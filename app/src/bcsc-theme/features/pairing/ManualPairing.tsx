@@ -46,7 +46,7 @@ const ManualPairing: React.FC = () => {
   const handleChangeCode = useCallback(
     (text: string) => {
       // strip non-alphanumeric characters and convert to uppercase
-      const cleanCode = text.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()
+      const cleanCode = text.replaceAll(/[^a-zA-Z0-9]/g, '').toUpperCase()
       setCode(cleanCode)
       setError(null)
 

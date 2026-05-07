@@ -23,8 +23,6 @@ type QRCoreTabParams = {
 
 type TabBarIconProps = {
   focused: boolean
-  color: string
-  size: number
 }
 
 const PairingCodeScreen: React.FC = () => {

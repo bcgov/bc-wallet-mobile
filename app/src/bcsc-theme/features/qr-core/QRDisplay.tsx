@@ -2,10 +2,25 @@ import { ButtonLocation, IconButton, QRRenderer, TOKENS, ThemedText, testIdWithK
 import { useNavigation } from '@react-navigation/native'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native'
+import { ScrollView, Share, StyleSheet, View, useWindowDimensions } from 'react-native'
 // import { useBCSCAgent } from '../agent'
-import { Share } from 'react-native'
 import WalletNameDisplay from './WalletNameDisplay'
+
+const ShareIcon = ({ invitation, logger }: { invitation?: string; logger: any }) => (
+  <IconButton
+    buttonLocation={ButtonLocation.Right}
+    icon="share-variant"
+    accessibilityLabel="Share"
+    testID={testIdWithKey('Share')}
+    onPress={() => {
+      if (!invitation) {
+        return
+      }
+      logger.info('Sharing QR invitation')
+      Share.share({ message: invitation }).catch((error) => logger.error('Error sharing QR invitation', error))
+    }}
+  />
+)
 
 const QRDisplay: React.FC = () => {
   // const { agent } = useBCSCAgent()
@@ -18,21 +33,7 @@ const QRDisplay: React.FC = () => {
 
   useEffect(() => {
     navigation.setOptions({
-      headerRight: () => (
-        <IconButton
-          buttonLocation={ButtonLocation.Right}
-          icon="share-variant"
-          accessibilityLabel="Share"
-          testID={testIdWithKey('Share')}
-          onPress={() => {
-            if (!invitation) {
-              return
-            }
-            logger.info('Sharing QR invitation')
-            Share.share({ message: invitation }).catch((error) => logger.error('Error sharing QR invitation', error))
-          }}
-        />
-      ),
+      headerRight: () => <ShareIcon invitation={invitation} logger={logger} />,
     })
   }, [navigation, invitation, logger])
 
