@@ -1,6 +1,8 @@
+import { VerifyPromptScreen } from '@/bcsc-theme/features/onboarding/VerifyPromptScreen'
 import ManualPairing from '@/bcsc-theme/features/pairing/ManualPairing'
 import QRDisplay from '@/bcsc-theme/features/qr-core/QRDisplay'
 import QRScanner from '@/bcsc-theme/features/qr-core/QRScanner'
+import { useVerificationStatus } from '@/bcsc-theme/hooks/useVerificationStatus'
 import { HelpCentreUrl } from '@/constants'
 import { ButtonLocation, IconButton, testIdWithKey, useTheme } from '@bifold/core'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
@@ -25,6 +27,11 @@ type TabBarIconProps = {
   size: number
 }
 
+const PairingCodeScreen: React.FC = () => {
+  const { needsVerification } = useVerificationStatus()
+  return needsVerification ? <VerifyPromptScreen showSkip={false} /> : <ManualPairing />
+}
+
 const createQRBackButton = () => {
   const QRBackButton = () => {
     const navigation = useNavigation()
@@ -34,7 +41,7 @@ const createQRBackButton = () => {
         icon={Platform.select({ ios: 'arrow-back-ios', android: 'arrow-left', default: 'arrow-left' })}
         accessibilityLabel="Back"
         testID={testIdWithKey('Back')}
-        onPress={() => navigation.goBack()}
+        onPress={() => navigation.getParent()?.goBack()}
       />
     )
   }
@@ -124,7 +131,7 @@ const QRCoreStack: React.FC = () => {
         />
         <Tab.Screen
           name="PairingCode"
-          component={ManualPairing}
+          component={PairingCodeScreen}
           options={{
             title: t('BCSC.ManualPairing.TabTitle'),
             tabBarIconStyle: styles.tabBarIcon,
