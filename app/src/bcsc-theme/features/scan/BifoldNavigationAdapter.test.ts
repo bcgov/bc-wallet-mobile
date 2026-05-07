@@ -1,0 +1,77 @@
+import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
+import { CommonActions } from '@react-navigation/native'
+import Toast from 'react-native-toast-message'
+
+import { createBifoldNavigationAdapter } from './BifoldNavigationAdapter'
+
+jest.mock('react-native-toast-message', () => ({ show: jest.fn() }))
+
+const t = ((k: string) => k) as any
+
+const mkNav = () => {
+  const grandparent = { navigate: jest.fn(), dispatch: jest.fn(), getParent: jest.fn(() => undefined) }
+  const parent = { navigate: jest.fn(), dispatch: jest.fn(), getParent: jest.fn(() => grandparent) }
+  const nav = { navigate: jest.fn(), dispatch: jest.fn(), getParent: jest.fn(() => parent) }
+  return { nav, parent, grandparent }
+}
+
+describe('BifoldNavigationAdapter', () => {
+  beforeEach(() => jest.clearAllMocks())
+
+  it('translates "Tab Home Stack" to a reset onto BCSC tab/home', () => {
+    const { nav } = mkNav()
+    const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    adapted.navigate('Tab Home Stack' as never, { screen: 'Home' } as never)
+    expect(nav.navigate).not.toHaveBeenCalled()
+    expect(nav.dispatch).toHaveBeenCalledWith(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: BCSCStacks.Tab, state: { routes: [{ name: BCSCScreens.Home }] } }],
+      })
+    )
+  })
+
+  it('shows feature-unavailable toast for Contacts Stack and Proof Requests Stack', () => {
+    const { nav } = mkNav()
+    const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    adapted.navigate('Contacts Stack' as never, { screen: 'JSON Details' } as never)
+    adapted.navigate('Proof Requests Stack' as never, { screen: 'Choose a credential' } as never)
+    expect(Toast.show).toHaveBeenCalledTimes(2)
+    expect(Toast.show).toHaveBeenLastCalledWith({ type: 'info', text1: 'BCSC.Scan.FeatureUnavailable' })
+    expect(nav.navigate).not.toHaveBeenCalled()
+  })
+
+  it('passes other routes straight through', () => {
+    const { nav } = mkNav()
+    const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    adapted.navigate('SomeBcscRoute' as never, { x: 1 } as never)
+    expect(nav.navigate).toHaveBeenCalledWith('SomeBcscRoute', { x: 1 })
+  })
+
+  it('wraps getParent so chained navigate calls are also translated', () => {
+    const { nav, parent } = mkNav()
+    const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    const adaptedParent = adapted.getParent()
+    adaptedParent?.navigate('Tab Home Stack' as never, undefined as never)
+    expect(parent.dispatch).toHaveBeenCalled()
+    expect(parent.navigate).not.toHaveBeenCalled()
+  })
+
+  it('returns undefined when getParent has no parent', () => {
+    const { nav, grandparent } = mkNav()
+    const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    const top = adapted.getParent()?.getParent()
+    expect(top).toBeDefined()
+    const beyond = top?.getParent()
+    expect(beyond).toBeUndefined()
+    expect(grandparent.getParent).toHaveBeenCalled()
+  })
+
+  it('exposes other navigation methods (e.g. dispatch) untouched', () => {
+    const { nav } = mkNav()
+    const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    const action = CommonActions.goBack()
+    adapted.dispatch(action)
+    expect(nav.dispatch).toHaveBeenCalledWith(action)
+  })
+})
