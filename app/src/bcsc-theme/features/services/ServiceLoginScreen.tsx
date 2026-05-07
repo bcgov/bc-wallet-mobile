@@ -50,6 +50,7 @@ type ServiceLoginUnavailableViewProps = {
   Spacing: ReturnType<typeof useTheme>['Spacing']
   t: (key: string, options?: Record<string, unknown>) => string
   logger: any
+  onCancel: () => void
 }
 
 const RenderState = {
@@ -68,40 +69,34 @@ const ServiceLoginLoadingView = () => (
 
 type DevicePreferenceURLViewProps = {
   serviceClientUri?: string
-  ColorPalette: ReturnType<typeof useTheme>['ColorPalette']
   t: (key: string, options?: Record<string, unknown>) => string
   Spacing: ReturnType<typeof useTheme>['Spacing']
 }
 
 const DevicePreferenceURLView: React.FC<DevicePreferenceURLViewProps> = ({
   serviceClientUri,
-  ColorPalette,
   t,
-  Spacing,
-}: DevicePreferenceURLViewProps) =>
-  serviceClientUri ? (
+}: DevicePreferenceURLViewProps) => {
+  const { Spacing, TextTheme } = useTheme()
+
+  return serviceClientUri ? (
     <View style={{ marginTop: Spacing.lg }}>
-      <View
-        style={{
-          borderBottomWidth: 1,
-          borderBottomColor: ColorPalette.grayscale.lightGrey,
-          marginBottom: Spacing.lg,
-        }}
-      />
-      <ThemedText variant={'bold'} style={{ textAlign: 'center' }}>
+      <ThemedText variant={'bold'} style={{ color: TextTheme.headingFour.color }}>
         {t('BCSC.Services.PreferOtherDevice')}
       </ThemedText>
-      <ThemedText style={{ textAlign: 'center' }}>{t('BCSC.Services.Goto')}</ThemedText>
-      <ThemedText selectable={true} style={{ textAlign: 'center' }}>
-        <Link
-          style={{ textAlign: 'center' }}
-          linkText={serviceClientUri}
-          testID={testIdWithKey('ServiceClientLink')}
-          onPress={() => Linking.openURL(serviceClientUri)}
-        />
-      </ThemedText>
+      <View style={{ flexDirection: 'row', gap: Spacing.xs }}>
+        <ThemedText>{t('BCSC.Services.Goto')}</ThemedText>
+        <ThemedText selectable={true}>
+          <Link
+            linkText={serviceClientUri}
+            testID={testIdWithKey('ServiceClientLink')}
+            onPress={() => Linking.openURL(serviceClientUri)}
+          />
+        </ThemedText>
+      </View>
     </View>
   ) : null
+}
 
 type ReportSuspiciousLinkProps = {
   t: (key: string, options?: Record<string, unknown>) => string
@@ -114,7 +109,7 @@ const ReportSuspiciousLink: React.FC<ReportSuspiciousLinkProps> = ({
   testID,
   Spacing,
 }: ReportSuspiciousLinkProps) => (
-  <ThemedText variant={'bold'} style={{ textAlign: 'center', marginTop: Spacing.lg }}>
+  <ThemedText variant={'bold'} style={{ marginTop: Spacing.sm }}>
     {t('BCSC.Services.ReportSuspiciousPrefix')}{' '}
     <Link
       linkText={t('BCSC.Services.ReportSuspicious')}
@@ -131,56 +126,62 @@ const ServiceLoginUnavailableView = ({
   t,
   logger,
   Spacing,
-}: ServiceLoginUnavailableViewProps) => (
-  <ScreenWrapper
-    padded={false}
-    scrollViewContainerStyle={{
-      flexGrow: 1,
-      padding: Spacing.lg,
-      gap: Spacing.md,
-    }}
-  >
-    <ThemedText variant={'headingThree'} style={{ color: ColorPalette.brand.primary }}>
-      {state.serviceTitle}
-    </ThemedText>
-    <ThemedText style={styles.descriptionText}>{t('BCSC.Services.NoLoginInstructions')}</ThemedText>
-    <ThemedText style={styles.descriptionText}>{t('BCSC.Services.NoLoginProof')}</ThemedText>
+  onCancel,
+}: ServiceLoginUnavailableViewProps) => {
+  const controls = (
+    <ControlContainer>
+      <Button
+        title={t('BCSC.Services.GotoService', { service: state.serviceTitle })}
+        accessibilityLabel={a11yLabel(t('BCSC.Services.GotoService', { service: state.serviceTitle }))}
+        accessibilityHint={t('Global.A11y.OpensInBrowser')}
+        testID={testIdWithKey('GoToServiceClient')}
+        buttonType={ButtonType.Primary}
+        onPress={async () => {
+          if (!state.serviceClientUri) {
+            logger.error('ServiceLoginScreen: No service client URI available for navigation')
+            return
+          }
 
-    <TouchableOpacity
-      testID={testIdWithKey('GoToServiceClient')}
-      accessibilityLabel={a11yLabel(t('BCSC.Services.GotoService', { service: state.serviceTitle }))}
-      accessibilityRole="link"
-      accessibilityHint={t('Global.A11y.OpensInBrowser')}
-      hitSlop={hitSlop}
-      onPress={async () => {
-        if (!state.serviceClientUri) {
-          logger.error('ServiceLoginScreen: No service client URI available for navigation')
-          return
-        }
+          try {
+            await Linking.openURL(state.serviceClientUri)
+          } catch (error) {
+            logger.error('ServiceLoginScreen: Failed to open service client URL', error as Error)
+            Alert.alert(t('BCSC.Services.OpenUrlErrorTitle'), t('BCSC.Services.OpenUrlErrorMessage'))
+          }
+        }}
+      >
+        <Icon name="open-in-new" size={20} color={ColorPalette.brand.buttonText} />
+      </Button>
+      <Button
+        buttonType={ButtonType.Secondary}
+        title={t('Global.Cancel')}
+        testID={testIdWithKey('Cancel')}
+        accessibilityLabel={t('Global.Cancel')}
+        onPress={onCancel}
+      />
+    </ControlContainer>
+  )
 
-        try {
-          await Linking.openURL(state.serviceClientUri)
-        } catch (error) {
-          logger.error('ServiceLoginScreen: Failed to open service client URL', error as Error)
-          Alert.alert(t('BCSC.Services.OpenUrlErrorTitle'), t('BCSC.Services.OpenUrlErrorMessage'))
-        }
+  return (
+    <ScreenWrapper
+      padded={false}
+      controls={controls}
+      scrollViewContainerStyle={{
+        flexGrow: 1,
+        padding: Spacing.lg,
+        gap: Spacing.md,
       }}
     >
-      <View style={[styles.infoContainer, styles.privacyNoticeContainer]}>
-        <ThemedText style={styles.infoHeader} ellipsizeMode="tail">
-          {t('BCSC.Services.GotoService', { service: state.serviceTitle })}
-        </ThemedText>
-        <Icon name="open-in-new" size={30} color={ColorPalette.brand.primary} />
-      </View>
-    </TouchableOpacity>
-    <DevicePreferenceURLView
-      serviceClientUri={state.serviceClientUri}
-      ColorPalette={ColorPalette}
-      t={t}
-      Spacing={Spacing}
-    />
-  </ScreenWrapper>
-)
+      <ThemedText variant={'headingThree'} style={{ color: ColorPalette.brand.primary }}>
+        {state.serviceTitle}
+      </ThemedText>
+      <ThemedText style={styles.descriptionText}>{t('BCSC.Services.NoLoginInstructions')}</ThemedText>
+      <ThemedText style={styles.descriptionText}>{t('BCSC.Services.NoLoginProof')}</ThemedText>
+
+      <DevicePreferenceURLView serviceClientUri={state.serviceClientUri} t={t} Spacing={Spacing} />
+    </ScreenWrapper>
+  )
+}
 
 const ServiceLoginDefaultView = ({
   state,
@@ -505,6 +506,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
           t={t}
           logger={logger}
           Spacing={Spacing}
+          onCancel={onCancel}
         />
       )
     default:
