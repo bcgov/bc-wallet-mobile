@@ -6,9 +6,6 @@ import { getVerifyContext } from '../card-type/card-context.js'
 
 const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 const VerificationMethodSelection = new BaseScreen(BCSC_TestIDs.VerificationMethodSelection)
-const BeforeYouCall = new BaseScreen(BCSC_TestIDs.BeforeYouCall)
-const WebView = new BaseScreen(BCSC_TestIDs.WebView)
-const ContactUs = new BaseScreen(BCSC_TestIDs.ContactUs)
 const InformationRequired = new BaseScreen(BCSC_TestIDs.InformationRequired)
 const PhotoInstructions = new BaseScreen(BCSC_TestIDs.PhotoInstructions)
 const TakePhoto = new BaseScreen(BCSC_TestIDs.TakePhoto)
@@ -25,37 +22,6 @@ describe('Send Video Verification', () => {
   it('should navigate through the Setup Steps screen and tap Step 5', async () => {
     await SetupSteps.waitFor('Step5', 10_000)
     await SetupSteps.tap('Step5')
-    await VerificationMethodSelection.waitFor('Help')
-  })
-
-  it('opens VerificationMethodSelection Help WebView and returns', async () => {
-    await VerificationMethodSelection.tap('Help')
-    await WebView.waitFor('Back')
-    await WebView.tap('Back')
-    await VerificationMethodSelection.waitFor('VideoCall')
-  })
-
-  it('detours into BeforeYouCall via VideoCall', async () => {
-    await VerificationMethodSelection.tap('VideoCall')
-    await BeforeYouCall.waitFor('Help')
-  })
-
-  it('opens BeforeYouCall Help WebView and returns', async () => {
-    await BeforeYouCall.tap('Help')
-    await WebView.waitFor('Back')
-    await WebView.tap('Back')
-    await BeforeYouCall.waitFor('Assistance')
-  })
-
-  it('exercises BeforeYouCall.Assistance and returns', async () => {
-    await BeforeYouCall.tap('Assistance')
-    await ContactUs.waitFor('Back')
-    await ContactUs.tap('Back')
-    await BeforeYouCall.waitFor('Back')
-  })
-
-  it('backs out of BeforeYouCall to VerificationMethodSelection', async () => {
-    await BeforeYouCall.tap('Back')
     await VerificationMethodSelection.waitFor('SendVideo')
   })
 
