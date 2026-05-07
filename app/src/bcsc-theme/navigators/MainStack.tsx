@@ -39,6 +39,7 @@ import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
 import { usePairingService } from '../features/pairing'
+import QRCoreStack from './QRCoreStack'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
@@ -137,6 +138,13 @@ const MainStack: React.FC = () => {
             component={BCSCTabStack}
             options={{
               animationEnabled: false,
+            }}
+          />
+          <Stack.Screen
+            name={BCSCScreens.QRCore}
+            component={QRCoreStack}
+            options={{
+              headerShown: false,
             }}
           />
           <Stack.Screen

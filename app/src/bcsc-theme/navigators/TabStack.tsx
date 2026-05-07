@@ -1,16 +1,19 @@
 import { useCustomNotifications } from '@/hooks/useCustomNotifications'
 import { CredentialStack, testIdWithKey, useTheme } from '@bifold/core'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
-import React from 'react'
-import { StyleSheet, Text, useWindowDimensions, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
+import React, { useCallback, useState } from 'react'
+import { Platform, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { createMainFloatingMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createMainSettingsHeaderButton } from '../components/SettingsHeaderButton'
 import { AgentReadyGate } from '../features/agent'
+import { FloatingScanButton } from '../features/scan'
 import Home from '../features/home/Home'
 import Services from '../features/services/Services'
-import { BCSCScreens, BCSCTabStackParams } from '../types/navigators'
+import { BCSCMainStackParams, BCSCScreens, BCSCTabStackParams } from '../types/navigators'
 
 const ScopedCredentialStack: React.FC = () => (
   <AgentReadyGate testID={testIdWithKey('Wallet.Loading')}>
@@ -55,26 +58,43 @@ const createTabBarIcon = (label: string, iconName: string) => {
   return TabBarIconComponent
 }
 
+const TAB_BAR_HEIGHT = Platform.select({ ios: 49, android: 56, default: 56 })
+
 const BCSCTabStack: React.FC = () => {
   const Tab = createBottomTabNavigator<BCSCTabStackParams>()
-  const { TabTheme, ColorPalette } = useTheme()
+  const { TabTheme, ColorPalette, Spacing } = useTheme()
   const { customNotifications } = useCustomNotifications()
+  const [activeTab, setActiveTab] = useState<string>(BCSCScreens.Home)
+  const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
+  const { bottom: safeAreaBottom } = useSafeAreaInsets()
 
   // FIXME (V4.1.x): Add custom notifications and credential notifications together to calculate badge count.
   // Need to wait until useNotifications doesn't throw an error when un-wrapped by the providers.
   // If that's not possible, call navigation.setOptions({ tabBarBadge: badgeCount }) to update the badge count when notifications change.
   const homeNotificationsBadgeCount = customNotifications.length || undefined
 
+  const handleScanPress = useCallback(() => {
+    navigation.navigate(BCSCScreens.QRCore)
+  }, [navigation])
+
   // this style should be moved to the theme file here and in Bifold
   const styles = StyleSheet.create({
     tabBarIcon: {
       flex: 1,
     },
+    fabContainer: {
+      position: 'absolute',
+      bottom: safeAreaBottom + TAB_BAR_HEIGHT + Spacing.md,
+      right: Spacing.lg,
+    },
   })
 
   return (
-    <>
+    <View style={{ flex: 1 }}>
       <Tab.Navigator
+        screenListeners={({ route }) => ({
+          focus: () => setActiveTab(route.name),
+        })}
         initialRouteName={BCSCScreens.Home}
         screenOptions={{
           unmountOnBlur: false,
@@ -128,7 +148,10 @@ const BCSCTabStack: React.FC = () => {
         />
       </Tab.Navigator>
       <SafeAreaView edges={['bottom']} style={{ backgroundColor: TabTheme.tabBarSecondaryBackgroundColor }} />
-    </>
+      <View style={styles.fabContainer} pointerEvents="box-none">
+        <FloatingScanButton activeTabName={activeTab} onPress={handleScanPress} />
+      </View>
+    </View>
   )
 }
 
