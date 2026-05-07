@@ -58,7 +58,7 @@ const createTabBarIcon = (label: string, iconName: string) => {
       <View style={{ ...TabTheme.tabBarContainerStyle, justifyContent: showLabels ? 'flex-end' : 'center' }}>
         <Icon
           name={iconName}
-          size={Spacing.lg}
+          size={focused ? Spacing.lg + 2 : Spacing.lg}
           color={focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor}
         />
         {showLabels && (
@@ -66,7 +66,7 @@ const createTabBarIcon = (label: string, iconName: string) => {
             style={{
               ...TabTheme.tabBarTextStyle,
               color: focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor,
-              fontWeight: focused ? TextTheme.bold.fontWeight : TextTheme.normal.fontWeight,
+              fontFamily: focused ? TextTheme.bold.fontFamily : TextTheme.normal.fontFamily,
             }}
           >
             {label}
