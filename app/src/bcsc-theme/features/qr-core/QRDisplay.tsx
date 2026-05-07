@@ -28,7 +28,7 @@ const QRDisplay: React.FC = () => {
             if (!invitation) {
               return
             }
-            logger.info(`QR invitation: ${invitation}`)
+            logger.info('Sharing QR invitation')
             Share.share({ message: invitation }).catch((error) => logger.error('Error sharing QR invitation', error))
           }}
         />
