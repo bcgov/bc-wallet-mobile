@@ -16,7 +16,19 @@ describe('WalletNameDisplay', () => {
 
   const renderComponent = (nickname?: string) =>
     render(
-      <BasicAppContext initialStateOverride={{ bcsc: { selectedNickname: nickname } }}>
+      <BasicAppContext
+        initialStateOverride={{
+          bcsc: {
+            selectedNickname: nickname,
+            appVersion: '',
+            appBuildNumber: '',
+            hasAccount: false,
+            nicknames: [],
+            bannerMessages: [],
+            analyticsOptIn: false,
+          },
+        }}
+      >
         <WalletNameDisplay />
       </BasicAppContext>
     )

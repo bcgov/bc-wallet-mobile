@@ -1,6 +1,6 @@
 import { ButtonLocation, IconButton, QRRenderer, TOKENS, ThemedText, testIdWithKey, useServices } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, Share, StyleSheet, View, useWindowDimensions } from 'react-native'
 // import { useBCSCAgent } from '../agent'
@@ -31,11 +31,11 @@ const QRDisplay: React.FC = () => {
   const [invitation, setInvitation] = useState<string | undefined>(undefined)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
+  const headerRight = useCallback(() => <ShareIcon invitation={invitation} logger={logger} />, [invitation, logger])
+
   useEffect(() => {
-    navigation.setOptions({
-      headerRight: () => <ShareIcon invitation={invitation} logger={logger} />,
-    })
-  }, [navigation, invitation, logger])
+    navigation.setOptions({ headerRight })
+  }, [navigation, headerRight])
 
   useEffect(() => {
     const fetchInvitation = async () => {
