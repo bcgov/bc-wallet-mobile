@@ -616,6 +616,14 @@ const translation = {
       "ContinueScanning": "Continue Scanning",
       "Confirm": "Confirm",
       "TryAgain": "Try Again",
+      "Connecting": "Connecting…",
+      "UnrecognizedQR": "QR code not recognized.",
+      "FeatureUnavailable": "This action isn't available yet.",
+      "Unsupported": {
+        "OpenID": "OpenID credentials aren't supported in BC Services Card.",
+        "Mediator": "Mediator invitations aren't supported in BC Services Card.",
+        "AgentNotReady": "Wallet isn't ready yet — please try again in a moment.",
+      },
     },
     "ManualSerial": {
       "InputLabel": "Enter serial number",

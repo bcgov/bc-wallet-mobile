@@ -50,6 +50,7 @@ import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
+import BCSCScanStack from './ScanStack'
 import { getDefaultModalOptions } from './stack-utils'
 import BCSCTabStack from './TabStack'
 
@@ -137,6 +138,14 @@ const MainStack: React.FC = () => {
             component={BCSCTabStack}
             options={{
               animationEnabled: false,
+            }}
+          />
+          <Stack.Screen
+            name={BCSCStacks.Scan}
+            component={BCSCScanStack}
+            options={{
+              headerShown: false,
+              presentation: 'modal',
             }}
           />
           <Stack.Screen
