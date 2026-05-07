@@ -82,7 +82,7 @@ const QRScanner: React.FC = () => {
         accessibilityRole="button"
         accessibilityLabel={t(torchActive ? 'BCSC.Scan.TorchOff' : 'BCSC.Scan.TorchOn')}
       >
-        <Icon name={torchActive ? 'flashlight' : 'flashlight-off'} size={28} style={styles.torchIcon} />
+        <Icon name={torchActive ? 'flash' : 'flash-off'} size={28} style={styles.torchIcon} />
       </TouchableOpacity>
     </View>
   )
