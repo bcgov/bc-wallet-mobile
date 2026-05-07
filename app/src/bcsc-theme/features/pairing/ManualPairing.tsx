@@ -29,7 +29,7 @@ const ManualPairing: React.FC = () => {
       } else {
         const stopLoading = loadingScreen.startLoading()
         try {
-          logger.info(`Submitting pairing code: ${paringCode}`)
+          logger.info('Submitting pairing code.')
           const serviceClient = await pairing.loginByPairingCode(paringCode)
 
           logger.info('Pairing code submitted successfully.')
