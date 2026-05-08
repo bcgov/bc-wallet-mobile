@@ -40,7 +40,7 @@ exports[`TransferAgeRestrictionScreen renders correctly 1`] = `
           ]
         }
       >
-        Not available
+        BCSC.AgeRestrictedTransfer.Title
       </Text>
       <Text
         maxFontSizeMultiplier={2}
@@ -56,7 +56,7 @@ exports[`TransferAgeRestrictionScreen renders correctly 1`] = `
           ]
         }
       >
-        You must be 12 years or older to transfer your account to another device
+        BCSC.AgeRestrictedTransfer.Description
       </Text>
     </View>
   </RCTScrollView>

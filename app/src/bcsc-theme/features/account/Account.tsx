@@ -8,6 +8,7 @@ import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { parseBirthdateToLocalDate } from '@/bcsc-theme/utils/birthdate'
 import { useAlerts } from '@/hooks/useAlerts'
 import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
 import { testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
@@ -170,7 +171,8 @@ const Account: React.FC = () => {
           <SectionButton
             onPress={() => {
               if (account?.birthdate) {
-                const age = moment().diff(moment(account.birthdate, 'MMMM D, YYYY'), 'years')
+                const birthdate = parseBirthdateToLocalDate(account.birthdate)
+                const age = moment().diff(moment(birthdate), 'years')
                 if (age < 12) {
                   navigation.navigate(BCSCScreens.TransferAgeRestriction)
                   return

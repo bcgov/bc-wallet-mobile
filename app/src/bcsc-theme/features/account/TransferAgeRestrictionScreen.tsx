@@ -1,10 +1,12 @@
 import { ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const TransferAgeRestrictionScreen: React.FC = () => {
   const { Spacing } = useTheme()
+  const { t } = useTranslation()
 
   const styles = StyleSheet.create({
     container: {
@@ -20,8 +22,8 @@ const TransferAgeRestrictionScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollView}>
-        <ThemedText variant={'headingTwo'}>Not available</ThemedText>
-        <ThemedText>You must be 12 years or older to transfer your account to another device</ThemedText>
+        <ThemedText variant={'headingTwo'}>{t('BCSC.AgeRestrictedTransfer.Title')}</ThemedText>
+        <ThemedText>{t('BCSC.AgeRestrictedTransfer.Description')}</ThemedText>
       </ScrollView>
     </SafeAreaView>
   )
