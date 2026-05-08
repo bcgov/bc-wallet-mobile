@@ -6,22 +6,6 @@ import { ScrollView, Share, StyleSheet, View, useWindowDimensions } from 'react-
 // import { useBCSCAgent } from '../agent'
 import WalletNameDisplay from './WalletNameDisplay'
 
-const ShareIcon = ({ invitation, logger }: { invitation?: string; logger: any }) => (
-  <IconButton
-    buttonLocation={ButtonLocation.Right}
-    icon="share-variant"
-    accessibilityLabel="Share"
-    testID={testIdWithKey('Share')}
-    onPress={() => {
-      if (!invitation) {
-        return
-      }
-      logger.info('Sharing QR invitation')
-      Share.share({ message: invitation }).catch((error) => logger.error('Error sharing QR invitation', error))
-    }}
-  />
-)
-
 const QRDisplay: React.FC = () => {
   // const { agent } = useBCSCAgent()
   const { t } = useTranslation()
@@ -31,7 +15,24 @@ const QRDisplay: React.FC = () => {
   const [invitation, setInvitation] = useState<string | undefined>(undefined)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
-  const headerRight = useCallback(() => <ShareIcon invitation={invitation} logger={logger} />, [invitation, logger])
+  const headerRight = useCallback(
+    () => (
+      <IconButton
+        buttonLocation={ButtonLocation.Right}
+        icon="share-variant"
+        accessibilityLabel="Share"
+        testID={testIdWithKey('Share')}
+        onPress={() => {
+          if (!invitation) {
+            return
+          }
+          logger.info('Sharing QR invitation')
+          Share.share({ message: invitation }).catch((error) => logger.error('Error sharing QR invitation', error))
+        }}
+      />
+    ),
+    [invitation, logger]
+  )
 
   useEffect(() => {
     navigation.setOptions({ headerRight })
