@@ -211,7 +211,7 @@ exports[`AuthPrivacyPolicyScreen renders correctly 1`] = `
                     },
                     {
                       "color": "#313132",
-                      "fontSize": undefined,
+                      "fontSize": 21,
                     },
                   ]
                 }

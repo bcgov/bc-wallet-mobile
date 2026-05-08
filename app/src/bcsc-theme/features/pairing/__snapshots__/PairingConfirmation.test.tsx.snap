@@ -23,11 +23,10 @@ exports[`PairingConfirmation should match snapshot 1`] = `
   <RCTScrollView
     contentContainerStyle={
       [
-        {
-          "padding": 16,
-        },
+        false,
         {
           "gap": 16,
+          "padding": 24,
         },
       ]
     }
@@ -69,9 +68,8 @@ exports[`PairingConfirmation should match snapshot 1`] = `
       <View
         style={
           {
-            "backgroundColor": "#FFFFFF",
             "gap": 16,
-            "padding": 16,
+            "marginTop": 24,
           }
         }
       >
@@ -95,7 +93,9 @@ exports[`PairingConfirmation should match snapshot 1`] = `
                     "fontSize": 18,
                     "fontWeight": "bold",
                   },
-                  undefined,
+                  {
+                    "color": "#313132",
+                  },
                 ]
               }
             >
@@ -111,7 +111,9 @@ exports[`PairingConfirmation should match snapshot 1`] = `
                     "fontSize": 18,
                     "fontWeight": "bold",
                   },
-                  undefined,
+                  {
+                    "color": "#313132",
+                  },
                 ]
               }
             >
@@ -211,89 +213,133 @@ exports[`PairingConfirmation should match snapshot 1`] = `
         {
           "gap": 16,
         },
-        {
-          "paddingBottom": 16,
-          "paddingHorizontal": 16,
-        },
+        false,
         undefined,
       ]
     }
   >
     <View
-      accessibilityLabel="Global.Close"
-      accessibilityRole="button"
-      accessibilityState={
-        {
-          "busy": undefined,
-          "checked": undefined,
-          "disabled": false,
-          "expanded": undefined,
-          "selected": undefined,
-        }
-      }
-      accessibilityValue={
-        {
-          "max": undefined,
-          "min": undefined,
-          "now": undefined,
-          "text": undefined,
-        }
-      }
-      accessible={true}
-      collapsable={false}
-      focusable={true}
-      onClick={[Function]}
-      onResponderGrant={[Function]}
-      onResponderMove={[Function]}
-      onResponderRelease={[Function]}
-      onResponderTerminate={[Function]}
-      onResponderTerminationRequest={[Function]}
-      onStartShouldSetResponder={[Function]}
       style={
         {
-          "backgroundColor": "#003366",
-          "borderRadius": 4,
-          "opacity": 1,
-          "padding": 16,
+          "flexGrow": 1,
+          "width": "100%",
         }
       }
-      testID="com.ariesbifold:id/Close"
     >
       <View
         style={
           {
-            "alignItems": "center",
-            "flexDirection": "row",
-            "justifyContent": "center",
+            "left": 0,
+            "position": "absolute",
+            "right": 0,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": -3,
+              "width": 0,
+            },
+            "shadowOpacity": 0.9,
+            "shadowRadius": 3,
+            "top": 0,
+            "zIndex": -1,
           }
         }
       >
-        <Text
-          maxFontSizeMultiplier={2}
+        <View
           style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              [
-                {
-                  "color": "#FFFFFF",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "bold",
-                  "textAlign": "center",
-                },
-                false,
-                false,
-              ],
-            ]
+            {
+              "backgroundColor": "#F2F2F2",
+              "height": 1,
+            }
           }
+        />
+      </View>
+      <View
+        style={
+          {
+            "backgroundColor": "#F2F2F2",
+            "flexGrow": 1,
+            "gap": 8,
+            "padding": 24,
+          }
+        }
+      >
+        <View
+          accessibilityLabel="Global.Close"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "backgroundColor": "#003366",
+              "borderRadius": 4,
+              "opacity": 1,
+              "padding": 16,
+            }
+          }
+          testID="com.ariesbifold:id/Close"
         >
-          Global.Close
-        </Text>
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "center",
+              }
+            }
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "color": "#FFFFFF",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
+                    false,
+                    false,
+                  ],
+                ]
+              }
+            >
+              Global.Close
+            </Text>
+          </View>
+        </View>
       </View>
     </View>
   </View>

@@ -285,7 +285,7 @@ exports[`AccountExpired renders correctly 1`] = `
                       },
                       {
                         "color": "#313132",
-                        "fontSize": undefined,
+                        "fontSize": 21,
                       },
                     ]
                   }
@@ -378,7 +378,7 @@ exports[`AccountExpired renders correctly 1`] = `
                       },
                       {
                         "color": "#313132",
-                        "fontSize": undefined,
+                        "fontSize": 21,
                       },
                     ]
                   }
