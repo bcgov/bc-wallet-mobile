@@ -1,18 +1,21 @@
 import { useCustomNotifications } from '@/hooks/useCustomNotifications'
 import { CredentialStack, testIdWithKey, useTheme } from '@bifold/core'
 import { BottomTabBar, BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs'
-import React, { useEffect, useRef } from 'react'
+import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Animated, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Animated, Platform, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { createMainFloatingMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createTabHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainSettingsHeaderButton } from '../components/SettingsHeaderButton'
 import { AgentReadyGate } from '../features/agent'
 import Home from '../features/home/Home'
+import { FloatingScanButton } from '../features/scan'
 import Services from '../features/services/Services'
-import { BCSCScreens, BCSCTabStackParams } from '../types/navigators'
+import { BCSCMainStackParams, BCSCScreens, BCSCTabStackParams } from '../types/navigators'
 
 const ScopedCredentialStack: React.FC = () => (
   <AgentReadyGate testID={testIdWithKey('Wallet.Loading')}>
@@ -57,6 +60,7 @@ const createTabBarIcon = (label: string, iconName: string) => {
   return TabBarIconComponent
 }
 
+const TAB_BAR_HEIGHT = Platform.select({ ios: 49, android: 56, default: 56 })
 const ACTIVE_INDICATOR_HEIGHT = 3
 const ACTIVE_INDICATOR_DURATION_MS = 100
 
@@ -100,8 +104,11 @@ const AnimatedTabBar: React.FC<BottomTabBarProps> = (props) => {
 
 const BCSCTabStack: React.FC = () => {
   const Tab = createBottomTabNavigator<BCSCTabStackParams>()
-  const { TabTheme, ColorPalette } = useTheme()
+  const { TabTheme, ColorPalette, Spacing } = useTheme()
   const { customNotifications } = useCustomNotifications()
+  const [activeTab, setActiveTab] = useState<string>(BCSCScreens.Home)
+  const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
+  const { bottom: safeAreaBottom } = useSafeAreaInsets()
   const { t } = useTranslation()
 
   // FIXME (V4.1.x): Add custom notifications and credential notifications together to calculate badge count.
@@ -109,16 +116,28 @@ const BCSCTabStack: React.FC = () => {
   // If that's not possible, call navigation.setOptions({ tabBarBadge: badgeCount }) to update the badge count when notifications change.
   const homeNotificationsBadgeCount = customNotifications.length || undefined
 
+  const handleScanPress = useCallback(() => {
+    navigation.navigate(BCSCScreens.QRCore)
+  }, [navigation])
+
   // this style should be moved to the theme file here and in Bifold
   const styles = StyleSheet.create({
     tabBarIcon: {
       flex: 1,
     },
+    fabContainer: {
+      position: 'absolute',
+      bottom: safeAreaBottom + TAB_BAR_HEIGHT + Spacing.md,
+      right: Spacing.lg,
+    },
   })
 
   return (
-    <>
+    <View style={{ flex: 1 }}>
       <Tab.Navigator
+        screenListeners={({ route }) => ({
+          focus: () => setActiveTab(route.name),
+        })}
         initialRouteName={BCSCScreens.Home}
         tabBar={(props) => <AnimatedTabBar {...props} />}
         screenOptions={{
@@ -175,7 +194,10 @@ const BCSCTabStack: React.FC = () => {
         />
       </Tab.Navigator>
       <SafeAreaView edges={['bottom']} style={{ backgroundColor: TabTheme.tabBarSecondaryBackgroundColor }} />
-    </>
+      <View style={styles.fabContainer} pointerEvents="box-none">
+        <FloatingScanButton activeTabName={activeTab} onPress={handleScanPress} />
+      </View>
+    </View>
   )
 }
 

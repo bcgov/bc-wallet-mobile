@@ -522,9 +522,9 @@ const translation = {
       "RenameSuccessToastMessage": "Account nickname updated successfully",
     },
     "ManualPairing": {
-      "EnterPairingCodeTitle": "Enter pairing code",
+      "EnterPairingCodeTitle": "Enter your pairing code",
       "PairingCodeLabel": "Pairing code",
-      "EnterPairingCodeMessage": "A pairing code will be provided when you log in to a website on another device.",
+      "EnterPairingCodeMessage": "Enter the 6 digit pairing code on your other device. Please enter the code within 5 minutes.",
       "InvalidPairingCodeMessage": "Pairing code must be six characters long",
       "EmptyPairingCodeMessage": "Pairing code cannot be empty",
       "FailedToSubmitPairingCodeMessage": "Failed to submit pairing code",
@@ -538,6 +538,7 @@ const translation = {
       "BookmarkService": "Save link to:",
       "ToggleBookmark": "Toggle bookmark",
       "BookmarkDescription": "This adds a link to the menu in this app for easier access next time.",
+      "TabTitle": "Pairing code",
     },
     "Onboarding": {
       "LearnMore": "Learn more",
@@ -609,7 +610,9 @@ const translation = {
       "NoAttestationResponse": "No attestation response, check your connection and try again.",
       "NoDeviceCodeFound": "No device code found",
       "InvalidQrCode": "Invalid QR code",
-      "WillScanAutomatically": "Will scan automatically",
+      "WillScanAutomatically": "A valid QR Code will scan automatically",
+      "TorchOn": "Turn flashlight on",
+      "TorchOff": "Turn flashlight off",
       "ErrorDetails": "Error details",
       "Dismiss": "Dismiss",
       "SaveScanZones": "Save Scan Zones",
@@ -931,6 +934,9 @@ const translation = {
       "Step2": "2. Choose 'Transfer to another device' to get your QR code.",
       "Step3": "3. Continue on this device and scan that QR code.",
       "ScanQRCode": "Scan QR Code",
+    },
+    "QRDisplay": {
+      "SharingDescription": "Sharing this QR code with someone will add them as a Contact.",
     },
     "TransferQRDisplay": {
       "Instructions": "Scan this QR code in the BC Services Card app on your other mobile device",

@@ -1,50 +1,31 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import CodeInput from '@/bcsc-theme/components/CodeInput'
+import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { PAIRING_CODE_LENGTH } from '@/constants'
 import { BCSCMainStackParams, BCSCScreens } from '@bcsc-theme/types/navigators'
-import {
-  Button,
-  ButtonType,
-  ScreenWrapper,
-  testIdWithKey,
-  ThemedText,
-  TOKENS,
-  useAnimatedComponents,
-  useServices,
-  useTheme,
-} from '@bifold/core'
-import { StackScreenProps } from '@react-navigation/stack'
+import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
+import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { StyleSheet, View } from 'react-native'
 
-type ManualPairingProps = StackScreenProps<BCSCMainStackParams, BCSCScreens.ManualPairingCode>
-
-const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
+const ManualPairing: React.FC = () => {
+  const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const { t } = useTranslation()
   const [code, setCode] = useState('')
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { Spacing } = useTheme()
+  const { Spacing, ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { ButtonLoading } = useAnimatedComponents()
   const { pairing } = useApi()
+  const loadingScreen = useLoadingScreen()
 
-  const handleChangeCode = useCallback((text: string) => {
-    // strip non-alphanumeric characters and convert to uppercase
-    setCode(text.replace(/[^a-zA-Z0-9]/g, '').toUpperCase())
-    setError(null)
-  }, [])
-
-  const onSubmit = async () => {
-    if (!code.length) {
-      setError(t('BCSC.ManualPairing.EmptyPairingCodeMessage'))
-    } else if (code.length < PAIRING_CODE_LENGTH) {
-      setError(t('BCSC.ManualPairing.InvalidPairingCodeMessage'))
-    } else {
+  const onSubmit = useCallback(
+    async (pairingCode: string) => {
+      const stopLoading = loadingScreen.startLoading()
       try {
-        setLoading(true)
-        logger.info(`Submitting pairing code: ${code}`)
-        const serviceClient = await pairing.loginByPairingCode(code)
+        logger.info('Submitting pairing code.')
+        const serviceClient = await pairing.loginByPairingCode(pairingCode)
 
         logger.info('Pairing code submitted successfully.')
 
@@ -56,30 +37,46 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
         logger.error(`Error submitting pairing code: ${error}`)
         setError(t('BCSC.ManualPairing.FailedToSubmitPairingCodeMessage'))
       } finally {
-        setLoading(false)
+        stopLoading()
       }
-    }
-  }
-
-  const controls = (
-    <Button
-      title={t('Global.Submit')}
-      buttonType={ButtonType.Primary}
-      testID={testIdWithKey('Submit')}
-      accessibilityLabel={t('Global.Submit')}
-      onPress={onSubmit}
-      disabled={loading}
-    >
-      {loading && <ButtonLoading />}
-    </Button>
+    },
+    [loadingScreen, logger, navigation, pairing, t]
   )
 
+  const handleChangeCode = useCallback(
+    (text: string) => {
+      // strip non-alphanumeric characters and convert to uppercase
+      const cleanCode = text.replaceAll(/[^a-zA-Z0-9]/g, '').toUpperCase()
+      setCode(cleanCode)
+      setError(null)
+
+      // Auto submit
+      if (cleanCode.length === PAIRING_CODE_LENGTH) {
+        onSubmit(cleanCode)
+      }
+    },
+    [onSubmit]
+  )
+
+  const styles = StyleSheet.create({
+    lineBreak: {
+      height: 4,
+      marginTop: Spacing.md,
+      marginHorizontal: Spacing.md,
+    },
+  })
+
   return (
-    <ScreenWrapper keyboardActive controls={controls}>
-      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
+    <ScreenWrapper keyboardActive>
+      <ThemedText
+        variant={'headingTwo'}
+        style={{ marginHorizontal: Spacing.md, marginBottom: Spacing.md, alignSelf: 'center' }}
+      >
         {t('BCSC.ManualPairing.EnterPairingCodeTitle')}
       </ThemedText>
-      <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.ManualPairing.EnterPairingCodeMessage')}</ThemedText>
+      <ThemedText style={{ marginBottom: Spacing.md, marginHorizontal: Spacing.md, alignSelf: 'center' }}>
+        {t('BCSC.ManualPairing.EnterPairingCodeMessage')}
+      </ThemedText>
       <CodeInput
         value={code}
         onChange={handleChangeCode}
@@ -94,6 +91,7 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
           accessibilityLabel: 'Pairing-Code-Input',
         }}
       />
+      <View style={[styles.lineBreak, { backgroundColor: ColorPalette.brand.highlight }]} />
     </ScreenWrapper>
   )
 }
