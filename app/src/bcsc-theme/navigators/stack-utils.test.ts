@@ -52,7 +52,7 @@ describe('StackUtils', () => {
               routes: [
                 { name: BCSCScreens.Home, key: 'home-1' },
                 { name: BCSCScreens.Services, key: 'services-1' },
-                { name: BCSCScreens.Account, key: 'account-1' },
+                { name: BCSCScreens.Wallet, key: 'wallet-1' },
               ],
             },
           },
@@ -74,14 +74,14 @@ describe('StackUtils', () => {
               routes: [
                 { name: BCSCScreens.Home, key: 'home-1' },
                 { name: BCSCScreens.Services, key: 'services-1' },
-                { name: BCSCScreens.Account, key: 'account-1' },
+                { name: BCSCScreens.Wallet, key: 'wallet-1' },
               ],
             },
           },
         ],
       } as unknown as NavigationState
 
-      expect(getCurrentStateScreenName(state)).toBe(BCSCScreens.Account)
+      expect(getCurrentStateScreenName(state)).toBe(BCSCScreens.Wallet)
     })
 
     it('recursively resolves through three levels of nesting', () => {
