@@ -13,6 +13,7 @@ import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningB
 import { testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import moment from 'moment'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppState, AppStateStatus, Linking, StyleSheet, View } from 'react-native'
@@ -168,6 +169,13 @@ const Account: React.FC = () => {
           />
           <SectionButton
             onPress={() => {
+              if (account?.birthdate) {
+                const age = moment().diff(moment(account.birthdate, 'MMMM D, YYYY'), 'years')
+                if (age < 12) {
+                  navigation.navigate(BCSCScreens.TransferAgeRestriction)
+                  return
+                }
+              }
               navigation.navigate(BCSCScreens.TransferAccountQRInformation)
             }}
             title={t('BCSC.Account.TransferAccount')}
