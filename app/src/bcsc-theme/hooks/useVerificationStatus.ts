@@ -12,14 +12,10 @@ import { useMemo } from 'react'
  */
 export const useVerificationStatus = () => {
   const [store] = useStore<BCState>()
-  const { verified, verifiedStatus, refreshToken } = store.bcscSecure
+  const { verified, verifiedStatus } = store.bcscSecure
 
   return useMemo(() => {
-    const isVerified = Boolean(
-      verified ||
-        verifiedStatus === VerificationStatus.VERIFIED ||
-        (refreshToken && verifiedStatus !== VerificationStatus.DEACTIVATED)
-    )
+    const isVerified = Boolean(verified)
     const isVerificationInProgress = verifiedStatus === VerificationStatus.IN_PROGRESS
     const isDeactivated = verifiedStatus === VerificationStatus.DEACTIVATED
 
@@ -29,5 +25,5 @@ export const useVerificationStatus = () => {
       isDeactivated,
       needsVerification: !isVerified && !isVerificationInProgress,
     }
-  }, [verified, verifiedStatus, refreshToken])
+  }, [verified, verifiedStatus])
 }
