@@ -193,7 +193,7 @@ exports[`AccountSetup when nicknames exist renders correctly with nickname butto
                       },
                       {
                         "color": "#313132",
-                        "fontSize": undefined,
+                        "fontSize": 21,
                       },
                     ]
                   }
@@ -286,7 +286,7 @@ exports[`AccountSetup when nicknames exist renders correctly with nickname butto
                       },
                       {
                         "color": "#313132",
-                        "fontSize": undefined,
+                        "fontSize": 21,
                       },
                     ]
                   }
