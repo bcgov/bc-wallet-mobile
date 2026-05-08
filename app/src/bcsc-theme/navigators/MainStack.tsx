@@ -50,6 +50,7 @@ import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
+import QRCoreStack from './QRCoreStack'
 import { getDefaultModalOptions } from './stack-utils'
 import BCSCTabStack from './TabStack'
 
@@ -137,6 +138,13 @@ const MainStack: React.FC = () => {
             component={BCSCTabStack}
             options={{
               animationEnabled: false,
+            }}
+          />
+          <Stack.Screen
+            name={BCSCScreens.QRCore}
+            component={QRCoreStack}
+            options={{
+              headerShown: false,
             }}
           />
           <Stack.Screen
