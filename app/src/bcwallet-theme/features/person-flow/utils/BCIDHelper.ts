@@ -103,7 +103,10 @@ export const connectToIASAgent = async (agent: Agent, iasAgentInviteUrl: string,
   // Credo's assertReady() only accepts `completed` or `response-sent` —
   // `response-received` (our state as requester during the trust-ping window)
   // is rejected, which silently drops the proof request.
-  if (record.connectionRecord && !isConnectionCompleted(record.connectionRecord.state)) {
+  if (
+    record.connectionRecord &&
+    !(isConnectionCompleted(record.connectionRecord.state) && record.connectionRecord.isReady)
+  ) {
     await waitForConnectionCompleted(agent, record.connectionRecord)
   }
 
