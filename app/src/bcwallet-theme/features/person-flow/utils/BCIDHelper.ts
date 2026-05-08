@@ -81,7 +81,11 @@ const waitForConnectionCompleted = (agent: Agent, connection: DidCommConnectionR
   })
 }
 
-export const connectToIASAgent = async (agent: Agent, iasAgentInviteUrl: string, label?: string): Promise<WellKnownAgentDetails> => {
+export const connectToIASAgent = async (
+  agent: Agent,
+  iasAgentInviteUrl: string,
+  label?: string
+): Promise<WellKnownAgentDetails> => {
   // connect to the agent, this will re-format the legacy invite
   // until we have OOB working in ACA-py.
   const invite = await agent.didcomm.oob.parseInvitation(iasAgentInviteUrl)

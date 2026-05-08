@@ -8,10 +8,9 @@ import {
   credentialCustomMetadata,
   useStore,
 } from '@bifold/core'
-import { BCAgent } from '@utils/bc-agent-modules'
 import { useAgent, useBasicMessages, useCredentialByState, useProofByState } from '@bifold/react-hooks'
-import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds'
 import { ProofCustomMetadata, ProofMetadata } from '@bifold/verifier'
+import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds'
 import {
   DidCommCredentialExchangeRecord as CredentialRecord,
   DidCommBasicMessageRecord,
@@ -20,6 +19,7 @@ import {
   DidCommProofState,
 } from '@credo-ts/didcomm'
 import { isProofRequestingAttestation } from '@services/attestation'
+import { BCAgent } from '@utils/bc-agent-modules'
 import { useEffect, useMemo, useState } from 'react'
 
 export type CredentialNotificationRecord = DidCommBasicMessageRecord | CredentialRecord | DidCommProofExchangeRecord
@@ -87,7 +87,14 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
     )
 
     setNotifications([...custom, ...notif] as never[])
-  }, [offers, credsReceived, credsDone, basicMessages, nonAttestationProofs, store.dismissPersonCredentialOffer.personCredentialOfferDismissed])
+  }, [
+    offers,
+    credsReceived,
+    credsDone,
+    basicMessages,
+    nonAttestationProofs,
+    store.dismissPersonCredentialOffer.personCredentialOfferDismissed,
+  ])
 
   useEffect(() => {
     Promise.all(

@@ -1,6 +1,5 @@
 import { CredentialNotificationRecord } from '@/hooks/notifications'
 import type { Attribute, Predicate } from '@bifold/oca/build/legacy'
-import { BCAgent } from '@utils/bc-agent-modules'
 import {
   AnonCredsCredentialInfo,
   AnonCredsPredicateType,
@@ -12,6 +11,7 @@ import {
   DidCommProofExchangeRecord,
   GetCredentialsForProofRequestReturn,
 } from '@credo-ts/didcomm'
+import { BCAgent } from '@utils/bc-agent-modules'
 
 export type Fields = Record<string, AnonCredsRequestedAttributeMatch[] | AnonCredsRequestedPredicateMatch[]>
 
