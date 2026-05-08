@@ -4,7 +4,6 @@ import {
   AbstractBifoldLogger,
   AttestationEventTypes,
   AttestationMonitor as AttestationMonitorI,
-  BifoldAgent,
   BifoldError,
   removeExistingInvitationsById,
 } from '@bifold/core'
@@ -107,7 +106,7 @@ const invitationUrlFromRestrictions = async (
   agent: BCAgent,
   restrictions: AttestationRestrictionsType
 ): Promise<string | undefined> => {
-  const format = (await agent.didcomm.proofs.getFormatData(proof.id)) as unknown as AttestationProofRequestFormat
+  const format = (await agent.didcomm.proofs.getFormatData(proof.id)) as AttestationProofRequestFormat
   const formatToUse = format.request?.anoncreds ? 'anoncreds' : 'indy'
   const restrictionsArePresent = format.request?.[formatToUse]?.requested_attributes?.attestationInfo?.restrictions
 
@@ -183,7 +182,7 @@ export class AttestationMonitor implements AttestationMonitorI {
     return this._shouldHandleProofRequestAutomatically
   }
 
-  public start(agent: Agent): void {
+  public start(agent: BCAgent): void {
     this.agent = agent
 
     this.proofSubscription = this.agent?.events
@@ -441,7 +440,7 @@ export class AttestationMonitor implements AttestationMonitorI {
     }
 
     this.log?.info('Removing any existing duplicate invitations if they exist')
-    await removeExistingInvitationsById(this.agent as unknown as BifoldAgent, invite.id)
+    await removeExistingInvitationsById(this.agent as Agent, invite.id)
 
     this.log?.info('Receiving invitation')
     const { connectionRecord } = await this.agent.didcomm.oob.receiveInvitation(invite, {
