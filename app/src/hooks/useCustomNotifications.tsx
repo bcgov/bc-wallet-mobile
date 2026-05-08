@@ -1,6 +1,5 @@
 import StartVerificationNotification from '@/bcsc-theme/features/notifications/StartVerificationNotification'
-import { BCState, VerificationStatus } from '@/store'
-import { useStore } from '@bifold/core'
+import { useVerificationStatus } from '@/bcsc-theme/hooks/useVerificationStatus'
 import { JSX, useCallback, useMemo, useState } from 'react'
 
 export enum CustomNotificationId {
@@ -13,7 +12,7 @@ export enum CustomNotificationId {
  * @returns An object containing an array of custom notifications to be displayed on the Home screen.
  */
 export const useCustomNotifications = () => {
-  const [store] = useStore<BCState>()
+  const { needsVerification } = useVerificationStatus()
   const [dismissedIds, setDismissedIds] = useState<Set<CustomNotificationId>>(new Set())
 
   /**
@@ -32,7 +31,7 @@ export const useCustomNotifications = () => {
   const customNotifications = useMemo((): JSX.Element[] => {
     const notifications = []
 
-    if (!store.bcscSecure.verified && store.bcscSecure.verifiedStatus !== VerificationStatus.IN_PROGRESS) {
+    if (needsVerification) {
       notifications.push({
         id: CustomNotificationId.BCSCStartVerification,
         element: (
@@ -47,7 +46,7 @@ export const useCustomNotifications = () => {
     return notifications
       .filter((notification) => !dismissedIds.has(notification.id))
       .map((notification) => notification.element)
-  }, [store.bcscSecure.verified, store.bcscSecure.verifiedStatus, dismissCustomNotification, dismissedIds])
+  }, [needsVerification, dismissCustomNotification, dismissedIds])
 
   return useMemo(
     () => ({

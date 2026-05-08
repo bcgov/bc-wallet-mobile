@@ -1993,7 +1993,7 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - SocketRocket
-  - react-native-attestation (3.0.3):
+  - react-native-attestation (3.0.4):
     - boost
     - DoubleConversion
     - fast_float
@@ -3805,7 +3805,7 @@ SPEC CHECKSUMS:
   React-logger: a913317214a26565cd4c045347edf1bcacb80a3f
   React-Mapbuffer: 94f4264de2cb156960cd82b338a403f4653f2fd9
   React-microtasksnativemodule: 6c4ee39a36958c39c97b074d28f360246a335e84
-  react-native-attestation: d9034bb8af82aff77b7e12e2be02df5ce3fa1675
+  react-native-attestation: c0c26a184d090fcc52a12e45d25eeeed70846c0b
   react-native-config: eae2b928a919c9743d710bbff3b7592882268fe8
   react-native-drop-shadow: aeb76e4b46c09924b4a8ee3d454dd00fdb5c62d9
   react-native-get-random-values: d16467cf726c618e9c7a8c3c39c31faa2244bbba

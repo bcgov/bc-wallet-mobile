@@ -6,6 +6,7 @@ import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createAuthSettingsHeaderButton } from '../components/SettingsHeaderButton'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
+import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import AccountSelector from '../features/auth/AccountSelectorScreen'
 import { ConfirmDeviceAuthInfoScreen } from '../features/auth/ConfirmDeviceAuthInfoScreen'
 import { DeviceAuthAppResetScreen } from '../features/auth/DeviceAuthAppResetScreen'
@@ -19,6 +20,9 @@ import { AuthSettingsScreen } from '../features/settings/AuthSettingsScreen'
 import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { BCSCAuthStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
+
+import PairingConfirmation from '../features/pairing/PairingConfirmation'
+import QRCoreStack from './QRCoreStack'
 import { getDefaultModalOptions } from './stack-utils'
 
 /**
@@ -114,6 +118,28 @@ const AuthStack = (): React.ReactElement => {
         component={Developer}
         options={{
           title: t('Developer.DeveloperMode'),
+        }}
+      />
+
+      <Stack.Screen
+        name={BCSCScreens.QRCore}
+        component={QRCoreStack}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.PairingConfirmation}
+        component={PairingConfirmation}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.EditNickname}
+        component={EditNicknameScreen}
+        options={{
+          headerShown: true,
         }}
       />
 

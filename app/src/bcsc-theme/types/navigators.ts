@@ -135,6 +135,7 @@ export enum BCSCScreens {
   AuthContactUs = `${BCSCStacks.Auth} Contact Us`,
   AuthPrivacyPolicy = `${BCSCStacks.Auth} Privacy Information`,
   AuthDeveloper = `${BCSCStacks.Auth} Developer`,
+  QRCore = 'QRCore',
 }
 
 export type BCSCOnboardingStackParams = {
@@ -259,6 +260,8 @@ export type BCSCMainStackParams = {
   // so ListCredentials (rendered in the Wallet tab) can navigate to it.
   [Screens.CredentialDetails]: { credentialId: string }
 
+  [BCSCScreens.QRCore]: undefined
+
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
   [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
@@ -266,6 +269,9 @@ export type BCSCMainStackParams = {
 }
 
 export type BCSCAuthStackParams = {
+  [BCSCScreens.QRCore]: undefined
+  [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string; fromAppSwitch?: boolean }
+  [BCSCScreens.EditNickname]: undefined
   [BCSCScreens.AccountSelector]: undefined
   [BCSCScreens.EnterPIN]: undefined
   [BCSCScreens.DeviceAuthInfo]: undefined

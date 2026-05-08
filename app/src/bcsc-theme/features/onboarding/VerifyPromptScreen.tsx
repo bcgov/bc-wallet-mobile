@@ -15,7 +15,11 @@ import VerifiedCheck from '@assets/img/verified.svg'
  * or defer it until later. The choice is recorded via `SEEN_VERIFY_PROMPT` so
  * the screen is not shown again on subsequent launches.
  */
-export const VerifyPromptScreen: React.FC = () => {
+interface VerifyPromptScreenProps {
+  showSkip?: boolean
+}
+
+export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({ showSkip = true }) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [, dispatch] = useStore<BCState>()
@@ -45,13 +49,15 @@ export const VerifyPromptScreen: React.FC = () => {
         accessibilityLabel={t('Global.Continue')}
         testID={testIdWithKey('Continue')}
       />
-      <Button
-        buttonType={ButtonType.Secondary}
-        title={t('Global.Skip')}
-        onPress={handleLater}
-        accessibilityLabel={t('Global.Skip')}
-        testID={testIdWithKey('Skip')}
-      />
+      {showSkip && (
+        <Button
+          buttonType={ButtonType.Secondary}
+          title={t('Global.Skip')}
+          onPress={handleLater}
+          accessibilityLabel={t('Global.Skip')}
+          testID={testIdWithKey('Skip')}
+        />
+      )}
     </ControlContainer>
   )
 
