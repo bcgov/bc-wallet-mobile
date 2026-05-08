@@ -1,7 +1,7 @@
 import { ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet } from 'react-native'
+import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const TransferAgeRestrictionScreen: React.FC = () => {
@@ -13,18 +13,12 @@ const TransferAgeRestrictionScreen: React.FC = () => {
       padding: Spacing.md,
       flex: 1,
     },
-    scrollView: {
-      flexGrow: 1,
-      gap: Spacing.md,
-    },
   })
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scrollView}>
-        <ThemedText variant={'headingTwo'}>{t('BCSC.AgeRestrictedTransfer.Title')}</ThemedText>
-        <ThemedText>{t('BCSC.AgeRestrictedTransfer.Description')}</ThemedText>
-      </ScrollView>
+      <ThemedText variant={'headingTwo'}>{t('BCSC.AgeRestrictedTransfer.Title')}</ThemedText>
+      <ThemedText>{t('BCSC.AgeRestrictedTransfer.Description')}</ThemedText>
     </SafeAreaView>
   )
 }
