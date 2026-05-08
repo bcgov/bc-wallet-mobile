@@ -301,7 +301,7 @@ export class AttestationMonitor implements AttestationMonitorI {
     return true
   }
 
-  private handleCredentialStateChanged = async (event: DidCommCredentialStateChangedEvent) => {
+  private readonly handleCredentialStateChanged = async (event: DidCommCredentialStateChangedEvent) => {
     if (!this.agent) {
       throw new BifoldError(
         'Attestation Service',
@@ -354,7 +354,7 @@ export class AttestationMonitor implements AttestationMonitorI {
     }
   }
 
-  private handleProofStateChanged = async (event: DidCommProofStateChangedEvent) => {
+  private readonly handleProofStateChanged = async (event: DidCommProofStateChangedEvent) => {
     if (!this.agent) {
       throw new BifoldError(
         'Attestation Service',
@@ -645,7 +645,7 @@ export class AttestationMonitor implements AttestationMonitorI {
     return attestationRequest
   }
 
-  private attestationCredentialRequired = async (agent: BCAgent, proofId: string): Promise<boolean> => {
+  private readonly attestationCredentialRequired = async (agent: BCAgent, proofId: string): Promise<boolean> => {
     agent.config.logger.info('Fetching proof by id')
     const proof = await agent?.didcomm.proofs.getById(proofId)
     agent.config.logger.info('Second check if proof is requesting attestation')
