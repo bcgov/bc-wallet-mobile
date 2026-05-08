@@ -167,7 +167,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   showBarcodeHighlight = false,
   enableScanZones = false,
   scanZones,
-  initialZoom = 2,
+  initialZoom = 1,
   showScanZoneOverlay = true,
   showZoomIndicator = true,
   hideTorchButton = false,
@@ -193,9 +193,9 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const focusScale = useRef(new Animated.Value(1)).current
 
   // Zoom management – uses Reanimated shared value for smooth pinch-to-zoom
-  const zoom = useSharedValue(1)
+  const zoom = useSharedValue(initialZoom)
   const zoomOffset = useSharedValue(0)
-  const [zoomDisplay, setZoomDisplay] = useState(1)
+  const [zoomDisplay, setZoomDisplay] = useState(initialZoom)
 
   // Barcode highlight state
   const [detectedCodes, setDetectedCodes] = useState<EnhancedCode[]>([])

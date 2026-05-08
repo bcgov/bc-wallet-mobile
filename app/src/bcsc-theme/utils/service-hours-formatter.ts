@@ -199,7 +199,7 @@ const getCurrentTimeInTimezone = (timezone: string): Date => {
   const now = new Date()
   if (timezone === PACIFIC_TIMEZONE) {
     const utcTime = now.getTime() + now.getTimezoneOffset() * 60000
-    const pacificOffset = -8 * 60 * 60000
+    const pacificOffset = -7 * 60 * 60000
     return new Date(utcTime + pacificOffset)
   }
   return now
