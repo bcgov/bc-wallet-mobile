@@ -137,6 +137,7 @@ export enum BCSCScreens {
   AuthPrivacyPolicy = `${BCSCStacks.Auth} Privacy Information`,
   AuthDeveloper = `${BCSCStacks.Auth} Developer`,
   ConnectionLoading = 'BCSCConnectionLoading',
+  QRCore = 'QRCore',
 }
 
 export type BCSCOnboardingStackParams = {
@@ -267,6 +268,7 @@ export type BCSCMainStackParams = {
   [Screens.CredentialDetails]: { credentialId: string }
 
   [BCSCStacks.Scan]: NavigatorScreenParams<BCSCScanStackParams>
+  [BCSCScreens.QRCore]: undefined
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
@@ -275,6 +277,9 @@ export type BCSCMainStackParams = {
 }
 
 export type BCSCAuthStackParams = {
+  [BCSCScreens.QRCore]: undefined
+  [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string; fromAppSwitch?: boolean }
+  [BCSCScreens.EditNickname]: undefined
   [BCSCScreens.AccountSelector]: undefined
   [BCSCScreens.EnterPIN]: undefined
   [BCSCScreens.DeviceAuthInfo]: undefined

@@ -257,7 +257,7 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
                         },
                         {
                           "color": "#313132",
-                          "fontSize": undefined,
+                          "fontSize": 21,
                         },
                       ]
                     }
@@ -368,7 +368,7 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
                         },
                         {
                           "color": "#313132",
-                          "fontSize": undefined,
+                          "fontSize": 21,
                         },
                       ]
                     }
@@ -479,7 +479,7 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
                         },
                         {
                           "color": "#313132",
-                          "fontSize": undefined,
+                          "fontSize": 21,
                         },
                       ]
                     }

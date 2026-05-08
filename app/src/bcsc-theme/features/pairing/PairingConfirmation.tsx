@@ -1,3 +1,4 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import ArrowUp from '@assets/img/arrowup.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
@@ -51,20 +52,23 @@ const PairingConfirmation: React.FC<PairingConfirmationProps> = ({ navigation, r
   }
 
   const controls = !showIOSAppSwitchGuide ? (
-    <Button
-      title={t('Global.Close')}
-      buttonType={ButtonType.Primary}
-      testID={testIdWithKey('Close')}
-      accessibilityLabel={t('Global.Close')}
-      onPress={onClose}
-    />
+    <ControlContainer>
+      <Button
+        title={t('Global.Close')}
+        buttonType={ButtonType.Primary}
+        testID={testIdWithKey('Close')}
+        accessibilityLabel={t('Global.Close')}
+        onPress={onClose}
+      />
+    </ControlContainer>
   ) : undefined
 
   return (
     <ScreenWrapper
+      padded={false}
       controls={controls}
       edges={['bottom', 'left', 'right', 'top']}
-      scrollViewContainerStyle={{ gap: Spacing.md }}
+      scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
     >
       {showIOSAppSwitchGuide && (
         <ArrowUp

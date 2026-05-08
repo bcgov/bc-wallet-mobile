@@ -1,6 +1,7 @@
+import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { testIdWithKey } from '@bifold/core'
-import { useNavigation } from '@mocks/custom/@react-navigation/core'
+import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import React from 'react'
@@ -33,7 +34,9 @@ describe('ManualPairing', () => {
   const renderScreen = () =>
     render(
       <BasicAppContext>
-        <ManualPairing navigation={mockNavigation as never} route={{} as never} />
+        <BCSCLoadingProvider>
+          <ManualPairing />
+        </BCSCLoadingProvider>
       </BasicAppContext>
     )
 
@@ -45,13 +48,18 @@ describe('ManualPairing', () => {
   })
 
   describe('Submission', () => {
-    test('shows error when submitting empty code', () => {
+    test('does not submit when code is incomplete', async () => {
       renderScreen()
-      fireEvent.press(screen.getByTestId(testIdWithKey('Submit')))
-      expect(screen.getByText('BCSC.ManualPairing.EmptyPairingCodeMessage')).toBeTruthy()
+
+      const codeInput = screen.getByTestId(testIdWithKey('ManualPairingCodeInput'))
+      fireEvent.changeText(codeInput, 'ABC')
+
+      await waitFor(() => {
+        expect(mockLoginByPairingCode).not.toHaveBeenCalled()
+      })
     })
 
-    test('submits valid pairing code', async () => {
+    test('auto-submits when code reaches full length', async () => {
       mockLoginByPairingCode.mockResolvedValue({
         client_ref_id: 'ref-123',
         client_name: 'Test Service',
@@ -60,7 +68,6 @@ describe('ManualPairing', () => {
 
       const codeInput = screen.getByTestId(testIdWithKey('ManualPairingCodeInput'))
       fireEvent.changeText(codeInput, 'ABCDEF')
-      fireEvent.press(screen.getByTestId(testIdWithKey('Submit')))
 
       await waitFor(() => {
         expect(mockLoginByPairingCode).toHaveBeenCalledWith('ABCDEF')
@@ -76,7 +83,6 @@ describe('ManualPairing', () => {
 
       const codeInput = screen.getByTestId(testIdWithKey('ManualPairingCodeInput'))
       fireEvent.changeText(codeInput, 'abcdef')
-      fireEvent.press(screen.getByTestId(testIdWithKey('Submit')))
 
       await waitFor(() => {
         expect(mockLoginByPairingCode).toHaveBeenCalledWith('ABCDEF')
@@ -89,7 +95,6 @@ describe('ManualPairing', () => {
 
       const codeInput = screen.getByTestId(testIdWithKey('ManualPairingCodeInput'))
       fireEvent.changeText(codeInput, 'ABCDEF')
-      fireEvent.press(screen.getByTestId(testIdWithKey('Submit')))
 
       await waitFor(() => {
         expect(screen.getByText('BCSC.ManualPairing.FailedToSubmitPairingCodeMessage')).toBeTruthy()
@@ -105,7 +110,6 @@ describe('ManualPairing', () => {
 
       const codeInput = screen.getByTestId(testIdWithKey('ManualPairingCodeInput'))
       fireEvent.changeText(codeInput, 'ABCDEF')
-      fireEvent.press(screen.getByTestId(testIdWithKey('Submit')))
 
       await waitFor(() => {
         expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.PairingConfirmation, {

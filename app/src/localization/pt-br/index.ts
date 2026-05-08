@@ -609,7 +609,9 @@ const translation = {
       "NoAttestationResponse": "No attestation response, check your connection and try again. (PT-BR)",
       "NoDeviceCodeFound": "No device code found (PT-BR)",
       "InvalidQrCode": "Invalid QR code (PT-BR)",
-      "WillScanAutomatically": "Will scan automatically (PT-BR)",
+      "WillScanAutomatically": "A valid QR Code will scan automatically (PT-BR)",
+      "TorchOn": "Turn flashlight on (PT-BR)",
+      "TorchOff": "Turn flashlight off (PT-BR)",
       "ErrorDetails": "Error details (PT-BR)",
       "Dismiss": "Dismiss (PT-BR)",
       "SaveScanZones": "Save Scan Zones (PT-BR)",
@@ -937,6 +939,9 @@ const translation = {
       "Step2": "2. Choose 'Transfer to another device' to get your QR code. (PT-BR)",
       "Step3": "3. Continue on this device and scan that QR code. (PT-BR)",
       "ScanQRCode": "Scan QR Code (PT-BR)",
+    },
+    "QRDisplay": {
+      "SharingDescription": "Sharing this QR code with someone will add them as a Contact. (PT-BR)",
     },
     "TransferQRDisplay": {
       "Instructions": "Scan this QR code in the BC Services Card app on your other mobile device (PT-BR)",
