@@ -298,7 +298,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
         <CodeScanningCamera
           onCodeScanned={onCodeScanned}
           cameraType={'back'}
-          initialZoom={2}
+          initialZoom={1}
           scanZones={BCSC_SN_SCAN_ZONES}
           showScanZoneOverlay={false}
           showZoomIndicator={false}
