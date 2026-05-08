@@ -41,7 +41,7 @@ exports[`ScanSerial renders correctly 1`] = `
       <Camera
         animatedProps={
           {
-            "zoom": 1,
+            "zoom": 2,
           }
         }
         codeScanner={
@@ -169,7 +169,7 @@ exports[`ScanSerial renders correctly 1`] = `
         }
       >
         Zoom: 
-        1.00
+        2.00
         x
       </Text>
       <Text
