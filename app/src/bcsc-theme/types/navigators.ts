@@ -12,7 +12,6 @@ export enum BCSCStacks {
   Verify = 'BCSCVerifyStack',
   Tab = 'BCSCTabStack',
   Main = 'BCSCMainStack',
-  Scan = 'BCSCScanStack',
 }
 
 export enum BCSCModals {
@@ -228,11 +227,6 @@ export type BCSCTabStackParams = {
   [BCSCScreens.Wallet]: undefined
 }
 
-export type BCSCScanStackParams = {
-  [Screens.Scan]: undefined
-  [BCSCScreens.ConnectionLoading]: { oobRecordId: string }
-}
-
 export type BCSCMainStackParams = {
   [BCSCStacks.Tab]: NavigatorScreenParams<BCSCTabStackParams>
   [BCSCScreens.MainWebView]: { url: string; title: string }
@@ -267,8 +261,8 @@ export type BCSCMainStackParams = {
   // so ListCredentials (rendered in the Wallet tab) can navigate to it.
   [Screens.CredentialDetails]: { credentialId: string }
 
-  [BCSCStacks.Scan]: NavigatorScreenParams<BCSCScanStackParams>
   [BCSCScreens.QRCore]: undefined
+  [BCSCScreens.ConnectionLoading]: { oobRecordId: string }
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined

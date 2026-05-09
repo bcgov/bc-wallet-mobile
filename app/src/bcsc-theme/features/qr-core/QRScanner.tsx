@@ -1,38 +1,39 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
-import { MaskType, ScanCamera, SVGOverlay, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
-import React, { useCallback, useEffect, useState } from 'react'
+import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { DismissiblePopupModal, MaskType, ScanCamera, SVGOverlay, ThemedText, useTheme } from '@bifold/core'
+import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
+import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { useCameraPermission } from 'react-native-vision-camera'
+
+import useScanScreenViewModel from './useScanScreenViewModel'
 
 const QRScanner: React.FC = () => {
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
-  const { hasPermission, requestPermission } = useCameraPermission()
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const [torchActive, setTorchActive] = useState(false)
 
-  useEffect(() => {
-    if (!hasPermission) {
-      requestPermission()
-    }
-  }, [hasPermission, requestPermission])
-
-  const handleScan = useCallback(
-    async (code: string) => {
-      logger.info(`QR code scanned: ${code}`)
+  const onConnectionFound = useCallback(
+    (oobRecordId: string) => {
+      // QRScanner sits inside QRCoreStack (a tab navigator); ConnectionLoading
+      // lives on MainStack, so escape up via getParent before navigating.
+      navigation
+        .getParent<StackNavigationProp<BCSCMainStackParams>>()
+        ?.navigate(BCSCScreens.ConnectionLoading, { oobRecordId })
     },
-    [logger]
+    [navigation]
   )
 
+  const { isPermissionLoading, hasPermission, isProcessing, scanError, handleScan, dismissError } =
+    useScanScreenViewModel({ onConnectionFound })
+
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-    },
-    overlay: {
-      ...StyleSheet.absoluteFillObject,
-    },
+    container: { flex: 1 },
+    overlay: { ...StyleSheet.absoluteFillObject },
     messageContainer: {
       marginHorizontal: 40,
       flexDirection: 'row',
@@ -40,13 +41,8 @@ const QRScanner: React.FC = () => {
       alignSelf: 'center',
       paddingTop: 30,
     },
-    icon: {
-      color: ColorPalette.grayscale.white,
-      padding: Spacing.md,
-    },
-    text: {
-      color: ColorPalette.grayscale.white,
-    },
+    icon: { color: ColorPalette.grayscale.white, padding: Spacing.md },
+    text: { color: ColorPalette.grayscale.white },
     torchButton: {
       position: 'absolute',
       bottom: Spacing.lg,
@@ -58,15 +54,22 @@ const QRScanner: React.FC = () => {
     torchIcon: {
       color: torchActive ? ColorPalette.grayscale.black : ColorPalette.grayscale.white,
     },
+    processing: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   })
 
+  if (isPermissionLoading) {
+    return <LoadingScreen />
+  }
   if (!hasPermission) {
     return <PermissionDisabled permissionType="camera" />
+  }
+  if (isProcessing) {
+    return <ActivityIndicator size="large" style={styles.processing} />
   }
 
   return (
     <View style={styles.container}>
-      <ScanCamera handleCodeScan={handleScan} enableCameraOnError={true} torchActive={torchActive} />
+      <ScanCamera handleCodeScan={handleScan} enableCameraOnError={true} torchActive={torchActive} error={scanError} />
       <View pointerEvents="none" style={styles.overlay}>
         <SVGOverlay maskType={MaskType.QR_CODE} strokeColor={ColorPalette.grayscale.white} />
       </View>
@@ -84,6 +87,15 @@ const QRScanner: React.FC = () => {
       >
         <Icon name={torchActive ? 'flash' : 'flash-off'} size={28} style={styles.torchIcon} />
       </TouchableOpacity>
+      {scanError && (
+        <DismissiblePopupModal
+          title={t('BCSC.Scan.ErrorDetails')}
+          description={scanError.message}
+          onCallToActionLabel={t('BCSC.Scan.Dismiss')}
+          onCallToActionPressed={dismissError}
+          onDismissPressed={dismissError}
+        />
+      )}
     </View>
   )
 }

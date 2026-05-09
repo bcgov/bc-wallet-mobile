@@ -1,86 +1,97 @@
-import * as Bifold from '@bifold/core'
-import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import React from 'react'
-import { useCameraPermission } from 'react-native-vision-camera'
+
 import QRScanner from './QRScanner'
+import useScanScreenViewModel from './useScanScreenViewModel'
 
 jest.mock('@bifold/core', () => ({
-  ...jest.requireActual('@bifold/core'),
   ScanCamera: jest.fn().mockReturnValue(null),
   SVGOverlay: jest.fn().mockReturnValue(null),
+  MaskType: { QR_CODE: 'QR_CODE' },
+  ThemedText: ({ children }: any) => children,
+  DismissiblePopupModal: ({ description }: any) => description ?? null,
+  useTheme: () => ({
+    ColorPalette: { grayscale: { white: '#fff', black: '#000' } },
+    Spacing: { sm: 4, md: 8, lg: 16 },
+  }),
 }))
 
 jest.mock('@/bcsc-theme/components/PermissionDisabled', () => ({
   PermissionDisabled: () => 'PermissionDisabled',
 }))
 
+jest.mock('@/bcsc-theme/contexts/BCSCLoadingContext', () => ({
+  LoadingScreen: () => 'LoadingScreen',
+}))
+
 jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon')
 
-describe('QRScanner', () => {
-  const mockRequestPermission = jest.fn()
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ getParent: () => ({ navigate: jest.fn() }) }),
+}))
 
+jest.mock('./useScanScreenViewModel', () => jest.fn())
+
+const mockUseScanScreenViewModel = useScanScreenViewModel as unknown as jest.MockedFunction<
+  typeof useScanScreenViewModel
+>
+
+const defaultViewModelState = {
+  isPermissionLoading: false,
+  hasPermission: true,
+  isProcessing: false,
+  scanError: null,
+  handleScan: jest.fn(),
+  dismissError: jest.fn(),
+}
+
+const Bifold = jest.requireMock('@bifold/core') as { ScanCamera: jest.Mock }
+
+describe('QRScanner', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    jest.mocked(useCameraPermission).mockReturnValue({
-      hasPermission: true,
-      requestPermission: mockRequestPermission,
-    } as any)
+    mockUseScanScreenViewModel.mockReturnValue(defaultViewModelState)
   })
 
-  const renderComponent = () =>
-    render(
-      <BasicAppContext>
-        <QRScanner />
-      </BasicAppContext>
-    )
-
   it('renders the scanner when camera permission is granted', () => {
-    renderComponent()
-    expect(jest.mocked(Bifold.ScanCamera)).toHaveBeenCalled()
+    render(<QRScanner />)
+    expect(Bifold.ScanCamera).toHaveBeenCalled()
   })
 
   it('shows PermissionDisabled when camera permission is not granted', () => {
-    jest.mocked(useCameraPermission).mockReturnValue({
-      hasPermission: false,
-      requestPermission: mockRequestPermission,
-    } as any)
-    const { toJSON } = renderComponent()
+    mockUseScanScreenViewModel.mockReturnValue({ ...defaultViewModelState, hasPermission: false })
+    const { toJSON } = render(<QRScanner />)
     expect(toJSON()).toBe('PermissionDisabled')
   })
 
-  it('requests camera permission on mount when not already granted', () => {
-    jest.mocked(useCameraPermission).mockReturnValue({
-      hasPermission: false,
-      requestPermission: mockRequestPermission,
-    } as any)
-    renderComponent()
-    expect(mockRequestPermission).toHaveBeenCalled()
-  })
-
-  it('does not request permission if already granted', () => {
-    renderComponent()
-    expect(mockRequestPermission).not.toHaveBeenCalled()
+  it('shows LoadingScreen while permission is being requested', () => {
+    mockUseScanScreenViewModel.mockReturnValue({ ...defaultViewModelState, isPermissionLoading: true })
+    const { toJSON } = render(<QRScanner />)
+    expect(toJSON()).toBe('LoadingScreen')
   })
 
   it('passes torchActive true to ScanCamera after torch button press', () => {
-    renderComponent()
-
-    const scanCameraMock = jest.mocked(Bifold.ScanCamera)
-    expect(scanCameraMock.mock.calls.at(-1)![0]).toMatchObject({ torchActive: false })
+    render(<QRScanner />)
+    expect(Bifold.ScanCamera.mock.calls.at(-1)![0]).toMatchObject({ torchActive: false })
 
     fireEvent.press(screen.getByRole('button', { name: 'BCSC.Scan.TorchOn' }))
 
-    expect(scanCameraMock.mock.calls.at(-1)![0]).toMatchObject({ torchActive: true })
+    expect(Bifold.ScanCamera.mock.calls.at(-1)![0]).toMatchObject({ torchActive: true })
   })
 
   it('toggles torch back off on second press', () => {
-    renderComponent()
-    const scanCameraMock = jest.mocked(Bifold.ScanCamera)
+    render(<QRScanner />)
 
     fireEvent.press(screen.getByRole('button', { name: 'BCSC.Scan.TorchOn' }))
     fireEvent.press(screen.getByRole('button', { name: 'BCSC.Scan.TorchOff' }))
 
-    expect(scanCameraMock.mock.calls.at(-1)![0]).toMatchObject({ torchActive: false })
+    expect(Bifold.ScanCamera.mock.calls.at(-1)![0]).toMatchObject({ torchActive: false })
+  })
+
+  it('passes onConnectionFound to the view model', () => {
+    render(<QRScanner />)
+    expect(mockUseScanScreenViewModel).toHaveBeenCalledWith(
+      expect.objectContaining({ onConnectionFound: expect.any(Function) })
+    )
   })
 })

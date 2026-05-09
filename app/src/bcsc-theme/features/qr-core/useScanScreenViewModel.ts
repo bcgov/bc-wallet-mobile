@@ -1,25 +1,26 @@
-import { BCSCScanStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { QrCodeScanError, TOKENS, useServices } from '@bifold/core'
 import { useAgent } from '@bifold/react-hooks'
-import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useCameraPermission } from 'react-native-vision-camera'
 
-import { DidCommOobStrategy } from './uri-strategies'
+import { DidCommOobStrategy, PairingCodeStrategy } from './uri-strategies'
 import type { UriStrategy } from './uri-strategies/types'
 
 export interface UseScanScreenViewModelOptions {
+  /**
+   * Called when a strategy returns `{ kind: 'connection' }`. The screen decides
+   * how to navigate (push within its own stack, or escape up to MainStack).
+   */
+  onConnectionFound: (oobRecordId: string) => void
   strategies?: UriStrategy[]
 }
 
-const DEFAULT_STRATEGIES: UriStrategy[] = [DidCommOobStrategy]
+const DEFAULT_STRATEGIES: UriStrategy[] = [DidCommOobStrategy, PairingCodeStrategy]
 
-const useScanScreenViewModel = (
-  navigation: StackNavigationProp<BCSCScanStackParams>,
-  options: UseScanScreenViewModelOptions = {}
-) => {
+const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
+  const { onConnectionFound } = options
   const strategies = useMemo(() => options.strategies ?? DEFAULT_STRATEGIES, [options.strategies])
   const { t } = useTranslation()
   const { agent } = useAgent()
@@ -49,7 +50,7 @@ const useScanScreenViewModel = (
         const result = await strategy.handle(value, { agent, logger })
         switch (result.kind) {
           case 'connection':
-            navigation.replace(BCSCScreens.ConnectionLoading, { oobRecordId: result.oobRecordId })
+            onConnectionFound(result.oobRecordId)
             break
           case 'unsupported':
             // BCSC v4.1 rejects OpenID and mediator URIs at the strategy layer; show a localized
@@ -69,7 +70,7 @@ const useScanScreenViewModel = (
         setIsProcessing(false)
       }
     },
-    [strategies, scanError, t, agent, logger, navigation]
+    [strategies, scanError, t, agent, logger, onConnectionFound]
   )
 
   const dismissError = useCallback(() => setScanError(null), [])

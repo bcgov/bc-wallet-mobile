@@ -1,4 +1,3 @@
-import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
 
 import type { UriStrategy } from './uri-strategies/types'
@@ -26,8 +25,6 @@ jest.mock('@bifold/core', () => {
   }
 })
 
-const mockNav = { replace: jest.fn() } as any
-
 const mkStrategy = (
   matches: boolean,
   result: Awaited<ReturnType<UriStrategy['handle']>> | Error,
@@ -46,19 +43,21 @@ const mkStrategy = (
 describe('useScanScreenViewModel', () => {
   beforeEach(() => jest.clearAllMocks())
 
-  it('navigates to ConnectionLoading on connection result', async () => {
+  it('invokes onConnectionFound with the oobRecordId on connection result', async () => {
+    const onConnectionFound = jest.fn()
     const strat = mkStrategy(true, { kind: 'connection', oobRecordId: 'rec-1' })
-    const { result } = renderHook(() => useScanScreenViewModel(mockNav, { strategies: [strat] }))
+    const { result } = renderHook(() => useScanScreenViewModel({ onConnectionFound, strategies: [strat] }))
     await act(async () => {
       await result.current.handleScan('didcomm://x')
     })
-    expect(mockNav.replace).toHaveBeenCalledWith(BCSCScreens.ConnectionLoading, { oobRecordId: 'rec-1' })
+    expect(onConnectionFound).toHaveBeenCalledWith('rec-1')
     expect(result.current.scanError).toBeNull()
   })
 
   it('sets scanError with localized key when result is unsupported', async () => {
+    const onConnectionFound = jest.fn()
     const strat = mkStrategy(true, { kind: 'unsupported', reason: 'OpenID' })
-    const { result } = renderHook(() => useScanScreenViewModel(mockNav, { strategies: [strat] }))
+    const { result } = renderHook(() => useScanScreenViewModel({ onConnectionFound, strategies: [strat] }))
     await act(async () => {
       await result.current.handleScan('openid://x')
     })
@@ -67,8 +66,9 @@ describe('useScanScreenViewModel', () => {
   })
 
   it('sets scanError when no strategy matches', async () => {
+    const onConnectionFound = jest.fn()
     const strat = mkStrategy(false, { kind: 'connection', oobRecordId: 'x' })
-    const { result } = renderHook(() => useScanScreenViewModel(mockNav, { strategies: [strat] }))
+    const { result } = renderHook(() => useScanScreenViewModel({ onConnectionFound, strategies: [strat] }))
     await act(async () => {
       await result.current.handleScan('https://random.example.com')
     })
@@ -76,8 +76,9 @@ describe('useScanScreenViewModel', () => {
   })
 
   it('catches strategy errors and surfaces InvalidQrCode', async () => {
+    const onConnectionFound = jest.fn()
     const strat = mkStrategy(true, new Error('boom'))
-    const { result } = renderHook(() => useScanScreenViewModel(mockNav, { strategies: [strat] }))
+    const { result } = renderHook(() => useScanScreenViewModel({ onConnectionFound, strategies: [strat] }))
     await act(async () => {
       await result.current.handleScan('didcomm://x')
     })
@@ -85,6 +86,7 @@ describe('useScanScreenViewModel', () => {
   })
 
   it('skips repeat scans while one is processing or an error is showing', async () => {
+    const onConnectionFound = jest.fn()
     let resolveOne: (() => void) | undefined
     const strat: UriStrategy = {
       name: 'slow',
@@ -93,7 +95,7 @@ describe('useScanScreenViewModel', () => {
         async () => new Promise((res) => (resolveOne = () => res({ kind: 'connection', oobRecordId: 'r' })))
       ),
     }
-    const { result } = renderHook(() => useScanScreenViewModel(mockNav, { strategies: [strat] }))
+    const { result } = renderHook(() => useScanScreenViewModel({ onConnectionFound, strategies: [strat] }))
     let firstPromise: Promise<void> | undefined
     await act(async () => {
       firstPromise = result.current.handleScan('didcomm://1')
@@ -108,12 +110,13 @@ describe('useScanScreenViewModel', () => {
       resolveOne?.()
       await firstPromise
     })
-    expect(mockNav.replace).toHaveBeenCalledTimes(1)
+    expect(onConnectionFound).toHaveBeenCalledTimes(1)
   })
 
   it('dismissError clears scanError', async () => {
+    const onConnectionFound = jest.fn()
     const strat = mkStrategy(false, { kind: 'connection', oobRecordId: 'x' })
-    const { result } = renderHook(() => useScanScreenViewModel(mockNav, { strategies: [strat] }))
+    const { result } = renderHook(() => useScanScreenViewModel({ onConnectionFound, strategies: [strat] }))
     await act(async () => {
       await result.current.handleScan('https://x')
     })

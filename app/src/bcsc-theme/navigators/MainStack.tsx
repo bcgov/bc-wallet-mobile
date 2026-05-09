@@ -41,6 +41,7 @@ import { ServiceOutage } from '../features/modal/ServiceOutage'
 import { usePairingService } from '../features/pairing'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
+import ConnectionLoadingScreen from '../features/qr-core/ConnectionLoadingScreen'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
 import { ContactUsScreen } from '../features/settings/ContactUsScreen'
@@ -51,7 +52,6 @@ import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
 import QRCoreStack from './QRCoreStack'
-import BCSCScanStack from './ScanStack'
 import { getDefaultModalOptions } from './stack-utils'
 import BCSCTabStack from './TabStack'
 
@@ -149,11 +149,12 @@ const MainStack: React.FC = () => {
             }}
           />
           <Stack.Screen
-            name={BCSCStacks.Scan}
-            component={BCSCScanStack}
+            name={BCSCScreens.ConnectionLoading}
+            component={ConnectionLoadingScreen}
             options={{
-              headerShown: false,
-              presentation: 'modal',
+              headerShown: true,
+              headerLeft: () => null,
+              title: t('BCSC.Scan.Connecting'),
             }}
           />
           <Stack.Screen

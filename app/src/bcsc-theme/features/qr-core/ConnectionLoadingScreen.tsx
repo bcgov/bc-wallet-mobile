@@ -1,4 +1,4 @@
-import { BCSCScanStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
+import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import {
   CredentialOffer,
   LoadingPlaceholder,
@@ -17,7 +17,7 @@ import Toast from 'react-native-toast-message'
 import { createBifoldNavigationAdapter } from './BifoldNavigationAdapter'
 import useConnectionLoadingViewModel from './useConnectionLoadingViewModel'
 
-type Props = StackScreenProps<BCSCScanStackParams, BCSCScreens.ConnectionLoading>
+type Props = StackScreenProps<BCSCMainStackParams, BCSCScreens.ConnectionLoading>
 
 const styles = StyleSheet.create({
   page: { flex: 1 },
