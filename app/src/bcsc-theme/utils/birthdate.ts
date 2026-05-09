@@ -10,4 +10,4 @@ import moment from 'moment'
  * unparseable input.
  */
 export const parseBirthdateToLocalDate = (value: string): Date =>
-  moment(value, ['YYYY-MM-DD', 'YYYY/MM/DD'], true).toDate()
+  moment(value, ['YYYY-MM-DD', 'YYYY/MM/DD', 'MMMM D, YYYY'], true).toDate()

@@ -204,6 +204,10 @@ const translation = {
     "ScanQRCode": "Scan a QR code",
   },
   "BCSC": {
+    "AgeRestrictedTransfer": {
+      "Title": "Not available",
+      "Description": "You must be 12 years or older to transfer your account to another device",
+    },
     "Components": {
       "CloseDropdown": "Close dropdown menu",
     },

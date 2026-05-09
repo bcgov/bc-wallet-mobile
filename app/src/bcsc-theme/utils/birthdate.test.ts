@@ -23,6 +23,10 @@ describe('parseBirthdateToLocalDate', () => {
     assertLocalMidnight(parseBirthdateToLocalDate('2000/01/01'), 2000, 0, 1)
   })
 
+  it('parses MMMM D, YYYY as local midnight', () => {
+    assertLocalMidnight(parseBirthdateToLocalDate('January 1, 2000'), 2000, 0, 1)
+  })
+
   it('handles leap-day input', () => {
     assertLocalMidnight(parseBirthdateToLocalDate('2000-02-29'), 2000, 1, 29)
   })
