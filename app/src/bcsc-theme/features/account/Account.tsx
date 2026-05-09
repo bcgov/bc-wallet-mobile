@@ -8,11 +8,13 @@ import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { parseBirthdateToLocalDate } from '@/bcsc-theme/utils/birthdate'
 import { useAlerts } from '@/hooks/useAlerts'
 import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
 import { testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import moment from 'moment'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppState, AppStateStatus, Linking, StyleSheet, View } from 'react-native'
@@ -168,6 +170,14 @@ const Account: React.FC = () => {
           />
           <SectionButton
             onPress={() => {
+              if (account?.birthdate) {
+                const birthdate = parseBirthdateToLocalDate(account.birthdate)
+                const age = moment().diff(moment(birthdate), 'years')
+                if (age < 12) {
+                  navigation.navigate(BCSCScreens.TransferAgeRestriction)
+                  return
+                }
+              }
               navigation.navigate(BCSCScreens.TransferAccountQRInformation)
             }}
             title={t('BCSC.Account.TransferAccount')}

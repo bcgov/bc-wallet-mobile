@@ -1,8 +1,10 @@
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import * as useAlertsModule from '@/hooks/useAlerts'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { useNavigation } from '@react-navigation/native'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import Account from './Account'
@@ -162,6 +164,75 @@ describe('Account', () => {
     expect(tree.getByText('Prince')).toBeTruthy()
     expect(tree.queryByText(/undefined/i)).toBeNull()
     expect(tree).toMatchSnapshot()
+  })
+
+  describe('TransferAccount button', () => {
+    const baseAccount = {
+      given_name: 'Steve',
+      family_name: 'Brule',
+      card_expiry: '2030-12-31',
+      picture: null,
+      fullname_formatted: 'Brule, Steve',
+      account_expiration_date: new Date('2030-12-31'),
+    }
+
+    beforeEach(() => {
+      jest.setSystemTime(new Date('2026-05-08'))
+    })
+
+    it('navigates to TransferAgeRestriction when user is under 12', () => {
+      mockedUseAccount.mockReturnValue({
+        account: { ...baseAccount, birthdate: 'January 1, 2020' },
+        isLoadingAccount: false,
+        refreshAccount: jest.fn(),
+      } as any)
+
+      const { navigate } = useNavigation() as any
+      const tree = render(
+        <BasicAppContext>
+          <Account />
+        </BasicAppContext>
+      )
+
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/TransferAccount'))
+      expect(navigate).toHaveBeenCalledWith(BCSCScreens.TransferAgeRestriction)
+    })
+
+    it('navigates to TransferAccountQRInformation when user is 12 or older', () => {
+      mockedUseAccount.mockReturnValue({
+        account: { ...baseAccount, birthdate: 'January 1, 2000' },
+        isLoadingAccount: false,
+        refreshAccount: jest.fn(),
+      } as any)
+
+      const { navigate } = useNavigation() as any
+      const tree = render(
+        <BasicAppContext>
+          <Account />
+        </BasicAppContext>
+      )
+
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/TransferAccount'))
+      expect(navigate).toHaveBeenCalledWith(BCSCScreens.TransferAccountQRInformation)
+    })
+
+    it('navigates to TransferAccountQRInformation when birthdate is not present', () => {
+      mockedUseAccount.mockReturnValue({
+        account: { ...baseAccount, birthdate: undefined },
+        isLoadingAccount: false,
+        refreshAccount: jest.fn(),
+      } as any)
+
+      const { navigate } = useNavigation() as any
+      const tree = render(
+        <BasicAppContext>
+          <Account />
+        </BasicAppContext>
+      )
+
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/TransferAccount'))
+      expect(navigate).toHaveBeenCalledWith(BCSCScreens.TransferAccountQRInformation)
+    })
   })
 
   describe('handleAllAccountDetailsPress', () => {
