@@ -145,8 +145,9 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const focusOpacity = useRef(new Animated.Value(0)).current
   const focusScale = useRef(new Animated.Value(1)).current
 
-  // Zoom management – uses Reanimated shared value for smooth pinch-to-zoom
-  const zoom = useSharedValue(initialZoom)
+  // Android zoom fix - the camera will initially build with this default zoom of 1, when our prop default of 2 is applied
+  // the camera triggers a prop change and properly zooms the camera to the desired level
+  const zoom = useSharedValue(1)
   const zoomOffset = useSharedValue(0)
   const [zoomDisplay, setZoomDisplay] = useState(initialZoom)
 
@@ -800,14 +801,8 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     if (!hasInitializedRef.current) {
       hasInitializedRef.current = true
       const targetZoom = getEffectiveZoom(initialZoom)
-      // Force Reanimated to dispatch to native even if zoom.value already equals targetZoom.
-      // Reanimated skips updates when the value doesn't change, but the native camera may
-      // have missed the initial prop if it wasn't ready when the component first mounted.
-      zoom.value = targetZoom - 0.001
-      requestAnimationFrame(() => {
-        zoom.value = targetZoom
-        setZoomDisplay(targetZoom)
-      })
+      zoom.value = targetZoom
+      setZoomDisplay(targetZoom)
       logger.debug('Zoom applied after initialization', { zoom: targetZoom })
     }
   }, [initialZoom, getEffectiveZoom, logger, device, format, zoom])
