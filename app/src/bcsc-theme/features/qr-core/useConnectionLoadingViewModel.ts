@@ -59,7 +59,15 @@ const useConnectionLoadingViewModel = (oobRecordId: string): ConnectionLoadingSt
   }, [notifications, oobRecord, connection, matchedNotification])
 
   return useMemo<ConnectionLoadingState>(() => {
-    const goalCode = oobRecord?.outOfBandInvitation?.goalCode
+    // Wait until the OOB record has loaded before deciding the connection is terminal —
+    // otherwise a connection arriving before the oobRecord makes goalCode read as undefined
+    // and we'd incorrectly treat `aries.vc.issue` / `aries.vc.verify` flows as plain
+    // connections, dismissing the screen before the offer/proof notification arrives.
+    if (!oobRecord) {
+      return { kind: 'loading' }
+    }
+
+    const goalCode = oobRecord.outOfBandInvitation?.goalCode
 
     // Connection without a recognized goal code: lands on Home as the terminal state.
     if (connection && !Object.values(GoalCodes).includes(goalCode as (typeof GoalCodes)[keyof typeof GoalCodes])) {

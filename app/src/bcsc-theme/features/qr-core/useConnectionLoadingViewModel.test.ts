@@ -39,6 +39,15 @@ describe('useConnectionLoadingViewModel', () => {
     expect(result.current).toEqual({ kind: 'loading' })
   })
 
+  it('stays in loading while the OOB record has not arrived even if a connection is present', () => {
+    // Race condition: connection observed before the OOB record resolves. Without a guard,
+    // an `aries.vc.issue` flow would incorrectly drop to `kind: 'connection'`.
+    mocks.oob = undefined
+    setConnection('conn-1')
+    const { result } = renderHook(() => useConnectionLoadingViewModel('oob-1'))
+    expect(result.current).toEqual({ kind: 'loading' })
+  })
+
   it('lands on connection state when connection arrives without a goal code', () => {
     setOob(undefined)
     setConnection('conn-1')
