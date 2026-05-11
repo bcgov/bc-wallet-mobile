@@ -800,7 +800,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     })
     if (!hasInitializedRef.current) {
       hasInitializedRef.current = true
-      const targetZoom = getEffectiveZoom(initialZoom)
+      const targetZoom = getEffectiveZoom(initialZoom ?? 1)
       zoom.value = targetZoom
       setZoomDisplay(targetZoom)
       logger.debug('Zoom applied after initialization', { zoom: targetZoom })
