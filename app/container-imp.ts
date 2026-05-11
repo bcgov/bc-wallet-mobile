@@ -346,10 +346,10 @@ export class AppContainer implements Container {
             stackOptions: { headerShown: false },
           },
         ],
-        pageTitle: 'PersonCredential.PageTitle',
-        title: 'PersonCredentialNotification.Title',
-        description: 'PersonCredentialNotification.Description',
-        buttonTitle: 'PersonCredentialNotification.ButtonTitle',
+        pageTitle: 'PersonCredential.Notification.PageTitle',
+        title: 'PersonCredential.Notification.Title',
+        description: 'PersonCredential.Notification.Description',
+        buttonTitle: 'PersonCredential.Notification.ButtonTitle',
       },
     })
 

@@ -1,5 +1,4 @@
 import { CredentialNotificationRecord } from '@/hooks/notifications'
-import { BifoldAgent } from '@bifold/core'
 import type { Attribute, Predicate } from '@bifold/oca/build/legacy'
 import {
   AnonCredsCredentialInfo,
@@ -12,6 +11,7 @@ import {
   DidCommProofExchangeRecord,
   GetCredentialsForProofRequestReturn,
 } from '@credo-ts/didcomm'
+import { BCAgent } from '@utils/bc-agent-modules'
 
 export type Fields = Record<string, AnonCredsRequestedAttributeMatch[] | AnonCredsRequestedPredicateMatch[]>
 
@@ -137,7 +137,7 @@ export const evaluatePredicates =
  * @param filterByNonRevocationRequirements
  * @returns The Anoncreds or Indy proof format object
  */
-const formatForProofWithId = async (agent: BifoldAgent, proofId: string, filterByNonRevocationRequirements = false) => {
+const formatForProofWithId = async (agent: BCAgent, proofId: string, filterByNonRevocationRequirements = false) => {
   const format = await agent.didcomm.proofs.getFormatData(proofId)
   const proofIsAnoncredsFormat = format.request?.anoncreds !== undefined
   const proofIsIndycredsFormat = format.request?.indy !== undefined
@@ -181,7 +181,7 @@ const formatForProofWithId = async (agent: BifoldAgent, proofId: string, filterB
  * @throws {Error} Will throw an error if a problem looking up data occurs
  */
 export const credentialsMatchForProof = async (
-  agent: BifoldAgent,
+  agent: BCAgent,
   proof: DidCommProofExchangeRecord,
   filterByNonRevocationRequirements = true
 ): Promise<GetCredentialsForProofRequestReturn> => {
