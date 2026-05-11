@@ -128,7 +128,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   showBarcodeHighlight = false,
   enableScanZones = false,
   scanZones,
-  initialZoom = 1,
+  initialZoom,
 }) => {
   // Derive scanner code types from the declared scan zones (deduped)
   const codeTypes = [...new Set(scanZones.flatMap((z) => z.types))] as CodeType[]
@@ -159,6 +159,9 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
   const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const clearHighlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Prevents initialZoom from being reapplied on every screen re-focus or camera re-init
+  const hasInitializedRef = useRef(false)
 
   // Track locked state inside scanner callback closure (React state is stale in callback)
   const isLockedRef = useRef(false)
@@ -228,6 +231,12 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
    * - On iOS, AVFoundation uses the full active format resolution regardless
    */
   const format = useCameraFormat(device, [
+    // Prefer non-HDR formats: HDR video is incompatible with torch on many Android devices,
+    // causing a session rebuild (and visible zoom jump) when the torch is toggled.
+    // SDR is also better for barcode scanning — HDR tone-mapping can soften barcode contrast.
+    {
+      videoHdr: false,
+    },
     // 1080p video resolution — sufficient for PDF-417 (>=1156px) while keeping
     // processing fast on Android. The native patch ensures this resolution is
     // actually used by the code scanner's ImageAnalysis pipeline.
@@ -764,25 +773,22 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       // Pause inactivity timeout while camera is active to prevent auto-lock during scanning
       pauseActivityTracking()
 
-      // Reset zoom when screen comes into focus
-      const targetZoom = getEffectiveZoom(initialZoom)
-      logger.debug('Screen focused, applying zoom', { zoom: targetZoom })
-      zoom.value = targetZoom
-      setZoomDisplay(targetZoom)
-
-      // Reset zoom and resume activity tracking when screen loses focus
       return () => {
         setTorchEnabled(false)
         stopFocusCycling()
-        const resetZoom = getEffectiveZoom(initialZoom)
-        zoom.value = resetZoom
-        setZoomDisplay(resetZoom)
         resumeActivityTracking()
       }
-    }, [pauseActivityTracking, getEffectiveZoom, initialZoom, logger, stopFocusCycling, resumeActivityTracking, zoom])
+    }, [pauseActivityTracking, stopFocusCycling, resumeActivityTracking])
   )
 
   const toggleTorch = () => {
+    // // Sync the JS-thread copy of zoom.value before triggering a re-render.
+    // // The pinch gesture runs on the UI thread only, so the JS-thread copy stays at
+    // // initialZoom. When React commits the re-render, Reanimated snapshots zoom from
+    // // the JS thread — causing a brief zoom snap back to initialZoom. Writing
+    // // zoomDisplay (the runOnJS mirror of the current zoom) here ensures the
+    // // snapshot is current.
+    // zoom.value = zoomDisplay
     setTorchEnabled((prev) => !prev)
   }
 
@@ -791,18 +797,20 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
    * Sets the zoom level once the camera is fully initialized and ready
    */
   const handleCameraInitialized = useCallback(() => {
-    const targetZoom = getEffectiveZoom(initialZoom)
     logger.debug('Camera initialized', {
       minZoom: device?.minZoom,
       maxZoom: device?.maxZoom,
       requestedZoom: initialZoom,
-      effectiveZoom: targetZoom,
       formatVideo: format ? `${format.videoWidth}×${format.videoHeight}` : 'none',
       formatPhoto: format ? `${format.photoWidth}×${format.photoHeight}` : 'none',
     })
-    zoom.value = targetZoom
-    setZoomDisplay(targetZoom)
-    logger.debug('Zoom applied after initialization', { zoom: targetZoom })
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true
+      const targetZoom = getEffectiveZoom(initialZoom)
+      zoom.value = targetZoom
+      setZoomDisplay(targetZoom)
+      logger.debug('Zoom applied after initialization', { zoom: targetZoom })
+    }
   }, [initialZoom, getEffectiveZoom, logger, device, format, zoom])
 
   const handleSaveScanZones = useCallback(() => {

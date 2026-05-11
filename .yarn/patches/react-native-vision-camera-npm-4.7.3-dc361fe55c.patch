@@ -1,10 +1,33 @@
+diff --git a/android/src/main/java/com/mrousavy/camera/core/CameraSession.kt b/android/src/main/java/com/mrousavy/camera/core/CameraSession.kt
+index 13f6a763c138c9aa3e493730fb5ba2c0c4782c66..3aca4bf969e2f34854e4ec791f7e5824e50802d4 100644
+--- a/android/src/main/java/com/mrousavy/camera/core/CameraSession.kt
++++ b/android/src/main/java/com/mrousavy/camera/core/CameraSession.kt
+@@ -122,6 +122,7 @@
+         return
+       }
+       val diff = CameraConfiguration.difference(this.configuration, config)
++      val prevZoom = this.configuration?.zoom
+       this.configuration = config
+
+       if (!diff.hasChanges) {
+@@ -150,7 +151,9 @@
+         }
+         if (diff.sidePropsChanged) {
+           // 3. side props such as zoom, exposure or torch changed.
+-          configureSideProps(config)
++          // Re-apply zoom only when zoom itself changed or the session was rebuilt.
++          val applyZoom = prevZoom != config.zoom || diff.deviceChanged
++          configureSideProps(config, applyZoom)
+         }
+         if (diff.isActiveChanged) {
+           // 4. start or stop the session
 diff --git a/android/src/main/java/com/mrousavy/camera/core/CameraSession+Configuration.kt b/android/src/main/java/com/mrousavy/camera/core/CameraSession+Configuration.kt
-index 1e9c0def6444656112c34856f70eddda982a6b55..c14e70f2f4f7f79424edc695d0064c5069c6aca7 100644
+index 1e9c0def6444656112c34856f70eddda982a6b55..71686f023407d541b37f0f918439aec8493fe24b 100644
 --- a/android/src/main/java/com/mrousavy/camera/core/CameraSession+Configuration.kt
 +++ b/android/src/main/java/com/mrousavy/camera/core/CameraSession+Configuration.kt
-@@ -75,11 +75,39 @@ internal fun CameraSession.configureOutputs(configuration: CameraConfiguration)
+@@ -75,11 +75,39 @@
        }
- 
+
        if (format != null) {
 -        // Preview will follow video size as it's size & aspect ratio, or photo- if video is disabled.
 -        val targetSize = if (videoConfig != null) format.videoSize else format.photoSize
@@ -21,7 +44,7 @@ index 1e9c0def6444656112c34856f70eddda982a6b55..c14e70f2f4f7f79424edc695d0064c50
 +        } else {
 +          format.photoSize
 +        }
- 
+
 +        // Strictly filter Preview to matching aspect ratio to ensure Preview and
 +        // ImageAnalysis/CodeScanner have the same FOV.
 +        val targetAspect = targetSize.width.toFloat() / targetSize.height.toFloat()
@@ -45,7 +68,7 @@ index 1e9c0def6444656112c34856f70eddda982a6b55..c14e70f2f4f7f79424edc695d0064c50
            .setAllowedResolutionMode(ResolutionSelector.PREFER_CAPTURE_RATE_OVER_HIGHER_RESOLUTION)
            .build()
          preview.setResolutionSelector(previewResolutionSelector)
-@@ -220,7 +248,20 @@ internal fun CameraSession.configureOutputs(configuration: CameraConfiguration)
+@@ -220,7 +248,20 @@
    val codeScannerConfig = configuration.codeScanner as? CameraConfiguration.Output.Enabled<CameraConfiguration.CodeScanner>
    if (codeScannerConfig != null) {
      Log.i(CameraSession.TAG, "Creating CodeScanner output...")
@@ -67,11 +90,32 @@ index 1e9c0def6444656112c34856f70eddda982a6b55..c14e70f2f4f7f79424edc695d0064c50
      val pipeline = CodeScannerPipeline(codeScannerConfig.config, callback)
      analyzer.setAnalyzer(CameraQueues.analyzerExecutor, pipeline)
      codeScannerOutput = analyzer
+@@ -311,12 +352,14 @@
+   Log.i(CameraSession.TAG, "Successfully bound Camera #${configuration.cameraId}!")
+ }
+
+-internal fun CameraSession.configureSideProps(config: CameraConfiguration) {
++internal fun CameraSession.configureSideProps(config: CameraConfiguration, applyZoom: Boolean = true) {
+   val camera = camera ?: throw CameraNotReadyError()
+
+-  // Zoom
+-  val currentZoom = camera.cameraInfo.zoomState.value?.zoomRatio
+-  if (currentZoom != config.zoom) {
+-    camera.cameraControl.setZoomRatio(config.zoom)
+-  }
++  // Zoom — only re-apply when zoom itself changed or the camera session was rebuilt.
++  // Comparing against the async zoomState (hardware) causes false mismatches while the
++  // previous setZoomRatio is still settling, leading to an unwanted zoom snap whenever
++  // an unrelated side prop (torch, exposure) triggers configureSideProps.
++  if (applyZoom) {
++    camera.cameraControl.setZoomRatio(config.zoom)
++  }
+
 diff --git a/android/src/main/java/com/mrousavy/camera/core/CodeScannerPipeline.kt b/android/src/main/java/com/mrousavy/camera/core/CodeScannerPipeline.kt
 index 23d78d1350242c1d2497b732fd77b291b9e06c3a..6c75b2802cf490bf2310fa69b16151603c6c7ab4 100644
 --- a/android/src/main/java/com/mrousavy/camera/core/CodeScannerPipeline.kt
 +++ b/android/src/main/java/com/mrousavy/camera/core/CodeScannerPipeline.kt
-@@ -23,6 +23,10 @@ class CodeScannerPipeline(val configuration: CameraConfiguration.CodeScanner, va
+@@ -23,6 +23,10 @@
      val types = configuration.codeTypes.map { it.toBarcodeType() }
      val barcodeScannerOptions = BarcodeScannerOptions.Builder()
        .setBarcodeFormats(types[0], *types.toIntArray())
@@ -82,8 +126,8 @@ index 23d78d1350242c1d2497b732fd77b291b9e06c3a..6c75b2802cf490bf2310fa69b1615160
        .build()
      scanner = BarcodeScanning.getClient(barcodeScannerOptions)
    }
-@@ -33,10 +37,26 @@ class CodeScannerPipeline(val configuration: CameraConfiguration.CodeScanner, va
- 
+@@ -33,10 +37,26 @@
+
      try {
        val inputImage = InputImage.fromMediaImage(image, imageProxy.imageInfo.rotationDegrees)
 +      val rotation = imageProxy.imageInfo.rotationDegrees
