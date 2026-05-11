@@ -10,6 +10,7 @@ import {
   withToken,
 } from '@pexip/infinity-api'
 import type { Result as PexipTokenResult, Stun, Turn } from '@pexip/infinity-api/dist/token/types'
+import { Platform } from 'react-native'
 import EventSource from 'react-native-sse'
 import { mediaDevices, MediaStream, RTCIceCandidate, RTCPeerConnection } from 'react-native-webrtc'
 import { RTCOfferOptions } from 'react-native-webrtc/lib/typescript/RTCUtil'
@@ -349,10 +350,24 @@ export const buildIceServers = (tokenResult: PexipTokenResult, logger: BifoldLog
   return iceServers
 }
 
-const createPeerConnection = async (localStream: MediaStream, tokenResult: PexipTokenResult, logger: BifoldLogger) => {
-  const peerConstraints = {
+export const createPeerConnection = async (
+  localStream: MediaStream,
+  tokenResult: PexipTokenResult,
+  logger: BifoldLogger
+) => {
+  interface RTCConfiguration {
+    iceServers: IceServer[]
+    iceTransportPolicy?: 'all' | 'relay'
+  }
+
+  const peerConstraints: RTCConfiguration = {
     iceServers: buildIceServers(tokenResult, logger),
-    iceTransportPolicy: 'relay' as const, // Only use TURN relay servers, prevents iOS local network prompt
+  }
+
+  // On iOS, restrict ICE transport to relay-only to prevent the Local Network permission prompt.
+  // The relay policy works with both STUN and TURN servers, including the Google STUN fallback.
+  if (Platform.OS === 'ios') {
+    peerConstraints.iceTransportPolicy = 'relay'
   }
 
   const peerConnection = new RTCPeerConnection(peerConstraints)
