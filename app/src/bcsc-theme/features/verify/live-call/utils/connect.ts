@@ -352,6 +352,7 @@ export const buildIceServers = (tokenResult: PexipTokenResult, logger: BifoldLog
 const createPeerConnection = async (localStream: MediaStream, tokenResult: PexipTokenResult, logger: BifoldLogger) => {
   const peerConstraints = {
     iceServers: buildIceServers(tokenResult, logger),
+    iceTransportPolicy: 'relay' as const, // Only use TURN relay servers, prevents iOS local network prompt
   }
 
   const peerConnection = new RTCPeerConnection(peerConstraints)
