@@ -107,17 +107,21 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
   useEffect(() => {
     const connect = async () => {
       try {
-        const remoteAgentDetails = await connectToIASAgent(agent, store.developer.environment.iasAgentInviteUrl)
+        const remoteAgentDetails = await connectToIASAgent(
+          agent,
+          store.developer.environment.iasAgentInviteUrl,
+          store.preferences.walletName || 'BC Wallet'
+        )
         setRemoteAgentDetails(remoteAgentDetails)
         setStep(1)
         logger.info(`Connected to IAS agent, connectionId: ${remoteAgentDetails.connectionId}`)
       } catch (err) {
-        logger.error(`Failed to connect to IAS agent, error: ${(err as BifoldError).message}`)
+        logger.error(`Failed to connect to IAS agent: ${(err as BifoldError).message}`)
       }
     }
 
     connect()
-  }, [agent, store.developer.environment.iasAgentInviteUrl, logger, t, setStep])
+  }, [agent, store.developer.environment.iasAgentInviteUrl, logger, t, setStep, store.preferences.walletName])
 
   // when a person credential offer is received, show the
   // offer screen to the user.
@@ -143,11 +147,10 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     }
 
     const handleStartedCompleted = () => {
-      setStep(3)
-      logger.info('Attestation proof request completed')
-
       timer.current && clearTimeout(timer.current)
       setDidCompleteAttestationProofRequest(true)
+      setStep(3)
+      logger.info('Attestation proof request completed')
     }
 
     const subscriptions = Array<EmitterSubscription>()
