@@ -8,6 +8,13 @@ import {
   removeExistingInvitationsById,
 } from '@bifold/core'
 import { DidRepository } from '@credo-ts/core'
+import {
+  DidCommConnectionEventTypes,
+  DidCommConnectionRecord,
+  DidCommConnectionState,
+  DidCommConnectionStateChangedEvent,
+  DidCommDidExchangeState,
+} from '@credo-ts/didcomm'
 import { DeviceEventEmitter, Linking } from 'react-native'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 
@@ -45,7 +52,40 @@ export const showPersonCredentialSelector = (credentialDefinitionIDs: string[]):
   return !credentialDefinitionIDs.some((i) => trustedPersonCredentialIssuerRe.test(i))
 }
 
-export const connectToIASAgent = async (agent: Agent, iasAgentInviteUrl: string): Promise<WellKnownAgentDetails> => {
+const CONNECTION_COMPLETION_TIMEOUT_MS = 30000
+
+const isConnectionCompleted = (state: string): boolean =>
+  state === DidCommDidExchangeState.Completed || state === DidCommConnectionState.Complete
+
+const waitForConnectionCompleted = (agent: Agent, connection: DidCommConnectionRecord): Promise<void> => {
+  return new Promise<void>((resolve, reject) => {
+    const listener = (event: DidCommConnectionStateChangedEvent) => {
+      const { connectionRecord } = event.payload
+      if (connectionRecord.id === connection.id && isConnectionCompleted(connectionRecord.state)) {
+        cleanup()
+        resolve()
+      }
+    }
+
+    const cleanup = () => {
+      agent.events.off(DidCommConnectionEventTypes.DidCommConnectionStateChanged, listener)
+      clearTimeout(timeoutId)
+    }
+
+    agent.events.on(DidCommConnectionEventTypes.DidCommConnectionStateChanged, listener)
+
+    const timeoutId = setTimeout(() => {
+      cleanup()
+      reject(new Error(`Timed out waiting for connection ${connection.id} to complete`))
+    }, CONNECTION_COMPLETION_TIMEOUT_MS)
+  })
+}
+
+export const connectToIASAgent = async (
+  agent: Agent,
+  iasAgentInviteUrl: string,
+  label?: string
+): Promise<WellKnownAgentDetails> => {
   // connect to the agent, this will re-format the legacy invite
   // until we have OOB working in ACA-py.
   const invite = await agent.didcomm.oob.parseInvitation(iasAgentInviteUrl)
@@ -56,10 +96,22 @@ export const connectToIASAgent = async (agent: Agent, iasAgentInviteUrl: string)
 
   await removeExistingInvitationsById(agent, invite.id)
 
-  const record = await agent.didcomm.oob.receiveInvitation(invite)
+  const record = await agent.didcomm.oob.receiveInvitation(invite, { label: label ?? 'BC Wallet' })
 
   if (!record) {
     throw AppError.fromErrorDefinition(ErrorRegistry.RECEIVE_INVITATION_ERROR)
+  }
+
+  // Wait for the connection to fully complete before continuing. The IAS agent
+  // sends an attestation proof request immediately after the handshake, and
+  // Credo's assertReady() only accepts `completed` or `response-sent` —
+  // `response-received` (our state as requester during the trust-ping window)
+  // is rejected, which silently drops the proof request.
+  if (
+    record.connectionRecord &&
+    !(isConnectionCompleted(record.connectionRecord.state) && record.connectionRecord.isReady)
+  ) {
+    await waitForConnectionCompleted(agent, record.connectionRecord)
   }
 
   // retrieve the legacy DID. ACA-py does not support `peer:did`

@@ -109,6 +109,12 @@ const translation = {
     }
   },
   "PersonCredential": {
+    "Notification": {
+      "PageTitle": "Person Credential",
+      "Title": "Get your Person credential",
+      "Description": "Add your Person credential to your wallet and use it to get access to services online",
+      "ButtonTitle": "Start"
+    },
     "ServicesCardInstalled": "Step 1: BC Services Card app installed",
     "InstallServicesCard": "Step 1: Install the BC Services Card app",
     "InstallApp": "Install the app",
