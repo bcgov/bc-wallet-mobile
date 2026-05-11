@@ -13,15 +13,14 @@ type ServiceBookmarkButtonProps = {
 }
 
 const ServiceBookmarkButton = ({ serviceName, serviceId }: ServiceBookmarkButtonProps) => {
-  const { ColorPalette, Spacing } = useTheme()
+  const { ColorPalette, Spacing, TextTheme } = useTheme()
   const [store] = useStore<BCState>()
   const { t } = useTranslation()
   const { updateSavedService } = useSecureActions()
 
   const styles = StyleSheet.create({
     container: {
-      backgroundColor: ColorPalette.brand.secondaryBackground,
-      padding: Spacing.md,
+      marginTop: Spacing.lg,
       gap: Spacing.md,
     },
     row: {
@@ -43,8 +42,12 @@ const ServiceBookmarkButton = ({ serviceName, serviceId }: ServiceBookmarkButton
     <View style={styles.container}>
       <View style={styles.row}>
         <View>
-          <ThemedText variant={'bold'}>{t('BCSC.ManualPairing.BookmarkService')}</ThemedText>
-          <ThemedText variant={'bold'}>{serviceName}</ThemedText>
+          <ThemedText variant={'bold'} style={{ color: TextTheme.headingFour.color }}>
+            {t('BCSC.ManualPairing.BookmarkService')}
+          </ThemedText>
+          <ThemedText variant={'bold'} style={{ color: TextTheme.headingFour.color }}>
+            {serviceName}
+          </ThemedText>
         </View>
         <TouchableOpacity
           hitSlop={hitSlop}

@@ -1,3 +1,4 @@
+import { Screens } from '@bifold/core'
 import { NavigatorScreenParams } from '@react-navigation/native'
 import { BCSCCardProcess, EvidenceType } from 'react-native-bcsc-core'
 import { VerificationCardError } from '../features/verify/verificationCardError'
@@ -30,7 +31,7 @@ export enum BCSCModals {
 export enum BCSCScreens {
   Home = 'Home',
   Services = 'Service List',
-  Account = 'Account Details',
+  Wallet = 'Wallet',
   ForgetAllPairings = 'Forget All Pairings',
   SetupSteps = 'Setup Steps',
   IdentitySelection = 'New Setup ID Confirmation',
@@ -141,6 +142,7 @@ export enum BCSCScreens {
   AuthContactUs = `${BCSCStacks.Auth} Contact Us`,
   AuthPrivacyPolicy = `${BCSCStacks.Auth} Privacy Information`,
   AuthDeveloper = `${BCSCStacks.Auth} Developer`,
+  QRCore = 'QRCore',
 }
 
 export type BCSCOnboardingStackParams = {
@@ -228,7 +230,7 @@ export type BCSCVerifyStackParams = {
 export type BCSCTabStackParams = {
   [BCSCScreens.Home]: undefined
   [BCSCScreens.Services]: undefined
-  [BCSCScreens.Account]: undefined
+  [BCSCScreens.Wallet]: undefined
 }
 
 export type BCSCMainStackParams = {
@@ -268,6 +270,12 @@ export type BCSCMainStackParams = {
   [BCSCScreens.ContactChat]: { connectionId: string }
   [BCSCScreens.RemoveContact]: { connectionId: string }
 
+  // Bifold's AnonCreds credential detail screen reused inside BCSC's MainStack
+  // so ListCredentials (rendered in the Wallet tab) can navigate to it.
+  [Screens.CredentialDetails]: { credentialId: string }
+
+  [BCSCScreens.QRCore]: undefined
+
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
   [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
@@ -275,6 +283,9 @@ export type BCSCMainStackParams = {
 }
 
 export type BCSCAuthStackParams = {
+  [BCSCScreens.QRCore]: undefined
+  [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string; fromAppSwitch?: boolean }
+  [BCSCScreens.EditNickname]: undefined
   [BCSCScreens.AccountSelector]: undefined
   [BCSCScreens.EnterPIN]: undefined
   [BCSCScreens.DeviceAuthInfo]: undefined

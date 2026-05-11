@@ -1,7 +1,7 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { ErrorRegistry } from '@/errors'
-import { BCState, VerificationStatus } from '@/store'
+import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -15,6 +15,7 @@ import BCSCAgentProvider from '../features/agent/BCSCAgentProvider'
 import { useFcmService } from '../features/fcm'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
+import { useVerificationStatus } from '../hooks/useVerificationStatus'
 import { toAppError } from '../utils/native-error-map'
 import AuthStack from './AuthStack'
 import BCSCMainStack from './MainStack'
@@ -31,6 +32,7 @@ const BCSCRootStack: React.FC = () => {
   const { emitErrorModal } = useErrorAlert()
   const { isNavigationReady } = useNavigationContainer()
   const { initializingAccount } = useInitializeAccountStatus()
+  const { needsVerification, isVerified, isVerificationInProgress } = useVerificationStatus()
   useSystemChecks(SystemCheckScope.STARTUP)
   useThirdPartyKeyboardWarning()
 
@@ -67,19 +69,13 @@ const BCSCRootStack: React.FC = () => {
     return <AuthStack />
   }
 
-  const shouldShowVerifyPrompt =
-    !store.bcsc.hasSeenVerifyPrompt &&
-    store.bcscSecure.verified !== true &&
-    store.bcscSecure.verifiedStatus !== VerificationStatus.IN_PROGRESS &&
-    store.bcscSecure.verifiedStatus !== VerificationStatus.VERIFIED
-
-  if (shouldShowVerifyPrompt) {
+  if (!store.bcsc.hasSeenVerifyPrompt && needsVerification) {
     return <PromptStack />
   }
 
   return (
     <BCSCAgentProvider>
-      {store.bcscSecure.verified === false && store.bcscSecure.verifiedStatus === VerificationStatus.IN_PROGRESS ? (
+      {!isVerified && isVerificationInProgress ? (
         <BCSCActivityProvider>
           <VerifyStack />
         </BCSCActivityProvider>

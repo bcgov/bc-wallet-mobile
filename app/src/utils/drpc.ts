@@ -1,6 +1,6 @@
-import { Agent } from '@credo-ts/core'
 import { DidCommConnectionRecord } from '@credo-ts/didcomm'
 import { DrpcRequest, DrpcResponseObject } from '@credo-ts/drpc'
+import { BCAgent } from '@utils/bc-agent-modules'
 
 export type DrpcResponsePromise<T> = (responseTimeout: number) => Promise<T>
 
@@ -34,36 +34,27 @@ const DrpcMethod = {
 } as const
 
 export const sendDrpcRequest = async (
-  agent: Agent,
+  agent: BCAgent,
   connectionId: string,
-  request: Partial<DrpcRequest>
+  request: Omit<DrpcRequest, 'id' | 'jsonrpc'>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<DrpcResponsePromise<any>> => {
-  const requestWithId = { jsonrpc: '2.0', id: Math.floor(Math.random() * 900000) + 100000, ...request }
+  const fullRequest = { jsonrpc: '2.0', id: Math.floor(Math.random() * 900000) + 100000, ...request } as DrpcRequest
 
-  return await agent.modules.drpc.sendRequest(connectionId, requestWithId)
+  return await agent.modules.drpc.sendRequest(connectionId, fullRequest)
 }
 
 export const requestNonceDrpc = async (
-  agent: Agent,
+  agent: BCAgent,
   connectionRecord: DidCommConnectionRecord
 ): Promise<DrpcResponsePromise<NonceDrpcResponse>> => {
-  const request: Partial<DrpcRequest> = {
-    method: DrpcMethod.RequestNonceV2,
-  }
-
-  return await sendDrpcRequest(agent, connectionRecord.id, request)
+  return await sendDrpcRequest(agent, connectionRecord.id, { method: DrpcMethod.RequestNonceV2 })
 }
 
 export const requestAttestationDrpc = async (
-  agent: Agent,
+  agent: BCAgent,
   connectionRecord: DidCommConnectionRecord,
   params: AttestationRequestParams
 ): Promise<DrpcResponsePromise<AttestationDrpcResponse>> => {
-  const request: Partial<DrpcRequest> = {
-    method: DrpcMethod.RequestAttestationV2,
-    params,
-  }
-
-  return await sendDrpcRequest(agent, connectionRecord.id, request)
+  return await sendDrpcRequest(agent, connectionRecord.id, { method: DrpcMethod.RequestAttestationV2, params })
 }

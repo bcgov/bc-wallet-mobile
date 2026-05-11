@@ -395,7 +395,7 @@ const translation = {
       },
     },
     "Services": {
-      "CatalogueTitle": "Services (PT-BR)",
+      "Title": "Services (PT-BR)",
       "CatalogueSearch": "Search services (PT-BR)",
       "WantToLogin": "Do you want to log in to (PT-BR)",
       "RequestedInformation": "They will receive the following information: (PT-BR)",
@@ -409,7 +409,7 @@ const translation = {
       "OpenUrlErrorMessage": "Could not open the service URL. Please try again later. (PT-BR)",
       "NoLoginInstructions": "You will need to go to their website first if you want to log in to it. You can't log in to services directly from this app. (PT-BR)",
       "NoLoginProof": "You will use this app to prove who you are when you log in. (PT-BR)",
-      "Goto": "On that device, go to: (PT-BR)",
+      "Goto": "Go to: (PT-BR)",
       "GotoService": "Go to {{- service}} (PT-BR)",
       "GotoUrl": "Go to: {{- url}} (PT-BR)",
       "NotListed": "Services not listed? (PT-BR)",
@@ -670,7 +670,9 @@ const translation = {
       "NoAttestationResponse": "No attestation response, check your connection and try again. (PT-BR)",
       "NoDeviceCodeFound": "No device code found (PT-BR)",
       "InvalidQrCode": "Invalid QR code (PT-BR)",
-      "WillScanAutomatically": "Will scan automatically (PT-BR)",
+      "WillScanAutomatically": "A valid QR Code will scan automatically (PT-BR)",
+      "TorchOn": "Turn flashlight on (PT-BR)",
+      "TorchOff": "Turn flashlight off (PT-BR)",
       "ErrorDetails": "Error details (PT-BR)",
       "Dismiss": "Dismiss (PT-BR)",
       "SaveScanZones": "Save Scan Zones (PT-BR)",
@@ -990,6 +992,9 @@ const translation = {
       "Step2": "2. Choose 'Transfer to another device' to get your QR code. (PT-BR)",
       "Step3": "3. Continue on this device and scan that QR code. (PT-BR)",
       "ScanQRCode": "Scan QR Code (PT-BR)",
+    },
+    "QRDisplay": {
+      "SharingDescription": "Sharing this QR code with someone will add them as a Contact. (PT-BR)",
     },
     "TransferQRDisplay": {
       "Instructions": "Scan this QR code in the BC Services Card app on your other mobile device (PT-BR)",

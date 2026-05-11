@@ -134,7 +134,7 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                     [
                       {
                         "backgroundColor": "#FFFFFF",
-                        "borderColor": "transparent",
+                        "borderColor": "#D8D8D8",
                         "borderRadius": 8,
                         "borderWidth": 2,
                         "color": "#313132",
@@ -166,7 +166,7 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                     [
                       {
                         "backgroundColor": "#FFFFFF",
-                        "borderColor": "transparent",
+                        "borderColor": "#D8D8D8",
                         "borderRadius": 8,
                         "borderWidth": 2,
                         "color": "#313132",
@@ -198,7 +198,7 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                     [
                       {
                         "backgroundColor": "#FFFFFF",
-                        "borderColor": "transparent",
+                        "borderColor": "#D8D8D8",
                         "borderRadius": 8,
                         "borderWidth": 2,
                         "color": "#313132",
@@ -230,7 +230,7 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                     [
                       {
                         "backgroundColor": "#FFFFFF",
-                        "borderColor": "transparent",
+                        "borderColor": "#D8D8D8",
                         "borderRadius": 8,
                         "borderWidth": 2,
                         "color": "#313132",
@@ -262,7 +262,7 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                     [
                       {
                         "backgroundColor": "#FFFFFF",
-                        "borderColor": "transparent",
+                        "borderColor": "#D8D8D8",
                         "borderRadius": 8,
                         "borderWidth": 2,
                         "color": "#313132",
@@ -294,7 +294,7 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                     [
                       {
                         "backgroundColor": "#FFFFFF",
-                        "borderColor": "transparent",
+                        "borderColor": "#D8D8D8",
                         "borderRadius": 8,
                         "borderWidth": 2,
                         "color": "#313132",

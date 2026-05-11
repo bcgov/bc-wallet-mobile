@@ -109,6 +109,12 @@ const translation = {
     }
   },
   "PersonCredential": {
+    "Notification": {
+      "PageTitle": "Person Credential",
+      "Title": "Get your Person credential",
+      "Description": "Add your Person credential to your wallet and use it to get access to services online",
+      "ButtonTitle": "Start"
+    },
     "ServicesCardInstalled": "Step 1: BC Services Card app installed",
     "InstallServicesCard": "Step 1: Install the BC Services Card app",
     "InstallApp": "Install the app",
@@ -401,7 +407,7 @@ const translation = {
       },
     },
     "Services": {
-      "CatalogueTitle": "Services",
+      "Title": "Services",
       "CatalogueSearch": "Search services",
       "WantToLogin": "Do you want to log in to",
       "RequestedInformation": "They will receive the following information:",
@@ -415,7 +421,7 @@ const translation = {
       "OpenUrlErrorMessage": "Could not open the service URL. Please try again later.",
       "NoLoginInstructions": "You will need to go to their website first if you want to log in to it. You can't log in to services directly from this app.",
       "NoLoginProof": "You will use this app to prove who you are when you log in.",
-      "Goto": "On that device, go to:",
+      "Goto": "Go to:",
       "GotoService": "Go to {{- service}}",
       "GotoUrl": "Go to: {{- url}}",
       "NotListed": "Services not listed?",
@@ -589,9 +595,9 @@ const translation = {
       "RenameSuccessToastMessage": "Account nickname updated successfully",
     },
     "ManualPairing": {
-      "EnterPairingCodeTitle": "Enter pairing code",
+      "EnterPairingCodeTitle": "Enter your pairing code",
       "PairingCodeLabel": "Pairing code",
-      "EnterPairingCodeMessage": "A pairing code will be provided when you log in to a website on another device.",
+      "EnterPairingCodeMessage": "Enter the 6 digit pairing code on your other device. Please enter the code within 5 minutes.",
       "InvalidPairingCodeMessage": "Pairing code must be six characters long",
       "EmptyPairingCodeMessage": "Pairing code cannot be empty",
       "FailedToSubmitPairingCodeMessage": "Failed to submit pairing code",
@@ -605,6 +611,7 @@ const translation = {
       "BookmarkService": "Save link to:",
       "ToggleBookmark": "Toggle bookmark",
       "BookmarkDescription": "This adds a link to the menu in this app for easier access next time.",
+      "TabTitle": "Pairing code",
     },
     "Onboarding": {
       "LearnMore": "Learn more",
@@ -676,7 +683,9 @@ const translation = {
       "NoAttestationResponse": "No attestation response, check your connection and try again.",
       "NoDeviceCodeFound": "No device code found",
       "InvalidQrCode": "Invalid QR code",
-      "WillScanAutomatically": "Will scan automatically",
+      "WillScanAutomatically": "A valid QR Code will scan automatically",
+      "TorchOn": "Turn flashlight on",
+      "TorchOff": "Turn flashlight off",
       "ErrorDetails": "Error details",
       "Dismiss": "Dismiss",
       "SaveScanZones": "Save Scan Zones",
@@ -999,6 +1008,9 @@ const translation = {
       "Step3": "3. Continue on this device and scan that QR code.",
       "ScanQRCode": "Scan QR Code",
     },
+    "QRDisplay": {
+      "SharingDescription": "Sharing this QR code with someone will add them as a Contact.",
+    },
     "TransferQRDisplay": {
       "Instructions": "Scan this QR code in the BC Services Card app on your other mobile device",
       "GetNewQRCode": "Get new QR code",
@@ -1163,6 +1175,9 @@ const translation = {
       "AddressSaved": "Address saved",
       "AuthorizationErrorTitle": "Authorization failed",
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again.",
+    },
+    "Wallet": {
+      "EmptyMessage": "Your wallet is empty",
     },
     "Account": {
       "RemoveAccount": "Remove account",

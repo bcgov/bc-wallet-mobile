@@ -15,8 +15,16 @@ import { ErrorRegistry } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
 import { BCDispatchAction, BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
-import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
-import { testIdWithKey, ThemedText, TOKENS, useDeveloperMode, useServices, useStore, useTheme } from '@bifold/core'
+import {
+  ScreenWrapper,
+  testIdWithKey,
+  ThemedText,
+  TOKENS,
+  useDeveloperMode,
+  useServices,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -202,8 +210,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
   const styles = StyleSheet.create({
     container: {
-      flex: 1,
-      padding: Spacing.md,
+      padding: Spacing.lg,
     },
     sectionHeader: {
       paddingVertical: Spacing.md,
@@ -334,87 +341,80 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const isAuthenticated = store.authentication.didAuthenticate
 
   return (
-    <TabScreenWrapper edges={['bottom', 'left', 'right']}>
-      <View style={styles.container}>
-        {isAuthenticated ? (
-          <AuthenticatedSection
-            styles={styles}
-            accountSecurityMethod={accountSecurityMethod}
-            onAppSecurity={onAppSecurity}
-            onChangePIN={onChangePIN}
-            onEditNickname={onEditNickname}
-            onAutoLock={onAutoLock}
-            onForgetAllPairings={onForgetAllPairings}
-            onPressOptInAnalytics={onPressOptInAnalytics}
-            onPressRemoveAccount={onPressRemoveAccount}
-            onLogout={logout}
-            onContacts={onContacts}
-            setTheme={setTheme}
-            themeName={themeName}
+    <ScreenWrapper padded={false} scrollViewContainerStyle={styles.container}>
+      {isAuthenticated ? (
+        <AuthenticatedSection
+          styles={styles}
+          accountSecurityMethod={accountSecurityMethod}
+          onAppSecurity={onAppSecurity}
+          onChangePIN={onChangePIN}
+          onEditNickname={onEditNickname}
+          onAutoLock={onAutoLock}
+          onForgetAllPairings={onForgetAllPairings}
+          onPressOptInAnalytics={onPressOptInAnalytics}
+          onPressRemoveAccount={onPressRemoveAccount}
+          onLogout={logout}
+          setTheme={setTheme}
+          themeName={themeName}
+        />
+      ) : null}
+
+      <ThemedText variant={'bold'} style={styles.sectionHeader}>
+        {t('BCSC.Settings.HeaderB')}
+      </ThemedText>
+      <View style={styles.sectionContainer}>
+        <SettingsActionCard title={t('BCSC.Settings.Help')} onPress={onHelp} testID={testIdWithKey('Help')} />
+        <SettingsActionCard title={t('BCSC.Settings.Privacy')} onPress={onPrivacy} testID={testIdWithKey('Privacy')} />
+        <SettingsActionCard
+          title={t('BCSC.Settings.ContactUs')}
+          onPress={onContactUs}
+          testID={testIdWithKey('ContactUs')}
+        />
+        <SettingsActionCard
+          title={t('BCSC.Settings.Feedback')}
+          onPress={onPressFeedback}
+          testID={testIdWithKey('Feedback')}
+          accessibilityHint={t('Global.A11y.OpensInBrowser')}
+        />
+        <SettingsActionCard
+          title={t('BCSC.Settings.Accessibility')}
+          onPress={onPressAccessibility}
+          testID={testIdWithKey('Accessibility')}
+          accessibilityHint={t('Global.A11y.OpensInBrowser')}
+        />
+        <SettingsActionCard
+          title={t('BCSC.Settings.TermsOfUse')}
+          onPress={onPressTermsOfUse}
+          testID={testIdWithKey('TermsOfUse')}
+          accessibilityHint={t('Global.A11y.OpensInBrowser')}
+        />
+        <SettingsActionCard
+          title={t('BCSC.Settings.Analytics')}
+          onPress={onPressAnalytics}
+          testID={testIdWithKey('Analytics')}
+          accessibilityHint={t('Global.A11y.OpensInBrowser')}
+        />
+        {store.preferences.developerModeEnabled ? (
+          <SettingsActionCard
+            title={t('Developer.DeveloperMode')}
+            onPress={onPressDeveloperMode}
+            testID={testIdWithKey('DeveloperMode')}
           />
         ) : null}
-
-        <ThemedText variant={'bold'} style={styles.sectionHeader}>
-          {t('BCSC.Settings.HeaderB')}
-        </ThemedText>
-        <View style={styles.sectionContainer}>
-          <SettingsActionCard title={t('BCSC.Settings.Help')} onPress={onHelp} testID={testIdWithKey('Help')} />
-          <SettingsActionCard
-            title={t('BCSC.Settings.Privacy')}
-            onPress={onPrivacy}
-            testID={testIdWithKey('Privacy')}
-          />
-          <SettingsActionCard
-            title={t('BCSC.Settings.ContactUs')}
-            onPress={onContactUs}
-            testID={testIdWithKey('ContactUs')}
-          />
-          <SettingsActionCard
-            title={t('BCSC.Settings.Feedback')}
-            onPress={onPressFeedback}
-            testID={testIdWithKey('Feedback')}
-            accessibilityHint={t('Global.A11y.OpensInBrowser')}
-          />
-          <SettingsActionCard
-            title={t('BCSC.Settings.Accessibility')}
-            onPress={onPressAccessibility}
-            testID={testIdWithKey('Accessibility')}
-            accessibilityHint={t('Global.A11y.OpensInBrowser')}
-          />
-          <SettingsActionCard
-            title={t('BCSC.Settings.TermsOfUse')}
-            onPress={onPressTermsOfUse}
-            testID={testIdWithKey('TermsOfUse')}
-            accessibilityHint={t('Global.A11y.OpensInBrowser')}
-          />
-          <SettingsActionCard
-            title={t('BCSC.Settings.Analytics')}
-            onPress={onPressAnalytics}
-            testID={testIdWithKey('Analytics')}
-            accessibilityHint={t('Global.A11y.OpensInBrowser')}
-          />
-          {store.preferences.developerModeEnabled ? (
-            <SettingsActionCard
-              title={t('Developer.DeveloperMode')}
-              onPress={onPressDeveloperMode}
-              testID={testIdWithKey('DeveloperMode')}
-            />
-          ) : null}
-        </View>
-
-        <View style={styles.versionContainer}>
-          <TouchableWithoutFeedback
-            onPress={incrementDeveloperMenuCounter}
-            disabled={store.preferences.developerModeEnabled}
-            accessible={false}
-          >
-            <View style={{ alignItems: 'center' }}>
-              <ThemedText variant="labelSubtitle">{t('BCSC.Title')}</ThemedText>
-              <ThemedText variant="labelSubtitle">{`Version ${getVersion()} (${getBuildNumber()})`}</ThemedText>
-            </View>
-          </TouchableWithoutFeedback>
-        </View>
       </View>
-    </TabScreenWrapper>
+
+      <View style={styles.versionContainer}>
+        <TouchableWithoutFeedback
+          onPress={incrementDeveloperMenuCounter}
+          disabled={store.preferences.developerModeEnabled}
+          accessible={false}
+        >
+          <View style={{ alignItems: 'center' }}>
+            <ThemedText variant="labelSubtitle">{t('BCSC.Title')}</ThemedText>
+            <ThemedText variant="labelSubtitle">{`Version ${getVersion()} (${getBuildNumber()})`}</ThemedText>
+          </View>
+        </TouchableWithoutFeedback>
+      </View>
+    </ScreenWrapper>
   )
 }
