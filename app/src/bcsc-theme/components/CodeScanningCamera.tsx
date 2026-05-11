@@ -128,7 +128,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   showBarcodeHighlight = false,
   enableScanZones = false,
   scanZones,
-  initialZoom,
+  initialZoom = 2,
 }) => {
   // Derive scanner code types from the declared scan zones (deduped)
   const codeTypes = [...new Set(scanZones.flatMap((z) => z.types))] as CodeType[]
@@ -782,13 +782,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   )
 
   const toggleTorch = () => {
-    // // Sync the JS-thread copy of zoom.value before triggering a re-render.
-    // // The pinch gesture runs on the UI thread only, so the JS-thread copy stays at
-    // // initialZoom. When React commits the re-render, Reanimated snapshots zoom from
-    // // the JS thread — causing a brief zoom snap back to initialZoom. Writing
-    // // zoomDisplay (the runOnJS mirror of the current zoom) here ensures the
-    // // snapshot is current.
-    // zoom.value = zoomDisplay
     setTorchEnabled((prev) => !prev)
   }
 
@@ -807,8 +800,14 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     if (!hasInitializedRef.current) {
       hasInitializedRef.current = true
       const targetZoom = getEffectiveZoom(initialZoom)
-      zoom.value = targetZoom
-      setZoomDisplay(targetZoom)
+      // Force Reanimated to dispatch to native even if zoom.value already equals targetZoom.
+      // Reanimated skips updates when the value doesn't change, but the native camera may
+      // have missed the initial prop if it wasn't ready when the component first mounted.
+      zoom.value = targetZoom - 0.001
+      requestAnimationFrame(() => {
+        zoom.value = targetZoom
+        setZoomDisplay(targetZoom)
+      })
       logger.debug('Zoom applied after initialization', { zoom: targetZoom })
     }
   }, [initialZoom, getEffectiveZoom, logger, device, format, zoom])
