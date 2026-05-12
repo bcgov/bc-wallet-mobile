@@ -8,6 +8,14 @@ jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k
 jest.mock('@bifold/core', () => ({
   Connection: jest.fn().mockReturnValue(null),
 }))
+// `@react-navigation/native` isn't transformed by jest (see transformIgnorePatterns), so
+// pull-through imports like NavigationContext come back as undefined. Spread the real module
+// and supply a minimal NavigationContext shim — Provider just renders children — so the
+// wrapping in ConnectionLoadingScreen works in tests.
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual('@react-navigation/native'),
+  NavigationContext: { Provider: ({ children }: any) => children },
+}))
 
 const ConnectionMock = Connection as jest.MockedFunction<typeof Connection>
 

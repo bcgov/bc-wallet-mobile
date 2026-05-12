@@ -57,14 +57,21 @@ describe('BifoldNavigationAdapter', () => {
     expect(parent.navigate).not.toHaveBeenCalled()
   })
 
-  it('returns undefined when getParent has no parent', () => {
-    const { nav, grandparent } = mkNav()
-    const adapted = createBifoldNavigationAdapter(nav as any, { t })
-    const top = adapted.getParent()?.getParent()
-    expect(top).toBeDefined()
-    const beyond = top?.getParent()
-    expect(beyond).toBeUndefined()
-    expect(grandparent.getParent).toHaveBeenCalled()
+  it('falls back to wrapping the current target when no real parent exists (so route intercepts still fire)', () => {
+    // Standalone nav has no parent; mimicking BCSCMainStack which is the root authenticated navigator.
+    const orphan = { navigate: jest.fn(), dispatch: jest.fn(), getParent: jest.fn(() => undefined) }
+    const adapted = createBifoldNavigationAdapter(orphan as any, { t })
+    const fallbackParent = adapted.getParent()
+    expect(fallbackParent).toBeDefined()
+    // Calling navigate on the fallback parent with a Bifold route name still translates,
+    // dispatching the BCSC reset on the same underlying nav.
+    fallbackParent!.navigate('Tab Credential Stack' as never, undefined as never)
+    expect(orphan.dispatch).toHaveBeenCalledWith(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: BCSCStacks.Tab, state: { routes: [{ name: BCSCScreens.Wallet }] } }],
+      })
+    )
   })
 
   it('translates "Tab Credential Stack" to a reset onto BCSC tab/wallet (CredentialOfferAccept Done button)', () => {

@@ -111,7 +111,15 @@ export const createBifoldNavigationAdapter = <T extends NavigationProp<any>>(
       if (prop === 'getParent') {
         return () => {
           const parent = (target as any).getParent?.()
-          return parent ? createBifoldNavigationAdapter(parent, options) : undefined
+          // Bifold's screens call `navigation.getParent()?.navigate('Tab Home Stack' / 'Tab Credential Stack' / …)`
+          // expecting a parent navigator to translate those route names. BCSC's MainStack is the root
+          // authenticated navigator, so the underlying `getParent()` returns undefined and the
+          // optional chain short-circuits — the route-name intercept never fires.
+          //
+          // Fall back to wrapping `target` itself so the intercept runs. The intercept handlers
+          // dispatch resets onto `target` (which IS MainStack here), so resetting to BCSCStacks.Tab
+          // works fine — MainStack registers it.
+          return createBifoldNavigationAdapter((parent ?? target) as any, options)
         }
       }
       return Reflect.get(target, prop, receiver)
