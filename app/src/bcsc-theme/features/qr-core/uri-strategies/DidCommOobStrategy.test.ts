@@ -73,10 +73,16 @@ describe('DidCommOobStrategy.handle', () => {
 
   it('returns unrecognized when invitation cannot be parsed', async () => {
     const { agent, spies } = makeAgent({ goalCode: '__noparse__' })
-    // first parseInvitation call (mediator check) returns null too — both calls return null
     const result = await DidCommOobStrategy.handle('https://x?oob=foo', ctx(agent))
     expect(result).toEqual({ kind: 'unrecognized' })
+    expect(spies.parseInvitation).toHaveBeenCalledTimes(1)
     expect(spies.receiveInvitation).not.toHaveBeenCalled()
+  })
+
+  it('parses the invitation exactly once on the success path', async () => {
+    const { agent, spies } = makeAgent({ recordId: 'rec-1' })
+    await DidCommOobStrategy.handle('https://x?oob=foo', ctx(agent))
+    expect(spies.parseInvitation).toHaveBeenCalledTimes(1)
   })
 
   it('returns connection result with oobRecordId on success', async () => {
