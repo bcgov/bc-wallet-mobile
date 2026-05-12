@@ -11,7 +11,7 @@ import {
   ThemedText,
   useTheme,
 } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -37,8 +37,17 @@ const QRScanner: React.FC = () => {
     [navigation]
   )
 
-  const { isPermissionLoading, hasPermission, isProcessing, scanError, handleScan, dismissError } =
+  const { isPermissionLoading, hasPermission, isProcessing, scanError, handleScan, dismissError, resetNavigationLock } =
     useScanScreenViewModel({ onConnectionFound })
+
+  // QRCoreStack has `unmountOnBlur: false` so the scanner persists across the
+  // ConnectionLoading round trip; reset the nav lock on each focus so the
+  // user can scan again after completing a flow.
+  useFocusEffect(
+    useCallback(() => {
+      resetNavigationLock()
+    }, [resetNavigationLock])
+  )
 
   const styles = StyleSheet.create({
     container: { flex: 1 },

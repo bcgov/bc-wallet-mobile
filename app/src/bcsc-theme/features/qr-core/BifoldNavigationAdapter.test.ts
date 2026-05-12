@@ -67,6 +67,19 @@ describe('BifoldNavigationAdapter', () => {
     expect(grandparent.getParent).toHaveBeenCalled()
   })
 
+  it('translates "Tab Credential Stack" to a reset onto BCSC tab/wallet (CredentialOfferAccept Done button)', () => {
+    const { nav } = mkNav()
+    const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    adapted.navigate('Tab Credential Stack' as never, { screen: 'Credentials' } as never)
+    expect(nav.navigate).not.toHaveBeenCalled()
+    expect(nav.dispatch).toHaveBeenCalledWith(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: BCSCStacks.Tab, state: { routes: [{ name: BCSCScreens.Wallet }] } }],
+      })
+    )
+  })
+
   it('translates "Tab Stack" navigate to a reset onto BCSC tab/home', () => {
     const { nav } = mkNav()
     const adapted = createBifoldNavigationAdapter(nav as any, { t })

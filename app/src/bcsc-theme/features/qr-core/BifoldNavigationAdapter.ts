@@ -17,6 +17,7 @@ import type { TFunction } from 'i18next'
 
 // Bifold route names that don't exist in BCSC's nav graph.
 const BIFOLD_TAB_HOME_STACK = 'Tab Home Stack' // Bifold's TabStacks.HomeStack
+const BIFOLD_TAB_CREDENTIAL_STACK = 'Tab Credential Stack' // Bifold's TabStacks.CredentialStack
 const BIFOLD_TAB_STACK = 'Tab Stack' // Bifold's Stacks.TabStack (root)
 const BIFOLD_CHAT = 'Chat' // Bifold's Screens.Chat — BCSC has no chat surface
 const BIFOLD_CONTACTS_STACK = 'Contacts Stack'
@@ -33,6 +34,18 @@ const resetToBCSCHome = (navigation: NavigationProp<any>): void => {
     CommonActions.reset({
       index: 0,
       routes: [{ name: BCSCStacks.Tab, state: { routes: [{ name: BCSCScreens.Home }] } }],
+    })
+  )
+}
+
+// Reset to BCSC's tab navigator with the Wallet tab focused — BCSC's equivalent
+// of Bifold's TabStacks.CredentialStack target (used by CredentialOfferAccept's
+// "Done" button to send the user to where their credentials live).
+const resetToBCSCWallet = (navigation: NavigationProp<any>): void => {
+  navigation.dispatch(
+    CommonActions.reset({
+      index: 0,
+      routes: [{ name: BCSCStacks.Tab, state: { routes: [{ name: BCSCScreens.Wallet }] } }],
     })
   )
 }
@@ -67,6 +80,10 @@ export const createBifoldNavigationAdapter = <T extends NavigationProp<any>>(
         return (name: string, params?: unknown) => {
           if (name === BIFOLD_TAB_HOME_STACK || name === BIFOLD_TAB_STACK) {
             resetToBCSCHome(target)
+            return
+          }
+          if (name === BIFOLD_TAB_CREDENTIAL_STACK) {
+            resetToBCSCWallet(target)
             return
           }
           if (name === BIFOLD_CHAT) {

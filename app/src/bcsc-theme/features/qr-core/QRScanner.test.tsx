@@ -29,6 +29,10 @@ jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon')
 
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ getParent: () => ({ navigate: jest.fn() }) }),
+  useFocusEffect: (cb: () => void | (() => void)) => {
+    // Eagerly invoke once on mount to mimic the focus-effect's initial fire.
+    cb()
+  },
 }))
 
 jest.mock('./useScanScreenViewModel', () => jest.fn())
@@ -44,6 +48,7 @@ const defaultViewModelState = {
   scanError: null,
   handleScan: jest.fn(),
   dismissError: jest.fn(),
+  resetNavigationLock: jest.fn(),
 }
 
 const Bifold = jest.requireMock('@bifold/core') as { ScanCamera: jest.Mock }

@@ -131,6 +131,67 @@ describe('useScanScreenViewModel', () => {
     expect(onConnectionFound).toHaveBeenCalledTimes(1)
   })
 
+  it('suppresses subsequent scans after a successful navigation handoff (ScanCamera re-fire race)', async () => {
+    const onConnectionFound = jest.fn()
+    const strat = mkStrategy(true, { kind: 'connection', oobRecordId: 'rec-1' })
+    const { result } = renderHook(() => useScanScreenViewModel({ onConnectionFound, strategies: [strat] }))
+    await act(async () => {
+      await result.current.handleScan('didcomm://x')
+    })
+    expect(onConnectionFound).toHaveBeenCalledTimes(1)
+    // Camera continues firing frames — a second scan during the transition must be ignored.
+    await act(async () => {
+      await result.current.handleScan('didcomm://x')
+    })
+    expect(strat.handle).toHaveBeenCalledTimes(1)
+    expect(onConnectionFound).toHaveBeenCalledTimes(1)
+    expect(result.current.scanError).toBeNull()
+  })
+
+  it('swallows errors thrown during the post-navigation transition (no modal on top of the success flow)', async () => {
+    const onConnectionFound = jest.fn()
+    // Strategy succeeds on the first call (latching isNavigatingRef) and throws on subsequent calls
+    // — mirrors ScanCamera re-firing after the OOB record has already been received upstream.
+    let calls = 0
+    const strat: UriStrategy = {
+      name: 'flaky-after-success',
+      matches: () => true,
+      handle: jest.fn(async () => {
+        calls += 1
+        if (calls === 1) {
+          return { kind: 'connection', oobRecordId: 'rec-1' } as const
+        }
+        throw new Error('post-nav boom')
+      }),
+    }
+    const { result } = renderHook(() => useScanScreenViewModel({ onConnectionFound, strategies: [strat] }))
+    await act(async () => {
+      await result.current.handleScan('didcomm://x')
+    })
+    await act(async () => {
+      await result.current.handleScan('didcomm://x')
+    })
+    // Second scan is blocked at the guard — strategy.handle is never called a second time,
+    // so the post-nav error never surfaces.
+    expect(strat.handle).toHaveBeenCalledTimes(1)
+    expect(result.current.scanError).toBeNull()
+  })
+
+  it('resetNavigationLock re-enables scanning after navigation (e.g. user returns to the scanner)', async () => {
+    const onConnectionFound = jest.fn()
+    const strat = mkStrategy(true, { kind: 'connection', oobRecordId: 'rec-1' })
+    const { result } = renderHook(() => useScanScreenViewModel({ onConnectionFound, strategies: [strat] }))
+    await act(async () => {
+      await result.current.handleScan('didcomm://x')
+    })
+    expect(onConnectionFound).toHaveBeenCalledTimes(1)
+    act(() => result.current.resetNavigationLock())
+    await act(async () => {
+      await result.current.handleScan('didcomm://x')
+    })
+    expect(onConnectionFound).toHaveBeenCalledTimes(2)
+  })
+
   it('dismissError clears scanError', async () => {
     const onConnectionFound = jest.fn()
     const strat = mkStrategy(false, { kind: 'connection', oobRecordId: 'x' })

@@ -35,10 +35,16 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
   const [isProcessing, setIsProcessing] = useState(false)
   const [scanError, setScanError] = useState<QrCodeScanError | null>(null)
   const isProcessingRef = useRef(false)
+  // ScanCamera continues firing frames after a successful scan, so a second
+  // invocation can race the navigation and trip an "already received" error
+  // on the OOB record. `isNavigatingRef` short-circuits any scan that lands
+  // after we've handed off to ConnectionLoading; reset on focus so the user
+  // can scan again if they navigate back.
+  const isNavigatingRef = useRef(false)
 
   const handleScan = useCallback(
     async (value: string) => {
-      if (isProcessingRef.current || scanError != null) {
+      if (isProcessingRef.current || isNavigatingRef.current || scanError != null) {
         return
       }
       isProcessingRef.current = true
@@ -55,6 +61,9 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
         const result = await strategy.handle(value, { agent, logger })
         switch (result.kind) {
           case 'connection':
+            // Latch before the navigation handoff so frames that land during
+            // the transition (see isNavigatingRef comment above) are ignored.
+            isNavigatingRef.current = true
             onConnectionFound(result.oobRecordId)
             break
           case 'unsupported':
@@ -76,6 +85,12 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
           }
         }
       } catch (err) {
+        // Swallow errors that fire during the post-navigation transition —
+        // ScanCamera frames that race the handoff would otherwise pop an
+        // "invalid QR" modal on top of the success flow.
+        if (isNavigatingRef.current) {
+          return
+        }
         // Preserve QrCodeScanError thrown by a strategy verbatim — strategies are
         // closest to the failure and may have set a more specific title / details.
         // Wrap anything else as a generic invalid-code error.
@@ -97,6 +112,12 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
 
   const dismissError = useCallback(() => setScanError(null), [])
 
+  // Call from the screen's focus effect to unlock scanning when the user
+  // navigates back (e.g. closes a credential flow and reopens the scanner).
+  const resetNavigationLock = useCallback(() => {
+    isNavigatingRef.current = false
+  }, [])
+
   return {
     isPermissionLoading,
     hasPermission,
@@ -104,6 +125,7 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
     scanError,
     handleScan,
     dismissError,
+    resetNavigationLock,
   }
 }
 
