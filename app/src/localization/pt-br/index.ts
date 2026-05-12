@@ -633,15 +633,14 @@ const translation = {
       "Label": "Birthdate (PT-BR)",
     },
     "AdditionalEvidence": {
-      "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't have a photo on it. (PT-BR)",
-      "PhotoRequiredDescription": "It's needed to verify your identity. You'll be asked to provide one or two government-issued IDs. (PT-BR)",
+     "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't include a photo (PT-BR)",
+      "PhotoRequiredDescription": "A photo is needed to verify your identity. You'll be asked to provide one or two government-issued IDs. (PT-BR)",
       "CheckYourID": "Check your ID (PT-BR)",
       "CheckYourIDBullet1": "Has the same name as on your BC Services Card (PT-BR)",
       "CheckYourIDBullet2": "Has a recent photo (PT-BR)",
       "CheckYourIDBullet3": "Is not expired (PT-BR)",
       "LimitedAccess": "Limited access to services (PT-BR)",
       "LimitedAccessDescription": "Some services only accept the app when it's set up with a BC Services Card with a photo. (PT-BR)",
-      "ChooseID": "Choose ID (PT-BR)",
       "OpenAccountServices": "Open account services (PT-BR)",
     },
     "AccountSetup": {

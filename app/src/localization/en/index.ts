@@ -642,15 +642,14 @@ const translation = {
       "ExampleDate": "The birthdate format is: YYYY/MM/DD",
     },
     "AdditionalEvidence": {
-      "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't have a photo on it.",
-      "PhotoRequiredDescription": "It's needed to verify your identity. You'll be asked to provide one or two government-issued IDs.",
+      "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't include a photo",
+      "PhotoRequiredDescription": "A photo is needed to verify your identity. You'll be asked to provide one or two government-issued IDs.",
       "CheckYourID": "Check your ID",
       "CheckYourIDBullet1": "Has the same name as on your BC Services Card",
       "CheckYourIDBullet2": "Has a recent photo",
       "CheckYourIDBullet3": "Is not expired",
       "LimitedAccess": "Limited access to services",
       "LimitedAccessDescription": "Some services only accept the app when it's set up with a BC Services Card with a photo.",
-      "ChooseID": "Choose ID",
       "OpenAccountServices": "Open account services",
     },
     "AccountSetup": {

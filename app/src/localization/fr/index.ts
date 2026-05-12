@@ -633,15 +633,14 @@ const translation = {
       "Label": "Birthdate (FR)",
     },
     "AdditionalEvidence": {
-      "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't have a photo on it. (FR)",
-      "PhotoRequiredDescription": "It's needed to verify your identity. You'll be asked to provide one or two government-issued IDs. (FR)",
+      "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't include a photo (FR)",
+      "PhotoRequiredDescription": "A photo is needed to verify your identity. You'll be asked to provide one or two government-issued IDs. (FR)",
       "CheckYourID": "Check your ID (FR)",
       "CheckYourIDBullet1": "Has the same name as on your BC Services Card (FR)",
       "CheckYourIDBullet2": "Has a recent photo (FR)",
       "CheckYourIDBullet3": "Is not expired (FR)",
       "LimitedAccess": "Limited access to services (FR)",
       "LimitedAccessDescription": "Some services only accept the app when it's set up with a BC Services Card with a photo. (FR)",
-      "ChooseID": "Choose ID (FR)",
       "OpenAccountServices": "Open account services (FR)",
     },
     "AccountSetup": {
