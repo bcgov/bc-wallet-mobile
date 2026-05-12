@@ -154,6 +154,7 @@ const MainStack: React.FC = () => {
             options={{
               headerShown: true,
               headerLeft: () => null,
+              gestureEnabled: false,
               title: t('BCSC.Scan.Connecting'),
             }}
           />

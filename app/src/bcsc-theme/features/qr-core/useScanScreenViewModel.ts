@@ -62,9 +62,17 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
             break
         }
       } catch (err) {
-        const message = err instanceof Error ? err.message : String(err)
-        logger.error(`[ScanScreen] strategy threw: ${message}`)
-        setScanError(new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, message))
+        // Preserve QrCodeScanError thrown by a strategy verbatim — strategies are
+        // closest to the failure and may have set a more specific title / details.
+        // Wrap anything else as a generic invalid-code error.
+        if (err instanceof QrCodeScanError) {
+          logger.error(`[ScanScreen] strategy threw QrCodeScanError: ${err.message}`)
+          setScanError(err)
+        } else {
+          const message = err instanceof Error ? err.message : String(err)
+          logger.error(`[ScanScreen] strategy threw: ${message}`)
+          setScanError(new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, message))
+        }
       } finally {
         isProcessingRef.current = false
         setIsProcessing(false)

@@ -9,13 +9,17 @@ jest.mock('react-native-vision-camera', () => ({
 }))
 jest.mock('@bifold/react-hooks', () => ({ useAgent: () => ({ agent: { id: 'agent' } }) }))
 jest.mock('@bifold/core', () => {
+  // Mirrors @bifold/core's real QrCodeScanError shape (see packages/core/src/types/error.ts):
+  // constructor(message?, data?, details?); `data` is the offending value, `details` is the
+  // underlying error string. Earlier revisions of this mock used a different field order
+  // and masked production behavior.
   class QrCodeScanError extends Error {
-    title: string
-    data?: string
-    constructor(title: string, data?: string, message?: string) {
-      super(message ?? title)
-      this.title = title
+    public data?: string
+    public details?: string
+    public constructor(message?: string, data?: string, details?: string) {
+      super(message)
       this.data = data
+      this.details = details
     }
   }
   return {
@@ -75,14 +79,28 @@ describe('useScanScreenViewModel', () => {
     expect(result.current.scanError?.message).toBe('BCSC.Scan.UnrecognizedQR')
   })
 
-  it('catches strategy errors and surfaces InvalidQrCode', async () => {
+  it('wraps generic strategy errors as InvalidQrCode and stashes the underlying message in details', async () => {
     const onConnectionFound = jest.fn()
     const strat = mkStrategy(true, new Error('boom'))
     const { result } = renderHook(() => useScanScreenViewModel({ onConnectionFound, strategies: [strat] }))
     await act(async () => {
       await result.current.handleScan('didcomm://x')
     })
-    expect(result.current.scanError?.message).toBe('boom')
+    expect(result.current.scanError?.message).toBe('BCSC.Scan.InvalidQrCode')
+    expect(result.current.scanError?.data).toBe('didcomm://x')
+    expect((result.current.scanError as any)?.details).toBe('boom')
+  })
+
+  it('preserves a QrCodeScanError thrown by a strategy verbatim', async () => {
+    const { QrCodeScanError } = jest.requireMock('@bifold/core') as { QrCodeScanError: any }
+    const thrown = new QrCodeScanError('Strategy.SpecificTitle', 'didcomm://y', 'strategy-detail')
+    const onConnectionFound = jest.fn()
+    const strat = mkStrategy(true, thrown)
+    const { result } = renderHook(() => useScanScreenViewModel({ onConnectionFound, strategies: [strat] }))
+    await act(async () => {
+      await result.current.handleScan('didcomm://y')
+    })
+    expect(result.current.scanError).toBe(thrown)
   })
 
   it('skips repeat scans while one is processing or an error is showing', async () => {
