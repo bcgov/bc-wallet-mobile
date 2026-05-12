@@ -67,7 +67,46 @@ describe('BifoldNavigationAdapter', () => {
     expect(grandparent.getParent).toHaveBeenCalled()
   })
 
-  it('exposes other navigation methods (e.g. dispatch) untouched', () => {
+  it('translates "Tab Stack" navigate to a reset onto BCSC tab/home', () => {
+    const { nav } = mkNav()
+    const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    adapted.navigate('Tab Stack' as never, undefined as never)
+    expect(nav.navigate).not.toHaveBeenCalled()
+    expect(nav.dispatch).toHaveBeenCalledWith(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: BCSCStacks.Tab, state: { routes: [{ name: BCSCScreens.Home }] } }],
+      })
+    )
+  })
+
+  it('shows feature-unavailable toast for navigate to Chat (BCSC has no chat surface)', () => {
+    const { nav } = mkNav()
+    const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    adapted.navigate('Chat' as never, { connectionId: 'c-1' } as never)
+    expect(Toast.show).toHaveBeenCalledWith({ type: 'info', text1: 'BCSC.Scan.FeatureUnavailable' })
+    expect(nav.navigate).not.toHaveBeenCalled()
+  })
+
+  it('translates a Bifold chat-path reset dispatch to a BCSC home reset', () => {
+    const { nav } = mkNav()
+    const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    // Mirrors the action Connection.tsx dispatches when enableChat=true completes.
+    adapted.dispatch(
+      CommonActions.reset({
+        index: 1,
+        routes: [{ name: 'Tab Stack' }, { name: 'Chat', params: { connectionId: 'c-1' } }],
+      })
+    )
+    expect(nav.dispatch).toHaveBeenCalledWith(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: BCSCStacks.Tab, state: { routes: [{ name: BCSCScreens.Home }] } }],
+      })
+    )
+  })
+
+  it('lets non-chat dispatch actions pass through unchanged', () => {
     const { nav } = mkNav()
     const adapted = createBifoldNavigationAdapter(nav as any, { t })
     const action = CommonActions.goBack()

@@ -1,36 +1,11 @@
-import type { Agent } from '@credo-ts/core'
+import {
+  isDidCommInvitation,
+  isMediatorInvitation,
+  isOpenIdCredentialOffer,
+  isOpenIdPresentationRequest,
+} from '@bifold/core'
 
 import type { ScanContext, ScanResult, UriStrategy } from './types'
-
-export const isOpenIdCredentialOffer = (url: string): boolean => {
-  if (url.startsWith('openid-initiate-issuance://') || url.startsWith('openid-credential-offer://')) {
-    return true
-  }
-  return url.includes('credential_offer_uri=') || url.includes('credential_offer=')
-}
-
-export const isOpenIdPresentationRequest = (url: string): boolean => {
-  if (url.startsWith('openid://') || url.startsWith('openid-vc://') || url.startsWith('openid4vp://')) {
-    return true
-  }
-  return url.includes('request_uri=') || url.includes('request=')
-}
-
-export const isDidCommInvitation = (url: string): boolean => {
-  if (url.startsWith('didcomm://')) {
-    return true
-  }
-  return url.includes('c_i=') || url.includes('oob=') || url.includes('oobUrl=') || url.includes('d_m=')
-}
-
-const isMediatorInvitation = async (agent: Agent, url: string): Promise<boolean> => {
-  try {
-    const invitation = await agent.modules.didcomm.oob.parseInvitation(url)
-    return invitation?.goalCode === 'aries.vc.mediate'
-  } catch {
-    return false
-  }
-}
 
 const DidCommOobStrategy: UriStrategy = {
   name: 'didcomm-oob',

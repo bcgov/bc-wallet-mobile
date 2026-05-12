@@ -1,11 +1,7 @@
 import type { BifoldLogger } from '@bifold/core'
 import type { Agent } from '@credo-ts/core'
 
-import DidCommOobStrategy, {
-  isDidCommInvitation,
-  isOpenIdCredentialOffer,
-  isOpenIdPresentationRequest,
-} from './DidCommOobStrategy'
+import DidCommOobStrategy from './DidCommOobStrategy'
 import type { ScanContext } from './types'
 
 const makeLogger = (): BifoldLogger =>
@@ -28,8 +24,11 @@ const makeAgent = (overrides?: Partial<{ goalCode?: string; throwOnParse: boolea
     return goalCode === '__noparse__' ? null : { id: 'inv-1', goalCode }
   })
   const receiveInvitation = jest.fn(async () => ({ outOfBandRecord: { id: recordId } }))
+  // Bifold's isMediatorInvitation reads agent.config.logger; provide a stub so the helper doesn't crash.
+  const agentLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
   return {
     agent: {
+      config: { logger: agentLogger },
       modules: { didcomm: { oob: { parseInvitation, receiveInvitation } } },
     } as unknown as Agent,
     spies: { parseInvitation, receiveInvitation },
@@ -37,36 +36,6 @@ const makeAgent = (overrides?: Partial<{ goalCode?: string; throwOnParse: boolea
 }
 
 const ctx = (agent: Agent | undefined): ScanContext => ({ agent, logger: makeLogger() })
-
-describe('isOpenIdCredentialOffer', () => {
-  it.each([
-    'openid-initiate-issuance://abc',
-    'openid-credential-offer://abc',
-    'https://example/?credential_offer=foo',
-    'https://example/?credential_offer_uri=foo',
-  ])('detects %s', (uri) => expect(isOpenIdCredentialOffer(uri)).toBe(true))
-
-  it('rejects plain DIDComm URI', () => expect(isOpenIdCredentialOffer('didcomm://x?oob=y')).toBe(false))
-})
-
-describe('isOpenIdPresentationRequest', () => {
-  it.each(['openid://x', 'openid-vc://x', 'openid4vp://x', 'https://x?request_uri=y', 'https://x?request=y'])(
-    'detects %s',
-    (uri) => expect(isOpenIdPresentationRequest(uri)).toBe(true)
-  )
-})
-
-describe('isDidCommInvitation', () => {
-  it.each([
-    'didcomm://x',
-    'https://example/?c_i=base64',
-    'https://example/?oob=base64',
-    'https://example/?oobUrl=https',
-    'https://example/?d_m=base64',
-  ])('detects %s', (uri) => expect(isDidCommInvitation(uri)).toBe(true))
-
-  it('rejects bare https URL', () => expect(isDidCommInvitation('https://example.com/page')).toBe(false))
-})
 
 describe('DidCommOobStrategy.matches', () => {
   it('matches DIDComm invitations and OpenID URIs (so handle can reject them with a clear reason)', () => {
