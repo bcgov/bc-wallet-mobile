@@ -24,11 +24,8 @@ const makeAgent = (overrides?: Partial<{ goalCode?: string; throwOnParse: boolea
     return goalCode === '__noparse__' ? null : { id: 'inv-1', goalCode }
   })
   const receiveInvitation = jest.fn(async () => ({ outOfBandRecord: { id: recordId } }))
-  // Bifold's isMediatorInvitation reads agent.config.logger; provide a stub so the helper doesn't crash.
-  const agentLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
   return {
     agent: {
-      config: { logger: agentLogger },
       modules: { didcomm: { oob: { parseInvitation, receiveInvitation } } },
     } as unknown as Agent,
     spies: { parseInvitation, receiveInvitation },

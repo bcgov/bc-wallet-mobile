@@ -3,7 +3,7 @@ import type { Agent } from '@credo-ts/core'
 
 export type ScanResult =
   | { kind: 'connection'; oobRecordId: string }
-  | { kind: 'unsupported'; reason: 'OpenID' | 'Mediator' | 'AgentNotReady' }
+  | { kind: 'unsupported'; reason: 'OpenID' | 'Mediator' | 'AgentNotReady' | 'PairingCodePending' }
   | { kind: 'unrecognized' }
 
 export interface ScanContext {

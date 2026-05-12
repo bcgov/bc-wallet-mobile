@@ -34,10 +34,10 @@ describe('isPairingCode', () => {
 })
 
 describe('PairingCodeStrategy', () => {
-  it('returns unrecognized today (real handler tracked separately)', async () => {
+  it('returns unsupported with PairingCodePending reason today (real handler tracked separately)', async () => {
     const ctx: ScanContext = { agent: undefined, logger: makeLogger() }
     const result = await PairingCodeStrategy.handle('ABC123', ctx)
-    expect(result).toEqual({ kind: 'unrecognized' })
+    expect(result).toEqual({ kind: 'unsupported', reason: 'PairingCodePending' })
     expect(ctx.logger.info).toHaveBeenCalled()
   })
 })

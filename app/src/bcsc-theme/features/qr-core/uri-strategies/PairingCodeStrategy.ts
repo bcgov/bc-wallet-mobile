@@ -17,7 +17,10 @@ const PairingCodeStrategy: UriStrategy = {
 
   async handle(_uri, ctx: ScanContext): Promise<ScanResult> {
     ctx.logger.info('[PairingCodeStrategy] pairing-code QR detected — handler pending (#3838)')
-    return { kind: 'unrecognized' }
+    // Surface as `unsupported` so the user sees a "pending" message instead of the
+    // generic "QR code not recognized" surfaced for truly unknown codes. #3838 will
+    // replace this with a real `connection`-style result.
+    return { kind: 'unsupported', reason: 'PairingCodePending' }
   },
 }
 

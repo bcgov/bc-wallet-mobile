@@ -632,6 +632,7 @@ const translation = {
         "OpenID": "OpenID credentials aren't supported in BC Services Card.",
         "Mediator": "Mediator invitations aren't supported in BC Services Card.",
         "AgentNotReady": "Wallet isn't ready yet — please try again in a moment.",
+        "PairingCodePending": "Pairing-code scanning isn't available yet.",
       },
     },
     "ManualSerial": {
