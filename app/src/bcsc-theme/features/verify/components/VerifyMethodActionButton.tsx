@@ -28,12 +28,9 @@ const VerifyMethodActionButton = ({
 
   const styles = StyleSheet.create({
     container: {
-      backgroundColor: ColorPalette.brand.secondaryBackground,
       padding: Spacing.md,
-      borderTopWidth: 1,
-      borderTopColor: ColorPalette.brand.tertiary,
-      borderBottomWidth: 1,
-      borderBottomColor: ColorPalette.brand.tertiary,
+      borderWidth: 1,
+      borderColor: '#EDEBE9',
       flexDirection: 'row',
       alignItems: 'center',
       ...style,
@@ -57,36 +54,59 @@ const VerifyMethodActionButton = ({
   })
 
   return (
-    <TouchableOpacity
-      style={styles.container}
-      onPress={() => {
-        if (!disabled && !loading) {
-          onPress()
-        }
-      }}
-      testID={testIdWithKey(title)}
-      accessibilityRole="button"
-      accessibilityLabel={a11yLabel(title)}
-    >
-      <View style={{ flex: 1 }}>
-        <View style={styles.titleContainer}>
-          <Icon name={icon} size={iconSize} color={ColorPalette.brand.primary} />
-          <ThemedText variant={'bold'} style={styles.title} numberOfLines={0}>
-            {title}
+    <>
+      <TouchableOpacity
+        style={styles.container}
+        onPress={() => {
+          if (!disabled && !loading) {
+            onPress()
+          }
+        }}
+        testID={testIdWithKey(title)}
+        accessibilityRole="button"
+        accessibilityLabel={a11yLabel(title)}
+      >
+        <View style={{ flex: 1 }}>
+          <View style={styles.titleContainer}>
+            <Icon name={icon} size={iconSize} color={ColorPalette.brand.primary} />
+            <ThemedText variant={'bold'} style={styles.title} numberOfLines={0}>
+              {title}
+            </ThemedText>
+          </View>
+          <ThemedText numberOfLines={0} style={styles.description}>
+            {description}
           </ThemedText>
         </View>
-        <ThemedText numberOfLines={0} style={styles.description}>
-          {description}
-        </ThemedText>
-      </View>
-      <View style={styles.chevronContainer}>
-        {loading ? (
-          <ActivityIndicator size="small" color={TextTheme.normal.color} />
-        ) : (
-          <Icon name={'chevron-right'} size={iconSize} color={TextTheme.normal.color} />
-        )}
-      </View>
-    </TouchableOpacity>
+        <View style={styles.chevronContainer}>
+          {loading ? (
+            <ActivityIndicator size="small" color={TextTheme.normal.color} />
+          ) : (
+            <Icon name={'chevron-right'} size={iconSize} color={TextTheme.normal.color} />
+          )}
+        </View>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={{ ...styles.container, backgroundColor: '#D8EAFD', borderRadius: Spacing.sm }}
+        onPress={() => {
+          if (!disabled && !loading) {
+            onPress()
+          }
+        }}
+        testID={testIdWithKey(title)}
+        accessibilityRole="button"
+        accessibilityLabel={a11yLabel(title)}
+      >
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ marginRight: Spacing.lg }}>
+            <Icon name={icon} size={iconSize} color={'#1E5189'} />
+          </View>
+          <View>
+            <ThemedText style={{ color: '#1E5189', fontWeight: 'bold' }}>{title}</ThemedText>
+            <ThemedText>{description}</ThemedText>
+          </View>
+        </View>
+      </TouchableOpacity>
+    </>
   )
 }
 
