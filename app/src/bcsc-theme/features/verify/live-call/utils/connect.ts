@@ -10,6 +10,7 @@ import {
   withToken,
 } from '@pexip/infinity-api'
 import type { Result as PexipTokenResult, Stun, Turn } from '@pexip/infinity-api/dist/token/types'
+import { Platform } from 'react-native'
 import EventSource from 'react-native-sse'
 import { mediaDevices, MediaStream, RTCIceCandidate, RTCPeerConnection } from 'react-native-webrtc'
 import { RTCOfferOptions } from 'react-native-webrtc/lib/typescript/RTCUtil'
@@ -349,9 +350,24 @@ export const buildIceServers = (tokenResult: PexipTokenResult, logger: BifoldLog
   return iceServers
 }
 
-const createPeerConnection = async (localStream: MediaStream, tokenResult: PexipTokenResult, logger: BifoldLogger) => {
-  const peerConstraints = {
-    iceServers: buildIceServers(tokenResult, logger),
+export const createPeerConnection = async (
+  localStream: MediaStream,
+  tokenResult: PexipTokenResult,
+  logger: BifoldLogger
+) => {
+  const iceServers = buildIceServers(tokenResult, logger)
+  const peerConstraints: { iceServers: IceServer[]; iceTransportPolicy?: 'all' | 'relay' } = {
+    iceServers,
+  }
+
+  // On iOS, skip gathering host candidates to prevent the Local Network permission prompt.
+  // 'nohost' is supported by the native libwebrtc layer in react-native-webrtc (verified in
+  // RCTConvert+WebRTC.m and WebRTCModule.java) but is not exposed in the public TS types.
+  // STUN reflexive (srflx) and TURN relay candidates are still gathered, so connectivity
+  // works with STUN-only fallbacks too.
+  if (Platform.OS === 'ios') {
+    // @ts-expect-error 'nohost' is accepted by the native layer but missing from the public types.
+    peerConstraints.iceTransportPolicy = 'nohost'
   }
 
   const peerConnection = new RTCPeerConnection(peerConstraints)
