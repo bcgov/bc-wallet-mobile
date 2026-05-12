@@ -332,6 +332,44 @@ class BcscCoreModule(
                                         promise.resolve(token)
                                         return
                                     }
+                                    
+                                    // older V3 fallback: try reading refresh token from providers file
+                                    Log.d(NAME, "getToken: refresh token not found in V4 tokens file, trying older V3 fallback")
+                                    val v3RefreshToken =
+                                        nativeStorage.readRefreshTokenFromV3Provider(
+                                            issuerName,
+                                            accountId,
+                                        )
+                                    if (v3RefreshToken != null) {
+                                        Log.d(
+                                            NAME,
+                                            "getToken: V3 refresh token found, migrating to V4 tokens file",
+                                        )
+                                        val existingTokensForMigration = nativeStorage.readTokens(issuerName, accountId)
+                                        val migratedRefreshToken =
+                                            NativeToken(
+                                                id = "$clientID/tokens/$tokenType/1",
+                                                type = NativeTokenType.REFRESH,
+                                                token = v3RefreshToken,
+                                                created = Date(),
+                                            )
+                                        val migratedTokens =
+                                            existingTokensForMigration?.copy(refreshToken = migratedRefreshToken)
+                                                ?: NativeTokens(issuer = issuer, refreshToken = migratedRefreshToken)
+                                        nativeStorage.saveTokens(migratedTokens, issuerName, accountId)
+                                        Log.d(NAME, "getToken: V3 refresh token migrated and saved to V4 tokens file")
+                                        val token: WritableMap = Arguments.createMap()
+                                        token.putString("id", migratedRefreshToken.id)
+                                        token.putInt("type", tokenType)
+                                        token.putString("token", v3RefreshToken)
+                                        token.putDouble("created", migratedRefreshToken.created?.time?.toDouble() ?: 0.0)
+                                        promise.resolve(token)
+                                        return
+                                    }
+                                    Log.w(
+                                        NAME,
+                                        "getToken: No refresh token found in V4 tokens file or V3 providers fallback",
+                                    )
                                 }
 
                                 TOKEN_TYPE_REGISTRATION -> { // Registration Token (idToken)

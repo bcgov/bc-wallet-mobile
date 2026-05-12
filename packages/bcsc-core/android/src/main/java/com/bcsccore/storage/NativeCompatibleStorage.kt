@@ -361,6 +361,13 @@ class NativeCompatibleStorage(
             tokensFile.delete()
         }
 
+        // Also delete V3 providers file to prevent orphaned token reuse
+        val providerPath = issuerName + File.separator + accountUuid + File.separator + "providers"
+        val providerFile = File(context.filesDir, providerPath)
+        if (providerFile.exists()) {
+            providerFile.delete()
+        }
+
         // Delete account directory if empty
         accountDir?.let {
             if (it.exists() && it.isDirectory && (it.listFiles()?.isEmpty() == true)) {
@@ -555,6 +562,66 @@ class NativeCompatibleStorage(
             }
         } catch (e: Exception) {
             Log.e(TAG, "readRegistrationTokenFromV3Provider: Failed to parse v3 provider file", e)
+            null
+        }
+    }
+
+    /**
+     * Reads the refresh token from the V3 providers file.
+     *
+     * @param issuerName The issuer name
+     * @param accountUuid The account UUID
+     * @return The refresh token string, or null if not found
+     */
+    fun readRefreshTokenFromV3Provider(
+        issuerName: String,
+        accountUuid: String,
+    ): String? {
+        val providerPath = issuerName + File.separator + accountUuid + File.separator + "providers"
+        val providerFile = File(context.filesDir, providerPath)
+
+        Log.d(TAG, "readRefreshTokenFromV3Provider: Attempting to read v3 provider file from: $providerPath")
+        if (!providerFile.exists()) {
+            Log.d(
+                TAG,
+                "readRefreshTokenFromV3Provider: V3 provider file not found at: ${providerFile.absolutePath}",
+            )
+            return null
+        }
+
+        Log.d(TAG, "readRefreshTokenFromV3Provider: Reading v3 provider file: ${providerFile.absolutePath}")
+
+        val jsonContent = readEncryptedFile(providerFile) ?: return null
+
+        return try {
+            val jsonObject = org.json.JSONObject(jsonContent)
+            val clientReg = jsonObject.optJSONObject("clientRegistration") ?: return null
+            
+            // Try refresh_token first (common OAuth field name)
+            var token = clientReg.optString("refresh_token", null)
+            if (!token.isNullOrEmpty()) {
+                Log.d(TAG, "readRefreshTokenFromV3Provider: Found refresh token in clientRegistration")
+                return token
+            }
+            
+            // Try refreshToken (camelCase variant)
+            token = clientReg.optString("refreshToken", null)
+            if (!token.isNullOrEmpty()) {
+                Log.d(TAG, "readRefreshTokenFromV3Provider: Found refreshToken in clientRegistration")
+                return token
+            }
+            
+            // Try looking in oauth section if present
+            val oauth = jsonObject.optJSONObject("oauth") ?: return null
+            token = oauth.optString("refresh_token", null)
+            if (!token.isNullOrEmpty()) {
+                Log.d(TAG, "readRefreshTokenFromV3Provider: Found refresh token in oauth section")
+                return token
+            }
+            
+            null
+        } catch (e: Exception) {
+            Log.e(TAG, "readRefreshTokenFromV3Provider: Failed to parse v3 provider file", e)
             null
         }
     }
