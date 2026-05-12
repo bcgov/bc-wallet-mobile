@@ -72,14 +72,15 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     updateVerificationRequest,
   ])
 
+  const getServiceHours = useCallback(async () => {
+    return await Promise.all([videoCallApi.getVideoDestinations(), videoCallApi.getServiceHours()])
+  }, [videoCallApi])
+
   const handlePressLiveCall = useCallback(async () => {
     try {
       setLiveCallLoading(true)
 
-      const [destinations, serviceHours] = await Promise.all([
-        videoCallApi.getVideoDestinations(),
-        videoCallApi.getServiceHours(),
-      ])
+      const [destinations, serviceHours] = await getServiceHours()
 
       const formattedHours = formatServiceAndUnavailableHours(serviceHours)
       const liveCallVideoQueue = getLiveCallVideoQueue(store.developer.environment, destinations)
@@ -112,7 +113,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     } finally {
       setLiveCallLoading(false)
     }
-  }, [videoCallApi, store.developer.environment, navigation, logger])
+  }, [store.developer.environment, navigation, logger, getServiceHours])
 
   return {
     handlePressSendVideo,
@@ -120,6 +121,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     sendVideoLoading,
     liveCallLoading,
     verificationOptions: store.bcscSecure.verificationOptions ?? [],
+    getServiceHours,
   }
 }
 
