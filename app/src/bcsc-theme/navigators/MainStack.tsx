@@ -141,27 +141,6 @@ const MainStack: React.FC = () => {
           }}
         >
           <Stack.Screen
-            name={BCSCScreens.AccountRenewalInformation}
-            component={AccountRenewalInformationScreen}
-            options={() => ({
-              headerShown: true,
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.AccountRenewalFirstWarning}
-            component={AccountRenewalFirstWarningScreen}
-            options={() => ({
-              headerShown: true,
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.AccountRenewalFinalWarning}
-            component={AccountRenewalFinalWarningScreen}
-            options={() => ({
-              headerShown: true,
-            })}
-          />
-          <Stack.Screen
             name={BCSCScreens.Contacts}
             component={ContactsScreen}
             options={() => ({
@@ -216,16 +195,6 @@ const MainStack: React.FC = () => {
             options={() => ({
               ...getDefaultModalOptions(t('BCSC.Contacts.Remove.HeaderTitle')),
             })}
-          />
-
-          {/* React navigation docs suggest modals at bottom of stack */}
-          <Stack.Screen
-            name={BCSCModals.InternetDisconnected}
-            component={InternetDisconnected}
-            options={{
-              ...getDefaultModalOptions(t('BCSC.Title')),
-              gestureEnabled: false,
-            }}
           />
           <Stack.Screen
             name={BCSCStacks.Tab}
