@@ -145,11 +145,10 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const focusOpacity = useRef(new Animated.Value(0)).current
   const focusScale = useRef(new Animated.Value(1)).current
 
-  // Android zoom fix - the camera will initially build with this default zoom of 1, when our prop default of 2 is applied
-  // the camera triggers a prop change and properly zooms the camera to the desired level
-  const zoom = useSharedValue(1)
+  const zoom = useSharedValue(initialZoom)
   const zoomOffset = useSharedValue(0)
   const [zoomDisplay, setZoomDisplay] = useState(initialZoom)
+  const cameraIsReady = useSharedValue(false)
 
   // Barcode highlight state
   const [detectedCodes, setDetectedCodes] = useState<EnhancedCode[]>([])
@@ -300,8 +299,12 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const minZoomValue = device?.minZoom ?? 1
   const maxZoomValue = Math.min(device?.maxZoom ?? 10, 20)
 
-  // Animated zoom props for the ReanimatedCamera
-  const animatedProps = useAnimatedProps<CameraProps>(() => ({ zoom: zoom.value }), [zoom])
+  // Wait until camera is ready before applying zoom
+  // zoom can be ignored if the prop is passed in and the camera isn't ready
+  const animatedProps = useAnimatedProps<CameraProps>(
+    () => (cameraIsReady.value ? { zoom: zoom.value } : {}),
+    [zoom, cameraIsReady]
+  )
 
   // Pinch-to-zoom gesture — maps linear pinch scale to the camera's zoom range
   const pinchGesture = Gesture.Pinch()
@@ -803,9 +806,11 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       const targetZoom = getEffectiveZoom(initialZoom ?? 1)
       zoom.value = targetZoom
       setZoomDisplay(targetZoom)
+      // Forcing cameraIsReady to trigger animatedProps to re-evaluate and apply properly
+      cameraIsReady.value = true
       logger.debug('Zoom applied after initialization', { zoom: targetZoom })
     }
-  }, [initialZoom, getEffectiveZoom, logger, device, format, zoom])
+  }, [initialZoom, getEffectiveZoom, logger, device, format, zoom, cameraIsReady])
 
   const handleSaveScanZones = useCallback(() => {
     if (!containerSize || !frameSize) {
