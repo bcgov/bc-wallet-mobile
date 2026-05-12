@@ -1,10 +1,10 @@
 diff --git a/android/src/main/java/com/mrousavy/camera/core/CameraSession+Configuration.kt b/android/src/main/java/com/mrousavy/camera/core/CameraSession+Configuration.kt
-index 1e9c0def6444656112c34856f70eddda982a6b55..71686f023407d541b37f0f918439aec8493fe24b 100644
+index 1e9c0def6444656112c34856f70eddda982a6b55..c14e70f2f4f7f79424edc695d0064c5069c6aca7 100644
 --- a/android/src/main/java/com/mrousavy/camera/core/CameraSession+Configuration.kt
 +++ b/android/src/main/java/com/mrousavy/camera/core/CameraSession+Configuration.kt
-@@ -75,11 +75,39 @@
+@@ -75,11 +75,39 @@ internal fun CameraSession.configureOutputs(configuration: CameraConfiguration)
        }
-
+ 
        if (format != null) {
 -        // Preview will follow video size as it's size & aspect ratio, or photo- if video is disabled.
 -        val targetSize = if (videoConfig != null) format.videoSize else format.photoSize
@@ -21,7 +21,7 @@ index 1e9c0def6444656112c34856f70eddda982a6b55..71686f023407d541b37f0f918439aec8
 +        } else {
 +          format.photoSize
 +        }
-
+ 
 +        // Strictly filter Preview to matching aspect ratio to ensure Preview and
 +        // ImageAnalysis/CodeScanner have the same FOV.
 +        val targetAspect = targetSize.width.toFloat() / targetSize.height.toFloat()
@@ -45,7 +45,7 @@ index 1e9c0def6444656112c34856f70eddda982a6b55..71686f023407d541b37f0f918439aec8
            .setAllowedResolutionMode(ResolutionSelector.PREFER_CAPTURE_RATE_OVER_HIGHER_RESOLUTION)
            .build()
          preview.setResolutionSelector(previewResolutionSelector)
-@@ -220,7 +248,20 @@
+@@ -220,7 +248,20 @@ internal fun CameraSession.configureOutputs(configuration: CameraConfiguration)
    val codeScannerConfig = configuration.codeScanner as? CameraConfiguration.Output.Enabled<CameraConfiguration.CodeScanner>
    if (codeScannerConfig != null) {
      Log.i(CameraSession.TAG, "Creating CodeScanner output...")
@@ -71,7 +71,7 @@ diff --git a/android/src/main/java/com/mrousavy/camera/core/CodeScannerPipeline.
 index 23d78d1350242c1d2497b732fd77b291b9e06c3a..6c75b2802cf490bf2310fa69b16151603c6c7ab4 100644
 --- a/android/src/main/java/com/mrousavy/camera/core/CodeScannerPipeline.kt
 +++ b/android/src/main/java/com/mrousavy/camera/core/CodeScannerPipeline.kt
-@@ -23,6 +23,10 @@
+@@ -23,6 +23,10 @@ class CodeScannerPipeline(val configuration: CameraConfiguration.CodeScanner, va
      val types = configuration.codeTypes.map { it.toBarcodeType() }
      val barcodeScannerOptions = BarcodeScannerOptions.Builder()
        .setBarcodeFormats(types[0], *types.toIntArray())
@@ -82,8 +82,8 @@ index 23d78d1350242c1d2497b732fd77b291b9e06c3a..6c75b2802cf490bf2310fa69b1615160
        .build()
      scanner = BarcodeScanning.getClient(barcodeScannerOptions)
    }
-@@ -33,10 +37,26 @@
-
+@@ -33,10 +37,26 @@ class CodeScannerPipeline(val configuration: CameraConfiguration.CodeScanner, va
+ 
      try {
        val inputImage = InputImage.fromMediaImage(image, imageProxy.imageInfo.rotationDegrees)
 +      val rotation = imageProxy.imageInfo.rotationDegrees
