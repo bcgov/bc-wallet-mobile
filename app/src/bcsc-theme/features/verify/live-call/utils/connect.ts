@@ -355,19 +355,19 @@ export const createPeerConnection = async (
   tokenResult: PexipTokenResult,
   logger: BifoldLogger
 ) => {
-  interface RTCConfiguration {
-    iceServers: IceServer[]
-    iceTransportPolicy?: 'all' | 'relay'
+  const iceServers = buildIceServers(tokenResult, logger)
+  const peerConstraints: { iceServers: IceServer[]; iceTransportPolicy?: 'all' | 'relay' } = {
+    iceServers,
   }
 
-  const peerConstraints: RTCConfiguration = {
-    iceServers: buildIceServers(tokenResult, logger),
-  }
-
-  // On iOS, restrict ICE transport to relay-only to prevent the Local Network permission prompt.
-  // The relay policy works with both STUN and TURN servers, including the Google STUN fallback.
+  // On iOS, skip gathering host candidates to prevent the Local Network permission prompt.
+  // 'nohost' is supported by the native libwebrtc layer in react-native-webrtc (verified in
+  // RCTConvert+WebRTC.m and WebRTCModule.java) but is not exposed in the public TS types.
+  // STUN reflexive (srflx) and TURN relay candidates are still gathered, so connectivity
+  // works with STUN-only fallbacks too.
   if (Platform.OS === 'ios') {
-    peerConstraints.iceTransportPolicy = 'relay'
+    // @ts-expect-error 'nohost' is accepted by the native layer but missing from the public types.
+    peerConstraints.iceTransportPolicy = 'nohost'
   }
 
   const peerConnection = new RTCPeerConnection(peerConstraints)

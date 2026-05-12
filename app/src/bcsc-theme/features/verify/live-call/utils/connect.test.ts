@@ -203,13 +203,13 @@ describe('createPeerConnection', () => {
     jest.clearAllMocks()
   })
 
-  it('should set iceTransportPolicy to relay on iOS', async () => {
+  it("should set iceTransportPolicy to 'nohost' on iOS", async () => {
     Platform.OS = 'ios'
 
     await createPeerConnection(mockLocalStream, baseTokenResult, mockLogger)
 
     const config = (RTCPeerConnection as jest.Mock).mock.calls[0][0]
-    expect(config.iceTransportPolicy).toBe('relay')
+    expect(config.iceTransportPolicy).toBe('nohost')
   })
 
   it('should not set iceTransportPolicy on Android', async () => {
