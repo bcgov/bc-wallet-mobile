@@ -195,10 +195,10 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.VerificationSuccess]: undefined
   [BCSCScreens.AdditionalIdentificationRequired]: undefined
   [BCSCScreens.DualIdentificationRequired]: undefined
-  [BCSCScreens.IDPhotoInformation]: { cardType: EvidenceType }
+  [BCSCScreens.IDPhotoInformation]: undefined
   [BCSCScreens.EvidenceTypeList]: { cardProcess: BCSCCardProcess; photoFilter?: 'photo' | 'nonPhoto' }
-  [BCSCScreens.EvidenceCapture]: { cardType: EvidenceType }
-  [BCSCScreens.EvidenceIDCollection]: { cardType: EvidenceType; documentNumber?: string }
+  [BCSCScreens.EvidenceCapture]: undefined
+  [BCSCScreens.EvidenceIDCollection]: { cardType: EvidenceType; documentNumber?: string; photoPath?: string }
   [BCSCScreens.BeforeYouCall]: { formattedHours: FormattedServicePeriod[] }
   [BCSCScreens.StartCall]: undefined
   [BCSCScreens.CallBusyOrClosed]: { busy: boolean; formattedHours: FormattedServicePeriod[] }

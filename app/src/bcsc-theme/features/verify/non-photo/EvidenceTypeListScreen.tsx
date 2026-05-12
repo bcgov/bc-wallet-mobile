@@ -14,6 +14,8 @@ import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Pressable, SectionList, StyleSheet, View } from 'react-native'
 import { BCSCCardProcess, EvidenceType } from 'react-native-bcsc-core'
 
+//might deleted full screen
+
 type EvidenceTypeListScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceTypeList>
   route: RouteProp<BCSCVerifyStackParams, BCSCScreens.EvidenceTypeList>
@@ -238,7 +240,7 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
           <Pressable
             onPress={() => {
               addEvidenceType(data.item)
-              navigation.navigate(BCSCScreens.IDPhotoInformation, { cardType: data.item })
+              navigation.navigate(BCSCScreens.IDPhotoInformation)
             }}
             testID={testIdWithKey(`EvidenceTypeListItem ${data.item.evidence_type_label}`)}
             accessibilityLabel={a11yShortLabel(data.item.evidence_type_label)}

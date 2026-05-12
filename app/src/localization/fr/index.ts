@@ -1044,6 +1044,10 @@ const translation = {
         "TryAgain": "Try again (FR)"
       },
     },
+    "EvidenceCapture": {
+      "Label": "Take a photo of your ID (FR)",
+      "Instructions": "Center your ID within the frame and take a picture. (FR)"
+    },
     "EvidenceTypeList": {
       "Heading": "Choose photo ID (FR)",
       "Description": "Use an ID that has the same name as on your BC Services Card. (FR)",

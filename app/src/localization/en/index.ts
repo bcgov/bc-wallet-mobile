@@ -1053,6 +1053,10 @@ const translation = {
         "TryAgain": "Try again"
       },
     },
+    "EvidenceCapture": {
+      "Label": "Take a photo of your ID",
+      "Instructions": "Center your ID within the frame and take a picture."
+    },
     "EvidenceTypeList": {
       "Heading": "Choose photo ID",
       "Description": "Use an ID that has the same name as on your BC Services Card.",
