@@ -41,6 +41,12 @@ const resetToBCSCHome = (navigation: NavigationProp<any>): void => {
 // Connection.tsx on the enableChat=true completion path. The reset routes
 // reference Bifold's nav graph, which BCSC doesn't register; translate to
 // BCSC's home reset so the chat path lands somewhere valid.
+//
+// Heuristic note: the match is intentionally broad — any RESET whose routes
+// contain `Tab Stack` OR `Chat` is treated as the Bifold chat-path reset.
+// BCSC has no screen named `Chat` and uses `BCSCStacks.Tab` (not `Tab Stack`),
+// so collisions with legitimate BCSC resets are unlikely today. Revisit if a
+// future Bifold internal refactor changes the reset shape.
 const isBifoldChatResetAction = (action: { type?: string; payload?: { routes?: { name?: string }[] } }): boolean => {
   if (action.type !== 'RESET') {
     return false

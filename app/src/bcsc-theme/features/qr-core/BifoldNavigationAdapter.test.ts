@@ -113,4 +113,14 @@ describe('BifoldNavigationAdapter', () => {
     adapted.dispatch(action)
     expect(nav.dispatch).toHaveBeenCalledWith(action)
   })
+
+  it('does not translate a non-RESET dispatch action that happens to reference Bifold route names', () => {
+    const { nav } = mkNav()
+    const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    // A NAVIGATE action whose payload name is 'Chat' must still pass through —
+    // the chat-reset intercept is gated on `action.type === 'RESET'`.
+    const action = CommonActions.navigate('Chat')
+    adapted.dispatch(action)
+    expect(nav.dispatch).toHaveBeenCalledWith(action)
+  })
 })

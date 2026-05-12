@@ -17,6 +17,11 @@ export interface UseScanScreenViewModelOptions {
   strategies?: UriStrategy[]
 }
 
+// Ordering matters: `Array.find` returns the first matching strategy. Keep
+// `DidCommOobStrategy` first because its DIDComm-shaped URLs are unambiguous;
+// `PairingCodeStrategy` is the looser catch-all (bare alphanumeric codes) so
+// it goes last. If a future Bifold release loosens `isDidCommInvitation`, the
+// `PairingCodeStrategy.matches` test pins the assumption.
 const DEFAULT_STRATEGIES: UriStrategy[] = [DidCommOobStrategy, PairingCodeStrategy]
 
 const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
@@ -60,6 +65,15 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
           case 'unrecognized':
             setScanError(new QrCodeScanError(t('BCSC.Scan.UnrecognizedQR'), value))
             break
+          default: {
+            // Defensive: a future ScanResult variant added without updating this switch would
+            // otherwise leave the screen idle with no error shown. Log + surface as invalid so the
+            // user gets feedback and the dropped variant shows up in logs.
+            const exhaustive: never = result
+            logger.error(`[ScanScreen] unhandled scan result kind: ${JSON.stringify(exhaustive)}`)
+            setScanError(new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value))
+            break
+          }
         }
       } catch (err) {
         // Preserve QrCodeScanError thrown by a strategy verbatim — strategies are

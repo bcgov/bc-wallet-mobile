@@ -10,6 +10,7 @@ jest.mock('@bifold/core', () => ({
   MaskType: { QR_CODE: 'QR_CODE' },
   ThemedText: ({ children }: any) => children,
   DismissiblePopupModal: ({ description }: any) => description ?? null,
+  testIdWithKey: (k: string) => `id/${k}`,
   useTheme: () => ({
     ColorPalette: { grayscale: { white: '#fff', black: '#000' } },
     Spacing: { sm: 4, md: 8, lg: 16 },

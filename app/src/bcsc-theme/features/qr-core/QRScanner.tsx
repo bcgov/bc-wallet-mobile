@@ -1,7 +1,16 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { DismissiblePopupModal, MaskType, ScanCamera, SVGOverlay, ThemedText, useTheme } from '@bifold/core'
+import { hitSlop } from '@/constants'
+import {
+  DismissiblePopupModal,
+  MaskType,
+  ScanCamera,
+  SVGOverlay,
+  testIdWithKey,
+  ThemedText,
+  useTheme,
+} from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useState } from 'react'
@@ -84,6 +93,8 @@ const QRScanner: React.FC = () => {
         onPress={() => setTorchActive((v) => !v)}
         accessibilityRole="button"
         accessibilityLabel={t(torchActive ? 'BCSC.Scan.TorchOff' : 'BCSC.Scan.TorchOn')}
+        hitSlop={hitSlop}
+        testID={testIdWithKey('TorchToggle')}
       >
         <Icon name={torchActive ? 'flash' : 'flash-off'} size={28} style={styles.torchIcon} />
       </TouchableOpacity>

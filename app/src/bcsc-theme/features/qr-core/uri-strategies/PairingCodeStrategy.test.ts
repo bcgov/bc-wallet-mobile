@@ -1,4 +1,4 @@
-import type { BifoldLogger } from '@bifold/core'
+import { isDidCommInvitation, type BifoldLogger } from '@bifold/core'
 
 import PairingCodeStrategy, { isPairingCode } from './PairingCodeStrategy'
 import type { ScanContext } from './types'
@@ -39,5 +39,16 @@ describe('PairingCodeStrategy', () => {
     const result = await PairingCodeStrategy.handle('ABC123', ctx)
     expect(result).toEqual({ kind: 'unrecognized' })
     expect(ctx.logger.info).toHaveBeenCalled()
+  })
+})
+
+// Boundary assumption: DEFAULT_STRATEGIES lists DidCommOob before PairingCode
+// and uses Array.find first-match. PairingCode is the catch-all looser matcher.
+// If Bifold ever loosens `isDidCommInvitation` such that bare alphanumeric
+// strings classify as DIDComm, pairing codes would be silently shadowed.
+describe('strategy ordering boundary', () => {
+  it('isDidCommInvitation does not match a bare alphanumeric pairing-code shape — keeps PairingCode reachable', () => {
+    expect(isDidCommInvitation('ABC123')).toBe(false)
+    expect(isDidCommInvitation('XYZ12ABCDE')).toBe(false)
   })
 })
