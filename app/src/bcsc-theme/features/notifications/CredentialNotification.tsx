@@ -1,6 +1,18 @@
+import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
+import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { CredentialNotificationRecord } from '@/hooks/notifications'
 import { getCredentialNotificationType, NotificationType } from '@/utils/credentials'
-import { InfoBoxType } from '@bifold/core'
+import {
+  basicMessageCustomMetadata,
+  BasicMessageMetadata,
+  getConnectionName,
+  InfoBoxType,
+  useStore,
+} from '@bifold/core'
+import { useConnectionById } from '@bifold/react-hooks'
+import { DidCommBasicMessageRecord, DidCommBasicMessageRepository } from '@credo-ts/didcomm'
+import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import NotificationCard from './NotificationCard'
 
@@ -32,10 +44,24 @@ const CredentialNotification = (props: CredentialNotificationProps) => {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const BasicMessageNotification = (props: CredentialNotificationProps) => {
+const BasicMessageNotification = ({ notification }: CredentialNotificationProps) => {
   const { t } = useTranslation()
-  const label = 'TODO (V4.1.x): Connection Label' // Bifold:NotificationListItem.tsx:263
+  const { agent } = useBCSCAgent()
+  const [store] = useStore()
+  const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
+  const basicMessage = notification as DidCommBasicMessageRecord
+  const connection = useConnectionById(basicMessage.connectionId)
+  const label = getConnectionName(connection, store.preferences.alternateContactNames)
+
+  const handleClose = async () => {
+    if (!agent) {
+      return
+    }
+    const meta = basicMessage.metadata.get(BasicMessageMetadata.customMetadata) as basicMessageCustomMetadata
+    basicMessage.metadata.set(BasicMessageMetadata.customMetadata, { ...meta, seen: true })
+    const repo = agent.context.dependencyManager.resolve(DidCommBasicMessageRepository)
+    await repo.update(agent.context, basicMessage)
+  }
 
   return (
     <NotificationCard
@@ -45,9 +71,8 @@ const BasicMessageNotification = (props: CredentialNotificationProps) => {
       }
       buttonTitle={t('Notification.BasicMessage.ButtonTitle')}
       cardType={InfoBoxType.Info}
-      onPress={() => {
-        // FIXME (V4.1.x): Replace this callback with the appropriate credential notification callback once implemented.
-      }}
+      onPress={() => navigation.navigate(BCSCScreens.ContactChat, { connectionId: basicMessage.connectionId })}
+      onClose={handleClose}
     />
   )
 }
