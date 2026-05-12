@@ -668,6 +668,7 @@ const translation = {
       "Bullet2": "Add a photo ID",
       "Bullet3": "Take a photo of your face",
       "Bullet4": "Record a short video, have a video call, or visit a Service BC office",
+      "SkipVerification": "Skip verification",
     },
     "NewSetup": {
       "Title": "New setup",
