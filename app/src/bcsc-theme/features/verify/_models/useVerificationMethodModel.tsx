@@ -1,4 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { ServiceHours, VideoDestinations } from '@/bcsc-theme/api/hooks/useVideoCallApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { formatServiceAndUnavailableHours, isLiveCallAvailable } from '@/bcsc-theme/utils/service-hours-formatter'
@@ -6,7 +7,7 @@ import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { getLiveCallVideoQueue } from '../live-call/utils/videoDestinations'
 import { VerificationVideoCache } from '../send-video/VideoReviewScreen'
 
@@ -18,9 +19,20 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
   const [store, dispatch] = useStore<BCState>()
   const [sendVideoLoading, setSendVideoLoading] = useState(false)
   const [liveCallLoading, setLiveCallLoading] = useState(false)
+  const [serviceHours, setServiceHours] = useState<ServiceHours | undefined>()
+  const [destinations, setDestinations] = useState<VideoDestinations | undefined>()
   const { evidence, video: videoCallApi } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { updateVerificationRequest } = useSecureActions()
+
+  useEffect(() => {
+    Promise.all([videoCallApi.getVideoDestinations(), videoCallApi.getServiceHours()])
+      .then(([d, h]) => {
+        setDestinations(d)
+        setServiceHours(h)
+      })
+      .catch(() => {})
+  }, [videoCallApi])
 
   const handlePressSendVideo = useCallback(async () => {
     try {
@@ -72,18 +84,17 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     updateVerificationRequest,
   ])
 
-  const getServiceHours = useCallback(async () => {
-    return await Promise.all([videoCallApi.getVideoDestinations(), videoCallApi.getServiceHours()])
-  }, [videoCallApi])
-
   const handlePressLiveCall = useCallback(async () => {
     try {
       setLiveCallLoading(true)
 
-      const [destinations, serviceHours] = await getServiceHours()
+      const [resolvedDestinations, resolvedServiceHours] =
+        destinations && serviceHours
+          ? [destinations, serviceHours]
+          : await Promise.all([videoCallApi.getVideoDestinations(), videoCallApi.getServiceHours()])
 
-      const formattedHours = formatServiceAndUnavailableHours(serviceHours)
-      const liveCallVideoQueue = getLiveCallVideoQueue(store.developer.environment, destinations)
+      const formattedHours = formatServiceAndUnavailableHours(resolvedServiceHours)
+      const liveCallVideoQueue = getLiveCallVideoQueue(store.developer.environment, resolvedDestinations)
 
       if (!liveCallVideoQueue) {
         navigation.navigate(BCSCScreens.CallBusyOrClosed, {
@@ -93,9 +104,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
         return
       }
 
-      const isWithinServiceHours = isLiveCallAvailable(serviceHours)
-
-      if (!isWithinServiceHours) {
+      if (!isLiveCallAvailable(resolvedServiceHours)) {
         navigation.navigate(BCSCScreens.CallBusyOrClosed, {
           busy: false,
           formattedHours,
@@ -113,7 +122,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     } finally {
       setLiveCallLoading(false)
     }
-  }, [store.developer.environment, navigation, logger, getServiceHours])
+  }, [store.developer.environment, navigation, logger, destinations, serviceHours, videoCallApi])
 
   return {
     handlePressSendVideo,
@@ -121,7 +130,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     sendVideoLoading,
     liveCallLoading,
     verificationOptions: store.bcscSecure.verificationOptions ?? [],
-    getServiceHours,
+    formattedHours: serviceHours ? formatServiceAndUnavailableHours(serviceHours) : undefined,
   }
 }
 

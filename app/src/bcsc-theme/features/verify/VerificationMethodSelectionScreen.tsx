@@ -1,11 +1,9 @@
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
-import { ServiceHours } from '@/bcsc-theme/api/hooks/useVideoCallApi'
-import { formatServiceAndUnavailableHours } from '@/bcsc-theme/utils/service-hours-formatter'
 import { Spacing } from '@/bcwallet-theme/theme'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { ScreenWrapper, testIdWithKey, ThemedText } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import useVerificationMethodModel from './_models/useVerificationMethodModel'
@@ -18,7 +16,6 @@ type VerificationMethodSelectionScreenProps = {
 
 const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSelectionScreenProps) => {
   const { t } = useTranslation()
-  const [hours, setHours] = useState<ServiceHours | undefined>(undefined)
 
   const {
     handlePressSendVideo,
@@ -26,32 +23,10 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
     sendVideoLoading,
     liveCallLoading,
     verificationOptions,
-    getServiceHours,
+    formattedHours,
   } = useVerificationMethodModel({ navigation })
 
   const [primaryOption, ...remainingOptions] = verificationOptions
-  // TODO: (al) Is it possible to select the wrong primary option?
-  // const headingText = useMemo(() => {
-  //   if (primaryOption === DeviceVerificationOption.SEND_VIDEO) {
-  //     return t('BCSC.VerificationMethods.CannotSendVideo')
-  //   }
-  //   if (primaryOption === DeviceVerificationOption.IN_PERSON) {
-  //     return t('BCSC.VerificationMethods.CannotMakeItToServiceBC')
-  //   }
-  //   if (primaryOption === DeviceVerificationOption.LIVE_VIDEO_CALL) {
-  //     return t('BCSC.VerificationMethods.CannotVideoCall')
-  //   }
-
-  //   logger.error(`Unknown primary verification option: ${primaryOption}`)
-  //   return ''
-  // }, [primaryOption, t, logger])
-  useEffect(() => {
-    const fetch = async () => {
-      const [_, serviceHours] = await getServiceHours()
-      setHours(serviceHours)
-    }
-    fetch()
-  }, [getServiceHours])
 
   const renderOption = (option: DeviceVerificationOption) => {
     if (option === DeviceVerificationOption.SEND_VIDEO) {
@@ -126,7 +101,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         >
           {t('BCSC.VideoCall.CallBusyOrClosed.HoursOfService')}
         </ThemedText>
-        {hours && <ServicePeriodList items={formatServiceAndUnavailableHours(hours)} />}
+        {formattedHours && <ServicePeriodList items={formattedHours} />}
       </View>
     </ScreenWrapper>
   )
