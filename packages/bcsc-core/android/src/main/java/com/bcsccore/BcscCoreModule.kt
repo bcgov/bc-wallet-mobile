@@ -2767,13 +2767,26 @@ class BcscCoreModule(
             val accountId = account.getString("id")
             val issuer = account.getString("issuer")
 
-            if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
-                Log.d(NAME, "getAuthorizationRequest: No issuer")
+            if (accountId.isNullOrEmpty()) {
+                Log.d(NAME, "getAuthorizationRequest: No account id")
                 promise.resolve(null)
                 return
             }
 
-            val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+            // If the account's issuer is missing (e.g. incomplete v3 migration), fall back
+            // to the default issuer name derived from the issuer file / account directories.
+            // This lets the v3 provider read below recover issuer/clientID for callers.
+            val issuerName =
+                if (issuer.isNullOrEmpty()) {
+                    val fallbackName = nativeStorage.getDefaultIssuerName()
+                    Log.w(
+                        NAME,
+                        "getAuthorizationRequest: account.issuer missing; using default issuer name '$fallbackName' to attempt v3 recovery",
+                    )
+                    fallbackName
+                } else {
+                    nativeStorage.getIssuerNameFromIssuer(issuer)
+                }
 
             // First try to read from our v4 storage location
             var authRequest: NativeAuthorizationRequest? = nativeStorage.readAuthorizationRequest(issuerName, accountId)
@@ -2806,7 +2819,11 @@ class BcscCoreModule(
                     authRequest.firstName?.let { putString("firstName", it) }
                     authRequest.lastName?.let { putString("lastName", it) }
                     authRequest.middleNames?.let { putString("middleNames", it) }
-                    authRequest.issuer?.let { putString("audience", it) }
+                    authRequest.issuer?.let {
+                        putString("issuer", it)
+                        putString("audience", it)
+                    }
+                    authRequest.clientID?.let { putString("clientID", it) }
                     authRequest.verificationOptions?.let { putString("verificationOptions", it) }
                     authRequest.verificationUriVideo?.let { putString("verificationURIVideo", it) }
                     authRequest.backCheckVerificationId?.let { putString("backCheckVerificationId", it) }
