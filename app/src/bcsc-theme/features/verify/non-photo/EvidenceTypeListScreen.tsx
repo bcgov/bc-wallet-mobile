@@ -11,8 +11,9 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { a11yLabel, a11yShortLabel } from '@utils/accessibility'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, Pressable, SectionList, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native'
 import { BCSCCardProcess, EvidenceType } from 'react-native-bcsc-core'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 type EvidenceTypeListScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceTypeList>
@@ -24,24 +25,6 @@ interface SectionData {
   data: EvidenceType[]
 }
 
-const SectionSeparator = ({ trailingItem }: { trailingItem?: boolean }) => {
-  const { ColorPalette } = useTheme()
-  if (trailingItem) {
-    return null
-  } else {
-    return <View style={{ height: 10, backgroundColor: ColorPalette.brand.secondaryBackground, alignSelf: 'center' }} />
-  }
-}
-
-const ItemSeparator = () => {
-  const { ColorPalette } = useTheme()
-  return (
-    <View
-      style={{ height: 2, width: '95%', backgroundColor: ColorPalette.brand.primaryBackground, alignSelf: 'center' }}
-    />
-  )
-}
-
 const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenProps) => {
   const { cardProcess, photoFilter } = route.params
   const { ColorPalette, Spacing } = useTheme()
@@ -50,7 +33,7 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
   const { evidence } = useApi()
   const [store] = useStore<BCState>()
   const { addEvidenceType, removeIncompleteEvidence } = useSecureActions()
-  const [evidenceSections, setEvidenceSections] = useState<{ title: string; data: EvidenceType[] }[]>([])
+  const [evidenceSections, setEvidenceSections] = useState<SectionData[]>([])
   const { data, load, isLoading } = useDataLoader<EvidenceMetadataResponseData>(() => evidence.getEvidenceMetadata(), {
     onError: (error: unknown) => {
       logger.error(`Error loading evidence metadata: ${error}`)
@@ -58,15 +41,33 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
   })
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      padding: Spacing.md,
+    section: {
+      gap: Spacing.lg,
     },
-    cardSection: {
-      paddingVertical: 24,
-      paddingHorizontal: 24,
+    cardGroup: {
       backgroundColor: ColorPalette.brand.secondaryBackground,
+      borderRadius: Spacing.sm,
+      borderWidth: 1,
+      borderColor: ColorPalette.notification.infoBorder,
+      overflow: 'hidden',
+    },
+    cardItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: Spacing.md,
+      paddingHorizontal: Spacing.md,
+    },
+    cardItemDivider: {
+      borderTopWidth: 1,
+      borderTopColor: ColorPalette.notification.infoBorder,
+    },
+    cardItemPressed: {
+      backgroundColor: ColorPalette.brand.primaryLight,
+    },
+    cardItemLabel: {
+      flexShrink: 1,
+      marginRight: Spacing.sm,
     },
   })
 
@@ -171,7 +172,7 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
    *
    * @returns {[string, string]} An array containing the heading and description text.
    */
-  const getEvidenceHeadingAndDescription = useCallback(() => {
+  const getEvidenceHeadingAndDescription = useCallback((): [string, string] => {
     const isFirstEvidenceComplete = isCardEvidenceComplete(store.bcscSecure.additionalEvidenceData[0])
     const isNonBCSCCard = cardProcess === BCSCCardProcess.NonBCSC
 
@@ -213,74 +214,76 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
     return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
   }
 
+  const [heading, description] = getEvidenceHeadingAndDescription()
+
   return (
-    <ScreenWrapper padded={false} scrollable={false} style={styles.pageContainer}>
-      <View style={{ marginBottom: Spacing.lg }}>
-        <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-          {getEvidenceHeadingAndDescription()[0]}
-        </ThemedText>
-        {getEvidenceHeadingAndDescription()[1] ? (
-          <ThemedText style={{ marginBottom: Spacing.md }}>{getEvidenceHeadingAndDescription()[1]}</ThemedText>
-        ) : null}
+    <ScreenWrapper
+      padded={false}
+      scrollViewContainerStyle={{
+        flexGrow: 1,
+        gap: Spacing.lg,
+        padding: Spacing.lg,
+      }}
+    >
+      <View style={{ gap: Spacing.sm }}>
+        <ThemedText variant={'headingThree'}>{heading}</ThemedText>
+        {description ? <ThemedText>{description}</ThemedText> : null}
       </View>
 
-      <SectionList
-        sections={evidenceSections || []}
-        SectionSeparatorComponent={SectionSeparator}
-        ItemSeparatorComponent={ItemSeparator}
-        showsVerticalScrollIndicator={false}
-        renderSectionHeader={(item) => (
-          <ThemedText style={[styles.cardSection, { color: ColorPalette.brand.primary }]} variant={'headingFour'}>
-            {item.section.title}
-          </ThemedText>
-        )}
-        renderItem={(data: { item: EvidenceType }) => (
-          <Pressable
-            onPress={() => {
-              addEvidenceType(data.item)
-              navigation.navigate(BCSCScreens.IDPhotoInformation, { cardType: data.item })
-            }}
-            testID={testIdWithKey(`EvidenceTypeListItem ${data.item.evidence_type_label}`)}
-            accessibilityLabel={a11yShortLabel(data.item.evidence_type_label)}
-            accessibilityRole="button"
-            style={({ pressed }) => [
-              styles.cardSection,
-              pressed && { backgroundColor: ColorPalette.brand.primaryLight, opacity: 0.8 },
-            ]}
-          >
-            <View>
-              <ThemedText>{data.item.evidence_type_label}</ThemedText>
-            </View>
-          </Pressable>
-        )}
-        ListFooterComponent={
-          showOtherOptions ? (
-            <>
-              <SectionSeparator />
-              <ThemedText style={[styles.cardSection, { color: ColorPalette.brand.primary }]} variant={'headingFour'}>
-                {t('BCSC.EvidenceTypeList.OtherOptions')}
-              </ThemedText>
+      {evidenceSections.map((section) => (
+        <View key={section.title} style={styles.section}>
+          <ThemedText variant={'headingFour'}>{section.title}</ThemedText>
+          <View style={styles.cardGroup}>
+            {section.data.map((item, index) => (
               <Pressable
+                key={item.evidence_type_label}
                 onPress={() => {
-                  navigation.replace(BCSCScreens.EvidenceTypeList, {
-                    cardProcess,
-                    photoFilter: 'nonPhoto',
-                  })
+                  addEvidenceType(item)
+                  navigation.navigate(BCSCScreens.IDPhotoInformation, { cardType: item })
                 }}
-                testID={testIdWithKey('EvidenceTypeListOtherOptions')}
-                accessibilityLabel={a11yLabel(t('BCSC.EvidenceTypeList.ShowMoreOptions'))}
-                accessibilityRole="button"
+                testID={testIdWithKey(`EvidenceTypeListItem ${item.evidence_type_label}`)}
+                accessibilityLabel={a11yShortLabel(item.evidence_type_label)}
+                accessibilityRole={'button'}
                 style={({ pressed }) => [
-                  styles.cardSection,
-                  pressed && { backgroundColor: ColorPalette.brand.primaryLight, opacity: 0.8 },
+                  styles.cardItem,
+                  index > 0 && styles.cardItemDivider,
+                  pressed && styles.cardItemPressed,
                 ]}
               >
-                <ThemedText>{t('BCSC.EvidenceTypeList.ShowMoreOptions')}</ThemedText>
+                <ThemedText variant={'bold'} style={styles.cardItemLabel}>
+                  {item.evidence_type_label}
+                </ThemedText>
+                <Icon name={'chevron-right'} size={24} color={ColorPalette.brand.primary} />
               </Pressable>
-            </>
-          ) : null
-        }
-      />
+            ))}
+          </View>
+        </View>
+      ))}
+
+      {showOtherOptions ? (
+        <View style={styles.section}>
+          <ThemedText variant={'headingFour'}>{t('BCSC.EvidenceTypeList.OtherOptions')}</ThemedText>
+          <View style={styles.cardGroup}>
+            <Pressable
+              onPress={() => {
+                navigation.replace(BCSCScreens.EvidenceTypeList, {
+                  cardProcess,
+                  photoFilter: 'nonPhoto',
+                })
+              }}
+              testID={testIdWithKey('EvidenceTypeListOtherOptions')}
+              accessibilityLabel={a11yLabel(t('BCSC.EvidenceTypeList.ShowMoreOptions'))}
+              accessibilityRole={'button'}
+              style={({ pressed }) => [styles.cardItem, pressed && styles.cardItemPressed]}
+            >
+              <ThemedText variant={'bold'} style={styles.cardItemLabel}>
+                {t('BCSC.EvidenceTypeList.ShowMoreOptions')}
+              </ThemedText>
+              <Icon name={'chevron-right'} size={24} color={ColorPalette.brand.primary} />
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
     </ScreenWrapper>
   )
 }

@@ -85,7 +85,7 @@ function buildPalette(spec: PaletteSpec): IColorPalette {
       secondaryDisabled: '#757575',
       tertiary: GrayscaleColors.lightGrey,
       tertiaryDisabled: '#757575',
-      primaryLight: '#3470B1',
+      primaryLight: '#D9EAF7',
       highlight: '#FCBA19',
       primaryBackground: spec.primaryBackground,
       secondaryBackground: spec.secondaryBackground,

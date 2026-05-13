@@ -16,59 +16,49 @@ exports[`EvidenceTypeList renders correctly 1`] = `
         "backgroundColor": "#F2F2F2",
         "flex": 1,
       },
-      {
-        "flex": 1,
-        "justifyContent": "space-between",
-        "padding": 16,
-      },
+      undefined,
     ]
   }
 >
-  <View
-    style={
-      {
-        "marginBottom": 24,
-      }
-    }
-  >
-    <Text
-      maxFontSizeMultiplier={2}
-      style={
-        [
-          {
-            "color": "#313132",
-            "fontFamily": "BCSans-Regular",
-            "fontSize": 26,
-            "fontWeight": "bold",
-          },
-          {
-            "marginBottom": 16,
-          },
-        ]
-      }
-    >
-      BCSC.EvidenceTypeList.FirstID
-    </Text>
-  </View>
   <RCTScrollView
-    ListFooterComponent={null}
-    data={[]}
-    getItem={[Function]}
-    getItemCount={[Function]}
-    keyExtractor={[Function]}
-    onContentSizeChange={[Function]}
-    onLayout={[Function]}
-    onMomentumScrollBegin={[Function]}
-    onMomentumScrollEnd={[Function]}
-    onScroll={[Function]}
-    onScrollBeginDrag={[Function]}
-    onScrollEndDrag={[Function]}
-    renderItem={[Function]}
-    scrollEventThrottle={0.0001}
+    contentContainerStyle={
+      [
+        false,
+        {
+          "flexGrow": 1,
+          "gap": 24,
+          "padding": 24,
+        },
+      ]
+    }
     showsVerticalScrollIndicator={false}
-    stickyHeaderIndices={[]}
   >
-    <View />
+    <View>
+      <View
+        style={
+          {
+            "gap": 8,
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 26,
+                "fontWeight": "bold",
+              },
+              undefined,
+            ]
+          }
+        >
+          BCSC.EvidenceTypeList.FirstID
+        </Text>
+      </View>
+    </View>
   </RCTScrollView>
 </RNCSafeAreaView>
 `;
