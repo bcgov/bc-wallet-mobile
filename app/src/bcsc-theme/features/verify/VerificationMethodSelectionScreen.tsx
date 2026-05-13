@@ -30,7 +30,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
   } = useVerificationMethodModel({ navigation })
 
   const [primaryOption, ...remainingOptions] = verificationOptions
-
+  // TODO: (al) Is it possible to select the wrong primary option?
   // const headingText = useMemo(() => {
   //   if (primaryOption === DeviceVerificationOption.SEND_VIDEO) {
   //     return t('BCSC.VerificationMethods.CannotSendVideo')
@@ -110,7 +110,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
       >
         <ThemedText variant="headingFour">{'Choose how to verify'}</ThemedText>
         <ThemedText style={{ marginVertical: Spacing.md }}>
-          {"We need to make sure you're a real person. How would you like to procede?"}
+          {"We need to make sure you're a real person. How would you like to proceed?"}
         </ThemedText>
       </View>
       {renderOption(primaryOption)}

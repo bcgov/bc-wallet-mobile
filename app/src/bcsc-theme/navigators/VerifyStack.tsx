@@ -145,7 +145,6 @@ const VerifyStack = () => {
         name={BCSCScreens.VerificationMethodSelection}
         component={VerificationMethodSelectionScreen}
         options={{
-          title: t('BCSC.Screens.VerificationMethodSelection'),
           headerRight: createVerifyHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.VERIFICATION_METHODS }),
         }}
       />
