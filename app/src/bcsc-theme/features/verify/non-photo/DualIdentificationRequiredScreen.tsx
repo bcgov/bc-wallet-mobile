@@ -1,13 +1,10 @@
-import GenericCardImage from '@/bcsc-theme/components/GenericCardImage'
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import BulletPointWithText from '@/components/BulletPointWithText'
-import { ACCOUNT_SERVICES_URL } from '@/constants'
+import BulletPointList from '@/components/BulletPointList'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { Linking, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 type DualIdentificationRequiredScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.DualIdentificationRequired>
@@ -25,66 +22,41 @@ const DualIdentificationRequiredScreen: React.FC<DualIdentificationRequiredScree
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
 
-  const styles = StyleSheet.create({
-    scrollView: {
-      flexGrow: 1,
-      gap: Spacing.lg,
-    },
-  })
+  const controls = (
+    <ControlContainer>
+      <Button
+        title={t('Global.Continue')}
+        accessibilityLabel={t('Global.Continue')}
+        testID={testIdWithKey(t('Global.Continue'))}
+        onPress={() => {
+          navigation.navigate(BCSCScreens.EvidenceTypeList, { cardProcess: BCSCCardProcess.NonBCSC })
+        }}
+        buttonType={ButtonType.Primary}
+      />
+    </ControlContainer>
+  )
 
   return (
-    <ScreenWrapper scrollViewContainerStyle={styles.scrollView}>
-      <GenericCardImage />
-      <ThemedText variant={'headingFour'}>{t('BCSC.DualNonBCSCEvidence.Heading')}</ThemedText>
+    <ScreenWrapper
+      padded={false}
+      controls={controls}
+      scrollViewContainerStyle={{ flexGrow: 1, gap: Spacing.md, padding: Spacing.xl }}
+    >
+      <ThemedText variant={'headingThree'}>{t('BCSC.DualNonBCSCEvidence.Heading')}</ThemedText>
       <ThemedText>{t('BCSC.DualNonBCSCEvidence.Description')}</ThemedText>
-
-      <View>
-        <ThemedText variant={'headingFour'}>{t('BCSC.DualNonBCSCEvidence.CheckYourID')}</ThemedText>
-        <BulletPointWithText
-          translationKey={t('BCSC.DualNonBCSCEvidence.CheckYourIDBullet1')}
-          iconColor={ColorPalette.brand.icon}
-        />
-        <BulletPointWithText
-          translationKey={t('BCSC.DualNonBCSCEvidence.CheckYourIDBullet2')}
-          iconColor={ColorPalette.brand.icon}
-          iconSize={Spacing.sm}
-        />
-        <BulletPointWithText
-          translationKey={t('BCSC.DualNonBCSCEvidence.CheckYourIDBullet3')}
-          iconColor={ColorPalette.brand.icon}
-        />
-        <BulletPointWithText
-          translationKey={t('BCSC.DualNonBCSCEvidence.CheckYourIDBullet4')}
-          iconColor={ColorPalette.brand.icon}
-        />
-      </View>
-      <View>
-        <View style={{ flexDirection: 'row', alignContent: 'center', alignItems: 'center' }}>
-          <ThemedText variant={'headingFour'}>{t('BCSC.AdditionalEvidence.LimitedAccess')}</ThemedText>
-          <TouchableOpacity
-            style={{ marginLeft: Spacing.sm }}
-            onPress={() => Linking.openURL(ACCOUNT_SERVICES_URL)}
-            accessibilityLabel={t('BCSC.AdditionalEvidence.OpenAccountServices')}
-            accessibilityRole="link"
-            accessibilityHint={t('Global.A11y.OpensInBrowser')}
-            testID={testIdWithKey('OpenAccountServices')}
-          >
-            <Icon color={ColorPalette.brand.primary} size={Spacing.xl} name={'open-in-new'} />
-          </TouchableOpacity>
-        </View>
-        <ThemedText>{t('BCSC.AdditionalEvidence.LimitedAccessDescription')}</ThemedText>
-      </View>
-      <View style={{ marginTop: 'auto' }}>
-        <Button
-          title={t('BCSC.AdditionalEvidence.ChooseID')}
-          accessibilityLabel={t('BCSC.AdditionalEvidence.ChooseID')}
-          testID={testIdWithKey(t('BCSC.AdditionalEvidence.ChooseID'))}
-          onPress={() => {
-            navigation.navigate(BCSCScreens.EvidenceTypeList, { cardProcess: BCSCCardProcess.NonBCSC })
-          }}
-          buttonType={ButtonType.Primary}
-        />
-      </View>
+      <ThemedText variant={'headingFour'}>{t('BCSC.DualNonBCSCEvidence.CheckYourID')}</ThemedText>
+      <BulletPointList
+        translationKeys={[
+          'BCSC.DualNonBCSCEvidence.CheckYourIDBullet1',
+          'BCSC.DualNonBCSCEvidence.CheckYourIDBullet2',
+          'BCSC.DualNonBCSCEvidence.CheckYourIDBullet3',
+          'BCSC.DualNonBCSCEvidence.CheckYourIDBullet4',
+        ]}
+        iconColor={ColorPalette.brand.icon}
+        iconSize={Spacing.xs}
+      />
+      <ThemedText variant={'headingFour'}>{t('BCSC.AdditionalEvidence.LimitedAccess')}</ThemedText>
+      <ThemedText>{t('BCSC.AdditionalEvidence.LimitedAccessDescription')}</ThemedText>
     </ScreenWrapper>
   )
 }
