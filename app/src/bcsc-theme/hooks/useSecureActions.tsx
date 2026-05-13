@@ -19,6 +19,7 @@ import {
   EvidenceType,
   getAccount,
   getAccountFlags,
+  getAccountSecurityMethod,
   getAuthorizationRequest,
   getCredential,
   getEvidence,
@@ -27,6 +28,7 @@ import {
   NativeAuthorizationRequest,
   NativeSavedService,
   PhotoMetadata,
+  setAccount,
   setAccountFlags,
   setAuthorizationRequest,
   setCredential,
@@ -733,6 +735,7 @@ export const useSecureActions = () => {
 
       // Load all data from native storage in parallel
       const [
+        account,
         authRequest,
         refreshTokenObj,
         registrationAccessTokenObj,
@@ -742,6 +745,7 @@ export const useSecureActions = () => {
         credential,
         nativeSavedServices,
       ] = await Promise.all([
+        getAccount(),
         getAuthorizationRequest(),
         getToken(TokenType.Refresh),
         getToken(TokenType.Registration),
@@ -759,6 +763,41 @@ export const useSecureActions = () => {
       if (!credential && refreshToken) {
         // Potential bug detected: Missing credential but refresh token exists? Log a warning for visibility, but treat as not verified to avoid false positives.
         logger.warn('[IsVerified] No credential found but refresh token exists — treating as not verified.')
+      }
+
+      if (account && (!account.issuer || !account.clientID)) {
+        // Account is missing issuer or clientID - this prevents token refresh from working.
+        // Recover from authRequest, which preserves these fields from older v3 storage during migration.
+        logger.warn(
+          `[hydrateSecureState] Account missing required fields: issuer=${!account.issuer ? 'MISSING' : 'OK'}, clientID=${!account.clientID ? 'MISSING' : 'OK'}. Attempting recovery from authorization request.`
+        )
+
+        if (authRequest) {
+          try {
+            const recoveredIssuer = account.issuer || authRequest.issuer
+            const recoveredClientID = account.clientID || authRequest.clientID
+
+            if (recoveredIssuer && recoveredClientID) {
+              const securityMethod = await getAccountSecurityMethod()
+              const updatedAccount = {
+                ...account,
+                issuer: recoveredIssuer,
+                clientID: recoveredClientID,
+                securityMethod,
+              }
+              logger.info('[hydrateSecureState] Recovered issuer/clientID from authorization request; updating account')
+              await setAccount(updatedAccount)
+            } else {
+              logger.warn(
+                `[hydrateSecureState] Could not recover account fields from authorization request: issuer=${recoveredIssuer ? 'OK' : 'MISSING'}, clientID=${recoveredClientID ? 'OK' : 'MISSING'}`
+              )
+            }
+          } catch (error) {
+            logger.warn(
+              `[hydrateSecureState] Failed to update account with recovered values: ${error instanceof Error ? error.message : String(error)}`
+            )
+          }
+        }
       }
 
       let freshTokens: TokenResponse | null = null

@@ -596,8 +596,20 @@ class NativeCompatibleStorage(
             val clientReg = jsonObject.optJSONObject("clientRegistration") ?: return null
             val authReqJson = clientReg.optJSONObject("authorizationRequest") ?: return null
 
+            // v3 stored OAuth client context on Provider/ClientRegistration; surface them
+            // on the AuthorizationRequest so callers can recover issuer/clientID when the
+            // Account record is incomplete after migration.
+            val v3Issuer =
+                authReqJson.optString("issuer", null)
+                    ?: jsonObject.optString("issuer", null)
+            val v3ClientID =
+                clientReg.optString("client_id", null)
+                    ?: clientReg.optString("clientID", null)
+                    ?: authReqJson.optString("audience", null)
+
             // Convert to our model
             NativeAuthorizationRequest(
+                clientID = v3ClientID,
                 deviceCode = authReqJson.optString("deviceCode", null),
                 userCode = authReqJson.optString("userCode", null),
                 birthDate = authReqJson.optString("birth_date", null),
@@ -607,7 +619,7 @@ class NativeCompatibleStorage(
                 lastName = authReqJson.optString("lastName", null),
                 middleNames = authReqJson.optString("middleNames", null),
                 residentialAddress = authReqJson.optString("residentialAddress", null),
-                issuer = authReqJson.optString("issuer", null),
+                issuer = v3Issuer,
                 verificationOptions = authReqJson.optString("verification_options", null),
                 verificationUri = authReqJson.optString("verification_uri", null),
                 verificationUriVideo = authReqJson.optString("verification_uri_video", null),
