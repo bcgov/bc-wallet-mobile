@@ -776,6 +776,7 @@ const translation = {
         "ActionLabel": "Take Photo",
         "ActionLabel2": "Record Video",
         "ButtonText": "Send to Service BC Now",
+        "NonBCSCMessage": "Please note: Service BC will check if you have a BC Services Card. If you have one, then your account will be updated to link to it.",
       },
       "PendingReview": {
         "Heading": "Request pending review",

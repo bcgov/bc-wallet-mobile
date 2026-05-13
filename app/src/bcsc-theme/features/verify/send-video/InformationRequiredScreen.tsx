@@ -1,9 +1,10 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
-import { Button, ButtonType, ScreenWrapper, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 import TakeMediaButton from './components/TakeMediaButton'
 import useEvidenceUploadModel from './useEvidenceUploadModel'
 
@@ -60,6 +61,11 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
           store.bcsc.videoPath && store.bcsc.videoThumbnailPath && `file://${store.bcsc.videoThumbnailPath}`
         }
       />
+      {store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC ? (
+        <ThemedText style={{ padding: Spacing.md }}>
+          {t('BCSC.SendVideo.InformationRequired.NonBCSCMessage')}
+        </ThemedText>
+      ) : null}
     </ScreenWrapper>
   )
 }
