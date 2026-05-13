@@ -142,7 +142,13 @@ const VerifyStack = () => {
       <Stack.Screen name={BCSCScreens.VerificationCardError} component={VerificationCardErrorScreen} />
       <Stack.Screen name={BCSCScreens.BirthdateLockout} component={BirthdateLockoutScreen} />
       <Stack.Screen name={BCSCScreens.EnterEmail} component={EnterEmailScreen} />
-      <Stack.Screen name={BCSCScreens.EmailConfirmation} component={EmailConfirmationScreen} />
+      <Stack.Screen
+        name={BCSCScreens.EmailConfirmation}
+        component={EmailConfirmationScreen}
+        options={{
+          headerRight: createVerifyHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.VERIFY_EMAIL }),
+        }}
+      />
       <Stack.Screen
         name={BCSCScreens.VerificationMethodSelection}
         component={VerificationMethodSelectionScreen}
