@@ -5,12 +5,15 @@ import SCAN_ID_IMAGE from '@assets/img/id-photo-info.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
+import { EvidenceType } from 'react-native-bcsc-core'
 
 type IDPhotoInformationScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.IDPhotoInformation>
+  route: { params: { cardType: EvidenceType } }
 }
 
-const IDPhotoInformationScreen = ({ navigation }: IDPhotoInformationScreenProps) => {
+const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScreenProps) => {
+  const { cardType } = route.params
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
 
@@ -21,7 +24,9 @@ const IDPhotoInformationScreen = ({ navigation }: IDPhotoInformationScreenProps)
         accessibilityLabel={t('BCSC.IDPhotoInformation.TakePhoto')}
         testID={testIdWithKey('IDPhotoInformationTakePhoto')}
         onPress={() => {
-          navigation.navigate(BCSCScreens.EvidenceCapture)
+          navigation.navigate(BCSCScreens.EvidenceCapture, {
+            cardType: cardType,
+          })
         }}
         buttonType={ButtonType.Primary}
       />
