@@ -119,7 +119,7 @@ export const createBifoldNavigationAdapter = <T extends NavigationProp<any>>(
           // Fall back to wrapping `target` itself so the intercept runs. The intercept handlers
           // dispatch resets onto `target` (which IS MainStack here), so resetting to BCSCStacks.Tab
           // works fine — MainStack registers it.
-          return createBifoldNavigationAdapter((parent ?? target) as any, options)
+          return createBifoldNavigationAdapter(parent ?? target, options)
         }
       }
       return Reflect.get(target, prop, receiver)
