@@ -1,13 +1,42 @@
 import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
-import { EvidenceMetadata, setEvidence } from 'react-native-bcsc-core'
+import {
+  AccountSecurityMethod,
+  EvidenceMetadata,
+  getAccount,
+  getAccountFlags,
+  getAccountSecurityMethod,
+  getAuthorizationRequest,
+  getCredential,
+  getEvidence,
+  getSavedServices,
+  getToken,
+  setAccount,
+  setEvidence,
+} from 'react-native-bcsc-core'
 import * as useBCSCApiClientModule from './useBCSCApiClient'
 import { useSecureActions } from './useSecureActions'
 
 jest.mock('@bifold/core')
 jest.mock('react-native-bcsc-core', () => ({
+  AccountSecurityMethod: {
+    PinNoDeviceAuth: 'app_pin_no_device_authn',
+    PinWithDeviceAuth: 'app_pin_has_device_authn',
+    DeviceAuth: 'device_authentication',
+  },
+  TokenType: { Refresh: 0, Registration: 2, Access: 1 },
   setEvidence: jest.fn(),
+  setAccount: jest.fn(),
+  setToken: jest.fn(),
+  getAccount: jest.fn(),
+  getAccountFlags: jest.fn(),
+  getAccountSecurityMethod: jest.fn(),
+  getAuthorizationRequest: jest.fn(),
+  getCredential: jest.fn(),
+  getEvidence: jest.fn(),
+  getSavedServices: jest.fn(),
+  getToken: jest.fn(),
 }))
 jest.mock('./useBCSCApiClient')
 
@@ -158,6 +187,122 @@ describe('useSecureActions', () => {
         type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
         payload: [[complete]],
       })
+    })
+  })
+
+  describe('hydrateSecureState account recovery', () => {
+    const baseAccount = {
+      id: 'account-1',
+      issuer: '',
+      clientID: '',
+      displayName: 'Test User',
+    }
+
+    beforeEach(() => {
+      jest.mocked(getToken).mockResolvedValue(null as any)
+      jest.mocked(getAccountFlags).mockResolvedValue({} as any)
+      jest.mocked(getEvidence).mockResolvedValue([] as any)
+      jest.mocked(getCredential).mockResolvedValue(null as any)
+      jest.mocked(getSavedServices).mockResolvedValue([] as any)
+      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
+    })
+
+    it('recovers issuer/clientID from authorization request and updates account', async () => {
+      jest.mocked(getAccount).mockResolvedValue(baseAccount as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue({
+        issuer: 'https://idsit.gov.bc.ca',
+        clientID: 'recovered-client-id',
+      } as any)
+
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(getAccountSecurityMethod).toHaveBeenCalled()
+      expect(setAccount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'account-1',
+          issuer: 'https://idsit.gov.bc.ca',
+          clientID: 'recovered-client-id',
+          securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
+        })
+      )
+    })
+
+    it('does not call setAccount when account already has issuer and clientID', async () => {
+      jest.mocked(getAccount).mockResolvedValue({
+        ...baseAccount,
+        issuer: 'https://idsit.gov.bc.ca',
+        clientID: 'existing-client-id',
+      } as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue({
+        issuer: 'https://other.example.com',
+        clientID: 'other-client-id',
+      } as any)
+
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(setAccount).not.toHaveBeenCalled()
+    })
+
+    it('does not call setAccount when authorization request lacks issuer/clientID', async () => {
+      jest.mocked(getAccount).mockResolvedValue(baseAccount as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue({
+        // no issuer or clientID
+        deviceCode: 'abc',
+      } as any)
+
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(setAccount).not.toHaveBeenCalled()
+    })
+
+    it('does not call setAccount when authorization request is null', async () => {
+      jest.mocked(getAccount).mockResolvedValue(baseAccount as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue(null)
+
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(setAccount).not.toHaveBeenCalled()
+    })
+
+    it('backfills only the missing field (clientID) from authorization request', async () => {
+      jest.mocked(getAccount).mockResolvedValue({
+        ...baseAccount,
+        issuer: 'https://idsit.gov.bc.ca',
+        clientID: '',
+      } as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue({
+        issuer: 'https://ignored-because-account-has-one.example.com',
+        clientID: 'recovered-client-id',
+      } as any)
+
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(setAccount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          issuer: 'https://idsit.gov.bc.ca',
+          clientID: 'recovered-client-id',
+        })
+      )
     })
   })
 })

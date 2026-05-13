@@ -145,6 +145,12 @@ export enum BCSCCardProcess {
 }
 
 export type NativeAuthorizationRequest = {
+  // OAuth client context (preserved from v3 storage for migration/recovery)
+  // In v3, these were stored alongside AuthorizationRequest within Provider->ClientRegistration.
+  // Surfaced here as optional fields so callers can recover issuer/clientID if Account is incomplete.
+  issuer?: string;
+  clientID?: string;
+
   // Device/user codes
   deviceCode?: string;
   userCode?: string;
