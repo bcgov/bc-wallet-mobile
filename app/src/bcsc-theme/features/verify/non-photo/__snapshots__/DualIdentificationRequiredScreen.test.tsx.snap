@@ -23,34 +23,17 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
   <RCTScrollView
     contentContainerStyle={
       [
-        {
-          "padding": 16,
-        },
+        false,
         {
           "flexGrow": 1,
-          "gap": 24,
+          "gap": 16,
+          "padding": 32,
         },
       ]
     }
     showsVerticalScrollIndicator={false}
   >
     <View>
-      <View
-        style={
-          {
-            "alignSelf": "center",
-            "backgroundColor": "#FFFFFF",
-            "borderRadius": 8,
-            "margin": 24,
-            "padding": 8,
-          }
-        }
-      >
-        <
-          height={75}
-          width={120}
-        />
-      </View>
       <Text
         maxFontSizeMultiplier={2}
         style={
@@ -58,7 +41,7 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
             {
               "color": "#313132",
               "fontFamily": "BCSans-Regular",
-              "fontSize": 21,
+              "fontSize": 26,
               "fontWeight": "bold",
             },
             undefined,
@@ -83,37 +66,44 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
       >
         BCSC.DualNonBCSCEvidence.Description
       </Text>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 21,
+              "fontWeight": "bold",
+            },
+            undefined,
+          ]
+        }
+      >
+        BCSC.DualNonBCSCEvidence.CheckYourID
+      </Text>
       <View>
-        <Text
-          maxFontSizeMultiplier={2}
+        <View
           style={
             [
               {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 21,
-                "fontWeight": "bold",
+                "alignContent": "center",
+                "alignItems": "flex-start",
+                "flexDirection": "row",
+                "marginVertical": 8,
               },
-              undefined,
+              {
+                "marginVertical": 4,
+              },
             ]
-          }
-        >
-          BCSC.DualNonBCSCEvidence.CheckYourID
-        </Text>
-        <View
-          style={
-            {
-              "alignContent": "center",
-              "alignItems": "flex-start",
-              "flexDirection": "row",
-              "marginVertical": 8,
-            }
           }
         >
           <View
             style={
               {
-                "margin": 8,
+                "height": undefined,
+                "justifyContent": "center",
+                "marginHorizontal": 8,
               }
             }
           >
@@ -124,7 +114,7 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
                 [
                   {
                     "color": "#FFFFFF",
-                    "fontSize": 8,
+                    "fontSize": 4,
                   },
                   undefined,
                   {
@@ -162,18 +152,25 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
         </View>
         <View
           style={
-            {
-              "alignContent": "center",
-              "alignItems": "flex-start",
-              "flexDirection": "row",
-              "marginVertical": 8,
-            }
+            [
+              {
+                "alignContent": "center",
+                "alignItems": "flex-start",
+                "flexDirection": "row",
+                "marginVertical": 8,
+              },
+              {
+                "marginVertical": 4,
+              },
+            ]
           }
         >
           <View
             style={
               {
-                "margin": 8,
+                "height": undefined,
+                "justifyContent": "center",
+                "marginHorizontal": 8,
               }
             }
           >
@@ -184,7 +181,7 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
                 [
                   {
                     "color": "#FFFFFF",
-                    "fontSize": 8,
+                    "fontSize": 4,
                   },
                   undefined,
                   {
@@ -222,18 +219,25 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
         </View>
         <View
           style={
-            {
-              "alignContent": "center",
-              "alignItems": "flex-start",
-              "flexDirection": "row",
-              "marginVertical": 8,
-            }
+            [
+              {
+                "alignContent": "center",
+                "alignItems": "flex-start",
+                "flexDirection": "row",
+                "marginVertical": 8,
+              },
+              {
+                "marginVertical": 4,
+              },
+            ]
           }
         >
           <View
             style={
               {
-                "margin": 8,
+                "height": undefined,
+                "justifyContent": "center",
+                "marginHorizontal": 8,
               }
             }
           >
@@ -244,7 +248,7 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
                 [
                   {
                     "color": "#FFFFFF",
-                    "fontSize": 8,
+                    "fontSize": 4,
                   },
                   undefined,
                   {
@@ -282,18 +286,25 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
         </View>
         <View
           style={
-            {
-              "alignContent": "center",
-              "alignItems": "flex-start",
-              "flexDirection": "row",
-              "marginVertical": 8,
-            }
+            [
+              {
+                "alignContent": "center",
+                "alignItems": "flex-start",
+                "flexDirection": "row",
+                "marginVertical": 8,
+              },
+              {
+                "marginVertical": 4,
+              },
+            ]
           }
         >
           <View
             style={
               {
-                "margin": 8,
+                "height": undefined,
+                "justifyContent": "center",
+                "marginHorizontal": 8,
               }
             }
           >
@@ -304,7 +315,7 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
                 [
                   {
                     "color": "#FFFFFF",
-                    "fontSize": 8,
+                    "fontSize": 4,
                   },
                   undefined,
                   {
@@ -341,120 +352,98 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
           </Text>
         </View>
       </View>
-      <View>
-        <View
-          style={
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
             {
-              "alignContent": "center",
-              "alignItems": "center",
-              "flexDirection": "row",
-            }
-          }
-        >
-          <Text
-            maxFontSizeMultiplier={2}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 21,
-                  "fontWeight": "bold",
-                },
-                undefined,
-              ]
-            }
-          >
-            BCSC.AdditionalEvidence.LimitedAccess
-          </Text>
-          <View
-            accessibilityHint="Global.A11y.OpensInBrowser"
-            accessibilityLabel="BCSC.AdditionalEvidence.OpenAccountServices"
-            accessibilityRole="link"
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": undefined,
-                "expanded": undefined,
-                "selected": undefined,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            onClick={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            style={
-              {
-                "marginLeft": 8,
-                "opacity": 1,
-              }
-            }
-            testID="com.ariesbifold:id/OpenAccountServices"
-          >
-            <Text
-              allowFontScaling={false}
-              selectable={false}
-              style={
-                [
-                  {
-                    "color": "#003366",
-                    "fontSize": 32,
-                  },
-                  undefined,
-                  {
-                    "fontFamily": "Material Design Icons",
-                    "fontStyle": "normal",
-                    "fontWeight": "normal",
-                  },
-                  {},
-                ]
-              }
-            >
-              󰏌
-            </Text>
-          </View>
-        </View>
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              undefined,
-            ]
-          }
-        >
-          BCSC.AdditionalEvidence.LimitedAccessDescription
-        </Text>
-      </View>
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 21,
+              "fontWeight": "bold",
+            },
+            undefined,
+          ]
+        }
+      >
+        BCSC.AdditionalEvidence.LimitedAccess
+      </Text>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+            undefined,
+          ]
+        }
+      >
+        BCSC.AdditionalEvidence.LimitedAccessDescription
+      </Text>
+    </View>
+  </RCTScrollView>
+  <View
+    style={
+      [
+        {
+          "gap": 16,
+        },
+        false,
+        undefined,
+      ]
+    }
+  >
+    <View
+      style={
+        {
+          "flexGrow": 1,
+          "width": "100%",
+        }
+      }
+    >
       <View
         style={
           {
-            "marginTop": "auto",
+            "left": 0,
+            "position": "absolute",
+            "right": 0,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": -3,
+              "width": 0,
+            },
+            "shadowOpacity": 0.9,
+            "shadowRadius": 3,
+            "top": 0,
+            "zIndex": -1,
           }
         }
       >
         <View
-          accessibilityLabel="BCSC.AdditionalEvidence.ChooseID"
+          style={
+            {
+              "backgroundColor": "#F2F2F2",
+              "height": 1,
+            }
+          }
+        />
+      </View>
+      <View
+        style={
+          {
+            "backgroundColor": "#F2F2F2",
+            "flexGrow": 1,
+            "gap": 8,
+            "padding": 24,
+          }
+        }
+      >
+        <View
+          accessibilityLabel="Global.Continue"
           accessibilityRole="button"
           accessibilityState={
             {
@@ -491,7 +480,7 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
               "padding": 16,
             }
           }
-          testID="com.ariesbifold:id/BCSC.AdditionalEvidence.ChooseID"
+          testID="com.ariesbifold:id/Global.Continue"
         >
           <View
             style={
@@ -526,12 +515,12 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
                 ]
               }
             >
-              BCSC.AdditionalEvidence.ChooseID
+              Global.Continue
             </Text>
           </View>
         </View>
       </View>
     </View>
-  </RCTScrollView>
+  </View>
 </RNCSafeAreaView>
 `;
