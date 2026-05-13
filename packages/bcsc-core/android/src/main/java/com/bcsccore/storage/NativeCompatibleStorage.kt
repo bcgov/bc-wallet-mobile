@@ -593,11 +593,44 @@ class NativeCompatibleStorage(
         return try {
             // Parse the nested structure: Provider -> ClientRegistration -> AuthorizationRequest
             val jsonObject = org.json.JSONObject(jsonContent)
-            val clientReg = jsonObject.optJSONObject("clientRegistration") ?: return null
-            val authReqJson = clientReg.optJSONObject("authorizationRequest") ?: return null
+            val clientReg = jsonObject.optJSONObject("clientRegistration")
+            val authReqJson = clientReg?.optJSONObject("authorizationRequest")
+
+            // v3 stored OAuth client context on Provider/ClientRegistration; surface them
+            // on the AuthorizationRequest so callers can recover issuer/clientID when the
+            // Account record is incomplete after migration. Extract these even when the
+            // nested authorizationRequest object is absent so recovery still works.
+            val v3Issuer =
+                authReqJson?.optString("issuer", null)
+                    ?: jsonObject.optString("issuer", null)
+            val v3ClientID =
+                clientReg?.optString("client_id", null)
+                    ?: clientReg?.optString("clientID", null)
+                    ?: authReqJson?.optString("audience", null)
+
+            if (authReqJson == null) {
+                // No nested authorization request, but we may still be able to surface
+                // issuer/clientID from the v3 Provider/ClientRegistration for recovery.
+                if (v3Issuer.isNullOrEmpty() && v3ClientID.isNullOrEmpty()) {
+                    Log.d(
+                        TAG,
+                        "readAuthorizationRequestFromV3Provider: v3 provider lacks authorizationRequest and issuer/clientID",
+                    )
+                    return null
+                }
+                Log.d(
+                    TAG,
+                    "readAuthorizationRequestFromV3Provider: v3 provider lacks authorizationRequest; returning minimal record with issuer/clientID for recovery",
+                )
+                return NativeAuthorizationRequest(
+                    clientID = v3ClientID,
+                    issuer = v3Issuer,
+                )
+            }
 
             // Convert to our model
             NativeAuthorizationRequest(
+                clientID = v3ClientID,
                 deviceCode = authReqJson.optString("deviceCode", null),
                 userCode = authReqJson.optString("userCode", null),
                 birthDate = authReqJson.optString("birth_date", null),
@@ -607,7 +640,7 @@ class NativeCompatibleStorage(
                 lastName = authReqJson.optString("lastName", null),
                 middleNames = authReqJson.optString("middleNames", null),
                 residentialAddress = authReqJson.optString("residentialAddress", null),
-                issuer = authReqJson.optString("issuer", null),
+                issuer = v3Issuer,
                 verificationOptions = authReqJson.optString("verification_options", null),
                 verificationUri = authReqJson.optString("verification_uri", null),
                 verificationUriVideo = authReqJson.optString("verification_uri_video", null),
