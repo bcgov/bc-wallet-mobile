@@ -26,8 +26,8 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
         false,
         {
           "flexGrow": 1,
-          "gap": 16,
-          "padding": 32,
+          "gap": 8,
+          "padding": 24,
         },
       ]
     }
