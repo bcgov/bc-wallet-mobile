@@ -22,7 +22,7 @@ describe('IDPhotoInformation', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <IDPhotoInformationScreen navigation={mockNavigation as never} route={{ params: {} } as never} />
+        <IDPhotoInformationScreen navigation={mockNavigation as never} />
       </BasicAppContext>
     )
 

@@ -4,8 +4,7 @@ import PhotoReview from '@/bcsc-theme/components/PhotoReview'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
-import { BCState } from '@/store'
-import { MaskType, testIdWithKey, useStore } from '@bifold/core'
+import { MaskType, testIdWithKey } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -24,7 +23,6 @@ enum CaptureState {
 const TOP_BANNER_HEIGHT = 140
 
 const EvidenceCaptureScreen = ({ navigation }: EvidenceCaptureScreenProps) => {
-  const [store] = useStore<BCState>()
   const { t } = useTranslation()
   const { width, height } = useWindowDimensions()
   const { hasPermission, requestPermission } = useCameraPermission()
@@ -32,9 +30,8 @@ const EvidenceCaptureScreen = ({ navigation }: EvidenceCaptureScreenProps) => {
   const [captureState, setCaptureState] = useState<CaptureState>(CaptureState.CAPTURING)
   const [currentPhotoPath, setCurrentPhotoPath] = useState<string>()
 
-  // Cutout shape: a rectangle covering everything BELOW the top banner. The
-  // area above stays inside the dark overlay so the instruction text reads
-  // clearly against a darkened background.
+  // SVGOverlay's customPath is the cutout — this rectangle leaves the top
+  // banner area inside the dark overlay so the instruction text reads clearly.
   const customPath = `M 0 ${TOP_BANNER_HEIGHT} H ${width} V ${height} H 0 Z`
 
   const styles = StyleSheet.create({
@@ -54,14 +51,7 @@ const EvidenceCaptureScreen = ({ navigation }: EvidenceCaptureScreenProps) => {
       return
     }
 
-    const evidenceData = store.bcscSecure.additionalEvidenceData
-    const cardType = evidenceData[evidenceData.length - 1]?.evidenceType
-    if (!cardType) {
-      return
-    }
-
     navigation.navigate(BCSCScreens.EvidenceIDCollection, {
-      cardType,
       photoPath: currentPhotoPath,
     })
   }

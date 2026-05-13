@@ -1,46 +1,43 @@
+import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { initialBCSCSecureState } from '@/store'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
-import { ScrollView, View } from 'react-native'
-import { BCSCCardProcess } from 'react-native-bcsc-core'
+import { BCSCCardProcess, EvidenceType } from 'react-native-bcsc-core'
 import EvidenceIDCollectionScreen from './EvidenceIDCollectionScreen'
 
-const mockRemoveEvidenceByType = jest.fn().mockResolvedValue(undefined)
+jest.mock('@/bcsc-theme/hooks/useDataLoader')
+jest.mock('@/bcsc-theme/hooks/useSecureActions')
+
+const mockUseDataLoader = useDataLoader as jest.Mock
+const mockUseSecureActions = useSecureActions as jest.Mock
+
+const mockAddEvidenceType = jest.fn().mockResolvedValue(undefined)
+const mockUpdateEvidenceMetadata = jest.fn().mockResolvedValue(undefined)
 const mockUpdateEvidenceDocumentNumber = jest.fn().mockResolvedValue(undefined)
 const mockUpdateUserInfo = jest.fn().mockResolvedValue(undefined)
 const mockUpdateUserMetadata = jest.fn().mockResolvedValue(undefined)
 
-jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
-  __esModule: true,
-  default: jest.fn(() => ({
-    removeEvidenceByType: mockRemoveEvidenceByType,
-    updateEvidenceDocumentNumber: mockUpdateEvidenceDocumentNumber,
-    updateUserInfo: mockUpdateUserInfo,
-    updateUserMetadata: mockUpdateUserMetadata,
-  })),
-}))
-
-const mockEvidenceType = {
-  evidence_type: 'passport',
+const makeEvidenceType = (overrides: Partial<EvidenceType> = {}): EvidenceType => ({
+  evidence_type: 'BC Drivers Licence',
   has_photo: true,
-  group: 'OTHER COUNTRIES' as const,
+  group: 'BRITISH COLUMBIA',
   group_sort_order: 1,
   sort_order: 1,
-  collection_order: 'FIRST' as const,
-  document_reference_input_mask: '[0-9]{9}',
-  document_reference_label: 'Passport Number',
-  document_reference_sample: '123456789',
-  image_sides: [
-    {
-      image_side_name: 'FRONT_SIDE' as const,
-      image_side_label: 'Front of Passport',
-      image_side_tip: 'Take a photo of the front of your passport',
-    },
-  ],
-  evidence_type_label: 'Passport',
-}
+  collection_order: 'BOTH',
+  document_reference_input_mask: '',
+  document_reference_label: 'Driver\'s License Number',
+  document_reference_sample: '12345678',
+  image_sides: [],
+  evidence_type_label: "B.C. Driver's Licence",
+  ...overrides,
+})
+
+const mockMetadata = (evidenceTypes: EvidenceType[], process: string = BCSCCardProcess.BCSCNonPhoto) => ({
+  processes: [{ process, evidence_types: evidenceTypes }],
+})
 
 describe('EvidenceIDCollection', () => {
   let mockNavigation: any
@@ -50,18 +47,34 @@ describe('EvidenceIDCollection', () => {
     jest.clearAllMocks()
     jest.useFakeTimers()
     jest.setSystemTime(new Date('2026-01-01T00:00:00.000Z'))
+    mockUseSecureActions.mockReturnValue({
+      addEvidenceType: mockAddEvidenceType,
+      updateEvidenceMetadata: mockUpdateEvidenceMetadata,
+      updateEvidenceDocumentNumber: mockUpdateEvidenceDocumentNumber,
+      updateUserInfo: mockUpdateUserInfo,
+      updateUserMetadata: mockUpdateUserMetadata,
+    })
+    mockUseDataLoader.mockReturnValue({
+      data: mockMetadata([makeEvidenceType()]),
+      isLoading: false,
+      load: jest.fn(),
+    })
   })
 
   afterEach(() => {
     jest.useRealTimers()
   })
 
-  it('renders correctly', () => {
+  it('renders correctly with the type-of-ID dropdown', () => {
     const tree = render(
-      <BasicAppContext>
+      <BasicAppContext
+        initialStateOverride={{
+          bcscSecure: { ...initialBCSCSecureState, cardProcess: BCSCCardProcess.BCSCNonPhoto },
+        }}
+      >
         <EvidenceIDCollectionScreen
           navigation={mockNavigation as never}
-          route={{ params: { cardType: mockEvidenceType } } as never}
+          route={{ params: { photoPath: '/tmp/photo.jpg' } } as never}
         />
       </BasicAppContext>
     )
@@ -69,7 +82,7 @@ describe('EvidenceIDCollection', () => {
     expect(tree).toMatchSnapshot()
   })
 
-  it('shows abbreviated form (document number only) for BCSCNonPhoto flow', () => {
+  it('does not render the document number input until a type is selected', () => {
     const tree = render(
       <BasicAppContext
         initialStateOverride={{
@@ -78,44 +91,15 @@ describe('EvidenceIDCollection', () => {
       >
         <EvidenceIDCollectionScreen
           navigation={mockNavigation as never}
-          route={{ params: { cardType: mockEvidenceType } } as never}
+          route={{ params: { photoPath: '/tmp/photo.jpg' } } as never}
         />
       </BasicAppContext>
     )
 
-    expect(tree.getByTestId('com.ariesbifold:id/documentNumber-input')).toBeTruthy()
-    expect(tree.queryByTestId('com.ariesbifold:id/firstName-input')).toBeNull()
-    expect(tree.queryByTestId('com.ariesbifold:id/lastName-input')).toBeNull()
-    expect(tree.queryByTestId('com.ariesbifold:id/middleNames-input')).toBeNull()
-    expect(tree.queryByTestId('com.ariesbifold:id/birthDate-input')).toBeNull()
+    expect(tree.queryByTestId('com.ariesbifold:id/documentNumber-input')).toBeNull()
   })
 
-  it('shows full form (personal info fields) for NonBCSC flow', () => {
-    const tree = render(
-      <BasicAppContext
-        initialStateOverride={{
-          bcscSecure: {
-            ...initialBCSCSecureState,
-            cardProcess: BCSCCardProcess.NonBCSC,
-            additionalEvidenceData: [{ evidenceType: mockEvidenceType, metadata: [] }],
-          },
-        }}
-      >
-        <EvidenceIDCollectionScreen
-          navigation={mockNavigation as never}
-          route={{ params: { cardType: mockEvidenceType } } as never}
-        />
-      </BasicAppContext>
-    )
-
-    expect(tree.getByTestId('com.ariesbifold:id/documentNumber-input')).toBeTruthy()
-    expect(tree.getByTestId('com.ariesbifold:id/firstName-input')).toBeTruthy()
-    expect(tree.getByTestId('com.ariesbifold:id/lastName-input')).toBeTruthy()
-    expect(tree.getByTestId('com.ariesbifold:id/middleNames-input')).toBeTruthy()
-    expect(tree.getByTestId('com.ariesbifold:id/birthDate-input')).toBeTruthy()
-  })
-
-  it('cancel removes evidence and navigates to evidence type list', async () => {
+  it('renders the type-of-ID dropdown trigger', () => {
     const tree = render(
       <BasicAppContext
         initialStateOverride={{
@@ -124,21 +108,15 @@ describe('EvidenceIDCollection', () => {
       >
         <EvidenceIDCollectionScreen
           navigation={mockNavigation as never}
-          route={{ params: { cardType: mockEvidenceType } } as never}
+          route={{ params: { photoPath: '/tmp/photo.jpg' } } as never}
         />
       </BasicAppContext>
     )
 
-    const cancelButton = tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionCancel')
-    await fireEvent.press(cancelButton)
-
-    expect(mockRemoveEvidenceByType).toHaveBeenCalledWith(mockEvidenceType)
-    expect(mockNavigation.dispatch).toHaveBeenCalled()
+    expect(tree.getByTestId('com.ariesbifold:id/evidenceType-input')).toBeTruthy()
   })
 
-  it('scrolls to first invalid field after validation', async () => {
-    const scrollToSpy = jest.spyOn(ScrollView.prototype, 'scrollTo').mockImplementation(jest.fn())
-
+  it('shows a type-of-ID error when submitting without a selection', async () => {
     const tree = render(
       <BasicAppContext
         initialStateOverride={{
@@ -147,24 +125,14 @@ describe('EvidenceIDCollection', () => {
       >
         <EvidenceIDCollectionScreen
           navigation={mockNavigation as never}
-          route={{ params: { cardType: mockEvidenceType } } as never}
+          route={{ params: { photoPath: '/tmp/photo.jpg' } } as never}
         />
       </BasicAppContext>
     )
-
-    const formContainer = tree
-      .UNSAFE_getAllByType(View)
-      .find((node) => node.props.onLayout && node.props.style?.gap === 18)
-    expect(formContainer).toBeTruthy()
-
-    fireEvent(formContainer as never, 'layout', { nativeEvent: { layout: { y: 100 } } })
-    fireEvent(tree.getByTestId('com.ariesbifold:id/documentNumber-input'), 'layout', {
-      nativeEvent: { layout: { y: 25 } },
-    })
 
     await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
 
-    expect(scrollToSpy).toHaveBeenCalledWith({ y: 125, animated: true })
-    scrollToSpy.mockRestore()
+    expect(tree.queryByTestId('com.ariesbifold:id/evidenceType-error')).toBeTruthy()
+    expect(mockAddEvidenceType).not.toHaveBeenCalled()
   })
 })

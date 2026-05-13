@@ -659,6 +659,38 @@ export const useSecureActions = () => {
   )
 
   /**
+   * Upsert a complete evidence entry in a single atomic dispatch + persist.
+   *
+   * Use this when you need to set the evidenceType, photo metadata, and document
+   * number together. Chaining addEvidenceType + updateEvidenceMetadata +
+   * updateEvidenceDocumentNumber from one handler does NOT work — each callback
+   * closes over the store array captured at render time, so the second and third
+   * calls map over the pre-add array and persist over the first call.
+   */
+  const upsertEvidence = useCallback(
+    async (entry: EvidenceMetadata) => {
+      const matchKey = entry.evidenceType?.evidence_type
+      const current = store.bcscSecure.additionalEvidenceData
+      const existingIndex = matchKey
+        ? current.findIndex((e) => e.evidenceType?.evidence_type === matchKey)
+        : -1
+
+      const updatedEvidence =
+        existingIndex >= 0
+          ? current.map((e, i) => (i === existingIndex ? { ...e, ...entry } : e))
+          : [...current, entry]
+
+      dispatch({
+        type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
+        payload: [updatedEvidence],
+      })
+
+      await persistEvidenceData(updatedEvidence)
+    },
+    [dispatch, persistEvidenceData, store.bcscSecure.additionalEvidenceData]
+  )
+
+  /**
    * Clear all additional evidence data and persist to native storage
    */
   const clearAdditionalEvidence = useCallback(async () => {
@@ -973,6 +1005,7 @@ export const useSecureActions = () => {
     addEvidenceType,
     updateEvidenceMetadata,
     updateEvidenceDocumentNumber,
+    upsertEvidence,
     removeEvidenceByType,
     removeIncompleteEvidence,
     clearAdditionalEvidence,

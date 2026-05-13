@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`EvidenceIDCollection renders correctly 1`] = `
+exports[`EvidenceIDCollection renders correctly with the type-of-ID dropdown 1`] = `
 <RNCSafeAreaView
   edges={
     {
@@ -70,7 +70,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
               ]
             }
           >
-            Passport
+            BCSC.EvidenceIDCollection.ConfirmHeader
           </Text>
           <Text
             maxFontSizeMultiplier={2}
@@ -88,24 +88,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
               ]
             }
           >
-            BCSC.EvidenceIDCollection.Heading1
-             
-            <Text
-              style={
-                [
-                  {
-                    "color": "#313132",
-                  },
-                  {
-                    "fontWeight": "bold",
-                  },
-                ]
-              }
-            >
-              BCSC.EvidenceIDCollection.Heading2
-            </Text>
-             
-            BCSC.EvidenceIDCollection.Heading3
+            BCSC.EvidenceIDCollection.ConfirmDescription
           </Text>
           <View
             onLayout={[Function]}
@@ -120,68 +103,62 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
             <View
               onLayout={[Function]}
             >
-              <Text
-                maxFontSizeMultiplier={2}
-                style={
-                  [
-                    {
-                      "color": "#313132",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 16,
-                      "fontWeight": "bold",
-                    },
+              <View>
+                <Text
+                  maxFontSizeMultiplier={2}
+                  style={
                     [
                       {
-                        "marginBottom": 8,
+                        "color": "#313132",
+                        "fontFamily": "BCSans-Regular",
+                        "fontSize": 16,
+                        "fontWeight": "bold",
                       },
-                      undefined,
-                    ],
-                  ]
-                }
-                testID="com.ariesbifold:id/documentNumber-label"
-              >
-                Passport Number
-              </Text>
-              <View
-                accessibilityState={
-                  {
-                    "busy": undefined,
-                    "checked": undefined,
-                    "disabled": undefined,
-                    "expanded": undefined,
-                    "selected": undefined,
+                      [
+                        {
+                          "marginBottom": 8,
+                        },
+                        undefined,
+                      ],
+                    ]
                   }
-                }
-                accessibilityValue={
-                  {
-                    "max": undefined,
-                    "min": undefined,
-                    "now": undefined,
-                    "text": undefined,
+                  testID="com.ariesbifold:id/evidenceType-label"
+                >
+                  BCSC.EvidenceIDCollection.TypeOfIDLabel
+                </Text>
+                <View
+                  accessibilityLabel="BCSC.EvidenceIDCollection.TypeOfIDLabel, BCSC.EvidenceIDCollection.TypeOfIDPlaceholder"
+                  accessibilityRole="combobox"
+                  accessibilityState={
+                    {
+                      "busy": undefined,
+                      "checked": undefined,
+                      "disabled": undefined,
+                      "expanded": false,
+                      "selected": undefined,
+                    }
                   }
-                }
-                accessible={false}
-                collapsable={false}
-                focusable={true}
-                hitSlop={
-                  {
-                    "bottom": 44,
-                    "left": 44,
-                    "right": 44,
-                    "top": 44,
+                  accessibilityValue={
+                    {
+                      "max": undefined,
+                      "min": undefined,
+                      "now": undefined,
+                      "text": undefined,
+                    }
                   }
-                }
-                onBlur={[Function]}
-                onClick={[Function]}
-                onFocus={[Function]}
-                onResponderGrant={[Function]}
-                onResponderMove={[Function]}
-                onResponderRelease={[Function]}
-                onResponderTerminate={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
-                style={
-                  [
+                  accessible={true}
+                  collapsable={false}
+                  focusable={true}
+                  onBlur={[Function]}
+                  onClick={[Function]}
+                  onFocus={[Function]}
+                  onResponderGrant={[Function]}
+                  onResponderMove={[Function]}
+                  onResponderRelease={[Function]}
+                  onResponderTerminate={[Function]}
+                  onResponderTerminationRequest={[Function]}
+                  onStartShouldSetResponder={[Function]}
+                  style={
                     {
                       "alignItems": "center",
                       "backgroundColor": "#D3D3D3",
@@ -189,100 +166,63 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
                       "borderRadius": 4,
                       "borderWidth": 1,
                       "color": "#313132",
-                      "elevation": 0,
                       "flexDirection": "row",
                       "fontFamily": "BCSans-Regular",
                       "fontSize": 16,
+                      "justifyContent": "space-between",
                       "padding": 10,
-                      "shadowColor": undefined,
-                      "shadowOffset": undefined,
-                      "shadowOpacity": 0,
-                      "shadowRadius": undefined,
-                    },
-                    false,
-                    undefined,
-                  ]
-                }
-                testID="com.ariesbifold:id/documentNumber-pressable"
-              >
-                <View
-                  style={
-                    {
-                      "flex": 1,
+                      "paddingHorizontal": 16,
                     }
                   }
+                  testID="com.ariesbifold:id/evidenceType-input"
                 >
-                  <TextInput
-                    accessibilityLabel="Passport Number"
-                    autoCorrect={false}
-                    onBlur={[Function]}
-                    onChange={[Function]}
-                    onChangeText={[Function]}
-                    onFocus={[Function]}
+                  <Text
+                    maxFontSizeMultiplier={2}
                     style={
                       [
                         {
-                          "backgroundColor": "transparent",
                           "color": "#313132",
-                          "flex": 1,
-                          "fontSize": 16,
-                          "includeFontPadding": false,
-                          "padding": 0,
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
                         },
-                        undefined,
+                        [
+                          {
+                            "flex": 1,
+                            "fontSize": 16,
+                          },
+                          {
+                            "color": "#606060",
+                          },
+                        ],
                       ]
                     }
-                    testID="com.ariesbifold:id/documentNumber-input"
-                    value=""
-                  />
+                  >
+                    BCSC.EvidenceIDCollection.TypeOfIDPlaceholder
+                  </Text>
+                  <Text
+                    allowFontScaling={false}
+                    selectable={false}
+                    style={
+                      [
+                        {
+                          "color": "#606060",
+                          "fontSize": 24,
+                        },
+                        undefined,
+                        {
+                          "fontFamily": "Material Icons",
+                          "fontStyle": "normal",
+                          "fontWeight": "normal",
+                        },
+                        {},
+                      ]
+                    }
+                  >
+                    
+                  </Text>
                 </View>
-                <Text
-                  allowFontScaling={false}
-                  selectable={false}
-                  style={
-                    [
-                      {
-                        "color": "#D8292F",
-                        "fontSize": 24,
-                      },
-                      {
-                        "marginRight": 8,
-                        "opacity": 0,
-                      },
-                      {
-                        "fontFamily": "Material Design Icons",
-                        "fontStyle": "normal",
-                        "fontWeight": "normal",
-                      },
-                      {},
-                    ]
-                  }
-                >
-                  󰀨
-                </Text>
               </View>
-              <Text
-                maxFontSizeMultiplier={2}
-                style={
-                  [
-                    {
-                      "color": "#313132",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 14,
-                      "fontWeight": "normal",
-                    },
-                    [
-                      {
-                        "marginTop": 8,
-                      },
-                      undefined,
-                    ],
-                  ]
-                }
-                testID="com.ariesbifold:id/documentNumber-subtext"
-              >
-                BCSC.EvidenceIDCollection.DocumentNumberSubtext 123456789
-              </Text>
             </View>
           </View>
         </View>
@@ -306,7 +246,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
           }
         >
           <View
-            accessibilityLabel="Global.Continue"
+            accessibilityLabel="BCSC.EvidenceIDCollection.TakePhotoOfSecondID"
             accessibilityRole="button"
             accessibilityState={
               {
@@ -378,85 +318,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
                   ]
                 }
               >
-                Continue
-              </Text>
-            </View>
-          </View>
-          <View
-            accessibilityLabel="Global.Cancel"
-            accessibilityRole="button"
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": false,
-                "expanded": undefined,
-                "selected": undefined,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            onClick={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            style={
-              {
-                "borderColor": "#003366",
-                "borderRadius": 4,
-                "borderWidth": 2,
-                "opacity": 1,
-                "padding": 16,
-              }
-            }
-            testID="com.ariesbifold:id/EvidenceIDCollectionCancel"
-          >
-            <View
-              style={
-                {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "justifyContent": "center",
-                }
-              }
-            >
-              <Text
-                maxFontSizeMultiplier={2}
-                style={
-                  [
-                    {
-                      "color": "#313132",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "normal",
-                    },
-                    [
-                      {
-                        "color": "#003366",
-                        "fontFamily": "BCSans-Regular",
-                        "fontSize": 18,
-                        "fontWeight": "bold",
-                        "textAlign": "center",
-                      },
-                      false,
-                      false,
-                    ],
-                  ]
-                }
-              >
-                Cancel
+                BCSC.EvidenceIDCollection.TakePhotoOfSecondID
               </Text>
             </View>
           </View>

@@ -1,6 +1,6 @@
 import { Screens } from '@bifold/core'
 import { NavigatorScreenParams } from '@react-navigation/native'
-import { BCSCCardProcess, EvidenceType } from 'react-native-bcsc-core'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { VerificationCardError } from '../features/verify/verificationCardError'
 import { BCSCReason } from '../utils/id-token'
 import { FormattedServicePeriod } from '../utils/service-hours-formatter'
@@ -198,7 +198,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.IDPhotoInformation]: undefined
   [BCSCScreens.EvidenceTypeList]: { cardProcess: BCSCCardProcess; photoFilter?: 'photo' | 'nonPhoto' }
   [BCSCScreens.EvidenceCapture]: undefined
-  [BCSCScreens.EvidenceIDCollection]: { cardType: EvidenceType; documentNumber?: string; photoPath?: string }
+  [BCSCScreens.EvidenceIDCollection]: { photoPath?: string }
   [BCSCScreens.BeforeYouCall]: { formattedHours: FormattedServicePeriod[] }
   [BCSCScreens.StartCall]: undefined
   [BCSCScreens.CallBusyOrClosed]: { busy: boolean; formattedHours: FormattedServicePeriod[] }

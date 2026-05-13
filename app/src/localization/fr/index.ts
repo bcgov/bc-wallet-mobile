@@ -1060,6 +1060,12 @@ const translation = {
       "OtherIDOptionsDescription": "You can use one of the following IDs, but will also need to provide photo ID. (FR)"
     },
     "EvidenceIDCollection": {
+      "ConfirmHeader": "Confirm information (FR)",
+      "ConfirmDescription": "Check the information entered exactly matches what is shown on the ID. (FR)",
+      "TypeOfIDLabel": "Type of ID (FR)",
+      "TypeOfIDPlaceholder": "Select an ID type (FR)",
+      "TypeOfIDError": "Please select an ID type (FR)",
+      "TakePhotoOfSecondID": "Take photo of your second ID (FR)",
       "Heading1": "Enter the information (FR)",
       "Heading2": "exactly as shown (FR)",
       "Heading3": "on the ID. (FR)",
