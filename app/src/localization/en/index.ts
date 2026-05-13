@@ -1137,7 +1137,7 @@ const translation = {
     },
     "VerificationMethods": {
       "SendVideoTitle": "Record a video for an agent to verify",
-      "SendVideoDescription": "turnaround time is 24 hours",
+      "SendVideoDescription": "Turnaround time is 24 hours",
       "VideoCallTitle": "Have a video call with an agent",
       "VideoCallDescription": "Available during normal hours of operation",
       "InPersonTitle": "In person with an agent",
