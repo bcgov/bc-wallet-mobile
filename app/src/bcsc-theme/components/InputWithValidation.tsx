@@ -89,6 +89,9 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
     subtext: {
       marginTop: Spacing.sm,
     },
+    errorText: {
+      color: ColorPalette.semantic.error,
+    },
   })
 
   return (
@@ -155,13 +158,15 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
         />
       </Pressable>
 
-      <ThemedText
-        style={[styles.subtext, props.subtextProps]}
-        variant={'labelSubtitle'}
-        testID={testIdWithKey(`${props.id}-subtext`)}
-      >
-        {props.error ? props.error : props.subtext}
-      </ThemedText>
+      {props.error || props.subtext ? (
+        <ThemedText
+          style={[styles.subtext, props.error && styles.errorText, props.subtextProps]}
+          variant={'labelSubtitle'}
+          testID={testIdWithKey(`${props.id}-subtext`)}
+        >
+          {props.error ? props.error : props.subtext}
+        </ThemedText>
+      ) : null}
     </View>
   )
 }

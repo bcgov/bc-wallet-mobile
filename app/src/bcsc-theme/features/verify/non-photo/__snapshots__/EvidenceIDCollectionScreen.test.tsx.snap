@@ -276,6 +276,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
                         "marginTop": 8,
                       },
                       undefined,
+                      undefined,
                     ],
                   ]
                 }
