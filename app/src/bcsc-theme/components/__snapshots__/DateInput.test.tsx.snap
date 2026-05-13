@@ -145,6 +145,7 @@ exports[`DateInput Component Rendering renders correctly 1`] = `
         onChange={[Function]}
         onChangeText={[Function]}
         onFocus={[Function]}
+        placeholderTextColor="#606060"
         style={
           [
             {
