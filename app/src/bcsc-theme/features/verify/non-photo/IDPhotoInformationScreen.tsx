@@ -1,7 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import BulletPointList from '@/components/BulletPointList'
-import SCAN_ID_IMAGE from '@assets/img/id-photo-info.svg'
+import ScanIdImage from '@assets/img/id-photo-info.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -43,7 +43,7 @@ const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScree
         padding: Spacing.lg,
       }}
     >
-      <SCAN_ID_IMAGE />
+      <ScanIdImage />
       <ThemedText variant={'headingThree'}>{t('BCSC.IDPhotoInformation.Heading')}</ThemedText>
       <BulletPointList
         translationKeys={[
