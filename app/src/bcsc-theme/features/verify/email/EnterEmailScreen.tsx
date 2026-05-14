@@ -62,9 +62,11 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
 
     try {
       setLoading(true)
-      const { email_address_id } = await evidence.createEmailVerification(email)
+      // Email verification is case-insensitive, so normalize before persisting/sending
+      const normalizedEmail = email.toLowerCase()
+      const { email_address_id } = await evidence.createEmailVerification(normalizedEmail)
       await updateAccountFlags({ userSkippedEmailVerification: false })
-      await updateUserInfo({ email, isEmailVerified: false })
+      await updateUserInfo({ email: normalizedEmail, isEmailVerified: false })
       navigation.navigate(BCSCScreens.EmailConfirmation, { emailAddressId: email_address_id })
     } catch (error: any) {
       setError(t('BCSC.EmailConfirmation.ErrorTitle'))

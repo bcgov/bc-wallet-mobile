@@ -136,17 +136,17 @@ exports[`ManualPairing Rendering renders correctly 1`] = `
                         [
                           {
                             "backgroundColor": "#FFFFFF",
-                            "borderColor": "#D8D8D8",
-                            "borderRadius": 8,
+                            "borderColor": "#D3D3D3",
+                            "borderRadius": 12,
                             "borderWidth": 2,
                             "color": "#313132",
                             "fontSize": 32,
-                            "height": 60,
+                            "height": 56,
                             "includeFontPadding": false,
-                            "lineHeight": 56,
+                            "lineHeight": 52,
                             "textAlign": "center",
                             "textAlignVertical": "center",
-                            "width": 50,
+                            "width": 52,
                           },
                           false,
                           null,
@@ -168,17 +168,17 @@ exports[`ManualPairing Rendering renders correctly 1`] = `
                         [
                           {
                             "backgroundColor": "#FFFFFF",
-                            "borderColor": "#D8D8D8",
-                            "borderRadius": 8,
+                            "borderColor": "#D3D3D3",
+                            "borderRadius": 12,
                             "borderWidth": 2,
                             "color": "#313132",
                             "fontSize": 32,
-                            "height": 60,
+                            "height": 56,
                             "includeFontPadding": false,
-                            "lineHeight": 56,
+                            "lineHeight": 52,
                             "textAlign": "center",
                             "textAlignVertical": "center",
-                            "width": 50,
+                            "width": 52,
                           },
                           false,
                           null,
@@ -200,17 +200,49 @@ exports[`ManualPairing Rendering renders correctly 1`] = `
                         [
                           {
                             "backgroundColor": "#FFFFFF",
-                            "borderColor": "#D8D8D8",
-                            "borderRadius": 8,
+                            "borderColor": "#D3D3D3",
+                            "borderRadius": 12,
                             "borderWidth": 2,
                             "color": "#313132",
                             "fontSize": 32,
-                            "height": 60,
+                            "height": 56,
                             "includeFontPadding": false,
-                            "lineHeight": 56,
+                            "lineHeight": 52,
                             "textAlign": "center",
                             "textAlignVertical": "center",
-                            "width": 50,
+                            "width": 52,
+                          },
+                          false,
+                          null,
+                        ],
+                      ]
+                    }
+                  />
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    onLayout={[Function]}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                        },
+                        [
+                          {
+                            "backgroundColor": "#FFFFFF",
+                            "borderColor": "#D3D3D3",
+                            "borderRadius": 12,
+                            "borderWidth": 2,
+                            "color": "#313132",
+                            "fontSize": 32,
+                            "height": 56,
+                            "includeFontPadding": false,
+                            "lineHeight": 52,
+                            "textAlign": "center",
+                            "textAlignVertical": "center",
+                            "width": 52,
                           },
                           false,
                           null,
@@ -231,7 +263,7 @@ exports[`ManualPairing Rendering renders correctly 1`] = `
                         {
                           "color": "#003366",
                           "fontSize": 32,
-                          "lineHeight": 60,
+                          "lineHeight": 56,
                           "textAlign": "center",
                         },
                       ]
@@ -253,17 +285,17 @@ exports[`ManualPairing Rendering renders correctly 1`] = `
                         [
                           {
                             "backgroundColor": "#FFFFFF",
-                            "borderColor": "#D8D8D8",
-                            "borderRadius": 8,
+                            "borderColor": "#D3D3D3",
+                            "borderRadius": 12,
                             "borderWidth": 2,
                             "color": "#313132",
                             "fontSize": 32,
-                            "height": 60,
+                            "height": 56,
                             "includeFontPadding": false,
-                            "lineHeight": 56,
+                            "lineHeight": 52,
                             "textAlign": "center",
                             "textAlignVertical": "center",
-                            "width": 50,
+                            "width": 52,
                           },
                           false,
                           null,
@@ -285,49 +317,17 @@ exports[`ManualPairing Rendering renders correctly 1`] = `
                         [
                           {
                             "backgroundColor": "#FFFFFF",
-                            "borderColor": "#D8D8D8",
-                            "borderRadius": 8,
+                            "borderColor": "#D3D3D3",
+                            "borderRadius": 12,
                             "borderWidth": 2,
                             "color": "#313132",
                             "fontSize": 32,
-                            "height": 60,
+                            "height": 56,
                             "includeFontPadding": false,
-                            "lineHeight": 56,
+                            "lineHeight": 52,
                             "textAlign": "center",
                             "textAlignVertical": "center",
-                            "width": 50,
-                          },
-                          false,
-                          null,
-                        ],
-                      ]
-                    }
-                  />
-                  <Text
-                    maxFontSizeMultiplier={2}
-                    onLayout={[Function]}
-                    style={
-                      [
-                        {
-                          "color": "#313132",
-                          "fontFamily": "BCSans-Regular",
-                          "fontSize": 18,
-                          "fontWeight": "normal",
-                        },
-                        [
-                          {
-                            "backgroundColor": "#FFFFFF",
-                            "borderColor": "#D8D8D8",
-                            "borderRadius": 8,
-                            "borderWidth": 2,
-                            "color": "#313132",
-                            "fontSize": 32,
-                            "height": 60,
-                            "includeFontPadding": false,
-                            "lineHeight": 56,
-                            "textAlign": "center",
-                            "textAlignVertical": "center",
-                            "width": 50,
+                            "width": 52,
                           },
                           false,
                           null,

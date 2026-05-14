@@ -12,6 +12,7 @@ interface SecondaryButtonStyle {
 /** Palette values that vary between variants. Everything else is shared defaults. */
 interface PaletteSpec {
   primary: string
+  primaryLight: string
   primaryBackground: string
   secondaryBackground: string
   tertiaryBackground: string
@@ -85,7 +86,7 @@ function buildPalette(spec: PaletteSpec): IColorPalette {
       secondaryDisabled: '#757575',
       tertiary: GrayscaleColors.lightGrey,
       tertiaryDisabled: '#757575',
-      primaryLight: '#D9EAF7',
+      primaryLight: spec.primaryLight,
       highlight: '#FCBA19',
       primaryBackground: spec.primaryBackground,
       secondaryBackground: spec.secondaryBackground,
