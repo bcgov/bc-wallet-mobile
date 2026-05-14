@@ -17,7 +17,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, useWindowDimensions, View } 
 
 import { useBCSCAgent } from '../agent'
 
-import useQRDisplayViewModel from './useQRDisplayViewModel'
+import useQRDisplayViewModel, { QRDisplayStatus } from './useQRDisplayViewModel'
 import WalletNameDisplay from './WalletNameDisplay'
 
 const QRDisplay: React.FC = () => {
@@ -32,7 +32,7 @@ const QRDisplay: React.FC = () => {
   const qrSize = width - Spacing.lg * 2
 
   const headerRight = useCallback(() => {
-    if (vm.status !== 'ready') {
+    if (vm.status !== QRDisplayStatus.READY) {
       return null
     }
     return (
@@ -73,7 +73,7 @@ const QRDisplay: React.FC = () => {
     },
   })
 
-  if (vm.status === 'loading') {
+  if (vm.status === QRDisplayStatus.LOADING) {
     return (
       <View style={styles.stateContainer} testID={testIdWithKey('QRDisplay.Loading')}>
         <ActivityIndicator size="large" color={ColorPalette.brand.primary} />
@@ -81,7 +81,7 @@ const QRDisplay: React.FC = () => {
     )
   }
 
-  if (vm.status === 'error') {
+  if (vm.status === QRDisplayStatus.ERROR) {
     return (
       <View style={styles.stateContainer} testID={testIdWithKey('QRDisplay.Error')}>
         <InfoBox

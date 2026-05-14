@@ -2,7 +2,11 @@ import { BifoldAgent, BifoldLogger, createConnectionInvitation } from '@bifold/c
 import { useCallback, useEffect, useState } from 'react'
 import { Share } from 'react-native'
 
-export type QRDisplayStatus = 'loading' | 'ready' | 'error'
+export enum QRDisplayStatus {
+  LOADING = 'loading',
+  READY = 'ready',
+  ERROR = 'error',
+}
 
 export interface QRDisplayViewModelInputs {
   agent: BifoldAgent | null
@@ -19,7 +23,7 @@ export interface QRDisplayViewModel {
 
 const useQRDisplayViewModel = ({ agent, logger }: QRDisplayViewModelInputs): QRDisplayViewModel => {
   const [invitation, setInvitation] = useState<string | undefined>(undefined)
-  const [status, setStatus] = useState<QRDisplayStatus>('loading')
+  const [status, setStatus] = useState<QRDisplayStatus>(QRDisplayStatus.LOADING)
   const [error, setError] = useState<Error | null>(null)
   const [retryToken, setRetryToken] = useState(0)
 
@@ -29,7 +33,7 @@ const useQRDisplayViewModel = ({ agent, logger }: QRDisplayViewModelInputs): QRD
     }
 
     let cancelled = false
-    setStatus('loading')
+    setStatus(QRDisplayStatus.LOADING)
     setError(null)
 
     createConnectionInvitation(agent)
@@ -38,7 +42,7 @@ const useQRDisplayViewModel = ({ agent, logger }: QRDisplayViewModelInputs): QRD
           return
         }
         setInvitation(result.invitationUrl)
-        setStatus('ready')
+        setStatus(QRDisplayStatus.READY)
       })
       .catch((err) => {
         if (cancelled) {
@@ -47,7 +51,7 @@ const useQRDisplayViewModel = ({ agent, logger }: QRDisplayViewModelInputs): QRD
         const wrapped = err instanceof Error ? err : new Error(String(err))
         logger.error('[QRDisplay] createConnectionInvitation failed', wrapped)
         setError(wrapped)
-        setStatus('error')
+        setStatus(QRDisplayStatus.ERROR)
       })
 
     return () => {

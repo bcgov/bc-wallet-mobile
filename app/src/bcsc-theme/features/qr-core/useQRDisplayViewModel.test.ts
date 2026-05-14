@@ -2,7 +2,7 @@ import * as Bifold from '@bifold/core'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
 import { Share } from 'react-native'
 
-import useQRDisplayViewModel from './useQRDisplayViewModel'
+import useQRDisplayViewModel, { QRDisplayStatus } from './useQRDisplayViewModel'
 
 jest.mock('@bifold/core', () => ({
   ...jest.requireActual('@bifold/core'),
@@ -36,7 +36,7 @@ describe('useQRDisplayViewModel', () => {
     const logger = makeLogger()
     const { result } = renderHook(() => useQRDisplayViewModel({ agent: null, logger }))
 
-    expect(result.current.status).toBe('loading')
+    expect(result.current.status).toBe(QRDisplayStatus.LOADING)
     expect(mockCreateInvitation).not.toHaveBeenCalled()
   })
 
@@ -53,7 +53,7 @@ describe('useQRDisplayViewModel', () => {
     const { result } = renderHook(() => useQRDisplayViewModel({ agent: fakeAgent, logger }))
 
     await waitFor(() => {
-      expect(result.current.status).toBe('ready')
+      expect(result.current.status).toBe(QRDisplayStatus.READY)
     })
 
     expect(result.current.invitation).toBe(url)
@@ -67,7 +67,7 @@ describe('useQRDisplayViewModel', () => {
     const { result } = renderHook(() => useQRDisplayViewModel({ agent: fakeAgent, logger }))
 
     await waitFor(() => {
-      expect(result.current.status).toBe('error')
+      expect(result.current.status).toBe(QRDisplayStatus.ERROR)
     })
     expect(result.current.error?.message).toBe('agent boom')
     expect(logger.error).toHaveBeenCalled()
@@ -85,7 +85,7 @@ describe('useQRDisplayViewModel', () => {
     })
 
     await waitFor(() => {
-      expect(result.current.status).toBe('ready')
+      expect(result.current.status).toBe(QRDisplayStatus.READY)
     })
     expect(result.current.invitation).toBe(url)
   })
@@ -118,7 +118,7 @@ describe('useQRDisplayViewModel', () => {
     const { result } = renderHook(() => useQRDisplayViewModel({ agent: fakeAgent, logger }))
 
     await waitFor(() => {
-      expect(result.current.status).toBe('ready')
+      expect(result.current.status).toBe(QRDisplayStatus.READY)
     })
 
     await act(async () => {
@@ -144,7 +144,7 @@ describe('useQRDisplayViewModel', () => {
     const { result } = renderHook(() => useQRDisplayViewModel({ agent: fakeAgent, logger }))
 
     await waitFor(() => {
-      expect(result.current.status).toBe('ready')
+      expect(result.current.status).toBe(QRDisplayStatus.READY)
     })
 
     await act(async () => {
