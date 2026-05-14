@@ -1,6 +1,7 @@
 import { VerificationPrompt } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
+import BrownHandHoldingPhone from '@assets/img/brown-hand-holding-phone.svg'
 import { Button, ButtonType, ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { Fragment } from 'react'
@@ -18,10 +19,10 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
   const { t } = useTranslation()
 
   const styles = StyleSheet.create({
-    mainIcon: {
-      marginTop: Spacing.md,
-      marginBottom: Spacing.xxl,
-      alignSelf: 'center',
+    image: {
+      width: '100%',
+      height: 200,
+      marginBottom: Spacing.md,
     },
     lineBreak: {
       borderBottomWidth: 1,
@@ -37,9 +38,22 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
     },
   })
 
+  const controls = (
+    <Button
+      buttonType={ButtonType.Primary}
+      title={t('BCSC.SendVideo.VideoInstructions.StartRecordingButton')}
+      onPress={() => {
+        navigation.navigate(BCSCScreens.TakeVideo)
+      }}
+      testID={'StartRecordingButton'}
+      accessibilityLabel={t('BCSC.SendVideo.VideoInstructions.StartRecordingButton')}
+    />
+  )
+
   return (
-    <ScreenWrapper>
-      <Icon name={'video'} size={112} color={TextTheme.normal.color} style={styles.mainIcon} />
+    <ScreenWrapper controls={controls}>
+      {/* <Icon name={'video'} size={112} color={TextTheme.normal.color} style={styles.mainIcon} /> */}
+      <BrownHandHoldingPhone style={styles.image} height={styles.image.height} width={styles.image.width} />
       <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.lg, textAlign: 'center' }}>
         {t('BCSC.SendVideo.VideoInstructions.Heading1')}
       </ThemedText>
@@ -91,15 +105,6 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
       <ThemedText variant={'headingFour'} style={{ marginBottom: Spacing.xxl, textAlign: 'center' }}>
         {t('BCSC.SendVideo.VideoInstructions.Heading4')}
       </ThemedText>
-      <Button
-        buttonType={ButtonType.Primary}
-        title={t('BCSC.SendVideo.VideoInstructions.StartRecordingButton')}
-        onPress={() => {
-          navigation.navigate(BCSCScreens.TakeVideo)
-        }}
-        testID={'StartRecordingButton'}
-        accessibilityLabel={t('BCSC.SendVideo.VideoInstructions.StartRecordingButton')}
-      />
     </ScreenWrapper>
   )
 }

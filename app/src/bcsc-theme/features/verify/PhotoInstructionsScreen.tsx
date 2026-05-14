@@ -1,13 +1,11 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import SelfieImage from '@assets/img/selfie_example.png'
+import WhiteHandHoldingPhone from '@assets/img/white-hand-holding-phone.svg'
 import { Button, ButtonType, ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
 import { useTranslation } from 'react-i18next'
-import { Image, StyleSheet, View } from 'react-native'
-
-const SELFIE_IMAGE = Image.resolveAssetSource(SelfieImage).uri
+import { StyleSheet, View } from 'react-native'
 
 type PhotoInstructionsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.PhotoInstructions>
@@ -53,7 +51,7 @@ const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenP
 
   return (
     <ScreenWrapper controls={controls}>
-      <Image source={{ uri: SELFIE_IMAGE }} style={styles.image} />
+      <WhiteHandHoldingPhone style={styles.image} height={styles.image.height} width={styles.image.width} />
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.PhotoInstructions.Heading')}
       </ThemedText>
