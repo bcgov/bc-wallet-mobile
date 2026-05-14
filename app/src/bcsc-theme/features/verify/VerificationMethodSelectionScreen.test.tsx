@@ -29,6 +29,8 @@ describe('VerificationMethodSelection', () => {
       handlePressLiveCall: mockHandlePressLiveCall,
       sendVideoLoading: false,
       liveCallLoading: false,
+      hoursLoading: false,
+      formattedHours: undefined,
       verificationOptions: [
         DeviceVerificationOption.SEND_VIDEO,
         DeviceVerificationOption.LIVE_VIDEO_CALL,
@@ -51,6 +53,8 @@ describe('VerificationMethodSelection', () => {
       handlePressLiveCall: mockHandlePressLiveCall,
       sendVideoLoading: false,
       liveCallLoading: false,
+      hoursLoading: false,
+      formattedHours: undefined,
       verificationOptions: [
         DeviceVerificationOption.LIVE_VIDEO_CALL,
         DeviceVerificationOption.SEND_VIDEO,
@@ -73,6 +77,8 @@ describe('VerificationMethodSelection', () => {
       handlePressLiveCall: mockHandlePressLiveCall,
       sendVideoLoading: false,
       liveCallLoading: false,
+      hoursLoading: false,
+      formattedHours: undefined,
       verificationOptions: [
         DeviceVerificationOption.IN_PERSON,
         DeviceVerificationOption.SEND_VIDEO,

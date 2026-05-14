@@ -32,9 +32,13 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
         setDestinations(destinations)
         setServiceHours(serviceHours)
       })
-      .catch(() => {})
+      .catch((error) => {
+        logger.error('Error loading verification method service hours:', error as Error)
+        setDestinations(undefined)
+        setServiceHours(undefined)
+      })
       .finally(() => setHoursLoading(false))
-  }, [videoCallApi])
+  }, [logger, videoCallApi])
 
   const handlePressSendVideo = useCallback(async () => {
     try {

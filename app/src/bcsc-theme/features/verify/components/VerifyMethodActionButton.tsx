@@ -9,7 +9,6 @@ type VerifyMethodActionButtonProps = {
   title: string
   description: string
   onPress: () => void
-  loading?: boolean
   disabled?: boolean
 }
 
@@ -21,7 +20,6 @@ const VerifyMethodActionButton = ({
   description,
   icon,
   onPress,
-  loading,
   disabled = false,
 }: VerifyMethodActionButtonProps) => {
   const { ColorPalette, Spacing } = useTheme()
@@ -62,9 +60,9 @@ const VerifyMethodActionButton = ({
 
   return (
     <TouchableOpacity
-      style={{ ...styles.container, backgroundColor: '#D8EAFD', borderRadius: Spacing.sm }}
+      style={{ ...styles.container, backgroundColor: ColorPalette.brand.tertiaryBackground, borderRadius: Spacing.sm }}
       onPress={() => {
-        if (!disabled && !loading) {
+        if (!disabled) {
           onPress()
         }
       }}
@@ -74,10 +72,10 @@ const VerifyMethodActionButton = ({
     >
       <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', minWidth: 0 }}>
         <View style={{ marginRight: Spacing.lg }}>
-          <Icon name={icon} size={iconSize} color={'#1E5189'} />
+          <Icon name={icon} size={iconSize} color={ColorPalette.brand.headerText} />
         </View>
         <View style={styles.contentContainer}>
-          <ThemedText style={{ color: '#1E5189', fontWeight: 'bold' }}>{title}</ThemedText>
+          <ThemedText style={{ color: ColorPalette.brand.headerText, fontWeight: 'bold' }}>{title}</ThemedText>
           <ThemedText style={styles.description}>{description}</ThemedText>
         </View>
       </View>

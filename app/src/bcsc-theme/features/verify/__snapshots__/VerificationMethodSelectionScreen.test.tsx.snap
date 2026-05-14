@@ -108,7 +108,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
         style={
           {
             "alignItems": "center",
-            "backgroundColor": "#D8EAFD",
+            "backgroundColor": "#003366",
             "borderColor": "#EDEBE9",
             "borderRadius": 8,
             "borderWidth": 1,
@@ -144,7 +144,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
               style={
                 [
                   {
-                    "color": "#1E5189",
+                    "color": "#FFFFFF",
                     "fontSize": 36,
                   },
                   undefined,
@@ -180,7 +180,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
                     "fontWeight": "normal",
                   },
                   {
-                    "color": "#1E5189",
+                    "color": "#FFFFFF",
                     "fontWeight": "bold",
                   },
                 ]
@@ -242,7 +242,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
         style={
           {
             "alignItems": "center",
-            "backgroundColor": "#D8EAFD",
+            "backgroundColor": "#003366",
             "borderColor": "#EDEBE9",
             "borderRadius": 8,
             "borderWidth": 1,
@@ -278,7 +278,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
               style={
                 [
                   {
-                    "color": "#1E5189",
+                    "color": "#FFFFFF",
                     "fontSize": 36,
                   },
                   undefined,
@@ -314,7 +314,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
                     "fontWeight": "normal",
                   },
                   {
-                    "color": "#1E5189",
+                    "color": "#FFFFFF",
                     "fontWeight": "bold",
                   },
                 ]
@@ -376,7 +376,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
         style={
           {
             "alignItems": "center",
-            "backgroundColor": "#D8EAFD",
+            "backgroundColor": "#003366",
             "borderColor": "#EDEBE9",
             "borderRadius": 8,
             "borderWidth": 1,
@@ -412,7 +412,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
               style={
                 [
                   {
-                    "color": "#1E5189",
+                    "color": "#FFFFFF",
                     "fontSize": 36,
                   },
                   undefined,
@@ -448,7 +448,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
                     "fontWeight": "normal",
                   },
                   {
-                    "color": "#1E5189",
+                    "color": "#FFFFFF",
                     "fontWeight": "bold",
                   },
                 ]
@@ -617,7 +617,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
         style={
           {
             "alignItems": "center",
-            "backgroundColor": "#D8EAFD",
+            "backgroundColor": "#003366",
             "borderColor": "#EDEBE9",
             "borderRadius": 8,
             "borderWidth": 1,
@@ -653,7 +653,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
               style={
                 [
                   {
-                    "color": "#1E5189",
+                    "color": "#FFFFFF",
                     "fontSize": 36,
                   },
                   undefined,
@@ -689,7 +689,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
                     "fontWeight": "normal",
                   },
                   {
-                    "color": "#1E5189",
+                    "color": "#FFFFFF",
                     "fontWeight": "bold",
                   },
                 ]
@@ -751,7 +751,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
         style={
           {
             "alignItems": "center",
-            "backgroundColor": "#D8EAFD",
+            "backgroundColor": "#003366",
             "borderColor": "#EDEBE9",
             "borderRadius": 8,
             "borderWidth": 1,
@@ -787,7 +787,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
               style={
                 [
                   {
-                    "color": "#1E5189",
+                    "color": "#FFFFFF",
                     "fontSize": 36,
                   },
                   undefined,
@@ -823,7 +823,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
                     "fontWeight": "normal",
                   },
                   {
-                    "color": "#1E5189",
+                    "color": "#FFFFFF",
                     "fontWeight": "bold",
                   },
                 ]
@@ -885,7 +885,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
         style={
           {
             "alignItems": "center",
-            "backgroundColor": "#D8EAFD",
+            "backgroundColor": "#003366",
             "borderColor": "#EDEBE9",
             "borderRadius": 8,
             "borderWidth": 1,
@@ -921,7 +921,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
               style={
                 [
                   {
-                    "color": "#1E5189",
+                    "color": "#FFFFFF",
                     "fontSize": 36,
                   },
                   undefined,
@@ -957,7 +957,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
                     "fontWeight": "normal",
                   },
                   {
-                    "color": "#1E5189",
+                    "color": "#FFFFFF",
                     "fontWeight": "bold",
                   },
                 ]
@@ -1126,7 +1126,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
         style={
           {
             "alignItems": "center",
-            "backgroundColor": "#D8EAFD",
+            "backgroundColor": "#003366",
             "borderColor": "#EDEBE9",
             "borderRadius": 8,
             "borderWidth": 1,
@@ -1162,7 +1162,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
               style={
                 [
                   {
-                    "color": "#1E5189",
+                    "color": "#FFFFFF",
                     "fontSize": 36,
                   },
                   undefined,
@@ -1198,7 +1198,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
                     "fontWeight": "normal",
                   },
                   {
-                    "color": "#1E5189",
+                    "color": "#FFFFFF",
                     "fontWeight": "bold",
                   },
                 ]
@@ -1260,7 +1260,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
         style={
           {
             "alignItems": "center",
-            "backgroundColor": "#D8EAFD",
+            "backgroundColor": "#003366",
             "borderColor": "#EDEBE9",
             "borderRadius": 8,
             "borderWidth": 1,
@@ -1296,7 +1296,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
               style={
                 [
                   {
-                    "color": "#1E5189",
+                    "color": "#FFFFFF",
                     "fontSize": 36,
                   },
                   undefined,
@@ -1332,7 +1332,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
                     "fontWeight": "normal",
                   },
                   {
-                    "color": "#1E5189",
+                    "color": "#FFFFFF",
                     "fontWeight": "bold",
                   },
                 ]
@@ -1394,7 +1394,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
         style={
           {
             "alignItems": "center",
-            "backgroundColor": "#D8EAFD",
+            "backgroundColor": "#003366",
             "borderColor": "#EDEBE9",
             "borderRadius": 8,
             "borderWidth": 1,
@@ -1430,7 +1430,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
               style={
                 [
                   {
-                    "color": "#1E5189",
+                    "color": "#FFFFFF",
                     "fontSize": 36,
                   },
                   undefined,
@@ -1466,7 +1466,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
                     "fontWeight": "normal",
                   },
                   {
-                    "color": "#1E5189",
+                    "color": "#FFFFFF",
                     "fontWeight": "bold",
                   },
                 ]

@@ -38,7 +38,6 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
           description={t('BCSC.VerificationMethods.SendVideoDescription')}
           icon={'video-outline'}
           onPress={handlePressSendVideo}
-          loading={sendVideoLoading}
           disabled={sendVideoLoading || liveCallLoading}
         />
       )
@@ -65,7 +64,6 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
           description={t('BCSC.VerificationMethods.VideoCallDescription')}
           icon={'face-agent'}
           onPress={handlePressLiveCall}
-          loading={liveCallLoading}
           disabled={liveCallLoading || sendVideoLoading}
         />
       )
