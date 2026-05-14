@@ -77,7 +77,10 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
   }
 
   const handleResendCode = async () => {
-    if (resendLoading) return
+    if (resendLoading) {
+      return
+    }
+
     setError(null)
 
     try {
