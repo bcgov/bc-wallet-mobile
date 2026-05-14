@@ -14,6 +14,7 @@ const translation = {
     "Dismiss": "Dispensar",
     "GetHelp": "Get help (PT-BR)",
     "ContinueSetup": "Continue setup (PT-BR)",
+    "Share": "Share (PT-BR)",
     "Skip": "Skip (PT-BR)",
     "A11y": {
       "OpensInBrowser": "This opens in browser (PT-BR)",

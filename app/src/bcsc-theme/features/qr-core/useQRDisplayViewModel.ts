@@ -29,6 +29,9 @@ const useQRDisplayViewModel = ({ agent, logger }: QRDisplayViewModelInputs): QRD
 
   useEffect(() => {
     if (!agent) {
+      setInvitation(undefined)
+      setError(null)
+      setStatus(QRDisplayStatus.LOADING)
       return
     }
 

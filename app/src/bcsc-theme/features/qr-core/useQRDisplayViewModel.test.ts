@@ -130,6 +130,35 @@ describe('useQRDisplayViewModel', () => {
     shareSpy.mockRestore()
   })
 
+  it('resets to loading and clears invitation when agent flips from ready back to null', async () => {
+    const logger = makeLogger()
+    mockCreateInvitation.mockResolvedValueOnce({
+      invitationUrl: url,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      record: {} as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      invitation: {} as any,
+    })
+
+    const { result, rerender } = renderHook(
+      ({ agent }: { agent: typeof fakeAgent | null }) => useQRDisplayViewModel({ agent, logger }),
+      { initialProps: { agent: fakeAgent } }
+    )
+
+    await waitFor(() => {
+      expect(result.current.status).toBe(QRDisplayStatus.READY)
+    })
+    expect(result.current.invitation).toBe(url)
+
+    rerender({ agent: null })
+
+    await waitFor(() => {
+      expect(result.current.status).toBe(QRDisplayStatus.LOADING)
+    })
+    expect(result.current.invitation).toBeUndefined()
+    expect(result.current.error).toBeNull()
+  })
+
   it('logs but does not throw when Share.share rejects', async () => {
     const logger = makeLogger()
     mockCreateInvitation.mockResolvedValueOnce({

@@ -14,6 +14,7 @@ const translation = {
     "Dismiss": "Fermer",
     "GetHelp": "Get help (FR)",
     "ContinueSetup": "Continue setup (FR)",
+    "Share": "Share (FR)",
     "Skip": "Skip (FR)",
     "A11y": {
       "OpensInBrowser": "This opens in browser (FR)",

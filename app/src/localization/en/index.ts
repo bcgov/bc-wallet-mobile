@@ -14,6 +14,7 @@ const translation = {
     "Dismiss": "Dismiss",
     "GetHelp": "Get help",
     "ContinueSetup": "Continue setup",
+    "Share": "Share",
     "Skip": "Skip",
     "A11y": {
       "OpensInBrowser": "This opens in browser",
