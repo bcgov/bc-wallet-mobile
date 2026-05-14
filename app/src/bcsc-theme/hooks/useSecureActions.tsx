@@ -256,15 +256,29 @@ export const useSecureActions = () => {
       if (userInfo.serial) {
         authRequestData.csn = userInfo.serial
       }
-      if (userInfo.email) {
+      // Only persist as verifiedEmail when the email has actually been verified.
+      // Otherwise an unverified email captured mid-flow would look verified after re-auth (see hydrateSecureState).
+      if (userInfo.email && userInfo.isEmailVerified) {
         authRequestData.verifiedEmail = userInfo.email
       }
 
       if (Object.keys(authRequestData).length > 0) {
         await persistAuthorizationRequest(authRequestData)
       }
+
+      // Persist email + verification flag to accountFlags so they survive auto-lock during verification.
+      const accountFlagsData: AccountFlags = {}
+      if (userInfo.email !== undefined) {
+        accountFlagsData.emailAddress = userInfo.email
+      }
+      if (userInfo.isEmailVerified !== undefined) {
+        accountFlagsData.isEmailVerified = userInfo.isEmailVerified
+      }
+      if (Object.keys(accountFlagsData).length > 0) {
+        await persistAccountFlags(accountFlagsData)
+      }
     },
-    [dispatch, persistAuthorizationRequest]
+    [dispatch, persistAuthorizationRequest, persistAccountFlags]
   )
 
   /**
