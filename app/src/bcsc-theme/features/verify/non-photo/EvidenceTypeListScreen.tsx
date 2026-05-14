@@ -87,13 +87,13 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
   const shouldAddEvidence = useCallback(
     (card: EvidenceType): boolean => {
       const allEvidence = store.bcscSecure.additionalEvidenceData
-      const order = card.collection_order
-      const isComplete = allEvidence.some(
-        (evidence) =>
-          evidence.evidenceType?.evidence_type_label === card.evidence_type_label && isCardEvidenceComplete(evidence)
-      )
 
-      if (isComplete) {
+      const order = card.collection_order
+      // Hide cards that have already been added to evidence — completed or not —
+      // so the user can't pick the same ID twice (e.g. Canadian Passport as both first and second ID).
+      const isAlreadyUsed = allEvidence.some((evidence) => evidence.evidenceType?.evidence_type === card.evidence_type)
+
+      if (isAlreadyUsed) {
         return false
       }
 

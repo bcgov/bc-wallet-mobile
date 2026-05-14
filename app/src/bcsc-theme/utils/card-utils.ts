@@ -28,9 +28,17 @@ export function getCardProcessForCardType(cardType: BCSCCardType | null): BCSCCa
 /**
  * Check if the card evidence is complete by verifying that the evidence type, document number, and metadata are all present and valid.
  *
+ * Completeness depends on the card: single-sided IDs (e.g. Canadian Passport) only need 1 photo,
+ * double-sided IDs (e.g. driver's licence, BCSC) need 2. The required count is derived from
+ * the card's own `image_sides`. Falling back to 1 keeps this safe if `image_sides` is missing.
+ *
  * @param card - The card evidence metadata to check for completeness.
  * @returns True if the card evidence is complete, false otherwise.
  */
 export function isCardEvidenceComplete(card?: EvidenceMetadata): boolean {
-  return Boolean(card?.evidenceType && card.documentNumber && card.metadata.length === 2)
+  if (!card?.evidenceType || !card.documentNumber) {
+    return false
+  }
+  const requiredPhotos = card.evidenceType.image_sides?.length || 1
+  return card.metadata.length >= requiredPhotos
 }

@@ -160,13 +160,25 @@ describe('EvidenceTypeList', () => {
     })
 
     it('should show SECOND and BOTH cards when evidence has already been selected', () => {
-      const firstCard = makeEvidenceType({ collection_order: 'FIRST', evidence_type_label: 'First Card' })
-      const secondCard = makeEvidenceType({ collection_order: 'SECOND', evidence_type_label: 'Second Card' })
-      const bothCard = makeEvidenceType({ collection_order: 'BOTH', evidence_type_label: 'Both Card' })
+      const firstCard = makeEvidenceType({
+        evidence_type: 'First Card',
+        collection_order: 'FIRST',
+        evidence_type_label: 'First Card',
+      })
+      const secondCard = makeEvidenceType({
+        evidence_type: 'Second Card',
+        collection_order: 'SECOND',
+        evidence_type_label: 'Second Card',
+      })
+      const bothCard = makeEvidenceType({
+        evidence_type: 'Both Card',
+        collection_order: 'BOTH',
+        evidence_type_label: 'Both Card',
+      })
       const process = BCSCCardProcess.None as string
 
       const existingEvidence: EvidenceMetadata = {
-        evidenceType: makeEvidenceType({ evidence_type_label: 'Some Other Card' }),
+        evidenceType: makeEvidenceType({ evidence_type: 'Some Other Card', evidence_type_label: 'Some Other Card' }),
         metadata: [{ uri: 'front.jpg' } as any, { uri: 'back.jpg' } as any],
         documentNumber: 'SO123',
       }
@@ -195,15 +207,21 @@ describe('EvidenceTypeList', () => {
       expect(queryByText('First Card')).toBeNull()
     })
 
-    it('should exclude evidence types that have already been fully collected', () => {
-      const bothCard = makeEvidenceType({ collection_order: 'BOTH', evidence_type_label: 'BC Drivers Licence' })
-      const secondCard = makeEvidenceType({ collection_order: 'SECOND', evidence_type_label: 'Passport' })
+    it('should exclude evidence types that have already been used (complete or incomplete)', () => {
+      const bothCard = makeEvidenceType({
+        evidence_type: 'BC Drivers Licence',
+        collection_order: 'BOTH',
+        evidence_type_label: 'BC Drivers Licence',
+      })
+      const secondCard = makeEvidenceType({
+        evidence_type: 'Passport',
+        collection_order: 'SECOND',
+        evidence_type_label: 'Passport',
+      })
       const process = BCSCCardProcess.None as string
 
-      // A complete evidence entry — both photos + a document number. shouldAddEvidence only
-      // filters out cards whose existing entry is complete; incomplete entries remain selectable.
       const existingEvidence: EvidenceMetadata = {
-        evidenceType: makeEvidenceType({ evidence_type_label: 'BC Drivers Licence' }),
+        evidenceType: makeEvidenceType({ evidence_type: 'BC Drivers Licence', evidence_type_label: 'BC Drivers Licence' }),
         metadata: [{ uri: 'front.jpg' } as any, { uri: 'back.jpg' } as any],
         documentNumber: 'DL123',
       }
@@ -229,6 +247,47 @@ describe('EvidenceTypeList', () => {
 
       expect(getByText('Passport')).toBeTruthy()
       expect(queryByText('BC Drivers Licence')).toBeNull()
+    })
+
+    it('should exclude evidence types that have been added but not yet completed', () => {
+      const bothCard = makeEvidenceType({
+        evidence_type: 'Canadian Passport',
+        collection_order: 'BOTH',
+        evidence_type_label: 'Canadian Passport',
+      })
+      const secondCard = makeEvidenceType({
+        evidence_type: 'Birth Certificate',
+        collection_order: 'SECOND',
+        evidence_type_label: 'Birth Certificate',
+      })
+      const process = BCSCCardProcess.NonBCSC as string
+
+      // Incomplete entry — no metadata photos, no documentNumber.
+      const incompleteEvidence: EvidenceMetadata = {
+        evidenceType: makeEvidenceType({ evidence_type: 'Canadian Passport', evidence_type_label: 'Canadian Passport' }),
+        metadata: [],
+      }
+
+      mockUseStore.mockReturnValue([
+        { ...initialState, bcscSecure: { ...initialState.bcscSecure, additionalEvidenceData: [incompleteEvidence] } },
+        jest.fn(),
+      ])
+      mockUseDataLoader.mockReturnValue({
+        data: mockMetadata([bothCard, secondCard], process),
+        load: jest.fn(),
+        isLoading: false,
+      })
+
+      const { queryByText } = render(
+        <BasicAppContext>
+          <EvidenceTypeListScreen
+            navigation={mockNavigation as never}
+            route={{ params: { cardProcess: BCSCCardProcess.NonBCSC } } as EvidenceTypeListRoute}
+          />
+        </BasicAppContext>
+      )
+
+      expect(queryByText('Canadian Passport')).toBeNull()
     })
   })
 
