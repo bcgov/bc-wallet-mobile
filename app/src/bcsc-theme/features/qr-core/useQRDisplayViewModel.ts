@@ -21,6 +21,8 @@ export interface QRDisplayViewModel {
   share: () => Promise<void>
 }
 
+const toError = (err: unknown): Error => (err instanceof Error ? err : new Error(String(err)))
+
 const useQRDisplayViewModel = ({ agent, logger }: QRDisplayViewModelInputs): QRDisplayViewModel => {
   const [invitation, setInvitation] = useState<string | undefined>(undefined)
   const [status, setStatus] = useState<QRDisplayStatus>(QRDisplayStatus.LOADING)
@@ -44,15 +46,9 @@ const useQRDisplayViewModel = ({ agent, logger }: QRDisplayViewModelInputs): QRD
         if (cancelled) {
           return
         }
-        // SEAM (issue #3777): the OOB record id from `result.record.id` is the
-        // handle for watching connection acceptance. To match BC Wallet's
-        // behaviour (auto-navigate to chat when the remote scans + accepts),
-        // surface the id from this VM and add an effect using Bifold's
-        // `useConnectionByOutOfBandId(oobRecordId)` to observe the connection
-        // record. When `record.state === DidCommDidExchangeState.Completed`,
-        // fire an `onConnectionAccepted(oobRecordId)` callback that the screen
-        // wraps into `navigation.navigate(...)` for the chat / connection
-        // landing destination.
+        // SEAM (#3777): result.record.id is the OOB handle for auto-navigate-to-chat
+        // on acceptance. Hook useConnectionByOutOfBandId + an onConnectionAccepted
+        // callback here when chat lands.
         setInvitation(result.invitationUrl)
         setStatus(QRDisplayStatus.READY)
       })
@@ -60,7 +56,7 @@ const useQRDisplayViewModel = ({ agent, logger }: QRDisplayViewModelInputs): QRD
         if (cancelled) {
           return
         }
-        const wrapped = err instanceof Error ? err : new Error(String(err))
+        const wrapped = toError(err)
         logger.error('[QRDisplay] createConnectionInvitation failed', wrapped)
         setError(wrapped)
         setStatus(QRDisplayStatus.ERROR)
@@ -83,7 +79,7 @@ const useQRDisplayViewModel = ({ agent, logger }: QRDisplayViewModelInputs): QRD
     try {
       await Share.share({ message: invitation })
     } catch (err) {
-      logger.error('[QRDisplay] Share failed', err instanceof Error ? err : new Error(String(err)))
+      logger.error('[QRDisplay] Share failed', toError(err))
     }
   }, [invitation, logger])
 
