@@ -221,7 +221,10 @@ describe('EvidenceTypeList', () => {
       const process = BCSCCardProcess.None as string
 
       const existingEvidence: EvidenceMetadata = {
-        evidenceType: makeEvidenceType({ evidence_type: 'BC Drivers Licence', evidence_type_label: 'BC Drivers Licence' }),
+        evidenceType: makeEvidenceType({
+          evidence_type: 'BC Drivers Licence',
+          evidence_type_label: 'BC Drivers Licence',
+        }),
         metadata: [{ uri: 'front.jpg' } as any, { uri: 'back.jpg' } as any],
         documentNumber: 'DL123',
       }
@@ -264,7 +267,10 @@ describe('EvidenceTypeList', () => {
 
       // Incomplete entry — no metadata photos, no documentNumber.
       const incompleteEvidence: EvidenceMetadata = {
-        evidenceType: makeEvidenceType({ evidence_type: 'Canadian Passport', evidence_type_label: 'Canadian Passport' }),
+        evidenceType: makeEvidenceType({
+          evidence_type: 'Canadian Passport',
+          evidence_type_label: 'Canadian Passport',
+        }),
         metadata: [],
       }
 
