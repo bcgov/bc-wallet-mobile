@@ -44,6 +44,15 @@ const useQRDisplayViewModel = ({ agent, logger }: QRDisplayViewModelInputs): QRD
         if (cancelled) {
           return
         }
+        // SEAM (issue #3777): the OOB record id from `result.record.id` is the
+        // handle for watching connection acceptance. To match BC Wallet's
+        // behaviour (auto-navigate to chat when the remote scans + accepts),
+        // surface the id from this VM and add an effect using Bifold's
+        // `useConnectionByOutOfBandId(oobRecordId)` to observe the connection
+        // record. When `record.state === DidCommDidExchangeState.Completed`,
+        // fire an `onConnectionAccepted(oobRecordId)` callback that the screen
+        // wraps into `navigation.navigate(...)` for the chat / connection
+        // landing destination.
         setInvitation(result.invitationUrl)
         setStatus(QRDisplayStatus.READY)
       })
