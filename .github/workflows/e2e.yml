@@ -75,7 +75,7 @@ jobs:
   # do not gate the pipeline.
   e2e-tests:
     name: '${{ inputs.suite }} - ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest-m
     permissions:
       contents: read
     timeout-minutes: 45
