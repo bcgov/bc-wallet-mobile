@@ -39,7 +39,6 @@ import java.util.HashMap
  */
 @RunWith(RobolectricTestRunner::class)
 class BcscKeyPairRepoSeedingTest {
-
     companion object {
         // One 2048-bit key pair shared across all signing tests — key size does
         // not affect kid logic and avoids per-test generation overhead.
@@ -50,27 +49,40 @@ class BcscKeyPairRepoSeedingTest {
 
     // Lightweight in-memory stand-in for SharedPreferences-backed KeyPairInfoSource.
     private class InMemoryKeyPairInfoSource(
-        initial: Map<String, KeyPairInfo> = emptyMap()
+        initial: Map<String, KeyPairInfo> = emptyMap(),
     ) : KeyPairInfoSource {
         val store = HashMap<String, KeyPairInfo>(initial)
 
         override fun getKeyPairInfo(kid: String): KeyPairInfo? = store[kid]
+
         override fun getKeyPairInfo(): HashMap<String, KeyPairInfo> = HashMap(store)
-        override fun saveKeyPairInfo(info: KeyPairInfo) { store[info.alias] = info }
-        override fun deleteKeyPairInfo(alias: String) { store.remove(alias) }
+
+        override fun saveKeyPairInfo(info: KeyPairInfo) {
+            store[info.alias] = info
+        }
+
+        override fun deleteKeyPairInfo(alias: String) {
+            store.remove(alias)
+        }
     }
 
     // Reflective helpers so we can reach the private seeding methods directly
     // without going through the full Android KeyStore stack.
 
-    private fun reconcile(repo: BcscKeyPairRepo, keyStore: KeyStore) {
+    private fun reconcile(
+        repo: BcscKeyPairRepo,
+        keyStore: KeyStore,
+    ) {
         BcscKeyPairRepo::class.java
             .getDeclaredMethod("reconcileKeyPairInfoWithKeyStore", KeyStore::class.java)
             .also { it.isAccessible = true }
             .invoke(repo, keyStore)
     }
 
-    private fun getOldest(repo: BcscKeyPairRepo, map: HashMap<String, KeyPairInfo>): KeyPairInfo? =
+    private fun getOldest(
+        repo: BcscKeyPairRepo,
+        map: HashMap<String, KeyPairInfo>,
+    ): KeyPairInfo? =
         BcscKeyPairRepo::class.java
             .getDeclaredMethod("getOldestKeyPairInfo", HashMap::class.java)
             .also { it.isAccessible = true }
@@ -112,11 +124,12 @@ class BcscKeyPairRepoSeedingTest {
     fun `getOldestKeyPairInfo returns the entry with the lowest createdAt`() {
         val repo = BcscKeyPairRepo(InMemoryKeyPairInfoSource())
         val now = System.currentTimeMillis()
-        val map = hashMapOf(
-            "rsa1" to KeyPairInfo("rsa1", now - 2000L),
-            "rsa2" to KeyPairInfo("rsa2", now - 1000L),
-            "rsa3" to KeyPairInfo("rsa3", now)
-        )
+        val map =
+            hashMapOf(
+                "rsa1" to KeyPairInfo("rsa1", now - 2000L),
+                "rsa2" to KeyPairInfo("rsa2", now - 1000L),
+                "rsa3" to KeyPairInfo("rsa3", now),
+            )
 
         val oldest = getOldest(repo, map)
 
@@ -128,14 +141,15 @@ class BcscKeyPairRepoSeedingTest {
     fun `getOldestKeyPairInfo returns null when fewer than 3 entries exist`() {
         val repo = BcscKeyPairRepo(InMemoryKeyPairInfoSource())
         val now = System.currentTimeMillis()
-        val map = hashMapOf(
-            "rsa1" to KeyPairInfo("rsa1", now - 1000L),
-            "rsa2" to KeyPairInfo("rsa2", now)
-        )
+        val map =
+            hashMapOf(
+                "rsa1" to KeyPairInfo("rsa1", now - 1000L),
+                "rsa2" to KeyPairInfo("rsa2", now),
+            )
 
         assertNull(
             "cleanup guard must prevent pruning when fewer than 3 keys are tracked",
-            getOldest(repo, map)
+            getOldest(repo, map),
         )
     }
 
@@ -150,7 +164,7 @@ class BcscKeyPairRepoSeedingTest {
 
         reconcile(
             repo,
-            keystoreWith(listOf("rsa2", "firebase_key", "some_cert", "RSA4", "rsa4"))
+            keystoreWith(listOf("rsa2", "firebase_key", "some_cert", "RSA4", "rsa4")),
         )
 
         val saved = infoSource.store
@@ -180,28 +194,30 @@ class BcscKeyPairRepoSeedingTest {
     @Test
     fun `signClaimsSet sets kid in JWS header to the active key alias`() {
         val alias = "rsa7"
-        val jwt = repoSigningAs(alias)
-            .signClaimsSet(JWTClaimsSet.Builder().subject("test-subject").build())
+        val jwt =
+            repoSigningAs(alias)
+                .signClaimsSet(JWTClaimsSet.Builder().subject("test-subject").build())
 
         assertEquals(
             "JWS header kid must equal the alias of the active key",
             alias,
-            jwt.header.keyID
+            jwt.header.keyID,
         )
     }
 
     @Test
     fun `signClaimsSet kid matches the key that produced the signature`() {
         val alias = "rsa7"
-        val jwt = repoSigningAs(alias)
-            .signClaimsSet(JWTClaimsSet.Builder().subject("test-subject").build())
+        val jwt =
+            repoSigningAs(alias)
+                .signClaimsSet(JWTClaimsSet.Builder().subject("test-subject").build())
 
         // Verify with the public half of TEST_KEY_PAIR — if kid lied about which
         // key signed, this would fail and the server would reject the token.
         val verifier = RSASSAVerifier(TEST_KEY_PAIR.public as RSAPublicKey)
         assertTrue(
             "JWT must be verifiable with the public key whose alias appears as kid",
-            jwt.verify(verifier)
+            jwt.verify(verifier),
         )
         assertEquals(alias, jwt.header.keyID)
     }
@@ -209,14 +225,15 @@ class BcscKeyPairRepoSeedingTest {
     @Test
     fun `signAndSerializeClaimsSet embeds kid in the serialized JWT header`() {
         val alias = "rsa7"
-        val serialized = repoSigningAs(alias)
-            .signAndSerializeClaimsSet(JWTClaimsSet.Builder().subject("test-subject").build())
+        val serialized =
+            repoSigningAs(alias)
+                .signAndSerializeClaimsSet(JWTClaimsSet.Builder().subject("test-subject").build())
 
         val parsed = SignedJWT.parse(serialized)
         assertEquals(
             "kid in the serialized JWT header must match the active key alias",
             alias,
-            parsed.header.keyID
+            parsed.header.keyID,
         )
     }
 }
