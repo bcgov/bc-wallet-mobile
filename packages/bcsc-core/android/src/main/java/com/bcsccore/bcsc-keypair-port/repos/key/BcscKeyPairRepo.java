@@ -90,18 +90,19 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
     try {
       KeyStore keyStore = loadAndroidKeyStore();
 
+      // Reconcile metadata with the keystore before picking the active key.
+      // Required for v3 -> v4 migrated users whose v4 SharedPreferences was
+      // initialized with a stale rsa1 entry by an earlier code path, while
+      // the AndroidKeyStore (preserved across the in-place upgrade) still
+      // holds higher-numbered rsa\d+ aliases that are the keys actually
+      // registered with IAS.
+      reconcileKeyPairInfoWithKeyStore(keyStore);
+
       KeyPairInfo info = getNewestKeyPairInfo(keyPairInfoSource.getKeyPairInfo());
 
       if (info == null) {
-        // No metadata in v4 storage. If v3 keystore entries are still present
-        // (e.g. migrated user whose key has rotated to rsa2/rsa3/...), seed
-        // metadata from the keystore so we pick the alias the IAS server
-        // actually has registered, instead of falling back to a stale rsa1.
-        info = seedKeyPairInfoFromKeyStore(keyStore);
-        if (info == null) {
-          info = new KeyPairInfo(ALIAS_RSA, System.currentTimeMillis());
-          keyPairInfoSource.saveKeyPairInfo(info);
-        }
+        info = new KeyPairInfo(ALIAS_RSA, System.currentTimeMillis());
+        keyPairInfoSource.saveKeyPairInfo(info);
       }
 
       if (!keyStore.containsAlias(info.getAlias())) {
@@ -153,18 +154,15 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
     try {
       KeyStore keyStore = loadAndroidKeyStore();
 
+      // Reconcile so rotation increments off the highest existing rsa\d+
+      // alias rather than colliding with a leftover v3 keystore entry.
+      reconcileKeyPairInfoWithKeyStore(keyStore);
+
       KeyPairInfo info = getNewestKeyPairInfo(keyPairInfoSource.getKeyPairInfo());
 
       if (info == null) {
-        // Mirror the seeding behavior of getCurrentBcscKeyPair so that a
-        // rotation triggered before any successful sign-in still increments
-        // off the highest existing rsa\d+ alias rather than restarting at
-        // rsa1 and clashing with a leftover v3 keystore entry.
-        info = seedKeyPairInfoFromKeyStore(keyStore);
-        if (info == null) {
-          info = new KeyPairInfo(ALIAS_RSA, System.currentTimeMillis());
-          keyPairInfoSource.saveKeyPairInfo(info);
-        }
+        info = new KeyPairInfo(ALIAS_RSA, System.currentTimeMillis());
+        keyPairInfoSource.saveKeyPairInfo(info);
       }
 
       int id = Integer.parseInt(info.getAlias().replaceAll("\\D+", ""));
@@ -259,70 +257,74 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
   }
 
   /**
-   * Seed KeyPairInfo metadata from existing AndroidKeyStore aliases.
+   * Make sure every rsa\d+ key sitting in the AndroidKeyStore also has a
+   * KeyPairInfo entry in our SharedPreferences-backed metadata.
    *
-   * Used when {@link KeyPairInfoSource} is empty (typical for users migrated
-   * from the v3 ias-android app, which kept its KeyPairInfo metadata in an
-   * encrypted MA file rather than in SharedPreferences). Because the
-   * applicationId is preserved across the v3 -> v4 upgrade, v3-generated
-   * rsa\d+ entries remain present in the keystore and their private keys
-   * still match what the IAS server has registered.
+   * Why this exists: users upgrading from v3 ias-android keep their keystore
+   * (same applicationId) but lose their v3 metadata (v3 stored it in an
+   * encrypted file, v4 stores it in SharedPreferences). Without this step,
+   * v4 would ignore the keys IAS actually has registered and sign with a
+   * fresh rsa1 instead, producing a 401 on /device/token.
    *
-   * Each backfilled entry is given a distinct, monotonically increasing
-   * createdAt so that:
-   *  - {@link #getNewestKeyPairInfo} picks the highest-numbered alias as the
-   *    active key (the one the server most recently registered), and
-   *  - {@link #getOldestKeyPairInfo} / {@link #cleanUpBcscKeyPairs} subsequently
-   *    prune lowest-numbered aliases first, matching v3 rotation semantics.
+   * Approach: any keystore alias matching rsa\d+ that isn't already tracked
+   * gets a KeyPairInfo with a synthetic createdAt. The createdAt values are
+   * chosen so a higher-numbered alias is newer than a lower-numbered one --
+   * that's all getNewestKeyPairInfo / getOldestKeyPairInfo care about.
    *
-   * @param keyStore the loaded AndroidKeyStore
-   * @return the newest seeded KeyPairInfo, or null if no rsa\d+ aliases exist
-   * @throws BcscException if saving the seeded metadata fails
+   * Safe to call on every access: if nothing is missing, this is a no-op.
    */
-  @Nullable
-  private KeyPairInfo seedKeyPairInfoFromKeyStore(@NonNull KeyStore keyStore) throws BcscException {
-    int highestId = -1;
-    java.util.TreeMap<Integer, String> orderedAliases = new java.util.TreeMap<>();
+  private void reconcileKeyPairInfoWithKeyStore(@NonNull KeyStore keyStore) throws BcscException {
+    // 1. Find every rsa\d+ alias the keystore knows about, sorted by number.
+    java.util.TreeMap<Integer, String> keystoreAliases = findRsaAliasesInKeyStore(keyStore);
+    if (keystoreAliases.isEmpty()) {
+      return;
+    }
+
+    // 2. Drop the ones we already have metadata for.
+    HashMap<String, KeyPairInfo> existing = keyPairInfoSource.getKeyPairInfo();
+    java.util.TreeMap<Integer, String> missing = new java.util.TreeMap<>();
+    for (java.util.Map.Entry<Integer, String> entry : keystoreAliases.entrySet()) {
+      if (!existing.containsKey(entry.getValue())) {
+        missing.put(entry.getKey(), entry.getValue());
+      }
+    }
+    if (missing.isEmpty()) {
+      return;
+    }
+
+    // 3. Backfill metadata for the rest. The newest alias gets "now"; older
+    //    aliases get progressively earlier timestamps so ordering is right.
+    long now = System.currentTimeMillis();
+    int highestId = missing.lastKey();
+    for (java.util.Map.Entry<Integer, String> entry : missing.entrySet()) {
+      long createdAt = now - (long) (highestId - entry.getKey());
+      keyPairInfoSource.saveKeyPairInfo(new KeyPairInfo(entry.getValue(), createdAt));
+    }
+    SimpleLog.d(TAG, "Reconciled KeyPairInfo with keystore; backfilled aliases "
+        + missing.values() + " (keystore had " + keystoreAliases.values() + ")");
+  }
+
+  /**
+   * Return every keystore alias that looks like rsa\d+, keyed by its number
+   * so iteration is in numeric order. Returns an empty map (never null) if
+   * the keystore can't be read.
+   */
+  @NonNull
+  private java.util.TreeMap<Integer, String> findRsaAliasesInKeyStore(@NonNull KeyStore keyStore) {
+    java.util.TreeMap<Integer, String> result = new java.util.TreeMap<>();
     try {
       Enumeration<String> aliases = keyStore.aliases();
       while (aliases.hasMoreElements()) {
         String alias = aliases.nextElement();
         Matcher m = RSA_ALIAS_PATTERN.matcher(alias);
         if (m.matches()) {
-          int id = Integer.parseInt(m.group(1));
-          orderedAliases.put(id, alias);
-          if (id > highestId) {
-            highestId = id;
-          }
+          result.put(Integer.parseInt(m.group(1)), alias);
         }
       }
     } catch (KeyStoreException e) {
-      SimpleLog.e(TAG, "Failed to enumerate keystore aliases for seeding", e);
-      return null;
+      SimpleLog.e(TAG, "Failed to enumerate keystore aliases for reconciliation", e);
     }
-
-    if (orderedAliases.isEmpty()) {
-      return null;
-    }
-
-    // Assign createdAt values in ascending order of alias number so that the
-    // highest-numbered alias is the newest and the lowest is the oldest.
-    long now = System.currentTimeMillis();
-    int count = orderedAliases.size();
-    int index = 0;
-    KeyPairInfo newest = null;
-    for (java.util.Map.Entry<Integer, String> entry : orderedAliases.entrySet()) {
-      long createdAt = now - (long) (count - 1 - index);
-      KeyPairInfo seeded = new KeyPairInfo(entry.getValue(), createdAt);
-      keyPairInfoSource.saveKeyPairInfo(seeded);
-      if (entry.getKey() == highestId) {
-        newest = seeded;
-      }
-      index++;
-    }
-    SimpleLog.d(TAG, "Seeded KeyPairInfo from keystore aliases " + orderedAliases.values()
-        + "; active alias: " + (newest != null ? newest.getAlias() : "none"));
-    return newest;
+    return result;
   }
 
   /**
