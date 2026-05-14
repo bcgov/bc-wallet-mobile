@@ -19,6 +19,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
   const [store, dispatch] = useStore<BCState>()
   const [sendVideoLoading, setSendVideoLoading] = useState(false)
   const [liveCallLoading, setLiveCallLoading] = useState(false)
+  const [hoursLoading, setHoursLoading] = useState(true)
   const [serviceHours, setServiceHours] = useState<ServiceHours | undefined>()
   const [destinations, setDestinations] = useState<VideoDestinations | undefined>()
   const { evidence, video: videoCallApi } = useApi()
@@ -27,11 +28,12 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
 
   useEffect(() => {
     Promise.all([videoCallApi.getVideoDestinations(), videoCallApi.getServiceHours()])
-      .then(([d, h]) => {
-        setDestinations(d)
-        setServiceHours(h)
+      .then(([destinations, serviceHours]) => {
+        setDestinations(destinations)
+        setServiceHours(serviceHours)
       })
       .catch(() => {})
+      .finally(() => setHoursLoading(false))
   }, [videoCallApi])
 
   const handlePressSendVideo = useCallback(async () => {
@@ -129,6 +131,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     handlePressLiveCall,
     sendVideoLoading,
     liveCallLoading,
+    hoursLoading,
     verificationOptions: store.bcscSecure.verificationOptions ?? [],
     formattedHours: serviceHours ? formatServiceAndUnavailableHours(serviceHours) : undefined,
   }

@@ -5,7 +5,7 @@ import { ScreenWrapper, testIdWithKey, ThemedText } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { View } from 'react-native'
+import { ActivityIndicator, View } from 'react-native'
 import useVerificationMethodModel from './_models/useVerificationMethodModel'
 import VerifyMethodActionButton from './components/VerifyMethodActionButton'
 import ServicePeriodList from './live-call/components/ServicePeriodList'
@@ -22,6 +22,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
     handlePressLiveCall,
     sendVideoLoading,
     liveCallLoading,
+    hoursLoading,
     verificationOptions,
     formattedHours,
   } = useVerificationMethodModel({ navigation })
@@ -101,7 +102,11 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         >
           {t('BCSC.VideoCall.CallBusyOrClosed.HoursOfService')}
         </ThemedText>
-        {formattedHours && <ServicePeriodList items={formattedHours} />}
+        {hoursLoading ? (
+          <ActivityIndicator style={{ marginTop: Spacing.sm }} />
+        ) : (
+          formattedHours && <ServicePeriodList items={formattedHours} />
+        )}
       </View>
     </ScreenWrapper>
   )
