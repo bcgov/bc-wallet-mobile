@@ -35,8 +35,11 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.UnrecoverableEntryException;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Android KeyStore implementation of BcscKeyPairSource.
@@ -59,6 +62,7 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
   private static final String ALIAS_RSA = RSA_ALIAS_PREFIX + "1";
   private static final String KEYSTORE_TYPE = "AndroidKeyStore";
   private static final String TAG = "BcscKeyPairRepo";
+  private static final Pattern RSA_ALIAS_PATTERN = Pattern.compile("^" + RSA_ALIAS_PREFIX + "(\\d+)$");
 
   @NonNull
   private final KeyPairInfoSource keyPairInfoSource;
@@ -89,8 +93,15 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
       KeyPairInfo info = getNewestKeyPairInfo(keyPairInfoSource.getKeyPairInfo());
 
       if (info == null) {
-        info = new KeyPairInfo(ALIAS_RSA, System.currentTimeMillis());
-        keyPairInfoSource.saveKeyPairInfo(info);
+        // No metadata in v4 storage. If v3 keystore entries are still present
+        // (e.g. migrated user whose key has rotated to rsa2/rsa3/...), seed
+        // metadata from the keystore so we pick the alias the IAS server
+        // actually has registered, instead of falling back to a stale rsa1.
+        info = seedKeyPairInfoFromKeyStore(keyStore);
+        if (info == null) {
+          info = new KeyPairInfo(ALIAS_RSA, System.currentTimeMillis());
+          keyPairInfoSource.saveKeyPairInfo(info);
+        }
       }
 
       if (!keyStore.containsAlias(info.getAlias())) {
@@ -145,8 +156,15 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
       KeyPairInfo info = getNewestKeyPairInfo(keyPairInfoSource.getKeyPairInfo());
 
       if (info == null) {
-        info = new KeyPairInfo(ALIAS_RSA, System.currentTimeMillis());
-        keyPairInfoSource.saveKeyPairInfo(info);
+        // Mirror the seeding behavior of getCurrentBcscKeyPair so that a
+        // rotation triggered before any successful sign-in still increments
+        // off the highest existing rsa\d+ alias rather than restarting at
+        // rsa1 and clashing with a leftover v3 keystore entry.
+        info = seedKeyPairInfoFromKeyStore(keyStore);
+        if (info == null) {
+          info = new KeyPairInfo(ALIAS_RSA, System.currentTimeMillis());
+          keyPairInfoSource.saveKeyPairInfo(info);
+        }
       }
 
       int id = Integer.parseInt(info.getAlias().replaceAll("\\D+", ""));
@@ -238,6 +256,73 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
     KeyStore keyStore = KeyStore.getInstance(KEYSTORE_TYPE);
     keyStore.load(null);
     return keyStore;
+  }
+
+  /**
+   * Seed KeyPairInfo metadata from existing AndroidKeyStore aliases.
+   *
+   * Used when {@link KeyPairInfoSource} is empty (typical for users migrated
+   * from the v3 ias-android app, which kept its KeyPairInfo metadata in an
+   * encrypted MA file rather than in SharedPreferences). Because the
+   * applicationId is preserved across the v3 -> v4 upgrade, v3-generated
+   * rsa\d+ entries remain present in the keystore and their private keys
+   * still match what the IAS server has registered.
+   *
+   * Each backfilled entry is given a distinct, monotonically increasing
+   * createdAt so that:
+   *  - {@link #getNewestKeyPairInfo} picks the highest-numbered alias as the
+   *    active key (the one the server most recently registered), and
+   *  - {@link #getOldestKeyPairInfo} / {@link #cleanUpBcscKeyPairs} subsequently
+   *    prune lowest-numbered aliases first, matching v3 rotation semantics.
+   *
+   * @param keyStore the loaded AndroidKeyStore
+   * @return the newest seeded KeyPairInfo, or null if no rsa\d+ aliases exist
+   * @throws BcscException if saving the seeded metadata fails
+   */
+  @Nullable
+  private KeyPairInfo seedKeyPairInfoFromKeyStore(@NonNull KeyStore keyStore) throws BcscException {
+    int highestId = -1;
+    java.util.TreeMap<Integer, String> orderedAliases = new java.util.TreeMap<>();
+    try {
+      Enumeration<String> aliases = keyStore.aliases();
+      while (aliases.hasMoreElements()) {
+        String alias = aliases.nextElement();
+        Matcher m = RSA_ALIAS_PATTERN.matcher(alias);
+        if (m.matches()) {
+          int id = Integer.parseInt(m.group(1));
+          orderedAliases.put(id, alias);
+          if (id > highestId) {
+            highestId = id;
+          }
+        }
+      }
+    } catch (KeyStoreException e) {
+      SimpleLog.e(TAG, "Failed to enumerate keystore aliases for seeding", e);
+      return null;
+    }
+
+    if (orderedAliases.isEmpty()) {
+      return null;
+    }
+
+    // Assign createdAt values in ascending order of alias number so that the
+    // highest-numbered alias is the newest and the lowest is the oldest.
+    long now = System.currentTimeMillis();
+    int count = orderedAliases.size();
+    int index = 0;
+    KeyPairInfo newest = null;
+    for (java.util.Map.Entry<Integer, String> entry : orderedAliases.entrySet()) {
+      long createdAt = now - (long) (count - 1 - index);
+      KeyPairInfo seeded = new KeyPairInfo(entry.getValue(), createdAt);
+      keyPairInfoSource.saveKeyPairInfo(seeded);
+      if (entry.getKey() == highestId) {
+        newest = seeded;
+      }
+      index++;
+    }
+    SimpleLog.d(TAG, "Seeded KeyPairInfo from keystore aliases " + orderedAliases.values()
+        + "; active alias: " + (newest != null ? newest.getAlias() : "none"));
+    return newest;
   }
 
   /**
@@ -334,8 +419,12 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
   @NonNull
   public SignedJWT signClaimsSet(@NonNull JWTClaimsSet claimsSet) throws BcscException {
     try {
-      SignedJWT signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.RS512), claimsSet);
-      signedJWT.sign(new RSASSASigner(getCurrentBcscKeyPair().getKeyPair().getPrivate()));
+      BcscKeyPair currentKeyPair = getCurrentBcscKeyPair();
+      JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.RS512)
+          .keyID(currentKeyPair.getKeyInfo().getAlias())
+          .build();
+      SignedJWT signedJWT = new SignedJWT(header, claimsSet);
+      signedJWT.sign(new RSASSASigner(currentKeyPair.getKeyPair().getPrivate()));
       return signedJWT;
     } catch (Exception e) {
       throw new BcscException(AlertKey.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET, e.getMessage());
