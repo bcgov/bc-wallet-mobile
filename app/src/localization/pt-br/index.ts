@@ -943,6 +943,9 @@ const translation = {
     },
     "QRDisplay": {
       "SharingDescription": "Sharing this QR code with someone will add them as a Contact. (PT-BR)",
+      "ErrorTitle": "Unable to generate QR code (PT-BR)",
+      "ErrorBody": "Something went wrong while creating your QR code. Please try again. (PT-BR)",
+      "RetryCta": "Try again (PT-BR)",
     },
     "TransferQRDisplay": {
       "Instructions": "Scan this QR code in the BC Services Card app on your other mobile device (PT-BR)",
