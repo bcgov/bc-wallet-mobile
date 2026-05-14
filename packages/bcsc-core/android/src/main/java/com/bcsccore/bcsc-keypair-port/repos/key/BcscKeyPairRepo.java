@@ -90,6 +90,20 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
     try {
       KeyStore keyStore = loadAndroidKeyStore();
 
+      // Log full keystore contents on entry so we can diagnose both the
+      // v3→older-v4→this-v4 path and the direct v3→this-v4 path.
+      // Non-rsa\d+ aliases here indicate v3 keys that reconcile will ignore.
+      try {
+        java.util.List<String> allAliases = new java.util.ArrayList<>();
+        Enumeration<String> en = keyStore.aliases();
+        while (en.hasMoreElements()) allAliases.add(en.nextElement());
+        SimpleLog.d(TAG, "getCurrentBcscKeyPair: keystore aliases=" + allAliases);
+      } catch (KeyStoreException kse) {
+        SimpleLog.d(TAG, "getCurrentBcscKeyPair: could not list keystore aliases: " + kse.getMessage());
+      }
+      SimpleLog.d(TAG, "getCurrentBcscKeyPair: rsa keystore aliases="
+          + findRsaAliasesInKeyStore(keyStore).values());
+
       // Reconcile metadata with the keystore before picking the active key.
       // Required for v3 -> v4 migrated users whose v4 SharedPreferences was
       // initialized with a stale rsa1 entry by an earlier code path, while
@@ -98,14 +112,25 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
       // registered with IAS.
       reconcileKeyPairInfoWithKeyStore(keyStore);
 
-      KeyPairInfo info = getNewestKeyPairInfo(keyPairInfoSource.getKeyPairInfo());
+      HashMap<String, KeyPairInfo> allInfo = keyPairInfoSource.getKeyPairInfo();
+      SimpleLog.d(TAG, "getCurrentBcscKeyPair: KeyPairInfo after reconcile=" + allInfo.keySet());
+
+      KeyPairInfo info = getNewestKeyPairInfo(allInfo);
 
       if (info == null) {
+        SimpleLog.d(TAG, "getCurrentBcscKeyPair: no KeyPairInfo found — seeding fresh " + ALIAS_RSA);
         info = new KeyPairInfo(ALIAS_RSA, System.currentTimeMillis());
         keyPairInfoSource.saveKeyPairInfo(info);
+      } else {
+        SimpleLog.d(TAG, "getCurrentBcscKeyPair: newest KeyPairInfo="
+            + info.getAlias() + " createdAt=" + info.getCreatedAt());
       }
 
-      if (!keyStore.containsAlias(info.getAlias())) {
+      boolean aliasPresent = keyStore.containsAlias(info.getAlias());
+      SimpleLog.d(TAG, "getCurrentBcscKeyPair: alias '" + info.getAlias()
+          + "' present in keystore=" + aliasPresent);
+      if (!aliasPresent) {
+        SimpleLog.d(TAG, "getCurrentBcscKeyPair: generating new key pair for alias " + info.getAlias());
         generateKeyPair(info.getAlias());
       }
 
@@ -116,7 +141,7 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
         throw new KeyNotFoundException(
             "Failed to retrieve key pair for alias '" + info.getAlias() + "': " + e.getMessage(), e);
       }
-      SimpleLog.d(TAG, "Current active key pair " + info.getAlias());
+      SimpleLog.d(TAG, "getCurrentBcscKeyPair: returning active key pair " + info.getAlias());
       return new BcscKeyPair(keyPair, info);
     } catch (KeypairGenerationException e) {
       throw e;
