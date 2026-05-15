@@ -34,6 +34,13 @@ import { MainRemoveAccountConfirmationScreen } from '../features/account/RemoveA
 import { AgentReadyGate, BifoldScope } from '../features/agent'
 import { MainChangePINScreen } from '../features/auth/MainChangePINScreen'
 import { MainChangeSecurityScreen } from '../features/auth/MainChangeSecurityScreen'
+import ContactChatScreen from '../features/contacts/ContactChatScreen'
+import ContactDetailsScreen from '../features/contacts/ContactDetailsScreen'
+import ContactJSONDetailsScreen from '../features/contacts/ContactJSONDetailsScreen'
+import ContactsScreen from '../features/contacts/ContactsScreen'
+import EditContactNameScreen from '../features/contacts/EditContactNameScreen'
+import RemoveContactScreen from '../features/contacts/RemoveContactScreen'
+import WhatAreContactsScreen from '../features/contacts/WhatAreContactsScreen'
 import { DeviceInvalidated } from '../features/modal/DeviceInvalidated'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
@@ -134,6 +141,62 @@ const MainStack: React.FC = () => {
             headerRight: createMainFloatingMenuButton(),
           }}
         >
+          <Stack.Screen
+            name={BCSCScreens.Contacts}
+            component={ContactsScreen}
+            options={() => ({
+              headerShown: true,
+              title: t('BCSC.Contacts.Title'),
+            })}
+          />
+          <Stack.Screen
+            name={BCSCScreens.WhatAreContacts}
+            component={WhatAreContactsScreen}
+            options={() => ({
+              headerShown: true,
+              title: t('BCSC.Contacts.Title'),
+              headerRight: () => null,
+            })}
+          />
+          <Stack.Screen
+            name={BCSCScreens.ContactDetails}
+            component={ContactDetailsScreen}
+            options={() => ({
+              headerShown: true,
+              title: t('BCSC.Contacts.Details.Title'),
+            })}
+          />
+          <Stack.Screen
+            name={BCSCScreens.EditContactName}
+            component={EditContactNameScreen}
+            options={() => ({
+              headerShown: true,
+              title: t('BCSC.Contacts.EditName.HeaderTitle'),
+            })}
+          />
+          <Stack.Screen
+            name={BCSCScreens.ContactJSONDetails}
+            component={ContactJSONDetailsScreen}
+            options={({ route }) => ({
+              headerShown: true,
+              title: route.params?.title ?? t('BCSC.Contacts.JSON.Title'),
+            })}
+          />
+          <Stack.Screen
+            name={BCSCScreens.ContactChat}
+            component={ContactChatScreen}
+            options={() => ({
+              headerShown: true,
+              title: '',
+            })}
+          />
+          <Stack.Screen
+            name={BCSCScreens.RemoveContact}
+            component={RemoveContactScreen}
+            options={() => ({
+              ...getDefaultModalOptions(t('BCSC.Contacts.Remove.HeaderTitle')),
+            })}
+          />
           <Stack.Screen
             name={BCSCStacks.Tab}
             component={BCSCTabStack}
