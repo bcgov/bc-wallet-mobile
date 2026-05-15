@@ -14,6 +14,7 @@ const translation = {
     "Dismiss": "Fermer",
     "GetHelp": "Get help (FR)",
     "ContinueSetup": "Continue setup (FR)",
+    "Share": "Share (FR)",
     "Skip": "Skip (FR)",
     "A11y": {
       "OpensInBrowser": "This opens in browser (FR)",
@@ -943,6 +944,9 @@ const translation = {
     },
     "QRDisplay": {
       "SharingDescription": "Sharing this QR code with someone will add them as a Contact. (FR)",
+      "ErrorTitle": "Unable to generate QR code (FR)",
+      "ErrorBody": "Something went wrong while creating your QR code. Please try again. (FR)",
+      "RetryCta": "Try again (FR)",
     },
     "TransferQRDisplay": {
       "Instructions": "Scan this QR code in the BC Services Card app on your other mobile device (FR)",
