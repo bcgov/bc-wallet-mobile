@@ -10,11 +10,13 @@ const BC_BLUE_LINK = '#1A5A96'
 const OFF_WHITE = '#F7F9FC' // QUESTION (MD): Is this also the value for LIGHT_GREY_BG?
 const HEADING_TEXT_BLUE = '#1E5189'
 const LIGHT_BLUE_BG = '#D8EAFD'
+const PRIMARY_LIGHT = '#D9EAF7'
 
 export const LightTheme = createAppTheme({
   name: BCThemeNames.Light,
   logo: Logo,
   primary: BC_BLUE,
+  primaryLight: PRIMARY_LIGHT,
   primaryBackground: GrayscaleColors.white,
   secondaryBackground: GrayscaleColors.white,
   tertiaryBackground: LIGHT_BLUE_BG,
@@ -25,7 +27,7 @@ export const LightTheme = createAppTheme({
   unorderedList: GrayscaleColors.darkGrey,
   unorderedListModal: GrayscaleColors.darkGrey,
   text: GrayscaleColors.white,
-  icon: GrayscaleColors.white,
+  icon: GrayscaleColors.darkGrey,
   headerIcon: GrayscaleColors.darkGrey,
   headerText: HEADING_TEXT_BLUE,
   tabBarInactive: GrayscaleColors.darkGrey,

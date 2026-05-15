@@ -43,6 +43,7 @@ export enum BCSCScreens {
   BirthdateLockout = 'Too Many Add Attempts',
   EnterEmail = 'Email Entry',
   EmailConfirmation = 'Email Verification',
+  EmailVerified = 'Email Verified',
   VerificationMethodSelection = 'Verify Options',
   VerifyInPerson = 'Verify In Person Instruction',
   InformationRequired = 'Send Video Menu',
@@ -142,6 +143,7 @@ export enum BCSCScreens {
   AuthContactUs = `${BCSCStacks.Auth} Contact Us`,
   AuthPrivacyPolicy = `${BCSCStacks.Auth} Privacy Information`,
   AuthDeveloper = `${BCSCStacks.Auth} Developer`,
+  ConnectionLoading = 'BCSCConnectionLoading',
   QRCore = 'QRCore',
 }
 
@@ -181,6 +183,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.BirthdateLockout]: undefined
   [BCSCScreens.EnterEmail]: { cardProcess: BCSCCardProcess }
   [BCSCScreens.EmailConfirmation]: { emailAddressId: string }
+  [BCSCScreens.EmailVerified]: undefined
   [BCSCScreens.VerificationMethodSelection]: undefined
   [BCSCScreens.VerifyInPerson]: undefined
   [BCSCScreens.InformationRequired]: undefined
@@ -275,6 +278,7 @@ export type BCSCMainStackParams = {
   [Screens.CredentialDetails]: { credentialId: string }
 
   [BCSCScreens.QRCore]: undefined
+  [BCSCScreens.ConnectionLoading]: { oobRecordId: string }
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined

@@ -41,11 +41,24 @@ describe('Card Utils', () => {
   })
 
   describe('isCardEvidenceComplete', () => {
-    it('should return true for complete card evidence', () => {
+    const twoSidedEvidenceType = { image_sides: [{}, {}] }
+    const oneSidedEvidenceType = { image_sides: [{}] }
+
+    it('should return true for complete two-sided card evidence (e.g. drivers licence)', () => {
       const completeCard = {
-        evidenceType: 'someEvidenceType',
+        evidenceType: twoSidedEvidenceType,
         documentNumber: '123456789',
         metadata: ['meta1', 'meta2'],
+      }
+
+      expect(isCardEvidenceComplete(completeCard as any)).toBe(true)
+    })
+
+    it('should return true for complete one-sided card evidence (e.g. passport)', () => {
+      const completeCard = {
+        evidenceType: oneSidedEvidenceType,
+        documentNumber: '123456789',
+        metadata: ['meta1'],
       }
 
       expect(isCardEvidenceComplete(completeCard as any)).toBe(true)
@@ -62,18 +75,18 @@ describe('Card Utils', () => {
 
     it('should return false when missing document number', () => {
       const incompleteCard = {
-        evidenceType: 'someEvidenceType',
+        evidenceType: twoSidedEvidenceType,
         metadata: ['meta1', 'meta2'],
       }
 
       expect(isCardEvidenceComplete(incompleteCard as any)).toBe(false)
     })
 
-    it('should return false when metadata is incomplete', () => {
+    it('should return false when a two-sided card only has one photo', () => {
       const incompleteCard = {
-        evidenceType: 'someEvidenceType',
+        evidenceType: twoSidedEvidenceType,
         documentNumber: '123456789',
-        metadata: ['meta1'], // Only 1 metadata item instead of 2
+        metadata: ['meta1'],
       }
 
       expect(isCardEvidenceComplete(incompleteCard as any)).toBe(false)
