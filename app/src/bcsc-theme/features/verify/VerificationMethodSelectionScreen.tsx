@@ -82,10 +82,8 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
           alignItems: 'center',
         }}
       >
-        <ThemedText variant="headingFour">{'Choose how to verify'}</ThemedText>
-        <ThemedText style={{ marginVertical: Spacing.md }}>
-          {"We need to make sure you're a real person. How would you like to proceed?"}
-        </ThemedText>
+        <ThemedText variant="headingFour">{t('BCSC.VerificationMethods.Heading')}</ThemedText>
+        <ThemedText style={{ marginVertical: Spacing.md }}>{t('BCSC.VerificationMethods.Subheading')}</ThemedText>
       </View>
       {renderOption(primaryOption)}
       {remainingOptions.map((option) => {

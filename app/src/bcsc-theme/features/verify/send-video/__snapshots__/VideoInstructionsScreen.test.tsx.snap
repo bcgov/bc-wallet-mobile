@@ -32,31 +32,17 @@ exports[`VideoInstructions renders correctly 1`] = `
     showsVerticalScrollIndicator={false}
   >
     <View>
-      <Text
-        allowFontScaling={false}
-        selectable={false}
+      <
+        height={200}
         style={
-          [
-            {
-              "color": "#313132",
-              "fontSize": 112,
-            },
-            {
-              "alignSelf": "center",
-              "marginBottom": 40,
-              "marginTop": 16,
-            },
-            {
-              "fontFamily": "Material Design Icons",
-              "fontStyle": "normal",
-              "fontWeight": "normal",
-            },
-            {},
-          ]
+          {
+            "height": 200,
+            "marginBottom": 16,
+            "width": "100%",
+          }
         }
-      >
-        󰕧
-      </Text>
+        width="100%"
+      />
       <Text
         maxFontSizeMultiplier={2}
         style={
@@ -423,84 +409,99 @@ exports[`VideoInstructions renders correctly 1`] = `
       >
         BCSC.SendVideo.VideoInstructions.Heading4
       </Text>
-      <View
-        accessibilityLabel="BCSC.SendVideo.VideoInstructions.StartRecordingButton"
-        accessibilityRole="button"
-        accessibilityState={
-          {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": false,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        accessibilityValue={
-          {
-            "max": undefined,
-            "min": undefined,
-            "now": undefined,
-            "text": undefined,
-          }
-        }
-        accessible={true}
-        collapsable={false}
-        focusable={true}
-        onClick={[Function]}
-        onResponderGrant={[Function]}
-        onResponderMove={[Function]}
-        onResponderRelease={[Function]}
-        onResponderTerminate={[Function]}
-        onResponderTerminationRequest={[Function]}
-        onStartShouldSetResponder={[Function]}
-        style={
-          {
-            "backgroundColor": "#003366",
-            "borderRadius": 4,
-            "opacity": 1,
-            "padding": 16,
-          }
-        }
-        testID="StartRecordingButton"
-      >
-        <View
-          style={
-            {
-              "alignItems": "center",
-              "flexDirection": "row",
-              "justifyContent": "center",
-            }
-          }
-        >
-          <Text
-            maxFontSizeMultiplier={2}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                [
-                  {
-                    "color": "#FFFFFF",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "bold",
-                    "textAlign": "center",
-                  },
-                  false,
-                  false,
-                ],
-              ]
-            }
-          >
-            BCSC.SendVideo.VideoInstructions.StartRecordingButton
-          </Text>
-        </View>
-      </View>
     </View>
   </RCTScrollView>
+  <View
+    style={
+      [
+        {
+          "gap": 16,
+        },
+        {
+          "paddingBottom": 16,
+          "paddingHorizontal": 16,
+        },
+        undefined,
+      ]
+    }
+  >
+    <View
+      accessibilityLabel="BCSC.SendVideo.VideoInstructions.StartRecordingButton"
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "backgroundColor": "#003366",
+          "borderRadius": 4,
+          "opacity": 1,
+          "padding": 16,
+        }
+      }
+      testID="StartRecordingButton"
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "justifyContent": "center",
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              [
+                {
+                  "color": "#FFFFFF",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "bold",
+                  "textAlign": "center",
+                },
+                false,
+                false,
+              ],
+            ]
+          }
+        >
+          BCSC.SendVideo.VideoInstructions.StartRecordingButton
+        </Text>
+      </View>
+    </View>
+  </View>
 </RNCSafeAreaView>
 `;

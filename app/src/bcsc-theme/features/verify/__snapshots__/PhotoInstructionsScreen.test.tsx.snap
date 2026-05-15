@@ -32,12 +32,8 @@ exports[`PhotoInstructions renders correctly 1`] = `
     showsVerticalScrollIndicator={false}
   >
     <View>
-      <Image
-        source={
-          {
-            "uri": "mocked-image-uri",
-          }
-        }
+      <
+        height={200}
         style={
           {
             "height": 200,
@@ -45,6 +41,7 @@ exports[`PhotoInstructions renders correctly 1`] = `
             "width": "100%",
           }
         }
+        width="100%"
       />
       <Text
         maxFontSizeMultiplier={2}

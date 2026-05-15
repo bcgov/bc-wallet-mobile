@@ -54,7 +54,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
             ]
           }
         >
-          Choose how to verify
+          BCSC.VerificationMethods.Heading
         </Text>
         <Text
           maxFontSizeMultiplier={2}
@@ -72,7 +72,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
             ]
           }
         >
-          We need to make sure you're a real person. How would you like to proceed?
+          BCSC.VerificationMethods.Subheading
         </Text>
       </View>
       <View
@@ -563,7 +563,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
             ]
           }
         >
-          Choose how to verify
+          BCSC.VerificationMethods.Heading
         </Text>
         <Text
           maxFontSizeMultiplier={2}
@@ -581,7 +581,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
             ]
           }
         >
-          We need to make sure you're a real person. How would you like to proceed?
+          BCSC.VerificationMethods.Subheading
         </Text>
       </View>
       <View
@@ -1072,7 +1072,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
             ]
           }
         >
-          Choose how to verify
+          BCSC.VerificationMethods.Heading
         </Text>
         <Text
           maxFontSizeMultiplier={2}
@@ -1090,7 +1090,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
             ]
           }
         >
-          We need to make sure you're a real person. How would you like to proceed?
+          BCSC.VerificationMethods.Subheading
         </Text>
       </View>
       <View
