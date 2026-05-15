@@ -31,6 +31,51 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
   >
     <View>
       <View
+        style={
+          {
+            "alignItems": "center",
+            "marginBottom": 8,
+            "marginTop": 40,
+            "paddingHorizontal": 16,
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 21,
+                "fontWeight": "bold",
+              },
+              undefined,
+            ]
+          }
+        >
+          Choose how to verify
+        </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              {
+                "marginVertical": 16,
+              },
+            ]
+          }
+        >
+          We need to make sure you're a real person. How would you like to proceed?
+        </Text>
+      </View>
+      <View
         accessibilityLabel="BCSC.VerificationMethods.InPersonTitle"
         accessibilityRole="button"
         accessibilityState={
@@ -63,12 +108,13 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
         style={
           {
             "alignItems": "center",
-            "backgroundColor": "#FFFFFF",
-            "borderBottomColor": "#606060",
-            "borderBottomWidth": 1,
-            "borderTopColor": "#606060",
-            "borderTopWidth": 1,
+            "backgroundColor": "#003366",
+            "borderColor": "#EDEBE9",
+            "borderRadius": 8,
+            "borderWidth": 1,
             "flexDirection": "row",
+            "marginBottom": 16,
+            "marginHorizontal": 16,
             "opacity": 1,
             "padding": 16,
           }
@@ -78,17 +124,17 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
         <View
           style={
             {
+              "alignItems": "center",
               "flex": 1,
+              "flexDirection": "row",
+              "minWidth": 0,
             }
           }
         >
           <View
             style={
               {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "flexShrink": 1,
-                "marginBottom": 8,
+                "marginRight": 24,
               }
             }
           >
@@ -98,7 +144,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
               style={
                 [
                   {
-                    "color": "#003366",
+                    "color": "#FFFFFF",
                     "fontSize": 36,
                   },
                   undefined,
@@ -111,104 +157,57 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
                 ]
               }
             >
-              󰀄
+              󰀓
             </Text>
+          </View>
+          <View
+            style={
+              {
+                "flex": 1,
+                "flexShrink": 1,
+                "minWidth": 0,
+              }
+            }
+          >
             <Text
               maxFontSizeMultiplier={2}
-              numberOfLines={0}
               style={
                 [
                   {
                     "color": "#313132",
                     "fontFamily": "BCSans-Regular",
                     "fontSize": 18,
-                    "fontWeight": "bold",
+                    "fontWeight": "normal",
                   },
                   {
-                    "color": "#003366",
-                    "marginLeft": 8,
+                    "color": "#FFFFFF",
+                    "fontWeight": "bold",
                   },
                 ]
               }
             >
               BCSC.VerificationMethods.InPersonTitle
             </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "flexShrink": 1,
+                  },
+                ]
+              }
+            >
+              BCSC.VerificationMethods.InPersonDescription
+            </Text>
           </View>
-          <Text
-            maxFontSizeMultiplier={2}
-            numberOfLines={0}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "flexShrink": 1,
-                },
-              ]
-            }
-          >
-            BCSC.VerificationMethods.InPersonDescription
-          </Text>
         </View>
-        <View
-          style={
-            {
-              "justifyContent": "center",
-            }
-          }
-        >
-          <Text
-            allowFontScaling={false}
-            selectable={false}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontSize": 36,
-                },
-                undefined,
-                {
-                  "fontFamily": "Material Design Icons",
-                  "fontStyle": "normal",
-                  "fontWeight": "normal",
-                },
-                {},
-              ]
-            }
-          >
-            󰅂
-          </Text>
-        </View>
-      </View>
-      <View
-        style={
-          {
-            "marginBottom": 8,
-            "marginTop": 40,
-            "paddingHorizontal": 16,
-          }
-        }
-      >
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 21,
-                "fontWeight": "bold",
-              },
-              undefined,
-            ]
-          }
-        >
-          BCSC.VerificationMethods.CannotMakeItToServiceBC
-        </Text>
       </View>
       <View
         accessibilityLabel="BCSC.VerificationMethods.SendVideoTitle"
@@ -243,12 +242,13 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
         style={
           {
             "alignItems": "center",
-            "backgroundColor": "#FFFFFF",
-            "borderBottomColor": "#606060",
-            "borderBottomWidth": undefined,
-            "borderTopColor": "#606060",
-            "borderTopWidth": 1,
+            "backgroundColor": "#003366",
+            "borderColor": "#EDEBE9",
+            "borderRadius": 8,
+            "borderWidth": 1,
             "flexDirection": "row",
+            "marginBottom": 16,
+            "marginHorizontal": 16,
             "opacity": 1,
             "padding": 16,
           }
@@ -258,17 +258,17 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
         <View
           style={
             {
+              "alignItems": "center",
               "flex": 1,
+              "flexDirection": "row",
+              "minWidth": 0,
             }
           }
         >
           <View
             style={
               {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "flexShrink": 1,
-                "marginBottom": 8,
+                "marginRight": 24,
               }
             }
           >
@@ -278,7 +278,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
               style={
                 [
                   {
-                    "color": "#003366",
+                    "color": "#FFFFFF",
                     "fontSize": 36,
                   },
                   undefined,
@@ -291,77 +291,56 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
                 ]
               }
             >
-              󰒊
+              󰯜
             </Text>
+          </View>
+          <View
+            style={
+              {
+                "flex": 1,
+                "flexShrink": 1,
+                "minWidth": 0,
+              }
+            }
+          >
             <Text
               maxFontSizeMultiplier={2}
-              numberOfLines={0}
               style={
                 [
                   {
                     "color": "#313132",
                     "fontFamily": "BCSans-Regular",
                     "fontSize": 18,
-                    "fontWeight": "bold",
+                    "fontWeight": "normal",
                   },
                   {
-                    "color": "#003366",
-                    "marginLeft": 8,
+                    "color": "#FFFFFF",
+                    "fontWeight": "bold",
                   },
                 ]
               }
             >
               BCSC.VerificationMethods.SendVideoTitle
             </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "flexShrink": 1,
+                  },
+                ]
+              }
+            >
+              BCSC.VerificationMethods.SendVideoDescription
+            </Text>
           </View>
-          <Text
-            maxFontSizeMultiplier={2}
-            numberOfLines={0}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "flexShrink": 1,
-                },
-              ]
-            }
-          >
-            BCSC.VerificationMethods.SendVideoDescription
-          </Text>
-        </View>
-        <View
-          style={
-            {
-              "justifyContent": "center",
-            }
-          }
-        >
-          <Text
-            allowFontScaling={false}
-            selectable={false}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontSize": 36,
-                },
-                undefined,
-                {
-                  "fontFamily": "Material Design Icons",
-                  "fontStyle": "normal",
-                  "fontWeight": "normal",
-                },
-                {},
-              ]
-            }
-          >
-            󰅂
-          </Text>
         </View>
       </View>
       <View
@@ -397,12 +376,13 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
         style={
           {
             "alignItems": "center",
-            "backgroundColor": "#FFFFFF",
-            "borderBottomColor": "#606060",
-            "borderBottomWidth": 1,
-            "borderTopColor": "#606060",
-            "borderTopWidth": 1,
+            "backgroundColor": "#003366",
+            "borderColor": "#EDEBE9",
+            "borderRadius": 8,
+            "borderWidth": 1,
             "flexDirection": "row",
+            "marginBottom": 16,
+            "marginHorizontal": 16,
             "opacity": 1,
             "padding": 16,
           }
@@ -412,17 +392,17 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
         <View
           style={
             {
+              "alignItems": "center",
               "flex": 1,
+              "flexDirection": "row",
+              "minWidth": 0,
             }
           }
         >
           <View
             style={
               {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "flexShrink": 1,
-                "marginBottom": 8,
+                "marginRight": 24,
               }
             }
           >
@@ -432,7 +412,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
               style={
                 [
                   {
-                    "color": "#003366",
+                    "color": "#FFFFFF",
                     "fontSize": 36,
                   },
                   undefined,
@@ -445,78 +425,84 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
                 ]
               }
             >
-              󰕧
+              󰵰
             </Text>
+          </View>
+          <View
+            style={
+              {
+                "flex": 1,
+                "flexShrink": 1,
+                "minWidth": 0,
+              }
+            }
+          >
             <Text
               maxFontSizeMultiplier={2}
-              numberOfLines={0}
               style={
                 [
                   {
                     "color": "#313132",
                     "fontFamily": "BCSans-Regular",
                     "fontSize": 18,
-                    "fontWeight": "bold",
+                    "fontWeight": "normal",
                   },
                   {
-                    "color": "#003366",
-                    "marginLeft": 8,
+                    "color": "#FFFFFF",
+                    "fontWeight": "bold",
                   },
                 ]
               }
             >
               BCSC.VerificationMethods.VideoCallTitle
             </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "flexShrink": 1,
+                  },
+                ]
+              }
+            >
+              BCSC.VerificationMethods.VideoCallDescription
+            </Text>
           </View>
-          <Text
-            maxFontSizeMultiplier={2}
-            numberOfLines={0}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "flexShrink": 1,
-                },
-              ]
-            }
-          >
-            BCSC.VerificationMethods.VideoCallDescription
-          </Text>
         </View>
-        <View
-          style={
-            {
-              "justifyContent": "center",
-            }
+      </View>
+      <View
+        style={
+          {
+            "marginHorizontal": 16,
           }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 21,
+                "fontWeight": "bold",
+              },
+              {
+                "marginTop": 16,
+              },
+            ]
+          }
+          testID="com.ariesbifold:id/HoursOfServiceTitle"
         >
-          <Text
-            allowFontScaling={false}
-            selectable={false}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontSize": 36,
-                },
-                undefined,
-                {
-                  "fontFamily": "Material Design Icons",
-                  "fontStyle": "normal",
-                  "fontWeight": "normal",
-                },
-                {},
-              ]
-            }
-          >
-            󰅂
-          </Text>
-        </View>
+          BCSC.VideoCall.CallBusyOrClosed.HoursOfService
+        </Text>
       </View>
     </View>
   </RCTScrollView>
@@ -554,6 +540,51 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
   >
     <View>
       <View
+        style={
+          {
+            "alignItems": "center",
+            "marginBottom": 8,
+            "marginTop": 40,
+            "paddingHorizontal": 16,
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 21,
+                "fontWeight": "bold",
+              },
+              undefined,
+            ]
+          }
+        >
+          Choose how to verify
+        </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              {
+                "marginVertical": 16,
+              },
+            ]
+          }
+        >
+          We need to make sure you're a real person. How would you like to proceed?
+        </Text>
+      </View>
+      <View
         accessibilityLabel="BCSC.VerificationMethods.SendVideoTitle"
         accessibilityRole="button"
         accessibilityState={
@@ -586,12 +617,13 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
         style={
           {
             "alignItems": "center",
-            "backgroundColor": "#FFFFFF",
-            "borderBottomColor": "#606060",
-            "borderBottomWidth": 1,
-            "borderTopColor": "#606060",
-            "borderTopWidth": 1,
+            "backgroundColor": "#003366",
+            "borderColor": "#EDEBE9",
+            "borderRadius": 8,
+            "borderWidth": 1,
             "flexDirection": "row",
+            "marginBottom": 16,
+            "marginHorizontal": 16,
             "opacity": 1,
             "padding": 16,
           }
@@ -601,17 +633,17 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
         <View
           style={
             {
+              "alignItems": "center",
               "flex": 1,
+              "flexDirection": "row",
+              "minWidth": 0,
             }
           }
         >
           <View
             style={
               {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "flexShrink": 1,
-                "marginBottom": 8,
+                "marginRight": 24,
               }
             }
           >
@@ -621,7 +653,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
               style={
                 [
                   {
-                    "color": "#003366",
+                    "color": "#FFFFFF",
                     "fontSize": 36,
                   },
                   undefined,
@@ -634,104 +666,57 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
                 ]
               }
             >
-              󰒊
+              󰯜
             </Text>
+          </View>
+          <View
+            style={
+              {
+                "flex": 1,
+                "flexShrink": 1,
+                "minWidth": 0,
+              }
+            }
+          >
             <Text
               maxFontSizeMultiplier={2}
-              numberOfLines={0}
               style={
                 [
                   {
                     "color": "#313132",
                     "fontFamily": "BCSans-Regular",
                     "fontSize": 18,
-                    "fontWeight": "bold",
+                    "fontWeight": "normal",
                   },
                   {
-                    "color": "#003366",
-                    "marginLeft": 8,
+                    "color": "#FFFFFF",
+                    "fontWeight": "bold",
                   },
                 ]
               }
             >
               BCSC.VerificationMethods.SendVideoTitle
             </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "flexShrink": 1,
+                  },
+                ]
+              }
+            >
+              BCSC.VerificationMethods.SendVideoDescription
+            </Text>
           </View>
-          <Text
-            maxFontSizeMultiplier={2}
-            numberOfLines={0}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "flexShrink": 1,
-                },
-              ]
-            }
-          >
-            BCSC.VerificationMethods.SendVideoDescription
-          </Text>
         </View>
-        <View
-          style={
-            {
-              "justifyContent": "center",
-            }
-          }
-        >
-          <Text
-            allowFontScaling={false}
-            selectable={false}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontSize": 36,
-                },
-                undefined,
-                {
-                  "fontFamily": "Material Design Icons",
-                  "fontStyle": "normal",
-                  "fontWeight": "normal",
-                },
-                {},
-              ]
-            }
-          >
-            󰅂
-          </Text>
-        </View>
-      </View>
-      <View
-        style={
-          {
-            "marginBottom": 8,
-            "marginTop": 40,
-            "paddingHorizontal": 16,
-          }
-        }
-      >
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 21,
-                "fontWeight": "bold",
-              },
-              undefined,
-            ]
-          }
-        >
-          BCSC.VerificationMethods.CannotSendVideo
-        </Text>
       </View>
       <View
         accessibilityLabel="BCSC.VerificationMethods.VideoCallTitle"
@@ -766,12 +751,13 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
         style={
           {
             "alignItems": "center",
-            "backgroundColor": "#FFFFFF",
-            "borderBottomColor": "#606060",
-            "borderBottomWidth": undefined,
-            "borderTopColor": "#606060",
-            "borderTopWidth": 1,
+            "backgroundColor": "#003366",
+            "borderColor": "#EDEBE9",
+            "borderRadius": 8,
+            "borderWidth": 1,
             "flexDirection": "row",
+            "marginBottom": 16,
+            "marginHorizontal": 16,
             "opacity": 1,
             "padding": 16,
           }
@@ -781,17 +767,17 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
         <View
           style={
             {
+              "alignItems": "center",
               "flex": 1,
+              "flexDirection": "row",
+              "minWidth": 0,
             }
           }
         >
           <View
             style={
               {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "flexShrink": 1,
-                "marginBottom": 8,
+                "marginRight": 24,
               }
             }
           >
@@ -801,7 +787,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
               style={
                 [
                   {
-                    "color": "#003366",
+                    "color": "#FFFFFF",
                     "fontSize": 36,
                   },
                   undefined,
@@ -814,77 +800,56 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
                 ]
               }
             >
-              󰕧
+              󰵰
             </Text>
+          </View>
+          <View
+            style={
+              {
+                "flex": 1,
+                "flexShrink": 1,
+                "minWidth": 0,
+              }
+            }
+          >
             <Text
               maxFontSizeMultiplier={2}
-              numberOfLines={0}
               style={
                 [
                   {
                     "color": "#313132",
                     "fontFamily": "BCSans-Regular",
                     "fontSize": 18,
-                    "fontWeight": "bold",
+                    "fontWeight": "normal",
                   },
                   {
-                    "color": "#003366",
-                    "marginLeft": 8,
+                    "color": "#FFFFFF",
+                    "fontWeight": "bold",
                   },
                 ]
               }
             >
               BCSC.VerificationMethods.VideoCallTitle
             </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "flexShrink": 1,
+                  },
+                ]
+              }
+            >
+              BCSC.VerificationMethods.VideoCallDescription
+            </Text>
           </View>
-          <Text
-            maxFontSizeMultiplier={2}
-            numberOfLines={0}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "flexShrink": 1,
-                },
-              ]
-            }
-          >
-            BCSC.VerificationMethods.VideoCallDescription
-          </Text>
-        </View>
-        <View
-          style={
-            {
-              "justifyContent": "center",
-            }
-          }
-        >
-          <Text
-            allowFontScaling={false}
-            selectable={false}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontSize": 36,
-                },
-                undefined,
-                {
-                  "fontFamily": "Material Design Icons",
-                  "fontStyle": "normal",
-                  "fontWeight": "normal",
-                },
-                {},
-              ]
-            }
-          >
-            󰅂
-          </Text>
         </View>
       </View>
       <View
@@ -920,12 +885,13 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
         style={
           {
             "alignItems": "center",
-            "backgroundColor": "#FFFFFF",
-            "borderBottomColor": "#606060",
-            "borderBottomWidth": 1,
-            "borderTopColor": "#606060",
-            "borderTopWidth": 1,
+            "backgroundColor": "#003366",
+            "borderColor": "#EDEBE9",
+            "borderRadius": 8,
+            "borderWidth": 1,
             "flexDirection": "row",
+            "marginBottom": 16,
+            "marginHorizontal": 16,
             "opacity": 1,
             "padding": 16,
           }
@@ -935,17 +901,17 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
         <View
           style={
             {
+              "alignItems": "center",
               "flex": 1,
+              "flexDirection": "row",
+              "minWidth": 0,
             }
           }
         >
           <View
             style={
               {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "flexShrink": 1,
-                "marginBottom": 8,
+                "marginRight": 24,
               }
             }
           >
@@ -955,7 +921,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
               style={
                 [
                   {
-                    "color": "#003366",
+                    "color": "#FFFFFF",
                     "fontSize": 36,
                   },
                   undefined,
@@ -968,78 +934,84 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
                 ]
               }
             >
-              󰀄
+              󰀓
             </Text>
+          </View>
+          <View
+            style={
+              {
+                "flex": 1,
+                "flexShrink": 1,
+                "minWidth": 0,
+              }
+            }
+          >
             <Text
               maxFontSizeMultiplier={2}
-              numberOfLines={0}
               style={
                 [
                   {
                     "color": "#313132",
                     "fontFamily": "BCSans-Regular",
                     "fontSize": 18,
-                    "fontWeight": "bold",
+                    "fontWeight": "normal",
                   },
                   {
-                    "color": "#003366",
-                    "marginLeft": 8,
+                    "color": "#FFFFFF",
+                    "fontWeight": "bold",
                   },
                 ]
               }
             >
               BCSC.VerificationMethods.InPersonTitle
             </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "flexShrink": 1,
+                  },
+                ]
+              }
+            >
+              BCSC.VerificationMethods.InPersonDescription
+            </Text>
           </View>
-          <Text
-            maxFontSizeMultiplier={2}
-            numberOfLines={0}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "flexShrink": 1,
-                },
-              ]
-            }
-          >
-            BCSC.VerificationMethods.InPersonDescription
-          </Text>
         </View>
-        <View
-          style={
-            {
-              "justifyContent": "center",
-            }
+      </View>
+      <View
+        style={
+          {
+            "marginHorizontal": 16,
           }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 21,
+                "fontWeight": "bold",
+              },
+              {
+                "marginTop": 16,
+              },
+            ]
+          }
+          testID="com.ariesbifold:id/HoursOfServiceTitle"
         >
-          <Text
-            allowFontScaling={false}
-            selectable={false}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontSize": 36,
-                },
-                undefined,
-                {
-                  "fontFamily": "Material Design Icons",
-                  "fontStyle": "normal",
-                  "fontWeight": "normal",
-                },
-                {},
-              ]
-            }
-          >
-            󰅂
-          </Text>
-        </View>
+          BCSC.VideoCall.CallBusyOrClosed.HoursOfService
+        </Text>
       </View>
     </View>
   </RCTScrollView>
@@ -1077,6 +1049,51 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
   >
     <View>
       <View
+        style={
+          {
+            "alignItems": "center",
+            "marginBottom": 8,
+            "marginTop": 40,
+            "paddingHorizontal": 16,
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 21,
+                "fontWeight": "bold",
+              },
+              undefined,
+            ]
+          }
+        >
+          Choose how to verify
+        </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              {
+                "marginVertical": 16,
+              },
+            ]
+          }
+        >
+          We need to make sure you're a real person. How would you like to proceed?
+        </Text>
+      </View>
+      <View
         accessibilityLabel="BCSC.VerificationMethods.VideoCallTitle"
         accessibilityRole="button"
         accessibilityState={
@@ -1109,12 +1126,13 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
         style={
           {
             "alignItems": "center",
-            "backgroundColor": "#FFFFFF",
-            "borderBottomColor": "#606060",
-            "borderBottomWidth": 1,
-            "borderTopColor": "#606060",
-            "borderTopWidth": 1,
+            "backgroundColor": "#003366",
+            "borderColor": "#EDEBE9",
+            "borderRadius": 8,
+            "borderWidth": 1,
             "flexDirection": "row",
+            "marginBottom": 16,
+            "marginHorizontal": 16,
             "opacity": 1,
             "padding": 16,
           }
@@ -1124,17 +1142,17 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
         <View
           style={
             {
+              "alignItems": "center",
               "flex": 1,
+              "flexDirection": "row",
+              "minWidth": 0,
             }
           }
         >
           <View
             style={
               {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "flexShrink": 1,
-                "marginBottom": 8,
+                "marginRight": 24,
               }
             }
           >
@@ -1144,7 +1162,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
               style={
                 [
                   {
-                    "color": "#003366",
+                    "color": "#FFFFFF",
                     "fontSize": 36,
                   },
                   undefined,
@@ -1157,104 +1175,57 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
                 ]
               }
             >
-              󰕧
+              󰵰
             </Text>
+          </View>
+          <View
+            style={
+              {
+                "flex": 1,
+                "flexShrink": 1,
+                "minWidth": 0,
+              }
+            }
+          >
             <Text
               maxFontSizeMultiplier={2}
-              numberOfLines={0}
               style={
                 [
                   {
                     "color": "#313132",
                     "fontFamily": "BCSans-Regular",
                     "fontSize": 18,
-                    "fontWeight": "bold",
+                    "fontWeight": "normal",
                   },
                   {
-                    "color": "#003366",
-                    "marginLeft": 8,
+                    "color": "#FFFFFF",
+                    "fontWeight": "bold",
                   },
                 ]
               }
             >
               BCSC.VerificationMethods.VideoCallTitle
             </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "flexShrink": 1,
+                  },
+                ]
+              }
+            >
+              BCSC.VerificationMethods.VideoCallDescription
+            </Text>
           </View>
-          <Text
-            maxFontSizeMultiplier={2}
-            numberOfLines={0}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "flexShrink": 1,
-                },
-              ]
-            }
-          >
-            BCSC.VerificationMethods.VideoCallDescription
-          </Text>
         </View>
-        <View
-          style={
-            {
-              "justifyContent": "center",
-            }
-          }
-        >
-          <Text
-            allowFontScaling={false}
-            selectable={false}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontSize": 36,
-                },
-                undefined,
-                {
-                  "fontFamily": "Material Design Icons",
-                  "fontStyle": "normal",
-                  "fontWeight": "normal",
-                },
-                {},
-              ]
-            }
-          >
-            󰅂
-          </Text>
-        </View>
-      </View>
-      <View
-        style={
-          {
-            "marginBottom": 8,
-            "marginTop": 40,
-            "paddingHorizontal": 16,
-          }
-        }
-      >
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 21,
-                "fontWeight": "bold",
-              },
-              undefined,
-            ]
-          }
-        >
-          BCSC.VerificationMethods.CannotVideoCall
-        </Text>
       </View>
       <View
         accessibilityLabel="BCSC.VerificationMethods.SendVideoTitle"
@@ -1289,12 +1260,13 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
         style={
           {
             "alignItems": "center",
-            "backgroundColor": "#FFFFFF",
-            "borderBottomColor": "#606060",
-            "borderBottomWidth": undefined,
-            "borderTopColor": "#606060",
-            "borderTopWidth": 1,
+            "backgroundColor": "#003366",
+            "borderColor": "#EDEBE9",
+            "borderRadius": 8,
+            "borderWidth": 1,
             "flexDirection": "row",
+            "marginBottom": 16,
+            "marginHorizontal": 16,
             "opacity": 1,
             "padding": 16,
           }
@@ -1304,17 +1276,17 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
         <View
           style={
             {
+              "alignItems": "center",
               "flex": 1,
+              "flexDirection": "row",
+              "minWidth": 0,
             }
           }
         >
           <View
             style={
               {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "flexShrink": 1,
-                "marginBottom": 8,
+                "marginRight": 24,
               }
             }
           >
@@ -1324,7 +1296,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
               style={
                 [
                   {
-                    "color": "#003366",
+                    "color": "#FFFFFF",
                     "fontSize": 36,
                   },
                   undefined,
@@ -1337,77 +1309,56 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
                 ]
               }
             >
-              󰒊
+              󰯜
             </Text>
+          </View>
+          <View
+            style={
+              {
+                "flex": 1,
+                "flexShrink": 1,
+                "minWidth": 0,
+              }
+            }
+          >
             <Text
               maxFontSizeMultiplier={2}
-              numberOfLines={0}
               style={
                 [
                   {
                     "color": "#313132",
                     "fontFamily": "BCSans-Regular",
                     "fontSize": 18,
-                    "fontWeight": "bold",
+                    "fontWeight": "normal",
                   },
                   {
-                    "color": "#003366",
-                    "marginLeft": 8,
+                    "color": "#FFFFFF",
+                    "fontWeight": "bold",
                   },
                 ]
               }
             >
               BCSC.VerificationMethods.SendVideoTitle
             </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "flexShrink": 1,
+                  },
+                ]
+              }
+            >
+              BCSC.VerificationMethods.SendVideoDescription
+            </Text>
           </View>
-          <Text
-            maxFontSizeMultiplier={2}
-            numberOfLines={0}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "flexShrink": 1,
-                },
-              ]
-            }
-          >
-            BCSC.VerificationMethods.SendVideoDescription
-          </Text>
-        </View>
-        <View
-          style={
-            {
-              "justifyContent": "center",
-            }
-          }
-        >
-          <Text
-            allowFontScaling={false}
-            selectable={false}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontSize": 36,
-                },
-                undefined,
-                {
-                  "fontFamily": "Material Design Icons",
-                  "fontStyle": "normal",
-                  "fontWeight": "normal",
-                },
-                {},
-              ]
-            }
-          >
-            󰅂
-          </Text>
         </View>
       </View>
       <View
@@ -1443,12 +1394,13 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
         style={
           {
             "alignItems": "center",
-            "backgroundColor": "#FFFFFF",
-            "borderBottomColor": "#606060",
-            "borderBottomWidth": 1,
-            "borderTopColor": "#606060",
-            "borderTopWidth": 1,
+            "backgroundColor": "#003366",
+            "borderColor": "#EDEBE9",
+            "borderRadius": 8,
+            "borderWidth": 1,
             "flexDirection": "row",
+            "marginBottom": 16,
+            "marginHorizontal": 16,
             "opacity": 1,
             "padding": 16,
           }
@@ -1458,17 +1410,17 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
         <View
           style={
             {
+              "alignItems": "center",
               "flex": 1,
+              "flexDirection": "row",
+              "minWidth": 0,
             }
           }
         >
           <View
             style={
               {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "flexShrink": 1,
-                "marginBottom": 8,
+                "marginRight": 24,
               }
             }
           >
@@ -1478,7 +1430,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
               style={
                 [
                   {
-                    "color": "#003366",
+                    "color": "#FFFFFF",
                     "fontSize": 36,
                   },
                   undefined,
@@ -1491,78 +1443,84 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
                 ]
               }
             >
-              󰀄
+              󰀓
             </Text>
+          </View>
+          <View
+            style={
+              {
+                "flex": 1,
+                "flexShrink": 1,
+                "minWidth": 0,
+              }
+            }
+          >
             <Text
               maxFontSizeMultiplier={2}
-              numberOfLines={0}
               style={
                 [
                   {
                     "color": "#313132",
                     "fontFamily": "BCSans-Regular",
                     "fontSize": 18,
-                    "fontWeight": "bold",
+                    "fontWeight": "normal",
                   },
                   {
-                    "color": "#003366",
-                    "marginLeft": 8,
+                    "color": "#FFFFFF",
+                    "fontWeight": "bold",
                   },
                 ]
               }
             >
               BCSC.VerificationMethods.InPersonTitle
             </Text>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "flexShrink": 1,
+                  },
+                ]
+              }
+            >
+              BCSC.VerificationMethods.InPersonDescription
+            </Text>
           </View>
-          <Text
-            maxFontSizeMultiplier={2}
-            numberOfLines={0}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "flexShrink": 1,
-                },
-              ]
-            }
-          >
-            BCSC.VerificationMethods.InPersonDescription
-          </Text>
         </View>
-        <View
-          style={
-            {
-              "justifyContent": "center",
-            }
+      </View>
+      <View
+        style={
+          {
+            "marginHorizontal": 16,
           }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 21,
+                "fontWeight": "bold",
+              },
+              {
+                "marginTop": 16,
+              },
+            ]
+          }
+          testID="com.ariesbifold:id/HoursOfServiceTitle"
         >
-          <Text
-            allowFontScaling={false}
-            selectable={false}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontSize": 36,
-                },
-                undefined,
-                {
-                  "fontFamily": "Material Design Icons",
-                  "fontStyle": "normal",
-                  "fontWeight": "normal",
-                },
-                {},
-              ]
-            }
-          >
-            󰅂
-          </Text>
-        </View>
+          BCSC.VideoCall.CallBusyOrClosed.HoursOfService
+        </Text>
       </View>
     </View>
   </RCTScrollView>
