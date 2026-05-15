@@ -93,7 +93,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
         routes: [
           { name: BCSCScreens.SetupSteps },
           { name: BCSCScreens.VerificationMethodSelection },
-          { name: BCSCScreens.InformationRequired },
+          { name: BCSCScreens.EvidenceUploading },
         ],
       })
     )
@@ -112,7 +112,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
    * Optimistically caches the video and extracts its metadata in the background,
    * allowing the user to upload videos with minimal waiting time.
    *
-   * Note: If the user navigates quickly through the flow, the InformationRequiredScreen will just wait
+   * Note: If the user navigates quickly through the flow, the UploadingScreen will just wait
    * for the video disk read to complete before proceeding.
    *
    * @param {OnLoadData} data The data object containing video load information.

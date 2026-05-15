@@ -211,7 +211,6 @@ const translation = {
       "SetupTypes": "BC Services Card",
       "SetupSteps": "Setup Steps",
       "VerificationMethodSelection": "Choose How to Verify",
-      "InformationRequired": "Information Required",
       "TransferAccountInstructions": "Transfer Instructions",
       "TransferAccountScan": "Scan QR Code",
       "ContactUs": "Contact Us",
@@ -821,13 +820,6 @@ const translation = {
       "CardSerialNumber": "Card serial number: {{ serial }}",
     },
     "SendVideo": {
-      "InformationRequired": {
-        "Heading1": "Photo of your face",
-        "Heading2": "Video of your face",
-        "ActionLabel": "Take Photo",
-        "ActionLabel2": "Record Video",
-        "ButtonText": "Send to Service BC Now",
-      },
       "PendingReview": {
         "Heading": "Request pending review",
         "Description1": "We review requests:",

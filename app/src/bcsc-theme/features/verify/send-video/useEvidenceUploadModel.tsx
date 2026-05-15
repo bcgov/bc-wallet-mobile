@@ -22,7 +22,7 @@ import RNFS from 'react-native-fs'
 import { VerificationVideoCache } from './VideoReviewScreen'
 
 const useEvidenceUploadModel = (
-  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.InformationRequired>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceUploading>
 ) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store] = useStore<BCState>()

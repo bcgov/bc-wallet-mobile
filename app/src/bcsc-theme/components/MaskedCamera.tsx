@@ -23,6 +23,8 @@ type MaskedCameraProps = {
   cameraLabel?: string
   maskType?: MaskType
   maskLineColor?: string
+  maskLineWidth?: number
+  maskOverlayOpacity?: number
   codeScanner?: CodeScanner
   onPhotoTaken: (path: string) => void
 }
@@ -32,6 +34,8 @@ const MaskedCamera = ({
   cameraInstructions,
   cameraLabel,
   maskLineColor,
+  maskLineWidth,
+  maskOverlayOpacity = 0,
   maskType,
   codeScanner,
   cameraFace = 'back',
@@ -173,7 +177,7 @@ const MaskedCamera = ({
         // Set fps to max supported by the selected format for smoother preview
         fps={format?.maxFps}
       />
-      <SVGOverlay maskType={maskType} strokeColor={maskLineColor ?? ColorPalette.brand.tertiary} />
+      <SVGOverlay maskType={maskType} strokeColor={maskLineColor ?? ColorPalette.brand.tertiary} strokeWidth={maskLineWidth} overlayOpacity={maskOverlayOpacity} />
       <View style={styles.instructionText}>
         {cameraLabel && (
           <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingThree'}>

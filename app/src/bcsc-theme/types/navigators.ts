@@ -45,7 +45,6 @@ export enum BCSCScreens {
   EmailConfirmation = 'Email Verification',
   VerificationMethodSelection = 'Verify Options',
   VerifyInPerson = 'Verify In Person Instruction',
-  InformationRequired = 'Send Video Menu',
   PhotoInstructions = 'Selfie Photo Tips',
   TakePhoto = 'Selfie Photo Capture',
   PhotoReview = 'Selfie Photo Confirmation',
@@ -55,6 +54,7 @@ export enum BCSCScreens {
   VideoTooLong = 'Selfie Video Too Long',
   PendingReview = 'Send Video Check Status',
   CancelledReview = 'BCSCCancelledReview', // FIXME (MD): Not sure which V3 screen this maps to...
+  EvidenceUploading = 'Send Video Uploading',
   SuccessfullySent = 'Send Video Received Request Confirmation',
   VerificationSuccess = 'Setup Complete',
   ManualPairingCode = 'Login Device Pairing',
@@ -177,7 +177,6 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.EmailConfirmation]: { emailAddressId: string }
   [BCSCScreens.VerificationMethodSelection]: undefined
   [BCSCScreens.VerifyInPerson]: undefined
-  [BCSCScreens.InformationRequired]: undefined
   [BCSCScreens.PhotoInstructions]: { forLiveCall: boolean }
   [BCSCScreens.TakePhoto]: {
     deviceSide: 'front' | 'back'
@@ -190,6 +189,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.TakeVideo]: undefined
   [BCSCScreens.VideoReview]: { videoPath: string; videoThumbnailPath: string }
   [BCSCScreens.VideoTooLong]: { videoLengthSeconds: number }
+  [BCSCScreens.EvidenceUploading]: undefined
   [BCSCScreens.SuccessfullySent]: undefined
   [BCSCScreens.PendingReview]: undefined
   [BCSCScreens.CancelledReview]: { agentReason?: string }
