@@ -23,7 +23,9 @@ const RemoveContactScreen = ({ navigation, route }: RemoveContactScreenProps) =>
   const [submitting, setSubmitting] = useState(false)
 
   const onConfirmRemove = useCallback(async () => {
-    if (!agent || !connection || submitting) {return}
+    if (!agent || !connection || submitting) {
+      return
+    }
     setSubmitting(true)
     try {
       const [basicMessages, proofs, offers] = await Promise.all([

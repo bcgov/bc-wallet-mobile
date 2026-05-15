@@ -55,17 +55,21 @@ const EditContactNameScreen = ({ navigation, route }: EditContactNameScreenProps
       secondaryActionText={t('Global.Cancel')}
       onPressSecondaryAction={() => navigation.goBack()}
     >
-      <ThemedText variant="headingThree">{t('BCSC.Contacts.EditName.Title')}</ThemedText>
-      <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.Contacts.EditName.Description')}</ThemedText>
-      <View>
-        <LimitedTextInput
-          defaultValue={name}
-          label={t('BCSC.Contacts.EditName.Label')}
-          limit={NAME_MAX}
-          handleChangeText={setName}
-          accessibilityLabel={t('BCSC.Contacts.EditName.Label')}
-          testID={testIdWithKey('NameInput')}
-        />
+      <View style={{ padding: Spacing.md, gap: Spacing.md }}>
+        <ThemedText variant="headingThree" style={{ textAlign: 'center' }}>
+          {t('BCSC.Contacts.EditName.Title')}
+        </ThemedText>
+        <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.Contacts.EditName.Description')}</ThemedText>
+        <View>
+          <LimitedTextInput
+            defaultValue={name}
+            label={t('BCSC.Contacts.EditName.Label')}
+            limit={NAME_MAX}
+            handleChangeText={setName}
+            accessibilityLabel={t('BCSC.Contacts.EditName.Label')}
+            testID={testIdWithKey('NameInput')}
+          />
+        </View>
       </View>
     </ActionScreenLayout>
   )

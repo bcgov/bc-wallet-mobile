@@ -244,6 +244,7 @@ const translation = {
       "Details": {
         "Title": "Contact Details (PT-BR)",
         "ConnectedAt": "Connected: {{date}} (PT-BR)",
+        "PinContact": "Pin contact (PT-BR)",
         "UnpinContact": "Unpin contact (PT-BR)",
         "EditName": "Edit Contact Name (PT-BR)",
         "ViewHistory": "View history (PT-BR)",

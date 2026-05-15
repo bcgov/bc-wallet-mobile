@@ -30,7 +30,7 @@ const ContactJSONDetailsScreen = ({ route }: ContactJSONDetailsScreenProps) => {
 
   const styles = StyleSheet.create({
     blob: {
-      backgroundColor: ColorPalette.grayscale.lightGrey,
+      backgroundColor: ColorPalette.grayscale.veryLightGrey,
       padding: Spacing.md,
       borderRadius: Spacing.sm,
       marginBottom: Spacing.md,
@@ -38,7 +38,7 @@ const ContactJSONDetailsScreen = ({ route }: ContactJSONDetailsScreenProps) => {
     code: {
       fontFamily: 'Courier',
       fontSize: 12,
-      color: ColorPalette.brand.text,
+      color: ColorPalette.grayscale.black,
     },
   })
 

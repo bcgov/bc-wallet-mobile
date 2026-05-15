@@ -6,19 +6,20 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pressable, StyleSheet, View } from 'react-native'
+import CommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import Icon from 'react-native-vector-icons/MaterialIcons'
+import { usePinnedContacts } from './usePinnedContacts'
 
 interface ContactDetailsScreenProps {
   navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.ContactDetails>
   route: RouteProp<BCSCMainStackParams, BCSCScreens.ContactDetails>
 }
 
-interface ActionRowProps {
+interface ActionCardProps {
   icon: string
   label: string
   onPress: () => void
   testID: string
-  destructive?: boolean
 }
 
 const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) => {
@@ -27,6 +28,8 @@ const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) 
   const { Spacing, ColorPalette } = useTheme()
   const [store] = useStore()
   const connection = useConnectionById(connectionId)
+  const { isPinned, togglePin } = usePinnedContacts()
+  const pinned = isPinned(connectionId)
 
   const name = useMemo(
     () => getConnectionName(connection, store.preferences.alternateContactNames),
@@ -37,7 +40,10 @@ const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) 
     if (!connection?.createdAt) {
       return ''
     }
-    return new Date(connection.createdAt).toLocaleString()
+    const date = new Date(connection.createdAt)
+    const datePart = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+    const timePart = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase()
+    return `${datePart}, ${timePart}`
   }, [connection?.createdAt])
 
   const styles = StyleSheet.create({
@@ -50,51 +56,61 @@ const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) 
     name: {
       color: ColorPalette.brand.primary,
       flex: 1,
+      paddingLeft: Spacing.sm,
     },
     connectedAt: {
-      color: ColorPalette.grayscale.mediumGrey,
+      color: ColorPalette.grayscale.black,
       marginBottom: Spacing.lg,
     },
     actionGroup: {
-      borderTopColor: ColorPalette.grayscale.lightGrey,
-      borderTopWidth: StyleSheet.hairlineWidth,
+      gap: Spacing.sm,
+      marginBottom: Spacing.lg,
     },
-    actionRow: {
+    actionCard: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: Spacing.md,
+      backgroundColor: ColorPalette.brand.primaryLight,
+      borderRadius: 8,
+      padding: Spacing.md,
       gap: Spacing.md,
-      borderBottomColor: ColorPalette.grayscale.lightGrey,
-      borderBottomWidth: StyleSheet.hairlineWidth,
+    },
+    actionLabel: {
+      color: ColorPalette.brand.primary,
+      flex: 1,
+    },
+    removeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: Spacing.md,
+      gap: Spacing.md,
+    },
+    removeLabel: {
+      color: ColorPalette.semantic.error,
     },
   })
 
-  const ActionRow: React.FC<ActionRowProps> = ({ icon, label, onPress, testID, destructive }) => {
-    const color = destructive ? ColorPalette.semantic.error : ColorPalette.brand.text
-    return (
-      <Pressable
-        onPress={onPress}
-        accessibilityRole="button"
-        accessibilityLabel={label}
-        testID={testID}
-        style={styles.actionRow}
-      >
-        <Icon name={icon} size={22} color={color} />
-        <ThemedText style={{ color }}>{label}</ThemedText>
-      </Pressable>
-    )
-  }
+  const ActionCard: React.FC<ActionCardProps> = ({ icon, label, onPress, testID }) => (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      testID={testID}
+      style={styles.actionCard}
+    >
+      <CommunityIcon name={icon} size={22} color={ColorPalette.brand.primary} />
+      <ThemedText style={styles.actionLabel}>{label}</ThemedText>
+    </Pressable>
+  )
 
-  const onUnpin = useCallback(() => {
-    // TODO: pin state requires a local store extension; placeholder for now.
-  }, [])
+  const onTogglePin = useCallback(() => {
+    togglePin(connectionId)
+  }, [togglePin, connectionId])
 
   const onEditName = useCallback(() => {
     navigation.navigate(BCSCScreens.EditContactName, { connectionId })
   }, [navigation, connectionId])
 
   const onViewHistory = useCallback(() => {
-    // History view is not built yet; route to JSON details as a stand-in.
     const blob = JSON.stringify(connection?.toJSON?.() ?? connection ?? {}, null, 2)
     navigation.navigate(BCSCScreens.ContactJSONDetails, {
       jsonBlob: blob,
@@ -112,12 +128,13 @@ const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) 
   }, [navigation, connectionId])
 
   return (
-    <ScreenWrapper>
+    <ScreenWrapper scrollViewContainerStyle={{ padding: Spacing.lg }}>
       <View style={styles.header}>
-        <Icon name="apartment" size={22} color={ColorPalette.brand.primary} />
+        <Icon name="apartment" size={24} color={ColorPalette.brand.primary} />
         <ThemedText variant="headingThree" style={styles.name} numberOfLines={2}>
           {name}
         </ThemedText>
+        {pinned ? <CommunityIcon name="pin" size={24} color={ColorPalette.brand.primary} /> : null}
       </View>
       {connectedAt ? (
         <ThemedText style={styles.connectedAt}>
@@ -126,38 +143,42 @@ const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) 
       ) : null}
 
       <View style={styles.actionGroup}>
-        <ActionRow
-          icon="push-pin"
-          label={t('BCSC.Contacts.Details.UnpinContact')}
-          onPress={onUnpin}
-          testID={testIdWithKey('UnpinContact')}
+        <ActionCard
+          icon="pin"
+          label={t(pinned ? 'BCSC.Contacts.Details.UnpinContact' : 'BCSC.Contacts.Details.PinContact')}
+          onPress={onTogglePin}
+          testID={testIdWithKey(pinned ? 'UnpinContact' : 'PinContact')}
         />
-        <ActionRow
-          icon="edit"
+        <ActionCard
+          icon="pencil"
           label={t('BCSC.Contacts.Details.EditName')}
           onPress={onEditName}
           testID={testIdWithKey('EditContactName')}
         />
-        <ActionRow
+        <ActionCard
           icon="history"
           label={t('BCSC.Contacts.Details.ViewHistory')}
           onPress={onViewHistory}
           testID={testIdWithKey('ViewHistory')}
         />
-        <ActionRow
-          icon="data-object"
+        <ActionCard
+          icon="code-braces"
           label={t('BCSC.Contacts.Details.ViewJSON')}
           onPress={onViewJSON}
           testID={testIdWithKey('ViewJSON')}
         />
-        <ActionRow
-          icon="delete-outline"
-          label={t('BCSC.Contacts.Details.RemoveContact')}
-          onPress={onRemove}
-          testID={testIdWithKey('RemoveContact')}
-          destructive
-        />
       </View>
+
+      <Pressable
+        onPress={onRemove}
+        accessibilityRole="button"
+        accessibilityLabel={t('BCSC.Contacts.Details.RemoveContact')}
+        testID={testIdWithKey('RemoveContact')}
+        style={styles.removeRow}
+      >
+        <CommunityIcon name="trash-can-outline" size={22} color={ColorPalette.semantic.error} />
+        <ThemedText style={styles.removeLabel}>{t('BCSC.Contacts.Details.RemoveContact')}</ThemedText>
+      </Pressable>
     </ScreenWrapper>
   )
 }
