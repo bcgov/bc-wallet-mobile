@@ -93,18 +93,23 @@ exports[`StartCall renders correctly 1`] = `
       </Text>
       <View
         style={
-          {
-            "alignContent": "center",
-            "alignItems": "flex-start",
-            "flexDirection": "row",
-            "marginVertical": 8,
-          }
+          [
+            {
+              "alignContent": "center",
+              "alignItems": "flex-start",
+              "flexDirection": "row",
+              "marginVertical": 8,
+            },
+            undefined,
+          ]
         }
       >
         <View
           style={
             {
-              "margin": 8,
+              "height": undefined,
+              "justifyContent": "center",
+              "marginHorizontal": 8,
             }
           }
         >
@@ -153,18 +158,23 @@ exports[`StartCall renders correctly 1`] = `
       </View>
       <View
         style={
-          {
-            "alignContent": "center",
-            "alignItems": "flex-start",
-            "flexDirection": "row",
-            "marginVertical": 8,
-          }
+          [
+            {
+              "alignContent": "center",
+              "alignItems": "flex-start",
+              "flexDirection": "row",
+              "marginVertical": 8,
+            },
+            undefined,
+          ]
         }
       >
         <View
           style={
             {
-              "margin": 8,
+              "height": undefined,
+              "justifyContent": "center",
+              "marginHorizontal": 8,
             }
           }
         >
@@ -213,18 +223,23 @@ exports[`StartCall renders correctly 1`] = `
       </View>
       <View
         style={
-          {
-            "alignContent": "center",
-            "alignItems": "flex-start",
-            "flexDirection": "row",
-            "marginVertical": 8,
-          }
+          [
+            {
+              "alignContent": "center",
+              "alignItems": "flex-start",
+              "flexDirection": "row",
+              "marginVertical": 8,
+            },
+            undefined,
+          ]
         }
       >
         <View
           style={
             {
-              "margin": 8,
+              "height": undefined,
+              "justifyContent": "center",
+              "marginHorizontal": 8,
             }
           }
         >

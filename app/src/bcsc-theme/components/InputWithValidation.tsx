@@ -23,6 +23,7 @@ type InputWithValidationProps = {
   onChangeText?: (value: string) => void
   onLayout?: (e: LayoutChangeEvent) => void
   label: string
+  hideLabel?: boolean
   onFocus?: () => void
   onPressIn?: () => void
   subtext?: string
@@ -89,17 +90,22 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
     subtext: {
       marginTop: Spacing.sm,
     },
+    errorText: {
+      color: ColorPalette.semantic.error,
+    },
   })
 
   return (
     <View onLayout={props.onLayout}>
-      <ThemedText
-        variant={'labelTitle'}
-        style={[styles.label, props.labelProps]}
-        testID={testIdWithKey(`${props.id}-label`)}
-      >
-        {props.label}
-      </ThemedText>
+      {props.hideLabel ? null : (
+        <ThemedText
+          variant={'labelTitle'}
+          style={[styles.label, props.labelProps]}
+          testID={testIdWithKey(`${props.id}-label`)}
+        >
+          {props.label}
+        </ThemedText>
+      )}
 
       <Pressable
         style={[styles.inputContainer, isFocused && styles.inputFocused, props.error && styles.inputError]}
@@ -120,6 +126,7 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
             ref={inputRef}
             style={[styles.input, props.inputProps]}
             value={props.value}
+            placeholderTextColor={ColorPalette.grayscale.mediumGrey}
             onChangeText={(text) => {
               reportActivity?.()
               if (props.error) {
@@ -155,13 +162,15 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
         />
       </Pressable>
 
-      <ThemedText
-        style={[styles.subtext, props.subtextProps]}
-        variant={'labelSubtitle'}
-        testID={testIdWithKey(`${props.id}-subtext`)}
-      >
-        {props.error ? props.error : props.subtext}
-      </ThemedText>
+      {props.error || props.subtext ? (
+        <ThemedText
+          style={[styles.subtext, props.error && styles.errorText, props.subtextProps]}
+          variant={'labelSubtitle'}
+          testID={testIdWithKey(`${props.id}-subtext`)}
+        >
+          {props.error ? props.error : props.subtext}
+        </ThemedText>
+      ) : null}
     </View>
   )
 }

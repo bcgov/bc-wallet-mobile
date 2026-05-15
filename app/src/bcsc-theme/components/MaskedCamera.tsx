@@ -23,6 +23,7 @@ type MaskedCameraProps = {
   cameraLabel?: string
   maskType?: MaskType
   maskLineColor?: string
+  customPath?: string
   codeScanner?: CodeScanner
   onPhotoTaken: (path: string) => void
 }
@@ -33,6 +34,7 @@ const MaskedCamera = ({
   cameraLabel,
   maskLineColor,
   maskType,
+  customPath,
   codeScanner,
   cameraFace = 'back',
   cameraFormatFilter = [],
@@ -77,7 +79,7 @@ const MaskedCamera = ({
       left: 0,
       right: 0,
       zIndex: 5,
-      paddingHorizontal: Spacing.md,
+      padding: Spacing.lg,
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
@@ -173,17 +175,21 @@ const MaskedCamera = ({
         // Set fps to max supported by the selected format for smoother preview
         fps={format?.maxFps}
       />
-      <SVGOverlay maskType={maskType} strokeColor={maskLineColor ?? ColorPalette.brand.tertiary} />
+      {maskType && (
+        <SVGOverlay
+          maskType={maskType}
+          customPath={customPath}
+          strokeColor={maskLineColor ?? ColorPalette.brand.tertiary}
+        />
+      )}
       <View style={styles.instructionText}>
         {cameraLabel && (
-          <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingThree'}>
+          <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingFour'}>
             {cameraLabel}
           </ThemedText>
         )}
         {cameraInstructions && (
-          <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingFour'}>
-            {cameraInstructions}
-          </ThemedText>
+          <ThemedText style={{ color: 'white', textAlign: 'center' }}>{cameraInstructions}</ThemedText>
         )}
       </View>
       <View style={styles.controlsContainer}>

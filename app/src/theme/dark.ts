@@ -7,11 +7,13 @@ import { createAppTheme } from './factory'
 const DARK_BLUE = '#013366'
 const DARK_NAVY = '#01264C'
 const GOLD = '#FCBA19'
+const PRIMARY_LIGHT = '#3470B1'
 
 export const DarkTheme = createAppTheme({
   name: BCThemeNames.Dark,
   logo: Logo,
   primary: GOLD,
+  primaryLight: PRIMARY_LIGHT,
   primaryBackground: DARK_BLUE,
   secondaryBackground: DARK_NAVY,
   tertiaryBackground: DARK_BLUE,

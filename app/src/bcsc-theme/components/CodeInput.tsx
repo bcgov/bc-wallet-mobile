@@ -5,9 +5,13 @@ import React, { Fragment, useCallback } from 'react'
 import { FocusEvent, StyleSheet, TextInputProps, View } from 'react-native'
 import { CodeField, Cursor, useClearByFocusCell } from 'react-native-confirmation-code-field'
 
-const CELL_HEIGHT = 60
+const CELL_HEIGHT = 56
+const CELL_WIDTH = 52
 const CELL_BORDER_WIDTH = 2
+const CELL_BORDER_RADIUS = 12
 const CELL_LINE_HEIGHT = CELL_HEIGHT - CELL_BORDER_WIDTH * 2
+
+type CodeInputVariant = 'outlined' | 'borderless' | 'underline'
 
 interface CodeInputProps {
   value: string
@@ -15,10 +19,19 @@ interface CodeInputProps {
   error?: string | null
   onErrorClear?: () => void
   separator?: boolean
+  variant?: CodeInputVariant
   textInputProps?: TextInputProps
 }
 
-const CodeInput = ({ value, onChange, error, onErrorClear, separator, textInputProps }: CodeInputProps) => {
+const CodeInput = ({
+  value,
+  onChange,
+  error,
+  onErrorClear,
+  separator,
+  variant = 'outlined',
+  textInputProps,
+}: CodeInputProps) => {
   const { ColorPalette, Spacing, Inputs } = useTheme()
   const { reportActivity } = useBCSCActivity() ?? {}
 
@@ -47,21 +60,29 @@ const CodeInput = ({ value, onChange, error, onErrorClear, separator, textInputP
   const styles = StyleSheet.create({
     root: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: Spacing.xs,
     },
     cell: {
-      width: 50,
+      width: CELL_WIDTH,
       height: CELL_HEIGHT,
       lineHeight: CELL_LINE_HEIGHT,
       fontSize: 32,
       backgroundColor: ColorPalette.grayscale.white,
       textAlign: 'center',
       textAlignVertical: 'center',
-      borderRadius: 8,
-      borderWidth: CELL_BORDER_WIDTH,
-      borderColor: '#D8D8D8',
+      borderRadius: variant === 'underline' ? 0 : CELL_BORDER_RADIUS,
+      borderWidth: variant === 'borderless' ? 0 : CELL_BORDER_WIDTH,
+      borderColor: ColorPalette.grayscale.lightGrey,
       color: ColorPalette.grayscale.darkGrey,
       includeFontPadding: false,
+      ...(variant === 'underline' && {
+        borderTopWidth: 0,
+        borderLeftWidth: 0,
+        borderRightWidth: 0,
+        borderBottomWidth: CELL_BORDER_WIDTH,
+      }),
     },
     cellFocused: {
       borderColor: Inputs.inputSelected.borderColor,

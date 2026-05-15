@@ -52,10 +52,10 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({ showSkip
       {showSkip && (
         <Button
           buttonType={ButtonType.Secondary}
-          title={t('Global.Skip')}
+          title={t('BCSC.VerifyPrompt.SkipVerification')}
           onPress={handleLater}
-          accessibilityLabel={t('Global.Skip')}
-          testID={testIdWithKey('Skip')}
+          accessibilityLabel={t('BCSC.VerifyPrompt.SkipVerification')}
+          testID={testIdWithKey('SkipVerification')}
         />
       )}
     </ControlContainer>

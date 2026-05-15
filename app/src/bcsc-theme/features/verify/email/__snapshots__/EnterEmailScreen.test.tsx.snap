@@ -49,10 +49,12 @@ exports[`EnterEmailScreen Rendering should match snapshot 1`] = `
         <View
           style={
             [
+              false,
               {
-                "padding": 16,
+                "flexGrow": 1,
+                "gap": 16,
+                "padding": 24,
               },
-              undefined,
             ]
           }
         >
@@ -66,73 +68,13 @@ exports[`EnterEmailScreen Rendering should match snapshot 1`] = `
                   "fontSize": 26,
                   "fontWeight": "bold",
                 },
-                {
-                  "marginBottom": 16,
-                },
+                undefined,
               ]
             }
           >
             BCSC.EnterEmail.EnterEmailAddress
           </Text>
-          <Text
-            maxFontSizeMultiplier={2}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "marginBottom": 16,
-                },
-              ]
-            }
-          >
-            BCSC.EnterEmail.EmailDescription1
-          </Text>
-          <Text
-            maxFontSizeMultiplier={2}
-            style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "marginBottom": 16,
-                },
-              ]
-            }
-          >
-            BCSC.EnterEmail.EmailDescription2
-          </Text>
           <View>
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 16,
-                    "fontWeight": "bold",
-                  },
-                  [
-                    {
-                      "marginBottom": 8,
-                    },
-                    undefined,
-                  ],
-                ]
-              }
-              testID="com.ariesbifold:id/email-label"
-            >
-              BCSC.EnterEmail.EmailAddress
-            </Text>
             <View
               accessibilityState={
                 {
@@ -213,6 +155,8 @@ exports[`EnterEmailScreen Rendering should match snapshot 1`] = `
                   onChange={[Function]}
                   onChangeText={[Function]}
                   onFocus={[Function]}
+                  placeholder="BCSC.EnterEmail.EmailExample"
+                  placeholderTextColor="#606060"
                   style={
                     [
                       {
@@ -256,26 +200,254 @@ exports[`EnterEmailScreen Rendering should match snapshot 1`] = `
                 󰀨
               </Text>
             </View>
-            <Text
-              maxFontSizeMultiplier={2}
+          </View>
+          <View
+            style={
+              [
+                {
+                  "backgroundColor": "#FCBA19",
+                  "height": 2,
+                },
+                undefined,
+              ]
+            }
+          />
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                undefined,
+              ]
+            }
+          >
+            BCSC.EnterEmail.EmailDescription1
+          </Text>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 21,
+                  "fontWeight": "bold",
+                },
+                {
+                  "color": "#003366",
+                },
+              ]
+            }
+          >
+            BCSC.EnterEmail.EmailDescription2
+          </Text>
+          <View>
+            <View
               style={
                 [
                   {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 14,
-                    "fontWeight": "normal",
+                    "alignContent": "center",
+                    "alignItems": "flex-start",
+                    "flexDirection": "row",
+                    "marginVertical": 8,
                   },
-                  [
-                    {
-                      "marginTop": 8,
-                    },
-                    undefined,
-                  ],
+                  {
+                    "marginVertical": 4,
+                  },
                 ]
               }
-              testID="com.ariesbifold:id/email-subtext"
-            />
+            >
+              <View
+                style={
+                  {
+                    "height": undefined,
+                    "justifyContent": "center",
+                    "marginHorizontal": 8,
+                  }
+                }
+              >
+                <Text
+                  allowFontScaling={false}
+                  selectable={false}
+                  style={
+                    [
+                      {
+                        "color": "#FFFFFF",
+                        "fontSize": 4,
+                      },
+                      undefined,
+                      {
+                        "fontFamily": "Material Design Icons",
+                        "fontStyle": "normal",
+                        "fontWeight": "normal",
+                      },
+                      {},
+                    ]
+                  }
+                >
+                  󰝥
+                </Text>
+              </View>
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    {
+                      "flexShrink": 1,
+                    },
+                  ]
+                }
+              >
+                <span>
+                  BCSC.EnterEmail.NotificationsBullet1
+                </span>
+              </Text>
+            </View>
+            <View
+              style={
+                [
+                  {
+                    "alignContent": "center",
+                    "alignItems": "flex-start",
+                    "flexDirection": "row",
+                    "marginVertical": 8,
+                  },
+                  {
+                    "marginVertical": 4,
+                  },
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "height": undefined,
+                    "justifyContent": "center",
+                    "marginHorizontal": 8,
+                  }
+                }
+              >
+                <Text
+                  allowFontScaling={false}
+                  selectable={false}
+                  style={
+                    [
+                      {
+                        "color": "#FFFFFF",
+                        "fontSize": 4,
+                      },
+                      undefined,
+                      {
+                        "fontFamily": "Material Design Icons",
+                        "fontStyle": "normal",
+                        "fontWeight": "normal",
+                      },
+                      {},
+                    ]
+                  }
+                >
+                  󰝥
+                </Text>
+              </View>
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    {
+                      "flexShrink": 1,
+                    },
+                  ]
+                }
+              >
+                <span>
+                  BCSC.EnterEmail.NotificationsBullet2
+                </span>
+              </Text>
+            </View>
+            <View
+              style={
+                [
+                  {
+                    "alignContent": "center",
+                    "alignItems": "flex-start",
+                    "flexDirection": "row",
+                    "marginVertical": 8,
+                  },
+                  {
+                    "marginVertical": 4,
+                  },
+                ]
+              }
+            >
+              <View
+                style={
+                  {
+                    "height": undefined,
+                    "justifyContent": "center",
+                    "marginHorizontal": 8,
+                  }
+                }
+              >
+                <Text
+                  allowFontScaling={false}
+                  selectable={false}
+                  style={
+                    [
+                      {
+                        "color": "#FFFFFF",
+                        "fontSize": 4,
+                      },
+                      undefined,
+                      {
+                        "fontFamily": "Material Design Icons",
+                        "fontStyle": "normal",
+                        "fontWeight": "normal",
+                      },
+                      {},
+                    ]
+                  }
+                >
+                  󰝥
+                </Text>
+              </View>
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    {
+                      "flexShrink": 1,
+                    },
+                  ]
+                }
+              >
+                <span>
+                  BCSC.EnterEmail.NotificationsBullet3
+                </span>
+              </Text>
+            </View>
           </View>
         </View>
         <View
@@ -285,10 +457,7 @@ exports[`EnterEmailScreen Rendering should match snapshot 1`] = `
                 {
                   "gap": 16,
                 },
-                {
-                  "paddingBottom": 16,
-                  "paddingHorizontal": 16,
-                },
+                false,
                 undefined,
               ],
               {
@@ -298,158 +467,205 @@ exports[`EnterEmailScreen Rendering should match snapshot 1`] = `
           }
         >
           <View
-            accessibilityLabel="Global.Continue"
-            accessibilityRole="button"
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": false,
-                "expanded": undefined,
-                "selected": undefined,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            onClick={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
             style={
               {
-                "backgroundColor": "#003366",
-                "borderRadius": 4,
-                "opacity": 1,
-                "padding": 16,
+                "flexGrow": 1,
+                "width": "100%",
               }
             }
-            testID="ContinueButton"
           >
             <View
               style={
                 {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "justifyContent": "center",
+                  "left": 0,
+                  "position": "absolute",
+                  "right": 0,
+                  "shadowColor": "#000",
+                  "shadowOffset": {
+                    "height": -3,
+                    "width": 0,
+                  },
+                  "shadowOpacity": 0.9,
+                  "shadowRadius": 3,
+                  "top": 0,
+                  "zIndex": -1,
                 }
               }
             >
-              <Text
-                maxFontSizeMultiplier={2}
+              <View
                 style={
-                  [
-                    {
-                      "color": "#313132",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "normal",
-                    },
-                    [
-                      {
-                        "color": "#FFFFFF",
-                        "fontFamily": "BCSans-Regular",
-                        "fontSize": 18,
-                        "fontWeight": "bold",
-                        "textAlign": "center",
-                      },
-                      false,
-                      false,
-                    ],
-                  ]
+                  {
+                    "backgroundColor": "#F2F2F2",
+                    "height": 1,
+                  }
                 }
-              >
-                Global.Continue
-              </Text>
+              />
             </View>
-          </View>
-          <View
-            accessibilityLabel="BCSC.EnterEmail.EmailSkipButton2"
-            accessibilityRole="button"
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": false,
-                "expanded": undefined,
-                "selected": undefined,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            onClick={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            style={
-              {
-                "borderColor": "#003366",
-                "borderRadius": 4,
-                "borderWidth": 2,
-                "opacity": 1,
-                "padding": 16,
-              }
-            }
-            testID="SkipButton"
-          >
             <View
               style={
                 {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "justifyContent": "center",
+                  "backgroundColor": "#F2F2F2",
+                  "flexGrow": 1,
+                  "gap": 8,
+                  "padding": 24,
                 }
               }
             >
-              <Text
-                maxFontSizeMultiplier={2}
-                style={
-                  [
-                    {
-                      "color": "#313132",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "normal",
-                    },
-                    [
-                      {
-                        "color": "#003366",
-                        "fontFamily": "BCSans-Regular",
-                        "fontSize": 18,
-                        "fontWeight": "bold",
-                        "textAlign": "center",
-                      },
-                      false,
-                      false,
-                    ],
-                  ]
+              <View
+                accessibilityLabel="Global.Continue"
+                accessibilityRole="button"
+                accessibilityState={
+                  {
+                    "busy": undefined,
+                    "checked": undefined,
+                    "disabled": false,
+                    "expanded": undefined,
+                    "selected": undefined,
+                  }
                 }
+                accessibilityValue={
+                  {
+                    "max": undefined,
+                    "min": undefined,
+                    "now": undefined,
+                    "text": undefined,
+                  }
+                }
+                accessible={true}
+                collapsable={false}
+                focusable={true}
+                onClick={[Function]}
+                onResponderGrant={[Function]}
+                onResponderMove={[Function]}
+                onResponderRelease={[Function]}
+                onResponderTerminate={[Function]}
+                onResponderTerminationRequest={[Function]}
+                onStartShouldSetResponder={[Function]}
+                style={
+                  {
+                    "backgroundColor": "#003366",
+                    "borderRadius": 4,
+                    "opacity": 1,
+                    "padding": 16,
+                  }
+                }
+                testID="ContinueButton"
               >
-                BCSC.EnterEmail.EmailSkipButton2
-              </Text>
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "justifyContent": "center",
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                        },
+                        [
+                          {
+                            "color": "#FFFFFF",
+                            "fontFamily": "BCSans-Regular",
+                            "fontSize": 18,
+                            "fontWeight": "bold",
+                            "textAlign": "center",
+                          },
+                          false,
+                          false,
+                        ],
+                      ]
+                    }
+                  >
+                    Global.Continue
+                  </Text>
+                </View>
+              </View>
+              <View
+                accessibilityLabel="BCSC.EnterEmail.EmailSkipButton2"
+                accessibilityRole="button"
+                accessibilityState={
+                  {
+                    "busy": undefined,
+                    "checked": undefined,
+                    "disabled": false,
+                    "expanded": undefined,
+                    "selected": undefined,
+                  }
+                }
+                accessibilityValue={
+                  {
+                    "max": undefined,
+                    "min": undefined,
+                    "now": undefined,
+                    "text": undefined,
+                  }
+                }
+                accessible={true}
+                collapsable={false}
+                focusable={true}
+                onClick={[Function]}
+                onResponderGrant={[Function]}
+                onResponderMove={[Function]}
+                onResponderRelease={[Function]}
+                onResponderTerminate={[Function]}
+                onResponderTerminationRequest={[Function]}
+                onStartShouldSetResponder={[Function]}
+                style={
+                  {
+                    "borderColor": "#003366",
+                    "borderRadius": 4,
+                    "borderWidth": 2,
+                    "opacity": 1,
+                    "padding": 16,
+                  }
+                }
+                testID="SkipButton"
+              >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "justifyContent": "center",
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                        },
+                        [
+                          {
+                            "color": "#003366",
+                            "fontFamily": "BCSans-Regular",
+                            "fontSize": 18,
+                            "fontWeight": "bold",
+                            "textAlign": "center",
+                          },
+                          false,
+                          false,
+                        ],
+                      ]
+                    }
+                  >
+                    BCSC.EnterEmail.EmailSkipButton2
+                  </Text>
+                </View>
+              </View>
             </View>
           </View>
         </View>
