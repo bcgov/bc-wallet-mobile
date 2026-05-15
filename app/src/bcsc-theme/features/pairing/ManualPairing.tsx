@@ -49,11 +49,11 @@ const ManualPairing: React.FC = () => {
 
   // QRCoreStack keeps tabs mounted (unmountOnBlur: false), so a pre-populated
   // pairingCode param must be consumed-and-cleared or it would re-fire on every
-  // focus. Tab navigator handles setParams; cast off the type-system mismatch
-  // since useNavigation typing is split between parent stack and sibling tab.
+  // focus. setParams lives on the tab navigator, so we hold a separately-typed
+  // `tabNavigation` handle just for this call.
   useEffect(() => {
     const pre = route.params?.pairingCode
-    if (pre && pre.length === PAIRING_CODE_LENGTH) {
+    if (pre?.length === PAIRING_CODE_LENGTH) {
       setCode(pre)
       onSubmit(pre)
       tabNavigation.setParams({ pairingCode: undefined })
