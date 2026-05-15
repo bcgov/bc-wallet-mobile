@@ -8,8 +8,9 @@
 import '../onboarding/onboarding-basic.spec.js'
 // Verify: Import `verify/card-type/config-*.js` before any `./verify/*.spec.js` imports.
 import '../verify/card-type/config-non-photo-card.js'
-import '../verify/nickname.spec.js'
-import '../verify/card-csn.spec.js'
-import '../verify/additional-id-passport.spec.js'
-import '../verify/in-person-verification.spec.js'
+import '../verify/components/nickname.spec.js'
+import '../verify/components/card-csn.spec.js'
+import '../verify/non-photo/additional-id-passport.spec.js'
+
+import '../verify/components/in-person-verification.spec.js'
 import '../main/main.spec.js'
