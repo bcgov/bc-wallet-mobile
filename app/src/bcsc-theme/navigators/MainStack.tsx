@@ -41,6 +41,7 @@ import { ServiceOutage } from '../features/modal/ServiceOutage'
 import { usePairingService } from '../features/pairing'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
+import ConnectionLoadingScreen from '../features/qr-core/ConnectionLoadingScreen'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
 import { ContactUsScreen } from '../features/settings/ContactUsScreen'
@@ -145,6 +146,16 @@ const MainStack: React.FC = () => {
             component={QRCoreStack}
             options={{
               headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name={BCSCScreens.ConnectionLoading}
+            component={ConnectionLoadingScreen}
+            options={{
+              headerShown: true,
+              headerLeft: () => null,
+              gestureEnabled: false,
+              title: t('BCSC.Scan.Connecting'),
             }}
           />
           <Stack.Screen

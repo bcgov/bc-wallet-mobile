@@ -618,6 +618,15 @@ const translation = {
       "ContinueScanning": "Continue Scanning (FR)",
       "Confirm": "Confirm (FR)",
       "TryAgain": "Try Again (FR)",
+      "Connecting": "Connecting… (FR)",
+      "UnrecognizedQR": "QR code not recognized. (FR)",
+      "FeatureUnavailable": "This action isn't available yet. (FR)",
+      "Unsupported": {
+        "OpenID": "OpenID credentials aren't supported in BC Services Card. (FR)",
+        "Mediator": "Mediator invitations aren't supported in BC Services Card. (FR)",
+        "AgentNotReady": "Wallet isn't ready yet — please try again in a moment. (FR)",
+        "PairingCodePending": "Pairing-code scanning isn't available yet. (FR)",
+      },
     },
     "ManualSerial": {
       "InputLabel": "Enter serial number (FR)",

@@ -618,6 +618,15 @@ const translation = {
       "ContinueScanning": "Continue Scanning (PT-BR)",
       "Confirm": "Confirm (PT-BR)",
       "TryAgain": "Try Again (PT-BR)",
+      "Connecting": "Connecting… (PT-BR)",
+      "UnrecognizedQR": "QR code not recognized. (PT-BR)",
+      "FeatureUnavailable": "This action isn't available yet. (PT-BR)",
+      "Unsupported": {
+        "OpenID": "OpenID credentials aren't supported in BC Services Card. (PT-BR)",
+        "Mediator": "Mediator invitations aren't supported in BC Services Card. (PT-BR)",
+        "AgentNotReady": "Wallet isn't ready yet — please try again in a moment. (PT-BR)",
+        "PairingCodePending": "Pairing-code scanning isn't available yet. (PT-BR)",
+      },
     },
     "ManualSerial": {
       "InputLabel": "Enter serial number (PT-BR)",

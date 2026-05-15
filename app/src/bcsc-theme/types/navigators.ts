@@ -135,6 +135,7 @@ export enum BCSCScreens {
   AuthContactUs = `${BCSCStacks.Auth} Contact Us`,
   AuthPrivacyPolicy = `${BCSCStacks.Auth} Privacy Information`,
   AuthDeveloper = `${BCSCStacks.Auth} Developer`,
+  ConnectionLoading = 'BCSCConnectionLoading',
   QRCore = 'QRCore',
 }
 
@@ -261,6 +262,7 @@ export type BCSCMainStackParams = {
   [Screens.CredentialDetails]: { credentialId: string }
 
   [BCSCScreens.QRCore]: undefined
+  [BCSCScreens.ConnectionLoading]: { oobRecordId: string }
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
