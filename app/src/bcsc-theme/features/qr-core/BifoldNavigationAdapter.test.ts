@@ -143,4 +143,54 @@ describe('BifoldNavigationAdapter', () => {
     adapted.dispatch(action)
     expect(nav.dispatch).toHaveBeenCalledWith(action)
   })
+
+  // The following cases mirror the exact navigate payloads Bifold's
+  // `ProofRequest` and `ProofRequestAccept` emit on exit, so a future Bifold
+  // bump or adapter refactor that breaks the proof flow surfaces here.
+
+  it('proof-request decline routes to BCSC Home (ProofRequest.handleDeclineTouched)', () => {
+    // ProofRequest.js: navigation.getParent()?.navigate('Tab Home Stack', { screen: 'Home' })
+    const { nav, parent } = mkNav()
+    const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    adapted.getParent()?.navigate('Tab Home Stack' as never, { screen: 'Home' } as never)
+    expect(parent.dispatch).toHaveBeenCalledWith(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: BCSCStacks.Tab, state: { routes: [{ name: BCSCScreens.Home }] } }],
+      })
+    )
+  })
+
+  it('proof-request share-success Back-to-Home routes to BCSC Home (ProofRequestAccept.onBackToHomeTouched)', () => {
+    // ProofRequestAccept reads navigation via useNavigation(); in production the
+    // NavigationContext.Provider in ConnectionLoadingScreen makes that the
+    // adapter. The emitted payload is identical to the decline case.
+    const { nav, parent } = mkNav()
+    const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    adapted.getParent()?.navigate('Tab Home Stack' as never, { screen: 'Home' } as never)
+    expect(parent.dispatch).toHaveBeenCalledWith(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: BCSCStacks.Tab, state: { routes: [{ name: BCSCScreens.Home }] } }],
+      })
+    )
+  })
+
+  it('proof-request alt-credential picker is deferred — toasts feature-unavailable', () => {
+    // ProofRequest.js: navigation.getParent()?.navigate('Proof Requests Stack', { screen: 'Choose a credential', ... })
+    // Deferred to v4.2 — tracked in issue #3877. Current behaviour is a soft no-op with toast.
+    const { nav } = mkNav()
+    const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    adapted.getParent()?.navigate('Proof Requests Stack' as never, { screen: 'Choose a credential' } as never)
+    expect(Toast.show).toHaveBeenCalledWith({ type: 'info', text1: 'BCSC.Scan.FeatureUnavailable' })
+  })
+
+  it('proof-request View-JSON debug surface toasts feature-unavailable (Bifold ContactStack/JSONDetails)', () => {
+    // ProofRequest.js: navigation.navigate('Contacts Stack', { screen: 'JSON Details', ... })
+    const { nav } = mkNav()
+    const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    adapted.navigate('Contacts Stack' as never, { screen: 'JSON Details' } as never)
+    expect(Toast.show).toHaveBeenCalledWith({ type: 'info', text1: 'BCSC.Scan.FeatureUnavailable' })
+    expect(nav.navigate).not.toHaveBeenCalled()
+  })
 })

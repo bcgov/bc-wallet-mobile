@@ -1,4 +1,6 @@
+import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { Connection } from '@bifold/core'
+import { CommonActions } from '@react-navigation/native'
 import { render } from '@testing-library/react-native'
 import React from 'react'
 
@@ -46,5 +48,24 @@ describe('ConnectionLoadingScreen', () => {
     props.navigation.navigate('Tab Home Stack')
     expect(navigation.navigate).not.toHaveBeenCalled()
     expect(navigation.dispatch).toHaveBeenCalled()
+  })
+
+  it('exit calls from inside Bifold (proof-request share / decline) reset to BCSC Home', () => {
+    // Bifold's ProofRequest + ProofRequestAccept exit paths call
+    //   navigation.getParent()?.navigate('Tab Home Stack', { screen: 'Home' })
+    // In production, NavigationContext.Provider makes useNavigation() inside
+    // ProofRequestAccept return this same adapter. Drive that call through the
+    // adapter prop the mocked Connection received and assert the underlying nav
+    // sees the BCSC reset — proving the share/decline contract end-to-end.
+    const { navigation, route } = mkProps()
+    render(<ConnectionLoadingScreen navigation={navigation} route={route} />)
+    const props = ConnectionMock.mock.calls.at(-1)![0] as any
+    props.navigation.getParent()?.navigate('Tab Home Stack', { screen: 'Home' })
+    expect(navigation.dispatch).toHaveBeenCalledWith(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: BCSCStacks.Tab, state: { routes: [{ name: BCSCScreens.Home }] } }],
+      })
+    )
   })
 })
