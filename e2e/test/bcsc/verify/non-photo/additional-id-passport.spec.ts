@@ -1,8 +1,7 @@
-import { injectPhoto } from '../../../src/helpers/camera.js'
-import { isSauceLabs } from '../../../src/helpers/sauce.js'
-import { BaseScreen } from '../../../src/screens/BaseScreen.js'
-import { BCSC_TestIDs } from '../../../src/testIDs.js'
-import { getVerifyContext } from './card-type/card-context.js'
+import { acceptSystemAlert } from '../../../../src/helpers/alerts.js'
+import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
+import { BCSC_TestIDs } from '../../../../src/testIDs.js'
+import { getVerifyContext } from '../card-type/card-context.js'
 
 const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 const AdditionalIdentificationRequired = new BaseScreen(BCSC_TestIDs.AdditionalIdentificationRequired)
@@ -31,12 +30,10 @@ describe('Additional Identification', () => {
   it('should navigate through the ID Photo Information screen and take a photo', async () => {
     await IDPhotoInformation.waitFor('TakePhoto')
     await IDPhotoInformation.tap('TakePhoto')
+    acceptSystemAlert()
   })
 
   it('should navigate through the Evidence Capture screen and take a photo', async () => {
-    if (isSauceLabs()) {
-      await injectPhoto('images/passport.jpg', { top: 0, right: 0, bottom: 0, left: 0 })
-    }
     await EvidenceCapture.waitFor('TakePhoto')
     await EvidenceCapture.tap('TakePhoto')
   })
@@ -48,8 +45,13 @@ describe('Additional Identification', () => {
 
   it('should navigate through the Evidence ID Collection screen and fill in the Document Number', async () => {
     const { testUser } = getVerifyContext()
-    await EvidenceIDCollection.waitFor('DocumentNumberPressable')
-    await EvidenceIDCollection.type('DocumentNumberPressable', testUser.documentNumber)
+    if (driver.isAndroid) {
+      await EvidenceIDCollection.tap('DocumentNumberInput')
+      await EvidenceIDCollection.type('DocumentNumberInput', testUser.documentNumber)
+    } else {
+      await EvidenceIDCollection.tap('DocumentNumberPressable')
+      await EvidenceIDCollection.type('DocumentNumberPressable', testUser.documentNumber)
+    }
     await EvidenceIDCollection.dismissKeyboard()
     await EvidenceIDCollection.tap('Continue')
   })

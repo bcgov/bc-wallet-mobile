@@ -131,18 +131,14 @@ describe('V3 Add Card', () => {
   })
 
   it('should enable notifications', async () => {
-    if (driver.isIOS) {
-      const enableBtn = await V3.Notifications.continue()
-      await enableBtn.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
-      await enableBtn.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
-      await enableBtn.click()
+    const enableBtn = await V3.Notifications.continue()
+    await enableBtn.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+    await enableBtn.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
+    await enableBtn.click()
 
-      // Tapping Continue triggers the iOS system "Allow Notifications" popup.
-      // On Sauce Labs RDC the popup hangs unless we explicitly accept it via WDA.
-      await acceptSystemAlert()
-    } else {
-      // Android doesn't show a notifications screen
-    }
+    // Tapping Continue triggers the iOS system "Allow Notifications" popup.
+    // On Sauce Labs RDC the popup hangs unless we explicitly accept it via WDA.
+    await acceptSystemAlert()
   })
 
   it('should tap Step 1', async () => {
@@ -363,7 +359,11 @@ describe('V3 Add Card', () => {
     }
 
     console.log(`[migration] V3 confirmation code: "${confirmationCode}"`)
-    await approveInPersonRequest(confirmationCode, testUser.cardSerial, testUser.dob)
+    await approveInPersonRequest(confirmationCode, {
+      flow: 'photo',
+      cardSerialNumber: testUser.cardSerial,
+      cardBirthdate: testUser.dob,
+    })
   })
 
   it('should tap complete button once the verification is approved and tap Ok on the "You\'re all set" screen', async () => {

@@ -42,7 +42,6 @@ describe('Login From Computer — pairing code minted in Node', () => {
   it('submits the pairing code and verifies PairingConfirmation renders', async () => {
     await ManualPairing.type('PairingCodeInput', pairingCode, {
       tapFirst: true,
-      characterByCharacter: true,
     })
     await ManualPairing.dismissKeyboard()
     await ManualPairing.tap('Submit')
