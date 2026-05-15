@@ -49,11 +49,11 @@ exports[`ResidentialAddress renders correctly 1`] = `
         <View
           style={
             [
+              false,
               {
-                "padding": 16,
-              },
-              {
-                "gap": 24,
+                "flexGrow": 1,
+                "gap": 8,
+                "padding": 24,
               },
             ]
           }
@@ -105,7 +105,9 @@ exports[`ResidentialAddress renders correctly 1`] = `
                     {
                       "marginBottom": 8,
                     },
-                    undefined,
+                    {
+                      "color": "#003366",
+                    },
                   ],
                 ]
               }
@@ -191,6 +193,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   onChange={[Function]}
                   onChangeText={[Function]}
                   onFocus={[Function]}
+                  placeholderTextColor="#606060"
                   style={
                     [
                       {
@@ -234,28 +237,6 @@ exports[`ResidentialAddress renders correctly 1`] = `
                 󰀨
               </Text>
             </View>
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 14,
-                    "fontWeight": "normal",
-                  },
-                  [
-                    {
-                      "marginTop": 8,
-                    },
-                    undefined,
-                  ],
-                ]
-              }
-              testID="com.ariesbifold:id/streetAddress1-subtext"
-            >
-              BCSC.Address.StreetAddressSubtext
-            </Text>
           </View>
           <View>
             <Text
@@ -272,7 +253,9 @@ exports[`ResidentialAddress renders correctly 1`] = `
                     {
                       "marginBottom": 8,
                     },
-                    undefined,
+                    {
+                      "color": "#003366",
+                    },
                   ],
                 ]
               }
@@ -358,6 +341,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   onChange={[Function]}
                   onChangeText={[Function]}
                   onFocus={[Function]}
+                  placeholderTextColor="#606060"
                   style={
                     [
                       {
@@ -401,28 +385,6 @@ exports[`ResidentialAddress renders correctly 1`] = `
                 󰀨
               </Text>
             </View>
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 14,
-                    "fontWeight": "normal",
-                  },
-                  [
-                    {
-                      "marginTop": 8,
-                    },
-                    undefined,
-                  ],
-                ]
-              }
-              testID="com.ariesbifold:id/streetAddress2-subtext"
-            >
-              BCSC.Address.StreetAddress2Subtext
-            </Text>
           </View>
           <View>
             <Text
@@ -439,7 +401,9 @@ exports[`ResidentialAddress renders correctly 1`] = `
                     {
                       "marginBottom": 8,
                     },
-                    undefined,
+                    {
+                      "color": "#003366",
+                    },
                   ],
                 ]
               }
@@ -525,6 +489,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   onChange={[Function]}
                   onChangeText={[Function]}
                   onFocus={[Function]}
+                  placeholderTextColor="#606060"
                   style={
                     [
                       {
@@ -568,28 +533,6 @@ exports[`ResidentialAddress renders correctly 1`] = `
                 󰀨
               </Text>
             </View>
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 14,
-                    "fontWeight": "normal",
-                  },
-                  [
-                    {
-                      "marginTop": 8,
-                    },
-                    undefined,
-                  ],
-                ]
-              }
-              testID="com.ariesbifold:id/city-subtext"
-            >
-              BCSC.Address.CitySubtext
-            </Text>
           </View>
           <View>
             <Text
@@ -606,7 +549,9 @@ exports[`ResidentialAddress renders correctly 1`] = `
                     {
                       "marginBottom": 8,
                     },
-                    undefined,
+                    {
+                      "color": "#003366",
+                    },
                   ],
                 ]
               }
@@ -615,7 +560,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.ProvinceLabel
             </Text>
             <View
-              accessibilityLabel="BCSC.Address.ProvinceLabel, BCSC.Address.ProvinceSubtext"
+              accessibilityLabel="BCSC.Address.ProvinceLabel, BCSC.Address.ProvincePlaceholder"
               accessibilityRole="combobox"
               accessibilityState={
                 {
@@ -686,7 +631,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   ]
                 }
               >
-                BCSC.Address.ProvinceSubtext
+                BCSC.Address.ProvincePlaceholder
               </Text>
               <Text
                 allowFontScaling={false}
@@ -748,7 +693,9 @@ exports[`ResidentialAddress renders correctly 1`] = `
                     {
                       "marginBottom": 8,
                     },
-                    undefined,
+                    {
+                      "color": "#003366",
+                    },
                   ],
                 ]
               }
@@ -835,6 +782,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   onChange={[Function]}
                   onChangeText={[Function]}
                   onFocus={[Function]}
+                  placeholderTextColor="#606060"
                   style={
                     [
                       {
@@ -893,6 +841,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                       "marginTop": 8,
                     },
                     undefined,
+                    undefined,
                   ],
                 ]
               }
@@ -901,10 +850,27 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.PostalCodeSubtext
             </Text>
           </View>
+        </View>
+        <View
+          style={
+            [
+              [
+                {
+                  "gap": 16,
+                },
+                false,
+                undefined,
+              ],
+              {
+                "marginTop": "auto",
+              },
+            ]
+          }
+        >
           <View
             style={
               {
-                "marginTop": 48,
+                "flexGrow": 1,
                 "width": "100%",
               }
             }
@@ -912,7 +878,37 @@ exports[`ResidentialAddress renders correctly 1`] = `
             <View
               style={
                 {
-                  "marginBottom": 20,
+                  "left": 0,
+                  "position": "absolute",
+                  "right": 0,
+                  "shadowColor": "#000",
+                  "shadowOffset": {
+                    "height": -3,
+                    "width": 0,
+                  },
+                  "shadowOpacity": 0.9,
+                  "shadowRadius": 3,
+                  "top": 0,
+                  "zIndex": -1,
+                }
+              }
+            >
+              <View
+                style={
+                  {
+                    "backgroundColor": "#F2F2F2",
+                    "height": 1,
+                  }
+                }
+              />
+            </View>
+            <View
+              style={
+                {
+                  "backgroundColor": "#F2F2F2",
+                  "flexGrow": 1,
+                  "gap": 8,
+                  "padding": 24,
                 }
               }
             >
