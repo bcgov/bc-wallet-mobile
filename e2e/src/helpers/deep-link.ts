@@ -6,6 +6,7 @@
  * This module wraps that and the matching app-id lookup so spec code can stay
  * platform-agnostic.
  */
+import { acceptSystemAlert } from './alerts.js'
 import type { DeepLinkPlatform } from './pairing-code.js'
 
 /** Platform string the WDIO driver is currently bound to. */
@@ -34,8 +35,18 @@ export async function getCurrentAppId(): Promise<string> {
  * resolve a tap on a `<scheme>://...` link in a mobile browser — Appium
  * routes through Safari (iOS) or `am start -a VIEW` (Android), and the
  * registered URL scheme handler in the variant manifests catches it.
+ *
+ * iOS: We deliberately omit `bundleId` so WDA hands the URL off through
+ * Safari instead of `XCUIApplication.open(URL:)` — the latter fails on
+ * App Store / Enterprise-signed builds with "The current Xcode SDK does
+ * not support opening of URLs with given application". The Safari path
+ * triggers an "Open in BC Wallet" system prompt, which we accept.
  */
 export async function dispatchDeepLink(url: string, appId: string): Promise<void> {
-  const params = driver.isIOS ? { url, bundleId: appId } : { url, package: appId }
-  await driver.execute('mobile: deepLink', params)
+  if (driver.isIOS) {
+    await driver.execute('mobile: deepLink', { url })
+    await acceptSystemAlert()
+    return
+  }
+  await driver.execute('mobile: deepLink', { url, package: appId })
 }

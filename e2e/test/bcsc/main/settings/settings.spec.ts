@@ -449,7 +449,7 @@ describe('Settings', () => {
     const heading = await MainContactUs.findByText('Service BC Help Desk')
     await heading.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
     await MainContactUs.tap('BackButton')
-    await Settings.waitFor('EditNickname')
+    await Settings.waitFor('Help')
   })
 
   // External-browser rows all follow the same pattern: tap the Settings
@@ -460,11 +460,12 @@ describe('Settings', () => {
       await Settings.tap(row)
       await driver.pause(BROWSER_HANDOFF_PAUSE_MS)
       await driver.activateApp(appId)
-      await Settings.waitFor('EditNickname')
+      await Settings.waitFor('Help')
     })
   }
 
   it('backs out of Settings to Home', async () => {
+    await driver.pause(BROWSER_HANDOFF_PAUSE_MS)
     await Settings.tap('BackButton')
     await Home.waitFor('WhereToUse')
   })

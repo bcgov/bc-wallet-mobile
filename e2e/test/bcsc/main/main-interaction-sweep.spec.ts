@@ -19,12 +19,17 @@ const WebView = new BaseScreen(BCSC_TestIDs.WebView)
 
 const SEARCH_QUERY = 'first'
 
-const SERVICES_TO_EXERCISE = 5
+const PRIMARY_SERVICE_TITLE = 'Families First BC'
 
-function serviceButtonSelector(): string {
-  return driver.isIOS
-    ? '-ios predicate string:name BEGINSWITH "com.ariesbifold:id/ServiceButton-"'
-    : 'android=new UiSelector().resourceIdMatches(".*ServiceButton-.*")'
+const SERVICES_TO_EXERCISE = [
+  'Families First BC',
+  'BC Parks Discover Camping',
+  'CHEFS with BCSC Login Demo',
+  'Government Gateway OIDC',
+]
+
+function serviceButtonTestId(title: string): string {
+  return `com.ariesbifold:id/ServiceButton-${title.replaceAll(/\s+/g, '')}`
 }
 
 describe('Home → secondary interactions', () => {
@@ -65,14 +70,9 @@ describe('Services → search and clear', () => {
 
 describe('Services → service detail interactions', () => {
   it('opens the first service and exercises every safe ServiceLoginScreen button', async () => {
-    const services = await $$(serviceButtonSelector()).getElements()
-
-    if (!services.length) {
-      throw new Error('No ServiceButtons rendered in the Services catalogue')
-    }
-
-    await services[2].waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
-    await services[2].click()
+    const primary = await Services.findByTestId(serviceButtonTestId(PRIMARY_SERVICE_TITLE))
+    await primary.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+    await primary.click()
 
     await ServiceLogin.waitFor('ServiceLoginCancel', Timeouts.SCREEN_TRANSITION)
     const continueButton = await ServiceLogin.findByTestId(ServiceLogin.ids.ServiceLoginContinue)
@@ -92,14 +92,9 @@ describe('Services → service detail interactions', () => {
     await TabBar.tap('Services')
     await driver.pause(Timeouts.BROWSER_HANDOFF_PAUSE_MS)
 
-    const services = await $$(serviceButtonSelector()).getElements()
-
-    if (!services.length) {
-      throw new Error('No ServiceButtons rendered in the Services catalogue')
-    }
-
-    await services[2].waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
-    await services[2].click()
+    const primary = await Services.findByTestId(serviceButtonTestId(PRIMARY_SERVICE_TITLE))
+    await primary.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+    await primary.click()
 
     await ServiceLogin.tap('HelpButton')
 
@@ -135,15 +130,10 @@ describe('Services → service detail interactions', () => {
   })
 
   it('opens additional services and cancels back, just to confirm navigation works for any catalogue entry', async () => {
-    const services = await $$(serviceButtonSelector()).getElements()
-
-    if (!services.length) {
-      throw new Error('No ServiceButtons rendered in the Services catalogue')
-    }
-
-    for (let i = 0; i < SERVICES_TO_EXERCISE; i++) {
-      await services[i].waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
-      await services[i].click()
+    for (const title of SERVICES_TO_EXERCISE) {
+      const button = await Services.findByTestId(serviceButtonTestId(title))
+      await button.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+      await button.click()
       await ServiceLogin.waitFor('Back', Timeouts.SCREEN_TRANSITION)
       await ServiceLogin.tap('Back')
       await Services.waitFor('Search', Timeouts.SCREEN_TRANSITION)

@@ -1231,5 +1231,3 @@ jobs:
     secrets:
       SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
       SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-      CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
-      BIRTH_DATE: ${{ secrets.BIRTH_DATE }}

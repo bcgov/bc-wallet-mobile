@@ -1,8 +1,8 @@
-import { acceptSystemAlert } from '../../../src/helpers/alerts.js'
-import { injectPhoto } from '../../../src/helpers/camera.js'
-import { BaseScreen } from '../../../src/screens/BaseScreen.js'
-import { BCSC_TestIDs } from '../../../src/testIDs.js'
-import { getVerifyContext } from './card-type/card-context.js'
+import { acceptSystemAlert } from '../../../../src/helpers/alerts.js'
+import { injectPhoto } from '../../../../src/helpers/camera.js'
+import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
+import { BCSC_TestIDs } from '../../../../src/testIDs.js'
+import { getVerifyContext } from '../card-type/card-context.js'
 
 const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 const VerificationMethodSelection = new BaseScreen(BCSC_TestIDs.VerificationMethodSelection)
@@ -22,10 +22,10 @@ describe('Send Video Verification', () => {
   it('should navigate through the Setup Steps screen and tap Step 5', async () => {
     await SetupSteps.waitFor('Step5', 10_000)
     await SetupSteps.tap('Step5')
+    await VerificationMethodSelection.waitFor('SendVideo')
   })
 
   it('should navigate through the Verification Method Selection screen and tap Send Video', async () => {
-    await VerificationMethodSelection.waitFor('SendVideo')
     await VerificationMethodSelection.tap('SendVideo')
   })
 
@@ -74,8 +74,21 @@ describe('Send Video Verification', () => {
     }
   })
 
-  it('should navigate through the Video Review screen and tap Use Video', async () => {
+  it('toggles play/pause on the VideoReview preview', async () => {
     await VideoReview.waitFor('UseVideo')
+    await VideoReview.tap('TogglePlayPause')
+    await VideoReview.tap('TogglePlayPause')
+  })
+
+  it('retakes the video and re-lands on VideoReview', async () => {
+    await VideoReview.tap('RetakeVideo')
+    for (let i = 0; i < 3; i++) {
+      await TakeVideo.waitForEnabledAndTap('StartRecordingButton')
+    }
+    await VideoReview.waitFor('UseVideo')
+  })
+
+  it('should navigate through the Video Review screen and tap Use Video', async () => {
     await VideoReview.tap('UseVideo')
   })
 
