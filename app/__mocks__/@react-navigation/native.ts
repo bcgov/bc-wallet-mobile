@@ -6,6 +6,7 @@ const navigation = {
   navigate,
   replace,
   setOptions: jest.fn(),
+  setParams: jest.fn(),
   getParent: () => {
     return {
       navigate,

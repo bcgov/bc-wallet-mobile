@@ -15,10 +15,10 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { createAuthHelpHeaderButton } from '../components/HelpHeaderButton'
 
-type QRCoreTabParams = {
+export type QRCoreTabParams = {
   Scanner: undefined
   Display: undefined
-  PairingCode: undefined
+  PairingCode: { pairingCode?: string } | undefined
   AccountNotVerified: undefined
 }
 
