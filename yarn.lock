@@ -2132,7 +2132,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@credo-ts/anoncreds@npm:0.6.3, @credo-ts/anoncreds@npm:^0.6.1":
+"@credo-ts/anoncreds@npm:0.6.3":
   version: 0.6.3
   resolution: "@credo-ts/anoncreds@npm:0.6.3"
   dependencies:
@@ -2146,6 +2146,23 @@ __metadata:
   peerDependencies:
     "@hyperledger/anoncreds-shared": ^0.3.4
   checksum: 10c0/a9897f2a8bc71e6d36b6527d985f12d6fbee5a0e33de9a96323b13c7b9821e2b8d418ee04ec03a84b7d7a3ed171f9c58cb9441481b040f5e6a567d07a4da32e5
+  languageName: node
+  linkType: hard
+
+"@credo-ts/anoncreds@patch:@credo-ts/anoncreds@npm%3A0.6.3#~/.yarn/patches/@credo-ts-anoncreds-npm-0.6.3-95e0920301.patch":
+  version: 0.6.3
+  resolution: "@credo-ts/anoncreds@patch:@credo-ts/anoncreds@npm%3A0.6.3#~/.yarn/patches/@credo-ts-anoncreds-npm-0.6.3-95e0920301.patch::version=0.6.3&hash=c2cfa2"
+  dependencies:
+    "@astronautlabs/jsonpath": "npm:^1.1.2"
+    "@credo-ts/core": "npm:0.6.3"
+    "@credo-ts/didcomm": "npm:0.6.3"
+    "@sphereon/pex-models": "npm:^2.3.2"
+    class-transformer: "npm:0.5.1"
+    class-validator: "npm:^0.14.3"
+    reflect-metadata: "npm:0.2.2"
+  peerDependencies:
+    "@hyperledger/anoncreds-shared": ^0.3.4
+  checksum: 10c0/4540928f9207767715a5c94e8a4736068a8397326120e162e6357ab4ff512088f7384d9f47fe2276fc2900c7993a31d82ed503098c5eb7343f7503c87732491d
   languageName: node
   linkType: hard
 

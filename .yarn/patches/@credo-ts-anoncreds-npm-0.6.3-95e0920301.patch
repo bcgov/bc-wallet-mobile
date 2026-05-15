@@ -1,0 +1,13 @@
+diff --git a/build/utils/proofRequest.mjs b/build/utils/proofRequest.mjs
+index cae32453f4ab3afea960b996f748e30f705ce5a9..88fc7e5f06e03412ae9d062f185f4ec0ee8add4a 100644
+--- a/build/utils/proofRequest.mjs
++++ b/build/utils/proofRequest.mjs
+@@ -2,7 +2,7 @@ import { isUnqualifiedCredentialDefinitionId, isUnqualifiedIndyDid, isUnqualifie
+ 
+ //#region src/utils/proofRequest.ts
+ function proofRequestUsesUnqualifiedIdentifiers(proofRequest) {
+-	return [...Object.values(proofRequest.requested_attributes), ...Object.values(proofRequest.requested_predicates)].some((attribute) => attribute.restrictions?.some((restriction) => restriction.cred_def_id && isUnqualifiedCredentialDefinitionId(restriction.cred_def_id) || restriction.schema_id && isUnqualifiedSchemaId(restriction.schema_id) || restriction.issuer_did && isUnqualifiedIndyDid(restriction.issuer_did) || restriction.issuer_id && isUnqualifiedIndyDid(restriction.issuer_id) || restriction.schema_issuer_did && isUnqualifiedIndyDid(restriction.schema_issuer_did) || restriction.schema_issuer_id && isUnqualifiedIndyDid(restriction.schema_issuer_id) || restriction.rev_reg_id && isUnqualifiedRevocationRegistryId(restriction.rev_reg_id)));
++	return [...Object.values(proofRequest.requested_attributes), ...Object.values(proofRequest.requested_predicates)].some((attribute) => attribute.restrictions?.some((restriction) => (!restriction.cred_def_id && !restriction.schema_id && !restriction.issuer_did && !restriction.issuer_id && !restriction.schema_issuer_did && !restriction.schema_issuer_id && !restriction.rev_reg_id) || restriction.cred_def_id && isUnqualifiedCredentialDefinitionId(restriction.cred_def_id) || restriction.schema_id && isUnqualifiedSchemaId(restriction.schema_id) || restriction.issuer_did && isUnqualifiedIndyDid(restriction.issuer_did) || restriction.issuer_id && isUnqualifiedIndyDid(restriction.issuer_id) || restriction.schema_issuer_did && isUnqualifiedIndyDid(restriction.schema_issuer_did) || restriction.schema_issuer_id && isUnqualifiedIndyDid(restriction.schema_issuer_id) || restriction.rev_reg_id && isUnqualifiedRevocationRegistryId(restriction.rev_reg_id)));
+ }
+ 
+ //#endregion
