@@ -148,23 +148,15 @@ describe('BifoldNavigationAdapter', () => {
   // `ProofRequest` and `ProofRequestAccept` emit on exit, so a future Bifold
   // bump or adapter refactor that breaks the proof flow surfaces here.
 
-  it('proof-request decline routes to BCSC Home (ProofRequest.handleDeclineTouched)', () => {
-    // ProofRequest.js: navigation.getParent()?.navigate('Tab Home Stack', { screen: 'Home' })
-    const { nav, parent } = mkNav()
-    const adapted = createBifoldNavigationAdapter(nav as any, { t })
-    adapted.getParent()?.navigate('Tab Home Stack' as never, { screen: 'Home' } as never)
-    expect(parent.dispatch).toHaveBeenCalledWith(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: BCSCStacks.Tab, state: { routes: [{ name: BCSCScreens.Home }] } }],
-      })
-    )
-  })
-
-  it('proof-request share-success Back-to-Home routes to BCSC Home (ProofRequestAccept.onBackToHomeTouched)', () => {
-    // ProofRequestAccept reads navigation via useNavigation(); in production the
-    // NavigationContext.Provider in ConnectionLoadingScreen makes that the
-    // adapter. The emitted payload is identical to the decline case.
+  // Both Bifold call sites emit an identical getParent()?.navigate('Tab Home Stack', { screen: 'Home' })
+  // today, but pinning each site by name keeps the contract grep-able if Bifold ever diverges them
+  // (e.g. ProofRequestAccept switching to popToTop, or decline routing via dispatch(reset)).
+  // ProofRequestAccept reads navigation via useNavigation() — NavigationContext.Provider in
+  // ConnectionLoadingScreen is what makes that resolve to the adapter at runtime.
+  it.each([
+    ['ProofRequest.handleDeclineTouched (decline)'],
+    ['ProofRequestAccept.onBackToHomeTouched (share success)'],
+  ])('proof-request %s routes to BCSC Home', () => {
     const { nav, parent } = mkNav()
     const adapted = createBifoldNavigationAdapter(nav as any, { t })
     adapted.getParent()?.navigate('Tab Home Stack' as never, { screen: 'Home' } as never)
