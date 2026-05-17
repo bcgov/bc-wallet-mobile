@@ -253,7 +253,7 @@ export interface Spec extends TurboModule {
   setActiveKeyAlias(alias: string): Promise<void>;
   /**
    * Permanently delete a keystore alias and its metadata entry. Rejects with
-   * E_KEY_DELETE_REFUSED_SELF if the alias is currently active.
+   * E_KEY_DELETE_REFUSED_LAST if deleting would leave zero private keys.
    */
   deleteKey(alias: string): Promise<void>;
   getKeyPair(label: string): Promise<KeyPair>;

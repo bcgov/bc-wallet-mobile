@@ -27,8 +27,10 @@ interface ServerClientRegistrationView {
  *     setActiveKeyAlias() so the next sign uses it.
  *  4. Prune local keys whose kid is NOT in the server set. Guarded by
  *     `serverKids.length >= 1` so an unexpectedly empty jwks response never
- *     wipes the device; the native delete additionally refuses to remove
- *     the currently-active alias.
+ *     wipes the device; this loop additionally skips `matched.id` so the
+ *     just-selected active alias is never a prune target. The native delete
+ *     has its own last-line-of-defence guard that refuses to remove the
+ *     final remaining alias.
  *
  * @returns true if recovery completed and the caller should retry token
  *   refresh once; false if no recovery occurred (no token, no match,

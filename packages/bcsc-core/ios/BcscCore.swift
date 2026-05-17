@@ -243,8 +243,15 @@ class BcscCore: NSObject {
 
   /**
    * Permanently delete a keychain alias. Used by the 401 key-recovery flow to
-   * prune local keys the server does not recognise. Refuses to delete the
-   * currently-active alias (the keychain-newest) as a defence in depth.
+   * prune local keys the server does not recognise.
+   *
+   * Defence-in-depth: refuses to delete the alias if doing so would leave the
+   * keychain with zero private keys, which would brick signing entirely. The
+   * JS recovery layer is authoritative for never deleting the matched/active
+   * alias — we deliberately do NOT guard "active" here, because on iOS
+   * kSecAttrCreationDate is read-only and the matched alias only becomes
+   * keychain-newest after the unmatched newer alias is pruned (see
+   * setActiveKeyAlias). Guarding by "newest" would block the recovery path.
    */
   @objc(deleteKey:resolve:reject:)
   func deleteKey(
@@ -254,11 +261,11 @@ class BcscCore: NSObject {
   ) {
     let keyPairManager = KeyPairManager()
     let keys = keyPairManager.findAllPrivateKeys()
-    let activeAlias = keys.sorted(by: { $0.created > $1.created }).first?.tag
-    if let active = activeAlias, active == alias {
+    let remaining = keys.filter { $0.tag != alias }
+    if remaining.isEmpty {
       reject(
-        "E_KEY_DELETE_REFUSED_SELF",
-        "Refusing to delete the currently-active alias '\(alias)'",
+        "E_KEY_DELETE_REFUSED_LAST",
+        "Refusing to delete '\(alias)': would leave the keychain with no private keys",
         nil
       )
       return

@@ -277,9 +277,13 @@ class BcscCoreModule(
 
     /**
      * Permanently delete a keystore alias and its metadata entry. Called by the
-     * recovery flow to prune local keys the server does not recognise. Refuses
-     * to delete the currently-active alias as a defence in depth against the
-     * recovery flow accidentally orphaning the signing key.
+     * recovery flow to prune local keys the server does not recognise.
+     *
+     * Defence-in-depth: refuses to delete the alias if doing so would leave the
+     * keystore with zero rsa\d+ aliases, which would brick signing entirely.
+     * The JS recovery layer is authoritative for never deleting the matched
+     * alias; this guard exists so that a buggy caller (or future regression)
+     * cannot wipe the device's last private key. Mirrors the iOS guard.
      */
     @ReactMethod
     fun deleteKey(
@@ -291,16 +295,16 @@ class BcscCoreModule(
                 promise.reject("E_KEYSTORE_UNAVAILABLE", "Android KeyStore is not available on this device")
                 return
             }
-            val current =
+            val remainingCount =
                 try {
-                    keyPairSource.getCurrentBcscKeyPair().getKeyInfo().getAlias()
+                    keyPairSource.getAllBcscKeyPairInfos().count { it.getAlias() != alias }
                 } catch (_: Exception) {
-                    null
+                    -1
                 }
-            if (current != null && current == alias) {
+            if (remainingCount == 0) {
                 promise.reject(
-                    "E_KEY_DELETE_REFUSED_SELF",
-                    "Refusing to delete the currently-active alias '$alias'",
+                    "E_KEY_DELETE_REFUSED_LAST",
+                    "Refusing to delete '$alias': would leave the keystore with no private keys",
                 )
                 return
             }

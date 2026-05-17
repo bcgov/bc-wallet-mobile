@@ -276,7 +276,8 @@ export const setActiveKeyAlias = (alias: string): Promise<void> => {
 /**
  * Permanently deletes a keystore alias and its metadata entry. Used by the
  * 401 key-recovery flow to prune local keys the server does not recognise.
- * Rejects with `E_KEY_DELETE_REFUSED_SELF` if the alias is currently active.
+ * Rejects with `E_KEY_DELETE_REFUSED_LAST` if deleting the alias would leave
+ * the device with no private keys (defence-in-depth against bricking signing).
  */
 export const deleteKey = (alias: string): Promise<void> => {
   return BcscCore.deleteKey(alias);
