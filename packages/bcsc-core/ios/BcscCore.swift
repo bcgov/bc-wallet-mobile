@@ -216,6 +216,61 @@ class BcscCore: NSObject {
     resolve(result)
   }
 
+  /**
+   * Mark a keychain alias as the active (newest) signing key.
+   *
+   * iOS picks the active key by `kSecAttrCreationDate` (newest-first), which is
+   * read-only at the keychain level. The recovery flow's contract is that
+   * setActiveKeyAlias is followed immediately by deleteKey() on every other
+   * alias — once the unmatched aliases are pruned, the matched alias becomes
+   * de-facto active by elimination. This method therefore only verifies the
+   * alias actually exists; the prune step does the heavy lifting.
+   */
+  @objc(setActiveKeyAlias:resolve:reject:)
+  func setActiveKeyAlias(
+    _ alias: String,
+    resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    let keyPairManager = KeyPairManager()
+    let keys = keyPairManager.findAllPrivateKeys()
+    guard keys.contains(where: { $0.tag == alias }) else {
+      reject("E_KEY_NOT_FOUND", "Alias '\(alias)' is not present in the keychain", nil)
+      return
+    }
+    resolve(nil)
+  }
+
+  /**
+   * Permanently delete a keychain alias. Used by the 401 key-recovery flow to
+   * prune local keys the server does not recognise. Refuses to delete the
+   * currently-active alias (the keychain-newest) as a defence in depth.
+   */
+  @objc(deleteKey:resolve:reject:)
+  func deleteKey(
+    _ alias: String,
+    resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    let keyPairManager = KeyPairManager()
+    let keys = keyPairManager.findAllPrivateKeys()
+    let activeAlias = keys.sorted(by: { $0.created > $1.created }).first?.tag
+    if let active = activeAlias, active == alias {
+      reject(
+        "E_KEY_DELETE_REFUSED_SELF",
+        "Refusing to delete the currently-active alias '\(alias)'",
+        nil
+      )
+      return
+    }
+    let deleted = keyPairManager.deleteKey(withLabel: alias)
+    if deleted {
+      resolve(nil)
+    } else {
+      reject("E_KEYSTORE_ERROR", "Failed to delete key '\(alias)' from keychain", nil)
+    }
+  }
+
   func getKeyPair(
     _ label: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock

@@ -246,6 +246,16 @@ export type NativeSavedService = {
 
 export interface Spec extends TurboModule {
   getAllKeys(): Promise<PrivateKeyInfo[]>;
+  /**
+   * Mark a keystore alias as the active (newest) signing key. Rejects with
+   * E_KEY_NOT_FOUND if the alias is not present in the keystore.
+   */
+  setActiveKeyAlias(alias: string): Promise<void>;
+  /**
+   * Permanently delete a keystore alias and its metadata entry. Rejects with
+   * E_KEY_DELETE_REFUSED_SELF if the alias is currently active.
+   */
+  deleteKey(alias: string): Promise<void>;
   getKeyPair(label: string): Promise<KeyPair>;
   getToken(tokenType: number): Promise<NativeToken | null>;
 
