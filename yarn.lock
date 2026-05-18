@@ -16918,8 +16918,8 @@ __metadata:
   linkType: hard
 
 "react-native-gifted-chat@npm:*":
-  version: 3.3.2
-  resolution: "react-native-gifted-chat@npm:3.3.2"
+  version: 3.3.3
+  resolution: "react-native-gifted-chat@npm:3.3.3"
   dependencies:
     "@expo/react-native-action-sheet": "npm:^4.1.1"
     "@types/lodash.isequal": "npm:^4.5.8"
@@ -16933,7 +16933,7 @@ __metadata:
     react-native-keyboard-controller: ">=1.0.0"
     react-native-reanimated: ">=3.0.0 || ^4.0.0"
     react-native-safe-area-context: ">=5.0.0"
-  checksum: 10c0/8e0d15826c40c4e7e5a564cb402886be52625a1d6334b9970f967dca5fb31a9e62dfdac0e3e10386109c039a9ce70b367f2c8703db4b6660f529f3379ae4d070
+  checksum: 10c0/17ac8009bf2d015dcb05288d968f51e736c4b905651fdc228854ff6a4813031f505bd0000bcfbe1b176823620203e9bae775662cf4c5c293023ad199d084b7fb
   languageName: node
   linkType: hard
 
