@@ -176,7 +176,7 @@ V3_IOS_APP=BCSC-v3.ipa
 # ANDROID_APP_FILENAME / IOS_APP_FILENAME
 ```
 
-3. _Ensure SiteMinder credentials are in_ `local.env` _(the v3 flow uses in-person verification)._
+3. _Ensure SiteMinder credentials (_`SM_USER`_,_ `SM_PASSWORD`_) are set in_ `.env.e2e` _(the v3 flow uses in-person verification)._
 
 ```bash
 # Run migration on both platforms
@@ -203,11 +203,10 @@ VARIANT=bcsc yarn test:android:sauce
 
 ## _Environment Variables_
 
-_Three env files split general e2e config, SauceLabs credentials, and SiteMinder credentials:_
+_Two env files split general e2e config (including SiteMinder credentials) from SauceLabs credentials:_
 
-- **`.env.e2e`** _— loaded for every run target (local + sauce). Copy from_ `.env.e2e.example`_._
+- **`.env.e2e`** _— loaded for every run target (local + sauce). Copy from_ `.env.e2e.example`_. Includes the SiteMinder credentials used by the in-person verification approval flow._
 - **`.env.saucelabs`** _— loaded only for sauce runs. Copy from_ `.env.saucelabs.example`_._
-- **`local.env`** _— SiteMinder credentials for the in-person verification approval flow (gitignored). Create manually — see_ [_SiteMinder section_](#siteminder-localenv) _below._
 
 ### _General (`.env.e2e`)_
 
@@ -246,24 +245,24 @@ _Three env files split general e2e config, SauceLabs credentials, and SiteMinder
 | `V3_ANDROID_APP`           | `BCSC-v3.apk`         | _V3 Android app for migration tests (local file or Sauce storage filename)_   |
 | `V3_IOS_APP`               | `BCSC-v3.ipa`         | _V3 iOS app for migration tests (local file or Sauce storage filename)_       |
 
-### _SiteMinder (`local.env`)_
+### _SiteMinder (in_ `.env.e2e`_)_
 
-_The in-person verification approval flow (`approveInPersonRequest` in_ `src/helpers/approval.ts`_) automates the SiteMinder login used by the IDCheck portal. It reads credentials from_ `e2e/local.env`_:_
+_The in-person verification approval flow (`approveInPersonRequest` in_ `src/helpers/approval.ts`_) automates the SiteMinder login used by the IDCheck portal. It reads credentials from_ `process.env` _— locally these come from_ `e2e/.env.e2e` _(loaded by_ `configs/wdio.shared.conf.ts`_), and in CI they come from GitHub Actions secrets injected via_ `.github/workflows/e2e.yml`_:_
 
 | _Variable_    | _Description_                                          |
 | ------------- | ------------------------------------------------------ |
 | `SM_USER`     | _SiteMinder username for the IDCheck test environment_ |
 | `SM_PASSWORD` | _SiteMinder password for the IDCheck test environment_ |
 
-_Create the file manually (it is gitignored):_
+_For local runs, add them to your_ `.env.e2e` _(see_ `.env.e2e.example`_):_
 
 ```bash
-# e2e/local.env
+# e2e/.env.e2e
 SM_USER='your-siteminder-username'
 SM_PASSWORD='your-siteminder-password'
 ```
 
-_Without these credentials, any test suite that includes in-person verification (e.g._ `happy-path`_,_ `full-regression`_) will fail at the approval step._
+_The same_ `scripts/login.mjs` _can also be invoked as a CLI; it loads_ `.env.e2e` _itself when run standalone. Without these credentials, any test suite that includes in-person verification (e.g._ `happy-path`_,_ `full-regression`_,_ `migration`_) will fail at the approval step._
 
 ## _Config Hierarchy_
 
