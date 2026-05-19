@@ -248,6 +248,29 @@ export const attestationPollingErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
+// Error policy for email verification code submission — 400/404 indicate a wrong or
+// expired code, which is a user-input error. Suppress the global modal so the
+// EmailConfirmationScreen can show its own inline error instead of the misleading
+// "App not installed correctly (error 209)" alert.
+//
+// Matches by path pattern (PUT /v1/emails/{id}) rather than the full evidence base URL,
+// because the discovery-provided evidence_endpoint can differ from the fallback (trailing
+// slash, version suffix, etc.) and we don't want this match to silently break.
+const EMAIL_VERIFICATION_PATH_PATTERN = /\/v1\/emails\/[^/?#]+/
+export const emailVerificationCodeErrorPolicy: ErrorHandlingPolicy = {
+  matches: (_, context) => {
+    return (
+      (context.statusCode === 400 || context.statusCode === 404) &&
+      EMAIL_VERIFICATION_PATH_PATTERN.test(context.endpoint)
+    )
+  },
+  handle: (_error, context) => {
+    context.logger.info(
+      '[EmailVerificationCodeErrorPolicy] Suppressing global alert — confirmation screen will show inline error for invalid code'
+    )
+  },
+}
+
 // Error policy for unexpected server errors (http status: 500, 503)
 export const unexpectedServerErrorPolicy: ErrorHandlingPolicy = {
   matches: (_, context) => {
@@ -439,6 +462,7 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   invalidRegistrationRequestErrorPolicy,
   videoSessionErrorPolicy,
   attestationPollingErrorPolicy,
+  emailVerificationCodeErrorPolicy,
   invalidClientMetadataErrorPolicy,
   iasErrorPolicy,
   // Specific polices listed above, followed by global policies
