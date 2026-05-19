@@ -74,14 +74,13 @@ const MaskedCamera = ({
       marginBottom: safeAreaInsets.bottom,
     },
     instructionText: {
-      backgroundColor: 'transparent',
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
       position: 'absolute',
       fontWeight: 'normal',
-      top: Spacing.md,
       left: 0,
       right: 0,
       zIndex: 5,
-      paddingHorizontal: Spacing.md,
+      padding: Spacing.lg,
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
@@ -177,7 +176,12 @@ const MaskedCamera = ({
         // Set fps to max supported by the selected format for smoother preview
         fps={format?.maxFps}
       />
-      <SVGOverlay maskType={maskType} strokeColor={maskLineColor ?? ColorPalette.brand.tertiary} strokeWidth={maskLineWidth} overlayOpacity={maskOverlayOpacity} />
+      <SVGOverlay
+        maskType={maskType}
+        strokeColor={maskLineColor ?? ColorPalette.brand.tertiary}
+        strokeWidth={maskLineWidth}
+        overlayOpacity={maskOverlayOpacity}
+      />
       <View style={styles.instructionText}>
         {cameraLabel && (
           <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingThree'}>
@@ -185,7 +189,13 @@ const MaskedCamera = ({
           </ThemedText>
         )}
         {cameraInstructions && (
-          <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingFour'}>
+          <ThemedText
+            style={{
+              color: 'white',
+              textAlign: 'center',
+            }}
+            variant={'headingFour'}
+          >
             {cameraInstructions}
           </ThemedText>
         )}

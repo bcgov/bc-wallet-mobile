@@ -14,7 +14,7 @@ type VideoInstructionsScreenProps = {
 }
 
 const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) => {
-  const { Spacing, TextTheme } = useTheme()
+  const { Spacing, TextTheme, ColorPalette } = useTheme()
   const [store] = useStore<BCState>()
   const { t } = useTranslation()
 
@@ -24,14 +24,8 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
       height: 200,
       marginBottom: Spacing.md,
     },
-    lineBreak: {
-      borderBottomWidth: 1,
-      borderBottomColor: TextTheme.normal.color,
-      width: '100%',
-    },
     bulletContainer: {
       flexDirection: 'row',
-      marginBottom: Spacing.md,
     },
     bullet: {
       marginRight: Spacing.xs,
@@ -57,7 +51,10 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
       <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.lg, textAlign: 'center' }}>
         {t('BCSC.SendVideo.VideoInstructions.Heading1')}
       </ThemedText>
-      <ThemedText variant={'headingFour'} style={{ marginBottom: Spacing.xl, textAlign: 'center' }}>
+      <ThemedText
+        variant={'headingFour'}
+        style={{ marginBottom: Spacing.xl, textAlign: 'center', color: ColorPalette.grayscale.black }}
+      >
         {t('BCSC.SendVideo.VideoInstructions.Heading2')}
       </ThemedText>
       {store.bcsc.prompts?.map(({ prompt, id }: VerificationPrompt, index) => (
@@ -68,14 +65,14 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
           <ThemedText style={{ marginBottom: Spacing.xl, textAlign: 'center' }}>{prompt}</ThemedText>
         </Fragment>
       ))}
-      <View style={styles.lineBreak} />
-      <ThemedText variant={'headingFour'} style={{ marginVertical: Spacing.xl }}>
+      <ThemedText variant={'headingFour'} style={{ marginVertical: Spacing.l }}>
         {t('BCSC.SendVideo.VideoInstructions.Heading3')}
       </ThemedText>
-      <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet1')}</ThemedText>
-      </View>
+
+      <ThemedText variant={'headingFour'} style={{ marginVertical: Spacing.md, color: ColorPalette.grayscale.black }}>
+        {'You should:'}
+      </ThemedText>
+
       <View style={styles.bulletContainer}>
         <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
         <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet2')}</ThemedText>
@@ -96,15 +93,31 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
         <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
         <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet6')}</ThemedText>
       </View>
-      <Icon
-        name={'alert'}
-        size={32}
-        color={TextTheme.normal.color}
-        style={{ marginVertical: Spacing.lg, alignSelf: 'center' }}
-      />
-      <ThemedText variant={'headingFour'} style={{ marginBottom: Spacing.xxl, textAlign: 'center' }}>
-        {t('BCSC.SendVideo.VideoInstructions.Heading4')}
-      </ThemedText>
+      <View style={styles.bulletContainer}>
+        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
+        <ThemedText>{'Say your first and last name'}</ThemedText>
+      </View>
+      <View
+        style={{
+          flex: 1,
+          flexDirection: 'row',
+          borderColor: ColorPalette.grayscale.black,
+          borderWidth: 1,
+        }}
+      >
+        <Icon
+          name={'alert'}
+          size={32}
+          color={TextTheme.normal.color}
+          style={{ marginVertical: Spacing.lg, alignSelf: 'center' }}
+        />
+        <ThemedText
+          variant={'headingFour'}
+          style={{ marginBottom: Spacing.xxl, textAlign: 'center', color: ColorPalette.grayscale.black }}
+        >
+          {t('BCSC.SendVideo.VideoInstructions.Heading4')}
+        </ThemedText>
+      </View>
     </ScreenWrapper>
   )
 }
