@@ -265,6 +265,25 @@ export const getAllKeys = (): Promise<PrivateKeyInfo[]> => {
 };
 
 /**
+ * Marks a keystore alias as the active (newest) signing key. Used by the 401
+ * key-recovery flow to point the wallet at the kid the server confirms it
+ * accepts. Rejects with `E_KEY_NOT_FOUND` if the alias is not in the keystore.
+ */
+export const setActiveKeyAlias = (alias: string): Promise<void> => {
+  return BcscCore.setActiveKeyAlias(alias);
+};
+
+/**
+ * Permanently deletes a keystore alias and its metadata entry. Used by the
+ * 401 key-recovery flow to prune local keys the server does not recognise.
+ * Rejects with `E_KEY_DELETE_REFUSED_LAST` if deleting the alias would leave
+ * the device with no private keys (defence-in-depth against bricking signing).
+ */
+export const deleteKey = (alias: string): Promise<void> => {
+  return BcscCore.deleteKey(alias);
+};
+
+/**
  * Retrieves a key pair (public and optionally private) for a given label.
  * @param label The identifier for the key pair.
  * @returns A promise that resolves to a KeyPair object.
