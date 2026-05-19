@@ -222,26 +222,98 @@ class BcscCoreModule(
                 return
             }
 
-            // Get the current key pair (this will create one if none exists)
-            val currentKeyPair = keyPairSource.getCurrentBcscKeyPair()
+            // Enumerate every rsa\d+ alias the keystore actually holds. This is the
+            // source of truth for the recovery flow: matching local keys against the
+            // server's jwks requires visibility into orphan aliases that metadata
+            // may not yet track.
+            val infos = keyPairSource.getAllBcscKeyPairInfos()
 
             val privateKeys: WritableArray = Arguments.createArray()
-            val keyInfo: WritableMap = Arguments.createMap()
-
-            // Add the current key pair info
-            val info = currentKeyPair.getKeyInfo()
-            keyInfo.putString("id", info.getAlias())
-            keyInfo.putString("keyType", "RSA") // bcsc-keypair-port uses RSA keys
-            keyInfo.putInt("keySize", 4096) // bcsc-keypair-port uses 4096-bit RSA keys
-            keyInfo.putDouble("created", info.getCreatedAt().toDouble())
-
-            privateKeys.pushMap(keyInfo)
+            for (info in infos) {
+                val keyInfo: WritableMap = Arguments.createMap()
+                keyInfo.putString("id", info.getAlias())
+                keyInfo.putString("keyType", "RSA")
+                keyInfo.putInt("keySize", 4096)
+                keyInfo.putDouble("created", info.getCreatedAt().toDouble())
+                privateKeys.pushMap(keyInfo)
+            }
 
             promise.resolve(privateKeys)
         } catch (e: BcscException) {
             promise.reject("E_KEYSTORE_ERROR", "Error accessing keystore: ${e.devMessage}", e)
         } catch (e: Exception) {
             promise.reject("E_KEYSTORE_ERROR", "Unexpected error accessing keystore: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Mark a keystore alias as the active (newest) key. Called by the recovery
+     * flow after the server confirms which kid it accepts. Refuses if the alias
+     * is not present in the keystore so the app never points at a missing key.
+     */
+    @ReactMethod
+    fun setActiveKeyAlias(
+        alias: String,
+        promise: Promise,
+    ) {
+        try {
+            if (!keyPairSource.isAvailable()) {
+                promise.reject("E_KEYSTORE_UNAVAILABLE", "Android KeyStore is not available on this device")
+                return
+            }
+            val present = keyPairSource.getAllBcscKeyPairInfos().any { it.getAlias() == alias }
+            if (!present) {
+                promise.reject("E_KEY_NOT_FOUND", "Alias '$alias' is not present in the keystore")
+                return
+            }
+            keyPairSource.markActiveBcscKeyPair(alias)
+            promise.resolve(null)
+        } catch (e: BcscException) {
+            promise.reject("E_KEYSTORE_ERROR", "Error marking active alias: ${e.devMessage}", e)
+        } catch (e: Exception) {
+            promise.reject("E_KEYSTORE_ERROR", "Unexpected error marking active alias: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Permanently delete a keystore alias and its metadata entry. Called by the
+     * recovery flow to prune local keys the server does not recognise.
+     *
+     * Defence-in-depth: refuses to delete the alias if doing so would leave the
+     * keystore with zero rsa\d+ aliases, which would brick signing entirely.
+     * The JS recovery layer is authoritative for never deleting the matched
+     * alias; this guard exists so that a buggy caller (or future regression)
+     * cannot wipe the device's last private key. Mirrors the iOS guard.
+     */
+    @ReactMethod
+    fun deleteKey(
+        alias: String,
+        promise: Promise,
+    ) {
+        try {
+            if (!keyPairSource.isAvailable()) {
+                promise.reject("E_KEYSTORE_UNAVAILABLE", "Android KeyStore is not available on this device")
+                return
+            }
+            val remainingCount =
+                try {
+                    keyPairSource.getAllBcscKeyPairInfos().count { it.getAlias() != alias }
+                } catch (_: Exception) {
+                    -1
+                }
+            if (remainingCount == 0) {
+                promise.reject(
+                    "E_KEY_DELETE_REFUSED_LAST",
+                    "Refusing to delete '$alias': would leave the keystore with no private keys",
+                )
+                return
+            }
+            keyPairSource.deleteBcscKeyPair(alias)
+            promise.resolve(null)
+        } catch (e: BcscException) {
+            promise.reject("E_KEYSTORE_ERROR", "Error deleting key: ${e.devMessage}", e)
+        } catch (e: Exception) {
+            promise.reject("E_KEYSTORE_ERROR", "Unexpected error deleting key: ${e.message}", e)
         }
     }
 

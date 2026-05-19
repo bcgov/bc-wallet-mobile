@@ -35,8 +35,10 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.UnrecoverableEntryException;
 import java.security.interfaces.RSAPublicKey;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -282,51 +284,90 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
   }
 
   /**
-   * Make sure every rsa\d+ key sitting in the AndroidKeyStore also has a
-   * KeyPairInfo entry in our SharedPreferences-backed metadata.
+   * Conservative bootstrap for KeyPairInfo metadata when nothing is tracked yet.
    *
-   * Why this exists: users upgrading from v3 ias-android keep their keystore
-   * (same applicationId) but lose their v3 metadata (v3 stored it in an
-   * encrypted file, v4 stores it in SharedPreferences). Without this step,
-   * v4 would ignore the keys IAS actually has registered and sign with a
-   * fresh rsa1 instead, producing a 401 on /device/token.
+   * Source of truth for "which kid is active" is the server (validated via
+   * GET /device/register/{client_id} and the recovery flow in the app layer).
+   * This method exists only to bootstrap metadata when we have no other
+   * information at all: e.g. a v3 user upgraded in place, keystore preserved,
+   * but SharedPreferences empty.
    *
-   * Approach: any keystore alias matching rsa\d+ that isn't already tracked
-   * gets a KeyPairInfo with a synthetic createdAt. The createdAt values are
-   * chosen so a higher-numbered alias is newer than a lower-numbered one --
-   * that's all getNewestKeyPairInfo / getOldestKeyPairInfo care about.
-   *
-   * Safe to call on every access: if nothing is missing, this is a no-op.
+   * Behaviour:
+   *   - If metadata already has any entry, this is a no-op. We trust metadata;
+   *     orphaned keystore aliases (e.g. left over from a v3 account reset) are
+   *     intentionally NOT promoted to "newest" here. The recovery flow will
+   *     prune them once the server confirms which kid is real.
+   *   - If metadata is empty AND keystore has rsa\d+ aliases, backfill them
+   *     with synthetic createdAt values so the highest-numbered alias becomes
+   *     newest. This is a last-resort guess (numeric ordering is wrong after
+   *     a v3 account reset that restarts at rsa1); the recovery flow corrects
+   *     it on the first 401.
    */
   private void reconcileKeyPairInfoWithKeyStore(@NonNull KeyStore keyStore) throws BcscException {
-    // 1. Find every rsa\d+ alias the keystore knows about, sorted by number.
+    HashMap<String, KeyPairInfo> existing = keyPairInfoSource.getKeyPairInfo();
+    if (!existing.isEmpty()) {
+      SimpleLog.d(TAG, "reconcile: metadata non-empty; trusting existing entries (" + existing.keySet() + ")");
+      return;
+    }
+
     java.util.TreeMap<Integer, String> keystoreAliases = findRsaAliasesInKeyStore(keyStore);
     if (keystoreAliases.isEmpty()) {
+      SimpleLog.d(TAG, "reconcile: metadata empty and no rsa\\d+ aliases in keystore; nothing to do");
       return;
     }
 
-    // 2. Drop the ones we already have metadata for.
-    HashMap<String, KeyPairInfo> existing = keyPairInfoSource.getKeyPairInfo();
-    java.util.TreeMap<Integer, String> missing = new java.util.TreeMap<>();
-    for (java.util.Map.Entry<Integer, String> entry : keystoreAliases.entrySet()) {
-      if (!existing.containsKey(entry.getValue())) {
-        missing.put(entry.getKey(), entry.getValue());
-      }
-    }
-    if (missing.isEmpty()) {
-      return;
-    }
-
-    // 3. Backfill metadata for the rest. The newest alias gets "now"; older
-    //    aliases get progressively earlier timestamps so ordering is right.
     long now = System.currentTimeMillis();
-    int highestId = missing.lastKey();
-    for (java.util.Map.Entry<Integer, String> entry : missing.entrySet()) {
+    int highestId = keystoreAliases.lastKey();
+    for (java.util.Map.Entry<Integer, String> entry : keystoreAliases.entrySet()) {
       long createdAt = now - (long) (highestId - entry.getKey());
       keyPairInfoSource.saveKeyPairInfo(new KeyPairInfo(entry.getValue(), createdAt));
     }
-    SimpleLog.d(TAG, "Reconciled KeyPairInfo with keystore; backfilled aliases "
-        + missing.values() + " (keystore had " + keystoreAliases.values() + ")");
+    SimpleLog.d(TAG, "reconcile: bootstrapped empty metadata from keystore aliases "
+        + keystoreAliases.values() + " (synthetic timestamps; will be corrected on first 401 recovery)");
+  }
+
+  /**
+   * Enumerate every rsa\d+ alias that exists in the AndroidKeyStore, augmented
+   * with the createdAt from metadata when present. This is the source of truth
+   * for "what private keys does this device actually hold" — used by the
+   * recovery flow to match local keys against the server's jwks.
+   *
+   * @return list of KeyPairInfo, one per keystore alias matching rsa\d+. The
+   *         createdAt is 0 for aliases not yet tracked in metadata. Empty list
+   *         (never null) if the keystore can't be read.
+   */
+  @NonNull
+  @Override
+  public List<KeyPairInfo> getAllBcscKeyPairInfos() throws BcscException {
+    try {
+      KeyStore keyStore = loadAndroidKeyStore();
+      java.util.TreeMap<Integer, String> keystoreAliases = findRsaAliasesInKeyStore(keyStore);
+      HashMap<String, KeyPairInfo> metadata = keyPairInfoSource.getKeyPairInfo();
+      List<KeyPairInfo> result = new ArrayList<>(keystoreAliases.size());
+      for (String alias : keystoreAliases.values()) {
+        KeyPairInfo tracked = metadata.get(alias);
+        result.add(tracked != null ? tracked : new KeyPairInfo(alias, 0L));
+      }
+      return result;
+    } catch (BcscException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new BcscException("Failed to enumerate keystore aliases: " + e.getMessage());
+    }
+  }
+
+  /**
+   * Mark the given alias as the active (newest) key in metadata. Called by
+   * the recovery flow after the server confirms which kid it accepts.
+   *
+   * Updates createdAt = now so getNewestKeyPairInfo returns this alias on
+   * subsequent calls. If the alias has no metadata entry yet (e.g. it was a
+   * keystore-only orphan before recovery), an entry is created.
+   */
+  @Override
+  public void markActiveBcscKeyPair(@NonNull String alias) throws BcscException {
+    keyPairInfoSource.saveKeyPairInfo(new KeyPairInfo(alias, System.currentTimeMillis()));
+    SimpleLog.d(TAG, "markActiveBcscKeyPair: " + alias + " stamped as newest");
   }
 
   /**
