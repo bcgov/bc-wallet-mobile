@@ -177,6 +177,94 @@ class BcscKeyPairRepoSeedingTest {
     }
 
     // -----------------------------------------------------------------------
+    // (3b) Conservative reconcile: when metadata already exists, the keystore
+    //      is NOT used to backfill orphan aliases.
+    //
+    //      This guards against the v3-account-reset case where the keystore
+    //      retains an orphan (e.g. rsa2) from a previous identity while
+    //      metadata correctly points at rsa1 — synthetic timestamps used to
+    //      misrank rsa2 as newest and cause a 401. The server-driven recovery
+    //      flow is the only path that may now reassign the active alias.
+    // -----------------------------------------------------------------------
+
+    @Test
+    fun `reconcile preserves existing metadata and ignores orphan keystore aliases`() {
+        val now = System.currentTimeMillis()
+        val infoSource =
+            InMemoryKeyPairInfoSource(
+                mapOf("rsa1" to KeyPairInfo("rsa1", now)),
+            )
+        val repo = BcscKeyPairRepo(infoSource)
+
+        // Keystore holds an orphan rsa2 left over from a v3 account reset.
+        reconcile(repo, keystoreWith(listOf("rsa1", "rsa2")))
+
+        val saved = infoSource.store
+        assertEquals(
+            "metadata must not gain an entry for the orphan rsa2 alias",
+            1,
+            saved.size,
+        )
+        assertTrue("the original rsa1 entry must remain", saved.containsKey("rsa1"))
+        assertFalse(
+            "orphan rsa2 must NOT be backfilled when metadata is non-empty — only the recovery flow may add it",
+            saved.containsKey("rsa2"),
+        )
+        assertEquals(
+            "the original rsa1 createdAt must not be rewritten by reconcile",
+            now,
+            saved["rsa1"]!!.createdAt,
+        )
+    }
+
+    // -----------------------------------------------------------------------
+    // (3c) markActiveBcscKeyPair stamps the given alias as the newest entry
+    // -----------------------------------------------------------------------
+
+    @Test
+    fun `markActiveBcscKeyPair creates a metadata entry with the current timestamp`() {
+        val infoSource = InMemoryKeyPairInfoSource()
+        val repo = BcscKeyPairRepo(infoSource)
+
+        val before = System.currentTimeMillis()
+        repo.markActiveBcscKeyPair("rsa3")
+        val after = System.currentTimeMillis()
+
+        val saved = infoSource.store["rsa3"]
+        assertNotNull("markActiveBcscKeyPair must create an entry when none exists", saved)
+        assertTrue(
+            "createdAt must be stamped with the current time",
+            saved!!.createdAt in before..after,
+        )
+    }
+
+    @Test
+    fun `markActiveBcscKeyPair promotes an existing alias to newest`() {
+        // rsa1 is stamped in the distant past so a same-millisecond execution of
+        // markActiveBcscKeyPair still produces a strictly-greater timestamp.
+        val rsa1CreatedAt = System.currentTimeMillis() - 60_000L
+        val infoSource =
+            InMemoryKeyPairInfoSource(
+                mapOf(
+                    "rsa1" to KeyPairInfo("rsa1", rsa1CreatedAt), // currently newest
+                    "rsa2" to KeyPairInfo("rsa2", rsa1CreatedAt - 10_000L), // orphan, older
+                ),
+            )
+        val repo = BcscKeyPairRepo(infoSource)
+
+        val before = System.currentTimeMillis()
+        repo.markActiveBcscKeyPair("rsa2")
+
+        val rsa1 = infoSource.store["rsa1"]!!
+        val rsa2 = infoSource.store["rsa2"]!!
+        assertEquals("rsa1's timestamp must not be touched", rsa1CreatedAt, rsa1.createdAt)
+        assertTrue(
+            "rsa2 must now be newer than rsa1 after markActiveBcscKeyPair",
+            rsa2.createdAt >= before && rsa2.createdAt > rsa1.createdAt,
+        )
+    }
+
+    // -----------------------------------------------------------------------
     // (4) signClaimsSet – kid in JWS header matches the active key alias, and
     //     the alias identifies the key that actually produced the signature.
     // -----------------------------------------------------------------------

@@ -42,6 +42,7 @@ import { TokenResponse } from '../api/hooks/useTokens'
 import { ProvinceCode } from '../utils/address-utils'
 import { createMinimalCredential, getCredentialVerificationStatus } from '../utils/bcsc-credential'
 import { isCardEvidenceComplete } from '../utils/card-utils'
+import { performKeyRecovery } from '../utils/key-recovery'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 
 /**
@@ -779,31 +780,34 @@ export const useSecureActions = () => {
         logger.warn('[IsVerified] No credential found but refresh token exists — treating as not verified.')
       }
 
-      if (account && (!account.issuer || !account.clientID)) {
+      let issuer = account?.issuer
+      let clientID = account?.clientID
+
+      if (account && (!issuer || !clientID)) {
         // Account is missing issuer or clientID - this prevents token refresh from working.
         // Recover from authRequest, which preserves these fields from older v3 storage during migration.
         logger.warn(
-          `[hydrateSecureState] Account missing required fields: issuer=${!account.issuer ? 'MISSING' : 'OK'}, clientID=${!account.clientID ? 'MISSING' : 'OK'}. Attempting recovery from authorization request.`
+          `[hydrateSecureState] Account missing required fields: issuer=${!issuer ? 'MISSING' : 'OK'}, clientID=${!clientID ? 'MISSING' : 'OK'}. Attempting recovery from authorization request.`
         )
 
         if (authRequest) {
           try {
-            const recoveredIssuer = account.issuer || authRequest.issuer
-            const recoveredClientID = account.clientID || authRequest.clientID
+            issuer = issuer || authRequest.issuer
+            clientID = clientID || authRequest.clientID
 
-            if (recoveredIssuer && recoveredClientID) {
+            if (issuer && clientID) {
               const securityMethod = await getAccountSecurityMethod()
               const updatedAccount = {
                 ...account,
-                issuer: recoveredIssuer,
-                clientID: recoveredClientID,
+                issuer,
+                clientID,
                 securityMethod,
               }
               logger.info('[hydrateSecureState] Recovered issuer/clientID from authorization request; updating account')
               await setAccount(updatedAccount)
             } else {
               logger.warn(
-                `[hydrateSecureState] Could not recover account fields from authorization request: issuer=${recoveredIssuer ? 'OK' : 'MISSING'}, clientID=${recoveredClientID ? 'OK' : 'MISSING'}`
+                `[hydrateSecureState] Could not recover account fields from authorization request: issuer=${issuer ? 'OK' : 'MISSING'}, clientID=${clientID ? 'OK' : 'MISSING'}`
               )
             }
           } catch (error) {
@@ -821,6 +825,21 @@ export const useSecureActions = () => {
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error)
           logger.error(`[hydrateSecureState] Failed to refresh tokens with stored refresh token: ${message}`)
+          if (clientID && registrationAccessToken) {
+            logger.info('[hydrateSecureState] Attempting key recovery in case of signing key mismatch...')
+            const recovered = await performKeyRecovery(apiClient, clientID, registrationAccessToken, logger)
+            if (recovered) {
+              try {
+                freshTokens = await apiClient.getTokensForRefreshToken(refreshToken)
+                logger.info('[hydrateSecureState] token refresh succeeded after key recovery')
+              } catch (retryError) {
+                const retryMessage = retryError instanceof Error ? retryError.message : String(retryError)
+                logger.error(`[hydrateSecureState] token refresh still failed after key recovery: ${retryMessage}`)
+              }
+            } else {
+              logger.warn('[hydrateSecureState] Key recovery did not occur or did not succeed; tokens remain stale.')
+            }
+          }
         }
       }
 
