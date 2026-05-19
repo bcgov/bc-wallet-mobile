@@ -30,7 +30,7 @@ describe('Additional Identification', () => {
   it('should navigate through the ID Photo Information screen and take a photo', async () => {
     await IDPhotoInformation.waitFor('TakePhoto')
     await IDPhotoInformation.tap('TakePhoto')
-    acceptSystemAlert()
+    await acceptSystemAlert()
   })
 
   it('should navigate through the Evidence Capture screen and take a photo', async () => {
