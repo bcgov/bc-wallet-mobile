@@ -44,6 +44,12 @@ on:
         required: true
       SAUCE_ACCESS_KEY:
         required: true
+      SM_USER:
+        required: false
+        description: 'SiteMinder username for in-person verification auto-approval (required for happy-path/full-regression/migration; omit for smoke)'
+      SM_PASSWORD:
+        required: false
+        description: 'SiteMinder password for in-person verification auto-approval'
   workflow_dispatch:
     inputs:
       suite:
@@ -114,6 +120,8 @@ jobs:
         env:
           SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
           SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+          SM_USER: ${{ secrets.SM_USER }}
+          SM_PASSWORD: ${{ secrets.SM_PASSWORD }}
           SAUCE_REGION: us
           VARIANT: bcsc-dev
           PLATFORM: ${{ matrix.device.platform }}
