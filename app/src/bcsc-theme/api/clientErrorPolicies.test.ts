@@ -11,6 +11,7 @@ import {
   birthdateLockoutErrorPolicy,
   cardExpiredErrorPolicy,
   ClientErrorHandlingPolicies,
+  emailVerificationCodeErrorPolicy,
   failedToRetrieveStringResourceErrorPolicy,
   globalAlertErrorPolicy,
   iasErrorPolicy,
@@ -647,6 +648,75 @@ describe('clientErrorPolicies', () => {
     })
   })
 
+  describe('emailVerificationCodeErrorPolicy', () => {
+    const evidenceBase = 'https://idsit.gov.bc.ca/evidence'
+
+    describe('matches', () => {
+      it('should match 404 on email verification PUT endpoint', () => {
+        const error = newError('unknown_server_error')
+        const context = {
+          statusCode: 404,
+          endpoint: `${evidenceBase}/v1/emails/349802`,
+          apiEndpoints: { evidence: evidenceBase },
+        }
+        expect(emailVerificationCodeErrorPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it('should match 400 on email verification PUT endpoint', () => {
+        const error = newError('unknown_server_error')
+        const context = {
+          statusCode: 400,
+          endpoint: `${evidenceBase}/v1/emails/349802`,
+          apiEndpoints: { evidence: evidenceBase },
+        }
+        expect(emailVerificationCodeErrorPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it('should NOT match the email creation POST endpoint (no id in path)', () => {
+        const error = newError('unknown_server_error')
+        const context = {
+          statusCode: 400,
+          endpoint: `${evidenceBase}/v1/emails`,
+          apiEndpoints: { evidence: evidenceBase },
+        }
+        expect(emailVerificationCodeErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
+      it('should NOT match other status codes on the verification endpoint', () => {
+        const error = newError('unknown_server_error')
+        const context = {
+          statusCode: 500,
+          endpoint: `${evidenceBase}/v1/emails/349802`,
+          apiEndpoints: { evidence: evidenceBase },
+        }
+        expect(emailVerificationCodeErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
+      it('should NOT match 404 on unrelated endpoints', () => {
+        const error = newError('unknown_server_error')
+        const context = {
+          statusCode: 404,
+          endpoint: `${evidenceBase}/v1/photos/123`,
+          apiEndpoints: { evidence: evidenceBase },
+        }
+        expect(emailVerificationCodeErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle', () => {
+      it('should log expected info message', () => {
+        const error = newError('unknown_server_error')
+        const loggerMock = { info: jest.fn() }
+        const context = { logger: loggerMock }
+        emailVerificationCodeErrorPolicy.handle(error, context as any)
+
+        expect(loggerMock.info).toHaveBeenCalledWith(
+          '[EmailVerificationCodeErrorPolicy] Suppressing global alert — confirmation screen will show inline error for invalid code'
+        )
+      })
+    })
+  })
+
   describe('failedToRetrieveStringResourceErrorPolicy', () => {
     describe('matches', () => {
       it('should match ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE', () => {
@@ -784,6 +854,13 @@ describe('clientErrorPolicies', () => {
         expect(indexOfStringResource).toBeLessThan(indexOfGlobalAlert)
         expect(indexOfInvalidUrl).toBeLessThan(indexOfGlobalAlert)
         expect(indexOfInvalidRegistration).toBeLessThan(indexOfGlobalAlert)
+      })
+
+      it('should have emailVerificationCodeErrorPolicy before iasErrorPolicy so 400/404 do not route to the err_209 alert', () => {
+        const indexOfEmailVerification = ClientErrorHandlingPolicies.indexOf(emailVerificationCodeErrorPolicy)
+        const indexOfIas = ClientErrorHandlingPolicies.indexOf(iasErrorPolicy)
+
+        expect(indexOfEmailVerification).toBeLessThan(indexOfIas)
       })
 
       it('should prefer alreadyRegisteredErrorPolicy for ERR_501 with "client is in invalid" on deviceAuthorization', () => {

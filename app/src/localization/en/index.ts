@@ -870,6 +870,8 @@ const translation = {
     },
     "EmailConfirmation": {
       "ErrorTitle": "Error verifying confirmation code",
+      "CouldNotVerifyTitle": "Could not verify your email",
+      "CodeDoesNotMatch": "The code you entered does not match. Try again.",
       "EmailError": "Please enter a valid email address (name@host.com).",
       "CodeError": "Please enter a six digit verification code",
       "ErrorResendingCode": "Error resending code",
