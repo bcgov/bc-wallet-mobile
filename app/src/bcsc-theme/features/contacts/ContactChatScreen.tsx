@@ -35,6 +35,14 @@ const ChatHeaderInfoButton: React.FC<ChatHeaderInfoButtonProps> = ({ accessibili
   />
 )
 
+// Factory so the header-right render component is defined at module scope
+// rather than nested inside ContactChatScreen — matches the
+// createVerifyHelpHeaderButton pattern in components/HelpHeaderButton.tsx.
+const createChatHeaderRight = (props: ChatHeaderInfoButtonProps) => {
+  const ChatHeaderRight = () => <ChatHeaderInfoButton {...props} />
+  return ChatHeaderRight
+}
+
 const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
   const { connectionId } = route.params
   const { t } = useTranslation()
@@ -55,17 +63,21 @@ const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
     [navigation, connectionId]
   )
 
+  const HeaderRight = useMemo(
+    () =>
+      createChatHeaderRight({
+        accessibilityLabel: t('BCSC.Contacts.Chat.InfoAccessibilityLabel'),
+        onPress: onInfoPress,
+      }),
+    [t, onInfoPress]
+  )
+
   useLayoutEffect(() => {
     navigation.setOptions({
       title: theirLabel,
-      headerRight: () => (
-        <ChatHeaderInfoButton
-          accessibilityLabel={t('BCSC.Contacts.Chat.InfoAccessibilityLabel')}
-          onPress={onInfoPress}
-        />
-      ),
+      headerRight: HeaderRight,
     })
-  }, [navigation, theirLabel, onInfoPress, t])
+  }, [navigation, theirLabel, HeaderRight])
 
   const messages: IMessage[] = useMemo(() => {
     return basicMessages

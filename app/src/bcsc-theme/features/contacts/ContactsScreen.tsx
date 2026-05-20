@@ -23,6 +23,14 @@ const ContactListSeparator: React.FC<ContactListSeparatorProps> = ({ backgroundC
   <View style={{ height: 1, backgroundColor }} />
 )
 
+// Factory so the separator component reference is created outside ContactsScreen
+// rather than inline at the FlatList prop — avoids the nested-component
+// anti-pattern flagged by sonar S6478.
+const createContactListSeparator = (backgroundColor: ColorValue) => {
+  const Separator = () => <ContactListSeparator backgroundColor={backgroundColor} />
+  return Separator
+}
+
 const ContactsScreen = ({ navigation }: ContactsScreenProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
@@ -70,6 +78,11 @@ const ContactsScreen = ({ navigation }: ContactsScreenProps) => {
   const onPressWhatAreContacts = useCallback(() => {
     navigation.navigate(BCSCScreens.WhatAreContacts)
   }, [navigation])
+
+  const Separator = useMemo(
+    () => createContactListSeparator(ColorPalette.brand.secondaryBackground),
+    [ColorPalette.brand.secondaryBackground]
+  )
 
   const styles = StyleSheet.create({
     searchContainer: {
@@ -143,7 +156,7 @@ const ContactsScreen = ({ navigation }: ContactsScreenProps) => {
       <FlatList
         data={filteredContacts}
         keyExtractor={(c) => c.id}
-        ItemSeparatorComponent={() => <ContactListSeparator backgroundColor={ColorPalette.brand.secondaryBackground} />}
+        ItemSeparatorComponent={Separator}
         renderItem={({ item }) => (
           <ContactRow
             contact={item}
