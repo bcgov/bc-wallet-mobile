@@ -70,6 +70,9 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
       )
     } catch (error) {
       setError(t('BCSC.EmailConfirmation.ErrorTitle'))
+      Alert.alert(t('BCSC.EmailConfirmation.CouldNotVerifyTitle'), t('BCSC.EmailConfirmation.CodeDoesNotMatch'), [
+        { text: t('Global.OK') },
+      ])
     } finally {
       setLoading(false)
     }
