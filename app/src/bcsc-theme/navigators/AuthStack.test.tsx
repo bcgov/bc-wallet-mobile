@@ -29,7 +29,7 @@ jest.mock('../components/SettingsHeaderButton', () => ({
   createAuthSettingsHeaderButton: jest.fn(() => () => 'SettingsHeaderButton'),
 }))
 jest.mock('../../screens/Developer', () => 'Developer')
-jest.mock('../features/auth/AccountSelectorScreen', () => 'AccountSelector')
+jest.mock('../features/auth/AccountLandingScreen', () => 'AccountLanding')
 jest.mock('../features/auth/ConfirmDeviceAuthInfoScreen', () => ({
   ConfirmDeviceAuthInfoScreen: 'ConfirmDeviceAuthInfoScreen',
 }))

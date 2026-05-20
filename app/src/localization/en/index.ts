@@ -223,13 +223,16 @@ const translation = {
       "Title": "Need help?",
       "AccessibilityLabel": "Help menu",
       "Version": "BCSC version: {{ version }}",
-      "LearnMore": "Learn about BCSC app",
+      "LearnMore": "Learn more",
       "GiveFeedback": "Give feedback",
       "ReportProblem": "Report a problem",
     },
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online",
       "AppStartup": "Getting your BCSC App ready..."
+    },
+    "AccountLanding": {
+      "Unlock": "Unlock",
     },
     "Security": {
       "AuthenticatePrompt": "Authenticate to secure your app",

@@ -2,12 +2,13 @@ import { useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
+import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createAuthSettingsHeaderButton } from '../components/SettingsHeaderButton'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
-import AccountSelector from '../features/auth/AccountSelectorScreen'
+import AccountLanding from '../features/auth/AccountLandingScreen'
 import { ConfirmDeviceAuthInfoScreen } from '../features/auth/ConfirmDeviceAuthInfoScreen'
 import { DeviceAuthAppResetScreen } from '../features/auth/DeviceAuthAppResetScreen'
 import { EnterPINScreen } from '../features/auth/EnterPINScreen'
@@ -39,17 +40,18 @@ const AuthStack = (): React.ReactElement => {
 
   return (
     <Stack.Navigator
-      initialRouteName={BCSCScreens.AccountSelector}
+      initialRouteName={BCSCScreens.AccountLanding}
       screenOptions={{
         ...defaultStackOptions,
         headerShadowVisible: false,
         headerLeft: createHeaderBackButton,
         header: createHeaderWithoutBanner,
+        headerRight: createFloatingHelpMenuButton({ webViewScreen: BCSCScreens.AuthWebView }),
       }}
     >
       <Stack.Screen
-        name={BCSCScreens.AccountSelector}
-        component={AccountSelector}
+        name={BCSCScreens.AccountLanding}
+        component={AccountLanding}
         options={{
           title: t('BCSC.Title'),
           headerLeft: createAuthSettingsHeaderButton(),
