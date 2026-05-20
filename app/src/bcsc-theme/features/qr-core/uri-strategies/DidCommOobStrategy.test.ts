@@ -13,22 +13,26 @@ const makeLogger = (): BifoldLogger =>
     trace: jest.fn(),
   }) as unknown as BifoldLogger
 
-const makeAgent = (overrides?: Partial<{ goalCode?: string; throwOnParse: boolean; recordId: string }>) => {
+const makeAgent = (
+  overrides?: Partial<{ goalCode?: string; throwOnParse: boolean; recordId: string; existingRecordId: string | null }>
+) => {
   const goalCode = overrides?.goalCode
   const throwOnParse = overrides?.throwOnParse ?? false
   const recordId = overrides?.recordId ?? 'oob-123'
+  const existingRecordId = overrides?.existingRecordId ?? null
   const parseInvitation = jest.fn(async () => {
     if (throwOnParse) {
       throw new Error('parse failed')
     }
     return goalCode === '__noparse__' ? null : { id: 'inv-1', goalCode }
   })
+  const findByReceivedInvitationId = jest.fn(async () => (existingRecordId ? { id: existingRecordId } : null))
   const receiveInvitation = jest.fn(async () => ({ outOfBandRecord: { id: recordId } }))
   return {
     agent: {
-      modules: { didcomm: { oob: { parseInvitation, receiveInvitation } } },
+      modules: { didcomm: { oob: { parseInvitation, findByReceivedInvitationId, receiveInvitation } } },
     } as unknown as Agent,
-    spies: { parseInvitation, receiveInvitation },
+    spies: { parseInvitation, findByReceivedInvitationId, receiveInvitation },
   }
 }
 
@@ -87,5 +91,13 @@ describe('DidCommOobStrategy.handle', () => {
     const result = await DidCommOobStrategy.handle('https://x?oob=foo', ctx(agent))
     expect(result).toEqual({ kind: 'connection', oobRecordId: 'rec-42' })
     expect(spies.receiveInvitation).toHaveBeenCalledTimes(1)
+  })
+
+  it('reuses an existing OOB record instead of receiving the same invitation twice', async () => {
+    const { agent, spies } = makeAgent({ existingRecordId: 'rec-existing' })
+    const result = await DidCommOobStrategy.handle('https://x?oob=foo', ctx(agent))
+    expect(result).toEqual({ kind: 'connection', oobRecordId: 'rec-existing' })
+    expect(spies.findByReceivedInvitationId).toHaveBeenCalledWith('inv-1')
+    expect(spies.receiveInvitation).not.toHaveBeenCalled()
   })
 })

@@ -33,6 +33,15 @@ const DidCommOobStrategy: UriStrategy = {
       logger.info('[DidCommOobStrategy] mediator invitation rejected (BCSC uses .env mediator)')
       return { kind: 'unsupported', reason: 'Mediator' }
     }
+
+    // Dedupe duplicate scans of the same QR: two didexchange requests for one
+    // invitation @id leave the user stuck on "Connecting…".
+    const existing = await agent.modules.didcomm.oob.findByReceivedInvitationId(invitation.id)
+    if (existing) {
+      logger.info(`[DidCommOobStrategy] reusing existing OOB record ${existing.id} for invitation ${invitation.id}`)
+      return { kind: 'connection', oobRecordId: existing.id }
+    }
+
     const { outOfBandRecord } = await agent.modules.didcomm.oob.receiveInvitation(invitation, {
       label: 'didcomm-oob-invitation',
     })
