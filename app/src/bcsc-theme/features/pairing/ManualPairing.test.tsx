@@ -1,7 +1,7 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { testIdWithKey } from '@bifold/core'
-import { useNavigation } from '@mocks/@react-navigation/native'
+import { useNavigation, useRoute } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import React from 'react'
@@ -24,6 +24,7 @@ describe('ManualPairing', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockNavigation = useNavigation()
+    jest.mocked(useRoute).mockReturnValue({ params: {} } as ReturnType<typeof useRoute>)
     jest.useFakeTimers()
   })
 
@@ -117,6 +118,39 @@ describe('ManualPairing', () => {
           serviceName: 'Test Service',
         })
       })
+    })
+  })
+
+  describe('Pre-populated from route param', () => {
+    test('auto-submits and navigates when route.params.pairingCode is a full-length code', async () => {
+      mockLoginByPairingCode.mockResolvedValue({
+        client_ref_id: 'ref-456',
+        client_name: 'BC Parks Discover Camping',
+      })
+      jest.mocked(useRoute).mockReturnValue({ params: { pairingCode: 'SKGAZZ' } } as ReturnType<typeof useRoute>)
+
+      renderScreen()
+
+      await waitFor(() => {
+        expect(mockLoginByPairingCode).toHaveBeenCalledWith('SKGAZZ')
+      })
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.PairingConfirmation, {
+        serviceId: 'ref-456',
+        serviceName: 'BC Parks Discover Camping',
+      })
+      // Param is cleared after consumption so re-focus doesn't re-submit
+      expect(mockNavigation.setParams).toHaveBeenCalledWith({ pairingCode: undefined })
+    })
+
+    test('does not auto-submit when the param is too short', async () => {
+      jest.mocked(useRoute).mockReturnValue({ params: { pairingCode: 'ABC' } } as ReturnType<typeof useRoute>)
+
+      renderScreen()
+
+      await waitFor(() => {
+        expect(mockLoginByPairingCode).not.toHaveBeenCalled()
+      })
+      expect(mockNavigation.setParams).not.toHaveBeenCalled()
     })
   })
 })
