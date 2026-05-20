@@ -1142,6 +1142,8 @@ const translation = {
       }
     },
     "VerificationMethods": {
+      "Title": "Choose how to verify (FR)",
+      "Subtitle": "We need to make sure you're a real person. How would you like to proceed? (FR)",
       "SendVideoTitle": "Record a video for an agent to verify (FR)",
       "SendVideoDescription": "Turnaround time is 24 hours (FR)",
       "VideoCallTitle": "Have a video call with an agent (FR)",

@@ -5,7 +5,7 @@ import { ScreenWrapper, testIdWithKey, ThemedText } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, View } from 'react-native'
+import { ActivityIndicator, StyleSheet } from 'react-native'
 import useVerificationMethodModel from './_models/useVerificationMethodModel'
 import VerifyMethodActionButton from './components/VerifyMethodActionButton'
 import ServicePeriodList from './live-call/components/ServicePeriodList'
@@ -15,6 +15,14 @@ type VerificationMethodSelectionScreenProps = {
 }
 
 const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSelectionScreenProps) => {
+  const styles = StyleSheet.create({
+    pageHeaderContainer: {
+      paddingHorizontal: Spacing.md,
+      marginBottom: Spacing.sm,
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+  })
   const { t } = useTranslation()
 
   const {
@@ -73,39 +81,27 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
   }
 
   return (
-    <ScreenWrapper padded={false}>
-      <View
-        style={{
-          marginTop: Spacing.xxl,
-          paddingHorizontal: Spacing.md,
-          marginBottom: Spacing.sm,
-          alignItems: 'center',
-        }}
-      >
-        <ThemedText variant="headingFour">{'Choose how to verify'}</ThemedText>
-        <ThemedText style={{ marginVertical: Spacing.md }}>
-          {"We need to make sure you're a real person. How would you like to proceed?"}
-        </ThemedText>
-      </View>
+    <ScreenWrapper scrollViewContainerStyle={styles.pageHeaderContainer} edges={['top', 'bottom', 'left', 'right']}>
+      <ThemedText variant="headingFour">{t('BCSC.VerificationMethods.Title')}</ThemedText>
+      <ThemedText style={{ marginVertical: Spacing.md }}>{t('BCSC.VerificationMethods.Subtitle')}</ThemedText>
+
       {renderOption(primaryOption)}
       {remainingOptions.map((option) => {
         return renderOption(option)
       })}
 
-      <View style={{ marginHorizontal: Spacing.md }}>
-        <ThemedText
-          variant={'headingFour'}
-          style={{ marginTop: Spacing.md }}
-          testID={testIdWithKey('HoursOfServiceTitle')}
-        >
-          {t('BCSC.VideoCall.CallBusyOrClosed.HoursOfService')}
-        </ThemedText>
-        {hoursLoading ? (
-          <ActivityIndicator style={{ marginTop: Spacing.sm }} />
-        ) : (
-          formattedHours && <ServicePeriodList items={formattedHours} />
-        )}
-      </View>
+      <ThemedText
+        variant={'headingFour'}
+        style={{ marginTop: Spacing.md, alignSelf: 'stretch' }}
+        testID={testIdWithKey('HoursOfServiceTitle')}
+      >
+        {t('BCSC.VideoCall.CallBusyOrClosed.HoursOfService')}
+      </ThemedText>
+      {hoursLoading ? (
+        <ActivityIndicator style={{ marginTop: Spacing.sm }} />
+      ) : (
+        formattedHours && <ServicePeriodList items={formattedHours} />
+      )}
     </ScreenWrapper>
   )
 }
