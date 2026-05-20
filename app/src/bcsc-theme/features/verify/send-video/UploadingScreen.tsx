@@ -1,7 +1,9 @@
+import { LoadingScreenContent } from '@/bcsc-theme/features/splash-loading/LoadingScreenContent'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { ScreenWrapper } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import useEvidenceUploadModel from './useEvidenceUploadModel'
 
 type UploadingScreenProps = {
@@ -9,13 +11,28 @@ type UploadingScreenProps = {
 }
 
 const UploadingScreen = ({ navigation }: UploadingScreenProps) => {
-  const { handleSend } = useEvidenceUploadModel(navigation)
+  const { handleSend, uploadMessage } = useEvidenceUploadModel(navigation)
+  const { t } = useTranslation()
 
   useEffect(() => {
     handleSend()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [handleSend])
 
-  return <ScreenWrapper />
+  const controls = (
+    <Button
+      buttonType={ButtonType.Secondary}
+      onPress={() => navigation.goBack()}
+      testID={testIdWithKey('CancelUpload')}
+      title={t('Global.Cancel')}
+      accessibilityLabel={t('Global.Cancel')}
+    />
+  )
+
+  return (
+    <ScreenWrapper controls={controls} edges={['top', 'bottom', 'left', 'right']}>
+      <LoadingScreenContent message={uploadMessage ?? undefined} />
+    </ScreenWrapper>
+  )
 }
 
 export default UploadingScreen

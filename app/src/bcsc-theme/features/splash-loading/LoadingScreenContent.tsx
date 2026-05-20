@@ -11,6 +11,11 @@ export interface LoadingScreenContentProps {
    * @type {string | undefined}
    */
   message?: string
+  /**
+   * An optional boolean to determine if the loading icon appears above the provided message or below.
+   * This defaults to true, meaning the icon is above the message.
+   */
+  iconOnTop?: boolean
 }
 
 /**
@@ -18,10 +23,10 @@ export interface LoadingScreenContentProps {
  *
  * @returns The LoadingScreenContent component.
  */
-export const LoadingScreenContent = ({ message }: LoadingScreenContentProps) => {
+export const LoadingScreenContent = ({ message, iconOnTop = true }: LoadingScreenContentProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
-
+  const iconSize = 113
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -44,12 +49,13 @@ export const LoadingScreenContent = ({ message }: LoadingScreenContentProps) => 
   return (
     <SafeAreaView style={styles.container} testID={testIdWithKey('LoadingScreenContent')}>
       <View style={styles.contentContainer}>
-        <BCAnimatedLoadingIcon size={113} />
+        {iconOnTop && <BCAnimatedLoadingIcon size={iconSize} />}
         <View style={styles.textContainer}>
           <ThemedText style={styles.text} variant="headingFour">
             {message ?? t('BCSC.Loading.DefaultMessage')}
           </ThemedText>
         </View>
+        {!iconOnTop && <BCAnimatedLoadingIcon size={iconSize} />}
       </View>
     </SafeAreaView>
   )

@@ -4,7 +4,6 @@ import {
   VerificationPrompt,
   VerificationVideoUploadPayload,
 } from '@/bcsc-theme/api/hooks/useEvidenceApi'
-import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useEvidenceUpload from '@/bcsc-theme/hooks/useEvidenceUpload'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
@@ -16,7 +15,7 @@ import readFileInChunks from '@/utils/read-file'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import RNFS from 'react-native-fs'
 import { VerificationVideoCache } from './VideoReviewScreen'
@@ -30,7 +29,8 @@ const useEvidenceUploadModel = (
   const { updateAccountFlags } = useSecureActions()
   const { processAdditionalEvidence } = useEvidenceUpload()
   const { t } = useTranslation()
-  const loadingScreen = useLoadingScreen()
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadMessage, setUploadMessage] = useState<string | null>(null)
   const { fileUploadErrorAlert } = useAlerts(navigation)
 
   const { photoPath, videoPath, videoThumbnailPath, videoDuration, prompts, photoMetadata } = store.bcsc
@@ -116,7 +116,8 @@ const useEvidenceUploadModel = (
   )
 
   const handleSend = useCallback(async () => {
-    const stopLoading = loadingScreen.startLoading(t('BCSC.SendVideo.UploadProgress.PreparingVideo'))
+    setIsUploading(true)
+    setUploadMessage(t('BCSC.SendVideo.UploadProgress.PreparingVideo'))
     try {
       if (!photoPath || !videoPath || !videoDuration) {
         throw new Error('Missing photo or video data')
@@ -136,10 +137,10 @@ const useEvidenceUploadModel = (
 
       const localFiles = await prepareLocalFiles(photoPath, videoPath, videoDuration, prompts)
 
-      loadingScreen.updateLoadingMessage(t('BCSC.SendVideo.UploadProgress.PreparingDocuments'))
+      setUploadMessage(t('BCSC.SendVideo.UploadProgress.PreparingDocuments'))
       const additionalEvidence = await processAdditionalEvidence()
 
-      loadingScreen.updateLoadingMessage(t('BCSC.SendVideo.UploadProgress.UploadingInformation'))
+      setUploadMessage(t('BCSC.SendVideo.UploadProgress.UploadingInformation'))
       const evidenceMetadata = await uploadEvidenceMetadata(photoMetadata, localFiles.videoMetadata)
 
       await uploadEvidenceFiles(
@@ -150,7 +151,7 @@ const useEvidenceUploadModel = (
         additionalEvidence
       )
 
-      loadingScreen.updateLoadingMessage(t('BCSC.SendVideo.UploadProgress.FinalizingVerification'))
+      setUploadMessage(t('BCSC.SendVideo.UploadProgress.FinalizingVerification'))
       const additionalUploadUris = additionalEvidence.map(({ uploadUri }) => uploadUri)
       await finalizeVerification(
         evidenceMetadata.photoMetadataResponse.upload_uri,
@@ -179,12 +180,12 @@ const useEvidenceUploadModel = (
       logger.error('[useEvidenceUploadModel] Error during evidence upload process', appError)
       fileUploadErrorAlert(appError)
     } finally {
-      stopLoading()
+      setIsUploading(false)
+      setUploadMessage(null)
     }
   }, [
     fileUploadErrorAlert,
     finalizeVerification,
-    loadingScreen,
     logger,
     navigation,
     photoMetadata,
@@ -205,7 +206,8 @@ const useEvidenceUploadModel = (
   return {
     handleSend,
     isReady,
-    isLoading: loadingScreen.isLoading,
+    isUploading,
+    uploadMessage,
   }
 }
 
