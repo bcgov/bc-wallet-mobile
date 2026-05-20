@@ -224,7 +224,7 @@ const translation = {
       "Title": "Need help?",
       "AccessibilityLabel": "Help menu",
       "Version": "BCSC version: {{ version }}",
-      "LearnMore": "Learn about BCSC app",
+      "LearnMore": "Learn more",
       "GiveFeedback": "Give feedback",
       "ReportProblem": "Report a problem",
     },

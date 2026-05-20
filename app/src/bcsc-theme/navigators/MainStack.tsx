@@ -16,7 +16,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import Developer from '../../screens/Developer'
-import { createMainFloatingMenuButton } from '../components/FloatingHelpMenuHeaderButton'
+import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
@@ -131,7 +131,7 @@ const MainStack: React.FC = () => {
             headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
             headerLeft: createHeaderBackButton,
             header: createHeaderWithoutBanner,
-            headerRight: createMainFloatingMenuButton(),
+            headerRight: createFloatingHelpMenuButton({ webViewScreen: BCSCScreens.MainWebView }),
           }}
         >
           <Stack.Screen

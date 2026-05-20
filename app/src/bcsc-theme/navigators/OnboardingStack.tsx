@@ -1,12 +1,11 @@
-import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
+import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE } from '@/constants'
 import Developer from '@/screens/Developer'
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
+import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
-import { createHeaderRightMoreButton } from '../components/HeaderRightMoreButton'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
-import { createOnboardingHelpHeaderButton } from '../components/HelpHeaderButton'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferInformationScreen from '../features/account-transfer/transferee/TransferInformationScreen'
 import { OnboardingRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
@@ -50,7 +49,7 @@ const OnboardingStack = (): React.ReactElement => {
         headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
         headerLeft: createHeaderBackButton,
         header: createHeaderWithoutBanner,
-        headerRight: createHeaderRightMoreButton,
+        headerRight: createFloatingHelpMenuButton({ webViewScreen: BCSCScreens.OnboardingWebView }),
       }}
     >
       <Stack.Screen
@@ -96,7 +95,6 @@ const OnboardingStack = (): React.ReactElement => {
         options={{
           title: t('BCSC.Onboarding.NotificationsTitle'),
           headerShown: true,
-          headerRight: createOnboardingHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
         }}
       />
       <Stack.Screen

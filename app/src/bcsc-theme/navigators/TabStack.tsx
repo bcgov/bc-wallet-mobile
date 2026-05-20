@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next'
 import { Animated, Platform, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { createMainFloatingMenuButton } from '../components/FloatingHelpMenuHeaderButton'
+import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createTabHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainSettingsHeaderButton } from '../components/SettingsHeaderButton'
 import { AgentReadyGate } from '../features/agent'
@@ -151,7 +151,7 @@ const BCSCTabStack: React.FC = () => {
           tabBarInactiveTintColor: TabTheme.tabBarInactiveTintColor,
           title: '',
           header: createTabHeaderWithoutBanner,
-          headerRight: createMainFloatingMenuButton(),
+          headerRight: createFloatingHelpMenuButton({ webViewScreen: BCSCScreens.MainWebView }),
         }}
       >
         <Tab.Screen
