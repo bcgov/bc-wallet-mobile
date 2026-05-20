@@ -203,6 +203,7 @@ exports[`EditNickname renders correctly 1`] = `
                   },
                   [
                     {
+                      "color": "#313132",
                       "marginBottom": 8,
                     },
                     undefined,
