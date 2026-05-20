@@ -1,65 +1,108 @@
-import { ButtonLocation, IconButton, QRRenderer, TOKENS, ThemedText, testIdWithKey, useServices } from '@bifold/core'
+import {
+  ButtonLocation,
+  IconButton,
+  InfoBox,
+  InfoBoxType,
+  QRRenderer,
+  testIdWithKey,
+  ThemedText,
+  TOKENS,
+  useServices,
+  useTheme,
+} from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, Share, StyleSheet, View, useWindowDimensions } from 'react-native'
-// import { useBCSCAgent } from '../agent'
+import { ActivityIndicator, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native'
+
+import { useBCSCAgent } from '../agent'
+
+import useQRDisplayViewModel, { QRDisplayStatus } from './useQRDisplayViewModel'
 import WalletNameDisplay from './WalletNameDisplay'
 
 const QRDisplay: React.FC = () => {
-  // const { agent } = useBCSCAgent()
+  const { agent } = useBCSCAgent()
   const { t } = useTranslation()
   const navigation = useNavigation()
   const { width } = useWindowDimensions()
-  const qrSize = width - 80
-  const [invitation, setInvitation] = useState<string | undefined>(undefined)
+  const { ColorPalette, Spacing } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const vm = useQRDisplayViewModel({ agent, logger })
 
-  const headerRight = useCallback(
-    () => (
+  const qrSize = width - Spacing.lg * 2
+
+  const headerRight = useCallback(() => {
+    if (vm.status !== QRDisplayStatus.READY) {
+      return null
+    }
+    return (
       <IconButton
         buttonLocation={ButtonLocation.Right}
         icon="share-variant"
-        accessibilityLabel="Share"
+        accessibilityLabel={t('Global.Share')}
         testID={testIdWithKey('Share')}
-        onPress={() => {
-          if (!invitation) {
-            return
-          }
-          logger.info('Sharing QR invitation')
-          Share.share({ message: invitation }).catch((error) => logger.error('Error sharing QR invitation', error))
-        }}
+        onPress={vm.share}
       />
-    ),
-    [invitation, logger]
-  )
+    )
+  }, [t, vm.share, vm.status])
 
   useEffect(() => {
     navigation.setOptions({ headerRight })
   }, [navigation, headerRight])
 
-  useEffect(() => {
-    const fetchInvitation = async () => {
-      // const newInvitation = await createConnectionInvitation(agent as Agent)
-      // setInvitation(newInvitation.invitationUrl)
-      setInvitation('https://example.com/invitation') // Placeholder for testing
-    }
-    fetchInvitation()
-  }, [])
-
   const styles = StyleSheet.create({
-    content: {
+    container: {
+      flexGrow: 1,
+    },
+    qrFrame: {
+      padding: Spacing.lg,
       alignItems: 'center',
-      paddingTop: 20,
+    },
+    descriptionBlock: {
+      padding: Spacing.lg,
+      gap: Spacing.sm,
+    },
+    description: {
+      textAlign: 'left',
+    },
+    stateContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: Spacing.lg,
     },
   })
 
+  if (vm.status === QRDisplayStatus.LOADING) {
+    return (
+      <View style={styles.stateContainer} testID={testIdWithKey('QRDisplay.Loading')}>
+        <ActivityIndicator size="large" color={ColorPalette.brand.primary} />
+      </View>
+    )
+  }
+
+  if (vm.status === QRDisplayStatus.ERROR) {
+    return (
+      <View style={styles.stateContainer} testID={testIdWithKey('QRDisplay.Error')}>
+        <InfoBox
+          notificationType={InfoBoxType.Error}
+          title={t('BCSC.QRDisplay.ErrorTitle')}
+          description={t('BCSC.QRDisplay.ErrorBody')}
+          onCallToActionPressed={vm.retry}
+          onCallToActionLabel={t('BCSC.QRDisplay.RetryCta')}
+        />
+      </View>
+    )
+  }
+
   return (
-    <ScrollView contentContainerStyle={styles.content}>
-      <QRRenderer value={invitation || ''} size={qrSize} />
-      <WalletNameDisplay />
-      <View>
-        <ThemedText style={{ marginTop: 20 }}>{t('BCSC.QRDisplay.SharingDescription')}</ThemedText>
+    <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.qrFrame}>
+        <QRRenderer value={vm.invitation ?? ''} size={qrSize} />
+      </View>
+      <View style={styles.descriptionBlock}>
+        <WalletNameDisplay />
+        <ThemedText style={styles.description}>{t('BCSC.QRDisplay.SharingDescription')}</ThemedText>
       </View>
     </ScrollView>
   )

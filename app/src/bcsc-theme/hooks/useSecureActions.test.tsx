@@ -62,7 +62,7 @@ describe('useSecureActions', () => {
       const { result } = renderHook(() => useSecureActions())
 
       const completeEvidence = makeEvidence({
-        evidenceType: { evidence_type: 'drivers_licence' } as any,
+        evidenceType: { evidence_type: 'drivers_licence', image_sides: [{}, {}] } as any,
         metadata: [{ uri: 'front.jpg' } as any, { uri: 'back.jpg' } as any],
         documentNumber: 'DL123',
       })
@@ -78,11 +78,30 @@ describe('useSecureActions', () => {
       expect(mockDispatch).not.toHaveBeenCalled()
     })
 
-    it('should remove evidence without both photos', async () => {
+    it('should keep single-sided evidence (e.g. passport) with one photo and documentNumber', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      const completePassport = makeEvidence({
+        evidenceType: { evidence_type: 'canadian_passport', image_sides: [{}] } as any,
+        metadata: [{ uri: 'front.jpg' } as any],
+        documentNumber: 'P123',
+      })
+
+      let cleaned: EvidenceMetadata[] = []
+      await act(async () => {
+        cleaned = await result.current.removeIncompleteEvidence([completePassport])
+      })
+
+      expect(cleaned).toEqual([completePassport])
+      expect(setEvidence).not.toHaveBeenCalled()
+      expect(mockDispatch).not.toHaveBeenCalled()
+    })
+
+    it('should remove two-sided evidence missing a side', async () => {
       const { result } = renderHook(() => useSecureActions())
 
       const noPhotos = makeEvidence({
-        evidenceType: { evidence_type: 'drivers_licence' } as any,
+        evidenceType: { evidence_type: 'drivers_licence', image_sides: [{}, {}] } as any,
         metadata: [{ uri: 'front.jpg' } as any],
         documentNumber: 'DL123',
       })
@@ -100,7 +119,7 @@ describe('useSecureActions', () => {
       const { result } = renderHook(() => useSecureActions())
 
       const noDocNumber = makeEvidence({
-        evidenceType: { evidence_type: 'passport' } as any,
+        evidenceType: { evidence_type: 'passport', image_sides: [{}, {}] } as any,
         metadata: [{ uri: 'front.jpg' } as any, { uri: 'back.jpg' } as any],
       })
 
@@ -117,12 +136,12 @@ describe('useSecureActions', () => {
       const { result } = renderHook(() => useSecureActions())
 
       const complete = makeEvidence({
-        evidenceType: { evidence_type: 'drivers_licence' } as any,
+        evidenceType: { evidence_type: 'drivers_licence', image_sides: [{}, {}] } as any,
         metadata: [{ uri: 'front.jpg' } as any, { uri: 'back.jpg' } as any],
         documentNumber: 'DL456',
       })
       const incomplete = makeEvidence({
-        evidenceType: { evidence_type: 'passport' } as any,
+        evidenceType: { evidence_type: 'passport', image_sides: [{}, {}] } as any,
         metadata: [{ uri: 'page.jpg' } as any, { uri: 'page2.jpg' } as any],
         // no documentNumber
       })
@@ -140,12 +159,12 @@ describe('useSecureActions', () => {
       const { result } = renderHook(() => useSecureActions())
 
       const complete = makeEvidence({
-        evidenceType: { evidence_type: 'drivers_licence' } as any,
+        evidenceType: { evidence_type: 'drivers_licence', image_sides: [{}, {}] } as any,
         metadata: [{ uri: 'front.jpg' } as any, { uri: 'back.jpg' } as any],
         documentNumber: 'DL789',
       })
       const incomplete = makeEvidence({
-        evidenceType: { evidence_type: 'passport' } as any,
+        evidenceType: { evidence_type: 'other_two_sided', image_sides: [{}, {}] } as any,
         metadata: [{ uri: 'page.jpg' } as any],
         documentNumber: 'P123',
       })

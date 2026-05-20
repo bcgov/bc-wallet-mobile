@@ -49,11 +49,11 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
         <View
           style={
             [
+              false,
               {
-                "padding": 16,
-              },
-              {
-                "gap": 24,
+                "flexGrow": 1,
+                "gap": 16,
+                "padding": 24,
               },
             ]
           }
@@ -65,14 +65,17 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                 {
                   "color": "#313132",
                   "fontFamily": "BCSans-Regular",
-                  "fontSize": 26,
+                  "fontSize": 32,
                   "fontWeight": "bold",
                 },
-                undefined,
+                {
+                  "color": "black",
+                  "textAlign": "center",
+                },
               ]
             }
           >
-            BCSC.EmailConfirmation.VerifyYourEmail
+            BCSC.EmailConfirmation.EnterVerificationCode
           </Text>
           <Text
             maxFontSizeMultiplier={2}
@@ -84,26 +87,48 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                   "fontSize": 18,
                   "fontWeight": "normal",
                 },
-                undefined,
+                {
+                  "textAlign": "center",
+                },
               ]
             }
           >
-            BCSC.EmailConfirmation.EnterTheSixDigitCode
+            BCSC.EmailConfirmation.CodeSentTo
              
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "bold",
-                  },
-                  undefined,
-                ]
-              }
-            />
+          </Text>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "bold",
+                },
+                {
+                  "textAlign": "center",
+                },
+              ]
+            }
+          />
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "textAlign": "center",
+                },
+              ]
+            }
+          >
+            BCSC.EmailConfirmation.EnterCodeWithin
           </Text>
           <View>
             <View
@@ -114,8 +139,10 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                     "justifyContent": "space-between",
                   },
                   {
+                    "alignItems": "center",
                     "flexDirection": "row",
-                    "justifyContent": "space-between",
+                    "gap": 4,
+                    "justifyContent": "center",
                   },
                 ]
               }
@@ -134,17 +161,21 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                     [
                       {
                         "backgroundColor": "#FFFFFF",
-                        "borderColor": "#D8D8D8",
-                        "borderRadius": 8,
+                        "borderBottomWidth": 2,
+                        "borderColor": "#D3D3D3",
+                        "borderLeftWidth": 0,
+                        "borderRadius": 0,
+                        "borderRightWidth": 0,
+                        "borderTopWidth": 0,
                         "borderWidth": 2,
                         "color": "#313132",
                         "fontSize": 32,
-                        "height": 60,
+                        "height": 56,
                         "includeFontPadding": false,
-                        "lineHeight": 56,
+                        "lineHeight": 52,
                         "textAlign": "center",
                         "textAlignVertical": "center",
-                        "width": 50,
+                        "width": 52,
                       },
                       false,
                       null,
@@ -166,17 +197,21 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                     [
                       {
                         "backgroundColor": "#FFFFFF",
-                        "borderColor": "#D8D8D8",
-                        "borderRadius": 8,
+                        "borderBottomWidth": 2,
+                        "borderColor": "#D3D3D3",
+                        "borderLeftWidth": 0,
+                        "borderRadius": 0,
+                        "borderRightWidth": 0,
+                        "borderTopWidth": 0,
                         "borderWidth": 2,
                         "color": "#313132",
                         "fontSize": 32,
-                        "height": 60,
+                        "height": 56,
                         "includeFontPadding": false,
-                        "lineHeight": 56,
+                        "lineHeight": 52,
                         "textAlign": "center",
                         "textAlignVertical": "center",
-                        "width": 50,
+                        "width": 52,
                       },
                       false,
                       null,
@@ -198,17 +233,78 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                     [
                       {
                         "backgroundColor": "#FFFFFF",
-                        "borderColor": "#D8D8D8",
-                        "borderRadius": 8,
+                        "borderBottomWidth": 2,
+                        "borderColor": "#D3D3D3",
+                        "borderLeftWidth": 0,
+                        "borderRadius": 0,
+                        "borderRightWidth": 0,
+                        "borderTopWidth": 0,
                         "borderWidth": 2,
                         "color": "#313132",
                         "fontSize": 32,
-                        "height": 60,
+                        "height": 56,
                         "includeFontPadding": false,
-                        "lineHeight": 56,
+                        "lineHeight": 52,
                         "textAlign": "center",
                         "textAlignVertical": "center",
-                        "width": 50,
+                        "width": 52,
+                      },
+                      false,
+                      null,
+                    ],
+                  ]
+                }
+              />
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    {
+                      "color": "#003366",
+                      "fontSize": 32,
+                      "lineHeight": 56,
+                      "textAlign": "center",
+                    },
+                  ]
+                }
+              >
+                –
+              </Text>
+              <Text
+                maxFontSizeMultiplier={2}
+                onLayout={[Function]}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "backgroundColor": "#FFFFFF",
+                        "borderBottomWidth": 2,
+                        "borderColor": "#D3D3D3",
+                        "borderLeftWidth": 0,
+                        "borderRadius": 0,
+                        "borderRightWidth": 0,
+                        "borderTopWidth": 0,
+                        "borderWidth": 2,
+                        "color": "#313132",
+                        "fontSize": 32,
+                        "height": 56,
+                        "includeFontPadding": false,
+                        "lineHeight": 52,
+                        "textAlign": "center",
+                        "textAlignVertical": "center",
+                        "width": 52,
                       },
                       false,
                       null,
@@ -230,17 +326,21 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                     [
                       {
                         "backgroundColor": "#FFFFFF",
-                        "borderColor": "#D8D8D8",
-                        "borderRadius": 8,
+                        "borderBottomWidth": 2,
+                        "borderColor": "#D3D3D3",
+                        "borderLeftWidth": 0,
+                        "borderRadius": 0,
+                        "borderRightWidth": 0,
+                        "borderTopWidth": 0,
                         "borderWidth": 2,
                         "color": "#313132",
                         "fontSize": 32,
-                        "height": 60,
+                        "height": 56,
                         "includeFontPadding": false,
-                        "lineHeight": 56,
+                        "lineHeight": 52,
                         "textAlign": "center",
                         "textAlignVertical": "center",
-                        "width": 50,
+                        "width": 52,
                       },
                       false,
                       null,
@@ -262,49 +362,21 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                     [
                       {
                         "backgroundColor": "#FFFFFF",
-                        "borderColor": "#D8D8D8",
-                        "borderRadius": 8,
+                        "borderBottomWidth": 2,
+                        "borderColor": "#D3D3D3",
+                        "borderLeftWidth": 0,
+                        "borderRadius": 0,
+                        "borderRightWidth": 0,
+                        "borderTopWidth": 0,
                         "borderWidth": 2,
                         "color": "#313132",
                         "fontSize": 32,
-                        "height": 60,
+                        "height": 56,
                         "includeFontPadding": false,
-                        "lineHeight": 56,
+                        "lineHeight": 52,
                         "textAlign": "center",
                         "textAlignVertical": "center",
-                        "width": 50,
-                      },
-                      false,
-                      null,
-                    ],
-                  ]
-                }
-              />
-              <Text
-                maxFontSizeMultiplier={2}
-                onLayout={[Function]}
-                style={
-                  [
-                    {
-                      "color": "#313132",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "normal",
-                    },
-                    [
-                      {
-                        "backgroundColor": "#FFFFFF",
-                        "borderColor": "#D8D8D8",
-                        "borderRadius": 8,
-                        "borderWidth": 2,
-                        "color": "#313132",
-                        "fontSize": 32,
-                        "height": 60,
-                        "includeFontPadding": false,
-                        "lineHeight": 56,
-                        "textAlign": "center",
-                        "textAlignVertical": "center",
-                        "width": 50,
+                        "width": 52,
                       },
                       false,
                       null,
@@ -346,6 +418,58 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
               />
             </View>
           </View>
+          <View
+            style={
+              [
+                {
+                  "backgroundColor": "#FCBA19",
+                  "height": 2,
+                },
+                undefined,
+              ]
+            }
+          />
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 14,
+                  "fontWeight": "normal",
+                },
+                {
+                  "textAlign": "center",
+                },
+              ]
+            }
+          >
+            BCSC.EmailConfirmation.CantFindCode
+            <Text
+              accessibilityLabel="BCSC.EmailConfirmation.SendNewCode"
+              accessibilityRole="link"
+              maxFontSizeMultiplier={2}
+              onPress={[Function]}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 14,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "color": "#1A5A96",
+                    "fontWeight": "bold",
+                  },
+                ]
+              }
+              testID="ResendCodeLink"
+            >
+              BCSC.EmailConfirmation.SendNewCode
+            </Text>
+          </Text>
         </View>
         <View
           style={
@@ -354,10 +478,7 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                 {
                   "gap": 16,
                 },
-                {
-                  "paddingBottom": 16,
-                  "paddingHorizontal": 16,
-                },
+                false,
                 undefined,
               ],
               {
@@ -367,236 +488,127 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
           }
         >
           <View
-            accessibilityLabel="Global.Continue"
-            accessibilityRole="button"
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": false,
-                "expanded": undefined,
-                "selected": undefined,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            onClick={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
             style={
               {
-                "backgroundColor": "#003366",
-                "borderRadius": 4,
-                "opacity": 1,
-                "padding": 16,
+                "flexGrow": 1,
+                "width": "100%",
               }
             }
-            testID="ContinueButton"
           >
             <View
               style={
                 {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "justifyContent": "center",
+                  "left": 0,
+                  "position": "absolute",
+                  "right": 0,
+                  "shadowColor": "#000",
+                  "shadowOffset": {
+                    "height": -3,
+                    "width": 0,
+                  },
+                  "shadowOpacity": 0.9,
+                  "shadowRadius": 3,
+                  "top": 0,
+                  "zIndex": -1,
                 }
               }
             >
-              <Text
-                maxFontSizeMultiplier={2}
+              <View
                 style={
-                  [
-                    {
-                      "color": "#313132",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "normal",
-                    },
-                    [
-                      {
-                        "color": "#FFFFFF",
-                        "fontFamily": "BCSans-Regular",
-                        "fontSize": 18,
-                        "fontWeight": "bold",
-                        "textAlign": "center",
-                      },
-                      false,
-                      false,
-                    ],
-                  ]
+                  {
+                    "backgroundColor": "#F2F2F2",
+                    "height": 1,
+                  }
                 }
-              >
-                Global.Continue
-              </Text>
+              />
             </View>
-          </View>
-          <View
-            accessibilityLabel="BCSC.EmailConfirmation.ResendCode"
-            accessibilityRole="button"
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": false,
-                "expanded": undefined,
-                "selected": undefined,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            onClick={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            style={
-              {
-                "borderColor": "#003366",
-                "borderRadius": 4,
-                "borderWidth": 2,
-                "opacity": 1,
-                "padding": 16,
-              }
-            }
-            testID="ResendCodeButton"
-          >
             <View
               style={
                 {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "justifyContent": "center",
+                  "backgroundColor": "#F2F2F2",
+                  "flexGrow": 1,
+                  "gap": 8,
+                  "padding": 24,
                 }
               }
             >
-              <Text
-                maxFontSizeMultiplier={2}
+              <View
+                accessibilityLabel="Global.Continue"
+                accessibilityRole="button"
+                accessibilityState={
+                  {
+                    "busy": undefined,
+                    "checked": undefined,
+                    "disabled": false,
+                    "expanded": undefined,
+                    "selected": undefined,
+                  }
+                }
+                accessibilityValue={
+                  {
+                    "max": undefined,
+                    "min": undefined,
+                    "now": undefined,
+                    "text": undefined,
+                  }
+                }
+                accessible={true}
+                collapsable={false}
+                focusable={true}
+                onClick={[Function]}
+                onResponderGrant={[Function]}
+                onResponderMove={[Function]}
+                onResponderRelease={[Function]}
+                onResponderTerminate={[Function]}
+                onResponderTerminationRequest={[Function]}
+                onStartShouldSetResponder={[Function]}
                 style={
-                  [
-                    {
-                      "color": "#313132",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "normal",
-                    },
-                    [
-                      {
-                        "color": "#003366",
-                        "fontFamily": "BCSans-Regular",
-                        "fontSize": 18,
-                        "fontWeight": "bold",
-                        "textAlign": "center",
-                      },
-                      false,
-                      false,
-                    ],
-                  ]
+                  {
+                    "backgroundColor": "#003366",
+                    "borderRadius": 4,
+                    "opacity": 1,
+                    "padding": 16,
+                  }
                 }
+                testID="ContinueButton"
               >
-                BCSC.EmailConfirmation.ResendCode
-              </Text>
-            </View>
-          </View>
-          <View
-            accessibilityLabel="BCSC.EmailConfirmation.GoToEmail"
-            accessibilityRole="button"
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": false,
-                "expanded": undefined,
-                "selected": undefined,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            onClick={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            style={
-              {
-                "borderColor": "#003366",
-                "borderRadius": 4,
-                "borderWidth": 2,
-                "opacity": 1,
-                "padding": 16,
-              }
-            }
-            testID="GoToEmailButton"
-          >
-            <View
-              style={
-                {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "justifyContent": "center",
-                }
-              }
-            >
-              <Text
-                maxFontSizeMultiplier={2}
-                style={
-                  [
+                <View
+                  style={
                     {
-                      "color": "#313132",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "normal",
-                    },
-                    [
-                      {
-                        "color": "#003366",
-                        "fontFamily": "BCSans-Regular",
-                        "fontSize": 18,
-                        "fontWeight": "bold",
-                        "textAlign": "center",
-                      },
-                      false,
-                      false,
-                    ],
-                  ]
-                }
-              >
-                BCSC.EmailConfirmation.GoToEmail
-              </Text>
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "justifyContent": "center",
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                        },
+                        [
+                          {
+                            "color": "#FFFFFF",
+                            "fontFamily": "BCSans-Regular",
+                            "fontSize": 18,
+                            "fontWeight": "bold",
+                            "textAlign": "center",
+                          },
+                          false,
+                          false,
+                        ],
+                      ]
+                    }
+                  >
+                    Global.Continue
+                  </Text>
+                </View>
+              </View>
             </View>
           </View>
         </View>
