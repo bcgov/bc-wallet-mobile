@@ -124,6 +124,16 @@ export const AutoLockScreen: React.FC = () => {
             testID: `auto-lock-time-${AutoLockTime.OneMinute}`,
             onPress: handleTimeoutChange,
           },
+          ...(__DEV__
+            ? [
+                {
+                  title: t('AutoLockTimes.Never'),
+                  value: AutoLockTime.Never,
+                  testID: `auto-lock-time-${AutoLockTime.Never}`,
+                  onPress: handleTimeoutChange,
+                },
+              ]
+            : []),
         ]}
         renderItem={({ item }) => {
           const data: AutoLockListItem = item
