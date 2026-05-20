@@ -43,6 +43,7 @@ export enum BCSCScreens {
   BirthdateLockout = 'Too Many Add Attempts',
   EnterEmail = 'Email Entry',
   EmailConfirmation = 'Email Verification',
+  EmailVerified = 'Email Verified',
   VerificationMethodSelection = 'Verify Options',
   VerifyInPerson = 'Verify In Person Instruction',
   PhotoInstructions = 'Selfie Photo Tips',
@@ -175,6 +176,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.BirthdateLockout]: undefined
   [BCSCScreens.EnterEmail]: { cardProcess: BCSCCardProcess }
   [BCSCScreens.EmailConfirmation]: { emailAddressId: string }
+  [BCSCScreens.EmailVerified]: undefined
   [BCSCScreens.VerificationMethodSelection]: undefined
   [BCSCScreens.VerifyInPerson]: undefined
   [BCSCScreens.PhotoInstructions]: { forLiveCall: boolean }

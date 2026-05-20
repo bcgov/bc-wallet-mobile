@@ -39,6 +39,7 @@ import VerificationCardErrorScreen from '../features/verify/VerificationCardErro
 import VerificationMethodSelectionScreen from '../features/verify/VerificationMethodSelectionScreen'
 import VerificationSuccessScreen from '../features/verify/VerificationSuccessScreen'
 import EmailConfirmationScreen from '../features/verify/email/EmailConfirmationScreen'
+import EmailVerifiedScreen from '../features/verify/email/EmailVerifiedScreen'
 import EnterEmailScreen from '../features/verify/email/EnterEmailScreen'
 import VerifyInPersonScreen from '../features/verify/in-person/VerifyInPersonScreen'
 import BeforeYouCallScreen from '../features/verify/live-call/BeforeYouCallScreen'
@@ -141,6 +142,11 @@ const VerifyStack = () => {
       <Stack.Screen name={BCSCScreens.BirthdateLockout} component={BirthdateLockoutScreen} />
       <Stack.Screen name={BCSCScreens.EnterEmail} component={EnterEmailScreen} />
       <Stack.Screen name={BCSCScreens.EmailConfirmation} component={EmailConfirmationScreen} />
+      <Stack.Screen
+        name={BCSCScreens.EmailVerified}
+        component={EmailVerifiedScreen}
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
       <Stack.Screen
         name={BCSCScreens.VerificationMethodSelection}
         component={VerificationMethodSelectionScreen}

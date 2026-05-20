@@ -77,13 +77,12 @@ describe('EnterEmailScreen', () => {
       )
 
       expect(getByText('BCSC.EnterEmail.EnterEmailAddress')).toBeTruthy()
-      expect(getByText('BCSC.EnterEmail.EmailAddress')).toBeTruthy()
       expect(getByText('BCSC.EnterEmail.EmailDescription1')).toBeTruthy()
       expect(getByText('BCSC.EnterEmail.EmailDescription2')).toBeTruthy()
     })
 
-    it('should not display description 1 for Other card type', () => {
-      const { queryByText } = render(
+    it('should display description 1 for Other card type', () => {
+      const { getByText } = render(
         <BasicAppContext>
           <ErrorAlertProvider>
             <EnterEmailScreen
@@ -94,7 +93,7 @@ describe('EnterEmailScreen', () => {
         </BasicAppContext>
       )
 
-      expect(queryByText('BCSC.EnterEmail.EmailDescription1')).toBeNull()
+      expect(getByText('BCSC.EnterEmail.EmailDescription1')).toBeTruthy()
     })
 
     it('should display Skip button for non-Other card types i.e BCSCPhoto', () => {

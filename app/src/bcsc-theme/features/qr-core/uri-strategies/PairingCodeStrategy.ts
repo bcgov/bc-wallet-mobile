@@ -1,26 +1,40 @@
+import { PAIRING_CODE_LENGTH } from '@/constants'
+
 import type { ScanContext, ScanResult, UriStrategy } from './types'
 
-// Pairing-code QR codes carry a short alphanumeric code (typically the same
-// shape ManualPairing accepts). The actual handler that surfaces this into
-// the PairingCode tab is tracked in #3838 — this stub just exercises the
-// multi-strategy seam so #3838 only adds a body.
-const PAIRING_CODE_PATTERN = /^[A-Z0-9]{6,12}$/
+// Pairing QRs encode a landing-page URL with the code in the fragment, e.g.
+//   https://idsit.gov.bc.ca/static/pairingqrcode.html#SKGAZZ
+// Host varies across environments, so we anchor on the path + fragment shape.
+const PAIRING_QR_PATH = /pairingqrcode\.html$/i
+const PAIRING_CODE_FRAGMENT = new RegExp(`^[A-Z0-9]{${PAIRING_CODE_LENGTH}}$`)
 
-export const isPairingCode = (value: string): boolean => PAIRING_CODE_PATTERN.test(value.trim())
+export const extractPairingCode = (uri: string): string | null => {
+  try {
+    const url = new URL(uri)
+    if (!PAIRING_QR_PATH.test(url.pathname)) {
+      return null
+    }
+    const fragment = url.hash.startsWith('#') ? url.hash.slice(1) : url.hash
+    return PAIRING_CODE_FRAGMENT.test(fragment) ? fragment : null
+  } catch {
+    return null
+  }
+}
 
 const PairingCodeStrategy: UriStrategy = {
   name: 'pairing-code',
 
   matches(uri) {
-    return isPairingCode(uri)
+    return extractPairingCode(uri) !== null
   },
 
-  async handle(_uri, ctx: ScanContext): Promise<ScanResult> {
-    ctx.logger.info('[PairingCodeStrategy] pairing-code QR detected — handler pending (#3838)')
-    // Surface as `unsupported` so the user sees a "pending" message instead of the
-    // generic "QR code not recognized" surfaced for truly unknown codes. #3838 will
-    // replace this with a real `connection`-style result.
-    return { kind: 'unsupported', reason: 'PairingCodePending' }
+  async handle(uri, ctx: ScanContext): Promise<ScanResult> {
+    const code = extractPairingCode(uri)
+    if (!code) {
+      ctx.logger.warn('[PairingCodeStrategy] matched but failed to extract code')
+      return { kind: 'unrecognized' }
+    }
+    return { kind: 'pairing-code', pairingCode: code }
   },
 }
 

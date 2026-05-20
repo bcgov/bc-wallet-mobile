@@ -39,6 +39,8 @@ enum CaptureState {
   REVIEWING = 'REVIEWING',
 }
 
+const TOP_BANNER_HEIGHT = 140
+
 const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps) => {
   const { cardType } = route.params
   const [store] = useStore<BCState>()
@@ -49,7 +51,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const [currentPhotoPath, setCurrentPhotoPath] = useState<string>()
   const [capturedPhotos, setCapturedPhotos] = useState<PhotoMetadata[]>([])
   const { hasPermission, requestPermission } = useCameraPermission()
-  const { width } = useWindowDimensions()
+  const { width, height } = useWindowDimensions()
   const { ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const scanner = useCardScanner()
@@ -81,6 +83,10 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     },
   })
 
+  // SVGOverlay's customPath is the cutout — this rectangle leaves the top
+  // banner area inside the dark overlay so the instruction text reads clearly.
+  const customHeaderPath = `M 0 ${TOP_BANNER_HEIGHT} H ${width} V ${height} H 0 Z`
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -96,13 +102,6 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
       backgroundColor: 'transparent',
       alignItems: 'center',
       pointerEvents: 'none', // Allow touch events to pass through
-    },
-    reticle: {
-      width: width - 80, // Match mask width
-      height: (width - 80) / 1.59, // Match mask height/ratio
-      borderWidth: 6,
-      borderColor: ColorPalette.brand.primary,
-      borderRadius: 16,
     },
   })
 
@@ -224,7 +223,8 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
             cameraFace={'back'}
             cameraInstructions={currentSide.image_side_tip}
             cameraLabel={currentSide.image_side_label}
-            maskType={MaskType.ID_CARD}
+            maskType={MaskType.CUSTOM}
+            customPath={customHeaderPath}
             maskLineColor={ColorPalette.brand.primary}
             onPhotoTaken={handlePhotoTaken}
             codeScanner={codeScanner}

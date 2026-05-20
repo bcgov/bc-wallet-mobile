@@ -1,10 +1,10 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import BulletPointWithText from '@/components/BulletPointWithText'
-import SCAN_ID_IMAGE from '@assets/img/credential-scan.png'
+import BulletPointList from '@/components/BulletPointList'
+import ScanIdImage from '@assets/img/id-photo-info.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { Image, StyleSheet, View } from 'react-native'
 import { EvidenceType } from 'react-native-bcsc-core'
 
 type IDPhotoInformationScreenProps = {
@@ -16,52 +16,45 @@ const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScree
   const { cardType } = route.params
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
-  const styles = StyleSheet.create({
-    image: {
-      width: '100%',
-      height: 250,
-      marginBottom: Spacing.md,
-    },
-  })
 
   const controls = (
-    <Button
-      title={t('BCSC.IDPhotoInformation.TakePhoto')}
-      accessibilityLabel={t('BCSC.IDPhotoInformation.TakePhoto')}
-      testID={testIdWithKey('IDPhotoInformationTakePhoto')}
-      onPress={() => {
-        navigation.navigate(BCSCScreens.EvidenceCapture, {
-          cardType: cardType,
-        })
-      }}
-      buttonType={ButtonType.Primary}
-    />
+    <ControlContainer>
+      <Button
+        title={t('BCSC.IDPhotoInformation.TakePhoto')}
+        accessibilityLabel={t('BCSC.IDPhotoInformation.TakePhoto')}
+        testID={testIdWithKey('IDPhotoInformationTakePhoto')}
+        onPress={() => {
+          navigation.navigate(BCSCScreens.EvidenceCapture, {
+            cardType: cardType,
+          })
+        }}
+        buttonType={ButtonType.Primary}
+      />
+    </ControlContainer>
   )
 
   return (
-    <ScreenWrapper controls={controls}>
-      <Image source={SCAN_ID_IMAGE} style={styles.image} />
-      <View style={{ marginBottom: Spacing.md }}>
-        <ThemedText style={{ marginBottom: Spacing.md }} variant={'headingThree'}>
-          {t('BCSC.IDPhotoInformation.Heading')}
-        </ThemedText>
-        <BulletPointWithText
-          translationKey={t('BCSC.IDPhotoInformation.IDPhotoInstructionsBullet1')}
-          iconColor={ColorPalette.grayscale.white}
-        />
-        <BulletPointWithText
-          translationKey={t('BCSC.IDPhotoInformation.IDPhotoInstructionsBullet2')}
-          iconColor={ColorPalette.grayscale.white}
-        />
-        <BulletPointWithText
-          translationKey={t('BCSC.IDPhotoInformation.IDPhotoInstructionsBullet3')}
-          iconColor={ColorPalette.grayscale.white}
-        />
-        <BulletPointWithText
-          translationKey={t('BCSC.IDPhotoInformation.IDPhotoInstructionsBullet4')}
-          iconColor={ColorPalette.grayscale.white}
-        />
-      </View>
+    <ScreenWrapper
+      padded={false}
+      controls={controls}
+      scrollViewContainerStyle={{
+        flexGrow: 1,
+        gap: Spacing.sm,
+        padding: Spacing.lg,
+      }}
+    >
+      <ScanIdImage />
+      <ThemedText variant={'headingThree'}>{t('BCSC.IDPhotoInformation.Heading')}</ThemedText>
+      <BulletPointList
+        translationKeys={[
+          'BCSC.IDPhotoInformation.IDPhotoInstructionsBullet1',
+          'BCSC.IDPhotoInformation.IDPhotoInstructionsBullet2',
+          'BCSC.IDPhotoInformation.IDPhotoInstructionsBullet3',
+          'BCSC.IDPhotoInformation.IDPhotoInstructionsBullet4',
+        ]}
+        iconColor={ColorPalette.brand.icon}
+        iconSize={Spacing.xs}
+      />
     </ScreenWrapper>
   )
 }

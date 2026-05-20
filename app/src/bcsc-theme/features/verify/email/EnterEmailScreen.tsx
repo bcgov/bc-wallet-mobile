@@ -1,7 +1,10 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { HighlightDivider } from '@/bcsc-theme/components/HighlightDivider'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import BulletPointList from '@/components/BulletPointList'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
 import { BCState } from '@/store'
 import {
@@ -31,7 +34,7 @@ type EnterEmailScreenProps = {
 }
 
 const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
-  const { Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const { evidence } = useApi()
   const { updateUserInfo, updateAccountFlags } = useSecureActions()
   const [store] = useStore<BCState>()
@@ -42,6 +45,8 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
   const { ButtonLoading } = useAnimatedComponents()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
+
+  const isBCSCFlow = cardProcess !== BCSCCardProcess.NonBCSC
 
   const handleChangeEmail = (em: string) => {
     setEmail(em)
@@ -57,9 +62,11 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
 
     try {
       setLoading(true)
-      const { email_address_id } = await evidence.createEmailVerification(email)
+      // Email verification is case-insensitive, so normalize before persisting/sending
+      const normalizedEmail = email.toLowerCase()
+      const { email_address_id } = await evidence.createEmailVerification(normalizedEmail)
       await updateAccountFlags({ userSkippedEmailVerification: false })
-      await updateUserInfo({ email, isEmailVerified: false })
+      await updateUserInfo({ email: normalizedEmail, isEmailVerified: false })
       navigation.navigate(BCSCScreens.EmailConfirmation, { emailAddressId: email_address_id })
     } catch (error: any) {
       setError(t('BCSC.EmailConfirmation.ErrorTitle'))
@@ -91,7 +98,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
   }
 
   const controls = (
-    <>
+    <ControlContainer>
       <Button
         buttonType={ButtonType.Primary}
         onPress={handleSubmit}
@@ -101,7 +108,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
       >
         {loading && <ButtonLoading />}
       </Button>
-      {cardProcess !== BCSCCardProcess.NonBCSC ? (
+      {isBCSCFlow ? (
         <Button
           buttonType={ButtonType.Secondary}
           onPress={handleSkip}
@@ -110,21 +117,26 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
           testID={'SkipButton'}
         />
       ) : null}
-    </>
+    </ControlContainer>
   )
 
   return (
-    <ScreenWrapper keyboardActive={true} controls={controls}>
-      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-        {t('BCSC.EnterEmail.EnterEmailAddress')}
-      </ThemedText>
-      {cardProcess !== BCSCCardProcess.NonBCSC ? (
-        <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.EnterEmail.EmailDescription1')}</ThemedText>
-      ) : null}
-      <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.EnterEmail.EmailDescription2')}</ThemedText>
+    <ScreenWrapper
+      keyboardActive
+      padded={false}
+      controls={controls}
+      scrollViewContainerStyle={{
+        flexGrow: 1,
+        gap: Spacing.md,
+        padding: Spacing.lg,
+      }}
+    >
+      <ThemedText variant={'headingThree'}>{t('BCSC.EnterEmail.EnterEmailAddress')}</ThemedText>
+
       <InputWithValidation
         id={'email'}
         label={t('BCSC.EnterEmail.EmailAddress')}
+        hideLabel
         value={email}
         onChangeText={handleChangeEmail}
         error={error}
@@ -135,7 +147,24 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
           autoCorrect: false,
           autoComplete: 'email',
           textContentType: 'emailAddress',
+          placeholder: t('BCSC.EnterEmail.EmailExample'),
         }}
+      />
+
+      <HighlightDivider />
+
+      <ThemedText>{t('BCSC.EnterEmail.EmailDescription1')}</ThemedText>
+      <ThemedText variant={'headingFour'} style={{ color: ColorPalette.brand.primary }}>
+        {t('BCSC.EnterEmail.EmailDescription2')}
+      </ThemedText>
+      <BulletPointList
+        translationKeys={[
+          'BCSC.EnterEmail.NotificationsBullet1',
+          'BCSC.EnterEmail.NotificationsBullet2',
+          'BCSC.EnterEmail.NotificationsBullet3',
+        ]}
+        iconColor={ColorPalette.brand.icon}
+        iconSize={Spacing.xs}
       />
     </ScreenWrapper>
   )
