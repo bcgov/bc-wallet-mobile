@@ -222,6 +222,8 @@ const translation = {
       "GiveFeedback": "Give feedback (FR)",
       "ReportProblem": "Report a problem (FR)",
     },
+    // TODO(i18n): Contacts strings are English placeholders with " (FR)" suffix.
+    // Replace with real translations before shipping to FR users.
     "Contacts": {
       "Title": "Contacts (FR)",
       "EmptyTitle": "Your contacts are empty (FR)",
@@ -265,6 +267,9 @@ const translation = {
         "Title": "Contact Details (FR)",
         "Download": "Download (FR)",
         "Copy": "Copy (FR)",
+        "ShareWarningTitle": "Share contact data? (FR)",
+        "ShareWarningBody": "This file contains identifiers and keys used to communicate with this contact. Only share it with services you trust. (FR)",
+        "ShareConfirm": "Share (FR)",
       },
       "Chat": {
         "Placeholder": "Message this contact... (FR)",

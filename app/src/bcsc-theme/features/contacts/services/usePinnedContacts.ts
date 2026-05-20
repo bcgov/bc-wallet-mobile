@@ -52,3 +52,11 @@ export const usePinnedContacts = () => {
   const togglePin = useCallback((contactId: string) => togglePinId(contactId), [])
   return { pinnedIds: ids, isPinned, togglePin }
 }
+
+// Tests rely on this to clear the module-level pin store and hydration flag
+// between cases — production code never calls it.
+export const resetPinnedContactsForTests = () => {
+  pinnedIds = new Set()
+  hydrationStarted = false
+  listeners.clear()
+}

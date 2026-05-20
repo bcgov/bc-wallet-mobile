@@ -1,5 +1,5 @@
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { ScreenWrapper, ThemedText, getConnectionName, testIdWithKey, useStore, useTheme } from '@bifold/core'
+import { ScreenWrapper, ThemedText, formatTime, getConnectionName, testIdWithKey, useStore, useTheme } from '@bifold/core'
 import { useConnectionById } from '@bifold/react-hooks'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -56,10 +56,7 @@ const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) 
     if (!connection?.createdAt) {
       return ''
     }
-    const date = new Date(connection.createdAt)
-    const datePart = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-    const timePart = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase()
-    return `${datePart}, ${timePart}`
+    return formatTime(new Date(connection.createdAt), { includeHour: true })
   }, [connection?.createdAt])
 
   const styles = StyleSheet.create({

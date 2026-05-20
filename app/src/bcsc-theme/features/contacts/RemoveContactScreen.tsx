@@ -36,17 +36,27 @@ const RemoveContactScreen = ({ navigation, route }: RemoveContactScreenProps) =>
           state: DidCommCredentialState.OfferReceived,
         }),
       ])
-      await Promise.allSettled([
+
+      // Delete child records first. If any fail, abort before deleting the
+      // connection itself so we don't leave orphan records pointing at a
+      // missing connectionId.
+      const childResults = await Promise.allSettled([
         ...proofs.map((p: { id: string }) => agent.modules.didcomm.proofs.deleteById(p.id)),
         ...offers.map((o: { id: string }) => agent.modules.didcomm.credentials.deleteById(o.id)),
         ...basicMessages.map((m: { id: string }) => agent.modules.didcomm.basicMessages.deleteById(m.id)),
-        agent.modules.didcomm.connections.deleteById(connection.id),
       ])
+      const childFailure = childResults.find((r) => r.status === 'rejected') as PromiseRejectedResult | undefined
+      if (childFailure) {
+        throw childFailure.reason instanceof Error ? childFailure.reason : new Error(String(childFailure.reason))
+      }
+
+      await agent.modules.didcomm.connections.deleteById(connection.id)
       // Pop both this modal and the details screen so we land on the list.
       navigation.popToTop()
       navigation.navigate(BCSCScreens.Contacts)
     } catch (err) {
-      Alert.alert(t('BCSC.Contacts.Remove.FailureTitle'), (err as Error).message)
+      const message = err instanceof Error ? err.message : String(err)
+      Alert.alert(t('BCSC.Contacts.Remove.FailureTitle'), message)
       setSubmitting(false)
     }
   }, [agent, connection, navigation, submitting, t])

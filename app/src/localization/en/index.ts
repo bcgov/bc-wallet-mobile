@@ -271,6 +271,9 @@ const translation = {
         "Title": "Contact Details",
         "Download": "Download",
         "Copy": "Copy",
+        "ShareWarningTitle": "Share contact data?",
+        "ShareWarningBody": "This file contains identifiers and keys used to communicate with this contact. Only share it with services you trust.",
+        "ShareConfirm": "Share",
       },
       "Chat": {
         "Placeholder": "Message this contact...",

@@ -6,7 +6,7 @@ import { DidCommBasicMessageRecord, DidCommBasicMessageRole } from '@credo-ts/di
 import { useHeaderHeight } from '@react-navigation/elements'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useEffect, useLayoutEffect, useMemo } from 'react'
+import React, { useCallback, useLayoutEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { KeyboardAvoidingView, Platform } from 'react-native'
 import { GiftedChat, IMessage } from 'react-native-gifted-chat'
@@ -90,11 +90,6 @@ const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
     },
     [agent, connectionId]
   )
-
-  // Mark messages as seen on focus.
-  useEffect(() => {
-    // Future: persist a 'seen' flag. For now we just rely on the visit itself.
-  }, [basicMessages])
 
   return (
     <SafeAreaView
