@@ -47,7 +47,7 @@ const proofEventLabel = (record: DidCommProofExchangeRecord): string => {
     case DidCommProofState.Abandoned:
       return 'Chat.ProofRequestRejectReceived'
     case DidCommProofState.Done:
-      return record.isVerified !== undefined ? 'Chat.ProofPresentationReceived' : 'Chat.ProofRequestSatisfied'
+      return record.isVerified === undefined ? 'Chat.ProofRequestSatisfied' : 'Chat.ProofPresentationReceived'
     default:
       return ''
   }

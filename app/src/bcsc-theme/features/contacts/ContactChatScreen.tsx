@@ -20,6 +20,21 @@ interface ContactChatScreenProps {
 const ME_ID = 1
 const THEM_ID = 2
 
+interface ChatHeaderInfoButtonProps {
+  accessibilityLabel: string
+  onPress: () => void
+}
+
+const ChatHeaderInfoButton: React.FC<ChatHeaderInfoButtonProps> = ({ accessibilityLabel, onPress }) => (
+  <IconButton
+    buttonLocation={ButtonLocation.Right}
+    icon="information-outline"
+    accessibilityLabel={accessibilityLabel}
+    testID={testIdWithKey('ContactInfo')}
+    onPress={onPress}
+  />
+)
+
 const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
   const { connectionId } = route.params
   const { t } = useTranslation()
@@ -35,20 +50,22 @@ const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
     [connection, store.preferences.alternateContactNames]
   )
 
+  const onInfoPress = useCallback(
+    () => navigation.navigate(BCSCScreens.ContactDetails, { connectionId }),
+    [navigation, connectionId]
+  )
+
   useLayoutEffect(() => {
     navigation.setOptions({
       title: theirLabel,
       headerRight: () => (
-        <IconButton
-          buttonLocation={ButtonLocation.Right}
-          icon="information-outline"
+        <ChatHeaderInfoButton
           accessibilityLabel={t('BCSC.Contacts.Chat.InfoAccessibilityLabel')}
-          testID={testIdWithKey('ContactInfo')}
-          onPress={() => navigation.navigate(BCSCScreens.ContactDetails, { connectionId })}
+          onPress={onInfoPress}
         />
       ),
     })
-  }, [navigation, theirLabel, connectionId, t])
+  }, [navigation, theirLabel, onInfoPress, t])
 
   const messages: IMessage[] = useMemo(() => {
     return basicMessages

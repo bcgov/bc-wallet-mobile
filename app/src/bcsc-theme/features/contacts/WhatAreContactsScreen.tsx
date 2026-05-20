@@ -47,8 +47,8 @@ const WhatAreContactsScreen = ({ navigation }: WhatAreContactsScreenProps) => {
 
       <View>
         <ThemedText variant="bold">{t('BCSC.Contacts.WhatAre.YouCanHeader')}</ThemedText>
-        {bullets.map((line, i) => (
-          <View key={i} style={styles.bulletRow}>
+        {bullets.map((line) => (
+          <View key={line} style={styles.bulletRow}>
             <ThemedText style={styles.bulletGlyph}>{'•'}</ThemedText>
             <ThemedText style={styles.bulletText}>{line}</ThemedText>
           </View>

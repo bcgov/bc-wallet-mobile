@@ -93,8 +93,8 @@ const RemoveContactScreen = ({ navigation, route }: RemoveContactScreenProps) =>
       <ThemedText variant="bold" style={styles.paragraph}>
         {t('BCSC.Contacts.Remove.NoLongerAble')}
       </ThemedText>
-      {bullets.map((line, i) => (
-        <View key={i} style={styles.bulletRow}>
+      {bullets.map((line) => (
+        <View key={line} style={styles.bulletRow}>
           <ThemedText style={styles.bulletGlyph}>{'•'}</ThemedText>
           <ThemedText style={styles.bulletText}>{line}</ThemedText>
         </View>

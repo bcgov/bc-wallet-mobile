@@ -3,13 +3,11 @@ import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { ThemedText, useTheme } from '@bifold/core'
 import Clipboard from '@react-native-clipboard/clipboard'
 import { RouteProp } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Share, StyleSheet, View } from 'react-native'
 
 interface ContactJSONDetailsScreenProps {
-  navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.ContactJSONDetails>
   route: RouteProp<BCSCMainStackParams, BCSCScreens.ContactJSONDetails>
 }
 

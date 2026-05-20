@@ -6,7 +6,7 @@ import { DidCommConnectionRecord, DidCommConnectionType, DidCommDidExchangeState
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FlatList, StyleSheet, TextInput, View } from 'react-native'
+import { ColorValue, FlatList, StyleSheet, TextInput, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import ContactRow from './ContactRow'
 import { usePinnedContacts } from './services/usePinnedContacts'
@@ -14,6 +14,14 @@ import { usePinnedContacts } from './services/usePinnedContacts'
 interface ContactsScreenProps {
   navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.Contacts>
 }
+
+interface ContactListSeparatorProps {
+  backgroundColor: ColorValue
+}
+
+const ContactListSeparator: React.FC<ContactListSeparatorProps> = ({ backgroundColor }) => (
+  <View style={{ height: 1, backgroundColor }} />
+)
 
 const ContactsScreen = ({ navigation }: ContactsScreenProps) => {
   const { t } = useTranslation()
@@ -82,10 +90,6 @@ const ContactsScreen = ({ navigation }: ContactsScreenProps) => {
       color: ColorPalette.brand.text,
       fontSize: 16,
     },
-    separator: {
-      height: 1,
-      backgroundColor: ColorPalette.brand.secondaryBackground,
-    },
     empty: {
       flex: 1,
       alignItems: 'center',
@@ -139,7 +143,7 @@ const ContactsScreen = ({ navigation }: ContactsScreenProps) => {
       <FlatList
         data={filteredContacts}
         keyExtractor={(c) => c.id}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={() => <ContactListSeparator backgroundColor={ColorPalette.brand.secondaryBackground} />}
         renderItem={({ item }) => (
           <ContactRow
             contact={item}

@@ -5,7 +5,7 @@ import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Pressable, StyleSheet, View } from 'react-native'
+import { Pressable, StyleProp, StyleSheet, TextStyle, View, ViewStyle } from 'react-native'
 import CommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import { usePinnedContacts } from './services/usePinnedContacts'
@@ -20,7 +20,23 @@ interface ActionCardProps {
   label: string
   onPress: () => void
   testID: string
+  iconColor: string
+  cardStyle: StyleProp<ViewStyle>
+  labelStyle: StyleProp<TextStyle>
 }
+
+const ActionCard: React.FC<ActionCardProps> = ({ icon, label, onPress, testID, iconColor, cardStyle, labelStyle }) => (
+  <Pressable
+    onPress={onPress}
+    accessibilityRole="button"
+    accessibilityLabel={label}
+    testID={testID}
+    style={cardStyle}
+  >
+    <CommunityIcon name={icon} size={22} color={iconColor} />
+    <ThemedText style={labelStyle}>{label}</ThemedText>
+  </Pressable>
+)
 
 const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) => {
   const { connectionId } = route.params
@@ -89,19 +105,6 @@ const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) 
     },
   })
 
-  const ActionCard: React.FC<ActionCardProps> = ({ icon, label, onPress, testID }) => (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      testID={testID}
-      style={styles.actionCard}
-    >
-      <CommunityIcon name={icon} size={22} color={ColorPalette.brand.primary} />
-      <ThemedText style={styles.actionLabel}>{label}</ThemedText>
-    </Pressable>
-  )
-
   const onTogglePin = useCallback(() => {
     togglePin(connectionId)
   }, [togglePin, connectionId])
@@ -148,24 +151,36 @@ const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) 
           label={t(pinned ? 'BCSC.Contacts.Details.UnpinContact' : 'BCSC.Contacts.Details.PinContact')}
           onPress={onTogglePin}
           testID={testIdWithKey(pinned ? 'UnpinContact' : 'PinContact')}
+          iconColor={ColorPalette.brand.primary}
+          cardStyle={styles.actionCard}
+          labelStyle={styles.actionLabel}
         />
         <ActionCard
           icon="pencil"
           label={t('BCSC.Contacts.Details.EditName')}
           onPress={onEditName}
           testID={testIdWithKey('EditContactName')}
+          iconColor={ColorPalette.brand.primary}
+          cardStyle={styles.actionCard}
+          labelStyle={styles.actionLabel}
         />
         <ActionCard
           icon="history"
           label={t('BCSC.Contacts.Details.ViewHistory')}
           onPress={onViewHistory}
           testID={testIdWithKey('ViewHistory')}
+          iconColor={ColorPalette.brand.primary}
+          cardStyle={styles.actionCard}
+          labelStyle={styles.actionLabel}
         />
         <ActionCard
           icon="code-braces"
           label={t('BCSC.Contacts.Details.ViewJSON')}
           onPress={onViewJSON}
           testID={testIdWithKey('ViewJSON')}
+          iconColor={ColorPalette.brand.primary}
+          cardStyle={styles.actionCard}
+          labelStyle={styles.actionLabel}
         />
       </View>
 
