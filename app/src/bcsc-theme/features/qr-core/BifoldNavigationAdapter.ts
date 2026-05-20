@@ -13,6 +13,16 @@ import type { TFunction } from 'i18next'
  * else passes through untouched, including getParent (which returns its own
  * adapter so chained calls continue to be translated) and dispatch (which we
  * also intercept to catch reset actions that target Bifold's nav graph).
+ *
+ * Proof-request exit paths (Bifold's `ProofRequest` rendered inline by
+ * `Connection.tsx`) all funnel through these same intercepts: decline,
+ * cancel-done, the `Declined`/`Abandoned` state effect, and the share-success
+ * "Back to Home" button inside `ProofRequestAccept` all call
+ * `navigation.getParent()?.navigate('Tab Home Stack', { screen: 'Home' })`,
+ * which the navigate intercept resets onto `BCSCStacks.Tab` / `Home`.
+ * `ProofRequestAccept` reads `navigation` via `useNavigation()` rather than a
+ * prop, so the `NavigationContext.Provider` wrapping in `ConnectionLoadingScreen`
+ * (not just the prop-level adapter) is what makes its calls reach this code.
  */
 
 // Bifold route names that don't exist in BCSC's nav graph.
