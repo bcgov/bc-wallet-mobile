@@ -831,12 +831,13 @@ const translation = {
         "ButtonText": "Ok",
       },
       "SuccessfullySent": {
-        "Heading": "We've received your request to verify your identity.",
-        "Description1": "We review requests:",
+        "Heading": "We've received your request to verify your identity",
         "Bullet1": "Monday to Friday, 9am to 5pm",
         "Bullet2": "In the order they're received",
-        "Description3": "Usually, we review requests within 2 business days. During busy periods, it may take longer.",
-        "ButtonText": "Ok"
+        "Description1": "We review requests:",
+        "Description2": "Requests are usually reviewed within 24 hours.",
+        "Description3": "You'll get an email after we review your request. You can also check the status in this app.",
+        "ButtonText": "Go to home"
       },
       "TakePhoto": {
         "CameraInstructions": "Position your face within the oval and press the button on the screen",

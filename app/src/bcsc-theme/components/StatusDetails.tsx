@@ -10,7 +10,8 @@ type StatusScreenProps = {
   title: string
   description?: string
   bullets?: string[]
-  extraText?: string
+  description2?: string
+  description3?: string
 }
 
 const StatusDetails: React.FC<StatusScreenProps> = ({
@@ -18,42 +19,52 @@ const StatusDetails: React.FC<StatusScreenProps> = ({
   iconColor,
   iconSize = 108,
   title,
-  description,
   bullets,
-  extraText,
+  description,
+  description2,
+  description3,
 }) => {
   const { ColorPalette, Spacing } = useTheme()
 
   const styles = StyleSheet.create({
-    bulletContainer: {
+    bulletContainer: { width: '100%', marginBottom: Spacing.lg, marginLeft: Spacing.lg },
+    bulletItemContainer: {
       flexDirection: 'row',
       marginBottom: Spacing.md,
     },
     bullet: {
       marginRight: Spacing.xs,
     },
+    descriptions: {
+      width: '100%',
+      marginBottom: Spacing.md,
+      textAlign: 'left',
+    },
   })
 
   return (
     <>
-      <Icon name={iconName} size={iconSize} color={iconColor ?? ColorPalette.brand.primary} />
-      <ThemedText variant={'headingThree'} style={{ marginTop: Spacing.md, textAlign: 'center' }}>
+      <Icon
+        name={iconName}
+        size={iconSize}
+        color={iconColor ?? ColorPalette.brand.primary}
+        style={{ padding: Spacing.lg }}
+      />
+      <ThemedText variant={'headingThree'} style={{ marginVertical: Spacing.md, textAlign: 'left' }}>
         {title}
       </ThemedText>
-      {description ? (
-        <ThemedText variant={'headingFour'} style={{ marginVertical: Spacing.lg, textAlign: 'center' }}>
-          {description}
-        </ThemedText>
-      ) : null}
-      {bullets?.map((bullet) => (
-        <View style={styles.bulletContainer} key={bullet}>
-          <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{bullet}</ThemedText>
-        </View>
-      ))}
-      {extraText ? (
-        <ThemedText style={{ marginBottom: Spacing.md, textAlign: 'center' }}>{extraText}</ThemedText>
-      ) : null}
+      {description ? <ThemedText style={styles.descriptions}>{description}</ThemedText> : null}
+      <View style={styles.bulletContainer}>
+        {bullets?.map((bullet) => (
+          <View style={styles.bulletItemContainer} key={bullet}>
+            <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
+            <ThemedText>{bullet}</ThemedText>
+          </View>
+        ))}
+      </View>
+
+      {description2 ? <ThemedText style={styles.descriptions}>{description2}</ThemedText> : null}
+      {description3 ? <ThemedText style={styles.descriptions}>{description3}</ThemedText> : null}
     </>
   )
 }

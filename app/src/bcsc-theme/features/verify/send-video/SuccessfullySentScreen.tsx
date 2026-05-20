@@ -52,7 +52,10 @@ const SuccessfullySentScreen = ({ navigation }: SuccessfullySentScreenProps) => 
         title={t('BCSC.SendVideo.SuccessfullySent.Heading')}
         description={t('BCSC.SendVideo.SuccessfullySent.Description1')}
         bullets={[t('BCSC.SendVideo.SuccessfullySent.Bullet1'), t('BCSC.SendVideo.SuccessfullySent.Bullet2')]}
-        extraText={t('BCSC.SendVideo.SuccessfullySent.Description3')}
+        description2={t('BCSC.SendVideo.SuccessfullySent.Description2')}
+        description3={t('BCSC.SendVideo.SuccessfullySent.Description3')}
+        iconColor="#7AB8F9"
+        iconSize={150}
       />
     </ScreenWrapper>
   )
