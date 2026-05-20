@@ -1,5 +1,13 @@
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { ScreenWrapper, ThemedText, formatTime, getConnectionName, testIdWithKey, useStore, useTheme } from '@bifold/core'
+import {
+  ScreenWrapper,
+  ThemedText,
+  formatTime,
+  getConnectionName,
+  testIdWithKey,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { useConnectionById } from '@bifold/react-hooks'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -26,13 +34,7 @@ interface ActionCardProps {
 }
 
 const ActionCard: React.FC<ActionCardProps> = ({ icon, label, onPress, testID, iconColor, cardStyle, labelStyle }) => (
-  <Pressable
-    onPress={onPress}
-    accessibilityRole="button"
-    accessibilityLabel={label}
-    testID={testID}
-    style={cardStyle}
-  >
+  <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label} testID={testID} style={cardStyle}>
     <CommunityIcon name={icon} size={22} color={iconColor} />
     <ThemedText style={labelStyle}>{label}</ThemedText>
   </Pressable>

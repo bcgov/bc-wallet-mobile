@@ -24,22 +24,18 @@ const ContactJSONDetailsScreen = ({ route }: ContactJSONDetailsScreenProps) => {
     // Connection JSON contains DIDs, verification keys, and other identifiers
     // that could be used to impersonate or de-anonymize the user. Confirm before
     // handing it to whichever target app the system share sheet routes to.
-    Alert.alert(
-      t('BCSC.Contacts.JSON.ShareWarningTitle'),
-      t('BCSC.Contacts.JSON.ShareWarningBody'),
-      [
-        { text: t('Global.Cancel'), style: 'cancel' },
-        {
-          text: t('BCSC.Contacts.JSON.ShareConfirm'),
-          style: 'destructive',
-          onPress: () => {
-            Share.share({ message: jsonBlob }).catch(() => {
-              // user dismissed share sheet
-            })
-          },
+    Alert.alert(t('BCSC.Contacts.JSON.ShareWarningTitle'), t('BCSC.Contacts.JSON.ShareWarningBody'), [
+      { text: t('Global.Cancel'), style: 'cancel' },
+      {
+        text: t('BCSC.Contacts.JSON.ShareConfirm'),
+        style: 'destructive',
+        onPress: () => {
+          Share.share({ message: jsonBlob }).catch(() => {
+            // user dismissed share sheet
+          })
         },
-      ]
-    )
+      },
+    ])
   }, [jsonBlob, t])
 
   const styles = StyleSheet.create({

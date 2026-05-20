@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { DidCommConnectionType, DidCommDidExchangeState } from '@credo-ts/didcomm'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 import React from 'react'
-import { DidCommConnectionType, DidCommDidExchangeState } from '@credo-ts/didcomm'
 
 import ContactsScreen from './ContactsScreen'
 
@@ -16,20 +16,29 @@ jest.mock('@bifold/react-hooks', () => ({
 }))
 
 jest.mock('@bifold/core', () => {
-  const React = require('react') // eslint-disable-line @typescript-eslint/no-require-imports
+  // Jest forbids referencing out-of-scope identifiers in a mock factory, so
+  // re-require React here instead of relying on the top-level import.
+  // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+  const ReactInFactory = require('react')
   return {
     Button: ({ title, onPress, testID }: any) =>
-      React.createElement('Pressable', { testID, onPress }, React.createElement('Text', null, title)),
+      ReactInFactory.createElement('Pressable', { testID, onPress }, ReactInFactory.createElement('Text', null, title)),
     ButtonType: { Primary: 'Primary' },
-    ScreenWrapper: ({ children }: any) => React.createElement('View', null, children),
-    ThemedText: ({ children }: any) => React.createElement('Text', null, children),
+    ScreenWrapper: ({ children }: any) => ReactInFactory.createElement('View', null, children),
+    ThemedText: ({ children }: any) => ReactInFactory.createElement('Text', null, children),
     testIdWithKey: (k: string) => `id/${k}`,
-    formatTime: () => 'somedate',
+    formatTime: () => 'date-stub',
     getConnectionName: (record: any) => record?.theirLabel ?? record?.alias ?? '',
     useStore: () => [{ preferences: { alternateContactNames: {} } }],
     useTheme: () => ({
       ColorPalette: {
-        brand: { primary: '#000', primaryBackground: '#fff', primaryLight: '#eee', secondaryBackground: '#ccc', text: '#000' },
+        brand: {
+          primary: '#000',
+          primaryBackground: '#fff',
+          primaryLight: '#eee',
+          secondaryBackground: '#ccc',
+          text: '#000',
+        },
         grayscale: { mediumGrey: '#888', black: '#000' },
         semantic: { error: '#f00' },
       },
@@ -61,8 +70,7 @@ describe('ContactsScreen', () => {
     mockNavigate.mockReset()
   })
 
-  const renderScreen = () =>
-    render(<ContactsScreen navigation={{ navigate: mockNavigate } as any} />)
+  const renderScreen = () => render(<ContactsScreen navigation={{ navigate: mockNavigate } as any} />)
 
   it('renders the empty state when there are no completed connections', () => {
     mockUseConnections.mockReturnValue({ records: [] })

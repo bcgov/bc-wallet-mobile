@@ -1,4 +1,3 @@
-import { renderHook } from '@testing-library/react-native'
 import {
   DidCommBasicMessageRecord,
   DidCommCredentialExchangeRecord,
@@ -6,6 +5,7 @@ import {
   DidCommProofExchangeRecord,
   DidCommProofState,
 } from '@credo-ts/didcomm'
+import { renderHook } from '@testing-library/react-native'
 
 const mockUseBasicMessages = jest.fn<DidCommBasicMessageRecord[], [string]>()
 const mockUseCredentials = jest.fn<DidCommCredentialExchangeRecord[], [string]>()
