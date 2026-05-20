@@ -17,7 +17,8 @@ type VerificationMethodSelectionScreenProps = {
 const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSelectionScreenProps) => {
   const styles = StyleSheet.create({
     pageHeaderContainer: {
-      paddingHorizontal: Spacing.md,
+      marginTop: Spacing.md,
+      paddingHorizontal: Spacing.lg,
       marginBottom: Spacing.sm,
       alignItems: 'center',
       gap: Spacing.sm,
@@ -81,7 +82,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
   }
 
   return (
-    <ScreenWrapper scrollViewContainerStyle={styles.pageHeaderContainer} edges={['top', 'bottom', 'left', 'right']}>
+    <ScreenWrapper scrollViewContainerStyle={styles.pageHeaderContainer}>
       <ThemedText variant="headingFour">{t('BCSC.VerificationMethods.Title')}</ThemedText>
       <ThemedText style={{ marginVertical: Spacing.md }}>{t('BCSC.VerificationMethods.Subtitle')}</ThemedText>
 

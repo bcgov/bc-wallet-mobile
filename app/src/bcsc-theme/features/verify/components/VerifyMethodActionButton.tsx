@@ -27,10 +27,9 @@ const VerifyMethodActionButton = ({
   const styles = StyleSheet.create({
     container: {
       marginBottom: Spacing.md,
-      marginHorizontal: Spacing.md,
       padding: Spacing.md,
       borderWidth: 1,
-      borderColor: '#EDEBE9',
+      borderColor: ColorPalette.grayscale.veryLightGrey,
       flexDirection: 'row',
       alignItems: 'center',
       ...style,
