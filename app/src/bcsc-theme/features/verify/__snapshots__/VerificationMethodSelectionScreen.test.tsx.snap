@@ -52,43 +52,6 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
           ]
         }
       >
-<<<<<<< HEAD
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 21,
-                "fontWeight": "bold",
-              },
-              undefined,
-            ]
-          }
-        >
-          BCSC.VerificationMethods.Heading
-        </Text>
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              {
-                "marginVertical": 16,
-              },
-            ]
-          }
-        >
-          BCSC.VerificationMethods.Subheading
-        </Text>
-      </View>
-=======
         BCSC.VerificationMethods.Title
       </Text>
       <Text
@@ -109,7 +72,6 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
       >
         BCSC.VerificationMethods.Subtitle
       </Text>
->>>>>>> feat/restyle-verification
       <View
         accessibilityLabel="BCSC.VerificationMethods.InPersonTitle"
         accessibilityRole="button"
@@ -144,7 +106,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
           {
             "alignItems": "center",
             "backgroundColor": "#003366",
-            "borderColor": "#F2F2F2",
+            "borderColor": "#EDEBE9",
             "borderRadius": 8,
             "borderWidth": 1,
             "flexDirection": "row",
@@ -277,7 +239,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
           {
             "alignItems": "center",
             "backgroundColor": "#003366",
-            "borderColor": "#F2F2F2",
+            "borderColor": "#EDEBE9",
             "borderRadius": 8,
             "borderWidth": 1,
             "flexDirection": "row",
@@ -410,7 +372,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
           {
             "alignItems": "center",
             "backgroundColor": "#003366",
-            "borderColor": "#F2F2F2",
+            "borderColor": "#EDEBE9",
             "borderRadius": 8,
             "borderWidth": 1,
             "flexDirection": "row",
@@ -586,43 +548,6 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
           ]
         }
       >
-<<<<<<< HEAD
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 21,
-                "fontWeight": "bold",
-              },
-              undefined,
-            ]
-          }
-        >
-          BCSC.VerificationMethods.Heading
-        </Text>
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              {
-                "marginVertical": 16,
-              },
-            ]
-          }
-        >
-          BCSC.VerificationMethods.Subheading
-        </Text>
-      </View>
-=======
         BCSC.VerificationMethods.Title
       </Text>
       <Text
@@ -643,7 +568,6 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
       >
         BCSC.VerificationMethods.Subtitle
       </Text>
->>>>>>> feat/restyle-verification
       <View
         accessibilityLabel="BCSC.VerificationMethods.SendVideoTitle"
         accessibilityRole="button"
@@ -678,7 +602,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
           {
             "alignItems": "center",
             "backgroundColor": "#003366",
-            "borderColor": "#F2F2F2",
+            "borderColor": "#EDEBE9",
             "borderRadius": 8,
             "borderWidth": 1,
             "flexDirection": "row",
@@ -811,7 +735,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
           {
             "alignItems": "center",
             "backgroundColor": "#003366",
-            "borderColor": "#F2F2F2",
+            "borderColor": "#EDEBE9",
             "borderRadius": 8,
             "borderWidth": 1,
             "flexDirection": "row",
@@ -944,7 +868,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
           {
             "alignItems": "center",
             "backgroundColor": "#003366",
-            "borderColor": "#F2F2F2",
+            "borderColor": "#EDEBE9",
             "borderRadius": 8,
             "borderWidth": 1,
             "flexDirection": "row",
@@ -1120,43 +1044,6 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
           ]
         }
       >
-<<<<<<< HEAD
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 21,
-                "fontWeight": "bold",
-              },
-              undefined,
-            ]
-          }
-        >
-          BCSC.VerificationMethods.Heading
-        </Text>
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              {
-                "marginVertical": 16,
-              },
-            ]
-          }
-        >
-          BCSC.VerificationMethods.Subheading
-        </Text>
-      </View>
-=======
         BCSC.VerificationMethods.Title
       </Text>
       <Text
@@ -1177,7 +1064,6 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
       >
         BCSC.VerificationMethods.Subtitle
       </Text>
->>>>>>> feat/restyle-verification
       <View
         accessibilityLabel="BCSC.VerificationMethods.VideoCallTitle"
         accessibilityRole="button"
@@ -1212,7 +1098,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
           {
             "alignItems": "center",
             "backgroundColor": "#003366",
-            "borderColor": "#F2F2F2",
+            "borderColor": "#EDEBE9",
             "borderRadius": 8,
             "borderWidth": 1,
             "flexDirection": "row",
@@ -1345,7 +1231,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
           {
             "alignItems": "center",
             "backgroundColor": "#003366",
-            "borderColor": "#F2F2F2",
+            "borderColor": "#EDEBE9",
             "borderRadius": 8,
             "borderWidth": 1,
             "flexDirection": "row",
@@ -1478,7 +1364,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
           {
             "alignItems": "center",
             "backgroundColor": "#003366",
-            "borderColor": "#F2F2F2",
+            "borderColor": "#EDEBE9",
             "borderRadius": 8,
             "borderWidth": 1,
             "flexDirection": "row",
