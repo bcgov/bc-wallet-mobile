@@ -8,7 +8,7 @@ const SerialInstructions = new BaseScreen(BCSC_TestIDs.SerialInstructions)
 const ManualSerial = new BaseScreen(BCSC_TestIDs.ManualSerial)
 const EnterBirthdate = new BaseScreen(BCSC_TestIDs.EnterBirthdate)
 
-describe(`BCSC ${getVerifyContext().cardTypeLabel} Card`, () => {
+describe('BCSC Card', () => {
   it('should navigate through the Setup Steps screen and tap Step 2', async () => {
     await SetupSteps.waitFor('Step2')
     await SetupSteps.tap('Step2')

@@ -6,10 +6,10 @@
  * Run with: yarn wdio ... --suite biometrics
  */
 
-import './onboarding/components/app-launch.spec.js'
-import './onboarding/components/add-account.spec.js'
-import './onboarding/components/consent.spec.js'
-import './onboarding/components/notifications.spec.js'
-import './onboarding/components/biometric-auth.spec.js'
-import './verify/card-type/config-combined-card.js'
-import './verify/components/nickname.spec.js'
+import '../onboarding/components/app-launch.spec.js'
+import '../onboarding/components/add-account.spec.js'
+import '../onboarding/components/consent.spec.js'
+import '../onboarding/components/notifications.spec.js'
+import '../onboarding/components/biometric-auth.spec.js'
+import '../verify/card-type/config-combined-card.js'
+import '../verify/components/nickname.spec.js'

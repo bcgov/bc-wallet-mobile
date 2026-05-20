@@ -13,10 +13,7 @@ const ScanSerial = new BaseScreen(BCSC_TestIDs.ScanSerial)
 const ManualSerial = new BaseScreen(BCSC_TestIDs.ManualSerial)
 const EnterBirthdate = new BaseScreen(BCSC_TestIDs.EnterBirthdate)
 
-const { testUser } = getVerifyContext()
-const { cardScanImage } = testUser
-
-describe(`BCSC ${getVerifyContext().cardTypeLabel} Card Scan`, () => {
+describe('BCSC Card Scan', () => {
   it('should navigate through the Setup Steps screen and tap Step 2', async () => {
     await SetupSteps.waitFor('Step2')
     await SetupSteps.tap('Step2')
@@ -29,15 +26,16 @@ describe(`BCSC ${getVerifyContext().cardTypeLabel} Card Scan`, () => {
   })
 
   it('should navigate to the scan screen and inject the card image', async () => {
+    const { testUser } = getVerifyContext()
     await SerialInstructions.waitFor('ScanBarcode', 10_000)
     // Queue the image before the camera feed starts — Sauce Labs replaces the
     // placeholder on the first frame.
-    await injectPhoto(cardScanImage, CARD_SCAN_PADDING)
+    await injectPhoto(testUser.cardScanImage, CARD_SCAN_PADDING)
     await SerialInstructions.tap('ScanBarcode')
     await acceptSystemAlert()
     // Re-inject once after the permission dialog in case the first injection
     // was consumed by the system alert overlay rather than the camera feed.
-    await injectPhoto(cardScanImage, CARD_SCAN_PADDING)
+    await injectPhoto(testUser.cardScanImage, CARD_SCAN_PADDING)
   })
 
   // Sauce Labs image injection does not work reliably with React Native camera
@@ -71,6 +69,7 @@ describe(`BCSC ${getVerifyContext().cardTypeLabel} Card Scan`, () => {
       return
     }
 
+    const { testUser } = getVerifyContext()
     if (driver.isAndroid) {
       await ManualSerial.tap('SerialInput')
       await ManualSerial.type('SerialInput', testUser.cardSerial, { tapFirst: true })
@@ -89,6 +88,7 @@ describe(`BCSC ${getVerifyContext().cardTypeLabel} Card Scan`, () => {
       return
     }
 
+    const { testUser } = getVerifyContext()
     if (driver.isAndroid) {
       await EnterBirthdate.tap('BirthdateInput')
       await EnterBirthdate.type('BirthdateInput', testUser.dob, { tapFirst: true })
