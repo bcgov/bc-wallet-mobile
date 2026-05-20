@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next'
 import { Pressable, StyleSheet, View } from 'react-native'
 import CommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import Icon from 'react-native-vector-icons/MaterialIcons'
-import { usePinnedContacts } from './usePinnedContacts'
+import { usePinnedContacts } from './services/usePinnedContacts'
 
 interface ContactDetailsScreenProps {
   navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.ContactDetails>

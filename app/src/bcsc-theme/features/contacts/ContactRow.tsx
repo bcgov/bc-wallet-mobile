@@ -3,7 +3,7 @@ import { DidCommConnectionRecord } from '@credo-ts/didcomm'
 import React, { useMemo } from 'react'
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { useContactSubtitle } from './useContactSubtitle'
+import { useContactSubtitle } from './services/useContactSubtitle'
 
 interface ContactRowProps {
   contact: DidCommConnectionRecord

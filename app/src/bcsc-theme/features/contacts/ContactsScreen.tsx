@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next'
 import { FlatList, StyleSheet, TextInput, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import ContactRow from './ContactRow'
-import { usePinnedContacts } from './usePinnedContacts'
+import { usePinnedContacts } from './services/usePinnedContacts'
 
 interface ContactsScreenProps {
   navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.Contacts>

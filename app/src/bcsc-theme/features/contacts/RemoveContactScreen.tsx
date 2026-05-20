@@ -55,6 +55,7 @@ const RemoveContactScreen = ({ navigation, route }: RemoveContactScreenProps) =>
     title: {
       color: ColorPalette.brand.primary,
       marginBottom: Spacing.md,
+      textAlign: 'center',
     },
     paragraph: {
       marginBottom: Spacing.md,
