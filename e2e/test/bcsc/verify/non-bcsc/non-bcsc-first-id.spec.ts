@@ -3,8 +3,6 @@ import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
 import { BCSC_TestIDs } from '../../../../src/testIDs.js'
 import { getVerifyContext } from '../card-type/card-context.js'
 
-const context = getVerifyContext()
-
 const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 const IdentitySelection = new BaseScreen(BCSC_TestIDs.IdentitySelection)
 const DualIdentificationRequired = new BaseScreen(BCSC_TestIDs.DualIdentificationRequired)
@@ -19,7 +17,8 @@ describe(`Non-BCSC Card (1) - Drivers License`, () => {
   })
 
   it('should navigate through the Identity screen and select card type', async () => {
-    await IdentitySelection.tap(context.cardTypeButton)
+    const { cardTypeButton } = getVerifyContext()
+    await IdentitySelection.tap(cardTypeButton)
   })
 
   it('should navigate to the evidence ID collection screen', async () => {
@@ -46,12 +45,13 @@ describe(`Non-BCSC Card (1) - Drivers License`, () => {
   })
 
   it('should enter in the correct form data', async () => {
+    const { testUser } = getVerifyContext()
     await EvidenceFormData.type('DocumentNumberInput', '12345678')
-    await EvidenceFormData.type('LastNameInput', context.testUser.lastName)
-    await EvidenceFormData.type('FirstNameInput', context.testUser.firstName)
+    await EvidenceFormData.type('LastNameInput', testUser.lastName)
+    await EvidenceFormData.type('FirstNameInput', testUser.firstName)
     await EvidenceFormData.type('MiddleNamesInput', 'Middle Names')
     await EvidenceFormData.scrollTo('BirthdateInput')
-    await EvidenceFormData.type('BirthdateInput', context.testUser.dob)
+    await EvidenceFormData.type('BirthdateInput', testUser.dob)
     await EvidenceFormData.tap('Continue')
   })
 })

@@ -15,9 +15,6 @@ const TakeVideo = new BaseScreen(BCSC_TestIDs.TakeVideo)
 const VideoReview = new BaseScreen(BCSC_TestIDs.VideoReview)
 const SuccessfullySent = new BaseScreen(BCSC_TestIDs.SuccessfullySent)
 
-const { testUser } = getVerifyContext()
-const { selfieImage } = testUser
-
 describe('Send Video Verification', () => {
   it('should navigate through the Setup Steps screen and tap Step 5', async () => {
     await SetupSteps.waitFor('Step5', 10_000)
@@ -35,8 +32,9 @@ describe('Send Video Verification', () => {
   })
 
   it('should navigate through the Photo Instructions screen and tap Take Photo', async () => {
+    const { testUser } = getVerifyContext()
     await PhotoInstructions.waitFor('TakePhotoButton')
-    await injectPhoto(selfieImage, { top: 0, right: 0, bottom: 0, left: 0 })
+    await injectPhoto(testUser.selfieImage, { top: 0, right: 0, bottom: 0, left: 0 })
     await PhotoInstructions.tap('TakePhotoButton')
     await acceptSystemAlert()
   })
@@ -57,8 +55,9 @@ describe('Send Video Verification', () => {
   })
 
   it('should navigate through the Video Instructions screen and tap Record Video', async () => {
+    const { testUser } = getVerifyContext()
     await VideoInstructions.waitFor('StartRecordingButton')
-    await injectPhoto(selfieImage, { top: 0, right: 0, bottom: 0, left: 0 })
+    await injectPhoto(testUser.selfieImage, { top: 0, right: 0, bottom: 0, left: 0 })
     await VideoInstructions.tap('StartRecordingButton')
     await acceptSystemAlert()
   })

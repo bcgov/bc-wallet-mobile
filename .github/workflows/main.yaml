@@ -1174,3 +1174,5 @@ jobs:
     secrets:
       SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
       SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+      SM_USER: ${{ secrets.SM_USER }}
+      SM_PASSWORD: ${{ secrets.SM_PASSWORD }}

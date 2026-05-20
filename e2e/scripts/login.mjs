@@ -177,8 +177,6 @@ function buildUsercodeBody(csrfToken, input) {
 export async function approveInPersonLogin(input, options = {}) {
   const { signal } = options
 
-  dotenv.config({ path: path.join(SCRIPT_DIR, '..', 'local.env') })
-
   const cookieJar = new CookieJar()
   const fetchWithCookies = makeFetchCookie(fetch, cookieJar)
 
@@ -195,7 +193,7 @@ export async function approveInPersonLogin(input, options = {}) {
   const password = process.env.SM_PASSWORD
 
   if (!username || !password) {
-    throw new Error('Missing SM_USER or SM_PASSWORD in local.env')
+    throw new Error('Missing SM_USER or SM_PASSWORD environment variables (set them in e2e/.env.e2e or export them in your shell)')
   }
 
   const smLoginBody = new URLSearchParams({
@@ -529,6 +527,13 @@ function printUsage() {
 }
 
 if (isRunAsCli()) {
+  // CLI-only: load .env.e2e so the standalone invocation has SM_USER/
+  // SM_PASSWORD. When this module is dynamic-imported by wdio tests,
+  // configs/wdio.shared.conf.ts has already loaded .env.e2e and this
+  // branch is skipped. In CI, the values come from workflow env (no
+  // file load needed).
+  dotenv.config({ path: path.join(SCRIPT_DIR, '..', '.env.e2e') })
+
   const [flow, ...rest] = process.argv.slice(2)
 
   /** @type {ApproveInPersonInput | null} */
