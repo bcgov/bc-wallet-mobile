@@ -35,6 +35,66 @@ type IdCardMaskOverlayProps = {
 }
 
 /**
+ * Deterministic bar/space widths (alternating, starting with a bar) used to
+ * fake a barcode look. Values are relative units, scaled to the region.
+ */
+// 1D barcode (wide, sparse-ish bars).
+const BARCODE_PATTERN_1D = [2, 1, 1, 2, 1, 3, 1, 1, 2, 1, 1, 2, 3, 1, 1, 2, 1, 1, 2, 1, 3, 1, 1, 2, 1, 1, 2, 1, 3]
+// 2D / PDF417 (denser stacked rows).
+const BARCODE_PATTERN_2D = [1, 1, 2, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 2, 1]
+
+type BarcodeGuideProps = {
+  x: number
+  y: number
+  width: number
+  height: number
+  pattern: number[]
+  /** Direction the individual bars run. @default 'vertical' */
+  bars?: 'vertical' | 'horizontal'
+  color?: string
+  opacity?: number
+}
+
+/**
+ * A row (or column) of bars that reads as a barcode, filling the given region.
+ * Purely decorative — hints where the card's barcode/magstripe sits.
+ */
+const BarcodeGuide: React.FC<BarcodeGuideProps> = ({
+  x,
+  y,
+  width,
+  height,
+  pattern,
+  bars = 'vertical',
+  color = 'white',
+  opacity = 0.8,
+}) => {
+  const along = bars === 'vertical' ? width : height
+  const total = pattern.reduce((sum, seg) => sum + seg, 0)
+  const scale = along / total
+  let cursor = 0
+
+  return (
+    <>
+      {pattern.map((seg, i) => {
+        const length = seg * scale
+        const left = cursor
+        cursor += length
+        // Even indices are bars; odd indices are the transparent gaps between them.
+        if (i % 2 !== 0) {
+          return null
+        }
+        return bars === 'vertical' ? (
+          <Rect key={i} x={x + left} y={y} width={length} height={height} fill={color} fillOpacity={opacity} />
+        ) : (
+          <Rect key={i} x={x} y={y + left} width={width} height={length} fill={color} fillOpacity={opacity} />
+        )
+      })}
+    </>
+  )
+}
+
+/**
  * Full-bleed dark overlay with a vertically-oriented ID-card cutout. Mirrors the
  * look of bifold's `MaskType.ID_CARD` (rounded-rect window + stroke) but stands
  * the card up in portrait orientation and is sized to the camera area rather than
@@ -82,6 +142,36 @@ const IdCardMaskOverlay: React.FC<IdCardMaskOverlayProps> = ({
           fill="transparent"
           stroke={strokeColor}
           strokeWidth={3}
+        />
+
+        {/* Magstripe — solid bar along the right edge (the card's top edge, held upright) */}
+        <Rect
+          x={x + cardWidth * 0.68}
+          y={y}
+          width={cardWidth * 0.23}
+          height={cardHeight}
+          fill="white"
+          fillOpacity={0.5}
+        />
+
+        {/* 2D (PDF417) barcode — tall band along the left edge */}
+        <BarcodeGuide
+          x={x + cardWidth * 0.04}
+          y={y + cardHeight * 0.04}
+          width={cardWidth * 0.2}
+          height={cardHeight * 0.6}
+          bars="horizontal"
+          pattern={BARCODE_PATTERN_2D}
+        />
+
+        {/* 1D barcode — horizontal band near the bottom */}
+        <BarcodeGuide
+          x={x + cardWidth * 0.05}
+          y={y + cardHeight * 0.89}
+          width={cardWidth * 0.55}
+          height={cardHeight * 0.07}
+          bars="vertical"
+          pattern={BARCODE_PATTERN_1D}
         />
       </Svg>
     </View>
