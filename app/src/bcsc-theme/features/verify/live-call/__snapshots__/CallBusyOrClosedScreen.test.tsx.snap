@@ -96,6 +96,11 @@ exports[`CallBusyOrClosed renders correctly 1`] = `
         }
       >
         <View
+          style={
+            {
+              "alignSelf": "stretch",
+            }
+          }
           testID="com.ariesbifold:id/ServicePeriodList"
         >
           <View
