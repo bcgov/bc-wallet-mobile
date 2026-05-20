@@ -246,6 +246,8 @@ describe('useVerificationMethodModel', () => {
 
       const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
 
+      await act(async () => {})
+
       await act(async () => {
         await result.current.handlePressLiveCall()
       })
