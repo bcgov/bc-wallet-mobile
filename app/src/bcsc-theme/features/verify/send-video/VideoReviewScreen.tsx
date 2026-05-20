@@ -68,6 +68,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       textAlign: 'center',
       marginBottom: Spacing.md,
       width: '100%',
+      color: ColorPalette.grayscale.black,
     },
     video: {
       height: width - 2 * Spacing.md,
@@ -75,7 +76,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       aspectRatio: 1,
     },
     pauseButton: {
-      backgroundColor: ColorPalette.grayscale.white,
+      backgroundColor: ColorPalette.brand.primary,
       width: pauseButtonSize,
       height: pauseButtonSize,
       borderRadius: pauseButtonSize / 2,
