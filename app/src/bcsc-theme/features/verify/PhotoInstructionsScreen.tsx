@@ -20,12 +20,10 @@ const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenP
   const styles = StyleSheet.create({
     image: {
       width: '100%',
-      height: 200,
-      marginBottom: Spacing.md,
+      height: 250,
     },
     bulletContainer: {
       flexDirection: 'row',
-      marginBottom: Spacing.md,
     },
     bullet: {
       marginRight: Spacing.xs,
@@ -50,11 +48,9 @@ const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenP
   )
 
   return (
-    <ScreenWrapper controls={controls}>
+    <ScreenWrapper controls={controls} scrollViewContainerStyle={{ gap: Spacing.md }}>
       <WhiteHandHoldingPhone style={styles.image} height={styles.image.height} width={styles.image.width} />
-      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-        {t('BCSC.PhotoInstructions.Heading')}
-      </ThemedText>
+      <ThemedText variant={'headingThree'}>{t('BCSC.PhotoInstructions.Heading')}</ThemedText>
       <View style={styles.bulletContainer}>
         <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
         <ThemedText>{t('BCSC.PhotoInstructions.Bullet1')}</ThemedText>

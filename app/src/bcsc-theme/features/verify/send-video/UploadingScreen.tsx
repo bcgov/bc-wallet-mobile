@@ -13,10 +13,10 @@ type UploadingScreenProps = {
 const UploadingScreen = ({ navigation }: UploadingScreenProps) => {
   const { handleSend, uploadMessage } = useEvidenceUploadModel(navigation)
   const { t } = useTranslation()
-
   useEffect(() => {
     handleSend()
-  }, [handleSend])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const controls = (
     <Button
