@@ -1157,12 +1157,14 @@ const translation = {
       }
     },
     "VerificationMethods": {
-      "SendVideoTitle": "Send a video",
-      "SendVideoDescription": "Record a short video and we'll review it to verify your identity.",
-      "VideoCallTitle": "Video call",
-      "VideoCallDescription": "We will verify your identity during a video call.",
-      "InPersonTitle": "In person",
-      "InPersonDescription": "Find out where to go and what to bring.",
+      "Title": "Choose how to verify",
+      "Subtitle": "We need to make sure you're a real person. How would you like to proceed?",
+      "SendVideoTitle": "Record a video for an agent to verify",
+      "SendVideoDescription": "Turnaround time is 24 hours",
+      "VideoCallTitle": "Have a video call with an agent",
+      "VideoCallDescription": "Available during normal hours of operation",
+      "InPersonTitle": "In person with an agent",
+      "InPersonDescription": "Find out where to go and what to bring",
       "CannotSendVideo": "Cannot send a video?",
       "CannotMakeItToServiceBC": "Cannot make it to a Service BC Office?",
       "CannotVideoCall": "Cannot video call?"
