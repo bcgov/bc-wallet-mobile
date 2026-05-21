@@ -1,6 +1,6 @@
+import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { testIdWithKey } from '@bifold/core'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import UploadingScreen from './UploadingScreen'
