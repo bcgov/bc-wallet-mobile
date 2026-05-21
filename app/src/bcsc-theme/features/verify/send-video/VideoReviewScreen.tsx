@@ -19,7 +19,7 @@ import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
+import { StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import type { OnLoadData } from 'react-native-video'
 import { Video, VideoRef } from 'react-native-video'
@@ -71,9 +71,8 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       color: ColorPalette.grayscale.black,
     },
     video: {
-      height: width - 2 * Spacing.md,
       width: width - 2 * Spacing.md,
-      aspectRatio: 1,
+      aspectRatio: 3 / 4,
     },
     pauseButton: {
       backgroundColor: ColorPalette.brand.primary,
@@ -161,32 +160,35 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   )
 
   return (
-    <ScreenWrapper edges={['top', 'bottom', 'left', 'right']} style={styles.pageContainer} controls={controls}>
-      <View style={styles.videoContainer}>
-        <ThemedText variant={'headingFour'} style={styles.heading}>
-          {t('BCSC.SendVideo.VideoReview.Heading')}
-        </ThemedText>
-        <Video
-          ref={videoRef}
-          source={{ uri: videoPath }}
-          paused={paused}
-          audioOutput={'speaker'}
-          repeat
-          resizeMode={'cover'}
-          style={styles.video}
-          onLoad={(data) => onVideoLoad(data)}
-          disableAudioSessionManagement
-        />
-        <TouchableOpacity
-          style={styles.pauseButton}
-          onPress={onTogglePause}
-          accessibilityLabel={t('BCSC.SendVideo.VideoReview.TogglePlayPause')}
-          accessibilityRole="button"
-          testID={testIdWithKey('TogglePlayPause')}
-        >
-          <Icon name={paused ? 'play' : 'pause'} size={pauseButtonSize} color={ColorPalette.brand.primaryBackground} />
-        </TouchableOpacity>
-      </View>
+    <ScreenWrapper
+      edges={['top', 'bottom', 'left', 'right']}
+      style={styles.pageContainer}
+      controls={controls}
+      scrollViewContainerStyle={styles.videoContainer}
+    >
+      <ThemedText variant={'headingFour'} style={styles.heading}>
+        {t('BCSC.SendVideo.VideoReview.Heading')}
+      </ThemedText>
+      <Video
+        ref={videoRef}
+        source={{ uri: videoPath }}
+        paused={paused}
+        audioOutput={'speaker'}
+        repeat
+        resizeMode={'cover'}
+        style={styles.video}
+        onLoad={(data) => onVideoLoad(data)}
+        disableAudioSessionManagement
+      />
+      <TouchableOpacity
+        style={styles.pauseButton}
+        onPress={onTogglePause}
+        accessibilityLabel={t('BCSC.SendVideo.VideoReview.TogglePlayPause')}
+        accessibilityRole="button"
+        testID={testIdWithKey('TogglePlayPause')}
+      >
+        <Icon name={paused ? 'play' : 'pause'} size={pauseButtonSize} color={ColorPalette.brand.primaryBackground} />
+      </TouchableOpacity>
     </ScreenWrapper>
   )
 }
