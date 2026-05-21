@@ -877,6 +877,7 @@ const translation = {
         "Bullet5": "Check your face can be seen in the video",
         "Bullet6": "Say your first and last name",
         "Heading4": "Videos with inappropriate, offensive, or harassing behavior will not be accepted.",
+        "YouShould": "You should:",
         "StartRecordingButton": "Start Recording Video",
       },
       "VideoReview": {

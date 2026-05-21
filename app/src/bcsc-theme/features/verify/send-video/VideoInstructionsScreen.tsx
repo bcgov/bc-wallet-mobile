@@ -46,7 +46,6 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
 
   return (
     <ScreenWrapper controls={controls}>
-      {/* <Icon name={'video'} size={112} color={TextTheme.normal.color} style={styles.mainIcon} /> */}
       <BrownHandHoldingPhone style={styles.image} height={styles.image.height} width={styles.image.width} />
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.lg, textAlign: 'center' }}>
         {t('BCSC.SendVideo.VideoInstructions.Heading1')}
@@ -74,7 +73,7 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
       </ThemedText>
 
       <ThemedText variant={'headingFour'} style={{ marginVertical: Spacing.md, color: ColorPalette.grayscale.black }}>
-        {'You should:'}
+        {t('BCSC.SendVideo.VideoInstructions.YouShould')}
       </ThemedText>
 
       <View style={styles.bulletContainer}>

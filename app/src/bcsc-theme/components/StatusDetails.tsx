@@ -54,14 +54,16 @@ const StatusDetails: React.FC<StatusScreenProps> = ({
         {title}
       </ThemedText>
       {description ? <ThemedText style={styles.descriptions}>{description}</ThemedText> : null}
-      <View style={styles.bulletContainer}>
-        {bullets?.map((bullet) => (
-          <View style={styles.bulletItemContainer} key={bullet}>
-            <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-            <ThemedText>{bullet}</ThemedText>
-          </View>
-        ))}
-      </View>
+      {bullets?.length && (
+        <View style={styles.bulletContainer}>
+          {bullets?.map((bullet) => (
+            <View style={styles.bulletItemContainer} key={bullet}>
+              <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
+              <ThemedText>{bullet}</ThemedText>
+            </View>
+          ))}
+        </View>
+      )}
 
       {description2 ? <ThemedText style={styles.descriptions}>{description2}</ThemedText> : null}
       {description3 ? <ThemedText style={styles.descriptions}>{description3}</ThemedText> : null}
