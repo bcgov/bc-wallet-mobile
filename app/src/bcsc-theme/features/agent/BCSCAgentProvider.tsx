@@ -22,6 +22,11 @@ export const useBCSCAgent = (): BCSCAgentContextValue => {
   return ctx
 }
 
+// Used by callers that may run outside the provider tree (e.g. AuthStack,
+// OnboardingStack) and must tolerate the agent being absent — returns null
+// instead of throwing.
+export const useBCSCAgentSafe = (): BCSCAgentContextValue | null => useContext(BCSCAgentContext)
+
 // Non-blocking and decoupled from Bifold's AgentProvider. Children always
 // render; consumers inspect { agent, loading, error } via useBCSCAgent and
 // decide what to show. Init failures are logged by the ViewModel — no modal,

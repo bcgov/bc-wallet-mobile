@@ -1,6 +1,8 @@
+import { useBCSCAgentSafe } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCDispatchAction, BCSCState, BCState } from '@/store'
+import { BCAgent } from '@/utils/bc-agent-modules'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
 import * as BcscCore from 'react-native-bcsc-core'
@@ -36,6 +38,7 @@ export const useFactoryReset = () => {
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { clearSecureState, deleteSecureData } = useSecureActions()
+  const agentCtx = useBCSCAgentSafe()
 
   /**
    * Deletes the IAS account associated with the given clientID from the server.
@@ -111,6 +114,28 @@ export const useFactoryReset = () => {
         }
 
         logger.info('FactoryReset: Starting BCSC factory reset process...')
+
+        // Delete the wallet store first, while the agent still holds a valid
+        // handle. If we cleared keys/state first, re-onboarding would derive a
+        // new wallet key and the next agent init would trip on the stale
+        // on-disk wallet (duplicate-store error, code 3).
+        const agent = agentCtx?.agent as BCAgent | null | undefined
+        if (agent) {
+          try {
+            logger.info('FactoryReset: Deleting wallet store...')
+            await agent.modules.askar.deleteStore()
+          } catch (err) {
+            logger.warn('FactoryReset: wallet deleteStore() failed; wallet file may persist', { error: err })
+          }
+          try {
+            await agent.shutdown()
+          } catch (err) {
+            logger.warn('FactoryReset: agent.shutdown() failed', { error: err })
+          }
+        } else {
+          logger.info('FactoryReset: No active agent; skipping wallet store delete')
+        }
+
         await removeAccountArtifacts()
 
         // Reset BCSC state to initial state
@@ -133,7 +158,7 @@ export const useFactoryReset = () => {
         return { success: false, error: factoryResetError }
       }
     },
-    [removeAccountArtifacts, logger, clearSecureState, dispatch, client]
+    [removeAccountArtifacts, logger, clearSecureState, dispatch, client, agentCtx]
   )
 
   return factoryReset
