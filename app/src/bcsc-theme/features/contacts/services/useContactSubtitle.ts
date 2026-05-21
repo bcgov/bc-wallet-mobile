@@ -3,69 +3,10 @@ import {
   useCredentialsByConnectionId,
   useProofsByConnectionId,
 } from '@bifold/react-hooks'
-import {
-  DidCommCredentialExchangeRecord,
-  DidCommCredentialState,
-  DidCommProofExchangeRecord,
-  DidCommProofState,
-} from '@credo-ts/didcomm'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
-/**
- * Generates a subtitle for a contact based on the most recent interaction,
- * which could be a basic message, credential exchange, or proof exchange.
- * The subtitle is determined by the type and state of the most recent interaction.
- *
- * @param {DidCommCredentialExchangeRecord} record
- * @return {*}  {string}
- */
-const credentialEventLabel = (record: DidCommCredentialExchangeRecord): string => {
-  switch (record.state) {
-    case DidCommCredentialState.ProposalSent:
-      return 'Chat.CredentialProposalSent'
-    case DidCommCredentialState.OfferReceived:
-      return 'Chat.CredentialOfferReceived'
-    case DidCommCredentialState.RequestSent:
-      return 'Chat.CredentialRequestSent'
-    case DidCommCredentialState.Declined:
-      return 'Chat.CredentialDeclined'
-    case DidCommCredentialState.CredentialReceived:
-    case DidCommCredentialState.Done:
-      return 'Chat.CredentialReceived'
-    default:
-      return ''
-  }
-}
-
-/**
- * Generates a subtitle for a contact based on the most recent proof exchange interaction,
- *
- * @param {DidCommProofExchangeRecord} record
- * @return {*}  {string}
- */
-const proofEventLabel = (record: DidCommProofExchangeRecord): string => {
-  switch (record.state) {
-    case DidCommProofState.RequestSent:
-    case DidCommProofState.ProposalReceived:
-      return 'Chat.ProofRequestSent'
-    case DidCommProofState.PresentationReceived:
-      return 'Chat.ProofPresentationReceived'
-    case DidCommProofState.RequestReceived:
-      return 'Chat.ProofRequestReceived'
-    case DidCommProofState.ProposalSent:
-    case DidCommProofState.PresentationSent:
-      return 'Chat.ProofRequestSatisfied'
-    case DidCommProofState.Declined:
-      return 'Chat.ProofRequestRejected'
-    case DidCommProofState.Abandoned:
-      return 'Chat.ProofRequestRejectReceived'
-    case DidCommProofState.Done:
-      return record.isVerified === undefined ? 'Chat.ProofRequestSatisfied' : 'Chat.ProofPresentationReceived'
-    default:
-      return ''
-  }
-}
+import { credentialEventLabelKey, proofEventLabelKey } from './chat-events'
 
 /**
  * Custom hook to generate a subtitle for a contact based on the most recent interaction,
@@ -89,13 +30,13 @@ export const useContactSubtitle = (connectionId: string): string | undefined => 
       }
     }
     for (const c of credentials) {
-      const key = credentialEventLabel(c)
+      const key = credentialEventLabelKey(c)
       if (key) {
         items.push({ createdAt: c.createdAt, text: t(key) })
       }
     }
     for (const p of proofs) {
-      const key = proofEventLabel(p)
+      const key = proofEventLabelKey(p)
       if (key) {
         items.push({ createdAt: p.createdAt, text: t(key) })
       }
