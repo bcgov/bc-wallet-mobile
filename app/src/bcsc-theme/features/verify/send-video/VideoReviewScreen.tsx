@@ -150,7 +150,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
         accessibilityLabel={t('BCSC.SendVideo.VideoReview.UseVideo')}
       />
       <Button
-        buttonType={ButtonType.Tertiary}
+        buttonType={ButtonType.Secondary}
         onPress={onPressRetake}
         testID={testIdWithKey('RetakeVideo')}
         title={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
