@@ -106,7 +106,11 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
           {
             "alignItems": "center",
             "backgroundColor": "#003366",
+<<<<<<< HEAD
             "borderColor": "#EDEBE9",
+=======
+            "borderColor": "#F2F2F2",
+>>>>>>> release/v4.1.0
             "borderRadius": 8,
             "borderWidth": 1,
             "flexDirection": "row",
@@ -239,7 +243,11 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
           {
             "alignItems": "center",
             "backgroundColor": "#003366",
+<<<<<<< HEAD
             "borderColor": "#EDEBE9",
+=======
+            "borderColor": "#F2F2F2",
+>>>>>>> release/v4.1.0
             "borderRadius": 8,
             "borderWidth": 1,
             "flexDirection": "row",
@@ -372,7 +380,11 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
           {
             "alignItems": "center",
             "backgroundColor": "#003366",
+<<<<<<< HEAD
             "borderColor": "#EDEBE9",
+=======
+            "borderColor": "#F2F2F2",
+>>>>>>> release/v4.1.0
             "borderRadius": 8,
             "borderWidth": 1,
             "flexDirection": "row",
@@ -491,6 +503,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
       >
         BCSC.VideoCall.CallBusyOrClosed.HoursOfService
       </Text>
+<<<<<<< HEAD
       <Text
         maxFontSizeMultiplier={2}
         style={
@@ -508,6 +521,8 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
       >
         BCSC.VideoCall.DefaultHours
       </Text>
+=======
+>>>>>>> release/v4.1.0
     </View>
   </RCTScrollView>
 </RNCSafeAreaView>
@@ -619,7 +634,11 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
           {
             "alignItems": "center",
             "backgroundColor": "#003366",
+<<<<<<< HEAD
             "borderColor": "#EDEBE9",
+=======
+            "borderColor": "#F2F2F2",
+>>>>>>> release/v4.1.0
             "borderRadius": 8,
             "borderWidth": 1,
             "flexDirection": "row",
@@ -752,7 +771,11 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
           {
             "alignItems": "center",
             "backgroundColor": "#003366",
+<<<<<<< HEAD
             "borderColor": "#EDEBE9",
+=======
+            "borderColor": "#F2F2F2",
+>>>>>>> release/v4.1.0
             "borderRadius": 8,
             "borderWidth": 1,
             "flexDirection": "row",
@@ -885,7 +908,11 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
           {
             "alignItems": "center",
             "backgroundColor": "#003366",
+<<<<<<< HEAD
             "borderColor": "#EDEBE9",
+=======
+            "borderColor": "#F2F2F2",
+>>>>>>> release/v4.1.0
             "borderRadius": 8,
             "borderWidth": 1,
             "flexDirection": "row",
@@ -1004,6 +1031,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
       >
         BCSC.VideoCall.CallBusyOrClosed.HoursOfService
       </Text>
+<<<<<<< HEAD
       <Text
         maxFontSizeMultiplier={2}
         style={
@@ -1021,6 +1049,8 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
       >
         BCSC.VideoCall.DefaultHours
       </Text>
+=======
+>>>>>>> release/v4.1.0
     </View>
   </RCTScrollView>
 </RNCSafeAreaView>
@@ -1132,7 +1162,11 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
           {
             "alignItems": "center",
             "backgroundColor": "#003366",
+<<<<<<< HEAD
             "borderColor": "#EDEBE9",
+=======
+            "borderColor": "#F2F2F2",
+>>>>>>> release/v4.1.0
             "borderRadius": 8,
             "borderWidth": 1,
             "flexDirection": "row",
@@ -1265,7 +1299,11 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
           {
             "alignItems": "center",
             "backgroundColor": "#003366",
+<<<<<<< HEAD
             "borderColor": "#EDEBE9",
+=======
+            "borderColor": "#F2F2F2",
+>>>>>>> release/v4.1.0
             "borderRadius": 8,
             "borderWidth": 1,
             "flexDirection": "row",
@@ -1398,7 +1436,11 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
           {
             "alignItems": "center",
             "backgroundColor": "#003366",
+<<<<<<< HEAD
             "borderColor": "#EDEBE9",
+=======
+            "borderColor": "#F2F2F2",
+>>>>>>> release/v4.1.0
             "borderRadius": 8,
             "borderWidth": 1,
             "flexDirection": "row",
@@ -1517,6 +1559,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
       >
         BCSC.VideoCall.CallBusyOrClosed.HoursOfService
       </Text>
+<<<<<<< HEAD
       <Text
         maxFontSizeMultiplier={2}
         style={
@@ -1534,6 +1577,8 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
       >
         BCSC.VideoCall.DefaultHours
       </Text>
+=======
+>>>>>>> release/v4.1.0
     </View>
   </RCTScrollView>
 </RNCSafeAreaView>
