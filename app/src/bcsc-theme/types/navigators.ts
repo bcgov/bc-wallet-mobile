@@ -133,7 +133,7 @@ export enum BCSCScreens {
   AccountRenewalInformation = 'Renewal ID requirements',
   AccountRenewalFirstWarning = 'Renewal Instructions',
   AccountRenewalFinalWarning = 'Renewal Warning',
-  AccountSelector = 'Account Select',
+  AccountLanding = 'Account Landing',
   EnterPIN = 'Enter/Verify PIN',
   DeviceAuthInfo = 'Device Authentication Prep',
   Lockout = 'Too many PIN attempts',
@@ -290,7 +290,7 @@ export type BCSCAuthStackParams = {
   [BCSCScreens.QRCore]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string; fromAppSwitch?: boolean }
   [BCSCScreens.EditNickname]: undefined
-  [BCSCScreens.AccountSelector]: undefined
+  [BCSCScreens.AccountLanding]: undefined
   [BCSCScreens.EnterPIN]: undefined
   [BCSCScreens.DeviceAuthInfo]: undefined
   [BCSCScreens.Lockout]: undefined

@@ -693,7 +693,6 @@ const translation = {
         "OpenID": "OpenID credentials aren't supported in BC Services Card. (PT-BR)",
         "Mediator": "Mediator invitations aren't supported in BC Services Card. (PT-BR)",
         "AgentNotReady": "Wallet isn't ready yet — please try again in a moment. (PT-BR)",
-        "PairingCodePending": "Pairing-code scanning isn't available yet. (PT-BR)",
       },
     },
     "ManualSerial": {
@@ -1210,11 +1209,13 @@ const translation = {
       }
     },
     "VerificationMethods": {
-      "SendVideoTitle": "Send a video (PT-BR)",
-      "SendVideoDescription": "Record a short video and we'll review it to verify your identity. (PT-BR)",
-      "VideoCallTitle": "Video call (PT-BR)",
-      "VideoCallDescription": "We will verify your identity during a video call. (PT-BR)",
-      "InPersonTitle": "In person (PT-BR)",
+      "Title": "Choose how to verify (PT-BR)",
+      "Subtitle": "We need to make sure you're a real person. How would you like to proceed? (PT-BR)",
+      "SendVideoTitle": "Record a video for an agent to verify (PT-BR)",
+      "SendVideoDescription": "Turnaround time is 24 hours (PT-BR)",
+      "VideoCallTitle": "Have a video call with an agent (PT-BR)",
+      "VideoCallDescription": "Available during normal hours of operation (PT-BR)",
+      "InPersonTitle": "In person with an agent (PT-BR)",
       "InPersonDescription": "Find out where to go and what to bring. (PT-BR)",
       "CannotSendVideo": "Cannot send a video? (PT-BR)",
       "CannotMakeItToServiceBC": "Cannot make it to a Service BC Office? (PT-BR)",

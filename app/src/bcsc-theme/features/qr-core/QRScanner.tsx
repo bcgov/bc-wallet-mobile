@@ -1,5 +1,6 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { QRCoreTabParams } from '@/bcsc-theme/navigators/QRCoreStack'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { hitSlop } from '@/constants'
 import {
@@ -11,6 +12,7 @@ import {
   ThemedText,
   useTheme,
 } from '@bifold/core'
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useState } from 'react'
@@ -23,7 +25,7 @@ import useScanScreenViewModel from './useScanScreenViewModel'
 const QRScanner: React.FC = () => {
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
-  const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
+  const navigation = useNavigation<BottomTabNavigationProp<QRCoreTabParams>>()
   const [torchActive, setTorchActive] = useState(false)
 
   const onConnectionFound = useCallback(
@@ -37,8 +39,15 @@ const QRScanner: React.FC = () => {
     [navigation]
   )
 
+  const onPairingCodeFound = useCallback(
+    (pairingCode: string) => {
+      navigation.navigate('PairingCode', { pairingCode })
+    },
+    [navigation]
+  )
+
   const { isPermissionLoading, hasPermission, isProcessing, scanError, handleScan, dismissError, resetNavigationLock } =
-    useScanScreenViewModel({ onConnectionFound })
+    useScanScreenViewModel({ onConnectionFound, onPairingCodeFound })
 
   // QRCoreStack has `unmountOnBlur: false` so the scanner persists across the
   // ConnectionLoading round trip; reset the nav lock on each focus so the

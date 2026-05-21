@@ -1,6 +1,6 @@
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { a11yLabel } from '@utils/accessibility'
-import { ActivityIndicator, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native'
+import { StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 type VerifyMethodActionButtonProps = {
@@ -9,7 +9,6 @@ type VerifyMethodActionButtonProps = {
   title: string
   description: string
   onPress: () => void
-  loading?: boolean
   disabled?: boolean
 }
 
@@ -21,19 +20,16 @@ const VerifyMethodActionButton = ({
   description,
   icon,
   onPress,
-  loading,
   disabled = false,
 }: VerifyMethodActionButtonProps) => {
-  const { ColorPalette, Spacing, TextTheme } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
 
   const styles = StyleSheet.create({
     container: {
-      backgroundColor: ColorPalette.brand.secondaryBackground,
+      marginBottom: Spacing.md,
       padding: Spacing.md,
-      borderTopWidth: 1,
-      borderTopColor: ColorPalette.brand.tertiary,
-      borderBottomWidth: 1,
-      borderBottomColor: ColorPalette.brand.tertiary,
+      borderWidth: 1,
+      borderColor: ColorPalette.grayscale.veryLightGrey,
       flexDirection: 'row',
       alignItems: 'center',
       ...style,
@@ -51,6 +47,11 @@ const VerifyMethodActionButton = ({
     description: {
       flexShrink: 1,
     },
+    contentContainer: {
+      flex: 1,
+      flexShrink: 1,
+      minWidth: 0,
+    },
     chevronContainer: {
       justifyContent: 'center',
     },
@@ -58,9 +59,9 @@ const VerifyMethodActionButton = ({
 
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={{ ...styles.container, backgroundColor: ColorPalette.brand.tertiaryBackground, borderRadius: Spacing.sm }}
       onPress={() => {
-        if (!disabled && !loading) {
+        if (!disabled) {
           onPress()
         }
       }}
@@ -68,23 +69,14 @@ const VerifyMethodActionButton = ({
       accessibilityRole="button"
       accessibilityLabel={a11yLabel(title)}
     >
-      <View style={{ flex: 1 }}>
-        <View style={styles.titleContainer}>
-          <Icon name={icon} size={iconSize} color={ColorPalette.brand.primary} />
-          <ThemedText variant={'bold'} style={styles.title} numberOfLines={0}>
-            {title}
-          </ThemedText>
+      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', minWidth: 0 }}>
+        <View style={{ marginRight: Spacing.lg }}>
+          <Icon name={icon} size={iconSize} color={ColorPalette.brand.headerText} />
         </View>
-        <ThemedText numberOfLines={0} style={styles.description}>
-          {description}
-        </ThemedText>
-      </View>
-      <View style={styles.chevronContainer}>
-        {loading ? (
-          <ActivityIndicator size="small" color={TextTheme.normal.color} />
-        ) : (
-          <Icon name={'chevron-right'} size={iconSize} color={TextTheme.normal.color} />
-        )}
+        <View style={styles.contentContainer}>
+          <ThemedText style={{ color: ColorPalette.brand.headerText, fontWeight: 'bold' }}>{title}</ThemedText>
+          <ThemedText style={styles.description}>{description}</ThemedText>
+        </View>
       </View>
     </TouchableOpacity>
   )

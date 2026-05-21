@@ -14,18 +14,21 @@ export interface UseScanScreenViewModelOptions {
    * how to navigate (push within its own stack, or escape up to MainStack).
    */
   onConnectionFound: (oobRecordId: string) => void
+  /**
+   * Called when a strategy returns `{ kind: 'pairing-code' }`. The screen
+   * routes the code into the pairing flow (typically the sibling PairingCode tab).
+   */
+  onPairingCodeFound: (pairingCode: string) => void
   strategies?: UriStrategy[]
 }
 
-// Ordering matters: `Array.find` returns the first matching strategy. Keep
-// `DidCommOobStrategy` first because its DIDComm-shaped URLs are unambiguous;
-// `PairingCodeStrategy` is the looser catch-all (bare alphanumeric codes) so
-// it goes last. If a future Bifold release loosens `isDidCommInvitation`, the
-// `PairingCodeStrategy.matches` test pins the assumption.
+// Ordering matters: `Array.find` returns the first matching strategy. Both
+// strategies parse URLs with disjoint shapes (DIDComm OOB vs pairingqrcode.html),
+// so order is not load-bearing today; keep DIDComm first to match the original seam.
 const DEFAULT_STRATEGIES: UriStrategy[] = [DidCommOobStrategy, PairingCodeStrategy]
 
 const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
-  const { onConnectionFound } = options
+  const { onConnectionFound, onPairingCodeFound } = options
   const strategies = useMemo(() => options.strategies ?? DEFAULT_STRATEGIES, [options.strategies])
   const { t } = useTranslation()
   const { agent } = useAgent()
@@ -65,6 +68,10 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
             // the transition (see isNavigatingRef comment above) are ignored.
             isNavigatingRef.current = true
             onConnectionFound(result.oobRecordId)
+            break
+          case 'pairing-code':
+            isNavigatingRef.current = true
+            onPairingCodeFound(result.pairingCode)
             break
           case 'unsupported':
             // BCSC v4.1 rejects OpenID and mediator URIs at the strategy layer; show a localized
@@ -107,7 +114,7 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
         setIsProcessing(false)
       }
     },
-    [strategies, scanError, t, agent, logger, onConnectionFound]
+    [strategies, scanError, t, agent, logger, onConnectionFound, onPairingCodeFound]
   )
 
   const dismissError = useCallback(() => setScanError(null), [])

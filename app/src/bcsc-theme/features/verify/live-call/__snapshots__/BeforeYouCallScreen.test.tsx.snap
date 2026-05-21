@@ -138,6 +138,11 @@ exports[`BeforeYouCall renders correctly 1`] = `
         BCSC.VideoCall.CallBusyOrClosed.HoursOfService
       </Text>
       <View
+        style={
+          {
+            "alignSelf": "stretch",
+          }
+        }
         testID="com.ariesbifold:id/ServicePeriodList"
       >
         <View
