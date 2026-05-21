@@ -250,6 +250,7 @@ const translation = {
       "Details": {
         "Title": "Contact Details",
         "ConnectedAt": "Connected: {{date}}",
+        "Message": "Message",
         "PinContact": "Pin contact",
         "UnpinContact": "Unpin contact",
         "EditName": "Edit Contact Name",

@@ -244,6 +244,7 @@ const translation = {
       "Details": {
         "Title": "Contact Details (FR)",
         "ConnectedAt": "Connected: {{date}} (FR)",
+        "Message": "Message (FR)",
         "PinContact": "Pin contact (FR)",
         "UnpinContact": "Unpin contact (FR)",
         "EditName": "Edit Contact Name (FR)",
@@ -365,6 +366,12 @@ const translation = {
       "TermsOfUse": "Terms of use (FR)",
       "Analytics": "Analytics (FR)",
       "RemoveAccount": "Remove account (FR)",
+      "Features": {
+        "Header": "Features (FR)",
+        "Contacts": "Contacts (FR)",
+        "ScanQR": "Scan my QR code (FR)",
+        "ProofRequests": "Proof Requests (FR)",
+      },
       "AppSecurity": {
         "ScreenTitle": "App Security (FR)",
         "ChangeAppSecurity": "Change App Security (FR)",

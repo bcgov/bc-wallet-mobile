@@ -119,8 +119,9 @@ export const useFactoryReset = () => {
         // handle. If we cleared keys/state first, re-onboarding would derive a
         // new wallet key and the next agent init would trip on the stale
         // on-disk wallet (duplicate-store error, code 3).
-        const agent = agentCtx?.agent as BCAgent | null | undefined
-        if (agent) {
+        if (agentCtx?.agent) {
+          // The BCSC agent is always built via getBCAgentModules, so .modules.askar is present at runtime.
+          const agent = agentCtx.agent as BCAgent
           try {
             logger.info('FactoryReset: Deleting wallet store...')
             await agent.modules.askar.deleteStore()

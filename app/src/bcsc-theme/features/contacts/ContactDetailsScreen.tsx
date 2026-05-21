@@ -113,6 +113,10 @@ const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) 
     togglePin(connectionId)
   }, [togglePin, connectionId])
 
+  const onMessage = useCallback(() => {
+    navigation.navigate(BCSCScreens.ContactChat, { connectionId })
+  }, [navigation, connectionId])
+
   const onEditName = useCallback(() => {
     navigation.navigate(BCSCScreens.EditContactName, { connectionId })
   }, [navigation, connectionId])
@@ -150,6 +154,15 @@ const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) 
       ) : null}
 
       <View style={styles.actionGroup}>
+        <ActionCard
+          icon="message-text-outline"
+          label={t('BCSC.Contacts.Details.Message')}
+          onPress={onMessage}
+          testID={testIdWithKey('MessageContact')}
+          iconColor={ColorPalette.brand.primary}
+          cardStyle={styles.actionCard}
+          labelStyle={styles.actionLabel}
+        />
         <ActionCard
           icon="pin"
           label={t(pinned ? 'BCSC.Contacts.Details.UnpinContact' : 'BCSC.Contacts.Details.PinContact')}
