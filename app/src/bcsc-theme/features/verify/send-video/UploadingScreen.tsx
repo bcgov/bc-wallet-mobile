@@ -1,3 +1,4 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { LoadingScreenContent } from '@/bcsc-theme/features/splash-loading/LoadingScreenContent'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey } from '@bifold/core'
@@ -19,14 +20,16 @@ const UploadingScreen = ({ navigation }: UploadingScreenProps) => {
   }, [])
 
   const controls = (
-    <Button
-      buttonType={ButtonType.Secondary}
-      onPress={handleCancel}
-      disabled={isCancelling}
-      testID={testIdWithKey('CancelUpload')}
-      title={t('Global.Cancel')}
-      accessibilityLabel={t('Global.Cancel')}
-    />
+    <ControlContainer>
+      <Button
+        buttonType={ButtonType.Secondary}
+        onPress={handleCancel}
+        disabled={isCancelling}
+        testID={testIdWithKey('CancelUpload')}
+        title={t('Global.Cancel')}
+        accessibilityLabel={t('Global.Cancel')}
+      />
+    </ControlContainer>
   )
 
   return (

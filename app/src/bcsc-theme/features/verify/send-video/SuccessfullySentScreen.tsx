@@ -1,4 +1,5 @@
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey } from '@bifold/core'
 import { CommonActions, useFocusEffect } from '@react-navigation/native'
@@ -27,20 +28,22 @@ const SuccessfullySentScreen = ({ navigation }: SuccessfullySentScreenProps) => 
   })
 
   const controls = (
-    <Button
-      testID={testIdWithKey(t('BCSC.SendVideo.SuccessfullySent.ButtonText'))}
-      accessibilityLabel={t('BCSC.SendVideo.SuccessfullySent.ButtonText')}
-      title={t('BCSC.SendVideo.SuccessfullySent.ButtonText')}
-      buttonType={ButtonType.Primary}
-      onPress={() =>
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: BCSCScreens.SetupSteps }],
-          })
-        )
-      }
-    />
+    <ControlContainer>
+      <Button
+        testID={testIdWithKey(t('BCSC.SendVideo.SuccessfullySent.ButtonText'))}
+        accessibilityLabel={t('BCSC.SendVideo.SuccessfullySent.ButtonText')}
+        title={t('BCSC.SendVideo.SuccessfullySent.ButtonText')}
+        buttonType={ButtonType.Primary}
+        onPress={() =>
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: BCSCScreens.SetupSteps }],
+            })
+          )
+        }
+      />
+    </ControlContainer>
   )
   return (
     <ScreenWrapper

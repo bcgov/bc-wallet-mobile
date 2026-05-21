@@ -4,6 +4,7 @@ import { useAlerts } from '@/hooks/useAlerts'
 import { BCDispatchAction, BCState } from '@/store'
 import { withAlert } from '@/utils/alert'
 import readFileInChunks from '@/utils/read-file'
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import {
   Button,
   ButtonType,
@@ -42,7 +43,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
   const [, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { width } = useWindowDimensions()
+  const { width, height } = useWindowDimensions()
   const [paused, setPaused] = useState(false)
   const videoRef = useRef<VideoRef>(null)
   const { videoPath, videoThumbnailPath } = route.params
@@ -73,6 +74,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     video: {
       width: width - 2 * Spacing.md,
       aspectRatio: 3 / 4,
+      maxHeight: height * 0.5,
     },
     pauseButton: {
       backgroundColor: ColorPalette.brand.primary,
@@ -141,7 +143,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   }
 
   const controls = (
-    <>
+    <ControlContainer>
       <Button
         buttonType={ButtonType.Primary}
         onPress={onPressUse}
@@ -156,7 +158,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
         title={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
         accessibilityLabel={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
       />
-    </>
+    </ControlContainer>
   )
 
   return (
