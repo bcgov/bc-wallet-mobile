@@ -252,13 +252,13 @@ const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
           color: ColorPalette.brand.text,
           opacity: 0.85,
           fontSize: 12,
-          alignSelf: 'flex-end',
+          textAlign: 'right',
           marginTop: 2,
         },
         textTimeThem: {
           color: ColorPalette.grayscale.mediumGrey,
           fontSize: 12,
-          alignSelf: 'flex-end',
+          textAlign: 'right',
           marginTop: 2,
         },
         // Input toolbar
@@ -349,7 +349,7 @@ const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
         <View key={String(item._id)} style={styles.textBubbleRow}>
           <View style={[styles.textBubble, isMe ? styles.textBubbleMe : styles.textBubbleThem]}>
             <ThemedText style={isMe ? styles.textMessageMe : styles.textMessageThem}>{item.text}</ThemedText>
-            <ThemedText style={isMe ? styles.textTimeMe : styles.textTimeThem}>
+            <ThemedText numberOfLines={1} style={isMe ? styles.textTimeMe : styles.textTimeThem}>
               {formatTime(item.createdAt as Date, { chatFormat: true, trim: true })}
             </ThemedText>
           </View>
