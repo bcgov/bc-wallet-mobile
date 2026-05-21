@@ -130,7 +130,7 @@ export const createBifoldNavigationAdapter = <T extends NavigationProp<any>>(
           if (name === BIFOLD_CHAT) {
             const connectionId = (params as { connectionId?: string } | undefined)?.connectionId
             if (connectionId) {
-              ;(target as any).navigate(BCSCScreens.ContactChat, { connectionId })
+              target.navigate(BCSCScreens.ContactChat, { connectionId })
               return
             }
             // Fall back to a toast if a caller ever invokes Chat without a
@@ -142,7 +142,7 @@ export const createBifoldNavigationAdapter = <T extends NavigationProp<any>>(
             Toast.show({ type: 'info', text1: t('BCSC.Scan.FeatureUnavailable') })
             return
           }
-          return (target as any).navigate(name, params)
+          return target.navigate(name, params)
         }
       }
       if (prop === 'dispatch') {
@@ -156,12 +156,12 @@ export const createBifoldNavigationAdapter = <T extends NavigationProp<any>>(
             }
             return
           }
-          return (target as any).dispatch(action)
+          return target.dispatch(action)
         }
       }
       if (prop === 'getParent') {
         return () => {
-          const parent = (target as any).getParent?.()
+          const parent = target.getParent?.()
           // Bifold's screens call `navigation.getParent()?.navigate('Tab Home Stack' / 'Tab Credential Stack' / …)`
           // expecting a parent navigator to translate those route names. BCSC's MainStack is the root
           // authenticated navigator, so the underlying `getParent()` returns undefined and the

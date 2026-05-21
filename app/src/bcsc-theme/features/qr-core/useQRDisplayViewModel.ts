@@ -1,4 +1,4 @@
-import { BifoldAgent, BifoldLogger, createConnectionInvitation, useConnectionByOutOfBandId } from '@bifold/core'
+import { BifoldAgent, BifoldLogger, useConnectionByOutOfBandId } from '@bifold/core'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Share } from 'react-native'
 
@@ -8,9 +8,21 @@ export enum QRDisplayStatus {
   ERROR = 'error',
 }
 
+// Mirror of bifold's internal `constants.ts#domain`; it's not exported from
+// @bifold/core so we redeclare it here. Both this app and bifold use the
+// `didcomm://invite` scheme for OOB URLs.
+const OOB_INVITE_DOMAIN = 'didcomm://invite'
+
 export interface QRDisplayViewModelInputs {
   agent: BifoldAgent | null
   logger: BifoldLogger
+  /**
+   * Becomes the OOB invitation's `label`, which credo-ts copies into the
+   * scanner's `theirLabel` on their new connection record (see
+   * `DidExchangeProtocol.createRequest`). Without it the scanner has no
+   * name for us and falls back to displaying the connection's UUID.
+   */
+  label?: string
   /**
    * Fired once when the displayed invitation results in a connection. The
    * argument is the new connection's id so the caller can navigate to chat.
@@ -31,6 +43,7 @@ const toError = (err: unknown): Error => (err instanceof Error ? err : new Error
 const useQRDisplayViewModel = ({
   agent,
   logger,
+  label,
   onConnectionAccepted,
 }: QRDisplayViewModelInputs): QRDisplayViewModel => {
   const [invitation, setInvitation] = useState<string | undefined>(undefined)
@@ -61,30 +74,37 @@ const useQRDisplayViewModel = ({
     setStatus(QRDisplayStatus.LOADING)
     setError(null)
 
-    createConnectionInvitation(agent)
-      .then((result) => {
+    // Call credo's oob.createInvitation directly rather than going through
+    // bifold's `createConnectionInvitation` helper because that helper
+    // doesn't forward a `label`. Credo embeds this label in the OOB
+    // invitation, and the scanner reads it as `theirLabel` on the new
+    // connection record (which is what the chat header displays).
+    ;(async () => {
+      try {
+        const record = await agent.modules.didcomm.oob.createInvitation({ label })
         if (cancelled) {
           return
         }
+        const invitationUrl = record.outOfBandInvitation.toUrl({ domain: OOB_INVITE_DOMAIN })
         acceptedRef.current = false
-        setOobRecordId(result.record.id)
-        setInvitation(result.invitationUrl)
+        setOobRecordId(record.id)
+        setInvitation(invitationUrl)
         setStatus(QRDisplayStatus.READY)
-      })
-      .catch((err) => {
+      } catch (err) {
         if (cancelled) {
           return
         }
         const wrapped = toError(err)
-        logger.error('[QRDisplay] createConnectionInvitation failed', wrapped)
+        logger.error('[QRDisplay] createInvitation failed', wrapped)
         setError(wrapped)
         setStatus(QRDisplayStatus.ERROR)
-      })
+      }
+    })()
 
     return () => {
       cancelled = true
     }
-  }, [agent, retryToken, logger])
+  }, [agent, retryToken, logger, label])
 
   const connection = useConnectionByOutOfBandId(oobRecordId ?? '')
 

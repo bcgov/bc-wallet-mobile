@@ -1,4 +1,5 @@
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCState } from '@/store'
 import {
   ButtonLocation,
   IconButton,
@@ -9,11 +10,12 @@ import {
   ThemedText,
   TOKENS,
   useServices,
+  useStore,
   useTheme,
 } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useEffect } from 'react'
+import React, { useCallback, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native'
 
@@ -29,6 +31,10 @@ const QRDisplay: React.FC = () => {
   const { width } = useWindowDimensions()
   const { ColorPalette, Spacing } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [store] = useStore<BCState>()
+  // Mirror of WalletNameDisplay; this is what the inviter advertises as its
+  // label in the OOB invitation and ends up as `theirLabel` on the scanner.
+  const label = useMemo(() => store.bcsc.selectedNickname || 'My Wallet', [store.bcsc.selectedNickname])
 
   // QRDisplay sits inside QRCoreStack (a tab navigator); ContactChat lives on
   // MainStack, so escape up via getParent before navigating.
@@ -41,7 +47,7 @@ const QRDisplay: React.FC = () => {
     [navigation]
   )
 
-  const vm = useQRDisplayViewModel({ agent, logger, onConnectionAccepted })
+  const vm = useQRDisplayViewModel({ agent, logger, label, onConnectionAccepted })
 
   const qrSize = width - Spacing.lg * 2
 
