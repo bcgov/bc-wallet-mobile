@@ -1,19 +1,5 @@
-import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { formatTime, getConnectionName, Screens, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
-import {
-  useBasicMessagesByConnectionId,
-  useConnectionById,
-  useCredentialsByConnectionId,
-  useProofsByConnectionId,
-} from '@bifold/react-hooks'
-import {
-  DidCommBasicMessageRecord,
-  DidCommBasicMessageRole,
-  DidCommCredentialExchangeRecord,
-  DidCommCredentialState,
-  DidCommProofExchangeRecord,
-} from '@credo-ts/didcomm'
+import { formatTime, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useHeaderHeight } from '@react-navigation/elements'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -36,159 +22,25 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
-import {
-  credentialEventLabelKey,
-  credentialEventRole,
-  EventRole,
-  messageEventRole,
-  proofEventLabelKey,
-  proofEventRole,
-} from './services/chat-events'
+import { ChatItem, ME_ID } from './services/chat-items'
+import { useContactChat } from './services/useContactChat'
 
 interface ContactChatScreenProps {
   navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.ContactChat>
   route: RouteProp<BCSCMainStackParams, BCSCScreens.ContactChat>
 }
 
-const ME_ID = 1
-const THEM_ID = 2
-
-type ChatItemKind = 'text' | 'connected' | 'credentialEvent' | 'proofEvent'
-
-interface ChatItem extends IMessage {
-  kind: ChatItemKind
-  role: EventRole
-  /** Localized label key for credential/proof event (e.g. 'Chat.CredentialOfferReceived'). */
-  eventLabelKey?: string
-  /** Optional handler for the "View request" action; when absent, no button is shown. */
-  onView?: () => void
-}
-
-const userIdForRole = (role: EventRole): number => (role === 'me' ? ME_ID : THEM_ID)
-
-type TFn = ReturnType<typeof useTranslation>['t']
-type ChatNavigation = StackNavigationProp<BCSCMainStackParams, BCSCScreens.ContactChat>
-
-const messageToChatItem = (m: DidCommBasicMessageRecord, theirLabel: string): ChatItem => ({
-  _id: m.id,
-  text: m.content,
-  createdAt: new Date(m.sentTime ?? m.createdAt),
-  user: {
-    _id: m.role === DidCommBasicMessageRole.Sender ? ME_ID : THEM_ID,
-    name: m.role === DidCommBasicMessageRole.Sender ? undefined : theirLabel,
-  },
-  kind: 'text',
-  role: messageEventRole(m),
-})
-
-const credentialToChatItem = (
-  c: DidCommCredentialExchangeRecord,
-  t: TFn,
-  navigation: ChatNavigation
-): ChatItem | null => {
-  const labelKey = credentialEventLabelKey(c)
-  if (!labelKey) {
-    return null
-  }
-  const role = credentialEventRole(c)
-  const canView =
-    c.state === DidCommCredentialState.Done || c.state === DidCommCredentialState.CredentialReceived
-  return {
-    _id: c.id,
-    text: t(labelKey as any),
-    createdAt: new Date(c.createdAt),
-    user: { _id: userIdForRole(role) },
-    kind: 'credentialEvent',
-    role,
-    eventLabelKey: labelKey,
-    onView: canView ? () => navigation.navigate(Screens.CredentialDetails, { credentialId: c.id }) : undefined,
-  }
-}
-
-const proofToChatItem = (p: DidCommProofExchangeRecord, t: TFn): ChatItem | null => {
-  const labelKey = proofEventLabelKey(p)
-  if (!labelKey) {
-    return null
-  }
-  const role = proofEventRole(p)
-  return {
-    _id: p.id,
-    text: t(labelKey as any),
-    createdAt: new Date(p.createdAt),
-    user: { _id: userIdForRole(role) },
-    kind: 'proofEvent',
-    role,
-    eventLabelKey: labelKey,
-  }
-}
-
 const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
   const { connectionId } = route.params
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
-  const { agent } = useBCSCAgent()
-  const [store] = useStore()
-  const connection = useConnectionById(connectionId)
-  const basicMessages: DidCommBasicMessageRecord[] = useBasicMessagesByConnectionId(connectionId)
-  const credentials = useCredentialsByConnectionId(connectionId)
-  const proofs = useProofsByConnectionId(connectionId)
   const headerHeight = useHeaderHeight()
 
-  const theirLabel = useMemo(
-    () => getConnectionName(connection, store.preferences.alternateContactNames),
-    [connection, store.preferences.alternateContactNames]
-  )
+  const { items, theirLabel, onSend, isAgentReady } = useContactChat(connectionId, navigation)
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: theirLabel })
   }, [navigation, theirLabel])
-
-  const items: ChatItem[] = useMemo(() => {
-    const out: ChatItem[] = []
-
-    for (const m of basicMessages) {
-      out.push(messageToChatItem(m, theirLabel))
-    }
-
-    for (const c of credentials) {
-      const item = credentialToChatItem(c, t, navigation)
-      if (item) {
-        out.push(item)
-      }
-    }
-
-    for (const p of proofs) {
-      const item = proofToChatItem(p, t)
-      if (item) {
-        out.push(item)
-      }
-    }
-
-    if (connection) {
-      out.push({
-        _id: `connected-${connection.id}`,
-        text: t('Chat.YouConnected'),
-        createdAt: new Date(connection.createdAt),
-        user: { _id: ME_ID },
-        kind: 'connected',
-        role: 'me',
-      })
-    }
-
-    // GiftedChat is inverted: newest first in the array (rendered nearest the composer).
-    out.sort((a, b) => (b.createdAt as Date).getTime() - (a.createdAt as Date).getTime())
-    return out
-  }, [basicMessages, credentials, proofs, connection, theirLabel, t, navigation])
-
-  const onSend = useCallback(
-    async (sent: IMessage[]) => {
-      if (!agent || !sent[0]?.text) {
-        return
-      }
-      await agent.modules.didcomm.basicMessages.sendMessage(connectionId, sent[0].text)
-    },
-    [agent, connectionId]
-  )
 
   const styles = useMemo(
     () =>
@@ -419,14 +271,14 @@ const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
           ...props.textInputProps,
           accessibilityLabel: '',
           maxFontSizeMultiplier: 1.2,
-          editable: !!agent,
+          editable: isAgentReady,
           placeholder: t('BCSC.Contacts.Chat.Placeholder'),
           placeholderTextColor: ColorPalette.grayscale.mediumGrey,
           style: styles.composer,
         }}
       />
     ),
-    [agent, ColorPalette.grayscale.mediumGrey, styles.composer, t]
+    [isAgentReady, ColorPalette.grayscale.mediumGrey, styles.composer, t]
   )
 
   const renderSend = useCallback(
@@ -456,9 +308,7 @@ const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
   )
 
   const renderActions = useCallback(
-    (props: ActionsProps) => (
-      <Actions {...props} wrapperStyle={styles.actionsContainer} icon={renderActionsIcon} />
-    ),
+    (props: ActionsProps) => <Actions {...props} wrapperStyle={styles.actionsContainer} icon={renderActionsIcon} />,
     [renderActionsIcon, styles.actionsContainer]
   )
 
@@ -474,13 +324,6 @@ const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
         renderActions={renderActions}
         onSend={onSend}
         user={{ _id: ME_ID }}
-        // GiftedChat wraps the chat in a `react-native-keyboard-controller`
-        // KeyboardAvoidingView already; its default offset is only `insets.top`
-        // (status bar), which leaves the composer hidden under the keyboard on
-        // Android because the navigation header isn't accounted for. Override
-        // with the navigator-aware header height. Wrapping the screen in our
-        // own RN KeyboardAvoidingView duplicated the work and was a no-op on
-        // Android (behavior=undefined), so it's removed.
         keyboardAvoidingViewProps={{ keyboardVerticalOffset: headerHeight }}
       />
     </SafeAreaView>
