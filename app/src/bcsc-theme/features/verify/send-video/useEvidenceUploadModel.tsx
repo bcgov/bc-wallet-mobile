@@ -27,10 +27,11 @@ const useEvidenceUploadModel = (
   const [store, dispatch] = useStore<BCState>()
   const isCancelledRef = useRef(false)
   const { evidence } = useApi()
-  const { updateAccountFlags, updateVerificationRequest } = useSecureActions()
+  const { updateAccountFlags } = useSecureActions()
   const { processAdditionalEvidence } = useEvidenceUpload()
   const { t } = useTranslation()
   const [isUploading, setIsUploading] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
   const [uploadMessage, setUploadMessage] = useState<string | null>(null)
   const { fileUploadErrorAlert } = useAlerts(navigation)
 
@@ -220,6 +221,7 @@ const useEvidenceUploadModel = (
   ])
 
   const handleCancel = useCallback(async () => {
+    setIsCancelling(true)
     isCancelledRef.current = true
     await Promise.allSettled([
       removeFileSafely(photoPath, logger),
@@ -228,15 +230,15 @@ const useEvidenceUploadModel = (
     ])
     VerificationVideoCache.clearCache()
     dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
-    updateVerificationRequest(null, null)
     navigation.goBack()
-  }, [dispatch, logger, navigation, photoPath, updateVerificationRequest, videoPath, videoThumbnailPath])
+  }, [dispatch, logger, navigation, photoPath, videoPath, videoThumbnailPath])
 
   return {
     handleSend,
     handleCancel,
     isReady,
     isUploading,
+    isCancelling,
     uploadMessage,
   }
 }

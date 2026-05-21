@@ -11,7 +11,7 @@ type UploadingScreenProps = {
 }
 
 const UploadingScreen = ({ navigation }: UploadingScreenProps) => {
-  const { handleSend, handleCancel, uploadMessage } = useEvidenceUploadModel(navigation)
+  const { handleSend, handleCancel, isCancelling, uploadMessage } = useEvidenceUploadModel(navigation)
   const { t } = useTranslation()
   useEffect(() => {
     handleSend()
@@ -22,6 +22,7 @@ const UploadingScreen = ({ navigation }: UploadingScreenProps) => {
     <Button
       buttonType={ButtonType.Secondary}
       onPress={handleCancel}
+      disabled={isCancelling}
       testID={testIdWithKey('CancelUpload')}
       title={t('Global.Cancel')}
       accessibilityLabel={t('Global.Cancel')}
@@ -29,7 +30,7 @@ const UploadingScreen = ({ navigation }: UploadingScreenProps) => {
   )
 
   return (
-    <ScreenWrapper controls={controls} edges={['top', 'bottom', 'left', 'right']}>
+    <ScreenWrapper controls={controls} edges={['top', 'bottom', 'left', 'right']} scrollable={false}>
       <LoadingScreenContent iconOnTop={false} message={uploadMessage ?? undefined} />
     </ScreenWrapper>
   )
