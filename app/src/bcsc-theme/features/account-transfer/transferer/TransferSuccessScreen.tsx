@@ -43,7 +43,7 @@ const TransferSuccessScreen: React.FC = () => {
       <StatusDetails
         title={t('BCSC.TransferSuccess.Title')}
         description={t('BCSC.TransferSuccess.Description')}
-        extraText={t('BCSC.TransferSuccess.ExtraText')}
+        description2={t('BCSC.TransferSuccess.ExtraText')}
       />
     </ScreenWrapper>
   )
