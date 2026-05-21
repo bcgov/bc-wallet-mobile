@@ -91,15 +91,10 @@ const MaskedCamera = ({
       width: 70,
       height: 70,
       borderRadius: 35,
-      backgroundColor: 'white',
+      borderColor: ColorPalette.grayscale.white,
+      borderWidth: 4,
       justifyContent: 'center',
       alignItems: 'center',
-    },
-    captureButtonInner: {
-      width: 64,
-      height: 64,
-      borderRadius: 30,
-      borderWidth: 2,
     },
   })
 
@@ -221,9 +216,7 @@ const MaskedCamera = ({
           accessibilityLabel={t('BCSC.CameraDisclosure.TakePhoto')}
           accessibilityRole="button"
           testID={testIdWithKey('TakePhoto')}
-        >
-          <View style={styles.captureButtonInner} />
-        </TouchableOpacity>
+        ></TouchableOpacity>
         {hasTorch ? (
           <TouchableOpacity
             style={{ flex: 1, alignItems: 'flex-end' }}

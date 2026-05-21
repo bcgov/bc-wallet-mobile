@@ -258,7 +258,11 @@ export function createAppTheme(v: ThemeVariant) {
             ...ThemeTextStyles.bold,
             textAlign: 'center',
           },
-          primaryDisabled: { padding: Spacing.sm, borderWidth: 1 },
+          primaryDisabled: {
+            padding: Spacing.sm,
+            borderWidth: 1,
+            borderColor: theme.ColorPalette.brand.primaryDisabled,
+          },
           primaryTextDisabled: {
             ...theme.TextTheme.normal,
             color: theme.ColorPalette.brand.text,
