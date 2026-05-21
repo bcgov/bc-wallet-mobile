@@ -62,7 +62,7 @@ export const proofEventRole = (record: DidCommProofExchangeRecord): EventRole =>
     case DidCommProofState.Abandoned:
       return 'them'
     case DidCommProofState.Done:
-      return record.isVerified !== undefined ? 'them' : 'me'
+      return record.isVerified === undefined ? 'me' : 'them'
     default:
       return 'me'
   }

@@ -7,7 +7,13 @@ import {
   useCredentialsByConnectionId,
   useProofsByConnectionId,
 } from '@bifold/react-hooks'
-import { DidCommBasicMessageRecord, DidCommBasicMessageRole, DidCommCredentialState } from '@credo-ts/didcomm'
+import {
+  DidCommBasicMessageRecord,
+  DidCommBasicMessageRole,
+  DidCommCredentialExchangeRecord,
+  DidCommCredentialState,
+  DidCommProofExchangeRecord,
+} from '@credo-ts/didcomm'
 import { useHeaderHeight } from '@react-navigation/elements'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -60,6 +66,62 @@ interface ChatItem extends IMessage {
 
 const userIdForRole = (role: EventRole): number => (role === 'me' ? ME_ID : THEM_ID)
 
+type TFn = ReturnType<typeof useTranslation>['t']
+type ChatNavigation = StackNavigationProp<BCSCMainStackParams, BCSCScreens.ContactChat>
+
+const messageToChatItem = (m: DidCommBasicMessageRecord, theirLabel: string): ChatItem => ({
+  _id: m.id,
+  text: m.content,
+  createdAt: new Date(m.sentTime ?? m.createdAt),
+  user: {
+    _id: m.role === DidCommBasicMessageRole.Sender ? ME_ID : THEM_ID,
+    name: m.role === DidCommBasicMessageRole.Sender ? undefined : theirLabel,
+  },
+  kind: 'text',
+  role: messageEventRole(m),
+})
+
+const credentialToChatItem = (
+  c: DidCommCredentialExchangeRecord,
+  t: TFn,
+  navigation: ChatNavigation
+): ChatItem | null => {
+  const labelKey = credentialEventLabelKey(c)
+  if (!labelKey) {
+    return null
+  }
+  const role = credentialEventRole(c)
+  const canView =
+    c.state === DidCommCredentialState.Done || c.state === DidCommCredentialState.CredentialReceived
+  return {
+    _id: c.id,
+    text: t(labelKey as any),
+    createdAt: new Date(c.createdAt),
+    user: { _id: userIdForRole(role) },
+    kind: 'credentialEvent',
+    role,
+    eventLabelKey: labelKey,
+    onView: canView ? () => navigation.navigate(Screens.CredentialDetails, { credentialId: c.id }) : undefined,
+  }
+}
+
+const proofToChatItem = (p: DidCommProofExchangeRecord, t: TFn): ChatItem | null => {
+  const labelKey = proofEventLabelKey(p)
+  if (!labelKey) {
+    return null
+  }
+  const role = proofEventRole(p)
+  return {
+    _id: p.id,
+    text: t(labelKey as any),
+    createdAt: new Date(p.createdAt),
+    user: { _id: userIdForRole(role) },
+    kind: 'proofEvent',
+    role,
+    eventLabelKey: labelKey,
+  }
+}
+
 const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
   const { connectionId } = route.params
   const { t } = useTranslation()
@@ -85,56 +147,21 @@ const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
     const out: ChatItem[] = []
 
     for (const m of basicMessages) {
-      out.push({
-        _id: m.id,
-        text: m.content,
-        createdAt: new Date(m.sentTime ?? m.createdAt),
-        user: {
-          _id: m.role === DidCommBasicMessageRole.Sender ? ME_ID : THEM_ID,
-          name: m.role === DidCommBasicMessageRole.Sender ? undefined : theirLabel,
-        },
-        kind: 'text',
-        role: messageEventRole(m),
-      })
+      out.push(messageToChatItem(m, theirLabel))
     }
 
     for (const c of credentials) {
-      const labelKey = credentialEventLabelKey(c)
-      if (!labelKey) {
-        continue
+      const item = credentialToChatItem(c, t, navigation)
+      if (item) {
+        out.push(item)
       }
-      const role = credentialEventRole(c)
-      const onView =
-        c.state === DidCommCredentialState.Done || c.state === DidCommCredentialState.CredentialReceived
-          ? () => navigation.navigate(Screens.CredentialDetails, { credentialId: c.id })
-          : undefined
-      out.push({
-        _id: c.id,
-        text: t(labelKey as any),
-        createdAt: new Date(c.createdAt),
-        user: { _id: userIdForRole(role) },
-        kind: 'credentialEvent',
-        role,
-        eventLabelKey: labelKey,
-        onView,
-      })
     }
 
     for (const p of proofs) {
-      const labelKey = proofEventLabelKey(p)
-      if (!labelKey) {
-        continue
+      const item = proofToChatItem(p, t)
+      if (item) {
+        out.push(item)
       }
-      const role = proofEventRole(p)
-      out.push({
-        _id: p.id,
-        text: t(labelKey as any),
-        createdAt: new Date(p.createdAt),
-        user: { _id: userIdForRole(role) },
-        kind: 'proofEvent',
-        role,
-        eventLabelKey: labelKey,
-      })
     }
 
     if (connection) {
@@ -415,23 +442,24 @@ const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
     [ColorPalette.brand.primary, ColorPalette.grayscale.lightGrey, styles.sendContainer]
   )
 
-  const renderActions = useCallback(
-    (props: ActionsProps) => (
-      <Actions
-        {...props}
-        wrapperStyle={styles.actionsContainer}
-        icon={() => (
-          <Icon
-            name="plus-box-outline"
-            size={28}
-            color={ColorPalette.brand.primary}
-            accessibilityLabel={t('Chat.Actions')}
-            accessibilityRole="button"
-          />
-        )}
+  const renderActionsIcon = useCallback(
+    () => (
+      <Icon
+        name="plus-box-outline"
+        size={28}
+        color={ColorPalette.brand.primary}
+        accessibilityLabel={t('Chat.Actions')}
+        accessibilityRole="button"
       />
     ),
-    [ColorPalette.brand.primary, styles.actionsContainer, t]
+    [ColorPalette.brand.primary, t]
+  )
+
+  const renderActions = useCallback(
+    (props: ActionsProps) => (
+      <Actions {...props} wrapperStyle={styles.actionsContainer} icon={renderActionsIcon} />
+    ),
+    [renderActionsIcon, styles.actionsContainer]
   )
 
   return (
