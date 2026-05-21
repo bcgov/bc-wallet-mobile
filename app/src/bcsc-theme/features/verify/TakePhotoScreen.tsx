@@ -3,6 +3,7 @@ import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { CameraFormat } from '@/bcsc-theme/components/utils/camera'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { Spacing } from '@/bcwallet-theme/theme'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { MaskType, ScreenWrapper, useTheme } from '@bifold/core'
 import { RouteProp } from '@react-navigation/native'
@@ -47,6 +48,8 @@ const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) =>
         maskLineColor={ColorPalette.brand.highlight}
         onPhotoTaken={handlePhotoTaken}
         cameraFormatFilter={CameraFormat.MaskedWithBarcodeDetection}
+        maskLineWidth={Spacing.xs}
+        maskOverlayOpacity={0.6}
       />
     </ScreenWrapper>
   )
