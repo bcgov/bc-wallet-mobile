@@ -1,5 +1,5 @@
-import { BifoldAgent, BifoldLogger, createConnectionInvitation } from '@bifold/core'
-import { useCallback, useEffect, useState } from 'react'
+import { BifoldAgent, BifoldLogger, createConnectionInvitation, useConnectionByOutOfBandId } from '@bifold/core'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Share } from 'react-native'
 
 export enum QRDisplayStatus {
@@ -11,6 +11,11 @@ export enum QRDisplayStatus {
 export interface QRDisplayViewModelInputs {
   agent: BifoldAgent | null
   logger: BifoldLogger
+  /**
+   * Fired once when the displayed invitation results in a connection. The
+   * argument is the new connection's id so the caller can navigate to chat.
+   */
+  onConnectionAccepted?: (connectionId: string) => void
 }
 
 export interface QRDisplayViewModel {
@@ -23,15 +28,30 @@ export interface QRDisplayViewModel {
 
 const toError = (err: unknown): Error => (err instanceof Error ? err : new Error(String(err)))
 
-const useQRDisplayViewModel = ({ agent, logger }: QRDisplayViewModelInputs): QRDisplayViewModel => {
+const useQRDisplayViewModel = ({
+  agent,
+  logger,
+  onConnectionAccepted,
+}: QRDisplayViewModelInputs): QRDisplayViewModel => {
   const [invitation, setInvitation] = useState<string | undefined>(undefined)
   const [status, setStatus] = useState<QRDisplayStatus>(QRDisplayStatus.LOADING)
   const [error, setError] = useState<Error | null>(null)
   const [retryToken, setRetryToken] = useState(0)
+  const [oobRecordId, setOobRecordId] = useState<string | undefined>(undefined)
+  // Guard against firing twice if the connection record updates after creation.
+  const acceptedRef = useRef(false)
+
+  // Latest callback in a ref so we don't restart the watcher each render.
+  const onAcceptedRef = useRef<typeof onConnectionAccepted>(undefined)
+  useEffect(() => {
+    onAcceptedRef.current = onConnectionAccepted
+  }, [onConnectionAccepted])
 
   useEffect(() => {
     if (!agent) {
       setInvitation(undefined)
+      setOobRecordId(undefined)
+      acceptedRef.current = false
       setError(null)
       setStatus(QRDisplayStatus.LOADING)
       return
@@ -46,9 +66,8 @@ const useQRDisplayViewModel = ({ agent, logger }: QRDisplayViewModelInputs): QRD
         if (cancelled) {
           return
         }
-        // SEAM (#3777): result.record.id is the OOB handle for auto-navigate-to-chat
-        // on acceptance. Hook useConnectionByOutOfBandId + an onConnectionAccepted
-        // callback here when chat lands.
+        acceptedRef.current = false
+        setOobRecordId(result.record.id)
         setInvitation(result.invitationUrl)
         setStatus(QRDisplayStatus.READY)
       })
@@ -66,6 +85,16 @@ const useQRDisplayViewModel = ({ agent, logger }: QRDisplayViewModelInputs): QRD
       cancelled = true
     }
   }, [agent, retryToken, logger])
+
+  const connection = useConnectionByOutOfBandId(oobRecordId ?? '')
+
+  useEffect(() => {
+    if (!oobRecordId || !connection || acceptedRef.current) {
+      return
+    }
+    acceptedRef.current = true
+    onAcceptedRef.current?.(connection.id)
+  }, [oobRecordId, connection])
 
   const retry = useCallback(() => {
     setRetryToken((n) => n + 1)

@@ -100,4 +100,22 @@ describe('DidCommOobStrategy.handle', () => {
     expect(spies.findByReceivedInvitationId).toHaveBeenCalledWith('inv-1')
     expect(spies.receiveInvitation).not.toHaveBeenCalled()
   })
+
+  it('forwards ctx.label to receiveInvitation so the inviter sees this wallet name', async () => {
+    const { agent, spies } = makeAgent({ recordId: 'rec-1' })
+    await DidCommOobStrategy.handle('https://x?oob=foo', { ...ctx(agent), label: "Kjartan's iPhone" })
+    expect(spies.receiveInvitation).toHaveBeenCalledWith(
+      { id: 'inv-1', goalCode: undefined },
+      { label: "Kjartan's iPhone" }
+    )
+  })
+
+  it('falls back to a placeholder label when ctx.label is missing', async () => {
+    const { agent, spies } = makeAgent({ recordId: 'rec-1' })
+    await DidCommOobStrategy.handle('https://x?oob=foo', ctx(agent))
+    expect(spies.receiveInvitation).toHaveBeenCalledWith(
+      { id: 'inv-1', goalCode: undefined },
+      { label: 'didcomm-oob-invitation' }
+    )
+  })
 })

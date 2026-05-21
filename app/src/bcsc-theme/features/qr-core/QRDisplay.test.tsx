@@ -17,6 +17,7 @@ jest.mock('@bifold/core', () => ({
   ...jest.requireActual('@bifold/core'),
   QRRenderer: jest.fn().mockReturnValue(null),
   createConnectionInvitation: jest.fn(),
+  useConnectionByOutOfBandId: jest.fn().mockReturnValue(undefined),
 }))
 
 jest.mock('./WalletNameDisplay', () => ({

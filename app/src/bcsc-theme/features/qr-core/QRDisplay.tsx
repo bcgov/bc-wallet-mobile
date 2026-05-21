@@ -1,3 +1,4 @@
+import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import {
   ButtonLocation,
   IconButton,
@@ -11,6 +12,7 @@ import {
   useTheme,
 } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native'
@@ -27,7 +29,19 @@ const QRDisplay: React.FC = () => {
   const { width } = useWindowDimensions()
   const { ColorPalette, Spacing } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const vm = useQRDisplayViewModel({ agent, logger })
+
+  // QRDisplay sits inside QRCoreStack (a tab navigator); ContactChat lives on
+  // MainStack, so escape up via getParent before navigating.
+  const onConnectionAccepted = useCallback(
+    (connectionId: string) => {
+      navigation
+        .getParent<StackNavigationProp<BCSCMainStackParams>>()
+        ?.navigate(BCSCScreens.ContactChat, { connectionId })
+    },
+    [navigation]
+  )
+
+  const vm = useQRDisplayViewModel({ agent, logger, onConnectionAccepted })
 
   const qrSize = width - Spacing.lg * 2
 

@@ -13,7 +13,7 @@ import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useLayoutEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { KeyboardAvoidingView, Platform, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import {
   Actions,
   ActionsProps,
@@ -436,23 +436,25 @@ const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
 
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.screen}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={headerHeight}
-      >
-        <GiftedChat
-          messages={items}
-          renderAvatar={null}
-          renderMessage={renderMessage}
-          renderInputToolbar={renderInputToolbar}
-          renderComposer={renderComposer}
-          renderSend={renderSend}
-          renderActions={renderActions}
-          onSend={onSend}
-          user={{ _id: ME_ID }}
-        />
-      </KeyboardAvoidingView>
+      <GiftedChat
+        messages={items}
+        renderAvatar={null}
+        renderMessage={renderMessage}
+        renderInputToolbar={renderInputToolbar}
+        renderComposer={renderComposer}
+        renderSend={renderSend}
+        renderActions={renderActions}
+        onSend={onSend}
+        user={{ _id: ME_ID }}
+        // GiftedChat wraps the chat in a `react-native-keyboard-controller`
+        // KeyboardAvoidingView already; its default offset is only `insets.top`
+        // (status bar), which leaves the composer hidden under the keyboard on
+        // Android because the navigation header isn't accounted for. Override
+        // with the navigator-aware header height. Wrapping the screen in our
+        // own RN KeyboardAvoidingView duplicated the work and was a no-op on
+        // Android (behavior=undefined), so it's removed.
+        keyboardAvoidingViewProps={{ keyboardVerticalOffset: headerHeight }}
+      />
     </SafeAreaView>
   )
 }

@@ -42,8 +42,10 @@ const DidCommOobStrategy: UriStrategy = {
       return { kind: 'connection', oobRecordId: existing.id }
     }
 
+    // `label` becomes `theirLabel` on the inviter's connection record and
+    // shows up as the contact name in their chat header.
     const { outOfBandRecord } = await agent.modules.didcomm.oob.receiveInvitation(invitation, {
-      label: 'didcomm-oob-invitation',
+      label: ctx.label || 'didcomm-oob-invitation',
     })
     return { kind: 'connection', oobRecordId: outOfBandRecord.id }
   },

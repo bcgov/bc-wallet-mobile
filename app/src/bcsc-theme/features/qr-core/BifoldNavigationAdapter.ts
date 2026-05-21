@@ -23,6 +23,12 @@ import type { TFunction } from 'i18next'
  * `ProofRequestAccept` reads `navigation` via `useNavigation()` rather than a
  * prop, so the `NavigationContext.Provider` wrapping in `ConnectionLoadingScreen`
  * (not just the prop-level adapter) is what makes its calls reach this code.
+ *
+ * Chat path: bifold's Connection.tsx dispatches a reset to `[TabStack, Chat]`
+ * (or, less commonly, calls `navigate('Chat', { connectionId })`) when an OOB
+ * exchange completes with no goal code. BCSC now has its own chat surface
+ * (`BCSCScreens.ContactChat`), so the adapter routes that connectionId into
+ * ContactChat instead of falling back to Home.
  */
 
 // Bifold route names that don't exist in BCSC's nav graph.
@@ -60,22 +66,47 @@ const resetToBCSCWallet = (navigation: NavigationProp<any>): void => {
   )
 }
 
+// Reset to BCSC's tab navigator with Home focused, then push ContactChat on top
+// (index 1). The Tab/Home route on the stack means the back button on chat goes
+// back to Home — the natural place to land after a chat session.
+const resetToBCSCContactChat = (navigation: NavigationProp<any>, connectionId: string): void => {
+  navigation.dispatch(
+    CommonActions.reset({
+      index: 1,
+      routes: [
+        { name: BCSCStacks.Tab, state: { routes: [{ name: BCSCScreens.Home }] } },
+        { name: BCSCScreens.ContactChat, params: { connectionId } },
+      ],
+    })
+  )
+}
+
 // Detect Bifold's `reset({ … TabStack … Chat … })` action, dispatched by
 // Connection.tsx on the enableChat=true completion path. The reset routes
-// reference Bifold's nav graph, which BCSC doesn't register; translate to
-// BCSC's home reset so the chat path lands somewhere valid.
+// reference Bifold's nav graph, which BCSC doesn't register; if the Chat route
+// carries a connectionId we have somewhere meaningful to land — otherwise fall
+// back to Home so the user still ends up somewhere valid.
 //
 // Heuristic note: the match is intentionally broad — any RESET whose routes
 // contain `Tab Stack` OR `Chat` is treated as the Bifold chat-path reset.
 // BCSC has no screen named `Chat` and uses `BCSCStacks.Tab` (not `Tab Stack`),
 // so collisions with legitimate BCSC resets are unlikely today. Revisit if a
 // future Bifold internal refactor changes the reset shape.
-const isBifoldChatResetAction = (action: { type?: string; payload?: { routes?: { name?: string }[] } }): boolean => {
+type BifoldResetRoute = { name?: string; params?: { connectionId?: string } }
+const detectBifoldChatReset = (action: {
+  type?: string
+  payload?: { routes?: BifoldResetRoute[] }
+}): { matched: boolean; connectionId?: string } => {
   if (action.type !== 'RESET') {
-    return false
+    return { matched: false }
   }
   const routes = action.payload?.routes ?? []
-  return routes.some((r) => r.name === BIFOLD_TAB_STACK || r.name === BIFOLD_CHAT)
+  const matched = routes.some((r) => r.name === BIFOLD_TAB_STACK || r.name === BIFOLD_CHAT)
+  if (!matched) {
+    return { matched: false }
+  }
+  const chatRoute = routes.find((r) => r.name === BIFOLD_CHAT)
+  return { matched: true, connectionId: chatRoute?.params?.connectionId }
 }
 
 export const createBifoldNavigationAdapter = <T extends NavigationProp<any>>(
@@ -97,8 +128,13 @@ export const createBifoldNavigationAdapter = <T extends NavigationProp<any>>(
             return
           }
           if (name === BIFOLD_CHAT) {
-            // BCSC has no chat surface; treat as a soft no-op with a toast so
-            // any caller that takes this path lands gracefully.
+            const connectionId = (params as { connectionId?: string } | undefined)?.connectionId
+            if (connectionId) {
+              ;(target as any).navigate(BCSCScreens.ContactChat, { connectionId })
+              return
+            }
+            // Fall back to a toast if a caller ever invokes Chat without a
+            // connectionId — we have nothing to display without one.
             Toast.show({ type: 'info', text1: t('BCSC.Scan.FeatureUnavailable') })
             return
           }
@@ -111,8 +147,13 @@ export const createBifoldNavigationAdapter = <T extends NavigationProp<any>>(
       }
       if (prop === 'dispatch') {
         return (action: any) => {
-          if (isBifoldChatResetAction(action)) {
-            resetToBCSCHome(target)
+          const chatReset = detectBifoldChatReset(action)
+          if (chatReset.matched) {
+            if (chatReset.connectionId) {
+              resetToBCSCContactChat(target, chatReset.connectionId)
+            } else {
+              resetToBCSCHome(target)
+            }
             return
           }
           return (target as any).dispatch(action)

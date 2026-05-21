@@ -4,9 +4,12 @@ import { Share } from 'react-native'
 
 import useQRDisplayViewModel, { QRDisplayStatus } from './useQRDisplayViewModel'
 
+const mockUseConnectionByOutOfBandId = jest.fn<unknown, [string]>(() => undefined)
+
 jest.mock('@bifold/core', () => ({
   ...jest.requireActual('@bifold/core'),
   createConnectionInvitation: jest.fn(),
+  useConnectionByOutOfBandId: (oobId: string) => mockUseConnectionByOutOfBandId(oobId),
 }))
 
 const mockCreateInvitation = jest.mocked(Bifold.createConnectionInvitation)
@@ -30,6 +33,7 @@ const url = 'https://realhost.example/invitation?oob=abc'
 describe('useQRDisplayViewModel', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockUseConnectionByOutOfBandId.mockReturnValue(undefined)
   })
 
   it('stays loading and does not call createConnectionInvitation when agent is null', async () => {
@@ -157,6 +161,41 @@ describe('useQRDisplayViewModel', () => {
     })
     expect(result.current.invitation).toBeUndefined()
     expect(result.current.error).toBeNull()
+  })
+
+  it('fires onConnectionAccepted exactly once when a connection appears for the invitation', async () => {
+    const logger = makeLogger()
+    mockCreateInvitation.mockResolvedValueOnce({
+      invitationUrl: url,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      record: { id: 'oob-1' } as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      invitation: {} as any,
+    })
+    const onConnectionAccepted = jest.fn()
+
+    const { result, rerender } = renderHook(() =>
+      useQRDisplayViewModel({ agent: fakeAgent, logger, onConnectionAccepted })
+    )
+
+    await waitFor(() => {
+      expect(result.current.status).toBe(QRDisplayStatus.READY)
+    })
+    expect(onConnectionAccepted).not.toHaveBeenCalled()
+
+    // Connection now resolves for the displayed OOB invitation.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockUseConnectionByOutOfBandId.mockReturnValue({ id: 'conn-1' } as any)
+    rerender({})
+
+    await waitFor(() => {
+      expect(onConnectionAccepted).toHaveBeenCalledWith('conn-1')
+    })
+    expect(onConnectionAccepted).toHaveBeenCalledTimes(1)
+
+    // Further re-renders with the same connection should not re-fire.
+    rerender({})
+    expect(onConnectionAccepted).toHaveBeenCalledTimes(1)
   })
 
   it('logs but does not throw when Share.share rejects', async () => {

@@ -100,15 +100,23 @@ describe('BifoldNavigationAdapter', () => {
     )
   })
 
-  it('shows feature-unavailable toast for navigate to Chat (BCSC has no chat surface)', () => {
+  it('routes navigate("Chat", { connectionId }) to BCSC ContactChat', () => {
     const { nav } = mkNav()
     const adapted = createBifoldNavigationAdapter(nav as any, { t })
     adapted.navigate('Chat' as never, { connectionId: 'c-1' } as never)
+    expect(nav.navigate).toHaveBeenCalledWith(BCSCScreens.ContactChat, { connectionId: 'c-1' })
+    expect(Toast.show).not.toHaveBeenCalled()
+  })
+
+  it('shows feature-unavailable toast for navigate("Chat") without a connectionId', () => {
+    const { nav } = mkNav()
+    const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    adapted.navigate('Chat' as never, undefined as never)
     expect(Toast.show).toHaveBeenCalledWith({ type: 'info', text1: 'BCSC.Scan.FeatureUnavailable' })
     expect(nav.navigate).not.toHaveBeenCalled()
   })
 
-  it('translates a Bifold chat-path reset dispatch to a BCSC home reset', () => {
+  it('translates a Bifold chat-path reset dispatch into a Tab+ContactChat stack', () => {
     const { nav } = mkNav()
     const adapted = createBifoldNavigationAdapter(nav as any, { t })
     // Mirrors the action Connection.tsx dispatches when enableChat=true completes.
@@ -116,6 +124,26 @@ describe('BifoldNavigationAdapter', () => {
       CommonActions.reset({
         index: 1,
         routes: [{ name: 'Tab Stack' }, { name: 'Chat', params: { connectionId: 'c-1' } }],
+      })
+    )
+    expect(nav.dispatch).toHaveBeenCalledWith(
+      CommonActions.reset({
+        index: 1,
+        routes: [
+          { name: BCSCStacks.Tab, state: { routes: [{ name: BCSCScreens.Home }] } },
+          { name: BCSCScreens.ContactChat, params: { connectionId: 'c-1' } },
+        ],
+      })
+    )
+  })
+
+  it('falls back to a Home reset for a chat-path reset that carries no connectionId', () => {
+    const { nav } = mkNav()
+    const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    adapted.dispatch(
+      CommonActions.reset({
+        index: 1,
+        routes: [{ name: 'Tab Stack' }, { name: 'Chat' }],
       })
     )
     expect(nav.dispatch).toHaveBeenCalledWith(

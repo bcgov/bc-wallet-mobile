@@ -26,6 +26,7 @@ jest.mock('@bifold/core', () => {
     QrCodeScanError,
     TOKENS: { UTIL_LOGGER: 'logger' },
     useServices: () => [{ info: jest.fn(), warn: jest.fn(), error: jest.fn() }],
+    useStore: () => [{ bcsc: { selectedNickname: 'TestWallet' } }],
   }
 })
 
