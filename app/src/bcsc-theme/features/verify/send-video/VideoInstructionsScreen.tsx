@@ -78,6 +78,10 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
 
       <View style={styles.bulletContainer}>
         <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
+        <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet1')}</ThemedText>
+      </View>
+      <View style={styles.bulletContainer}>
+        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
         <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet2')}</ThemedText>
       </View>
       <View style={styles.bulletContainer}>
