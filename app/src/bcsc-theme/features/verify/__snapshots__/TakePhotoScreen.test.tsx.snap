@@ -156,7 +156,7 @@ exports[`TakePhoto renders correctly 1`] = `
               "type": 0,
             }
           }
-          fillOpacity={0}
+          fillOpacity={0.6}
           height={1334}
           mask="overlayMask"
           propList={

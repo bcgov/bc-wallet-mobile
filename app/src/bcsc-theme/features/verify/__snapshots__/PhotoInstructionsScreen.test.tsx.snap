@@ -26,18 +26,19 @@ exports[`PhotoInstructions renders correctly 1`] = `
         {
           "padding": 16,
         },
-        undefined,
+        {
+          "gap": 16,
+        },
       ]
     }
     showsVerticalScrollIndicator={false}
   >
     <View>
       <
-        height={200}
+        height={250}
         style={
           {
-            "height": 200,
-            "marginBottom": 16,
+            "height": 250,
             "width": "100%",
           }
         }
@@ -53,9 +54,7 @@ exports[`PhotoInstructions renders correctly 1`] = `
               "fontSize": 26,
               "fontWeight": "bold",
             },
-            {
-              "marginBottom": 16,
-            },
+            undefined,
           ]
         }
       >
@@ -65,7 +64,6 @@ exports[`PhotoInstructions renders correctly 1`] = `
         style={
           {
             "flexDirection": "row",
-            "marginBottom": 16,
           }
         }
       >
@@ -108,7 +106,6 @@ exports[`PhotoInstructions renders correctly 1`] = `
         style={
           {
             "flexDirection": "row",
-            "marginBottom": 16,
           }
         }
       >
@@ -151,7 +148,6 @@ exports[`PhotoInstructions renders correctly 1`] = `
         style={
           {
             "flexDirection": "row",
-            "marginBottom": 16,
           }
         }
       >
@@ -194,7 +190,6 @@ exports[`PhotoInstructions renders correctly 1`] = `
         style={
           {
             "flexDirection": "row",
-            "marginBottom": 16,
           }
         }
       >

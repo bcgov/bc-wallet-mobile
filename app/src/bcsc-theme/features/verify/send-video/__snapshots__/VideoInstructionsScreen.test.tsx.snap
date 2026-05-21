@@ -117,7 +117,7 @@ exports[`VideoInstructions renders correctly 1`] = `
           ]
         }
       >
-        You should:
+        BCSC.SendVideo.VideoInstructions.YouShould
       </Text>
       <View
         style={
