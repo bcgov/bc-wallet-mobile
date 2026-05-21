@@ -46,6 +46,12 @@ const togglePinId = (contactId: string) => {
   notify()
 }
 
+/**
+ * Custom hook to manage pinned contacts, allowing components to subscribe to changes
+ * in the set of pinned contact IDs and toggle the pinned state of individual contacts.
+ *
+ * @return {*}
+ */
 export const usePinnedContacts = () => {
   const ids = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
   const isPinned = useCallback((contactId: string) => ids.has(contactId), [ids])
@@ -53,8 +59,10 @@ export const usePinnedContacts = () => {
   return { pinnedIds: ids, isPinned, togglePin }
 }
 
-// Tests rely on this to clear the module-level pin store and hydration flag
-// between cases — production code never calls it.
+/**
+ * Resets the module-level pinned-id store, hydration flag, and subscriber list.
+ * Tests call this between cases; production code must not.
+ */
 export const resetPinnedContactsForTests = () => {
   pinnedIds = new Set()
   hydrationStarted = false

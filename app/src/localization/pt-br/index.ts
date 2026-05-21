@@ -222,8 +222,6 @@ const translation = {
       "GiveFeedback": "Give feedback (PT-BR)",
       "ReportProblem": "Report a problem (PT-BR)",
     },
-    // TODO(i18n): Contacts strings are English placeholders with " (PT-BR)" suffix.
-    // Replace with real translations before shipping to pt-BR users.
     "Contacts": {
       "Title": "Contacts (PT-BR)",
       "EmptyTitle": "Your contacts are empty (PT-BR)",

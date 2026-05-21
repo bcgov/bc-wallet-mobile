@@ -14,6 +14,10 @@ interface RemoveContactScreenProps {
   route: RouteProp<BCSCMainStackParams, BCSCScreens.RemoveContact>
 }
 
+/**
+ * Confirmation screen for deleting a DIDComm connection record. Warns about
+ * outstanding credential exchanges, then calls `agent.didcomm.connections.deleteById`.
+ */
 const RemoveContactScreen = ({ navigation, route }: RemoveContactScreenProps) => {
   const { connectionId } = route.params
   const { t } = useTranslation()

@@ -12,6 +12,11 @@ interface ContactRowProps {
   onLongPress?: () => void
 }
 
+/**
+ * List row for one DIDComm contact. Renders an initial-avatar, the connection
+ * name (preferring `alternateContactNames`), a subtitle from the connection's
+ * latest message/state, a relative timestamp, and an optional pinned indicator.
+ */
 const ContactRow: React.FC<ContactRowProps> = ({ contact, pinned, onPress, onLongPress }) => {
   const { ColorPalette, Spacing } = useTheme()
   const [store] = useStore()

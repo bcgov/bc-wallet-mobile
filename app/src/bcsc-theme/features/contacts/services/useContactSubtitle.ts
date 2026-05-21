@@ -12,6 +12,14 @@ import {
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
+/**
+ * Generates a subtitle for a contact based on the most recent interaction,
+ * which could be a basic message, credential exchange, or proof exchange.
+ * The subtitle is determined by the type and state of the most recent interaction.
+ *
+ * @param {DidCommCredentialExchangeRecord} record
+ * @return {*}  {string}
+ */
 const credentialEventLabel = (record: DidCommCredentialExchangeRecord): string => {
   switch (record.state) {
     case DidCommCredentialState.ProposalSent:
@@ -30,6 +38,12 @@ const credentialEventLabel = (record: DidCommCredentialExchangeRecord): string =
   }
 }
 
+/**
+ * Generates a subtitle for a contact based on the most recent proof exchange interaction,
+ *
+ * @param {DidCommProofExchangeRecord} record
+ * @return {*}  {string}
+ */
 const proofEventLabel = (record: DidCommProofExchangeRecord): string => {
   switch (record.state) {
     case DidCommProofState.RequestSent:
@@ -53,6 +67,12 @@ const proofEventLabel = (record: DidCommProofExchangeRecord): string => {
   }
 }
 
+/**
+ * Custom hook to generate a subtitle for a contact based on the most recent interaction,
+ *
+ * @param {string} connectionId
+ * @return {*}  {(string | undefined)}
+ */
 export const useContactSubtitle = (connectionId: string): string | undefined => {
   const { t } = useTranslation()
   const basicMessages = useBasicMessagesByConnectionId(connectionId)

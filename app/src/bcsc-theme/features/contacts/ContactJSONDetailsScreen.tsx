@@ -11,6 +11,12 @@ interface ContactJSONDetailsScreenProps {
   route: RouteProp<BCSCMainStackParams, BCSCScreens.ContactJSONDetails>
 }
 
+/**
+ * Displays the raw JSON payload of a DIDComm connection record (DIDs,
+ * verification keys, endpoints) with copy-to-clipboard and a guarded share
+ * action — the data is sensitive enough that we confirm before handing it off
+ * to the system share sheet.
+ */
 const ContactJSONDetailsScreen = ({ route }: ContactJSONDetailsScreenProps) => {
   const { jsonBlob } = route.params
   const { t } = useTranslation()

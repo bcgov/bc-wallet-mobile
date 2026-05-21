@@ -9,6 +9,10 @@ interface WhatAreContactsScreenProps {
   navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.WhatAreContacts>
 }
 
+/**
+ * Informational screen explaining what contacts are and how they're created in
+ * the BC Wallet. Reached from the empty state and the contacts list header.
+ */
 const WhatAreContactsScreen = ({ navigation }: WhatAreContactsScreenProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()

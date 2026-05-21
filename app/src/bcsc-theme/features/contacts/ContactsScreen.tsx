@@ -23,14 +23,16 @@ const ContactListSeparator: React.FC<ContactListSeparatorProps> = ({ backgroundC
   <View style={{ height: 1, backgroundColor }} />
 )
 
-// Factory so the separator component reference is created outside ContactsScreen
-// rather than inline at the FlatList prop — avoids the nested-component
-// anti-pattern flagged by sonar S6478.
 const createContactListSeparator = (backgroundColor: ColorValue) => {
   const Separator = () => <ContactListSeparator backgroundColor={backgroundColor} />
   return Separator
 }
 
+/**
+ * Lists the user's DIDComm connections with search and per-contact pin
+ * toggling. Pinned contacts appear first; remaining contacts are sorted by
+ * most-recent activity.
+ */
 const ContactsScreen = ({ navigation }: ContactsScreenProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()

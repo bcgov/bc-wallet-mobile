@@ -43,6 +43,13 @@ const createChatHeaderRight = (props: ChatHeaderInfoButtonProps) => {
   return ChatHeaderRight
 }
 
+/**
+ * Chat screen for a single DIDComm connection.
+ *
+ * Renders `BasicMessage` history via GiftedChat, lets the user send new basic
+ * messages through the active agent, and routes the header info button to the
+ * contact details screen.
+ */
 const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
   const { connectionId } = route.params
   const { t } = useTranslation()

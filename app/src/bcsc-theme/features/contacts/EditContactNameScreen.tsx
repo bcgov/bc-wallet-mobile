@@ -23,6 +23,10 @@ interface EditContactNameScreenProps {
 
 const NAME_MAX = 50
 
+/**
+ * Renames a DIDComm contact by writing to `preferences.alternateContactNames`.
+ * Enforces a 50-character maximum and trims whitespace on save.
+ */
 const EditContactNameScreen = ({ navigation, route }: EditContactNameScreenProps) => {
   const { connectionId } = route.params
   const { t } = useTranslation()
