@@ -26,7 +26,7 @@ describe('BifoldScope', () => {
   })
 
   it('renders children without Bifold providers when the agent is not ready', () => {
-    mockUseBCSCAgent.mockReturnValue({ agent: null, loading: true, error: null, retry: jest.fn() })
+    mockUseBCSCAgent.mockReturnValue({ agent: null, loading: true, error: null, retry: jest.fn(), resetWallet: jest.fn() })
 
     const { getByText } = render(
       <BifoldScope>
@@ -42,7 +42,7 @@ describe('BifoldScope', () => {
   it('wraps children in Bifold providers using the live agent when ready', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const agent = {} as Agent
-    mockUseBCSCAgent.mockReturnValue({ agent, loading: false, error: null, retry: jest.fn() })
+    mockUseBCSCAgent.mockReturnValue({ agent, loading: false, error: null, retry: jest.fn(), resetWallet: jest.fn() })
 
     const { getByText } = render(
       <BifoldScope>

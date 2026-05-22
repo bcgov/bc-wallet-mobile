@@ -10,6 +10,7 @@ export interface BCSCAgentContextValue {
   loading: boolean
   error: AppError | null
   retry: () => void
+  resetWallet: () => Promise<void>
 }
 
 const BCSCAgentContext = createContext<BCSCAgentContextValue | null>(null)
@@ -28,7 +29,7 @@ export const useBCSCAgent = (): BCSCAgentContextValue => {
 // no fall-through to Bifold hooks. Screens that need the live agent reach
 // for it through useBCSCAgent().agent rather than Bifold's useAgent().
 const BCSCAgentProvider: React.FC<PropsWithChildren> = ({ children }) => {
-  const { agent, status, error, retry } = useAgentSetupViewModel()
+  const { agent, status, error, retry, resetWallet } = useAgentSetupViewModel()
 
   const value = useMemo<BCSCAgentContextValue>(
     () => ({
@@ -36,8 +37,9 @@ const BCSCAgentProvider: React.FC<PropsWithChildren> = ({ children }) => {
       loading: status === 'idle' || status === 'initializing',
       error,
       retry,
+      resetWallet,
     }),
-    [agent, status, error, retry]
+    [agent, status, error, retry, resetWallet]
   )
 
   return <BCSCAgentContext.Provider value={value}>{children}</BCSCAgentContext.Provider>

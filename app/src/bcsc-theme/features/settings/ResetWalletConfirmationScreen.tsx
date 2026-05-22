@@ -1,4 +1,4 @@
-import { useWalletReset } from '@/bcsc-theme/api/hooks/useWalletReset'
+import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import DeleteConfirmationScreen from '@/bcsc-theme/components/DeleteConfirmationScreen'
 
 import React from 'react'
@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 
 const ResetWalletConfirmationScreen: React.FC = () => {
   const { t } = useTranslation()
-  const resetWallet = useWalletReset()
+  const { resetWallet } = useBCSCAgent()
 
   return (
     <DeleteConfirmationScreen

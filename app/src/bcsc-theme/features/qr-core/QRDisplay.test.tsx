@@ -32,8 +32,8 @@ const realInvitationUrl = 'https://realhost.example/invitation?oob=abc123'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const fakeAgent = {} as any
 
-const readyAgentReturn = { agent: fakeAgent, loading: false, error: null, retry: jest.fn() }
-const noAgentReturn = { agent: null, loading: true, error: null, retry: jest.fn() }
+const readyAgentReturn = { agent: fakeAgent, loading: false, error: null, retry: jest.fn(), resetWallet: jest.fn() }
+const noAgentReturn = { agent: null, loading: true, error: null, retry: jest.fn(), resetWallet: jest.fn() }
 
 describe('QRDisplay', () => {
   let mockNavigation: ReturnType<typeof useNavigation>

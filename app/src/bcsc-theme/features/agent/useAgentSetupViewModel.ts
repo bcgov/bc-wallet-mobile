@@ -17,6 +17,7 @@ export interface AgentSetupResult {
   status: AgentSetupStatus
   error: AppError | null
   retry: () => void
+  resetWallet: () => Promise<void>
 }
 
 const useAgentSetupViewModel = (): AgentSetupResult => {
@@ -114,6 +115,10 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
           // Best-effort shut it down before falling through to build a fresh one.
           await shutdownAgent(agentRef.current, logger)
           agentRef.current = null
+          // Setting agent to null causes BifoldScope to drop AgentProvider,
+          // which remounts child components and clears stale hook state (e.g.
+          // useCredentials) before the fresh agent is provided.
+          setAgent(null)
         }
 
         const cachedLedgers = await loadCachedLedgers()
@@ -211,7 +216,21 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     refreshAttestationMonitor,
   ])
 
-  return { agent, status, error, retry }
+  const resetWallet = useCallback(async () => {
+    const currentAgent = agentRef.current
+    if (!currentAgent) {
+      throw new Error('WalletReset: Agent is not initialized')
+    }
+    await shutdownAgent(currentAgent, logger)
+    await currentAgent.modules.askar.deleteStore()
+    agentRef.current = null
+    setAgent(null)
+    setError(null)
+    setStatus('idle')
+    setRetryCount((c) => c + 1)
+  }, [logger])
+
+  return { agent, status, error, retry, resetWallet }
 }
 
 export default useAgentSetupViewModel

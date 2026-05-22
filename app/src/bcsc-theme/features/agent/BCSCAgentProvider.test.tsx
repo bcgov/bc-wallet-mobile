@@ -24,7 +24,7 @@ describe('BCSCAgentProvider', () => {
   })
 
   it('exposes loading=true while idle', () => {
-    mockViewModel.mockReturnValue({ agent: null, status: 'idle', error: null, retry: jest.fn() })
+    mockViewModel.mockReturnValue({ agent: null, status: 'idle', error: null, retry: jest.fn(), resetWallet: jest.fn() })
 
     const { getByText } = render(
       <BCSCAgentProvider>
@@ -36,7 +36,7 @@ describe('BCSCAgentProvider', () => {
   })
 
   it('exposes loading=true while initializing', () => {
-    mockViewModel.mockReturnValue({ agent: null, status: 'initializing', error: null, retry: jest.fn() })
+    mockViewModel.mockReturnValue({ agent: null, status: 'initializing', error: null, retry: jest.fn(), resetWallet: jest.fn() })
 
     const { getByText } = render(
       <BCSCAgentProvider>
@@ -50,7 +50,7 @@ describe('BCSCAgentProvider', () => {
   it('exposes the agent and loading=false when ready', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const agent = {} as any
-    mockViewModel.mockReturnValue({ agent, status: 'ready', error: null, retry: jest.fn() })
+    mockViewModel.mockReturnValue({ agent, status: 'ready', error: null, retry: jest.fn(), resetWallet: jest.fn() })
 
     const { getByText } = render(
       <BCSCAgentProvider>
@@ -63,7 +63,7 @@ describe('BCSCAgentProvider', () => {
 
   it('exposes the error and loading=false when init fails', () => {
     const error = AppError.fromErrorDefinition(ErrorRegistry.AGENT_INITIALIZATION_ERROR)
-    mockViewModel.mockReturnValue({ agent: null, status: 'error', error, retry: jest.fn() })
+    mockViewModel.mockReturnValue({ agent: null, status: 'error', error, retry: jest.fn(), resetWallet: jest.fn() })
 
     const { getByText } = render(
       <BCSCAgentProvider>
