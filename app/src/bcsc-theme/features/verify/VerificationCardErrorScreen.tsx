@@ -1,7 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCState } from '@/store'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
-import { CommonActions, RouteProp, useRoute } from '@react-navigation/native'
+import { RouteProp, useRoute } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { Linking, View } from 'react-native'
@@ -58,7 +58,7 @@ const VerificationCardErrorScreen = ({ navigation }: VerificationCardErrorScreen
         testID={testIdWithKey('TryAnother')}
         buttonType={ButtonType.Primary}
         onPress={() => {
-          navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.ManualSerial }] }))
+          navigation.navigate(BCSCScreens.IdentitySelection)
         }}
       />
     </ControlContainer>
