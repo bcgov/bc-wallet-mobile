@@ -1,7 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useEvidenceUploadModel from '@/bcsc-theme/features/verify/send-video/useEvidenceUploadModel'
-import { getVideoMetadata } from '@/bcsc-theme/utils/file-info'
-import { BCState } from '@/store'
+import { getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info'
+import { BCDispatchAction, BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
@@ -12,6 +12,7 @@ jest.mock('@/bcsc-theme/api/hooks/useApi')
 jest.mock('@/utils/read-file')
 jest.mock('@/bcsc-theme/utils/file-info', () => ({
   getVideoMetadata: jest.fn(),
+  removeFileSafely: jest.fn().mockResolvedValue(undefined),
 }))
 jest.mock('@/utils/analytics/analytics-singleton', () => ({
   Analytics: {
@@ -47,14 +48,6 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   })),
 }))
 
-jest.mock('@/bcsc-theme/contexts/BCSCLoadingContext', () => ({
-  useLoadingScreen: () => ({
-    startLoading: jest.fn().mockReturnValue(jest.fn()),
-    updateLoadingMessage: jest.fn(),
-    isLoading: false,
-  }),
-}))
-
 const mockFileUploadErrorAlert = jest.fn()
 jest.mock('@/hooks/useAlerts', () => ({
   useAlerts: () => ({
@@ -72,6 +65,7 @@ describe('useEvidenceUploadModel', () => {
   const mockNavigation = {
     navigate: jest.fn(),
     dispatch: jest.fn(),
+    goBack: jest.fn(),
   } as any
 
   const mockEvidenceApi = {
@@ -542,6 +536,77 @@ describe('useEvidenceUploadModel', () => {
         upload_uris: ['photo-uri', 'video-uri', 'evidence-uri-front'],
         sha256: 'sha-456',
       })
+    })
+  })
+
+  describe('handleCancel', () => {
+    const storeWithPaths: any = {
+      ...baseStore,
+      bcsc: {
+        ...baseStore.bcsc,
+        photoPath: '/photo.jpg',
+        videoPath: '/video.mp4',
+        videoThumbnailPath: '/thumb.jpg',
+      },
+    }
+
+    it('sets isCancelling to true', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([storeWithPaths as BCState, jest.fn()])
+
+      const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+      expect(result.current.isCancelling).toBe(false)
+
+      await act(async () => {
+        await result.current.handleCancel()
+      })
+
+      expect(result.current.isCancelling).toBe(true)
+    })
+
+    it('removes all media files', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([storeWithPaths as BCState, jest.fn()])
+
+      const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+      await act(async () => {
+        await result.current.handleCancel()
+      })
+
+      const mockRemove = jest.mocked(removeFileSafely)
+      expect(mockRemove).toHaveBeenCalledWith('/photo.jpg', expect.anything())
+      expect(mockRemove).toHaveBeenCalledWith('/video.mp4', expect.anything())
+      expect(mockRemove).toHaveBeenCalledWith('/thumb.jpg', expect.anything())
+    })
+
+    it('clears the video cache and dispatches RESET_SEND_VIDEO', async () => {
+      const mockDispatch = jest.fn()
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([storeWithPaths as BCState, mockDispatch])
+
+      const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+      await act(async () => {
+        await result.current.handleCancel()
+      })
+
+      expect(VerificationVideoCache.clearCache).toHaveBeenCalled()
+      expect(mockDispatch).toHaveBeenCalledWith({ type: BCDispatchAction.RESET_SEND_VIDEO })
+    })
+
+    it('navigates back', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([storeWithPaths as BCState, jest.fn()])
+
+      const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+      await act(async () => {
+        await result.current.handleCancel()
+      })
+
+      expect(mockNavigation.goBack).toHaveBeenCalled()
     })
   })
 })

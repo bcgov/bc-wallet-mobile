@@ -14,16 +14,16 @@ type VerificationMethodSelectionScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VerificationMethodSelection>
 }
 
+const styles = StyleSheet.create({
+  pageHeaderContainer: {
+    marginTop: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing.sm,
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+})
 const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSelectionScreenProps) => {
-  const styles = StyleSheet.create({
-    pageHeaderContainer: {
-      marginTop: Spacing.md,
-      paddingHorizontal: Spacing.lg,
-      marginBottom: Spacing.sm,
-      alignItems: 'center',
-      gap: Spacing.sm,
-    },
-  })
   const { t } = useTranslation()
 
   const {
@@ -101,7 +101,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
       {hoursLoading ? (
         <ActivityIndicator style={{ marginTop: Spacing.sm }} />
       ) : (
-        formattedHours && <ServicePeriodList items={formattedHours} />
+        <ServicePeriodList items={formattedHours ?? []} />
       )}
     </ScreenWrapper>
   )

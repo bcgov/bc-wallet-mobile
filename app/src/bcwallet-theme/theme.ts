@@ -63,7 +63,7 @@ export const GrayscaleColors: IGrayscaleColors = {
   darkGrey: '#313132',
   mediumGrey: '#606060',
   lightGrey: '#D3D3D3',
-  veryLightGrey: '#F2F2F2',
+  veryLightGrey: '#EDEBE9',
   white: '#FFFFFF',
 }
 

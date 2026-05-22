@@ -144,7 +144,7 @@ describe('useVerificationMethodModel', () => {
         payload: [mockVerificationRequest.prompts],
       })
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.InformationRequired)
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.PhotoInstructions, { forLiveCall: false })
       expect(result.current.sendVideoLoading).toBe(false)
     })
 

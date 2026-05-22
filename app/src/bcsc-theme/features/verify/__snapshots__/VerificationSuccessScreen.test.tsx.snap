@@ -44,7 +44,9 @@ exports[`VerificationSuccess renders correctly 1`] = `
               "color": "#003366",
               "fontSize": 108,
             },
-            undefined,
+            {
+              "padding": 24,
+            },
             {
               "fontFamily": "Material Design Icons",
               "fontStyle": "normal",
@@ -67,8 +69,8 @@ exports[`VerificationSuccess renders correctly 1`] = `
               "fontWeight": "bold",
             },
             {
-              "marginTop": 16,
-              "textAlign": "center",
+              "marginVertical": 16,
+              "textAlign": "left",
             },
           ]
         }
@@ -82,12 +84,13 @@ exports[`VerificationSuccess renders correctly 1`] = `
             {
               "color": "#313132",
               "fontFamily": "BCSans-Regular",
-              "fontSize": 21,
-              "fontWeight": "bold",
+              "fontSize": 18,
+              "fontWeight": "normal",
             },
             {
-              "marginVertical": 24,
-              "textAlign": "center",
+              "marginBottom": 16,
+              "textAlign": "left",
+              "width": "100%",
             },
           ]
         }
@@ -106,7 +109,8 @@ exports[`VerificationSuccess renders correctly 1`] = `
             },
             {
               "marginBottom": 16,
-              "textAlign": "center",
+              "textAlign": "left",
+              "width": "100%",
             },
           ]
         }

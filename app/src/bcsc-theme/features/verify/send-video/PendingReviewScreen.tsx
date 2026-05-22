@@ -1,3 +1,4 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -23,13 +24,15 @@ const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
   })
 
   const controls = (
-    <Button
-      testID={testIdWithKey('Ok')}
-      accessibilityLabel={t('BCSC.SendVideo.PendingReview.ButtonText')}
-      title={t('BCSC.SendVideo.PendingReview.ButtonText')}
-      buttonType={ButtonType.Primary}
-      onPress={() => navigation.goBack()}
-    />
+    <ControlContainer>
+      <Button
+        testID={testIdWithKey('Ok')}
+        accessibilityLabel={t('BCSC.SendVideo.PendingReview.ButtonText')}
+        title={t('BCSC.SendVideo.PendingReview.ButtonText')}
+        buttonType={ButtonType.Primary}
+        onPress={() => navigation.goBack()}
+      />
+    </ControlContainer>
   )
 
   return (

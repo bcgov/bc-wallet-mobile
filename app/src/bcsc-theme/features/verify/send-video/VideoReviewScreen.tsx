@@ -1,3 +1,4 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { MediaCache } from '@/bcsc-theme/utils/media-cache'
 import { useAlerts } from '@/hooks/useAlerts'
@@ -19,7 +20,7 @@ import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
+import { StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import type { OnLoadData } from 'react-native-video'
 import { Video, VideoRef } from 'react-native-video'
@@ -42,7 +43,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
   const [, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { width } = useWindowDimensions()
+  const { width, height } = useWindowDimensions()
   const [paused, setPaused] = useState(false)
   const videoRef = useRef<VideoRef>(null)
   const { videoPath, videoThumbnailPath } = route.params
@@ -62,20 +63,21 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     videoContainer: {
       flexGrow: 1,
       alignItems: 'center',
-      paddingHorizontal: Spacing.md,
+      padding: Spacing.lg,
     },
     heading: {
       textAlign: 'center',
       marginBottom: Spacing.md,
       width: '100%',
+      color: ColorPalette.grayscale.black,
     },
     video: {
-      height: width - 2 * Spacing.md,
       width: width - 2 * Spacing.md,
-      aspectRatio: 1,
+      aspectRatio: 3 / 4,
+      maxHeight: height * 0.5,
     },
     pauseButton: {
-      backgroundColor: ColorPalette.grayscale.white,
+      backgroundColor: ColorPalette.brand.primary,
       width: pauseButtonSize,
       height: pauseButtonSize,
       borderRadius: pauseButtonSize / 2,
@@ -93,7 +95,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
         routes: [
           { name: BCSCScreens.SetupSteps },
           { name: BCSCScreens.VerificationMethodSelection },
-          { name: BCSCScreens.InformationRequired },
+          { name: BCSCScreens.EvidenceUploading },
         ],
       })
     )
@@ -112,7 +114,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
    * Optimistically caches the video and extracts its metadata in the background,
    * allowing the user to upload videos with minimal waiting time.
    *
-   * Note: If the user navigates quickly through the flow, the InformationRequiredScreen will just wait
+   * Note: If the user navigates quickly through the flow, the UploadingScreen will just wait
    * for the video disk read to complete before proceeding.
    *
    * @param {OnLoadData} data The data object containing video load information.
@@ -141,7 +143,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   }
 
   const controls = (
-    <>
+    <ControlContainer>
       <Button
         buttonType={ButtonType.Primary}
         onPress={onPressUse}
@@ -150,42 +152,46 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
         accessibilityLabel={t('BCSC.SendVideo.VideoReview.UseVideo')}
       />
       <Button
-        buttonType={ButtonType.Tertiary}
+        buttonType={ButtonType.Secondary}
         onPress={onPressRetake}
         testID={testIdWithKey('RetakeVideo')}
         title={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
         accessibilityLabel={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
       />
-    </>
+    </ControlContainer>
   )
 
   return (
-    <ScreenWrapper edges={['top', 'bottom', 'left', 'right']} style={styles.pageContainer} controls={controls}>
-      <View style={styles.videoContainer}>
-        <ThemedText variant={'headingFour'} style={styles.heading}>
-          {t('BCSC.SendVideo.VideoReview.Heading')}
-        </ThemedText>
-        <Video
-          ref={videoRef}
-          source={{ uri: videoPath }}
-          paused={paused}
-          audioOutput={'speaker'}
-          repeat
-          resizeMode={'cover'}
-          style={styles.video}
-          onLoad={(data) => onVideoLoad(data)}
-          disableAudioSessionManagement
-        />
-        <TouchableOpacity
-          style={styles.pauseButton}
-          onPress={onTogglePause}
-          accessibilityLabel={t('BCSC.SendVideo.VideoReview.TogglePlayPause')}
-          accessibilityRole="button"
-          testID={testIdWithKey('TogglePlayPause')}
-        >
-          <Icon name={paused ? 'play' : 'pause'} size={pauseButtonSize} color={ColorPalette.brand.primaryBackground} />
-        </TouchableOpacity>
-      </View>
+    <ScreenWrapper
+      edges={['top', 'bottom', 'left', 'right']}
+      style={styles.pageContainer}
+      controls={controls}
+      padded={false}
+      scrollViewContainerStyle={styles.videoContainer}
+    >
+      <ThemedText variant={'headingFour'} style={styles.heading}>
+        {t('BCSC.SendVideo.VideoReview.Heading')}
+      </ThemedText>
+      <Video
+        ref={videoRef}
+        source={{ uri: videoPath }}
+        paused={paused}
+        audioOutput={'speaker'}
+        repeat
+        resizeMode={'cover'}
+        style={styles.video}
+        onLoad={(data) => onVideoLoad(data)}
+        disableAudioSessionManagement
+      />
+      <TouchableOpacity
+        style={styles.pauseButton}
+        onPress={onTogglePause}
+        accessibilityLabel={t('BCSC.SendVideo.VideoReview.TogglePlayPause')}
+        accessibilityRole="button"
+        testID={testIdWithKey('TogglePlayPause')}
+      >
+        <Icon name={paused ? 'play' : 'pause'} size={pauseButtonSize} color={ColorPalette.brand.primaryBackground} />
+      </TouchableOpacity>
     </ScreenWrapper>
   )
 }

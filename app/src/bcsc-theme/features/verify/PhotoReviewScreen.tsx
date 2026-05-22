@@ -54,7 +54,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
           routes: [
             { name: BCSCScreens.SetupSteps },
             { name: BCSCScreens.VerificationMethodSelection },
-            { name: BCSCScreens.InformationRequired },
+            { name: BCSCScreens.VideoInstructions },
           ],
         })
       )
