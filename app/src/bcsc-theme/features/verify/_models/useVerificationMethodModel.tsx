@@ -70,7 +70,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
 
       dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
 
-      navigation.navigate(BCSCScreens.InformationRequired)
+      navigation.navigate(BCSCScreens.PhotoInstructions, { forLiveCall: false })
     } catch (error) {
       logger.error('Error sending video:', error as Error)
       return

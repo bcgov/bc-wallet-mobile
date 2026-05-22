@@ -23,6 +23,8 @@ type MaskedCameraProps = {
   cameraLabel?: string
   maskType?: MaskType
   maskLineColor?: string
+  maskLineWidth?: number
+  maskOverlayOpacity?: number
   customPath?: string
   codeScanner?: CodeScanner
   onPhotoTaken: (path: string) => void
@@ -33,6 +35,8 @@ const MaskedCamera = ({
   cameraInstructions,
   cameraLabel,
   maskLineColor,
+  maskLineWidth,
+  maskOverlayOpacity = 0,
   maskType,
   customPath,
   codeScanner,
@@ -72,10 +76,9 @@ const MaskedCamera = ({
       marginBottom: safeAreaInsets.bottom,
     },
     instructionText: {
-      backgroundColor: 'transparent',
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
       position: 'absolute',
       fontWeight: 'normal',
-      top: Spacing.md,
       left: 0,
       right: 0,
       zIndex: 5,
@@ -88,15 +91,10 @@ const MaskedCamera = ({
       width: 70,
       height: 70,
       borderRadius: 35,
-      backgroundColor: 'white',
+      borderColor: ColorPalette.grayscale.white,
+      borderWidth: 4,
       justifyContent: 'center',
       alignItems: 'center',
-    },
-    captureButtonInner: {
-      width: 64,
-      height: 64,
-      borderRadius: 30,
-      borderWidth: 2,
     },
   })
 
@@ -180,6 +178,8 @@ const MaskedCamera = ({
           maskType={maskType}
           customPath={customPath}
           strokeColor={maskLineColor ?? ColorPalette.brand.tertiary}
+          strokeWidth={maskLineWidth}
+          overlayOpacity={maskOverlayOpacity}
         />
       )}
       <View style={styles.instructionText}>
@@ -189,7 +189,15 @@ const MaskedCamera = ({
           </ThemedText>
         )}
         {cameraInstructions && (
-          <ThemedText style={{ color: 'white', textAlign: 'center' }}>{cameraInstructions}</ThemedText>
+          <ThemedText
+            style={{
+              color: 'white',
+              textAlign: 'center',
+            }}
+            variant={'headingFour'}
+          >
+            {cameraInstructions}
+          </ThemedText>
         )}
       </View>
       <View style={styles.controlsContainer}>
@@ -208,9 +216,7 @@ const MaskedCamera = ({
           accessibilityLabel={t('BCSC.CameraDisclosure.TakePhoto')}
           accessibilityRole="button"
           testID={testIdWithKey('TakePhoto')}
-        >
-          <View style={styles.captureButtonInner} />
-        </TouchableOpacity>
+        ></TouchableOpacity>
         {hasTorch ? (
           <TouchableOpacity
             style={{ flex: 1, alignItems: 'flex-end' }}

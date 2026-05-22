@@ -47,7 +47,7 @@ const VerificationSuccessScreen = () => {
       <StatusDetails
         title={t('BCSC.Verification.Title')}
         description={t('BCSC.Verification.Description')}
-        extraText={t('BCSC.Verification.ExtraText')}
+        description2={t('BCSC.Verification.ExtraText')}
       />
     </ScreenWrapper>
   )

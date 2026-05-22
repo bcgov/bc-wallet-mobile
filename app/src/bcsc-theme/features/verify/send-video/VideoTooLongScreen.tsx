@@ -1,3 +1,4 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
@@ -19,7 +20,7 @@ const VideoTooLongScreen = ({ navigation, route }: VideoTooLongScreenProps) => {
   const { t } = useTranslation()
 
   const controls = (
-    <>
+    <ControlContainer>
       <Button
         buttonType={ButtonType.Primary}
         title={t('BCSC.SendVideo.VideoTooLong.ButtonText')}
@@ -42,7 +43,7 @@ const VideoTooLongScreen = ({ navigation, route }: VideoTooLongScreenProps) => {
         testID={'Cancel'}
         accessibilityLabel={t('BCSC.SendVideo.VideoTooLong.CancelButtonText')}
       />
-    </>
+    </ControlContainer>
   )
 
   return (

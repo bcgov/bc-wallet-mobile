@@ -54,10 +54,10 @@ import EvidenceIDCollectionScreen from '../features/verify/non-photo/EvidenceIDC
 import EvidenceTypeListScreen from '../features/verify/non-photo/EvidenceTypeListScreen'
 import IDPhotoInformationScreen from '../features/verify/non-photo/IDPhotoInformationScreen'
 import CancelledReview from '../features/verify/send-video/CancelledReview'
-import InformationRequiredScreen from '../features/verify/send-video/InformationRequiredScreen'
 import PendingReviewScreen from '../features/verify/send-video/PendingReviewScreen'
 import SuccessfullySentScreen from '../features/verify/send-video/SuccessfullySentScreen'
 import TakeVideoScreen from '../features/verify/send-video/TakeVideoScreen'
+import UploadingScreen from '../features/verify/send-video/UploadingScreen'
 import VideoInstructionsScreen from '../features/verify/send-video/VideoInstructionsScreen'
 import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
@@ -154,11 +154,6 @@ const VerifyStack = () => {
           }),
         }}
       />
-      <Stack.Screen
-        name={BCSCScreens.InformationRequired}
-        component={InformationRequiredScreen}
-        options={{ title: t('BCSC.Screens.InformationRequired') }}
-      />
       <Stack.Screen name={BCSCScreens.PhotoInstructions} component={PhotoInstructionsScreen} />
       <Stack.Screen name={BCSCScreens.TakePhoto} component={TakePhotoScreen} options={{ headerShown: false }} />
       <Stack.Screen name={BCSCScreens.PhotoReview} component={PhotoReviewScreen} options={{ headerShown: false }} />
@@ -168,6 +163,11 @@ const VerifyStack = () => {
       <Stack.Screen name={BCSCScreens.PendingReview} component={PendingReviewScreen} />
       <Stack.Screen name={BCSCScreens.CancelledReview} component={CancelledReview} />
       <Stack.Screen name={BCSCScreens.VideoTooLong} component={VideoTooLongScreen} options={{ headerShown: false }} />
+      <Stack.Screen
+        name={BCSCScreens.EvidenceUploading}
+        component={UploadingScreen}
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
       <Stack.Screen
         name={BCSCScreens.SuccessfullySent}
         component={SuccessfullySentScreen}

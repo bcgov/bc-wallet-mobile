@@ -212,7 +212,6 @@ const translation = {
       "SetupTypes": "BC Services Card",
       "SetupSteps": "Setup Steps",
       "VerificationMethodSelection": "Choose How to Verify",
-      "InformationRequired": "Information Required",
       "TransferAccountInstructions": "Transfer Instructions",
       "TransferAccountScan": "Scan QR Code",
       "ContactUs": "Contact Us",
@@ -891,13 +890,6 @@ const translation = {
       "CardSerialNumber": "Card serial number: {{ serial }}",
     },
     "SendVideo": {
-      "InformationRequired": {
-        "Heading1": "Photo of your face",
-        "Heading2": "Video of your face",
-        "ActionLabel": "Take Photo",
-        "ActionLabel2": "Record Video",
-        "ButtonText": "Send to Service BC Now",
-      },
       "PendingReview": {
         "Heading": "Request pending review",
         "Description1": "We review requests:",
@@ -909,12 +901,13 @@ const translation = {
         "ButtonText": "Ok",
       },
       "SuccessfullySent": {
-        "Heading": "We've received your request to verify your identity.",
-        "Description1": "We review requests:",
+        "Heading": "We've received your request to verify your identity",
         "Bullet1": "Monday to Friday, 9am to 5pm",
         "Bullet2": "In the order they're received",
-        "Description3": "Usually, we review requests within 2 business days. During busy periods, it may take longer.",
-        "ButtonText": "Ok"
+        "Description1": "We review requests:",
+        "Description2": "Requests are usually reviewed within 24 hours.",
+        "Description3": "You'll get an email after we review your request. You can also check the status in this app.",
+        "ButtonText": "Go to home"
       },
       "TakePhoto": {
         "CameraInstructions": "Position your face within the oval and press the button on the screen",
@@ -936,8 +929,8 @@ const translation = {
         "StartRecordingButton": "Start Recording Video",
       },
       "VideoInstructions": {
-        "Heading1": "Record a short video.",
-        "Heading2": "You'll be asked to",
+        "Heading1": "Record a short video",
+        "Heading2": "You'll be asked to:",
         "Heading3": "A person at Service BC will watch the video. They need to hear and see you clearly.",
         "Bullet1": "Keep the video under 30 seconds in length",
         "Bullet2": "Be the only person in the video",
@@ -946,6 +939,7 @@ const translation = {
         "Bullet5": "Check your face can be seen in the video",
         "Bullet6": "Say your first and last name",
         "Heading4": "Videos with inappropriate, offensive, or harassing behavior will not be accepted.",
+        "YouShould": "You should:",
         "StartRecordingButton": "Start Recording Video",
       },
       "VideoReview": {
@@ -991,7 +985,7 @@ const translation = {
     "PhotoInstructions": {
       "Heading": "Take a photo of your face. The agent will use this photo when verifying your identity.",
       "Bullet1": "Hold your phone in front of you",
-      "Bullet2": "Remove your glasses for the photo only",
+      "Bullet2": "Remove your glasses - if possible",
       "Bullet3": "Be the only person in the photo",
       "Bullet4": "Look like the photo on your BC Services Card or photo ID",
       "TakePhoto": "Take Photo of Face",

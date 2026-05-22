@@ -1,13 +1,12 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import SelfieImage from '@assets/img/selfie_example.png'
+import WhiteHandHoldingPhone from '@assets/img/white-hand-holding-phone.svg'
 import { Button, ButtonType, ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
 import { useTranslation } from 'react-i18next'
-import { Image, StyleSheet, View } from 'react-native'
-
-const SELFIE_IMAGE = Image.resolveAssetSource(SelfieImage).uri
+import { StyleSheet, View } from 'react-native'
 
 type PhotoInstructionsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.PhotoInstructions>
@@ -23,11 +22,9 @@ const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenP
     image: {
       width: '100%',
       height: 200,
-      marginBottom: Spacing.md,
     },
     bulletContainer: {
       flexDirection: 'row',
-      marginBottom: Spacing.md,
     },
     bullet: {
       marginRight: Spacing.xs,
@@ -35,28 +32,33 @@ const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenP
   })
 
   const controls = (
-    <Button
-      buttonType={ButtonType.Primary}
-      title={t('BCSC.PhotoInstructions.TakePhoto')}
-      onPress={() => {
-        navigation.navigate(BCSCScreens.TakePhoto, {
-          deviceSide: 'front',
-          cameraInstructions: '',
-          cameraLabel: '',
-          forLiveCall,
-        })
-      }}
-      testID={'TakePhotoButton'}
-      accessibilityLabel={a11yLabel(t('BCSC.PhotoInstructions.TakePhotoAccessibilityLabel'))}
-    />
+    <ControlContainer>
+      <Button
+        buttonType={ButtonType.Primary}
+        title={t('BCSC.PhotoInstructions.TakePhoto')}
+        onPress={() => {
+          navigation.navigate(BCSCScreens.TakePhoto, {
+            deviceSide: 'front',
+            cameraInstructions: '',
+            cameraLabel: '',
+            forLiveCall,
+          })
+        }}
+        testID={'TakePhotoButton'}
+        accessibilityLabel={a11yLabel(t('BCSC.PhotoInstructions.TakePhotoAccessibilityLabel'))}
+      />
+    </ControlContainer>
   )
 
   return (
-    <ScreenWrapper controls={controls}>
-      <Image source={{ uri: SELFIE_IMAGE }} style={styles.image} />
-      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-        {t('BCSC.PhotoInstructions.Heading')}
-      </ThemedText>
+    <ScreenWrapper
+      controls={controls}
+      scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
+      edges={['bottom', 'left', 'right']}
+      padded={false}
+    >
+      <WhiteHandHoldingPhone style={styles.image} height={styles.image.height} width={styles.image.width} />
+      <ThemedText variant={'headingThree'}>{t('BCSC.PhotoInstructions.Heading')}</ThemedText>
       <View style={styles.bulletContainer}>
         <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
         <ThemedText>{t('BCSC.PhotoInstructions.Bullet1')}</ThemedText>

@@ -23,7 +23,7 @@ const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake
       bottom: 0,
       left: 0,
       right: 0,
-      padding: Spacing.md,
+      padding: Spacing.lg,
       backgroundColor: ColorPalette.notification.popupOverlay,
     },
   })
@@ -51,7 +51,7 @@ const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake
           {loading && <ButtonLoading />}
         </Button>
         <Button
-          buttonType={ButtonType.Tertiary}
+          buttonType={ButtonType.Secondary}
           onPress={onRetake}
           testID={testIdWithKey(`RetakePhoto`)}
           title={t('BCSC.PhotoReview.RetakePhoto')}
