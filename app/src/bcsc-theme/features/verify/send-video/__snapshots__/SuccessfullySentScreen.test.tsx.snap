@@ -7,7 +7,7 @@ exports[`SuccessfullySent renders correctly 1`] = `
       "bottom": "additive",
       "left": "additive",
       "right": "additive",
-      "top": "additive",
+      "top": "off",
     }
   }
   style={
@@ -23,12 +23,11 @@ exports[`SuccessfullySent renders correctly 1`] = `
   <RCTScrollView
     contentContainerStyle={
       [
-        {
-          "padding": 16,
-        },
+        false,
         {
           "alignItems": "center",
           "justifyContent": "center",
+          "padding": 24,
         },
       ]
     }
@@ -241,89 +240,133 @@ exports[`SuccessfullySent renders correctly 1`] = `
         {
           "gap": 16,
         },
-        {
-          "paddingBottom": 16,
-          "paddingHorizontal": 16,
-        },
+        false,
         undefined,
       ]
     }
   >
     <View
-      accessibilityLabel="BCSC.SendVideo.SuccessfullySent.ButtonText"
-      accessibilityRole="button"
-      accessibilityState={
-        {
-          "busy": undefined,
-          "checked": undefined,
-          "disabled": false,
-          "expanded": undefined,
-          "selected": undefined,
-        }
-      }
-      accessibilityValue={
-        {
-          "max": undefined,
-          "min": undefined,
-          "now": undefined,
-          "text": undefined,
-        }
-      }
-      accessible={true}
-      collapsable={false}
-      focusable={true}
-      onClick={[Function]}
-      onResponderGrant={[Function]}
-      onResponderMove={[Function]}
-      onResponderRelease={[Function]}
-      onResponderTerminate={[Function]}
-      onResponderTerminationRequest={[Function]}
-      onStartShouldSetResponder={[Function]}
       style={
         {
-          "backgroundColor": "#003366",
-          "borderRadius": 4,
-          "opacity": 1,
-          "padding": 16,
+          "flexGrow": 1,
+          "width": "100%",
         }
       }
-      testID="com.ariesbifold:id/BCSC.SendVideo.SuccessfullySent.ButtonText"
     >
       <View
         style={
           {
-            "alignItems": "center",
-            "flexDirection": "row",
-            "justifyContent": "center",
+            "left": 0,
+            "position": "absolute",
+            "right": 0,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": -3,
+              "width": 0,
+            },
+            "shadowOpacity": 0.9,
+            "shadowRadius": 3,
+            "top": 0,
+            "zIndex": -1,
           }
         }
       >
-        <Text
-          maxFontSizeMultiplier={2}
+        <View
           style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              [
-                {
-                  "color": "#FFFFFF",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "bold",
-                  "textAlign": "center",
-                },
-                false,
-                false,
-              ],
-            ]
+            {
+              "backgroundColor": "#F2F2F2",
+              "height": 1,
+            }
           }
+        />
+      </View>
+      <View
+        style={
+          {
+            "backgroundColor": "#F2F2F2",
+            "flexGrow": 1,
+            "gap": 8,
+            "padding": 24,
+          }
+        }
+      >
+        <View
+          accessibilityLabel="BCSC.SendVideo.SuccessfullySent.ButtonText"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "backgroundColor": "#003366",
+              "borderRadius": 4,
+              "opacity": 1,
+              "padding": 16,
+            }
+          }
+          testID="com.ariesbifold:id/BCSC.SendVideo.SuccessfullySent.ButtonText"
         >
-          BCSC.SendVideo.SuccessfullySent.ButtonText
-        </Text>
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "center",
+              }
+            }
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "color": "#FFFFFF",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
+                    false,
+                    false,
+                  ],
+                ]
+              }
+            >
+              BCSC.SendVideo.SuccessfullySent.ButtonText
+            </Text>
+          </View>
+        </View>
       </View>
     </View>
   </View>
