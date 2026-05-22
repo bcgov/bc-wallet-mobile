@@ -1,25 +1,18 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { PressableOpacity } from '@/components/PressableOpacity'
-import { HelpCentreUrl } from '@/constants'
 import { BCState } from '@/store'
-import ComboCardImage from '@assets/img/combo_card.png'
-import NoPhotoCardImage from '@assets/img/no_photo_card.png'
-import PhotoCardImage from '@assets/img/photo_card.png'
-import { ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
+import ScanExampleImage from '@assets/img/scan_example.png'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Image, StyleSheet, View } from 'react-native'
+import { Image } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import TileButton, { TileButtonProps } from '../../components/TileButton'
 
-const COMBO_CARD = Image.resolveAssetSource(ComboCardImage).uri
-const PHOTO_CARD = Image.resolveAssetSource(PhotoCardImage).uri
-const NO_PHOTO_CARD = Image.resolveAssetSource(NoPhotoCardImage).uri
+const SCAN_EXAMPLE = Image.resolveAssetSource(ScanExampleImage).uri
 
 type IdentitySelectionScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.IdentitySelection>
@@ -29,15 +22,10 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   navigation,
 }: IdentitySelectionScreenProps) => {
   const { t } = useTranslation()
-  const { ColorPalette, Spacing } = useTheme()
+  const { Spacing } = useTheme()
   const [store] = useStore<BCState>()
   const { updateCardProcess } = useSecureActions()
   const verificationReset = useVerificationReset()
-  const styles = StyleSheet.create({
-    checkButtonText: {
-      color: ColorPalette.brand.primary,
-    },
-  })
 
   // Reset the card registration process when the user navigates back
   useEffect(() => {
@@ -65,20 +53,8 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
     }, [updateCardProcess])
   )
 
-  const onPressCombinedCard = useCallback(() => {
-    navigation.navigate(BCSCScreens.SerialInstructions)
-  }, [navigation])
-
-  const onPressPhotoCard = useCallback(() => {
-    navigation.navigate(BCSCScreens.SerialInstructions)
-  }, [navigation])
-
-  const onPressNoPhotoCard = useCallback(() => {
-    navigation.navigate(BCSCScreens.SerialInstructions)
-  }, [navigation])
-
-  const onCheckForServicesCard = useCallback(() => {
-    navigation.navigate(BCSCScreens.VerifyWebView, { title: '', url: HelpCentreUrl.HELP_CHECK_BCSC })
+  const onPressScan = useCallback(() => {
+    navigation.navigate(BCSCScreens.ScanSerial)
   }, [navigation])
 
   const onPressOtherID = useCallback(async () => {
@@ -86,69 +62,41 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
     await updateCardProcess(BCSCCardProcess.NonBCSC)
   }, [navigation, updateCardProcess])
 
-  const cardButtons = useMemo(() => {
-    return (
-      [
-        {
-          onPress: onPressCombinedCard,
-          testIDKey: 'CombinedCard',
-          accessibilityLabel: t('BCSC.ChooseYourID.CombinedCard'),
-          actionText: t('BCSC.ChooseYourID.CombinedCardActionText'),
-          description: t('BCSC.ChooseYourID.CombinedCardDescription'),
-          imgSrc: { uri: COMBO_CARD },
-          style: { marginBottom: Spacing.md },
-        },
-        {
-          onPress: onPressPhotoCard,
-          testIDKey: 'PhotoCard',
-          accessibilityLabel: t('BCSC.ChooseYourID.PhotoCard'),
-          actionText: t('BCSC.ChooseYourID.PhotoCardActionText'),
-          description: t('BCSC.ChooseYourID.PhotoCardDescription'),
-          imgSrc: { uri: PHOTO_CARD },
-          style: { marginBottom: Spacing.md },
-        },
-        {
-          onPress: onPressNoPhotoCard,
-          testIDKey: 'NoPhotoCard',
-          accessibilityLabel: t('BCSC.ChooseYourID.NoPhotoCard'),
-          actionText: t('BCSC.ChooseYourID.NoPhotoCardActionText'),
-          description: t('BCSC.ChooseYourID.NoPhotoCardDescription'),
-          imgSrc: { uri: NO_PHOTO_CARD },
-          style: { marginBottom: Spacing.md },
-        },
-      ] as TileButtonProps[]
-    ).map((props, i) => <TileButton {...props} key={i + 1} />)
-  }, [onPressCombinedCard, onPressPhotoCard, onPressNoPhotoCard, t, Spacing])
+  const controls = (
+    <ControlContainer>
+      <Button
+        buttonType={ButtonType.Primary}
+        accessibilityLabel={t('BCSC.IdentitySelection.Scan')}
+        title={t('BCSC.IdentitySelection.Scan')}
+        testID={testIdWithKey('Scan')}
+        onPress={onPressScan}
+      />
+      <Button
+        buttonType={ButtonType.Secondary}
+        accessibilityLabel={t('BCSC.IdentitySelection.UseOtherID')}
+        title={t('BCSC.IdentitySelection.UseOtherID')}
+        testID={testIdWithKey('OtherID')}
+        onPress={onPressOtherID}
+      />
+    </ControlContainer>
+  )
 
   return (
-    <ScreenWrapper scrollViewContainerStyle={{ gap: Spacing.md }}>
-      <View style={{ gap: Spacing.md }}>
-        <ThemedText variant={'headingThree'}>{t('BCSC.ChooseYourID.WhatCardDoYou')}</ThemedText>
-        <ThemedText>{t('BCSC.ChooseYourID.SomePeopleStillCallIt')}</ThemedText>
-      </View>
-      <View>{cardButtons}</View>
-      <View style={{ gap: Spacing.md }}>
-        <ThemedText variant={'headingThree'}>{t('BCSC.ChooseYourID.DontHaveOne')}</ThemedText>
-        <ThemedText>{t('BCSC.ChooseYourID.CheckBefore')}</ThemedText>
-        <PressableOpacity
-          onPress={onCheckForServicesCard}
-          testID={'CheckForServicesCard'}
-          accessibilityLabel={t('BCSC.ChooseYourID.CheckForServicesCard')}
-        >
-          <ThemedText variant={'bold'} style={styles.checkButtonText}>
-            {t('BCSC.ChooseYourID.CheckIfIHave') + ' '}
-            <Icon size={20} color={ColorPalette.brand.primary} name={'help-circle-outline'} />
-          </ThemedText>
-        </PressableOpacity>
-        <TileButton
-          onPress={onPressOtherID}
-          testIDKey={'OtherID'}
-          accessibilityLabel={t('BCSC.ChooseYourID.OtherID')}
-          actionText={t('BCSC.ChooseYourID.OtherIDActionText')}
-          description={t('BCSC.ChooseYourID.OtherIDDescription')}
-          style={{ marginBottom: Spacing.md }}
-        />
-      </View>
+    <ScreenWrapper
+      controls={controls}
+      padded={false}
+      scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
+    >
+      <ThemedText variant={'headingThree'} style={{ textAlign: 'center' }}>
+        {t('BCSC.IdentitySelection.HaveABCSC')}
+      </ThemedText>
+      <Image
+        source={{ uri: SCAN_EXAMPLE }}
+        style={{ flexGrow: 1, width: '100%', aspectRatio: 1.6 }}
+        resizeMode={'contain'}
+      />
+      <ThemedText variant={'headingThree'}>{t('BCSC.IdentitySelection.ScanTheBack')}</ThemedText>
+      <ThemedText>{t('BCSC.IdentitySelection.LineUpParagraph')}</ThemedText>
     </ScreenWrapper>
   )
 }

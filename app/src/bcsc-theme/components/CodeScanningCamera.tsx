@@ -115,6 +115,45 @@ export interface CodeScanningCameraProps {
    * @default 2
    */
   initialZoom?: number
+
+  /**
+   * Show the built-in visual scan-zone guide (the orange zone boxes / default
+   * centered box). Alignment detection still uses `scanZones` regardless of this
+   * flag — set to false when the parent renders its own framing overlay.
+   * @default true
+   */
+  showScanZoneOverlay?: boolean
+
+  /**
+   * Show the live zoom-level indicator (dev/diagnostic readout).
+   * @default true
+   */
+  showZoomIndicator?: boolean
+
+  /**
+   * Hide the built-in torch button so the parent can render its own.
+   * @default false
+   */
+  hideTorchButton?: boolean
+
+  /**
+   * Controlled torch state. When provided, overrides the internal torch state
+   * (use together with `onToggleTorch`).
+   */
+  torchActive?: boolean
+
+  /**
+   * Called when the torch is toggled. When provided, the component delegates
+   * torch state to the parent instead of managing it internally.
+   */
+  onToggleTorch?: () => void
+
+  /**
+   * Called whenever the collective scan state changes
+   * (`scanning` → `aligned` → `locked`). Lets a parent rendering its own
+   * framing overlay reflect alignment (e.g. recolour the outline).
+   */
+  onScanStateChange?: (state: ScanState) => void
 }
 
 /** Feature flag: when true, shows Confirm/Try Again buttons on lock.
@@ -129,6 +168,12 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   enableScanZones = false,
   scanZones,
   initialZoom = 2,
+  showScanZoneOverlay = true,
+  showZoomIndicator = true,
+  hideTorchButton = false,
+  torchActive,
+  onToggleTorch,
+  onScanStateChange,
 }) => {
   // Derive scanner code types from the declared scan zones (deduped)
   const codeTypes = [...new Set(scanZones.flatMap((z) => z.types))] as CodeType[]
@@ -139,6 +184,8 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const { pauseActivityTracking, resumeActivityTracking } = useBCSCActivity()
   const camera = useRef<Camera>(null)
   const [torchEnabled, setTorchEnabled] = useState(false)
+  // When `torchActive`/`onToggleTorch` are provided, the parent owns torch state.
+  const isTorchOn = torchActive ?? torchEnabled
   const { width, height: windowHeight } = useWindowDimensions()
   const { hasPermission, requestPermission } = useCameraPermission()
   const [focusPoint, setFocusPoint] = useState<{ x: number; y: number } | null>(null)
@@ -179,6 +226,11 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
   // Collective scan state: 'scanning' → 'aligned' → 'locked'
   const [scanState, setScanState] = useState<ScanState>('scanning')
+
+  // Surface scan-state changes so a parent can recolour its own framing overlay.
+  useEffect(() => {
+    onScanStateChange?.(scanState)
+  }, [scanState, onScanStateChange])
 
   // Scan-and-accumulate: track validated codes across frames within a time window.
   // This allows PDF-417 and Code-39 to be detected in separate frames rather than
@@ -783,6 +835,10 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   )
 
   const toggleTorch = () => {
+    if (onToggleTorch) {
+      onToggleTorch()
+      return
+    }
     setTorchEnabled((prev) => !prev)
   }
 
@@ -1079,7 +1135,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
           isActive={hasPermission && !frozenFrameUri}
           video={true}
           codeScanner={codeScanner}
-          torch={torchEnabled ? 'on' : 'off'}
+          torch={isTorchOn ? 'on' : 'off'}
           animatedProps={animatedProps}
           onInitialized={handleCameraInitialized}
           resizeMode="cover"
@@ -1331,47 +1387,49 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       </GestureDetector>
 
       {/* Scan area guide — custom zones or default centered zone */}
-      <View style={styles.overlayContainer} pointerEvents="none" testID="scan-zone">
-        {scanZones && scanZones.length > 0 && containerSize ? (
-          // Render custom scan zones from saved coordinates
-          scanZones.map((zone) => {
-            let zoneColor
-            if (scanState === 'locked') {
-              zoneColor = '#00FF00'
-            } else if (scanState === 'aligned') {
-              zoneColor = '#00CC00'
-            } else {
-              zoneColor = ColorPalette.brand.primary
-            }
-            return (
-              <View
-                key={`scan-zone-${zone.types.join('-')}-${zone.box.x}-${zone.box.y}`}
-                style={{
-                  position: 'absolute',
-                  left: zone.box.x * containerSize.width,
-                  top: zone.box.y * containerSize.height,
-                  width: zone.box.width * containerSize.width,
-                  height: zone.box.height * containerSize.height,
-                  borderRadius: 4,
-                  borderColor: zoneColor,
-                  borderWidth: 4,
-                  borderStyle: 'solid',
-                }}
-              />
-            )
-          })
-        ) : (
-          // Default centered scan zone
-          <View
-            style={styles.overlayOpening}
-            onLayout={(event) => {
-              const { x, y, width, height } = event.nativeEvent.layout
-              setScanZoneBounds({ x, y, width, height })
-              logger.debug('Scan zone bounds', { x, y, width, height })
-            }}
-          />
-        )}
-      </View>
+      {showScanZoneOverlay && (
+        <View style={styles.overlayContainer} pointerEvents="none" testID="scan-zone">
+          {scanZones && scanZones.length > 0 && containerSize ? (
+            // Render custom scan zones from saved coordinates
+            scanZones.map((zone) => {
+              let zoneColor
+              if (scanState === 'locked') {
+                zoneColor = '#00FF00'
+              } else if (scanState === 'aligned') {
+                zoneColor = '#00CC00'
+              } else {
+                zoneColor = ColorPalette.brand.primary
+              }
+              return (
+                <View
+                  key={`scan-zone-${zone.types.join('-')}-${zone.box.x}-${zone.box.y}`}
+                  style={{
+                    position: 'absolute',
+                    left: zone.box.x * containerSize.width,
+                    top: zone.box.y * containerSize.height,
+                    width: zone.box.width * containerSize.width,
+                    height: zone.box.height * containerSize.height,
+                    borderRadius: 4,
+                    borderColor: zoneColor,
+                    borderWidth: 4,
+                    borderStyle: 'solid',
+                  }}
+                />
+              )
+            })
+          ) : (
+            // Default centered scan zone
+            <View
+              style={styles.overlayOpening}
+              onLayout={(event) => {
+                const { x, y, width, height } = event.nativeEvent.layout
+                setScanZoneBounds({ x, y, width, height })
+                logger.debug('Scan zone bounds', { x, y, width, height })
+              }}
+            />
+          )}
+        </View>
+      )}
 
       {/* Locked state action buttons — scanning is paused, user must confirm */}
       {scanState === 'locked' && (ENABLE_MANUAL_CONFIRM || enableScanZones) && (
@@ -1422,20 +1480,24 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
         </View>
       )}
 
-      {/* Zoom level indicator - always visible */}
-      <View style={styles.zoomIndicator}>
-        <Text style={styles.zoomText}>Zoom: {zoomDisplay.toFixed(2)}x</Text>
-        {device && (
-          <Text style={[styles.zoomText, { fontSize: 8 }]}>
-            ({device.minZoom?.toFixed(1)}-{device.maxZoom?.toFixed(1)})
-          </Text>
-        )}
-      </View>
+      {/* Zoom level indicator - diagnostic readout */}
+      {showZoomIndicator && (
+        <View style={styles.zoomIndicator}>
+          <Text style={styles.zoomText}>Zoom: {zoomDisplay.toFixed(2)}x</Text>
+          {device && (
+            <Text style={[styles.zoomText, { fontSize: 8 }]}>
+              ({device.minZoom?.toFixed(1)}-{device.maxZoom?.toFixed(1)})
+            </Text>
+          )}
+        </View>
+      )}
 
       {/* Torch toggle button */}
-      <View style={styles.torchContainer}>
-        <QRScannerTorch active={torchEnabled} onPress={toggleTorch} />
-      </View>
+      {!hideTorchButton && (
+        <View style={styles.torchContainer}>
+          <QRScannerTorch active={isTorchOn} onPress={toggleTorch} />
+        </View>
+      )}
     </View>
   )
 }
