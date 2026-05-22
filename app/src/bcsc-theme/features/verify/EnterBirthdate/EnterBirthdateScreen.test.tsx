@@ -28,15 +28,15 @@ describe('EnterBirthdate', () => {
     expect(tree).toMatchSnapshot()
   })
 
-  it('Done button is disabled when no date is selected', () => {
+  it('Continue button is disabled when no date is selected', () => {
     const { getByTestId } = render(
       <BasicAppContext>
         <EnterBirthdateScreen navigation={mockNavigation as never} />
       </BasicAppContext>
     )
 
-    const doneButton = getByTestId('com.ariesbifold:id/Done')
-    fireEvent.press(doneButton)
+    const continueButton = getByTestId('com.ariesbifold:id/Continue')
+    fireEvent.press(continueButton)
 
     // handleSubmit should not run — no date selected means button is disabled
     expect(mockNavigation.navigate).not.toHaveBeenCalled()
@@ -56,7 +56,7 @@ describe('EnterBirthdate', () => {
     expect(input.props.value).toBe('1990/06/15')
   })
 
-  it('keeps Done disabled for an invalid complete date', () => {
+  it('keeps Continue disabled for an invalid complete date', () => {
     const { getByTestId } = render(
       <BasicAppContext>
         <EnterBirthdateScreen navigation={mockNavigation as never} />
@@ -66,14 +66,14 @@ describe('EnterBirthdate', () => {
     const input = getByTestId('com.ariesbifold:id/birthDate-input')
     fireEvent.changeText(input, '1990/13/40')
 
-    const doneButton = getByTestId('com.ariesbifold:id/Done')
-    fireEvent.press(doneButton)
+    const continueButton = getByTestId('com.ariesbifold:id/Continue')
+    fireEvent.press(continueButton)
 
     expect(mockNavigation.navigate).not.toHaveBeenCalled()
     expect(mockNavigation.goBack).not.toHaveBeenCalled()
   })
 
-  it('allows Done button after a valid date is typed', () => {
+  it('allows Continue button after a valid date is typed', () => {
     const { getByTestId } = render(
       <BasicAppContext>
         <EnterBirthdateScreen navigation={mockNavigation as never} />
@@ -83,8 +83,8 @@ describe('EnterBirthdate', () => {
     const input = getByTestId('com.ariesbifold:id/birthDate-input')
     fireEvent.changeText(input, '1990/06/15')
 
-    const doneButton = getByTestId('com.ariesbifold:id/Done')
-    fireEvent.press(doneButton)
+    const continueButton = getByTestId('com.ariesbifold:id/Continue')
+    fireEvent.press(continueButton)
 
     // handleSubmit runs — since vm.serial is undefined in test, it calls goBack
     expect(mockNavigation.goBack).toHaveBeenCalled()

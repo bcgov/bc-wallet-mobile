@@ -362,24 +362,24 @@ export const determineScanState = (
 }
 
 /**
- * Scan zones for the BC Services Card / Driver's License serial number scan screen.
- * Describes the expected barcode positions on a CR-80 ID card.
+ * Scan zone for the BC Services Card / Driver's License serial number scan screen.
  * Coordinates are normalized (0–1) relative to the camera container (portrait).
  *
- * Physical card layout (landscape):
- *   - 1D barcode (Code-39/Code-128): vertical strip on the RIGHT edge of the card
- *   - 2D barcode (PDF-417): horizontal rectangle LEFT-ALIGNED along the BOTTOM of the card
+ * This single zone maps to the interior of the vertical ID-card framing overlay
+ * shown on ScanSerialScreen (the `MaskType.ID_CARD`-style cutout, stood up in
+ * portrait). A barcode counts as aligned when it falls inside this region, i.e.
+ * inside the card the user is framing — so wherever the 1D (Code-39/Code-128) or
+ * 2D (PDF-417) barcode sits on the card, placing the card in the outline aligns it.
  *
- * The zone(s) below add padding around those captured positions so
- * alignment detection works across different devices & card placements.
- * They also allow detection of the 1D barcodes in both zones to reduce friction for users
- * with older cards that only have the 1D barcode
+ * The card overlay keeps an exact CR-80 ratio while the zone is a fixed normalized
+ * box, so the two line up closely (not pixel-exact) across device aspect ratios;
+ * the alignment margin in CodeScanningCamera absorbs the small difference.
  *
- * NOTE (bm + cv): For now, we are only using one visual zone for alignment detection to reduce
- * confusion around the two separate barcodes, which can be more difficult to scan and may not be
- * present on older cards. We may want to revisit this in the future to allow either zone
- * to trigger alignment, with clear user feedback on which barcode is being detected.
+ * NOTE (bm + cv): For now, we use one zone to reduce confusion around the two
+ * separate barcodes, which can be harder to scan and may be absent on older cards.
+ * We may revisit this to allow either barcode region to trigger alignment with
+ * clear feedback on which barcode is being detected.
  */
 export const BCSC_SN_SCAN_ZONES: ScanZone[] = [
-  { types: ['code-39', 'code-128', 'pdf-417'], box: { x: 0.07, y: 0.3, width: 0.86, height: 0.1 } },
+  { types: ['code-39', 'code-128', 'pdf-417'], box: { x: 0.18, y: 0.2, width: 0.64, height: 0.52 } },
 ]

@@ -23,441 +23,147 @@ exports[`IdentitySelection renders correctly 1`] = `
   <RCTScrollView
     contentContainerStyle={
       [
-        {
-          "padding": 16,
-        },
+        false,
         {
           "gap": 16,
+          "padding": 24,
         },
       ]
     }
     showsVerticalScrollIndicator={false}
   >
     <View>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 26,
+              "fontWeight": "bold",
+            },
+            {
+              "textAlign": "center",
+            },
+          ]
+        }
+      >
+        BCSC.IdentitySelection.HaveABCSC
+      </Text>
+      <Image
+        resizeMode="contain"
+        source={
+          {
+            "uri": "mocked-image-uri",
+          }
+        }
+        style={
+          {
+            "aspectRatio": 1.6,
+            "flexGrow": 1,
+            "width": "100%",
+          }
+        }
+      />
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 26,
+              "fontWeight": "bold",
+            },
+            undefined,
+          ]
+        }
+      >
+        BCSC.IdentitySelection.ScanTheBack
+      </Text>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+            undefined,
+          ]
+        }
+      >
+        BCSC.IdentitySelection.LineUpParagraph
+      </Text>
+    </View>
+  </RCTScrollView>
+  <View
+    style={
+      [
+        {
+          "gap": 16,
+        },
+        false,
+        undefined,
+      ]
+    }
+  >
+    <View
+      style={
+        {
+          "flexGrow": 1,
+          "width": "100%",
+        }
+      }
+    >
       <View
         style={
           {
-            "gap": 16,
+            "left": 0,
+            "position": "absolute",
+            "right": 0,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": -3,
+              "width": 0,
+            },
+            "shadowOpacity": 0.9,
+            "shadowRadius": 3,
+            "top": 0,
+            "zIndex": -1,
           }
         }
       >
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 26,
-                "fontWeight": "bold",
-              },
-              undefined,
-            ]
-          }
-        >
-          BCSC.ChooseYourID.WhatCardDoYou
-        </Text>
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              undefined,
-            ]
-          }
-        >
-          BCSC.ChooseYourID.SomePeopleStillCallIt
-        </Text>
-      </View>
-      <View>
         <View
-          accessibilityLabel="BCSC.ChooseYourID.CombinedCard"
-          accessibilityState={
-            {
-              "busy": undefined,
-              "checked": undefined,
-              "disabled": undefined,
-              "expanded": undefined,
-              "selected": undefined,
-            }
-          }
-          accessibilityValue={
-            {
-              "max": undefined,
-              "min": undefined,
-              "now": undefined,
-              "text": undefined,
-            }
-          }
-          accessible={true}
-          collapsable={false}
-          focusable={true}
-          onClick={[Function]}
-          onResponderGrant={[Function]}
-          onResponderMove={[Function]}
-          onResponderRelease={[Function]}
-          onResponderTerminate={[Function]}
-          onResponderTerminationRequest={[Function]}
-          onStartShouldSetResponder={[Function]}
           style={
             {
-              "marginBottom": 16,
-              "opacity": 1,
+              "backgroundColor": "#F2F2F2",
+              "height": 1,
             }
           }
-          testID="com.ariesbifold:id/CombinedCard"
-        >
-          <View
-            style={
-              {
-                "backgroundColor": "#D9EAF7",
-                "borderColor": "#B9CEDE",
-                "borderRadius": 8,
-                "borderWidth": 1,
-                "padding": 24,
-              }
-            }
-          >
-            <Text
-              style={
-                {
-                  "color": "#003366",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "bold",
-                }
-              }
-            >
-              BCSC.ChooseYourID.CombinedCardActionText
-              <Text
-                allowFontScaling={false}
-                selectable={false}
-                style={
-                  [
-                    {
-                      "color": "#003366",
-                      "fontSize": 20,
-                    },
-                    undefined,
-                    {
-                      "fontFamily": "Material Design Icons",
-                      "fontStyle": "normal",
-                      "fontWeight": "normal",
-                    },
-                    {},
-                  ]
-                }
-              >
-                󱦰
-              </Text>
-            </Text>
-            <Text
-              style={
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                  "marginTop": 16,
-                }
-              }
-            >
-              BCSC.ChooseYourID.CombinedCardDescription
-            </Text>
-            <Image
-              resizeMode="contain"
-              source={
-                {
-                  "uri": "mocked-image-uri",
-                }
-              }
-              style={
-                {
-                  "flex": 1,
-                  "height": 100,
-                  "marginTop": 16,
-                  "width": 150,
-                }
-              }
-            />
-          </View>
-        </View>
-        <View
-          accessibilityLabel="BCSC.ChooseYourID.PhotoCard"
-          accessibilityState={
-            {
-              "busy": undefined,
-              "checked": undefined,
-              "disabled": undefined,
-              "expanded": undefined,
-              "selected": undefined,
-            }
-          }
-          accessibilityValue={
-            {
-              "max": undefined,
-              "min": undefined,
-              "now": undefined,
-              "text": undefined,
-            }
-          }
-          accessible={true}
-          collapsable={false}
-          focusable={true}
-          onClick={[Function]}
-          onResponderGrant={[Function]}
-          onResponderMove={[Function]}
-          onResponderRelease={[Function]}
-          onResponderTerminate={[Function]}
-          onResponderTerminationRequest={[Function]}
-          onStartShouldSetResponder={[Function]}
-          style={
-            {
-              "marginBottom": 16,
-              "opacity": 1,
-            }
-          }
-          testID="com.ariesbifold:id/PhotoCard"
-        >
-          <View
-            style={
-              {
-                "backgroundColor": "#D9EAF7",
-                "borderColor": "#B9CEDE",
-                "borderRadius": 8,
-                "borderWidth": 1,
-                "padding": 24,
-              }
-            }
-          >
-            <Text
-              style={
-                {
-                  "color": "#003366",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "bold",
-                }
-              }
-            >
-              BCSC.ChooseYourID.PhotoCardActionText
-              <Text
-                allowFontScaling={false}
-                selectable={false}
-                style={
-                  [
-                    {
-                      "color": "#003366",
-                      "fontSize": 20,
-                    },
-                    undefined,
-                    {
-                      "fontFamily": "Material Design Icons",
-                      "fontStyle": "normal",
-                      "fontWeight": "normal",
-                    },
-                    {},
-                  ]
-                }
-              >
-                󱦰
-              </Text>
-            </Text>
-            <Text
-              style={
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                  "marginTop": 16,
-                }
-              }
-            >
-              BCSC.ChooseYourID.PhotoCardDescription
-            </Text>
-            <Image
-              resizeMode="contain"
-              source={
-                {
-                  "uri": "mocked-image-uri",
-                }
-              }
-              style={
-                {
-                  "flex": 1,
-                  "height": 100,
-                  "marginTop": 16,
-                  "width": 150,
-                }
-              }
-            />
-          </View>
-        </View>
-        <View
-          accessibilityLabel="BCSC.ChooseYourID.NoPhotoCard"
-          accessibilityState={
-            {
-              "busy": undefined,
-              "checked": undefined,
-              "disabled": undefined,
-              "expanded": undefined,
-              "selected": undefined,
-            }
-          }
-          accessibilityValue={
-            {
-              "max": undefined,
-              "min": undefined,
-              "now": undefined,
-              "text": undefined,
-            }
-          }
-          accessible={true}
-          collapsable={false}
-          focusable={true}
-          onClick={[Function]}
-          onResponderGrant={[Function]}
-          onResponderMove={[Function]}
-          onResponderRelease={[Function]}
-          onResponderTerminate={[Function]}
-          onResponderTerminationRequest={[Function]}
-          onStartShouldSetResponder={[Function]}
-          style={
-            {
-              "marginBottom": 16,
-              "opacity": 1,
-            }
-          }
-          testID="com.ariesbifold:id/NoPhotoCard"
-        >
-          <View
-            style={
-              {
-                "backgroundColor": "#D9EAF7",
-                "borderColor": "#B9CEDE",
-                "borderRadius": 8,
-                "borderWidth": 1,
-                "padding": 24,
-              }
-            }
-          >
-            <Text
-              style={
-                {
-                  "color": "#003366",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "bold",
-                }
-              }
-            >
-              BCSC.ChooseYourID.NoPhotoCardActionText
-              <Text
-                allowFontScaling={false}
-                selectable={false}
-                style={
-                  [
-                    {
-                      "color": "#003366",
-                      "fontSize": 20,
-                    },
-                    undefined,
-                    {
-                      "fontFamily": "Material Design Icons",
-                      "fontStyle": "normal",
-                      "fontWeight": "normal",
-                    },
-                    {},
-                  ]
-                }
-              >
-                󱦰
-              </Text>
-            </Text>
-            <Text
-              style={
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                  "marginTop": 16,
-                }
-              }
-            >
-              BCSC.ChooseYourID.NoPhotoCardDescription
-            </Text>
-            <Image
-              resizeMode="contain"
-              source={
-                {
-                  "uri": "mocked-image-uri",
-                }
-              }
-              style={
-                {
-                  "flex": 1,
-                  "height": 100,
-                  "marginTop": 16,
-                  "width": 150,
-                }
-              }
-            />
-          </View>
-        </View>
+        />
       </View>
       <View
         style={
           {
-            "gap": 16,
+            "backgroundColor": "#F2F2F2",
+            "flexGrow": 1,
+            "gap": 8,
+            "padding": 24,
           }
         }
       >
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 26,
-                "fontWeight": "bold",
-              },
-              undefined,
-            ]
-          }
-        >
-          BCSC.ChooseYourID.DontHaveOne
-        </Text>
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              undefined,
-            ]
-          }
-        >
-          BCSC.ChooseYourID.CheckBefore
-        </Text>
         <View
-          accessibilityLabel="BCSC.ChooseYourID.CheckForServicesCard"
+          accessibilityLabel="BCSC.IdentitySelection.Scan"
+          accessibilityRole="button"
           accessibilityState={
             {
               "busy": undefined,
               "checked": undefined,
-              "disabled": undefined,
+              "disabled": false,
               "expanded": undefined,
               "selected": undefined,
             }
@@ -473,64 +179,68 @@ exports[`IdentitySelection renders correctly 1`] = `
           accessible={true}
           collapsable={false}
           focusable={true}
-          onBlur={[Function]}
           onClick={[Function]}
-          onFocus={[Function]}
           onResponderGrant={[Function]}
           onResponderMove={[Function]}
           onResponderRelease={[Function]}
           onResponderTerminate={[Function]}
           onResponderTerminationRequest={[Function]}
           onStartShouldSetResponder={[Function]}
-          testID="CheckForServicesCard"
+          style={
+            {
+              "backgroundColor": "#003366",
+              "borderRadius": 4,
+              "opacity": 1,
+              "padding": 16,
+            }
+          }
+          testID="com.ariesbifold:id/Scan"
         >
-          <Text
-            maxFontSizeMultiplier={2}
+          <View
             style={
-              [
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "bold",
-                },
-                {
-                  "color": "#003366",
-                },
-              ]
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "center",
+              }
             }
           >
-            BCSC.ChooseYourID.CheckIfIHave 
             <Text
-              allowFontScaling={false}
-              selectable={false}
+              maxFontSizeMultiplier={2}
               style={
                 [
                   {
-                    "color": "#003366",
-                    "fontSize": 20,
-                  },
-                  undefined,
-                  {
-                    "fontFamily": "Material Design Icons",
-                    "fontStyle": "normal",
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
                     "fontWeight": "normal",
                   },
-                  {},
+                  [
+                    {
+                      "color": "#FFFFFF",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
+                    false,
+                    false,
+                  ],
                 ]
               }
             >
-              󰘥
+              BCSC.IdentitySelection.Scan
             </Text>
-          </Text>
+          </View>
         </View>
         <View
-          accessibilityLabel="BCSC.ChooseYourID.OtherID"
+          accessibilityLabel="BCSC.IdentitySelection.UseOtherID"
+          accessibilityRole="button"
           accessibilityState={
             {
               "busy": undefined,
               "checked": undefined,
-              "disabled": undefined,
+              "disabled": false,
               "expanded": undefined,
               "selected": undefined,
             }
@@ -555,8 +265,11 @@ exports[`IdentitySelection renders correctly 1`] = `
           onStartShouldSetResponder={[Function]}
           style={
             {
-              "marginBottom": 16,
+              "borderColor": "#003366",
+              "borderRadius": 4,
+              "borderWidth": 2,
               "opacity": 1,
+              "padding": 16,
             }
           }
           testID="com.ariesbifold:id/OtherID"
@@ -564,64 +277,42 @@ exports[`IdentitySelection renders correctly 1`] = `
           <View
             style={
               {
-                "backgroundColor": "#D9EAF7",
-                "borderColor": "#B9CEDE",
-                "borderRadius": 8,
-                "borderWidth": 1,
-                "padding": 24,
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "center",
               }
             }
           >
             <Text
+              maxFontSizeMultiplier={2}
               style={
-                {
-                  "color": "#003366",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "bold",
-                }
-              }
-            >
-              BCSC.ChooseYourID.OtherIDActionText
-              <Text
-                allowFontScaling={false}
-                selectable={false}
-                style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
                   [
                     {
                       "color": "#003366",
-                      "fontSize": 20,
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
                     },
-                    undefined,
-                    {
-                      "fontFamily": "Material Design Icons",
-                      "fontStyle": "normal",
-                      "fontWeight": "normal",
-                    },
-                    {},
-                  ]
-                }
-              >
-                󱦰
-              </Text>
-            </Text>
-            <Text
-              style={
-                {
-                  "color": "#313132",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                  "marginTop": 16,
-                }
+                    false,
+                    false,
+                  ],
+                ]
               }
             >
-              BCSC.ChooseYourID.OtherIDDescription
+              BCSC.IdentitySelection.UseOtherID
             </Text>
           </View>
         </View>
       </View>
     </View>
-  </RCTScrollView>
+  </View>
 </RNCSafeAreaView>
 `;

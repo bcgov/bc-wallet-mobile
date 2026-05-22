@@ -103,6 +103,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   },
                   [
                     {
+                      "color": "#313132",
                       "marginBottom": 8,
                     },
                     {
@@ -251,6 +252,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   },
                   [
                     {
+                      "color": "#313132",
                       "marginBottom": 8,
                     },
                     {
@@ -399,6 +401,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   },
                   [
                     {
+                      "color": "#313132",
                       "marginBottom": 8,
                     },
                     {
@@ -691,6 +694,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   },
                   [
                     {
+                      "color": "#313132",
                       "marginBottom": 8,
                     },
                     {

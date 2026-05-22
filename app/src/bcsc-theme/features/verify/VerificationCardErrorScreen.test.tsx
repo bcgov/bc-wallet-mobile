@@ -23,7 +23,7 @@ describe('VerificationCardErrorScreen', () => {
 
     const tree = render(
       <BasicAppContext>
-        <VerificationCardErrorScreen />
+        <VerificationCardErrorScreen navigation={jest.fn() as any} />
       </BasicAppContext>
     )
 
@@ -39,7 +39,7 @@ describe('VerificationCardErrorScreen', () => {
 
     const tree = render(
       <BasicAppContext>
-        <VerificationCardErrorScreen />
+        <VerificationCardErrorScreen navigation={jest.fn() as any} />
       </BasicAppContext>
     )
 
