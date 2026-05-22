@@ -1,7 +1,7 @@
 import { WALLET_ID } from '@/constants'
 import { AppError, ErrorRegistry } from '@/errors'
 import { BCState } from '@/store'
-import { activate } from '@/utils/PushNotificationsHelper'
+import { activate, deactivate } from '@/utils/PushNotificationsHelper'
 import { createLinkSecretIfRequired, TOKENS, useServices, useStore } from '@bifold/core'
 import { Agent } from '@credo-ts/core'
 import { DidCommMediatorPickupStrategy } from '@credo-ts/didcomm'
@@ -221,14 +221,19 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     if (!currentAgent) {
       throw new Error('WalletReset: Agent is not initialized')
     }
+    attestationMonitor?.stop()
+    await deactivate(currentAgent).catch((err) => logger.warn(`Push notification deactivation failed: ${err}`))
     await shutdownAgent(currentAgent, logger)
-    await currentAgent.modules.askar.deleteStore()
-    agentRef.current = null
-    setAgent(null)
-    setError(null)
-    setStatus('idle')
-    setRetryCount((c) => c + 1)
-  }, [logger])
+    try {
+      await currentAgent.modules.askar.deleteStore()
+    } finally {
+      agentRef.current = null
+      setAgent(null)
+      setError(null)
+      setStatus('idle')
+      setRetryCount((c) => c + 1)
+    }
+  }, [logger, attestationMonitor])
 
   return { agent, status, error, retry, resetWallet }
 }
