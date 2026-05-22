@@ -100,4 +100,12 @@ describe('QRScanner', () => {
       expect.objectContaining({ onConnectionFound: expect.any(Function) })
     )
   })
+
+  // ScanCamera owns the per-frame dedupe ref. Unmounting it during processing
+  // would reset that ref and let the same QR re-fire as a duplicate scan.
+  it('keeps ScanCamera mounted while isProcessing is true', () => {
+    mockUseScanScreenViewModel.mockReturnValue({ ...defaultViewModelState, isProcessing: true })
+    render(<QRScanner />)
+    expect(Bifold.ScanCamera).toHaveBeenCalled()
+  })
 })

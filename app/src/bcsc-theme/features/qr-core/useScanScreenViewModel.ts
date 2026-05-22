@@ -1,5 +1,6 @@
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
-import { QrCodeScanError, TOKENS, useServices } from '@bifold/core'
+import { BCState } from '@/store'
+import { QrCodeScanError, TOKENS, useServices, useStore } from '@bifold/core'
 import { useAgent } from '@bifold/react-hooks'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -33,6 +34,11 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
   const { t } = useTranslation()
   const { agent } = useAgent()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [store] = useStore<BCState>()
+  // Sent to the inviter as our label when we accept their invitation — they
+  // see this name in their chat header. Mirrors the value shown by
+  // `WalletNameDisplay` so the two ends agree.
+  const scanLabel = useMemo(() => store.bcsc.selectedNickname || 'My Wallet', [store.bcsc.selectedNickname])
   const { hasPermission, requestPermission } = useCameraPermission()
   const { isLoading: isPermissionLoading } = useAutoRequestPermission(hasPermission, requestPermission)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -61,7 +67,7 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
           return
         }
 
-        const result = await strategy.handle(value, { agent, logger })
+        const result = await strategy.handle(value, { agent, logger, label: scanLabel })
         switch (result.kind) {
           case 'connection':
             // Latch before the navigation handoff so frames that land during
@@ -114,7 +120,7 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
         setIsProcessing(false)
       }
     },
-    [strategies, scanError, t, agent, logger, onConnectionFound, onPairingCodeFound]
+    [strategies, scanError, t, agent, logger, scanLabel, onConnectionFound, onPairingCodeFound]
   )
 
   const dismissError = useCallback(() => setScanError(null), [])

@@ -10,6 +10,13 @@ export type ScanResult =
 export interface ScanContext {
   agent: Agent | undefined
   logger: BifoldLogger
+  /**
+   * Label this wallet sends to the inviter when accepting an OOB invitation.
+   * Becomes `theirLabel` on the inviter's connection record, surfacing as the
+   * contact name in their chat header. Strategies should fall back to a
+   * placeholder if absent.
+   */
+  label?: string
 }
 
 export interface UriStrategy {
