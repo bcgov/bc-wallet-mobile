@@ -1,3 +1,4 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import WhiteHandHoldingPhone from '@assets/img/white-hand-holding-phone.svg'
 import { Button, ButtonType, ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
@@ -20,7 +21,7 @@ const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenP
   const styles = StyleSheet.create({
     image: {
       width: '100%',
-      height: 250,
+      height: 200,
     },
     bulletContainer: {
       flexDirection: 'row',
@@ -31,24 +32,31 @@ const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenP
   })
 
   const controls = (
-    <Button
-      buttonType={ButtonType.Primary}
-      title={t('BCSC.PhotoInstructions.TakePhoto')}
-      onPress={() => {
-        navigation.navigate(BCSCScreens.TakePhoto, {
-          deviceSide: 'front',
-          cameraInstructions: '',
-          cameraLabel: '',
-          forLiveCall,
-        })
-      }}
-      testID={'TakePhotoButton'}
-      accessibilityLabel={a11yLabel(t('BCSC.PhotoInstructions.TakePhotoAccessibilityLabel'))}
-    />
+    <ControlContainer>
+      <Button
+        buttonType={ButtonType.Primary}
+        title={t('BCSC.PhotoInstructions.TakePhoto')}
+        onPress={() => {
+          navigation.navigate(BCSCScreens.TakePhoto, {
+            deviceSide: 'front',
+            cameraInstructions: '',
+            cameraLabel: '',
+            forLiveCall,
+          })
+        }}
+        testID={'TakePhotoButton'}
+        accessibilityLabel={a11yLabel(t('BCSC.PhotoInstructions.TakePhotoAccessibilityLabel'))}
+      />
+    </ControlContainer>
   )
 
   return (
-    <ScreenWrapper controls={controls} scrollViewContainerStyle={{ gap: Spacing.md }}>
+    <ScreenWrapper
+      controls={controls}
+      scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
+      edges={['bottom', 'left', 'right']}
+      padded={false}
+    >
       <WhiteHandHoldingPhone style={styles.image} height={styles.image.height} width={styles.image.width} />
       <ThemedText variant={'headingThree'}>{t('BCSC.PhotoInstructions.Heading')}</ThemedText>
       <View style={styles.bulletContainer}>

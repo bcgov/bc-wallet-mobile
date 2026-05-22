@@ -20,7 +20,7 @@ const VideoTooLongScreen = ({ navigation, route }: VideoTooLongScreenProps) => {
   const { t } = useTranslation()
 
   const controls = (
-    <>
+    <ControlContainer>
       <Button
         buttonType={ButtonType.Primary}
         title={t('BCSC.SendVideo.VideoTooLong.ButtonText')}
@@ -43,7 +43,7 @@ const VideoTooLongScreen = ({ navigation, route }: VideoTooLongScreenProps) => {
         testID={'Cancel'}
         accessibilityLabel={t('BCSC.SendVideo.VideoTooLong.CancelButtonText')}
       />
-    </>
+    </ControlContainer>
   )
 
   return (

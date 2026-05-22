@@ -48,7 +48,12 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
   )
 
   return (
-    <ScreenWrapper controls={controls}>
+    <ScreenWrapper
+      controls={controls}
+      padded={false}
+      edges={['top', 'bottom', 'left', 'right']}
+      scrollViewContainerStyle={{ padding: Spacing.lg }}
+    >
       <BrownHandHoldingPhone style={styles.image} height={styles.image.height} width={styles.image.width} />
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.lg, textAlign: 'center' }}>
         {t('BCSC.SendVideo.VideoInstructions.Heading1')}

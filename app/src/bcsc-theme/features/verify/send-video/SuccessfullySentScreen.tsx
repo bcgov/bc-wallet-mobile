@@ -1,7 +1,8 @@
-import StatusDetails from '@/bcsc-theme/components/StatusDetails'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import StatusDetails from '@/bcsc-theme/components/StatusDetails'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey } from '@bifold/core'
+
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
 import { CommonActions, useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -12,12 +13,14 @@ type SuccessfullySentScreenProps = {
 }
 
 const SuccessfullySentScreen = ({ navigation }: SuccessfullySentScreenProps) => {
+  const { Spacing } = useTheme()
   const { t } = useTranslation()
 
   const styles = StyleSheet.create({
     contentContainer: {
       justifyContent: 'center',
       alignItems: 'center',
+      padding: Spacing.lg,
     },
   })
 
@@ -48,7 +51,8 @@ const SuccessfullySentScreen = ({ navigation }: SuccessfullySentScreenProps) => 
   return (
     <ScreenWrapper
       controls={controls}
-      edges={['top', 'bottom', 'left', 'right']}
+      padded={false}
+      edges={['bottom', 'left', 'right']}
       scrollViewContainerStyle={styles.contentContainer}
     >
       <StatusDetails

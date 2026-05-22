@@ -1,10 +1,10 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { MediaCache } from '@/bcsc-theme/utils/media-cache'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCDispatchAction, BCState } from '@/store'
 import { withAlert } from '@/utils/alert'
 import readFileInChunks from '@/utils/read-file'
-import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import {
   Button,
   ButtonType,
@@ -63,7 +63,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     videoContainer: {
       flexGrow: 1,
       alignItems: 'center',
-      paddingHorizontal: Spacing.md,
+      padding: Spacing.lg,
     },
     heading: {
       textAlign: 'center',
@@ -166,6 +166,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       edges={['top', 'bottom', 'left', 'right']}
       style={styles.pageContainer}
       controls={controls}
+      padded={false}
       scrollViewContainerStyle={styles.videoContainer}
     >
       <ThemedText variant={'headingFour'} style={styles.heading}>
