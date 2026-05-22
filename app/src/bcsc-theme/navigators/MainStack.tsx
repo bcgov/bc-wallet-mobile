@@ -31,6 +31,7 @@ import { AccountRenewalFirstWarningScreen } from '../features/account/AccountRen
 import { AccountRenewalInformationScreen } from '../features/account/AccountRenewalInformationScreen'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import { MainRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
+import { MainResetWalletConfirmationScreen } from '../features/settings/ResetWalletConfirmationScreen'
 import { AgentReadyGate, BifoldScope } from '../features/agent'
 import { MainChangePINScreen } from '../features/auth/MainChangePINScreen'
 import { MainChangeSecurityScreen } from '../features/auth/MainChangeSecurityScreen'
@@ -227,6 +228,13 @@ const MainStack: React.FC = () => {
           <Stack.Screen
             name={BCSCScreens.MainRemoveAccountConfirmation}
             component={MainRemoveAccountConfirmationScreen}
+            options={() => ({
+              headerShown: true,
+            })}
+          />
+          <Stack.Screen
+            name={BCSCScreens.MainResetWalletConfirmation}
+            component={MainResetWalletConfirmationScreen}
             options={() => ({
               headerShown: true,
             })}

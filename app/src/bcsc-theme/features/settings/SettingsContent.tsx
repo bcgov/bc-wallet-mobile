@@ -44,6 +44,7 @@ interface SettingsContentProps {
   onAutoLock?: () => void
   onAppSecurity?: () => void
   onChangePIN?: () => void
+  onResetWallet?: () => void
 }
 
 interface AuthenticatedSectionProps {
@@ -54,6 +55,7 @@ interface AuthenticatedSectionProps {
   onEditNickname?: () => void
   onAutoLock?: () => void
   onForgetAllPairings?: () => void
+  onResetWallet?: () => void
   onPressOptInAnalytics: () => void | Promise<void>
   onPressRemoveAccount: () => void
   onLogout: () => void
@@ -69,6 +71,7 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
   onEditNickname,
   onAutoLock,
   onForgetAllPairings,
+  onResetWallet,
   onPressOptInAnalytics,
   onPressRemoveAccount,
   onLogout,
@@ -155,6 +158,14 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
           testID={testIdWithKey('Theme')}
         />
 
+        {onResetWallet ? (
+          <SettingsActionCard
+            title={t('BCSC.Settings.ResetWallet')}
+            onPress={onResetWallet}
+            textStyle={{ color: ColorPalette.semantic.error }}
+            testID={testIdWithKey('ResetWallet')}
+          />
+        ) : null}
         <SettingsActionCard
           title={t('BCSC.Settings.RemoveAccount')}
           onPress={onPressRemoveAccount}
@@ -180,6 +191,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   onAutoLock,
   onAppSecurity,
   onChangePIN,
+  onResetWallet,
 }) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette, setTheme, themeName } = useTheme()
@@ -334,6 +346,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           onEditNickname={onEditNickname}
           onAutoLock={onAutoLock}
           onForgetAllPairings={onForgetAllPairings}
+          onResetWallet={onResetWallet}
           onPressOptInAnalytics={onPressOptInAnalytics}
           onPressRemoveAccount={onPressRemoveAccount}
           onLogout={logout}

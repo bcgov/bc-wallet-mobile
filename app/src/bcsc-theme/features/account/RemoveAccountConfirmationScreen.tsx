@@ -1,86 +1,24 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
-import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
-import { BCSCMainStackParams } from '@/bcsc-theme/types/navigators'
-import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
+import DeleteConfirmationScreen from '@/bcsc-theme/components/DeleteConfirmationScreen'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
-type AccountNavigationProp = StackNavigationProp<BCSCMainStackParams>
-
-/**
- * Screen that confirms the user's intent to remove their account.
- *
- * @returns {*} {React.ReactElement} The RemoveAccountConfirmationScreen component.
- */
 const RemoveAccountConfirmationScreen: React.FC = () => {
-  const { Spacing } = useTheme()
-  const navigation = useNavigation<AccountNavigationProp>()
   const { t } = useTranslation()
   const factoryReset = useFactoryReset()
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const loadingScreen = useLoadingScreen()
 
-  const styles = StyleSheet.create({
-    container: {
-      padding: Spacing.md,
-      flex: 1,
-      justifyContent: 'space-between',
-    },
-    scrollView: {
-      flexGrow: 1,
-      gap: Spacing.md,
-    },
-    buttonsContainer: {
-      gap: Spacing.md,
-      marginTop: Spacing.lg,
-    },
-    textContainer: {
-      marginBottom: Spacing.md,
-    },
-  })
+  const onConfirm = async () => {
+    await factoryReset()
+  }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scrollView}>
-        <ThemedText variant={'headingThree'}>{t('BCSC.Account.RemoveAccountTitle')}</ThemedText>
-        <ThemedText>{t('BCSC.Account.RemoveAccountParagraph')}</ThemedText>
-      </ScrollView>
-      <View style={styles.buttonsContainer}>
-        <Button
-          accessibilityLabel={t('BCSC.Account.RemoveAccount')}
-          buttonType={ButtonType.Critical}
-          title={t('BCSC.Account.RemoveAccount')}
-          testID={testIdWithKey('RemoveAccount')}
-          onPress={async () => {
-            const stopLoading = loadingScreen.startLoading(t('BCSC.Account.RemoveAccountLoading'))
-            try {
-              logger.info('[RemoveAccount] User confirmed account removal, proceeding with verification reset')
-
-              const result = await factoryReset()
-
-              if (!result.success) {
-                logger.error('[RemoveAccount] Failed to remove account', result.error)
-              }
-            } catch (error) {
-              logger.error('[RemoveAccount] Error during account removal', error as Error)
-            } finally {
-              stopLoading()
-            }
-          }}
-        />
-        <Button
-          accessibilityLabel={t('Global.Cancel')}
-          testID={testIdWithKey('Cancel')}
-          buttonType={ButtonType.Secondary}
-          title={t('Global.Cancel')}
-          onPress={() => navigation.goBack()}
-        />
-      </View>
-    </SafeAreaView>
+    <DeleteConfirmationScreen
+      title={t('BCSC.Account.RemoveAccountTitle')}
+      description={t('BCSC.Account.RemoveAccountParagraph')}
+      confirmLabel={t('BCSC.Account.RemoveAccount')}
+      loadingLabel={t('BCSC.Account.RemoveAccountLoading')}
+      onConfirm={onConfirm}
+    />
   )
 }
 
