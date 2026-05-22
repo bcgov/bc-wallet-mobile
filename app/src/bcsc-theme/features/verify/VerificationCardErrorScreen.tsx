@@ -1,9 +1,10 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCState } from '@/store'
-import CardNotFoundImage from '@assets/img/card_not_found_highlight.png'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { RouteProp, useRoute } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { Image, Linking, StyleSheet, useWindowDimensions } from 'react-native'
+import { Linking, View } from 'react-native'
 import { BCSCScreens, BCSCVerifyStackParams } from '../../types/navigators'
 import { VerificationCardError } from './verificationCardError'
 
@@ -11,71 +12,81 @@ export { VerificationCardError }
 
 const GET_BCSC_URL = 'https://www2.gov.bc.ca/gov/content?id=98CEBFB7201143378046AC4AE5F0B9DE'
 
-const CARD_NOT_FOUND_IMAGE = Image.resolveAssetSource(CardNotFoundImage).uri
+interface VerificationCardErrorScreenProps {
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VerificationCardError>
+}
 
-const twoThirds = 0.67
-
-const VerificationCardErrorScreen = () => {
+const VerificationCardErrorScreen = ({ navigation }: VerificationCardErrorScreenProps) => {
   const { Spacing } = useTheme()
   const [store] = useStore<BCState>()
-  const { width } = useWindowDimensions()
   const { t } = useTranslation()
   const { params } = useRoute<RouteProp<BCSCVerifyStackParams, BCSCScreens.VerificationCardError>>()
 
   const errorType = params.errorType
 
-  const styles = StyleSheet.create({
-    image: {
-      width: width - Spacing.md * 2,
-      height: (width - Spacing.md * 2) * twoThirds,
-      marginBottom: Spacing.lg,
-    },
-  })
-
   if (errorType === VerificationCardError.CardExpired) {
     const controls = (
-      <Button
-        title={t('BCSC.VerificationCardError.CardExpired.ButtonText')}
-        accessibilityLabel={t('BCSC.VerificationCardError.CardExpired.ButtonText')}
-        accessibilityHint={t('Global.A11y.OpensInBrowser')}
-        testID={testIdWithKey('GetBCSC')}
-        buttonType={ButtonType.Primary}
-        onPress={() => Linking.openURL(GET_BCSC_URL)}
-      />
+      <ControlContainer>
+        <Button
+          title={t('BCSC.VerificationCardError.CardExpired.ButtonText')}
+          accessibilityLabel={t('BCSC.VerificationCardError.CardExpired.ButtonText')}
+          accessibilityHint={t('Global.A11y.OpensInBrowser')}
+          testID={testIdWithKey('GetBCSC')}
+          buttonType={ButtonType.Primary}
+          onPress={() => Linking.openURL(GET_BCSC_URL)}
+        />
+      </ControlContainer>
     )
 
     return (
-      <ScreenWrapper controls={controls}>
-        <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.sm }}>
-          {t('BCSC.VerificationCardError.CardExpired.Heading')}
-        </ThemedText>
-        <ThemedText style={{ marginBottom: Spacing.lg }}>
-          {t('BCSC.VerificationCardError.CardExpired.Description')}
-        </ThemedText>
+      <ScreenWrapper
+        padded={false}
+        controls={controls}
+        scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
+      >
+        <ThemedText variant={'headingThree'}>{t('BCSC.VerificationCardError.CardExpired.Heading')}</ThemedText>
+        <ThemedText>{t('BCSC.VerificationCardError.CardExpired.Description')}</ThemedText>
       </ScreenWrapper>
     )
   }
 
+  const controls = (
+    <ControlContainer>
+      <Button
+        title={t('BCSC.MismatchedSerial.TryAnotherCard')}
+        accessibilityLabel={t('BCSC.MismatchedSerial.TryAnotherCard')}
+        testID={testIdWithKey('TryAnother')}
+        buttonType={ButtonType.Primary}
+        onPress={() => {
+          navigation.navigate(BCSCScreens.IdentitySelection)
+        }}
+      />
+    </ControlContainer>
+  )
+
   return (
-    <ScreenWrapper>
-      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.sm }}>
-        {t('BCSC.MismatchedSerial.Heading')}
-      </ThemedText>
-      <ThemedText style={{ marginBottom: Spacing.lg }}>{t('BCSC.MismatchedSerial.Description1')}</ThemedText>
-      <ThemedText variant={'bold'}>
-        {t('BCSC.MismatchedSerial.SerialNumber', { serial: store.bcscSecure.serial })}
-      </ThemedText>
-      <ThemedText variant={'bold'} style={{ marginBottom: Spacing.lg }}>
-        {t('BCSC.MismatchedSerial.Birthdate', {
-          birthdate: store.bcscSecure.birthdate?.toLocaleString(t('BCSC.LocaleStringFormat'), {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric',
-          }),
-        })}
-      </ThemedText>
-      <ThemedText style={{ marginBottom: Spacing.lg }}>{t('BCSC.MismatchedSerial.Description2')}</ThemedText>
-      <Image style={styles.image} source={{ uri: CARD_NOT_FOUND_IMAGE }} resizeMode={'contain'} />
+    <ScreenWrapper
+      controls={controls}
+      padded={false}
+      scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
+    >
+      <ThemedText variant={'headingThree'}>{t('BCSC.MismatchedSerial.Heading')}</ThemedText>
+      <ThemedText>{t('BCSC.MismatchedSerial.Description1')}</ThemedText>
+      <View>
+        <ThemedText variant={'bold'}>
+          {t('BCSC.MismatchedSerial.SerialNumber', { serial: store.bcscSecure.serial })}
+        </ThemedText>
+        <ThemedText variant={'bold'}>
+          {t('BCSC.MismatchedSerial.Birthdate', {
+            birthdate: store.bcscSecure.birthdate?.toLocaleString(t('BCSC.LocaleStringFormat'), {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric',
+            }),
+          })}
+        </ThemedText>
+      </View>
+      <ThemedText>{t('BCSC.MismatchedSerial.Description2')}</ThemedText>
     </ScreenWrapper>
   )
 }

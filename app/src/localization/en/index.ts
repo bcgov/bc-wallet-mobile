@@ -588,25 +588,12 @@ const translation = {
       "AcceptAnalytics": "Enable Analytics",
       "DenyAnalytics": "Skip",
     },
-    "ChooseYourID": {
-      "WhatCardDoYou": "What BC Services Card do you have?",
-      "SomePeopleStillCallIt": "Some people still call it a CareCard or a Health Card. It has your personal health number (PHN) on the back.",
-      "CombinedCard": "Combined card",
-      "CombinedCardActionText": "It's combined with my driver's licence",
-      "CombinedCardDescription": "Use this card for a faster way to set up the app.",
-      "PhotoCard": "Photo card",
-      "PhotoCardActionText": "A card with my photo",
-      "PhotoCardDescription": "Use this card for a faster way to set up the app.",
-      "NoPhotoCard": "Non photo card",
-      "NoPhotoCardActionText": "A card without a photo",
-      "NoPhotoCardDescription": "Use this card + photo ID to set up the app.",
-      "DontHaveOne": "Don't have one?",
-      "CheckBefore": "Check before you continue. It's faster to set up with one of the above.",
-      "CheckForServicesCard": "Check for BC Services Card",
-      "CheckIfIHave": "Check if I have a BC Services Card",
-      "OtherID": "Other ID",
-      "OtherIDActionText": "Set up with other ID",
-      "OtherIDDescription": "This option takes the longest to set up. You'll need 2 IDs to set up the app and have limited access to services.",
+    "IdentitySelection": {
+      "HaveABCSC": "Have a BC Services Card?",
+      "ScanTheBack": "Scan the back of your ID",
+      "LineUpParagraph": "Line up your ID inside the frames and hold still until the camera takes the picture automatically.",
+      "Scan": "Scan",
+      "UseOtherID": "Use another ID"
     },
     "Instructions": {
       "Heading": "Provide the card serial number on the back right side of your card.",
@@ -620,6 +607,9 @@ const translation = {
       "NoDeviceCodeFound": "No device code found",
       "InvalidQrCode": "Invalid QR code",
       "WillScanAutomatically": "A valid QR Code will scan automatically",
+      "HoldSteadyHelp": "Can not see the card clearly? Try holding your phone steady.",
+      "ScanYourCard": "Scan your card",
+      "LineUpHelp": "Line up your ID inside the frame and hold still until the camera takes the picture automatically.",
       "TorchOn": "Turn flashlight on",
       "TorchOff": "Turn flashlight off",
       "ErrorDetails": "Error details",
@@ -647,7 +637,7 @@ const translation = {
     "Birthdate": {
       "CardSerialNumber": "Card serial number: {{ serial }}",
       "Heading": "Enter your birthdate",
-      "Paragraph": "Your birthdate is only used to to set up this app. It is not shared.",
+      "Paragraph": "Your birthdate is only used to to set up this app. It will not be stored on this device.",
       "Label": "Birthdate",
       "InvalidDate": "Entered birthdate is invalid. Please enter a valid date.",
       "ExampleDate": "The birthdate format is: YYYY/MM/DD",
@@ -907,6 +897,7 @@ const translation = {
       "Description2": "Check your card is a BC Services Card by looking at the front of your card:",
       "SerialNumber": "Serial number: {{serial}}",
       "Birthdate": "Birthdate: {{birthdate}}",
+      "TryAnotherCard": "Try another card",
     },
     "VerificationCardError": {
       "CardExpired": {
