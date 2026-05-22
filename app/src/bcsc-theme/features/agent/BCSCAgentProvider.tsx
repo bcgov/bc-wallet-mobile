@@ -14,6 +14,11 @@ export interface BCSCAgentContextValue {
 
 const BCSCAgentContext = createContext<BCSCAgentContextValue | null>(null)
 
+/**
+ * Reads the BCSC agent context. Throws if called outside of {@link BCSCAgentProvider}.
+ *
+ * @returns The current agent context value (`agent`, `loading`, `error`, `retry`).
+ */
 export const useBCSCAgent = (): BCSCAgentContextValue => {
   const ctx = useContext(BCSCAgentContext)
   if (!ctx) {
@@ -22,11 +27,25 @@ export const useBCSCAgent = (): BCSCAgentContextValue => {
   return ctx
 }
 
-// Non-blocking and decoupled from Bifold's AgentProvider. Children always
-// render; consumers inspect { agent, loading, error } via useBCSCAgent and
-// decide what to show. Init failures are logged by the ViewModel — no modal,
-// no fall-through to Bifold hooks. Screens that need the live agent reach
-// for it through useBCSCAgent().agent rather than Bifold's useAgent().
+/**
+ * Non-throwing variant of {@link useBCSCAgent} for callers that may run outside
+ * the provider tree (e.g. AuthStack, OnboardingStack) and must tolerate the
+ * agent being absent.
+ *
+ * @returns The agent context value when mounted under a provider, otherwise `null`.
+ */
+export const useBCSCAgentSafe = (): BCSCAgentContextValue | null => useContext(BCSCAgentContext)
+
+/**
+ * Provider that owns the BCSC Credo agent lifecycle and exposes `{ agent,
+ * loading, error, retry }` to descendants.
+ *
+ * Non-blocking and decoupled from Bifold's AgentProvider. Children always
+ * render; consumers inspect the context via {@link useBCSCAgent} and decide
+ * what to show. Init failures are logged by the ViewModel — no modal, no
+ * fall-through to Bifold hooks. Screens that need the live agent reach for it
+ * through `useBCSCAgent().agent` rather than Bifold's `useAgent()`.
+ */
 const BCSCAgentProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const { agent, status, error, retry } = useAgentSetupViewModel()
 

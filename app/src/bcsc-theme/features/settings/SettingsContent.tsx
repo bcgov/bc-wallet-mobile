@@ -40,6 +40,7 @@ interface SettingsContentProps {
   onPrivacy: () => void
   onPressDeveloperMode: () => void
   onEditNickname?: () => void
+  onContacts?: () => void
   onForgetAllPairings?: () => void
   onAutoLock?: () => void
   onAppSecurity?: () => void
@@ -54,6 +55,7 @@ interface AuthenticatedSectionProps {
   onEditNickname?: () => void
   onAutoLock?: () => void
   onForgetAllPairings?: () => void
+  onContacts?: () => void
   onPressOptInAnalytics: () => void | Promise<void>
   onPressRemoveAccount: () => void
   onLogout: () => void
@@ -69,6 +71,7 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
   onEditNickname,
   onAutoLock,
   onForgetAllPairings,
+  onContacts,
   onPressOptInAnalytics,
   onPressRemoveAccount,
   onLogout,
@@ -98,6 +101,19 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
           onPress={onLogout}
           testID={testIdWithKey('SignOut')}
         />
+      </View>
+
+      <ThemedText variant={'bold'} style={styles.sectionHeader}>
+        {t('BCSC.Settings.Features.Header')}
+      </ThemedText>
+      <View style={styles.sectionContainer}>
+        {onContacts ? (
+          <SettingsActionCard
+            title={t('BCSC.Settings.Features.Contacts')}
+            onPress={onContacts}
+            testID={testIdWithKey('Contacts')}
+          />
+        ) : null}
       </View>
 
       <ThemedText variant={'bold'} style={styles.sectionHeader}>
@@ -180,6 +196,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   onAutoLock,
   onAppSecurity,
   onChangePIN,
+  onContacts,
 }) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette, setTheme, themeName } = useTheme()
@@ -337,6 +354,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           onPressOptInAnalytics={onPressOptInAnalytics}
           onPressRemoveAccount={onPressRemoveAccount}
           onLogout={logout}
+          onContacts={onContacts}
           setTheme={setTheme}
           themeName={themeName}
         />
