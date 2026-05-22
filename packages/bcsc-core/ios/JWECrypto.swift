@@ -73,9 +73,11 @@ class SecureRandom {
   /// - Returns: The random byte array with the given count number of bytes.
   class func nextBytes(count: Int) -> [UInt8] {
     var bytes = [UInt8](repeating: 0, count: count)
-    _ = bytes.withUnsafeMutableBytes { buffer in
+    print("[SecureRandom] nextBytes: requesting \(count) bytes")
+    let status = bytes.withUnsafeMutableBytes { buffer in
       SecRandomCopyBytes(kSecRandomDefault, count, buffer.baseAddress!)
     }
+    print("[SecureRandom] nextBytes: SecRandomCopyBytes returned \(status) for \(count) bytes")
     return bytes
   }
 }
