@@ -50,7 +50,7 @@ exports[`PhotoReview renders correctly 1`] = `
           "bottom": 0,
           "gap": 16,
           "left": 0,
-          "padding": 16,
+          "padding": 24,
           "position": "absolute",
           "right": 0,
         }

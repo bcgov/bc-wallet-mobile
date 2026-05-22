@@ -105,7 +105,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           right: 0,
           backgroundColor: ColorPalette.notification.popupOverlay,
           paddingBottom: Spacing.md,
-          paddingHorizontal: Spacing.md,
+          paddingHorizontal: Spacing.lg,
           flexDirection: 'column',
         },
         cancelContainer: {
@@ -113,7 +113,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           justifyContent: 'space-between',
           alignItems: 'center',
           paddingTop: Spacing.md,
-          paddingBottom: Spacing.xl,
+          paddingBottom: Spacing.lg,
         },
         recordingLengthContainer: {
           flexDirection: 'row',
@@ -126,7 +126,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           marginBottom: safeAreaInsets.bottom,
         },
       }),
-    [ColorPalette.notification.popupOverlay, Spacing.lg, Spacing.md, Spacing.sm, Spacing.xl, safeAreaInsets.bottom]
+    [ColorPalette.notification.popupOverlay, Spacing.lg, Spacing.md, Spacing.sm, safeAreaInsets.bottom]
   )
 
   const handleCancel = () => {
