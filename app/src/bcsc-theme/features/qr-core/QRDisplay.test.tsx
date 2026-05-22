@@ -16,7 +16,7 @@ jest.mock('@/bcsc-theme/features/agent', () => ({
 jest.mock('@bifold/core', () => ({
   ...jest.requireActual('@bifold/core'),
   QRRenderer: jest.fn().mockReturnValue(null),
-  createConnectionInvitation: jest.fn(),
+  useConnectionByOutOfBandId: jest.fn().mockReturnValue(undefined),
 }))
 
 jest.mock('./WalletNameDisplay', () => ({
@@ -25,30 +25,40 @@ jest.mock('./WalletNameDisplay', () => ({
 }))
 
 const mockUseBCSCAgent = jest.mocked(useBCSCAgent)
-const mockCreateInvitation = jest.mocked(Bifold.createConnectionInvitation)
 
-const realInvitationUrl = 'https://realhost.example/invitation?oob=abc123'
+const realInvitationUrl = 'didcomm://invite?oob=abc123'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const fakeAgent = {} as any
-
-const readyAgentReturn = { agent: fakeAgent, loading: false, error: null, retry: jest.fn() }
-const noAgentReturn = { agent: null, loading: true, error: null, retry: jest.fn() }
+// Stand-in for a credo agent with just the OOB module the view model needs.
+const makeAgent = () => {
+  const toUrl = jest.fn(() => realInvitationUrl)
+  const createInvitation = jest.fn(async () => ({
+    id: 'oob-1',
+    outOfBandInvitation: { toUrl },
+  }))
+  const agent = {
+    modules: { didcomm: { oob: { createInvitation } } },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any
+  return { agent, createInvitation }
+}
 
 describe('QRDisplay', () => {
   let mockNavigation: ReturnType<typeof useNavigation>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let agentHandle: ReturnType<typeof makeAgent>
 
   beforeEach(() => {
     jest.clearAllMocks()
     mockNavigation = useNavigation()
-    mockCreateInvitation.mockResolvedValue({
-      invitationUrl: realInvitationUrl,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      record: {} as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      invitation: {} as any,
-    })
+    agentHandle = makeAgent()
   })
+
+  const setReadyAgent = () => {
+    mockUseBCSCAgent.mockReturnValue({ agent: agentHandle.agent, loading: false, error: null, retry: jest.fn() })
+  }
+  const setNoAgent = () => {
+    mockUseBCSCAgent.mockReturnValue({ agent: null, loading: true, error: null, retry: jest.fn() })
+  }
 
   const renderComponent = () =>
     render(
@@ -57,31 +67,31 @@ describe('QRDisplay', () => {
       </BasicAppContext>
     )
 
-  it('shows the loading state and does not call createConnectionInvitation when the agent is not ready', async () => {
-    mockUseBCSCAgent.mockReturnValue(noAgentReturn)
+  it('shows the loading state and does not call createInvitation when the agent is not ready', async () => {
+    setNoAgent()
 
     const { getByTestId } = renderComponent()
     await act(async () => {})
 
     expect(getByTestId(testIdWithKey('QRDisplay.Loading'))).toBeTruthy()
-    expect(mockCreateInvitation).not.toHaveBeenCalled()
+    expect(agentHandle.createInvitation).not.toHaveBeenCalled()
   })
 
   it('passes the real invitation URL to QRRenderer once the agent is ready', async () => {
-    mockUseBCSCAgent.mockReturnValue(readyAgentReturn)
+    setReadyAgent()
 
     renderComponent()
 
     await waitFor(() => {
-      expect(mockCreateInvitation).toHaveBeenCalledWith(fakeAgent)
+      expect(agentHandle.createInvitation).toHaveBeenCalled()
       const calls = jest.mocked(Bifold.QRRenderer).mock.calls
       expect(calls.at(-1)![0]).toMatchObject({ value: realInvitationUrl })
     })
   })
 
   it('renders the error state and recovers via retry', async () => {
-    mockUseBCSCAgent.mockReturnValue(readyAgentReturn)
-    mockCreateInvitation.mockRejectedValueOnce(new Error('agent boom'))
+    setReadyAgent()
+    agentHandle.createInvitation.mockRejectedValueOnce(new Error('agent boom'))
 
     const { findByTestId, getByText } = renderComponent()
 
@@ -91,14 +101,14 @@ describe('QRDisplay', () => {
     fireEvent.press(getByText('BCSC.QRDisplay.RetryCta'))
 
     await waitFor(() => {
-      expect(mockCreateInvitation).toHaveBeenCalledTimes(2)
+      expect(agentHandle.createInvitation).toHaveBeenCalledTimes(2)
       const calls = jest.mocked(Bifold.QRRenderer).mock.calls
       expect(calls.at(-1)![0]).toMatchObject({ value: realInvitationUrl })
     })
   })
 
   it('renders a header share button only when ready and shares the real invitation', async () => {
-    mockUseBCSCAgent.mockReturnValue(readyAgentReturn)
+    setReadyAgent()
     const shareSpy = jest.spyOn(Share, 'share').mockResolvedValue({ action: Share.sharedAction })
 
     renderComponent()
@@ -121,7 +131,7 @@ describe('QRDisplay', () => {
   })
 
   it('omits the share button while the QR is not ready', async () => {
-    mockUseBCSCAgent.mockReturnValue(noAgentReturn)
+    setNoAgent()
 
     renderComponent()
     await act(async () => {})

@@ -81,7 +81,12 @@ const QRScanner: React.FC = () => {
     torchIcon: {
       color: torchActive ? ColorPalette.grayscale.black : ColorPalette.grayscale.white,
     },
-    processing: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    processingOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
   })
 
   if (isPermissionLoading) {
@@ -90,10 +95,11 @@ const QRScanner: React.FC = () => {
   if (!hasPermission) {
     return <PermissionDisabled permissionType="camera" />
   }
-  if (isProcessing) {
-    return <ActivityIndicator size="large" style={styles.processing} />
-  }
 
+  // ScanCamera owns the camera-frame dedupe (hasFiredRef + cameraActive). If we
+  // unmount it while processing, those reset on remount and the same QR — still
+  // in the user's frame — re-fires, queuing a duplicate connection. Overlay the
+  // spinner instead so the dedupe state survives the in-flight strategy.handle.
   return (
     <View style={styles.container}>
       <ScanCamera handleCodeScan={handleScan} enableCameraOnError={true} torchActive={torchActive} error={scanError} />
@@ -116,6 +122,11 @@ const QRScanner: React.FC = () => {
       >
         <Icon name={torchActive ? 'flash' : 'flash-off'} size={28} style={styles.torchIcon} />
       </TouchableOpacity>
+      {isProcessing && (
+        <View style={styles.processingOverlay} pointerEvents="auto">
+          <ActivityIndicator size="large" color={ColorPalette.grayscale.white} />
+        </View>
+      )}
       {scanError && (
         <DismissiblePopupModal
           title={t('BCSC.Scan.ErrorDetails')}
