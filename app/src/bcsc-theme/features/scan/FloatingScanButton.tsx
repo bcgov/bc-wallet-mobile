@@ -54,7 +54,7 @@ const FloatingScanButton: React.FC<FloatingScanButtonProps> = ({ activeTabName, 
     <Pressable
       accessibilityLabel={t('AddCredentialSlider.ScanQRCode')}
       accessibilityRole="button"
-      hitSlop={hitSlop}
+      hitSlop={{ ...hitSlop, bottom: 0 }}
       testID={testIdWithKey('FloatingScanButton')}
       onPress={onPress}
       style={({ pressed }) => [styles.button, pressed && styles.pressed]}
