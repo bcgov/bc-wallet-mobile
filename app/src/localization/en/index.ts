@@ -309,6 +309,7 @@ const translation = {
       "TermsOfUse": "Terms of use",
       "Analytics": "Analytics",
       "RemoveAccount": "Remove account",
+      "ResetWallet": "Reset wallet",
       "AppSecurity": {
         "ScreenTitle": "App Security",
         "ChangeAppSecurity": "Change App Security",
@@ -1132,6 +1133,10 @@ const translation = {
     },
     "Wallet": {
       "EmptyMessage": "Your wallet is empty",
+      "Reset": "Reset wallet",
+      "ResetTitle": "Reset wallet?",
+      "ResetDescription": "This will permanently delete all credentials, connections, and chat history stored in your wallet. Your PIN, biometrics, and BC Services Card identity will not be affected.",
+      "Resetting": "Resetting wallet...",
     },
     "Account": {
       "RemoveAccount": "Remove account",

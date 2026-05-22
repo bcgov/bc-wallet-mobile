@@ -300,6 +300,7 @@ const translation = {
       "TermsOfUse": "Terms of use (PT-BR)",
       "Analytics": "Analytics (PT-BR)",
       "RemoveAccount": "Remove account (PT-BR)",
+      "ResetWallet": "Reset wallet (PT-BR)",
       "AppSecurity": {
         "ScreenTitle": "App Security (PT-BR)",
         "ChangeAppSecurity": "Change App Security (PT-BR)",
@@ -1117,6 +1118,13 @@ const translation = {
       "AddressSaved": "Address saved (PT-BR)",
       "AuthorizationErrorTitle": "Authorization failed (PT-BR)",
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again. (PT-BR)",
+    },
+    "Wallet": {
+      "EmptyMessage": "Your wallet is empty (PT-BR)",
+      "Reset": "Reset wallet (PT-BR)",
+      "ResetTitle": "Reset wallet? (PT-BR)",
+      "ResetDescription": "This will permanently delete all credentials, connections, and chat history stored in your wallet. Your PIN, biometrics, and BC Services Card identity will not be affected. (PT-BR)",
+      "Resetting": "Resetting wallet... (PT-BR)",
     },
     "Account": {
       "RemoveAccount": "Remove account (PT-BR)",
