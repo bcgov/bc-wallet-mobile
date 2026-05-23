@@ -86,7 +86,7 @@ const ManualPairing: React.FC = () => {
   return (
     <ScreenWrapper keyboardActive>
       <ThemedText
-        variant={'headingTwo'}
+        variant={'headingThree'}
         style={{ marginHorizontal: Spacing.md, marginBottom: Spacing.md, alignSelf: 'center' }}
       >
         {t('BCSC.ManualPairing.EnterPairingCodeTitle')}

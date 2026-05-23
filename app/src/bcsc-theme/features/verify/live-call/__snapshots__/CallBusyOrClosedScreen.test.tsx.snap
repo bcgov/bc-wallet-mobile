@@ -39,7 +39,7 @@ exports[`CallBusyOrClosed renders correctly 1`] = `
             {
               "color": "#313132",
               "fontFamily": "BCSans-Regular",
-              "fontSize": 32,
+              "fontSize": 26,
               "fontWeight": "bold",
             },
             {

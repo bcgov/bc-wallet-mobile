@@ -1,3 +1,4 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useAuthentication } from '@/bcsc-theme/hooks/useAuthentication'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import {
@@ -14,6 +15,7 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { View } from 'react-native'
 import { setHideDeviceAuthPrepFlag } from 'react-native-bcsc-core'
 
 interface ConfirmDeviceAuthInfoScreenProps {
@@ -45,27 +47,36 @@ export const ConfirmDeviceAuthInfoScreen: React.FC<ConfirmDeviceAuthInfoScreenPr
 
   const controls = (
     <>
-      <CheckBoxRow
-        title={t('BCSC.ConfirmDeviceAuth.CheckboxLabel')}
-        accessibilityLabel={t('BCSC.ConfirmDeviceAuth.CheckboxLabel')}
-        testID={testIdWithKey('HideConfirmationCheckbox')}
-        checked={checked}
-        onPress={() => setChecked(!checked)}
-        reverse
-        titleStyle={{ textAlign: 'right' }}
-      />
-      <Button
-        buttonType={ButtonType.Primary}
-        title={t('Global.Continue')}
-        accessibilityLabel={t('Global.Continue')}
-        testID={testIdWithKey('Continue')}
-        onPress={onPressContinue}
-      />
+      <View style={{ paddingHorizontal: Spacing.lg }}>
+        <CheckBoxRow
+          title={t('BCSC.ConfirmDeviceAuth.CheckboxLabel')}
+          accessibilityLabel={t('BCSC.ConfirmDeviceAuth.CheckboxLabel')}
+          testID={testIdWithKey('HideConfirmationCheckbox')}
+          checked={checked}
+          onPress={() => setChecked(!checked)}
+          reverse
+          titleStyle={{ textAlign: 'right' }}
+        />
+      </View>
+      <ControlContainer>
+        <Button
+          buttonType={ButtonType.Primary}
+          title={t('Global.Continue')}
+          accessibilityLabel={t('Global.Continue')}
+          testID={testIdWithKey('Continue')}
+          onPress={onPressContinue}
+        />
+      </ControlContainer>
     </>
   )
 
   return (
-    <ScreenWrapper keyboardActive controls={controls} scrollViewContainerStyle={{ gap: Spacing.lg }}>
+    <ScreenWrapper
+      padded={false}
+      keyboardActive
+      controls={controls}
+      scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
+    >
       <ThemedText variant={'headingThree'}>{t('BCSC.ConfirmDeviceAuth.Title')}</ThemedText>
       <ThemedText>{t('BCSC.ConfirmDeviceAuth.Description1')}</ThemedText>
       <ThemedText variant={'bold'}>{t('BCSC.ConfirmDeviceAuth.Description2')}</ThemedText>

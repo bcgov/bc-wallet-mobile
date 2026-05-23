@@ -1,3 +1,4 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import {
@@ -14,7 +15,6 @@ import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
 import ServicePeriodList from './components/ServicePeriodList'
 
 type BeforeYouCallScreenProps = {
@@ -32,13 +32,6 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
   const [isWaitingForPermissions, setIsWaitingForPermissions] = useState(false)
 
   const isCellular = useMemo(() => networkType === 'cellular' && isConnected === true, [networkType, isConnected])
-
-  const styles = StyleSheet.create({
-    controlsContainer: {
-      gap: Spacing.md,
-      marginTop: Spacing.md,
-    },
-  })
 
   const onPressContinue = async () => {
     setIsWaitingForPermissions(true)
@@ -62,10 +55,32 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
     navigation.navigate(BCSCScreens.VerifyContactUs)
   }
 
+  const controls = (
+    <ControlContainer>
+      <Button
+        buttonType={ButtonType.Primary}
+        testID={testIdWithKey('Continue')}
+        accessibilityLabel={t('Global.Continue')}
+        title={t('Global.Continue')}
+        onPress={onPressContinue}
+        disabled={isWaitingForPermissions}
+      >
+        {isWaitingForPermissions && <ButtonLoading />}
+      </Button>
+      <Button
+        buttonType={ButtonType.Secondary}
+        testID={testIdWithKey('Assistance')}
+        accessibilityLabel={t('BCSC.VideoCall.Assistance')}
+        title={t('BCSC.VideoCall.Assistance')}
+        onPress={onPressAssistance}
+      />
+    </ControlContainer>
+  )
+
   return (
-    <ScreenWrapper>
+    <ScreenWrapper padded={false} controls={controls} scrollViewContainerStyle={{ padding: Spacing.lg }}>
       <ThemedText
-        variant={'headingTwo'}
+        variant={'headingThree'}
         style={{ marginBottom: Spacing.md }}
         testID={testIdWithKey('BeforeYouCallTitle')}
       >
@@ -95,26 +110,6 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
       </ThemedText>
       <ThemedText>{t(`BCSC.VideoCall.PrivacyNotice`)}</ThemedText>
       <ThemedText style={{ marginTop: Spacing.md }}>{t(`BCSC.VideoCall.PrivacyContactInfo`)}</ThemedText>
-
-      <View style={styles.controlsContainer}>
-        <Button
-          buttonType={ButtonType.Primary}
-          testID={testIdWithKey('Continue')}
-          accessibilityLabel={t('Global.Continue')}
-          title={t('Global.Continue')}
-          onPress={onPressContinue}
-          disabled={isWaitingForPermissions}
-        >
-          {isWaitingForPermissions && <ButtonLoading />}
-        </Button>
-        <Button
-          buttonType={ButtonType.Secondary}
-          testID={testIdWithKey('Assistance')}
-          accessibilityLabel={t('BCSC.VideoCall.Assistance')}
-          title={t('BCSC.VideoCall.Assistance')}
-          onPress={onPressAssistance}
-        />
-      </View>
     </ScreenWrapper>
   )
 }

@@ -1,10 +1,10 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCAnimatedLoadingIcon } from '@/bcsc-theme/features/splash-loading/BCAnimatedLoadingIcon'
 import ProgressBar from '@/components/ProgressBar'
-import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import React, { useEffect, useState } from 'react'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { View } from 'react-native'
 
 type CallLoadingViewProps = {
   onCancel: () => void
@@ -12,33 +12,10 @@ type CallLoadingViewProps = {
 }
 
 const CallLoadingView = ({ onCancel, message }: CallLoadingViewProps) => {
-  const { Spacing, ColorPalette } = useTheme()
+  const { Spacing } = useTheme()
   const { t } = useTranslation()
   const [progressPercent, setProgressPercent] = useState(0)
   const [delayReached, setDelayReached] = useState(false)
-
-  const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-    upperContainer: {
-      flex: 1,
-    },
-    contentContainer: {
-      flex: 1,
-      padding: Spacing.md,
-    },
-    controlsContainer: {
-      marginTop: 'auto',
-      padding: Spacing.md,
-    },
-    iconContainer: {
-      alignSelf: 'center',
-      marginVertical: Spacing.md,
-    },
-  })
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -63,37 +40,38 @@ const CallLoadingView = ({ onCancel, message }: CallLoadingViewProps) => {
     return () => clearInterval(interval)
   }, [])
 
+  const controls = (
+    <ControlContainer>
+      <Button
+        buttonType={ButtonType.Primary}
+        onPress={onCancel}
+        title={t('Global.Cancel')}
+        accessibilityLabel={t('Global.Cancel')}
+        testID={testIdWithKey('Cancel')}
+      />
+    </ControlContainer>
+  )
+
   return (
-    <SafeAreaView style={styles.pageContainer}>
-      <View style={styles.upperContainer}>
-        <ProgressBar dark={true} progressPercent={progressPercent} />
-        <View style={styles.contentContainer}>
-          <ThemedText variant={'headingTwo'} style={{ marginTop: 2 * Spacing.xxl, textAlign: 'center' }}>
-            {t('BCSC.VideoCall.Loading.OneMomentPlease')}
-          </ThemedText>
-          <ThemedText style={{ marginTop: 2 * Spacing.xxl, textAlign: 'center' }}>
-            {message || t('BCSC.VideoCall.Loading.SettingThingsUp')}
-          </ThemedText>
-          <View style={styles.iconContainer}>
-            <BCAnimatedLoadingIcon size={200} />
-          </View>
-          {delayReached ? (
-            <ThemedText variant={'labelSubtitle'} style={{ textAlign: 'center' }}>
-              {t('BCSC.VideoCall.Loading.TakingLongerThanUsual')}
-            </ThemedText>
-          ) : null}
+    <ScreenWrapper padded={false} scrollable={false} edges={['top', 'bottom', 'left', 'right']} controls={controls}>
+      <ProgressBar dark={true} progressPercent={progressPercent} />
+      <View style={{ flex: 1, padding: Spacing.md }}>
+        <ThemedText variant={'headingThree'} style={{ marginTop: 2 * Spacing.xxl, textAlign: 'center' }}>
+          {t('BCSC.VideoCall.Loading.OneMomentPlease')}
+        </ThemedText>
+        <ThemedText style={{ marginTop: 2 * Spacing.xxl, textAlign: 'center' }}>
+          {message || t('BCSC.VideoCall.Loading.SettingThingsUp')}
+        </ThemedText>
+        <View style={{ alignSelf: 'center', marginVertical: Spacing.md }}>
+          <BCAnimatedLoadingIcon size={200} />
         </View>
+        {delayReached ? (
+          <ThemedText variant={'labelSubtitle'} style={{ textAlign: 'center' }}>
+            {t('BCSC.VideoCall.Loading.TakingLongerThanUsual')}
+          </ThemedText>
+        ) : null}
       </View>
-      <View style={styles.controlsContainer}>
-        <Button
-          buttonType={ButtonType.Primary}
-          onPress={onCancel}
-          title={t('Global.Cancel')}
-          accessibilityLabel={t('Global.Cancel')}
-          testID={testIdWithKey('Cancel')}
-        />
-      </View>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

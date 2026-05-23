@@ -25,7 +25,7 @@ export const ContactUsScreen = (): React.ReactElement => {
   }
 
   return (
-    <ScreenWrapper>
+    <ScreenWrapper padded={false} scrollViewContainerStyle={{ padding: Spacing.lg }}>
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.xl }}>
         {t('BCSC.ContactUs.Title')}
       </ThemedText>

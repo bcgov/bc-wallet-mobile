@@ -156,7 +156,7 @@ export const PermissionDisabled = ({
       style={headerPadding ? { paddingTop: Spacing.lg } : {}}
       edges={headerPadding ? ['top', 'bottom'] : undefined}
     >
-      <ThemedText variant={'headingTwo'} style={styles.title}>
+      <ThemedText variant={'headingThree'} style={styles.title}>
         {t(keys.title)}
       </ThemedText>
       <ThemedText style={styles.description}>{t(keys.description)}</ThemedText>

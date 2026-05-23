@@ -1,3 +1,4 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import BulletPointWithText from '@/components/BulletPointWithText'
@@ -104,20 +105,22 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   }
 
   const controls = (
-    <Button
-      buttonType={ButtonType.Primary}
-      title={t('BCSC.VideoCall.StartCall')}
-      accessibilityLabel={t('BCSC.VideoCall.StartVideoCall')}
-      onPress={onPressStart}
-      disabled={isWaitingForPermissions}
-      testID={testIdWithKey('StartCall')}
-    >
-      {isWaitingForPermissions && <ButtonLoading />}
-    </Button>
+    <ControlContainer>
+      <Button
+        buttonType={ButtonType.Primary}
+        title={t('BCSC.VideoCall.StartCall')}
+        accessibilityLabel={t('BCSC.VideoCall.StartVideoCall')}
+        onPress={onPressStart}
+        disabled={isWaitingForPermissions}
+        testID={testIdWithKey('StartCall')}
+      >
+        {isWaitingForPermissions && <ButtonLoading />}
+      </Button>
+    </ControlContainer>
   )
 
   return (
-    <ScreenWrapper controls={controls}>
+    <ScreenWrapper padded={false} controls={controls} scrollViewContainerStyle={{ padding: Spacing.lg }}>
       <Image
         source={{ uri: `file://${store.bcsc.photoPath}` }}
         resizeMode={'contain'}

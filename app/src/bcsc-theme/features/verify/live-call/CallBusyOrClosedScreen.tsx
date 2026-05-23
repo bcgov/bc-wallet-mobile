@@ -39,7 +39,11 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
 
   return (
     <ScreenWrapper controls={controls}>
-      <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.lg }} testID={testIdWithKey('CallStatusTitle')}>
+      <ThemedText
+        variant={'headingThree'}
+        style={{ marginBottom: Spacing.lg }}
+        testID={testIdWithKey('CallStatusTitle')}
+      >
         {busy ? t('BCSC.VideoCall.CallBusyOrClosed.AllAgentsBusy') : t('BCSC.VideoCall.CallBusyOrClosed.CallUsLater')}
       </ThemedText>
 
