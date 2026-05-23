@@ -131,8 +131,6 @@ dependencies {
   }
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   implementation "com.google.android.gms:play-services-base:18.2.0"
-  implementation "com.google.android.play:integrity:1.2.0"
-  
   // Required: Nimbus JOSE library for JWT operations
   implementation 'com.nimbusds:nimbus-jose-jwt:9.37.3'
   

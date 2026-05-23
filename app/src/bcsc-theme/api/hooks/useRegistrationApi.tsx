@@ -5,7 +5,7 @@ import { AppError, ErrorRegistry } from '@/errors'
 import { ErrorDefinition } from '@/errors/errorRegistry'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
-import { getAppStoreReceipt, googleAttestation } from '@bifold/react-native-attestation'
+import { getAppStoreReceipt } from '@bifold/react-native-attestation'
 import { useCallback, useMemo } from 'react'
 import { Platform } from 'react-native'
 import {
@@ -13,7 +13,6 @@ import {
   BcscNativeErrorCodes,
   getAccount,
   getAccountSecurityMethod,
-  getDeviceId,
   getDynamicClientRegistrationBody,
   isBcscNativeError,
   setAccount,
@@ -94,9 +93,9 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
   /**
    * Retrieves platform-specific attestation for device verification.
    *
-   * On iOS, fetches App Store receipt. On Android, obtains nonce from server
-   * and generates Play Integrity attestation. Attestation failures are logged
-   * but non-blocking as per BCSC v3/v4 phase 1 specifications.
+   * On iOS, fetches App Store receipt. On other platforms, returns null.
+   * Attestation failures are logged but non-blocking as per BCSC v3/v4
+   * phase 1 specifications.
    *
    * @returns Promise resolving to attestation string or null if failed
    * @throws Error if BCSC client is not ready
@@ -112,23 +111,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
       if (Platform.OS === 'ios') {
         attestation = await getAppStoreReceipt()
         logger.debug('iOS App Store Receipt attestation complete')
-      } else if (Platform.OS === 'android') {
-        const deviceId = await getDeviceId()
-        const {
-          data: { nonce },
-        } = await apiClient.post<NonceResponseData>(
-          `${apiClient.baseURL}/device/nonces/${Platform.OS}`,
-          {
-            device_id: deviceId,
-          },
-          {
-            skipBearerAuth: true,
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          }
-        )
-        logger.debug('Received nonce for Android Play Integrity attestation')
-        attestation = await googleAttestation(nonce)
-        logger.debug('Android Play Integrity attestation complete')
       }
     } catch (err) {
       // attestation in BCSC v3 (and v4 phase 1) is non-blocking, so we log and continue

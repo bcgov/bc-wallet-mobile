@@ -8,12 +8,7 @@ import {
   BifoldError,
   removeExistingInvitationsById,
 } from '@bifold/core'
-import {
-  appleAttestation,
-  generateKey,
-  googleAttestation,
-  isPlayIntegrityAvailable,
-} from '@bifold/react-native-attestation'
+import { appleAttestation, generateKey } from '@bifold/react-native-attestation'
 import { AnonCredsCredentialOffer } from '@credo-ts/anoncreds'
 import {
   Agent,
@@ -412,8 +407,13 @@ export class AttestationMonitor implements AttestationMonitorI {
         return
       }
 
-      // 4. If no, get a new attestation credential
-      await this.requestAttestationCredential()
+      // 4. If no, get a new attestation credential.
+      try {
+        await this.requestAttestationCredential()
+      } catch {
+        await this.agent.proofs.declineRequest({ proofRecordId: proof.id })
+        this.stopWorkflow(AttestationEventTypes.FailedHandleProof)
+      }
     } catch (error) {
       this.log?.error('Failed to handle proof', error as Error)
 
@@ -569,8 +569,6 @@ export class AttestationMonitor implements AttestationMonitorI {
     switch (Platform.OS) {
       case 'ios':
         return this.generateAppleAttestation(nonce)
-      case 'android':
-        return this.generateGoogleAttestation(nonce)
 
       default:
         throw new BifoldError(
@@ -599,51 +597,6 @@ export class AttestationMonitor implements AttestationMonitorI {
     } as AttestationRequestParams
 
     this.log?.info('On-device Apple attestation complete')
-
-    return attestationRequest
-  }
-
-  private async generateGoogleAttestation(nonce: string) {
-    const common = this.commonAttestationMessageComponent()
-
-    this.log?.info('Checking if Play Integrity is available')
-
-    const available = await isPlayIntegrityAvailable()
-    if (!available) {
-      this.log?.error('Google Play Integrity is unavailable')
-
-      const error = new BifoldError(
-        'Google Play Integrity Unavailable',
-        'Google Play Integrity is required for device attestation but is not available on this device.',
-        'The device attestation process cannot be completed without Google Play Integrity services.',
-        AttestationErrorCodes.IntegrityUnavailable
-      )
-
-      throw error
-    } else {
-      this.log?.info('Google Play Integrity is available')
-    }
-
-    this.log?.info('Using Google on-device attestation')
-
-    let tokenString: string
-    try {
-      tokenString = await googleAttestation(nonce)
-    } catch (error) {
-      const bifoldError = new BifoldError(
-        'Google Attestation Error',
-        'There was a problem with the Google Integrity API.',
-        (error as Error)?.message || 'No details provided.',
-        AttestationErrorCodes.IntegrityUnavailable
-      )
-      throw bifoldError
-    }
-    const attestationRequest = {
-      ...common,
-      platform: 'google',
-      attestation_object: tokenString,
-    } as AttestationRequestParams
-    this.log?.info('On-device Google attestation complete')
 
     return attestationRequest
   }

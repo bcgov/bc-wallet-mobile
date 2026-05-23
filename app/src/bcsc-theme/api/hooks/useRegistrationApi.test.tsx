@@ -48,7 +48,6 @@ jest.mock('@/bcsc-theme/utils/push-notification-tokens', () => ({
 
 jest.mock('@bifold/react-native-attestation', () => ({
   getAppStoreReceipt: jest.fn().mockResolvedValue('mock-ios-receipt'),
-  googleAttestation: jest.fn().mockResolvedValue('mock-google-attestation'),
 }))
 
 const mockApiClient = {

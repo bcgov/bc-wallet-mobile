@@ -896,7 +896,7 @@ export const ErrorRegistry = {
     appEvent: AppEventCode.ATTESTATION_GENERATION_ERROR,
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.VERIFICATION,
-    message: 'Platform attestation generation failed — Play Integrity or App Attest error',
+    message: 'Platform attestation generation failed — App Attest error',
   },
   ATTESTATION_VALIDATION_ERROR: {
     statusCode: 3104,
@@ -917,7 +917,7 @@ export const ErrorRegistry = {
     appEvent: AppEventCode.ATTESTATION_INTEGRITY_UNAVAILABLE,
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.VERIFICATION,
-    message: 'Platform integrity API (Play Integrity / App Attest) is not available on this device',
+    message: 'Platform integrity API (App Attest) is not available on this device',
   },
   ATTESTATION_GENERAL_PROOF_ERROR: {
     statusCode: 3107,
