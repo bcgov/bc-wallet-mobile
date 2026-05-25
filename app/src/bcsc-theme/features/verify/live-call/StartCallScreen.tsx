@@ -21,7 +21,7 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Image, ImageErrorEvent, PermissionsAndroid, Platform, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, Image, ImageErrorEvent, PermissionsAndroid, Platform, StyleSheet, View } from 'react-native'
 import { useMicrophonePermission } from 'react-native-vision-camera'
 import ServicePeriodList from './components/ServicePeriodList'
 
@@ -43,6 +43,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   const { liveCallFileUploadAlert } = useAlerts(navigation)
   const [isWaitingForPermissions, setIsWaitingForPermissions] = useState(false)
   const [formattedHours, setFormattedHours] = useState<FormattedServicePeriod[]>([])
+  const [hoursLoading, setHoursLoading] = useState(true)
 
   useEffect(() => {
     videoCallApi
@@ -53,6 +54,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
         logger.error('Error loading live call service hours:', error as Error)
         setFormattedHours([])
       })
+      .finally(() => setHoursLoading(false))
   }, [videoCallApi, logger])
 
   const styles = StyleSheet.create({
@@ -171,7 +173,11 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
         {t('BCSC.VideoCall.CallBusyOrClosed.HoursOfService')}
       </ThemedText>
       <View style={{ marginTop: Spacing.sm }}>
-        <ServicePeriodList items={formattedHours} />
+        {hoursLoading ? (
+          <ActivityIndicator style={{ alignSelf: 'center' }} />
+        ) : (
+          <ServicePeriodList items={formattedHours} />
+        )}
       </View>
     </ScreenWrapper>
   )
