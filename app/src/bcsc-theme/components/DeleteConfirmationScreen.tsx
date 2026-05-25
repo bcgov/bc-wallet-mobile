@@ -12,6 +12,7 @@ interface DeleteConfirmationScreenProps {
   confirmLabel: string
   loadingLabel: string
   onConfirm: () => Promise<void>
+  disabled?: boolean
 }
 
 const DeleteConfirmationScreen: React.FC<DeleteConfirmationScreenProps> = ({
@@ -20,6 +21,7 @@ const DeleteConfirmationScreen: React.FC<DeleteConfirmationScreenProps> = ({
   confirmLabel,
   loadingLabel,
   onConfirm,
+  disabled = false,
 }) => {
   const { Spacing } = useTheme()
   const navigation = useNavigation()
@@ -67,6 +69,7 @@ const DeleteConfirmationScreen: React.FC<DeleteConfirmationScreenProps> = ({
           title={confirmLabel}
           testID={testIdWithKey('ConfirmDestructiveAction')}
           onPress={onPress}
+          disabled={disabled}
         />
         <Button
           accessibilityLabel={t('Global.Cancel')}

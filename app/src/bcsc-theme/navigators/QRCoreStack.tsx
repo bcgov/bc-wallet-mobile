@@ -1,4 +1,4 @@
-import { AgentReadyGate } from '@/bcsc-theme/features/agent'
+import { AgentReadyGate, BifoldScope } from '@/bcsc-theme/features/agent'
 import { VerifyPromptScreen } from '@/bcsc-theme/features/onboarding/VerifyPromptScreen'
 import ManualPairing from '@/bcsc-theme/features/pairing/ManualPairing'
 import QRDisplay from '@/bcsc-theme/features/qr-core/QRDisplay'
@@ -35,7 +35,9 @@ const PairingCodeScreen: React.FC = () => {
 // so gate the Scanner tab behind agent init.
 const ScopedQRScanner: React.FC = () => (
   <AgentReadyGate testID={testIdWithKey('Scan.Loading')}>
-    <QRScanner />
+    <BifoldScope>
+      <QRScanner />
+    </BifoldScope>
   </AgentReadyGate>
 )
 

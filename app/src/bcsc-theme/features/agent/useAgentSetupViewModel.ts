@@ -221,17 +221,26 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     if (!currentAgent) {
       throw new Error('WalletReset: Agent is not initialized')
     }
+
+    // 1. Stop background attestation polling so it doesn't interfere during teardown
     attestationMonitor?.stop()
+
+    // 2. deregister push notifications - failures are non-fatal
     await deactivate(currentAgent).catch((err) => logger.warn(`Push notification deactivation failed: ${err}`))
+
+    // 3. shut down the agent (closes connections, stops transports, etc.)
     await shutdownAgent(currentAgent, logger)
+
+    // 4. delete the wallet store (credential data, connections, ect.)
     try {
       await currentAgent.modules.askar.deleteStore()
     } finally {
+      // 5. Clear agent state so the setup flow re-initializes a fresh wallet
       agentRef.current = null
       setAgent(null)
       setError(null)
       setStatus('idle')
-      setRetryCount((c) => c + 1)
+      setRetryCount((c) => c + 1) // triggers useEffect to restart agent setup
     }
   }, [logger, attestationMonitor])
 

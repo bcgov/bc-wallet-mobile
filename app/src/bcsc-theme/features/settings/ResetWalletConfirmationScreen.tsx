@@ -1,7 +1,7 @@
 import DeleteConfirmationScreen from '@/bcsc-theme/components/DeleteConfirmationScreen'
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { useNavigation } from '@react-navigation/native'
-import React, { useRef } from 'react'
+import React, { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 const ResetWalletConfirmationScreen: React.FC = () => {
@@ -9,8 +9,10 @@ const ResetWalletConfirmationScreen: React.FC = () => {
   const navigation = useNavigation()
   const { resetWallet } = useBCSCAgent()
   const resetTriggered = useRef(false)
+  const [disabled, setDisabled] = useState(false)
 
   const onConfirm = async () => {
+    setDisabled(true)
     resetTriggered.current = true
     await resetWallet()
     // fixes flicker caused by navigation animation interaction with loading screen
@@ -25,6 +27,7 @@ const ResetWalletConfirmationScreen: React.FC = () => {
       confirmLabel={t('BCSC.Wallet.Reset')}
       loadingLabel={t('BCSC.Wallet.Resetting')}
       onConfirm={onConfirm}
+      disabled={disabled}
     />
   )
 }
