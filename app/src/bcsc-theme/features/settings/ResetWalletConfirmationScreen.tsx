@@ -13,6 +13,8 @@ const ResetWalletConfirmationScreen: React.FC = () => {
   const onConfirm = async () => {
     resetTriggered.current = true
     await resetWallet()
+    // fixes flicker caused by navigation animation interaction with loading screen
+    navigation.setOptions({ animationEnabled: false })
     navigation.goBack()
   }
 
