@@ -26,7 +26,13 @@ describe('BifoldScope', () => {
   })
 
   it('renders children without Bifold providers when the agent is not ready', () => {
-    mockUseBCSCAgent.mockReturnValue({ agent: null, loading: true, error: null, retry: jest.fn(), resetWallet: jest.fn() })
+    mockUseBCSCAgent.mockReturnValue({
+      agent: null,
+      loading: true,
+      error: null,
+      retry: jest.fn(),
+      resetWallet: jest.fn(),
+    })
 
     const { getByText } = render(
       <BifoldScope>

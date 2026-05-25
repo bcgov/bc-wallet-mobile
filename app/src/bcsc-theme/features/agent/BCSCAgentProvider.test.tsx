@@ -24,7 +24,13 @@ describe('BCSCAgentProvider', () => {
   })
 
   it('exposes loading=true while idle', () => {
-    mockViewModel.mockReturnValue({ agent: null, status: 'idle', error: null, retry: jest.fn(), resetWallet: jest.fn() })
+    mockViewModel.mockReturnValue({
+      agent: null,
+      status: 'idle',
+      error: null,
+      retry: jest.fn(),
+      resetWallet: jest.fn(),
+    })
 
     const { getByText } = render(
       <BCSCAgentProvider>
@@ -36,7 +42,13 @@ describe('BCSCAgentProvider', () => {
   })
 
   it('exposes loading=true while initializing', () => {
-    mockViewModel.mockReturnValue({ agent: null, status: 'initializing', error: null, retry: jest.fn(), resetWallet: jest.fn() })
+    mockViewModel.mockReturnValue({
+      agent: null,
+      status: 'initializing',
+      error: null,
+      retry: jest.fn(),
+      resetWallet: jest.fn(),
+    })
 
     const { getByText } = render(
       <BCSCAgentProvider>

@@ -118,7 +118,7 @@ exports[`RemoveAccountConfirmation renders correctly 1`] = `
               "padding": 16,
             }
           }
-          testID="com.ariesbifold:id/RemoveAccount"
+          testID="com.ariesbifold:id/ConfirmDestructiveAction"
         >
           <View
             style={
