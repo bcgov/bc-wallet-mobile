@@ -31,7 +31,6 @@ import { AccountRenewalFirstWarningScreen } from '../features/account/AccountRen
 import { AccountRenewalInformationScreen } from '../features/account/AccountRenewalInformationScreen'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import { MainRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
-import { MainResetWalletConfirmationScreen } from '../features/settings/ResetWalletConfirmationScreen'
 import { AgentReadyGate, BifoldScope } from '../features/agent'
 import { MainChangePINScreen } from '../features/auth/MainChangePINScreen'
 import { MainChangeSecurityScreen } from '../features/auth/MainChangeSecurityScreen'
@@ -49,6 +48,7 @@ import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsScreen'
 import { MainPrivacyPolicyScreen } from '../features/settings/MainPrivacyPolicyScreen'
 import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
+import { MainResetWalletConfirmationScreen } from '../features/settings/ResetWalletConfirmationScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
@@ -58,7 +58,9 @@ import BCSCTabStack from './TabStack'
 
 const ScopedCredentialDetails: React.FC<React.ComponentProps<typeof CredentialDetails>> = (props) => (
   <AgentReadyGate testID={testIdWithKey('CredentialDetails.Loading')}>
-    <CredentialDetails {...props} />
+    <BifoldScope>
+      <CredentialDetails {...props} />
+    </BifoldScope>
   </AgentReadyGate>
 )
 
@@ -119,8 +121,7 @@ const MainStack: React.FC = () => {
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
-      <BifoldScope>
-        <Stack.Navigator
+      <Stack.Navigator
           initialRouteName={initialRouteName}
           screenOptions={{
             ...defaultStackOptions,
@@ -371,7 +372,6 @@ const MainStack: React.FC = () => {
             }}
           />
         </Stack.Navigator>
-      </BifoldScope>
     </View>
   )
 }
