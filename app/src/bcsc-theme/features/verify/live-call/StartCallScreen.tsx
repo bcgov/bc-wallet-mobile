@@ -1,6 +1,8 @@
+import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { formatServiceAndUnavailableHours, FormattedServicePeriod } from '@/bcsc-theme/utils/service-hours-formatter'
 import BulletPointWithText from '@/components/BulletPointWithText'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
@@ -17,10 +19,11 @@ import {
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Image, ImageErrorEvent, PermissionsAndroid, Platform, StyleSheet } from 'react-native'
+import { Image, ImageErrorEvent, PermissionsAndroid, Platform, StyleSheet, View } from 'react-native'
 import { useMicrophonePermission } from 'react-native-vision-camera'
+import ServicePeriodList from './components/ServicePeriodList'
 
 type StartCallScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.StartCall>
@@ -28,9 +31,10 @@ type StartCallScreenProps = {
 
 const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   const { ButtonLoading } = useAnimatedComponents()
-  const { Spacing } = useTheme()
+  const { Spacing, ColorPalette } = useTheme()
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
+  const { video: videoCallApi } = useApi()
   const { hasPermission: hasMicrophonePermission, requestPermission: requestMicrophonePermission } =
     useMicrophonePermission()
   const [showPermissionDisabled, setShowPermissionDisabled] = useState(false)
@@ -38,6 +42,18 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   const hasRequestedPermission = useRef(false)
   const { liveCallFileUploadAlert } = useAlerts(navigation)
   const [isWaitingForPermissions, setIsWaitingForPermissions] = useState(false)
+  const [formattedHours, setFormattedHours] = useState<FormattedServicePeriod[]>([])
+
+  useEffect(() => {
+    videoCallApi
+      .getServiceHours()
+      .then((serviceHours) => setFormattedHours(formatServiceAndUnavailableHours(serviceHours)))
+      .catch((error) => {
+        // ServicePeriodList falls back to the default hours string when the list is empty
+        logger.error('Error loading live call service hours:', error as Error)
+        setFormattedHours([])
+      })
+  }, [videoCallApi, logger])
 
   const styles = StyleSheet.create({
     // At smaller sizes the Image tag will ignore exif tags, which provide orientation
@@ -50,6 +66,11 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
       overflow: 'hidden',
       transform: [{ scale: 0.333 }], // scale to match thumbnailHeight
       margin: -100, // -height * scale
+      // 'cover' (set on the Image) fills the box edge-to-edge so the border has no letterbox
+      // gap to span. The border is rendered before the 0.333 scale above, so 6 lands on a ~2px
+      // visible frame — matching the gold stroke of the selfie capture mask (TakePhotoScreen).
+      borderWidth: 6,
+      borderColor: ColorPalette.brand.highlight,
     },
     bulletContainer: {
       flexDirection: 'row',
@@ -123,17 +144,35 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
     <ScreenWrapper padded={false} controls={controls} scrollViewContainerStyle={{ padding: Spacing.lg }}>
       <Image
         source={{ uri: `file://${store.bcsc.photoPath}` }}
-        resizeMode={'contain'}
+        resizeMode={'cover'}
         style={styles.image}
         onError={handleImageError}
       />
-      <ThemedText variant={'headingThree'} style={{ marginTop: Spacing.xxl }}>
+      <ThemedText variant={'headingThree'} style={{ marginTop: Spacing.xl }}>
+        {t('BCSC.VideoCall.StartVideoCallTitle')}
+      </ThemedText>
+      <ThemedText variant={'bold'} style={{ marginTop: Spacing.md }}>
         {t('BCSC.VideoCall.StartVideoCallDescription')}
       </ThemedText>
-      <ThemedText style={{ marginTop: Spacing.lg }}>{t('BCSC.VideoCall.YouShould')}</ThemedText>
-      <BulletPointWithText translationKey={'BCSC.VideoTips.PrivatePlace'} />
-      <BulletPointWithText translationKey={'BCSC.VideoTips.OnlyPerson'} />
-      <BulletPointWithText translationKey={'BCSC.VideoTips.RemoveGlasses'} />
+      <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.lg }}>
+        {t('BCSC.VideoCall.YouShould')}
+      </ThemedText>
+      <BulletPointWithText translationKey={'BCSC.VideoTips.PrivatePlace'} iconColor={ColorPalette.grayscale.darkGrey} />
+      <BulletPointWithText translationKey={'BCSC.VideoTips.OnlyPerson'} iconColor={ColorPalette.grayscale.darkGrey} />
+      <BulletPointWithText
+        translationKey={'BCSC.VideoTips.RemoveGlasses'}
+        iconColor={ColorPalette.grayscale.darkGrey}
+      />
+      <ThemedText
+        variant={'headingFour'}
+        style={{ marginTop: Spacing.lg }}
+        testID={testIdWithKey('HoursOfServiceTitle')}
+      >
+        {t('BCSC.VideoCall.CallBusyOrClosed.HoursOfService')}
+      </ThemedText>
+      <View style={{ marginTop: Spacing.sm }}>
+        <ServicePeriodList items={formattedHours} />
+      </View>
     </ScreenWrapper>
   )
 }

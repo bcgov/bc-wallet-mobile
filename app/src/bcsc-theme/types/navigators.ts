@@ -83,7 +83,6 @@ export enum BCSCScreens {
   EvidenceTypeList = 'BCSCEvidenceTypeList',
   EvidenceCapture = 'Document Photo Capture',
   EvidenceIDCollection = 'Secondary ID Document Data Entry',
-  BeforeYouCall = 'Verify by Video Call Prep',
   StartCall = 'Video Verify Call Now Progress',
   CallBusyOrClosed = 'Video Verify Closed',
   LiveCall = 'Video Call: In-Call',
@@ -209,7 +208,6 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.EvidenceTypeList]: { cardProcess: BCSCCardProcess; photoFilter?: 'photo' | 'nonPhoto' }
   [BCSCScreens.EvidenceCapture]: { cardType: EvidenceType }
   [BCSCScreens.EvidenceIDCollection]: { cardType: EvidenceType; documentNumber?: string }
-  [BCSCScreens.BeforeYouCall]: { formattedHours: FormattedServicePeriod[] }
   [BCSCScreens.StartCall]: undefined
   [BCSCScreens.CallBusyOrClosed]: { busy: boolean; formattedHours: FormattedServicePeriod[] }
   [BCSCScreens.LiveCall]: undefined

@@ -34,7 +34,7 @@ exports[`StartCall renders correctly 1`] = `
     <View>
       <Image
         onError={[Function]}
-        resizeMode="contain"
+        resizeMode="cover"
         source={
           {
             "uri": "file://undefined",
@@ -44,6 +44,8 @@ exports[`StartCall renders correctly 1`] = `
           {
             "alignSelf": "center",
             "aspectRatio": 0.7692307692307692,
+            "borderColor": "#FCBA19",
+            "borderWidth": 6,
             "height": 300,
             "margin": -100,
             "overflow": "hidden",
@@ -66,7 +68,25 @@ exports[`StartCall renders correctly 1`] = `
               "fontWeight": "bold",
             },
             {
-              "marginTop": 40,
+              "marginTop": 32,
+            },
+          ]
+        }
+      >
+        BCSC.VideoCall.StartVideoCallTitle
+      </Text>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "bold",
+            },
+            {
+              "marginTop": 16,
             },
           ]
         }
@@ -80,8 +100,8 @@ exports[`StartCall renders correctly 1`] = `
             {
               "color": "#313132",
               "fontFamily": "BCSans-Regular",
-              "fontSize": 18,
-              "fontWeight": "normal",
+              "fontSize": 21,
+              "fontWeight": "bold",
             },
             {
               "marginTop": 24,
@@ -284,6 +304,50 @@ exports[`StartCall renders correctly 1`] = `
           <span>
             BCSC.VideoTips.RemoveGlasses
           </span>
+        </Text>
+      </View>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 21,
+              "fontWeight": "bold",
+            },
+            {
+              "marginTop": 24,
+            },
+          ]
+        }
+        testID="com.ariesbifold:id/HoursOfServiceTitle"
+      >
+        BCSC.VideoCall.CallBusyOrClosed.HoursOfService
+      </Text>
+      <View
+        style={
+          {
+            "marginTop": 8,
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              undefined,
+            ]
+          }
+          testID="com.ariesbifold:id/ServiceHours"
+        >
+          BCSC.VideoCall.DefaultHours
         </Text>
       </View>
     </View>
