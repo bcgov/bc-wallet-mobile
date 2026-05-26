@@ -42,7 +42,6 @@ import EmailConfirmationScreen from '../features/verify/email/EmailConfirmationS
 import EmailVerifiedScreen from '../features/verify/email/EmailVerifiedScreen'
 import EnterEmailScreen from '../features/verify/email/EnterEmailScreen'
 import VerifyInPersonScreen from '../features/verify/in-person/VerifyInPersonScreen'
-import BeforeYouCallScreen from '../features/verify/live-call/BeforeYouCallScreen'
 import CallBusyOrClosedScreen from '../features/verify/live-call/CallBusyOrClosedScreen'
 import LiveCallScreen from '../features/verify/live-call/LiveCallScreen'
 import StartCallScreen from '../features/verify/live-call/StartCallScreen'
@@ -209,7 +208,6 @@ const VerifyStack = () => {
           title: route.params.title,
         })}
       />
-      <Stack.Screen name={BCSCScreens.BeforeYouCall} component={BeforeYouCallScreen} />
       <Stack.Screen name={BCSCScreens.StartCall} component={StartCallScreen} />
       <Stack.Screen name={BCSCScreens.LiveCall} component={LiveCallScreen} options={{ headerShown: false }} />
       <Stack.Screen name={BCSCScreens.VerifyNotComplete} component={VerifyNotCompleteScreen} />

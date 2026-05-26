@@ -1,3 +1,4 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
@@ -28,18 +29,24 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
   }
 
   const controls = (
-    <Button
-      buttonType={ButtonType.Primary}
-      testID={testIdWithKey('SendVideo')}
-      accessibilityLabel={t('BCSC.VideoCall.CallBusyOrClosed.SendVideoInstead')}
-      title={t('BCSC.VideoCall.CallBusyOrClosed.SendVideoInstead')}
-      onPress={onPressSendVideo}
-    />
+    <ControlContainer>
+      <Button
+        buttonType={ButtonType.Primary}
+        testID={testIdWithKey('SendVideo')}
+        accessibilityLabel={t('BCSC.VideoCall.CallBusyOrClosed.SendVideoInstead')}
+        title={t('BCSC.VideoCall.CallBusyOrClosed.SendVideoInstead')}
+        onPress={onPressSendVideo}
+      />
+    </ControlContainer>
   )
 
   return (
-    <ScreenWrapper controls={controls}>
-      <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.lg }} testID={testIdWithKey('CallStatusTitle')}>
+    <ScreenWrapper padded={false} controls={controls} scrollViewContainerStyle={{ padding: Spacing.lg }}>
+      <ThemedText
+        variant={'headingThree'}
+        style={{ marginBottom: Spacing.lg }}
+        testID={testIdWithKey('CallStatusTitle')}
+      >
         {busy ? t('BCSC.VideoCall.CallBusyOrClosed.AllAgentsBusy') : t('BCSC.VideoCall.CallBusyOrClosed.CallUsLater')}
       </ThemedText>
 

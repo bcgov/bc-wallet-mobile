@@ -130,7 +130,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
           <View
             style={
               {
-                "marginRight": 24,
+                "marginRight": 16,
               }
             }
           >
@@ -263,7 +263,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
           <View
             style={
               {
-                "marginRight": 24,
+                "marginRight": 16,
               }
             }
           >
@@ -396,7 +396,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
           <View
             style={
               {
-                "marginRight": 24,
+                "marginRight": 16,
               }
             }
           >
@@ -643,7 +643,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
           <View
             style={
               {
-                "marginRight": 24,
+                "marginRight": 16,
               }
             }
           >
@@ -776,7 +776,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
           <View
             style={
               {
-                "marginRight": 24,
+                "marginRight": 16,
               }
             }
           >
@@ -909,7 +909,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
           <View
             style={
               {
-                "marginRight": 24,
+                "marginRight": 16,
               }
             }
           >
@@ -1156,7 +1156,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
           <View
             style={
               {
-                "marginRight": 24,
+                "marginRight": 16,
               }
             }
           >
@@ -1289,7 +1289,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
           <View
             style={
               {
-                "marginRight": 24,
+                "marginRight": 16,
               }
             }
           >
@@ -1422,7 +1422,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
           <View
             style={
               {
-                "marginRight": 24,
+                "marginRight": 16,
               }
             }
           >

@@ -23,10 +23,10 @@ exports[`ContactUs renders correctly 1`] = `
   <RCTScrollView
     contentContainerStyle={
       [
+        false,
         {
-          "padding": 16,
+          "padding": 24,
         },
-        undefined,
       ]
     }
     showsVerticalScrollIndicator={false}

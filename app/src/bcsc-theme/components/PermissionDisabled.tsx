@@ -1,6 +1,7 @@
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import { Linking, Platform, StyleSheet, View } from 'react-native'
+import { ControlContainer } from './ControlContainer'
 
 export type PermissionType = 'camera' | 'microphone' | 'notifications' | 'cameraAndMicrophone'
 
@@ -130,7 +131,7 @@ export const PermissionDisabled = ({
   const steps = keys.steps[platform]
 
   const controls = (
-    <>
+    <ControlContainer>
       <Button
         title={t('BCSC.PermissionDisabled.OpenSettings')}
         buttonType={ButtonType.Primary}
@@ -147,16 +148,18 @@ export const PermissionDisabled = ({
           accessibilityLabel={t('BCSC.PermissionDisabled.ContinueWithoutNotifications')}
         />
       ) : null}
-    </>
+    </ControlContainer>
   )
 
   return (
     <ScreenWrapper
+      padded={false}
       controls={controls}
       style={headerPadding ? { paddingTop: Spacing.lg } : {}}
       edges={headerPadding ? ['top', 'bottom'] : undefined}
+      scrollViewContainerStyle={{ padding: Spacing.lg }}
     >
-      <ThemedText variant={'headingTwo'} style={styles.title}>
+      <ThemedText variant={'headingThree'} style={styles.title}>
         {t(keys.title)}
       </ThemedText>
       <ThemedText style={styles.description}>{t(keys.description)}</ThemedText>

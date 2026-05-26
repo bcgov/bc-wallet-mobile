@@ -118,7 +118,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
         return
       }
 
-      navigation.navigate(BCSCScreens.BeforeYouCall, { formattedHours })
+      navigation.navigate(BCSCScreens.PhotoInstructions, { forLiveCall: true })
     } catch (error) {
       logger.error('Error checking service availability:', error as Error)
       navigation.navigate(BCSCScreens.CallBusyOrClosed, {

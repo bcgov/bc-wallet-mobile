@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { LoadingScreenContent } from '@/bcsc-theme/features/splash-loading/LoadingScreenContent'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { Spacing } from '@/bcwallet-theme/theme'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useEffect } from 'react'
@@ -33,7 +34,13 @@ const UploadingScreen = ({ navigation }: UploadingScreenProps) => {
   )
 
   return (
-    <ScreenWrapper controls={controls} edges={['top', 'bottom', 'left', 'right']} scrollable={false}>
+    <ScreenWrapper
+      scrollViewContainerStyle={{ padding: Spacing.lg }}
+      padded={false}
+      controls={controls}
+      edges={['top', 'bottom', 'left', 'right']}
+      scrollable={false}
+    >
       <LoadingScreenContent iconOnTop={false} message={uploadMessage ?? undefined} />
     </ScreenWrapper>
   )

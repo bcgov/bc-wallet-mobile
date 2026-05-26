@@ -43,7 +43,7 @@ const WhatAreContactsScreen = ({ navigation }: WhatAreContactsScreenProps) => {
 
   return (
     <ScreenWrapper scrollViewContainerStyle={{ gap: Spacing.lg, padding: Spacing.lg }}>
-      <ThemedText variant="headingTwo" style={{ color: ColorPalette.brand.primary }}>
+      <ThemedText variant="headingThree" style={{ color: ColorPalette.brand.primary }}>
         {t('BCSC.Contacts.WhatAre.Title')}
       </ThemedText>
       <ThemedText>{t('BCSC.Contacts.WhatAre.Description1')}</ThemedText>
