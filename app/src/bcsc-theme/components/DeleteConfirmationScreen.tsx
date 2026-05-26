@@ -9,7 +9,6 @@ interface DeleteConfirmationScreenProps {
   title: string
   description: string
   confirmLabel: string
-  loadingLabel: string
   onConfirm: () => Promise<void>
 }
 

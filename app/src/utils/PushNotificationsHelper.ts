@@ -264,8 +264,8 @@ const setDeviceInfo = async (agent: Agent, blankDeviceToken = false): Promise<vo
     agent.config.logger.info(`Successfully sent device info to mediator [${mediator.id}]`)
     if (blankDeviceToken) {
       await PersistentStorage.storeValueForKey<string>(BCLocalStorageKeys.DeviceToken, 'blank')
-    } else {
-      await PersistentStorage.storeValueForKey<string>(BCLocalStorageKeys.DeviceToken, token!)
+    } else if (token) {
+      await PersistentStorage.storeValueForKey<string>(BCLocalStorageKeys.DeviceToken, token)
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? `${error.name}: ${error.message}` : String(error)

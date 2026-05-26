@@ -30,7 +30,6 @@ const ResetWalletConfirmationScreen: React.FC = () => {
       title={t('BCSC.Wallet.ResetTitle')}
       description={t('BCSC.Wallet.ResetDescription')}
       confirmLabel={t('BCSC.Wallet.Reset')}
-      loadingLabel={t('BCSC.Wallet.Resetting')}
       onConfirm={onConfirm}
     />
   )

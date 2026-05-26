@@ -16,7 +16,6 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
       title={t('BCSC.Account.RemoveAccountTitle')}
       description={t('BCSC.Account.RemoveAccountParagraph')}
       confirmLabel={t('BCSC.Account.RemoveAccount')}
-      loadingLabel={t('BCSC.Account.RemoveAccountLoading')}
       onConfirm={onConfirm}
     />
   )
