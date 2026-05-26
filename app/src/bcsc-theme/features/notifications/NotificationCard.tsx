@@ -19,6 +19,7 @@ interface NotificationCardProps {
   timestamp?: string
   badge?: string
   icon?: string
+  backgroundColor?: string
 }
 
 /**
@@ -40,7 +41,9 @@ const NotificationCard: React.FC<NotificationCardProps> = (props) => {
     container: {
       paddingHorizontal: Spacing.lg,
       paddingVertical: Spacing.md,
-      backgroundColor: isV1 ? ColorPalette.brand.modalTertiaryBackground : cardStyle.backgroundColor,
+      backgroundColor: isV1
+        ? ColorPalette.brand.modalTertiaryBackground
+        : (props.backgroundColor ?? cardStyle.backgroundColor),
       ...(isV1 && {
         borderWidth: 1,
         borderColor: ColorPalette.notification.infoBorder,

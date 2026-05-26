@@ -12,6 +12,7 @@ import {
   parsedSchema,
   Screens,
   useStore,
+  useTheme,
 } from '@bifold/core'
 import { useConnectionById } from '@bifold/react-hooks'
 import { markProofAsViewed } from '@bifold/verifier'
@@ -128,6 +129,7 @@ const BasicMessageNotification = ({ notification }: CredentialNotificationProps)
 const CredentialOfferNotification = ({ notification }: CredentialNotificationProps) => {
   const { t } = useTranslation()
   const { agent } = useBCSCAgent()
+  const { ColorPalette } = useTheme()
   const [store] = useStore()
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const credential = notification as DidCommCredentialExchangeRecord
@@ -157,6 +159,7 @@ const CredentialOfferNotification = ({ notification }: CredentialNotificationPro
       description={description}
       icon="card-membership"
       cardType={InfoBoxType.Info}
+      backgroundColor={ColorPalette.grayscale.white}
       onPress={() => navigation.navigate(BCSCScreens.ConnectionLoading, { credentialId: credential.id })}
       onClose={handleClose}
       timestamp={formatTimestamp(notification.createdAt)}
