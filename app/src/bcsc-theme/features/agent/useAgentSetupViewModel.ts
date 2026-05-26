@@ -218,8 +218,31 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
 
   const resetWallet = useCallback(async () => {
     const currentAgent = agentRef.current
+
     if (!currentAgent) {
-      throw new Error('WalletReset: Agent is not initialized')
+      // Agent is unavailable — a previous reset was likely interrupted mid-shutdown
+      // (e.g. app was killed). Build an uninitialized agent so we can reach the Askar
+      // store manager and delete the store by its file URI without needing it open.
+      if (walletKey) {
+        const tempAgent = buildAgent({
+          ledgers: indyLedgers,
+          walletSecret: { id: WALLET_ID, key: walletKey },
+          mediatorUrl,
+          walletLabel,
+          enableProxy,
+          proxyBaseUrl: Config.INDY_VDR_PROXY_URL,
+          logger,
+        })
+        await tempAgent.modules.askar
+          .deleteStore()
+          .catch((err: unknown) =>
+            logger.warn(`WalletReset: store deletion on recovery failed (may already be deleted): ${err}`)
+          )
+      }
+      setError(null)
+      setStatus('idle')
+      setRetryCount((c) => c + 1)
+      return
     }
 
     // 1. Stop background attestation polling so it doesn't interfere during teardown
@@ -242,7 +265,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
       setStatus('idle')
       setRetryCount((c) => c + 1) // triggers useEffect to restart agent setup
     }
-  }, [logger, attestationMonitor])
+  }, [logger, attestationMonitor, walletKey, indyLedgers, mediatorUrl, walletLabel, enableProxy])
 
   return { agent, status, error, retry, resetWallet }
 }
