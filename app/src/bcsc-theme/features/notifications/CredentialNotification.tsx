@@ -69,8 +69,12 @@ function formatTimestamp(date: Date): string {
   const diffMs = now.getTime() - date.getTime()
   const diffMin = Math.floor(diffMs / 60_000)
 
-  if (diffMin < 1) return 'Just now'
-  if (diffMin < 60) return `${diffMin} minute${diffMin === 1 ? '' : 's'} ago`
+  if (diffMin < 1) {
+    return 'Just now'
+  }
+  if (diffMin < 60) {
+    return `${diffMin} minute${diffMin === 1 ? '' : 's'} ago`
+  }
 
   const diffHours = Math.floor(diffMin / 60)
   if (diffHours < 24) {

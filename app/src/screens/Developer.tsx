@@ -1,3 +1,4 @@
+import NotificationTestTriggers from '@/bcsc-theme/features/notifications/NotificationTestTriggers'
 import { BCThemeNames } from '@/constants'
 import { BCDispatchAction, BCState, Mode } from '@/store'
 import {
@@ -20,7 +21,6 @@ import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import Icon from 'react-native-vector-icons/MaterialIcons'
-import NotificationTestTriggers from '@/bcsc-theme/features/notifications/NotificationTestTriggers'
 import ErrorAlertTest from './ErrorAlertTest'
 import IASEnvironment from './IASEnvironment'
 import RemoteLogWarning from './RemoteLogWarning'

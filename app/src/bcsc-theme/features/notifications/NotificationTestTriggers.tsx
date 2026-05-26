@@ -110,6 +110,8 @@ const NotificationTestTriggers: React.FC = () => {
         style={[styles.button, connections.length === 0 && styles.buttonDisabled]}
         onPress={triggerBasicMessage}
         disabled={connections.length === 0}
+        accessibilityRole="button"
+        accessibilityLabel="Trigger BasicMessage"
       >
         <Text style={styles.buttonText}>Trigger BasicMessage{connections.length === 0 ? ' (no connections)' : ''}</Text>
       </Pressable>
@@ -118,6 +120,8 @@ const NotificationTestTriggers: React.FC = () => {
         style={[styles.button, credsDone.length === 0 && styles.buttonDisabled]}
         onPress={triggerRevocation}
         disabled={credsDone.length === 0}
+        accessibilityRole="button"
+        accessibilityLabel="Trigger Revocation"
       >
         <Text style={styles.buttonText}>Trigger Revocation{credsDone.length === 0 ? ' (no credentials)' : ''}</Text>
       </Pressable>
