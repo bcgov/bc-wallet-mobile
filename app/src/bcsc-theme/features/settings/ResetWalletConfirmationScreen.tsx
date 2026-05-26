@@ -13,9 +13,9 @@ const ResetWalletConfirmationScreen: React.FC = () => {
 
   const onConfirm = async () => {
     const stopLoading = loadingScreen.startLoading(t('BCSC.Wallet.Resetting'))
+    // BifoldScope holds refernece to the agent, so during the reset the entire navigation stack is re rendered
     // Navigate back while still mounted so the navigation ref is fresh.
-    // The loading overlay covers settings during the async reset, and finally
-    // reveals it when done — no flash of the confirmation screen possible.
+    // The loading overlay covers settings until the async resetWallet finishes
     navigation.setOptions({ animationEnabled: false })
     navigation.goBack()
     try {
