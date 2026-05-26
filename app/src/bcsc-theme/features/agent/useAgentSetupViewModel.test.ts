@@ -304,9 +304,7 @@ describe('useAgentSetupViewModel', () => {
     })
 
     it('builds a temp agent and deletes store when no live agent is available', async () => {
-      jest.mocked(Bifold.useStore).mockReturnValue(
-        mockedStore({ authentication: { didAuthenticate: false } }) as never
-      )
+      jest.mocked(Bifold.useStore).mockReturnValue(mockedStore({ authentication: { didAuthenticate: false } }) as never)
       const tempAgent = mockAgent()
       jest.mocked(agentService.buildAgent).mockReturnValue(tempAgent)
 
@@ -324,9 +322,11 @@ describe('useAgentSetupViewModel', () => {
     })
 
     it('skips temp agent build when walletKey is missing and resets state', async () => {
-      jest.mocked(Bifold.useStore).mockReturnValue(
-        mockedStore({ authentication: { didAuthenticate: false }, bcscSecure: { walletKey: undefined } }) as never
-      )
+      jest
+        .mocked(Bifold.useStore)
+        .mockReturnValue(
+          mockedStore({ authentication: { didAuthenticate: false }, bcscSecure: { walletKey: undefined } }) as never
+        )
 
       const { result } = renderHook(() => useAgentSetupViewModel())
 
