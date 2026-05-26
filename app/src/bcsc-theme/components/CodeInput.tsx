@@ -26,7 +26,12 @@ const CodeInput = ({ value, onChange, error, onErrorClear, separator, textInputP
     (text: string) => {
       reportActivity?.()
       onErrorClear?.()
-      onChange(text)
+      const sanitized = text.replace(/\s+/g, '')
+      if (sanitized.length > CELL_COUNT) {
+        onChange(sanitized.slice(0, CELL_COUNT))
+        return
+      }
+      onChange(sanitized)
     },
     [onChange, onErrorClear, reportActivity]
   )
