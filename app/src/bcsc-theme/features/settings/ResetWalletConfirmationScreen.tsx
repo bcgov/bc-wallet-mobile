@@ -2,7 +2,7 @@ import DeleteConfirmationScreen from '@/bcsc-theme/components/DeleteConfirmation
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { useNavigation } from '@react-navigation/native'
-import React, { useEffect, useRef } from 'react'
+import React from 'react'
 import { useTranslation } from 'react-i18next'
 
 const ResetWalletConfirmationScreen: React.FC = () => {
@@ -11,21 +11,19 @@ const ResetWalletConfirmationScreen: React.FC = () => {
   const { resetWallet } = useBCSCAgent()
   const loadingScreen = useLoadingScreen()
 
-  const loaderRef = useRef<(() => void) | null>(null)
-
   const onConfirm = async () => {
-    loaderRef.current = loadingScreen.startLoading(t('BCSC.Wallet.Resetting'))
-    await resetWallet()
+    const stopLoading = loadingScreen.startLoading(t('BCSC.Wallet.Resetting'))
+    // Navigate back while still mounted so the navigation ref is fresh.
+    // The loading overlay covers settings during the async reset, and finally
+    // reveals it when done — no flash of the confirmation screen possible.
     navigation.setOptions({ animationEnabled: false })
     navigation.goBack()
-  }
-
-  useEffect(() => {
-    return () => {
-      loaderRef.current?.()
-      loaderRef.current = null
+    try {
+      await resetWallet()
+    } finally {
+      stopLoading()
     }
-  }, [])
+  }
 
   return (
     <DeleteConfirmationScreen
