@@ -33,7 +33,7 @@ const NotificationCard: React.FC<NotificationCardProps> = (props) => {
     container: {
       paddingHorizontal: Spacing.lg,
       paddingVertical: Spacing.md,
-      backgroundColor: cardStyle.backgroundColor,
+      backgroundColor: isV1 ? ColorPalette.brand.modalTertiaryBackground : cardStyle.backgroundColor,
       ...(isV1 && {
         borderWidth: 1,
         borderColor: ColorPalette.notification.infoBorder,
