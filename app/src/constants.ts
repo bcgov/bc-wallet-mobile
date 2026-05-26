@@ -152,7 +152,7 @@ export const CACHED_LEDGERS_TTL_DAYS = 1
 
 // Shadow constants
 export const SHADOW_CASTER_HEIGHT = 1
-export const SHADOW_SIZE = 2
+export const SHADOW_SIZE = 3
 export const SHADOW_COLOR = '#000'
 export const SHADOW_OPACITY = 0.9
 export const SHADOW_RADIUS = SHADOW_SIZE
