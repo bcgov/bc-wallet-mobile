@@ -14,6 +14,10 @@ interface RemoveContactScreenProps {
   route: RouteProp<BCSCMainStackParams, BCSCScreens.RemoveContact>
 }
 
+/**
+ * Confirmation screen for deleting a DIDComm connection record. Warns about
+ * outstanding credential exchanges, then calls `agent.didcomm.connections.deleteById`.
+ */
 const RemoveContactScreen = ({ navigation, route }: RemoveContactScreenProps) => {
   const { connectionId } = route.params
   const { t } = useTranslation()
@@ -23,7 +27,9 @@ const RemoveContactScreen = ({ navigation, route }: RemoveContactScreenProps) =>
   const [submitting, setSubmitting] = useState(false)
 
   const onConfirmRemove = useCallback(async () => {
-    if (!agent || !connection || submitting) {return}
+    if (!agent || !connection || submitting) {
+      return
+    }
     setSubmitting(true)
     try {
       const [basicMessages, proofs, offers] = await Promise.all([
@@ -34,17 +40,27 @@ const RemoveContactScreen = ({ navigation, route }: RemoveContactScreenProps) =>
           state: DidCommCredentialState.OfferReceived,
         }),
       ])
-      await Promise.allSettled([
+
+      // Delete child records first. If any fail, abort before deleting the
+      // connection itself so we don't leave orphan records pointing at a
+      // missing connectionId.
+      const childResults = await Promise.allSettled([
         ...proofs.map((p: { id: string }) => agent.modules.didcomm.proofs.deleteById(p.id)),
         ...offers.map((o: { id: string }) => agent.modules.didcomm.credentials.deleteById(o.id)),
         ...basicMessages.map((m: { id: string }) => agent.modules.didcomm.basicMessages.deleteById(m.id)),
-        agent.modules.didcomm.connections.deleteById(connection.id),
       ])
+      const childFailure = childResults.find((r) => r.status === 'rejected') as PromiseRejectedResult | undefined
+      if (childFailure) {
+        throw childFailure.reason instanceof Error ? childFailure.reason : new Error(String(childFailure.reason))
+      }
+
+      await agent.modules.didcomm.connections.deleteById(connection.id)
       // Pop both this modal and the details screen so we land on the list.
       navigation.popToTop()
       navigation.navigate(BCSCScreens.Contacts)
     } catch (err) {
-      Alert.alert(t('BCSC.Contacts.Remove.FailureTitle'), (err as Error).message)
+      const message = err instanceof Error ? err.message : String(err)
+      Alert.alert(t('BCSC.Contacts.Remove.FailureTitle'), message)
       setSubmitting(false)
     }
   }, [agent, connection, navigation, submitting, t])
@@ -53,6 +69,7 @@ const RemoveContactScreen = ({ navigation, route }: RemoveContactScreenProps) =>
     title: {
       color: ColorPalette.brand.primary,
       marginBottom: Spacing.md,
+      textAlign: 'center',
     },
     paragraph: {
       marginBottom: Spacing.md,
@@ -90,8 +107,8 @@ const RemoveContactScreen = ({ navigation, route }: RemoveContactScreenProps) =>
       <ThemedText variant="bold" style={styles.paragraph}>
         {t('BCSC.Contacts.Remove.NoLongerAble')}
       </ThemedText>
-      {bullets.map((line, i) => (
-        <View key={i} style={styles.bulletRow}>
+      {bullets.map((line) => (
+        <View key={line} style={styles.bulletRow}>
           <ThemedText style={styles.bulletGlyph}>{'•'}</ThemedText>
           <ThemedText style={styles.bulletText}>{line}</ThemedText>
         </View>

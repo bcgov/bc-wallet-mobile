@@ -16,7 +16,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import Developer from '../../screens/Developer'
-import { createMainFloatingMenuButton } from '../components/FloatingHelpMenuHeaderButton'
+import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
@@ -48,6 +48,7 @@ import { ServiceOutage } from '../features/modal/ServiceOutage'
 import { usePairingService } from '../features/pairing'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
+import ConnectionLoadingScreen from '../features/qr-core/ConnectionLoadingScreen'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
 import { ContactUsScreen } from '../features/settings/ContactUsScreen'
@@ -137,7 +138,7 @@ const MainStack: React.FC = () => {
             headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
             headerLeft: createHeaderBackButton,
             header: createHeaderWithoutBanner,
-            headerRight: createMainFloatingMenuButton(),
+            headerRight: createFloatingHelpMenuButton({ webViewScreen: BCSCScreens.MainWebView }),
           }}
         >
           <Stack.Screen
@@ -208,6 +209,16 @@ const MainStack: React.FC = () => {
             component={QRCoreStack}
             options={{
               headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name={BCSCScreens.ConnectionLoading}
+            component={ConnectionLoadingScreen}
+            options={{
+              headerShown: true,
+              headerLeft: () => null,
+              gestureEnabled: false,
+              title: t('BCSC.Scan.Connecting'),
             }}
           />
           <Stack.Screen

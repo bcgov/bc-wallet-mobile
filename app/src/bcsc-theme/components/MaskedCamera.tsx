@@ -23,6 +23,9 @@ type MaskedCameraProps = {
   cameraLabel?: string
   maskType?: MaskType
   maskLineColor?: string
+  maskLineWidth?: number
+  maskOverlayOpacity?: number
+  customPath?: string
   codeScanner?: CodeScanner
   onPhotoTaken: (path: string) => void
 }
@@ -32,7 +35,10 @@ const MaskedCamera = ({
   cameraInstructions,
   cameraLabel,
   maskLineColor,
+  maskLineWidth,
+  maskOverlayOpacity = 0,
   maskType,
+  customPath,
   codeScanner,
   cameraFace = 'back',
   cameraFormatFilter = [],
@@ -70,14 +76,13 @@ const MaskedCamera = ({
       marginBottom: safeAreaInsets.bottom,
     },
     instructionText: {
-      backgroundColor: 'transparent',
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
       position: 'absolute',
       fontWeight: 'normal',
-      top: Spacing.md,
       left: 0,
       right: 0,
       zIndex: 5,
-      paddingHorizontal: Spacing.md,
+      padding: Spacing.lg,
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
@@ -86,15 +91,10 @@ const MaskedCamera = ({
       width: 70,
       height: 70,
       borderRadius: 35,
-      backgroundColor: 'white',
+      borderColor: ColorPalette.grayscale.white,
+      borderWidth: 4,
       justifyContent: 'center',
       alignItems: 'center',
-    },
-    captureButtonInner: {
-      width: 64,
-      height: 64,
-      borderRadius: 30,
-      borderWidth: 2,
     },
   })
 
@@ -173,15 +173,29 @@ const MaskedCamera = ({
         // Set fps to max supported by the selected format for smoother preview
         fps={format?.maxFps}
       />
-      <SVGOverlay maskType={maskType} strokeColor={maskLineColor ?? ColorPalette.brand.tertiary} />
+      {maskType && (
+        <SVGOverlay
+          maskType={maskType}
+          customPath={customPath}
+          strokeColor={maskLineColor ?? ColorPalette.brand.tertiary}
+          strokeWidth={maskLineWidth}
+          overlayOpacity={maskOverlayOpacity}
+        />
+      )}
       <View style={styles.instructionText}>
         {cameraLabel && (
-          <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingThree'}>
+          <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingFour'}>
             {cameraLabel}
           </ThemedText>
         )}
         {cameraInstructions && (
-          <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingFour'}>
+          <ThemedText
+            style={{
+              color: 'white',
+              textAlign: 'center',
+            }}
+            variant={'headingFour'}
+          >
             {cameraInstructions}
           </ThemedText>
         )}
@@ -202,9 +216,7 @@ const MaskedCamera = ({
           accessibilityLabel={t('BCSC.CameraDisclosure.TakePhoto')}
           accessibilityRole="button"
           testID={testIdWithKey('TakePhoto')}
-        >
-          <View style={styles.captureButtonInner} />
-        </TouchableOpacity>
+        ></TouchableOpacity>
         {hasTorch ? (
           <TouchableOpacity
             style={{ flex: 1, alignItems: 'flex-end' }}

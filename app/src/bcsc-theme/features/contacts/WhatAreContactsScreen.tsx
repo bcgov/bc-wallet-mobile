@@ -9,6 +9,10 @@ interface WhatAreContactsScreenProps {
   navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.WhatAreContacts>
 }
 
+/**
+ * Informational screen explaining what contacts are and how they're created in
+ * the BC Wallet. Reached from the empty state and the contacts list header.
+ */
 const WhatAreContactsScreen = ({ navigation }: WhatAreContactsScreenProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
@@ -39,7 +43,7 @@ const WhatAreContactsScreen = ({ navigation }: WhatAreContactsScreenProps) => {
 
   return (
     <ScreenWrapper scrollViewContainerStyle={{ gap: Spacing.lg, padding: Spacing.lg }}>
-      <ThemedText variant="headingTwo" style={{ color: ColorPalette.brand.primary }}>
+      <ThemedText variant="headingThree" style={{ color: ColorPalette.brand.primary }}>
         {t('BCSC.Contacts.WhatAre.Title')}
       </ThemedText>
       <ThemedText>{t('BCSC.Contacts.WhatAre.Description1')}</ThemedText>
@@ -47,8 +51,8 @@ const WhatAreContactsScreen = ({ navigation }: WhatAreContactsScreenProps) => {
 
       <View>
         <ThemedText variant="bold">{t('BCSC.Contacts.WhatAre.YouCanHeader')}</ThemedText>
-        {bullets.map((line, i) => (
-          <View key={i} style={styles.bulletRow}>
+        {bullets.map((line) => (
+          <View key={line} style={styles.bulletRow}>
             <ThemedText style={styles.bulletGlyph}>{'•'}</ThemedText>
             <ThemedText style={styles.bulletText}>{line}</ThemedText>
           </View>

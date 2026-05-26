@@ -6,8 +6,10 @@ import { StyleSheet, View } from 'react-native'
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
+  },
+  message: {
+    textAlign: 'center',
   },
 })
 
@@ -22,7 +24,7 @@ const EmptyWalletList: React.FC = () => {
 
   return (
     <View style={[styles.container, { padding: Spacing.lg }]} testID={testIdWithKey('Wallet.Empty')}>
-      <ThemedText>{t('BCSC.Wallet.EmptyMessage')}</ThemedText>
+      <ThemedText style={styles.message}>{t('BCSC.Wallet.EmptyMessage')}</ThemedText>
     </View>
   )
 }

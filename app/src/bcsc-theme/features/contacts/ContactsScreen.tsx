@@ -6,29 +6,57 @@ import { DidCommConnectionRecord, DidCommConnectionType, DidCommDidExchangeState
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FlatList, StyleSheet, TextInput, View } from 'react-native'
+import { ColorValue, FlatList, StyleSheet, TextInput, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import ContactRow from './ContactRow'
+import { usePinnedContacts } from './services/usePinnedContacts'
 
 interface ContactsScreenProps {
   navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.Contacts>
 }
 
+interface ContactListSeparatorProps {
+  backgroundColor: ColorValue
+}
+
+const ContactListSeparator: React.FC<ContactListSeparatorProps> = ({ backgroundColor }) => (
+  <View style={{ height: 1, backgroundColor }} />
+)
+
+const createContactListSeparator = (backgroundColor: ColorValue) => {
+  const Separator = () => <ContactListSeparator backgroundColor={backgroundColor} />
+  return Separator
+}
+
+/**
+ * Lists the user's DIDComm connections with search and per-contact pin
+ * toggling. Pinned contacts appear first; remaining contacts are sorted by
+ * most-recent activity.
+ */
 const ContactsScreen = ({ navigation }: ContactsScreenProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const { records: connectionRecords } = useConnections()
   const [store] = useStore()
   const [query, setQuery] = useState('')
+  const { isPinned, togglePin } = usePinnedContacts()
 
   const visibleContacts = useMemo<DidCommConnectionRecord[]>(() => {
+    const recencyOf = (r: DidCommConnectionRecord) => new Date(r.updatedAt ?? r.createdAt).valueOf()
     return connectionRecords
       .filter(
         (r) =>
           r.state === DidCommDidExchangeState.Completed && !r.connectionTypes.includes(DidCommConnectionType.Mediator)
       )
-      .sort((a, b) => new Date(b.updatedAt ?? b.createdAt).valueOf() - new Date(a.updatedAt ?? a.createdAt).valueOf())
-  }, [connectionRecords])
+      .sort((a, b) => {
+        const pa = isPinned(a.id) ? 1 : 0
+        const pb = isPinned(b.id) ? 1 : 0
+        if (pa !== pb) {
+          return pb - pa
+        }
+        return recencyOf(b) - recencyOf(a)
+      })
+  }, [connectionRecords, isPinned])
 
   const filteredContacts = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -53,27 +81,29 @@ const ContactsScreen = ({ navigation }: ContactsScreenProps) => {
     navigation.navigate(BCSCScreens.WhatAreContacts)
   }, [navigation])
 
+  const Separator = useMemo(
+    () => createContactListSeparator(ColorPalette.brand.secondaryBackground),
+    [ColorPalette.brand.secondaryBackground]
+  )
+
   const styles = StyleSheet.create({
     searchContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: ColorPalette.grayscale.lightGrey,
-      borderRadius: Spacing.sm,
+      backgroundColor: ColorPalette.brand.secondaryBackground,
+      borderWidth: 1,
+      borderColor: ColorPalette.grayscale.mediumGrey,
+      borderRadius: 8,
       paddingHorizontal: Spacing.md,
       marginHorizontal: Spacing.md,
-      marginVertical: Spacing.sm,
+      marginVertical: Spacing.md,
     },
     searchInput: {
       flex: 1,
-      paddingVertical: Spacing.sm,
+      paddingVertical: Spacing.md,
       marginLeft: Spacing.sm,
       color: ColorPalette.brand.text,
       fontSize: 16,
-    },
-    separator: {
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: ColorPalette.grayscale.lightGrey,
-      marginHorizontal: Spacing.md,
     },
     empty: {
       flex: 1,
@@ -112,7 +142,7 @@ const ContactsScreen = ({ navigation }: ContactsScreenProps) => {
   return (
     <View style={{ flex: 1, backgroundColor: ColorPalette.brand.primaryBackground }}>
       <View style={styles.searchContainer}>
-        <Icon name="search" size={20} color={ColorPalette.grayscale.mediumGrey} />
+        <Icon name="search" size={20} color={ColorPalette.brand.primary} />
         <TextInput
           style={styles.searchInput}
           value={query}
@@ -128,8 +158,15 @@ const ContactsScreen = ({ navigation }: ContactsScreenProps) => {
       <FlatList
         data={filteredContacts}
         keyExtractor={(c) => c.id}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        renderItem={({ item }) => <ContactRow contact={item} onPress={() => onPressContact(item.id)} />}
+        ItemSeparatorComponent={Separator}
+        renderItem={({ item }) => (
+          <ContactRow
+            contact={item}
+            pinned={isPinned(item.id)}
+            onPress={() => onPressContact(item.id)}
+            onLongPress={() => togglePin(item.id)}
+          />
+        )}
       />
     </View>
   )

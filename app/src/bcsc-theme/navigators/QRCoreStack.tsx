@@ -1,3 +1,4 @@
+import { AgentReadyGate } from '@/bcsc-theme/features/agent'
 import { VerifyPromptScreen } from '@/bcsc-theme/features/onboarding/VerifyPromptScreen'
 import ManualPairing from '@/bcsc-theme/features/pairing/ManualPairing'
 import QRDisplay from '@/bcsc-theme/features/qr-core/QRDisplay'
@@ -14,10 +15,10 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { createAuthHelpHeaderButton } from '../components/HelpHeaderButton'
 
-type QRCoreTabParams = {
+export type QRCoreTabParams = {
   Scanner: undefined
   Display: undefined
-  PairingCode: undefined
+  PairingCode: { pairingCode?: string } | undefined
   AccountNotVerified: undefined
 }
 
@@ -29,6 +30,14 @@ const PairingCodeScreen: React.FC = () => {
   const { needsVerification } = useVerificationStatus()
   return needsVerification ? <VerifyPromptScreen showSkip={false} /> : <ManualPairing />
 }
+
+// QRScanner uses URI strategies that require the BCSC agent for OOB parsing,
+// so gate the Scanner tab behind agent init.
+const ScopedQRScanner: React.FC = () => (
+  <AgentReadyGate testID={testIdWithKey('Scan.Loading')}>
+    <QRScanner />
+  </AgentReadyGate>
+)
 
 const createQRBackButton = () => {
   const QRBackButton = () => {
@@ -104,7 +113,7 @@ const QRCoreStack: React.FC = () => {
       >
         <Tab.Screen
           name="Scanner"
-          component={QRScanner}
+          component={ScopedQRScanner}
           options={{
             title: t('Scan.ScanQRCode'),
             tabBarIconStyle: styles.tabBarIcon,

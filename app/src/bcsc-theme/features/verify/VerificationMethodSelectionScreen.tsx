@@ -1,69 +1,53 @@
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import { Spacing } from '@/bcwallet-theme/theme'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
-import { ScreenWrapper, ThemedText, TOKENS, useServices } from '@bifold/core'
+import { ScreenWrapper, testIdWithKey, ThemedText } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useMemo } from 'react'
+import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { View } from 'react-native'
+import { ActivityIndicator, StyleSheet } from 'react-native'
 import useVerificationMethodModel from './_models/useVerificationMethodModel'
 import VerifyMethodActionButton from './components/VerifyMethodActionButton'
+import ServicePeriodList from './live-call/components/ServicePeriodList'
 
 type VerificationMethodSelectionScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VerificationMethodSelection>
 }
 
+const styles = StyleSheet.create({
+  pageHeaderContainer: {
+    marginTop: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing.sm,
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+})
 const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSelectionScreenProps) => {
   const { t } = useTranslation()
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
-  const { handlePressSendVideo, handlePressLiveCall, sendVideoLoading, liveCallLoading, verificationOptions } =
-    useVerificationMethodModel({ navigation })
+  const {
+    handlePressSendVideo,
+    handlePressLiveCall,
+    sendVideoLoading,
+    liveCallLoading,
+    hoursLoading,
+    verificationOptions,
+    formattedHours,
+  } = useVerificationMethodModel({ navigation })
 
   const [primaryOption, ...remainingOptions] = verificationOptions
 
-  const headingText = useMemo(() => {
-    if (primaryOption === DeviceVerificationOption.SEND_VIDEO) {
-      return t('BCSC.VerificationMethods.CannotSendVideo')
-    }
-    if (primaryOption === DeviceVerificationOption.IN_PERSON) {
-      return t('BCSC.VerificationMethods.CannotMakeItToServiceBC')
-    }
-    if (primaryOption === DeviceVerificationOption.LIVE_VIDEO_CALL) {
-      return t('BCSC.VerificationMethods.CannotVideoCall')
-    }
-
-    logger.error(`Unknown primary verification option: ${primaryOption}`)
-    return ''
-  }, [primaryOption, t, logger])
-
-  const renderOption = (option: DeviceVerificationOption, borderBottomWidth?: number) => {
-    if (option === DeviceVerificationOption.LIVE_VIDEO_CALL) {
-      return (
-        <VerifyMethodActionButton
-          key="video_call"
-          title={t('BCSC.VerificationMethods.VideoCallTitle')}
-          description={t('BCSC.VerificationMethods.VideoCallDescription')}
-          icon={'video'}
-          onPress={handlePressLiveCall}
-          loading={liveCallLoading}
-          disabled={liveCallLoading || sendVideoLoading}
-          style={{ borderBottomWidth }}
-        />
-      )
-    }
-
+  const renderOption = (option: DeviceVerificationOption) => {
     if (option === DeviceVerificationOption.SEND_VIDEO) {
       return (
         <VerifyMethodActionButton
           key="send_video"
           title={t('BCSC.VerificationMethods.SendVideoTitle')}
           description={t('BCSC.VerificationMethods.SendVideoDescription')}
-          icon={'send'}
+          icon={'video-outline'}
           onPress={handlePressSendVideo}
-          loading={sendVideoLoading}
           disabled={sendVideoLoading || liveCallLoading}
-          style={{ borderBottomWidth }}
         />
       )
     }
@@ -74,10 +58,22 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
           key="in_person"
           title={t('BCSC.VerificationMethods.InPersonTitle')}
           description={t('BCSC.VerificationMethods.InPersonDescription')}
-          icon={'account'}
+          icon={'account-outline'}
           onPress={() => navigation.navigate(BCSCScreens.VerifyInPerson)}
           disabled={liveCallLoading || sendVideoLoading}
-          style={{ borderBottomWidth }}
+        />
+      )
+    }
+
+    if (option === DeviceVerificationOption.LIVE_VIDEO_CALL) {
+      return (
+        <VerifyMethodActionButton
+          key="video_call"
+          title={t('BCSC.VerificationMethods.VideoCallTitle')}
+          description={t('BCSC.VerificationMethods.VideoCallDescription')}
+          icon={'face-agent'}
+          onPress={handlePressLiveCall}
+          disabled={liveCallLoading || sendVideoLoading}
         />
       )
     }
@@ -86,15 +82,27 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
   }
 
   return (
-    <ScreenWrapper padded={false}>
-      {renderOption(primaryOption, 1)}
-      <View style={{ marginTop: Spacing.xxl, paddingHorizontal: Spacing.md, marginBottom: Spacing.sm }}>
-        <ThemedText variant="headingFour">{headingText}</ThemedText>
-      </View>
-      {remainingOptions.map((option, index) => {
-        const borderBottomWidth = remainingOptions.length === index + 1 ? 1 : undefined
-        return renderOption(option, borderBottomWidth)
+    <ScreenWrapper scrollViewContainerStyle={styles.pageHeaderContainer}>
+      <ThemedText variant="headingFour">{t('BCSC.VerificationMethods.Title')}</ThemedText>
+      <ThemedText style={{ marginVertical: Spacing.md }}>{t('BCSC.VerificationMethods.Subtitle')}</ThemedText>
+
+      {renderOption(primaryOption)}
+      {remainingOptions.map((option) => {
+        return renderOption(option)
       })}
+
+      <ThemedText
+        variant={'headingFour'}
+        style={{ marginTop: Spacing.md, alignSelf: 'stretch' }}
+        testID={testIdWithKey('HoursOfServiceTitle')}
+      >
+        {t('BCSC.VideoCall.CallBusyOrClosed.HoursOfService')}
+      </ThemedText>
+      {hoursLoading ? (
+        <ActivityIndicator style={{ marginTop: Spacing.sm }} />
+      ) : (
+        <ServicePeriodList items={formattedHours ?? []} />
+      )}
     </ScreenWrapper>
   )
 }

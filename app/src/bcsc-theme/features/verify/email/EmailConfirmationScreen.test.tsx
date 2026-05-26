@@ -108,7 +108,7 @@ describe('EmailConfirmation', () => {
       })
     })
 
-    test('navigates to SetupSteps on success', async () => {
+    test('navigates to EmailVerified on success', async () => {
       mockSendEmailVerificationCode.mockResolvedValue(undefined)
       renderScreen()
 
@@ -120,7 +120,7 @@ describe('EmailConfirmation', () => {
         expect(mockNavigation.dispatch).toHaveBeenCalled()
         expect(CommonActions.reset).toHaveBeenCalledWith({
           index: 0,
-          routes: [{ name: BCSCScreens.SetupSteps }],
+          routes: [{ name: BCSCScreens.EmailVerified }],
         })
       })
     })
@@ -146,7 +146,7 @@ describe('EmailConfirmation', () => {
         bcscSecure: { emailAddress: 'test@example.com' },
       })
 
-      fireEvent.press(screen.getByTestId('ResendCodeButton'))
+      fireEvent.press(screen.getByTestId('ResendCodeLink'))
 
       await waitFor(() => {
         expect(mockCreateEmailVerification).toHaveBeenCalledWith('test@example.com')
@@ -164,7 +164,7 @@ describe('EmailConfirmation', () => {
         bcscSecure: { emailAddress: 'test@example.com' },
       })
 
-      fireEvent.press(screen.getByTestId('ResendCodeButton'))
+      fireEvent.press(screen.getByTestId('ResendCodeLink'))
 
       await waitFor(() => {
         expect(screen.getByText('BCSC.EmailConfirmation.ErrorResendingCode')).toBeTruthy()
@@ -178,7 +178,7 @@ describe('EmailConfirmation', () => {
         bcscSecure: { emailAddress: 'test@example.com' },
       })
 
-      fireEvent.press(screen.getByTestId('ResendCodeButton'))
+      fireEvent.press(screen.getByTestId('ResendCodeLink'))
 
       await waitFor(() => {
         expect(mockCreateEmailVerification).toHaveBeenCalled()

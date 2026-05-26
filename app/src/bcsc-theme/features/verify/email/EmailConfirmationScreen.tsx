@@ -1,5 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import CodeInput from '@/bcsc-theme/components/CodeInput'
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { HighlightDivider } from '@/bcsc-theme/components/HighlightDivider'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
@@ -20,7 +22,6 @@ import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, Linking, Platform } from 'react-native'
 import Toast from 'react-native-toast-message'
 
 type EmailConfirmationScreenProps = {
@@ -33,7 +34,7 @@ type EmailConfirmationScreenProps = {
 }
 
 const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenProps) => {
-  const { Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const [store] = useStore<BCState>()
   const { evidence } = useApi()
   const { updateUserInfo } = useSecureActions()
@@ -65,7 +66,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
-          routes: [{ name: BCSCScreens.SetupSteps }],
+          routes: [{ name: BCSCScreens.EmailVerified }],
         })
       )
     } catch (error) {
@@ -76,6 +77,10 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
   }
 
   const handleResendCode = async () => {
+    if (resendLoading) {
+      return
+    }
+
     setError(null)
 
     try {
@@ -102,23 +107,8 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
     }
   }
 
-  const handleGoToEmail = () => {
-    let url = 'mailto:'
-
-    // On IOS we can open the mail application directly
-    if (Platform.OS === 'ios') {
-      url = 'message://'
-    }
-
-    Linking.openURL(url).catch(() => {
-      Alert.alert(t('BCSC.EmailConfirmation.UnableToOpenEmail'), t('BCSC.EmailConfirmation.UnableToOpenEmailMessage'), [
-        { text: t('BCSC.EmailConfirmation.OKButton') },
-      ])
-    })
-  }
-
   const controls = (
-    <>
+    <ControlContainer>
       <Button
         buttonType={ButtonType.Primary}
         onPress={handleSubmit}
@@ -128,36 +118,34 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
       >
         {loading && <ButtonLoading />}
       </Button>
-      <Button
-        buttonType={ButtonType.Secondary}
-        onPress={handleResendCode}
-        title={t('BCSC.EmailConfirmation.ResendCode')}
-        accessibilityLabel={t('BCSC.EmailConfirmation.ResendCode')}
-        testID={'ResendCodeButton'}
-      >
-        {resendLoading && <ButtonLoading />}
-      </Button>
-      <Button
-        buttonType={ButtonType.Secondary}
-        onPress={handleGoToEmail}
-        title={t('BCSC.EmailConfirmation.GoToEmail')}
-        accessibilityLabel={t('BCSC.EmailConfirmation.GoToEmail')}
-        testID={'GoToEmailButton'}
-      />
-    </>
+    </ControlContainer>
   )
 
   return (
-    <ScreenWrapper keyboardActive={true} controls={controls} scrollViewContainerStyle={{ gap: Spacing.lg }}>
-      <ThemedText variant={'headingThree'}>{t('BCSC.EmailConfirmation.VerifyYourEmail')}</ThemedText>
-      <ThemedText>
-        {t('BCSC.EmailConfirmation.EnterTheSixDigitCode')}{' '}
-        <ThemedText variant={'bold'}>{store.bcscSecure.emailAddress}</ThemedText>
+    <ScreenWrapper
+      keyboardActive
+      padded={false}
+      controls={controls}
+      scrollViewContainerStyle={{
+        flexGrow: 1,
+        gap: Spacing.md,
+        padding: Spacing.lg,
+      }}
+    >
+      <ThemedText variant={'headingThree'} style={{ textAlign: 'center', color: 'black' }}>
+        {t('BCSC.EmailConfirmation.EnterVerificationCode')}
       </ThemedText>
+      <ThemedText style={{ textAlign: 'center' }}>{t('BCSC.EmailConfirmation.CodeSentTo')} </ThemedText>
+      <ThemedText style={{ textAlign: 'center' }} variant={'bold'}>
+        {store.bcscSecure.emailAddress}
+      </ThemedText>
+      <ThemedText style={{ textAlign: 'center' }}>{t('BCSC.EmailConfirmation.EnterCodeWithin')}</ThemedText>
       <CodeInput
         value={code}
         onChange={setCode}
         error={error}
+        separator
+        variant={'underline'}
         onErrorClear={() => setError(null)}
         textInputProps={{
           keyboardType: 'number-pad',
@@ -167,6 +155,20 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
           accessibilityLabel: 'Confirmation-Code-Input',
         }}
       />
+      <HighlightDivider />
+      <ThemedText style={{ textAlign: 'center' }} variant={'caption'}>
+        {t('BCSC.EmailConfirmation.CantFindCode')}
+        <ThemedText
+          variant={'caption'}
+          style={{ color: ColorPalette.brand.link, fontWeight: 'bold' }}
+          onPress={handleResendCode}
+          accessibilityRole={'link'}
+          accessibilityLabel={t('BCSC.EmailConfirmation.SendNewCode')}
+          testID={'ResendCodeLink'}
+        >
+          {t('BCSC.EmailConfirmation.SendNewCode')}
+        </ThemedText>
+      </ThemedText>
     </ScreenWrapper>
   )
 }

@@ -1,19 +1,23 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import CodeInput from '@/bcsc-theme/components/CodeInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { QRCoreTabParams } from '@/bcsc-theme/navigators/QRCoreStack'
 import { PAIRING_CODE_LENGTH } from '@/constants'
 import { BCSCMainStackParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
 const ManualPairing: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
+  const tabNavigation = useNavigation<BottomTabNavigationProp<QRCoreTabParams, 'PairingCode'>>()
+  const route = useRoute<RouteProp<QRCoreTabParams, 'PairingCode'>>()
   const { t } = useTranslation()
-  const [code, setCode] = useState('')
+  const [code, setCode] = useState(route.params?.pairingCode ?? '')
   const [error, setError] = useState<string | null>(null)
   const { Spacing, ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -43,6 +47,19 @@ const ManualPairing: React.FC = () => {
     [loadingScreen, logger, navigation, pairing, t]
   )
 
+  // QRCoreStack keeps tabs mounted (unmountOnBlur: false), so a pre-populated
+  // pairingCode param must be consumed-and-cleared or it would re-fire on every
+  // focus. setParams lives on the tab navigator, so we hold a separately-typed
+  // `tabNavigation` handle just for this call.
+  useEffect(() => {
+    const pre = route.params?.pairingCode
+    if (pre?.length === PAIRING_CODE_LENGTH) {
+      setCode(pre)
+      onSubmit(pre)
+      tabNavigation.setParams({ pairingCode: undefined })
+    }
+  }, [route.params?.pairingCode, onSubmit, tabNavigation])
+
   const handleChangeCode = useCallback(
     (text: string) => {
       // strip non-alphanumeric characters and convert to uppercase
@@ -69,7 +86,7 @@ const ManualPairing: React.FC = () => {
   return (
     <ScreenWrapper keyboardActive>
       <ThemedText
-        variant={'headingTwo'}
+        variant={'headingThree'}
         style={{ marginHorizontal: Spacing.md, marginBottom: Spacing.md, alignSelf: 'center' }}
       >
         {t('BCSC.ManualPairing.EnterPairingCodeTitle')}

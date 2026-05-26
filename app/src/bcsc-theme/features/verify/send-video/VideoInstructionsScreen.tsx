@@ -1,6 +1,8 @@
 import { VerificationPrompt } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
+import BrownHandHoldingPhone from '@assets/img/brown-hand-holding-phone.svg'
 import { Button, ButtonType, ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { Fragment } from 'react'
@@ -13,51 +15,75 @@ type VideoInstructionsScreenProps = {
 }
 
 const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) => {
-  const { Spacing, TextTheme } = useTheme()
+  const { Spacing, TextTheme, ColorPalette } = useTheme()
   const [store] = useStore<BCState>()
   const { t } = useTranslation()
 
   const styles = StyleSheet.create({
-    mainIcon: {
-      marginTop: Spacing.md,
-      marginBottom: Spacing.xxl,
-      alignSelf: 'center',
-    },
-    lineBreak: {
-      borderBottomWidth: 1,
-      borderBottomColor: TextTheme.normal.color,
+    image: {
       width: '100%',
+      height: 250,
+      marginBottom: Spacing.md,
     },
     bulletContainer: {
       flexDirection: 'row',
-      marginBottom: Spacing.md,
     },
     bullet: {
       marginRight: Spacing.xs,
     },
   })
 
+  const controls = (
+    <ControlContainer>
+      <Button
+        buttonType={ButtonType.Primary}
+        title={t('BCSC.SendVideo.VideoInstructions.StartRecordingButton')}
+        onPress={() => {
+          navigation.navigate(BCSCScreens.TakeVideo)
+        }}
+        testID={'StartRecordingButton'}
+        accessibilityLabel={t('BCSC.SendVideo.VideoInstructions.StartRecordingButton')}
+      />
+    </ControlContainer>
+  )
+
   return (
-    <ScreenWrapper>
-      <Icon name={'video'} size={112} color={TextTheme.normal.color} style={styles.mainIcon} />
-      <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.lg, textAlign: 'center' }}>
+    <ScreenWrapper
+      controls={controls}
+      padded={false}
+      edges={['top', 'bottom', 'left', 'right']}
+      scrollViewContainerStyle={{ padding: Spacing.lg }}
+    >
+      <BrownHandHoldingPhone style={styles.image} height={styles.image.height} width={styles.image.width} />
+      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.lg, textAlign: 'center' }}>
         {t('BCSC.SendVideo.VideoInstructions.Heading1')}
       </ThemedText>
-      <ThemedText variant={'headingFour'} style={{ marginBottom: Spacing.xl, textAlign: 'center' }}>
+      <ThemedText
+        variant={'headingFour'}
+        style={{ marginBottom: Spacing.xl, textAlign: 'center', color: ColorPalette.grayscale.black }}
+      >
         {t('BCSC.SendVideo.VideoInstructions.Heading2')}
       </ThemedText>
       {store.bcsc.prompts?.map(({ prompt, id }: VerificationPrompt, index) => (
         <Fragment key={id}>
-          <ThemedText variant={'headingFour'} style={{ textAlign: 'center' }}>
+          <ThemedText variant={'headingFour'} style={{ textAlign: 'center', color: ColorPalette.grayscale.black }}>
             {index + 1}
           </ThemedText>
-          <ThemedText style={{ marginBottom: Spacing.xl, textAlign: 'center' }}>{prompt}</ThemedText>
+          <ThemedText
+            style={{ marginBottom: Spacing.xl, textAlign: 'center', fontSize: TextTheme.headingFour.fontSize }}
+          >
+            {prompt}
+          </ThemedText>
         </Fragment>
       ))}
-      <View style={styles.lineBreak} />
-      <ThemedText variant={'headingFour'} style={{ marginVertical: Spacing.xl }}>
+      <ThemedText variant={'headingFour'} style={{ marginVertical: Spacing.lg }}>
         {t('BCSC.SendVideo.VideoInstructions.Heading3')}
       </ThemedText>
+
+      <ThemedText variant={'headingFour'} style={{ marginVertical: Spacing.md, color: ColorPalette.grayscale.black }}>
+        {t('BCSC.SendVideo.VideoInstructions.YouShould')}
+      </ThemedText>
+
       <View style={styles.bulletContainer}>
         <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
         <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet1')}</ThemedText>
@@ -78,28 +104,21 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
         <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
         <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet5')}</ThemedText>
       </View>
-      <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet6')}</ThemedText>
-      </View>
-      <Icon
-        name={'alert'}
-        size={32}
-        color={TextTheme.normal.color}
-        style={{ marginVertical: Spacing.lg, alignSelf: 'center' }}
-      />
-      <ThemedText variant={'headingFour'} style={{ marginBottom: Spacing.xxl, textAlign: 'center' }}>
-        {t('BCSC.SendVideo.VideoInstructions.Heading4')}
-      </ThemedText>
-      <Button
-        buttonType={ButtonType.Primary}
-        title={t('BCSC.SendVideo.VideoInstructions.StartRecordingButton')}
-        onPress={() => {
-          navigation.navigate(BCSCScreens.TakeVideo)
+      <View
+        style={{
+          flexDirection: 'row',
+          borderColor: ColorPalette.grayscale.lightGrey,
+          borderWidth: 1,
+          borderRadius: Spacing.sm,
+          padding: Spacing.md,
+          marginTop: Spacing.lg,
         }}
-        testID={'StartRecordingButton'}
-        accessibilityLabel={t('BCSC.SendVideo.VideoInstructions.StartRecordingButton')}
-      />
+      >
+        <Icon name={'alert'} size={32} color={TextTheme.normal.color} style={{ marginRight: Spacing.md }} />
+        <ThemedText variant={'headingFour'} style={{ flex: 1, textAlign: 'left', color: ColorPalette.grayscale.black }}>
+          {t('BCSC.SendVideo.VideoInstructions.Heading4')}
+        </ThemedText>
+      </View>
     </ScreenWrapper>
   )
 }

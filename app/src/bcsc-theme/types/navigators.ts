@@ -43,9 +43,9 @@ export enum BCSCScreens {
   BirthdateLockout = 'Too Many Add Attempts',
   EnterEmail = 'Email Entry',
   EmailConfirmation = 'Email Verification',
+  EmailVerified = 'Email Verified',
   VerificationMethodSelection = 'Verify Options',
   VerifyInPerson = 'Verify In Person Instruction',
-  InformationRequired = 'Send Video Menu',
   PhotoInstructions = 'Selfie Photo Tips',
   TakePhoto = 'Selfie Photo Capture',
   PhotoReview = 'Selfie Photo Confirmation',
@@ -55,6 +55,7 @@ export enum BCSCScreens {
   VideoTooLong = 'Selfie Video Too Long',
   PendingReview = 'Send Video Check Status',
   CancelledReview = 'BCSCCancelledReview', // FIXME (MD): Not sure which V3 screen this maps to...
+  EvidenceUploading = 'Send Video Uploading',
   SuccessfullySent = 'Send Video Received Request Confirmation',
   VerificationSuccess = 'Setup Complete',
   ManualPairingCode = 'Login Device Pairing',
@@ -82,7 +83,6 @@ export enum BCSCScreens {
   EvidenceTypeList = 'BCSCEvidenceTypeList',
   EvidenceCapture = 'Document Photo Capture',
   EvidenceIDCollection = 'Secondary ID Document Data Entry',
-  BeforeYouCall = 'Verify by Video Call Prep',
   StartCall = 'Video Verify Call Now Progress',
   CallBusyOrClosed = 'Video Verify Closed',
   LiveCall = 'Video Call: In-Call',
@@ -132,7 +132,7 @@ export enum BCSCScreens {
   AccountRenewalInformation = 'Renewal ID requirements',
   AccountRenewalFirstWarning = 'Renewal Instructions',
   AccountRenewalFinalWarning = 'Renewal Warning',
-  AccountSelector = 'Account Select',
+  AccountLanding = 'Account Landing',
   EnterPIN = 'Enter/Verify PIN',
   DeviceAuthInfo = 'Device Authentication Prep',
   Lockout = 'Too many PIN attempts',
@@ -142,6 +142,7 @@ export enum BCSCScreens {
   AuthContactUs = `${BCSCStacks.Auth} Contact Us`,
   AuthPrivacyPolicy = `${BCSCStacks.Auth} Privacy Information`,
   AuthDeveloper = `${BCSCStacks.Auth} Developer`,
+  ConnectionLoading = 'BCSCConnectionLoading',
   QRCore = 'QRCore',
 }
 
@@ -181,9 +182,9 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.BirthdateLockout]: undefined
   [BCSCScreens.EnterEmail]: { cardProcess: BCSCCardProcess }
   [BCSCScreens.EmailConfirmation]: { emailAddressId: string }
+  [BCSCScreens.EmailVerified]: undefined
   [BCSCScreens.VerificationMethodSelection]: undefined
   [BCSCScreens.VerifyInPerson]: undefined
-  [BCSCScreens.InformationRequired]: undefined
   [BCSCScreens.PhotoInstructions]: { forLiveCall: boolean }
   [BCSCScreens.TakePhoto]: {
     deviceSide: 'front' | 'back'
@@ -196,6 +197,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.TakeVideo]: undefined
   [BCSCScreens.VideoReview]: { videoPath: string; videoThumbnailPath: string }
   [BCSCScreens.VideoTooLong]: { videoLengthSeconds: number }
+  [BCSCScreens.EvidenceUploading]: undefined
   [BCSCScreens.SuccessfullySent]: undefined
   [BCSCScreens.PendingReview]: undefined
   [BCSCScreens.CancelledReview]: { agentReason?: string }
@@ -206,7 +208,6 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.EvidenceTypeList]: { cardProcess: BCSCCardProcess; photoFilter?: 'photo' | 'nonPhoto' }
   [BCSCScreens.EvidenceCapture]: { cardType: EvidenceType }
   [BCSCScreens.EvidenceIDCollection]: { cardType: EvidenceType; documentNumber?: string }
-  [BCSCScreens.BeforeYouCall]: { formattedHours: FormattedServicePeriod[] }
   [BCSCScreens.StartCall]: undefined
   [BCSCScreens.CallBusyOrClosed]: { busy: boolean; formattedHours: FormattedServicePeriod[] }
   [BCSCScreens.LiveCall]: undefined
@@ -275,6 +276,7 @@ export type BCSCMainStackParams = {
   [Screens.CredentialDetails]: { credentialId: string }
 
   [BCSCScreens.QRCore]: undefined
+  [BCSCScreens.ConnectionLoading]: { oobRecordId: string }
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
@@ -286,7 +288,7 @@ export type BCSCAuthStackParams = {
   [BCSCScreens.QRCore]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string; fromAppSwitch?: boolean }
   [BCSCScreens.EditNickname]: undefined
-  [BCSCScreens.AccountSelector]: undefined
+  [BCSCScreens.AccountLanding]: undefined
   [BCSCScreens.EnterPIN]: undefined
   [BCSCScreens.DeviceAuthInfo]: undefined
   [BCSCScreens.Lockout]: undefined

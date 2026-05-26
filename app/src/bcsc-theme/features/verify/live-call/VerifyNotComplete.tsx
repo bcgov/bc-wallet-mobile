@@ -1,3 +1,4 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
@@ -36,7 +37,7 @@ const VerifyNotCompleteScreen = ({ navigation }: VerifyNotCompleteScreenProps) =
   }
 
   const controls = (
-    <>
+    <ControlContainer>
       <Button
         buttonType={ButtonType.Primary}
         testID={testIdWithKey('SendVideo')}
@@ -51,12 +52,12 @@ const VerifyNotCompleteScreen = ({ navigation }: VerifyNotCompleteScreenProps) =
         title={t('BCSC.VideoCall.VerifyNotComplete.TryAgain')}
         onPress={onPressSendVideo}
       />
-    </>
+    </ControlContainer>
   )
 
   return (
-    <ScreenWrapper controls={controls}>
-      <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
+    <ScreenWrapper padded={false} controls={controls} scrollViewContainerStyle={{ padding: Spacing.lg }}>
+      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.VideoCall.VerifyNotComplete.Title')}
       </ThemedText>
       <ThemedText style={{ marginBottom: Spacing.md }}>

@@ -2,14 +2,22 @@ import { formatTime, getConnectionName, ThemedText, useStore, useTheme } from '@
 import { DidCommConnectionRecord } from '@credo-ts/didcomm'
 import React, { useMemo } from 'react'
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { useContactSubtitle } from './services/useContactSubtitle'
 
 interface ContactRowProps {
   contact: DidCommConnectionRecord
-  subtitle?: string
+  pinned?: boolean
   onPress: () => void
+  onLongPress?: () => void
 }
 
-const ContactRow: React.FC<ContactRowProps> = ({ contact, subtitle, onPress }) => {
+/**
+ * List row for one DIDComm contact. Renders an initial-avatar, the connection
+ * name (preferring `alternateContactNames`), a subtitle from the connection's
+ * latest message/state, a relative timestamp, and an optional pinned indicator.
+ */
+const ContactRow: React.FC<ContactRowProps> = ({ contact, pinned, onPress, onLongPress }) => {
   const { ColorPalette, Spacing } = useTheme()
   const [store] = useStore()
 
@@ -22,13 +30,14 @@ const ContactRow: React.FC<ContactRowProps> = ({ contact, subtitle, onPress }) =
     () => formatTime(new Date(contact.updatedAt ?? contact.createdAt), { shortMonth: true, trim: true }),
     [contact.updatedAt, contact.createdAt]
   )
+  const subtitle = useContactSubtitle(contact.id)
 
   const styles = StyleSheet.create({
     row: {
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.sm,
+      paddingVertical: Spacing.md,
       backgroundColor: ColorPalette.brand.primaryBackground,
     },
     avatar: {
@@ -44,6 +53,7 @@ const ContactRow: React.FC<ContactRowProps> = ({ contact, subtitle, onPress }) =
       width: 40,
       height: 40,
       borderRadius: 20,
+      marginRight: Spacing.md,
     },
     body: {
       flex: 1,
@@ -53,16 +63,29 @@ const ContactRow: React.FC<ContactRowProps> = ({ contact, subtitle, onPress }) =
       color: ColorPalette.brand.primary,
     },
     subtitle: {
-      color: ColorPalette.grayscale.mediumGrey,
+      color: ColorPalette.grayscale.black,
+      marginTop: 2,
+    },
+    rightColumn: {
+      alignItems: 'flex-end',
+      justifyContent: 'space-between',
+      alignSelf: 'stretch',
+      paddingVertical: 2,
     },
     date: {
-      color: ColorPalette.grayscale.mediumGrey,
-      alignSelf: 'flex-start',
+      color: ColorPalette.brand.primary,
     },
   })
 
   return (
-    <TouchableOpacity onPress={onPress} accessibilityRole="button" accessibilityLabel={name}>
+    <TouchableOpacity
+      onPress={onPress}
+      onLongPress={onLongPress}
+      delayLongPress={350}
+      accessibilityRole="button"
+      accessibilityLabel={name}
+      accessibilityState={{ selected: !!pinned }}
+    >
       <View style={styles.row}>
         {contact.imageUrl ? (
           <Image style={styles.avatarImage} source={{ uri: contact.imageUrl }} />
@@ -83,7 +106,10 @@ const ContactRow: React.FC<ContactRowProps> = ({ contact, subtitle, onPress }) =
             </ThemedText>
           ) : null}
         </View>
-        <ThemedText style={styles.date}>{dateLabel}</ThemedText>
+        <View style={styles.rightColumn}>
+          <ThemedText style={styles.date}>{dateLabel}</ThemedText>
+          {pinned ? <Icon name="pin" size={20} color={ColorPalette.brand.primary} /> : null}
+        </View>
       </View>
     </TouchableOpacity>
   )

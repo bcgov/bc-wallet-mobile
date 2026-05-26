@@ -4,8 +4,6 @@ import { render } from '@testing-library/react-native'
 import React from 'react'
 import IDPhotoInformationScreen from './IDPhotoInformationScreen'
 
-jest.mock('@assets/img/credential-scan.png', () => 1)
-
 describe('IDPhotoInformation', () => {
   let mockNavigation: any
 

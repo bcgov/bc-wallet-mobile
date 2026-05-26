@@ -1,16 +1,23 @@
 import { ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { Trans, useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+
 interface BoldedBulletPointProps {
   translationKey: string
   iconSize?: number
   iconColor?: string
+  containerStyle?: StyleProp<ViewStyle>
 }
 
-const BulletPointWithText: React.FC<BoldedBulletPointProps> = ({ translationKey, iconSize, iconColor }) => {
-  const { ColorPalette, Spacing } = useTheme()
+const BulletPointWithText: React.FC<BoldedBulletPointProps> = ({
+  translationKey,
+  iconSize,
+  iconColor,
+  containerStyle,
+}) => {
+  const { ColorPalette, Spacing, TextTheme } = useTheme()
   const { t } = useTranslation()
 
   const styles = StyleSheet.create({
@@ -21,12 +28,14 @@ const BulletPointWithText: React.FC<BoldedBulletPointProps> = ({ translationKey,
       alignContent: 'center',
     },
     iconContainer: {
-      margin: Spacing.sm,
+      marginHorizontal: Spacing.sm,
+      height: TextTheme.normal.lineHeight,
+      justifyContent: 'center',
     },
   })
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, containerStyle]}>
       <View style={styles.iconContainer}>
         <Icon name={'circle'} size={iconSize ?? Spacing.sm} color={iconColor ?? ColorPalette.brand.modalIcon} />
       </View>

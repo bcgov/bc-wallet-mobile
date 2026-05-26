@@ -4,6 +4,17 @@ import { render } from '@testing-library/react-native'
 import React from 'react'
 import StartCallScreen from './StartCallScreen'
 
+const mockGetServiceHours = jest.fn().mockResolvedValue({})
+
+jest.mock('@/bcsc-theme/api/hooks/useApi', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({
+    video: {
+      getServiceHours: mockGetServiceHours,
+    },
+  })),
+}))
+
 jest.mock('react-native-vision-camera', () => ({
   Camera: 'Camera',
   useCameraDevice: jest.fn().mockReturnValue({ id: 'mock-device' }),

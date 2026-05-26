@@ -354,6 +354,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           onPressOptInAnalytics={onPressOptInAnalytics}
           onPressRemoveAccount={onPressRemoveAccount}
           onLogout={logout}
+          onContacts={onContacts}
           setTheme={setTheme}
           themeName={themeName}
         />

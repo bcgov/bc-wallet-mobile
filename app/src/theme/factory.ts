@@ -12,6 +12,7 @@ interface SecondaryButtonStyle {
 /** Palette values that vary between variants. Everything else is shared defaults. */
 interface PaletteSpec {
   primary: string
+  primaryLight: string
   primaryBackground: string
   secondaryBackground: string
   tertiaryBackground: string
@@ -85,7 +86,7 @@ function buildPalette(spec: PaletteSpec): IColorPalette {
       secondaryDisabled: '#757575',
       tertiary: GrayscaleColors.lightGrey,
       tertiaryDisabled: '#757575',
-      primaryLight: '#3470B1',
+      primaryLight: spec.primaryLight,
       highlight: '#FCBA19',
       primaryBackground: spec.primaryBackground,
       secondaryBackground: spec.secondaryBackground,
@@ -250,14 +251,18 @@ export function createAppTheme(v: ThemeVariant) {
     .withOverrides(
       (theme): DeepPartial<ITheme> => ({
         Buttons: {
-          primary: { padding: Spacing.sm, borderWidth: 1 },
+          primary: { padding: Spacing.sm, borderWidth: 1, borderColor: theme.ColorPalette.brand.primary },
           primaryText: {
             ...theme.TextTheme.normal,
             color: theme.ColorPalette.brand.text,
             ...ThemeTextStyles.bold,
             textAlign: 'center',
           },
-          primaryDisabled: { padding: Spacing.sm, borderWidth: 1 },
+          primaryDisabled: {
+            padding: Spacing.sm,
+            borderWidth: 1,
+            borderColor: theme.ColorPalette.brand.primaryDisabled,
+          },
           primaryTextDisabled: {
             ...theme.TextTheme.normal,
             color: theme.ColorPalette.brand.text,
@@ -285,8 +290,9 @@ export function createAppTheme(v: ThemeVariant) {
           tertiary: {
             padding: Spacing.sm,
             borderRadius: 4,
-            borderWidth: 0,
             backgroundColor: v.tertiaryButtonBackground,
+            borderWidth: 2,
+            borderColor: theme.ColorPalette.brand.primary,
           },
           tertiaryDisabled: {
             padding: Spacing.sm,
@@ -294,7 +300,7 @@ export function createAppTheme(v: ThemeVariant) {
             borderWidth: 2,
             borderColor: theme.ColorPalette.brand.tertiaryDisabled,
           },
-          tertiaryText: { color: v.textOnWhite, ...ThemeTextStyles.bold },
+          tertiaryText: { color: theme.ColorPalette.brand.primary, ...ThemeTextStyles.bold },
           tertiaryTextDisabled: {
             color: theme.ColorPalette.brand.secondaryDisabled,
             ...ThemeTextStyles.bold,

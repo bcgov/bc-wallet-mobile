@@ -23,10 +23,10 @@ exports[`StartCall renders correctly 1`] = `
   <RCTScrollView
     contentContainerStyle={
       [
+        false,
         {
-          "padding": 16,
+          "padding": 24,
         },
-        undefined,
       ]
     }
     showsVerticalScrollIndicator={false}
@@ -34,7 +34,7 @@ exports[`StartCall renders correctly 1`] = `
     <View>
       <Image
         onError={[Function]}
-        resizeMode="contain"
+        resizeMode="cover"
         source={
           {
             "uri": "file://undefined",
@@ -44,6 +44,8 @@ exports[`StartCall renders correctly 1`] = `
           {
             "alignSelf": "center",
             "aspectRatio": 0.7692307692307692,
+            "borderColor": "#FCBA19",
+            "borderWidth": 6,
             "height": 300,
             "margin": -100,
             "overflow": "hidden",
@@ -66,7 +68,25 @@ exports[`StartCall renders correctly 1`] = `
               "fontWeight": "bold",
             },
             {
-              "marginTop": 40,
+              "marginTop": 32,
+            },
+          ]
+        }
+      >
+        BCSC.VideoCall.StartVideoCallTitle
+      </Text>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "bold",
+            },
+            {
+              "marginTop": 16,
             },
           ]
         }
@@ -80,8 +100,8 @@ exports[`StartCall renders correctly 1`] = `
             {
               "color": "#313132",
               "fontFamily": "BCSans-Regular",
-              "fontSize": 18,
-              "fontWeight": "normal",
+              "fontSize": 21,
+              "fontWeight": "bold",
             },
             {
               "marginTop": 24,
@@ -93,18 +113,23 @@ exports[`StartCall renders correctly 1`] = `
       </Text>
       <View
         style={
-          {
-            "alignContent": "center",
-            "alignItems": "flex-start",
-            "flexDirection": "row",
-            "marginVertical": 8,
-          }
+          [
+            {
+              "alignContent": "center",
+              "alignItems": "flex-start",
+              "flexDirection": "row",
+              "marginVertical": 8,
+            },
+            undefined,
+          ]
         }
       >
         <View
           style={
             {
-              "margin": 8,
+              "height": undefined,
+              "justifyContent": "center",
+              "marginHorizontal": 8,
             }
           }
         >
@@ -153,18 +178,23 @@ exports[`StartCall renders correctly 1`] = `
       </View>
       <View
         style={
-          {
-            "alignContent": "center",
-            "alignItems": "flex-start",
-            "flexDirection": "row",
-            "marginVertical": 8,
-          }
+          [
+            {
+              "alignContent": "center",
+              "alignItems": "flex-start",
+              "flexDirection": "row",
+              "marginVertical": 8,
+            },
+            undefined,
+          ]
         }
       >
         <View
           style={
             {
-              "margin": 8,
+              "height": undefined,
+              "justifyContent": "center",
+              "marginHorizontal": 8,
             }
           }
         >
@@ -213,18 +243,23 @@ exports[`StartCall renders correctly 1`] = `
       </View>
       <View
         style={
-          {
-            "alignContent": "center",
-            "alignItems": "flex-start",
-            "flexDirection": "row",
-            "marginVertical": 8,
-          }
+          [
+            {
+              "alignContent": "center",
+              "alignItems": "flex-start",
+              "flexDirection": "row",
+              "marginVertical": 8,
+            },
+            undefined,
+          ]
         }
       >
         <View
           style={
             {
-              "margin": 8,
+              "height": undefined,
+              "justifyContent": "center",
+              "marginHorizontal": 8,
             }
           }
         >
@@ -271,6 +306,40 @@ exports[`StartCall renders correctly 1`] = `
           </span>
         </Text>
       </View>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 21,
+              "fontWeight": "bold",
+            },
+            {
+              "marginTop": 24,
+            },
+          ]
+        }
+        testID="com.ariesbifold:id/HoursOfServiceTitle"
+      >
+        BCSC.VideoCall.CallBusyOrClosed.HoursOfService
+      </Text>
+      <View
+        style={
+          {
+            "marginTop": 8,
+          }
+        }
+      >
+        <ActivityIndicator
+          style={
+            {
+              "alignSelf": "center",
+            }
+          }
+        />
+      </View>
     </View>
   </RCTScrollView>
   <View
@@ -279,89 +348,133 @@ exports[`StartCall renders correctly 1`] = `
         {
           "gap": 16,
         },
-        {
-          "paddingBottom": 16,
-          "paddingHorizontal": 16,
-        },
+        false,
         undefined,
       ]
     }
   >
     <View
-      accessibilityLabel="BCSC.VideoCall.StartVideoCall"
-      accessibilityRole="button"
-      accessibilityState={
-        {
-          "busy": undefined,
-          "checked": undefined,
-          "disabled": false,
-          "expanded": undefined,
-          "selected": undefined,
-        }
-      }
-      accessibilityValue={
-        {
-          "max": undefined,
-          "min": undefined,
-          "now": undefined,
-          "text": undefined,
-        }
-      }
-      accessible={true}
-      collapsable={false}
-      focusable={true}
-      onClick={[Function]}
-      onResponderGrant={[Function]}
-      onResponderMove={[Function]}
-      onResponderRelease={[Function]}
-      onResponderTerminate={[Function]}
-      onResponderTerminationRequest={[Function]}
-      onStartShouldSetResponder={[Function]}
       style={
         {
-          "backgroundColor": "#003366",
-          "borderRadius": 4,
-          "opacity": 1,
-          "padding": 16,
+          "flexGrow": 1,
+          "width": "100%",
         }
       }
-      testID="com.ariesbifold:id/StartCall"
     >
       <View
         style={
           {
-            "alignItems": "center",
-            "flexDirection": "row",
-            "justifyContent": "center",
+            "left": 0,
+            "position": "absolute",
+            "right": 0,
+            "shadowColor": "#000",
+            "shadowOffset": {
+              "height": -3,
+              "width": 0,
+            },
+            "shadowOpacity": 0.9,
+            "shadowRadius": 3,
+            "top": 0,
+            "zIndex": -1,
           }
         }
       >
-        <Text
-          maxFontSizeMultiplier={2}
+        <View
           style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              [
-                {
-                  "color": "#FFFFFF",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "bold",
-                  "textAlign": "center",
-                },
-                false,
-                false,
-              ],
-            ]
+            {
+              "backgroundColor": "#F2F2F2",
+              "height": 1,
+            }
           }
+        />
+      </View>
+      <View
+        style={
+          {
+            "backgroundColor": "#F2F2F2",
+            "flexGrow": 1,
+            "gap": 8,
+            "padding": 24,
+          }
+        }
+      >
+        <View
+          accessibilityLabel="BCSC.VideoCall.StartVideoCall"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "backgroundColor": "#003366",
+              "borderRadius": 4,
+              "opacity": 1,
+              "padding": 16,
+            }
+          }
+          testID="com.ariesbifold:id/StartCall"
         >
-          BCSC.VideoCall.StartCall
-        </Text>
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "center",
+              }
+            }
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "color": "#FFFFFF",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
+                    false,
+                    false,
+                  ],
+                ]
+              }
+            >
+              BCSC.VideoCall.StartCall
+            </Text>
+          </View>
+        </View>
       </View>
     </View>
   </View>

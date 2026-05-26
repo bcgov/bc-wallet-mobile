@@ -82,9 +82,9 @@ const BCSCRootStack: React.FC = () => {
       ) : (
         <BCSCActivityProvider>
           <BCSCAccountProvider>
-            <BCSCIdTokenProvider>
-              <BCSCMainStack />
-            </BCSCIdTokenProvider>
+            {/* <BCSCIdTokenProvider> */}
+            <BCSCMainStack />
+            {/* </BCSCIdTokenProvider>  */}
           </BCSCAccountProvider>
         </BCSCActivityProvider>
       )}
