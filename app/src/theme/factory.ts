@@ -251,14 +251,18 @@ export function createAppTheme(v: ThemeVariant) {
     .withOverrides(
       (theme): DeepPartial<ITheme> => ({
         Buttons: {
-          primary: { padding: Spacing.sm, borderWidth: 1 },
+          primary: { padding: Spacing.sm, borderWidth: 1, borderColor: theme.ColorPalette.brand.primary },
           primaryText: {
             ...theme.TextTheme.normal,
             color: theme.ColorPalette.brand.text,
             ...ThemeTextStyles.bold,
             textAlign: 'center',
           },
-          primaryDisabled: { padding: Spacing.sm, borderWidth: 1 },
+          primaryDisabled: {
+            padding: Spacing.sm,
+            borderWidth: 1,
+            borderColor: theme.ColorPalette.brand.primaryDisabled,
+          },
           primaryTextDisabled: {
             ...theme.TextTheme.normal,
             color: theme.ColorPalette.brand.text,
@@ -286,8 +290,9 @@ export function createAppTheme(v: ThemeVariant) {
           tertiary: {
             padding: Spacing.sm,
             borderRadius: 4,
-            borderWidth: 0,
             backgroundColor: v.tertiaryButtonBackground,
+            borderWidth: 2,
+            borderColor: theme.ColorPalette.brand.primary,
           },
           tertiaryDisabled: {
             padding: Spacing.sm,
@@ -295,7 +300,7 @@ export function createAppTheme(v: ThemeVariant) {
             borderWidth: 2,
             borderColor: theme.ColorPalette.brand.tertiaryDisabled,
           },
-          tertiaryText: { color: v.textOnWhite, ...ThemeTextStyles.bold },
+          tertiaryText: { color: theme.ColorPalette.brand.primary, ...ThemeTextStyles.bold },
           tertiaryTextDisabled: {
             color: theme.ColorPalette.brand.secondaryDisabled,
             ...ThemeTextStyles.bold,

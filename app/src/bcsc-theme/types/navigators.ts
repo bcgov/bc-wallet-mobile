@@ -46,7 +46,6 @@ export enum BCSCScreens {
   EmailVerified = 'Email Verified',
   VerificationMethodSelection = 'Verify Options',
   VerifyInPerson = 'Verify In Person Instruction',
-  InformationRequired = 'Send Video Menu',
   PhotoInstructions = 'Selfie Photo Tips',
   TakePhoto = 'Selfie Photo Capture',
   PhotoReview = 'Selfie Photo Confirmation',
@@ -56,6 +55,7 @@ export enum BCSCScreens {
   VideoTooLong = 'Selfie Video Too Long',
   PendingReview = 'Send Video Check Status',
   CancelledReview = 'BCSCCancelledReview', // FIXME (MD): Not sure which V3 screen this maps to...
+  EvidenceUploading = 'Send Video Uploading',
   SuccessfullySent = 'Send Video Received Request Confirmation',
   VerificationSuccess = 'Setup Complete',
   ManualPairingCode = 'Login Device Pairing',
@@ -63,6 +63,13 @@ export enum BCSCScreens {
   AdditionalIdentificationRequired = 'Photo ID Required',
   DualIdentificationRequired = 'BCSCDualIdentificationRequired', // FIXME (MD): Not sure which V3 screen this maps to...
   IDPhotoInformation = 'ID Photo Instructions',
+  Contacts = 'Contacts',
+  WhatAreContacts = 'What are Contacts',
+  ContactDetails = 'Contact Details',
+  EditContactName = 'Edit Contact Name',
+  ContactJSONDetails = 'Contact JSON Details',
+  ContactChat = 'Contact Chat',
+  RemoveContact = 'Remove Contact',
   /**
    * FIXME (MD): EvidenceTypeList screen in V4 maps to multiple screens in V3 https://github.com/bcgov/bc-wallet-mobile/issues/3409
    *
@@ -76,7 +83,6 @@ export enum BCSCScreens {
   EvidenceTypeList = 'BCSCEvidenceTypeList',
   EvidenceCapture = 'Document Photo Capture',
   EvidenceIDCollection = 'Secondary ID Document Data Entry',
-  BeforeYouCall = 'Verify by Video Call Prep',
   StartCall = 'Video Verify Call Now Progress',
   CallBusyOrClosed = 'Video Verify Closed',
   LiveCall = 'Video Call: In-Call',
@@ -180,7 +186,6 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.EmailVerified]: undefined
   [BCSCScreens.VerificationMethodSelection]: undefined
   [BCSCScreens.VerifyInPerson]: undefined
-  [BCSCScreens.InformationRequired]: undefined
   [BCSCScreens.PhotoInstructions]: { forLiveCall: boolean }
   [BCSCScreens.TakePhoto]: {
     deviceSide: 'front' | 'back'
@@ -193,6 +198,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.TakeVideo]: undefined
   [BCSCScreens.VideoReview]: { videoPath: string; videoThumbnailPath: string }
   [BCSCScreens.VideoTooLong]: { videoLengthSeconds: number }
+  [BCSCScreens.EvidenceUploading]: undefined
   [BCSCScreens.SuccessfullySent]: undefined
   [BCSCScreens.PendingReview]: undefined
   [BCSCScreens.CancelledReview]: { agentReason?: string }
@@ -203,7 +209,6 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.EvidenceTypeList]: { cardProcess: BCSCCardProcess; photoFilter?: 'photo' | 'nonPhoto' }
   [BCSCScreens.EvidenceCapture]: { cardType: EvidenceType }
   [BCSCScreens.EvidenceIDCollection]: { cardType: EvidenceType; documentNumber?: string }
-  [BCSCScreens.BeforeYouCall]: { formattedHours: FormattedServicePeriod[] }
   [BCSCScreens.StartCall]: undefined
   [BCSCScreens.CallBusyOrClosed]: { busy: boolean; formattedHours: FormattedServicePeriod[] }
   [BCSCScreens.LiveCall]: undefined
@@ -260,6 +265,13 @@ export type BCSCMainStackParams = {
   [BCSCScreens.AccountRenewalInformation]: undefined
   [BCSCScreens.AccountRenewalFirstWarning]: undefined
   [BCSCScreens.AccountRenewalFinalWarning]: undefined
+  [BCSCScreens.Contacts]: undefined
+  [BCSCScreens.WhatAreContacts]: undefined
+  [BCSCScreens.ContactDetails]: { connectionId: string }
+  [BCSCScreens.EditContactName]: { connectionId: string }
+  [BCSCScreens.ContactJSONDetails]: { jsonBlob: string; title?: string }
+  [BCSCScreens.ContactChat]: { connectionId: string }
+  [BCSCScreens.RemoveContact]: { connectionId: string }
 
   // Bifold's AnonCreds credential detail screen reused inside BCSC's MainStack
   // so ListCredentials (rendered in the Wallet tab) can navigate to it.

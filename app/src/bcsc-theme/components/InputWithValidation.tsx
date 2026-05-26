@@ -47,7 +47,7 @@ type InputWithValidationProps = {
  * @returns {*} {React.ReactElement}
  */
 export const InputWithValidation: React.FC<InputWithValidationProps> = (props: InputWithValidationProps) => {
-  const { Inputs, ColorPalette, Spacing } = useTheme()
+  const { Inputs, ColorPalette, Spacing, TextTheme } = useTheme()
   const { reportActivity } = useBCSCActivity() ?? {}
   const inputRef = useRef<TextInput>(null)
   const [isFocused, setIsFocused] = useState(false)
@@ -55,6 +55,7 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
   const styles = StyleSheet.create({
     label: {
       marginBottom: Spacing.sm,
+      color: TextTheme.headingFour.color,
     },
     inputContainer: {
       ...Inputs.textInput,

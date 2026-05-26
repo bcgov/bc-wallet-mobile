@@ -18,6 +18,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert, Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import {
   Camera,
   CameraRuntimeError,
@@ -104,7 +105,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           right: 0,
           backgroundColor: ColorPalette.notification.popupOverlay,
           paddingBottom: Spacing.md,
-          paddingHorizontal: Spacing.md,
+          paddingHorizontal: Spacing.lg,
           flexDirection: 'column',
         },
         cancelContainer: {
@@ -112,7 +113,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           justifyContent: 'space-between',
           alignItems: 'center',
           paddingTop: Spacing.md,
-          paddingBottom: Spacing.xl,
+          paddingBottom: Spacing.lg,
         },
         recordingLengthContainer: {
           flexDirection: 'row',
@@ -125,7 +126,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           marginBottom: safeAreaInsets.bottom,
         },
       }),
-    [ColorPalette.notification.popupOverlay, Spacing.lg, Spacing.md, Spacing.sm, Spacing.xl, safeAreaInsets.bottom]
+    [ColorPalette.notification.popupOverlay, Spacing.lg, Spacing.md, Spacing.sm, safeAreaInsets.bottom]
   )
 
   const handleCancel = () => {
@@ -331,15 +332,25 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
         {/* Top overlay with prompt text */}
         <View style={styles.promptContainer}>
           {recordingInProgress ? (
-            <Animated.Text style={[{ textAlign: 'center', opacity: promptOpacity }, TextTheme.headingTwo]}>
+            <Animated.Text
+              style={[
+                TextTheme.headingTwo,
+                { textAlign: 'center', opacity: promptOpacity, color: ColorPalette.grayscale.white },
+              ]}
+            >
               {prompt}
             </Animated.Text>
           ) : (
             <>
-              <ThemedText variant={'headingTwo'} style={{ textAlign: 'center' }}>
+              <ThemedText variant={'headingTwo'} style={{ textAlign: 'center', color: ColorPalette.grayscale.white }}>
                 {t('BCSC.SendVideo.TakeVideo.RecordingWillStartIn')}
               </ThemedText>
-              <Animated.Text style={[{ textAlign: 'center', opacity: promptOpacity }, TextTheme.headingTwo]}>
+              <Animated.Text
+                style={[
+                  TextTheme.headingTwo,
+                  { textAlign: 'center', opacity: promptOpacity, color: ColorPalette.grayscale.white },
+                ]}
+              >
                 {prompt}
               </Animated.Text>
             </>
@@ -355,17 +366,24 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
                 hitSlop={hitSlop}
                 accessibilityLabel={t('Global.Cancel')}
                 accessibilityRole="button"
+                style={{ flexDirection: 'row', alignItems: 'center' }}
               >
-                <ThemedText style={{ color: 'white' }}>{t('Global.Cancel')}</ThemedText>
+                <Icon name={'chevron-left'} size={TextTheme.headingFour.fontSize} color={'white'} />
+                <ThemedText style={{ color: 'white', fontSize: TextTheme.headingFour.fontSize }}>
+                  {t('Global.Cancel')}
+                </ThemedText>
               </TouchableOpacity>
               <View style={styles.recordingLengthContainer}>
-                <ThemedText style={{ color: ColorPalette.semantic.error }}>{'\u2B24'}</ThemedText>
                 <ThemedText
                   style={{
                     color: exceedsMaxDuration ? ColorPalette.semantic.error : ColorPalette.grayscale.white,
+                    fontSize: TextTheme.headingFour.fontSize,
                   }}
                 >
                   {formatTime(elapsedTime)}
+                </ThemedText>
+                <ThemedText style={{ color: ColorPalette.semantic.error, fontSize: TextTheme.headingFour.fontSize }}>
+                  {'\u2B24'}
                 </ThemedText>
               </View>
             </View>

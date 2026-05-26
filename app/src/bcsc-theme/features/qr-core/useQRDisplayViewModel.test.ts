@@ -1,15 +1,14 @@
-import * as Bifold from '@bifold/core'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
 import { Share } from 'react-native'
 
 import useQRDisplayViewModel, { QRDisplayStatus } from './useQRDisplayViewModel'
 
+const mockUseConnectionByOutOfBandId = jest.fn<unknown, [string]>(() => undefined)
+
 jest.mock('@bifold/core', () => ({
   ...jest.requireActual('@bifold/core'),
-  createConnectionInvitation: jest.fn(),
+  useConnectionByOutOfBandId: (oobId: string) => mockUseConnectionByOutOfBandId(oobId),
 }))
-
-const mockCreateInvitation = jest.mocked(Bifold.createConnectionInvitation)
 
 const makeLogger = () =>
   ({
@@ -22,49 +21,68 @@ const makeLogger = () =>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }) as any
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const fakeAgent = {} as any
+const url = 'didcomm://invite?oob=abc'
 
-const url = 'https://realhost.example/invitation?oob=abc'
+// Build a fresh fake credo agent for each test so its mocked `oob.createInvitation`
+// can be tweaked per-case without leaking state between tests.
+const makeAgent = () => {
+  const toUrl = jest.fn(() => url)
+  const createInvitation = jest.fn(async () => ({
+    id: 'oob-1',
+    outOfBandInvitation: { toUrl },
+  }))
+  const agent = {
+    modules: { didcomm: { oob: { createInvitation } } },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any
+  return { agent, createInvitation, toUrl }
+}
 
 describe('useQRDisplayViewModel', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockUseConnectionByOutOfBandId.mockReturnValue(undefined)
   })
 
-  it('stays loading and does not call createConnectionInvitation when agent is null', async () => {
+  it('stays loading and does not call createInvitation when agent is null', async () => {
     const logger = makeLogger()
     const { result } = renderHook(() => useQRDisplayViewModel({ agent: null, logger }))
 
     expect(result.current.status).toBe(QRDisplayStatus.LOADING)
-    expect(mockCreateInvitation).not.toHaveBeenCalled()
   })
 
   it('transitions loading -> ready when invitation resolves', async () => {
     const logger = makeLogger()
-    mockCreateInvitation.mockResolvedValueOnce({
-      invitationUrl: url,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      record: {} as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      invitation: {} as any,
-    })
+    const { agent, createInvitation } = makeAgent()
 
-    const { result } = renderHook(() => useQRDisplayViewModel({ agent: fakeAgent, logger }))
+    const { result } = renderHook(() => useQRDisplayViewModel({ agent, logger }))
 
     await waitFor(() => {
       expect(result.current.status).toBe(QRDisplayStatus.READY)
     })
 
+    expect(createInvitation).toHaveBeenCalledTimes(1)
     expect(result.current.invitation).toBe(url)
     expect(result.current.error).toBeNull()
   })
 
+  it('forwards the label option into credo so the scanner gets a meaningful theirLabel', async () => {
+    const logger = makeLogger()
+    const { agent, createInvitation } = makeAgent()
+
+    renderHook(() => useQRDisplayViewModel({ agent, logger, label: "Kjartan's iPhone" }))
+
+    await waitFor(() => {
+      expect(createInvitation).toHaveBeenCalledWith({ label: "Kjartan's iPhone" })
+    })
+  })
+
   it('transitions loading -> error when invitation rejects and recovers via retry', async () => {
     const logger = makeLogger()
-    mockCreateInvitation.mockRejectedValueOnce(new Error('agent boom'))
+    const { agent, createInvitation, toUrl } = makeAgent()
+    createInvitation.mockRejectedValueOnce(new Error('agent boom'))
 
-    const { result } = renderHook(() => useQRDisplayViewModel({ agent: fakeAgent, logger }))
+    const { result } = renderHook(() => useQRDisplayViewModel({ agent, logger }))
 
     await waitFor(() => {
       expect(result.current.status).toBe(QRDisplayStatus.ERROR)
@@ -72,13 +90,8 @@ describe('useQRDisplayViewModel', () => {
     expect(result.current.error?.message).toBe('agent boom')
     expect(logger.error).toHaveBeenCalled()
 
-    mockCreateInvitation.mockResolvedValueOnce({
-      invitationUrl: url,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      record: {} as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      invitation: {} as any,
-    })
+    // Next call succeeds with the default factory return.
+    createInvitation.mockResolvedValueOnce({ id: 'oob-1', outOfBandInvitation: { toUrl } })
 
     act(() => {
       result.current.retry()
@@ -106,16 +119,10 @@ describe('useQRDisplayViewModel', () => {
 
   it('share invokes Share.share with the resolved invitation URL', async () => {
     const logger = makeLogger()
-    mockCreateInvitation.mockResolvedValueOnce({
-      invitationUrl: url,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      record: {} as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      invitation: {} as any,
-    })
+    const { agent } = makeAgent()
     const shareSpy = jest.spyOn(Share, 'share').mockResolvedValue({ action: Share.sharedAction })
 
-    const { result } = renderHook(() => useQRDisplayViewModel({ agent: fakeAgent, logger }))
+    const { result } = renderHook(() => useQRDisplayViewModel({ agent, logger }))
 
     await waitFor(() => {
       expect(result.current.status).toBe(QRDisplayStatus.READY)
@@ -132,17 +139,11 @@ describe('useQRDisplayViewModel', () => {
 
   it('resets to loading and clears invitation when agent flips from ready back to null', async () => {
     const logger = makeLogger()
-    mockCreateInvitation.mockResolvedValueOnce({
-      invitationUrl: url,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      record: {} as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      invitation: {} as any,
-    })
+    const { agent } = makeAgent()
 
     const { result, rerender } = renderHook(
-      ({ agent }: { agent: typeof fakeAgent | null }) => useQRDisplayViewModel({ agent, logger }),
-      { initialProps: { agent: fakeAgent } }
+      ({ agent: a }: { agent: typeof agent | null }) => useQRDisplayViewModel({ agent: a, logger }),
+      { initialProps: { agent } }
     )
 
     await waitFor(() => {
@@ -159,18 +160,39 @@ describe('useQRDisplayViewModel', () => {
     expect(result.current.error).toBeNull()
   })
 
+  it('fires onConnectionAccepted exactly once when a connection appears for the invitation', async () => {
+    const logger = makeLogger()
+    const { agent } = makeAgent()
+    const onConnectionAccepted = jest.fn()
+
+    const { result, rerender } = renderHook(() => useQRDisplayViewModel({ agent, logger, onConnectionAccepted }))
+
+    await waitFor(() => {
+      expect(result.current.status).toBe(QRDisplayStatus.READY)
+    })
+    expect(onConnectionAccepted).not.toHaveBeenCalled()
+
+    // Connection now resolves for the displayed OOB invitation.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockUseConnectionByOutOfBandId.mockReturnValue({ id: 'conn-1' } as any)
+    rerender({})
+
+    await waitFor(() => {
+      expect(onConnectionAccepted).toHaveBeenCalledWith('conn-1')
+    })
+    expect(onConnectionAccepted).toHaveBeenCalledTimes(1)
+
+    // Further re-renders with the same connection should not re-fire.
+    rerender({})
+    expect(onConnectionAccepted).toHaveBeenCalledTimes(1)
+  })
+
   it('logs but does not throw when Share.share rejects', async () => {
     const logger = makeLogger()
-    mockCreateInvitation.mockResolvedValueOnce({
-      invitationUrl: url,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      record: {} as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      invitation: {} as any,
-    })
+    const { agent } = makeAgent()
     const shareSpy = jest.spyOn(Share, 'share').mockRejectedValue(new Error('user cancelled'))
 
-    const { result } = renderHook(() => useQRDisplayViewModel({ agent: fakeAgent, logger }))
+    const { result } = renderHook(() => useQRDisplayViewModel({ agent, logger }))
 
     await waitFor(() => {
       expect(result.current.status).toBe(QRDisplayStatus.READY)

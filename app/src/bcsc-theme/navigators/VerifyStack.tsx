@@ -42,7 +42,6 @@ import EmailConfirmationScreen from '../features/verify/email/EmailConfirmationS
 import EmailVerifiedScreen from '../features/verify/email/EmailVerifiedScreen'
 import EnterEmailScreen from '../features/verify/email/EnterEmailScreen'
 import VerifyInPersonScreen from '../features/verify/in-person/VerifyInPersonScreen'
-import BeforeYouCallScreen from '../features/verify/live-call/BeforeYouCallScreen'
 import CallBusyOrClosedScreen from '../features/verify/live-call/CallBusyOrClosedScreen'
 import LiveCallScreen from '../features/verify/live-call/LiveCallScreen'
 import StartCallScreen from '../features/verify/live-call/StartCallScreen'
@@ -54,10 +53,10 @@ import EvidenceIDCollectionScreen from '../features/verify/non-photo/EvidenceIDC
 import EvidenceTypeListScreen from '../features/verify/non-photo/EvidenceTypeListScreen'
 import IDPhotoInformationScreen from '../features/verify/non-photo/IDPhotoInformationScreen'
 import CancelledReview from '../features/verify/send-video/CancelledReview'
-import InformationRequiredScreen from '../features/verify/send-video/InformationRequiredScreen'
 import PendingReviewScreen from '../features/verify/send-video/PendingReviewScreen'
 import SuccessfullySentScreen from '../features/verify/send-video/SuccessfullySentScreen'
 import TakeVideoScreen from '../features/verify/send-video/TakeVideoScreen'
+import UploadingScreen from '../features/verify/send-video/UploadingScreen'
 import VideoInstructionsScreen from '../features/verify/send-video/VideoInstructionsScreen'
 import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
@@ -154,11 +153,6 @@ const VerifyStack = () => {
           }),
         }}
       />
-      <Stack.Screen
-        name={BCSCScreens.InformationRequired}
-        component={InformationRequiredScreen}
-        options={{ title: t('BCSC.Screens.InformationRequired') }}
-      />
       <Stack.Screen name={BCSCScreens.PhotoInstructions} component={PhotoInstructionsScreen} />
       <Stack.Screen name={BCSCScreens.TakePhoto} component={TakePhotoScreen} options={{ headerShown: false }} />
       <Stack.Screen name={BCSCScreens.PhotoReview} component={PhotoReviewScreen} options={{ headerShown: false }} />
@@ -168,6 +162,11 @@ const VerifyStack = () => {
       <Stack.Screen name={BCSCScreens.PendingReview} component={PendingReviewScreen} />
       <Stack.Screen name={BCSCScreens.CancelledReview} component={CancelledReview} />
       <Stack.Screen name={BCSCScreens.VideoTooLong} component={VideoTooLongScreen} options={{ headerShown: false }} />
+      <Stack.Screen
+        name={BCSCScreens.EvidenceUploading}
+        component={UploadingScreen}
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
       <Stack.Screen
         name={BCSCScreens.SuccessfullySent}
         component={SuccessfullySentScreen}
@@ -209,7 +208,6 @@ const VerifyStack = () => {
           title: route.params.title,
         })}
       />
-      <Stack.Screen name={BCSCScreens.BeforeYouCall} component={BeforeYouCallScreen} />
       <Stack.Screen name={BCSCScreens.StartCall} component={StartCallScreen} />
       <Stack.Screen name={BCSCScreens.LiveCall} component={LiveCallScreen} options={{ headerShown: false }} />
       <Stack.Screen name={BCSCScreens.VerifyNotComplete} component={VerifyNotCompleteScreen} />

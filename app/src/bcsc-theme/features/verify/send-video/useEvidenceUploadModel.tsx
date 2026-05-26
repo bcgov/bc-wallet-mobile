@@ -4,33 +4,35 @@ import {
   VerificationPrompt,
   VerificationVideoUploadPayload,
 } from '@/bcsc-theme/api/hooks/useEvidenceApi'
-import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useEvidenceUpload from '@/bcsc-theme/hooks/useEvidenceUpload'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { getVideoMetadata } from '@/bcsc-theme/utils/file-info'
+import { getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { AppError, ErrorRegistry } from '@/errors'
 import { useAlerts } from '@/hooks/useAlerts'
-import { BCState } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import RNFS from 'react-native-fs'
 import { VerificationVideoCache } from './VideoReviewScreen'
 
 const useEvidenceUploadModel = (
-  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.InformationRequired>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceUploading>
 ) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [store] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
+  const isCancelledRef = useRef(false)
   const { evidence } = useApi()
   const { updateAccountFlags } = useSecureActions()
   const { processAdditionalEvidence } = useEvidenceUpload()
   const { t } = useTranslation()
-  const loadingScreen = useLoadingScreen()
+  const [isUploading, setIsUploading] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
+  const [uploadMessage, setUploadMessage] = useState<string | null>(null)
   const { fileUploadErrorAlert } = useAlerts(navigation)
 
   const { photoPath, videoPath, videoThumbnailPath, videoDuration, prompts, photoMetadata } = store.bcsc
@@ -116,7 +118,8 @@ const useEvidenceUploadModel = (
   )
 
   const handleSend = useCallback(async () => {
-    const stopLoading = loadingScreen.startLoading(t('BCSC.SendVideo.UploadProgress.PreparingVideo'))
+    setIsUploading(true)
+    setUploadMessage(t('BCSC.SendVideo.UploadProgress.PreparingVideo'))
     try {
       if (!photoPath || !videoPath || !videoDuration) {
         throw new Error('Missing photo or video data')
@@ -135,12 +138,21 @@ const useEvidenceUploadModel = (
       }
 
       const localFiles = await prepareLocalFiles(photoPath, videoPath, videoDuration, prompts)
+      if (isCancelledRef.current) {
+        return
+      }
 
-      loadingScreen.updateLoadingMessage(t('BCSC.SendVideo.UploadProgress.PreparingDocuments'))
+      setUploadMessage(t('BCSC.SendVideo.UploadProgress.PreparingDocuments'))
       const additionalEvidence = await processAdditionalEvidence()
+      if (isCancelledRef.current) {
+        return
+      }
 
-      loadingScreen.updateLoadingMessage(t('BCSC.SendVideo.UploadProgress.UploadingInformation'))
+      setUploadMessage(t('BCSC.SendVideo.UploadProgress.UploadingInformation'))
       const evidenceMetadata = await uploadEvidenceMetadata(photoMetadata, localFiles.videoMetadata)
+      if (isCancelledRef.current) {
+        return
+      }
 
       await uploadEvidenceFiles(
         evidenceMetadata.photoMetadataResponse.upload_uri,
@@ -149,8 +161,11 @@ const useEvidenceUploadModel = (
         localFiles.videoBytes,
         additionalEvidence
       )
+      if (isCancelledRef.current) {
+        return
+      }
 
-      loadingScreen.updateLoadingMessage(t('BCSC.SendVideo.UploadProgress.FinalizingVerification'))
+      setUploadMessage(t('BCSC.SendVideo.UploadProgress.FinalizingVerification'))
       const additionalUploadUris = additionalEvidence.map(({ uploadUri }) => uploadUri)
       await finalizeVerification(
         evidenceMetadata.photoMetadataResponse.upload_uri,
@@ -171,6 +186,9 @@ const useEvidenceUploadModel = (
         })
       )
     } catch (error) {
+      if (isCancelledRef.current) {
+        return
+      }
       /**
        * Dev note: evidence_upload_server_error + evidence_upload_unkown_error are both deprecated in the IAS documentation.
        * So all errors during the upload process will be categorized as FILE_UPLOAD_ERROR.
@@ -179,12 +197,12 @@ const useEvidenceUploadModel = (
       logger.error('[useEvidenceUploadModel] Error during evidence upload process', appError)
       fileUploadErrorAlert(appError)
     } finally {
-      stopLoading()
+      setIsUploading(false)
+      setUploadMessage(null)
     }
   }, [
     fileUploadErrorAlert,
     finalizeVerification,
-    loadingScreen,
     logger,
     navigation,
     photoMetadata,
@@ -202,10 +220,26 @@ const useEvidenceUploadModel = (
     videoPath,
   ])
 
+  const handleCancel = useCallback(async () => {
+    setIsCancelling(true)
+    isCancelledRef.current = true
+    await Promise.allSettled([
+      removeFileSafely(photoPath, logger),
+      removeFileSafely(videoPath, logger),
+      removeFileSafely(videoThumbnailPath, logger),
+    ])
+    VerificationVideoCache.clearCache()
+    dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
+    navigation.goBack()
+  }, [dispatch, logger, navigation, photoPath, videoPath, videoThumbnailPath])
+
   return {
     handleSend,
+    handleCancel,
     isReady,
-    isLoading: loadingScreen.isLoading,
+    isUploading,
+    isCancelling,
+    uploadMessage,
   }
 }
 

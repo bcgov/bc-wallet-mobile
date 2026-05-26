@@ -57,6 +57,9 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
 
   const onResetWallet = () => {
     navigation.navigate(BCSCScreens.MainResetWalletConfirmation)
+
+  const onContacts = () => {
+    navigation.navigate(BCSCScreens.Contacts)
   }
 
   return (
@@ -71,6 +74,7 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
       onAppSecurity={onAppSecurity}
       onChangePIN={onChangePIN}
       onResetWallet={onResetWallet}
+      onContacts={onContacts}
     />
   )
 }

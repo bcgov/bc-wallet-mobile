@@ -82,6 +82,7 @@ exports[`TakeVideoScreen renders correctly 1`] = `
               "fontWeight": "bold",
             },
             {
+              "color": "#FFFFFF",
               "textAlign": "center",
             },
           ]
@@ -93,7 +94,7 @@ exports[`TakeVideoScreen renders correctly 1`] = `
         collapsable={false}
         style={
           {
-            "color": "#313132",
+            "color": "#FFFFFF",
             "fontFamily": "BCSans-Regular",
             "fontSize": 32,
             "fontWeight": "bold",

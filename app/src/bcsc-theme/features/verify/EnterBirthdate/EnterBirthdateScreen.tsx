@@ -1,3 +1,4 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import DateInput from '@/bcsc-theme/components/DateInput'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { isHandledAppError } from '@/errors/appError'
@@ -16,7 +17,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import moment from 'moment'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { View } from 'react-native'
 import { VerificationCardError } from '../verificationCardError'
 import { useEnterBirthdateViewModel } from './useEnterBirthdateViewModel'
 
@@ -37,15 +38,6 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   const isBirthDateComplete = birthDate.length === 10
   const isBirthDateInvalid = isBirthDateComplete && !vm.isDateValid(birthDate)
   const birthDateError = isBirthDateInvalid ? t('BCSC.Birthdate.InvalidDate') : undefined
-
-  const styles = StyleSheet.create({
-    lineBreak: {
-      height: 8,
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-      width: '100%',
-      marginBottom: Spacing.md,
-    },
-  })
 
   const handleSubmit = async () => {
     if (!birthDate) {
@@ -76,29 +68,29 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   }
 
   const controls = (
-    <Button
-      title={t('Global.Done')}
-      accessibilityLabel={t('Global.Done')}
-      testID={testIdWithKey('Done')}
-      onPress={handleSubmit}
-      buttonType={ButtonType.Primary}
-      disabled={loading || !isBirthDateComplete || isBirthDateInvalid}
-    >
-      {loading && <ButtonLoading />}
-    </Button>
+    <ControlContainer>
+      <Button
+        title={t('Global.Continue')}
+        accessibilityLabel={t('Global.Continue')}
+        testID={testIdWithKey('Continue')}
+        onPress={handleSubmit}
+        buttonType={ButtonType.Primary}
+        disabled={loading || !isBirthDateComplete || isBirthDateInvalid}
+      >
+        {loading && <ButtonLoading />}
+      </Button>
+    </ControlContainer>
   )
 
   return (
-    <ScreenWrapper controls={controls}>
-      <ThemedText style={{ marginBottom: Spacing.sm }}>
-        {t('BCSC.Birthdate.CardSerialNumber', { serial: vm.serial })}
-      </ThemedText>
-      <View style={styles.lineBreak} />
-      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-        {t('BCSC.Birthdate.Heading')}
-      </ThemedText>
-      <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.Birthdate.Paragraph')}</ThemedText>
-      <View style={{ marginVertical: Spacing.md, width: '100%' }}>
+    <ScreenWrapper
+      padded={false}
+      controls={controls}
+      scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
+    >
+      <ThemedText variant={'headingThree'}>{t('BCSC.Birthdate.Heading')}</ThemedText>
+      <ThemedText>{t('BCSC.Birthdate.Paragraph')}</ThemedText>
+      <View style={{ width: '100%' }}>
         <DateInput
           id={'birthDate'}
           label={t('BCSC.Birthdate.Label')}

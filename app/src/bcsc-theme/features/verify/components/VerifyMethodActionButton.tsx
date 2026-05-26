@@ -70,7 +70,7 @@ const VerifyMethodActionButton = ({
       accessibilityLabel={a11yLabel(title)}
     >
       <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', minWidth: 0 }}>
-        <View style={{ marginRight: Spacing.lg }}>
+        <View style={{ marginRight: Spacing.md }}>
           <Icon name={icon} size={iconSize} color={ColorPalette.brand.headerText} />
         </View>
         <View style={styles.contentContainer}>
