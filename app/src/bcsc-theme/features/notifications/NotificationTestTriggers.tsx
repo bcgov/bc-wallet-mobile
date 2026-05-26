@@ -37,6 +37,12 @@ const styles = StyleSheet.create({
   },
 })
 
+/**
+ * NotificationTestTriggers is a development utility component that provides buttons to trigger test notifications (BasicMessage and Revocation) within the app.
+ * It checks for necessary conditions (like agent initialization and existing connections/credentials) before allowing the triggers, and displays status messages about the actions taken.
+ *
+ * @return {*}
+ */
 const NotificationTestTriggers: React.FC = () => {
   const ctx = useBCSCAgentSafe()
   const agent = ctx?.agent
@@ -105,9 +111,7 @@ const NotificationTestTriggers: React.FC = () => {
         onPress={triggerBasicMessage}
         disabled={connections.length === 0}
       >
-        <Text style={styles.buttonText}>
-          Trigger BasicMessage{connections.length === 0 ? ' (no connections)' : ''}
-        </Text>
+        <Text style={styles.buttonText}>Trigger BasicMessage{connections.length === 0 ? ' (no connections)' : ''}</Text>
       </Pressable>
 
       <Pressable
@@ -115,9 +119,7 @@ const NotificationTestTriggers: React.FC = () => {
         onPress={triggerRevocation}
         disabled={credsDone.length === 0}
       >
-        <Text style={styles.buttonText}>
-          Trigger Revocation{credsDone.length === 0 ? ' (no credentials)' : ''}
-        </Text>
+        <Text style={styles.buttonText}>Trigger Revocation{credsDone.length === 0 ? ' (no credentials)' : ''}</Text>
       </Pressable>
 
       {status ? <Text style={styles.statusText}>{status}</Text> : null}
