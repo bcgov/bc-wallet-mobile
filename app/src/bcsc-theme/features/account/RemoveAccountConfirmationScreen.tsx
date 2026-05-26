@@ -7,8 +7,9 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
   const { t } = useTranslation()
   const factoryReset = useFactoryReset()
 
-  const onConfirm = async () => {
+  const onConfirm = async (stopLoading: () => void) => {
     await factoryReset()
+    stopLoading()
   }
 
   return (

@@ -1,7 +1,7 @@
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
-import React from 'react'
+import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -11,8 +11,7 @@ interface DeleteConfirmationScreenProps {
   description: string
   confirmLabel: string
   loadingLabel: string
-  onConfirm: () => Promise<void>
-  disabled?: boolean
+  onConfirm: (stopLoading: () => void) => Promise<void>
 }
 
 const DeleteConfirmationScreen: React.FC<DeleteConfirmationScreenProps> = ({
@@ -21,13 +20,13 @@ const DeleteConfirmationScreen: React.FC<DeleteConfirmationScreenProps> = ({
   confirmLabel,
   loadingLabel,
   onConfirm,
-  disabled = false,
 }) => {
   const { Spacing } = useTheme()
   const navigation = useNavigation()
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const loadingScreen = useLoadingScreen()
+  const [disabled, setDisabled] = useState(false)
 
   const styles = StyleSheet.create({
     container: {
@@ -46,13 +45,18 @@ const DeleteConfirmationScreen: React.FC<DeleteConfirmationScreenProps> = ({
   })
 
   const onPress = async () => {
+    if (disabled) {
+      return
+    }
+
+    setDisabled(true)
     const stopLoading = loadingScreen.startLoading(loadingLabel)
     try {
-      await onConfirm()
+      await onConfirm(stopLoading)
     } catch (error) {
       logger.error('[DeleteConfirmationScreen] Action failed', error as Error)
-    } finally {
       stopLoading()
+      setDisabled(false)
     }
   }
 
