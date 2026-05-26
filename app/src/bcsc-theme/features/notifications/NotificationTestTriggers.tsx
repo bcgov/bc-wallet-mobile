@@ -1,11 +1,10 @@
 import { useBCSCAgentSafe } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
-import { CredentialMetadata, credentialCustomMetadata, useStore } from '@bifold/core'
+import { CredentialMetadata, credentialCustomMetadata } from '@bifold/core'
 import { useConnections, useCredentialByState } from '@bifold/react-hooks'
 import {
   DidCommBasicMessageRecord,
   DidCommBasicMessageRepository,
   DidCommBasicMessageRole,
-  DidCommCredentialExchangeRecord,
   DidCommCredentialExchangeRepository,
   DidCommCredentialState,
   DidCommRevocationNotification,
@@ -76,12 +75,10 @@ const NotificationTestTriggers: React.FC = () => {
       return
     }
 
-    const eligible = credsDone.filter((c) => {
+    const credential = credsDone.find((c) => {
       const meta = c.metadata.get(CredentialMetadata.customMetadata) as credentialCustomMetadata | undefined
       return !c.revocationNotification && meta?.revoked_seen === undefined
     })
-
-    const credential = eligible[0] as DidCommCredentialExchangeRecord | undefined
     if (!credential) {
       Alert.alert('No eligible credentials', 'No credentials in Done state available for revocation test.')
       return

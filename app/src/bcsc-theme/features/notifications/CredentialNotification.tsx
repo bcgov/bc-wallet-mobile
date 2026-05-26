@@ -34,6 +34,12 @@ interface CredentialNotificationProps {
   notification: CredentialNotificationRecord
 }
 
+/**
+ * CredentialNotification component that renders different types of notifications based on the notification type.
+ *
+ * @param {CredentialNotificationProps} props
+ * @return {*}
+ */
 const CredentialNotification = (props: CredentialNotificationProps) => {
   const notificationType = getCredentialNotificationType(props.notification)
 
@@ -51,6 +57,12 @@ const CredentialNotification = (props: CredentialNotificationProps) => {
   }
 }
 
+/**
+ * Helper function to format timestamps in a user-friendly way (e.g., "Just now", "5 minutes ago", "Today at 3:45 PM").
+ *
+ * @param {Date} date
+ * @return {*}  {string}
+ */
 function formatTimestamp(date: Date): string {
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
@@ -67,6 +79,12 @@ function formatTimestamp(date: Date): string {
   return date.toLocaleDateString([], { month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 }
 
+/**
+ * Basic Message Notifications
+ *
+ * @param {CredentialNotificationProps} { notification }
+ * @return {*}
+ */
 const BasicMessageNotification = ({ notification }: CredentialNotificationProps) => {
   const { t } = useTranslation()
   const { agent } = useBCSCAgent()
@@ -101,6 +119,12 @@ const BasicMessageNotification = ({ notification }: CredentialNotificationProps)
   )
 }
 
+/**
+ * Credential Offer Notifications
+ *
+ * @param {CredentialNotificationProps} { notification }
+ * @return {*}
+ */
 const CredentialOfferNotification = ({ notification }: CredentialNotificationProps) => {
   const { t } = useTranslation()
   const [store] = useStore()
@@ -110,9 +134,10 @@ const CredentialOfferNotification = ({ notification }: CredentialNotificationPro
   const { name, version } = parsedSchema(credential)
   const label = getConnectionName(connection, store.preferences.alternateContactNames)
 
+  const credentialDisplayName = version ? `${name} v${version}` : name
   const description = label
-    ? t('Notification.CredentialOffer.Description', { label, credential: `${name}${version ? ` v${version}` : ''}` })
-    : `${name}${version ? ` v${version}` : ''}`
+    ? t('Notification.CredentialOffer.Description', { label, credential: credentialDisplayName })
+    : credentialDisplayName
 
   return (
     <NotificationCard
@@ -121,14 +146,18 @@ const CredentialOfferNotification = ({ notification }: CredentialNotificationPro
       icon="card-membership"
       cardType={InfoBoxType.Info}
       onPress={() => navigation.navigate(BCSCScreens.ConnectionLoading, { credentialId: credential.id })}
-      onClose={() => {
-        // TODO: Add decline confirmation modal
-      }}
+      onClose={() => undefined}
       timestamp={formatTimestamp(notification.createdAt)}
     />
   )
 }
 
+/**
+ * Proof Request Notifications
+ *
+ * @param {CredentialNotificationProps} { notification }
+ * @return {*}
+ */
 const ProofRequestNotification = ({ notification }: CredentialNotificationProps) => {
   const { t } = useTranslation()
   const { agent } = useBCSCAgent()
@@ -161,11 +190,9 @@ const ProofRequestNotification = ({ notification }: CredentialNotificationProps)
     fetchProofName()
   }, [agent, proof.id])
 
-  const description = proofName
-    ? proofName
-    : label
-      ? t('Notification.ProofRequest.Description', { label })
-      : t('Notification.ProofRequest.DefaultDescription')
+  const description =
+    proofName ||
+    (label ? t('Notification.ProofRequest.Description', { label }) : t('Notification.ProofRequest.DefaultDescription'))
 
   const isDone = proof.state === DidCommProofState.Done || proof.state === DidCommProofState.PresentationReceived
 
@@ -179,9 +206,7 @@ const ProofRequestNotification = ({ notification }: CredentialNotificationProps)
   const handleClose = () => {
     if (isDone && agent) {
       markProofAsViewed(agent, proof)
-      return
     }
-    // TODO: Add decline confirmation modal for pending requests
   }
 
   return (
@@ -223,7 +248,7 @@ const RevocationNotification = ({ notification }: CredentialNotificationProps) =
   return (
     <NotificationCard
       title={t('Notification.Revocation.Title')}
-      description={`${name}${version ? ` v${version}` : ''}`}
+      description={version ? `${name} v${version}` : name}
       icon="error"
       cardType={InfoBoxType.Error}
       onPress={() => navigation.navigate(Screens.CredentialDetails, { credentialId: credential.id })}
