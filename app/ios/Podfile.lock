@@ -82,9 +82,21 @@ PODS:
   - ExpoFont (14.0.11):
     - ExpoModulesCore
   - ExpoKeepAwake (15.0.8):
+    - ExpoModulesCore
+  - ExpoModulesCore (3.0.29):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
     - RCTTypeSafety
     - React-Core
     - React-debug
+    - React-Fabric
     - React-featureflags
     - React-graphics
     - React-ImageManager
