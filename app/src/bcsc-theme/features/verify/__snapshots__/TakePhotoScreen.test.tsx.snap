@@ -125,7 +125,7 @@ exports[`TakePhoto renders correctly 1`] = `
             />
             <RNSVGEllipse
               cx={375}
-              cy={657}
+              cy={637}
               fill={
                 {
                   "payload": 4278190080,
@@ -136,6 +136,7 @@ exports[`TakePhoto renders correctly 1`] = `
                 [
                   "fill",
                   "stroke",
+                  "strokeWidth",
                 ]
               }
               rx={337.5}
@@ -146,6 +147,7 @@ exports[`TakePhoto renders correctly 1`] = `
                   "type": 0,
                 }
               }
+              strokeWidth={4}
             />
           </RNSVGMask>
         </RNSVGDefs>
@@ -171,7 +173,7 @@ exports[`TakePhoto renders correctly 1`] = `
         />
         <RNSVGEllipse
           cx={375}
-          cy={657}
+          cy={637}
           fill={
             {
               "payload": 0,
@@ -182,6 +184,7 @@ exports[`TakePhoto renders correctly 1`] = `
             [
               "fill",
               "stroke",
+              "strokeWidth",
             ]
           }
           rx={337.5}
@@ -192,6 +195,7 @@ exports[`TakePhoto renders correctly 1`] = `
               "type": 0,
             }
           }
+          strokeWidth={4}
         />
       </RNSVGGroup>
     </RNSVGSvgView>
