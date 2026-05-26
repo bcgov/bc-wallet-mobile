@@ -127,6 +127,7 @@ const BasicMessageNotification = ({ notification }: CredentialNotificationProps)
  */
 const CredentialOfferNotification = ({ notification }: CredentialNotificationProps) => {
   const { t } = useTranslation()
+  const { agent } = useBCSCAgent()
   const [store] = useStore()
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const credential = notification as DidCommCredentialExchangeRecord
@@ -139,6 +140,17 @@ const CredentialOfferNotification = ({ notification }: CredentialNotificationPro
     ? t('Notification.CredentialOffer.Description', { label, credential: credentialDisplayName })
     : credentialDisplayName
 
+  const handleClose = async () => {
+    if (!agent) {
+      return
+    }
+    try {
+      await agent.didcomm.credentials.declineOffer({ credentialExchangeRecordId: credential.id })
+    } catch (err) {
+      agent.config.logger.error(`Failed to decline credential offer: ${err}`)
+    }
+  }
+
   return (
     <NotificationCard
       title={t('Notification.CredentialOffer.Title')}
@@ -146,7 +158,7 @@ const CredentialOfferNotification = ({ notification }: CredentialNotificationPro
       icon="card-membership"
       cardType={InfoBoxType.Info}
       onPress={() => navigation.navigate(BCSCScreens.ConnectionLoading, { credentialId: credential.id })}
-      onClose={() => undefined}
+      onClose={handleClose}
       timestamp={formatTimestamp(notification.createdAt)}
     />
   )
@@ -183,8 +195,8 @@ const ProofRequestNotification = ({ notification }: CredentialNotificationProps)
         if (message?.comment) {
           setProofName(message.comment)
         }
-      } catch {
-        // fall through to label-based description
+      } catch (err) {
+        agent?.config.logger.error(`Failed to fetch proof request name: ${err}`)
       }
     }
     fetchProofName()
