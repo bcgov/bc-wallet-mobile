@@ -19,7 +19,7 @@ const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake
   const styles = StyleSheet.create({
     controlsContainer: {
       position: 'absolute',
-      gap: Spacing.md,
+      gap: Spacing.sm,
       bottom: 0,
       left: 0,
       right: 0,

@@ -236,7 +236,7 @@ describe('useVerificationMethodModel', () => {
       ],
     }
 
-    it('should navigate to BeforeYouCall when destination is available and within service hours', async () => {
+    it('should navigate to PhotoInstructions when destination is available and within service hours', async () => {
       const formattedHours = [{ title: 'Monday to Friday', hours: '7:30am - 5pm Pacific Time' }]
 
       mockVideoCallApi.getVideoDestinations.mockResolvedValue(mockDestinations)
@@ -254,8 +254,8 @@ describe('useVerificationMethodModel', () => {
 
       expect(mockVideoCallApi.getVideoDestinations).toHaveBeenCalledTimes(1)
       expect(mockVideoCallApi.getServiceHours).toHaveBeenCalledTimes(1)
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.BeforeYouCall, {
-        formattedHours,
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.PhotoInstructions, {
+        forLiveCall: true,
       })
       expect(result.current.liveCallLoading).toBe(false)
     })

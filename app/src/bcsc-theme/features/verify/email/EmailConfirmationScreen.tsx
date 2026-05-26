@@ -132,7 +132,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
         padding: Spacing.lg,
       }}
     >
-      <ThemedText variant={'headingTwo'} style={{ textAlign: 'center', color: 'black' }}>
+      <ThemedText variant={'headingThree'} style={{ textAlign: 'center', color: 'black' }}>
         {t('BCSC.EmailConfirmation.EnterVerificationCode')}
       </ThemedText>
       <ThemedText style={{ textAlign: 'center' }}>{t('BCSC.EmailConfirmation.CodeSentTo')} </ThemedText>

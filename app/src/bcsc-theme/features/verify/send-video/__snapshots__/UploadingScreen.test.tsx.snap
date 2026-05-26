@@ -299,10 +299,7 @@ exports[`UploadingScreen renders correctly 1`] = `
         {
           "gap": 16,
         },
-        {
-          "paddingBottom": 16,
-          "paddingHorizontal": 16,
-        },
+        false,
         undefined,
       ]
     }

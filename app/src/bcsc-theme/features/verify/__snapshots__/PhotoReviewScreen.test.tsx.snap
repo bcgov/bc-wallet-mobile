@@ -48,7 +48,7 @@ exports[`PhotoReview renders correctly 1`] = `
         {
           "backgroundColor": "rgba(0, 0, 0, 0.5)",
           "bottom": 0,
-          "gap": 16,
+          "gap": 8,
           "left": 0,
           "padding": 24,
           "position": "absolute",

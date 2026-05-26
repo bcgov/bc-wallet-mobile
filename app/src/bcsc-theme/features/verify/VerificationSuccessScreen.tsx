@@ -1,11 +1,13 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, useAnimatedComponents } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, useAnimatedComponents, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
 import { BackHandler, StyleSheet } from 'react-native'
 import useVerificationResponseViewModel from './_models/useVerificationResponseViewModel'
 
 const VerificationSuccessScreen = () => {
+  const { Spacing } = useTheme()
   const { t } = useTranslation()
   const { isSettingUpAccount, handleAccountSetup } = useVerificationResponseViewModel()
   const { ButtonLoading } = useAnimatedComponents()
@@ -14,6 +16,7 @@ const VerificationSuccessScreen = () => {
     contentContainer: {
       justifyContent: 'center',
       alignItems: 'center',
+      padding: Spacing.lg,
     },
   })
 
@@ -24,22 +27,24 @@ const VerificationSuccessScreen = () => {
   })
 
   const controls = (
-    <Button
-      testID={testIdWithKey(t('BCSC.Verification.ButtonText'))}
-      accessibilityLabel={t('BCSC.Verification.ButtonText')}
-      title={t('BCSC.Verification.ButtonText')}
-      buttonType={ButtonType.Primary}
-      onPress={async () => {
-        await handleAccountSetup()
-      }}
-      disabled={isSettingUpAccount}
-    >
-      {isSettingUpAccount && <ButtonLoading />}
-    </Button>
+    <ControlContainer>
+      <Button
+        testID={testIdWithKey(t('BCSC.Verification.ButtonText'))}
+        accessibilityLabel={t('BCSC.Verification.ButtonText')}
+        title={t('BCSC.Verification.ButtonText')}
+        buttonType={ButtonType.Primary}
+        onPress={async () => {
+          await handleAccountSetup()
+        }}
+        disabled={isSettingUpAccount}
+      >
+        {isSettingUpAccount && <ButtonLoading />}
+      </Button>
+    </ControlContainer>
   )
   return (
     <ScreenWrapper
-      padded
+      padded={false}
       controls={controls}
       edges={['top', 'bottom', 'left', 'right']}
       scrollViewContainerStyle={styles.contentContainer}

@@ -1,4 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BC_SERVICE_LOCATION_URL } from '@/constants'
 import { BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
@@ -66,67 +67,80 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
 
   const controls = (
     <>
-      {error && (
-        <ThemedText variant={'inlineErrorText'} style={{ marginBottom: Spacing.sm }}>
-          {t('BCSC.VerifyIdentity.YouHaveNotBeenVerified')}
+      <View style={{ paddingHorizontal: Spacing.lg }}>
+        {error && (
+          <ThemedText variant={'inlineErrorText'} style={{ marginBottom: Spacing.sm }}>
+            {t('BCSC.VerifyIdentity.YouHaveNotBeenVerified')}
+          </ThemedText>
+        )}
+        <ThemedText variant={'labelSubtitle'}>
+          {t('BCSC.VerifyIdentity.CardSerialNumber', {
+            serial: store.bcscSecure.serial ?? store.bcscSecure.additionalEvidenceData[0]?.documentNumber ?? 'N/A',
+          })}
         </ThemedText>
-      )}
-      <Button
-        buttonType={ButtonType.Primary}
-        testID={testIdWithKey('Complete')}
-        accessibilityLabel={t('BCSC.VerifyIdentity.Complete')}
-        title={t('BCSC.VerifyIdentity.Complete')}
-        onPress={onPressComplete}
-        disabled={loading}
-      >
-        {loading && <ButtonLoading />}
-      </Button>
-      <ThemedText variant={'labelSubtitle'} style={{ textAlign: 'center' }}>
-        {t('BCSC.VerifyIdentity.CardSerialNumber', {
-          serial: store.bcscSecure.serial ?? store.bcscSecure.additionalEvidenceData[0]?.documentNumber ?? 'N/A',
-        })}
-      </ThemedText>
+      </View>
+      <ControlContainer>
+        <Button
+          buttonType={ButtonType.Primary}
+          testID={testIdWithKey('Complete')}
+          accessibilityLabel={t('BCSC.VerifyIdentity.Complete')}
+          title={t('BCSC.VerifyIdentity.Complete')}
+          onPress={onPressComplete}
+          disabled={loading}
+        >
+          {loading && <ButtonLoading />}
+        </Button>
+      </ControlContainer>
     </>
   )
 
   return (
-    <ScreenWrapper controls={controls}>
-      <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
-        {t('BCSC.VerifyIdentity.VerifyInPersonTitle')}
-      </ThemedText>
-      <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.WhereToGo')}</ThemedText>
-      <Link
-        linkText={t('BCSC.VerifyIdentity.WhereToGoLink')}
-        testID={testIdWithKey('ServiceBCLink')}
-        onPress={() => Linking.openURL(BC_SERVICE_LOCATION_URL)}
-        style={{ marginBottom: Spacing.md }}
-      />
-      <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.WhatToBring')}</ThemedText>
-      <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.VerifyIdentity.ThisDevice')}</ThemedText>
+    <ScreenWrapper
+      padded={false}
+      controls={controls}
+      scrollViewContainerStyle={{ padding: Spacing.lg, gap: Spacing.md }}
+    >
+      <ThemedText variant={'headingThree'}>{t('BCSC.VerifyIdentity.VerifyInPersonTitle')}</ThemedText>
+      <View>
+        <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.WhereToGo')}</ThemedText>
+        <Link
+          linkText={t('BCSC.VerifyIdentity.WhereToGoLink')}
+          testID={testIdWithKey('ServiceBCLink')}
+          onPress={() => Linking.openURL(BC_SERVICE_LOCATION_URL)}
+        />
       </View>
-      <View style={[styles.bulletContainer, { marginBottom: Spacing.lg }]}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.VerifyIdentity.YourBCServicesCard')}</ThemedText>
+      <View>
+        <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.WhatToBring')}</ThemedText>
+        <View style={styles.bulletContainer}>
+          <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
+          <ThemedText>{t('BCSC.VerifyIdentity.ThisDevice')}</ThemedText>
+        </View>
+        <View style={styles.bulletContainer}>
+          <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
+          <ThemedText>{t('BCSC.VerifyIdentity.YourBCServicesCard')}</ThemedText>
+        </View>
       </View>
-      <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.ShowThisConfirmationNumber')}</ThemedText>
-      <ThemedText
-        testID={testIdWithKey('ConfirmationCode')}
-        variant={'headingTwo'}
-        style={{ fontWeight: 'normal', marginBottom: Spacing.xl, letterSpacing: 7 }}
-      >
-        {/* User codes are 8 digits and are to be formatted as XXXX-XXXX in UI */}
-        {`${store.bcscSecure.userCode?.slice(0, 4)}-${store.bcscSecure.userCode?.slice(4, 8)}`}
-      </ThemedText>
-      <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.YouMustCompleteThisBy')}</ThemedText>
-      <ThemedText variant={'headingTwo'} style={{ fontWeight: 'normal' }}>
-        {store.bcscSecure.deviceCodeExpiresAt?.toLocaleString(t('BCSC.LocaleStringFormat'), {
-          month: 'long',
-          day: 'numeric',
-          year: 'numeric',
-        })}
-      </ThemedText>
+      <View>
+        <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.ShowThisConfirmationNumber')}</ThemedText>
+        <ThemedText
+          testID={testIdWithKey('ConfirmationCode')}
+          variant={'headingTwo'}
+          style={{ fontWeight: 'normal', marginBottom: Spacing.md, letterSpacing: 7 }}
+        >
+          {/* User codes are 8 digits and are to be formatted as XXXX-XXXX in UI */}
+          {`${store.bcscSecure.userCode?.slice(0, 4)}-${store.bcscSecure.userCode?.slice(4, 8)}`}
+        </ThemedText>
+      </View>
+      <View>
+        <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.YouMustCompleteThisBy')}</ThemedText>
+        <ThemedText variant={'headingTwo'} style={{ fontWeight: 'normal' }}>
+          {store.bcscSecure.deviceCodeExpiresAt?.toLocaleString(t('BCSC.LocaleStringFormat'), {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+          })}
+        </ThemedText>
+      </View>
     </ScreenWrapper>
   )
 }
