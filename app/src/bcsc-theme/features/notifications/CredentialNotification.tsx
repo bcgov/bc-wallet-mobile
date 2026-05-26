@@ -5,12 +5,21 @@ import { getCredentialNotificationType, NotificationType } from '@/utils/credent
 import {
   basicMessageCustomMetadata,
   BasicMessageMetadata,
+  credentialCustomMetadata,
+  CredentialMetadata,
   getConnectionName,
   InfoBoxType,
+  parsedSchema,
+  Screens,
   useStore,
 } from '@bifold/core'
 import { useConnectionById } from '@bifold/react-hooks'
-import { DidCommBasicMessageRecord, DidCommBasicMessageRepository } from '@credo-ts/didcomm'
+import {
+  DidCommBasicMessageRecord,
+  DidCommBasicMessageRepository,
+  DidCommCredentialExchangeRecord,
+  DidCommCredentialExchangeRepository,
+} from '@credo-ts/didcomm'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -20,12 +29,6 @@ interface CredentialNotificationProps {
   notification: CredentialNotificationRecord
 }
 
-/**
- * CredentialNotification is a component that renders different types of credential-related notifications based on the notification type.
- *
- * @param props - The properties for the CredentialNotification component, including the notification record.
- * @returns React.Element - The rendered CredentialNotification component, which conditionally renders specific notification cards based on the notification type.
- */
 const CredentialNotification = (props: CredentialNotificationProps) => {
   const notificationType = getCredentialNotificationType(props.notification)
 
@@ -38,10 +41,25 @@ const CredentialNotification = (props: CredentialNotificationProps) => {
       return <ProofRequestNotification {...props} />
     case NotificationType.Revocation:
       return <RevocationNotification {...props} />
-    // TODO (V4.1.x): Add Proof notification
     default:
       return null
   }
+}
+
+function formatTimestamp(date: Date): string {
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMin = Math.floor(diffMs / 60_000)
+
+  if (diffMin < 1) return 'Just now'
+  if (diffMin < 60) return `${diffMin} minute${diffMin === 1 ? '' : 's'} ago`
+
+  const diffHours = Math.floor(diffMin / 60)
+  if (diffHours < 24) {
+    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+  }
+
+  return date.toLocaleDateString([], { month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 }
 
 const BasicMessageNotification = ({ notification }: CredentialNotificationProps) => {
@@ -67,66 +85,85 @@ const BasicMessageNotification = ({ notification }: CredentialNotificationProps)
     <NotificationCard
       title={t('Notification.BasicMessage.Title')}
       description={
-        label ? t('Notification.BasicMessage.SentMessage', { label }) : t('Notification.BasicMessage.ReceviedMessage')
+        label ? t('Notification.BasicMessage.SentMessage', { label }) : t('Notification.BasicMessage.ReceivedMessage')
       }
-      buttonTitle={t('Notification.BasicMessage.ButtonTitle')}
+      icon="chat"
       cardType={InfoBoxType.Info}
       onPress={() => navigation.navigate(BCSCScreens.ContactChat, { connectionId: basicMessage.connectionId })}
       onClose={handleClose}
+      timestamp={formatTimestamp(notification.createdAt)}
     />
   )
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const CredentialOfferNotification = (props: CredentialNotificationProps) => {
+const CredentialOfferNotification = ({ notification }: CredentialNotificationProps) => {
   const { t } = useTranslation()
 
   return (
     <NotificationCard
       title={t('Notification.CredentialOffer.Title')}
-      description={'TODO (V4.1.x): Dynamic content'} // Bifold:NotificationListItem.tsx:270
-      buttonTitle={t('Global.View')}
+      description={'TODO (V4.1.x): Dynamic content'}
+      icon="card-membership"
       cardType={InfoBoxType.Info}
       onPress={() => {
-        // FIXME (V4.1.x): Replace this callback with the appropriate credential notification callback once implemented.
+        // FIXME (V4.1.x): Replace with credential offer navigation
       }}
+      onClose={() => {
+        // FIXME (V4.1.x): Replace with credential offer dismiss
+      }}
+      timestamp={formatTimestamp(notification.createdAt)}
     />
   )
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const ProofRequestNotification = (props: CredentialNotificationProps) => {
+const ProofRequestNotification = ({ notification }: CredentialNotificationProps) => {
   const { t } = useTranslation()
 
   return (
     <NotificationCard
       title={t('Notification.ProofRequest.Title')}
-      description={'TODO (V4.1.x): Dynamic content'} // Bifold:NotificationListItem.tsx:302
-      buttonTitle={t('Global.View')}
+      description={'TODO (V4.1.x): Dynamic content'}
+      icon="assignment"
       cardType={InfoBoxType.Info}
       onPress={() => {
-        // FIXME (V4.1.x): Replace this callback with the appropriate credential notification callback once implemented.
+        // FIXME (V4.1.x): Replace with proof request navigation
       }}
+      onClose={() => {
+        // FIXME (V4.1.x): Replace with proof request dismiss
+      }}
+      timestamp={formatTimestamp(notification.createdAt)}
     />
   )
 }
 
-// TODO (V4.1.x): Add Proof notification. Needs more invesitgation. Bifold appears to not have this wired up.
-//const ProofNotification = (_props: CredentialNotificationProps) => {}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const RevocationNotification = (props: CredentialNotificationProps) => {
+const RevocationNotification = ({ notification }: CredentialNotificationProps) => {
   const { t } = useTranslation()
+  const { agent } = useBCSCAgent()
+  const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
+  const credential = notification as DidCommCredentialExchangeRecord
+  const { name, version } = parsedSchema(credential)
+
+  const handleClose = async () => {
+    if (!agent) {
+      return
+    }
+    const meta = credential.metadata.get(CredentialMetadata.customMetadata) as credentialCustomMetadata
+    credential.metadata.set(CredentialMetadata.customMetadata, { ...meta, revoked_seen: true })
+    const repo = agent.context.dependencyManager.resolve(DidCommCredentialExchangeRepository)
+    await repo.update(agent.context, credential)
+  }
 
   return (
     <NotificationCard
       title={t('Notification.Revocation.Title')}
-      description={'TODO (V4.1.x): Dynamic content'} // Bifold:NotificationListItem.tsx:310
-      buttonTitle={t('Global.View')}
+      description={`${name}${version ? ` v${version}` : ''}`}
+      icon="error"
       cardType={InfoBoxType.Error}
-      onPress={() => {
-        // FIXME (V4.1.x): Replace this callback with the appropriate credential notification callback once implemented.
-      }}
+      onPress={() => navigation.navigate(Screens.CredentialDetails, { credentialId: credential.id })}
+      onClose={handleClose}
+      timestamp={formatTimestamp(notification.createdAt)}
     />
   )
 }

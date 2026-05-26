@@ -55,5 +55,7 @@ export const LightTheme = createAppTheme({
   notification: {
     info: OFF_WHITE,
     infoBorder: '#053662',
+    error: '#FDEAEA',
+    errorBorder: '#D8292F',
   },
 })

@@ -2,151 +2,179 @@ import { hitSlop } from '@/constants'
 import { Button, ButtonType, IColorPalette, InfoBoxType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Pressable, StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
-const NOTIFICATION_CARD_ICON_SIZE = 30
-
-interface NotificationCardStyle {
-  backgroundColor: string
-  borderColor: string
-  textColor: string
-  iconColor: string
-  icon: string
-}
+const ICON_CIRCLE_SIZE = 36
+const ICON_INNER_SIZE = 20
+const CLOSE_ICON_SIZE = 24
 
 interface NotificationCardProps {
   title: string
   description: string
-  buttonTitle: string
   cardType: InfoBoxType
   onPress: () => void
   onClose?: () => void
+  buttonTitle?: string
+  timestamp?: string
+  badge?: string
+  icon?: string
 }
 
-/**
- * A reusable notification card component that displays a title, description, and an action button.
- *
- * @param props - The properties for the NotificationCard component, including title, description, button title, card type, and action callbacks.
- * @returns React.Element - The rendered NotificationCard component.
- */
-const NotificationCard: React.FC<NotificationCardProps> = (props: NotificationCardProps) => {
+const NotificationCard: React.FC<NotificationCardProps> = (props) => {
   const { t } = useTranslation()
-  const { ColorPalette } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
+  const cardStyle = getCardStyle(props.cardType, ColorPalette)
+  const iconColor = ColorPalette.grayscale.mediumGrey
 
-  const cardStyle = _getNotificationCardStyle(props.cardType, ColorPalette)
+  const isV1 = !!props.buttonTitle
 
   const styles = StyleSheet.create({
     container: {
-      borderRadius: 5,
-      borderWidth: 2,
-      padding: 10,
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
       backgroundColor: cardStyle.backgroundColor,
-      borderColor: cardStyle.borderColor,
+      ...(isV1 && {
+        borderWidth: 1,
+        borderColor: ColorPalette.notification.infoBorder,
+        borderRadius: 8,
+      }),
     },
     headerContainer: {
       flexDirection: 'row',
-      paddingHorizontal: 5,
-      paddingTop: 5,
+      alignItems: 'center',
+    },
+    iconCircle: {
+      width: ICON_CIRCLE_SIZE,
+      height: ICON_CIRCLE_SIZE,
+      borderRadius: ICON_CIRCLE_SIZE / 2,
+      backgroundColor: iconColor,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
     },
     bodyContainer: {
-      flexGrow: 1,
-      flexDirection: 'column',
-      marginLeft: 10 + NOTIFICATION_CARD_ICON_SIZE,
-      paddingHorizontal: 5,
-      paddingBottom: 5,
+      marginLeft: ICON_CIRCLE_SIZE + 12,
+      marginTop: 4,
     },
     headerText: {
-      flexGrow: 1,
-      alignSelf: 'center',
       flex: 1,
-      color: cardStyle.textColor,
     },
     bodyText: {
-      flexShrink: 1,
-      marginVertical: 15,
-      paddingBottom: 10,
-      color: cardStyle.textColor,
+      marginTop: 4,
     },
-    icon: {
-      marginRight: 10,
-      alignSelf: 'center',
+    timestampText: {
+      marginTop: 8,
+      color: ColorPalette.grayscale.mediumGrey,
+      fontSize: 13,
+    },
+    badge: {
+      alignSelf: 'flex-start',
+      borderWidth: 1,
+      borderColor: ColorPalette.grayscale.mediumGrey,
+      borderRadius: 12,
+      paddingHorizontal: 10,
+      paddingVertical: 2,
+      marginBottom: 6,
+    },
+    badgeText: {
+      color: ColorPalette.grayscale.darkGrey,
+      fontSize: 12,
+    },
+    buttonContainer: {
+      marginTop: 12,
     },
   })
 
-  return (
+  const iconName = props.icon ?? cardStyle.defaultIcon
+
+  const content = (
     <View style={styles.container} testID={testIdWithKey('NotificationListItem')}>
       <View style={styles.headerContainer}>
-        <View style={styles.icon}>
-          <Icon accessible={false} name="info" size={NOTIFICATION_CARD_ICON_SIZE} color={cardStyle.iconColor} />
+        <View style={styles.iconCircle}>
+          <Icon accessible={false} name={iconName} size={ICON_INNER_SIZE} color="#FFFFFF" />
         </View>
         <ThemedText variant="bold" style={styles.headerText} testID={testIdWithKey('HeaderText')}>
-          {t(props.title)}
+          {props.title}
         </ThemedText>
-        <TouchableOpacity
-          accessibilityLabel={t('Global.Dismiss')}
-          accessibilityRole="button"
-          testID={testIdWithKey('DismissNotification')}
-          onPress={props.onClose}
-          hitSlop={hitSlop}
-        >
-          <Icon name="close" size={NOTIFICATION_CARD_ICON_SIZE} color={ColorPalette.brand.primary} />
-        </TouchableOpacity>
+        {props.onClose && (
+          <TouchableOpacity
+            accessibilityLabel={t('Global.Dismiss')}
+            accessibilityRole="button"
+            testID={testIdWithKey('DismissNotification')}
+            onPress={props.onClose}
+            hitSlop={hitSlop}
+          >
+            <Icon name="close" size={CLOSE_ICON_SIZE} color={ColorPalette.grayscale.darkGrey} />
+          </TouchableOpacity>
+        )}
       </View>
       <View style={styles.bodyContainer}>
+        {props.badge && (
+          <View style={styles.badge}>
+            <ThemedText style={styles.badgeText}>{props.badge}</ThemedText>
+          </View>
+        )}
         <ThemedText style={styles.bodyText} testID={testIdWithKey('BodyText')}>
-          {t(props.description)}
+          {props.description}
         </ThemedText>
-        <Button
-          title={props.buttonTitle}
-          accessibilityLabel={t(props.buttonTitle)}
-          testID={testIdWithKey('ViewNotification')}
-          buttonType={ButtonType.Primary}
-          onPress={props.onPress}
-        />
+        {props.timestamp && (
+          <ThemedText style={styles.timestampText} testID={testIdWithKey('TimestampText')}>
+            {props.timestamp}
+          </ThemedText>
+        )}
+        {props.buttonTitle && (
+          <View style={styles.buttonContainer}>
+            <Button
+              title={props.buttonTitle}
+              accessibilityLabel={t(props.buttonTitle)}
+              testID={testIdWithKey('ViewNotification')}
+              buttonType={ButtonType.Primary}
+              onPress={props.onPress}
+            />
+          </View>
+        )}
       </View>
     </View>
   )
+
+  if (props.buttonTitle) {
+    return content
+  }
+
+  return (
+    <Pressable onPress={props.onPress} accessibilityRole="button" testID={testIdWithKey('NotificationCardPressable')}>
+      {content}
+    </Pressable>
+  )
 }
 
-// Private helper to return the appropriate style for the notification card
-const _getNotificationCardStyle = (cardType: InfoBoxType, ColorPalette: IColorPalette): NotificationCardStyle => {
+interface CardStyle {
+  backgroundColor: string
+  defaultIcon: string
+}
+
+function getCardStyle(cardType: InfoBoxType, palette: IColorPalette): CardStyle {
   switch (cardType) {
     case InfoBoxType.Success:
       return {
-        backgroundColor: ColorPalette.notification.success,
-        borderColor: ColorPalette.notification.successBorder,
-        textColor: ColorPalette.notification.successText,
-        iconColor: ColorPalette.notification.successIcon,
-        icon: 'check-circle',
+        backgroundColor: palette.notification.success,
+        defaultIcon: 'check-circle',
       }
-
     case InfoBoxType.Warn:
       return {
-        backgroundColor: ColorPalette.notification.warn,
-        borderColor: ColorPalette.notification.warnBorder,
-        textColor: ColorPalette.notification.warnText,
-        iconColor: ColorPalette.notification.warnIcon,
-        icon: 'warning',
+        backgroundColor: palette.notification.warn,
+        defaultIcon: 'warning',
       }
-
     case InfoBoxType.Error:
       return {
-        backgroundColor: ColorPalette.notification.error,
-        borderColor: ColorPalette.notification.errorBorder,
-        textColor: ColorPalette.notification.errorText,
-        iconColor: ColorPalette.notification.errorIcon,
-        icon: 'error',
+        backgroundColor: palette.notification.error,
+        defaultIcon: 'error',
       }
-
-    // InfoBoxType.Info
     default:
       return {
-        backgroundColor: ColorPalette.notification.info,
-        borderColor: ColorPalette.notification.infoBorder,
-        textColor: ColorPalette.notification.infoText,
-        iconColor: ColorPalette.brand.primary,
-        icon: 'info',
+        backgroundColor: palette.notification.info,
+        defaultIcon: 'info',
       }
   }
 }
