@@ -1,4 +1,3 @@
-import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import React, { useState } from 'react'
@@ -11,21 +10,19 @@ interface DeleteConfirmationScreenProps {
   description: string
   confirmLabel: string
   loadingLabel: string
-  onConfirm: (stopLoading: () => void) => Promise<void>
+  onConfirm: () => Promise<void>
 }
 
 const DeleteConfirmationScreen: React.FC<DeleteConfirmationScreenProps> = ({
   title,
   description,
   confirmLabel,
-  loadingLabel,
   onConfirm,
 }) => {
   const { Spacing } = useTheme()
   const navigation = useNavigation()
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const loadingScreen = useLoadingScreen()
   const [disabled, setDisabled] = useState(false)
 
   const styles = StyleSheet.create({
@@ -50,12 +47,10 @@ const DeleteConfirmationScreen: React.FC<DeleteConfirmationScreenProps> = ({
     }
 
     setDisabled(true)
-    const stopLoading = loadingScreen.startLoading(loadingLabel)
     try {
-      await onConfirm(stopLoading)
+      await onConfirm()
     } catch (error) {
       logger.error('[DeleteConfirmationScreen] Action failed', error as Error)
-      stopLoading()
       setDisabled(false)
     }
   }
