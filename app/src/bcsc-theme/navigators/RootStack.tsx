@@ -9,7 +9,6 @@ import { useInitializeAccountStatus } from '../api/hooks/useInitializeAccountSta
 import useThirdPartyKeyboardWarning from '../api/hooks/useThirdPartyKeyboardWarning'
 import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
 import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
-import { BCSCIdTokenProvider } from '../contexts/BCSCIdTokenContext'
 import { LoadingScreen } from '../contexts/BCSCLoadingContext'
 import BCSCAgentProvider from '../features/agent/BCSCAgentProvider'
 import { useFcmService } from '../features/fcm'
