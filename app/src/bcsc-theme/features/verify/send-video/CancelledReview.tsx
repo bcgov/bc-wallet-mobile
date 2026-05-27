@@ -1,4 +1,5 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -40,7 +41,12 @@ const CancelledReview = ({ navigation, route }: CancelledReviewProps) => {
       ]}
       buttonText={t('BCSC.CancelledVerification.Button')}
       onButtonPress={() => {
-        navigation.goBack()
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: BCSCScreens.VerificationMethodSelection }],
+          })
+        )
       }}
     />
   )
