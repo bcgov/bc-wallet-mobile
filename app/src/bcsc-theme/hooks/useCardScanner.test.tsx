@@ -31,7 +31,7 @@ describe('useCardScanner', () => {
       const bifoldMock = jest.mocked(Bifold)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcscSecure: {} }
+      const mockState: any = { bcsc: {}, bcscSecure: { additionalEvidenceData: [] } }
       const mockAuthorization: any = {
         authorization: {
           authorizeDevice: jest.fn(),
@@ -67,7 +67,7 @@ describe('useCardScanner', () => {
       const bifoldMock = jest.mocked(Bifold)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcscSecure: {} }
+      const mockState: any = { bcsc: {}, bcscSecure: { additionalEvidenceData: [] } }
       const mockAuthorization: any = {
         authorization: {
           authorizeDevice: jest.fn(),
@@ -110,7 +110,7 @@ describe('useCardScanner', () => {
       const bifoldMock = jest.mocked(Bifold)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcscSecure: {} }
+      const mockState: any = { bcsc: {}, bcscSecure: { additionalEvidenceData: [] } }
       const mockAuthorization: any = {
         authorization: {
           authorizeDevice: jest.fn(),
@@ -152,7 +152,7 @@ describe('useCardScanner', () => {
       const bifoldMock = jest.mocked(Bifold)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcscSecure: {} }
+      const mockState: any = { bcsc: {}, bcscSecure: { additionalEvidenceData: [] } }
       const mockAuthorization: any = {
         authorization: {
           authorizeDevice: jest.fn(),
@@ -201,7 +201,7 @@ describe('useCardScanner', () => {
       const navigationMock = jest.mocked(navigation)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcscSecure: {} }
+      const mockState: any = { bcsc: {}, bcscSecure: { additionalEvidenceData: [] } }
       const mockUpdateUserInfo = jest.fn()
       const mockUpdateDeviceCodes = jest.fn()
       const mockUpdateCardProcess = jest.fn()
@@ -261,7 +261,7 @@ describe('useCardScanner', () => {
       expect(mockUpdateVerificationOptions).toHaveBeenCalledWith(['video_call', 'back_check'])
       expect(mockNavigationReset).toHaveBeenCalledWith({
         index: 0,
-        routes: [{ name: BCSCScreens.SetupSteps }],
+        routes: [{ name: BCSCScreens.VerificationMethodSelection }],
       })
     })
 
@@ -270,7 +270,7 @@ describe('useCardScanner', () => {
       const useApiMock = jest.mocked(useApi)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcscSecure: {} }
+      const mockState: any = { bcsc: {}, bcscSecure: { additionalEvidenceData: [] } }
       const mockAuthorization: any = {
         authorization: {
           authorizeDevice: jest.fn(),
@@ -306,7 +306,7 @@ describe('useCardScanner', () => {
       const useApiMock = jest.mocked(useApi)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcscSecure: {} }
+      const mockState: any = { bcsc: {}, bcscSecure: { additionalEvidenceData: [] } }
       const mockAuthorization: any = {
         authorization: {
           authorizeDevice: jest.fn(),
@@ -343,7 +343,7 @@ describe('useCardScanner', () => {
       const navigationMock = jest.mocked(navigation)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcscSecure: {} }
+      const mockState: any = { bcsc: {}, bcscSecure: { additionalEvidenceData: [] } }
       const mockUpdateUserInfo = jest.fn()
       const mockAuthorization: any = {
         authorization: {
@@ -383,7 +383,6 @@ describe('useCardScanner', () => {
       expect(mockNavigationReset).toHaveBeenCalledWith({
         index: 0,
         routes: [
-          { name: BCSCScreens.SetupSteps },
           {
             name: BCSCScreens.VerificationCardError,
             params: { errorType: VerificationCardError.MismatchedSerial },
@@ -400,7 +399,7 @@ describe('useCardScanner', () => {
       const navigationMock = jest.mocked(navigation)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcscSecure: {} }
+      const mockState: any = { bcsc: {}, bcscSecure: { additionalEvidenceData: [] } }
       const mockUpdateUserInfo = jest.fn()
       const mockAuthorization: any = {
         authorization: {
@@ -435,7 +434,7 @@ describe('useCardScanner', () => {
       })
       expect(mockNavigationReset).toHaveBeenCalledWith({
         index: 0,
-        routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.EnterBirthdate }],
+        routes: [{ name: BCSCScreens.EnterBirthdate }],
       })
     })
   })

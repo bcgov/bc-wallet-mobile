@@ -70,12 +70,8 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         logger.info('[LiveCallScreen.leaveCall] User not verified')
         navigation.dispatch(
           CommonActions.reset({
-            index: 2,
-            routes: [
-              { name: BCSCScreens.SetupSteps },
-              { name: BCSCScreens.VerificationMethodSelection },
-              { name: BCSCScreens.VerifyNotComplete },
-            ],
+            index: 1,
+            routes: [{ name: BCSCScreens.VerificationMethodSelection }, { name: BCSCScreens.VerifyNotComplete }],
           })
         )
         return

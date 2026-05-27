@@ -611,7 +611,7 @@ describe('useAlerts', () => {
       )
     })
 
-    it('should reset navigation to SetupSteps and VerificationMethodSelection when OK is pressed', () => {
+    it('should reset navigation to VerificationMethodSelection when OK is pressed', () => {
       const mockDispatch = jest.fn()
       const mockNavigation = { navigate: jest.fn(), dispatch: mockDispatch }
       const mockEmitAlert = jest.fn()
@@ -629,8 +629,8 @@ describe('useAlerts', () => {
 
       expect(mockDispatch).toHaveBeenCalledWith(
         CommonActions.reset({
-          index: 1,
-          routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.VerificationMethodSelection }],
+          index: 0,
+          routes: [{ name: BCSCScreens.VerificationMethodSelection }],
         })
       )
     })

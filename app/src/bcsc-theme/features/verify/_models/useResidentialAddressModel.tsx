@@ -3,6 +3,7 @@ import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizatio
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { isCanadianPostalCode, ProvinceCode } from '@/bcsc-theme/utils/address-utils'
+import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
 import { BCState, NonBCSCUserMetadata } from '@/store'
 import { ToastType, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
@@ -129,9 +130,13 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
     }
     await updateUserMetadata(updatedUserMetadata)
 
-    // A2: device is already authorized
+    // A2: device is already authorized — advance to whatever step the user is now on
     if (store.bcscSecure.deviceCode && store.bcscSecure.deviceCodeExpiresAt) {
-      navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
+      const predictedStore: BCState = {
+        ...store,
+        bcscSecure: { ...store.bcscSecure, userMetadata: updatedUserMetadata },
+      }
+      navigation.dispatch(CommonActions.reset({ index: 0, routes: [getResumeStepRoute(predictedStore)] }))
       return
     }
 
@@ -191,7 +196,18 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
       await updateVerificationOptions(deviceAuth.verification_options.split(' ') as DeviceVerificationOption[])
       await updateCardProcess(deviceAuth.process)
 
-      navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
+      const predictedStore: BCState = {
+        ...store,
+        bcscSecure: {
+          ...store.bcscSecure,
+          userMetadata: updatedUserMetadata,
+          deviceCode: deviceAuth.device_code,
+          userCode: deviceAuth.user_code,
+          deviceCodeExpiresAt: expiresAt,
+          cardProcess: deviceAuth.process,
+        },
+      }
+      navigation.dispatch(CommonActions.reset({ index: 0, routes: [getResumeStepRoute(predictedStore)] }))
     } catch (error) {
       logger.error('ResidentialAddressScreen.handleSubmit -> device authorization failed', { error })
       Toast.show({
@@ -210,6 +226,7 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
     store.bcscSecure.deviceCode,
     store.bcscSecure.deviceCodeExpiresAt,
     store.bcscSecure.birthdate,
+    store.bcscSecure.cardProcess,
     updateUserMetadata,
     navigation,
     logger,

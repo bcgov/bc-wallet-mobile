@@ -2,6 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
@@ -40,14 +41,40 @@ export const useEnterBirthdateViewModel = (
 
       logger.info(`Device authorized successfully, proceeding to verification steps: ${deviceAuth.process}`)
 
+      // The dispatched store updates above won't be reflected in our `store` closure
+      // until the next render, so build a predicted snapshot to compute the next route.
+      const predictedStore: BCState = {
+        ...store,
+        bcscSecure: {
+          ...store.bcscSecure,
+          serial,
+          birthdate: date,
+          emailAddress: deviceAuth.verified_email,
+          isEmailVerified: !!deviceAuth.verified_email,
+          deviceCode: deviceAuth.device_code,
+          userCode: deviceAuth.user_code,
+          deviceCodeExpiresAt: expiresAt,
+          cardProcess: deviceAuth.process,
+        },
+      }
+
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
-          routes: [{ name: BCSCScreens.SetupSteps }],
+          routes: [getResumeStepRoute(predictedStore)],
         })
       )
     },
-    [authorization, navigation, logger, updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions]
+    [
+      authorization,
+      navigation,
+      logger,
+      store,
+      updateUserInfo,
+      updateDeviceCodes,
+      updateCardProcess,
+      updateVerificationOptions,
+    ]
   )
 
   const isDateValid = (value: string): boolean => {
