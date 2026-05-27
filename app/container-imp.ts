@@ -33,6 +33,7 @@ import { Linking } from 'react-native'
 import { Config } from 'react-native-config'
 import { DependencyContainer } from 'tsyringe'
 
+import AddPersonCredentialButton from '@/bcsc-theme/components/AddPersonCredentialButton'
 import EmptyWalletList from '@/bcsc-theme/components/EmptyWalletList'
 import { createMainSettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
 import filePersistedLedgers from '@/configs/ledgers/indy/ledgers'
@@ -255,6 +256,10 @@ export class AppContainer implements Container {
     const isBCSC = Config.BUILD_TARGET === Mode.BCSC
     this._container.registerInstance(TOKENS.COMPONENT_CRED_EMPTY_LIST, isBCSC ? EmptyWalletList : EmptyList)
     if (isBCSC) {
+      // BCSC's Wallet-tab "+" requests a Person Credential from IAS and receives
+      // it in-app (the v4 single-app flow), rather than opening the BC Wallet
+      // add-credential slider. Overrides the bcwallet-theme button above.
+      this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_HEADER_RIGHT, AddPersonCredentialButton)
       this._container.registerInstance(TOKENS.OBJECT_SCREEN_CONFIG, {
         ...DefaultScreenOptionsDictionary,
         [Screens.Credentials]: {

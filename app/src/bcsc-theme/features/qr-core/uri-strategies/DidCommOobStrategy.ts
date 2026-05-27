@@ -24,7 +24,7 @@ const DidCommOobStrategy: UriStrategy = {
       return { kind: 'unsupported', reason: 'OpenID' }
     }
 
-    const invitation = await agent.modules.didcomm.oob.parseInvitation(uri)
+    const invitation = await agent.didcomm.oob.parseInvitation(uri)
     if (!invitation) {
       logger.warn('[DidCommOobStrategy] could not parse OOB invitation')
       return { kind: 'unrecognized' }
@@ -36,7 +36,7 @@ const DidCommOobStrategy: UriStrategy = {
 
     // Dedupe duplicate scans of the same QR: two didexchange requests for one
     // invitation @id leave the user stuck on "Connecting…".
-    const existing = await agent.modules.didcomm.oob.findByReceivedInvitationId(invitation.id)
+    const existing = await agent.didcomm.oob.findByReceivedInvitationId(invitation.id)
     if (existing) {
       logger.info(`[DidCommOobStrategy] reusing existing OOB record ${existing.id} for invitation ${invitation.id}`)
       return { kind: 'connection', oobRecordId: existing.id }
@@ -44,7 +44,7 @@ const DidCommOobStrategy: UriStrategy = {
 
     // `label` becomes `theirLabel` on the inviter's connection record and
     // shows up as the contact name in their chat header.
-    const { outOfBandRecord } = await agent.modules.didcomm.oob.receiveInvitation(invitation, {
+    const { outOfBandRecord } = await agent.didcomm.oob.receiveInvitation(invitation, {
       label: ctx.label || 'didcomm-oob-invitation',
     })
     return { kind: 'connection', oobRecordId: outOfBandRecord.id }

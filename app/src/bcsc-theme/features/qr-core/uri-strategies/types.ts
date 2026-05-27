@@ -1,5 +1,5 @@
+import { BCAgent } from '@/utils/bc-agent-modules'
 import type { BifoldLogger } from '@bifold/core'
-import type { Agent } from '@credo-ts/core'
 
 export type ScanResult =
   | { kind: 'connection'; oobRecordId: string }
@@ -8,7 +8,7 @@ export type ScanResult =
   | { kind: 'unrecognized' }
 
 export interface ScanContext {
-  agent: Agent | undefined
+  agent: BCAgent | undefined
   logger: BifoldLogger
   /**
    * Label this wallet sends to the inviter when accepting an OOB invitation.
