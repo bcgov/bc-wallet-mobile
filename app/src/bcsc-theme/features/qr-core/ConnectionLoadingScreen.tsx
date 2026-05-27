@@ -22,7 +22,17 @@ type Props = StackScreenProps<BCSCMainStackParams, BCSCScreens.ConnectionLoading
 const ConnectionLoadingScreen: React.FC<Props> = ({ navigation, route }) => {
   const { t } = useTranslation()
   const adaptedNavigation = useMemo(() => createBifoldNavigationAdapter(navigation, { t }), [navigation, t])
-  const bifoldRoute = useMemo(() => ({ ...route, params: { oobRecordId: route.params.oobRecordId } }), [route])
+  const bifoldRoute = useMemo(
+    () => ({
+      ...route,
+      params: {
+        oobRecordId: route.params.oobRecordId,
+        credentialId: route.params.credentialId,
+        proofId: route.params.proofId,
+      },
+    }),
+    [route]
+  )
 
   return (
     <NavigationContext.Provider value={adaptedNavigation as any}>

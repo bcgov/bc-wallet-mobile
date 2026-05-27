@@ -50,6 +50,7 @@ describe('useResidentialAddressModel', () => {
   } as any
 
   const mockStore: any = {
+    bcsc: {},
     bcscSecure: {
       birthdate: new Date('1990-01-15'),
       deviceCode: null,
@@ -247,7 +248,7 @@ describe('useResidentialAddressModel', () => {
   })
 
   describe('handleSubmit - device already authorized', () => {
-    it('should navigate to SetupSteps when device is already authorized', async () => {
+    it('should navigate to the email step when device is already authorized', async () => {
       const storeWithDeviceCode = {
         ...mockStore,
         bcscSecure: {

@@ -9,6 +9,7 @@ import { TFunction } from 'i18next'
 import { Linking } from 'react-native'
 import { VerificationCardError } from '../features/verify/verificationCardError'
 import { BCSCScreens } from '../types/navigators'
+import { ResumeStepRoute } from '../utils/resume-step-route'
 import { BCSCEndpoints } from './client'
 
 const UNSUPPORTED_OS_TECHNICAL_MESSAGE = 'unsupported os version'
@@ -25,6 +26,12 @@ type ErrorHandlerContext = {
   linking: typeof Linking
   logger: BifoldLogger
   alerts: AppAlerts
+  /**
+   * Returns the verify-stack route the user should currently be on.
+   * Recovery handlers use this to put the user back at their current step
+   * instead of the (removed) SetupStepsScreen.
+   */
+  getResumeRoute: () => ResumeStepRoute
 }
 
 export interface AxiosAppError extends AppError {
@@ -282,11 +289,11 @@ export const alreadyRegisteredErrorPolicy: ErrorHandlingPolicy = {
     )
   },
   handle: (_error, context) => {
-    context.logger.info('[AlreadyRegisteredErrorPolicy] Device already registered, navigating to SetupSteps screen')
+    context.logger.info('[AlreadyRegisteredErrorPolicy] Device already registered, navigating to current setup step')
     context.navigation.dispatch(
       CommonActions.reset({
         index: 0,
-        routes: [{ name: BCSCScreens.SetupSteps }],
+        routes: [context.getResumeRoute()],
       })
     )
   },
@@ -303,7 +310,7 @@ export const birthdateLockoutErrorPolicy: ErrorHandlingPolicy = {
     context.navigation.dispatch(
       CommonActions.reset({
         index: 1,
-        routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.BirthdateLockout }],
+        routes: [context.getResumeRoute(), { name: BCSCScreens.BirthdateLockout }],
       })
     )
   },
@@ -372,7 +379,7 @@ export const cardExpiredErrorPolicy: ErrorHandlingPolicy = {
       CommonActions.reset({
         index: 1,
         routes: [
-          { name: BCSCScreens.SetupSteps },
+          context.getResumeRoute(),
           {
             name: BCSCScreens.VerificationCardError,
             params: { errorType: VerificationCardError.CardExpired },

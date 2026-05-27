@@ -18,6 +18,7 @@ import {
   DriversLicenseMetadata,
   ScanableCode,
 } from '../utils/decoder-strategy/DecoderStrategy'
+import { getResumeStepRoute } from '../utils/resume-step-route'
 import { useSecureActions } from './useSecureActions'
 
 type DriversLicenseMetadataStub = { birthDate: Date }
@@ -85,7 +86,23 @@ export const useCardScanner = () => {
         await updateCardProcess(deviceAuth.process)
         await updateVerificationOptions(deviceAuth.verification_options.split(' ') as DeviceVerificationOption[])
 
-        navigation.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] })
+        // Build a predicted store snapshot reflecting the dispatches above so the
+        // resume route honours the freshly-set deviceCode / cardProcess / email.
+        const predictedStore: BCState = {
+          ...store,
+          bcscSecure: {
+            ...store.bcscSecure,
+            serial: bcscSerial,
+            birthdate: license.birthDate,
+            emailAddress: deviceAuth.verified_email,
+            isEmailVerified: !!deviceAuth.verified_email,
+            deviceCode: deviceAuth.device_code,
+            userCode: deviceAuth.user_code,
+            deviceCodeExpiresAt: new Date(Date.now() + deviceAuth.expires_in * 1000),
+            cardProcess: deviceAuth.process,
+          },
+        }
+        navigation.reset({ index: 0, routes: [getResumeStepRoute(predictedStore)] })
         return true
       } catch (error) {
         if (isHandledAppError(error)) {
@@ -106,7 +123,6 @@ export const useCardScanner = () => {
         navigation.reset({
           index: 0,
           routes: [
-            { name: BCSCScreens.SetupSteps },
             {
               name: BCSCScreens.VerificationCardError,
               params: { errorType: VerificationCardError.MismatchedSerial },
@@ -124,7 +140,7 @@ export const useCardScanner = () => {
       updateVerificationOptions,
       logger,
       navigation,
-      store.bcscSecure.cardProcess,
+      store,
     ]
   )
 
@@ -137,7 +153,7 @@ export const useCardScanner = () => {
   const handleScanBCServicesCard = useCallback(
     async (bcscSerial: string) => {
       await updateUserInfo({ serial: bcscSerial })
-      navigation.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.EnterBirthdate }] })
+      navigation.reset({ index: 0, routes: [{ name: BCSCScreens.EnterBirthdate }] })
     },
     [updateUserInfo, navigation]
   )

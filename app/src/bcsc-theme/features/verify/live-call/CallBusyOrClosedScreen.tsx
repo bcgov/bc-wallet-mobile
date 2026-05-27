@@ -22,8 +22,8 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
   const onPressSendVideo = () => {
     navigation.dispatch(
       CommonActions.reset({
-        index: 1,
-        routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.VerificationMethodSelection }],
+        index: 0,
+        routes: [{ name: BCSCScreens.VerificationMethodSelection }],
       })
     )
   }

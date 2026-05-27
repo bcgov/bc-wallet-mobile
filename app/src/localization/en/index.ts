@@ -91,7 +91,8 @@ const translation = {
     "StartVerification": {
       "Title": "You're not verified",
       "Description": "You can continue the verification process at any time.",
-      "ButtonTitle": "Start verification"
+      "ButtonTitle": "Start verification",
+      "ContinueButtonTitle": "Continue verification"
     },
     "BasicMessage": {
       "Title": "New message",
@@ -100,10 +101,13 @@ const translation = {
       "ButtonTitle": "View message"
     },
     "CredentialOffer": {
-      "Title": "New credential offer",
+      "Title": "Credential offer",
+      "Description": "{{ label }} is offering you a credential"
     },
     "ProofRequest": {
-      "Title": "New proof request"
+      "Title": "Proof request",
+      "Description": "{{ label }} is requesting information",
+      "DefaultDescription": "You received a proof request"
     },
     "Revocation": {
       "Title": "Credential revoked"
@@ -210,7 +214,6 @@ const translation = {
     "Screens": {
       "Settings": "Settings",
       "SetupTypes": "BC Services Card",
-      "SetupSteps": "Setup Steps",
       "VerificationMethodSelection": "Choose How to Verify",
       "TransferAccountInstructions": "Transfer Instructions",
       "TransferAccountScan": "Scan QR Code",
@@ -483,28 +486,8 @@ const translation = {
       "ViewMessages": "View new messages",
     },
     "Steps": {
-      "ScanOrTakePhotos": "Scan or take photos of your ID.",
-      "Step1": "Step 1",
-      "Step2": "Step 2",
-      "Step3": "Step 3",
-      "Step4": "Step 4",
-      "Step5": "Step 5",
       "VerificationIDMissing": "Verification request ID is missing",
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification",
-      "GetVerificationStep2Subtext1": "ID: BC Services Card ({{ serial }})",
-      "GetVerificationStep2Subtext2": "ID: {{ evidenceType }} ({{ documentNumber }})",
-      "GetVerificationStep3Subtext1": "Address: Residential address from your BC Services Card will be used",
-      "GetVerificationStep3Subtext2": "Address: {{ address }}",
-      "GetVerificationStep3Subtext3": "Residential address",
-      "GetVerificationStep5Subtext1": "Verify identity by {{ expirationDate }}",
-      "GetVerificationStep5Subtext2": "Complete additional identification first",
-      "GetVerificationStep5Subtext3": "Verify identity",
-      "TransferAccountSubtext": "Transfer your account from another device",
-      "AddSecondIdText": "Add second ID",
-      "AdditionalIdentificationRequired": "Additional identification required for non-photo BC Services Card.",
-      "StoredEmail": "Email: {{ email }}",
-      "EmailAddress": "Email Address",
-      "EditEmail": "Edit",
       "CheckStatus": "Check status",
       "ChooseAnotherWayToVerify": "Choose another way to verify",
     },

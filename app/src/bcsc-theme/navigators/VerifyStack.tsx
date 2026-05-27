@@ -1,5 +1,6 @@
 import { createHeaderWithoutBanner } from '@/bcsc-theme/components/HeaderWithBanner'
 import { createVerifySettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
+import { createProgressHeader } from '@/bcsc-theme/components/VerifyProgressHeader'
 import { useVerificationResponseListener } from '@/bcsc-theme/features/verification-response/useVerificationResponseListener'
 import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
 import { BCSCModals, BCSCScreens, BCSCStacks, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
@@ -33,7 +34,6 @@ import PhotoReviewScreen from '../features/verify/PhotoReviewScreen'
 import { ResidentialAddressScreen } from '../features/verify/ResidentialAddressScreen'
 import ScanSerialScreen from '../features/verify/ScanSerialScreen'
 import SerialInstructionsScreen from '../features/verify/SerialInstructionsScreen'
-import SetupStepsScreen from '../features/verify/SetupStepsScreen'
 import TakePhotoScreen from '../features/verify/TakePhotoScreen'
 import VerificationCardErrorScreen from '../features/verify/VerificationCardErrorScreen'
 import VerificationMethodSelectionScreen from '../features/verify/VerificationMethodSelectionScreen'
@@ -61,7 +61,7 @@ import VideoInstructionsScreen from '../features/verify/send-video/VideoInstruct
 import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
-import { isUserVerified } from '../utils/bcsc-credential'
+import { getResumeStepRoute } from '../utils/resume-step-route'
 
 const VerifyStack = () => {
   const Stack = createStackNavigator<BCSCVerifyStackParams>()
@@ -69,6 +69,7 @@ const VerifyStack = () => {
   const { t } = useTranslation()
   const defaultStackOptions = useDefaultStackOptions(theme)
   const [store] = useStore<BCState>()
+  const resumeRoute = getResumeStepRoute(store)
   useBCSCStack(BCSCStacks.Verify)
 
   // Listen for verification approval push notifications and navigate to success screen
@@ -76,8 +77,8 @@ const VerifyStack = () => {
 
   return (
     <Stack.Navigator
-      // If the user has a refresh token, they have completed setup and should go to success screen. Otherwise, start at setup steps.
-      initialRouteName={isUserVerified(store.bcscSecure) ? BCSCScreens.VerificationSuccess : BCSCScreens.SetupSteps}
+      // Users resume their verification journey directly at the step they are on.
+      initialRouteName={resumeRoute.name}
       screenOptions={{
         ...defaultStackOptions,
         headerShown: true,
@@ -92,10 +93,10 @@ const VerifyStack = () => {
       }}
     >
       <Stack.Screen
-        name={BCSCScreens.SetupSteps}
-        component={SetupStepsScreen}
+        name={BCSCScreens.IdentitySelection}
+        component={IdentitySelectionScreen}
         options={{
-          title: t('BCSC.Screens.SetupSteps'),
+          header: createProgressHeader(1, 10),
           headerLeft: createVerifySettingsHeaderButton(),
           headerRight: createFloatingHelpMenuButton({
             webViewScreen: BCSCScreens.VerifyWebView,
@@ -103,30 +104,57 @@ const VerifyStack = () => {
           }),
         }}
       />
-      <Stack.Screen name={BCSCScreens.IdentitySelection} component={IdentitySelectionScreen} />
+      <Stack.Screen name={BCSCScreens.VerifyPrivacyPolicy} component={VerifyPrivacyPolicyScreen} />
+      <Stack.Screen name={BCSCScreens.VerifyContactUs} component={ContactUsScreen} />
+      <Stack.Screen name={BCSCScreens.VerifyDeveloper} component={Developer} />
       <Stack.Screen
-        name={BCSCScreens.VerifyPrivacyPolicy}
-        component={VerifyPrivacyPolicyScreen}
-        options={{ title: t('BCSC.Screens.PrivacyInformation') }}
+        name={BCSCScreens.SerialInstructions}
+        component={SerialInstructionsScreen}
+        options={{ header: createProgressHeader(1, 20) }}
       />
       <Stack.Screen
-        name={BCSCScreens.VerifyContactUs}
-        component={ContactUsScreen}
-        options={{ title: t('BCSC.Screens.ContactUs') }}
+        name={BCSCScreens.ManualSerial}
+        component={ManualSerialScreen}
+        options={{ header: createProgressHeader(1, 40) }}
       />
       <Stack.Screen
-        name={BCSCScreens.VerifyDeveloper}
-        component={Developer}
-        options={{ title: t('Developer.DeveloperMode') }}
+        name={BCSCScreens.ScanSerial}
+        component={ScanSerialScreen}
+        options={{ header: createProgressHeader(1, 40) }}
       />
-      <Stack.Screen name={BCSCScreens.SerialInstructions} component={SerialInstructionsScreen} />
-      <Stack.Screen name={BCSCScreens.ManualSerial} component={ManualSerialScreen} />
-      <Stack.Screen name={BCSCScreens.ScanSerial} component={ScanSerialScreen} />
-      <Stack.Screen name={BCSCScreens.EnterBirthdate} component={EnterBirthdateScreen} />
-      <Stack.Screen name={BCSCScreens.VerificationCardError} component={VerificationCardErrorScreen} />
-      <Stack.Screen name={BCSCScreens.BirthdateLockout} component={BirthdateLockoutScreen} />
-      <Stack.Screen name={BCSCScreens.EnterEmail} component={EnterEmailScreen} />
-      <Stack.Screen name={BCSCScreens.EmailConfirmation} component={EmailConfirmationScreen} />
+      <Stack.Screen
+        name={BCSCScreens.EnterBirthdate}
+        component={EnterBirthdateScreen}
+        options={{ header: createProgressHeader(1, 60) }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.VerificationCardError}
+        component={VerificationCardErrorScreen}
+        options={{ header: createProgressHeader(1, 40) }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.BirthdateLockout}
+        component={BirthdateLockoutScreen}
+        options={{ header: createProgressHeader(1, 60) }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.EnterEmail}
+        component={EnterEmailScreen}
+        initialParams={
+          resumeRoute.name === BCSCScreens.EnterEmail
+            ? (resumeRoute.params as BCSCVerifyStackParams[typeof BCSCScreens.EnterEmail])
+            : undefined
+        }
+        options={{
+          header: createProgressHeader(4, 30),
+          headerLeft: createVerifySettingsHeaderButton(),
+        }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.EmailConfirmation}
+        component={EmailConfirmationScreen}
+        options={{ header: createProgressHeader(4, 80) }}
+      />
       <Stack.Screen
         name={BCSCScreens.EmailVerified}
         component={EmailVerifiedScreen}
@@ -136,7 +164,8 @@ const VerifyStack = () => {
         name={BCSCScreens.VerificationMethodSelection}
         component={VerificationMethodSelectionScreen}
         options={{
-          title: t('BCSC.Screens.VerificationMethodSelection'),
+          header: createProgressHeader(5, 20),
+          headerLeft: createVerifySettingsHeaderButton(),
           headerRight: createFloatingHelpMenuButton({
             webViewScreen: BCSCScreens.VerifyWebView,
             learnMoreUrl: HelpCentreUrl.VERIFICATION_METHODS,
@@ -147,20 +176,40 @@ const VerifyStack = () => {
         name={BCSCScreens.VerifyInPerson}
         component={VerifyInPersonScreen}
         options={{
+          header: createProgressHeader(5, 70),
           headerRight: createFloatingHelpMenuButton({
             webViewScreen: BCSCScreens.VerifyWebView,
             learnMoreUrl: HelpCentreUrl.VERIFY_IN_PERSON,
           }),
         }}
       />
-      <Stack.Screen name={BCSCScreens.PhotoInstructions} component={PhotoInstructionsScreen} />
+      <Stack.Screen
+        name={BCSCScreens.PhotoInstructions}
+        component={PhotoInstructionsScreen}
+        options={{ header: createProgressHeader(5, 30) }}
+      />
       <Stack.Screen name={BCSCScreens.TakePhoto} component={TakePhotoScreen} options={{ headerShown: false }} />
       <Stack.Screen name={BCSCScreens.PhotoReview} component={PhotoReviewScreen} options={{ headerShown: false }} />
-      <Stack.Screen name={BCSCScreens.VideoInstructions} component={VideoInstructionsScreen} />
+      <Stack.Screen
+        name={BCSCScreens.VideoInstructions}
+        component={VideoInstructionsScreen}
+        options={{ header: createProgressHeader(5, 50) }}
+      />
       <Stack.Screen name={BCSCScreens.TakeVideo} component={TakeVideoScreen} options={{ headerShown: false }} />
       <Stack.Screen name={BCSCScreens.VideoReview} component={VideoReviewScreen} options={{ headerShown: false }} />
-      <Stack.Screen name={BCSCScreens.PendingReview} component={PendingReviewScreen} />
-      <Stack.Screen name={BCSCScreens.CancelledReview} component={CancelledReview} />
+      <Stack.Screen
+        name={BCSCScreens.PendingReview}
+        component={PendingReviewScreen}
+        options={{
+          header: createProgressHeader(5, 80),
+          headerLeft: createVerifySettingsHeaderButton(),
+        }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.CancelledReview}
+        component={CancelledReview}
+        options={{ header: createProgressHeader(5, 80) }}
+      />
       <Stack.Screen name={BCSCScreens.VideoTooLong} component={VideoTooLongScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name={BCSCScreens.EvidenceUploading}
@@ -181,6 +230,8 @@ const VerifyStack = () => {
         name={BCSCScreens.AdditionalIdentificationRequired}
         component={AdditionalIdentificationRequiredScreen}
         options={{
+          header: createProgressHeader(2, 30),
+          headerLeft: createVerifySettingsHeaderButton(),
           headerRight: createFloatingHelpMenuButton({
             webViewScreen: BCSCScreens.VerifyWebView,
             learnMoreUrl: HelpCentreUrl.ACCEPTED_IDENTITY_DOCUMENTS,
@@ -191,72 +242,80 @@ const VerifyStack = () => {
         name={BCSCScreens.DualIdentificationRequired}
         component={DualIdentificationRequiredScreen}
         options={{
+          header: createProgressHeader(2, 30),
           headerRight: createFloatingHelpMenuButton({
             webViewScreen: BCSCScreens.VerifyWebView,
             learnMoreUrl: HelpCentreUrl.ACCEPTED_IDENTITY_DOCUMENTS,
           }),
         }}
       />
-      <Stack.Screen name={BCSCScreens.IDPhotoInformation} component={IDPhotoInformationScreen} />
-      <Stack.Screen name={BCSCScreens.EvidenceTypeList} component={EvidenceTypeListScreen} />
-      <Stack.Screen name={BCSCScreens.EvidenceCapture} component={EvidenceCaptureScreen} />
-      <Stack.Screen name={BCSCScreens.EvidenceIDCollection} component={EvidenceIDCollectionScreen} />
       <Stack.Screen
-        name={BCSCScreens.VerifyWebView}
-        component={WebViewScreen}
-        options={({ route }) => ({
-          title: route.params.title,
-        })}
+        name={BCSCScreens.IDPhotoInformation}
+        component={IDPhotoInformationScreen}
+        options={{ header: createProgressHeader(2, 50) }}
       />
-      <Stack.Screen name={BCSCScreens.StartCall} component={StartCallScreen} />
+      <Stack.Screen
+        name={BCSCScreens.EvidenceTypeList}
+        component={EvidenceTypeListScreen}
+        initialParams={
+          resumeRoute.name === BCSCScreens.EvidenceTypeList
+            ? (resumeRoute.params as BCSCVerifyStackParams[typeof BCSCScreens.EvidenceTypeList])
+            : undefined
+        }
+        options={{ header: createProgressHeader(2, 60) }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.EvidenceCapture}
+        component={EvidenceCaptureScreen}
+        options={{ header: createProgressHeader(2, 60) }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.EvidenceIDCollection}
+        component={EvidenceIDCollectionScreen}
+        options={{ header: createProgressHeader(2, 75) }}
+      />
+      <Stack.Screen name={BCSCScreens.VerifyWebView} component={WebViewScreen} />
+      <Stack.Screen
+        name={BCSCScreens.StartCall}
+        component={StartCallScreen}
+        options={{ header: createProgressHeader(5, 60) }}
+      />
       <Stack.Screen name={BCSCScreens.LiveCall} component={LiveCallScreen} options={{ headerShown: false }} />
-      <Stack.Screen name={BCSCScreens.VerifyNotComplete} component={VerifyNotCompleteScreen} />
-      <Stack.Screen name={BCSCScreens.CallBusyOrClosed} component={CallBusyOrClosedScreen} />
-      <Stack.Screen name={BCSCScreens.ResidentialAddress} component={ResidentialAddressScreen} />
       <Stack.Screen
-        name={BCSCScreens.VerifySettings}
-        component={VerifySettingsScreen}
+        name={BCSCScreens.VerifyNotComplete}
+        component={VerifyNotCompleteScreen}
+        options={{ header: createProgressHeader(5, 60) }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.CallBusyOrClosed}
+        component={CallBusyOrClosedScreen}
+        options={{ header: createProgressHeader(5, 50) }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.ResidentialAddress}
+        component={ResidentialAddressScreen}
         options={{
-          title: t('BCSC.Screens.Settings'),
+          header: createProgressHeader(3, 50),
+          headerLeft: createVerifySettingsHeaderButton(),
         }}
       />
-      <Stack.Screen
-        name={BCSCScreens.VerifyAutoLock}
-        component={AutoLockScreen}
-        options={{
-          title: t('BCSC.Settings.AutoLockTime'),
-        }}
-      />
-      <Stack.Screen
-        name={BCSCScreens.VerifyAppSecurity}
-        component={VerifyChangeSecurityScreen}
-        options={{
-          title: t('BCSC.Settings.AppSecurity.ScreenTitle'),
-        }}
-      />
-      <Stack.Screen
-        name={BCSCScreens.VerifyChangePIN}
-        component={VerifyChangePINScreen}
-        options={({ route }) => ({
-          title: route.params?.isChangingExistingPIN
-            ? t('BCSC.ChangePIN.ScreenTitle')
-            : t('BCSC.Settings.ChangePIN.ScreenTitle'),
-        })}
-      />
+      <Stack.Screen name={BCSCScreens.VerifySettings} component={VerifySettingsScreen} />
+      <Stack.Screen name={BCSCScreens.VerifyAutoLock} component={AutoLockScreen} />
+      <Stack.Screen name={BCSCScreens.VerifyAppSecurity} component={VerifyChangeSecurityScreen} />
+      <Stack.Screen name={BCSCScreens.VerifyChangePIN} component={VerifyChangePINScreen} />
 
       <Stack.Screen
         name={BCSCScreens.TransferAccountInstructions}
         component={TransferInstructionsScreen}
         options={{
-          title: t('BCSC.Screens.TransferAccountInstructions'),
+          header: createProgressHeader(5, 30),
+          headerLeft: createVerifySettingsHeaderButton(),
         }}
       />
       <Stack.Screen
         name={BCSCScreens.TransferAccountQRScan}
         component={TransferQRScannerScreen}
-        options={{
-          title: t('BCSC.Screens.TransferAccountScan'),
-        }}
+        options={{ header: createProgressHeader(5, 70) }}
       />
       <Stack.Screen
         name={BCSCScreens.VerifyRemoveAccountConfirmation}

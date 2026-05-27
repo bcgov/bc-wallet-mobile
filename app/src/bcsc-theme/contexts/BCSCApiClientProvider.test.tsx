@@ -43,7 +43,9 @@ describe('BCSCApiClientProvider', () => {
       },
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
+        additionalEvidenceData: [],
       },
+      bcsc: {},
     }
 
     const mockLogger = new MockLogger()
@@ -84,7 +86,9 @@ describe('BCSCApiClientProvider', () => {
       developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
+        additionalEvidenceData: [],
       },
+      bcsc: {},
     }
 
     const dispatchMock = jest.fn()
@@ -121,7 +125,9 @@ describe('BCSCApiClientProvider', () => {
       developer: { environment: { iasApiBaseUrl: '' } },
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
+        additionalEvidenceData: [],
       },
+      bcsc: {},
     }
     const dispatchMock = jest.fn()
     factoryResetMock.useFactoryReset.mockReturnValue(jest.fn())
@@ -156,7 +162,9 @@ describe('BCSCApiClientProvider', () => {
       developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
+        additionalEvidenceData: [],
       },
+      bcsc: {},
     }
 
     const dispatchMock = jest.fn()
@@ -207,7 +215,9 @@ describe('BCSCApiClientProvider', () => {
       developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
+        additionalEvidenceData: [],
       },
+      bcsc: {},
     }
     const dispatchMock = jest.fn()
     const mockLogger = new MockLogger()
@@ -248,7 +258,9 @@ describe('BCSCApiClientProvider', () => {
       developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
+        additionalEvidenceData: [],
       },
+      bcsc: {},
     }
     const dispatchMock = jest.fn()
     const mockLogger = new MockLogger()
@@ -290,7 +302,9 @@ describe('BCSCApiClientProvider', () => {
       developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
+        additionalEvidenceData: [],
       },
+      bcsc: {},
     }
     const dispatchMock = jest.fn()
     const mockLogger = new MockLogger()
@@ -328,7 +342,9 @@ describe('BCSCApiClientProvider', () => {
       developer: { environment: { iasApiBaseUrl: 'https://new.com' } },
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
+        additionalEvidenceData: [],
       },
+      bcsc: {},
     }
 
     rerender({})

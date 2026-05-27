@@ -41,7 +41,7 @@ const EmailVerifiedScreen = ({ navigation }: EmailVerifiedScreenProps) => {
           navigation.dispatch(
             CommonActions.reset({
               index: 0,
-              routes: [{ name: BCSCScreens.SetupSteps }],
+              routes: [{ name: BCSCScreens.VerificationMethodSelection }],
             })
           )
         }

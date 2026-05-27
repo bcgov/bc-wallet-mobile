@@ -33,7 +33,6 @@ export enum BCSCScreens {
   Services = 'Service List',
   Wallet = 'Wallet',
   ForgetAllPairings = 'Forget All Pairings',
-  SetupSteps = 'Setup Steps',
   IdentitySelection = 'New Setup ID Confirmation',
   SerialInstructions = 'Scan Card Instructions',
   ManualSerial = 'Manual Card Entry',
@@ -173,7 +172,6 @@ export type BCSCPromptStackParams = {
 
 export type BCSCVerifyStackParams = {
   [BCSCScreens.VerifyWebView]: { url: string; title: string }
-  [BCSCScreens.SetupSteps]: undefined
   [BCSCScreens.IdentitySelection]: undefined
   [BCSCScreens.SerialInstructions]: undefined
   [BCSCScreens.ManualSerial]: undefined
@@ -242,7 +240,6 @@ export type BCSCMainStackParams = {
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string; fromAppSwitch?: boolean }
   [BCSCScreens.MainRemoveAccountConfirmation]: undefined
   [BCSCScreens.MainResetWalletConfirmation]: undefined
-  [BCSCScreens.SetupSteps]: undefined
   [BCSCScreens.TransferAccountQRDisplay]: undefined
   [BCSCScreens.TransferAccountSuccess]: undefined
   [BCSCScreens.TransferAccountQRInformation]: undefined
@@ -278,7 +275,7 @@ export type BCSCMainStackParams = {
   [Screens.CredentialDetails]: { credentialId: string }
 
   [BCSCScreens.QRCore]: undefined
-  [BCSCScreens.ConnectionLoading]: { oobRecordId: string }
+  [BCSCScreens.ConnectionLoading]: { oobRecordId?: string; credentialId?: string; proofId?: string }
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
