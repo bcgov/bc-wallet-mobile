@@ -28,9 +28,13 @@ export const VerifyProgressBar = ({ step, percent }: VerifyProgressBarProps) => 
       {SEGMENT_COLORS.map((color, i) => {
         const segmentNumber = i + 1
         let fillPercent: number
-        if (segmentNumber < clampedStep) fillPercent = 100
-        else if (segmentNumber === clampedStep) fillPercent = clampedPercent
-        else fillPercent = 0
+        if (segmentNumber < clampedStep) {
+          fillPercent = 100
+        } else if (segmentNumber === clampedStep) {
+          fillPercent = clampedPercent
+        } else {
+          fillPercent = 0
+        }
 
         return (
           <View

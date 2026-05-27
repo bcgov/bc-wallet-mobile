@@ -222,11 +222,7 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
   }, [
     validateForm,
     formState,
-    store.bcscSecure.userMetadata,
-    store.bcscSecure.deviceCode,
-    store.bcscSecure.deviceCodeExpiresAt,
-    store.bcscSecure.birthdate,
-    store.bcscSecure.cardProcess,
+    store,
     updateUserMetadata,
     navigation,
     logger,
