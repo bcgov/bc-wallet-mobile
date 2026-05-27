@@ -25,7 +25,7 @@ import { BCSCScreens } from '../../types/navigators'
  *
  * Token fetching happens in this hook before navigation. VerificationSuccessScreen handles
  * final account setup (marking verified, metadata cleanup, registration update).
- * This follows the same pattern as the "Check Status" button in SetupStepsScreen.
+ * This follows the same pattern as the "Check Status" button on PendingReviewScreen.
  */
 export const useVerificationResponseListener = () => {
   const navigation = useNavigation()
@@ -50,7 +50,7 @@ export const useVerificationResponseListener = () => {
   /**
    * Handle request reviewed (send-video verification or live call).
    * The notification indicates the video was reviewed, but we need to check the actual status.
-   * This mirrors the "Check Status" button behavior in SetupStepsScreen.
+   * This mirrors the "Check Status" button behavior on PendingReviewScreen.
    */
   const handleRequestReviewed = useCallback(async () => {
     logger.info('[useVerificationResponseListener] Request reviewed event received (send-video/live call)')

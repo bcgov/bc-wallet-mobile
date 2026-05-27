@@ -407,25 +407,27 @@ describe('clientErrorPolicies', () => {
     })
 
     describe('handle', () => {
-      it('should reset navigation to SetupSteps screen', () => {
+      it('should reset navigation to the current resume step', () => {
         const error = newError('err_501_invalid_registration_request')
         const dispatchMock = jest.fn()
         const loggerMock = { info: jest.fn() }
+        const resumeRoute = { name: BCSCScreens.IdentitySelection }
         const context = {
           navigation: { dispatch: dispatchMock },
           logger: loggerMock,
+          getResumeRoute: () => resumeRoute,
         }
         alreadyRegisteredErrorPolicy.handle(error, context as any)
 
         expect(loggerMock.info).toHaveBeenCalledWith(
-          '[AlreadyRegisteredErrorPolicy] Device already registered, navigating to SetupSteps screen'
+          '[AlreadyRegisteredErrorPolicy] Device already registered, navigating to current setup step'
         )
         expect(dispatchMock).toHaveBeenCalledTimes(1)
 
         const dispatchArgs = dispatchMock.mock.calls[0][0]
         expect(dispatchArgs.type).toBe('RESET')
         expect(dispatchArgs.payload.index).toBe(0)
-        expect(dispatchArgs.payload.routes).toEqual([{ name: BCSCScreens.SetupSteps }])
+        expect(dispatchArgs.payload.routes).toEqual([resumeRoute])
       })
     })
   })
@@ -470,14 +472,16 @@ describe('clientErrorPolicies', () => {
     })
 
     describe('handle', () => {
-      it('should reset navigation to BirthdateLockout screen with SetupSteps in stack', () => {
+      it('should reset navigation to BirthdateLockout screen with the resume route below it', () => {
         const error = newError('unknown_server_error')
         error.cause = new AxiosError('unknown server error', undefined, undefined, undefined, { status: 503 } as any)
         const dispatchMock = jest.fn()
         const loggerMock = { info: jest.fn() }
+        const resumeRoute = { name: BCSCScreens.IdentitySelection }
         const context = {
           navigation: { dispatch: dispatchMock },
           logger: loggerMock,
+          getResumeRoute: () => resumeRoute,
         }
         birthdateLockoutErrorPolicy.handle(error, context as any)
 
@@ -489,10 +493,7 @@ describe('clientErrorPolicies', () => {
         const dispatchArgs = dispatchMock.mock.calls[0][0]
         expect(dispatchArgs.type).toBe('RESET')
         expect(dispatchArgs.payload.index).toBe(1)
-        expect(dispatchArgs.payload.routes).toEqual([
-          { name: BCSCScreens.SetupSteps },
-          { name: BCSCScreens.BirthdateLockout },
-        ])
+        expect(dispatchArgs.payload.routes).toEqual([resumeRoute, { name: BCSCScreens.BirthdateLockout }])
       })
     })
   })
@@ -554,9 +555,11 @@ describe('clientErrorPolicies', () => {
         error.cause = new AxiosError('card_expired')
         const dispatchMock = jest.fn()
         const loggerMock = { info: jest.fn() }
+        const resumeRoute = { name: BCSCScreens.IdentitySelection }
         const context = {
           navigation: { dispatch: dispatchMock },
           logger: loggerMock,
+          getResumeRoute: () => resumeRoute,
         }
         cardExpiredErrorPolicy.handle(error, context as any)
 
@@ -569,7 +572,7 @@ describe('clientErrorPolicies', () => {
         expect(dispatchArgs.type).toBe('RESET')
         expect(dispatchArgs.payload.index).toBe(1)
         expect(dispatchArgs.payload.routes).toEqual([
-          { name: BCSCScreens.SetupSteps },
+          resumeRoute,
           {
             name: BCSCScreens.VerificationCardError,
             params: { errorType: VerificationCardError.CardExpired },

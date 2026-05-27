@@ -23,10 +23,10 @@ exports[`PendingReview renders correctly 1`] = `
   <RCTScrollView
     contentContainerStyle={
       [
+        false,
         {
-          "padding": 16,
+          "padding": 24,
         },
-        undefined,
       ]
     }
     showsVerticalScrollIndicator={false}
@@ -212,10 +212,7 @@ exports[`PendingReview renders correctly 1`] = `
         {
           "gap": 16,
         },
-        {
-          "paddingBottom": 16,
-          "paddingHorizontal": 16,
-        },
+        false,
         undefined,
       ]
     }
@@ -266,7 +263,7 @@ exports[`PendingReview renders correctly 1`] = `
         }
       >
         <View
-          accessibilityLabel="BCSC.SendVideo.PendingReview.ButtonText"
+          accessibilityLabel="BCSC.Steps.CheckStatus"
           accessibilityRole="button"
           accessibilityState={
             {
@@ -303,7 +300,7 @@ exports[`PendingReview renders correctly 1`] = `
               "padding": 16,
             }
           }
-          testID="com.ariesbifold:id/Ok"
+          testID="com.ariesbifold:id/CheckStatus"
         >
           <View
             style={
@@ -338,7 +335,85 @@ exports[`PendingReview renders correctly 1`] = `
                 ]
               }
             >
-              BCSC.SendVideo.PendingReview.ButtonText
+              BCSC.Steps.CheckStatus
+            </Text>
+          </View>
+        </View>
+        <View
+          accessibilityLabel="BCSC.Steps.ChooseAnotherWayToVerify"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "borderColor": "#003366",
+              "borderRadius": 4,
+              "borderWidth": 2,
+              "opacity": 1,
+              "padding": 16,
+            }
+          }
+          testID="com.ariesbifold:id/ChooseAnotherWayToVerify"
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "center",
+              }
+            }
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "color": "#003366",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
+                    false,
+                    false,
+                  ],
+                ]
+              }
+            >
+              BCSC.Steps.ChooseAnotherWayToVerify
             </Text>
           </View>
         </View>

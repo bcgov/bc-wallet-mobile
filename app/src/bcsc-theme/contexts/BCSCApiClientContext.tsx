@@ -1,9 +1,10 @@
 import { useAlerts } from '@/hooks/useAlerts'
+import { useResumeStepRoute } from '@/hooks/useResumeStepRoute'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
-import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react'
+import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking } from 'react-native'
 import BCSCApiClient from '../api/client'
@@ -41,6 +42,11 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const alerts = useAlerts(navigation)
+  const resumeRoute = useResumeStepRoute()
+  // Keep a ref of the latest resume route so error handlers always read the
+  // most recent value, even if their closures were created on an earlier render.
+  const resumeRouteRef = useRef(resumeRoute)
+  resumeRouteRef.current = resumeRoute
 
   /**
    * Sets both the local state and the singleton instance of the BCSCApiClient.
@@ -84,6 +90,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
           translate: t,
           logger,
           alerts,
+          getResumeRoute: () => resumeRouteRef.current,
         })
       } finally {
         error.handled = true

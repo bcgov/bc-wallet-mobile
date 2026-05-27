@@ -91,7 +91,8 @@ const translation = {
     "StartVerification": {
       "Title": "You're not verified (FR)",
       "Description": "You can continue the verification process at any time. (FR)",
-      "ButtonTitle": "Start verification (FR)"
+      "ButtonTitle": "Start verification (FR)",
+      "ContinueButtonTitle": "Continue verification (FR)"
     },
     "BasicMessage": {
       "Title": "New message (FR)",
@@ -207,7 +208,6 @@ const translation = {
     "Screens": {
       "Settings": "Settings (FR)",
       "SetupTypes": "BC Services Card (FR)",
-      "SetupSteps": "Setup Steps (FR)",
       "VerificationMethodSelection": "Choose How to Verify (FR)",
       "TransferAccountInstructions": "Transfer Instructions (FR)",
       "TransferAccountScan": "Scan QR Code (FR)",
@@ -476,28 +476,8 @@ const translation = {
       "ViewMessages": "View new messages (FR)",
     },
     "Steps": {
-      "ScanOrTakePhotos": "Scan or take photos of your ID. (FR)",
-      "Step1": "Step 1 (FR)",
-      "Step2": "Step 2 (FR)",
-      "Step3": "Step 3 (FR)",
-      "Step4": "Step 4 (FR)",
-      "Step5": "Step 5 (FR)",
       "VerificationIDMissing": "Verification request ID is missing (FR)",
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification (FR)",
-      "GetVerificationStep2Subtext1": "ID: BC Services Card ({{ serial }}) (FR)",
-      "GetVerificationStep2Subtext2": "ID: {{ evidenceType }} ({{ documentNumber }}) (FR)",
-      "GetVerificationStep3Subtext1": "Address: Residential address from your BC Services Card will be used (FR)",
-      "GetVerificationStep3Subtext2": "Address: {{ address }} (FR)",
-      "GetVerificationStep3Subtext3": "Residential address (FR)",
-      "GetVerificationStep5Subtext1": "Verify identity by {{ expirationDate }} (FR)",
-      "GetVerificationStep5Subtext2": "Complete additional identification first (FR)",
-      "GetVerificationStep5Subtext3": "Verify identity (FR)",
-      "TransferAccountSubtext": "Transfer your account from another device (FR)",
-      "AddSecondIdText": "Add second ID (FR)",
-      "AdditionalIdentificationRequired": "Additional identification required for non-photo BC Services Card. (FR)",
-      "StoredEmail": "Email: {{ email }} (FR)",
-      "EmailAddress": "Email Address (FR)",
-      "EditEmail": "Edit (FR)",
       "CheckStatus": "Check status (FR)",
       "ChooseAnotherWayToVerify": "Choose another way to verify (FR)",
     },

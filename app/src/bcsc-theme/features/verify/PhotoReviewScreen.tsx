@@ -36,9 +36,8 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
       if (forLiveCall) {
         navigation.dispatch(
           CommonActions.reset({
-            index: 3,
+            index: 2,
             routes: [
-              { name: BCSCScreens.SetupSteps },
               { name: BCSCScreens.VerificationMethodSelection },
               { name: BCSCScreens.PhotoInstructions, params: { forLiveCall: true } },
               { name: BCSCScreens.StartCall },
@@ -50,12 +49,8 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
 
       navigation.dispatch(
         CommonActions.reset({
-          index: 2,
-          routes: [
-            { name: BCSCScreens.SetupSteps },
-            { name: BCSCScreens.VerificationMethodSelection },
-            { name: BCSCScreens.VideoInstructions },
-          ],
+          index: 1,
+          routes: [{ name: BCSCScreens.VerificationMethodSelection }, { name: BCSCScreens.VideoInstructions }],
         })
       )
     } catch (error) {

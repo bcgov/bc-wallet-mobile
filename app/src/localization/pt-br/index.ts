@@ -91,7 +91,8 @@ const translation = {
     "StartVerification": {
       "Title": "You're not verified (PT-BR)",
       "Description": "You can continue the verification process at any time. (PT-BR)",
-      "ButtonTitle": "Start verification (PT-BR)"
+      "ButtonTitle": "Start verification (PT-BR)",
+      "ContinueButtonTitle": "Continue verification (PT-BR)"
     },
     "BasicMessage": {
       "Title": "New message (PT-BR)",
@@ -207,7 +208,6 @@ const translation = {
     "Screens": {
       "Settings": "Settings (PT-BR)",
       "SetupTypes": "BC Services Card (PT-BR)",
-      "SetupSteps": "Setup Steps (PT-BR)",
       "VerificationMethodSelection": "Choose How to Verify (PT-BR)",
       "TransferAccountInstructions": "Transfer Instructions (PT-BR)",
       "TransferAccountScan": "Scan QR Code (PT-BR)",
@@ -476,28 +476,8 @@ const translation = {
       "ViewMessages": "View new messages (PT-BR)",
     },
     "Steps": {
-      "ScanOrTakePhotos": "Scan or take photos of your ID. (PT-BR)",
-      "Step1": "Step 1 (PT-BR)",
-      "Step2": "Step 2 (PT-BR)",
-      "Step3": "Step 3 (PT-BR)",
-      "Step4": "Step 4 (PT-BR)",
-      "Step5": "Step 5 (PT-BR)",
       "VerificationIDMissing": "Verification request ID is missing (PT-BR)",
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification (PT-BR)",
-      "GetVerificationStep2Subtext1": "ID: BC Services Card ({{ serial }}) (PT-BR)",
-      "GetVerificationStep2Subtext2": "ID: {{ evidenceType }} ({{ documentNumber }}) (PT-BR)",
-      "GetVerificationStep3Subtext1": "Address: Residential address from your BC Services Card will be used (PT-BR)",
-      "GetVerificationStep3Subtext2": "Address: {{ address }} (PT-BR)",
-      "GetVerificationStep3Subtext3": "Residential address (PT-BR)",
-      "GetVerificationStep5Subtext1": "Verify identity by {{ expirationDate }} (PT-BR)",
-      "GetVerificationStep5Subtext2": "Complete additional identification first (PT-BR)",
-      "GetVerificationStep5Subtext3": "Verify identity (PT-BR)",
-      "TransferAccountSubtext": "Transfer your account from another device (PT-BR)",
-      "AddSecondIdText": "Add second ID (PT-BR)",
-      "AdditionalIdentificationRequired": "Additional identification required for non-photo BC Services Card. (PT-BR)",
-      "StoredEmail": "Email: {{ email }} (PT-BR)",
-      "EmailAddress": "Email Address (PT-BR)",
-      "EditEmail": "Edit (PT-BR)",
       "CheckStatus": "Check status (PT-BR)",
       "ChooseAnotherWayToVerify": "Choose another way to verify (PT-BR)",
     },
