@@ -1,4 +1,3 @@
-import NotificationTestTriggers from '@/bcsc-theme/features/notifications/NotificationTestTriggers'
 import { BCThemeNames } from '@/constants'
 import { BCDispatchAction, BCState, Mode } from '@/store'
 import {
@@ -584,9 +583,6 @@ const Developer: React.FC = () => {
             >
               <Icon name="chevron-right" size={24} color={ColorPalette.brand.link} />
             </SectionRow>
-            <View style={styles.sectionSeparator}></View>
-            <SectionHeader icon={'notifications'} title={'Notification Triggers'} />
-            <NotificationTestTriggers />
           </>
         ) : null}
         <View style={styles.footer}>
