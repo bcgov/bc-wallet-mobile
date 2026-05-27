@@ -50,7 +50,7 @@ const StatusDetails: React.FC<StatusScreenProps> = ({
         color={iconColor ?? ColorPalette.brand.primary}
         style={{ padding: Spacing.lg }}
       />
-      <ThemedText variant={'headingThree'} style={{ marginVertical: Spacing.md, textAlign: 'left' }}>
+      <ThemedText variant={'headingThree'} style={{ marginVertical: Spacing.md, textAlign: 'center' }}>
         {title}
       </ThemedText>
       {description ? <ThemedText style={styles.descriptions}>{description}</ThemedText> : null}

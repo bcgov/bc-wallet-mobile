@@ -69,7 +69,7 @@ exports[`VerificationSuccess renders correctly 1`] = `
             },
             {
               "marginVertical": 16,
-              "textAlign": "left",
+              "textAlign": "center",
             },
           ]
         }

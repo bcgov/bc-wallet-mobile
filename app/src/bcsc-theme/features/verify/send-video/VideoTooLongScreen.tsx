@@ -36,7 +36,7 @@ const VideoTooLongScreen = ({ navigation, route }: VideoTooLongScreenProps) => {
           navigation.dispatch(
             CommonActions.reset({
               index: 0,
-              routes: [{ name: BCSCScreens.SetupSteps }],
+              routes: [{ name: BCSCScreens.VerificationMethodSelection }],
             })
           )
         }}

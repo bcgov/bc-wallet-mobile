@@ -1,5 +1,7 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { InfoBoxType } from '@bifold/core'
+import { computeSetupStepCompletion } from '@/bcsc-theme/utils/setup-step-completion'
+import { BCState } from '@/store'
+import { InfoBoxType, useStore } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import NotificationCard from './NotificationCard'
 
@@ -15,13 +17,20 @@ interface StartVerificationNotificationProps {
  */
 const StartVerificationNotification = (props: StartVerificationNotificationProps) => {
   const { t } = useTranslation()
+  const [store] = useStore<BCState>()
   const secureActions = useSecureActions()
+
+  // Later steps gate on step 1 being complete, so id.completed is a faithful proxy for "any step completed".
+  const hasCompletedAnyStep = computeSetupStepCompletion(store).id.completed
+  const buttonTitle = hasCompletedAnyStep
+    ? t('Notification.StartVerification.ContinueButtonTitle')
+    : t('Notification.StartVerification.ButtonTitle')
 
   return (
     <NotificationCard
       title={t('Notification.StartVerification.Title')}
       description={t('Notification.StartVerification.Description')}
-      buttonTitle={t('Notification.StartVerification.ButtonTitle')}
+      buttonTitle={buttonTitle}
       onPress={() => {
         secureActions.continueVerificationProcess()
       }}

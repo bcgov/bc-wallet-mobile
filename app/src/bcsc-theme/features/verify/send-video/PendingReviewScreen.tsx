@@ -1,4 +1,5 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { useVerificationPendingActions } from '@/bcsc-theme/hooks/useVerificationPendingActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -12,6 +13,7 @@ type PendingReviewScreenProps = {
 const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
   const { Spacing } = useTheme()
   const { t } = useTranslation()
+  const { isCheckingStatus, handleCheckStatus, handleCancelVerification } = useVerificationPendingActions(navigation)
 
   const styles = StyleSheet.create({
     bulletContainer: {
@@ -26,25 +28,33 @@ const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
   const controls = (
     <ControlContainer>
       <Button
-        testID={testIdWithKey('Ok')}
-        accessibilityLabel={t('BCSC.SendVideo.PendingReview.ButtonText')}
-        title={t('BCSC.SendVideo.PendingReview.ButtonText')}
+        testID={testIdWithKey('CheckStatus')}
+        accessibilityLabel={t('BCSC.Steps.CheckStatus')}
+        title={t('BCSC.Steps.CheckStatus')}
         buttonType={ButtonType.Primary}
-        onPress={() => navigation.goBack()}
+        disabled={isCheckingStatus}
+        onPress={handleCheckStatus}
+      />
+      <Button
+        testID={testIdWithKey('ChooseAnotherWayToVerify')}
+        accessibilityLabel={t('BCSC.Steps.ChooseAnotherWayToVerify')}
+        title={t('BCSC.Steps.ChooseAnotherWayToVerify')}
+        buttonType={ButtonType.Secondary}
+        onPress={handleCancelVerification}
       />
     </ControlContainer>
   )
 
   return (
-    <ScreenWrapper controls={controls}>
+    <ScreenWrapper padded={false} controls={controls} scrollViewContainerStyle={{ padding: Spacing.lg }}>
       <ThemedText variant={'headingThree'}>{t('BCSC.SendVideo.PendingReview.Heading')}</ThemedText>
       <ThemedText style={{ marginVertical: Spacing.md }}>{t('BCSC.SendVideo.PendingReview.Description1')}</ThemedText>
       <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
+        <ThemedText style={styles.bullet}>{'•'}</ThemedText>
         <ThemedText>{t('BCSC.SendVideo.PendingReview.Bullet1')}</ThemedText>
       </View>
       <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
+        <ThemedText style={styles.bullet}>{'•'}</ThemedText>
         <ThemedText>{t('BCSC.SendVideo.PendingReview.Bullet2')}</ThemedText>
       </View>
       <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.SendVideo.PendingReview.Description2')}</ThemedText>

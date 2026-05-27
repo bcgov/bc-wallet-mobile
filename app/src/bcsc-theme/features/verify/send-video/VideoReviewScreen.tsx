@@ -91,12 +91,8 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     dispatch({ type: BCDispatchAction.SAVE_VIDEO_THUMBNAIL, payload: [videoThumbnailPath] })
     navigation.dispatch(
       CommonActions.reset({
-        index: 2,
-        routes: [
-          { name: BCSCScreens.SetupSteps },
-          { name: BCSCScreens.VerificationMethodSelection },
-          { name: BCSCScreens.EvidenceUploading },
-        ],
+        index: 1,
+        routes: [{ name: BCSCScreens.VerificationMethodSelection }, { name: BCSCScreens.EvidenceUploading }],
       })
     )
   }

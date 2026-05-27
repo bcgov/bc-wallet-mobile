@@ -1,5 +1,7 @@
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useNavigation } from '@mocks/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { CommonActions } from '@react-navigation/native'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import CancelledReview from './CancelledReview'
@@ -67,7 +69,7 @@ describe('CancelledReview', () => {
     expect(tree.getByText('BCSC.CancelledVerification.Label')).toBeTruthy()
   })
 
-  it('navigates back when OK button is pressed', async () => {
+  it('resets navigation to verification method selection when OK button is pressed', async () => {
     const agentReason = 'Test reason'
     const route = {
       params: {
@@ -89,7 +91,12 @@ describe('CancelledReview', () => {
     fireEvent.press(okButton)
 
     await waitFor(() => {
-      expect(mockNavigation.goBack).toHaveBeenCalledTimes(1)
+      expect(mockNavigation.dispatch).toHaveBeenCalledWith(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: BCSCScreens.VerificationMethodSelection }],
+        })
+      )
     })
   })
 

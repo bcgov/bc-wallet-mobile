@@ -12,7 +12,7 @@ interface HeaderWithBannerProps extends StackHeaderProps {
   onManageDevices: () => void
 }
 
-const HeaderDropShadow = () => {
+export const HeaderDropShadow = () => {
   const { ColorPalette } = useTheme()
   return (
     <DropShadow

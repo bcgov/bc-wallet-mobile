@@ -46,9 +46,11 @@ describe('EnterBirthdateViewModel', () => {
   const mockSerial = '123456789'
   const mockBirthdate = new Date('1990-01-15')
   const mockStore: any = {
+    bcsc: {},
     bcscSecure: {
       serial: mockSerial,
       birthdate: mockBirthdate,
+      additionalEvidenceData: [],
     },
   }
 
@@ -79,7 +81,7 @@ describe('EnterBirthdateViewModel', () => {
   })
 
   describe('authorizeDevice', () => {
-    it('should navigate to SetupSteps', async () => {
+    it('should navigate to the verification-method-selection step for a photo BCSC with a verified email', async () => {
       const mockDeviceAuth = {
         device_code: 'test-device-code',
         user_code: 'ABCD1234',
@@ -124,11 +126,11 @@ describe('EnterBirthdateViewModel', () => {
         // Verify updateVerificationOptions was called
         expect(mockUpdateVerificationOptions).toHaveBeenCalledWith(['video_call'])
 
-        // Verify navigation
+        // Photo BCSC + verified email ⇒ steps 1/2/3 are auto-complete ⇒ next step is verify
         expect(mockNavigation.dispatch).toHaveBeenCalledWith(
           CommonActions.reset({
             index: 0,
-            routes: [{ name: BCSCScreens.SetupSteps }],
+            routes: [{ name: BCSCScreens.VerificationMethodSelection }],
           })
         )
       })
