@@ -1,6 +1,8 @@
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { CredentialNotificationRecord } from '@/hooks/notifications'
+import { useDeclineCredentialOffer } from '@/hooks/useDeclineCredentialOffer'
+import { useDeclineProofRequest } from '@/hooks/useDeclineProofRequest'
 import { getCredentialNotificationType, NotificationType } from '@/utils/credentials'
 import {
   basicMessageCustomMetadata,
@@ -84,6 +86,23 @@ function formatTimestamp(date: Date): string {
   return date.toLocaleDateString([], { month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 }
 
+function formatExpiryBadge(expiresTime: Date): string | undefined {
+  const diffMs = expiresTime.getTime() - Date.now()
+  if (diffMs <= 0) {
+    return 'Expired'
+  }
+  const diffMin = Math.floor(diffMs / 60_000)
+  if (diffMin < 60) {
+    return `Expires in ${diffMin} min`
+  }
+  const diffHours = Math.floor(diffMin / 60)
+  if (diffHours < 24) {
+    return `Expires in ${diffHours} hour${diffHours === 1 ? '' : 's'}`
+  }
+  const diffDays = Math.floor(diffHours / 24)
+  return `Expires in ${diffDays} day${diffDays === 1 ? '' : 's'}`
+}
+
 /**
  * Basic Message Notifications
  *
@@ -98,15 +117,33 @@ const BasicMessageNotification = ({ notification }: CredentialNotificationProps)
   const basicMessage = notification as DidCommBasicMessageRecord
   const connection = useConnectionById(basicMessage.connectionId)
   const label = getConnectionName(connection, store.preferences.alternateContactNames)
+  const [unseenCount, setUnseenCount] = useState(0)
+
+  useEffect(() => {
+    if (!agent) return
+    const repo = agent.context.dependencyManager.resolve(DidCommBasicMessageRepository)
+    repo.findByQuery(agent.context, { connectionId: basicMessage.connectionId }).then((messages) => {
+      const count = messages.filter((msg) => {
+        const meta = msg.metadata.get(BasicMessageMetadata.customMetadata) as basicMessageCustomMetadata
+        return !meta?.seen
+      }).length
+      setUnseenCount(count)
+    })
+  }, [agent, basicMessage.connectionId])
 
   const handleClose = async () => {
     if (!agent) {
       return
     }
-    const meta = basicMessage.metadata.get(BasicMessageMetadata.customMetadata) as basicMessageCustomMetadata
-    basicMessage.metadata.set(BasicMessageMetadata.customMetadata, { ...meta, seen: true })
     const repo = agent.context.dependencyManager.resolve(DidCommBasicMessageRepository)
-    await repo.update(agent.context, basicMessage)
+    const allMessages = await repo.findByQuery(agent.context, { connectionId: basicMessage.connectionId })
+    for (const msg of allMessages) {
+      const meta = msg.metadata.get(BasicMessageMetadata.customMetadata) as basicMessageCustomMetadata
+      if (!meta?.seen) {
+        msg.metadata.set(BasicMessageMetadata.customMetadata, { ...meta, seen: true })
+        await repo.update(agent.context, msg)
+      }
+    }
   }
 
   return (
@@ -117,8 +154,12 @@ const BasicMessageNotification = ({ notification }: CredentialNotificationProps)
       }
       icon="chat"
       cardType={InfoBoxType.Info}
-      onPress={() => navigation.navigate(BCSCScreens.ContactChat, { connectionId: basicMessage.connectionId })}
+      onPress={() => {
+        handleClose()
+        navigation.navigate(BCSCScreens.ContactChat, { connectionId: basicMessage.connectionId })
+      }}
       onClose={handleClose}
+      badge={unseenCount > 1 ? `${unseenCount} messages` : undefined}
       timestamp={formatTimestamp(notification.createdAt)}
     />
   )
@@ -140,22 +181,28 @@ const CredentialOfferNotification = ({ notification }: CredentialNotificationPro
   const connection = useConnectionById(credential.connectionId ?? '')
   const { name, version } = parsedSchema(credential)
   const label = getConnectionName(connection, store.preferences.alternateContactNames)
+  const [expiresTime, setExpiresTime] = useState<Date>()
+
+  useEffect(() => {
+    const fetchTiming = async () => {
+      try {
+        const message = await agent?.modules.didcomm.credentials.findOfferMessage(credential.id)
+        if (message?.timing?.expiresTime) {
+          setExpiresTime(message.timing.expiresTime)
+        }
+      } catch {
+        // timing is optional, ignore errors
+      }
+    }
+    fetchTiming()
+  }, [agent, credential.id])
 
   const credentialDisplayName = version ? `${name} v${version}` : name
   const description = label
     ? t('Notification.CredentialOffer.Description', { label, credential: credentialDisplayName })
     : credentialDisplayName
 
-  const handleClose = async () => {
-    if (!agent) {
-      return
-    }
-    try {
-      await agent.didcomm.credentials.declineOffer({ credentialExchangeRecordId: credential.id })
-    } catch (err) {
-      agent.config.logger.error(`Failed to decline credential offer: ${err}`)
-    }
-  }
+  const handleClose = useDeclineCredentialOffer(credential)
 
   return (
     <NotificationCard
@@ -166,6 +213,7 @@ const CredentialOfferNotification = ({ notification }: CredentialNotificationPro
       backgroundColor={ColorPalette.grayscale.white}
       onPress={() => navigation.navigate(BCSCScreens.ConnectionLoading, { credentialId: credential.id })}
       onClose={handleClose}
+      badge={expiresTime ? formatExpiryBadge(expiresTime) : undefined}
       timestamp={formatTimestamp(notification.createdAt)}
     />
   )
@@ -186,11 +234,15 @@ const ProofRequestNotification = ({ notification }: CredentialNotificationProps)
   const connection = useConnectionById(proof.connectionId ?? '')
   const label = getConnectionName(connection, store.preferences.alternateContactNames)
   const [proofName, setProofName] = useState('')
+  const [expiresTime, setExpiresTime] = useState<Date>()
 
   useEffect(() => {
-    const fetchProofName = async () => {
+    const fetchProofDetails = async () => {
       try {
         const message = await agent?.didcomm.proofs.findRequestMessage(proof.id)
+        if (message?.timing?.expiresTime) {
+          setExpiresTime(message.timing.expiresTime)
+        }
         if (message instanceof DidCommRequestPresentationV2Message) {
           const attachment = message.requestAttachments.find((a) => a.id === 'indy')
           const name = attachment?.getDataAsJson<{ name?: string }>()?.name
@@ -203,10 +255,10 @@ const ProofRequestNotification = ({ notification }: CredentialNotificationProps)
           setProofName(message.comment)
         }
       } catch (err) {
-        agent?.config.logger.error(`Failed to fetch proof request name: ${err}`)
+        agent?.config.logger.error(`Failed to fetch proof request details: ${err}`)
       }
     }
-    fetchProofName()
+    fetchProofDetails()
   }, [agent, proof.id])
 
   const description =
@@ -214,6 +266,7 @@ const ProofRequestNotification = ({ notification }: CredentialNotificationProps)
     (label ? t('Notification.ProofRequest.Description', { label }) : t('Notification.ProofRequest.DefaultDescription'))
 
   const isDone = proof.state === DidCommProofState.Done || proof.state === DidCommProofState.PresentationReceived
+  const declineProofRequest = useDeclineProofRequest(proof)
 
   const handlePress = () => {
     if (isDone && agent) {
@@ -222,9 +275,11 @@ const ProofRequestNotification = ({ notification }: CredentialNotificationProps)
     navigation.navigate(BCSCScreens.ConnectionLoading, { proofId: proof.id })
   }
 
-  const handleClose = () => {
+  const handleClose = async () => {
     if (isDone && agent) {
       markProofAsViewed(agent, proof)
+    } else {
+      await declineProofRequest()
     }
   }
 
@@ -236,6 +291,7 @@ const ProofRequestNotification = ({ notification }: CredentialNotificationProps)
       cardType={InfoBoxType.Info}
       onPress={handlePress}
       onClose={handleClose}
+      badge={expiresTime ? formatExpiryBadge(expiresTime) : undefined}
       timestamp={formatTimestamp(notification.createdAt)}
     />
   )

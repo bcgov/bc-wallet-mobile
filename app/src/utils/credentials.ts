@@ -209,7 +209,7 @@ export const getCredentialNotificationType = (notification: CredentialNotificati
     return NotificationType.BasicMessage
   }
 
-  if (notification.type === 'CredentialRecord' && 'revocationNotification' in notification) {
+  if (notification.type === 'CredentialRecord' && notification.revocationNotification !== undefined) {
     return NotificationType.Revocation
   }
 
