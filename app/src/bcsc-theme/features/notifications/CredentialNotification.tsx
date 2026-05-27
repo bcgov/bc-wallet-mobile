@@ -120,7 +120,9 @@ const BasicMessageNotification = ({ notification }: CredentialNotificationProps)
   const [unseenCount, setUnseenCount] = useState(0)
 
   useEffect(() => {
-    if (!agent) return
+    if (!agent) {
+      return
+    }
     const repo = agent.context.dependencyManager.resolve(DidCommBasicMessageRepository)
     repo.findByQuery(agent.context, { connectionId: basicMessage.connectionId }).then((messages) => {
       const count = messages.filter((msg) => {
