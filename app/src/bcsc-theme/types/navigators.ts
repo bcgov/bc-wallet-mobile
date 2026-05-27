@@ -276,7 +276,7 @@ export type BCSCMainStackParams = {
   [Screens.CredentialDetails]: { credentialId: string }
 
   [BCSCScreens.QRCore]: undefined
-  [BCSCScreens.ConnectionLoading]: { oobRecordId: string }
+  [BCSCScreens.ConnectionLoading]: { oobRecordId?: string; credentialId?: string; proofId?: string }
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined

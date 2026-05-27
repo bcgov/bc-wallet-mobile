@@ -1,7 +1,9 @@
+import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { useNotifications } from '@/hooks/notifications'
-import useBCAgentSetup from '@/hooks/useBCAgentSetup'
 import { useCustomNotifications } from '@/hooks/useCustomNotifications'
+import { useTheme } from '@bifold/core'
 import { JSX } from 'react'
+import { View } from 'react-native'
 import CredentialNotification from '../../notifications/CredentialNotification'
 
 /**
@@ -10,8 +12,7 @@ import CredentialNotification from '../../notifications/CredentialNotification'
  * @returns React.Element
  */
 export const NotificationsList = (): JSX.Element => {
-  // FIXME (V4.1.x): Replace this useBCAgentSetup hook with the new useAgent hook once complete.
-  const { agent } = useBCAgentSetup()
+  const { agent } = useBCSCAgent()
 
   if (agent) {
     return <WithAgentNotificationsList />
@@ -28,13 +29,18 @@ export const NotificationsList = (): JSX.Element => {
 const WithAgentNotificationsList = (): JSX.Element => {
   const notifications = useNotifications()
   const { customNotifications } = useCustomNotifications()
+  const { Spacing } = useTheme()
 
   return (
     <>
       {customNotifications}
-      {notifications.map((notification) => (
-        <CredentialNotification key={notification.id} notification={notification} />
-      ))}
+      {notifications.length > 0 && (
+        <View style={{ marginHorizontal: -Spacing.lg }}>
+          {notifications.map((notification) => (
+            <CredentialNotification key={notification.id} notification={notification} />
+          ))}
+        </View>
+      )}
     </>
   )
 }
