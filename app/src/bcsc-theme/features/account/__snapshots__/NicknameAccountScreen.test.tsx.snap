@@ -285,6 +285,7 @@ exports[`NicknameAccount renders correctly 1`] = `
               >
                 <TextInput
                   accessibilityLabel="BCSC.NicknameAccount.AccountName"
+                  autoCapitalize="sentences"
                   autoCorrect={false}
                   maxLength={30}
                   onBlur={[Function]}

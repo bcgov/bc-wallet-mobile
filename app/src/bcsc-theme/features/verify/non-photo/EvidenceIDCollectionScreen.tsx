@@ -251,7 +251,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
           onChange={(value) => handleChange('documentNumber', value)}
           error={formErrors.documentNumber}
           subtext={`${t('BCSC.EvidenceIDCollection.DocumentNumberSubtext')} ${cardType.document_reference_sample}`}
-          textInputProps={{ autoCorrect: false }}
+          textInputProps={{ autoCorrect: false, autoCapitalize: 'characters' }}
           onLayout={(e) => {
             fieldYOffsets.current.documentNumber = e.nativeEvent.layout.y
           }}
@@ -266,7 +266,12 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
               onChange={(value) => handleChange('lastName', value)}
               error={formErrors.lastName}
               subtext={t('BCSC.EvidenceIDCollection.LastNameSubtext')}
-              textInputProps={{ autoCorrect: false, autoComplete: 'name-family', textContentType: 'familyName' }}
+              textInputProps={{
+                autoCorrect: false,
+                autoComplete: 'name-family',
+                textContentType: 'familyName',
+                autoCapitalize: 'characters',
+              }}
               onLayout={(e) => {
                 fieldYOffsets.current.lastName = e.nativeEvent.layout.y
               }}
@@ -279,7 +284,12 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
               onChange={(value) => handleChange('firstName', value)}
               error={formErrors.firstName}
               subtext={t('BCSC.EvidenceIDCollection.FirstNameSubtext')}
-              textInputProps={{ autoCorrect: false, autoComplete: 'name-given', textContentType: 'givenName' }}
+              textInputProps={{
+                autoCorrect: false,
+                autoComplete: 'name-given',
+                textContentType: 'givenName',
+                autoCapitalize: 'characters',
+              }}
               onLayout={(e) => {
                 fieldYOffsets.current.firstName = e.nativeEvent.layout.y
               }}
@@ -292,7 +302,12 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
               onChange={(value) => handleChange('middleNames', value)}
               error={formErrors.middleNames}
               subtext={t('BCSC.EvidenceIDCollection.MiddleNamesSubtext')}
-              textInputProps={{ autoCorrect: false, autoComplete: 'name-middle', textContentType: 'middleName' }}
+              textInputProps={{
+                autoCorrect: false,
+                autoComplete: 'name-middle',
+                textContentType: 'middleName',
+                autoCapitalize: 'characters',
+              }}
               onLayout={(e) => {
                 fieldYOffsets.current.middleNames = e.nativeEvent.layout.y
               }}

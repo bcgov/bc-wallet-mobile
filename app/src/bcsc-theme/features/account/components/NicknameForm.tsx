@@ -103,6 +103,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
         textInputProps={{
           maxLength: formStringLengths.maximumLength,
           autoCorrect: false,
+          autoCapitalize: 'sentences',
         }}
       />
     </ScreenWrapper>
