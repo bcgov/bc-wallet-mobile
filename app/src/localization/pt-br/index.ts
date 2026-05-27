@@ -101,10 +101,13 @@ const translation = {
       "ButtonTitle": "View message (PT-BR)"
     },
     "CredentialOffer": {
-      "Title": "New credential offer (PT-BR)",
+      "Title": "Credential offer (PT-BR)",
+      "Description": "{{ label }} is offering you a credential (PT-BR)"
     },
     "ProofRequest": {
-      "Title": "New proof request (PT-BR)"
+      "Title": "Proof request (PT-BR)",
+      "Description": "{{ label }} is requesting information (PT-BR)",
+      "DefaultDescription": "You received a proof request (PT-BR)"
     },
     "Revocation": {
       "Title": "Credential revoked (PT-BR)"
