@@ -1183,7 +1183,7 @@ const translation = {
       "EmptyMessage": "Your wallet is empty",
       "Reset": "Reset wallet",
       "ResetTitle": "Reset wallet?",
-      "ResetDescription": "This will permanently delete all credentials, connections, and chat history stored in your wallet. Your PIN, biometrics, and BC Services Card identity will not be affected.",
+      "ResetDescription": "This will permanently delete all credentials, connections, and chat history stored in your wallet. Your PIN, biometrics, and BC Services Card identity will not be affected. You will not have to re-verify.",
       "Resetting": "Resetting wallet...",
     },
     "Account": {
