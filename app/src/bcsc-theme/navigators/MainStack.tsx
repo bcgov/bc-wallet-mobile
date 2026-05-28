@@ -12,13 +12,13 @@ import {
 } from '@bifold/core'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import Developer from '../../screens/Developer'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
-import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
+import { createHeaderWithBanner, createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
 import { useAccount } from '../contexts/BCSCAccountContext'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
@@ -57,6 +57,7 @@ import { MainPrivacyPolicyScreen } from '../features/settings/MainPrivacyPolicyS
 import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
 import { MainResetWalletConfirmationScreen } from '../features/settings/ResetWalletConfirmationScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
+import { useBCSCApiClient } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
 import QRCoreStack from './QRCoreStack'
@@ -103,7 +104,20 @@ const MainStack: React.FC = () => {
       pairingCode,
     }
   }, [logger, pendingPairing])
+
+  const apiClient = useBCSCApiClient()
+
+  const handleManageDevices = useCallback(() => {
+    navigation.navigate(BCSCScreens.MainWebView, {
+      url: apiClient.endpoints.accountDevices,
+      title: t('BCSC.Screens.ManageDevices'),
+    })
+  }, [apiClient.endpoints.accountDevices, navigation, t])
+
+  const headerWithBanner = useMemo(() => createHeaderWithBanner(handleManageDevices), [handleManageDevices])
+
   const initialRouteName = pairingInitialParams ? BCSCScreens.ServiceLogin : BCSCStacks.Tab
+
   useSystemChecks(SystemCheckScope.MAIN_STACK)
   useBCSCStack(BCSCStacks.Main)
 
@@ -138,7 +152,7 @@ const MainStack: React.FC = () => {
             headerBackTitleVisible: false,
             headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
             headerLeft: createHeaderBackButton,
-            header: createHeaderWithoutBanner,
+            header: headerWithBanner,
             headerRight: createFloatingHelpMenuButton({ webViewScreen: BCSCScreens.MainWebView }),
           }}
         >
