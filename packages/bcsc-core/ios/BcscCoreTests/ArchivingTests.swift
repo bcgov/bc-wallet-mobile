@@ -334,6 +334,122 @@ final class DocumentsArchiverTests: XCTestCase {
   }
 }
 
+// MARK: - EvidencePhoto fromPhotoDict Tests
+
+/// Regression coverage for the "content_length = 0 after app restart" bug.
+///
+/// The JS-side PhotoMetadata sent through `setEvidence` carries `file_path`, not
+/// `photoBase64String`. Before the fix, `EvidencePhoto` archived an empty base64
+/// string and the next `getEvidence` recomputed `content_length` from zero bytes.
+final class EvidencePhotoFromPhotoDictTests: XCTestCase {
+  private var tempDir: URL!
+
+  override func setUpWithError() throws {
+    try super.setUpWithError()
+    tempDir = URL(fileURLWithPath: NSTemporaryDirectory())
+      .appendingPathComponent("EvidencePhotoFromPhotoDictTests-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+  }
+
+  override func tearDownWithError() throws {
+    if let dir = tempDir, FileManager.default.fileExists(atPath: dir.path) {
+      try FileManager.default.removeItem(at: dir)
+    }
+    tempDir = nil
+    try super.tearDownWithError()
+  }
+
+  private func writeFixtureBytes(_ bytes: [UInt8], filename: String = "photo.jpg") throws -> (URL, Data) {
+    let data = Data(bytes)
+    let url = tempDir.appendingPathComponent(filename)
+    try data.write(to: url)
+    return (url, data)
+  }
+
+  func testReadsBytesFromFilePath() throws {
+    // Stand-in for a JPEG written earlier by saveEvidencePhoto.
+    let fixtureBytes: [UInt8] = Array(0 ..< 64).map { UInt8($0) } + [0xFF, 0xD8, 0xFF, 0xE0]
+    let (url, data) = try writeFixtureBytes(fixtureBytes)
+
+    let photoDict: [String: Any] = [
+      "label": "FRONT_SIDE",
+      "content_type": "image/jpeg",
+      "content_length": data.count,
+      "date": 1_700_000_000.0,
+      "sha256": "ignored-in-archive",
+      "filename": url.lastPathComponent,
+      "file_path": url.path,
+    ]
+
+    let photo = EvidencePhoto.fromPhotoDict(photoDict)
+
+    XCTAssertEqual(photo.timestamp, 1_700_000_000.0)
+    XCTAssertEqual(photo.photoBase64String, data.base64EncodedString())
+
+    // The decoded bytes round-trip back to the original content_length.
+    let decoded = try XCTUnwrap(Data(base64Encoded: try XCTUnwrap(photo.photoBase64String)))
+    XCTAssertEqual(decoded.count, data.count)
+    XCTAssertEqual(decoded, data)
+  }
+
+  func testFallsBackToEmptyBase64WhenFilePathMissing() {
+    // No file_path — preserves prior behavior for missing data.
+    let photo = EvidencePhoto.fromPhotoDict([
+      "date": 1_700_000_002.0,
+    ])
+
+    XCTAssertEqual(photo.photoBase64String, "")
+    XCTAssertEqual(photo.timestamp, 1_700_000_002.0)
+  }
+
+  func testFallsBackToEmptyBase64WhenFileMissing() {
+    // file_path points at a file that doesn't exist on disk.
+    let missingPath = tempDir.appendingPathComponent("does-not-exist.jpg").path
+
+    let photo = EvidencePhoto.fromPhotoDict([
+      "date": 1_700_000_003.0,
+      "file_path": missingPath,
+    ])
+
+    XCTAssertEqual(photo.photoBase64String, "")
+  }
+
+  /// End-to-end regression: a JS PhotoMetadata dict survives a DocumentsArchiver
+  /// encode/decode cycle and the photo bytes can still be recovered.
+  func testFilePathSurvivesDocumentsArchiverRoundTrip() throws {
+    let fixtureBytes = Array(repeating: UInt8(0x42), count: 1024)
+    let (url, data) = try writeFixtureBytes(fixtureBytes, filename: "evidence.jpg")
+
+    let photo = EvidencePhoto.fromPhotoDict([
+      "date": 1_700_000_004.0,
+      "file_path": url.path,
+    ])
+
+    let model = DocumentsDataModel(
+      firstId: EvidenceModel(
+        evidenceDetails: nil,
+        evidencePhotos: [photo],
+        evidenceType: nil
+      ),
+      secondId: nil
+    )
+
+    let archiver = DocumentsArchiver()
+    let encoded = try XCTUnwrap(archiver.encode(["test-key": model]))
+    let decoded = try XCTUnwrap(archiver.decode(from: encoded))
+
+    let decodedPhoto = try XCTUnwrap(decoded["test-key"]?.firstId?.evidencePhotos?.first)
+    let decodedData = try XCTUnwrap(
+      Data(base64Encoded: try XCTUnwrap(decodedPhoto.photoBase64String))
+    )
+
+    // Survival of content_length is what production cares about.
+    XCTAssertEqual(decodedData.count, data.count)
+    XCTAssertEqual(decodedData, data)
+    XCTAssertEqual(decodedPhoto.timestamp, 1_700_000_004.0)
+  }
+}
+
 // MARK: - ClientMetadataModel Archiving Tests
 
 final class ClientMetadataArchiverTests: XCTestCase {

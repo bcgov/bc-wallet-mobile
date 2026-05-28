@@ -2711,9 +2711,7 @@ class BcscCore: NSObject {
     var evidencePhotos = [EvidencePhoto]()
     if let metadataArray = dict["metadata"] as? [[String: Any]] {
       for photoDict in metadataArray {
-        let timestamp = photoDict["date"] as? Double ?? Date().timeIntervalSince1970
-        let base64 = photoDict["photoBase64String"] as? String ?? ""
-        evidencePhotos.append(EvidencePhoto(timestamp: timestamp, photoBase64String: base64))
+        evidencePhotos.append(EvidencePhoto.fromPhotoDict(photoDict))
       }
     }
 
