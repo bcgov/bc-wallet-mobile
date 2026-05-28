@@ -387,7 +387,7 @@ final class EvidencePhotoFromPhotoDictTests: XCTestCase {
     XCTAssertEqual(photo.photoBase64String, data.base64EncodedString())
 
     // The decoded bytes round-trip back to the original content_length.
-    let decoded = try XCTUnwrap(Data(base64Encoded: try XCTUnwrap(photo.photoBase64String)))
+    let decoded = try XCTUnwrap(try Data(base64Encoded: XCTUnwrap(photo.photoBase64String)))
     XCTAssertEqual(decoded.count, data.count)
     XCTAssertEqual(decoded, data)
   }
@@ -440,7 +440,7 @@ final class EvidencePhotoFromPhotoDictTests: XCTestCase {
 
     let decodedPhoto = try XCTUnwrap(decoded["test-key"]?.firstId?.evidencePhotos?.first)
     let decodedData = try XCTUnwrap(
-      Data(base64Encoded: try XCTUnwrap(decodedPhoto.photoBase64String))
+      try Data(base64Encoded: XCTUnwrap(decodedPhoto.photoBase64String))
     )
 
     // Survival of content_length is what production cares about.
