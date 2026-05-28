@@ -1,11 +1,12 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
+import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import DeleteConfirmationScreen from '@/bcsc-theme/components/DeleteConfirmationScreen'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
-import { TOKENS, useServices } from '@bifold/core'
+import { BCDispatchAction, BCState } from '@/store'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import Toast from 'react-native-toast-message'
 
 const RemoveAccountConfirmationScreen: React.FC = () => {
   const { t } = useTranslation()
@@ -13,6 +14,7 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
   const factoryReset = useFactoryReset()
   const loadingScreen = useLoadingScreen()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [, dispatch] = useStore<BCState>()
 
   const onConfirm = async () => {
     const stopLoading = loadingScreen.startLoading(t('BCSC.Account.RemoveAccountLoading'))
@@ -26,9 +28,15 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
       if (!result.success) {
         logger.error('[RemoveAccount] Failed to remove account', result.error)
       }
-      Toast.show({ type: 'success', text1: t('BCSC.Account.RemoveAccountSuccess'), position: 'bottom' })
+      dispatch({
+        type: BCDispatchAction.ADD_BANNER_MESSAGE,
+        payload: [{ id: BCSCBanner.REMOVE_ACCOUNT_SUCCESS, title: t('BCSC.Account.RemoveAccountSuccess'), type: 'success', dismissible: true }],
+      })
     } catch (error) {
-      Toast.show({ type: 'error', text1: t('BCSC.Account.RemoveAccountError'), position: 'bottom' })
+      dispatch({
+        type: BCDispatchAction.ADD_BANNER_MESSAGE,
+        payload: [{ id: BCSCBanner.REMOVE_ACCOUNT_ERROR, title: t('BCSC.Account.RemoveAccountError'), type: 'error', dismissible: true }],
+      })
       logger.error('[RemoveAccount] Error during account removal', error as Error)
     } finally {
       stopLoading()

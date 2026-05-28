@@ -1,11 +1,12 @@
+import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import DeleteConfirmationScreen from '@/bcsc-theme/components/DeleteConfirmationScreen'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
-import { TOKENS, useServices } from '@bifold/core'
+import { BCDispatchAction, BCState } from '@/store'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import Toast from 'react-native-toast-message'
 
 const ResetWalletConfirmationScreen: React.FC = () => {
   const { t } = useTranslation()
@@ -13,6 +14,7 @@ const ResetWalletConfirmationScreen: React.FC = () => {
   const { resetWallet } = useBCSCAgent()
   const loadingScreen = useLoadingScreen()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [, dispatch] = useStore<BCState>()
 
   const onConfirm = async () => {
     const stopLoading = loadingScreen.startLoading(t('BCSC.Wallet.Resetting'))
@@ -23,10 +25,25 @@ const ResetWalletConfirmationScreen: React.FC = () => {
     navigation.goBack()
     try {
       await resetWallet()
-      Toast.show({ type: 'success', text1: t('BCSC.Wallet.ResetSuccess'), position: 'bottom' })
-      logger.info('[ResetWallet] User confirmed wallet reset, proceeding with wallet reset')
+      dispatch({
+        type: BCDispatchAction.ADD_BANNER_MESSAGE,
+        payload: [
+          {
+            id: BCSCBanner.RESET_WALLET_SUCCESS,
+            title: t('BCSC.Wallet.ResetSuccess'),
+            type: 'success',
+            dismissible: true,
+          },
+        ],
+      })
+      logger.info('[ResetWallet] User confirmed wallet reset, wallet reset has been reset successfully')
     } catch (error) {
-      Toast.show({ type: 'error', text1: t('BCSC.Wallet.ResetError'), position: 'bottom' })
+      dispatch({
+        type: BCDispatchAction.ADD_BANNER_MESSAGE,
+        payload: [
+          { id: BCSCBanner.RESET_WALLET_ERROR, title: t('BCSC.Wallet.ResetError'), type: 'error', dismissible: true },
+        ],
+      })
       logger.error('[ResetWallet] Error during wallet reset', error as Error)
     } finally {
       stopLoading()
