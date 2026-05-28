@@ -70,9 +70,9 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Camera used for QR Code scanning and video calls</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>$(PRODUCT_NAME) wants to use your FaceID/TouchID to authenticate your identity</string>
+	<string>BC Wallet wants to use your FaceID/TouchID to authenticate your identity</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>$(PRODUCT_NAME) needs access to your microphone to enable video calls</string>
+	<string>BC Wallet needs access to your microphone to enable video calls</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIAppFonts</key>
