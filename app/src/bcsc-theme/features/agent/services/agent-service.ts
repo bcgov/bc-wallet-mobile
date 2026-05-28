@@ -37,6 +37,33 @@ interface CachedGenesisTransactions {
 }
 
 /**
+ * Serializes opening and closing of the single shared Askar wallet (WALLET_ID).
+ *
+ * The BCSC agent provider unmounts on sign-out and remounts on sign-in, building
+ * a brand-new {@link Agent} each time against the same wallet file. React can
+ * mount the next agent before the previous one has finished closing, so a fresh
+ * agent's `initialize()` (wallet open) could race the prior agent's `shutdown()`
+ * (wallet close) and leave the wallet/mediator session wedged — credential
+ * issuance hangs and the mediator never reconnects until the app is restarted.
+ *
+ * Routing every open/close through this promise chain guarantees they run
+ * strictly one after another, even across separate agent instances and React
+ * mounts — a module-level lock survives component unmount; component refs do not.
+ */
+let walletLifecycle: Promise<unknown> = Promise.resolve()
+
+const enqueueWalletOp = <T>(op: () => Promise<T>): Promise<T> => {
+  // Chain onto the tail whether or not the previous op resolved, so a single
+  // failed open/close can't wedge the queue for every later one.
+  const result = walletLifecycle.then(op, op)
+  walletLifecycle = result.then(
+    () => undefined,
+    () => undefined
+  )
+  return result
+}
+
+/**
  * Loads previously cached pool genesis transactions from persistent storage.
  *
  * Used to skip live ledger discovery on subsequent agent inits. Returns `undefined`
@@ -123,12 +150,26 @@ export const buildAgent = (opts: BuildAgentOptions): Agent => {
  */
 export const restartAgent = async (agent: Agent, logger: BifoldLogger): Promise<Agent | undefined> => {
   try {
-    await agent.initialize()
+    await enqueueWalletOp(() => agent.initialize())
     return agent
   } catch (error) {
     logger.warn(`Agent restart failed: ${error}`)
     return undefined
   }
+}
+
+/**
+ * Initializes a freshly built agent.
+ *
+ * The wallet open is serialized against any in-flight open/close (see
+ * {@link enqueueWalletOp}) so a sign-in rebuild never races the previous agent's
+ * teardown on the shared wallet file. Unlike {@link restartAgent} this rethrows
+ * on failure so the caller can surface an init error.
+ *
+ * @param agent - The built (uninitialized) agent to initialize.
+ */
+export const initializeAgent = async (agent: Agent): Promise<void> => {
+  await enqueueWalletOp(() => agent.initialize())
 }
 
 /**
@@ -226,7 +267,7 @@ const refreshLedgerCache = async (poolService: IndyVdrPoolService, logger: Bifol
  */
 export const shutdownAgent = async (agent: Agent, logger: BifoldLogger): Promise<void> => {
   try {
-    await agent.shutdown()
+    await enqueueWalletOp(() => agent.shutdown())
   } catch (error) {
     logger.error(`Error shutting down agent: ${error}`)
   }

@@ -8,7 +8,14 @@ import { DidCommMediatorPickupStrategy } from '@credo-ts/didcomm'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Config } from 'react-native-config'
 
-import { buildAgent, loadCachedLedgers, restartAgent, shutdownAgent, warmCache } from './services/agent-service'
+import {
+  buildAgent,
+  initializeAgent,
+  loadCachedLedgers,
+  restartAgent,
+  shutdownAgent,
+  warmCache,
+} from './services/agent-service'
 
 export type AgentSetupStatus = 'idle' | 'initializing' | 'ready' | 'error'
 
@@ -37,6 +44,8 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   const initializingRef = useRef(false)
   const statusRef = useRef<AgentSetupStatus>('idle')
   statusRef.current = status
+  const loggerRef = useRef(logger)
+  loggerRef.current = logger
 
   const didAuthenticate = store.authentication.didAuthenticate
   const walletKey = store.bcscSecure.walletKey
@@ -57,6 +66,23 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     setError(null)
     setStatus('idle')
     setRetryCount((c) => c + 1)
+  }, [])
+
+  // Sign-out removes the authenticated navigator subtree, unmounting this
+  // provider. Tear the agent down here so it doesn't linger as a zombie holding
+  // the Askar wallet open and its mediator live-session socket alive — otherwise
+  // the next sign-in builds a second agent that the mediator and wallet fight
+  // over, which is why issuance hangs until the app is force-restarted. The
+  // wallet close is serialized in agent-service, so the next sign-in's build
+  // waits for it before reopening. Empty deps: cleanup runs only on unmount.
+  useEffect(() => {
+    return () => {
+      const liveAgent = agentRef.current
+      if (liveAgent) {
+        agentRef.current = null
+        shutdownAgent(liveAgent, loggerRef.current)
+      }
+    }
   }, [])
 
   useEffect(() => {
@@ -132,7 +158,8 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
           logger,
         })
 
-        await inFlightAgent.initialize()
+        await initializeAgent(inFlightAgent)
+
         if (cancelled) {
           return
         }
@@ -182,6 +209,8 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         setStatus('error')
       } finally {
         if (inFlightAgent) {
+          // Cancelled or partially-built agent — close its wallet handle. The
+          // shutdown is serialized against the next build's open in agent-service.
           await shutdownAgent(inFlightAgent, logger)
         }
         if (!cancelled) {
