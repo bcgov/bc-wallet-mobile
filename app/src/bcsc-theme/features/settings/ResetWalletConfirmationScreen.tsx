@@ -1,7 +1,7 @@
 import DeleteConfirmationScreen from '@/bcsc-theme/components/DeleteConfirmationScreen'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
-import { TOKENS, useServices } from '@bifold/core/lib/typescript/src/container-api'
+import { TOKENS, useServices } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
