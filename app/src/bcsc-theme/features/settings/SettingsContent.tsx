@@ -1,5 +1,3 @@
-import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
-import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import {
@@ -10,9 +8,7 @@ import {
   FEEDBACK_URL,
   TERMS_OF_USE_URL,
 } from '@/constants'
-import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ErrorRegistry } from '@/errors/errorRegistry'
-import { AppEventCode } from '@/events/appEventCode'
 import { BCDispatchAction, BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import {
@@ -45,7 +41,8 @@ interface SettingsContentProps {
   onAutoLock?: () => void
   onAppSecurity?: () => void
   onChangePIN?: () => void
-  onResetWallet?: () => void
+  onResetWallet: () => void
+  onRemoveAccount: () => void
 }
 
 interface AuthenticatedSectionProps {
@@ -56,7 +53,7 @@ interface AuthenticatedSectionProps {
   onEditNickname?: () => void
   onAutoLock?: () => void
   onForgetAllPairings?: () => void
-  onResetWallet?: () => void
+  onResetWallet: () => void
   onContacts?: () => void
   onPressOptInAnalytics: () => void | Promise<void>
   onPressRemoveAccount: () => void
@@ -208,6 +205,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   onAppSecurity,
   onChangePIN,
   onResetWallet,
+  onRemoveAccount,
   onContacts,
 }) => {
   const { t } = useTranslation()
@@ -216,9 +214,6 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const { logout } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [accountSecurityMethod, setAccountSecurityMethod] = useState<AccountSecurityMethod>()
-  const factoryReset = useFactoryReset()
-  const { emitAlert } = useErrorAlert()
-  const loadingScreen = useLoadingScreen()
 
   const styles = StyleSheet.create({
     container: {
@@ -318,38 +313,6 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
     }
   }
 
-  const onPressRemoveAccount = () => {
-    emitAlert(t('Alerts.CancelMobileCardSetup.Title'), t('Alerts.CancelMobileCardSetup.Description'), {
-      event: AppEventCode.CANCEL_MOBILE_CARD_SETUP,
-      actions: [
-        {
-          text: t('Global.Cancel'),
-          style: 'cancel',
-        },
-        {
-          text: t('Alerts.CancelMobileCardSetup.Action1'),
-          style: 'destructive',
-          onPress: async () => {
-            const stopLoading = loadingScreen.startLoading(t('BCSC.Account.RemoveAccountLoading'))
-            try {
-              logger.info('[RemoveAccount] User confirmed account removal, proceeding with verification reset')
-
-              const result = await factoryReset()
-
-              if (!result.success) {
-                logger.error('[RemoveAccount] Failed to remove account', result.error)
-              }
-            } catch (error) {
-              logger.error('[RemoveAccount] Error during account removal', error as Error)
-            } finally {
-              stopLoading()
-            }
-          },
-        },
-      ],
-    })
-  }
-
   const isAuthenticated = store.authentication.didAuthenticate
 
   return (
@@ -365,7 +328,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           onForgetAllPairings={onForgetAllPairings}
           onResetWallet={onResetWallet}
           onPressOptInAnalytics={onPressOptInAnalytics}
-          onPressRemoveAccount={onPressRemoveAccount}
+          onPressRemoveAccount={onRemoveAccount}
           onLogout={logout}
           onContacts={onContacts}
           setTheme={setTheme}
