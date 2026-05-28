@@ -24,21 +24,27 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
       logger.info('[RemoveAccount] User confirmed account removal, proceeding with verification reset')
 
       const result = await factoryReset()
-
-      if (!result.success) {
-        logger.error('[RemoveAccount] Failed to remove account', result.error)
-      }
       dispatch({
         type: BCDispatchAction.ADD_BANNER_MESSAGE,
         payload: [
-          {
-            id: BCSCBanner.REMOVE_ACCOUNT_SUCCESS,
-            title: t('BCSC.Account.RemoveAccountSuccess'),
-            type: 'success',
-            dismissible: true,
-          },
+          result.success
+            ? {
+                id: BCSCBanner.REMOVE_ACCOUNT_SUCCESS,
+                title: t('BCSC.Account.RemoveAccountSuccess'),
+                type: 'success',
+                dismissible: true,
+              }
+            : {
+                id: BCSCBanner.REMOVE_ACCOUNT_ERROR,
+                title: t('BCSC.Account.RemoveAccountError'),
+                type: 'error',
+                dismissible: true,
+              },
         ],
       })
+      if (!result.success) {
+        logger.error('[RemoveAccount] Failed to remove account', result.error)
+      }
     } catch (error) {
       dispatch({
         type: BCDispatchAction.ADD_BANNER_MESSAGE,
