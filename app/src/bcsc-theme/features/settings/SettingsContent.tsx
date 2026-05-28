@@ -41,8 +41,8 @@ interface SettingsContentProps {
   onAutoLock?: () => void
   onAppSecurity?: () => void
   onChangePIN?: () => void
-  onResetWallet: () => void
-  onRemoveAccount: () => void
+  onResetWallet?: () => void
+  onRemoveAccount?: () => void
 }
 
 interface AuthenticatedSectionProps {
@@ -53,10 +53,10 @@ interface AuthenticatedSectionProps {
   onEditNickname?: () => void
   onAutoLock?: () => void
   onForgetAllPairings?: () => void
-  onResetWallet: () => void
+  onResetWallet?: () => void
   onContacts?: () => void
   onPressOptInAnalytics: () => void | Promise<void>
-  onPressRemoveAccount: () => void
+  onPressRemoveAccount?: () => void
   onLogout: () => void
   setTheme: (name: string) => void
   themeName: string
@@ -179,12 +179,14 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
             testID={testIdWithKey('ResetWallet')}
           />
         ) : null}
-        <SettingsActionCard
-          title={t('BCSC.Settings.RemoveAccount')}
-          onPress={onPressRemoveAccount}
-          textStyle={{ color: ColorPalette.semantic.error }}
-          testID={testIdWithKey('RemoveAccount')}
-        />
+        {onPressRemoveAccount ? (
+          <SettingsActionCard
+            title={t('BCSC.Settings.RemoveAccount')}
+            onPress={onPressRemoveAccount}
+            textStyle={{ color: ColorPalette.semantic.error }}
+            testID={testIdWithKey('RemoveAccount')}
+          />
+        ) : null}
       </View>
     </>
   )

@@ -18,6 +18,7 @@ const baseProps = {
   onAppSecurity: jest.fn(),
   onChangePIN: jest.fn(),
   onResetWallet: jest.fn(),
+  onRemoveAccount: jest.fn(),
 }
 
 const renderWithState = (override: Record<string, unknown> = {}) =>
