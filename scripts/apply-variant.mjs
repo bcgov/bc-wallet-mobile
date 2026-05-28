@@ -111,6 +111,18 @@ const TEMPLATE_FILES = {
       pattern: /(<key>CFBundleDisplayName<\/key>\s*<string>)[^<]+(<\/string>)/g,
       replacement: (env) => `$1${env.APP_NAME}$2`,
     },
+    {
+      // Replace NSFaceIDUsageDescription value (drives the FaceID/TouchID prompt title)
+      pattern: /(<key>NSFaceIDUsageDescription<\/key>\s*<string>)[^<]+(<\/string>)/g,
+      replacement: (env) =>
+        `$1${env.APP_NAME} wants to use your FaceID/TouchID to authenticate your identity$2`,
+    },
+    {
+      // Replace NSMicrophoneUsageDescription value
+      pattern: /(<key>NSMicrophoneUsageDescription<\/key>\s*<string>)[^<]+(<\/string>)/g,
+      replacement: (env) =>
+        `$1${env.APP_NAME} needs access to your microphone to enable video calls$2`,
+    },
   ],
 }
 
