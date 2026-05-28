@@ -30,12 +30,26 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
       }
       dispatch({
         type: BCDispatchAction.ADD_BANNER_MESSAGE,
-        payload: [{ id: BCSCBanner.REMOVE_ACCOUNT_SUCCESS, title: t('BCSC.Account.RemoveAccountSuccess'), type: 'success', dismissible: true }],
+        payload: [
+          {
+            id: BCSCBanner.REMOVE_ACCOUNT_SUCCESS,
+            title: t('BCSC.Account.RemoveAccountSuccess'),
+            type: 'success',
+            dismissible: true,
+          },
+        ],
       })
     } catch (error) {
       dispatch({
         type: BCDispatchAction.ADD_BANNER_MESSAGE,
-        payload: [{ id: BCSCBanner.REMOVE_ACCOUNT_ERROR, title: t('BCSC.Account.RemoveAccountError'), type: 'error', dismissible: true }],
+        payload: [
+          {
+            id: BCSCBanner.REMOVE_ACCOUNT_ERROR,
+            title: t('BCSC.Account.RemoveAccountError'),
+            type: 'error',
+            dismissible: true,
+          },
+        ],
       })
       logger.error('[RemoveAccount] Error during account removal', error as Error)
     } finally {

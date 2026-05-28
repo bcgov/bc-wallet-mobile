@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`RemoveAccountConfirmationScreen renders correctly 1`] = `
+exports[`ResetWalletConfirmationScreen renders correctly 1`] = `
 [
   <View
     importantForAccessibility="yes"
@@ -52,7 +52,7 @@ exports[`RemoveAccountConfirmationScreen renders correctly 1`] = `
               ]
             }
           >
-            BCSC.Account.RemoveAccountTitle
+            BCSC.Wallet.ResetTitle
           </Text>
           <Text
             maxFontSizeMultiplier={2}
@@ -68,7 +68,7 @@ exports[`RemoveAccountConfirmationScreen renders correctly 1`] = `
               ]
             }
           >
-            BCSC.Account.RemoveAccountParagraph
+            BCSC.Wallet.ResetDescription
           </Text>
         </View>
       </RCTScrollView>
@@ -81,7 +81,7 @@ exports[`RemoveAccountConfirmationScreen renders correctly 1`] = `
         }
       >
         <View
-          accessibilityLabel="BCSC.Account.RemoveAccount"
+          accessibilityLabel="BCSC.Wallet.Reset"
           accessibilityRole="button"
           accessibilityState={
             {
@@ -153,7 +153,7 @@ exports[`RemoveAccountConfirmationScreen renders correctly 1`] = `
                 ]
               }
             >
-              BCSC.Account.RemoveAccount
+              BCSC.Wallet.Reset
             </Text>
           </View>
         </View>
