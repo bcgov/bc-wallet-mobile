@@ -65,7 +65,7 @@ import Splash from './src/screens/Splash'
 import Terms, { TermsVersion } from './src/screens/Terms'
 import { AttestationMonitor, allCredDefIds } from './src/services/attestation'
 import { AutoCredentialMonitor } from './src/services/auto-credential'
-import { buildAccountIdCredentialRule } from './src/bcsc-theme/services/accountIdProvisioner'
+import { buildDigitalServicesCardCredentialRule } from './src/bcsc-theme/services/digitalServicesCardProvisioner'
 import { VersionCheckService } from './src/services/version'
 import {
   BCDispatchAction,
@@ -118,7 +118,7 @@ export class AppContainer implements Container {
     this._container.registerInstance(TOKENS.UTIL_ATTESTATION_MONITOR, new AttestationMonitor(this.logger, options))
     this._container.registerInstance(
       TOKENS.UTIL_CREDENTIAL_PROVISIONING_MONITOR,
-      new AutoCredentialMonitor(this.logger, { rules: [buildAccountIdCredentialRule()] })
+      new AutoCredentialMonitor(this.logger, { rules: [buildDigitalServicesCardCredentialRule()] })
     )
     this._container.registerInstance(TOKENS.UTIL_APP_VERSION_MONITOR, new VersionCheckService(this.logger))
     // Here you can register any component to override components in core package
