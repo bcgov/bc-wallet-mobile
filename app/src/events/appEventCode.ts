@@ -171,6 +171,12 @@ export enum AppEventCode {
   ATTESTATION_GENERAL_PROOF_ERROR = 'attestation_general_proof_error', // Non-IAS error code
   ATTESTATION_REQUEST_ERROR = 'attestation_request_error', // Non-IAS error code
   ATTESTATION_UNSUPPORTED_PLATFORM = 'attestation_unsupported_platform', // Non-IAS error code
+  // Auto Credential Provisioning Errors
+  AUTO_CRED_BAD_INVITATION = 'auto_cred_bad_invitation',
+  AUTO_CRED_CONNECTION_ERROR = 'auto_cred_connection_error',
+  AUTO_CRED_PROOF_ERROR = 'auto_cred_proof_error',
+  AUTO_CRED_OFFER_ERROR = 'auto_cred_offer_error',
+  AUTO_CRED_GENERAL_ERROR = 'auto_cred_general_error',
   // Account Errors
   ACCOUNT_NOT_FOUND = 'account_not_found', // Non-IAS error code
 }

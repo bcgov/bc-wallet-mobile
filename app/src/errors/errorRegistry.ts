@@ -940,6 +940,42 @@ export const ErrorRegistry = {
     category: ErrorCategory.DEVICE,
     message: 'Current platform does not support attestation — requires iOS 14+ or Android with Play Services',
   },
+  // 3200-3299: Auto Credential Provisioning Errors
+  AUTO_CRED_BAD_INVITATION: {
+    statusCode: 3200,
+    appEvent: AppEventCode.AUTO_CRED_BAD_INVITATION,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.CONNECTION,
+    message: 'Could not parse the credential issuer invitation',
+  },
+  AUTO_CRED_CONNECTION_ERROR: {
+    statusCode: 3201,
+    appEvent: AppEventCode.AUTO_CRED_CONNECTION_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.CONNECTION,
+    message: 'Failed to connect to the credential issuer',
+  },
+  AUTO_CRED_PROOF_ERROR: {
+    statusCode: 3202,
+    appEvent: AppEventCode.AUTO_CRED_PROOF_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.PROOF,
+    message: 'Failed to present proof to the credential issuer',
+  },
+  AUTO_CRED_OFFER_ERROR: {
+    statusCode: 3203,
+    appEvent: AppEventCode.AUTO_CRED_OFFER_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.CREDENTIAL,
+    message: 'Failed to accept the credential offer from the issuer',
+  },
+  AUTO_CRED_GENERAL_ERROR: {
+    statusCode: 3204,
+    appEvent: AppEventCode.AUTO_CRED_GENERAL_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.CREDENTIAL,
+    message: 'An unexpected error occurred during credential provisioning',
+  },
 } as const satisfies Record<string, ErrorDefinition>
 
 export const ErrorRegistryAppEventMap = new Map<AppEventCode, ErrorDefinition>(
