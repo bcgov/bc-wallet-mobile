@@ -103,18 +103,20 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
         />
       </View>
 
-      <ThemedText variant={'bold'} style={styles.sectionHeader}>
-        {t('BCSC.Settings.Features.Header')}
-      </ThemedText>
-      <View style={styles.sectionContainer}>
-        {onContacts ? (
-          <SettingsActionCard
-            title={t('BCSC.Settings.Features.Contacts')}
-            onPress={onContacts}
-            testID={testIdWithKey('Contacts')}
-          />
-        ) : null}
-      </View>
+      {onContacts ? (
+        <>
+          <ThemedText variant={'bold'} style={styles.sectionHeader}>
+            {t('BCSC.Settings.Features.Header')}
+          </ThemedText>
+          <View style={styles.sectionContainer}>
+            <SettingsActionCard
+              title={t('BCSC.Settings.Features.Contacts')}
+              onPress={onContacts}
+              testID={testIdWithKey('Contacts')}
+            />
+          </View>
+        </>
+      ) : null}
 
       <ThemedText variant={'bold'} style={styles.sectionHeader}>
         {t('BCSC.Settings.HeaderA')}
