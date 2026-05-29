@@ -58,6 +58,7 @@ jest.mock('@credo-ts/indy-vdr', () => ({
 import {
   AgentWalletSecret,
   buildAgent,
+  initializeAgent,
   loadCachedLedgers,
   restartAgent,
   shutdownAgent,
@@ -256,5 +257,64 @@ describe('shutdownAgent', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await expect(shutdownAgent(agent as any, logger)).resolves.toBeUndefined()
     expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('shutdown boom'))
+  })
+})
+
+describe('initializeAgent', () => {
+  it('rethrows when initialize fails (so callers can surface init errors)', async () => {
+    const agent = { initialize: jest.fn().mockRejectedValue(new Error('open failed')) }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await expect(initializeAgent(agent as any)).rejects.toThrow('open failed')
+  })
+})
+
+describe('wallet lifecycle serialization', () => {
+  it('holds a queued initialize until an in-flight shutdown finishes closing the wallet', async () => {
+    // Models sign-out → sign-in: the old agent is still closing the shared Askar
+    // wallet when the new agent tries to open it. The open must wait for the close.
+    const order: string[] = []
+    let resolveShutdown: () => void = () => undefined
+    const shutdownGate = new Promise<void>((resolve) => {
+      resolveShutdown = resolve
+    })
+
+    const oldAgent = {
+      shutdown: jest.fn(() => shutdownGate.then(() => void order.push('shutdown'))),
+    }
+    const newAgent = {
+      initialize: jest.fn(async () => void order.push('initialize')),
+    }
+
+    // Sign-out teardown begins (not awaited — fire-and-forget like the unmount path).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const shutdownPromise = shutdownAgent(oldAgent as any, logger)
+    // Sign-in build immediately tries to open the same wallet.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const initPromise = initializeAgent(newAgent as any)
+
+    // Flush microtasks/timers: the open must still be queued behind the close.
+    await new Promise((r) => setTimeout(r, 0))
+    expect(newAgent.initialize).not.toHaveBeenCalled()
+
+    // Close finishes → the queued open is now allowed to run.
+    resolveShutdown()
+    await shutdownPromise
+    await initPromise
+
+    expect(newAgent.initialize).toHaveBeenCalled()
+    expect(order).toEqual(['shutdown', 'initialize'])
+  })
+
+  it('does not let a failed shutdown wedge the queue for the next open', async () => {
+    const failing = { shutdown: jest.fn().mockRejectedValue(new Error('close boom')) }
+    const next = { initialize: jest.fn().mockResolvedValue(undefined) }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await shutdownAgent(failing as any, logger)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await initializeAgent(next as any)
+
+    expect(next.initialize).toHaveBeenCalled()
   })
 })
