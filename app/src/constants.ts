@@ -6,12 +6,39 @@ export const autoDisableRemoteLoggingIntervalInMinutes = 60
 export const surveyMonkeyUrl = 'https://www.surveymonkey.com/r/7BMHJL8'
 export const surveyMonkeyExitUrl = 'https://www.surveymonkey.com/survey-thanks'
 export const hitSlop = { top: 44, bottom: 44, left: 44, right: 44 }
-interface AttestationRestrictionEnvironment {
+export interface CredentialRestrictionEnvironment {
   credDefIDs: readonly string[]
   invitationUrl: string
 }
 
-export const AttestationRestrictions: { [key: string]: AttestationRestrictionEnvironment } = {
+/**
+ * Per-environment AccountID credential configuration.
+ *
+ * When an incoming proof requests an AccountID credential whose cred_def_id
+ * appears in one of these arrays AND the wallet doesn't hold it, the
+ * AutoCredentialMonitor will connect to the corresponding invitationUrl,
+ * auto-present the wallet's Person Credential as eligibility proof, and
+ * auto-accept the AccountID credential offer.
+ *
+ * TODO: Replace placeholder cred def IDs and invitation URLs with real values
+ * from the IAS team once they are available.
+ */
+export const AccountIDCredentialConfig: Record<string, CredentialRestrictionEnvironment> = {
+  Development: {
+    credDefIDs: ['PLACEHOLDER_DEV_ACCOUNT_ID_CRED_DEF_ID'],
+    invitationUrl: 'PLACEHOLDER_DEV_ACCOUNT_ID_INVITATION_URL',
+  },
+  Test: {
+    credDefIDs: ['PLACEHOLDER_TEST_ACCOUNT_ID_CRED_DEF_ID'],
+    invitationUrl: 'PLACEHOLDER_TEST_ACCOUNT_ID_INVITATION_URL',
+  },
+  Production: {
+    credDefIDs: ['PLACEHOLDER_PROD_ACCOUNT_ID_CRED_DEF_ID'],
+    invitationUrl: 'PLACEHOLDER_PROD_ACCOUNT_ID_INVITATION_URL',
+  },
+} as const
+
+export const AttestationRestrictions: { [key: string]: CredentialRestrictionEnvironment } = {
   Development: {
     credDefIDs: ['NXp6XcGeCR2MviWuY51Dva:3:CL:33557:bcwallet', 'NXp6XcGeCR2MviWuY51Dva:3:CL:33557:bcwallet_dev_v2'],
     invitationUrl:
