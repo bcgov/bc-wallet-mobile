@@ -4,14 +4,14 @@ import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
-import RemoveAccountConfirmationScreen from './RemoveAccountConfirmationScreen'
+import ResetWalletConfirmationScreen from './ResetWalletConfirmationScreen'
 
-const mockFactoryReset = jest.fn()
-jest.mock('@/bcsc-theme/api/hooks/useFactoryReset', () => ({
-  useFactoryReset: () => mockFactoryReset,
+const mockResetWallet = jest.fn()
+jest.mock('@/bcsc-theme/features/agent/BCSCAgentProvider', () => ({
+  useBCSCAgent: () => ({ resetWallet: mockResetWallet }),
 }))
 
-describe('RemoveAccountConfirmationScreen', () => {
+describe('ResetWalletConfirmationScreen', () => {
   let mockNavigation: ReturnType<typeof useNavigation>
 
   beforeEach(() => {
@@ -23,7 +23,7 @@ describe('RemoveAccountConfirmationScreen', () => {
     render(
       <BasicAppContext>
         <BCSCLoadingProvider>
-          <RemoveAccountConfirmationScreen />
+          <ResetWalletConfirmationScreen />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -33,15 +33,15 @@ describe('RemoveAccountConfirmationScreen', () => {
     expect(tree).toMatchSnapshot()
   })
 
-  it('calls factoryReset and navigates back when confirm is pressed', async () => {
-    mockFactoryReset.mockResolvedValue({ success: true })
+  it('calls resetWallet and navigates back when confirm is pressed', async () => {
+    mockResetWallet.mockResolvedValue(undefined)
     const tree = renderScreen()
 
     fireEvent.press(tree.getByTestId(testIdWithKey('ConfirmDestructiveAction')))
 
     expect(mockNavigation.goBack).toHaveBeenCalled()
     await waitFor(() => {
-      expect(mockFactoryReset).toHaveBeenCalled()
+      expect(mockResetWallet).toHaveBeenCalled()
     })
   })
 

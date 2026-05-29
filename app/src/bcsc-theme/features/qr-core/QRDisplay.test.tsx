@@ -54,10 +54,22 @@ describe('QRDisplay', () => {
   })
 
   const setReadyAgent = () => {
-    mockUseBCSCAgent.mockReturnValue({ agent: agentHandle.agent, loading: false, error: null, retry: jest.fn() })
+    mockUseBCSCAgent.mockReturnValue({
+      agent: agentHandle.agent,
+      loading: false,
+      error: null,
+      retry: jest.fn(),
+      resetWallet: jest.fn(),
+    })
   }
   const setNoAgent = () => {
-    mockUseBCSCAgent.mockReturnValue({ agent: null, loading: true, error: null, retry: jest.fn() })
+    mockUseBCSCAgent.mockReturnValue({
+      agent: null,
+      loading: true,
+      error: null,
+      retry: jest.fn(),
+      resetWallet: jest.fn(),
+    })
   }
 
   const renderComponent = () =>

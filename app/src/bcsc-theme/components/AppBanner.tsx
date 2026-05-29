@@ -13,6 +13,10 @@ export enum BCSCBanner {
   APP_UPDATE_AVAILABLE = 'AppUpdateAvailableBanner',
   ACCOUNT_EXPIRING_SOON = 'CardExpiringSoonBanner',
   ACCOUNT_EXPIRED = 'CardExpiredBanner',
+  RESET_WALLET_SUCCESS = 'ResetWalletSuccessBanner',
+  RESET_WALLET_ERROR = 'ResetWalletErrorBanner',
+  REMOVE_ACCOUNT_SUCCESS = 'RemoveAccountSuccessBanner',
+  REMOVE_ACCOUNT_ERROR = 'RemoveAccountErrorBanner',
 }
 
 export interface BCSCBannerMessage {

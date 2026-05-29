@@ -1,7 +1,7 @@
 import { WALLET_ID } from '@/constants'
 import { AppError, ErrorRegistry } from '@/errors'
 import { BCState } from '@/store'
-import { activate } from '@/utils/PushNotificationsHelper'
+import { activate, deactivate } from '@/utils/PushNotificationsHelper'
 import { createLinkSecretIfRequired, TOKENS, useServices, useStore } from '@bifold/core'
 import { Agent } from '@credo-ts/core'
 import { DidCommMediatorPickupStrategy } from '@credo-ts/didcomm'
@@ -17,6 +17,7 @@ export interface AgentSetupResult {
   status: AgentSetupStatus
   error: AppError | null
   retry: () => void
+  resetWallet: () => Promise<void>
 }
 
 const useAgentSetupViewModel = (): AgentSetupResult => {
@@ -114,6 +115,10 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
           // Best-effort shut it down before falling through to build a fresh one.
           await shutdownAgent(agentRef.current, logger)
           agentRef.current = null
+          // Setting agent to null causes BifoldScope to drop AgentProvider,
+          // which remounts child components and clears stale hook state (e.g.
+          // useCredentials) before the fresh agent is provided.
+          setAgent(null)
         }
 
         const cachedLedgers = await loadCachedLedgers()
@@ -211,7 +216,58 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     refreshAttestationMonitor,
   ])
 
-  return { agent, status, error, retry }
+  const resetWallet = useCallback(async () => {
+    const currentAgent = agentRef.current
+
+    if (!currentAgent) {
+      // Agent is unavailable — a previous reset was likely interrupted mid-shutdown
+      // (e.g. app was killed). Build an uninitialized agent so we can reach the Askar
+      // store manager and delete the store by its file URI without needing it open.
+      if (walletKey) {
+        const tempAgent = buildAgent({
+          ledgers: indyLedgers,
+          walletSecret: { id: WALLET_ID, key: walletKey },
+          mediatorUrl,
+          walletLabel,
+          enableProxy,
+          proxyBaseUrl: Config.INDY_VDR_PROXY_URL,
+          logger,
+        })
+        await tempAgent.modules.askar
+          .deleteStore()
+          .catch((err: unknown) =>
+            logger.warn(`WalletReset: store deletion on recovery failed (may already be deleted): ${err}`)
+          )
+      }
+      setError(null)
+      setStatus('idle')
+      setRetryCount((c) => c + 1)
+      return
+    }
+
+    // 1. Stop background attestation polling so it doesn't interfere during teardown
+    attestationMonitor?.stop()
+
+    // 2. deregister push notifications - failures are non-fatal
+    await deactivate(currentAgent).catch((err) => logger.warn(`Push notification deactivation failed: ${err}`))
+
+    // 3. shut down the agent (closes connections, stops transports, etc.)
+    await shutdownAgent(currentAgent, logger)
+
+    // 4. delete the wallet store (credential data, connections, ect.)
+    try {
+      await currentAgent.modules.askar.deleteStore()
+    } finally {
+      // 5. Clear agent state so the setup flow re-initializes a fresh wallet
+      agentRef.current = null
+      setAgent(null)
+      setError(null)
+      setStatus('idle')
+      setRetryCount((c) => c + 1) // triggers useEffect to restart agent setup
+    }
+  }, [logger, attestationMonitor, walletKey, indyLedgers, mediatorUrl, walletLabel, enableProxy])
+
+  return { agent, status, error, retry, resetWallet }
 }
 
 export default useAgentSetupViewModel
