@@ -163,6 +163,7 @@ describe('useFactoryReset', () => {
       loading: false,
       error: null,
       retry: jest.fn(),
+      resetWallet: jest.fn(),
     })
 
     useBCSCApiClientStateMock.mockReturnValue({
@@ -216,6 +217,7 @@ describe('useFactoryReset', () => {
       loading: false,
       error: null,
       retry: jest.fn(),
+      resetWallet: jest.fn(),
     })
 
     useBCSCApiClientStateMock.mockReturnValue({

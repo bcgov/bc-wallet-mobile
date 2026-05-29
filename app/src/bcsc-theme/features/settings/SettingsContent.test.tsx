@@ -17,6 +17,8 @@ const baseProps = {
   onAutoLock: jest.fn(),
   onAppSecurity: jest.fn(),
   onChangePIN: jest.fn(),
+  onResetWallet: jest.fn(),
+  onRemoveAccount: jest.fn(),
 }
 
 const renderWithState = (override: Record<string, unknown> = {}) =>
@@ -49,6 +51,7 @@ describe('SettingsContent', () => {
     expect(screen.getByTestId(tid('ForgetPairings'))).toBeTruthy()
     expect(screen.getByTestId(tid('AnalyticsOptIn'))).toBeTruthy()
     expect(screen.getByTestId(tid('Theme'))).toBeTruthy()
+    expect(screen.getByTestId(tid('ResetWallet'))).toBeTruthy()
     expect(screen.getByTestId(tid('RemoveAccount'))).toBeTruthy()
   })
 
@@ -123,6 +126,24 @@ describe('SettingsContent', () => {
     renderWithState({ preferences: { developerModeEnabled: true } as never })
     fireEvent.press(screen.getByTestId(tid('DeveloperMode')))
     expect(baseProps.onPressDeveloperMode).toHaveBeenCalled()
+  })
+
+  it('renders the ResetWallet row and invokes onResetWallet when pressed', async () => {
+    renderWithState({ authentication: { didAuthenticate: true } })
+    const row = await screen.findByTestId(tid('ResetWallet'))
+    fireEvent.press(row)
+    expect(baseProps.onResetWallet).toHaveBeenCalled()
+  })
+
+  it('hides ResetWallet row when onResetWallet is not provided', async () => {
+    render(
+      <BasicAppContext initialStateOverride={{ authentication: { didAuthenticate: true } } as never}>
+        <BCSCLoadingProvider>
+          <SettingsContent {...baseProps} onResetWallet={undefined} />
+        </BCSCLoadingProvider>
+      </BasicAppContext>
+    )
+    expect(screen.queryByTestId(tid('ResetWallet'))).toBeNull()
   })
 
   it('renders the RemoveAccount row and accepts press without throwing', async () => {

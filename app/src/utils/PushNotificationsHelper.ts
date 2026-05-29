@@ -238,13 +238,8 @@ const isEnabled = async (): Promise<boolean> => {
  * @returns {Promise<void>}
  */
 const setDeviceInfo = async (agent: Agent, blankDeviceToken = false): Promise<void> => {
-  let token
-  if (blankDeviceToken) {
-    token = ''
-  } else {
-    const messagingInstance = getMessaging(getApp())
-    token = await getToken(messagingInstance)
-  }
+  const messagingInstance = getMessaging(getApp())
+  const token = blankDeviceToken ? null : await getToken(messagingInstance)
 
   const mediator = await getMediatorConnection(agent)
   if (!mediator) {
@@ -255,10 +250,12 @@ const setDeviceInfo = async (agent: Agent, blankDeviceToken = false): Promise<vo
     `Trying to send device info to mediator with connection [${mediator.id}] platform=${Platform.OS} tokenLength=${token?.length ?? 0} blank=${blankDeviceToken}`
   )
   try {
-    const message = new DidCommPushNotificationsFcmSetDeviceInfoMessage({
-      deviceToken: token,
-      devicePlatform: Platform.OS,
-    })
+    // null deviceToken and devicePlatform is the signal to the mediator to disable push notifications for this device
+    const message = new DidCommPushNotificationsFcmSetDeviceInfoMessage(
+      blankDeviceToken
+        ? { deviceToken: null, devicePlatform: null }
+        : { deviceToken: token, devicePlatform: Platform.OS }
+    )
     const connectionService = agent.context.dependencyManager.resolve(DidCommConnectionService)
     const connection = await connectionService.getById(agent.context, mediator.id)
     const outbound = new DidCommOutboundMessageContext(message, { agentContext: agent.context, connection })
@@ -267,7 +264,7 @@ const setDeviceInfo = async (agent: Agent, blankDeviceToken = false): Promise<vo
     agent.config.logger.info(`Successfully sent device info to mediator [${mediator.id}]`)
     if (blankDeviceToken) {
       await PersistentStorage.storeValueForKey<string>(BCLocalStorageKeys.DeviceToken, 'blank')
-    } else {
+    } else if (token) {
       await PersistentStorage.storeValueForKey<string>(BCLocalStorageKeys.DeviceToken, token)
     }
   } catch (error) {
