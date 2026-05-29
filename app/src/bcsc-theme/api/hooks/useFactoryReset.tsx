@@ -1,8 +1,8 @@
 import { useBCSCAgentSafe } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
+import { deleteWalletStore, shutdownAgent } from '@/bcsc-theme/features/agent/services/agent-service'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCDispatchAction, BCSCState, BCState } from '@/store'
-import { BCAgent } from '@/utils/bc-agent-modules'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
 import * as BcscCore from 'react-native-bcsc-core'
@@ -115,23 +115,23 @@ export const useFactoryReset = () => {
 
         logger.info('FactoryReset: Starting BCSC factory reset process...')
 
-        // Delete the wallet store first, while the agent still holds a valid
-        // handle. If we cleared keys/state first, re-onboarding would derive a
-        // new wallet key and the next agent init would trip on the stale
-        // on-disk wallet (duplicate-store error, code 3).
+        // Tear the agent down before clearing keys/state: if keys were cleared first,
+        // re-onboarding would derive a new wallet key and the next agent init would
+        // trip on the stale on-disk wallet (duplicate-store error, code 3). Shut down
+        // BEFORE deleting (same order as resetWallet) — deleting first leaves the
+        // agent's askar context pointing at a removed store, so its shutdown's
+        // onCloseContext throws "There is no open store". Both ops route through the
+        // agent-service wallet-op queue, and shutdownAgent is idempotent so the
+        // shutdown the provider fires on DID_AUTHENTICATE -> false unmount is a no-op.
         if (agentCtx?.agent) {
-          // The BCSC agent is always built via getBCAgentModules, so .modules.askar is present at runtime.
-          const agent = agentCtx.agent as BCAgent
+          const agent = agentCtx.agent
+          // shutdownAgent is best-effort and logs its own errors.
+          await shutdownAgent(agent, logger)
           try {
             logger.info('FactoryReset: Deleting wallet store...')
-            await agent.modules.askar.deleteStore()
+            await deleteWalletStore(agent)
           } catch (err) {
             logger.warn('FactoryReset: wallet deleteStore() failed; wallet file may persist', { error: err })
-          }
-          try {
-            await agent.shutdown()
-          } catch (err) {
-            logger.warn('FactoryReset: agent.shutdown() failed', { error: err })
           }
         } else {
           logger.info('FactoryReset: No active agent; skipping wallet store delete')

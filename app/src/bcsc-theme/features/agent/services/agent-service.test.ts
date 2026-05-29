@@ -58,6 +58,7 @@ jest.mock('@credo-ts/indy-vdr', () => ({
 import {
   AgentWalletSecret,
   buildAgent,
+  deleteWalletStore,
   initializeAgent,
   loadCachedLedgers,
   restartAgent,
@@ -189,6 +190,35 @@ describe('warmCache', () => {
     { did: 'did:indy:b', id: 'schema-2' },
   ]
 
+  it('pre-resolves each unique issuer DID once before fetching cred-defs/schemas', async () => {
+    const agent = makeAgent()
+    mockPoolService.getPoolForDid.mockResolvedValue({ pool: { submitRequest: jest.fn() } })
+
+    const credDefsDup = [
+      { did: 'did:indy:a', id: 'cred-def-1' },
+      { did: 'did:indy:a', id: 'cred-def-2' },
+    ]
+    const schemasDup = [{ did: 'did:indy:b', id: 'schema-1' }]
+
+    await warmCache(agent, credDefsDup, schemasDup, [], logger)
+
+    // Two distinct DIDs across the inputs → the sequential pre-resolve phase is the
+    // first two getPoolForDid calls, one per unique DID (not one per cred-def/schema).
+    const preResolveDids = mockPoolService.getPoolForDid.mock.calls.slice(0, 2).map((call) => call[1])
+    expect(preResolveDids).toEqual(['did:indy:a', 'did:indy:b'])
+  })
+
+  it('logs a warning and continues when a single DID pre-resolve fails', async () => {
+    const agent = makeAgent()
+    mockPoolService.getPoolForDid
+      .mockRejectedValueOnce(new Error('pool down')) // pre-resolve did:indy:a
+      .mockResolvedValue({ pool: { submitRequest: jest.fn() } }) // everything else
+
+    await warmCache(agent, credDefs, schemas, [], logger)
+
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('did:indy:a'))
+  })
+
   it('skips ledger refresh when cached ledgers are provided', async () => {
     const agent = makeAgent()
     mockPoolService.getPoolForDid.mockResolvedValue({ pool: { submitRequest: jest.fn() } })
@@ -242,8 +272,8 @@ describe('warmCache', () => {
 })
 
 describe('shutdownAgent', () => {
-  it('calls agent.shutdown()', async () => {
-    const agent = { shutdown: jest.fn().mockResolvedValue(undefined) }
+  it('calls agent.shutdown() when the agent is initialized', async () => {
+    const agent = { isInitialized: true, shutdown: jest.fn().mockResolvedValue(undefined) }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await shutdownAgent(agent as any, logger)
@@ -251,8 +281,20 @@ describe('shutdownAgent', () => {
     expect(agent.shutdown).toHaveBeenCalled()
   })
 
+  it('skips shutdown when the agent is not initialized (idempotent)', async () => {
+    // A reset path already shut the agent down; the provider unmount then calls
+    // shutdownAgent again. A second shutdown() would throw in askar onCloseContext.
+    const agent = { isInitialized: false, shutdown: jest.fn().mockResolvedValue(undefined) }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await shutdownAgent(agent as any, logger)
+
+    expect(agent.shutdown).not.toHaveBeenCalled()
+    expect(logger.error).not.toHaveBeenCalled()
+  })
+
   it('catches and logs errors without rethrowing', async () => {
-    const agent = { shutdown: jest.fn().mockRejectedValue(new Error('shutdown boom')) }
+    const agent = { isInitialized: true, shutdown: jest.fn().mockRejectedValue(new Error('shutdown boom')) }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await expect(shutdownAgent(agent as any, logger)).resolves.toBeUndefined()
@@ -269,6 +311,25 @@ describe('initializeAgent', () => {
   })
 })
 
+describe('deleteWalletStore', () => {
+  it('deletes the askar store', async () => {
+    const deleteStore = jest.fn().mockResolvedValue(undefined)
+    const agent = { modules: { askar: { deleteStore } } }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await deleteWalletStore(agent as any)
+
+    expect(deleteStore).toHaveBeenCalled()
+  })
+
+  it('rethrows when deleteStore fails so callers can decide how to handle it', async () => {
+    const agent = { modules: { askar: { deleteStore: jest.fn().mockRejectedValue(new Error('delete boom')) } } }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await expect(deleteWalletStore(agent as any)).rejects.toThrow('delete boom')
+  })
+})
+
 describe('wallet lifecycle serialization', () => {
   it('holds a queued initialize until an in-flight shutdown finishes closing the wallet', async () => {
     // Models sign-out → sign-in: the old agent is still closing the shared Askar
@@ -280,6 +341,7 @@ describe('wallet lifecycle serialization', () => {
     })
 
     const oldAgent = {
+      isInitialized: true,
       shutdown: jest.fn(() => shutdownGate.then(() => void order.push('shutdown'))),
     }
     const newAgent = {
@@ -307,7 +369,7 @@ describe('wallet lifecycle serialization', () => {
   })
 
   it('does not let a failed shutdown wedge the queue for the next open', async () => {
-    const failing = { shutdown: jest.fn().mockRejectedValue(new Error('close boom')) }
+    const failing = { isInitialized: true, shutdown: jest.fn().mockRejectedValue(new Error('close boom')) }
     const next = { initialize: jest.fn().mockResolvedValue(undefined) }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -316,5 +378,37 @@ describe('wallet lifecycle serialization', () => {
     await initializeAgent(next as any)
 
     expect(next.initialize).toHaveBeenCalled()
+  })
+
+  it('holds a queued store delete until an in-flight shutdown finishes closing the wallet', async () => {
+    // Wallet/factory reset deletes the shared store while a previous agent may still
+    // be closing it (e.g. the unmount-triggered shutdown). The delete must wait.
+    const order: string[] = []
+    let resolveShutdown: () => void = () => undefined
+    const shutdownGate = new Promise<void>((resolve) => {
+      resolveShutdown = resolve
+    })
+
+    const oldAgent = {
+      isInitialized: true,
+      shutdown: jest.fn(() => shutdownGate.then(() => void order.push('shutdown'))),
+    }
+    const agent = {
+      modules: { askar: { deleteStore: jest.fn(async () => void order.push('delete')) } },
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const shutdownPromise = shutdownAgent(oldAgent as any, logger)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const deletePromise = deleteWalletStore(agent as any)
+
+    await new Promise((r) => setTimeout(r, 0))
+    expect(agent.modules.askar.deleteStore).not.toHaveBeenCalled()
+
+    resolveShutdown()
+    await shutdownPromise
+    await deletePromise
+
+    expect(order).toEqual(['shutdown', 'delete'])
   })
 })

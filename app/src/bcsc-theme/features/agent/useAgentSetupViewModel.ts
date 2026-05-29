@@ -10,6 +10,7 @@ import { Config } from 'react-native-config'
 
 import {
   buildAgent,
+  deleteWalletStore,
   initializeAgent,
   loadCachedLedgers,
   restartAgent,
@@ -262,11 +263,9 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
           proxyBaseUrl: Config.INDY_VDR_PROXY_URL,
           logger,
         })
-        await tempAgent.modules.askar
-          .deleteStore()
-          .catch((err: unknown) =>
-            logger.warn(`WalletReset: store deletion on recovery failed (may already be deleted): ${err}`)
-          )
+        await deleteWalletStore(tempAgent).catch((err: unknown) =>
+          logger.warn(`WalletReset: store deletion on recovery failed (may already be deleted): ${err}`)
+        )
       }
       setError(null)
       setStatus('idle')
@@ -285,7 +284,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
 
     // 4. delete the wallet store (credential data, connections, ect.)
     try {
-      await currentAgent.modules.askar.deleteStore()
+      await deleteWalletStore(currentAgent)
     } finally {
       // 5. Clear agent state so the setup flow re-initializes a fresh wallet
       agentRef.current = null

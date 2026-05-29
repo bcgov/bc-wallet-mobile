@@ -1,6 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { useBCSCAgentSafe } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
+import { deleteWalletStore, shutdownAgent } from '@/bcsc-theme/features/agent/services/agent-service'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCDispatchAction } from '@/store'
@@ -18,6 +19,12 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions')
 jest.mock('./useRegistrationApi')
 jest.mock('@/bcsc-theme/features/agent/BCSCAgentProvider', () => ({
   useBCSCAgentSafe: jest.fn(),
+}))
+// Factory mock (not automock) so the agent-service module's heavy transitive deps
+// (Credo, indy-vdr-shared, etc.) are never loaded by this hook test.
+jest.mock('@/bcsc-theme/features/agent/services/agent-service', () => ({
+  deleteWalletStore: jest.fn().mockResolvedValue(undefined),
+  shutdownAgent: jest.fn().mockResolvedValue(undefined),
 }))
 
 const warnMock = jest.fn()
@@ -139,16 +146,15 @@ describe('useFactoryReset', () => {
     const useRegistrationApiMock = jest.mocked(useRegistrationApi)
     const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
 
-    const deleteStoreMock = jest.fn().mockResolvedValue(undefined)
-    const shutdownMock = jest.fn().mockResolvedValue(undefined)
     const clearSecureStateMock = jest.fn()
     const deleteSecureDataMock = jest.fn().mockResolvedValue(undefined)
 
     const callOrder: string[] = []
-    deleteStoreMock.mockImplementation(async () => {
+    // Both teardown ops now route through the serialized agent-service helpers.
+    jest.mocked(deleteWalletStore).mockImplementation(async () => {
       callOrder.push('deleteStore')
     })
-    shutdownMock.mockImplementation(async () => {
+    jest.mocked(shutdownAgent).mockImplementation(async () => {
       callOrder.push('shutdown')
     })
     deleteSecureDataMock.mockImplementation(async () => {
@@ -158,8 +164,9 @@ describe('useFactoryReset', () => {
       callOrder.push('clearSecureState')
     })
 
+    const agent = { id: 'agent' } as any
     jest.mocked(useBCSCAgentSafe).mockReturnValue({
-      agent: { modules: { askar: { deleteStore: deleteStoreMock } }, shutdown: shutdownMock } as any,
+      agent,
       loading: false,
       error: null,
       retry: jest.fn(),
@@ -193,15 +200,18 @@ describe('useFactoryReset', () => {
       expect(result.success).toBe(true)
     })
 
-    expect(deleteStoreMock).toHaveBeenCalledTimes(1)
-    expect(shutdownMock).toHaveBeenCalledTimes(1)
-    // deleteStore must run before key-clearing steps so the wallet is removed
-    // while the agent still has a usable handle.
+    // Routed through the wallet-op queue rather than calling the agent directly.
+    expect(deleteWalletStore).toHaveBeenCalledWith(agent)
+    expect(shutdownAgent).toHaveBeenCalledWith(agent, expect.anything())
+    // Shut down before deleting (so shutdown closes a still-open store instead of
+    // throwing onCloseContext on a removed one), and both before the key-clearing
+    // steps so the wallet is removed before re-onboarding can derive a new key.
+    expect(callOrder.indexOf('shutdown')).toBeLessThan(callOrder.indexOf('deleteStore'))
     expect(callOrder.indexOf('deleteStore')).toBeLessThan(callOrder.indexOf('deleteSecureData'))
     expect(callOrder.indexOf('deleteStore')).toBeLessThan(callOrder.indexOf('clearSecureState'))
   })
 
-  it('should still succeed if askar.deleteStore() throws', async () => {
+  it('should still succeed if the wallet store delete throws', async () => {
     const bcscCoreMock = jest.mocked(BcscCore)
     const useSecureActionsMock = jest.mocked(useSecureActions)
     const bifoldMock = jest.mocked(Bifold)
@@ -209,11 +219,10 @@ describe('useFactoryReset', () => {
     const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
     const warnLogMock = jest.fn()
 
+    jest.mocked(deleteWalletStore).mockRejectedValue(new Error('boom'))
+    jest.mocked(shutdownAgent).mockResolvedValue(undefined)
     jest.mocked(useBCSCAgentSafe).mockReturnValue({
-      agent: {
-        modules: { askar: { deleteStore: jest.fn().mockRejectedValue(new Error('boom')) } },
-        shutdown: jest.fn().mockResolvedValue(undefined),
-      } as any,
+      agent: { id: 'agent' } as any,
       loading: false,
       error: null,
       retry: jest.fn(),

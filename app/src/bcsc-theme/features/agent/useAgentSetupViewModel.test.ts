@@ -55,6 +55,7 @@ describe('useAgentSetupViewModel', () => {
     jest.mocked(agentService.restartAgent).mockResolvedValue(undefined)
     jest.mocked(agentService.warmCache).mockResolvedValue(undefined)
     jest.mocked(agentService.shutdownAgent).mockResolvedValue(undefined)
+    jest.mocked(agentService.deleteWalletStore).mockResolvedValue(undefined)
   })
 
   it('happy path: builds agent and reaches ready status', async () => {
@@ -284,7 +285,7 @@ describe('useAgentSetupViewModel', () => {
 
       expect(attestationMonitor.stop).toHaveBeenCalled()
       expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger)
-      expect(agent1.modules.askar.deleteStore).toHaveBeenCalled()
+      expect(agentService.deleteWalletStore).toHaveBeenCalledWith(agent1)
       await waitFor(() => expect(result.current.status).toBe('ready'))
     })
 
@@ -317,7 +318,7 @@ describe('useAgentSetupViewModel', () => {
       })
 
       expect(agentService.buildAgent).toHaveBeenCalledTimes(1)
-      expect(tempAgent.modules.askar.deleteStore).toHaveBeenCalled()
+      expect(agentService.deleteWalletStore).toHaveBeenCalledWith(tempAgent)
       expect(result.current.status).toBe('idle')
       expect(result.current.error).toBeNull()
     })
@@ -342,7 +343,7 @@ describe('useAgentSetupViewModel', () => {
 
     it('clears agent state even if deleteStore throws', async () => {
       const agent1 = mockAgent()
-      agent1.modules.askar.deleteStore = jest.fn().mockRejectedValue(new Error('store gone'))
+      jest.mocked(agentService.deleteWalletStore).mockRejectedValueOnce(new Error('store gone'))
       jest.mocked(agentService.buildAgent).mockReturnValue(agent1)
 
       const { result } = renderHook(() => useAgentSetupViewModel())
