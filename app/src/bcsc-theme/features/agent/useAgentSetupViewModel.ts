@@ -21,10 +21,11 @@ export interface AgentSetupResult {
 
 const useAgentSetupViewModel = (): AgentSetupResult => {
   const [store] = useStore<BCState>()
-  const [logger, indyLedgers, attestationMonitor, credDefs, schemas] = useServices([
+  const [logger, indyLedgers, attestationMonitor, credentialProvisioningMonitor, credDefs, schemas] = useServices([
     TOKENS.UTIL_LOGGER,
     TOKENS.UTIL_LEDGERS,
     TOKENS.UTIL_ATTESTATION_MONITOR,
+    TOKENS.UTIL_CREDENTIAL_PROVISIONING_MONITOR,
     TOKENS.CACHE_CRED_DEFS,
     TOKENS.CACHE_SCHEMAS,
   ])
@@ -45,12 +46,14 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   const enableProxy = store.developer.enableProxy
   const usePushNotifications = store.preferences.usePushNotifications
 
-  const refreshAttestationMonitor = useCallback(
+  const refreshMonitors = useCallback(
     (liveAgent: Agent) => {
       attestationMonitor?.stop()
       attestationMonitor?.start(liveAgent)
+      credentialProvisioningMonitor?.stop()
+      credentialProvisioningMonitor?.start(liveAgent)
     },
-    [attestationMonitor]
+    [attestationMonitor, credentialProvisioningMonitor]
   )
 
   const retry = useCallback(() => {
@@ -104,7 +107,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
             if (cancelled) {
               return
             }
-            refreshAttestationMonitor(restarted)
+            refreshMonitors(restarted)
             agentRef.current = restarted
             setAgent(restarted)
             setStatus('ready')
@@ -156,7 +159,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
           activate(inFlightAgent).catch((err) => logger.warn(`Push notification activation failed: ${err}`))
         }
 
-        refreshAttestationMonitor(inFlightAgent)
+        refreshMonitors(inFlightAgent)
 
         agentRef.current = inFlightAgent
         setAgent(inFlightAgent)
@@ -208,7 +211,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     indyLedgers,
     credDefs,
     schemas,
-    refreshAttestationMonitor,
+    refreshMonitors,
   ])
 
   return { agent, status, error, retry }
