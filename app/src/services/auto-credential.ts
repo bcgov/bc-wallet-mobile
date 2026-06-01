@@ -1,14 +1,6 @@
-import { getErrorDefinition } from '@/errors'
-import {
-  AbstractBifoldLogger,
-  BifoldError,
-  CredentialProvisioningEventTypes,
-  CredentialProvisioningMonitor,
-  removeExistingInvitationsById,
-} from '@bifold/core'
+import { AbstractBifoldLogger, CredentialProvisioningEventTypes, CredentialProvisioningMonitor } from '@bifold/core'
 import { Agent } from '@credo-ts/core'
 import {
-  DidCommConnectionRecord,
   DidCommProofEventTypes,
   DidCommProofExchangeRecord,
   DidCommProofState,
@@ -20,14 +12,6 @@ import { DeviceEventEmitter } from 'react-native'
 
 // subscription type from agent events
 type AgentSubscription = ReturnType<ReturnType<Agent['events']['observable']>['subscribe']>
-
-const ErrorCodes = {
-  BadInvitation: getErrorDefinition('AUTO_CRED_BAD_INVITATION').statusCode,
-  ConnectionError: getErrorDefinition('AUTO_CRED_CONNECTION_ERROR').statusCode,
-  ProofError: getErrorDefinition('AUTO_CRED_PROOF_ERROR').statusCode,
-  OfferError: getErrorDefinition('AUTO_CRED_OFFER_ERROR').statusCode,
-  GeneralError: getErrorDefinition('AUTO_CRED_GENERAL_ERROR').statusCode,
-} as const
 
 /**
  * Configuration for a single just-in-time credential acquisition rule
@@ -156,6 +140,13 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
   /**
    * Returns true if the proof requests one of the rule's trigger cred def IDs
    * AND the wallet has no credential that satisfies it.
+   *
+   * For example:
+   * Rule: CredDefId: A
+   * Proof request received: request credential with CredDefId A
+   * Wallet: No Credential with CredDefId A
+   *
+   * Proof request triggers the rule AND credential is missing, return true to trigger a workflow
    */
   private async isCredentialMissingForRule(
     proof: DidCommProofExchangeRecord,
@@ -228,52 +219,10 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
   }
 
   // ---------------------------------------------------------------------------
-  // Private — connection
-  // ---------------------------------------------------------------------------
-
-  private async connectToIssuer(invitationUrl: string): Promise<DidCommConnectionRecord | undefined> {
-    if (!this.agent) {
-      return undefined
-    }
-
-    const invite = await this.agent.didcomm.oob.parseInvitation(invitationUrl)
-    if (!invite) {
-      throw new BifoldError(
-        'Auto Credential',
-        'Could not parse the credential issuer invitation.',
-        'The invitation URL is malformed or unsupported.',
-        ErrorCodes.BadInvitation
-      )
-    }
-
-    this.log?.info('[AutoCredentialMonitor] Removing any duplicate invitations')
-    await removeExistingInvitationsById(this.agent as Agent, invite.id)
-
-    this.log?.info('[AutoCredentialMonitor] Receiving invitation from issuer')
-    const { connectionRecord } = await this.agent.didcomm.oob.receiveInvitation(invite, {
-      label: 'Credential Issuer',
-    })
-
-    if (!connectionRecord) {
-      throw new BifoldError(
-        'Auto Credential',
-        'Failed to connect to the credential issuer.',
-        'No connection record was returned after receiving the invitation.',
-        ErrorCodes.ConnectionError
-      )
-    }
-
-    return await this.agent.didcomm.connections.returnWhenIsConnected(connectionRecord.id)
-  }
-
-  // ---------------------------------------------------------------------------
-  // Private — event handlers (arrow functions keep `this` bound)
+  // Private — event handler
   // ---------------------------------------------------------------------------
 
   private readonly handleProofStateChanged = async (event: DidCommProofStateChangedEvent): Promise<void> => {
-    this.log?.info(
-      `[AutoCredentialMonitor] Proof state changed: ${event.payload.proofRecord.id} is now ${event.payload.proofRecord.state}`
-    )
     if (!this.agent) {
       return
     }
@@ -282,7 +231,7 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     if (proof.state !== DidCommProofState.RequestReceived) {
       return
     }
-    this.log?.info(`AutoCredentialMonitor] made it here`)
+
     for (const rule of this.rules) {
       const format = await this.agent.didcomm.proofs.getFormatData(proof.id)
       const requestFormat = (format.request?.anoncreds ?? format.request?.indy) as
@@ -292,11 +241,12 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
           }
         | undefined
 
-      this.log?.info(`[AutoCredentialMonitor] request format for proof ${proof.id}: ${JSON.stringify(requestFormat)}`)
       if (!requestFormat) {
         continue
       }
 
+      // Collect and flatten restrictions from proof request attribute, predicate
+      // compare the cred def id against the rule trigger IDs, if any match then this proof is requesting a credential that would trigger the workflow
       const proofRequestsWatchedCredential = [
         ...Object.values(requestFormat.requested_attributes ?? {}).flatMap(
           (attributes) => attributes.restrictions ?? []
@@ -304,7 +254,7 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
         ...Object.values(requestFormat.requested_predicates ?? {}).flatMap(
           (predicates) => predicates.restrictions ?? []
         ),
-      ].some((r) => r.cred_def_id && rule.triggerCredDefIds.includes(r.cred_def_id))
+      ].some((restriction) => restriction.cred_def_id && rule.triggerCredDefIds.includes(restriction.cred_def_id))
 
       this.log?.info(
         `[AutoCredentialMonitor] Proof ${proof.id} requests credential(s) that match rule trigger IDs: ${proofRequestsWatchedCredential}`
@@ -315,6 +265,8 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
 
       try {
         const isMissing = await this.isCredentialMissingForRule(proof, rule)
+
+        // TODO: if isMissing == true, trigger workflow to fetch missing credential and respond to proof request
         this.log?.info(
           `[AutoCredentialMonitor] Credential (${rule.triggerCredDefIds.join(', ')}) is ${isMissing ? 'NOT ' : ''}in the wallet`
         )
