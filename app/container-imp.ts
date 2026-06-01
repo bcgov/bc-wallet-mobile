@@ -41,6 +41,7 @@ import { activate, deactivate, setup, status } from '@utils/PushNotificationsHel
 import { expirationOverrideInMinutes } from '@utils/expiration'
 import { createAppLogger } from '@utils/logger'
 import { TFunction } from 'i18next'
+import { buildDigitalServicesCardCredentialRule } from './src/bcsc-theme/services/digitalServicesCardProvisioner'
 import AddCredentialButton from './src/bcwallet-theme/components/AddCredentialButton'
 import AddCredentialSlider from './src/bcwallet-theme/components/AddCredentialSlider'
 import EmptyList from './src/bcwallet-theme/components/EmptyList'
@@ -65,7 +66,6 @@ import Splash from './src/screens/Splash'
 import Terms, { TermsVersion } from './src/screens/Terms'
 import { AttestationMonitor, allCredDefIds } from './src/services/attestation'
 import { AutoCredentialMonitor } from './src/services/auto-credential'
-import { buildDigitalServicesCardCredentialRule } from './src/bcsc-theme/services/digitalServicesCardProvisioner'
 import { VersionCheckService } from './src/services/version'
 import {
   BCDispatchAction,

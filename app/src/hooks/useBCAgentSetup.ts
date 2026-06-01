@@ -46,10 +46,11 @@ const useBCAgentSetup = () => {
   const [agent, setAgent] = useState<Agent | null>(null)
   const agentInstanceRef = useRef<Agent | null>(null)
   const [store] = useStore<BCState>()
-  const [logger, indyLedgers, attestationMonitor, credDefs, schemas] = useServices([
+  const [logger, indyLedgers, attestationMonitor, credentialProvisioningMonitor, credDefs, schemas] = useServices([
     TOKENS.UTIL_LOGGER,
     TOKENS.UTIL_LEDGERS,
     TOKENS.UTIL_ATTESTATION_MONITOR,
+    TOKENS.UTIL_CREDENTIAL_PROVISIONING_MONITOR,
     TOKENS.CACHE_CRED_DEFS,
     TOKENS.CACHE_SCHEMAS,
   ])
@@ -58,8 +59,10 @@ const useBCAgentSetup = () => {
     (agent: Agent) => {
       attestationMonitor?.stop()
       attestationMonitor?.start(agent)
+      credentialProvisioningMonitor?.stop()
+      credentialProvisioningMonitor?.start(agent)
     },
-    [attestationMonitor]
+    [attestationMonitor, credentialProvisioningMonitor]
   )
 
   const restartExistingAgent = useCallback(

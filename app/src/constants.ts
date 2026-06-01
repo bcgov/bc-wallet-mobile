@@ -25,7 +25,7 @@ export interface CredentialRestrictionEnvironment {
  */
 export const AccountIDCredentialConfig: Record<string, CredentialRestrictionEnvironment> = {
   Development: {
-    credDefIDs: ['PLACEHOLDER_DEV_ACCOUNT_ID_CRED_DEF_ID'],
+    credDefIDs: ['GLMSn8ABPSvGnk42xUU7Fo:3:CL:3190179:DigitalServicesCard'],
     invitationUrl: 'PLACEHOLDER_DEV_ACCOUNT_ID_INVITATION_URL',
   },
   Test: {
