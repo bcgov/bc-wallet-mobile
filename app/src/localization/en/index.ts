@@ -377,6 +377,7 @@ const translation = {
       "TermsOfUse": "Terms of use",
       "Analytics": "Analytics",
       "RemoveAccount": "Remove account",
+      "ResetWallet": "Reset wallet",
       "Features": {
         "Header": "Features",
         "Contacts": "Contacts",
@@ -1163,12 +1164,20 @@ const translation = {
     },
     "Wallet": {
       "EmptyMessage": "Your wallet is empty",
+      "Reset": "Reset wallet",
+      "ResetTitle": "Reset wallet?",
+      "ResetDescription": "This will permanently delete all credentials, connections, and chat history stored in your wallet. Your PIN, biometrics, and BC Services Card identity will not be affected. You will not have to re-verify.",
+      "Resetting": "Resetting wallet...",
+      "ResetSuccess": "Wallet reset successfully.",
+      "ResetError": "Failed to reset wallet. Please try again.",
     },
     "Account": {
       "RemoveAccount": "Remove account",
       "RemoveAccountTitle": "Remove account from this app?",
       "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity.",
       "RemoveAccountLoading": "Removing account...",
+      "RemoveAccountSuccess": "Account removed successfully.",
+      "RemoveAccountError": "Failed to remove account. Please try again.",
       "TransferAccount": "Transfer account to another device",
       "TransferAccountAccessibilityLabel": "Transfer",
       "AccountDetails": "All account details",

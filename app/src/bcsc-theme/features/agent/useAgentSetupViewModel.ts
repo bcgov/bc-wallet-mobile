@@ -1,14 +1,21 @@
 import { WALLET_ID } from '@/constants'
 import { AppError, ErrorRegistry } from '@/errors'
 import { BCState } from '@/store'
-import { activate } from '@/utils/PushNotificationsHelper'
+import { activate, deactivate } from '@/utils/PushNotificationsHelper'
 import { createLinkSecretIfRequired, TOKENS, useServices, useStore } from '@bifold/core'
 import { Agent } from '@credo-ts/core'
 import { DidCommMediatorPickupStrategy } from '@credo-ts/didcomm'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Config } from 'react-native-config'
 
-import { buildAgent, loadCachedLedgers, restartAgent, shutdownAgent, warmCache } from './services/agent-service'
+import {
+  buildAgent,
+  initializeAgent,
+  loadCachedLedgers,
+  restartAgent,
+  shutdownAgent,
+  warmCache,
+} from './services/agent-service'
 
 export type AgentSetupStatus = 'idle' | 'initializing' | 'ready' | 'error'
 
@@ -17,6 +24,7 @@ export interface AgentSetupResult {
   status: AgentSetupStatus
   error: AppError | null
   retry: () => void
+  resetWallet: () => Promise<void>
 }
 
 const useAgentSetupViewModel = (): AgentSetupResult => {
@@ -38,6 +46,8 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   const initializingRef = useRef(false)
   const statusRef = useRef<AgentSetupStatus>('idle')
   statusRef.current = status
+  const loggerRef = useRef(logger)
+  loggerRef.current = logger
 
   const didAuthenticate = store.authentication.didAuthenticate
   const walletKey = store.bcscSecure.walletKey
@@ -60,6 +70,23 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     setError(null)
     setStatus('idle')
     setRetryCount((c) => c + 1)
+  }, [])
+
+  // Sign-out removes the authenticated navigator subtree, unmounting this
+  // provider. Tear the agent down here so it doesn't linger as a zombie holding
+  // the Askar wallet open and its mediator live-session socket alive — otherwise
+  // the next sign-in builds a second agent that the mediator and wallet fight
+  // over, which is why issuance hangs until the app is force-restarted. The
+  // wallet close is serialized in agent-service, so the next sign-in's build
+  // waits for it before reopening. Empty deps: cleanup runs only on unmount.
+  useEffect(() => {
+    return () => {
+      const liveAgent = agentRef.current
+      if (liveAgent) {
+        agentRef.current = null
+        shutdownAgent(liveAgent, loggerRef.current)
+      }
+    }
   }, [])
 
   useEffect(() => {
@@ -117,6 +144,10 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
           // Best-effort shut it down before falling through to build a fresh one.
           await shutdownAgent(agentRef.current, logger)
           agentRef.current = null
+          // Setting agent to null causes BifoldScope to drop AgentProvider,
+          // which remounts child components and clears stale hook state (e.g.
+          // useCredentials) before the fresh agent is provided.
+          setAgent(null)
         }
 
         const cachedLedgers = await loadCachedLedgers()
@@ -135,7 +166,8 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
           logger,
         })
 
-        await inFlightAgent.initialize()
+        await initializeAgent(inFlightAgent)
+
         if (cancelled) {
           return
         }
@@ -185,6 +217,8 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         setStatus('error')
       } finally {
         if (inFlightAgent) {
+          // Cancelled or partially-built agent — close its wallet handle. The
+          // shutdown is serialized against the next build's open in agent-service.
           await shutdownAgent(inFlightAgent, logger)
         }
         if (!cancelled) {
@@ -214,7 +248,58 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     refreshMonitors,
   ])
 
-  return { agent, status, error, retry }
+  const resetWallet = useCallback(async () => {
+    const currentAgent = agentRef.current
+
+    if (!currentAgent) {
+      // Agent is unavailable — a previous reset was likely interrupted mid-shutdown
+      // (e.g. app was killed). Build an uninitialized agent so we can reach the Askar
+      // store manager and delete the store by its file URI without needing it open.
+      if (walletKey) {
+        const tempAgent = buildAgent({
+          ledgers: indyLedgers,
+          walletSecret: { id: WALLET_ID, key: walletKey },
+          mediatorUrl,
+          walletLabel,
+          enableProxy,
+          proxyBaseUrl: Config.INDY_VDR_PROXY_URL,
+          logger,
+        })
+        await tempAgent.modules.askar
+          .deleteStore()
+          .catch((err: unknown) =>
+            logger.warn(`WalletReset: store deletion on recovery failed (may already be deleted): ${err}`)
+          )
+      }
+      setError(null)
+      setStatus('idle')
+      setRetryCount((c) => c + 1)
+      return
+    }
+
+    // 1. Stop background attestation polling so it doesn't interfere during teardown
+    attestationMonitor?.stop()
+
+    // 2. deregister push notifications - failures are non-fatal
+    await deactivate(currentAgent).catch((err) => logger.warn(`Push notification deactivation failed: ${err}`))
+
+    // 3. shut down the agent (closes connections, stops transports, etc.)
+    await shutdownAgent(currentAgent, logger)
+
+    // 4. delete the wallet store (credential data, connections, ect.)
+    try {
+      await currentAgent.modules.askar.deleteStore()
+    } finally {
+      // 5. Clear agent state so the setup flow re-initializes a fresh wallet
+      agentRef.current = null
+      setAgent(null)
+      setError(null)
+      setStatus('idle')
+      setRetryCount((c) => c + 1) // triggers useEffect to restart agent setup
+    }
+  }, [logger, attestationMonitor, walletKey, indyLedgers, mediatorUrl, walletLabel, enableProxy])
+
+  return { agent, status, error, retry, resetWallet }
 }
 
 export default useAgentSetupViewModel

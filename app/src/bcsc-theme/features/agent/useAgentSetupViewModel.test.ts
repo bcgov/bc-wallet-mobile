@@ -8,7 +8,10 @@ import * as agentService from './services/agent-service'
 import useAgentSetupViewModel from './useAgentSetupViewModel'
 
 jest.mock('@bifold/core')
-jest.mock('@/utils/PushNotificationsHelper', () => ({ activate: jest.fn().mockResolvedValue(undefined) }))
+jest.mock('@/utils/PushNotificationsHelper', () => ({
+  activate: jest.fn().mockResolvedValue(undefined),
+  deactivate: jest.fn().mockResolvedValue(undefined),
+}))
 jest.mock('react-native-config', () => ({ Config: { INDY_VDR_PROXY_URL: '' } }))
 jest.mock('./services/agent-service')
 
@@ -31,6 +34,9 @@ const mockAgent = () =>
     },
     initialize: jest.fn().mockResolvedValue(undefined),
     shutdown: jest.fn().mockResolvedValue(undefined),
+    modules: {
+      askar: { deleteStore: jest.fn().mockResolvedValue(undefined) },
+    },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }) as any
 
@@ -45,6 +51,7 @@ describe('useAgentSetupViewModel', () => {
     jest.mocked(Bifold.createLinkSecretIfRequired).mockResolvedValue(undefined as never)
     jest.mocked(agentService.loadCachedLedgers).mockResolvedValue(undefined)
     jest.mocked(agentService.buildAgent).mockReturnValue(mockAgent())
+    jest.mocked(agentService.initializeAgent).mockResolvedValue(undefined)
     jest.mocked(agentService.restartAgent).mockResolvedValue(undefined)
     jest.mocked(agentService.warmCache).mockResolvedValue(undefined)
     jest.mocked(agentService.shutdownAgent).mockResolvedValue(undefined)
@@ -121,8 +128,8 @@ describe('useAgentSetupViewModel', () => {
       resolveInit = resolve
     })
     const newAgent = mockAgent()
-    newAgent.initialize = jest.fn().mockReturnValue(initPromise)
     jest.mocked(agentService.buildAgent).mockReturnValue(newAgent)
+    jest.mocked(agentService.initializeAgent).mockReturnValue(initPromise)
 
     const store: Record<string, unknown> = {
       authentication: { didAuthenticate: true },
@@ -191,8 +198,8 @@ describe('useAgentSetupViewModel', () => {
 
   it('shuts down partially-built agent when init step throws', async () => {
     const newAgent = mockAgent()
-    newAgent.initialize = jest.fn().mockRejectedValue(new Error('initialize failed'))
     jest.mocked(agentService.buildAgent).mockReturnValue(newAgent)
+    jest.mocked(agentService.initializeAgent).mockRejectedValue(new Error('initialize failed'))
 
     const { result } = renderHook(() => useAgentSetupViewModel())
 
@@ -206,8 +213,8 @@ describe('useAgentSetupViewModel', () => {
       resolveInit = resolve
     })
     const newAgent = mockAgent()
-    newAgent.initialize = jest.fn().mockReturnValue(initPromise)
     jest.mocked(agentService.buildAgent).mockReturnValue(newAgent)
+    jest.mocked(agentService.initializeAgent).mockReturnValue(initPromise)
 
     const store: Record<string, unknown> = {
       authentication: { didAuthenticate: true },
@@ -263,6 +270,94 @@ describe('useAgentSetupViewModel', () => {
     await waitFor(() => expect(result.current.status).toBe('ready'))
   })
 
+  describe('resetWallet', () => {
+    it('shuts down live agent, deletes store, and triggers re-init', async () => {
+      const agent1 = mockAgent()
+      jest.mocked(agentService.buildAgent).mockReturnValue(agent1)
+
+      const { result } = renderHook(() => useAgentSetupViewModel())
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+
+      await act(async () => {
+        await result.current.resetWallet()
+      })
+
+      expect(attestationMonitor.stop).toHaveBeenCalled()
+      expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger)
+      expect(agent1.modules.askar.deleteStore).toHaveBeenCalled()
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+    })
+
+    it('deactivates push notifications before shutting down the agent', async () => {
+      const { deactivate } = jest.requireMock('@/utils/PushNotificationsHelper')
+      const agent1 = mockAgent()
+      jest.mocked(agentService.buildAgent).mockReturnValue(agent1)
+
+      const { result } = renderHook(() => useAgentSetupViewModel())
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+
+      await act(async () => {
+        await result.current.resetWallet()
+      })
+
+      expect(deactivate).toHaveBeenCalledWith(agent1)
+      expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger)
+    })
+
+    it('builds a temp agent and deletes store when no live agent is available', async () => {
+      jest.mocked(Bifold.useStore).mockReturnValue(mockedStore({ authentication: { didAuthenticate: false } }) as never)
+      const tempAgent = mockAgent()
+      jest.mocked(agentService.buildAgent).mockReturnValue(tempAgent)
+
+      const { result } = renderHook(() => useAgentSetupViewModel())
+      expect(result.current.status).toBe('idle')
+
+      await act(async () => {
+        await result.current.resetWallet()
+      })
+
+      expect(agentService.buildAgent).toHaveBeenCalledTimes(1)
+      expect(tempAgent.modules.askar.deleteStore).toHaveBeenCalled()
+      expect(result.current.status).toBe('idle')
+      expect(result.current.error).toBeNull()
+    })
+
+    it('skips temp agent build when walletKey is missing and resets state', async () => {
+      jest
+        .mocked(Bifold.useStore)
+        .mockReturnValue(
+          mockedStore({ authentication: { didAuthenticate: false }, bcscSecure: { walletKey: undefined } }) as never
+        )
+
+      const { result } = renderHook(() => useAgentSetupViewModel())
+
+      await act(async () => {
+        await result.current.resetWallet()
+      })
+
+      expect(agentService.buildAgent).not.toHaveBeenCalled()
+      expect(result.current.status).toBe('idle')
+      expect(result.current.error).toBeNull()
+    })
+
+    it('clears agent state even if deleteStore throws', async () => {
+      const agent1 = mockAgent()
+      agent1.modules.askar.deleteStore = jest.fn().mockRejectedValue(new Error('store gone'))
+      jest.mocked(agentService.buildAgent).mockReturnValue(agent1)
+
+      const { result } = renderHook(() => useAgentSetupViewModel())
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+
+      await act(async () => {
+        await result.current.resetWallet().catch(() => undefined)
+      })
+
+      expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger)
+      // finally block clears state and retryCount triggers re-init
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+    })
+  })
+
   it('shuts down agent when didAuthenticate flips to false', async () => {
     const store: Record<string, unknown> = {
       authentication: { didAuthenticate: true },
@@ -283,5 +378,33 @@ describe('useAgentSetupViewModel', () => {
     await waitFor(() => expect(result.current.status).toBe('idle'))
     expect(agentService.shutdownAgent).toHaveBeenCalled()
     expect(result.current.agent).toBeNull()
+  })
+
+  it('shuts down the agent when the provider unmounts (the real sign-out path)', async () => {
+    // Regression test: sign-out unmounts BCSCAgentProvider (RootStack swaps in
+    // AuthStack) rather than re-rendering this hook with didAuthenticate=false.
+    // Previously nothing shut the agent down on unmount, so it lingered as a
+    // zombie holding the wallet + mediator socket and the next sign-in's agent
+    // collided with it — issuance hung until the app was force-restarted.
+    const builtAgent = mockAgent()
+    jest.mocked(agentService.buildAgent).mockReturnValue(builtAgent)
+
+    const { result, unmount } = renderHook(() => useAgentSetupViewModel())
+    await waitFor(() => expect(result.current.status).toBe('ready'))
+
+    unmount()
+
+    expect(agentService.shutdownAgent).toHaveBeenCalledWith(builtAgent, logger)
+  })
+
+  it('does not call shutdown on unmount when no agent was ever built', async () => {
+    jest.mocked(Bifold.useStore).mockReturnValue(mockedStore({ bcscSecure: { walletKey: undefined } }) as never)
+
+    const { result, unmount } = renderHook(() => useAgentSetupViewModel())
+    await waitFor(() => expect(result.current.status).toBe('error'))
+
+    unmount()
+
+    expect(agentService.shutdownAgent).not.toHaveBeenCalled()
   })
 })
