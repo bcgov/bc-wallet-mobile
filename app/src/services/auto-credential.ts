@@ -68,10 +68,10 @@ export interface AutoCredentialMonitorOptions {
  */
 export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
   private proofSubscription?: AgentSubscription
-  private credentialSubscription?: AgentSubscription
+  private readonly credentialSubscription?: AgentSubscription
   private agent?: BCAgent
-  private log?: AbstractBifoldLogger
-  private rules: AutoCredentialRule[]
+  private readonly log?: AbstractBifoldLogger
+  private readonly rules: AutoCredentialRule[]
 
   // State for the active workflow (one at a time)
   private _workflowInProgress = false
