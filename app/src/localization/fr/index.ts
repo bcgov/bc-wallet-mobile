@@ -186,6 +186,7 @@ const translation = {
   },
   "Init": {
     "Retry": "Réessayer",
+    "Failed": "Impossible de charger votre portefeuille. Vérifiez votre connexion et réessayez.",
     "Starting": "Démarrage...",
     "CheckingOCA": "Checking for OCA updates... (FR)",
     "InitializingAgent": "Initialisation de l'agent...",
