@@ -60,14 +60,6 @@ describe('SettingsContent', () => {
     expect(await screen.findByTestId(tid('ChangePIN'))).toBeTruthy()
   })
 
-  it('shows EditNickname when account is verified', async () => {
-    renderWithState({
-      authentication: { didAuthenticate: true },
-      bcscSecure: { verified: true },
-    })
-    expect(await screen.findByTestId(tid('EditNickname'))).toBeTruthy()
-  })
-
   it('renders the Analytics Opt-In row and accepts press without throwing', async () => {
     renderWithState({ authentication: { didAuthenticate: true } })
     const row = await screen.findByTestId(tid('AnalyticsOptIn'))

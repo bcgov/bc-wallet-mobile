@@ -23,7 +23,6 @@ import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { BCSCAuthStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
 
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
-import QRCoreStack from './QRCoreStack'
 import { getDefaultModalOptions } from './stack-utils'
 
 /**
@@ -120,14 +119,6 @@ const AuthStack = (): React.ReactElement => {
         component={Developer}
         options={{
           title: t('Developer.DeveloperMode'),
-        }}
-      />
-
-      <Stack.Screen
-        name={BCSCScreens.QRCore}
-        component={QRCoreStack}
-        options={{
-          headerShown: false,
         }}
       />
       <Stack.Screen

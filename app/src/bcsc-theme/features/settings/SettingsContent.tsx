@@ -112,7 +112,6 @@ interface AuthenticatedSectionProps {
   onNotifications?: () => void
   onAddDevice?: () => void
   onMyDevices?: () => void
-  onPressDeveloperMode: () => void
   onPressOptInAnalytics: () => void | Promise<void>
   onPressRemoveAccount?: () => void
 }
@@ -133,7 +132,6 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
   onNotifications,
   onAddDevice,
   onMyDevices,
-  onPressDeveloperMode,
   onPressOptInAnalytics,
   onPressRemoveAccount,
 }) => {
@@ -142,11 +140,10 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
   const [store] = useStore<BCState>()
   // useContext (not useIdToken) so we don't throw when the BCSCIdTokenProvider
   // isn't mounted — settings is reachable before verification completes.
-  const idToken = useContext(BCSCIdTokenContext)?.idToken
+  const deviceCount = useContext(BCSCIdTokenContext)?.data?.bcsc_devices_count
   const isVerified = store.bcscSecure.verified
 
   const showChangePIN = accountSecurityMethod !== AccountSecurityMethod.DeviceAuth && onChangePIN
-  const showEditNickname = store.bcscSecure.verified && onEditNickname
   const analyticsOptInText = store.bcsc.analyticsOptIn ? 'ON' : 'OFF'
   const autoLockTimeText = `${store.preferences.autoLockTime ?? DEFAULT_AUTO_LOCK_TIME_MIN} min`
   const profileName = store.bcsc.selectedNickname?.trim() || t('BCSC.Title')
@@ -220,11 +217,6 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
                 {t('BCSC.Settings.ChangePIN.ButtonTitle')}
               </ListButton>
             ) : null,
-            showEditNickname ? (
-              <ListButton key="nickname" onPress={onEditNickname!} testID={testIdWithKey('EditNickname')}>
-                {t('BCSC.Settings.EditNickname')}
-              </ListButton>
-            ) : null,
             onAutoLock ? (
               <ListButton key="lock" onPress={onAutoLock} testID={testIdWithKey('AutoLock')}>
                 <Row title={t('BCSC.Settings.AutoLockTime')} endAdornment={autoLockTimeText} />
@@ -245,11 +237,7 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
               <ListButton key="mydevices" onPress={onMyDevices ?? noop} testID={testIdWithKey('MyDevices')}>
                 <Row
                   title={t('BCSC.Settings.MyDevices')}
-                  endAdornment={
-                    typeof idToken?.bcsc_devices_count === 'number'
-                      ? t('BCSC.Settings.MyDevicesCount', { count: idToken.bcsc_devices_count })
-                      : undefined
-                  }
+                  endAdornment={deviceCount ? t('BCSC.Settings.MyDevicesCount', { count: deviceCount }) : undefined}
                 />
               </ListButton>
             ) : null,
@@ -441,7 +429,6 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           onNotifications={onNotifications}
           onAddDevice={onAddDevice}
           onMyDevices={onMyDevices}
-          onPressDeveloperMode={onPressDeveloperMode}
         />
       ) : null}
 

@@ -147,6 +147,20 @@ export enum BCSCScreens {
   QRCore = 'QRCore',
 }
 
+export enum BCSCQRCoreScreens {
+  Scanner = 'Scanner',
+  Display = 'Display',
+  PairingCode = 'PairingCode',
+  AccountNotVerified = 'AccountNotVerified',
+}
+
+export type BCSCQRCoreTabParams = {
+  [BCSCQRCoreScreens.Scanner]: undefined
+  [BCSCQRCoreScreens.Display]: undefined
+  [BCSCQRCoreScreens.PairingCode]: { pairingCode?: string } | undefined
+  [BCSCQRCoreScreens.AccountNotVerified]: undefined
+}
+
 export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingWebView]: { url: string; title: string }
   [BCSCScreens.OnboardingAccountSetup]: undefined
@@ -276,7 +290,7 @@ export type BCSCMainStackParams = {
   // so ListCredentials (rendered in the Wallet tab) can navigate to it.
   [Screens.CredentialDetails]: { credentialId: string }
 
-  [BCSCScreens.QRCore]: undefined
+  [BCSCScreens.QRCore]: NavigatorScreenParams<BCSCQRCoreTabParams> | undefined
   [BCSCScreens.ConnectionLoading]: { oobRecordId?: string; credentialId?: string; proofId?: string }
 
   [BCSCModals.InternetDisconnected]: undefined
@@ -286,7 +300,6 @@ export type BCSCMainStackParams = {
 }
 
 export type BCSCAuthStackParams = {
-  [BCSCScreens.QRCore]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string; fromAppSwitch?: boolean }
   [BCSCScreens.EditNickname]: undefined
   [BCSCScreens.AccountLanding]: undefined
