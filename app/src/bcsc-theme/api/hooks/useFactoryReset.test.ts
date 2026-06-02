@@ -1,7 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { useBCSCAgentSafe } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
-import { deleteWalletStore, shutdownAgent } from '@/bcsc-theme/features/agent/services/agent-service'
+import { deleteWalletStore, purgeWalletStore, shutdownAgent } from '@/bcsc-theme/features/agent/services/agent-service'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCDispatchAction } from '@/store'
@@ -24,8 +24,10 @@ jest.mock('@/bcsc-theme/features/agent/BCSCAgentProvider', () => ({
 // (Credo, indy-vdr-shared, etc.) are never loaded by this hook test.
 jest.mock('@/bcsc-theme/features/agent/services/agent-service', () => ({
   deleteWalletStore: jest.fn().mockResolvedValue(undefined),
+  purgeWalletStore: jest.fn().mockResolvedValue(undefined),
   shutdownAgent: jest.fn().mockResolvedValue(undefined),
 }))
+jest.mock('react-native-config', () => ({ Config: { INDY_VDR_PROXY_URL: '' } }))
 
 const warnMock = jest.fn()
 
@@ -258,6 +260,112 @@ describe('useFactoryReset', () => {
 
     expect(warnLogMock).toHaveBeenCalledWith(
       expect.stringContaining('deleteStore() failed'),
+      expect.objectContaining({ error: expect.any(Error) })
+    )
+  })
+
+  it('purges an orphaned wallet store when no live agent is held but a wallet key exists', async () => {
+    // Repro: reset wallet, then remove the account before the agent finishes
+    // re-initializing. The provider's `agent` is transiently null, but the
+    // interrupted init may have written an on-disk store keyed with the wallet
+    // key that account removal is about to make underivable. Factory reset must
+    // delete it via the throwaway-agent path or it orphans the store forever.
+    const bcscCoreMock = jest.mocked(BcscCore)
+    const useSecureActionsMock = jest.mocked(useSecureActions)
+    const bifoldMock = jest.mocked(Bifold)
+    const useRegistrationApiMock = jest.mocked(useRegistrationApi)
+    const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
+
+    // No live agent (mid-reinitialization), so the direct deleteWalletStore path
+    // is unavailable.
+    jest.mocked(useBCSCAgentSafe).mockReturnValue(null)
+
+    useBCSCApiClientStateMock.mockReturnValue({
+      client: { clearTokens: jest.fn() },
+      isClientReady: true,
+    } as any)
+    useRegistrationApiMock.mockReturnValue({
+      deleteRegistration: jest.fn().mockResolvedValue({ success: true }),
+      register: jest.fn(),
+    } as any)
+    bcscCoreMock.getAccount.mockResolvedValue({ clientID: 'test-client-id' } as any)
+    bcscCoreMock.removeAccount.mockResolvedValue(undefined)
+    useSecureActionsMock.mockReturnValue({
+      clearSecureState: jest.fn(),
+      deleteSecureData: jest.fn().mockResolvedValue(undefined),
+    } as any)
+    bifoldMock.useStore.mockReturnValue([
+      {
+        bcscSecure: { registrationAccessToken: 'token', additionalEvidenceData: [], walletKey: 'stale-wallet-key' },
+        preferences: { selectedMediator: 'https://mediator.example', walletName: 'BC Wallet' },
+        developer: { enableProxy: false },
+      } as any,
+      jest.fn(),
+    ])
+    // useServices returns [logger, ledgers] for the build options.
+    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), warn: jest.fn(), error: jest.fn() }, []] as any)
+
+    const hook = renderHook(() => useFactoryReset())
+
+    await act(async () => {
+      const result = await hook.result.current()
+      expect(result.success).toBe(true)
+    })
+
+    // Deleted via a throwaway agent keyed with the stale wallet secret, never the
+    // (absent) live agent.
+    expect(purgeWalletStore).toHaveBeenCalledTimes(1)
+    expect(purgeWalletStore).toHaveBeenCalledWith(
+      expect.objectContaining({ walletSecret: expect.objectContaining({ key: 'stale-wallet-key' }) })
+    )
+    expect(deleteWalletStore).not.toHaveBeenCalled()
+    expect(bcscCoreMock.removeAccount).toHaveBeenCalledWith()
+  })
+
+  it('does not fail the reset if the orphaned-store purge throws', async () => {
+    const bcscCoreMock = jest.mocked(BcscCore)
+    const useSecureActionsMock = jest.mocked(useSecureActions)
+    const bifoldMock = jest.mocked(Bifold)
+    const useRegistrationApiMock = jest.mocked(useRegistrationApi)
+    const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
+    const warnLogMock = jest.fn()
+
+    jest.mocked(useBCSCAgentSafe).mockReturnValue(null)
+    jest.mocked(purgeWalletStore).mockRejectedValue(new Error('build boom'))
+
+    useBCSCApiClientStateMock.mockReturnValue({
+      client: { clearTokens: jest.fn() },
+      isClientReady: true,
+    } as any)
+    useRegistrationApiMock.mockReturnValue({
+      deleteRegistration: jest.fn().mockResolvedValue({ success: true }),
+      register: jest.fn(),
+    } as any)
+    bcscCoreMock.getAccount.mockResolvedValue({ clientID: 'test-client-id' } as any)
+    bcscCoreMock.removeAccount.mockResolvedValue(undefined)
+    useSecureActionsMock.mockReturnValue({
+      clearSecureState: jest.fn(),
+      deleteSecureData: jest.fn().mockResolvedValue(undefined),
+    } as any)
+    bifoldMock.useStore.mockReturnValue([
+      {
+        bcscSecure: { registrationAccessToken: 'token', additionalEvidenceData: [], walletKey: 'stale-wallet-key' },
+        preferences: { selectedMediator: 'https://mediator.example', walletName: 'BC Wallet' },
+        developer: { enableProxy: false },
+      } as any,
+      jest.fn(),
+    ])
+    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), warn: warnLogMock, error: jest.fn() }, []] as any)
+
+    const hook = renderHook(() => useFactoryReset())
+
+    await act(async () => {
+      const result = await hook.result.current()
+      expect(result.success).toBe(true)
+    })
+
+    expect(warnLogMock).toHaveBeenCalledWith(
+      expect.stringContaining('orphaned wallet store purge failed'),
       expect.objectContaining({ error: expect.any(Error) })
     )
   })

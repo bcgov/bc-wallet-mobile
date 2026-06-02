@@ -1,11 +1,13 @@
 import { useBCSCAgentSafe } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
-import { deleteWalletStore, shutdownAgent } from '@/bcsc-theme/features/agent/services/agent-service'
+import { deleteWalletStore, purgeWalletStore, shutdownAgent } from '@/bcsc-theme/features/agent/services/agent-service'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { WALLET_ID } from '@/constants'
 import { BCDispatchAction, BCSCState, BCState } from '@/store'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
 import * as BcscCore from 'react-native-bcsc-core'
+import { Config } from 'react-native-config'
 import useRegistrationApi from './useRegistrationApi'
 
 type FactoryResetResult =
@@ -36,7 +38,7 @@ export const useFactoryReset = () => {
   const { client, isClientReady } = useBCSCApiClientState()
   const registration = useRegistrationApi(client, Boolean(isClientReady))
   const [store, dispatch] = useStore<BCState>()
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [logger, indyLedgers] = useServices([TOKENS.UTIL_LOGGER, TOKENS.UTIL_LEDGERS])
   const { clearSecureState, deleteSecureData } = useSecureActions()
   const agentCtx = useBCSCAgentSafe()
 
@@ -133,8 +135,27 @@ export const useFactoryReset = () => {
           } catch (err) {
             logger.warn('FactoryReset: wallet deleteStore() failed; wallet file may persist', { error: err })
           }
+        } else if (store.bcscSecure.walletKey) {
+          // No live agent, but a reset may have been interrupted mid-rebuild and
+          // left an on-disk store keyed with this about-to-be-cleared key. Purge
+          // it via a throwaway agent (delete is by file URI) or it orphans a store
+          // no future key can open, failing agent init on every later launch.
+          try {
+            logger.info('FactoryReset: No active agent; purging any orphaned wallet store...')
+            await purgeWalletStore({
+              ledgers: indyLedgers,
+              walletSecret: { id: WALLET_ID, key: store.bcscSecure.walletKey },
+              mediatorUrl: store.preferences?.selectedMediator ?? '',
+              walletLabel: store.preferences?.walletName || 'BC Wallet',
+              enableProxy: store.developer?.enableProxy ?? false,
+              proxyBaseUrl: Config.INDY_VDR_PROXY_URL,
+              logger,
+            })
+          } catch (err) {
+            logger.warn('FactoryReset: orphaned wallet store purge failed; wallet file may persist', { error: err })
+          }
         } else {
-          logger.info('FactoryReset: No active agent; skipping wallet store delete')
+          logger.info('FactoryReset: No active agent or wallet key; skipping wallet store delete')
         }
 
         await removeAccountArtifacts()
@@ -159,7 +180,19 @@ export const useFactoryReset = () => {
         return { success: false, error: factoryResetError }
       }
     },
-    [removeAccountArtifacts, logger, clearSecureState, dispatch, client, agentCtx]
+    [
+      removeAccountArtifacts,
+      logger,
+      clearSecureState,
+      dispatch,
+      client,
+      agentCtx,
+      indyLedgers,
+      store.bcscSecure.walletKey,
+      store.preferences?.selectedMediator,
+      store.preferences?.walletName,
+      store.developer?.enableProxy,
+    ]
   )
 
   return factoryReset

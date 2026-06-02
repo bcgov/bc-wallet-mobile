@@ -317,3 +317,17 @@ export const shutdownAgent = async (agent: Agent, logger: BifoldLogger): Promise
 export const deleteWalletStore = async (agent: Agent): Promise<void> => {
   await enqueueWalletOp(() => agent.modules.askar.deleteStore())
 }
+
+/**
+ * Deletes the shared BCSC wallet store when no live agent is held (e.g. a reset
+ * interrupted mid-shutdown, or a factory reset fired while the provider is
+ * rebuilding and its `agent` is transiently null). Builds a throwaway agent
+ * purely to reach the Askar store manager; deletion is by file URI, so it needs
+ * neither an open store nor a matching key. Rethrows like {@link deleteWalletStore}.
+ *
+ * @param opts - Agent build options identifying the wallet store to delete.
+ */
+export const purgeWalletStore = async (opts: BuildAgentOptions): Promise<void> => {
+  const tempAgent = buildAgent(opts)
+  await deleteWalletStore(tempAgent)
+}

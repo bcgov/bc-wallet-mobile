@@ -14,6 +14,7 @@ import {
   deleteWalletStore,
   initializeAgent,
   loadCachedLedgers,
+  purgeWalletStore,
   restartAgent,
   shutdownAgent,
   warmCache,
@@ -46,6 +47,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   const [retryCount, setRetryCount] = useState(0)
   const agentRef = useRef<Agent | null>(null)
   const initializingRef = useRef(false)
+  const resettingRef = useRef(false)
   const statusRef = useRef<AgentSetupStatus>('idle')
   statusRef.current = status
   const loggerRef = useRef(logger)
@@ -160,6 +162,14 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
           .checkForUpdates?.()
           .catch((err) => logger.warn(`OCA bundle update failed (continuing): ${err}`))
 
+        // checkForUpdates can take seconds; a sign-out/reset may have flipped
+        // `cancelled` meanwhile. Re-check before buildAgent so a discarded run
+        // never (re)creates the Askar store — a factory reset clears the wallet
+        // key right after, orphaning any store written here.
+        if (cancelled) {
+          return
+        }
+
         inFlightAgent = buildAgent({
           ledgers,
           walletSecret,
@@ -254,51 +264,65 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   ])
 
   const resetWallet = useCallback(async () => {
-    const currentAgent = agentRef.current
-
-    if (!currentAgent) {
-      // Agent is unavailable — a previous reset was likely interrupted mid-shutdown
-      // (e.g. app was killed). Build an uninitialized agent so we can reach the Askar
-      // store manager and delete the store by its file URI without needing it open.
-      if (walletKey) {
-        const tempAgent = buildAgent({
-          ledgers: indyLedgers,
-          walletSecret: { id: WALLET_ID, key: walletKey },
-          mediatorUrl,
-          walletLabel,
-          enableProxy,
-          proxyBaseUrl: Config.INDY_VDR_PROXY_URL,
-          logger,
-        })
-        await deleteWalletStore(tempAgent).catch((err: unknown) =>
-          logger.warn(`WalletReset: store deletion on recovery failed (may already be deleted): ${err}`)
-        )
-      }
-      setError(null)
-      setStatus('idle')
-      setRetryCount((c) => c + 1)
+    // Ignore re-entrant requests (e.g. button spam). Without this, overlapping
+    // resets race the shared wallet store — double shutdown/delete, or a later
+    // reset deleting the store the prior reset's re-init just rebuilt — which
+    // surfaces as a grab-bag of agent errors. initializingRef covers the window
+    // after a reset bumps retryCount and the re-init is still running.
+    if (resettingRef.current || initializingRef.current) {
+      logger.info('WalletReset: a reset or agent init is already in progress, ignoring request')
       return
     }
+    resettingRef.current = true
 
-    // 1. Stop background attestation polling so it doesn't interfere during teardown
-    attestationMonitor?.stop()
-
-    // 2. deregister push notifications - failures are non-fatal
-    await deactivate(currentAgent).catch((err) => logger.warn(`Push notification deactivation failed: ${err}`))
-
-    // 3. shut down the agent (closes connections, stops transports, etc.)
-    await shutdownAgent(currentAgent, logger)
-
-    // 4. delete the wallet store (credential data, connections, ect.)
     try {
-      await deleteWalletStore(currentAgent)
+      const currentAgent = agentRef.current
+
+      if (!currentAgent) {
+        // Agent is unavailable — a previous reset was likely interrupted mid-shutdown
+        // (e.g. app was killed). Build an uninitialized agent so we can reach the Askar
+        // store manager and delete the store by its file URI without needing it open.
+        if (walletKey) {
+          await purgeWalletStore({
+            ledgers: indyLedgers,
+            walletSecret: { id: WALLET_ID, key: walletKey },
+            mediatorUrl,
+            walletLabel,
+            enableProxy,
+            proxyBaseUrl: Config.INDY_VDR_PROXY_URL,
+            logger,
+          }).catch((err: unknown) =>
+            logger.warn(`WalletReset: store deletion on recovery failed (may already be deleted): ${err}`)
+          )
+        }
+        setError(null)
+        setStatus('idle')
+        setRetryCount((c) => c + 1)
+        return
+      }
+
+      // 1. Stop background attestation polling so it doesn't interfere during teardown
+      attestationMonitor?.stop()
+
+      // 2. deregister push notifications - failures are non-fatal
+      await deactivate(currentAgent).catch((err) => logger.warn(`Push notification deactivation failed: ${err}`))
+
+      // 3. shut down the agent (closes connections, stops transports, etc.)
+      await shutdownAgent(currentAgent, logger)
+
+      // 4. delete the wallet store (credential data, connections, ect.)
+      try {
+        await deleteWalletStore(currentAgent)
+      } finally {
+        // 5. Clear agent state so the setup flow re-initializes a fresh wallet
+        agentRef.current = null
+        setAgent(null)
+        setError(null)
+        setStatus('idle')
+        setRetryCount((c) => c + 1) // triggers useEffect to restart agent setup
+      }
     } finally {
-      // 5. Clear agent state so the setup flow re-initializes a fresh wallet
-      agentRef.current = null
-      setAgent(null)
-      setError(null)
-      setStatus('idle')
-      setRetryCount((c) => c + 1) // triggers useEffect to restart agent setup
+      resettingRef.current = false
     }
   }, [logger, attestationMonitor, walletKey, indyLedgers, mediatorUrl, walletLabel, enableProxy])
 

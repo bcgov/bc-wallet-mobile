@@ -23,6 +23,7 @@ jest.mock('@credo-ts/core', () => ({
   Agent: jest.fn().mockImplementation(() => ({
     initialize: jest.fn(),
     shutdown: jest.fn(),
+    modules: { askar: { deleteStore: jest.fn().mockResolvedValue(undefined) } },
   })),
 }))
 
@@ -61,6 +62,7 @@ import {
   deleteWalletStore,
   initializeAgent,
   loadCachedLedgers,
+  purgeWalletStore,
   restartAgent,
   shutdownAgent,
   warmCache,
@@ -327,6 +329,36 @@ describe('deleteWalletStore', () => {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await expect(deleteWalletStore(agent as any)).rejects.toThrow('delete boom')
+  })
+})
+
+describe('purgeWalletStore', () => {
+  const baseOptions = {
+    ledgers: [],
+    walletSecret,
+    walletLabel: 'BC Wallet',
+    enableProxy: false,
+    mediatorUrl: 'https://mediator.example',
+    logger,
+  }
+
+  it('builds a throwaway agent and deletes its store by config (no live agent needed)', async () => {
+    const { Agent } = jest.requireMock('@credo-ts/core')
+
+    await purgeWalletStore(baseOptions)
+
+    expect(Agent).toHaveBeenCalled()
+    const built = Agent.mock.results[Agent.mock.results.length - 1].value
+    expect(built.modules.askar.deleteStore).toHaveBeenCalled()
+  })
+
+  it('rethrows when the underlying store delete fails so callers can log and continue', async () => {
+    const { Agent } = jest.requireMock('@credo-ts/core')
+    Agent.mockImplementationOnce(() => ({
+      modules: { askar: { deleteStore: jest.fn().mockRejectedValue(new Error('purge boom')) } },
+    }))
+
+    await expect(purgeWalletStore(baseOptions)).rejects.toThrow('purge boom')
   })
 })
 
