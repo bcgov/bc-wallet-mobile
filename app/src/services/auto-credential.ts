@@ -63,6 +63,8 @@ export interface AutoCredentialMonitorOptions {
  * refresh and allow the user to approve the original request.
  *
  * Register an instance at TOKENS.UTIL_CREDENTIAL_PROVISIONING_MONITOR
+ *
+ * TODO: (al) This currently logs any results of a rule triggering, implement full workflow when target credential is ready
  */
 export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
   private proofSubscription?: AgentSubscription
@@ -155,6 +157,7 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
    * Proof request triggers the rule AND credential is missing, return true to trigger a workflow
    */
   private async isCredentialMissingForRule(
+    proofId: string,
     proofFormat: ProofRequestFormat,
     rule: AutoCredentialRule
   ): Promise<boolean> {
@@ -183,7 +186,7 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
 
     // Step 2: does the wallet have credentials to satisfy those specific attributes?
     try {
-      const credentials = await credentialsMatchForProof(this.agent, proof)
+      const credentials = await credentialsMatchForProof(this.agent, proofId)
       const matchedFormat = credentials.proofFormats.anoncreds ?? credentials.proofFormats.indy
 
       if (!matchedFormat) {
@@ -258,7 +261,7 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
       }
 
       try {
-        const isMissing = await this.isCredentialMissingForRule(requestFormat, rule)
+        const isMissing = await this.isCredentialMissingForRule(proof.id, requestFormat, rule)
         // TODO: if isMissing == true, trigger workflow to fetch missing credential and respond to proof request
         this.log?.info(
           `[AutoCredentialMonitor] Credential (${rule.triggerCredDefIds.join(', ')}) is ${isMissing ? 'NOT ' : ''}in the wallet`

@@ -12,18 +12,12 @@ export interface CredentialRestrictionEnvironment {
 }
 
 /**
- * Per-environment AccountID credential configuration.
- *
- * When an incoming proof requests an AccountID credential whose cred_def_id
- * appears in one of these arrays AND the wallet doesn't hold it, the
- * AutoCredentialMonitor will connect to the corresponding invitationUrl,
- * auto-present the wallet's Person Credential as eligibility proof, and
- * auto-accept the AccountID credential offer.
+ * Per-environment Auto fetch credential configuration.
  *
  * TODO: Replace placeholder cred def IDs and invitation URLs with real values
  * from the IAS team once they are available.
  */
-export const AccountIDCredentialConfig: Record<string, CredentialRestrictionEnvironment> = {
+export const AutoFetchCredentialConfig: Record<string, CredentialRestrictionEnvironment> = {
   Development: {
     credDefIDs: ['GLMSn8ABPSvGnk42xUU7Fo:3:CL:3190179:DigitalServicesCard'],
     invitationUrl: 'PLACEHOLDER_DEV_ACCOUNT_ID_INVITATION_URL',
