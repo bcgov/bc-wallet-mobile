@@ -1,4 +1,5 @@
 import { AbstractBifoldLogger, CredentialProvisioningEventTypes, CredentialProvisioningMonitor } from '@bifold/core'
+import { AnonCredsRequestedAttribute, AnonCredsRequestedPredicate } from '@credo-ts/anoncreds'
 import { Agent } from '@credo-ts/core'
 import {
   DidCommProofEventTypes,
@@ -12,6 +13,11 @@ import { DeviceEventEmitter } from 'react-native'
 
 // subscription type from agent events
 type AgentSubscription = ReturnType<ReturnType<Agent['events']['observable']>['subscribe']>
+
+interface ProofRequestFormat {
+  requested_attributes?: Record<string, AnonCredsRequestedAttribute>
+  requested_predicates?: Record<string, AnonCredsRequestedPredicate>
+}
 
 /**
  * Configuration for a single just-in-time credential acquisition rule
@@ -149,7 +155,7 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
    * Proof request triggers the rule AND credential is missing, return true to trigger a workflow
    */
   private async isCredentialMissingForRule(
-    proof: DidCommProofExchangeRecord,
+    proofFormat: ProofRequestFormat,
     rule: AutoCredentialRule
   ): Promise<boolean> {
     if (!this.agent) {
@@ -157,27 +163,15 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     }
 
     // Step 1: does the proof's restrictions reference any of our trigger cred def IDs?
-    const format = await this.agent.didcomm.proofs.getFormatData(proof.id)
-    const requestFormat = (format.request?.anoncreds ?? format.request?.indy) as
-      | {
-          requested_attributes?: Record<string, { restrictions?: { cred_def_id?: string }[] }>
-          requested_predicates?: Record<string, { restrictions?: { cred_def_id?: string }[] }>
-        }
-      | undefined
-
-    if (!requestFormat) {
-      return false
-    }
-
     const triggeredAttributeKeys = new Set<string>()
     const triggeredPredicateKeys = new Set<string>()
 
-    for (const [key, attr] of Object.entries(requestFormat.requested_attributes ?? {})) {
+    for (const [key, attr] of Object.entries(proofFormat.requested_attributes ?? {})) {
       if ((attr.restrictions ?? []).some((r) => r.cred_def_id && rule.triggerCredDefIds.includes(r.cred_def_id))) {
         triggeredAttributeKeys.add(key)
       }
     }
-    for (const [key, pred] of Object.entries(requestFormat.requested_predicates ?? {})) {
+    for (const [key, pred] of Object.entries(proofFormat.requested_predicates ?? {})) {
       if ((pred.restrictions ?? []).some((r) => r.cred_def_id && rule.triggerCredDefIds.includes(r.cred_def_id))) {
         triggeredPredicateKeys.add(key)
       }
@@ -213,7 +207,9 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
       }
       return false
     } catch (err) {
-      this.log?.warn('[AutoCredentialMonitor] Could not determine credential availability, assuming missing')
+      this.log?.warn(`[AutoCredentialMonitor] Could not determine credential availability, assuming missing`, {
+        error: err as Error,
+      })
       return true
     }
   }
@@ -226,35 +222,33 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     if (!this.agent) {
       return
     }
-    this.log?.info(`[AutoCredentialMonitor] Checking if proof request matches any rules`)
     const proof = event.payload.proofRecord
     if (proof.state !== DidCommProofState.RequestReceived) {
       return
     }
 
+    this.log?.info(`[AutoCredentialMonitor] Checking if proof request matches any rules`)
+
+    // fetch and construct proof request format
+    const format = await this.agent.didcomm.proofs.getFormatData(proof.id)
+    const requestFormat = (format.request?.anoncreds ?? format.request?.indy) as ProofRequestFormat | undefined
+
+    if (!requestFormat) {
+      // no proof format, nothing to check against
+      return
+    }
+
+    // collect and flatten proof request restrictions
+    const restrictions = [
+      ...Object.values(requestFormat.requested_attributes ?? {}).flatMap((attributes) => attributes.restrictions ?? []),
+      ...Object.values(requestFormat.requested_predicates ?? {}).flatMap((predicates) => predicates.restrictions ?? []),
+    ]
+
     for (const rule of this.rules) {
-      const format = await this.agent.didcomm.proofs.getFormatData(proof.id)
-      const requestFormat = (format.request?.anoncreds ?? format.request?.indy) as
-        | {
-            requested_attributes?: Record<string, { restrictions?: { cred_def_id?: string }[] }>
-            requested_predicates?: Record<string, { restrictions?: { cred_def_id?: string }[] }>
-          }
-        | undefined
-
-      if (!requestFormat) {
-        continue
-      }
-
-      // Collect and flatten restrictions from proof request attribute, predicate
       // compare the cred def id against the rule trigger IDs, if any match then this proof is requesting a credential that would trigger the workflow
-      const proofRequestsWatchedCredential = [
-        ...Object.values(requestFormat.requested_attributes ?? {}).flatMap(
-          (attributes) => attributes.restrictions ?? []
-        ),
-        ...Object.values(requestFormat.requested_predicates ?? {}).flatMap(
-          (predicates) => predicates.restrictions ?? []
-        ),
-      ].some((restriction) => restriction.cred_def_id && rule.triggerCredDefIds.includes(restriction.cred_def_id))
+      const proofRequestsWatchedCredential = restrictions.some(
+        (restriction) => restriction.cred_def_id && rule.triggerCredDefIds.includes(restriction.cred_def_id)
+      )
 
       this.log?.info(
         `[AutoCredentialMonitor] Proof ${proof.id} requests credential(s) that match rule trigger IDs: ${proofRequestsWatchedCredential}`
@@ -264,14 +258,13 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
       }
 
       try {
-        const isMissing = await this.isCredentialMissingForRule(proof, rule)
-
+        const isMissing = await this.isCredentialMissingForRule(requestFormat, rule)
         // TODO: if isMissing == true, trigger workflow to fetch missing credential and respond to proof request
         this.log?.info(
           `[AutoCredentialMonitor] Credential (${rule.triggerCredDefIds.join(', ')}) is ${isMissing ? 'NOT ' : ''}in the wallet`
         )
       } catch (err) {
-        this.log?.warn(`[AutoCredentialMonitor] Could not check credential availability: ${err}`)
+        this.log?.warn(`[AutoCredentialMonitor] Could not check credential availability`, { error: err as Error })
       }
     }
   }
