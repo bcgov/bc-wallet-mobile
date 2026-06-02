@@ -305,9 +305,6 @@ export function createAppTheme(v: ThemeVariant) {
             color: theme.ColorPalette.brand.secondaryDisabled,
             ...ThemeTextStyles.bold,
           },
-          // Modal buttons mirror their non-modal counterparts. Bifold's createButtonsTheme
-          // derives modal colours from brand.modalPrimary/modalSecondary/modalTertiary (BC gold),
-          // which doesn't match our primary/secondary/tertiary buttons, so we override them here.
           modalPrimary: {
             padding: Spacing.sm,
             borderWidth: 1,
