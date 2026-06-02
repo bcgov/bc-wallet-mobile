@@ -1,4 +1,4 @@
-import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HELP_URL } from '@/constants'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
@@ -39,6 +39,10 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
     navigation.navigate(BCSCScreens.EditNickname)
   }
 
+  const onAccountDetails = () => {
+    navigation.navigate(BCSCScreens.AccountDetails)
+  }
+
   const onForgetAllPairings = () => {
     navigation.navigate(BCSCScreens.ForgetAllPairings)
   }
@@ -67,6 +71,14 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
     navigation.navigate(BCSCScreens.Contacts)
   }
 
+  const onAddDevice = () => {
+    navigation.navigate(BCSCScreens.TransferAccountQRInformation)
+  }
+
+  const onScanMyQR = () => {
+    navigation.navigate(BCSCScreens.QRCore, { screen: BCSCQRCoreScreens.Display })
+  }
+
   return (
     <SettingsContent
       onContactUs={onContactUs}
@@ -74,6 +86,7 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
       onPrivacy={onPrivacy}
       onPressDeveloperMode={onPressDeveloperMode}
       onEditNickname={onEditNickname}
+      onAccountDetails={onAccountDetails}
       onForgetAllPairings={onForgetAllPairings}
       onAutoLock={onAutoLock}
       onAppSecurity={onAppSecurity}
@@ -81,6 +94,8 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
       onResetWallet={onResetWallet}
       onRemoveAccount={onRemoveAccount}
       onContacts={onContacts}
+      onAddDevice={onAddDevice}
+      onScanMyQR={onScanMyQR}
     />
   )
 }
