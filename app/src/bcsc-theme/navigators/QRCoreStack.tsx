@@ -27,8 +27,8 @@ type TabBarIconProps = {
 }
 
 const PairingCodeScreen: React.FC = () => {
-  const { needsVerification } = useVerificationStatus()
-  return needsVerification ? <VerifyPromptScreen showSkip={false} /> : <ManualPairing />
+  const { isVerified } = useVerificationStatus()
+  return isVerified ? <ManualPairing /> : <VerifyPromptScreen showSkip={false} edges={['left', 'right']} />
 }
 
 // QRScanner uses URI strategies that require the BCSC agent for OOB parsing,

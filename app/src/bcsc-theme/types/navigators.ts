@@ -99,6 +99,7 @@ export enum BCSCScreens {
   TransferAccountSuccess = 'QR Code Scan Complete',
   ServiceLogin = 'Login Request',
   EditNickname = 'Change Account Nickname',
+  AccountDetails = 'Account Details',
   OnboardingAccountSetup = 'Start Setup',
   OnboardingSetupTypes = 'Setup Options',
   OnboardingIntroCarousel = 'Intro',
@@ -254,6 +255,7 @@ export type BCSCMainStackParams = {
   [BCSCScreens.MainContactUs]: undefined
   [BCSCScreens.ForgetAllPairings]: undefined
   [BCSCScreens.EditNickname]: undefined
+  [BCSCScreens.AccountDetails]: undefined
   [BCSCScreens.MainDeveloper]: undefined
   [BCSCScreens.MainAutoLock]: undefined
   [BCSCScreens.MainAppSecurity]: undefined

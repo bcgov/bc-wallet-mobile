@@ -142,6 +142,7 @@ const AuthStack = (): React.ReactElement => {
         component={EditNicknameScreen}
         options={{
           headerShown: true,
+          title: t('BCSC.Screens.Nickname'),
         }}
       />
 

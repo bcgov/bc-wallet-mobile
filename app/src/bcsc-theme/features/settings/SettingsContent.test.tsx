@@ -37,20 +37,18 @@ describe('SettingsContent', () => {
 
   it('renders only public rows when unauthenticated', () => {
     renderWithState()
-    expect(screen.queryByTestId(tid('SignOut'))).toBeNull()
-    expect(screen.queryByTestId(tid('Theme'))).toBeNull()
+    expect(screen.queryByTestId(tid('AppSecurity'))).toBeNull()
+    expect(screen.queryByTestId(tid('AnalyticsOptIn'))).toBeNull()
     expect(screen.getByTestId(tid('Help'))).toBeTruthy()
     expect(screen.getByTestId(tid('Privacy'))).toBeTruthy()
   })
 
   it('renders authenticated rows when authenticated', async () => {
-    renderWithState({ authentication: { didAuthenticate: true } })
-    expect(await screen.findByTestId(tid('SignOut'))).toBeTruthy()
-    expect(screen.getByTestId(tid('AppSecurity'))).toBeTruthy()
+    renderWithState({ authentication: { didAuthenticate: true }, bcscSecure: { verified: true } })
+    expect(await screen.findByTestId(tid('AppSecurity'))).toBeTruthy()
     expect(screen.getByTestId(tid('AutoLock'))).toBeTruthy()
     expect(screen.getByTestId(tid('ForgetPairings'))).toBeTruthy()
     expect(screen.getByTestId(tid('AnalyticsOptIn'))).toBeTruthy()
-    expect(screen.getByTestId(tid('Theme'))).toBeTruthy()
     expect(screen.getByTestId(tid('ResetWallet'))).toBeTruthy()
     expect(screen.getByTestId(tid('RemoveAccount'))).toBeTruthy()
   })
@@ -70,23 +68,9 @@ describe('SettingsContent', () => {
     expect(await screen.findByTestId(tid('EditNickname'))).toBeTruthy()
   })
 
-  it('renders the Theme row and accepts press without throwing', async () => {
-    renderWithState({ authentication: { didAuthenticate: true } })
-    const row = await screen.findByTestId(tid('Theme'))
-    fireEvent.press(row)
-    expect(row).toBeTruthy()
-  })
-
   it('renders the Analytics Opt-In row and accepts press without throwing', async () => {
     renderWithState({ authentication: { didAuthenticate: true } })
     const row = await screen.findByTestId(tid('AnalyticsOptIn'))
-    fireEvent.press(row)
-    expect(row).toBeTruthy()
-  })
-
-  it('renders the SignOut row and accepts press without throwing', async () => {
-    renderWithState({ authentication: { didAuthenticate: true } })
-    const row = await screen.findByTestId(tid('SignOut'))
     fireEvent.press(row)
     expect(row).toBeTruthy()
   })
@@ -99,20 +83,22 @@ describe('SettingsContent', () => {
     expect(baseProps.onPrivacy).toHaveBeenCalled()
   })
 
-  it('shows DeveloperMode row when developer mode is enabled', () => {
-    renderWithState({ preferences: { developerModeEnabled: true } as never })
-    expect(screen.getByTestId(tid('DeveloperMode'))).toBeTruthy()
+  it('shows DeveloperMode row when developer mode is enabled and authenticated', async () => {
+    renderWithState({
+      authentication: { didAuthenticate: true },
+      preferences: { developerModeEnabled: true } as never,
+    })
+    expect(await screen.findByTestId(tid('DeveloperMode'))).toBeTruthy()
   })
 
-  it('opens external URL rows (Feedback, Accessibility, TermsOfUse, Analytics)', async () => {
+  it('opens external URL rows (Feedback, Accessibility, TermsOfUse)', async () => {
     const { Linking } = jest.requireActual('react-native')
     const spy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never)
     renderWithState()
     fireEvent.press(screen.getByTestId(tid('Feedback')))
     fireEvent.press(screen.getByTestId(tid('Accessibility')))
     fireEvent.press(screen.getByTestId(tid('TermsOfUse')))
-    fireEvent.press(screen.getByTestId(tid('Analytics')))
-    expect(spy).toHaveBeenCalledTimes(4)
+    expect(spy).toHaveBeenCalledTimes(3)
     spy.mockRestore()
   })
 
@@ -122,9 +108,12 @@ describe('SettingsContent', () => {
     expect(baseProps.onContactUs).toHaveBeenCalled()
   })
 
-  it('invokes onPressDeveloperMode when DeveloperMode row is pressed', () => {
-    renderWithState({ preferences: { developerModeEnabled: true } as never })
-    fireEvent.press(screen.getByTestId(tid('DeveloperMode')))
+  it('invokes onPressDeveloperMode when DeveloperMode row is pressed', async () => {
+    renderWithState({
+      authentication: { didAuthenticate: true },
+      preferences: { developerModeEnabled: true } as never,
+    })
+    fireEvent.press(await screen.findByTestId(tid('DeveloperMode')))
     expect(baseProps.onPressDeveloperMode).toHaveBeenCalled()
   })
 
