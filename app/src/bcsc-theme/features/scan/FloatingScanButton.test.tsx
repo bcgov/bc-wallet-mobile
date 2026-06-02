@@ -19,9 +19,10 @@ jest.mock('@bifold/core', () => ({
       brand: { primary: '#FCBA19', primaryBackground: '#013366' },
       grayscale: { black: '#000' },
     },
+    Spacing: { md: 16, lg: 24 },
   }),
 }))
-jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon')
+jest.mock('react-native-vector-icons/MaterialIcons', () => 'Icon')
 
 const mockViewModel = useFloatingScanButtonViewModel as jest.MockedFunction<typeof useFloatingScanButtonViewModel>
 

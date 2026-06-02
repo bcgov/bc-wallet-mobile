@@ -99,6 +99,7 @@ export enum BCSCScreens {
   TransferAccountSuccess = 'QR Code Scan Complete',
   ServiceLogin = 'Login Request',
   EditNickname = 'Change Account Nickname',
+  AccountDetails = 'Account Details',
   OnboardingAccountSetup = 'Start Setup',
   OnboardingSetupTypes = 'Setup Options',
   OnboardingIntroCarousel = 'Intro',
@@ -144,6 +145,20 @@ export enum BCSCScreens {
   AuthDeveloper = `${BCSCStacks.Auth} Developer`,
   ConnectionLoading = 'BCSCConnectionLoading',
   QRCore = 'QRCore',
+}
+
+export enum BCSCQRCoreScreens {
+  Scanner = 'Scanner',
+  Display = 'Display',
+  PairingCode = 'PairingCode',
+  AccountNotVerified = 'AccountNotVerified',
+}
+
+export type BCSCQRCoreTabParams = {
+  [BCSCQRCoreScreens.Scanner]: undefined
+  [BCSCQRCoreScreens.Display]: undefined
+  [BCSCQRCoreScreens.PairingCode]: { pairingCode?: string } | undefined
+  [BCSCQRCoreScreens.AccountNotVerified]: undefined
 }
 
 export type BCSCOnboardingStackParams = {
@@ -254,6 +269,7 @@ export type BCSCMainStackParams = {
   [BCSCScreens.MainContactUs]: undefined
   [BCSCScreens.ForgetAllPairings]: undefined
   [BCSCScreens.EditNickname]: undefined
+  [BCSCScreens.AccountDetails]: undefined
   [BCSCScreens.MainDeveloper]: undefined
   [BCSCScreens.MainAutoLock]: undefined
   [BCSCScreens.MainAppSecurity]: undefined
@@ -274,7 +290,7 @@ export type BCSCMainStackParams = {
   // so ListCredentials (rendered in the Wallet tab) can navigate to it.
   [Screens.CredentialDetails]: { credentialId: string }
 
-  [BCSCScreens.QRCore]: undefined
+  [BCSCScreens.QRCore]: NavigatorScreenParams<BCSCQRCoreTabParams> | undefined
   [BCSCScreens.ConnectionLoading]: { oobRecordId?: string; credentialId?: string; proofId?: string }
 
   [BCSCModals.InternetDisconnected]: undefined
@@ -284,7 +300,6 @@ export type BCSCMainStackParams = {
 }
 
 export type BCSCAuthStackParams = {
-  [BCSCScreens.QRCore]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string; fromAppSwitch?: boolean }
   [BCSCScreens.EditNickname]: undefined
   [BCSCScreens.AccountLanding]: undefined
