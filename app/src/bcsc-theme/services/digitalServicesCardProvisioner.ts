@@ -1,4 +1,4 @@
-import { AccountIDCredentialConfig, CredentialRestrictionEnvironment } from '@/constants'
+import { AutoFetchCredentialConfig, CredentialRestrictionEnvironment } from '@/constants'
 import { AutoCredentialRule } from '@/services/auto-credential'
 import { DidCommProofExchangeRecord } from '@credo-ts/didcomm'
 import { BCAgent } from '@utils/bc-agent-modules'
@@ -32,7 +32,7 @@ const getDigitalServicesCardInvitationUrl = async (
     ...Object.values(requestFormat.requested_predicates ?? {}).flatMap((p) => p.restrictions ?? []),
   ]
 
-  for (const env of Object.values(AccountIDCredentialConfig)) {
+  for (const env of Object.values(AutoFetchCredentialConfig)) {
     for (const restriction of allRestrictions) {
       if (
         restriction.cred_def_id &&
@@ -51,7 +51,7 @@ const getDigitalServicesCardInvitationUrl = async (
  * array for use as the `triggerCredDefIds` of the AutoCredentialRule.
  */
 const allDigitalServicesCardCredDefIds = (): string[] =>
-  Object.values(AccountIDCredentialConfig).flatMap((env) => [...(env as CredentialRestrictionEnvironment).credDefIDs])
+  Object.values(AutoFetchCredentialConfig).flatMap((env) => [...(env as CredentialRestrictionEnvironment).credDefIDs])
 
 /**
  * Builds the AutoCredentialRule for the DigitalServicesCard just-in-time workflow

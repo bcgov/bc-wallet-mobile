@@ -208,7 +208,9 @@ describe('useBCAgentSetup', () => {
     jest.clearAllMocks()
 
     jest.mocked(useStoreBifold).mockReturnValue([mockStore as any, jest.fn()])
-    jest.mocked(useServices).mockReturnValue([mockLogger, [], { stop: jest.fn(), start: jest.fn() }, [], []] as any)
+    jest
+      .mocked(useServices)
+      .mockReturnValue([mockLogger, [], { stop: jest.fn(), start: jest.fn() }, undefined, [], []] as any)
   })
 
   afterEach(() => {

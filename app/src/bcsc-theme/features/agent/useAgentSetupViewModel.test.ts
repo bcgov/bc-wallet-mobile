@@ -46,7 +46,7 @@ const attestationMonitor = { start: jest.fn(), stop: jest.fn() }
 describe('useAgentSetupViewModel', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    jest.mocked(Bifold.useServices).mockReturnValue([logger, [], attestationMonitor, [], []] as never)
+    jest.mocked(Bifold.useServices).mockReturnValue([logger, [], attestationMonitor, undefined, [], []] as never)
     jest.mocked(Bifold.useStore).mockReturnValue(mockedStore() as never)
     jest.mocked(Bifold.createLinkSecretIfRequired).mockResolvedValue(undefined as never)
     jest.mocked(agentService.loadCachedLedgers).mockResolvedValue(undefined)
