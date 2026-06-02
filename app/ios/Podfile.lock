@@ -112,8 +112,6 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - ExpoSecureEnvironment (0.1.5):
-    - ExpoModulesCore
   - ExpoSecureStore (15.0.8):
     - ExpoModulesCore
   - fast_float (8.0.0)
@@ -3368,7 +3366,6 @@ DEPENDENCIES:
   - ExpoFont (from `../node_modules/expo-font/ios`)
   - ExpoKeepAwake (from `../node_modules/expo-keep-awake/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
-  - "ExpoSecureEnvironment (from `../node_modules/@animo-id/expo-secure-environment/ios`)"
   - ExpoSecureStore (from `../node_modules/expo-secure-store/ios`)
   - fast_float (from `../node_modules/react-native/third-party-podspecs/fast_float.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
@@ -3529,8 +3526,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-keep-awake/ios"
   ExpoModulesCore:
     :path: "../node_modules/expo-modules-core"
-  ExpoSecureEnvironment:
-    :path: "../node_modules/@animo-id/expo-secure-environment/ios"
   ExpoSecureStore:
     :path: "../node_modules/expo-secure-store/ios"
   fast_float:
@@ -3755,7 +3750,6 @@ SPEC CHECKSUMS:
   ExpoFont: f543ce20a228dd702813668b1a07b46f51878d47
   ExpoKeepAwake: 55f75eca6499bb9e4231ebad6f3e9cb8f99c0296
   ExpoModulesCore: d86dab8a6c8f1184f9b0b0503ace93919882aa15
-  ExpoSecureEnvironment: bdba36c15073279baf3b8787f2e1eb42146a0761
   ExpoSecureStore: d32f751874a2ceb5aaeebeb3578e165c1ba2b24a
   fast_float: b32c788ed9c6a8c584d114d0047beda9664e7cc6
   FBLazyVector: 5beb8028d5a2e75dd9634917f23e23d3a061d2aa
