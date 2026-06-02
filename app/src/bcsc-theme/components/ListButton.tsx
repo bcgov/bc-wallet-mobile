@@ -1,14 +1,15 @@
 import { PressableOpacity } from '@/components/PressableOpacity'
 import { a11yLabel } from '@/utils/accessibility'
 import { ThemedText, useTheme } from '@bifold/core'
-import React, { Children, ReactElement } from 'react'
+import React, { Children, isValidElement, ReactElement, ReactNode } from 'react'
 import { StyleSheet, View } from 'react-native'
 
 interface ListButtonGroupProps {
   // Optional gap between buttons in the group. Defaults to theme Spacing.xs / 2
   gap?: number
-  // Accepts either a single ListButton or an array of ListButtons as children
-  children: ReactElement<ListButtonProps> | ReactElement<ListButtonProps>[]
+  // Accepts ListButton elements as children. Falsy children (e.g. from `cond && <ListButton />`)
+  // are filtered out so callers can render rows conditionally.
+  children: ReactNode
 }
 
 export interface ListButtonProps {
@@ -23,6 +24,9 @@ export interface ListButtonProps {
    * the string is used to derive the accessibility label.
    */
   accessibilityLabel?: string
+  accessibilityHint?: string
+  testID?: string
+  disabled?: boolean
   position?: 'first' | 'middle' | 'last' | 'only' // Position in the list to determine border radius
 }
 
@@ -94,8 +98,11 @@ export const ListButton = (props: ListButtonProps) => {
       accessible={true}
       style={[styles.container, getBorderRadiusStyle()]}
       onPress={props.onPress}
+      disabled={props.disabled}
       accessibilityRole="button"
       accessibilityLabel={resolvedA11yLabel}
+      accessibilityHint={props.accessibilityHint}
+      testID={props.testID}
     >
       <View style={styles.contentContainer}>
         {isStringChild ? <ThemedText style={styles.text}>{props.children}</ThemedText> : props.children}
@@ -113,7 +120,7 @@ export const ListButton = (props: ListButtonProps) => {
  */
 export const ListButtonGroup = (props: ListButtonGroupProps) => {
   const { Spacing } = useTheme()
-  const listButtons = Children.toArray(props.children)
+  const listButtons = Children.toArray(props.children).filter(isValidElement) as ReactElement<ListButtonProps>[]
 
   const styles = StyleSheet.create({
     container: {

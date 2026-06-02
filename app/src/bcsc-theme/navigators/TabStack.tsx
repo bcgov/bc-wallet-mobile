@@ -1,5 +1,5 @@
 import { useCustomNotifications } from '@/hooks/useCustomNotifications'
-import { CredentialStack, testIdWithKey, useTheme } from '@bifold/core'
+import { CredentialStack, OpenIDCredentialRecordProvider, testIdWithKey, useTheme } from '@bifold/core'
 import { BottomTabBar, BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -13,15 +13,24 @@ import { createTabHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainSettingsHeaderButton } from '../components/SettingsHeaderButton'
 import { AgentReadyGate } from '../features/agent'
 import Home from '../features/home/Home'
+import { VerifyPromptScreen } from '../features/onboarding/VerifyPromptScreen'
 import { FloatingScanButton } from '../features/scan'
 import Services from '../features/services/Services'
+import { useVerificationStatus } from '../hooks/useVerificationStatus'
 import { BCSCMainStackParams, BCSCScreens, BCSCTabStackParams } from '../types/navigators'
 
 const ScopedCredentialStack: React.FC = () => (
   <AgentReadyGate testID={testIdWithKey('Wallet.Loading')}>
-    <CredentialStack />
+    <OpenIDCredentialRecordProvider>
+      <CredentialStack />
+    </OpenIDCredentialRecordProvider>
   </AgentReadyGate>
 )
+
+const ServicesScreen: React.FC = () => {
+  const { isVerified } = useVerificationStatus()
+  return isVerified ? <Services /> : <VerifyPromptScreen showSkip={false} edges={['left', 'right']} />
+}
 
 type TabBarIconProps = {
   focused: boolean
@@ -169,7 +178,7 @@ const BCSCTabStack: React.FC = () => {
         />
         <Tab.Screen
           name={BCSCScreens.Services}
-          component={Services}
+          component={ServicesScreen}
           options={{
             tabBarIconStyle: styles.tabBarIcon,
             tabBarIcon: createTabBarIcon('Services', 'view-list-outline'),

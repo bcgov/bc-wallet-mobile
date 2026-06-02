@@ -1,7 +1,6 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
-import { QRCoreTabParams } from '@/bcsc-theme/navigators/QRCoreStack'
-import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { hitSlop } from '@/constants'
 import {
   DismissiblePopupModal,
@@ -25,7 +24,7 @@ import useScanScreenViewModel from './useScanScreenViewModel'
 const QRScanner: React.FC = () => {
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
-  const navigation = useNavigation<BottomTabNavigationProp<QRCoreTabParams>>()
+  const navigation = useNavigation<BottomTabNavigationProp<BCSCQRCoreTabParams>>()
   const [torchActive, setTorchActive] = useState(false)
 
   const onConnectionFound = useCallback(
@@ -41,7 +40,7 @@ const QRScanner: React.FC = () => {
 
   const onPairingCodeFound = useCallback(
     (pairingCode: string) => {
-      navigation.navigate('PairingCode', { pairingCode })
+      navigation.navigate(BCSCQRCoreScreens.PairingCode, { pairingCode })
     },
     [navigation]
   )

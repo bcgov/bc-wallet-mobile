@@ -4,6 +4,7 @@ import ManualPairing from '@/bcsc-theme/features/pairing/ManualPairing'
 import QRDisplay from '@/bcsc-theme/features/qr-core/QRDisplay'
 import QRScanner from '@/bcsc-theme/features/qr-core/QRScanner'
 import { useVerificationStatus } from '@/bcsc-theme/hooks/useVerificationStatus'
+import { BCSCQRCoreScreens, BCSCQRCoreTabParams } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
 import { ButtonLocation, IconButton, testIdWithKey, useTheme } from '@bifold/core'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
@@ -15,20 +16,13 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { createAuthHelpHeaderButton } from '../components/HelpHeaderButton'
 
-export type QRCoreTabParams = {
-  Scanner: undefined
-  Display: undefined
-  PairingCode: { pairingCode?: string } | undefined
-  AccountNotVerified: undefined
-}
-
 type TabBarIconProps = {
   focused: boolean
 }
 
 const PairingCodeScreen: React.FC = () => {
-  const { needsVerification } = useVerificationStatus()
-  return needsVerification ? <VerifyPromptScreen showSkip={false} /> : <ManualPairing />
+  const { isVerified } = useVerificationStatus()
+  return isVerified ? <ManualPairing /> : <VerifyPromptScreen showSkip={false} edges={['left', 'right']} />
 }
 
 // QRScanner uses URI strategies that require the BCSC agent for OOB parsing,
@@ -87,7 +81,7 @@ const createTabBarIcon = (label: string, iconName: string) => {
 }
 
 const QRCoreStack: React.FC = () => {
-  const Tab = createBottomTabNavigator<QRCoreTabParams>()
+  const Tab = createBottomTabNavigator<BCSCQRCoreTabParams>()
   const { TabTheme } = useTheme()
   const { t } = useTranslation()
 
@@ -112,7 +106,7 @@ const QRCoreStack: React.FC = () => {
         }}
       >
         <Tab.Screen
-          name="Scanner"
+          name={BCSCQRCoreScreens.Scanner}
           component={ScopedQRScanner}
           options={{
             title: t('Scan.ScanQRCode'),
@@ -125,7 +119,7 @@ const QRCoreStack: React.FC = () => {
           }}
         />
         <Tab.Screen
-          name="Display"
+          name={BCSCQRCoreScreens.Display}
           component={QRDisplay}
           options={{
             title: t('Scan.MyQRCode'),
@@ -137,7 +131,7 @@ const QRCoreStack: React.FC = () => {
           }}
         />
         <Tab.Screen
-          name="PairingCode"
+          name={BCSCQRCoreScreens.PairingCode}
           component={PairingCodeScreen}
           options={{
             title: t('BCSC.ManualPairing.TabTitle'),
