@@ -7,8 +7,11 @@ import { useConnectionInvitationDeepLink } from './useConnectionInvitationDeepLi
 const mockNavigate = jest.fn()
 const mockToastShow = jest.fn()
 const mockHandle = jest.fn()
+const mockStopPickup = jest.fn().mockResolvedValue(undefined)
 const mockInitiatePickup = jest.fn().mockResolvedValue(undefined)
-const mockAgent = { didcomm: { mediationRecipient: { initiateMessagePickup: mockInitiatePickup } } }
+const mockAgent = {
+  didcomm: { mediationRecipient: { stopMessagePickup: mockStopPickup, initiateMessagePickup: mockInitiatePickup } },
+}
 const mockAgentState: { agent: unknown; loading: boolean } = { agent: null, loading: true }
 let mockService: ConnectionInvitationService
 
@@ -62,8 +65,9 @@ describe('useConnectionInvitationDeepLink', () => {
     await waitFor(() =>
       expect(mockNavigate).toHaveBeenCalledWith(BCSCScreens.ConnectionLoading, { oobRecordId: 'rec-1' })
     )
-    // The #2288 fix: live pickup is (re)started before navigating so the
-    // inviter's response is flushed instead of stuck at the mediator.
+    // The #2288 fix: live pickup is fully restarted (stop → start) before navigating
+    // so the inviter's response is flushed instead of stuck at the mediator.
+    expect(mockStopPickup).toHaveBeenCalled()
     expect(mockInitiatePickup).toHaveBeenCalledWith(undefined, 'PickUpV2LiveMode')
     expect(mockHandle).toHaveBeenCalledWith(INVITATION_URL, expect.objectContaining({ agent: mockAgent }))
   })

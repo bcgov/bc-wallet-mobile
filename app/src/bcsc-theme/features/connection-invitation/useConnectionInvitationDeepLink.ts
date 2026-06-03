@@ -45,9 +45,20 @@ export const useConnectionInvitationDeepLink = (): void => {
       // agent reports ready once `initiateMessagePickup` was *awaited*, but the
       // mediator live-pickup socket may not be flushing yet — so the inviter's
       // connection response sits at the mediator and the Connection screen hangs
-      // (#2288). (Re)starting live pickup here flushes the queue, mirroring what
-      // the foreground handler does. BCSC has no foreground re-kick on cold
-      // start, so this is the deterministic fix for the deep-link path.
+      // (#2288).
+      //
+      // Mirror Bifold's proven foreground recovery (activity.js) with a full
+      // stop → start so we always land on a fresh, flushing live session. A bare
+      // `initiateMessagePickup` can be a no-op when a (stale) session already
+      // exists from agent init, which would leave the queue unflushed. BCSC has
+      // no foreground re-kick on cold start, so this is the deterministic fix for
+      // the deep-link path.
+      try {
+        await agent.didcomm.mediationRecipient.stopMessagePickup()
+      } catch (err) {
+        // Nothing to stop yet (no live session) — the (re)start below is what matters.
+        logger.info(`[ConnectionInvitationDeepLink] stopMessagePickup before restart: ${err}`)
+      }
       try {
         await agent.didcomm.mediationRecipient.initiateMessagePickup(
           undefined,

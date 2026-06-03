@@ -1,6 +1,6 @@
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, renderHook } from '@testing-library/react-native'
-import { Keyboard } from 'react-native'
+import { AppState, AppStateStatus, Keyboard } from 'react-native'
 
 import { BCSCActivityProvider, useBCSCActivity } from './BCSCActivityContext'
 
@@ -9,6 +9,16 @@ const mockLogout = jest.fn()
 jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   __esModule: true,
   default: () => ({ logout: mockLogout }),
+}))
+
+const mockMediationRecipient = {
+  stopMessagePickup: jest.fn().mockResolvedValue(undefined),
+  initiateMessagePickup: jest.fn().mockResolvedValue(undefined),
+}
+const mockAgentHolder: { current: unknown } = { current: null }
+
+jest.mock('@/bcsc-theme/features/agent/BCSCAgentProvider', () => ({
+  useBCSCAgentSafe: () => ({ agent: mockAgentHolder.current }),
 }))
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -25,6 +35,7 @@ describe('BCSCActivityContext', () => {
 
   afterEach(() => {
     jest.useRealTimers()
+    mockAgentHolder.current = null
   })
 
   it('should expose reportActivity on the context', () => {
@@ -108,5 +119,40 @@ describe('BCSCActivityContext', () => {
     expect(removeMock).toHaveBeenCalledTimes(2)
 
     addListenerSpy.mockRestore()
+  })
+
+  it('stops message pickup on background and restarts live pickup on foreground', async () => {
+    mockAgentHolder.current = { didcomm: { mediationRecipient: mockMediationRecipient } }
+    let appStateHandler: ((state: AppStateStatus) => void | Promise<void>) | undefined
+    const addEventListenerSpy = jest.spyOn(AppState, 'addEventListener').mockImplementation((event, handler) => {
+      if (event === 'change') {
+        appStateHandler = handler
+      }
+      return { remove: jest.fn() } as unknown as ReturnType<typeof AppState.addEventListener>
+    })
+
+    renderHook(() => useBCSCActivity(), { wrapper })
+
+    // Prime the previous app state to 'active' so the next transition is recognized,
+    // then clear any pickup calls priming may have produced.
+    await act(async () => {
+      await appStateHandler?.('active')
+    })
+    mockMediationRecipient.stopMessagePickup.mockClear()
+    mockMediationRecipient.initiateMessagePickup.mockClear()
+
+    // → background: the live pickup socket is torn down.
+    await act(async () => {
+      await appStateHandler?.('background')
+    })
+    expect(mockMediationRecipient.stopMessagePickup).toHaveBeenCalledTimes(1)
+
+    // → foreground: live pickup is restarted to flush anything queued while away.
+    await act(async () => {
+      await appStateHandler?.('active')
+    })
+    expect(mockMediationRecipient.initiateMessagePickup).toHaveBeenCalled()
+
+    addEventListenerSpy.mockRestore()
   })
 })
