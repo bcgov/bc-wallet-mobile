@@ -6,7 +6,7 @@ import React from 'react'
 import EmptyWalletList from './EmptyWalletList'
 
 describe('EmptyWalletList', () => {
-  it('renders the empty wallet container with localized message', () => {
+  it('renders the wallet illustration and localized message', () => {
     const { getByTestId, getByText } = render(
       <BasicAppContext>
         <EmptyWalletList />
@@ -14,6 +14,7 @@ describe('EmptyWalletList', () => {
     )
 
     expect(getByTestId(testIdWithKey('Wallet.Empty'))).toBeTruthy()
+    expect(getByTestId(testIdWithKey('Wallet.EmptyIllustration'))).toBeTruthy()
     expect(getByText('BCSC.Wallet.EmptyMessage')).toBeTruthy()
   })
 })
