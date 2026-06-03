@@ -1,4 +1,8 @@
 import Root from '@/Root'
+import {
+  ConnectionInvitationService,
+  ConnectionInvitationServiceProvider,
+} from '@/bcsc-theme/features/connection-invitation'
 import { DeepLinkService, DeepLinkViewModel } from '@/bcsc-theme/features/deep-linking'
 import { FcmService, FcmServiceProvider, FcmViewModel } from '@/bcsc-theme/features/fcm'
 import { PairingService, PairingServiceProvider } from '@/bcsc-theme/features/pairing'
@@ -57,8 +61,14 @@ initIssuer(appLogger)
 // Module-level singletons - constructors are pure (no RN bridge calls)
 // All platform interactions happen in initialize() methods
 const pairingService = new PairingService(appLogger)
+const connectionInvitationService = new ConnectionInvitationService(appLogger)
 const verificationResponseService = new VerificationResponseService(appLogger)
-const deepLinkViewModel = new DeepLinkViewModel(new DeepLinkService(), appLogger, pairingService)
+const deepLinkViewModel = new DeepLinkViewModel(
+  new DeepLinkService(),
+  appLogger,
+  pairingService,
+  connectionInvitationService
+)
 const appMode = Config.BUILD_TARGET === Mode.BCSC ? Mode.BCSC : Mode.BCWallet
 const fcmService = new FcmService(appLogger)
 const fcmViewModel = new FcmViewModel(fcmService, appLogger, pairingService, verificationResponseService, appMode)
@@ -127,32 +137,34 @@ const App = () => {
             >
               <NavigationContainerProvider>
                 <PairingServiceProvider service={pairingService}>
-                  <FcmServiceProvider service={fcmService} viewModel={fcmViewModel}>
-                    <VerificationResponseServiceProvider service={verificationResponseService}>
-                      <AnimatedComponentsProvider value={animatedComponents}>
-                        <AuthProvider>
-                          <NetworkProvider>
-                            <ThemeAwareStatusBar />
-                            <ErrorModal enableReport />
-                            <WebDisplay
-                              destinationUrl={surveyMonkeyUrl}
-                              exitUrl={surveyMonkeyExitUrl}
-                              visible={surveyVisible}
-                              onClose={() => setSurveyVisible(false)}
-                            />
-                            <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
-                              <ErrorAlertProvider enableReport>
-                                <KeyboardProvider statusBarTranslucent={true} navigationBarTranslucent={true}>
-                                  <Root />
-                                </KeyboardProvider>
-                              </ErrorAlertProvider>
-                            </TourProvider>
-                            <Toast topOffset={15} config={toastConfig} />
-                          </NetworkProvider>
-                        </AuthProvider>
-                      </AnimatedComponentsProvider>
-                    </VerificationResponseServiceProvider>
-                  </FcmServiceProvider>
+                  <ConnectionInvitationServiceProvider service={connectionInvitationService}>
+                    <FcmServiceProvider service={fcmService} viewModel={fcmViewModel}>
+                      <VerificationResponseServiceProvider service={verificationResponseService}>
+                        <AnimatedComponentsProvider value={animatedComponents}>
+                          <AuthProvider>
+                            <NetworkProvider>
+                              <ThemeAwareStatusBar />
+                              <ErrorModal enableReport />
+                              <WebDisplay
+                                destinationUrl={surveyMonkeyUrl}
+                                exitUrl={surveyMonkeyExitUrl}
+                                visible={surveyVisible}
+                                onClose={() => setSurveyVisible(false)}
+                              />
+                              <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
+                                <ErrorAlertProvider enableReport>
+                                  <KeyboardProvider statusBarTranslucent={true} navigationBarTranslucent={true}>
+                                    <Root />
+                                  </KeyboardProvider>
+                                </ErrorAlertProvider>
+                              </TourProvider>
+                              <Toast topOffset={15} config={toastConfig} />
+                            </NetworkProvider>
+                          </AuthProvider>
+                        </AnimatedComponentsProvider>
+                      </VerificationResponseServiceProvider>
+                    </FcmServiceProvider>
+                  </ConnectionInvitationServiceProvider>
                 </PairingServiceProvider>
               </NavigationContainerProvider>
             </ThemeProvider>
