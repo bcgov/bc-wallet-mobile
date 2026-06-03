@@ -1,4 +1,6 @@
 import BulletPoint from '@/bcsc-theme/components/BulletPoint'
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { HighlightDivider } from '@/bcsc-theme/components/HighlightDivider'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import { formStringLengths } from '@/constants'
 import { BCState } from '@/store'
@@ -33,12 +35,15 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
   const [loading, setLoading] = useState(false)
 
   const styles = StyleSheet.create({
-    contentContainer: {
-      flexGrow: 1,
-      paddingBottom: Spacing.sm,
-    },
     bulletPointContainer: {
-      margin: Spacing.sm,
+      marginTop: Spacing.sm,
+      marginLeft: Spacing.sm,
+    },
+    body: {
+      marginTop: Spacing.md,
+    },
+    divider: {
+      marginTop: Spacing.md,
     },
   })
 
@@ -66,36 +71,30 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
   }, [accountNickname, onSubmit, store, t])
 
   const controls = (
-    <Button
-      title={t('BCSC.NicknameAccount.SaveAndContinue')}
-      buttonType={ButtonType.Primary}
-      testID={testIdWithKey('SaveAndContinue')}
-      accessibilityLabel={a11yLabel(t('BCSC.NicknameAccount.SaveAndContinue'))}
-      onPress={handleButtonPress}
-      disabled={loading}
-    >
-      {loading && <ButtonLoading />}
-    </Button>
+    <ControlContainer>
+      <Button
+        title={t('BCSC.NicknameAccount.SaveAndContinue')}
+        buttonType={ButtonType.Primary}
+        testID={testIdWithKey('SaveAndContinue')}
+        accessibilityLabel={a11yLabel(t('BCSC.NicknameAccount.SaveAndContinue'))}
+        onPress={handleButtonPress}
+        disabled={loading}
+      >
+        {loading && <ButtonLoading />}
+      </Button>
+    </ControlContainer>
   )
 
   return (
-    <ScreenWrapper keyboardActive controls={controls}>
+    <ScreenWrapper padded={false} keyboardActive controls={controls} scrollViewContainerStyle={{ padding: Spacing.lg }}>
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-        {t('BCSC.NicknameAccount.AccountName')}
+        {t('BCSC.NicknameAccount.EnterNickname')}
       </ThemedText>
-
-      <ThemedText>
-        {isRenaming ? t('BCSC.NicknameAccount.EditAccountName') : t('BCSC.NicknameAccount.CreateAccountName')}
-      </ThemedText>
-
-      <View style={styles.bulletPointContainer}>
-        <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription1')} />
-        <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription2')} />
-      </View>
 
       <InputWithValidation
         id={'accountNickname'}
         label={t('BCSC.NicknameAccount.AccountName')}
+        hideLabel
         value={accountNickname}
         onChangeText={handleChangeText}
         error={error}
@@ -105,6 +104,17 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
           autoCorrect: false,
         }}
       />
+
+      {error ? null : <HighlightDivider style={styles.divider} />}
+
+      <ThemedText style={styles.body}>
+        {isRenaming ? t('BCSC.NicknameAccount.EditAccountName') : t('BCSC.NicknameAccount.CreateAccountName')}
+      </ThemedText>
+
+      <View style={styles.bulletPointContainer}>
+        <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription1')} />
+        <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription2')} />
+      </View>
     </ScreenWrapper>
   )
 }

@@ -1,9 +1,8 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import CodeInput from '@/bcsc-theme/components/CodeInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
-import { QRCoreTabParams } from '@/bcsc-theme/navigators/QRCoreStack'
 import { PAIRING_CODE_LENGTH } from '@/constants'
-import { BCSCMainStackParams, BCSCScreens } from '@bcsc-theme/types/navigators'
+import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native'
@@ -14,8 +13,8 @@ import { StyleSheet, View } from 'react-native'
 
 const ManualPairing: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
-  const tabNavigation = useNavigation<BottomTabNavigationProp<QRCoreTabParams, 'PairingCode'>>()
-  const route = useRoute<RouteProp<QRCoreTabParams, 'PairingCode'>>()
+  const tabNavigation = useNavigation<BottomTabNavigationProp<BCSCQRCoreTabParams, BCSCQRCoreScreens.PairingCode>>()
+  const route = useRoute<RouteProp<BCSCQRCoreTabParams, BCSCQRCoreScreens.PairingCode>>()
   const { t } = useTranslation()
   const [code, setCode] = useState(route.params?.pairingCode ?? '')
   const [error, setError] = useState<string | null>(null)

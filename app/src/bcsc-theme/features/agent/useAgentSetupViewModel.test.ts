@@ -42,11 +42,14 @@ const mockAgent = () =>
 
 const logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(), trace: jest.fn() }
 const attestationMonitor = { start: jest.fn(), stop: jest.fn() }
+const ocaBundleResolver = { checkForUpdates: jest.fn().mockResolvedValue(undefined) }
 
 describe('useAgentSetupViewModel', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    jest.mocked(Bifold.useServices).mockReturnValue([logger, [], attestationMonitor, undefined, [], []] as never)
+    jest
+      .mocked(Bifold.useServices)
+      .mockReturnValue([logger, [], attestationMonitor, undefined, [], [], ocaBundleResolver] as never)
     jest.mocked(Bifold.useStore).mockReturnValue(mockedStore() as never)
     jest.mocked(Bifold.createLinkSecretIfRequired).mockResolvedValue(undefined as never)
     jest.mocked(agentService.loadCachedLedgers).mockResolvedValue(undefined)

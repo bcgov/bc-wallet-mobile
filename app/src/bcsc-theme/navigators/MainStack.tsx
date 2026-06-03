@@ -25,6 +25,7 @@ import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferQRDisplayScreen from '../features/account-transfer/transferer/TransferQRDisplayScreen'
 import TransferQRInformationScreen from '../features/account-transfer/transferer/TransferQRInformationScreen'
 import TransferSuccessScreen from '../features/account-transfer/transferer/TransferSuccessScreen'
+import AccountDetailsScreen from '../features/account/AccountDetailsScreen'
 import { AccountExpiredScreen } from '../features/account/AccountExpiredScreen'
 import { AccountRenewalFinalWarningScreen } from '../features/account/AccountRenewalFinalWarningScreen'
 import { AccountRenewalFirstWarningScreen } from '../features/account/AccountRenewalFirstWarningScreen'
@@ -249,6 +250,15 @@ const MainStack: React.FC = () => {
             component={EditNicknameScreen}
             options={{
               headerShown: true,
+              title: t('BCSC.Screens.Nickname'),
+            }}
+          />
+          <Stack.Screen
+            name={BCSCScreens.AccountDetails}
+            component={AccountDetailsScreen}
+            options={{
+              headerShown: true,
+              title: t('BCSC.Screens.AccountDetails'),
             }}
           />
           <Stack.Screen

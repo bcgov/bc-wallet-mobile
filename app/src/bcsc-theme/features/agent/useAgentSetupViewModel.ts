@@ -3,6 +3,7 @@ import { AppError, ErrorRegistry } from '@/errors'
 import { BCState } from '@/store'
 import { activate, deactivate } from '@/utils/PushNotificationsHelper'
 import { createLinkSecretIfRequired, TOKENS, useServices, useStore } from '@bifold/core'
+import { RemoteOCABundleResolver } from '@bifold/oca/build/legacy'
 import { Agent } from '@credo-ts/core'
 import { DidCommMediatorPickupStrategy } from '@credo-ts/didcomm'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -29,14 +30,16 @@ export interface AgentSetupResult {
 
 const useAgentSetupViewModel = (): AgentSetupResult => {
   const [store] = useStore<BCState>()
-  const [logger, indyLedgers, attestationMonitor, credentialProvisioningMonitor, credDefs, schemas] = useServices([
-    TOKENS.UTIL_LOGGER,
-    TOKENS.UTIL_LEDGERS,
-    TOKENS.UTIL_ATTESTATION_MONITOR,
-    TOKENS.UTIL_CREDENTIAL_PROVISIONING_MONITOR,
-    TOKENS.CACHE_CRED_DEFS,
-    TOKENS.CACHE_SCHEMAS,
-  ])
+  const [logger, indyLedgers, attestationMonitor, credentialProvisioningMonitor, credDefs, schemas, ocaBundleResolver] =
+    useServices([
+      TOKENS.UTIL_LOGGER,
+      TOKENS.UTIL_LEDGERS,
+      TOKENS.UTIL_ATTESTATION_MONITOR,
+      TOKENS.UTIL_CREDENTIAL_PROVISIONING_MONITOR,
+      TOKENS.CACHE_CRED_DEFS,
+      TOKENS.CACHE_SCHEMAS,
+      TOKENS.UTIL_OCA_RESOLVER,
+    ])
 
   const [status, setStatus] = useState<AgentSetupStatus>('idle')
   const [agent, setAgent] = useState<Agent | null>(null)
@@ -156,6 +159,10 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         }
         const ledgers = cachedLedgers ?? indyLedgers
 
+        await (ocaBundleResolver as RemoteOCABundleResolver)
+          .checkForUpdates?.()
+          .catch((err) => logger.warn(`OCA bundle update failed (continuing): ${err}`))
+
         inFlightAgent = buildAgent({
           ledgers,
           walletSecret,
@@ -246,6 +253,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     credDefs,
     schemas,
     refreshMonitors,
+    ocaBundleResolver,
   ])
 
   const resetWallet = useCallback(async () => {

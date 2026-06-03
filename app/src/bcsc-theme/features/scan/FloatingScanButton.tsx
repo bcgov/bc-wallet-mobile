@@ -3,12 +3,12 @@ import { testIdWithKey, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pressable, StyleSheet } from 'react-native'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import Icon from 'react-native-vector-icons/MaterialIcons'
 
 import useFloatingScanButtonViewModel from './useFloatingScanButtonViewModel'
 
-const FAB_SIZE = 56
-const ICON_SIZE = 28
+const FAB_SIZE = 64
+const ICON_SIZE = 42
 
 interface FloatingScanButtonProps {
   /**
@@ -24,15 +24,16 @@ interface FloatingScanButtonProps {
 
 const FloatingScanButton: React.FC<FloatingScanButtonProps> = ({ activeTabName, onPress }) => {
   const { t } = useTranslation()
-  const { ColorPalette } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const { isVisible } = useFloatingScanButtonViewModel(activeTabName)
 
   const styles = StyleSheet.create({
     button: {
       width: FAB_SIZE,
       height: FAB_SIZE,
-      borderRadius: FAB_SIZE / 2,
-      backgroundColor: ColorPalette.brand.primary,
+      borderRadius: Spacing.md,
+      // TODO (bm): so far this is a one-off usage of this colour, eventually it should be added to the new theme
+      backgroundColor: '#F1F8FE',
       alignItems: 'center',
       justifyContent: 'center',
       shadowColor: ColorPalette.grayscale.black,
@@ -40,6 +41,7 @@ const FloatingScanButton: React.FC<FloatingScanButtonProps> = ({ activeTabName, 
       shadowOpacity: 0.25,
       shadowRadius: 4,
       elevation: 6,
+      marginBottom: Spacing.lg,
     },
     pressed: {
       opacity: 0.8,
@@ -59,7 +61,7 @@ const FloatingScanButton: React.FC<FloatingScanButtonProps> = ({ activeTabName, 
       onPress={onPress}
       style={({ pressed }) => [styles.button, pressed && styles.pressed]}
     >
-      <Icon name="qrcode-scan" size={ICON_SIZE} color={ColorPalette.brand.primaryBackground} />
+      <Icon name="qr-code-scanner" size={ICON_SIZE} color={ColorPalette.brand.primary} />
     </Pressable>
   )
 }

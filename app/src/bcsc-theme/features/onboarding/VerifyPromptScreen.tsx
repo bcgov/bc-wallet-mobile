@@ -4,6 +4,7 @@ import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore,
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
+import { Edges } from 'react-native-safe-area-context'
 
 import AccountCircle from '@assets/img/account_circle.svg'
 import Blob from '@assets/img/blob.svg'
@@ -17,9 +18,10 @@ import VerifiedCheck from '@assets/img/verified.svg'
  */
 interface VerifyPromptScreenProps {
   showSkip?: boolean
+  edges?: Edges
 }
 
-export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({ showSkip = true }) => {
+export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({ showSkip = true, edges }) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [, dispatch] = useStore<BCState>()
@@ -65,6 +67,7 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({ showSkip
     <ScreenWrapper
       padded={false}
       controls={controls}
+      edges={edges}
       scrollViewContainerStyle={{
         flexGrow: 1,
         gap: Spacing.md,
