@@ -186,6 +186,7 @@ const translation = {
   },
   "Init": {
     "Retry": "Retry (PT-BR)",
+    "Failed": "We couldn't load your wallet. Please try again. (PT-BR)",
     "Starting": "Starting... (PT-BR)",
     "CheckingOCA": "Checking for OCA updates... (PT-BR)",
     "InitializingAgent": "Initializing agent... (PT-BR)",
