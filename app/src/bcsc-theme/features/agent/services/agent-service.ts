@@ -201,6 +201,21 @@ export const warmCache = async (
     await refreshLedgerCache(poolService, logger)
   }
 
+  // Resolve each distinct issuer DID once, up front and sequentially, before firing
+  // the parallel cred-def/schema reads below. Many cred-defs/schemas share an issuer
+  // DID, so resolving them concurrently would send N simultaneous lookups for the same
+  // DID to the ledgers (each missing the cold cache) instead of one. Pre-warming
+  // serially populates the (in-memory) DID->pool cache so the reads below are cache
+  // hits. Per-DID failures are non-fatal — warm-up is additive and must not block init.
+  const uniqueDids = [...new Set([...credDefs, ...schemas].map(({ did }) => did))]
+  for (const did of uniqueDids) {
+    try {
+      await poolService.getPoolForDid(agent.context, did)
+    } catch (error) {
+      logger.warn(`Warm cache: did ${did} pre-resolve failed: ${error}`)
+    }
+  }
+
   const credDefResults = await Promise.allSettled(
     credDefs.map(async ({ did, id }) => {
       const pool = await poolService.getPoolForDid(agent.context, did)
@@ -267,8 +282,52 @@ const refreshLedgerCache = async (poolService: IndyVdrPoolService, logger: Bifol
  */
 export const shutdownAgent = async (agent: Agent, logger: BifoldLogger): Promise<void> => {
   try {
-    await enqueueWalletOp(() => agent.shutdown())
+    await enqueueWalletOp(async () => {
+      // Idempotent shutdown. A reset path (wallet reset / factory reset) may have
+      // already shut this agent down before the provider unmounts and calls here
+      // again on the same instance. Re-check inside the serialized op so we observe
+      // any prior queued shutdown's result: a second agent.shutdown() runs askar's
+      // onCloseContext against an already-closed store, which throws
+      // ("There is no open store" → CredoError on the 'askar' module).
+      if (!agent.isInitialized) {
+        return
+      }
+      await agent.shutdown()
+    })
   } catch (error) {
     logger.error(`Error shutting down agent: ${error}`)
   }
+}
+
+/**
+ * Deletes the agent's Askar wallet store, serialized against any in-flight wallet
+ * open/close (see {@link enqueueWalletOp}).
+ *
+ * Wallet reset and factory reset delete the store on the same shared wallet file that
+ * a (re)mounting agent may be opening or closing. Routing the delete through the same
+ * queue as `initialize`/`shutdown` guarantees it never runs concurrently with an open
+ * handle, which otherwise surfaces as transaction/`onCloseContext` errors.
+ *
+ * Unlike {@link shutdownAgent} this does not swallow errors — callers decide whether a
+ * failed delete is fatal (e.g. `resetWallet` clears state in a `finally`; recovery and
+ * factory-reset paths log and continue).
+ *
+ * @param agent - The agent whose wallet store should be deleted.
+ */
+export const deleteWalletStore = async (agent: Agent): Promise<void> => {
+  await enqueueWalletOp(() => agent.modules.askar.deleteStore())
+}
+
+/**
+ * Deletes the shared BCSC wallet store when no live agent is held (e.g. a reset
+ * interrupted mid-shutdown, or a factory reset fired while the provider is
+ * rebuilding and its `agent` is transiently null). Builds a throwaway agent
+ * purely to reach the Askar store manager; deletion is by file URI, so it needs
+ * neither an open store nor a matching key. Rethrows like {@link deleteWalletStore}.
+ *
+ * @param opts - Agent build options identifying the wallet store to delete.
+ */
+export const purgeWalletStore = async (opts: BuildAgentOptions): Promise<void> => {
+  const tempAgent = buildAgent(opts)
+  await deleteWalletStore(tempAgent)
 }

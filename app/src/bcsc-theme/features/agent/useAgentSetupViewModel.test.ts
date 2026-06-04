@@ -58,6 +58,8 @@ describe('useAgentSetupViewModel', () => {
     jest.mocked(agentService.restartAgent).mockResolvedValue(undefined)
     jest.mocked(agentService.warmCache).mockResolvedValue(undefined)
     jest.mocked(agentService.shutdownAgent).mockResolvedValue(undefined)
+    jest.mocked(agentService.deleteWalletStore).mockResolvedValue(undefined)
+    jest.mocked(agentService.purgeWalletStore).mockResolvedValue(undefined)
   })
 
   it('happy path: builds agent and reaches ready status', async () => {
@@ -287,8 +289,32 @@ describe('useAgentSetupViewModel', () => {
 
       expect(attestationMonitor.stop).toHaveBeenCalled()
       expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger)
-      expect(agent1.modules.askar.deleteStore).toHaveBeenCalled()
+      expect(agentService.deleteWalletStore).toHaveBeenCalledWith(agent1)
       await waitFor(() => expect(result.current.status).toBe('ready'))
+    })
+
+    it('ignores a concurrent reset while one is in progress, then allows a later one', async () => {
+      const agent1 = mockAgent()
+      jest.mocked(agentService.buildAgent).mockReturnValue(agent1)
+
+      const { result } = renderHook(() => useAgentSetupViewModel())
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+
+      // Spam: fire two resets without awaiting the first. The second must no-op.
+      await act(async () => {
+        await Promise.all([result.current.resetWallet(), result.current.resetWallet()])
+      })
+
+      expect(agentService.shutdownAgent).toHaveBeenCalledTimes(1)
+      expect(agentService.deleteWalletStore).toHaveBeenCalledTimes(1)
+
+      // Once the reset + re-init settles the guard releases, so a fresh reset runs.
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+      await act(async () => {
+        await result.current.resetWallet()
+      })
+      expect(agentService.shutdownAgent).toHaveBeenCalledTimes(2)
+      expect(agentService.deleteWalletStore).toHaveBeenCalledTimes(2)
     })
 
     it('deactivates push notifications before shutting down the agent', async () => {
@@ -307,10 +333,8 @@ describe('useAgentSetupViewModel', () => {
       expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger)
     })
 
-    it('builds a temp agent and deletes store when no live agent is available', async () => {
+    it('purges the wallet store with the current secret when no live agent is available', async () => {
       jest.mocked(Bifold.useStore).mockReturnValue(mockedStore({ authentication: { didAuthenticate: false } }) as never)
-      const tempAgent = mockAgent()
-      jest.mocked(agentService.buildAgent).mockReturnValue(tempAgent)
 
       const { result } = renderHook(() => useAgentSetupViewModel())
       expect(result.current.status).toBe('idle')
@@ -319,13 +343,17 @@ describe('useAgentSetupViewModel', () => {
         await result.current.resetWallet()
       })
 
-      expect(agentService.buildAgent).toHaveBeenCalledTimes(1)
-      expect(tempAgent.modules.askar.deleteStore).toHaveBeenCalled()
+      // Recovery deletes the on-disk store via a throwaway agent (purgeWalletStore),
+      // keyed with the still-present wallet secret.
+      expect(agentService.purgeWalletStore).toHaveBeenCalledTimes(1)
+      expect(agentService.purgeWalletStore).toHaveBeenCalledWith(
+        expect.objectContaining({ walletSecret: expect.objectContaining({ key: 'wallet-key-hash' }) })
+      )
       expect(result.current.status).toBe('idle')
       expect(result.current.error).toBeNull()
     })
 
-    it('skips temp agent build when walletKey is missing and resets state', async () => {
+    it('skips the store purge when walletKey is missing and resets state', async () => {
       jest
         .mocked(Bifold.useStore)
         .mockReturnValue(
@@ -338,14 +366,14 @@ describe('useAgentSetupViewModel', () => {
         await result.current.resetWallet()
       })
 
-      expect(agentService.buildAgent).not.toHaveBeenCalled()
+      expect(agentService.purgeWalletStore).not.toHaveBeenCalled()
       expect(result.current.status).toBe('idle')
       expect(result.current.error).toBeNull()
     })
 
     it('clears agent state even if deleteStore throws', async () => {
       const agent1 = mockAgent()
-      agent1.modules.askar.deleteStore = jest.fn().mockRejectedValue(new Error('store gone'))
+      jest.mocked(agentService.deleteWalletStore).mockRejectedValueOnce(new Error('store gone'))
       jest.mocked(agentService.buildAgent).mockReturnValue(agent1)
 
       const { result } = renderHook(() => useAgentSetupViewModel())
