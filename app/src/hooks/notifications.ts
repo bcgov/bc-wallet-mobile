@@ -1,5 +1,9 @@
 import { showPersonCredentialSelector } from '@/bcwallet-theme/features/person-flow/utils/BCIDHelper'
-import { AttestationRestrictions, NOTIFICATION_REFRESH_INTERVAL_MS, PROOF_REQUEST_NOTIFICATION_TTL_MS } from '@/constants'
+import {
+  AttestationRestrictions,
+  NOTIFICATION_REFRESH_INTERVAL_MS,
+  PROOF_REQUEST_NOTIFICATION_TTL_MS,
+} from '@/constants'
 import { BCState } from '@/store'
 import {
   BasicMessageMetadata,
