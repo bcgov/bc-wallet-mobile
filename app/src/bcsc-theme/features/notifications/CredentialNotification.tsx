@@ -1,6 +1,6 @@
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { CredentialNotificationRecord } from '@/hooks/notifications'
+import { CredentialNotificationRecord, PROOF_REQUEST_NOTIFICATION_TTL_MS } from '@/hooks/notifications'
 import { useDeclineCredentialOffer } from '@/hooks/useDeclineCredentialOffer'
 import { useDeclineProofRequest } from '@/hooks/useDeclineProofRequest'
 import { getCredentialNotificationType, NotificationType } from '@/utils/credentials'
@@ -10,20 +10,19 @@ import {
   credentialCustomMetadata,
   CredentialMetadata,
   getConnectionName,
-  InfoBoxType,
   parsedSchema,
   Screens,
   useStore,
-  useTheme,
 } from '@bifold/core'
 import { useConnectionById } from '@bifold/react-hooks'
-import { markProofAsViewed } from '@bifold/verifier'
+import { markProofAsViewed, ProofCustomMetadata, ProofMetadata } from '@bifold/verifier'
 import {
   DidCommBasicMessageRecord,
   DidCommBasicMessageRepository,
   DidCommCredentialExchangeRecord,
   DidCommCredentialExchangeRepository,
   DidCommProofExchangeRecord,
+  DidCommProofExchangeRepository,
   DidCommProofState,
   DidCommRequestPresentationV2Message,
 } from '@credo-ts/didcomm'
@@ -31,7 +30,7 @@ import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import NotificationCard from './NotificationCard'
+import NotificationCard, { NotificationCardStatus } from './NotificationCard'
 
 interface CredentialNotificationProps {
   notification: CredentialNotificationRecord
@@ -104,6 +103,37 @@ function formatExpiryBadge(expiresTime: Date): string | undefined {
 }
 
 /**
+ * Notifications within this window of expiring (or already expired) show the yellow
+ * "attention" state to warn the user before the item becomes unusable / is removed.
+ */
+const EXPIRY_WARNING_WINDOW_MS = 60 * 60 * 1000 // 1 hour
+
+/** App-level additions to bifold's credential custom metadata for notification read tracking. */
+interface NotificationCredentialMetadata extends credentialCustomMetadata {
+  offer_seen?: boolean
+}
+
+/** App-level additions to bifold's proof custom metadata for notification read tracking. */
+interface NotificationProofMetadata extends ProofCustomMetadata {
+  request_seen?: boolean
+}
+
+/**
+ * Resolve the card status for time-sensitive notifications: items at or near expiry need
+ * attention regardless of read state, otherwise blue when unread and white when read.
+ *
+ * @param {boolean} read Whether the user has opened the notification
+ * @param {Date} [expiresTime] When the notification expires, if it does
+ * @return {*}  {NotificationCardStatus}
+ */
+function getTimeSensitiveStatus(read: boolean, expiresTime?: Date): NotificationCardStatus {
+  if (expiresTime && expiresTime.getTime() - Date.now() <= EXPIRY_WARNING_WINDOW_MS) {
+    return NotificationCardStatus.Attention
+  }
+  return read ? NotificationCardStatus.Read : NotificationCardStatus.Unread
+}
+
+/**
  * Basic Message Notifications
  *
  * @param {CredentialNotificationProps} { notification }
@@ -155,7 +185,8 @@ const BasicMessageNotification = ({ notification }: CredentialNotificationProps)
         label ? t('Notification.BasicMessage.SentMessage', { label }) : t('Notification.BasicMessage.ReceivedMessage')
       }
       icon="chat"
-      cardType={InfoBoxType.Info}
+      // Only unseen messages appear in the notifications list, so this is always unread
+      status={NotificationCardStatus.Unread}
       onPress={() => {
         handleClose()
         navigation.navigate(BCSCScreens.ContactChat, { connectionId: basicMessage.connectionId })
@@ -176,7 +207,6 @@ const BasicMessageNotification = ({ notification }: CredentialNotificationProps)
 const CredentialOfferNotification = ({ notification }: CredentialNotificationProps) => {
   const { t } = useTranslation()
   const { agent } = useBCSCAgent()
-  const { ColorPalette } = useTheme()
   const [store] = useStore()
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const credential = notification as DidCommCredentialExchangeRecord
@@ -184,6 +214,9 @@ const CredentialOfferNotification = ({ notification }: CredentialNotificationPro
   const { name, version } = parsedSchema(credential)
   const label = getConnectionName(connection, store.preferences.alternateContactNames)
   const [expiresTime, setExpiresTime] = useState<Date>()
+
+  const offerMeta = credential.metadata.get(CredentialMetadata.customMetadata) as NotificationCredentialMetadata | null
+  const isRead = Boolean(offerMeta?.offer_seen)
 
   useEffect(() => {
     const fetchTiming = async () => {
@@ -204,6 +237,17 @@ const CredentialOfferNotification = ({ notification }: CredentialNotificationPro
     ? t('Notification.CredentialOffer.Description', { label, credential: credentialDisplayName })
     : credentialDisplayName
 
+  // Flip the notification from unread to read once the user opens it
+  const markOfferSeen = async () => {
+    if (!agent || isRead) {
+      return
+    }
+    const meta = credential.metadata.get(CredentialMetadata.customMetadata) as NotificationCredentialMetadata
+    credential.metadata.set(CredentialMetadata.customMetadata, { ...meta, offer_seen: true })
+    const repo = agent.context.dependencyManager.resolve(DidCommCredentialExchangeRepository)
+    await repo.update(agent.context, credential)
+  }
+
   const handleClose = useDeclineCredentialOffer(credential)
 
   return (
@@ -211,9 +255,11 @@ const CredentialOfferNotification = ({ notification }: CredentialNotificationPro
       title={t('Notification.CredentialOffer.Title')}
       description={description}
       icon="card-membership"
-      cardType={InfoBoxType.Info}
-      backgroundColor={ColorPalette.grayscale.white}
-      onPress={() => navigation.navigate(BCSCScreens.ConnectionLoading, { credentialId: credential.id })}
+      status={getTimeSensitiveStatus(isRead, expiresTime)}
+      onPress={() => {
+        markOfferSeen()
+        navigation.navigate(BCSCScreens.ConnectionLoading, { credentialId: credential.id })
+      }}
       onClose={handleClose}
       badge={expiresTime ? formatExpiryBadge(expiresTime) : undefined}
       timestamp={formatTimestamp(notification.createdAt)}
@@ -270,9 +316,32 @@ const ProofRequestNotification = ({ notification }: CredentialNotificationProps)
   const isDone = proof.state === DidCommProofState.Done || proof.state === DidCommProofState.PresentationReceived
   const declineProofRequest = useDeclineProofRequest(proof)
 
+  const proofMeta = proof.metadata.get(ProofMetadata.customMetadata) as NotificationProofMetadata | null
+  // Done proofs only stay in the list until their outcome has been viewed, so treat them as unread
+  const isRead = !isDone && Boolean(proofMeta?.request_seen)
+
+  // Pending proof requests are short-lived: they are removed from the list once their TTL
+  // passes (see useNotifications), so warn about the protocol expiry or the app-imposed
+  // removal time, whichever comes first. Expiry is moot once the proof is done.
+  const removalTime = new Date(new Date(proof.createdAt).getTime() + PROOF_REQUEST_NOTIFICATION_TTL_MS)
+  const effectiveExpiry = isDone ? undefined : expiresTime && expiresTime < removalTime ? expiresTime : removalTime
+
+  // Flip the notification from unread to read once the user opens it
+  const markRequestSeen = async () => {
+    if (!agent || isRead) {
+      return
+    }
+    const meta = proof.metadata.get(ProofMetadata.customMetadata) as NotificationProofMetadata
+    proof.metadata.set(ProofMetadata.customMetadata, { ...meta, request_seen: true })
+    const repo = agent.context.dependencyManager.resolve(DidCommProofExchangeRepository)
+    await repo.update(agent.context, proof)
+  }
+
   const handlePress = () => {
     if (isDone && agent) {
       markProofAsViewed(agent, proof)
+    } else {
+      markRequestSeen()
     }
     navigation.navigate(BCSCScreens.ConnectionLoading, { proofId: proof.id })
   }
@@ -290,10 +359,10 @@ const ProofRequestNotification = ({ notification }: CredentialNotificationProps)
       title={t('Notification.ProofRequest.Title')}
       description={description}
       icon="assignment"
-      cardType={InfoBoxType.Info}
+      status={getTimeSensitiveStatus(isRead, effectiveExpiry)}
       onPress={handlePress}
       onClose={handleClose}
-      badge={expiresTime ? formatExpiryBadge(expiresTime) : undefined}
+      badge={effectiveExpiry ? formatExpiryBadge(effectiveExpiry) : undefined}
       timestamp={formatTimestamp(notification.createdAt)}
     />
   )
@@ -327,7 +396,8 @@ const RevocationNotification = ({ notification }: CredentialNotificationProps) =
       title={t('Notification.Revocation.Title')}
       description={version ? `${name} v${version}` : name}
       icon="error"
-      cardType={InfoBoxType.Error}
+      // Revoked credentials require immediate attention, per the designs
+      status={NotificationCardStatus.Warning}
       onPress={() => navigation.navigate(Screens.CredentialDetails, { credentialId: credential.id })}
       onClose={handleClose}
       timestamp={formatTimestamp(notification.updatedAt ?? notification.createdAt)}

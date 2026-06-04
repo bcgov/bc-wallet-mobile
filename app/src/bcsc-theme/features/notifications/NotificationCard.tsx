@@ -1,5 +1,5 @@
 import { hitSlop } from '@/constants'
-import { Button, ButtonType, IColorPalette, InfoBoxType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { Button, ButtonType, IColorPalette, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pressable, StyleSheet, TouchableOpacity, View } from 'react-native'
@@ -9,17 +9,31 @@ const ICON_CIRCLE_SIZE = 36
 const ICON_INNER_SIZE = 20
 const CLOSE_ICON_SIZE = 24
 
+/**
+ * Display states for notification cards, matching the BCSC notification designs:
+ * blue for unread, white for read, red for warnings and yellow for attention.
+ */
+export enum NotificationCardStatus {
+  /** Notifications the user has not opened yet (blue). */
+  Unread = 'Unread',
+  /** Notifications the user has already opened (white). */
+  Read = 'Read',
+  /** Revoked notifications or anything requiring immediate attention (red). */
+  Warning = 'Warning',
+  /** Notifications needing moderate attention, e.g. expiring soon (yellow). */
+  Attention = 'Attention',
+}
+
 interface NotificationCardProps {
   title: string
   description: string
-  cardType: InfoBoxType
+  status: NotificationCardStatus
   onPress: () => void
   onClose?: () => void
   buttonTitle?: string
   timestamp?: string
   badge?: string
   icon?: string
-  backgroundColor?: string
 }
 
 /**
@@ -32,7 +46,7 @@ interface NotificationCardProps {
 const NotificationCard: React.FC<NotificationCardProps> = (props) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
-  const cardStyle = getCardStyle(props.cardType, ColorPalette)
+  const cardStyle = getCardStyle(props.status, ColorPalette)
   const iconColor = ColorPalette.grayscale.mediumGrey
 
   const isV1 = !!props.buttonTitle
@@ -41,9 +55,7 @@ const NotificationCard: React.FC<NotificationCardProps> = (props) => {
     container: {
       paddingHorizontal: Spacing.lg,
       paddingVertical: Spacing.md,
-      backgroundColor: isV1
-        ? ColorPalette.brand.modalTertiaryBackground
-        : (props.backgroundColor ?? cardStyle.backgroundColor),
+      backgroundColor: isV1 ? ColorPalette.brand.modalTertiaryBackground : cardStyle.backgroundColor,
       ...(isV1 && {
         borderWidth: 1,
         borderColor: ColorPalette.notification.infoBorder,
@@ -165,29 +177,30 @@ interface CardStyle {
 }
 
 /**
- * getCardStyle returns the appropriate background color and default icon for a given notification type, based on the app's color palette.
+ * getCardStyle returns the appropriate background color and default icon for a given notification status, based on the app's color palette.
  *
- * @param {InfoBoxType} cardType
+ * @param {NotificationCardStatus} status
  * @param {IColorPalette} palette
  * @return {*}  {CardStyle}
  */
-function getCardStyle(cardType: InfoBoxType, palette: IColorPalette): CardStyle {
-  switch (cardType) {
-    case InfoBoxType.Success:
+function getCardStyle(status: NotificationCardStatus, palette: IColorPalette): CardStyle {
+  switch (status) {
+    case NotificationCardStatus.Read:
       return {
-        backgroundColor: palette.notification.success,
-        defaultIcon: 'check-circle',
+        backgroundColor: palette.grayscale.white,
+        defaultIcon: 'info',
       }
-    case InfoBoxType.Warn:
-      return {
-        backgroundColor: palette.notification.warn,
-        defaultIcon: 'warning',
-      }
-    case InfoBoxType.Error:
+    case NotificationCardStatus.Warning:
       return {
         backgroundColor: palette.notification.error,
         defaultIcon: 'error',
       }
+    case NotificationCardStatus.Attention:
+      return {
+        backgroundColor: palette.notification.warn,
+        defaultIcon: 'warning',
+      }
+    case NotificationCardStatus.Unread:
     default:
       return {
         backgroundColor: palette.notification.info,
