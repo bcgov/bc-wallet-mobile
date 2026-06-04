@@ -72,7 +72,8 @@
     "handlebars": "4.7.9",
     "@credo-ts/anoncreds@npm:0.6.3": "patch:@credo-ts/anoncreds@npm%3A0.6.3#~/.yarn/patches/@credo-ts-anoncreds-npm-0.6.3-95e0920301.patch",
     "@credo-ts/anoncreds@npm:^0.6.1": "patch:@credo-ts/anoncreds@npm%3A0.6.3#~/.yarn/patches/@credo-ts-anoncreds-npm-0.6.3-95e0920301.patch",
-    "metro": "0.83.7"
+    "metro": "0.83.7",
+    "@bifold/core@npm:3.0.13": "patch:@bifold/core@npm%3A3.0.13#~/.yarn/patches/@bifold-core-npm-3.0.13-5347316ff0.patch"
   },
   "dependencies": {
     "react-native-bcsc-core": "workspace:*"

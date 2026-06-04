@@ -188,7 +188,7 @@ const translation = {
     "Retry": "Réessayer",
     "Failed": "Impossible de charger votre portefeuille. Veuillez réessayer.",
     "Starting": "Démarrage...",
-    "CheckingOCA": "Checking for OCA updates... (FR)",
+    "CheckingRemoteResources": "Checking for updates... (FR)",
     "InitializingAgent": "Initialisation de l'agent...",
     "Finishing": "Finalisation..."
   },

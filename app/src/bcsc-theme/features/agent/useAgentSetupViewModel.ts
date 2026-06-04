@@ -1,3 +1,4 @@
+import { ledgerResolver } from '@/configs/ledgers/indy/ledgerResolver'
 import { WALLET_ID } from '@/constants'
 import { AppError, ErrorRegistry } from '@/errors'
 import { BCState } from '@/store'
@@ -30,9 +31,8 @@ export interface AgentSetupResult {
 
 const useAgentSetupViewModel = (): AgentSetupResult => {
   const [store] = useStore<BCState>()
-  const [logger, indyLedgers, attestationMonitor, credDefs, schemas, ocaBundleResolver] = useServices([
+  const [logger, attestationMonitor, credDefs, schemas, ocaBundleResolver] = useServices([
     TOKENS.UTIL_LOGGER,
-    TOKENS.UTIL_LEDGERS,
     TOKENS.UTIL_ATTESTATION_MONITOR,
     TOKENS.CACHE_CRED_DEFS,
     TOKENS.CACHE_SCHEMAS,
@@ -153,11 +153,15 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         if (cancelled) {
           return
         }
-        const ledgers = cachedLedgers ?? indyLedgers
 
         await (ocaBundleResolver as RemoteOCABundleResolver)
           .checkForUpdates?.()
           .catch((err) => logger.warn(`OCA bundle update failed (continuing): ${err}`))
+        await ledgerResolver
+          .checkForUpdates()
+          .catch((err) => logger.warn(`Ledger update failed (continuing): ${err}`))
+
+        const ledgers = cachedLedgers ?? ledgerResolver.ledgers
 
         inFlightAgent = buildAgent({
           ledgers,
@@ -245,7 +249,6 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     usePushNotifications,
     retryCount,
     logger,
-    indyLedgers,
     credDefs,
     schemas,
     ocaBundleResolver,
@@ -261,7 +264,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
       // store manager and delete the store by its file URI without needing it open.
       if (walletKey) {
         const tempAgent = buildAgent({
-          ledgers: indyLedgers,
+          ledgers: ledgerResolver.ledgers,
           walletSecret: { id: WALLET_ID, key: walletKey },
           mediatorUrl,
           walletLabel,
@@ -301,7 +304,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
       setStatus('idle')
       setRetryCount((c) => c + 1) // triggers useEffect to restart agent setup
     }
-  }, [logger, attestationMonitor, walletKey, indyLedgers, mediatorUrl, walletLabel, enableProxy])
+  }, [logger, attestationMonitor, walletKey, mediatorUrl, walletLabel, enableProxy])
 
   return { agent, status, error, retry, resetWallet }
 }

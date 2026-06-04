@@ -1,3 +1,4 @@
+import { ledgerResolver } from '@/configs/ledgers/indy/ledgerResolver'
 import { BCLocalStorageKeys, BCState } from '@/store'
 import { activate } from '@/utils/PushNotificationsHelper'
 import { getBCAgentModules } from '@/utils/bc-agent-modules'
@@ -46,9 +47,8 @@ const useBCAgentSetup = () => {
   const [agent, setAgent] = useState<Agent | null>(null)
   const agentInstanceRef = useRef<Agent | null>(null)
   const [store] = useStore<BCState>()
-  const [logger, indyLedgers, attestationMonitor, credDefs, schemas] = useServices([
+  const [logger, attestationMonitor, credDefs, schemas] = useServices([
     TOKENS.UTIL_LOGGER,
-    TOKENS.UTIL_LEDGERS,
     TOKENS.UTIL_ATTESTATION_MONITOR,
     TOKENS.CACHE_CRED_DEFS,
     TOKENS.CACHE_SCHEMAS,
@@ -349,7 +349,7 @@ const useBCAgentSetup = () => {
 
       logger.info('Checking for cached ledgers...')
       const cachedLedgers = await loadCachedLedgers()
-      const ledgers = cachedLedgers ?? indyLedgers
+      const ledgers = cachedLedgers ?? ledgerResolver.ledgers
 
       logger.info('Creating new agent...')
       const newAgent = await createNewAgent(ledgers, walletSecret, mediatorUrl)
@@ -396,7 +396,6 @@ const useBCAgentSetup = () => {
       store.preferences.selectedMediator,
       store.preferences.usePushNotifications,
       logger,
-      indyLedgers,
       createNewAgent,
       warmUpCache,
       refreshAttestationMonitor,

@@ -13,6 +13,7 @@ module.exports = {
     '^axios$': require.resolve('axios'),
     'react-i18next': '<rootDir>/__mocks__/react-i18next.ts',
     '^uuid$': require.resolve('uuid'),
+    '@bifold/core/utils/file-cache': require.resolve('@bifold/core/utils/file-cache'),
     '@bifold/core': require.resolve('@bifold/core'),
     '@openwallet-foundation/askar-react-native': require.resolve('@openwallet-foundation/askar-react-native'),
   },
