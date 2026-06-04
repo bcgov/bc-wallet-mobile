@@ -117,6 +117,7 @@ def releaseArchitectures = project.getProperties().get("reactNativeArchitectures
 android {
     namespace 'ca.bc.gov.BCWallet'
     ndkVersion rootProject.ext.ndkVersion
+    compileSdk rootProject.ext.compileSdkVersion
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
     
