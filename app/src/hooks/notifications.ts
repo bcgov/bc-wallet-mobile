@@ -1,5 +1,5 @@
 import { showPersonCredentialSelector } from '@/bcwallet-theme/features/person-flow/utils/BCIDHelper'
-import { AttestationRestrictions } from '@/constants'
+import { AttestationRestrictions, NOTIFICATION_REFRESH_INTERVAL_MS, PROOF_REQUEST_NOTIFICATION_TTL_MS } from '@/constants'
 import { BCState } from '@/store'
 import {
   BasicMessageMetadata,
@@ -23,16 +23,6 @@ import { BCAgent } from '@utils/bc-agent-modules'
 import { useEffect, useMemo, useState } from 'react'
 
 export type CredentialNotificationRecord = DidCommBasicMessageRecord | CredentialRecord | DidCommProofExchangeRecord
-
-/**
- * How long a pending proof request notification stays in the notifications list. Users who hit
- * a problem often scan a new QR code and abandon the previous proof request, so old requests
- * are removed rather than left to pile up. (Duration is tentative, per the designs.)
- */
-export const PROOF_REQUEST_NOTIFICATION_TTL_MS = 60 * 60 * 1000 // 1 hour
-
-/** How often the notifications list re-evaluates time-based rules (TTL removal, expiry warnings). */
-const NOTIFICATION_REFRESH_INTERVAL_MS = 60_000
 
 export const useNotifications = (): Array<CredentialNotificationRecord> => {
   const { agent } = useAgent<BCAgent>()

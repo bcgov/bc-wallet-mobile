@@ -1,6 +1,8 @@
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { CredentialNotificationRecord, PROOF_REQUEST_NOTIFICATION_TTL_MS } from '@/hooks/notifications'
+import { formatExpiryBadge, formatTimestamp } from '@/bcsc-theme/utils/datetime-utils'
+import { NOTIFICATION_EXPIRY_WARNING_WINDOW_MS, PROOF_REQUEST_NOTIFICATION_TTL_MS } from '@/constants'
+import { CredentialNotificationRecord } from '@/hooks/notifications'
 import { useDeclineCredentialOffer } from '@/hooks/useDeclineCredentialOffer'
 import { useDeclineProofRequest } from '@/hooks/useDeclineProofRequest'
 import { getCredentialNotificationType, NotificationType } from '@/utils/credentials'
@@ -59,55 +61,6 @@ const CredentialNotification = (props: CredentialNotificationProps) => {
   }
 }
 
-/**
- * Helper function to format timestamps in a user-friendly way (e.g., "Just now", "5 minutes ago", "Today at 3:45 PM").
- *
- * @param {Date} date
- * @return {*}  {string}
- */
-function formatTimestamp(date: Date): string {
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffMin = Math.floor(diffMs / 60_000)
-
-  if (diffMin < 1) {
-    return 'Just now'
-  }
-  if (diffMin < 60) {
-    return `${diffMin} minute${diffMin === 1 ? '' : 's'} ago`
-  }
-
-  const diffHours = Math.floor(diffMin / 60)
-  if (diffHours < 24) {
-    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-  }
-
-  return date.toLocaleDateString([], { month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' })
-}
-
-function formatExpiryBadge(expiresTime: Date): string | undefined {
-  const diffMs = expiresTime.getTime() - Date.now()
-  if (diffMs <= 0) {
-    return 'Expired'
-  }
-  const diffMin = Math.floor(diffMs / 60_000)
-  if (diffMin < 60) {
-    return `Expires in ${diffMin} min`
-  }
-  const diffHours = Math.floor(diffMin / 60)
-  if (diffHours < 24) {
-    return `Expires in ${diffHours} hour${diffHours === 1 ? '' : 's'}`
-  }
-  const diffDays = Math.floor(diffHours / 24)
-  return `Expires in ${diffDays} day${diffDays === 1 ? '' : 's'}`
-}
-
-/**
- * Notifications within this window of expiring (or already expired) show the yellow
- * "attention" state to warn the user before the item becomes unusable / is removed.
- */
-const EXPIRY_WARNING_WINDOW_MS = 60 * 60 * 1000 // 1 hour
-
 /** App-level additions to bifold's credential custom metadata for notification read tracking. */
 interface NotificationCredentialMetadata extends credentialCustomMetadata {
   offer_seen?: boolean
@@ -127,7 +80,7 @@ interface NotificationProofMetadata extends ProofCustomMetadata {
  * @return {*}  {NotificationCardStatus}
  */
 function getTimeSensitiveStatus(read: boolean, expiresTime?: Date): NotificationCardStatus {
-  if (expiresTime && expiresTime.getTime() - Date.now() <= EXPIRY_WARNING_WINDOW_MS) {
+  if (expiresTime && expiresTime.getTime() - Date.now() <= NOTIFICATION_EXPIRY_WARNING_WINDOW_MS) {
     return NotificationCardStatus.Attention
   }
   return read ? NotificationCardStatus.Read : NotificationCardStatus.Unread
