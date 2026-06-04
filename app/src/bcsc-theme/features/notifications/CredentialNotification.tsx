@@ -26,7 +26,6 @@ import {
   DidCommProofExchangeRecord,
   DidCommProofExchangeRepository,
   DidCommProofState,
-  DidCommRequestPresentationV2Message,
 } from '@credo-ts/didcomm'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -161,10 +160,10 @@ const BasicMessageNotification = ({ notification }: CredentialNotificationProps)
 
   return (
     <NotificationCard
-      title={t('Notification.BasicMessage.Title')}
-      description={
-        label ? t('Notification.BasicMessage.SentMessage', { label }) : t('Notification.BasicMessage.ReceivedMessage')
-      }
+      // Per the designs, message notifications are titled with the connection's name
+      // and show the message itself as the content
+      title={label || t('Notification.BasicMessage.Title')}
+      description={basicMessage.content}
       icon="tray-arrow-down"
       logoUrl={connection?.imageUrl}
       status={isRead ? NotificationCardStatus.Read : NotificationCardStatus.Unread}
@@ -263,37 +262,27 @@ const ProofRequestNotification = ({ notification }: CredentialNotificationProps)
   const proof = notification as DidCommProofExchangeRecord
   const connection = useConnectionById(proof.connectionId ?? '')
   const label = getConnectionName(connection, store.preferences.alternateContactNames)
-  const [proofName, setProofName] = useState('')
   const [expiresTime, setExpiresTime] = useState<Date>()
 
   useEffect(() => {
-    const fetchProofDetails = async () => {
+    const fetchTiming = async () => {
       try {
         const message = await agent?.didcomm.proofs.findRequestMessage(proof.id)
         if (message?.timing?.expiresTime) {
           setExpiresTime(message.timing.expiresTime)
         }
-        if (message instanceof DidCommRequestPresentationV2Message) {
-          const attachment = message.requestAttachments.find((a) => a.id === 'indy')
-          const name = attachment?.getDataAsJson<{ name?: string }>()?.name
-          if (name) {
-            setProofName(name)
-            return
-          }
-        }
-        if (message?.comment) {
-          setProofName(message.comment)
-        }
-      } catch (err) {
-        agent?.config.logger.error(`Failed to fetch proof request details: ${err}`)
+      } catch {
+        // timing is optional, ignore errors
       }
     }
-    fetchProofDetails()
+    fetchTiming()
   }, [agent, proof.id])
 
-  const description =
-    proofName ||
-    (label ? t('Notification.ProofRequest.Description', { label }) : t('Notification.ProofRequest.DefaultDescription'))
+  // Per the designs: verifier name when the request comes from a connection,
+  // otherwise the generic connectionless wording
+  const description = label
+    ? t('Notification.ProofRequest.Description', { label })
+    : t('Notification.ProofRequest.DefaultDescription')
 
   const isDone = proof.state === DidCommProofState.Done || proof.state === DidCommProofState.PresentationReceived
   const declineProofRequest = useDeclineProofRequest(proof)
@@ -364,6 +353,7 @@ const RevocationNotification = ({ notification }: CredentialNotificationProps) =
   const credential = notification as DidCommCredentialExchangeRecord
   const connection = useConnectionById(credential.connectionId ?? '')
   const { name, version } = parsedSchema(credential)
+  const credentialDisplayName = version ? `${name} v${version}` : name
 
   const handleClose = async () => {
     if (!agent) {
@@ -378,7 +368,7 @@ const RevocationNotification = ({ notification }: CredentialNotificationProps) =
   return (
     <NotificationCard
       title={t('Notification.Revocation.Title')}
-      description={version ? `${name} v${version}` : name}
+      description={t('Notification.Revocation.Description', { credential: credentialDisplayName })}
       icon="alert-circle"
       logoUrl={connection?.imageUrl}
       // Revoked credentials require immediate attention, per the designs
