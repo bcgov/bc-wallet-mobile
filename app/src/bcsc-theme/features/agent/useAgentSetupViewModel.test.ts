@@ -8,6 +8,9 @@ import * as agentService from './services/agent-service'
 import useAgentSetupViewModel from './useAgentSetupViewModel'
 
 jest.mock('@bifold/core')
+jest.mock('@/configs/ledgers/indy/ledgerResolver', () => ({
+  ledgerResolver: { checkForUpdates: jest.fn().mockResolvedValue(undefined), ledgers: [], set logger(_: unknown) {} },
+}))
 jest.mock('@/utils/PushNotificationsHelper', () => ({
   activate: jest.fn().mockResolvedValue(undefined),
   deactivate: jest.fn().mockResolvedValue(undefined),

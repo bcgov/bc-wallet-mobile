@@ -59,8 +59,8 @@ export class RemoteLedgerResolver extends FileCache {
       remoteFetchSucceeded = true
 
       await this.saveFileToLocalStorage(filePath, JSON.stringify(this.ledgerData))
-    } catch {
-      this.log?.error(`Failed to fetch remote ledger index ${filePath}`)
+    } catch (error) {
+      this.log?.error(`Failed to fetch remote ledger index ${filePath}: ${error}`)
     }
 
     if (remoteFetchSucceeded) {
@@ -74,6 +74,10 @@ export class RemoteLedgerResolver extends FileCache {
     }
 
     this.log?.info(`Using cached ledger index ${filePath}`)
-    this.ledgerData = JSON.parse(data)
+    try {
+      this.ledgerData = JSON.parse(data)
+    } catch {
+      this.log?.warn(`Cached ledger index ${filePath} is corrupt, falling back to bundled default`)
+    }
   }
 }

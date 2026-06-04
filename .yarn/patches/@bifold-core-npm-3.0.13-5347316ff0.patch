@@ -14,12 +14,3 @@ index 034e8ea833b773b6efe624edafdc6a0d6a9c35af..4c0d035bcf271143652d3b4c9350a076
      "./utils/ledger": {
        "import": "./lib/module/utils/ledger.js",
        "require": "./lib/commonjs/utils/ledger.js",
-@@ -34,7 +39,7 @@
-     "!**/__mocks__"
-   ],
-   "scripts": {
--    "build": "echo 'building core 🏗️' && yarn clean && bob build && echo 'core built ✅'",
-+    "build": "echo 'building core \ud83c\udfd7\ufe0f' && yarn clean && bob build && echo 'core built \u2705'",
-     "clean": "rimraf ./lib",
-     "test": "TZ=GMT jest",
-     "coverage": "TZ=GMT jest --coverage",

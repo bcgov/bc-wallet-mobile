@@ -1,3 +1,6 @@
+jest.mock('@/configs/ledgers/indy/ledgerResolver', () => ({
+  ledgerResolver: { checkForUpdates: jest.fn().mockResolvedValue(undefined), ledgers: [], set logger(_: unknown) {} },
+}))
 jest.mock('@/store', () => ({
   BCLocalStorageKeys: {
     GenesisTransactions: 'GenesisTransactions',

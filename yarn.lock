@@ -1864,7 +1864,7 @@ __metadata:
 
 "@bifold/core@patch:@bifold/core@npm%3A3.0.13#~/.yarn/patches/@bifold-core-npm-3.0.13-5347316ff0.patch":
   version: 3.0.13
-  resolution: "@bifold/core@patch:@bifold/core@npm%3A3.0.13#~/.yarn/patches/@bifold-core-npm-3.0.13-5347316ff0.patch::version=3.0.13&hash=5a9fa7"
+  resolution: "@bifold/core@patch:@bifold/core@npm%3A3.0.13#~/.yarn/patches/@bifold-core-npm-3.0.13-5347316ff0.patch::version=3.0.13&hash=061609"
   dependencies:
     "@openwallet-foundation/askar-react-native": "npm:0.6.0"
     "@openwallet-foundation/askar-shared": "npm:0.6.0"
@@ -1944,7 +1944,7 @@ __metadata:
     uuid: ~9.0.1
   bin:
     bifold: bin/bifold
-  checksum: 10c0/a06dac4f89529b0a7bcac9347e868fe3b310fe0a48880969f60cbc0b077ba0767dd440cf6502143fdc0bab5d412c3cbd13af9f41646a9f76e6cdebc8e590330c
+  checksum: 10c0/5fd109587797b4bf0362d8d80e680d49168fa2b1fb02f1b065ab971498e1ca73845d8b94667dbb30c250dd7355beb62958aea0d66d135f9ed3210b5f0331a1dc
   languageName: node
   linkType: hard
 
