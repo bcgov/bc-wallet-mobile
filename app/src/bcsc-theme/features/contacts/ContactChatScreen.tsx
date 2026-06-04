@@ -313,7 +313,7 @@ const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
     (props: ActionsProps) =>
       store.preferences.developerModeEnabled ? (
         <Actions {...props} wrapperStyle={styles.actionsContainer} icon={renderActionsIcon} />
-      ) : null,
+      ) : undefined,
     [renderActionsIcon, store.preferences.developerModeEnabled, styles.actionsContainer]
   )
 
