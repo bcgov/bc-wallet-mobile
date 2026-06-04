@@ -16,7 +16,7 @@ import {
   Screens,
   useStore,
 } from '@bifold/core'
-import { useConnectionById } from '@bifold/react-hooks'
+import { useBasicMessages, useConnectionById } from '@bifold/react-hooks'
 import { markProofAsViewed, ProofCustomMetadata, ProofMetadata } from '@bifold/verifier'
 import {
   DidCommBasicMessageRecord,
@@ -30,7 +30,7 @@ import {
 } from '@credo-ts/didcomm'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import NotificationCard, { NotificationCardStatus } from './NotificationCard'
 
@@ -59,6 +59,11 @@ const CredentialNotification = (props: CredentialNotificationProps) => {
     default:
       return null
   }
+}
+
+/** App-level additions to bifold's basic message custom metadata for notification read tracking. */
+interface NotificationBasicMessageMetadata extends basicMessageCustomMetadata {
+  notification_read?: boolean
 }
 
 /** App-level additions to bifold's credential custom metadata for notification read tracking. */
@@ -100,34 +105,57 @@ const BasicMessageNotification = ({ notification }: CredentialNotificationProps)
   const basicMessage = notification as DidCommBasicMessageRecord
   const connection = useConnectionById(basicMessage.connectionId)
   const label = getConnectionName(connection, store.preferences.alternateContactNames)
-  const [unseenCount, setUnseenCount] = useState(0)
+  const { records: basicMessages } = useBasicMessages()
 
-  useEffect(() => {
+  // Messages for this contact the user hasn't dismissed — the list shows one
+  // notification per contact, so this card represents all of them
+  const unseenMessages = useMemo(
+    () =>
+      basicMessages.filter((msg) => {
+        if (msg.connectionId !== basicMessage.connectionId) {
+          return false
+        }
+        const meta = msg.metadata.get(BasicMessageMetadata.customMetadata) as NotificationBasicMessageMetadata
+        return !meta?.seen
+      }),
+    [basicMessages, basicMessage.connectionId]
+  )
+
+  // Read (white) once the user has opened the chat for every message in this card —
+  // a new incoming message flips the notification back to unread (blue)
+  const isRead =
+    unseenMessages.length > 0 &&
+    unseenMessages.every(
+      (msg) =>
+        (msg.metadata.get(BasicMessageMetadata.customMetadata) as NotificationBasicMessageMetadata)?.notification_read
+    )
+
+  // Flip the notification from unread to read once the user opens the chat;
+  // the notification stays in the list until dismissed
+  const markRead = async () => {
     if (!agent) {
       return
     }
     const repo = agent.context.dependencyManager.resolve(DidCommBasicMessageRepository)
-    repo.findByQuery(agent.context, { connectionId: basicMessage.connectionId }).then((messages) => {
-      const count = messages.filter((msg) => {
-        const meta = msg.metadata.get(BasicMessageMetadata.customMetadata) as basicMessageCustomMetadata
-        return !meta?.seen
-      }).length
-      setUnseenCount(count)
-    })
-  }, [agent, basicMessage.connectionId])
+    for (const msg of unseenMessages) {
+      const meta = msg.metadata.get(BasicMessageMetadata.customMetadata) as NotificationBasicMessageMetadata
+      if (!meta?.notification_read) {
+        msg.metadata.set(BasicMessageMetadata.customMetadata, { ...meta, notification_read: true })
+        await repo.update(agent.context, msg)
+      }
+    }
+  }
 
+  // Dismissing the notification marks the messages seen, which removes it from the list
   const handleClose = async () => {
     if (!agent) {
       return
     }
     const repo = agent.context.dependencyManager.resolve(DidCommBasicMessageRepository)
-    const allMessages = await repo.findByQuery(agent.context, { connectionId: basicMessage.connectionId })
-    for (const msg of allMessages) {
-      const meta = msg.metadata.get(BasicMessageMetadata.customMetadata) as basicMessageCustomMetadata
-      if (!meta?.seen) {
-        msg.metadata.set(BasicMessageMetadata.customMetadata, { ...meta, seen: true })
-        await repo.update(agent.context, msg)
-      }
+    for (const msg of unseenMessages) {
+      const meta = msg.metadata.get(BasicMessageMetadata.customMetadata) as NotificationBasicMessageMetadata
+      msg.metadata.set(BasicMessageMetadata.customMetadata, { ...meta, seen: true })
+      await repo.update(agent.context, msg)
     }
   }
 
@@ -138,14 +166,13 @@ const BasicMessageNotification = ({ notification }: CredentialNotificationProps)
         label ? t('Notification.BasicMessage.SentMessage', { label }) : t('Notification.BasicMessage.ReceivedMessage')
       }
       icon="chat"
-      // Only unseen messages appear in the notifications list, so this is always unread
-      status={NotificationCardStatus.Unread}
+      status={isRead ? NotificationCardStatus.Read : NotificationCardStatus.Unread}
       onPress={() => {
-        handleClose()
+        markRead()
         navigation.navigate(BCSCScreens.ContactChat, { connectionId: basicMessage.connectionId })
       }}
       onClose={handleClose}
-      badge={unseenCount > 1 ? `${unseenCount} messages` : undefined}
+      badge={unseenMessages.length > 1 ? `${unseenMessages.length} messages` : undefined}
       timestamp={formatTimestamp(notification.createdAt)}
     />
   )
