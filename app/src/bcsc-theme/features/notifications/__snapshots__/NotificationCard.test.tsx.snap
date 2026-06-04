@@ -85,7 +85,7 @@ exports[`NotificationCard renders correctly 1`] = `
             ]
           }
         >
-          ?
+          󰋼
         </Text>
       </View>
       <Text

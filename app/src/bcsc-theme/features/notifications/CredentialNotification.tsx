@@ -295,7 +295,8 @@ const ProofRequestNotification = ({ notification }: CredentialNotificationProps)
   // passes (see useNotifications), so warn about the protocol expiry or the app-imposed
   // removal time, whichever comes first. Expiry is moot once the proof is done.
   const removalTime = new Date(new Date(proof.createdAt).getTime() + PROOF_REQUEST_NOTIFICATION_TTL_MS)
-  const effectiveExpiry = isDone ? undefined : expiresTime && expiresTime < removalTime ? expiresTime : removalTime
+  const soonestExpiry = expiresTime && expiresTime < removalTime ? expiresTime : removalTime
+  const effectiveExpiry = isDone ? undefined : soonestExpiry
 
   // Flip the notification from unread to read once the user opens it
   const markRequestSeen = async () => {

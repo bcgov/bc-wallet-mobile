@@ -209,23 +209,23 @@ function getCardStyle(status: NotificationCardStatus, palette: IColorPalette): C
     case NotificationCardStatus.Read:
       return {
         backgroundColor: palette.grayscale.white,
-        defaultIcon: 'info',
+        defaultIcon: 'information',
       }
     case NotificationCardStatus.Warning:
       return {
         backgroundColor: palette.notification.error,
-        defaultIcon: 'error',
+        defaultIcon: 'alert-circle',
       }
     case NotificationCardStatus.Attention:
       return {
         backgroundColor: palette.notification.warn,
-        defaultIcon: 'warning',
+        defaultIcon: 'alert',
       }
     case NotificationCardStatus.Unread:
     default:
       return {
         backgroundColor: palette.notification.info,
-        defaultIcon: 'info',
+        defaultIcon: 'information',
       }
   }
 }
