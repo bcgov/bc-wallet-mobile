@@ -117,6 +117,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
       try {
         setStep(2)
         await (ocaBundleResolver as RemoteOCABundleResolver).checkForUpdates?.()
+        ledgerResolver.logger = logger
         await ledgerResolver.checkForUpdates().catch((err) => logger.warn(`Ledger update failed (continuing): ${err}`))
 
         setStep(3)

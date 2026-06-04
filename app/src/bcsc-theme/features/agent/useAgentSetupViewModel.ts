@@ -157,6 +157,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         await (ocaBundleResolver as RemoteOCABundleResolver)
           .checkForUpdates?.()
           .catch((err) => logger.warn(`OCA bundle update failed (continuing): ${err}`))
+        ledgerResolver.logger = logger
         await ledgerResolver
           .checkForUpdates()
           .catch((err) => logger.warn(`Ledger update failed (continuing): ${err}`))

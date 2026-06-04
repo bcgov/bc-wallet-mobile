@@ -15,6 +15,10 @@ export class RemoteLedgerResolver extends FileCache {
     this.defaultLedgers = defaultLedgers
   }
 
+  public set logger(log: BifoldLogger) {
+    this.log = log
+  }
+
   public get ledgers(): IndyVdrPoolConfig[] {
     return this.ledgerData ?? this.defaultLedgers
   }
