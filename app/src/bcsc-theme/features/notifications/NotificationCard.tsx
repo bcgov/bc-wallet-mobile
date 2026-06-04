@@ -2,8 +2,8 @@ import { hitSlop } from '@/constants'
 import { Button, ButtonType, IColorPalette, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { Pressable, StyleSheet, TouchableOpacity, View } from 'react-native'
-import Icon from 'react-native-vector-icons/MaterialIcons'
+import { Image, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 const ICON_CIRCLE_SIZE = 36
 const ICON_INNER_SIZE = 20
@@ -34,6 +34,12 @@ interface NotificationCardProps {
   timestamp?: string
   badge?: string
   icon?: string
+  /**
+   * Connection logo to display in place of the icon. Per the designs, notifications
+   * from connections show the connection's logo when one is available, and fall back
+   * to an icon matching the purpose of the notification otherwise.
+   */
+  logoUrl?: string
 }
 
 /**
@@ -75,6 +81,12 @@ const NotificationCard: React.FC<NotificationCardProps> = (props) => {
       alignItems: 'center',
       marginRight: 12,
     },
+    logoImage: {
+      width: ICON_CIRCLE_SIZE,
+      height: ICON_CIRCLE_SIZE,
+      borderRadius: ICON_CIRCLE_SIZE / 2,
+      marginRight: 12,
+    },
     bodyContainer: {
       marginLeft: ICON_CIRCLE_SIZE + 12,
       marginTop: 4,
@@ -113,9 +125,18 @@ const NotificationCard: React.FC<NotificationCardProps> = (props) => {
   const content = (
     <View style={styles.container} testID={testIdWithKey('NotificationListItem')}>
       <View style={styles.headerContainer}>
-        <View style={styles.iconCircle}>
-          <Icon accessible={false} name={iconName} size={ICON_INNER_SIZE} color="#FFFFFF" />
-        </View>
+        {props.logoUrl ? (
+          <Image
+            accessible={false}
+            source={{ uri: props.logoUrl }}
+            style={styles.logoImage}
+            testID={testIdWithKey('NotificationLogo')}
+          />
+        ) : (
+          <View style={styles.iconCircle}>
+            <Icon accessible={false} name={iconName} size={ICON_INNER_SIZE} color="#FFFFFF" />
+          </View>
+        )}
         <ThemedText variant="bold" style={styles.headerText} testID={testIdWithKey('HeaderText')}>
           {props.title}
         </ThemedText>

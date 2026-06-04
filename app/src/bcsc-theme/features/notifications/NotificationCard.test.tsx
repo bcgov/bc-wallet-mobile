@@ -31,6 +31,20 @@ describe('NotificationCard', () => {
     expect(tree.getByTestId(testIdWithKey('NotificationListItem'))).toHaveStyle({ backgroundColor })
   })
 
+  it('renders the connection logo in place of the icon when one is available', () => {
+    const tree = render(
+      <BasicAppContext>
+        <NotificationCard
+          {...baseProps}
+          status={NotificationCardStatus.Unread}
+          logoUrl="https://example.com/logo.png"
+        />
+      </BasicAppContext>
+    )
+
+    expect(tree.getByTestId(testIdWithKey('NotificationLogo'))).toBeTruthy()
+  })
+
   it('renders correctly', () => {
     const tree = renderCard(NotificationCardStatus.Unread)
 

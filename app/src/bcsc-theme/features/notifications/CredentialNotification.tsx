@@ -165,7 +165,8 @@ const BasicMessageNotification = ({ notification }: CredentialNotificationProps)
       description={
         label ? t('Notification.BasicMessage.SentMessage', { label }) : t('Notification.BasicMessage.ReceivedMessage')
       }
-      icon="chat"
+      icon="tray-arrow-down"
+      logoUrl={connection?.imageUrl}
       status={isRead ? NotificationCardStatus.Read : NotificationCardStatus.Unread}
       onPress={() => {
         markRead()
@@ -234,7 +235,8 @@ const CredentialOfferNotification = ({ notification }: CredentialNotificationPro
     <NotificationCard
       title={t('Notification.CredentialOffer.Title')}
       description={description}
-      icon="card-membership"
+      icon="tray-arrow-down"
+      logoUrl={connection?.imageUrl}
       status={getTimeSensitiveStatus(isRead, expiresTime)}
       onPress={() => {
         markOfferSeen()
@@ -338,7 +340,8 @@ const ProofRequestNotification = ({ notification }: CredentialNotificationProps)
     <NotificationCard
       title={t('Notification.ProofRequest.Title')}
       description={description}
-      icon="assignment"
+      icon="file-download"
+      logoUrl={connection?.imageUrl}
       status={getTimeSensitiveStatus(isRead, effectiveExpiry)}
       onPress={handlePress}
       onClose={handleClose}
@@ -359,6 +362,7 @@ const RevocationNotification = ({ notification }: CredentialNotificationProps) =
   const { agent } = useBCSCAgent()
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const credential = notification as DidCommCredentialExchangeRecord
+  const connection = useConnectionById(credential.connectionId ?? '')
   const { name, version } = parsedSchema(credential)
 
   const handleClose = async () => {
@@ -375,7 +379,8 @@ const RevocationNotification = ({ notification }: CredentialNotificationProps) =
     <NotificationCard
       title={t('Notification.Revocation.Title')}
       description={version ? `${name} v${version}` : name}
-      icon="error"
+      icon="alert-circle"
+      logoUrl={connection?.imageUrl}
       // Revoked credentials require immediate attention, per the designs
       status={NotificationCardStatus.Warning}
       onPress={() => navigation.navigate(Screens.CredentialDetails, { credentialId: credential.id })}

@@ -31,6 +31,7 @@ const StartVerificationNotification = (props: StartVerificationNotificationProps
       title={t('Notification.StartVerification.Title')}
       description={t('Notification.StartVerification.Description')}
       buttonTitle={buttonTitle}
+      icon="alert-circle"
       onPress={() => {
         secureActions.continueVerificationProcess()
       }}
