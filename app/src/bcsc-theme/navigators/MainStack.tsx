@@ -32,7 +32,7 @@ import { AccountRenewalFirstWarningScreen } from '../features/account/AccountRen
 import { AccountRenewalInformationScreen } from '../features/account/AccountRenewalInformationScreen'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import { MainRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
-import { AgentReadyGate, BifoldScope } from '../features/agent'
+import { AgentReadyGate, BifoldScope, withAgentReadyGate } from '../features/agent'
 import { MainChangePINScreen } from '../features/auth/MainChangePINScreen'
 import { MainChangeSecurityScreen } from '../features/auth/MainChangeSecurityScreen'
 import ContactChatScreen from '../features/contacts/ContactChatScreen'
@@ -70,6 +70,16 @@ const ScopedCredentialDetails: React.FC<React.ComponentProps<typeof CredentialDe
     <CredentialDetails {...props} />
   </AgentReadyGate>
 )
+
+// Contact screens call Bifold connection hooks (useConnections / useConnectionById)
+// that require the providers BifoldScope only mounts once the agent is ready.
+// Gate them so an early mount — a cold-start quick-tap into Settings → Contacts,
+// or navigation state restoring onto a deep contact screen — shows the loading/
+// retry state instead of crashing on a missing ConnectionProvider.
+const ScopedContacts = withAgentReadyGate(ContactsScreen, testIdWithKey('Contacts.Loading'))
+const ScopedContactDetails = withAgentReadyGate(ContactDetailsScreen, testIdWithKey('ContactDetails.Loading'))
+const ScopedEditContactName = withAgentReadyGate(EditContactNameScreen, testIdWithKey('EditContactName.Loading'))
+const ScopedRemoveContact = withAgentReadyGate(RemoveContactScreen, testIdWithKey('RemoveContact.Loading'))
 
 const MainStack: React.FC = () => {
   const { currentStep } = useTour()
@@ -159,7 +169,7 @@ const MainStack: React.FC = () => {
         >
           <Stack.Screen
             name={BCSCScreens.Contacts}
-            component={ContactsScreen}
+            component={ScopedContacts}
             options={() => ({
               headerShown: true,
               title: t('BCSC.Contacts.Title'),
@@ -176,7 +186,7 @@ const MainStack: React.FC = () => {
           />
           <Stack.Screen
             name={BCSCScreens.ContactDetails}
-            component={ContactDetailsScreen}
+            component={ScopedContactDetails}
             options={() => ({
               headerShown: true,
               title: t('BCSC.Contacts.Details.Title'),
@@ -184,7 +194,7 @@ const MainStack: React.FC = () => {
           />
           <Stack.Screen
             name={BCSCScreens.EditContactName}
-            component={EditContactNameScreen}
+            component={ScopedEditContactName}
             options={() => ({
               headerShown: true,
               title: t('BCSC.Contacts.EditName.HeaderTitle'),
@@ -208,7 +218,7 @@ const MainStack: React.FC = () => {
           />
           <Stack.Screen
             name={BCSCScreens.RemoveContact}
-            component={RemoveContactScreen}
+            component={ScopedRemoveContact}
             options={() => ({
               ...getDefaultModalOptions(t('BCSC.Contacts.Remove.HeaderTitle')),
             })}
