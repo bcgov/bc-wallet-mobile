@@ -24,6 +24,10 @@ export class RemoteLedgerResolver extends FileCache {
   }
 
   public async checkForUpdates(): Promise<void> {
+    if (!this.axiosInstance.defaults.baseURL) {
+      return
+    }
+
     await this.createWorkingDirectoryIfNotExists()
 
     if (!this.fileEtag) {

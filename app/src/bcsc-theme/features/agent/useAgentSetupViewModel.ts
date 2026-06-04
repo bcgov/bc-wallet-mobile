@@ -149,7 +149,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
           setAgent(null)
         }
 
-        const cachedLedgers = await loadCachedLedgers()
+        const cachedLedgers = Config.LEDGER_URL ? undefined : await loadCachedLedgers()
         if (cancelled) {
           return
         }

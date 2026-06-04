@@ -348,7 +348,7 @@ const useBCAgentSetup = () => {
       }
 
       logger.info('Checking for cached ledgers...')
-      const cachedLedgers = await loadCachedLedgers()
+      const cachedLedgers = Config.LEDGER_URL ? undefined : await loadCachedLedgers()
       const ledgers = cachedLedgers ?? ledgerResolver.ledgers
 
       logger.info('Creating new agent...')
