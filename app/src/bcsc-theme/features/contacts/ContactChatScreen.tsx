@@ -1,5 +1,6 @@
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { formatTime, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { BCState } from '@/store'
+import { formatTime, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useHeaderHeight } from '@react-navigation/elements'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -37,6 +38,7 @@ const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
   const headerHeight = useHeaderHeight()
 
   const { items, theirLabel, onSend, isAgentReady } = useContactChat(connectionId, navigation)
+  const [store] = useStore<BCState>()
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: theirLabel })
@@ -308,8 +310,11 @@ const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
   )
 
   const renderActions = useCallback(
-    (props: ActionsProps) => <Actions {...props} wrapperStyle={styles.actionsContainer} icon={renderActionsIcon} />,
-    [renderActionsIcon, styles.actionsContainer]
+    (props: ActionsProps) =>
+      store.preferences.developerModeEnabled ? (
+        <Actions {...props} wrapperStyle={styles.actionsContainer} icon={renderActionsIcon} />
+      ) : null,
+    [renderActionsIcon, store.preferences.developerModeEnabled, styles.actionsContainer]
   )
 
   return (
