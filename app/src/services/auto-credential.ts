@@ -68,7 +68,6 @@ export interface AutoCredentialMonitorOptions {
  */
 export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
   private proofSubscription?: AgentSubscription
-  private readonly credentialSubscription?: AgentSubscription
   private agent?: BCAgent
   private readonly log?: AbstractBifoldLogger
   private readonly rules: AutoCredentialRule[]
@@ -98,7 +97,6 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
 
   public stop(): void {
     this.proofSubscription?.unsubscribe()
-    this.credentialSubscription?.unsubscribe()
     this._workflowInProgress = false
     this._pendingProofRequest = undefined
     this._pendingConnectionId = undefined
@@ -233,8 +231,14 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     this.log?.info(`[AutoCredentialMonitor] Checking if proof request matches any rules`)
 
     // fetch and construct proof request format
-    const format = await this.agent.didcomm.proofs.getFormatData(proof.id)
-    const requestFormat = (format.request?.anoncreds ?? format.request?.indy) as ProofRequestFormat | undefined
+    let requestFormat: ProofRequestFormat | undefined
+    try {
+      const format = await this.agent.didcomm.proofs.getFormatData(proof.id)
+      requestFormat = (format.request?.anoncreds ?? format.request?.indy) as ProofRequestFormat | undefined
+    } catch (err) {
+      this.log?.warn(`[AutoCredentialMonitor] Could not read proof request format`, { error: err as Error })
+      return
+    }
 
     if (!requestFormat) {
       // no proof format, nothing to check against
