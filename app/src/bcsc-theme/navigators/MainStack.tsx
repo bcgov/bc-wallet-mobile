@@ -35,6 +35,7 @@ import { MainRemoveAccountConfirmationScreen } from '../features/account/RemoveA
 import { AgentReadyGate, BifoldScope, withAgentReadyGate } from '../features/agent'
 import { MainChangePINScreen } from '../features/auth/MainChangePINScreen'
 import { MainChangeSecurityScreen } from '../features/auth/MainChangeSecurityScreen'
+import { useConnectionInvitationDeepLink } from '../features/connection-invitation'
 import ContactChatScreen from '../features/contacts/ContactChatScreen'
 import ContactDetailsScreen from '../features/contacts/ContactDetailsScreen'
 import ContactJSONDetailsScreen from '../features/contacts/ContactJSONDetailsScreen'
@@ -131,6 +132,10 @@ const MainStack: React.FC = () => {
 
   useSystemChecks(SystemCheckScope.MAIN_STACK)
   useBCSCStack(BCSCStacks.Main)
+
+  // Accept connection-invitation deep links (e.g. from the showcase) once the
+  // agent is ready and route to the Connection screen (#2288).
+  useConnectionInvitationDeepLink()
 
   useEffect(() => {
     const unsubscribe = pairingService.onNavigationRequest(({ screen, params }) => {
