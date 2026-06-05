@@ -51,7 +51,10 @@ export class TermsOfUseSystemCheck implements SystemCheckStrategy {
       const termsOfUse = await this.getTermsOfUse()
       this.fetchedVersion = String(termsOfUse.version)
     } catch (error) {
-      this.utils.logger.error('TermsOfUseSystemCheck: Terms of Use request failed', error as Error)
+      this.utils.logger.error(
+        'TermsOfUseSystemCheck: Terms of Use request failed',
+        error instanceof Error ? error : new Error(String(error))
+      )
       // Fail open: do not block or re-prompt the user when the terms cannot be fetched
       return true
     }
