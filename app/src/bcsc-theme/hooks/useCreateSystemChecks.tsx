@@ -9,6 +9,7 @@ import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSyst
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClockSkewSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
+import { TermsOfUseSystemCheck } from '@/services/system-checks/TermsOfUseSystemCheck'
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
 import { UpdateDeviceRegistrationSystemCheck } from '@/services/system-checks/UpdateDeviceRegistrationSystemCheck'
 import { BCState } from '@/store'
@@ -132,6 +133,12 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       new DeviceCountSystemCheck(getIdToken, utils, dismissedAt),
       new AccountExpiryWarningBannerSystemCheck(accountExpirationDate, utils),
       new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation),
+      new TermsOfUseSystemCheck(
+        () => configApi.getTermsOfUse(),
+        store.bcsc.acceptedTermsOfUseVersion,
+        navigation,
+        utils
+      ),
       // TODO (ar/bm): v3 doesn't include the checks below; re-add if needed in future
       // AccountExpiryWarningAlertSystemCheck
       // AccountExpiryAlertSystemCheck
@@ -157,10 +164,12 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     isBCServicesCardBundle,
     tokenService,
     registrationService,
+    configApi,
     store.bcscSecure.registrationAccessToken,
     store.bcsc.selectedNickname,
     store.bcsc.appVersion,
     store.bcsc.appBuildNumber,
+    store.bcsc.acceptedTermsOfUseVersion,
   ])
 
   return useMemo(() => {

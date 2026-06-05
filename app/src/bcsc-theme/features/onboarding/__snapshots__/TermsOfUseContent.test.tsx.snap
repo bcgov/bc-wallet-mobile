@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`TermsOfUse renders correctly after loading terms 1`] = `
+exports[`TermsOfUseContent renders correctly after loading terms 1`] = `
 <RNCSafeAreaView
   edges={
     {
@@ -240,7 +240,7 @@ exports[`TermsOfUse renders correctly after loading terms 1`] = `
 </RNCSafeAreaView>
 `;
 
-exports[`TermsOfUse shows loading indicator while fetching terms 1`] = `
+exports[`TermsOfUseContent shows loading indicator while fetching terms 1`] = `
 <RNCSafeAreaView
   edges={
     {
