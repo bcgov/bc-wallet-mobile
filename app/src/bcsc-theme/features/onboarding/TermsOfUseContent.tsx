@@ -54,7 +54,7 @@ export const TermsOfUseContent = ({ onAccept, headerText }: TermsOfUseContentPro
       setError(false)
       setTermsOfUse(data)
     } catch (err) {
-      logger.error('Failed to fetch Terms of Use', err as Error)
+      logger.error('Failed to fetch Terms of Use', err instanceof Error ? err : new Error(String(err)))
       setError(true)
     } finally {
       setIsLoading(false)
