@@ -97,6 +97,8 @@ export interface BCSCState {
   deviceLimitBannerDismissedAt?: string
   credentialMetadata?: CredentialMetadata
   hasSeenVerifyPrompt?: boolean
+  showAccountExpiryNotification?: boolean
+  showCardRenewalNotification?: boolean
 }
 
 export enum VerificationStatus {
@@ -272,6 +274,8 @@ enum BCSCDispatchAction {
   DISMISSED_THIRD_PARTY_KEYBOARD_ALERT = 'bcsc/dismissedThirdPartyKeyboardAlert',
   DISMISSED_DEVICE_LIMIT_BANNER = 'bcsc/dismissedDeviceLimitBanner',
   SEEN_VERIFY_PROMPT = 'bcsc/seenVerifyPrompt',
+  SET_ACCOUNT_EXPIRY_NOTIFICATION = 'bcsc/setAccountExpiryNotification',
+  SET_CARD_RENEWAL_NOTIFICATION = 'bcsc/setCardRenewalNotification',
 }
 
 enum ModeDispatchAction {
@@ -796,6 +800,16 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
+    }
+
+    case BCSCDispatchAction.SET_ACCOUNT_EXPIRY_NOTIFICATION: {
+      const show = (action?.payload || []).pop() as boolean
+      return { ...state, bcsc: { ...state.bcsc, showAccountExpiryNotification: show } }
+    }
+
+    case BCSCDispatchAction.SET_CARD_RENEWAL_NOTIFICATION: {
+      const show = (action?.payload || []).pop() as boolean
+      return { ...state, bcsc: { ...state.bcsc, showCardRenewalNotification: show } }
     }
 
     default:

@@ -142,7 +142,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
         const getIdToken = () => tokenService.getCachedIdTokenMetadata({ refreshCache: false })
 
         await runSystemChecks([
-          new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation),
+          new EventReasonAlertsSystemCheck(getIdToken, credentialMetadataRef.current, utils, navigation),
         ])
       } catch (error) {
         logger.error(`Device invalidation check failed after token refresh: ${(error as Error).message}`)
@@ -167,7 +167,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
         const results = await runSystemChecks(systemCheckStrategies)
 
         const systemCheckResults = systemCheckStrategies.reduce<Record<string, boolean>>((acc, check, index) => {
-          // Collect results for logging ie: { DeviceCountSystemCheck: true, AccountExpiryWarningBannerSystemCheck: false }
+          // Collect results for logging ie: { DeviceCountSystemCheck: true, AccountExpiryWarningSystemCheck: false }
           acc[check.constructor.name] = results[index]
           return acc
         }, {})
