@@ -94,6 +94,16 @@ const translation = {
       "ButtonTitle": "Start verification",
       "ContinueButtonTitle": "Continue verification"
     },
+    "AccountExpiringSoon": {
+      "Title": "Your BCSC has expired",
+      "Description": "Please  reverify yourself to get access to your services",
+      "ButtonTitle": "Start renewal"
+    },
+    "CardStatusUpdated": {
+      "Title": "Time for renewal",
+      "Description": "Renew your BCSC app before it expires on {{expiryDate}}",
+      "ButtonTitle": "Start renewal"
+    },
     "BasicMessage": {
       "Title": "New message",
       "SentMessage": "{{ label }} sent a message",

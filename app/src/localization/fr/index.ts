@@ -94,6 +94,16 @@ const translation = {
       "ButtonTitle": "Start verification (FR)",
       "ContinueButtonTitle": "Continue verification (FR)"
     },
+    "AccountExpiringSoon": {
+      "Title": "Expires in {{days}} days (FR)",
+      "Description": "Renew your account on this device before it expires on {{accountExpiration}}. (FR)",
+      "ButtonTitle": "Renew account (FR)"
+    },
+    "CardStatusUpdated": {
+      "Title": "Account Updated (FR)",
+      "Description": "Your account has been automatically updated with information from your new BC Services Card. (FR)",
+      "ButtonTitle": "Renew account (FR)"
+    },
     "BasicMessage": {
       "Title": "New message (FR)",
       "SentMessage": "{{ label }} sent a message (FR)",

@@ -1,21 +1,16 @@
 import { compareCredentialMetadata, tokenToCredentialMetadata } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BCSCEvent, BCSCReason, IdToken } from '@/bcsc-theme/utils/id-token'
-import { AlertOptions } from '@/contexts/ErrorAlertContext'
-import { AppEventCode } from '@/events/appEventCode'
 import { BCDispatchAction, CredentialMetadata } from '@/store'
 import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
- * Checks token metadata and renders a modal or alert
+ * Checks token metadata and renders a modal or notification
  * Reasons:
  * Cancel
  *  - displays a modal instructing user to reset their app
- * Renew:
- *  - emits an alert informing the user their information has been updated
- *
- * Replace:
- *  - emits an alert informing the user their card type has changed
+ * Renew / Replace:
+ *  - shows a home screen notification prompting the user to re-verify
  *
  * @export
  * @class EventReasonAlertsSystemCheck
@@ -24,7 +19,6 @@ import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './
 export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
   private readonly navigation: SystemCheckNavigation
   private readonly getIdToken: () => Promise<IdToken>
-  private readonly emitAlert: (title: string, body: string, options?: AlertOptions) => void
   private readonly credentialMetadata: CredentialMetadata | undefined
   private readonly utils: SystemCheckUtils
   private event: BCSCEvent | undefined
@@ -33,13 +27,11 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
 
   constructor(
     getIdToken: () => Promise<IdToken>,
-    emitAlert: (title: string, body: string, options?: AlertOptions) => void,
     metadata: CredentialMetadata | undefined,
     utils: SystemCheckUtils,
     navigation: SystemCheckNavigation
   ) {
     this.getIdToken = getIdToken
-    this.emitAlert = emitAlert
     this.utils = utils
     this.credentialMetadata = metadata
     this.navigation = navigation
@@ -75,10 +67,8 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
         this.navigation.navigate(BCSCModals.DeviceInvalidated, { invalidationReason: this.reason })
         break
       case BCSCEvent.Renewal:
-        this.alertBuilder(AppEventCode.CARD_STATUS_UPDATED)
-        break
       case BCSCEvent.Replace:
-        this.alertBuilder(AppEventCode.CARD_TYPE_CHANGED)
+        this.utils.dispatch({ type: BCDispatchAction.SET_CARD_RENEWAL_NOTIFICATION, payload: [true] })
         break
       default:
         break
@@ -86,23 +76,6 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
   }
 
   onSuccess() {
-    // nothing to alert
-  }
-
-  // helper function for building the alert to emit
-  alertBuilder(eventCode: AppEventCode) {
-    this.emitAlert(
-      this.utils.translation('Alerts.AccountUpdated.Title'),
-      this.utils.translation('Alerts.AccountUpdated.Description'),
-      {
-        event: eventCode,
-        actions: [
-          {
-            text: this.utils.translation('Alerts.Actions.DefaultOK'),
-            style: 'cancel',
-          },
-        ],
-      }
-    )
+    // nothing to notify
   }
 }
