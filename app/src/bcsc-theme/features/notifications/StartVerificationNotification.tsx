@@ -1,9 +1,9 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { computeSetupStepCompletion } from '@/bcsc-theme/utils/setup-step-completion'
 import { BCState } from '@/store'
-import { InfoBoxType, useStore } from '@bifold/core'
+import { useStore } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
-import NotificationCard from './NotificationCard'
+import NotificationCard, { NotificationCardStatus } from './NotificationCard'
 
 interface StartVerificationNotificationProps {
   onClose: () => void
@@ -31,11 +31,12 @@ const StartVerificationNotification = (props: StartVerificationNotificationProps
       title={t('Notification.StartVerification.Title')}
       description={t('Notification.StartVerification.Description')}
       buttonTitle={buttonTitle}
+      icon="alert-circle"
       onPress={() => {
         secureActions.continueVerificationProcess()
       }}
       onClose={props.onClose}
-      cardType={InfoBoxType.Info}
+      status={NotificationCardStatus.Unread}
     />
   )
 }

@@ -1,5 +1,9 @@
 import { showPersonCredentialSelector } from '@/bcwallet-theme/features/person-flow/utils/BCIDHelper'
-import { AttestationRestrictions } from '@/constants'
+import {
+  AttestationRestrictions,
+  NOTIFICATION_REFRESH_INTERVAL_MS,
+  PROOF_REQUEST_NOTIFICATION_TTL_MS,
+} from '@/constants'
 import { BCState } from '@/store'
 import {
   BasicMessageMetadata,
@@ -39,6 +43,14 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
     []
   )
   const proofsDone = useProofByState(doneStates)
+  const [now, setNow] = useState(() => Date.now())
+
+  // Tick periodically so time-based rules (proof request TTL, expiry warnings) are
+  // re-evaluated while the notifications list stays mounted
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), NOTIFICATION_REFRESH_INTERVAL_MS)
+    return () => clearInterval(interval)
+  }, [])
 
   useEffect(() => {
     // get all unseen messages
@@ -76,8 +88,16 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
         : []
 
     const proofs = nonAttestationProofs.filter((proof) => {
+      const isDone = [DidCommProofState.Done, DidCommProofState.PresentationReceived].includes(proof.state)
+
+      // Pending proof requests are usually abandoned once they get old (e.g. the user scanned
+      // a new QR code), so they are removed from the list after their TTL passes
+      if (!isDone && new Date(proof.createdAt).getTime() + PROOF_REQUEST_NOTIFICATION_TTL_MS <= now) {
+        return false
+      }
+
       return (
-        ![DidCommProofState.Done, DidCommProofState.PresentationReceived].includes(proof.state) ||
+        !isDone ||
         (proof.isVerified !== undefined &&
           !(proof.metadata.data[ProofMetadata.customMetadata] as ProofCustomMetadata)?.details_seen)
       )
@@ -94,6 +114,7 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
     basicMessages,
     nonAttestationProofs,
     store.dismissPersonCredentialOffer.personCredentialOfferDismissed,
+    now,
   ])
 
   useEffect(() => {
