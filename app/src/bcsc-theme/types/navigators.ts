@@ -19,6 +19,7 @@ export enum BCSCModals {
   MandatoryUpdate = 'BCSCMandatoryUpdate',
   DeviceInvalidated = 'BCSCDeviceInvalidated',
   ServiceOutage = 'BCSCServiceOutage',
+  TermsOfUseUpdated = 'BCSCTermsOfUseUpdated',
 }
 
 /**
@@ -297,6 +298,7 @@ export type BCSCMainStackParams = {
   [BCSCModals.MandatoryUpdate]: undefined
   [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
   [BCSCModals.DeviceInvalidated]: { invalidationReason: BCSCReason }
+  [BCSCModals.TermsOfUseUpdated]: undefined
 }
 
 export type BCSCAuthStackParams = {

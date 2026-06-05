@@ -97,6 +97,7 @@ export interface BCSCState {
   deviceLimitBannerDismissedAt?: string
   credentialMetadata?: CredentialMetadata
   hasSeenVerifyPrompt?: boolean
+  acceptedTermsOfUseVersion?: string
 }
 
 export enum VerificationStatus {
@@ -239,6 +240,7 @@ enum BCSCDispatchAction {
   RESET_SEND_VIDEO = 'bcsc/clearPhotoAndVideo',
   UPDATE_ANALYTICS_OPT_IN = 'bcsc/updateAnalyticsOptIn',
   UPDATE_CREDENTIAL_METADATA = 'bcsc/updateCredentialMetadata',
+  UPDATE_ACCEPTED_TERMS_OF_USE_VERSION = 'bcsc/updateAcceptedTermsOfUseVersion',
   // Secure state actions
   HYDRATE_SECURE_STATE = 'bcsc/hydrateSecureState',
   CLEAR_SECURE_STATE = 'bcsc/clearSecureState',
@@ -793,6 +795,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCDispatchAction.UPDATE_CREDENTIAL_METADATA: {
       const credentialMetadata = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, credentialMetadata }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.UPDATE_ACCEPTED_TERMS_OF_USE_VERSION: {
+      const acceptedTermsOfUseVersion = (action?.payload || []).pop() ?? undefined
+      const bcsc = { ...state.bcsc, acceptedTermsOfUseVersion }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

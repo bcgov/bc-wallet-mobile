@@ -81,6 +81,10 @@ jest.mock('@/services/system-checks/ServerClockSkewSystemCheck', () => ({
   ServerClockSkewSystemCheck: class ServerClockSkewSystemCheck {},
 }))
 
+jest.mock('@/services/system-checks/TermsOfUseSystemCheck', () => ({
+  TermsOfUseSystemCheck: class TermsOfUseSystemCheck {},
+}))
+
 jest.mock('@/bcsc-theme/components/AppBanner', () => ({
   BCSCBanner: {
     IAS_SERVER_UNAVAILABLE: 'IASServerUnavailableBanner',
@@ -300,16 +304,18 @@ describe('useGetSystemChecks', () => {
 
         mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn() })
         mockUseRegistrationApi.mockReturnValue({})
+        mockUseConfigApi.mockReturnValue({ getTermsOfUse: jest.fn() })
 
         const { result } = renderHook(() => useCreateSystemChecks())
 
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
 
-        expect(systemChecks).toHaveLength(4) // DeviceCountSystemCheck, AccountExpiryWarningBannerSystemCheck, UpdateDeviceRegistrationSystemCheck
+        expect(systemChecks).toHaveLength(5) // DeviceCountSystemCheck, AccountExpiryWarningBannerSystemCheck, EventReasonAlertsSystemCheck, TermsOfUseSystemCheck, UpdateDeviceRegistrationSystemCheck
         expect(systemChecks[0].constructor.name).toBe('DeviceCountSystemCheck')
         expect(systemChecks[1].constructor.name).toBe('AccountExpiryWarningBannerSystemCheck')
         expect(systemChecks[2].constructor.name).toBe('EventReasonAlertsSystemCheck')
-        expect(systemChecks[3].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
+        expect(systemChecks[3].constructor.name).toBe('TermsOfUseSystemCheck')
+        expect(systemChecks[4].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
       })
     })
   })

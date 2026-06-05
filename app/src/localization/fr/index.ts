@@ -478,6 +478,9 @@ const translation = {
         "CheckAgainButton": "Check again (FR)",
         "LearnMore": "Learn more (FR)",
       },
+      "TermsOfUseUpdated": {
+        "Header": "The Terms of Use have been updated. Before you continue to use the Service, you must read and accept the updated terms. (FR)",
+      },
     },
     "Home": {
       "WhereToUseTitle": "Where to use (FR)",
