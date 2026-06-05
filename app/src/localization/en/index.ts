@@ -695,6 +695,7 @@ const translation = {
       "TryAgain": "Try Again",
       "Connecting": "Connecting…",
       "UnrecognizedQR": "QR code not recognized.",
+      "InvalidConnectionInvitation": "This connection invitation could not be opened.",
       "FeatureUnavailable": "This action isn't available yet.",
       "Unsupported": {
         "OpenID": "OpenID credentials aren't supported in BC Services Card.",
