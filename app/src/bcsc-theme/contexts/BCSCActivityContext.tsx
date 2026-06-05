@@ -112,8 +112,17 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
   useEffect(() => {
     // listener for backgrounding / foregrounding
     const eventSubscription = AppState.addEventListener('change', async (nextAppState) => {
+      // Snapshot the previous state and advance the ref/state synchronously, before any
+      // await below. The handler is async (it awaits pickup calls), so if the OS fires
+      // another AppState event while one is in-flight, advancing the ref up front keeps
+      // the second invocation from reading a stale previous state and mis-ordering pickup
+      // (e.g. a fast background→foreground flip would otherwise skip the pickup restart).
+      const prevAppState = prevAppStateStatusRef.current
+      prevAppStateStatusRef.current = nextAppState
+      setAppStateStatus(nextAppState)
+
       // if going into the background
-      if (['active', 'inactive'].includes(prevAppStateStatusRef.current) && nextAppState === 'background') {
+      if (['active', 'inactive'].includes(prevAppState) && nextAppState === 'background') {
         // remove timeout when backgrounded as timeout refs can be lost when app is backgrounded
         clearInactivityTimeoutIfExists()
 
@@ -133,7 +142,7 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
       }
 
       // if coming to the foreground
-      if (prevAppStateStatusRef.current === 'background' && ['active', 'inactive'].includes(nextAppState)) {
+      if (prevAppState === 'background' && ['active', 'inactive'].includes(nextAppState)) {
         // if app was in background for longer than allowed time, log out user
         if (
           !isPausedRef.current &&
@@ -166,9 +175,6 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
           }
         }
       }
-
-      prevAppStateStatusRef.current = nextAppState
-      setAppStateStatus(nextAppState)
     })
 
     // keyboard activity resets the inactivity timeout

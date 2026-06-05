@@ -185,4 +185,38 @@ describe('BCSCActivityContext', () => {
 
     addEventListenerSpy.mockRestore()
   })
+
+  it('restarts pickup on a fast background→foreground flip while the stop is still in-flight', async () => {
+    mockAgentHolder.current = { didcomm: { mediationRecipient: mockMediationRecipient } }
+    let appStateHandler: ((state: AppStateStatus) => void | Promise<void>) | undefined
+    const addEventListenerSpy = jest.spyOn(AppState, 'addEventListener').mockImplementation((event, handler) => {
+      if (event === 'change') {
+        appStateHandler = handler
+      }
+      return { remove: jest.fn() } as unknown as ReturnType<typeof AppState.addEventListener>
+    })
+
+    renderHook(() => useBCSCActivity(), { wrapper })
+
+    await act(async () => {
+      await appStateHandler?.('active')
+    })
+    mockMediationRecipient.stopMessagePickup.mockClear()
+    mockMediationRecipient.initiateMessagePickup.mockClear()
+
+    // Fire background then foreground back-to-back without awaiting between them — the
+    // foreground handler runs while the background handler is still awaiting stop, so it
+    // must read the already-advanced previous state and restart pickup (regression for
+    // the stale-prevAppState race).
+    await act(async () => {
+      const background = appStateHandler?.('background')
+      const foreground = appStateHandler?.('active')
+      await Promise.all([background, foreground])
+    })
+
+    expect(mockMediationRecipient.stopMessagePickup).toHaveBeenCalledTimes(1)
+    expect(mockMediationRecipient.initiateMessagePickup).toHaveBeenCalledTimes(1)
+
+    addEventListenerSpy.mockRestore()
+  })
 })
