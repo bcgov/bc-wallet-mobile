@@ -1,5 +1,5 @@
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
-import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
+import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningSystemCheck'
 import {
   CredentialDetails,
   Screens,

@@ -1,4 +1,3 @@
-import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { ACCOUNT_EXPIRATION_WARNING_DAYS } from '@/constants'
 import { BCDispatchAction } from '@/store'
 import moment from 'moment'
@@ -31,7 +30,7 @@ export const isAccountExpired = (accountExpiration: Date | string, warningPeriod
  * @class AccountExpirySystemCheck
  * @implements {SystemCheckStrategy}
  */
-export class AccountExpiryWarningBannerSystemCheck implements SystemCheckStrategy {
+export class AccountExpiryWarningSystemCheck implements SystemCheckStrategy {
   private readonly accountExpiration: Date
   private readonly utils: SystemCheckUtils
 
@@ -48,30 +47,10 @@ export class AccountExpiryWarningBannerSystemCheck implements SystemCheckStrateg
   }
 
   onFail() {
-    // Account is expiring soon
-    this.utils.dispatch({
-      type: BCDispatchAction.ADD_BANNER_MESSAGE,
-      payload: [
-        {
-          id: BCSCBanner.ACCOUNT_EXPIRING_SOON,
-          title: this.utils.translation('BCSC.SystemChecks.AccountExpiryWarningDescription.ExpiringBannerTitle', {
-            days: Math.ceil(moment(this.accountExpiration).diff(moment(), 'days', true)), // Math ceiling to show full days remaining. ie: 1.2 days = 2 days
-          }),
-          description: this.utils.translation(
-            'BCSC.SystemChecks.AccountExpiryWarningDescription.ExpiringBannerDescription',
-            {
-              accountExpiration: moment(this.accountExpiration).format('LL'), // ie: January 1, 1970
-            }
-          ),
-          type: 'warning',
-          variant: 'summary',
-          dismissible: false,
-        },
-      ],
-    })
+    this.utils.dispatch({ type: BCDispatchAction.SET_ACCOUNT_EXPIRY_NOTIFICATION, payload: [true] })
   }
 
   onSuccess() {
-    this.utils.dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.ACCOUNT_EXPIRING_SOON] })
+    this.utils.dispatch({ type: BCDispatchAction.SET_ACCOUNT_EXPIRY_NOTIFICATION, payload: [false] })
   }
 }

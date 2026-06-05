@@ -3,7 +3,7 @@ import BCSCApiClient from '@/bcsc-theme/api/client'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
-import { AccountExpiryWarningBannerSystemCheck } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
+import { AccountExpiryWarningSystemCheck } from '@/services/system-checks/AccountExpiryWarningSystemCheck'
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
@@ -130,8 +130,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
 
     const systemChecks: SystemCheckStrategy[] = [
       new DeviceCountSystemCheck(getIdToken, utils, dismissedAt),
-      new AccountExpiryWarningBannerSystemCheck(accountExpirationDate, utils),
-      new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation),
+      new AccountExpiryWarningSystemCheck(accountExpirationDate, utils),
+      new EventReasonAlertsSystemCheck(getIdToken, credentialMetadataRef.current, utils, navigation),
       // TODO (ar/bm): v3 doesn't include the checks below; re-add if needed in future
       // AccountExpiryWarningAlertSystemCheck
       // AccountExpiryAlertSystemCheck
@@ -152,7 +152,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   }, [
     accountExpirationDate,
     utils,
-    emitAlert,
     navigation,
     isBCServicesCardBundle,
     tokenService,
