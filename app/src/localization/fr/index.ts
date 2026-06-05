@@ -169,6 +169,8 @@ const translation = {
     "SwitchTheme": "Switch theme (FR)",
     "Testing": "Testing (FR)",
     "ErrorAlertTest": "Error & Alert Testing (FR)",
+    "StaleTermsOfUse": "Stale Terms of Use Acceptance (FR)",
+    "AcceptedTermsVersion": "Accepted version (FR)",
     "ErrorModals": "Error Modals (FR)",
     "ErrorModalsDescription": "Trigger errors that display as modal dialogs with title, description, and technical details. (FR)",
     "ErrorAsNativeAlert": "Errors as Native Alerts (FR)",
