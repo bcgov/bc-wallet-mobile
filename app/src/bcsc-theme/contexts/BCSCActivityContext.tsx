@@ -3,7 +3,7 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { DEFAULT_AUTO_LOCK_TIME_MIN } from '@/constants'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
-import { Agent } from '@credo-ts/core'
+import type { Agent } from '@credo-ts/core'
 import { DidCommMediatorPickupStrategy } from '@credo-ts/didcomm'
 import React, {
   createContext,
