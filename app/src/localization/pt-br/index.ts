@@ -96,21 +96,20 @@ const translation = {
     },
     "BasicMessage": {
       "Title": "New message (PT-BR)",
-      "SentMessage": "{{ label }} sent a message (PT-BR)",
-      "ReceivedMessage": "You received a new message (PT-BR)",
       "ButtonTitle": "View message (PT-BR)"
     },
     "CredentialOffer": {
       "Title": "Credential offer (PT-BR)",
-      "Description": "{{ label }} is offering you a credential (PT-BR)"
+      "Description": "{{ label }} is offering you a {{ credential }}. (PT-BR)"
     },
     "ProofRequest": {
       "Title": "Proof request (PT-BR)",
-      "Description": "{{ label }} is requesting information (PT-BR)",
-      "DefaultDescription": "You received a proof request (PT-BR)"
+      "Description": "{{ label }} is requesting for information. (PT-BR)",
+      "DefaultDescription": "You're being asked to share information. (PT-BR)"
     },
     "Revocation": {
-      "Title": "Credential revoked (PT-BR)"
+      "Title": "Credential revoked (PT-BR)",
+      "Description": "{{ credential }} was revoked. (PT-BR)"
     }
   },
   "PersonCredential": {
