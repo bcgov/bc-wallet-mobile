@@ -31,6 +31,8 @@ describe('BCSCActivityContext', () => {
   beforeEach(() => {
     jest.useFakeTimers()
     mockLogout.mockClear()
+    mockMediationRecipient.stopMessagePickup.mockClear()
+    mockMediationRecipient.initiateMessagePickup.mockClear()
   })
 
   afterEach(() => {
@@ -152,6 +154,34 @@ describe('BCSCActivityContext', () => {
       await appStateHandler?.('active')
     })
     expect(mockMediationRecipient.initiateMessagePickup).toHaveBeenCalled()
+
+    addEventListenerSpy.mockRestore()
+  })
+
+  it('does not touch message pickup (or log) when no agent is available', async () => {
+    mockAgentHolder.current = null
+    let appStateHandler: ((state: AppStateStatus) => void | Promise<void>) | undefined
+    const addEventListenerSpy = jest.spyOn(AppState, 'addEventListener').mockImplementation((event, handler) => {
+      if (event === 'change') {
+        appStateHandler = handler
+      }
+      return { remove: jest.fn() } as unknown as ReturnType<typeof AppState.addEventListener>
+    })
+
+    renderHook(() => useBCSCActivity(), { wrapper })
+
+    await act(async () => {
+      await appStateHandler?.('active')
+    })
+    await act(async () => {
+      await appStateHandler?.('background')
+    })
+    await act(async () => {
+      await appStateHandler?.('active')
+    })
+
+    expect(mockMediationRecipient.stopMessagePickup).not.toHaveBeenCalled()
+    expect(mockMediationRecipient.initiateMessagePickup).not.toHaveBeenCalled()
 
     addEventListenerSpy.mockRestore()
   })

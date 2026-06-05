@@ -120,11 +120,15 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
         // Tear down the live mediator pickup socket. The OS suspends sockets while
         // backgrounded, leaving a dead session; pairing this with the foreground
         // restart below is what flushes messages queued at the mediator on return.
-        try {
-          await agentRef.current?.didcomm.mediationRecipient.stopMessagePickup()
-          logger.info('BCSC Activity: Stopped agent message pickup')
-        } catch (err) {
-          logger.error(`BCSC Activity: Error stopping agent message pickup: ${err}`)
+        // Only act when an agent exists, so the log reflects what actually happened.
+        const agent = agentRef.current
+        if (agent) {
+          try {
+            await agent.didcomm.mediationRecipient.stopMessagePickup()
+            logger.info('BCSC Activity: Stopped agent message pickup')
+          } catch (err) {
+            logger.error(`BCSC Activity: Error stopping agent message pickup: ${err}`)
+          }
         }
       }
 
@@ -147,14 +151,18 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
           // messages (credential offers, proof requests, connection responses)
           // while the socket is down; without this they stay unfetched until the
           // next agent restart (app relaunch).
-          try {
-            await agentRef.current?.didcomm.mediationRecipient.initiateMessagePickup(
-              undefined,
-              DidCommMediatorPickupStrategy.PickUpV2LiveMode
-            )
-            logger.info('BCSC Activity: Restarted agent message pickup')
-          } catch (err) {
-            logger.error(`BCSC Activity: Error restarting agent message pickup: ${err}`)
+          // Only act when an agent exists, so the log reflects what actually happened.
+          const agent = agentRef.current
+          if (agent) {
+            try {
+              await agent.didcomm.mediationRecipient.initiateMessagePickup(
+                undefined,
+                DidCommMediatorPickupStrategy.PickUpV2LiveMode
+              )
+              logger.info('BCSC Activity: Restarted agent message pickup')
+            } catch (err) {
+              logger.error(`BCSC Activity: Error restarting agent message pickup: ${err}`)
+            }
           }
         }
       }
