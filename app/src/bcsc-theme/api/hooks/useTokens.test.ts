@@ -32,6 +32,8 @@ jest.mock('../../utils/id-token', () => ({
   getIdTokenMetadata: jest.fn(),
 }))
 
+const mockJwk = { kty: 'RSA', e: 'AQAB', kid: 'test-kid', alg: 'RS256', n: 'test-modulus' }
+
 describe('useTokenApi', () => {
   let mockApiClient: jest.Mocked<BCSCApiClient>
   let mockTokenResponse: TokenResponse
@@ -63,6 +65,7 @@ describe('useTokenApi', () => {
       },
       tokens: mockTokenResponse,
       getTokensForRefreshToken: jest.fn(),
+      fetchJwk: jest.fn().mockResolvedValue(mockJwk),
       logger: {
         info: jest.fn(),
         error: jest.fn(),
@@ -166,7 +169,7 @@ describe('useTokenApi', () => {
       const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
       const metadata = await result.current.getCachedIdTokenMetadata({ refreshCache: false })
 
-      expect(getIdTokenMetadata).toHaveBeenCalledWith('mock_id_token', mockApiClient.logger)
+      expect(getIdTokenMetadata).toHaveBeenCalledWith('mock_id_token', mockJwk, mockApiClient.logger)
       expect(mockApiClient.getTokensForRefreshToken).not.toHaveBeenCalled()
       expect(metadata).toEqual(mockMetadata)
     })
@@ -181,7 +184,7 @@ describe('useTokenApi', () => {
       const metadata = await result.current.getCachedIdTokenMetadata({ refreshCache: true })
 
       expect(mockApiClient.getTokensForRefreshToken).toHaveBeenCalledWith('mock_refresh_token')
-      expect(getIdTokenMetadata).toHaveBeenCalledWith('mock_id_token', mockApiClient.logger)
+      expect(getIdTokenMetadata).toHaveBeenCalledWith('mock_id_token', mockJwk, mockApiClient.logger)
       expect(metadata).toEqual(mockMetadata)
     })
 
@@ -223,7 +226,7 @@ describe('useTokenApi', () => {
       const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
       await result.current.getCachedIdTokenMetadata({ refreshCache: true })
 
-      expect(getIdTokenMetadata).toHaveBeenCalledWith('new_updated_id_token', mockApiClient.logger)
+      expect(getIdTokenMetadata).toHaveBeenCalledWith('new_updated_id_token', mockJwk, mockApiClient.logger)
     })
   })
 })

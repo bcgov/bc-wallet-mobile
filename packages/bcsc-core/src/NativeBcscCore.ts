@@ -25,6 +25,13 @@ export type LoginChallengeResult = {
   claims: LoginChallenge;
 };
 
+export type DecodePayloadResult = {
+  /** Whether the inner JWS signature was verified against the provided JWK */
+  verified: boolean;
+  /** The decoded inner-JWT payload as a raw JSON string (the caller JSON.parses it) */
+  claims: string;
+};
+
 // Re-declaring PrivateKeyInfo and KeyPair here to avoid import issues from index.ts
 // Ideally, these would be in a shared types file if not for TurboModule limitations.
 export type PrivateKeyInfo = {
@@ -284,7 +291,7 @@ export interface Spec extends TurboModule {
     issuer: string,
     confirmationCode: string
   ): Promise<string | null>;
-  decodePayload(jweString: string): Promise<string>;
+  decodePayload(jweString: string, key: JWK | null): Promise<DecodePayloadResult>;
   decodeLoginChallenge(jwt: string, key: JWK | null): Promise<LoginChallengeResult>;
   createPreVerificationJWT(deviceCode: string, clientID: string): Promise<string>;
   createQuickLoginJWT(

@@ -69,6 +69,8 @@ class BCSCApiClient {
   tokens?: TokenResponse // this token will be used to interact and access data from IAS servers
   tokensPromise: Promise<TokenResponse> | null // to prevent multiple simultaneous token fetches
   onError?: BCSCClientOnErrorCallback
+  private cachedJwk: JWK | null = null // in-memory JWK cache, invalidated when baseURL changes
+  private cachedJwkBaseUrl: string | null = null
 
   constructor(baseURL: string, logger: RemoteLogger) {
     this.baseURL = baseURL
@@ -326,16 +328,26 @@ class BCSCApiClient {
    * Fetches the first JWK from the server's JWKS endpoint.
    * Used for JWT signature verification.
    *
+   * The key is cached in-memory and reused while the environment (baseURL) is unchanged; the cache
+   * is invalidated automatically when baseURL changes. This keeps hot verification paths (user info,
+   * ID token decode) from issuing a network request on every call.
+   *
    * TODO: This should probably not be in the client, move logic elsewhere.
    */
   async fetchJwk(): Promise<JWK | null> {
+    if (this.cachedJwk && this.cachedJwkBaseUrl === this.baseURL) {
+      return this.cachedJwk
+    }
+
     try {
       const response = await this.get<JWKResponseData>(this.endpoints.jwksURI, {
         skipBearerAuth: true,
       })
 
       if (response.data.keys && response.data.keys.length > 0) {
-        return response.data.keys[0]
+        this.cachedJwk = response.data.keys[0]
+        this.cachedJwkBaseUrl = this.baseURL
+        return this.cachedJwk
       }
 
       return null

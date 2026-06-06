@@ -98,7 +98,8 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
         await apiClient.getTokensForRefreshToken(apiClient.tokens.refresh_token)
       }
 
-      return getIdTokenMetadata(apiClient.tokens.id_token, apiClient.logger)
+      const jwk = await apiClient.fetchJwk()
+      return getIdTokenMetadata(apiClient.tokens.id_token, jwk, apiClient.logger)
     },
     [apiClient]
   )

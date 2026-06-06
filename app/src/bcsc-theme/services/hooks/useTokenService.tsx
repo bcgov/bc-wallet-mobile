@@ -38,6 +38,14 @@ export const useTokenService = () => {
           alerts.failedToDeserializeJsonAlert()
         }
 
+        if (isAppError(error, AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK)) {
+          alerts.missingJwkAlert()
+        }
+
+        if (isAppError(error, AppEventCode.ERR_112_JWS_VERIFICATION_FAILED)) {
+          alerts.jwsVerificationFailedAlert()
+        }
+
         if (isAppError(error, AppEventCode.ERR_114_FAILED_TO_GET_CLAIMS_SET_AFTER_DECRYPT_AND_VERIFY)) {
           alerts.failedToGetClaimsSetAlert()
         }

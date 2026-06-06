@@ -1054,14 +1054,18 @@ class BcscCore: NSObject {
     resolve(body)
   }
 
-  /// Decodes a JWE string payload into a JWT and extracts the base64 encoded string from the JWT's payload.
+  /// Decodes a JWE string into its inner JWT, verifies the inner JWS signature (when a key is
+  /// provided), and extracts the JWT's payload as a raw JSON string.
   ///
   /// - Parameters:
   ///   - jweString: A string representing the JWE to decode.
-  ///   - resolve: The decoded JWT payload as a base64 encoded string.
-  ///   - reject: An error if the JWE cannot be parsed or the payload cannot be decoded.
+  ///   - key: Optional JWK public key used to verify the inner JWS signature. When omitted,
+  ///     `verified` is `false` and the claims are still returned (the caller gates on `verified`).
+  ///   - resolve: A `["verified": Bool, "claims": String]` map; `claims` is the decoded payload JSON string.
+  ///   - reject: An error if the JWE cannot be parsed/decrypted or the payload cannot be decoded.
   func decodePayload(
-    _ jweString: String, resolve: @escaping RCTPromiseResolveBlock,
+    _ jweString: String, key: NSDictionary?,
+    resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
     let keyPairManager = KeyPairManager()
@@ -1076,15 +1080,22 @@ class BcscCore: NSObject {
       let keyPair = try keyPairManager.getKeyPair(with: latestKeyInfo.tag)
       let jwe = try JWE.parse(s: jweString)
       let decrypter = RSADecrypter(privateKey: keyPair.private)
-      // Decrpyt payload into JWT
+      // Decrypt JWE payload into the inner JWT (compact JWS)
       let payload = try jwe.decrypt(withDecrypter: decrypter)
 
-      // Break down and decode JWT
+      // Validate the decrypted payload is a compact JWS
       let segments = payload.components(separatedBy: ".")
       guard segments.count == BcscCore.jwsCompactSegmentCount else {
         reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload", nil)
         return
       }
+
+      // Parse the inner JWS and verify its signature. `verified` is a flag (never throws); the
+      // caller decides what to do when it is false.
+      let jws = try JWS.parse(s: payload)
+      let verified = verifyJws(jws, key: key)
+
+      // Decode the claims segment (base64url) into the raw JSON string
       var base64String = segments[1]
       let requiredLength = Int(4 * ceil(Float(base64String.count) / 4.0))
       let nbrPaddings = requiredLength - base64String.count
@@ -1095,12 +1106,12 @@ class BcscCore: NSObject {
       base64String = base64String.replacingOccurrences(of: "-", with: "+")
       base64String = base64String.replacingOccurrences(of: "_", with: "/")
       guard let decodedData = Data(base64Encoded: base64String),
-            let base64Decoded = String(data: decodedData, encoding: .utf8)
+            let claims = String(data: decodedData, encoding: .utf8)
       else {
         reject("E_FAILED_TO_PARSE_JWS", "Failed to decode JWS payload segment", nil)
         return
       }
-      resolve(base64Decoded)
+      resolve(["verified": verified, "claims": claims])
     } catch {
       reject("E_PAYLOAD_DECODE_ERROR", "Unable to decode payload", nil)
     }
@@ -1147,13 +1158,7 @@ class BcscCore: NSObject {
       }
 
       // 3. Verify signature if key is provided
-      var verified = false
-      if let keyDict = key, let jwk = JWK(json: keyDict) {
-        if let secKey = JWK.jwkToSecKey(jwk: jwk) {
-          let verifier = RSAVerifier(rsaKey: secKey)
-          verified = (try? jws.verify(verifier: verifier)) ?? false
-        }
-      }
+      let verified = verifyJws(jws, key: key)
 
       // 4. Build claims response
       let claims: [String: Any] = [
@@ -1178,6 +1183,21 @@ class BcscCore: NSObject {
         "Unable to decode login challenge: \(error.localizedDescription)", error
       )
     }
+  }
+
+  /// Verifies a JWS signature against an optional JWK public key.
+  ///
+  /// Returns `false` when no key is provided, the JWK is invalid/unconvertible, or verification
+  /// fails. This never throws — an absent or failed verification is represented as `false`, not an
+  /// error, so callers can gate on the result (e.g. distinguish a missing key from a bad signature).
+  private func verifyJws(_ jws: JWS, key: NSDictionary?) -> Bool {
+    guard let keyDict = key, let jwk = JWK(json: keyDict),
+          let secKey = JWK.jwkToSecKey(jwk: jwk)
+    else {
+      return false
+    }
+    let verifier = RSAVerifier(rsaKey: secKey)
+    return (try? jws.verify(verifier: verifier)) ?? false
   }
 
   /// Creates a quick login JWT assertion matching the format used in ias-ios app.

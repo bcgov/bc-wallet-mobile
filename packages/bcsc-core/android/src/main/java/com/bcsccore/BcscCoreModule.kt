@@ -1542,6 +1542,7 @@ class BcscCoreModule(
     @ReactMethod
     override fun decodePayload(
         jweString: String,
+        key: ReadableMap?,
         promise: Promise,
     ) {
         try {
@@ -1559,9 +1560,22 @@ class BcscCoreModule(
             // Create RSA decrypter with the private key
             val rsaDecrypter = RSADecrypter(currentKeyPair.getKeyPair()!!.private)
 
-            // Decrypt the JWE to get the JWT payload
+            // Decrypt the JWE to get the inner JWT (compact JWS)
             jweObject.decrypt(rsaDecrypter)
             val jwtPayload = jweObject.payload.toString()
+
+            // Parse the inner JWS and verify its signature. `verified` is a flag (never throws); the
+            // caller decides what to do when it is false. A malformed inner token maps to
+            // E_FAILED_TO_PARSE_JWS, distinct from the outer JWE parse failure handled below.
+            val signedJWT =
+                try {
+                    SignedJWT.parse(jwtPayload)
+                } catch (e: java.text.ParseException) {
+                    Log.e(NAME, "decodePayload: inner JWS parse error: ${e.message}", e)
+                    promise.reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload", e)
+                    return
+                }
+            val verified = if (key != null) verifyJwtSignature(signedJWT, key) else false
 
             // Parse the JWT to extract and decode the payload (claims)
             val jwtSegments = jwtPayload.split(".")
@@ -1587,8 +1601,15 @@ class BcscCoreModule(
             val decodedBytes = android.util.Base64.decode(base64Payload, android.util.Base64.DEFAULT)
             val decodedPayload = String(decodedBytes, Charsets.UTF_8)
 
-            Log.d(NAME, "decodePayload: Successfully decoded JWE payload")
-            promise.resolve(decodedPayload)
+            // Return the verification flag alongside the raw claims JSON string
+            val result =
+                Arguments.createMap().apply {
+                    putBoolean("verified", verified)
+                    putString("claims", decodedPayload)
+                }
+
+            Log.d(NAME, "decodePayload: decoded JWE payload, verified=$verified")
+            promise.resolve(result)
         } catch (e: BcscException) {
             Log.e(NAME, "decodePayload: BCSC key error: ${e.devMessage}", e)
             promise.reject("E_BCSC_DECODE_ERROR", "Error accessing key for JWE decryption: ${e.devMessage}", e)

@@ -1,5 +1,6 @@
 import { NativeModules, Platform } from 'react-native';
 import NativeBcscCoreSpec, {
+  type DecodePayloadResult,
   type JWK,
   type JWTClaims,
   type LoginChallengeResult,
@@ -10,6 +11,7 @@ import NativeBcscCoreSpec, {
 } from './NativeBcscCore';
 export { AccountSecurityMethod, BCSCCardProcess } from './NativeBcscCore';
 export type {
+  DecodePayloadResult,
   JWK,
   LoginChallenge,
   LoginChallengeResult,
@@ -470,8 +472,8 @@ export const getDeviceCodeRequestBody = async (
   return BcscCore.getDeviceCodeRequestBody(deviceCode, clientId, issuer, confirmationCode);
 };
 
-export const decodePayload = async (jweString: string): Promise<any> => {
-  return BcscCore.decodePayload(jweString);
+export const decodePayload = async (jweString: string, key?: JWK | null): Promise<DecodePayloadResult> => {
+  return BcscCore.decodePayload(jweString, key ?? null);
 };
 
 export const decodeLoginChallenge = async (jwt: string, key?: JWK): Promise<LoginChallengeResult> => {

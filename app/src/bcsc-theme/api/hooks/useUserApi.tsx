@@ -1,7 +1,7 @@
 import { AppError, ErrorRegistry } from '@/errors'
 import { throwAppError } from '@bcsc-theme/utils/native-error-map'
 import { useCallback, useMemo } from 'react'
-import { decodePayload } from 'react-native-bcsc-core'
+import { decodePayload, DecodePayloadResult } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
@@ -40,16 +40,28 @@ const useUserApi = (apiClient: BCSCApiClient) => {
     return withAccount(async () => {
       const { data } = await apiClient.get<string>(apiClient.endpoints.userInfo)
 
-      let userInfoString: string
+      // Public key used to verify the inner JWS signature of the decrypted user-info token.
+      const jwk = await apiClient.fetchJwk()
+
+      let result: DecodePayloadResult
       try {
-        userInfoString = await decodePayload(data)
+        result = await decodePayload(data, jwk)
       } catch (error) {
         return throwAppError(error, ErrorRegistry.DECRYPT_JWE_ERROR)
       }
 
+      if (!result.verified) {
+        // Distinguish "no key to verify against" (ERR_111) from "signature did not match" (ERR_112),
+        // matching the gate FcmViewModel applies to decodeLoginChallenge.
+        if (!jwk) {
+          throw AppError.fromErrorDefinition(ErrorRegistry.MISSING_JWK_ERROR)
+        }
+        throw AppError.fromErrorDefinition(ErrorRegistry.JWS_VERIFICATION_FAILED)
+      }
+
       let parsed: UserInfoResponseData
       try {
-        parsed = JSON.parse(userInfoString)
+        parsed = JSON.parse(result.claims)
       } catch (error) {
         throw AppError.fromErrorDefinition(ErrorRegistry.DESERIALIZE_JSON_ERROR, { cause: error })
       }

@@ -101,7 +101,7 @@ export const getDynamicClientRegistrationBody = jest.fn().mockResolvedValue('moc
 export const getDeviceCodeRequestBody = jest.fn().mockResolvedValue('mock-device-code-body')
 
 // JWT and Cryptography
-export const decodePayload = jest.fn().mockResolvedValue({})
+export const decodePayload = jest.fn().mockResolvedValue({ verified: true, claims: '{}' })
 export const createDeviceSignedJWT = jest.fn().mockResolvedValue('mock-jwt')
 export const createPreVerificationJWT = jest.fn().mockResolvedValue('mock-pre-verification-jwt')
 export const createQuickLoginJWT = jest.fn().mockResolvedValue('mock-quick-login-jwt')
