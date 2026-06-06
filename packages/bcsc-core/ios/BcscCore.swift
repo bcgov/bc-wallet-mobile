@@ -1091,8 +1091,15 @@ class BcscCore: NSObject {
       }
 
       // Parse the inner JWS and verify its signature. `verified` is a flag (never throws); the
-      // caller decides what to do when it is false.
-      let jws = try JWS.parse(s: payload)
+      // caller decides what to do when it is false. A malformed inner token maps to
+      // E_FAILED_TO_PARSE_JWS, distinct from the outer decrypt/parse failure handled by the catch.
+      let jws: JWS
+      do {
+        jws = try JWS.parse(s: payload)
+      } catch {
+        reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload", nil)
+        return
+      }
       let verified = verifyJws(jws, key: key)
 
       // Decode the claims segment (base64url) into the raw JSON string
