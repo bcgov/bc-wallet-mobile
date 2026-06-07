@@ -248,8 +248,10 @@ class NativeCompatiblePinStorage(
         val keyFactory = SecretKeyFactory.getInstance(algorithm)
         val derivedKey = keyFactory.generateSecret(keySpec)
 
-        // Native uses contentToString() for the key representation
-        return derivedKey.encoded.contentToString()
+        // Base64-encode to match iOS (PINService.swift) and keep the wallet key string
+        // stable across platforms. contentToString() produced a Java byte-array debug
+        // string (e.g. "[-106, 10, ...]") rather than a proper encoding.
+        return Base64.encodeToString(derivedKey.encoded, Base64.NO_WRAP)
     }
 
     /**
