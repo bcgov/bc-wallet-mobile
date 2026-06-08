@@ -198,7 +198,7 @@ dependencies {
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
     
-    implementation 'net.java.dev.jna:jna:5.14.0'
+    implementation 'net.java.dev.jna:jna:5.19.0'
     
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
