@@ -85,8 +85,9 @@ const useEvidenceIDCollectionModel = () => {
       }
 
       // First name is intentionally optional to support mononyms (people with a single
-      // legal name). Only the last name is required.
-      if (!values.lastName) {
+      // legal name). Last name remains required; trim so whitespace-only input is rejected
+      // (the value is trimmed before it is persisted).
+      if (!values.lastName.trim()) {
         errors.lastName = t('BCSC.EvidenceIDCollection.LastNameError')
       }
 

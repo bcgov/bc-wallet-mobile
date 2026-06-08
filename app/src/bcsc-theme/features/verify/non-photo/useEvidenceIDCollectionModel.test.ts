@@ -47,6 +47,19 @@ describe('useEvidenceIDCollectionModel', () => {
       expect(errors.lastName).toBe('BCSC.EvidenceIDCollection.LastNameError')
     })
 
+    it('treats a whitespace-only last name as missing', () => {
+      const validateEvidence = getValidateEvidence()
+
+      const errors = validateEvidence({
+        values: { ...baseValues, lastName: '   ' },
+        personalInfoRequired: true,
+        minimumAge: 19,
+        t,
+      })
+
+      expect(errors.lastName).toBe('BCSC.EvidenceIDCollection.LastNameError')
+    })
+
     it('skips personal info validation entirely when not required', () => {
       const validateEvidence = getValidateEvidence()
 
