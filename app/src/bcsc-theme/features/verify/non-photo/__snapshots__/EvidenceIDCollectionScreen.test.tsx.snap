@@ -214,6 +214,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
                 >
                   <TextInput
                     accessibilityLabel="Passport Number"
+                    autoCapitalize="characters"
                     autoCorrect={false}
                     onBlur={[Function]}
                     onChange={[Function]}
