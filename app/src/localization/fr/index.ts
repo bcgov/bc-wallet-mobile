@@ -96,21 +96,20 @@ const translation = {
     },
     "BasicMessage": {
       "Title": "New message (FR)",
-      "SentMessage": "{{ label }} sent a message (FR)",
-      "ReceivedMessage": "You received a new message (FR)",
       "ButtonTitle": "View message (FR)"
     },
     "CredentialOffer": {
       "Title": "Credential offer (FR)",
-      "Description": "{{ label }} is offering you a credential (FR)"
+      "Description": "{{ label }} is offering you a {{ credential }}. (FR)"
     },
     "ProofRequest": {
       "Title": "Proof request (FR)",
-      "Description": "{{ label }} is requesting information (FR)",
-      "DefaultDescription": "You received a proof request (FR)"
+      "Description": "{{ label }} is requesting for information. (FR)",
+      "DefaultDescription": "You're being asked to share information. (FR)"
     },
     "Revocation": {
-      "Title": "Credential revoked (FR)"
+      "Title": "Credential revoked (FR)",
+      "Description": "{{ credential }} was revoked. (FR)"
     }
   },
   "PersonCredential": {
@@ -696,6 +695,7 @@ const translation = {
       "TryAgain": "Try Again (FR)",
       "Connecting": "Connecting… (FR)",
       "UnrecognizedQR": "QR code not recognized. (FR)",
+      "InvalidConnectionInvitation": "This connection invitation could not be opened. (FR)",
       "FeatureUnavailable": "This action isn't available yet. (FR)",
       "Unsupported": {
         "OpenID": "OpenID credentials aren't supported in BC Services Card. (FR)",
@@ -1188,7 +1188,7 @@ const translation = {
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again. (FR)",
     },
     "Wallet": {
-      "EmptyMessage": "Your wallet is empty (FR)",
+      "EmptyMessage": "Your wallet is empty! (FR)",
       "Reset": "Reset wallet (FR)",
       "ResetTitle": "Reset wallet? (FR)",
       "ResetDescription": "This will permanently delete all credentials, connections, and chat history stored in your wallet. Your PIN, biometrics, and BC Services Card identity will not be affected. You will not have to re-verify. (FR)",

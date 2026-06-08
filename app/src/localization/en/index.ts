@@ -96,21 +96,20 @@ const translation = {
     },
     "BasicMessage": {
       "Title": "New message",
-      "SentMessage": "{{ label }} sent a message",
-      "ReceivedMessage": "You received a new message",
       "ButtonTitle": "View message"
     },
     "CredentialOffer": {
       "Title": "Credential offer",
-      "Description": "{{ label }} is offering you a credential"
+      "Description": "{{ label }} is offering you a {{ credential }}."
     },
     "ProofRequest": {
       "Title": "Proof request",
-      "Description": "{{ label }} is requesting information",
-      "DefaultDescription": "You received a proof request"
+      "Description": "{{ label }} is requesting for information.",
+      "DefaultDescription": "You're being asked to share information."
     },
     "Revocation": {
-      "Title": "Credential revoked"
+      "Title": "Credential revoked",
+      "Description": "{{ credential }} was revoked."
     }
   },
   "PersonCredential": {
@@ -696,6 +695,7 @@ const translation = {
       "TryAgain": "Try Again",
       "Connecting": "Connecting…",
       "UnrecognizedQR": "QR code not recognized.",
+      "InvalidConnectionInvitation": "This connection invitation could not be opened.",
       "FeatureUnavailable": "This action isn't available yet.",
       "Unsupported": {
         "OpenID": "OpenID credentials aren't supported in BC Services Card.",
@@ -1183,7 +1183,7 @@ const translation = {
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again.",
     },
     "Wallet": {
-      "EmptyMessage": "Your wallet is empty",
+      "EmptyMessage": "Your wallet is empty!",
       "Reset": "Reset wallet",
       "ResetTitle": "Reset wallet?",
       "ResetDescription": "This will permanently delete all credentials, connections, and chat history stored in your wallet. Your PIN, biometrics, and BC Services Card identity will not be affected. You will not have to re-verify.",

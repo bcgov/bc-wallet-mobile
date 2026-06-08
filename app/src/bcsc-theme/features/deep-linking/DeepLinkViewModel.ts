@@ -1,16 +1,19 @@
-import { AbstractBifoldLogger } from '@bifold/core'
+import { AbstractBifoldLogger, isDidCommInvitation } from '@bifold/core'
+import { ConnectionInvitationService } from '../connection-invitation/ConnectionInvitationService'
 import { PairingService } from '../pairing'
 import { DeepLinkPayload, DeepLinkService } from './services/deep-linking'
 
 /**
- * ViewModel for handling deep link URLs.
- * Parses URLs and delegates pairing requests to PairingService.
+ * ViewModel for handling deep link URLs. Parses URLs and delegates pairing
+ * requests to PairingService and out-of-band connection invitations to
+ * ConnectionInvitationService.
  */
 export class DeepLinkViewModel {
   constructor(
     private readonly deepLinkService: DeepLinkService,
     private readonly logger: AbstractBifoldLogger,
-    private readonly pairingService: PairingService
+    private readonly pairingService: PairingService,
+    private readonly connectionInvitationService: ConnectionInvitationService
   ) {}
 
   public initialize() {
@@ -28,7 +31,33 @@ export class DeepLinkViewModel {
       return
     }
 
+    if (this.handleConnectionInvitation(payload)) {
+      return
+    }
+
     // Add more routes here as needed.
+  }
+
+  /**
+   * Route an out-of-band connection invitation deep link (e.g.
+   * `bcwallet://aries_connection_invitation?oob=<base64>`) to the
+   * ConnectionInvitationService, which buffers it until the agent is ready.
+   *
+   * Detection keys off the invitation query param via Bifold's
+   * `isDidCommInvitation`, which is scheme- and host-agnostic — robust even when
+   * `parseUrl` mangles the host of `scheme://host?query` custom-scheme URLs.
+   */
+  private handleConnectionInvitation(payload: DeepLinkPayload): boolean {
+    if (!isDidCommInvitation(payload.rawUrl)) {
+      return false
+    }
+
+    this.connectionInvitationService.handleInvitation({
+      url: payload.rawUrl,
+      source: 'deep-link',
+    })
+
+    return true
   }
 
   private handlePairing(payload: DeepLinkPayload): boolean {
