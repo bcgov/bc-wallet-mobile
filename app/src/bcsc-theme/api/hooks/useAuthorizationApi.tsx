@@ -105,7 +105,8 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
             iat: Math.floor(Date.now() / 1000),
             exp: Math.floor(Date.now() / 1000) + 60 * 10, // ten minutes
             family_name: config.lastName,
-            given_name: config.firstName,
+            // Omit given name if not provided or empty string (mononyms have no first name)
+            given_name: config.firstName || undefined,
             birthdate: config.birthdate,
             address: {
               street_address: config.address.streetAddress,

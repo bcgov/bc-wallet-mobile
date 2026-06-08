@@ -217,5 +217,17 @@ describe('useAuthorizationApi', () => {
         expect.objectContaining({ middle_name: undefined })
       )
     })
+
+    it('omits given_name when first name is empty (mononym)', async () => {
+      const apiClient = buildMockApiClient()
+      const api = renderAuthApi(apiClient)
+
+      await act(async () => {
+        await api.authorizeDeviceWithUnknownBCSC({ ...baseConfig, firstName: '' })
+      })
+      expect(BcscCore.createDeviceSignedJWT).toHaveBeenLastCalledWith(
+        expect.objectContaining({ given_name: undefined })
+      )
+    })
   })
 })
