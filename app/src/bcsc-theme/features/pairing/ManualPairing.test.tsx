@@ -4,6 +4,7 @@ import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import React from 'react'
+import { Alert } from 'react-native'
 import ManualPairing from './ManualPairing'
 
 const mockLoginByPairingCode = jest.fn()
@@ -84,6 +85,7 @@ describe('ManualPairing', () => {
     })
 
     test('shows error when submission fails', async () => {
+      const alertSpy = jest.spyOn(Alert, 'alert')
       mockLoginByPairingCode.mockRejectedValue(new Error('Network error'))
       renderScreen()
 
@@ -93,6 +95,11 @@ describe('ManualPairing', () => {
 
       await waitFor(() => {
         expect(screen.getByText('BCSC.ManualPairing.FailedToSubmitPairingCodeMessage')).toBeTruthy()
+        expect(alertSpy).toHaveBeenCalledWith(
+          'BCSC.ManualPairing.CouldNotVerifyPairingCodeTitle',
+          'BCSC.ManualPairing.CodeDoesNotMatchMessage',
+          expect.any(Array)
+        )
       })
     })
 
