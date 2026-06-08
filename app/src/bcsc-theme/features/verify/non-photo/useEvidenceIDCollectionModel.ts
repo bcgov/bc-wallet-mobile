@@ -84,10 +84,8 @@ const useEvidenceIDCollectionModel = () => {
         return errors
       }
 
-      if (!values.firstName) {
-        errors.firstName = t('BCSC.EvidenceIDCollection.FirstNameError')
-      }
-
+      // First name is intentionally optional to support mononyms (people with a single
+      // legal name). Only the last name is required.
       if (!values.lastName) {
         errors.lastName = t('BCSC.EvidenceIDCollection.LastNameError')
       }
