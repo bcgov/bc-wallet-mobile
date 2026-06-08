@@ -275,19 +275,14 @@ export const emailVerificationCodeErrorPolicy: ErrorHandlingPolicy = {
 // expired code, which is a user-input error. Suppress the global modal so the
 // ManualPairing screen can show its own alert error instead of the misleading
 // "App not installed correctly (error 209)" alert.
-// Matches by path pattern (PUT /v1/emails/{id}) rather than the full evidence base URL,
-// because the discovery-provided evidence_endpoint can differ from the fallback (trailing
-// slash, version suffix, etc.) and we don't want this match to silently break.
 const PAIRING_CORE_PATH_PATTERN = /\/v3\/mobile\/assertion/
 export const pairingCodeErrorPolicy: ErrorHandlingPolicy = {
   matches: (_, context) => {
-    return (
-      (context.statusCode === 400 || context.statusCode === 404) && PAIRING_CORE_PATH_PATTERN.test(context.endpoint)
-    )
+    return context.statusCode === 404 && PAIRING_CORE_PATH_PATTERN.test(context.endpoint)
   },
   handle: (_error, context) => {
     context.logger.info(
-      '[PairingCodeErrorPolicy] Suppressing global alert — confirmation screen will show inline error for invalid code'
+      '[PairingCodeErrorPolicy] Suppressing global alert — manual pairing screen will show inline error and alert for invalid pairing code'
     )
   },
 }
