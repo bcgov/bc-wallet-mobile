@@ -659,16 +659,6 @@ describe('clientErrorPolicies', () => {
         expect(emailVerificationCodeErrorPolicy.matches(error, context as any)).toBeTruthy()
       })
 
-      it('should match 400 on email verification PUT endpoint', () => {
-        const error = newError('unknown_server_error')
-        const context = {
-          statusCode: 400,
-          endpoint: `${evidenceBase}/v1/emails/349802`,
-          apiEndpoints: { evidence: evidenceBase },
-        }
-        expect(emailVerificationCodeErrorPolicy.matches(error, context as any)).toBeTruthy()
-      })
-
       it('should NOT match the email creation POST endpoint (no id in path)', () => {
         const error = newError('unknown_server_error')
         const context = {

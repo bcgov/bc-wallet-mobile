@@ -248,7 +248,7 @@ export const attestationPollingErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
-// Error policy for email verification code submission — 400/404 indicate a wrong or
+// Error policy for email verification code submission — 404 indicates a wrong or
 // expired code, which is a user-input error. Suppress the global modal so the
 // EmailConfirmationScreen can show its own inline error instead of the misleading
 // "App not installed correctly (error 209)" alert.
@@ -259,10 +259,7 @@ export const attestationPollingErrorPolicy: ErrorHandlingPolicy = {
 const EMAIL_VERIFICATION_PATH_PATTERN = /\/v1\/emails\/[^/?#]+/
 export const emailVerificationCodeErrorPolicy: ErrorHandlingPolicy = {
   matches: (_, context) => {
-    return (
-      (context.statusCode === 400 || context.statusCode === 404) &&
-      EMAIL_VERIFICATION_PATH_PATTERN.test(context.endpoint)
-    )
+    return context.statusCode === 404 && EMAIL_VERIFICATION_PATH_PATTERN.test(context.endpoint)
   },
   handle: (_error, context) => {
     context.logger.info(
@@ -275,10 +272,10 @@ export const emailVerificationCodeErrorPolicy: ErrorHandlingPolicy = {
 // expired code, which is a user-input error. Suppress the global modal so the
 // ManualPairing screen can show its own alert error instead of the misleading
 // "App not installed correctly (error 209)" alert.
-const PAIRING_CORE_PATH_PATTERN = /\/v3\/mobile\/assertion/
+const PAIRING_CODE_PATH_PATTERN = /\/v3\/mobile\/assertion/
 export const pairingCodeErrorPolicy: ErrorHandlingPolicy = {
   matches: (_, context) => {
-    return context.statusCode === 404 && PAIRING_CORE_PATH_PATTERN.test(context.endpoint)
+    return context.statusCode === 404 && PAIRING_CODE_PATH_PATTERN.test(context.endpoint)
   },
   handle: (_error, context) => {
     context.logger.info(

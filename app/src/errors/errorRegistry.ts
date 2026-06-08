@@ -163,7 +163,7 @@ export const ErrorRegistry = {
     appEvent: AppEventCode.ERR_209_BAD_REQUEST,
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.NETWORK,
-    message: 'Server rejected the request with HTTP 400 — check request payload',
+    message: 'Server rejected the request — check request payload',
   },
   SERVER_OUTAGE: {
     statusCode: 2108,

@@ -20,6 +20,7 @@ jest.mock('@/bcsc-theme/api/hooks/useApi', () => ({
 
 describe('ManualPairing', () => {
   let mockNavigation: any
+  let alertSpy: any
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -29,6 +30,7 @@ describe('ManualPairing', () => {
 
   afterEach(() => {
     jest.useRealTimers()
+    alertSpy?.mockRestore()
   })
 
   const renderScreen = () =>
@@ -84,9 +86,9 @@ describe('ManualPairing', () => {
       })
     })
 
-    test('shows error when submission fails', async () => {
-      const alertSpy = jest.spyOn(Alert, 'alert')
-      mockLoginByPairingCode.mockRejectedValue(new Error('Network error'))
+    test('shows error when submission fails with 404', async () => {
+      alertSpy = jest.spyOn(Alert, 'alert')
+      mockLoginByPairingCode.mockRejectedValue(new Error('Not Found', { cause: { status: 404 } }))
       renderScreen()
 
       const codeInput = screen.getByTestId(testIdWithKey('ManualPairingCodeInput'))

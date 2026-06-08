@@ -56,11 +56,15 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
       } catch (error) {
         logger.error(`Error submitting pairing code: ${error}`)
         setError(t('BCSC.ManualPairing.FailedToSubmitPairingCodeMessage'))
-        Alert.alert(
-          t('BCSC.ManualPairing.CouldNotVerifyPairingCodeTitle'),
-          t('BCSC.ManualPairing.CodeDoesNotMatchMessage'),
-          [{ text: t('Global.OK') }]
-        )
+
+        // Error 404 is assumed to be an incorrect pairing code
+        if ((error as any)?.cause?.status === 404) {
+          Alert.alert(
+            t('BCSC.ManualPairing.CouldNotVerifyPairingCodeTitle'),
+            t('BCSC.ManualPairing.CodeDoesNotMatchMessage'),
+            [{ text: t('Global.OK') }]
+          )
+        }
       } finally {
         setLoading(false)
       }
