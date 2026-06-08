@@ -271,11 +271,10 @@ export const emailVerificationCodeErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
-// Error policy for pairing code submission — 404 indicate a wrong or
+// Error policy for pairing code submission — 404 indicates a wrong or
 // expired code, which is a user-input error. Suppress the global modal so the
-// ManualPairing can show its own alert error instead of the misleading
+// ManualPairing screen can show its own alert error instead of the misleading
 // "App not installed correctly (error 209)" alert.
-//
 // Matches by path pattern (PUT /v1/emails/{id}) rather than the full evidence base URL,
 // because the discovery-provided evidence_endpoint can differ from the fallback (trailing
 // slash, version suffix, etc.) and we don't want this match to silently break.
