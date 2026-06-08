@@ -271,7 +271,7 @@ export const emailVerificationCodeErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
-// Error policy for pairing code submission — 400/404 indicate a wrong or
+// Error policy for pairing code submission — 404 indicate a wrong or
 // expired code, which is a user-input error. Suppress the global modal so the
 // ManualPairing can show its own alert error instead of the misleading
 // "App not installed correctly (error 209)" alert.
