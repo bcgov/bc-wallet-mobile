@@ -136,7 +136,7 @@ describe('EmailConfirmation', () => {
       fireEvent.press(screen.getByTestId('ContinueButton'))
 
       await waitFor(() => {
-        expect(screen.getByText('BCSC.EmailConfirmation.ErrorTitle')).toBeTruthy()
+        expect(screen.getByText('BCSC.EmailConfirmation.CodeDoesNotMatch')).toBeTruthy()
         expect(alertSpy).toHaveBeenCalledWith(
           'BCSC.EmailConfirmation.CouldNotVerifyTitle',
           'BCSC.EmailConfirmation.CodeDoesNotMatch',
