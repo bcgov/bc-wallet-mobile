@@ -3,6 +3,7 @@ import { Analytics } from '@/utils/analytics/analytics-singleton'
 import useApi from '@bcsc-theme/api/hooks/useApi'
 import { VideoCall, VideoSession } from '@bcsc-theme/api/hooks/useVideoCallApi'
 import useEvidenceUpload from '@bcsc-theme/hooks/useEvidenceUpload'
+import { buildUploadFailureDiagnostics } from '@bcsc-theme/utils/network-diagnostics'
 import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -217,16 +218,26 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
 
   // 0. upload any required evidence before attempting to connect to the call, since it must be present in IDCheck
   const uploadPreCallEvidence = useCallback(async (): Promise<boolean> => {
+    const startedAt = Date.now()
+    // Tracks which upload step is executing so a failure can report where it occurred.
+    let stage = 'upload-selfie'
     try {
       await uploadSelfiePhoto()
+      stage = 'process-additional-evidence'
       const additionalEvidence = await processAdditionalEvidence()
+      stage = 'upload-binaries'
       await uploadEvidenceBinaries(additionalEvidence)
     } catch (error) {
+      // Capture failure-time diagnostics so remote logs can distinguish a genuinely offline
+      // device from a host-specific transport failure (issue #4010). handleError still drives
+      // the UI/analytics; this adds the queryable structured detail.
+      const diagnostics = await buildUploadFailureDiagnostics(error, { stage, startedAt })
+      logger.error('[useVideoCallFlow] Pre-call evidence upload failed', diagnostics, error as Error)
       handleError(VideoCallErrorType.DOCUMENT_UPLOAD_FAILED, error as Error)
       return false
     }
     return true
-  }, [uploadSelfiePhoto, processAdditionalEvidence, uploadEvidenceBinaries, handleError])
+  }, [uploadSelfiePhoto, processAdditionalEvidence, uploadEvidenceBinaries, handleError, logger])
 
   // 1. a session must be created before call can begin
   const createSession = useCallback(async (): Promise<VideoSession | null> => {

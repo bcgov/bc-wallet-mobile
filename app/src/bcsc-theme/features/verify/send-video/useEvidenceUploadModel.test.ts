@@ -4,6 +4,7 @@ import { getVideoMetadata } from '@/bcsc-theme/utils/file-info'
 import { BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import * as Bifold from '@bifold/core'
+import NetInfo from '@react-native-community/netinfo'
 import { act, renderHook } from '@testing-library/react-native'
 import RNFS from 'react-native-fs'
 import { VerificationVideoCache } from './VideoReviewScreen'
@@ -433,6 +434,70 @@ describe('useEvidenceUploadModel', () => {
 
       expect(mockFileUploadErrorAlert).toHaveBeenCalled()
       expect(mockEvidenceApi.sendVerificationRequest).not.toHaveBeenCalled()
+    })
+
+    it('logs redacted upload diagnostics (stage, failing file, network) when a binary upload fails', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([
+        {
+          ...baseStore,
+          bcsc: {
+            ...baseStore.bcsc,
+            photoPath: '/photo.jpg',
+            videoPath: '/video.mp4',
+            videoDuration: 10,
+            prompts: [{ text: 'smile' }],
+            photoMetadata: { some: 'metadata' },
+          },
+          bcscSecure: {
+            ...baseStore.bcscSecure,
+            verificationRequestId: 'req-123',
+            verificationRequestSha: 'sha-456',
+            additionalEvidenceData: [],
+          },
+        } as BCState,
+        jest.fn(),
+      ])
+
+      jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
+      jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(Buffer.from([4, 5, 6]))
+      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-01-01') } as any)
+      jest.mocked(getVideoMetadata).mockResolvedValue({ duration: 10 } as any)
+      jest.mocked(NetInfo.refresh).mockResolvedValue({
+        type: 'wifi',
+        isConnected: true,
+        isInternetReachable: true,
+      } as any)
+
+      // Pre-signed upload URLs carry a token in the query string — it must not reach logs.
+      mockEvidenceApi.uploadPhotoEvidenceMetadata.mockResolvedValue({
+        upload_uri: 'https://store.example.com/photo?sig=PHOTOSECRET',
+      })
+      mockEvidenceApi.uploadVideoEvidenceMetadata.mockResolvedValue({
+        upload_uri: 'https://store.example.com/video?sig=VIDEOSECRET',
+      })
+      mockEvidenceApi.uploadPhotoEvidenceBinary.mockResolvedValue(undefined)
+      mockEvidenceApi.uploadVideoEvidenceBinary.mockRejectedValue(new Error('socket hang up'))
+
+      const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+      await act(async () => {
+        await result.current.handleSend()
+      })
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '[useEvidenceUploadModel] Error during evidence upload process',
+        expect.objectContaining({
+          stage: 'upload-binaries',
+          file: expect.objectContaining({ kind: 'video', host: 'store.example.com' }),
+          network: { isConnected: true, isInternetReachable: true, type: 'wifi' },
+        }),
+        expect.anything()
+      )
+
+      // The structured diagnostics payload must never contain a signed-URL token.
+      const diagnosticsArg = mockLogger.error.mock.calls.at(-1)?.[1]
+      expect(JSON.stringify(diagnosticsArg)).not.toContain('SECRET')
     })
 
     it('should emit fileUploadErrorAlert when finalization fails', async () => {

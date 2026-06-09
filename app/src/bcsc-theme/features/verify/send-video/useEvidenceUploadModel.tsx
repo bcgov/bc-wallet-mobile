@@ -8,7 +8,9 @@ import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useEvidenceUpload from '@/bcsc-theme/hooks/useEvidenceUpload'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { safeHost } from '@/bcsc-theme/utils/axios-error-utils'
 import { getVideoMetadata } from '@/bcsc-theme/utils/file-info'
+import { buildUploadFailureDiagnostics, tagUploadFailure } from '@/bcsc-theme/utils/network-diagnostics'
 import { AppError, ErrorRegistry } from '@/errors'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
@@ -85,11 +87,25 @@ const useEvidenceUploadModel = (
       videoBytes: Buffer,
       additionalUploads: { uploadUri: string; imageBytes: Buffer }[]
     ) => {
+      // Tag each upload so the first rejection carries which file/host/size failed — without
+      // changing Promise.all first-failure-wins semantics (see buildUploadFailureDiagnostics).
       await Promise.all([
-        evidence.uploadPhotoEvidenceBinary(photoUploadUri, photoBytes),
-        evidence.uploadVideoEvidenceBinary(videoUploadUri, videoBytes),
+        tagUploadFailure(evidence.uploadPhotoEvidenceBinary(photoUploadUri, photoBytes), {
+          kind: 'photo',
+          host: safeHost(photoUploadUri),
+          sizeBytes: photoBytes.length,
+        }),
+        tagUploadFailure(evidence.uploadVideoEvidenceBinary(videoUploadUri, videoBytes), {
+          kind: 'video',
+          host: safeHost(videoUploadUri),
+          sizeBytes: videoBytes.length,
+        }),
         ...additionalUploads.map(({ uploadUri, imageBytes }) =>
-          evidence.uploadPhotoEvidenceBinary(uploadUri, imageBytes)
+          tagUploadFailure(evidence.uploadPhotoEvidenceBinary(uploadUri, imageBytes), {
+            kind: 'document',
+            host: safeHost(uploadUri),
+            sizeBytes: imageBytes.length,
+          })
         ),
       ])
       logger.debug('Uploaded all evidence files')
@@ -116,6 +132,9 @@ const useEvidenceUploadModel = (
   )
 
   const handleSend = useCallback(async () => {
+    const startedAt = Date.now()
+    // Tracks which step is executing so a failure can report where it occurred.
+    let stage = 'validate'
     const stopLoading = loadingScreen.startLoading(t('BCSC.SendVideo.UploadProgress.PreparingVideo'))
     try {
       if (!photoPath || !videoPath || !videoDuration) {
@@ -134,14 +153,18 @@ const useEvidenceUploadModel = (
         throw new Error('Missing photo metadata')
       }
 
+      stage = 'prepare-local-files'
       const localFiles = await prepareLocalFiles(photoPath, videoPath, videoDuration, prompts)
 
+      stage = 'process-additional-evidence'
       loadingScreen.updateLoadingMessage(t('BCSC.SendVideo.UploadProgress.PreparingDocuments'))
       const additionalEvidence = await processAdditionalEvidence()
 
+      stage = 'upload-metadata'
       loadingScreen.updateLoadingMessage(t('BCSC.SendVideo.UploadProgress.UploadingInformation'))
       const evidenceMetadata = await uploadEvidenceMetadata(photoMetadata, localFiles.videoMetadata)
 
+      stage = 'upload-binaries'
       await uploadEvidenceFiles(
         evidenceMetadata.photoMetadataResponse.upload_uri,
         localFiles.photoBytes,
@@ -150,6 +173,7 @@ const useEvidenceUploadModel = (
         additionalEvidence
       )
 
+      stage = 'finalize'
       loadingScreen.updateLoadingMessage(t('BCSC.SendVideo.UploadProgress.FinalizingVerification'))
       const additionalUploadUris = additionalEvidence.map(({ uploadUri }) => uploadUri)
       await finalizeVerification(
@@ -160,6 +184,7 @@ const useEvidenceUploadModel = (
         verificationRequestSha
       )
 
+      stage = 'update-flags'
       await updateAccountFlags({
         userSubmittedVerificationVideo: true,
       })
@@ -176,7 +201,12 @@ const useEvidenceUploadModel = (
        * So all errors during the upload process will be categorized as FILE_UPLOAD_ERROR.
        */
       const appError = AppError.fromErrorDefinition(ErrorRegistry.FILE_UPLOAD_ERROR, { cause: error })
-      logger.error('[useEvidenceUploadModel] Error during evidence upload process', appError)
+
+      // Capture failure-time diagnostics so remote logs can distinguish a genuinely offline
+      // device from a host-specific transport failure. The wrapped FILE_UPLOAD_ERROR otherwise
+      // flattens an axios ERR_NETWORK into a misleading "no internet" message (issue #4010).
+      const diagnostics = await buildUploadFailureDiagnostics(error, { stage, startedAt })
+      logger.error('[useEvidenceUploadModel] Error during evidence upload process', diagnostics, appError)
       fileUploadErrorAlert(appError)
     } finally {
       stopLoading()

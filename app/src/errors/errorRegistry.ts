@@ -114,7 +114,12 @@ export const ErrorRegistry = {
     appEvent: AppEventCode.NO_INTERNET,
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.NETWORK,
-    message: 'Network reachability check failed — no active internet connection',
+    // NOTE: This maps from axios `ERR_NETWORK`, which means the request failed at the transport
+    // layer with no HTTP response — NOT necessarily that the device is offline. It also covers
+    // DNS failures, TLS errors, and connection resets against a specific host. Avoid implying a
+    // reachability probe was run (none is); see getRedactedNetworkDiagnostics for failure-time detail.
+    message:
+      'Network request failed before a response was received — device offline, or DNS/TLS/connection error on the target host',
   },
   SERVER_ERROR: {
     statusCode: 2101,
