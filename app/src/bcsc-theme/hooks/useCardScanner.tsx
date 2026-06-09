@@ -12,6 +12,7 @@ import useApi from '../api/hooks/useApi'
 import { DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
 import { VerificationCardError } from '../features/verify/verificationCardError'
 import { BCSCScreens, BCSCVerifyStackParams } from '../types/navigators'
+import { buildBarcodePayload } from '../utils/barcode'
 import {
   DecodedCodeKind,
   decodeScannedCode,
@@ -126,6 +127,58 @@ export const useCardScanner = () => {
       navigation,
       store.bcscSecure.cardProcess,
     ]
+  )
+
+  /**
+   * Non-BCSC flow handler: ask the backend whether the scanned barcodes belong
+   * to a real BC Services Card via POST `/device/barcodes`. The backend owns the
+   * discrimination (matching v3): a real BCSC is authorized and the user is
+   * rerouted into setup; any other card (PR card, passport, …) resolves to
+   * `false` so the caller keeps capturing it as evidence — no "Card not found".
+   *
+   * Only call this when the card presents BOTH a serial (1D) and AAMVA (2D)
+   * barcode — the only combination the backend can match.
+   *
+   * @param bcscSerial - The serial decoded from the card's 1D (CODE_128) barcode.
+   * @param license - The metadata decoded from the card's 2D (PDF-417) barcode.
+   * @returns `true` if authorized as a BCSC and rerouted, `false` to continue as evidence.
+   */
+  const handleScanBarcodes = useCallback(
+    async (bcscSerial: string, license: DriversLicenseMetadata): Promise<boolean> => {
+      try {
+        const deviceAuth = await authorization.authorizeDeviceWithBarcodes(buildBarcodePayload(bcscSerial, license))
+
+        await updateUserInfo({
+          serial: bcscSerial,
+          birthdate: license.birthDate,
+          email: deviceAuth.verified_email,
+          isEmailVerified: !!deviceAuth.verified_email,
+        })
+        await updateDeviceCodes({
+          deviceCode: deviceAuth.device_code,
+          userCode: deviceAuth.user_code,
+          deviceCodeExpiresAt: new Date(Date.now() + deviceAuth.expires_in * 1000),
+        })
+        await updateCardProcess(deviceAuth.process)
+        await updateVerificationOptions(deviceAuth.verification_options.split(' ') as DeviceVerificationOption[])
+
+        navigation.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] })
+        return true
+      } catch (error) {
+        if (isHandledAppError(error)) {
+          return true
+        }
+
+        // Not a BC Services Card (or the endpoint was unreachable). Stay in the
+        // evidence-capture flow rather than surfacing an error — matches v3's
+        // `card_not_found → continue with non-bcsc`.
+        logger.info('[CardScanner] Barcodes did not match a BC Services Card; continuing as evidence', {
+          error: String(error),
+        })
+        return false
+      }
+    },
+    [authorization, updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions, navigation, logger]
   )
 
   /**
@@ -259,10 +312,11 @@ export const useCardScanner = () => {
       startScan,
       completeScan,
       handleScanComboCard,
+      handleScanBarcodes,
       handleScanBCServicesCard,
       handleScanDriversLicense,
       codeTypes: [BC_SERVICES_CARD_BARCODE, OLD_BC_SERVICES_CARD_BARCODE, DRIVERS_LICENSE_BARCODE] satisfies CodeType[],
     }),
-    [handleCardScan, handleScanBCServicesCard, handleScanComboCard, handleScanDriversLicense]
+    [handleCardScan, handleScanBarcodes, handleScanBCServicesCard, handleScanComboCard, handleScanDriversLicense]
   )
 }
