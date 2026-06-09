@@ -1,10 +1,12 @@
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import { BCSCEventTypes } from '@/events/eventTypes'
 import { RemoteLogger } from '@bifold/remote-logs'
 import { getUserAgentString } from '@utils/user-agent'
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import merge from 'lodash.merge'
+import { DeviceEventEmitter } from 'react-native'
 import { getRefreshTokenRequestBody, getToken, TokenType } from 'react-native-bcsc-core'
 import {
   formatAxiosErrorForLogger as formatIASAxiosErrorForLogger,
@@ -334,7 +336,14 @@ class BCSCApiClient {
     }
 
     this.logger.warn('[BCSCApiClient] Token cache empty; rebuilding from stored refresh token')
-    return this.getTokensForRefreshToken(storedRefreshToken)
+    const tokens = await this.getTokensForRefreshToken(storedRefreshToken)
+
+    // Tokens went from missing to available (e.g. connectivity returned after a
+    // failed startup refresh) — notify listeners so data providers can reload
+    // state that failed while tokens were unavailable.
+    DeviceEventEmitter.emit(BCSCEventTypes.TOKENS_REFRESHED)
+
+    return tokens
   }
 
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {

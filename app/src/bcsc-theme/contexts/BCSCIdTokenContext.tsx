@@ -1,8 +1,11 @@
+import { BCSCEventTypes } from '@/events/eventTypes'
 import { CredentialMetadata } from '@/store'
 import { TOKENS, useServices } from '@bifold/core'
 import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useRef } from 'react'
+import { DeviceEventEmitter } from 'react-native'
 import useApi from '../api/hooks/useApi'
 import useDataLoader from '../hooks/useDataLoader'
+import { useRetryOnReconnect } from '../hooks/useRetryOnReconnect'
 import { IdToken } from '../utils/id-token'
 
 export interface BCSCIdTokenContextType<T> {
@@ -89,18 +92,25 @@ export const BCSCIdTokenProvider = ({ children }: PropsWithChildren) => {
     load()
   }, [load])
 
-  const contextValue = useMemo(() => {
-    if (!data) {
-      return {
-        isLoading: isLoading,
-        data: null,
-        refreshData: () => {},
-      } as BCSCIdTokenContextType<IdToken>
-    }
+  // Listen for token refresh events (e.g., tokens rebuilt after a failed startup
+  // refresh) and reload from the freshly cached tokens without another refresh
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener(BCSCEventTypes.TOKENS_REFRESHED, () => {
+      logger.info('BCSCIdTokenProvider: Tokens refreshed, reloading ID token metadata')
+      isInitialLoad.current = true
+      refresh()
+    })
 
+    return () => subscription.remove()
+  }, [refresh, logger])
+
+  // If the load failed while offline, retry when connectivity returns
+  useRetryOnReconnect(() => !data && !isLoading, refresh)
+
+  const contextValue = useMemo(() => {
     return {
-      isLoading: false,
-      data: data,
+      isLoading: data ? false : isLoading,
+      data: data ?? null,
       refreshData: refresh,
     } as BCSCIdTokenContextType<IdToken>
   }, [data, isLoading, refresh])

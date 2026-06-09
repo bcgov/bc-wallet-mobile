@@ -2,10 +2,12 @@ import BCSCApiClient from '@/bcsc-theme/api/client'
 import { AppError } from '@/errors/appError'
 import { ErrorCategory } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
+import { BCSCEventTypes } from '@/events/eventTypes'
 import { localization } from '@/localization'
 import { initLanguages } from '@bifold/core'
 import { AxiosError } from 'axios'
 import { jwtDecode } from 'jwt-decode'
+import { DeviceEventEmitter } from 'react-native'
 import { getAccount, getToken, TokenType } from 'react-native-bcsc-core'
 
 jest.mock('jwt-decode', () => ({
@@ -174,6 +176,46 @@ describe('BCSC Client', () => {
       expect(privateFetchTokens).toHaveBeenCalledWith('stored-refresh')
       expect(result).toEqual(recoveredTokens)
       expect(client.tokens).toEqual(recoveredTokens)
+    })
+
+    it('should emit TOKENS_REFRESHED after a successful rebuild', async () => {
+      const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+      const client = new BCSCApiClient('https://example.com', mockLogger as any)
+      client.tokens = undefined
+      ;(getToken as jest.Mock).mockResolvedValue({ token: 'stored-refresh', type: TokenType.Refresh })
+
+      const recoveredTokens = { access_token: 'recovered-access', refresh_token: 'recovered-refresh' }
+      jest.spyOn(BCSCApiClient.prototype as any, 'fetchTokens').mockResolvedValue(recoveredTokens)
+      const emitSpy = jest.spyOn(DeviceEventEmitter, 'emit').mockClear()
+
+      await client.recoverTokens()
+
+      expect(emitSpy).toHaveBeenCalledWith(BCSCEventTypes.TOKENS_REFRESHED)
+    })
+
+    it('should not emit TOKENS_REFRESHED when the cache is already populated', async () => {
+      const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+      const client = new BCSCApiClient('https://example.com', mockLogger as any)
+      client.tokens = { access_token: 'a', refresh_token: 'r' } as any
+      const emitSpy = jest.spyOn(DeviceEventEmitter, 'emit').mockClear()
+
+      await client.recoverTokens()
+
+      expect(emitSpy).not.toHaveBeenCalledWith(BCSCEventTypes.TOKENS_REFRESHED)
+    })
+
+    it('should not emit TOKENS_REFRESHED when the rebuild fails', async () => {
+      const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+      const client = new BCSCApiClient('https://example.com', mockLogger as any)
+      client.tokens = undefined
+      ;(getToken as jest.Mock).mockResolvedValue({ token: 'stored-refresh', type: TokenType.Refresh })
+
+      jest.spyOn(BCSCApiClient.prototype as any, 'fetchTokens').mockRejectedValue(new Error('Network Error'))
+      const emitSpy = jest.spyOn(DeviceEventEmitter, 'emit').mockClear()
+
+      await expect(client.recoverTokens()).rejects.toThrow('Network Error')
+
+      expect(emitSpy).not.toHaveBeenCalledWith(BCSCEventTypes.TOKENS_REFRESHED)
     })
 
     it('should throw TOKEN_NULL when the cache is empty and no refresh token is stored', async () => {
