@@ -96,7 +96,7 @@ describe('ManualPairing', () => {
       fireEvent.press(screen.getByTestId(testIdWithKey('Submit')))
 
       await waitFor(() => {
-        expect(screen.getByText('BCSC.ManualPairing.FailedToSubmitPairingCodeMessage')).toBeTruthy()
+        expect(screen.getByText('BCSC.ManualPairing.CodeDoesNotMatchMessage')).toBeTruthy()
         expect(alertSpy).toHaveBeenCalledWith(
           'BCSC.ManualPairing.CouldNotVerifyPairingCodeTitle',
           'BCSC.ManualPairing.CodeDoesNotMatchMessage',
