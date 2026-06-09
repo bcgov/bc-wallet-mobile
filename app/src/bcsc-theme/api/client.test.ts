@@ -234,6 +234,95 @@ describe('BCSC Client', () => {
     })
   })
 
+  describe('401 recovery', () => {
+    // A bearer request with locally-valid tokens: handleRequest attaches the bearer and won't refresh
+    // on its own, so the only refresh is the interceptor's force-refresh-and-retry.
+    const setupBearerClient = (mockLogger: any) => {
+      const client = new BCSCApiClient('https://example.com', mockLogger)
+      client.tokens = { access_token: 'access-1', refresh_token: 'refresh-1' } as any
+      ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
+      ;(jwtDecode as jest.Mock).mockReturnValue({ exp: Math.floor(Date.now() / 1000) + 3600 })
+      return client
+    }
+
+    const reject401 = (config: any) =>
+      Promise.reject(
+        new AxiosError('Unauthorized', 'ERR_BAD_REQUEST', config, null, {
+          status: 401,
+          data: {},
+          statusText: 'Unauthorized',
+          headers: {} as any,
+          config,
+        })
+      )
+
+    it('should refresh tokens and retry once on a 401, then succeed', async () => {
+      const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+      const client = setupBearerClient(mockLogger)
+
+      const forceRefreshSpy = jest
+        .spyOn(BCSCApiClient.prototype as any, 'forceRefreshTokens')
+        .mockResolvedValue({ access_token: 'access-2', refresh_token: 'refresh-2' })
+
+      let callCount = 0
+      client.client.defaults.adapter = (config: any) => {
+        callCount += 1
+        return callCount === 1
+          ? reject401(config)
+          : Promise.resolve({ status: 200, data: { ok: true }, statusText: 'OK', headers: {} as any, config })
+      }
+
+      const response = await client.get('/protected')
+
+      expect(forceRefreshSpy).toHaveBeenCalledTimes(1)
+      expect(callCount).toBe(2) // original + one retry
+      expect(response.status).toBe(200)
+      expect(response.data).toEqual({ ok: true })
+
+      forceRefreshSpy.mockRestore()
+    })
+
+    it('should not retry a 401 on a skipBearerAuth request', async () => {
+      const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+      const client = new BCSCApiClient('https://example.com', mockLogger as any)
+
+      const forceRefreshSpy = jest.spyOn(BCSCApiClient.prototype as any, 'forceRefreshTokens')
+
+      let callCount = 0
+      client.client.defaults.adapter = (config: any) => {
+        callCount += 1
+        return reject401(config)
+      }
+
+      await expect(client.get('/token', { skipBearerAuth: true })).rejects.toBeInstanceOf(AppError)
+      expect(forceRefreshSpy).not.toHaveBeenCalled()
+      expect(callCount).toBe(1)
+
+      forceRefreshSpy.mockRestore()
+    })
+
+    it('should retry a 401 only once, then surface the error', async () => {
+      const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+      const client = setupBearerClient(mockLogger)
+
+      const forceRefreshSpy = jest
+        .spyOn(BCSCApiClient.prototype as any, 'forceRefreshTokens')
+        .mockResolvedValue({ access_token: 'access-2', refresh_token: 'refresh-2' })
+
+      let callCount = 0
+      client.client.defaults.adapter = (config: any) => {
+        callCount += 1
+        return reject401(config)
+      }
+
+      await expect(client.get('/protected')).rejects.toBeInstanceOf(AppError)
+      expect(forceRefreshSpy).toHaveBeenCalledTimes(1)
+      expect(callCount).toBe(2) // original + one retry, then surfaced
+
+      forceRefreshSpy.mockRestore()
+    })
+  })
+
   describe('fetchEndpointsAndConfig', () => {
     it('should merge server config and endpoints into client', async () => {
       const mockLogger = { info: jest.fn(), error: jest.fn() }

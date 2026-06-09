@@ -102,19 +102,50 @@ export const isNetworkError = (error: unknown): boolean => {
 }
 
 /**
+ * Disambiguates a 4xx client error by its real HTTP status.
+ *
+ * Axios collapses *every* 4xx response into a single `ERR_BAD_REQUEST` code — see axios
+ * `settle.js`: `[ERR_BAD_REQUEST, ERR_BAD_RESPONSE][Math.floor(status / 100) - 4]`. Without this,
+ * 401/403/404/429 all resolve to BAD_REQUEST (2107), which both misclassifies them (the user sees
+ * the "app not installed correctly (error 209)" modal) and surfaces a misleading "HTTP 400" message.
+ * Mapping by status gives each its own error code, modal, and analytics event.
+ *
+ * Note: this only applies when the IAS response body did NOT carry an `error`/`error_description`
+ * (those are reclassified earlier by {@link formatIasAxiosResponseError} and take precedence).
+ *
+ * @param status - The HTTP status code from the Axios response (undefined when unavailable)
+ * @returns The ErrorDefinition for the specific status, falling back to BAD_REQUEST for HTTP 400 and any other unmapped 4xx
+ */
+const getClientErrorDefinitionFromStatus = (status?: number): ErrorDefinition => {
+  switch (status) {
+    case 401:
+      return ErrorRegistry.UNAUTHORIZED
+    case 403:
+      return ErrorRegistry.FORBIDDEN
+    case 404:
+      return ErrorRegistry.NOT_FOUND
+    case 429:
+      return ErrorRegistry.RETRY_LATER
+    default:
+      return ErrorRegistry.BAD_REQUEST
+  }
+}
+
+/**
  * Maps Axios error codes to predefined AppError definitions based on the application's error registry.
  *
  * @param errorCode - The error code from an AxiosError to map to an AppError definition
+ * @param status - The HTTP response status, used to disambiguate the collapsed `ERR_BAD_REQUEST` (4xx) code
  * @returns An ErrorDefinition from the ErrorRegistry if a mapping exists, or null if no mapping is found
  */
-export const getAxiosErrorDefinition = (errorCode?: string): ErrorDefinition | null => {
+export const getAxiosErrorDefinition = (errorCode?: string, status?: number): ErrorDefinition | null => {
   switch (errorCode) {
     case AxiosErrorCode.ECONNABORTED:
       return ErrorRegistry.SERVER_TIMEOUT
     case AxiosErrorCode.NETWORK_ERROR:
       return ErrorRegistry.NO_INTERNET
     case AxiosErrorCode.BAD_REQUEST:
-      return ErrorRegistry.BAD_REQUEST
+      return getClientErrorDefinitionFromStatus(status)
     case AxiosErrorCode.BAD_RESPONSE:
       return ErrorRegistry.SERVER_ERROR
   }
@@ -130,7 +161,8 @@ export const getAxiosErrorDefinition = (errorCode?: string): ErrorDefinition | n
  */
 export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
   const errorCode = error.code
-  const errorDefinition = getAxiosErrorDefinition(errorCode) ?? getErrorDefinitionFromAppEventCode(errorCode)
+  const errorDefinition =
+    getAxiosErrorDefinition(errorCode, error.response?.status) ?? getErrorDefinitionFromAppEventCode(errorCode)
 
   let appError: AppError
 
