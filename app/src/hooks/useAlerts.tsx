@@ -341,7 +341,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       missingJsonValuesAlert: _createBasicErrorModal(AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE, 'ProblemWithApp', { errorCode: '206' }),
       signClaimsErrorAlert: _createBasicErrorModal(AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET, 'ProblemWithApp', { errorCode: '207' }),
       unexpectedNetworkCallAlert: _createBasicErrorModal(AppEventCode.ERR_208_UNEXPECTED_NETWORK_CALL_EXCEPTION, 'ProblemWithApp', { errorCode: '208' }),
-      badRequestAlert: _createBasicErrorModal(AppEventCode.ERR_209_BAD_REQUEST, 'ProblemWithApp', { errorCode: '209' }),
+      badRequestAlert: _createBasicErrorModal(AppEventCode.ERR_209_BAD_REQUEST, 'BadRequest', { errorCode: '209' }),
       unauthorizedAlert: _createBasicErrorModal(AppEventCode.ERR_210_UNAUTHORIZED, 'ProblemWithApp', { errorCode: '210' }),
       serverOutageAlert: _createBasicErrorModal(AppEventCode.ERR_211_SERVER_OUTAGE, 'ProblemWithApp', { errorCode: '211' }),
       retryLaterAlert: _createBasicErrorModal(AppEventCode.ERR_212_RETRY_LATER, 'ProblemWithApp', { errorCode: '212' }),

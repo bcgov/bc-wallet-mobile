@@ -1144,6 +1144,10 @@ const translation = {
       "Title": "Problem with App (FR)",
       "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (error {{ errorCode }}) (FR)"
     },
+    "BadRequest": {
+      "Title": "Something went wrong (FR)",
+      "Description": "We couldn't complete your request at this time. Please try again later. \n\n If the issue persists, close and re-open app to try again. (FR)"
+    },
     "ProblemWithService": {
       "Title": "Problem with Service (FR)",
       "Description": "Please try again later. (error {{ errorCode }}) (FR)"
