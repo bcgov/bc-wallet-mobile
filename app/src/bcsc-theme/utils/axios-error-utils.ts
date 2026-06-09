@@ -70,6 +70,50 @@ export const summarizeLoggedBody = (body: unknown): unknown => {
 }
 
 /**
+ * Strip the query string and fragment from a URL before logging. Pre-signed upload URLs
+ * (and some API URLs) carry credentials — SAS tokens, signatures — in the query string,
+ * which must never reach remote logs.
+ *
+ * @param url - The request URL
+ * @returns The URL reduced to origin + pathname (or path only for relative URLs)
+ */
+const redactUrl = (url?: string): string | undefined => {
+  if (!url) {
+    return undefined
+  }
+
+  try {
+    const parsed = new URL(url)
+    return `${parsed.origin}${parsed.pathname}`
+  } catch {
+    // Relative or unparseable URL — drop anything from the first '?' or '#'.
+    return url.split(/[?#]/)[0]
+  }
+}
+
+/** Header names whose values must never be written to remote logs. */
+const SENSITIVE_HEADERS = new Set(['authorization', 'proxy-authorization', 'cookie', 'set-cookie'])
+
+/**
+ * Return a shallow copy of an HTTP headers object with sensitive values (auth tokens,
+ * cookies) replaced by a redaction marker. Non-sensitive headers are preserved for debugging.
+ *
+ * @param headers - The request or response headers
+ * @returns A copy with sensitive header values redacted
+ */
+const redactHeaders = (headers: unknown): unknown => {
+  if (!headers || typeof headers !== 'object') {
+    return headers
+  }
+
+  const redacted: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(headers as Record<string, unknown>)) {
+    redacted[key] = SENSITIVE_HEADERS.has(key.toLowerCase()) ? '[redacted]' : value
+  }
+  return redacted
+}
+
+/**
  * Outputs detailed information about an AxiosError to the provided logger.
  *
  * @see bcsc-theme/api/client.ts
@@ -83,7 +127,7 @@ export const formatAxiosErrorForLogger = (options: LogAxiosErrorOptions): Record
     message: options.error.message,
     method: options.error.config?.method?.toUpperCase(),
     status: options.error.response?.status,
-    url: options.error.config?.url,
+    url: redactUrl(options.error.config?.url),
     baseURL: options.error.config?.baseURL,
     isTimeout: options.error.code === AxiosErrorCode.ECONNABORTED,
     isNetworkError: isNetworkError(options.error),
@@ -91,7 +135,7 @@ export const formatAxiosErrorForLogger = (options: LogAxiosErrorOptions): Record
 
   if (options.error.config) {
     errorDetails.request = {
-      headers: options.error.config.headers,
+      headers: redactHeaders(options.error.config.headers),
       params: options.error.config.params,
       data: summarizeLoggedBody(options.error.config.data),
     }
@@ -100,7 +144,7 @@ export const formatAxiosErrorForLogger = (options: LogAxiosErrorOptions): Record
   if (options.error.response) {
     errorDetails.response = {
       statusText: options.error.response.statusText,
-      headers: options.error.response.headers,
+      headers: redactHeaders(options.error.response.headers),
       data: summarizeLoggedBody(options.error.response.data),
     }
   }
