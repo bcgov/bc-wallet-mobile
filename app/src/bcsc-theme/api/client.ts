@@ -26,6 +26,8 @@ declare module 'axios' {
     skipBearerAuth?: boolean
     // Note: Useful for endpoints that return expected error codes
     suppressStatusCodeLogs?: number[]
+    // Internal: marks a request already retried once after a 401, to prevent refresh/retry loops
+    _retriedAfter401?: boolean
   }
 }
 
@@ -136,6 +138,25 @@ class BCSCApiClient {
         throw _error
       }
 
+      // 401 recovery: a bearer-authed request can fail with 401 when its access token is rejected
+      // server-side despite still looking valid locally (revoked token, or device clock skew). Refresh
+      // the tokens once and retry the request a single time before surfacing the error. Guards: only
+      // bearer requests (skipBearerAuth is excluded so the refresh call itself can't loop) and only once.
+      const originalConfig = _error.config
+      if (
+        _error.response?.status === 401 &&
+        originalConfig &&
+        !originalConfig.skipBearerAuth &&
+        !originalConfig._retriedAfter401
+      ) {
+        originalConfig._retriedAfter401 = true
+        this.logger.info('[BCSCApiClient] Access token rejected (401); refreshing tokens and retrying once')
+        // On refresh failure the error is already handled by its own interceptor pass and propagates;
+        // on success the retry's own interceptor pass handles any further failure (no double-handling).
+        await this.forceRefreshTokens()
+        return this.client.request(originalConfig)
+      }
+
       // 1. Format the error - update error code and message properties from IAS response
       const error = formatIasAxiosResponseError(_error)
 
@@ -241,6 +262,38 @@ class BCSCApiClient {
 
       // access token is expired or about to expire, fetch new tokens using refresh token
       // Set tokensPromise immediately to prevent concurrent callers from starting duplicate refreshes
+      this.tokensPromise = this.fetchTokens(this.tokens.refresh_token)
+      try {
+        this.tokens = await this.tokensPromise
+      } finally {
+        this.tokensPromise = null
+      }
+      return this.tokens
+    })
+  }
+
+  /**
+   * Forces a token refresh regardless of the local access-token expiry, then returns the new tokens.
+   * Used to recover from a server-side 401 on an access token that still looked valid locally (revoked
+   * token, or device clock skew). Concurrent callers share the in-flight refresh via `tokensPromise`.
+   */
+  private async forceRefreshTokens(): Promise<TokenResponse> {
+    return withAccount(async () => {
+      if (this.tokensPromise) {
+        // share the in-flight refresh if one is already running
+        return this.tokensPromise
+      }
+
+      if (!this.tokens) {
+        this.logger.error('[BCSCApiClient] Cannot refresh after 401 - no tokens present')
+        throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL)
+      }
+
+      if (this.isTokenExpired(this.tokens.refresh_token)) {
+        this.logger.error('[BCSCApiClient] Cannot refresh after 401 - refresh token expired')
+        throw new Error('Refresh token expired')
+      }
+
       this.tokensPromise = this.fetchTokens(this.tokens.refresh_token)
       try {
         this.tokens = await this.tokensPromise
