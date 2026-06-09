@@ -40,6 +40,36 @@ export const formatIasAxiosResponseError = (axiosError: AxiosError<any>): AxiosE
 }
 
 /**
+ * Summarize an HTTP body for logging. Request/response bodies can be multi-MB binary
+ * Buffers (e.g. an evidence upload's photo/video bytes); logging them verbatim expands the
+ * Buffer to a per-byte JSON number array and can exhaust memory. Replace binary or very
+ * large payloads with a short descriptor; pass small values through unchanged.
+ *
+ * @param body - The request or response body to summarize
+ * @returns The body unchanged, or a size descriptor for binary/oversized payloads
+ */
+export const summarizeLoggedBody = (body: unknown): unknown => {
+  if (body == null) {
+    return body
+  }
+
+  // ArrayBuffer.isView covers Buffer (a Uint8Array subclass), typed arrays, and DataView.
+  if (ArrayBuffer.isView(body)) {
+    return `[binary ${(body as ArrayBufferView).byteLength} bytes]`
+  }
+
+  if (body instanceof ArrayBuffer) {
+    return `[binary ${body.byteLength} bytes]`
+  }
+
+  if (typeof body === 'string' && body.length > 2048) {
+    return `[string ${body.length} chars]`
+  }
+
+  return body
+}
+
+/**
  * Outputs detailed information about an AxiosError to the provided logger.
  *
  * @see bcsc-theme/api/client.ts
@@ -63,7 +93,7 @@ export const formatAxiosErrorForLogger = (options: LogAxiosErrorOptions): Record
     errorDetails.request = {
       headers: options.error.config.headers,
       params: options.error.config.params,
-      data: options.error.config.data,
+      data: summarizeLoggedBody(options.error.config.data),
     }
   }
 
@@ -71,7 +101,7 @@ export const formatAxiosErrorForLogger = (options: LogAxiosErrorOptions): Record
     errorDetails.response = {
       statusText: options.error.response.statusText,
       headers: options.error.response.headers,
-      data: options.error.response.data,
+      data: summarizeLoggedBody(options.error.response.data),
     }
   }
 

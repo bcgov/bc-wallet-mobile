@@ -16,6 +16,29 @@ export type ErrorIdentity = {
 }
 
 /**
+ * Reduce a `cause` to a small, safe-to-serialize summary.
+ *
+ * The raw cause of an HTTP failure is often an AxiosError whose `config.data` holds the
+ * full request body — for an evidence upload that is the multi-MB photo/video Buffer.
+ * Serializing it (JSON.stringify expands a Buffer to a per-byte number array) can exhaust
+ * memory, so toJSON() keeps only lightweight identifying fields and drops the nested
+ * chain/body. The live `cause` property is left untouched for runtime logic.
+ */
+const summarizeCause = (cause: unknown): unknown => {
+  if (!(cause instanceof Error)) {
+    return cause
+  }
+
+  const { code, status } = cause as { code?: unknown; status?: unknown }
+  return {
+    name: cause.name,
+    message: cause.message,
+    ...(code !== undefined ? { code } : {}),
+    ...(status !== undefined ? { status } : {}),
+  }
+}
+
+/**
  * Custom application error class with structured information.
  *
  * @extends {Error}
@@ -147,7 +170,7 @@ export class AppError extends Error {
       handled: this.handled,
       url: this.url,
       method: this.method,
-      cause: this.cause,
+      cause: summarizeCause(this.cause),
     }
   }
 }

@@ -1,6 +1,7 @@
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import {
+  formatAxiosErrorForLogger,
   formatIasAxiosResponseError,
   getAppErrorFromAxiosError,
   getAxiosErrorDefinition,
@@ -218,6 +219,52 @@ describe('Error Utils', () => {
     it('returns an empty object for a non-network error', () => {
       expect(getRedactedNetworkDiagnostics(new Error('Cache missing video data'))).toEqual({})
       expect(getRedactedNetworkDiagnostics(undefined)).toEqual({})
+    })
+  })
+
+  describe('formatAxiosErrorForLogger', () => {
+    it('summarizes a binary request body instead of logging the raw bytes', () => {
+      const error = {
+        name: 'AxiosError',
+        code: 'ERR_NETWORK',
+        message: 'Network Error',
+        config: { method: 'put', url: 'https://store.example.com/video', data: Buffer.alloc(1_000_000) },
+      } as any
+
+      const details = formatAxiosErrorForLogger({ error, suppressStackTrace: true })
+
+      expect((details.request as { data: unknown }).data).toBe('[binary 1000000 bytes]')
+      // The 1 MB body must not survive serialization (would be MBs as a JSON number array).
+      expect(JSON.stringify(details).length).toBeLessThan(1000)
+    })
+
+    it('summarizes an oversized string response body', () => {
+      const error = {
+        name: 'AxiosError',
+        code: 'ERR_BAD_RESPONSE',
+        message: 'Request failed',
+        config: { method: 'get', url: 'https://api.example.com/x' },
+        response: { status: 500, statusText: 'Server Error', data: 'x'.repeat(5000) },
+      } as any
+
+      const details = formatAxiosErrorForLogger({ error, suppressStackTrace: true })
+
+      expect((details.response as { data: unknown }).data).toBe('[string 5000 chars]')
+    })
+
+    it('passes small bodies through unchanged', () => {
+      const error = {
+        name: 'AxiosError',
+        code: 'ERR_BAD_REQUEST',
+        message: 'Bad request',
+        config: { method: 'post', url: 'https://api.example.com/x', data: { field: 'value' } },
+        response: { status: 400, statusText: 'Bad Request', data: { error: 'nope' } },
+      } as any
+
+      const details = formatAxiosErrorForLogger({ error, suppressStackTrace: true })
+
+      expect((details.request as { data: unknown }).data).toEqual({ field: 'value' })
+      expect((details.response as { data: unknown }).data).toEqual({ error: 'nope' })
     })
   })
 })
