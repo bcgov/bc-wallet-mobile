@@ -215,6 +215,11 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     err_bad_request: () => injectErrorCodeIntoAxiosResponse(client, 'ERR_BAD_REQUEST'),
     err_bad_response: () => injectErrorCodeIntoAxiosResponse(client, 'ERR_BAD_RESPONSE'),
     econnaborted: () => injectErrorCodeIntoAxiosResponse(client, 'ECONNABORTED'),
+    // Bare HTTP 4xx (no IAS error body): verifies axios' collapsed ERR_BAD_REQUEST is disambiguated by status
+    http_401_unauthorized: () => injectErrorCodeIntoAxiosResponse(client, 'ERR_BAD_REQUEST', undefined, 401),
+    http_403_forbidden: () => injectErrorCodeIntoAxiosResponse(client, 'ERR_BAD_REQUEST', undefined, 403),
+    http_404_not_found: () => injectErrorCodeIntoAxiosResponse(client, 'ERR_BAD_REQUEST', undefined, 404),
+    http_429_retry_later: () => injectErrorCodeIntoAxiosResponse(client, 'ERR_BAD_REQUEST', undefined, 429),
   }
 
   const getCategoryIcon = (category: ErrorCategory): string => {
@@ -241,7 +246,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     emitErrorModal('Error Modal Triggered', description, AppError.fromErrorDefinition(ErrorRegistry[key]))
   }
 
-  const triggerErrorAsAlert = (key: ErrorRegistryKey, description: string) => {
+  const triggerErrorAsAlert = (description: string) => {
     emitAlert('Native alert triggered', description, {
       actions: [
         { text: t('Global.Cancel'), style: 'cancel' },
@@ -369,7 +374,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
                 accessibilityLabel={`Trigger ${key} as native alert`}
                 testID={`error-alert-${key}`}
                 buttonType={ButtonType.Secondary}
-                onPress={() => triggerErrorAsAlert(key, description)}
+                onPress={() => triggerErrorAsAlert(description)}
               />
             </View>
           ))}
