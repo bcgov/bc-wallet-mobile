@@ -438,4 +438,94 @@ describe('useCardScanner', () => {
       })
     })
   })
+
+  describe('handleScanBarcodes', () => {
+    const mockLicense: any = {
+      birthDate: new Date('1970-01-01'),
+      isoIIN: '636028',
+      licenseNumber: '2222222',
+    }
+
+    it('should authorize via /device/barcodes and reroute to setup when the barcodes match a BC Services Card', async () => {
+      const useApiMock = jest.mocked(useApi)
+      const bifoldMock = jest.mocked(Bifold)
+      const navigationMock = jest.mocked(navigation)
+      const useSecureActionsMock = jest.mocked(useSecureActions)
+
+      const mockState: any = { bcscSecure: {} }
+      const mockUpdateDeviceCodes = jest.fn()
+      const mockUpdateCardProcess = jest.fn()
+      const mockUpdateVerificationOptions = jest.fn()
+      const mockNavigationReset = jest.fn()
+      const mockAuthorizeDeviceWithBarcodes = jest.fn().mockResolvedValue({
+        device_code: 'test-device-code',
+        user_code: 'ABCD1234',
+        verified_email: 'test@example.com',
+        expires_in: 3600,
+        verification_options: 'video_call back_check',
+        process: 'IDIM L3 Remote BCSC Photo Identity Verification',
+      })
+
+      useApiMock.mockReturnValue({
+        authorization: { authorizeDeviceWithBarcodes: mockAuthorizeDeviceWithBarcodes },
+      } as any)
+      useSecureActionsMock.mockReturnValue({
+        updateUserInfo: jest.fn(),
+        updateDeviceCodes: mockUpdateDeviceCodes,
+        updateCardProcess: mockUpdateCardProcess,
+        updateVerificationOptions: mockUpdateVerificationOptions,
+      } as any)
+      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      navigationMock.useNavigation = jest.fn().mockReturnValue({ reset: mockNavigationReset })
+      bifoldMock.useServices.mockReturnValue([{ debug: jest.fn(), info: jest.fn() } as any])
+
+      const hook = renderHook(() => useCardScanner())
+
+      const result = await hook.result.current.handleScanBarcodes('S00023254', mockLicense)
+
+      expect(result).toBe(true)
+      expect(mockAuthorizeDeviceWithBarcodes).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ type: 'CODE_128', value: 'S00023254' }),
+          expect.objectContaining({ type: 'PDF_417', iso_iin: '636028' }),
+        ])
+      )
+      expect(mockUpdateCardProcess).toHaveBeenCalledWith('IDIM L3 Remote BCSC Photo Identity Verification')
+      expect(mockUpdateVerificationOptions).toHaveBeenCalledWith(['video_call', 'back_check'])
+      expect(mockNavigationReset).toHaveBeenCalledWith({
+        index: 0,
+        routes: [{ name: BCSCScreens.SetupSteps }],
+      })
+    })
+
+    it('should return false and not surface an error when the barcodes are not a BC Services Card', async () => {
+      const useApiMock = jest.mocked(useApi)
+      const bifoldMock = jest.mocked(Bifold)
+      const navigationMock = jest.mocked(navigation)
+      const useSecureActionsMock = jest.mocked(useSecureActions)
+
+      const mockState: any = { bcscSecure: {} }
+      const mockNavigationReset = jest.fn()
+
+      useApiMock.mockReturnValue({
+        authorization: { authorizeDeviceWithBarcodes: jest.fn().mockRejectedValue(new Error('card_not_found')) },
+      } as any)
+      useSecureActionsMock.mockReturnValue({
+        updateUserInfo: jest.fn(),
+        updateDeviceCodes: jest.fn(),
+        updateCardProcess: jest.fn(),
+        updateVerificationOptions: jest.fn(),
+      } as any)
+      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      navigationMock.useNavigation = jest.fn().mockReturnValue({ reset: mockNavigationReset })
+      bifoldMock.useServices.mockReturnValue([{ debug: jest.fn(), info: jest.fn() } as any])
+
+      const hook = renderHook(() => useCardScanner())
+
+      const result = await hook.result.current.handleScanBarcodes('A06198657', mockLicense)
+
+      expect(result).toBe(false)
+      expect(mockNavigationReset).not.toHaveBeenCalled()
+    })
+  })
 })
