@@ -149,10 +149,15 @@ export const useCardScanner = () => {
    */
   const handleScanBarcodes = useCallback(
     async (bcscSerial: string, license: DriversLicenseMetadata): Promise<boolean> => {
+      logger.info(
+        '[CardScanner] Non-BCSC flow: querying /device/barcodes to check if the scanned card is a BC Services Card'
+      )
+
       try {
         const deviceAuth = await authorization.authorizeDeviceWithBarcodes(buildBarcodePayload(bcscSerial, license))
         await updateUserInfo({ serial: bcscSerial, birthdate: license.birthDate })
         await applyDeviceAuthorization(deviceAuth)
+        logger.info('[CardScanner] Scanned card matched a BC Services Card; switching to setup')
         return true
       } catch (error) {
         // Any failure — including a handled app error — means we could not confirm
