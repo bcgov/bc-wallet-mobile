@@ -230,4 +230,64 @@ describe('useAuthorizationApi', () => {
       )
     })
   })
+
+  describe('authorizeDeviceWithBarcodes', () => {
+    const BARCODES_ENDPOINT = 'https://mock-api.example.com/device/barcodes'
+
+    const buildBarcodeApiClient = () => ({
+      post: jest.fn().mockResolvedValue({ data: {} }),
+      endpoints: { barcodes: BARCODES_ENDPOINT },
+    })
+
+    it('posts the barcodes to /device/barcodes/{clientID} as JSON with skipBearerAuth', async () => {
+      const apiClient = buildBarcodeApiClient()
+      const api = renderAuthApi(apiClient as any)
+      const barcodes = [
+        { type: 'CODE_128', value: 'A06198657' },
+        { type: 'PDF_417', content_type: 'AAMVA_3TRACK_PDF417', iso_iin: '636028', birthdate: '2005-06-07' },
+      ]
+
+      await act(async () => {
+        await api.authorizeDeviceWithBarcodes(barcodes as any)
+      })
+
+      expect(apiClient.post).toHaveBeenCalledWith(
+        `${BARCODES_ENDPOINT}/${FAKE_CLIENT_ID}`,
+        { barcodes },
+        { headers: { 'Content-Type': 'application/json' }, skipBearerAuth: true }
+      )
+    })
+
+    it('returns the device authorization response from IAS', async () => {
+      const apiClient = buildBarcodeApiClient()
+      const mockResponse = {
+        device_code: 'dev-abc',
+        user_code: 'USER1234',
+        verification_options: 'video_call',
+        process: 'photo',
+        expires_in: 600,
+      }
+      apiClient.post.mockResolvedValueOnce({ data: mockResponse })
+      const api = renderAuthApi(apiClient as any)
+
+      let result: any
+      await act(async () => {
+        result = await api.authorizeDeviceWithBarcodes([{ type: 'CODE_128', value: 'A06198657' }] as any)
+      })
+
+      expect(result).toEqual(mockResponse)
+    })
+
+    it('propagates backend errors (e.g. card_not_found) so the caller can continue as evidence', async () => {
+      const apiClient = buildBarcodeApiClient()
+      apiClient.post.mockRejectedValue(new Error('card_not_found'))
+      const api = renderAuthApi(apiClient as any)
+
+      await act(async () => {
+        await expect(
+          api.authorizeDeviceWithBarcodes([{ type: 'CODE_128', value: 'A06198657' }] as any)
+        ).rejects.toThrow('card_not_found')
+      })
+    })
+  })
 })
