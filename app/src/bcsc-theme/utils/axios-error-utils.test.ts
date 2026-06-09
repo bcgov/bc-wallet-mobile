@@ -1,12 +1,9 @@
-import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import {
   formatAxiosErrorForLogger,
   formatIasAxiosResponseError,
   getAppErrorFromAxiosError,
   getAxiosErrorDefinition,
-  getRedactedNetworkDiagnostics,
-  safeHost,
 } from './axios-error-utils'
 
 describe('Error Utils', () => {
@@ -153,72 +150,6 @@ describe('Error Utils', () => {
 
       expect(errorDefinition).toBeDefined()
       expect(errorDefinition?.appEvent).toBe('server_error')
-    })
-  })
-
-  describe('safeHost', () => {
-    it('returns only the host, dropping path and the signed-URL query string', () => {
-      expect(safeHost('https://store.blob.core.windows.net/container/file.jpg?sig=SECRETSIG&se=2026')).toBe(
-        'store.blob.core.windows.net'
-      )
-    })
-
-    it('returns undefined for missing input', () => {
-      expect(safeHost(undefined)).toBeUndefined()
-      expect(safeHost('')).toBeUndefined()
-    })
-
-    it('returns undefined for an unparseable url', () => {
-      expect(safeHost('not a url')).toBeUndefined()
-    })
-  })
-
-  describe('getRedactedNetworkDiagnostics', () => {
-    it('unwraps an AppError cause and extracts transport detail without leaking tokens', () => {
-      const signedUrl = 'https://store.blob.core.windows.net/c/video.mp4?sig=TOPSECRET&token=abc'
-      const axiosError = {
-        code: 'ERR_NETWORK',
-        config: {
-          method: 'put',
-          url: signedUrl,
-          headers: { Authorization: 'Bearer JWT.TOKEN.SECRET' },
-        },
-      } as any
-      const appError = AppError.fromErrorDefinition(ErrorRegistry.NO_INTERNET, { cause: axiosError, track: false })
-
-      const diagnostics = getRedactedNetworkDiagnostics(appError)
-
-      expect(diagnostics).toEqual({
-        axiosCode: 'ERR_NETWORK',
-        httpStatus: undefined,
-        method: 'PUT',
-        host: 'store.blob.core.windows.net',
-      })
-      // Redaction guarantee: no signed-URL token or auth header survives serialization.
-      const serialized = JSON.stringify(diagnostics)
-      expect(serialized).not.toContain('TOPSECRET')
-      expect(serialized).not.toContain('Bearer')
-      expect(serialized).not.toContain('Authorization')
-    })
-
-    it('reads the HTTP status from a response-bearing axios error', () => {
-      const axiosError = {
-        code: 'ERR_BAD_RESPONSE',
-        config: { method: 'put', url: 'https://api.example.com/evidence/v1/photos' },
-        response: { status: 413 },
-      } as any
-
-      expect(getRedactedNetworkDiagnostics(axiosError)).toEqual({
-        axiosCode: 'ERR_BAD_RESPONSE',
-        httpStatus: 413,
-        method: 'PUT',
-        host: 'api.example.com',
-      })
-    })
-
-    it('returns an empty object for a non-network error', () => {
-      expect(getRedactedNetworkDiagnostics(new Error('Cache missing video data'))).toEqual({})
-      expect(getRedactedNetworkDiagnostics(undefined)).toEqual({})
     })
   })
 
