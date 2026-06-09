@@ -87,7 +87,7 @@ describe('ManualPairing', () => {
     })
 
     test('shows error when submission fails with 404', async () => {
-      alertSpy = jest.spyOn(Alert, 'alert')
+      alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {})
       mockLoginByPairingCode.mockRejectedValue(new Error('Not Found', { cause: { status: 404 } }))
       renderScreen()
 
