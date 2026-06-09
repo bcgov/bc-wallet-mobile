@@ -96,6 +96,8 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     { key: 'SERVER_TIMEOUT', description: 'Request timeout error' },
     { key: 'INVALID_QR_CODE', description: 'QR code scanning error' },
     { key: 'LOGIN_REJECTED_401', description: 'Authentication unauthorized' },
+    { key: 'FORBIDDEN', description: 'HTTP 403 — authenticated but not permitted' },
+    { key: 'NOT_FOUND', description: 'HTTP 404 — resource or endpoint not found' },
     { key: 'CARD_EXPIRED_WILL_REMOVE', description: 'Credential expiration warning' },
     { key: 'WALLET_SECRET_NOT_FOUND', description: 'Critical wallet error' },
     { key: 'ATTESTATION_CONNECTION_ERROR', description: 'Attestation flow error' },
