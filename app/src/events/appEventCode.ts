@@ -100,6 +100,8 @@ export enum AppEventCode {
   ERR_208_UNEXPECTED_NETWORK_CALL_EXCEPTION = 'err_208_unexpected_network_call_exception', //being tracked
   ERR_209_BAD_REQUEST = 'err_209_bad_request',
   ERR_210_UNAUTHORIZED = 'err_210_unauthorized',
+  FORBIDDEN = 'forbidden',
+  NOT_FOUND = 'not_found',
   ERR_212_RETRY_LATER = 'err_212_retry_later',
   ERR_211_SERVER_OUTAGE = 'err_211_server_outage',
   ERR_213_FAILED_CREATING_CLIENT_REGISTRATION = 'err_213_failed_creating_client_registration',

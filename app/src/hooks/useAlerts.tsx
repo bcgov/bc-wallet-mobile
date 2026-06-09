@@ -343,6 +343,10 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       unexpectedNetworkCallAlert: _createBasicErrorModal(AppEventCode.ERR_208_UNEXPECTED_NETWORK_CALL_EXCEPTION, 'ProblemWithApp', { errorCode: '208' }),
       badRequestAlert: _createBasicErrorModal(AppEventCode.ERR_209_BAD_REQUEST, 'ProblemWithApp', { errorCode: '209' }),
       unauthorizedAlert: _createBasicErrorModal(AppEventCode.ERR_210_UNAUTHORIZED, 'ProblemWithApp', { errorCode: '210' }),
+      // 403/404 are server/permission/resource issues, not a broken install — use the neutral
+      // "Problem with Service / please try again later" copy rather than "reinstall the app".
+      forbiddenAlert: _createBasicErrorModal(AppEventCode.FORBIDDEN, 'ProblemWithService', { errorCode: '403' }),
+      notFoundAlert: _createBasicErrorModal(AppEventCode.NOT_FOUND, 'ProblemWithService', { errorCode: '404' }),
       serverOutageAlert: _createBasicErrorModal(AppEventCode.ERR_211_SERVER_OUTAGE, 'ProblemWithApp', { errorCode: '211' }),
       retryLaterAlert: _createBasicErrorModal(AppEventCode.ERR_212_RETRY_LATER, 'ProblemWithApp', { errorCode: '212' }),
       creatingClientRegistrationFailedAlert: _createBasicErrorModal(AppEventCode.ERR_213_FAILED_CREATING_CLIENT_REGISTRATION, 'ProblemWithApp', { errorCode: '213' }),

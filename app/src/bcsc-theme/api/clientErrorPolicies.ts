@@ -70,7 +70,8 @@ const _getVerifyDeviceAssertionAlertMap = (alerts?: AppAlerts) => {
   ])
 }
 
-// Alert map for IAS errors 201–300 (add_card_*, err_206–213, err_299, err_300)
+// Alert map for IAS errors 201–300 (add_card_*, err_206–213, err_299, err_300) plus
+// status-mapped HTTP client errors (403 forbidden, 404 not found) that share the same modal style.
 const _getIasErrorAlertMap = (alerts?: AppAlerts) => {
   return new Map([
     [AppEventCode.ADD_CARD_SERVER_CONFIGURATION, alerts?.serverConfigurationAlert],
@@ -83,6 +84,8 @@ const _getIasErrorAlertMap = (alerts?: AppAlerts) => {
     [AppEventCode.ERR_208_UNEXPECTED_NETWORK_CALL_EXCEPTION, alerts?.unexpectedNetworkCallAlert],
     [AppEventCode.ERR_209_BAD_REQUEST, alerts?.badRequestAlert],
     [AppEventCode.ERR_210_UNAUTHORIZED, alerts?.unauthorizedAlert],
+    [AppEventCode.FORBIDDEN, alerts?.forbiddenAlert],
+    [AppEventCode.NOT_FOUND, alerts?.notFoundAlert],
     [AppEventCode.ERR_211_SERVER_OUTAGE, alerts?.serverOutageAlert],
     [AppEventCode.ERR_212_RETRY_LATER, alerts?.retryLaterAlert],
     [AppEventCode.ERR_213_FAILED_CREATING_CLIENT_REGISTRATION, alerts?.creatingClientRegistrationFailedAlert],
