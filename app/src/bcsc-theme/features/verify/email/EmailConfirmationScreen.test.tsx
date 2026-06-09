@@ -128,7 +128,7 @@ describe('EmailConfirmation', () => {
 
     test('shows native alert when submission fails', async () => {
       const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {})
-      mockSendEmailVerificationCode.mockRejectedValue(new Error('API Error'))
+      mockSendEmailVerificationCode.mockRejectedValue(new Error('Not Found', { cause: { status: 404 } }))
       renderScreen()
 
       const codeInput = screen.getByTestId(testIdWithKey('EmailConfirmationCodeInput'))
@@ -136,7 +136,7 @@ describe('EmailConfirmation', () => {
       fireEvent.press(screen.getByTestId('ContinueButton'))
 
       await waitFor(() => {
-        expect(screen.getByText('BCSC.EmailConfirmation.ErrorTitle')).toBeTruthy()
+        expect(screen.getByText('BCSC.EmailConfirmation.CodeDoesNotMatch')).toBeTruthy()
         expect(alertSpy).toHaveBeenCalledWith(
           'BCSC.EmailConfirmation.CouldNotVerifyTitle',
           'BCSC.EmailConfirmation.CodeDoesNotMatch',

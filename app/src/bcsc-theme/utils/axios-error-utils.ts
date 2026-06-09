@@ -132,14 +132,14 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
   const errorCode = error.code
   const errorDefinition = getAxiosErrorDefinition(errorCode) ?? getErrorDefinitionFromAppEventCode(errorCode)
 
+  let appError: AppError
+
   // If we have a predefined error definition for this app event code, use it to create the AppError
   if (errorDefinition) {
-    return AppError.fromErrorDefinition(errorDefinition, { cause: error })
-  }
-
-  // Create a generic AppError for known event codes that don't have a predefined error definition
-  if (isAppEventCode(errorCode)) {
-    return new AppError(
+    appError = AppError.fromErrorDefinition(errorDefinition, { cause: error })
+  } else if (isAppEventCode(errorCode)) {
+    // Create a generic AppError for known event codes that don't have a predefined error definition
+    appError = new AppError(
       `Server Error: Unregistered error code (${errorCode})`,
       {
         ...ErrorRegistry.UNKNOWN_SERVER_ERROR,
@@ -147,9 +147,14 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
       },
       { cause: error }
     )
+  } else {
+    appError = new AppError(`Server Error: Unknown error code (${errorCode})`, ErrorRegistry.UNKNOWN_SERVER_ERROR, {
+      cause: error,
+    })
   }
+  // http://x.com is a dummy domain so relative paths still parse correctly
+  appError.url = error.config?.url ? new URL(error.config.url, 'https://x.com').pathname : undefined
+  appError.method = error.config?.method?.toUpperCase()
 
-  return new AppError(`Server Error: Unknown error code (${errorCode})`, ErrorRegistry.UNKNOWN_SERVER_ERROR, {
-    cause: error,
-  })
+  return appError
 }

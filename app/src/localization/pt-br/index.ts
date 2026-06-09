@@ -612,6 +612,8 @@ const translation = {
       "BookmarkService": "Save link to: (PT-BR)",
       "ToggleBookmark": "Toggle bookmark (PT-BR)",
       "BookmarkDescription": "This adds a link to the menu in this app for easier access next time. (PT-BR)",
+      "CouldNotVerifyPairingCodeTitle": "Could not verify pairing code (PT-BR)",
+      "CodeDoesNotMatchMessage": "The code you entered does not match. Try again. (PT-BR)",
     },
     "Onboarding": {
       "LearnMore": "Learn more (PT-BR)",
