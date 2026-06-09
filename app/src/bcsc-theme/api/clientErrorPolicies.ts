@@ -255,7 +255,7 @@ export const attestationPollingErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
-// Error policy for email verification code submission — 400/404 indicate a wrong or
+// Error policy for email verification code submission — 404 indicates a wrong or
 // expired code, which is a user-input error. Suppress the global modal so the
 // EmailConfirmationScreen can show its own inline error instead of the misleading
 // "App not installed correctly (error 209)" alert.
@@ -266,14 +266,27 @@ export const attestationPollingErrorPolicy: ErrorHandlingPolicy = {
 const EMAIL_VERIFICATION_PATH_PATTERN = /\/v1\/emails\/[^/?#]+/
 export const emailVerificationCodeErrorPolicy: ErrorHandlingPolicy = {
   matches: (_, context) => {
-    return (
-      (context.statusCode === 400 || context.statusCode === 404) &&
-      EMAIL_VERIFICATION_PATH_PATTERN.test(context.endpoint)
-    )
+    return context.statusCode === 404 && EMAIL_VERIFICATION_PATH_PATTERN.test(context.endpoint)
   },
   handle: (_error, context) => {
     context.logger.info(
       '[EmailVerificationCodeErrorPolicy] Suppressing global alert — confirmation screen will show inline error for invalid code'
+    )
+  },
+}
+
+// Error policy for pairing code submission — 404 indicates a wrong or
+// expired code, which is a user-input error. Suppress the global modal so the
+// ManualPairing screen can show its own alert error instead of the misleading
+// "App not installed correctly (error 209)" alert.
+const PAIRING_CODE_PATH_PATTERN = /\/v3\/mobile\/assertion/
+export const pairingCodeErrorPolicy: ErrorHandlingPolicy = {
+  matches: (_, context) => {
+    return context.statusCode === 404 && PAIRING_CODE_PATH_PATTERN.test(context.endpoint)
+  },
+  handle: (_error, context) => {
+    context.logger.info(
+      '[PairingCodeErrorPolicy] Suppressing global alert — manual pairing screen will show inline error and alert for invalid pairing code'
     )
   },
 }
@@ -470,6 +483,7 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   videoSessionErrorPolicy,
   attestationPollingErrorPolicy,
   emailVerificationCodeErrorPolicy,
+  pairingCodeErrorPolicy,
   invalidClientMetadataErrorPolicy,
   iasErrorPolicy,
   // Specific polices listed above, followed by global policies

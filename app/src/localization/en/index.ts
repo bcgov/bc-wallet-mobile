@@ -627,6 +627,8 @@ const translation = {
       "ToggleBookmark": "Toggle bookmark",
       "BookmarkDescription": "This adds a link to the menu in this app for easier access next time.",
       "TabTitle": "Pairing code",
+      "CouldNotVerifyPairingCodeTitle": "Could not verify pairing code",
+      "CodeDoesNotMatchMessage": "The code you entered does not match. Try again.",
     },
     "Onboarding": {
       "LearnMore": "Learn more",
