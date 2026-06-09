@@ -26,7 +26,12 @@ const CodeInput = ({ value, onChange, error, onErrorClear, separator, textInputP
     (text: string) => {
       reportActivity?.()
       onErrorClear?.()
-      onChange(text)
+      const sanitized = text.replace(/\s+/g, '')
+      if (sanitized.length > CELL_COUNT) {
+        onChange(sanitized.slice(0, CELL_COUNT))
+        return
+      }
+      onChange(sanitized)
     },
     [onChange, onErrorClear, reportActivity]
   )
@@ -88,6 +93,12 @@ const CodeInput = ({ value, onChange, error, onErrorClear, separator, textInputP
         onChangeText={onChangeText}
         onFocus={handleFocus}
         cellCount={CELL_COUNT}
+        // The library defaults maxLength={cellCount}, which is enforced natively on the RAW string
+        // before onChangeText can strip whitespace. iOS Voice Control dictation inserts a smart
+        // leading space when appending to existing text (e.g. "A" + "BCDEF" -> "A BCDEF" = 7 chars),
+        // so the native cap truncates the last real character ("5 of 6"). We give the field headroom
+        // for whitespace artifacts and let onChangeText sanitize + slice to CELL_COUNT instead.
+        maxLength={CELL_COUNT * 2}
         rootStyle={styles.root}
         renderCell={({ index, symbol, isFocused }) => (
           <Fragment key={index}>
