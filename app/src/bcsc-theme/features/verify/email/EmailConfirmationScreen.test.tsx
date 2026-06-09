@@ -128,7 +128,7 @@ describe('EmailConfirmation', () => {
 
     test('shows native alert when submission fails', async () => {
       const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {})
-      mockSendEmailVerificationCode.mockRejectedValue(new Error('API Error'))
+      mockSendEmailVerificationCode.mockRejectedValue(new Error('Not Found', { cause: { status: 404 } }))
       renderScreen()
 
       const codeInput = screen.getByTestId(testIdWithKey('EmailConfirmationCodeInput'))
