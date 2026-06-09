@@ -53,9 +53,9 @@ export const summarizeLoggedBody = (body: unknown): unknown => {
     return body
   }
 
-  // ArrayBuffer.isView covers Buffer (a Uint8Array subclass), typed arrays, and DataView.
+  // ArrayBuffer.isView (a type guard) covers Buffer (a Uint8Array subclass), typed arrays, and DataView.
   if (ArrayBuffer.isView(body)) {
-    return `[binary ${(body as ArrayBufferView).byteLength} bytes]`
+    return `[binary ${body.byteLength} bytes]`
   }
 
   if (body instanceof ArrayBuffer) {

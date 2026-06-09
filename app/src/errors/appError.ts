@@ -30,12 +30,14 @@ const summarizeCause = (cause: unknown): unknown => {
   }
 
   const { code, status } = cause as { code?: unknown; status?: unknown }
-  return {
-    name: cause.name,
-    message: cause.message,
-    ...(code !== undefined ? { code } : {}),
-    ...(status !== undefined ? { status } : {}),
+  const summary: Record<string, unknown> = { name: cause.name, message: cause.message }
+  if (code !== undefined) {
+    summary.code = code
   }
+  if (status !== undefined) {
+    summary.status = status
+  }
+  return summary
 }
 
 /**
