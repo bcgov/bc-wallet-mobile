@@ -200,6 +200,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.AUTHENTICATION,
     message: 'Maximum retry/attempt count exceeded — request throttled',
   },
+  NOT_FOUND: {
+    statusCode: 2113,
+    appEvent: AppEventCode.NOT_FOUND,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.NETWORK,
+    message: 'Server returned 404 — requested resource or endpoint was not found',
+  },
 
   // ============================================
   // Authentication/Login Errors (2200-2299)
@@ -273,6 +280,13 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.WARNING,
     category: ErrorCategory.AUTHENTICATION,
     message: 'Account limit reached — user has too many active registrations',
+  },
+  FORBIDDEN: {
+    statusCode: 2210,
+    appEvent: AppEventCode.FORBIDDEN,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.AUTHENTICATION,
+    message: 'HTTP 403 — authenticated but not permitted to access this resource',
   },
 
   // ============================================

@@ -133,11 +133,27 @@ describe('Error Utils', () => {
       expect(errorDefinition?.appEvent).toBe('server_timeout')
     })
 
-    it('BAD_REQUEST should resolve to BAD_REQUEST AppError', () => {
+    it('BAD_REQUEST without a status should resolve to BAD_REQUEST AppError', () => {
       const errorDefinition = getAxiosErrorDefinition('ERR_BAD_REQUEST')
 
       expect(errorDefinition).toBeDefined()
       expect(errorDefinition?.appEvent).toBe('err_209_bad_request')
+    })
+
+    // Axios collapses every 4xx into ERR_BAD_REQUEST; we disambiguate by the real HTTP status so
+    // 401/403/404/429 no longer masquerade as the "HTTP 400 / error 209" bad-request error.
+    it.each([
+      [400, 'err_209_bad_request'],
+      [401, 'err_210_unauthorized'],
+      [403, 'forbidden'],
+      [404, 'not_found'],
+      [429, 'err_212_retry_later'],
+      [409, 'err_209_bad_request'], // unmapped 4xx falls back to BAD_REQUEST
+    ])('BAD_REQUEST with status %s should resolve to appEvent "%s"', (status, expectedAppEvent) => {
+      const errorDefinition = getAxiosErrorDefinition('ERR_BAD_REQUEST', status)
+
+      expect(errorDefinition).toBeDefined()
+      expect(errorDefinition?.appEvent).toBe(expectedAppEvent)
     })
 
     it('BAD_RESPONSE should resolve to SERVER_ERROR AppError', () => {

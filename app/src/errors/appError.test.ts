@@ -126,6 +126,27 @@ describe('AppError', () => {
         message: `[${error.code}] ${error.message}`,
       })
     })
+
+    it('should include the HTTP status and endpoint in the tracked message when present', () => {
+      const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
+
+      const identity = {
+        category: ErrorCategory.NETWORK,
+        appEvent: AppEventCode.NOT_FOUND,
+        statusCode: 2113,
+      }
+      // track: false so the constructor's auto-track doesn't fire before url/method are set
+      const error = new AppError('Not found', identity, { cause: { response: { status: 404 } }, track: false })
+      error.url = '/device/userinfo'
+      error.method = 'GET'
+
+      error.track()
+
+      expect(trackErrorEventSpy).toHaveBeenCalledWith({
+        code: AppEventCode.NOT_FOUND,
+        message: `[${error.code}] HTTP 404 GET /device/userinfo Not found`,
+      })
+    })
   })
 
   describe('fromErrorDefinition', () => {
