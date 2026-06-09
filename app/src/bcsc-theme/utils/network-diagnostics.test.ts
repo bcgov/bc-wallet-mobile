@@ -28,6 +28,14 @@ describe('network-diagnostics', () => {
       // Non-enumerable so it never leaks into JSON.stringify / Object.keys serialization.
       expect(Object.keys(original)).not.toContain('__uploadCtx')
     })
+
+    it('re-throws a frozen rejection unchanged instead of throwing from defineProperty', async () => {
+      const frozen = Object.freeze(new Error('frozen rejection'))
+
+      await expect(tagUploadFailure(Promise.reject(frozen), { kind: 'photo', sizeBytes: 1 })).rejects.toBe(frozen)
+      // Tagging was skipped; the original cause is preserved rather than lost to a TypeError.
+      expect((frozen as unknown as { __uploadCtx?: unknown }).__uploadCtx).toBeUndefined()
+    })
   })
 
   describe('getNetworkStateSnapshot', () => {

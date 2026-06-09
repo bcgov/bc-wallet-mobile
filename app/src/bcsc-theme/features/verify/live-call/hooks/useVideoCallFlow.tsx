@@ -228,12 +228,18 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
       stage = 'upload-binaries'
       await uploadEvidenceBinaries(additionalEvidence)
     } catch (error) {
-      // Capture failure-time diagnostics so remote logs can distinguish a genuinely offline
-      // device from a host-specific transport failure (issue #4010). handleError still drives
-      // the UI/analytics; this adds the queryable structured detail.
-      const diagnostics = await buildUploadFailureDiagnostics(error, { stage, startedAt })
-      logger.error('[useVideoCallFlow] Pre-call evidence upload failed', diagnostics, error as Error)
+      // Trigger the error UI/cleanup immediately, then log failure-time diagnostics in the
+      // background so a (possibly slow) NetInfo.refresh() can't delay the transition. The
+      // diagnostics distinguish a genuinely offline device from a host-specific transport
+      // failure (issue #4010).
       handleError(VideoCallErrorType.DOCUMENT_UPLOAD_FAILED, error as Error)
+      void buildUploadFailureDiagnostics(error, { stage, startedAt })
+        .then((diagnostics) =>
+          logger.error('[useVideoCallFlow] Pre-call evidence upload failed', diagnostics, error as Error)
+        )
+        .catch(() => {
+          // Diagnostics are best-effort; never let them mask error handling.
+        })
       return false
     }
     return true

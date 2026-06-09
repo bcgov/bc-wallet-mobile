@@ -55,7 +55,12 @@ export type UploadFailureDiagnostics = {
 export const tagUploadFailure = <T>(promise: Promise<T>, context: UploadFileContext): Promise<T> =>
   promise.catch((error: unknown) => {
     if (error && typeof error === 'object') {
-      Object.defineProperty(error, '__uploadCtx', { value: context, enumerable: false, configurable: true })
+      try {
+        Object.defineProperty(error, '__uploadCtx', { value: context, enumerable: false, configurable: true })
+      } catch {
+        // The rejection is frozen/sealed/non-extensible — skip tagging rather than let
+        // defineProperty throw and replace the original upload failure cause.
+      }
     }
     throw error
   })

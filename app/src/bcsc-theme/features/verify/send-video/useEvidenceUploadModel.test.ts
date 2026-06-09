@@ -5,7 +5,7 @@ import { BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import * as Bifold from '@bifold/core'
 import NetInfo from '@react-native-community/netinfo'
-import { act, renderHook } from '@testing-library/react-native'
+import { act, renderHook, waitFor } from '@testing-library/react-native'
 import RNFS from 'react-native-fs'
 import { VerificationVideoCache } from './VideoReviewScreen'
 
@@ -485,14 +485,17 @@ describe('useEvidenceUploadModel', () => {
         await result.current.handleSend()
       })
 
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        '[useEvidenceUploadModel] Error during evidence upload process',
-        expect.objectContaining({
-          stage: 'upload-binaries',
-          file: expect.objectContaining({ kind: 'video', host: 'store.example.com' }),
-          network: { isConnected: true, isInternetReachable: true, type: 'wifi' },
-        }),
-        expect.anything()
+      // Diagnostics are logged in the background (fire-and-forget) so the failure UI is immediate.
+      await waitFor(() =>
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          '[useEvidenceUploadModel] Error during evidence upload process',
+          expect.objectContaining({
+            stage: 'upload-binaries',
+            file: expect.objectContaining({ kind: 'video', host: 'store.example.com' }),
+            network: { isConnected: true, isInternetReachable: true, type: 'wifi' },
+          }),
+          expect.anything()
+        )
       )
 
       // The structured diagnostics payload must never contain a signed-URL token.

@@ -202,12 +202,19 @@ const useEvidenceUploadModel = (
        */
       const appError = AppError.fromErrorDefinition(ErrorRegistry.FILE_UPLOAD_ERROR, { cause: error })
 
-      // Capture failure-time diagnostics so remote logs can distinguish a genuinely offline
-      // device from a host-specific transport failure. The wrapped FILE_UPLOAD_ERROR otherwise
-      // flattens an axios ERR_NETWORK into a misleading "no internet" message (issue #4010).
-      const diagnostics = await buildUploadFailureDiagnostics(error, { stage, startedAt })
-      logger.error('[useEvidenceUploadModel] Error during evidence upload process', diagnostics, appError)
+      // Surface user feedback immediately, then gather + log failure-time diagnostics in the
+      // background so a (possibly slow) NetInfo.refresh() can't keep the user on the loading
+      // spinner. The diagnostics distinguish a genuinely offline device from a host-specific
+      // transport failure — the wrapped FILE_UPLOAD_ERROR otherwise flattens an axios
+      // ERR_NETWORK into a misleading "no internet" message (issue #4010).
       fileUploadErrorAlert(appError)
+      void buildUploadFailureDiagnostics(error, { stage, startedAt })
+        .then((diagnostics) =>
+          logger.error('[useEvidenceUploadModel] Error during evidence upload process', diagnostics, appError)
+        )
+        .catch(() => {
+          // Diagnostics are best-effort; never let them mask the original failure handling.
+        })
     } finally {
       stopLoading()
     }
