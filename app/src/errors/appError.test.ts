@@ -77,6 +77,35 @@ describe('AppError', () => {
         'Something went wrong\nDebug: [general.unknown_server_error.1234] Technical details about the error'
       )
     })
+
+    it('should append URL if set', () => {
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+      const error = new AppError('Something went wrong', identity)
+      error.url = 'https://example.com/device/token'
+
+      expect(error.fullMessage).toBe(
+        'Something went wrong\nDebug: [general.unknown_server_error.1234]\nRequest: https://example.com/device/token'
+      )
+    })
+
+    it('should include HTTP method with URL when both are set', () => {
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+      const error = new AppError('Something went wrong', identity)
+      error.url = 'https://example.com/device/token'
+      error.method = 'POST'
+
+      expect(error.fullMessage).toBe(
+        'Something went wrong\nDebug: [general.unknown_server_error.1234]\nRequest: POST https://example.com/device/token'
+      )
+    })
   })
 
   describe('track', () => {
@@ -170,6 +199,8 @@ describe('AppError', () => {
         timestamp: '2024-01-01T00:00:00.000Z',
         cause: cause,
         handled: false,
+        url: undefined,
+        method: undefined,
       })
 
       jest.useRealTimers()

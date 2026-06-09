@@ -16,6 +16,7 @@ import {
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Alert } from 'react-native'
 
 type ManualPairingProps = StackScreenProps<BCSCMainStackParams, BCSCScreens.ManualPairingCode>
 
@@ -54,7 +55,18 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
         })
       } catch (error) {
         logger.error(`Error submitting pairing code: ${error}`)
-        setError(t('BCSC.ManualPairing.FailedToSubmitPairingCodeMessage'))
+
+        // Error 404 is assumed to be an incorrect pairing code
+        if ((error as any)?.cause?.status === 404) {
+          setError(t('BCSC.ManualPairing.CodeDoesNotMatchMessage'))
+          Alert.alert(
+            t('BCSC.ManualPairing.CouldNotVerifyPairingCodeTitle'),
+            t('BCSC.ManualPairing.CodeDoesNotMatchMessage'),
+            [{ text: t('Global.OK') }]
+          )
+        } else {
+          setError(t('BCSC.ManualPairing.FailedToSubmitPairingCodeMessage'))
+        }
       } finally {
         setLoading(false)
       }

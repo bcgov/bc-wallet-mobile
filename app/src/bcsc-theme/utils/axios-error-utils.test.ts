@@ -53,6 +53,32 @@ describe('Error Utils', () => {
       expect(appError.appEvent).toBe('unknown_server_error')
       expect(appError.code).toContain(String(ErrorRegistry.UNKNOWN_SERVER_ERROR.statusCode))
     })
+
+    it('should set url path and method from error config', () => {
+      const axiosError = {
+        code: 'err_209_bad_request',
+        message: 'Bad request',
+        config: { url: 'https://example.com/device/token', method: 'post' },
+        response: { data: {}, status: 400 },
+      } as any
+
+      const appError = getAppErrorFromAxiosError(axiosError)
+
+      expect(appError.url).toBe('/device/token')
+      expect(appError.method).toBe('POST')
+    })
+
+    it('should set url path to undefined when config.url is absent', () => {
+      const axiosError = {
+        code: 'unknown_ias_code',
+        message: 'Unknown',
+        config: {},
+      } as any
+
+      const appError = getAppErrorFromAxiosError(axiosError)
+
+      expect(appError.url).toBeUndefined()
+    })
   })
 
   describe('formatIasAxiosResponseError', () => {
