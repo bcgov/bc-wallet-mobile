@@ -55,6 +55,10 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const scanner = useCardScanner()
   const bcscSerialRef = useRef<string | null>(null)
   const licenseRef = useRef<DriversLicenseMetadata | null>(null)
+  // Guards against re-hitting /device/barcodes on every photo of a multi-sided
+  // card — the scanned barcodes can't change once both refs are set (scanning
+  // stops below), so the backend only needs to be asked once per card.
+  const barcodesCheckedRef = useRef(false)
   const { isLoading: isCameraLoading } = useAutoRequestPermission(hasPermission, requestPermission)
   const { failedToReadFromLocalStorageAlert } = useAlerts(navigation)
   const codeScanner = useCodeScanner({
@@ -136,7 +140,8 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
      * In the Non-Photo BCSC flow we've already done authorizeDevice, so we skip.
      */
     if (isNonBCSCFlow) {
-      if (bcscSerialRef.current && licenseRef.current) {
+      if (bcscSerialRef.current && licenseRef.current && !barcodesCheckedRef.current) {
+        barcodesCheckedRef.current = true
         const switchedToBcsc = await scanner.handleScanBarcodes(bcscSerialRef.current, licenseRef.current)
         if (switchedToBcsc) {
           await clearAdditionalEvidence()

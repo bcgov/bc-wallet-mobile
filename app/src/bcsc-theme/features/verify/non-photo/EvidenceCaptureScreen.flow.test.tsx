@@ -122,12 +122,20 @@ const mockCardType = {
   image_sides: [{ side: 'FRONT', image_side_name: 'FRONT_SIDE', image_side_tip: 'tip', image_side_label: 'Front' }],
 }
 
-const renderScreen = (navigation: any) =>
+const mockTwoSidedCardType = {
+  evidence_type: 'pr_card',
+  image_sides: [
+    { side: 'FRONT', image_side_name: 'FRONT_SIDE', image_side_tip: 'tip', image_side_label: 'Front' },
+    { side: 'BACK', image_side_name: 'BACK_SIDE', image_side_tip: 'tip', image_side_label: 'Back' },
+  ],
+}
+
+const renderScreen = (navigation: any, cardType: any = mockCardType) =>
   render(
     <BasicAppContext
       initialStateOverride={{ bcscSecure: { ...initialState.bcscSecure, cardProcess: BCSCCardProcess.NonBCSC } } as any}
     >
-      <EvidenceCaptureScreen navigation={navigation} route={{ params: { cardType: mockCardType } } as never} />
+      <EvidenceCaptureScreen navigation={navigation} route={{ params: { cardType } } as never} />
     </BasicAppContext>
   )
 
@@ -183,6 +191,39 @@ describe('EvidenceCaptureScreen — Non-BCSC barcode flow', () => {
     expect(barcodes).toEqual(
       expect.arrayContaining([expect.objectContaining({ type: 'CODE_128', value: 'S00023254' })])
     )
+    expect(navigation.navigate).toHaveBeenCalledWith(
+      BCSCScreens.EvidenceIDCollection,
+      expect.objectContaining({ documentNumber: '123' })
+    )
+  })
+
+  it('asks /device/barcodes only once across a multi-sided card', async () => {
+    mockHandleScanBarcodes.mockResolvedValue(false)
+    const navigation = { navigate: jest.fn(), reset: jest.fn() }
+    const utils = renderScreen(navigation, mockTwoSidedCardType)
+
+    // Front side: scan, photo, accept.
+    await waitFor(() => utils.getByTestId('sim-scan'))
+    await act(async () => {
+      fireEvent.press(utils.getByTestId('sim-scan'))
+    })
+    await act(async () => {
+      fireEvent.press(utils.getByTestId('sim-photo'))
+    })
+    await act(async () => {
+      fireEvent.press(await utils.findByTestId('sim-accept'))
+    })
+
+    // Back side: photo, accept — the barcodes are already captured, so no rescan.
+    await act(async () => {
+      fireEvent.press(await utils.findByTestId('sim-photo'))
+    })
+    await act(async () => {
+      fireEvent.press(await utils.findByTestId('sim-accept'))
+    })
+
+    // The backend is asked once for the card, not once per side.
+    expect(mockHandleScanBarcodes).toHaveBeenCalledTimes(1)
     expect(navigation.navigate).toHaveBeenCalledWith(
       BCSCScreens.EvidenceIDCollection,
       expect.objectContaining({ documentNumber: '123' })
