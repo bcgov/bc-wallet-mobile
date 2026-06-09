@@ -9,7 +9,7 @@ import { useCallback, useMemo, useRef } from 'react'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { CodeType } from 'react-native-vision-camera'
 import useApi from '../api/hooks/useApi'
-import { DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
+import { DeviceAuthorizationResponse, DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
 import { VerificationCardError } from '../features/verify/verificationCardError'
 import { BCSCScreens, BCSCVerifyStackParams } from '../types/navigators'
 import { buildBarcodePayload } from '../utils/barcode'
@@ -54,6 +54,34 @@ export const useCardScanner = () => {
     useSecureActions()
 
   /**
+   * Applies a successful device authorization to secure storage and reroutes the
+   * user into the setup flow. Shared by the combo (serial + birthdate) and the
+   * barcodes (`/device/barcodes`) authorization paths.
+   *
+   * @param deviceAuth - The device authorization response from the backend.
+   */
+  const applyDeviceAuthorization = useCallback(
+    async (deviceAuth: DeviceAuthorizationResponse) => {
+      await updateUserInfo({
+        email: deviceAuth.verified_email,
+        isEmailVerified: !!deviceAuth.verified_email,
+      })
+
+      await updateDeviceCodes({
+        deviceCode: deviceAuth.device_code,
+        userCode: deviceAuth.user_code,
+        deviceCodeExpiresAt: new Date(Date.now() + deviceAuth.expires_in * 1000),
+      })
+
+      await updateCardProcess(deviceAuth.process)
+      await updateVerificationOptions(deviceAuth.verification_options.split(' ') as DeviceVerificationOption[])
+
+      navigation.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] })
+    },
+    [updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions, navigation]
+  )
+
+  /**
    * Default handler for combo card scanning (both BCSC serial and driver's license metadata).
    *
    * @param bcscSerial - The BCSC card serial number.
@@ -71,22 +99,7 @@ export const useCardScanner = () => {
 
       try {
         const deviceAuth = await authorization.authorizeDevice(bcscSerial, license.birthDate)
-
-        await updateUserInfo({
-          email: deviceAuth.verified_email,
-          isEmailVerified: !!deviceAuth.verified_email,
-        })
-
-        await updateDeviceCodes({
-          deviceCode: deviceAuth.device_code,
-          userCode: deviceAuth.user_code,
-          deviceCodeExpiresAt: new Date(Date.now() + deviceAuth.expires_in * 1000),
-        })
-
-        await updateCardProcess(deviceAuth.process)
-        await updateVerificationOptions(deviceAuth.verification_options.split(' ') as DeviceVerificationOption[])
-
-        navigation.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] })
+        await applyDeviceAuthorization(deviceAuth)
         return true
       } catch (error) {
         if (isHandledAppError(error)) {
@@ -117,16 +130,7 @@ export const useCardScanner = () => {
         return true
       }
     },
-    [
-      authorization,
-      updateUserInfo,
-      updateDeviceCodes,
-      updateCardProcess,
-      updateVerificationOptions,
-      logger,
-      navigation,
-      store.bcscSecure.cardProcess,
-    ]
+    [authorization, updateUserInfo, applyDeviceAuthorization, logger, navigation, store.bcscSecure.cardProcess]
   )
 
   /**
@@ -147,38 +151,20 @@ export const useCardScanner = () => {
     async (bcscSerial: string, license: DriversLicenseMetadata): Promise<boolean> => {
       try {
         const deviceAuth = await authorization.authorizeDeviceWithBarcodes(buildBarcodePayload(bcscSerial, license))
-
-        await updateUserInfo({
-          serial: bcscSerial,
-          birthdate: license.birthDate,
-          email: deviceAuth.verified_email,
-          isEmailVerified: !!deviceAuth.verified_email,
-        })
-        await updateDeviceCodes({
-          deviceCode: deviceAuth.device_code,
-          userCode: deviceAuth.user_code,
-          deviceCodeExpiresAt: new Date(Date.now() + deviceAuth.expires_in * 1000),
-        })
-        await updateCardProcess(deviceAuth.process)
-        await updateVerificationOptions(deviceAuth.verification_options.split(' ') as DeviceVerificationOption[])
-
-        navigation.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] })
+        await updateUserInfo({ serial: bcscSerial, birthdate: license.birthDate })
+        await applyDeviceAuthorization(deviceAuth)
         return true
       } catch (error) {
-        if (isHandledAppError(error)) {
-          return true
-        }
-
-        // Not a BC Services Card (or the endpoint was unreachable). Stay in the
-        // evidence-capture flow rather than surfacing an error — matches v3's
-        // `card_not_found → continue with non-bcsc`.
+        // Any failure — including a handled app error — means we could not confirm
+        // a BC Services Card, so stay in the evidence-capture flow rather than
+        // surfacing an error (matches v3's `card_not_found → continue with non-bcsc`).
         logger.info('[CardScanner] Barcodes did not match a BC Services Card; continuing as evidence', {
           error: String(error),
         })
         return false
       }
     },
-    [authorization, updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions, navigation, logger]
+    [authorization, updateUserInfo, applyDeviceAuthorization, logger]
   )
 
   /**

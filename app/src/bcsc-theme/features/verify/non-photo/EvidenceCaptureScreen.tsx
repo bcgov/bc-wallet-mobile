@@ -143,9 +143,6 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
           return
         }
       }
-      // Not a BC Services Card — drop any (possibly false-positive) serial so it
-      // isn't treated as one, then continue capturing this card as evidence.
-      bcscSerialRef.current = null
     }
 
     /**
