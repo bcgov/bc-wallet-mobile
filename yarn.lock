@@ -17023,7 +17023,7 @@ __metadata:
 
 "react-native-vision-camera@patch:react-native-vision-camera@npm%3A4.7.3#~/.yarn/patches/react-native-vision-camera-npm-4.7.3-dc361fe55c.patch":
   version: 4.7.3
-  resolution: "react-native-vision-camera@patch:react-native-vision-camera@npm%3A4.7.3#~/.yarn/patches/react-native-vision-camera-npm-4.7.3-dc361fe55c.patch::version=4.7.3&hash=458fb0"
+  resolution: "react-native-vision-camera@patch:react-native-vision-camera@npm%3A4.7.3#~/.yarn/patches/react-native-vision-camera-npm-4.7.3-dc361fe55c.patch::version=4.7.3&hash=9cec31"
   peerDependencies:
     "@shopify/react-native-skia": "*"
     react: "*"
@@ -17037,7 +17037,7 @@ __metadata:
       optional: true
     react-native-worklets-core:
       optional: true
-  checksum: 10c0/bc4f4aee8d1b7a8feec94e549fd22417598f742d153d5bf713f2a2efc27b4de9e573fd474eba7bb42d3f17cfed17973f1d236707f91eb40a236394f642e29188
+  checksum: 10c0/76cd9bf254051198448f4dd9cad4bcd833479736f07e2cb758741f7f4bbccfe42e3d9f67e1b24fe740adfa3ad87fcb256c13e4e3a791150f44731b728e426225
   languageName: node
   linkType: hard
 
