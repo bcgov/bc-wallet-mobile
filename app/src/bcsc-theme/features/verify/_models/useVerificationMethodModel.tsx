@@ -2,6 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { formatServiceAndUnavailableHours, isLiveCallAvailable } from '@/bcsc-theme/utils/service-hours-formatter'
+import { useAlerts } from '@/hooks/useAlerts'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { TOKENS, useServices, useStore } from '@bifold/core'
@@ -21,6 +22,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
   const { evidence, video: videoCallApi } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { updateVerificationRequest } = useSecureActions()
+  const { videoPromptsMissingAlert } = useAlerts(navigation)
 
   const handlePressSendVideo = useCallback(async () => {
     try {
@@ -32,7 +34,9 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
         verificationRequest = await evidence.createVerificationRequest()
       }
 
-      if (store.bcscSecure.verificationRequestId && !store.bcsc.prompts) {
+      // Use `?.length` (not just `!prompts`): an empty array is truthy, so a leftover/empty `[]` would
+      // otherwise skip this refetch and strand the user with no prompts on TakeVideoScreen.
+      if (store.bcscSecure.verificationRequestId && !store.bcsc.prompts?.length) {
         // NOTE: Making this request too many times will be rate limited by the server.
         verificationRequest = await evidence.getVerificationRequestPrompts(store.bcscSecure.verificationRequestId)
       }
@@ -40,6 +44,15 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
       if (verificationRequest) {
         updateVerificationRequest(verificationRequest.id, verificationRequest.sha256)
         dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [verificationRequest.prompts] })
+      }
+
+      // Never advance into the video flow without prompts. The server can return an empty prompt set,
+      // and TakeVideoScreen hard-stops when prompts are missing — surface a retryable alert here instead.
+      const resolvedPrompts = verificationRequest?.prompts ?? store.bcsc.prompts
+      if (!resolvedPrompts?.length) {
+        logger.error('[useVerificationMethodModel] No verification prompts available; aborting Send Video')
+        videoPromptsMissingAlert()
+        return
       }
 
       await Promise.allSettled([
@@ -70,6 +83,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     navigation,
     evidence,
     updateVerificationRequest,
+    videoPromptsMissingAlert,
   ])
 
   const handlePressLiveCall = useCallback(async () => {

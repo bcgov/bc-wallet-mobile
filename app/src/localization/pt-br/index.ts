@@ -1231,6 +1231,10 @@ const translation = {
       "Title": "Problem with Connection (PT-BR)",
       "Description": "Please try again. (PT-BR)"
     },
+    "VideoPromptsMissing": {
+      "Title": "Problem Starting Video (PT-BR)",
+      "Description": "We couldn't load your verification steps. Please try again. (PT-BR)"
+    },
     "FactoryReset": {
       "Title": "Problem with App (PT-BR)",
       "Description": "The app needs to be reset to factory settings to continue. This will delete all information in the app and you will have to set it up again. (PT-BR)",
