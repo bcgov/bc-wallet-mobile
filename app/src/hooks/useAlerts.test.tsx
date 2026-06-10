@@ -231,6 +231,27 @@ describe('useAlerts', () => {
     })
   })
 
+  describe('videoPromptsMissingAlert', () => {
+    it('should show an error modal with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      const mockEmitErrorModal = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.videoPromptsMissingAlert()
+
+      expect(mockEmitErrorModal).toHaveBeenCalledWith(
+        'Alerts.VideoPromptsMissing.Title',
+        'Alerts.VideoPromptsMissing.Description',
+        expect.objectContaining({ appEvent: AppEventCode.VIDEO_PROMPTS_MISSING })
+      )
+    })
+  })
+
   describe('loginSameDeviceInvalidPairingCodeAlert', () => {
     it('should show an error modal with the correct title and message', () => {
       const mockNavigation = { navigate: jest.fn() }

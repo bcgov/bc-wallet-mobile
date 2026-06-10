@@ -1,6 +1,7 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import {
   hitSlop,
   MAX_SELFIE_VIDEO_DURATION_SECONDS,
@@ -8,6 +9,7 @@ import {
   SELFIE_VIDEO_FRAME_RATE,
   VIDEO_RESOLUTION_480P,
 } from '@/constants'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
@@ -76,8 +78,10 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   }, [prompts, prompt])
 
   if (!prompts.length) {
-    // Developer error - prompts must be persisted before reaching this screen.
-    throw new Error('[TakeVideoScreen] No prompts found in store')
+    // Defensive backstop — upstream guards in useVerificationMethodModel should prevent reaching this
+    // screen without prompts. Throw a coded AppError so the ErrorBoundary reports 2412 instead of the
+    // catch-all 9999, giving this condition a specific signal in analytics/Loki.
+    throw toAppError(new Error('[TakeVideoScreen] No prompts found in store'), ErrorRegistry.VIDEO_PROMPTS_MISSING)
   }
 
   const styles = useMemo(
