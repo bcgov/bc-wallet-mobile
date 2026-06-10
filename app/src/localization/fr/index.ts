@@ -1146,11 +1146,11 @@ const translation = {
     },
     "BadRequest": {
       "Title": "Something went wrong (FR)",
-      "Description": "We couldn't complete your request at this time. Please try again later. \n\nIf the issue persists, close and re-open app to try again. (FR)"
+      "Description": "We couldn't complete your request at this time. Please try again later.\n\nIf the issue persists, close and re-open the app to try again. (FR)"
     },
     "SomethingWentWrong": {
       "Title": "Something went wrong (FR)",
-      "Description": "We couldn't complete your request at this time. Please try again later. \n\nIf the issue persists, close and re-open app to try again. (FR)"
+      "Description": "We are having trouble with the app. Please try again later.\n\nIf the issue persists, close and re-open the app, then try again.(FR)"
     },
     "ProblemWithService": {
       "Title": "Problem with Service (FR)",
