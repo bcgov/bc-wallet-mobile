@@ -1,5 +1,4 @@
-import { FileCache } from '@bifold/core/utils/file-cache'
-import { BifoldLogger } from '@bifold/core'
+import { FileCache, BifoldLogger } from '@bifold/core'
 import { IndyVdrPoolConfig } from '@credo-ts/indy-vdr'
 
 const ledgerCacheStorageDirectory = 'ledgers'
