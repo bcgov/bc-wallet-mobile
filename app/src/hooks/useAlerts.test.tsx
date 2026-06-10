@@ -39,8 +39,8 @@ describe('useAlerts', () => {
       result.current.problemWithAppAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.GENERAL })
       )
     })
@@ -287,8 +287,8 @@ describe('useAlerts', () => {
       result.current.missingJwkAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK })
       )
     })
@@ -308,8 +308,8 @@ describe('useAlerts', () => {
       result.current.jwsVerificationFailedAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_112_JWS_VERIFICATION_FAILED })
       )
     })
@@ -826,8 +826,8 @@ describe('useAlerts', () => {
       result.current.failedToWriteToLocalStorageAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE })
       )
     })
@@ -847,8 +847,8 @@ describe('useAlerts', () => {
       result.current.failedToSerializeJsonAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_115_FAILED_TO_SERIALIZE_JSON })
       )
     })
@@ -868,8 +868,8 @@ describe('useAlerts', () => {
       result.current.tokenUnexpectedlyNullAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL })
       )
     })
@@ -889,8 +889,8 @@ describe('useAlerts', () => {
       result.current.failedToReadFromLocalStorageAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_101_FAILED_TO_READ_LOCAL_STORAGE })
       )
     })
@@ -910,8 +910,8 @@ describe('useAlerts', () => {
       result.current.failedToParseJwsAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_117_FAILED_TO_PARSE_JWS })
       )
     })
@@ -931,8 +931,8 @@ describe('useAlerts', () => {
       result.current.clientRegistrationNullAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL })
       )
     })
@@ -952,8 +952,8 @@ describe('useAlerts', () => {
       result.current.unableToDecryptIdTokenAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN })
       )
     })
@@ -973,8 +973,8 @@ describe('useAlerts', () => {
       result.current.failedToDeserializeJsonAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON })
       )
     })
@@ -994,8 +994,8 @@ describe('useAlerts', () => {
       result.current.unableToDecryptJweAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_110_UNABLE_TO_DECRYPT_JWE })
       )
     })
@@ -1015,8 +1015,8 @@ describe('useAlerts', () => {
       result.current.toJsonMethodFailureAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_120_TOJSON_METHOD_FAILURE })
       )
     })
@@ -1036,8 +1036,8 @@ describe('useAlerts', () => {
       result.current.toJsonStringMethodFailureAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_120_TOJSONSTRING_METHOD_FAILURE })
       )
     })
@@ -1057,8 +1057,8 @@ describe('useAlerts', () => {
       result.current.keychainKeyExistsAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_120_KEYCHAIN_KEY_EXISTS_ERROR })
       )
     })
@@ -1078,8 +1078,8 @@ describe('useAlerts', () => {
       result.current.keychainKeyDoesntExistAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR })
       )
     })
@@ -1099,8 +1099,8 @@ describe('useAlerts', () => {
       result.current.keychainKeyGenerationAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_120_KEYCHAIN_KEY_GENERATION_ERROR })
       )
     })
@@ -1120,8 +1120,8 @@ describe('useAlerts', () => {
       result.current.jwtDeviceInfoAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_120_JWT_DEVICE_INFO_ERROR })
       )
     })
@@ -1141,8 +1141,8 @@ describe('useAlerts', () => {
       result.current.clientRegistrationFailureAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE })
       )
     })
@@ -1254,8 +1254,8 @@ describe('useAlerts', () => {
       result.current.failedToRetrieveStringResourceAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE })
       )
     })
@@ -1275,8 +1275,8 @@ describe('useAlerts', () => {
       result.current.invalidUrlAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_500_INVALID_URL })
       )
     })
@@ -1296,8 +1296,8 @@ describe('useAlerts', () => {
       result.current.invalidRegistrationRequestAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST })
       )
     })
@@ -1468,8 +1468,8 @@ describe('useAlerts', () => {
         result.current.missingJsonValuesAlert()
 
         expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.ProblemWithApp.Title',
-          'Alerts.ProblemWithApp.Description',
+          'Alerts.SomethingWentWrong.Title',
+          'Alerts.SomethingWentWrong.Description',
           expect.objectContaining({ appEvent: AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE })
         )
       })
@@ -1489,8 +1489,8 @@ describe('useAlerts', () => {
         result.current.signClaimsErrorAlert()
 
         expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.ProblemWithApp.Title',
-          'Alerts.ProblemWithApp.Description',
+          'Alerts.SomethingWentWrong.Title',
+          'Alerts.SomethingWentWrong.Description',
           expect.objectContaining({ appEvent: AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET })
         )
       })
@@ -1510,8 +1510,8 @@ describe('useAlerts', () => {
         result.current.unexpectedNetworkCallAlert()
 
         expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.ProblemWithApp.Title',
-          'Alerts.ProblemWithApp.Description',
+          'Alerts.SomethingWentWrong.Title',
+          'Alerts.SomethingWentWrong.Description',
           expect.objectContaining({ appEvent: AppEventCode.ERR_208_UNEXPECTED_NETWORK_CALL_EXCEPTION })
         )
       })
@@ -1531,8 +1531,8 @@ describe('useAlerts', () => {
         result.current.badRequestAlert()
 
         expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.ProblemWithApp.Title',
-          'Alerts.ProblemWithApp.Description',
+          'Alerts.BadRequest.Title',
+          'Alerts.BadRequest.Description',
           expect.objectContaining({ appEvent: AppEventCode.ERR_209_BAD_REQUEST })
         )
       })
@@ -1552,8 +1552,8 @@ describe('useAlerts', () => {
         result.current.unauthorizedAlert()
 
         expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.ProblemWithApp.Title',
-          'Alerts.ProblemWithApp.Description',
+          'Alerts.SomethingWentWrong.Title',
+          'Alerts.SomethingWentWrong.Description',
           expect.objectContaining({ appEvent: AppEventCode.ERR_210_UNAUTHORIZED })
         )
       })
@@ -1573,8 +1573,8 @@ describe('useAlerts', () => {
         result.current.serverOutageAlert()
 
         expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.ProblemWithApp.Title',
-          'Alerts.ProblemWithApp.Description',
+          'Alerts.SomethingWentWrong.Title',
+          'Alerts.SomethingWentWrong.Description',
           expect.objectContaining({ appEvent: AppEventCode.ERR_211_SERVER_OUTAGE })
         )
       })
@@ -1594,8 +1594,8 @@ describe('useAlerts', () => {
         result.current.retryLaterAlert()
 
         expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.ProblemWithApp.Title',
-          'Alerts.ProblemWithApp.Description',
+          'Alerts.SomethingWentWrong.Title',
+          'Alerts.SomethingWentWrong.Description',
           expect.objectContaining({ appEvent: AppEventCode.ERR_212_RETRY_LATER })
         )
       })
@@ -1615,8 +1615,8 @@ describe('useAlerts', () => {
         result.current.creatingClientRegistrationFailedAlert()
 
         expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.ProblemWithApp.Title',
-          'Alerts.ProblemWithApp.Description',
+          'Alerts.SomethingWentWrong.Title',
+          'Alerts.SomethingWentWrong.Description',
           expect.objectContaining({ appEvent: AppEventCode.ERR_213_FAILED_CREATING_CLIENT_REGISTRATION })
         )
       })
@@ -1636,8 +1636,8 @@ describe('useAlerts', () => {
         result.current.keysOutOfSyncAlert()
 
         expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.ProblemWithApp.Title',
-          'Alerts.ProblemWithApp.Description',
+          'Alerts.SomethingWentWrong.Title',
+          'Alerts.SomethingWentWrong.Description',
           expect.objectContaining({ appEvent: AppEventCode.ERR_299_KEYS_OUT_OF_SYNC })
         )
       })
@@ -1657,8 +1657,8 @@ describe('useAlerts', () => {
         result.current.emptyResponseAlert()
 
         expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.ProblemWithApp.Title',
-          'Alerts.ProblemWithApp.Description',
+          'Alerts.SomethingWentWrong.Title',
+          'Alerts.SomethingWentWrong.Description',
           expect.objectContaining({ appEvent: AppEventCode.ERR_300_EMPTY_RESPONSE })
         )
       })
