@@ -1,5 +1,10 @@
 import { ErrorRegistry } from '@/errors/errorRegistry'
-import { formatIasAxiosResponseError, getAppErrorFromAxiosError, getAxiosErrorDefinition } from './axios-error-utils'
+import {
+  formatAxiosErrorForLogger,
+  formatIasAxiosResponseError,
+  getAppErrorFromAxiosError,
+  getAxiosErrorDefinition,
+} from './axios-error-utils'
 
 describe('Error Utils', () => {
   describe('getAppErrorFromAxiosError', () => {
@@ -161,6 +166,107 @@ describe('Error Utils', () => {
 
       expect(errorDefinition).toBeDefined()
       expect(errorDefinition?.appEvent).toBe('server_error')
+    })
+  })
+
+  describe('formatAxiosErrorForLogger', () => {
+    it('summarizes a binary request body instead of logging the raw bytes', () => {
+      const error = {
+        name: 'AxiosError',
+        code: 'ERR_NETWORK',
+        message: 'Network Error',
+        config: { method: 'put', url: 'https://store.example.com/video', data: Buffer.alloc(1_000_000) },
+      } as any
+
+      const details = formatAxiosErrorForLogger({ error, suppressStackTrace: true })
+
+      expect((details.request as { data: unknown }).data).toBe('[binary 1000000 bytes]')
+      // The 1 MB body must not survive serialization (would be MBs as a JSON number array).
+      expect(JSON.stringify(details).length).toBeLessThan(1000)
+    })
+
+    it('summarizes an oversized string response body', () => {
+      const error = {
+        name: 'AxiosError',
+        code: 'ERR_BAD_RESPONSE',
+        message: 'Request failed',
+        config: { method: 'get', url: 'https://api.example.com/x' },
+        response: { status: 500, statusText: 'Server Error', data: 'x'.repeat(5000) },
+      } as any
+
+      const details = formatAxiosErrorForLogger({ error, suppressStackTrace: true })
+
+      expect((details.response as { data: unknown }).data).toBe('[string 5000 chars]')
+    })
+
+    it('passes small bodies through unchanged', () => {
+      const error = {
+        name: 'AxiosError',
+        code: 'ERR_BAD_REQUEST',
+        message: 'Bad request',
+        config: { method: 'post', url: 'https://api.example.com/x', data: { field: 'value' } },
+        response: { status: 400, statusText: 'Bad Request', data: { error: 'nope' } },
+      } as any
+
+      const details = formatAxiosErrorForLogger({ error, suppressStackTrace: true })
+
+      expect((details.request as { data: unknown }).data).toEqual({ field: 'value' })
+      expect((details.response as { data: unknown }).data).toEqual({ error: 'nope' })
+    })
+
+    it('strips the query string (signed-URL token) from the logged URL', () => {
+      const error = {
+        name: 'AxiosError',
+        code: 'ERR_NETWORK',
+        message: 'Network Error',
+        config: { method: 'put', url: 'https://store.blob.core.windows.net/c/video.mp4?sig=TOPSECRET&se=2026' },
+      } as any
+
+      const details = formatAxiosErrorForLogger({ error, suppressStackTrace: true })
+
+      expect(details.url).toBe('https://store.blob.core.windows.net/c/video.mp4')
+      expect(JSON.stringify(details)).not.toContain('TOPSECRET')
+    })
+
+    it('redacts Authorization and Cookie request headers, preserving others', () => {
+      const error = {
+        name: 'AxiosError',
+        code: 'ERR_BAD_REQUEST',
+        message: 'Bad request',
+        config: {
+          method: 'post',
+          url: 'https://api.example.com/x',
+          headers: {
+            Authorization: 'Bearer JWT.TOKEN.SECRET',
+            Cookie: 'session=SECRET',
+            'Content-Type': 'application/json',
+          },
+        },
+      } as any
+
+      const details = formatAxiosErrorForLogger({ error, suppressStackTrace: true })
+      const headers = (details.request as { headers: Record<string, unknown> }).headers
+
+      expect(headers.Authorization).toBe('[redacted]')
+      expect(headers.Cookie).toBe('[redacted]')
+      expect(headers['Content-Type']).toBe('application/json')
+      expect(JSON.stringify(details)).not.toContain('JWT.TOKEN.SECRET')
+    })
+
+    it('redacts Set-Cookie response headers', () => {
+      const error = {
+        name: 'AxiosError',
+        code: 'ERR_BAD_RESPONSE',
+        message: 'Server error',
+        config: { method: 'get', url: 'https://api.example.com/x' },
+        response: { status: 500, statusText: 'Server Error', headers: { 'set-cookie': 'session=SECRET; HttpOnly' } },
+      } as any
+
+      const details = formatAxiosErrorForLogger({ error, suppressStackTrace: true })
+      const headers = (details.response as { headers: Record<string, unknown> }).headers
+
+      expect(headers['set-cookie']).toBe('[redacted]')
+      expect(JSON.stringify(details)).not.toContain('session=SECRET')
     })
   })
 })
