@@ -1,11 +1,13 @@
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import { BCSCEventTypes } from '@/events/eventTypes'
 import { RemoteLogger } from '@bifold/remote-logs'
 import { getUserAgentString } from '@utils/user-agent'
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import merge from 'lodash.merge'
-import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
+import { DeviceEventEmitter } from 'react-native'
+import { getRefreshTokenRequestBody, getToken, TokenType } from 'react-native-bcsc-core'
 import {
   formatAxiosErrorForLogger as formatIASAxiosErrorForLogger,
   formatIasAxiosResponseError,
@@ -243,26 +245,25 @@ class BCSCApiClient {
         return this.tokensPromise
       }
 
-      if (!this.tokens) {
-        // initialize tokens using `getTokensForRefreshToken`
-        this.logger.error('[BCSCApiClient] Missing tokens - call getTokensForRefreshToken to initialize tokens')
-        throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL)
-      }
+      // Rebuild the in-memory cache from secure storage if it's empty (e.g. the
+      // startup hydration refresh failed transiently or ran before the client
+      // was ready). Throws TOKEN_NULL only when no refresh token is recoverable.
+      const tokens = this.tokens ?? (await this.recoverTokens())
 
-      if (this.isTokenExpired(this.tokens.refresh_token)) {
+      if (this.isTokenExpired(tokens.refresh_token)) {
         // refresh tokens should not expire
         this.logger.error('[BCSCApiClient] Refresh token expired - fatal error detected')
         throw new Error('Refresh token expired')
       }
 
-      if (!this.isTokenExpired(this.tokens.access_token)) {
+      if (!this.isTokenExpired(tokens.access_token)) {
         // access token is still valid, don't refresh
-        return this.tokens
+        return tokens
       }
 
       // access token is expired or about to expire, fetch new tokens using refresh token
       // Set tokensPromise immediately to prevent concurrent callers from starting duplicate refreshes
-      this.tokensPromise = this.fetchTokens(this.tokens.refresh_token)
+      this.tokensPromise = this.fetchTokens(tokens.refresh_token)
       try {
         this.tokens = await this.tokensPromise
       } finally {
@@ -357,6 +358,45 @@ class BCSCApiClient {
     }
 
     return this.tokens
+  }
+
+  /**
+   * Returns the in-memory token cache, rebuilding it from secure storage when it
+   * is empty.
+   *
+   * The cache (`this.tokens`) is ephemeral and is normally populated at startup
+   * by `hydrateSecureState`. That path can leave it empty without surfacing an
+   * error — for example when the startup refresh fails on a flaky network, or
+   * runs before the client finished configuring. In those cases a valid refresh
+   * token still lives in secure storage, so we lazily rebuild the cache instead
+   * of forcing the user to reinstall the app.
+   *
+   * @returns the populated tokens
+   * @throws AppError TOKEN_NULL when the cache is empty and no refresh token
+   *   exists in secure storage — the only genuinely unrecoverable case.
+   */
+  async recoverTokens(): Promise<TokenResponse> {
+    if (this.tokens) {
+      return this.tokens
+    }
+
+    const storedRefreshToken = (await getToken(TokenType.Refresh))?.token
+    if (!storedRefreshToken) {
+      this.logger.error('[BCSCApiClient] Token cache empty and no refresh token in secure storage')
+      throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL, {
+        cause: new Error('Token cache empty and no stored refresh token to recover from'),
+      })
+    }
+
+    this.logger.warn('[BCSCApiClient] Token cache empty; rebuilding from stored refresh token')
+    const tokens = await this.getTokensForRefreshToken(storedRefreshToken)
+
+    // Tokens went from missing to available (e.g. connectivity returned after a
+    // failed startup refresh) — notify listeners so data providers can reload
+    // state that failed while tokens were unavailable.
+    DeviceEventEmitter.emit(BCSCEventTypes.TOKENS_REFRESHED)
+
+    return tokens
   }
 
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
