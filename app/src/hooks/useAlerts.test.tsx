@@ -973,8 +973,8 @@ describe('useAlerts', () => {
       result.current.unableToDecryptJweAlert()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_110_UNABLE_TO_DECRYPT_JWE })
       )
     })
@@ -1510,8 +1510,8 @@ describe('useAlerts', () => {
         result.current.badRequestAlert()
 
         expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.ProblemWithApp.Title',
-          'Alerts.ProblemWithApp.Description',
+          'Alerts.BadRequest.Title',
+          'Alerts.BadRequest.Description',
           expect.objectContaining({ appEvent: AppEventCode.ERR_209_BAD_REQUEST })
         )
       })

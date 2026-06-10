@@ -1156,6 +1156,10 @@ const translation = {
       "Title": "Something went wrong",
       "Description": "We couldn't complete your request at this time. Please try again later. \n\n If the issue persists, close and re-open app to try again."
     },
+    "SomethingWentWrong": {
+      "Title": "Something went wrong",
+      "Description": "We couldn't complete your request at this time. Please try again later. \n\n If the issue persists, close and re-open app to try again."
+    },
     "ProblemWithService": {
       "Title": "Problem with Service",
       "Description": "Please try again later. (error {{ errorCode }})"
