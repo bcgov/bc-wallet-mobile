@@ -218,13 +218,34 @@ describe('AppError', () => {
         technicalMessage: 'Technical message',
         code: 'general.unknown_server_error.1234',
         timestamp: '2024-01-01T00:00:00.000Z',
-        cause: cause,
+        // cause is summarized (not the raw Error) so large nested bodies never serialize
+        cause: { name: 'Error', message: 'Technical message' },
         handled: false,
         url: undefined,
         method: undefined,
       })
 
       jest.useRealTimers()
+    })
+
+    it('summarizes the cause so a large request body is never serialized', () => {
+      const identity = {
+        category: ErrorCategory.NETWORK,
+        appEvent: AppEventCode.NO_INTERNET,
+        statusCode: 2100,
+      }
+      // Mimic an AxiosError carrying a multi-MB evidence-upload body on config.data.
+      const axiosLike = Object.assign(new Error('Network Error'), {
+        code: 'ERR_NETWORK',
+        config: { data: Buffer.alloc(1_000_000) },
+      })
+      const error = new AppError('Upload failed', identity, { cause: axiosLike, track: false })
+
+      const json = error.toJSON()
+
+      expect(json.cause).toEqual({ name: 'Error', message: 'Network Error', code: 'ERR_NETWORK' })
+      // The 1 MB Buffer must not survive serialization (would be ~MBs as a JSON number array).
+      expect(JSON.stringify(json).length).toBeLessThan(2000)
     })
   })
 
