@@ -1150,7 +1150,7 @@ const translation = {
     },
     "SomethingWentWrong": {
       "Title": "Something went wrong (PT-BR)",
-      "Description": "We are having trouble with the app. Please try again later.\n\nIf the issue persists, close and re-open the app, then try again. (PT-BR)"
+      "Description": "We're having trouble with the app. Please try again later.\n\nIf the issue persists, close and re-open the app, then try again. (PT-BR)"
     },
     "ProblemWithService": {
       "Title": "Problem with Service (PT-BR)",
