@@ -202,7 +202,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
 
     let snapshot: PhotoFile
     try {
-      snapshot = await cameraRef.current.takeSnapshot()
+      snapshot = await cameraRef.current.takePhoto({ flash: 'off', enableShutterSound: false })
     } catch (error) {
       // Without this catch a failure here (e.g. device out of disk space) is an unhandled
       // rejection that leaves the screen stuck on the countdown with no controls.
@@ -351,9 +351,12 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           device={device}
           format={format}
           isActive={isActive}
-          video={true}
+          video
+          photo
+          photoQualityBalance="speed"
           onInitialized={onInitialized}
           onError={onError}
+          isMirrored={false}
           audio
         />
 
