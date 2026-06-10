@@ -55,6 +55,10 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const scanner = useCardScanner()
   const bcscSerialRef = useRef<string | null>(null)
   const licenseRef = useRef<DriversLicenseMetadata | null>(null)
+  // Guards against re-hitting /device/barcodes on every photo of a multi-sided
+  // card — the scanned barcodes can't change once both refs are set (scanning
+  // stops below), so the backend only needs to be asked once per card.
+  const barcodesCheckedRef = useRef(false)
   const { isLoading: isCameraLoading } = useAutoRequestPermission(hasPermission, requestPermission)
   const { failedToReadFromLocalStorageAlert } = useAlerts(navigation)
   const codeScanner = useCodeScanner({
@@ -125,39 +129,24 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     }
 
     /**
-     * Short-circuit paths: only applicable in the Non-BCSC flow.
-     * In the Non-Photo BCSC flow we've already done authorizeDevice,
-     * so we skip these and continue to evidence photo capture.
+     * Non-BCSC flow only: the user may have scanned a real BC Services Card.
+     * Let the backend decide via POST /device/barcodes rather than guessing
+     * client-side. Only a card presenting BOTH a serial (1D) and an AAMVA (2D)
+     * barcode can match, so that's the only case we ask about. A real BCSC
+     * reroutes into setup; anything else — a lone serial (e.g. a PR card's 1D
+     * barcode), a passport, a DL — falls through to evidence capture with no
+     * error (matching v3 behaviour).
      *
-     * handleScanComboCard returns `false` when authorization fails in the
-     * Non-BCSC flow (e.g. a code-128 barcode on a DL is not a real BCSC
-     * serial).  In that case we clear the serial and fall through to the
-     * normal evidence-capture path (matching v3 iOS behaviour).
+     * In the Non-Photo BCSC flow we've already done authorizeDevice, so we skip.
      */
     if (isNonBCSCFlow) {
-      /**
-       * Both BCSC serial and DL barcode scanned
-       * Next Step: Navigate to setup steps verification (if authorization succeeds)
-       */
-      if (bcscSerialRef.current && licenseRef.current) {
-        const [, success] = await Promise.all([
-          clearAdditionalEvidence(),
-          scanner.handleScanComboCard(bcscSerialRef.current, licenseRef.current),
-        ])
-        if (success) {
+      if (bcscSerialRef.current && licenseRef.current && !barcodesCheckedRef.current) {
+        barcodesCheckedRef.current = true
+        const switchedToBcsc = await scanner.handleScanBarcodes(bcscSerialRef.current, licenseRef.current)
+        if (switchedToBcsc) {
+          await clearAdditionalEvidence()
           return
         }
-        // Authorization failed — not a real BCSC serial. Clear it and continue.
-        bcscSerialRef.current = null
-      }
-
-      /**
-       * Only BCSC serial scanned
-       * Next Step: Navigate to birthdate entry -> setup steps verification
-       */
-      if (bcscSerialRef.current) {
-        await Promise.all([clearAdditionalEvidence(), scanner.handleScanBCServicesCard(bcscSerialRef.current)])
-        return
       }
     }
 

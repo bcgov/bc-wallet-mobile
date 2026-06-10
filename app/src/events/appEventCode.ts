@@ -100,6 +100,8 @@ export enum AppEventCode {
   ERR_208_UNEXPECTED_NETWORK_CALL_EXCEPTION = 'err_208_unexpected_network_call_exception', //being tracked
   ERR_209_BAD_REQUEST = 'err_209_bad_request',
   ERR_210_UNAUTHORIZED = 'err_210_unauthorized',
+  FORBIDDEN = 'forbidden',
+  NOT_FOUND = 'not_found',
   ERR_212_RETRY_LATER = 'err_212_retry_later',
   ERR_211_SERVER_OUTAGE = 'err_211_server_outage',
   ERR_213_FAILED_CREATING_CLIENT_REGISTRATION = 'err_213_failed_creating_client_registration',
@@ -135,6 +137,7 @@ export enum AppEventCode {
   FILE_UPLOAD_ERROR = 'file_upload_error',
   NO_DOCUMENT_NUMBER_ENTERED_ERROR = 'no_document_number_entered_error',
   VIDEO_VERIFY_NOT_COMPLETE = 'video_verify_not_complete',
+  VIDEO_PROMPTS_MISSING = 'video_prompts_missing',
   REMOVE_UNVERIFIED_CARD = 'remove_unverified_card',
   REMOVE_VERIFIED_CARD = 'remove_verified_card',
   ALREADY_VERIFIED = 'already_verified',

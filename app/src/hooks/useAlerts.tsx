@@ -305,6 +305,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       invalidPairingCodeAlert: _createBasicErrorModal(AppEventCode.INVALID_PAIRING_CODE, 'InvalidPairingCode'),
       alreadyVerifiedAlert: _createBasicErrorModal(AppEventCode.ALREADY_VERIFIED, 'AlreadyVerified'),
       fileUploadErrorAlert: _createBasicErrorModal(AppEventCode.FILE_UPLOAD_ERROR, 'FileUploadError'),
+      videoPromptsMissingAlert: _createBasicErrorModal(AppEventCode.VIDEO_PROMPTS_MISSING, 'VideoPromptsMissing'),
       loginSameDeviceInvalidPairingCodeAlert: _createBasicErrorModal(AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE, 'InvalidPairingCodeSameDevice'),
       failedToWriteToLocalStorageAlert: _createBasicErrorModal(AppEventCode.ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE, 'SomethingWentWrong'),
       failedToReadFromLocalStorageAlert: _createBasicErrorModal(AppEventCode.ERR_101_FAILED_TO_READ_LOCAL_STORAGE, 'SomethingWentWrong'),
@@ -343,6 +344,10 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       unexpectedNetworkCallAlert: _createBasicErrorModal(AppEventCode.ERR_208_UNEXPECTED_NETWORK_CALL_EXCEPTION, 'SomethingWentWrong'),
       badRequestAlert: _createBasicErrorModal(AppEventCode.ERR_209_BAD_REQUEST, 'BadRequest'),
       unauthorizedAlert: _createBasicErrorModal(AppEventCode.ERR_210_UNAUTHORIZED, 'SomethingWentWrong'),
+      // 403/404 are server/permission/resource issues, not a broken install — use the neutral
+      // "Problem with Service / please try again later" copy rather than "reinstall the app".
+      forbiddenAlert: _createBasicErrorModal(AppEventCode.FORBIDDEN, 'ProblemWithService', { errorCode: '403' }),
+      notFoundAlert: _createBasicErrorModal(AppEventCode.NOT_FOUND, 'ProblemWithService', { errorCode: '404' }),
       serverOutageAlert: _createBasicErrorModal(AppEventCode.ERR_211_SERVER_OUTAGE, 'SomethingWentWrong'),
       retryLaterAlert: _createBasicErrorModal(AppEventCode.ERR_212_RETRY_LATER, 'SomethingWentWrong'),
       creatingClientRegistrationFailedAlert: _createBasicErrorModal(AppEventCode.ERR_213_FAILED_CREATING_CLIENT_REGISTRATION, 'SomethingWentWrong'),

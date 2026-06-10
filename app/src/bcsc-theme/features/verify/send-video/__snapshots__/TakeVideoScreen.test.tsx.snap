@@ -42,8 +42,11 @@ exports[`TakeVideoScreen renders correctly 1`] = `
         }
       }
       isActive={false}
+      isMirrored={false}
       onError={[Function]}
       onInitialized={[Function]}
+      photo={true}
+      photoQualityBalance="speed"
       ref={
         {
           "current": null,
