@@ -1290,6 +1290,14 @@ const translation = {
       "Title": "Not Enough Storage (FR)",
       "Description": "Your device is out of storage space, so the app can't save your information. Free up space on your device, then try again. (FR)"
     },
+    "BadRequest": {
+      "Title": "Something went wrong (FR)",
+      "Description": "We couldn't complete your request at this time. Please try again later.\n\nIf the issue persists, close and re-open the app to try again. (FR)"
+    },
+    "SomethingWentWrong": {
+      "Title": "Something went wrong (FR)",
+    "Description": "We're having trouble with the app. Please try again later.\n\nIf the issue persists, close and re-open the app, then try again.(FR)"
+    },
     "ProblemWithService": {
       "Title": "Problem with Service (FR)",
       "Description": "Please try again later. (error {{ errorCode }}) (FR)"
