@@ -44,7 +44,7 @@ describe('useVerificationMethodModel', () => {
   const mockNavigation = {
     navigate: jest.fn(),
   } as any
-  const mockFileUploadErrorAlert = jest.fn()
+  const mockVideoPromptsMissingAlert = jest.fn()
 
   const mockStore: any = {
     bcsc: {
@@ -96,7 +96,7 @@ describe('useVerificationMethodModel', () => {
     bifoldMock.useStore.mockReturnValue([mockStore, mockDispatch])
     bifoldMock.useServices.mockReturnValue([mockLogger] as any)
 
-    jest.mocked(useAlerts).mockReturnValue({ fileUploadErrorAlert: mockFileUploadErrorAlert } as any)
+    jest.mocked(useAlerts).mockReturnValue({ videoPromptsMissingAlert: mockVideoPromptsMissingAlert } as any)
   })
 
   describe('Initial state', () => {
@@ -250,7 +250,7 @@ describe('useVerificationMethodModel', () => {
         payload: [fetched.prompts],
       })
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.InformationRequired)
-      expect(mockFileUploadErrorAlert).not.toHaveBeenCalled()
+      expect(mockVideoPromptsMissingAlert).not.toHaveBeenCalled()
     })
 
     it('aborts with a retryable alert and no navigation when no prompts are returned', async () => {
@@ -265,7 +265,7 @@ describe('useVerificationMethodModel', () => {
         await result.current.handlePressSendVideo()
       })
 
-      expect(mockFileUploadErrorAlert).toHaveBeenCalledTimes(1)
+      expect(mockVideoPromptsMissingAlert).toHaveBeenCalledTimes(1)
       expect(mockNavigation.navigate).not.toHaveBeenCalled()
       expect(result.current.sendVideoLoading).toBe(false)
     })

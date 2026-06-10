@@ -22,7 +22,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
   const { evidence, video: videoCallApi } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { updateVerificationRequest } = useSecureActions()
-  const { fileUploadErrorAlert } = useAlerts(navigation)
+  const { videoPromptsMissingAlert } = useAlerts(navigation)
 
   const handlePressSendVideo = useCallback(async () => {
     try {
@@ -51,7 +51,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
       const resolvedPrompts = verificationRequest?.prompts ?? store.bcsc.prompts
       if (!resolvedPrompts?.length) {
         logger.error('[useVerificationMethodModel] No verification prompts available; aborting Send Video')
-        fileUploadErrorAlert()
+        videoPromptsMissingAlert()
         return
       }
 
@@ -83,7 +83,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     navigation,
     evidence,
     updateVerificationRequest,
-    fileUploadErrorAlert,
+    videoPromptsMissingAlert,
   ])
 
   const handlePressLiveCall = useCallback(async () => {
