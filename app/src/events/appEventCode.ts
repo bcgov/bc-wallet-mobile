@@ -139,6 +139,7 @@ export enum AppEventCode {
   FILE_UPLOAD_ERROR = 'file_upload_error',
   NO_DOCUMENT_NUMBER_ENTERED_ERROR = 'no_document_number_entered_error',
   VIDEO_VERIFY_NOT_COMPLETE = 'video_verify_not_complete',
+  VIDEO_PROMPTS_MISSING = 'video_prompts_missing',
   REMOVE_UNVERIFIED_CARD = 'remove_unverified_card',
   REMOVE_VERIFIED_CARD = 'remove_verified_card',
   ALREADY_VERIFIED = 'already_verified',
