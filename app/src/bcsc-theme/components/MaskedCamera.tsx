@@ -130,14 +130,9 @@ const MaskedCamera = ({
   const takePhoto = async () => {
     try {
       if (cameraRef.current && isActive) {
-        // Use takeSnapshot (captures from the video feed at video resolution)
-        // instead of takePhoto (full sensor resolution, e.g. 12MP).
-        // Xcode 26 / iOS 26 SDK changed the default photo encoding to HEIF,
-        // which takes 5-10s to decode at 12MP in RN's Image component.
-        // Snapshot at quality 90 produces a ~1080p JPEG that decodes instantly
-        // and is still well above the resolution needed for backend barcode processing.
-        const photo = await cameraRef.current.takeSnapshot({
-          quality: 90,
+        const photo = await cameraRef.current.takePhoto({
+          flash: 'off',
+          enableShutterSound: false,
         })
 
         onPhotoTaken(photo.path)
@@ -166,6 +161,8 @@ const MaskedCamera = ({
         isActive={isFocused && isActive}
         photo={true}
         video={true}
+        photoQualityBalance="speed"
+        isMirrored={false}
         onInitialized={() => setIsActive(true)}
         onError={onError}
         codeScanner={codeScanner}

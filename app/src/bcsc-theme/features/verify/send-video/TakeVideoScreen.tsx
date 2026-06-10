@@ -197,7 +197,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
       return
     }
 
-    const snapshot = await cameraRef.current.takeSnapshot()
+    const snapshot = await cameraRef.current.takePhoto({ flash: 'off', enableShutterSound: false })
 
     cameraRef.current.startRecording({
       fileType: 'mp4',
@@ -326,9 +326,12 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           device={device}
           format={format}
           isActive={isActive}
-          video={true}
+          video
+          photo
+          photoQualityBalance="speed"
           onInitialized={onInitialized}
           onError={onError}
+          isMirrored={false}
           audio
         />
 
