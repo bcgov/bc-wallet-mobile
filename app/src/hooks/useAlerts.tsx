@@ -311,7 +311,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       clientRegistrationNullAlert: _createBasicErrorModal(AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL, 'SomethingWentWrong'),
       unableToDecryptIdTokenAlert: _createBasicErrorModal(AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN, 'SomethingWentWrong'),
       failedToDeserializeJsonAlert: _createBasicErrorModal(AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON, 'SomethingWentWrong'),
-      unableToDecryptJweAlert: _createBasicErrorModal(AppEventCode.ERR_110_UNABLE_TO_DECRYPT_JWE, 'SomethingWentWrong', { errorCode: '110' }),
+      unableToDecryptJweAlert: _createBasicErrorModal(AppEventCode.ERR_110_UNABLE_TO_DECRYPT_JWE, 'SomethingWentWrong'),
       toJsonMethodFailureAlert: _createBasicErrorModal(AppEventCode.ERR_120_TOJSON_METHOD_FAILURE, 'SomethingWentWrong'),
       toJsonStringMethodFailureAlert: _createBasicErrorModal(AppEventCode.ERR_120_TOJSONSTRING_METHOD_FAILURE, 'SomethingWentWrong'),
       keychainKeyExistsAlert: _createBasicErrorModal(AppEventCode.ERR_120_KEYCHAIN_KEY_EXISTS_ERROR, 'SomethingWentWrong'),
