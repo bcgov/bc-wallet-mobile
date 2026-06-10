@@ -1,4 +1,5 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { AppError } from '@/errors'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { useNavigation } from '@react-navigation/native'
 import { render, waitFor } from '@testing-library/react-native'
@@ -81,5 +82,25 @@ describe('TakeVideoScreen', () => {
     await waitFor(() => {
       expect(getByText('BCSC.PermissionDisabled.CameraAndMicrophoneTitle')).toBeTruthy()
     })
+  })
+
+  test('throws a coded AppError (2412) when prompts are missing', () => {
+    // Regression for #4018: the backstop should report a specific code (2412) via the ErrorBoundary
+    // instead of the catch-all 9999.
+    const navigation = useNavigation()
+    let caught: unknown
+
+    try {
+      render(
+        <BasicAppContext initialStateOverride={{ bcsc: { prompts: [] } } as any}>
+          <TakeVideoScreen navigation={navigation as never} />
+        </BasicAppContext>
+      )
+    } catch (error) {
+      caught = error
+    }
+
+    expect(caught).toBeInstanceOf(AppError)
+    expect((caught as AppError).statusCode).toBe(2412)
   })
 })

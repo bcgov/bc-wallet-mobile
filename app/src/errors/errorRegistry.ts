@@ -394,6 +394,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.VERIFICATION,
     message: 'Verification request is still pending — agent has yet to verify request',
   },
+  VIDEO_PROMPTS_MISSING: {
+    statusCode: 2412,
+    appEvent: AppEventCode.VIDEO_PROMPTS_MISSING,
+    severity: ErrorSeverity.WARNING,
+    category: ErrorCategory.VERIFICATION,
+    message: 'Video prompts were missing or empty when entering the capture screen',
+  },
 
   // ============================================
   // Token/Crypto Errors (2500-2599)

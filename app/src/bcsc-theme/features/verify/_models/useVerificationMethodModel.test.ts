@@ -9,6 +9,7 @@ import {
   formatServiceHours,
   isLiveCallAvailable,
 } from '@/bcsc-theme/utils/service-hours-formatter'
+import { useAlerts } from '@/hooks/useAlerts'
 import { BCDispatchAction, IASEnvironment } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
@@ -17,6 +18,7 @@ import { BCSCCardType } from 'react-native-bcsc-core'
 jest.mock('@/bcsc-theme/api/hooks/useApi')
 jest.mock('@/bcsc-theme/utils/file-info')
 jest.mock('@/bcsc-theme/utils/service-hours-formatter')
+jest.mock('@/hooks/useAlerts')
 jest.mock('@/bcsc-theme/features/verify/send-video/VideoReviewScreen', () => ({
   VerificationVideoCache: {
     clearCache: jest.fn(),
@@ -42,6 +44,7 @@ describe('useVerificationMethodModel', () => {
   const mockNavigation = {
     navigate: jest.fn(),
   } as any
+  const mockFileUploadErrorAlert = jest.fn()
 
   const mockStore: any = {
     bcsc: {
@@ -72,6 +75,7 @@ describe('useVerificationMethodModel', () => {
 
   const mockEvidenceApi = {
     createVerificationRequest: jest.fn(),
+    getVerificationRequestPrompts: jest.fn(),
   }
 
   const mockVideoCallApi = {
@@ -91,6 +95,8 @@ describe('useVerificationMethodModel', () => {
     const bifoldMock = jest.mocked(Bifold)
     bifoldMock.useStore.mockReturnValue([mockStore, mockDispatch])
     bifoldMock.useServices.mockReturnValue([mockLogger] as any)
+
+    jest.mocked(useAlerts).mockReturnValue({ fileUploadErrorAlert: mockFileUploadErrorAlert } as any)
   })
 
   describe('Initial state', () => {
@@ -170,7 +176,7 @@ describe('useVerificationMethodModel', () => {
         resolveRequest!({
           sha256: 'test-sha256',
           id: 'test-id',
-          prompts: [],
+          prompts: [{ id: 1, prompt: 'Say your name' }],
         })
         await requestPromise
       })
@@ -198,7 +204,7 @@ describe('useVerificationMethodModel', () => {
       const mockVerificationRequest = {
         sha256: 'test-sha256',
         id: 'test-id',
-        prompts: [],
+        prompts: [{ id: 1, prompt: 'Say your name' }],
       }
 
       mockEvidenceApi.createVerificationRequest.mockResolvedValue(mockVerificationRequest)
@@ -215,6 +221,53 @@ describe('useVerificationMethodModel', () => {
       // (Promise.allSettled is used so rejections don't stop the flow)
       expect(mockDispatch).toHaveBeenCalled()
       expect(mockNavigation.navigate).toHaveBeenCalled()
+    })
+
+    it('refetches prompts when the store holds an empty prompts array and a request id exists', async () => {
+      // Regression for #4018: an empty array is truthy, so the old `!store.bcsc.prompts` guard skipped
+      // the refetch and stranded the user. `?.length` must re-trigger the fetch.
+      const storeWithEmptyPrompts = {
+        ...mockStore,
+        bcsc: { ...mockStore.bcsc, prompts: [] },
+        bcscSecure: { ...mockStore.bcscSecure, verificationRequestId: 'existing-id' },
+      }
+      jest.mocked(Bifold).useStore.mockReturnValue([storeWithEmptyPrompts, mockDispatch])
+
+      const fetched = { id: 'existing-id', sha256: 'sha', prompts: [{ id: 1, prompt: 'Say your name' }] }
+      mockEvidenceApi.getVerificationRequestPrompts.mockResolvedValue(fetched)
+      jest.mocked(removeFileSafely).mockResolvedValue(undefined)
+
+      const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handlePressSendVideo()
+      })
+
+      expect(mockEvidenceApi.getVerificationRequestPrompts).toHaveBeenCalledWith('existing-id')
+      expect(mockEvidenceApi.createVerificationRequest).not.toHaveBeenCalled()
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_VIDEO_PROMPTS,
+        payload: [fetched.prompts],
+      })
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.InformationRequired)
+      expect(mockFileUploadErrorAlert).not.toHaveBeenCalled()
+    })
+
+    it('aborts with a retryable alert and no navigation when no prompts are returned', async () => {
+      // Regression for #4018: the server can return an empty prompt set; never walk the user into
+      // TakeVideoScreen (which hard-stops) — show a retryable alert and stay put instead.
+      mockEvidenceApi.createVerificationRequest.mockResolvedValue({ id: 'test-id', sha256: 'sha', prompts: [] })
+      jest.mocked(removeFileSafely).mockResolvedValue(undefined)
+
+      const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handlePressSendVideo()
+      })
+
+      expect(mockFileUploadErrorAlert).toHaveBeenCalledTimes(1)
+      expect(mockNavigation.navigate).not.toHaveBeenCalled()
+      expect(result.current.sendVideoLoading).toBe(false)
     })
   })
 
