@@ -1,5 +1,5 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
-import { ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
+import { ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 

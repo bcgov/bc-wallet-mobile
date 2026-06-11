@@ -452,7 +452,7 @@ describe('useCardScanner', () => {
       const navigationMock = jest.mocked(navigation)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcscSecure: {} }
+      const mockState: any = { bcsc: {}, bcscSecure: { additionalEvidenceData: [] } }
       const mockUpdateDeviceCodes = jest.fn()
       const mockUpdateCardProcess = jest.fn()
       const mockUpdateVerificationOptions = jest.fn()
@@ -494,7 +494,7 @@ describe('useCardScanner', () => {
       expect(mockUpdateVerificationOptions).toHaveBeenCalledWith(['video_call', 'back_check'])
       expect(mockNavigationReset).toHaveBeenCalledWith({
         index: 0,
-        routes: [{ name: BCSCScreens.SetupSteps }],
+        routes: [{ name: BCSCScreens.VerificationMethodSelection }],
       })
     })
 
@@ -504,7 +504,7 @@ describe('useCardScanner', () => {
       const navigationMock = jest.mocked(navigation)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcscSecure: {} }
+      const mockState: any = { bcsc: {}, bcscSecure: { additionalEvidenceData: [] } }
       const mockNavigationReset = jest.fn()
 
       useApiMock.mockReturnValue({

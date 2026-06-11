@@ -22,6 +22,7 @@ import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Alert } from 'react-native'
 import Toast from 'react-native-toast-message'
 
 type EmailConfirmationScreenProps = {
