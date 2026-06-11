@@ -52,7 +52,7 @@ export class RemoteLedgerResolver extends FileCache {
       }
 
       if (etag && this.compareWeakEtags(this.fileEtag, etag)) {
-        this.log?.info(`Ledger index ${filePath} has not changed, using cached`)
+        this.log?.info(`Ledger index ${filePath} has not changed (ETag match)`)
         this.ledgerData = response.data
         return
       }
