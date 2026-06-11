@@ -118,7 +118,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
    * up space will fix it. Detect that case and show actionable copy instead.
    */
   const failedToWriteToLocalStorageAlert = useCallback(
-    (error?: AppError | unknown) => {
+    (error?: unknown) => {
       if (isDeviceStorageFullError(error)) {
         // Re-wrap as DEVICE_STORAGE_FULL (preserving the original as cause) so analytics and
         // problem reports can distinguish disk-full failures from other storage write errors.

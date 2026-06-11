@@ -80,7 +80,9 @@ describe('errorHandler', () => {
     })
 
     it('should detect the Android/POSIX ENOSPC message', () => {
-      const error = new Error('An unexpected File IO error occurred! Error: write failed: ENOSPC (No space left on device).')
+      const error = new Error(
+        'An unexpected File IO error occurred! Error: write failed: ENOSPC (No space left on device).'
+      )
       expect(isDeviceStorageFullError(error)).toBe(true)
     })
 
