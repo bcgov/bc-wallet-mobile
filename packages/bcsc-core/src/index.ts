@@ -93,6 +93,12 @@ export const BcscNativeErrorCodes = {
  */
 export interface BcscNativeError extends Error {
   code: string;
+  /**
+   * Diagnostics attached by the native layer (iOS: the rejected NSError's userInfo).
+   * Keychain failures include the failure site, underlying error, and key inventory.
+   * Bridge-serializable values only; absent on Android rejections.
+   */
+  userInfo?: Record<string, unknown>;
 }
 
 /**

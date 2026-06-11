@@ -9,19 +9,22 @@
 import Foundation
 import Security
 
-enum KeychainError: Error {
+enum KeychainError: Error, LocalizedError {
   case keyAlreadyExists
   case keyNotExists
   case keyGenError
 
-  var localizedDescription: String {
+  /// LocalizedError (not a plain computed property) so the message survives
+  /// access through the `Error` existential, e.g. in `error.localizedDescription`
+  /// interpolations at the React Native reject sites.
+  var errorDescription: String? {
     switch self {
     case .keyAlreadyExists:
-      return "KeyAlreadyExists error"
+      return "key already exists in the keychain"
     case .keyNotExists:
-      return "KeyNotExists error"
+      return "key does not exist in the keychain"
     case .keyGenError:
-      return "KeyGenError error"
+      return "key pair generation failed"
     }
   }
 }
@@ -65,7 +68,10 @@ protocol KeyPairManagerProtocol {
  ````
  */
 class KeyPairManager: KeyPairManagerProtocol {
-  // private let log = Logger(source: "KeyPairManager")
+  private let log = AppLogger(
+    subsystem: Bundle.main.bundleIdentifier ?? "ca.bc.gov.id.servicescard", category: "KeyPairManager"
+  )
+
   /*
    Returns true if a public / private key pair in the KeyChain with the given `label` can be found.
 
@@ -127,7 +133,7 @@ class KeyPairManager: KeyPairManagerProtocol {
     var result: CFTypeRef?
     let status = SecItemCopyMatching(query, &result)
     guard status == errSecSuccess else {
-      // log.error("findPrivateKey search was unsuccessful. OS status: \(status)")
+      log.error("findPrivateKey: lookup for label '\(label)' failed with OSStatus \(status)")
       return nil
     }
 
@@ -173,14 +179,14 @@ class KeyPairManager: KeyPairManagerProtocol {
     var result: CFTypeRef?
     let status = SecItemCopyMatching(attributes, &result)
     guard status == errSecSuccess else {
-      // log.error("findAllKeys search was unsuccessful. OS status: \(status)")
+      log.error("findAllPrivateKeys: enumeration failed with OSStatus \(status)")
       return []
     }
     let list = result as! [[String: Any]]
     var keys = [PrivateKeyInfo]()
     for dict in list {
       guard let pk = makePrivateKeyInfo(dictionary: dict) else {
-        // log.error("unable to create private key from dict")
+        log.warning("findAllPrivateKeys: skipping keychain item with missing or undecodable key attributes")
         continue
       }
       keys.append(pk)
@@ -211,31 +217,22 @@ class KeyPairManager: KeyPairManagerProtocol {
       kSecPrivateKeyAttrs: privKeyAttrs,
     ]
 
-    let currentDate = Date().timeIntervalSince1970
-    let pkGenDate = Int(currentDate)
-    // log.debug("Private Key was generated at \(currentDate). Integer value was converted to \(pkGenDate)")
-
-    // Defaults.pkLastUpdated = pkGenDate //j
-    // log.debug("PK gen date is \(pkGenDate)")
-    // log.debug("Defaults PK is \(Defaults.pkLastUpdated)")
-
     if keyPairExists(with: label) {
-      // log.debug("keyPair already exists from a previous invocation so just return it")
+      log.debug("generateKeyPair: key pair for label '\(label)' already exists, returning it")
       return try getKeyPair(with: label)
-      // throw KeychainError.keyAlreadyExists
     }
 
     var publicKey: SecKey?
     var privateKey: SecKey?
     let status = SecKeyGeneratePair(parameters, &publicKey, &privateKey)
     if errSecSuccess != status {
+      log.error("generateKeyPair: SecKeyGeneratePair for label '\(label)' failed with OSStatus \(status)")
       if status == errSecDuplicateItem {
         throw KeychainError.keyAlreadyExists
       }
       throw KeychainError.keyGenError
     }
 
-    // FileStorageService().saveDateForPrivateKey(with: label, date: Date())
     return (publicKey!, privateKey!)
   }
 
@@ -249,8 +246,9 @@ class KeyPairManager: KeyPairManagerProtocol {
   func deleteKey(withLabel label: String) -> Bool {
     let query: NSDictionary = [kSecClass: kSecClassKey, kSecAttrApplicationTag: label.data(using: .utf8)!]
     let status = SecItemDelete(query)
-    // log.debug("delete status is \(status)")
-    // FileStorageService().removeDateForPrivateKey(with: label)
+    if status != errSecSuccess {
+      log.error("deleteKey: delete for label '\(label)' failed with OSStatus \(status)")
+    }
     return errSecSuccess == status
   }
 
@@ -265,7 +263,9 @@ class KeyPairManager: KeyPairManagerProtocol {
     ]
     var result: CFTypeRef?
     let status = SecItemCopyMatching(attributes, &result)
-    // log.debug("findKey withLabel \(label) status is \(status)")
+    if status != errSecSuccess {
+      log.error("findKey: lookup for label '\(label)' failed with OSStatus \(status)")
+    }
     return result
   }
 

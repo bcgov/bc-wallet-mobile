@@ -144,7 +144,9 @@ describe('useRegistrationService', () => {
 
         await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
         expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
-        expect(keychainKeyDoesntExistAlert).toHaveBeenCalled()
+        // The alert must receive the original error so its cause (incl. native
+        // keychain diagnostics) reaches the problem-report log
+        expect(keychainKeyDoesntExistAlert).toHaveBeenCalledWith(mockError)
       })
     })
 
@@ -493,7 +495,9 @@ describe('useRegistrationService', () => {
 
         await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
         expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
-        expect(keychainKeyDoesntExistAlert).toHaveBeenCalled()
+        // The alert must receive the original error so its cause (incl. native
+        // keychain diagnostics) reaches the problem-report log
+        expect(keychainKeyDoesntExistAlert).toHaveBeenCalledWith(mockError)
       })
     })
 

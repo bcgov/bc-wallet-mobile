@@ -141,6 +141,42 @@ class BcscCore: NSObject {
     return serializedJWT
   }
 
+  /**
+   * Builds an NSError whose userInfo carries keychain diagnostics across the RN bridge.
+   * React Native serializes the NSError's userInfo onto the rejected JS error, so problem
+   * reports can show which lookup failed and what the keychain contained at the time.
+   *
+   * userInfo values must stay bridge-serializable (strings, numbers, arrays thereof).
+   */
+  private func keychainDiagnosticsError(
+    site: String, underlying: Error, keys: [PrivateKeyInfo]
+  ) -> NSError {
+    let iso8601 = ISO8601DateFormatter()
+    return NSError(
+      domain: "BcscCore",
+      code: 0,
+      userInfo: [
+        "site": site,
+        "underlying": underlying.localizedDescription,
+        "keyCount": keys.count,
+        "keyTags": keys.map(\.tag),
+        "keyCreated": keys.map { iso8601.string(from: $0.created) },
+      ]
+    )
+  }
+
+  /**
+   * Compact key inventory for reject MESSAGE strings. The problem-report view
+   * surfaces only the message text (via AppError.technicalMessage), not the
+   * structured userInfo, so the essentials must ride in the message itself.
+   */
+  private func keyInventorySummary(_ keys: [PrivateKeyInfo]) -> String {
+    guard let newest = keys.sorted(by: { $0.created > $1.created }).first else {
+      return "[keys=0]"
+    }
+    return "[keys=\(keys.count), newest=\(newest.tag)]"
+  }
+
   private func signJWT(payload: JWTClaimsSet, reject: @escaping RCTPromiseRejectBlock) -> String? {
     let keyPairManager = KeyPairManager()
     let keys = keyPairManager.findAllPrivateKeys()
@@ -156,7 +192,9 @@ class BcscCore: NSObject {
       signer = RSASigner(privateKey: keyPair.private)
     } catch {
       reject(
-        "E_KEYPAIR_RETRIEVAL_FAILED", "Failed to retrieve key pair: \(error.localizedDescription)", error
+        "E_KEYPAIR_RETRIEVAL_FAILED",
+        "Failed to retrieve key pair: \(error.localizedDescription) \(keyInventorySummary(keys))",
+        keychainDiagnosticsError(site: "sign_jwt", underlying: error, keys: keys)
       )
       return nil
     }
@@ -938,7 +976,8 @@ class BcscCore: NSObject {
       } catch {
         reject(
           "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
-          "Failed to retrieve key pair: \(error.localizedDescription)", error
+          "Failed to retrieve key pair: \(error.localizedDescription)",
+          keychainDiagnosticsError(site: "retrieve_latest", underlying: error, keys: keys)
         )
         return
       }
@@ -952,17 +991,20 @@ class BcscCore: NSObject {
         case .keyAlreadyExists:
           reject(
             "E_120_KEYCHAIN_KEY_EXISTS_ERROR",
-            "Keychain key already exists: \(error.localizedDescription)", error
+            "Keychain key already exists: \(error.localizedDescription)",
+            keychainDiagnosticsError(site: "generate_new", underlying: error, keys: keys)
           )
         case .keyNotExists:
           reject(
             "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
-            "Keychain key does not exist: \(error.localizedDescription)", error
+            "Keychain key does not exist: \(error.localizedDescription)",
+            keychainDiagnosticsError(site: "generate_new", underlying: error, keys: keys)
           )
         case .keyGenError:
           reject(
             "E_120_KEYCHAIN_KEY_GENERATION_ERROR",
-            "Failed to generate key pair: \(error.localizedDescription)", error
+            "Failed to generate key pair: \(error.localizedDescription)",
+            keychainDiagnosticsError(site: "generate_new", underlying: error, keys: keys)
           )
         }
         return
@@ -970,7 +1012,7 @@ class BcscCore: NSObject {
         reject(
           "E_120_KEYCHAIN_KEY_GENERATION_ERROR",
           "Failed to generate or retrieve key pair for client registration: \(error.localizedDescription)",
-          error
+          keychainDiagnosticsError(site: "generate_new", underlying: error, keys: keys)
         )
         return
       }
@@ -979,9 +1021,14 @@ class BcscCore: NSObject {
         keyPair = try keyPairManager.getKeyPair(with: newKeyId)
         keyId = newKeyId
       } catch {
+        // Re-enumerate so the diagnostics show the post-generation keychain state,
+        // i.e. whether the key we just generated is even visible to discovery.
         reject(
           "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
-          "Failed to retrieve newly generated key pair: \(error.localizedDescription)", error
+          "Failed to retrieve newly generated key pair: \(error.localizedDescription)",
+          keychainDiagnosticsError(
+            site: "retrieve_generated", underlying: error, keys: keyPairManager.findAllPrivateKeys()
+          )
         )
         return
       }

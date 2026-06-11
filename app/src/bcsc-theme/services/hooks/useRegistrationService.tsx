@@ -11,7 +11,7 @@ import { AccountSecurityMethod } from 'react-native-bcsc-core'
  * Maps AppEventCodes that can be thrown during registration to their
  * corresponding alert functions from {@link useAlerts}.
  */
-const getRegistrationAlertMap = (alerts: AppAlerts): Partial<Record<AppEventCode, () => void>> => ({
+const getRegistrationAlertMap = (alerts: AppAlerts): Partial<Record<AppEventCode, (error?: unknown) => void>> => ({
   [AppEventCode.ERR_120_TOJSON_METHOD_FAILURE]: alerts.toJsonMethodFailureAlert,
   [AppEventCode.ERR_120_TOJSONSTRING_METHOD_FAILURE]: alerts.toJsonStringMethodFailureAlert,
   [AppEventCode.ERR_120_KEYCHAIN_KEY_EXISTS_ERROR]: alerts.keychainKeyExistsAlert,
@@ -42,7 +42,9 @@ export const useRegistrationService = () => {
   const emitRegistrationAlert = useCallback(
     (error: unknown) => {
       if (isAppError(error)) {
-        getRegistrationAlertMap(alerts)[error.appEvent]?.()
+        // Pass the error through so the alert logs it (with its cause) instead of
+        // manufacturing a fresh cause-less AppError from the event code alone.
+        getRegistrationAlertMap(alerts)[error.appEvent]?.(error)
       }
     },
     [alerts]

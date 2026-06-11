@@ -29,13 +29,17 @@ const summarizeCause = (cause: unknown): unknown => {
     return cause
   }
 
-  const { code, status } = cause as { code?: unknown; status?: unknown }
+  const { code, status, userInfo } = cause as { code?: unknown; status?: unknown; userInfo?: unknown }
   const summary: Record<string, unknown> = { name: cause.name, message: cause.message }
   if (code !== undefined) {
     summary.code = code
   }
   if (status !== undefined) {
     summary.status = status
+  }
+  if (userInfo !== undefined) {
+    // Native-module rejections carry small, bridge-serializable diagnostics here
+    summary.userInfo = userInfo
   }
   return summary
 }
