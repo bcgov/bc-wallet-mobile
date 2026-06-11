@@ -162,9 +162,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         .checkForUpdates?.()
         .catch((err) => logger.warn(`OCA bundle update failed (continuing): ${err}`))
       ledgerResolver.logger = logger
-      await ledgerResolver
-        .checkForUpdates()
-        .catch((err) => logger.warn(`Ledger update failed (continuing): ${err}`))
+      await ledgerResolver.checkForUpdates().catch((err) => logger.warn(`Ledger update failed (continuing): ${err}`))
 
       // checkForUpdates can take seconds; a sign-out/reset may have flipped
       // `cancelled` meanwhile. Re-check before buildAgent so a discarded run never

@@ -50,9 +50,7 @@ const ocaBundleResolver = { checkForUpdates: jest.fn().mockResolvedValue(undefin
 describe('useAgentSetupViewModel', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    jest
-      .mocked(Bifold.useServices)
-      .mockReturnValue([logger, attestationMonitor, [], [], ocaBundleResolver] as never)
+    jest.mocked(Bifold.useServices).mockReturnValue([logger, attestationMonitor, [], [], ocaBundleResolver] as never)
     jest.mocked(Bifold.useStore).mockReturnValue(mockedStore() as never)
     jest.mocked(Bifold.createLinkSecretIfRequired).mockResolvedValue(undefined as never)
     jest.mocked(agentService.loadCachedLedgers).mockResolvedValue(undefined)
