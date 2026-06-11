@@ -13,6 +13,11 @@ enum KeychainError: Error, LocalizedError {
   case keyAlreadyExists
   case keyNotExists
   case keyGenError
+  /// The keychain cannot be read right now (device locked, auth failure,
+  /// service unavailable) — the key may well exist. Transient; retryable.
+  case keychainUnavailable(OSStatus)
+  /// Any other SecItemCopyMatching failure.
+  case unexpectedStatus(OSStatus)
 
   /// LocalizedError (not a plain computed property) so the message survives
   /// access through the `Error` existential, e.g. in `error.localizedDescription`
@@ -25,6 +30,10 @@ enum KeychainError: Error, LocalizedError {
       return "key does not exist in the keychain"
     case .keyGenError:
       return "key pair generation failed"
+    case let .keychainUnavailable(status):
+      return "keychain is temporarily unavailable (OSStatus \(status))"
+    case let .unexpectedStatus(status):
+      return "keychain lookup failed with unexpected OSStatus \(status)"
     }
   }
 }
@@ -55,7 +64,7 @@ protocol KeyPairManagerProtocol {
   func generateKeyPair(withLabel label: String, keyType: KeyType, keySize: Int) throws
     -> (public: SecKey, private: SecKey)
   func getKeyPair(with label: String) throws -> (public: SecKey, private: SecKey)
-  func keyPairExists(with label: String) -> Bool
+  func keyPairExists(with label: String) throws -> Bool
 }
 
 /**
@@ -72,20 +81,22 @@ class KeyPairManager: KeyPairManagerProtocol {
     subsystem: Bundle.main.bundleIdentifier ?? "ca.bc.gov.id.servicescard", category: "KeyPairManager"
   )
 
-  /*
+  /**
    Returns true if a public / private key pair in the KeyChain with the given `label` can be found.
 
    - Parameter label: The unique `kSecAttrApplicationTag` attribute used to find the key.
 
+   - Throws: `KeychainError.keychainUnavailable` / `KeychainError.unexpectedStatus` when
+             existence cannot be determined — only a definitive not-found returns false,
+             so callers never mistake a locked keychain for a missing key.
+
    - Returns: true if the keypair can be found, false otherwise.
-
    */
-
-  func keyPairExists(with label: String) -> Bool {
+  func keyPairExists(with label: String) throws -> Bool {
     do {
-      let pk = findPrivateKey(with: label)
-      return pk != nil
-    } catch {
+      _ = try findKey(withLabel: label)
+      return true
+    } catch KeychainError.keyNotExists {
       return false
     }
   }
@@ -101,11 +112,10 @@ class KeyPairManager: KeyPairManagerProtocol {
 
    */
   func getKeyPair(with label: String) throws -> (public: SecKey, private: SecKey) {
-    guard let privateKeyResult = findKey(withLabel: label),
-          let publicKeyResult = SecKeyCopyPublicKey(privateKeyResult as! SecKey)
-    else { throw KeychainError.keyNotExists }
-    let publicKey = publicKeyResult
-    let privateKey = privateKeyResult as! SecKey
+    let privateKey = try findKey(withLabel: label)
+    guard let publicKey = SecKeyCopyPublicKey(privateKey) else {
+      throw KeychainError.keyNotExists
+    }
 
     return (publicKey, privateKey)
   }
@@ -217,7 +227,7 @@ class KeyPairManager: KeyPairManagerProtocol {
       kSecPrivateKeyAttrs: privKeyAttrs,
     ]
 
-    if keyPairExists(with: label) {
+    if try keyPairExists(with: label) {
       log.debug("generateKeyPair: key pair for label '\(label)' already exists, returning it")
       return try getKeyPair(with: label)
     }
@@ -252,33 +262,52 @@ class KeyPairManager: KeyPairManagerProtocol {
     return errSecSuccess == status
   }
 
-  private func findKey(withLabel label: String) -> CFTypeRef? {
-    let attributes: NSDictionary = [
-      kSecClass: kSecClassKey,
-      kSecAttrLabel: label,
-//                                        kSecAttrApplicationTag: label.data(using: .utf8)!,
-      kSecAttrIsPermanent: kCFBooleanTrue,
-      kSecMatchLimit: kSecMatchLimitOne,
-      kSecReturnRef: kCFBooleanTrue,
-    ]
-    var result: CFTypeRef?
-    let status = SecItemCopyMatching(attributes, &result)
-    if status != errSecSuccess {
-      log.error("findKey: lookup for label '\(label)' failed with OSStatus \(status)")
-    }
-    return result
-  }
+  /**
+    Locate the private key stored under `label`.
 
-  func findLegacyKey(withLabel label: CFString) -> CFTypeRef? {
-    let attributes: NSDictionary = [
+    Keys are created and discovered (`findAllPrivateKeys`) by `kSecAttrApplicationTag`,
+    so the tag query is primary — a label-only query cannot see tag-only items and
+    was the root of error 2603 (key discoverable by tag, unretrievable by label).
+    The label query remains as a fallback for legacy items that predate tag+label
+    parity.
+
+    - Throws: `KeychainError.keyNotExists` when neither query matches,
+              `KeychainError.keychainUnavailable` when the keychain cannot be read
+              right now (device locked, auth failure, service unavailable),
+              `KeychainError.unexpectedStatus` for any other failure.
+   */
+  private func findKey(withLabel label: String) throws -> SecKey {
+    let baseQuery: [NSObject: Any] = [
       kSecClass: kSecClassKey,
-      kSecAttrLabel: label,
-      kSecAttrIsPermanent: kCFBooleanTrue,
+      kSecAttrKeyClass: kSecAttrKeyClassPrivate,
+      kSecAttrIsPermanent: kCFBooleanTrue!,
       kSecMatchLimit: kSecMatchLimitOne,
-      kSecReturnRef: kCFBooleanTrue,
+      kSecReturnRef: kCFBooleanTrue!,
     ]
+
+    var tagQuery = baseQuery
+    tagQuery[kSecAttrApplicationTag] = label.data(using: .utf8)!
+
     var result: CFTypeRef?
-    SecItemCopyMatching(attributes, &result)
-    return result
+    var status = SecItemCopyMatching(tagQuery as CFDictionary, &result)
+    if status == errSecItemNotFound {
+      var labelQuery = baseQuery
+      labelQuery[kSecAttrLabel] = label
+      status = SecItemCopyMatching(labelQuery as CFDictionary, &result)
+    }
+
+    switch status {
+    case errSecSuccess where result != nil:
+      return (result as! SecKey)
+    case errSecSuccess, errSecItemNotFound:
+      log.error("findKey: no private key found for '\(label)' by tag or label")
+      throw KeychainError.keyNotExists
+    case errSecInteractionNotAllowed, errSecAuthFailed, errSecNotAvailable:
+      log.error("findKey: keychain unavailable while looking up '\(label)' (OSStatus \(status))")
+      throw KeychainError.keychainUnavailable(status)
+    default:
+      log.error("findKey: lookup for '\(label)' failed with OSStatus \(status)")
+      throw KeychainError.unexpectedStatus(status)
+    }
   }
 }

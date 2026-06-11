@@ -501,6 +501,56 @@ describe('useRegistrationService', () => {
       })
     })
 
+    describe('App error ERR_120_KEYCHAIN_UNAVAILABLE_ERROR', () => {
+      const setup = (mockError: unknown) => {
+        const registrationApi = {
+          updateRegistration: jest.fn().mockRejectedValue(mockError),
+        } as any
+        const keychainUnavailableAlert = jest.fn()
+        const keychainKeyDoesntExistAlert = jest.fn()
+        const mockAlerts = { keychainUnavailableAlert, keychainKeyDoesntExistAlert }
+
+        jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+        jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+        return { keychainUnavailableAlert, keychainKeyDoesntExistAlert }
+      }
+
+      it('should show keychainUnavailableAlert by default', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_120_KEYCHAIN_UNAVAILABLE_ERROR)
+        const { keychainUnavailableAlert } = setup(mockError)
+
+        const { result } = renderHook(() => useRegistrationService())
+
+        await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
+        expect(keychainUnavailableAlert).toHaveBeenCalledWith(mockError)
+      })
+
+      it('should suppress the alert but rethrow when suppressTransientAlerts is set', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_120_KEYCHAIN_UNAVAILABLE_ERROR)
+        const { keychainUnavailableAlert } = setup(mockError)
+
+        const { result } = renderHook(() => useRegistrationService())
+
+        await expect(
+          result.current.updateRegistration('someToken', 'someNickname', { suppressTransientAlerts: true })
+        ).rejects.toThrow(mockError)
+        expect(keychainUnavailableAlert).not.toHaveBeenCalled()
+      })
+
+      it('should still alert on non-transient errors when suppressTransientAlerts is set', async () => {
+        const mockError = mockAppError(AppEventCode.ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR)
+        const { keychainKeyDoesntExistAlert } = setup(mockError)
+
+        const { result } = renderHook(() => useRegistrationService())
+
+        await expect(
+          result.current.updateRegistration('someToken', 'someNickname', { suppressTransientAlerts: true })
+        ).rejects.toThrow(mockError)
+        expect(keychainKeyDoesntExistAlert).toHaveBeenCalledWith(mockError)
+      })
+    })
+
     describe('App error ERR_120_JWT_DEVICE_INFO_ERROR', () => {
       it('should show jwtDeviceInfoAlert on JWT device info error', async () => {
         const mockError = mockAppError(AppEventCode.ERR_120_JWT_DEVICE_INFO_ERROR)

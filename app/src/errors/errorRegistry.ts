@@ -596,6 +596,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.STORAGE,
     message: 'Object toJSONString() serialization threw an exception',
   },
+  KEYCHAIN_UNAVAILABLE: {
+    statusCode: 2609,
+    appEvent: AppEventCode.ERR_120_KEYCHAIN_UNAVAILABLE_ERROR,
+    severity: ErrorSeverity.WARNING,
+    category: ErrorCategory.STORAGE,
+    message: 'Keychain temporarily unreadable (device locked or secure storage unavailable) — retryable',
+  },
 
   // ============================================
   // Device Errors (2700-2799)

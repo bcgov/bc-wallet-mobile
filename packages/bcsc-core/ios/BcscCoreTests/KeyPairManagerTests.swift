@@ -66,6 +66,8 @@ final class KeyPairManagerTests: XCTestCase {
   /// Best-effort removal of every keychain item a test may have created.
   private func removeTestArtifacts() {
     _ = manager.deleteKey(withLabel: testLabel)
+    // Legacy-style items carry a label but no tag — deleteKey (tag-based) misses them.
+    SecItemDelete([kSecClass: kSecClassKey, kSecAttrLabel: testLabel] as NSDictionary)
     // The legacy public-key import stores its tag as a CFString while app keys
     // store Data — clear both representations.
     for tag in [pollutionTag, "jwtutil.temp"] {
@@ -103,9 +105,28 @@ final class KeyPairManagerTests: XCTestCase {
   }
 
   func testKeyPairExistsReflectsKeychainState() throws {
-    XCTAssertFalse(manager.keyPairExists(with: testLabel))
+    XCTAssertFalse(try manager.keyPairExists(with: testLabel))
     _ = try manager.generateKeyPair(withLabel: testLabel, keyType: KeyType.RSA, keySize: 2048)
-    XCTAssertTrue(manager.keyPairExists(with: testLabel))
+    XCTAssertTrue(try manager.keyPairExists(with: testLabel))
+  }
+
+  /// Legacy keys may predate tag+label parity and carry only a label; retrieval is
+  /// tag-first but must still reach them through the label fallback.
+  func testGetKeyPairFallsBackToLabelOnlyLegacyItems() throws {
+    let privKeyAttrs: NSDictionary = try [
+      kSecAttrLabel: testLabel,
+      kSecAttrIsPermanent: XCTUnwrap(kCFBooleanTrue),
+    ]
+    let parameters: NSDictionary = [
+      kSecAttrKeyType: kSecAttrKeyTypeRSA,
+      kSecAttrKeySizeInBits: 2048,
+      kSecPrivateKeyAttrs: privKeyAttrs,
+    ]
+    var publicKey: SecKey?
+    var privateKey: SecKey?
+    XCTAssertEqual(SecKeyGeneratePair(parameters, &publicKey, &privateKey), errSecSuccess)
+
+    XCTAssertNoThrow(try manager.getKeyPair(with: testLabel))
   }
 
   // MARK: - Foreign keychain items (issue #4032 hypothesis)

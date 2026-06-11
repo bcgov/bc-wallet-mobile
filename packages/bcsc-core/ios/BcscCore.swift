@@ -973,13 +973,48 @@ class BcscCore: NSObject {
       do {
         keyPair = try keyPairManager.getKeyPair(with: latestKeyInfo.tag)
         keyId = latestKeyInfo.tag
-      } catch {
+      } catch let KeychainError.keychainUnavailable(status) {
+        // The key likely exists but cannot be read right now (e.g. device locked).
+        // Surface a distinct, retryable error — never generate a replacement key
+        // for a transient condition.
         reject(
-          "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
-          "Failed to retrieve key pair: \(error.localizedDescription)",
-          keychainDiagnosticsError(site: "retrieve_latest", underlying: error, keys: keys)
+          "E_120_KEYCHAIN_UNAVAILABLE_ERROR",
+          "Keychain temporarily unavailable while retrieving key pair (OSStatus \(status)) \(keyInventorySummary(keys))",
+          keychainDiagnosticsError(
+            site: "retrieve_latest", underlying: KeychainError.keychainUnavailable(status), keys: keys
+          )
         )
         return
+      } catch {
+        // The newest key is genuinely missing or unreadable (e.g. a foreign tag-only
+        // item shadowing the real key). Self-heal: generate a fresh key — this DCR
+        // body carries its public jwks, which replaces the server's registered key
+        // set in the same call; if the request later fails, the 401 key-recovery
+        // flow prunes the orphan.
+        logger.warning(
+          "getDynamicClientRegistrationBody - newest key '\(latestKeyInfo.tag)' unretrievable (\(error.localizedDescription)); generating a replacement key"
+        )
+        do {
+          let newKeyId = try generateKeyPair()
+          keyPair = try keyPairManager.getKeyPair(with: newKeyId)
+          keyId = newKeyId
+        } catch let KeychainError.keychainUnavailable(status) {
+          reject(
+            "E_120_KEYCHAIN_UNAVAILABLE_ERROR",
+            "Keychain temporarily unavailable while generating replacement key (OSStatus \(status)) \(keyInventorySummary(keys))",
+            keychainDiagnosticsError(
+              site: "retrieve_latest", underlying: KeychainError.keychainUnavailable(status), keys: keys
+            )
+          )
+          return
+        } catch {
+          reject(
+            "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
+            "Failed to retrieve key pair and could not generate a replacement: \(error.localizedDescription) \(keyInventorySummary(keys))",
+            keychainDiagnosticsError(site: "retrieve_latest", underlying: error, keys: keys)
+          )
+          return
+        }
       }
     } else {
       // No keys found, generate a new one
@@ -991,19 +1026,25 @@ class BcscCore: NSObject {
         case .keyAlreadyExists:
           reject(
             "E_120_KEYCHAIN_KEY_EXISTS_ERROR",
-            "Keychain key already exists: \(error.localizedDescription)",
+            "Keychain key already exists: \(error.localizedDescription) \(keyInventorySummary(keys))",
             keychainDiagnosticsError(site: "generate_new", underlying: error, keys: keys)
           )
         case .keyNotExists:
           reject(
             "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
-            "Keychain key does not exist: \(error.localizedDescription)",
+            "Keychain key does not exist: \(error.localizedDescription) \(keyInventorySummary(keys))",
             keychainDiagnosticsError(site: "generate_new", underlying: error, keys: keys)
           )
-        case .keyGenError:
+        case .keychainUnavailable:
+          reject(
+            "E_120_KEYCHAIN_UNAVAILABLE_ERROR",
+            "Keychain temporarily unavailable while generating key pair: \(error.localizedDescription) \(keyInventorySummary(keys))",
+            keychainDiagnosticsError(site: "generate_new", underlying: error, keys: keys)
+          )
+        case .keyGenError, .unexpectedStatus:
           reject(
             "E_120_KEYCHAIN_KEY_GENERATION_ERROR",
-            "Failed to generate key pair: \(error.localizedDescription)",
+            "Failed to generate key pair: \(error.localizedDescription) \(keyInventorySummary(keys))",
             keychainDiagnosticsError(site: "generate_new", underlying: error, keys: keys)
           )
         }
@@ -1011,7 +1052,7 @@ class BcscCore: NSObject {
       } catch {
         reject(
           "E_120_KEYCHAIN_KEY_GENERATION_ERROR",
-          "Failed to generate or retrieve key pair for client registration: \(error.localizedDescription)",
+          "Failed to generate or retrieve key pair for client registration: \(error.localizedDescription) \(keyInventorySummary(keys))",
           keychainDiagnosticsError(site: "generate_new", underlying: error, keys: keys)
         )
         return
@@ -1020,14 +1061,26 @@ class BcscCore: NSObject {
       do {
         keyPair = try keyPairManager.getKeyPair(with: newKeyId)
         keyId = newKeyId
+      } catch let KeychainError.keychainUnavailable(status) {
+        let postGenerationKeys = keyPairManager.findAllPrivateKeys()
+        reject(
+          "E_120_KEYCHAIN_UNAVAILABLE_ERROR",
+          "Keychain temporarily unavailable while retrieving newly generated key (OSStatus \(status)) \(keyInventorySummary(postGenerationKeys))",
+          keychainDiagnosticsError(
+            site: "retrieve_generated", underlying: KeychainError.keychainUnavailable(status),
+            keys: postGenerationKeys
+          )
+        )
+        return
       } catch {
         // Re-enumerate so the diagnostics show the post-generation keychain state,
         // i.e. whether the key we just generated is even visible to discovery.
+        let postGenerationKeys = keyPairManager.findAllPrivateKeys()
         reject(
           "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
-          "Failed to retrieve newly generated key pair: \(error.localizedDescription)",
+          "Failed to retrieve newly generated key pair: \(error.localizedDescription) \(keyInventorySummary(postGenerationKeys))",
           keychainDiagnosticsError(
-            site: "retrieve_generated", underlying: error, keys: keyPairManager.findAllPrivateKeys()
+            site: "retrieve_generated", underlying: error, keys: postGenerationKeys
           )
         )
         return

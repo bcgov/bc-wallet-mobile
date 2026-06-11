@@ -17,6 +17,7 @@ const getRegistrationAlertMap = (alerts: AppAlerts): Partial<Record<AppEventCode
   [AppEventCode.ERR_120_KEYCHAIN_KEY_EXISTS_ERROR]: alerts.keychainKeyExistsAlert,
   [AppEventCode.ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR]: alerts.keychainKeyDoesntExistAlert,
   [AppEventCode.ERR_120_KEYCHAIN_KEY_GENERATION_ERROR]: alerts.keychainKeyGenerationAlert,
+  [AppEventCode.ERR_120_KEYCHAIN_UNAVAILABLE_ERROR]: alerts.keychainUnavailableAlert,
   [AppEventCode.ERR_120_JWT_DEVICE_INFO_ERROR]: alerts.jwtDeviceInfoAlert,
   [AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE]: alerts.clientRegistrationFailureAlert,
   [AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL]: alerts.clientRegistrationNullAlert,
@@ -74,14 +75,24 @@ export const useRegistrationService = () => {
    *
    * @param registrationAccessToken - Bearer token for registration endpoint access
    * @param selectedNickname - New client name/nickname to set
+   * @param options - Set `suppressTransientAlerts` for automatic (non user-initiated) callers:
+   *   transient keychain-unavailable failures are logged but not surfaced as a modal, since
+   *   the operation retries on the next app launch
    * @return Promise resolving to updated registration response data
    */
   const updateRegistration = useCallback(
-    async (registrationAccessToken: string | undefined, selectedNickname: string | undefined) => {
+    async (
+      registrationAccessToken: string | undefined,
+      selectedNickname: string | undefined,
+      options?: { suppressTransientAlerts?: boolean }
+    ) => {
       try {
         return await registrationApi.updateRegistration(registrationAccessToken, selectedNickname)
       } catch (error) {
-        emitRegistrationAlert(error)
+        const isTransient = isAppError(error) && error.appEvent === AppEventCode.ERR_120_KEYCHAIN_UNAVAILABLE_ERROR
+        if (!(options?.suppressTransientAlerts && isTransient)) {
+          emitRegistrationAlert(error)
+        }
 
         throw error
       }

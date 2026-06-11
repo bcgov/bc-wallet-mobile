@@ -39,6 +39,11 @@ export const BcscNativeErrorCodes = {
   KEYCHAIN_KEY_GENERATION_ERROR: 'E_120_KEYCHAIN_KEY_GENERATION_ERROR',
   /** Error creating device info JWT during client registration (error 120-6) */
   JWT_DEVICE_INFO_ERROR: 'E_120_JWT_DEVICE_INFO_ERROR',
+  /**
+   * Keychain/secure storage temporarily unreadable (device locked, auth failure) during
+   * client registration — transient and retryable, the signing key may well exist (iOS-only)
+   */
+  KEYCHAIN_UNAVAILABLE: 'E_120_KEYCHAIN_UNAVAILABLE_ERROR',
 
   // --- Native error codes (see per-entry docs for platform availability) ---
 
