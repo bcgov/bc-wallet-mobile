@@ -141,17 +141,23 @@ class BcscCore: NSObject {
     return serializedJWT
   }
 
+  /// Diagnostics list the newest N keys; keyCount still reports the true total.
+  private static let keychainDiagnosticsMaxKeys = 5
+
   /**
    * Builds an NSError whose userInfo carries keychain diagnostics across the RN bridge.
    * React Native serializes the NSError's userInfo onto the rejected JS error, so problem
    * reports can show which lookup failed and what the keychain contained at the time.
    *
-   * userInfo values must stay bridge-serializable (strings, numbers, arrays thereof).
+   * userInfo values must stay bridge-serializable (strings, numbers, arrays thereof),
+   * and the per-key arrays are capped so the payload size stays predictable.
    */
   private func keychainDiagnosticsError(
     site: String, underlying: Error, keys: [PrivateKeyInfo]
   ) -> NSError {
     let iso8601 = ISO8601DateFormatter()
+    let newestFirst = keys.sorted(by: { $0.created > $1.created })
+      .prefix(BcscCore.keychainDiagnosticsMaxKeys)
     return NSError(
       domain: "BcscCore",
       code: 0,
@@ -159,8 +165,8 @@ class BcscCore: NSObject {
         "site": site,
         "underlying": underlying.localizedDescription,
         "keyCount": keys.count,
-        "keyTags": keys.map(\.tag),
-        "keyCreated": keys.map { iso8601.string(from: $0.created) },
+        "keyTags": newestFirst.map(\.tag),
+        "keyCreated": newestFirst.map { iso8601.string(from: $0.created) },
       ]
     )
   }
@@ -1007,10 +1013,19 @@ class BcscCore: NSObject {
             )
           )
           return
-        } catch {
+        } catch KeychainError.keyNotExists {
           reject(
             "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
-            "Failed to retrieve key pair and could not generate a replacement: \(error.localizedDescription) \(keyInventorySummary(keys))",
+            "Replacement key was generated but could not be retrieved \(keyInventorySummary(keys))",
+            keychainDiagnosticsError(site: "generate_replacement", underlying: KeychainError.keyNotExists, keys: keys)
+          )
+          return
+        } catch {
+          // Generation failures (keyGenError, keyAlreadyExists, unexpectedStatus, …)
+          // are key-generation errors, not "key doesn't exist".
+          reject(
+            "E_120_KEYCHAIN_KEY_GENERATION_ERROR",
+            "Failed to generate a replacement key: \(error.localizedDescription) \(keyInventorySummary(keys))",
             keychainDiagnosticsError(site: "generate_replacement", underlying: error, keys: keys)
           )
           return

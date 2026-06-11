@@ -243,7 +243,12 @@ class KeyPairManager: KeyPairManagerProtocol {
       throw KeychainError.keyGenError
     }
 
-    return (publicKey!, privateKey!)
+    guard let publicKey = publicKey, let privateKey = privateKey else {
+      log.error("generateKeyPair: SecKeyGeneratePair reported success but returned nil key(s) for label '\(label)'")
+      throw KeychainError.keyGenError
+    }
+
+    return (publicKey, privateKey)
   }
 
   /**
