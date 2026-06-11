@@ -59,9 +59,9 @@ export class RemoteLedgerResolver extends FileCache {
 
       this.fileEtag = etag
       this.ledgerData = response.data
-      remoteFetchSucceeded = true
 
       await this.saveFileToLocalStorage(filePath, JSON.stringify(this.ledgerData))
+      remoteFetchSucceeded = true
     } catch (error) {
       this.log?.error(`Failed to fetch remote ledger index ${filePath}: ${error}`)
     }
