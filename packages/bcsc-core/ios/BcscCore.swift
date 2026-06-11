@@ -1003,7 +1003,7 @@ class BcscCore: NSObject {
             "E_120_KEYCHAIN_UNAVAILABLE_ERROR",
             "Keychain temporarily unavailable while generating replacement key (OSStatus \(status)) \(keyInventorySummary(keys))",
             keychainDiagnosticsError(
-              site: "retrieve_latest", underlying: KeychainError.keychainUnavailable(status), keys: keys
+              site: "generate_replacement", underlying: KeychainError.keychainUnavailable(status), keys: keys
             )
           )
           return
@@ -1011,7 +1011,7 @@ class BcscCore: NSObject {
           reject(
             "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
             "Failed to retrieve key pair and could not generate a replacement: \(error.localizedDescription) \(keyInventorySummary(keys))",
-            keychainDiagnosticsError(site: "retrieve_latest", underlying: error, keys: keys)
+            keychainDiagnosticsError(site: "generate_replacement", underlying: error, keys: keys)
           )
           return
         }

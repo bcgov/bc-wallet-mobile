@@ -280,9 +280,9 @@ class KeyPairManager: KeyPairManagerProtocol {
     let baseQuery: [NSObject: Any] = [
       kSecClass: kSecClassKey,
       kSecAttrKeyClass: kSecAttrKeyClassPrivate,
-      kSecAttrIsPermanent: kCFBooleanTrue!,
+      kSecAttrIsPermanent: true,
       kSecMatchLimit: kSecMatchLimitOne,
-      kSecReturnRef: kCFBooleanTrue!,
+      kSecReturnRef: true,
     ]
 
     var tagQuery = baseQuery
