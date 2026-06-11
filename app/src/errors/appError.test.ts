@@ -50,6 +50,18 @@ describe('AppError', () => {
 
       expect(error.technicalMessage).toBeNull()
     })
+
+    it('should prefix the native error code when present on the cause', () => {
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+      const cause = Object.assign(new Error("Key pair with alias 'abc' not found."), { code: 'E_KEY_NOT_FOUND' })
+      const error = new AppError('Something went wrong', identity, { cause })
+
+      expect(error.technicalMessage).toBe("E_KEY_NOT_FOUND: Key pair with alias 'abc' not found.")
+    })
   })
 
   describe('fullMessage', () => {
