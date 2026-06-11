@@ -1,7 +1,10 @@
+import { useBCSCAgentSafe } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { DEFAULT_AUTO_LOCK_TIME_MIN } from '@/constants'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
+import type { Agent } from '@credo-ts/core'
+import { DidCommMediatorPickupStrategy } from '@credo-ts/didcomm'
 import React, {
   createContext,
   PropsWithChildren,
@@ -51,6 +54,11 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
   const prevAppStateStatusRef = useRef(AppState.currentState)
   const [appStateStatus, setAppStateStatus] = useState<AppStateStatus>(AppState.currentState)
   const isPausedRef = useRef<boolean>(false)
+  // Read the live agent through a ref so the AppState listener (registered once)
+  // always sees the current instance without re-subscribing on every agent change.
+  const agentContext = useBCSCAgentSafe()
+  const agentRef = useRef<Agent | null>(null)
+  agentRef.current = agentContext?.agent ?? null
 
   const clearInactivityTimeoutIfExists = useCallback(() => {
     if (inactivityTimeoutRef.current) {
@@ -104,14 +112,37 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
   useEffect(() => {
     // listener for backgrounding / foregrounding
     const eventSubscription = AppState.addEventListener('change', async (nextAppState) => {
+      // Snapshot the previous state and advance the ref/state synchronously, before any
+      // await below. The handler is async (it awaits pickup calls), so if the OS fires
+      // another AppState event while one is in-flight, advancing the ref up front keeps
+      // the second invocation from reading a stale previous state and mis-ordering pickup
+      // (e.g. a fast background→foreground flip would otherwise skip the pickup restart).
+      const prevAppState = prevAppStateStatusRef.current
+      prevAppStateStatusRef.current = nextAppState
+      setAppStateStatus(nextAppState)
+
       // if going into the background
-      if (['active', 'inactive'].includes(prevAppStateStatusRef.current) && nextAppState === 'background') {
+      if (['active', 'inactive'].includes(prevAppState) && nextAppState === 'background') {
         // remove timeout when backgrounded as timeout refs can be lost when app is backgrounded
         clearInactivityTimeoutIfExists()
+
+        // Tear down the live mediator pickup socket. The OS suspends sockets while
+        // backgrounded, leaving a dead session; pairing this with the foreground
+        // restart below is what flushes messages queued at the mediator on return.
+        // Only act when an agent exists, so the log reflects what actually happened.
+        const agent = agentRef.current
+        if (agent) {
+          try {
+            await agent.didcomm.mediationRecipient.stopMessagePickup()
+            logger.info('BCSC Activity: Stopped agent message pickup')
+          } catch (err) {
+            logger.error(`BCSC Activity: Error stopping agent message pickup: ${err}`)
+          }
+        }
       }
 
       // if coming to the foreground
-      if (prevAppStateStatusRef.current === 'background' && ['active', 'inactive'].includes(nextAppState)) {
+      if (prevAppState === 'background' && ['active', 'inactive'].includes(nextAppState)) {
         // if app was in background for longer than allowed time, log out user
         if (
           !isPausedRef.current &&
@@ -124,11 +155,26 @@ export const BCSCActivityProvider: React.FC<PropsWithChildren> = ({ children }) 
         } else {
           // app coming into the foreground is 'user activity', reset timeout
           resetInactivityTimeout(timeoutInMilliseconds.current)
+
+          // Restart live message pickup. The mediator queues inbound DIDComm
+          // messages (credential offers, proof requests, connection responses)
+          // while the socket is down; without this they stay unfetched until the
+          // next agent restart (app relaunch).
+          // Only act when an agent exists, so the log reflects what actually happened.
+          const agent = agentRef.current
+          if (agent) {
+            try {
+              await agent.didcomm.mediationRecipient.initiateMessagePickup(
+                undefined,
+                DidCommMediatorPickupStrategy.PickUpV2LiveMode
+              )
+              logger.info('BCSC Activity: Restarted agent message pickup')
+            } catch (err) {
+              logger.error(`BCSC Activity: Error restarting agent message pickup: ${err}`)
+            }
+          }
         }
       }
-
-      prevAppStateStatusRef.current = nextAppState
-      setAppStateStatus(nextAppState)
     })
 
     // keyboard activity resets the inactivity timeout

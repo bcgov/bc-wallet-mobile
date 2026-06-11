@@ -34,14 +34,15 @@ import { Config } from 'react-native-config'
 import { DependencyContainer } from 'tsyringe'
 
 import EmptyWalletList from '@/bcsc-theme/components/EmptyWalletList'
+import { createFloatingHelpMenuButton } from '@/bcsc-theme/components/FloatingHelpMenuHeaderButton'
 import { createMainSettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import filePersistedLedgers from '@/configs/ledgers/indy/ledgers'
 import useBCAgentSetup from '@/hooks/useBCAgentSetup'
 import { activate, deactivate, setup, status } from '@utils/PushNotificationsHelper'
 import { expirationOverrideInMinutes } from '@utils/expiration'
 import { createAppLogger } from '@utils/logger'
 import { TFunction } from 'i18next'
-import AddCredentialButton from './src/bcwallet-theme/components/AddCredentialButton'
 import AddCredentialSlider from './src/bcwallet-theme/components/AddCredentialSlider'
 import EmptyList from './src/bcwallet-theme/components/EmptyList'
 import HomeFooterView from './src/bcwallet-theme/components/HomeFooterView'
@@ -236,7 +237,10 @@ export class AppContainer implements Container {
       },
     })
     this._container.registerInstance(TOKENS.HOOK_USE_AGENT_SETUP, useBCAgentSetup)
-    this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_HEADER_RIGHT, AddCredentialButton)
+    this._container.registerInstance(
+      TOKENS.COMPONENT_CRED_LIST_HEADER_RIGHT,
+      createFloatingHelpMenuButton({ webViewScreen: BCSCScreens.MainWebView })
+    )
     this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_OPTIONS, AddCredentialSlider)
     this._container.registerInstance(TOKENS.COMPONENT_HOME_HEADER, HomeHeaderView)
     this._container.registerInstance(TOKENS.COMPONENT_HOME_FOOTER, HomeFooterView)

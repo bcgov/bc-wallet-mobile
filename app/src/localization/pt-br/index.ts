@@ -96,21 +96,20 @@ const translation = {
     },
     "BasicMessage": {
       "Title": "New message (PT-BR)",
-      "SentMessage": "{{ label }} sent a message (PT-BR)",
-      "ReceivedMessage": "You received a new message (PT-BR)",
       "ButtonTitle": "View message (PT-BR)"
     },
     "CredentialOffer": {
       "Title": "Credential offer (PT-BR)",
-      "Description": "{{ label }} is offering you a credential (PT-BR)"
+      "Description": "{{ label }} is offering you a {{ credential }}. (PT-BR)"
     },
     "ProofRequest": {
       "Title": "Proof request (PT-BR)",
-      "Description": "{{ label }} is requesting information (PT-BR)",
-      "DefaultDescription": "You received a proof request (PT-BR)"
+      "Description": "{{ label }} is requesting for information. (PT-BR)",
+      "DefaultDescription": "You're being asked to share information. (PT-BR)"
     },
     "Revocation": {
-      "Title": "Credential revoked (PT-BR)"
+      "Title": "Credential revoked (PT-BR)",
+      "Description": "{{ credential }} was revoked. (PT-BR)"
     }
   },
   "PersonCredential": {
@@ -696,6 +695,7 @@ const translation = {
       "TryAgain": "Try Again (PT-BR)",
       "Connecting": "Connecting… (PT-BR)",
       "UnrecognizedQR": "QR code not recognized. (PT-BR)",
+      "InvalidConnectionInvitation": "This connection invitation could not be opened. (PT-BR)",
       "FeatureUnavailable": "This action isn't available yet. (PT-BR)",
       "Unsupported": {
         "OpenID": "OpenID credentials aren't supported in BC Services Card. (PT-BR)",
@@ -1188,7 +1188,7 @@ const translation = {
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again. (PT-BR)",
     },
     "Wallet": {
-      "EmptyMessage": "Your wallet is empty (PT-BR)",
+      "EmptyMessage": "Your wallet is empty! (PT-BR)",
       "Reset": "Reset wallet (PT-BR)",
       "ResetTitle": "Reset wallet? (PT-BR)",
       "ResetDescription": "This will permanently delete all credentials, connections, and chat history stored in your wallet. Your PIN, biometrics, and BC Services Card identity will not be affected. You will not have to re-verify. (PT-BR)",

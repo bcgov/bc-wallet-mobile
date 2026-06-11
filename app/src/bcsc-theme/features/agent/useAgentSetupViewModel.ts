@@ -11,9 +11,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Config } from 'react-native-config'
 
 import {
+  AgentWalletSecret,
   buildAgent,
+  deleteWalletStore,
   initializeAgent,
   loadCachedLedgers,
+  purgeWalletStore,
   restartAgent,
   shutdownAgent,
   warmCache,
@@ -45,6 +48,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   const [retryCount, setRetryCount] = useState(0)
   const agentRef = useRef<Agent | null>(null)
   const initializingRef = useRef(false)
+  const resettingRef = useRef(false)
   const statusRef = useRef<AgentSetupStatus>('idle')
   statusRef.current = status
   const loggerRef = useRef(logger)
@@ -112,6 +116,124 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     let cancelled = false
     let inFlightAgent: Agent | undefined
 
+    // Reuse the in-memory agent if it can be reopened. Returns 'ready' when reused,
+    // 'rebuild' to fall through to a fresh build, or 'cancelled' if torn down mid-way.
+    const attemptRestart = async (existing: Agent): Promise<'ready' | 'rebuild' | 'cancelled'> => {
+      const restarted = await restartAgent(existing, logger)
+      if (cancelled) {
+        return 'cancelled'
+      }
+      if (!restarted) {
+        // Restart failed — old agent may still hold open transports/listeners.
+        // Best-effort shut it down before falling through to build a fresh one.
+        await shutdownAgent(existing, logger)
+        agentRef.current = null
+        // Setting agent to null causes BifoldScope to drop AgentProvider, which
+        // remounts child components and clears stale hook state (e.g. useCredentials)
+        // before the fresh agent is provided.
+        setAgent(null)
+        return 'rebuild'
+      }
+      await restarted.didcomm.mediationRecipient.initiateMessagePickup(
+        undefined,
+        DidCommMediatorPickupStrategy.PickUpV2LiveMode
+      )
+      if (cancelled) {
+        return 'cancelled'
+      }
+      refreshAttestationMonitor(restarted)
+      agentRef.current = restarted
+      setAgent(restarted)
+      setStatus('ready')
+      return 'ready'
+    }
+
+    // Build, initialize, and wire up a fresh agent, then mark ready. Bails at any
+    // checkpoint if cancelled, leaving inFlightAgent for run's finally to close.
+    const buildFreshAgent = async (walletSecret: AgentWalletSecret): Promise<void> => {
+      // cachedLedgers only gates the expensive pool warm-up in warmCache;
+      // the pool list itself comes from the resolver when LEDGER_URL is set.
+      const cachedLedgers = await loadCachedLedgers()
+      if (cancelled) {
+        return
+      }
+
+      await (ocaBundleResolver as RemoteOCABundleResolver)
+        .checkForUpdates?.()
+        .catch((err) => logger.warn(`OCA bundle update failed (continuing): ${err}`))
+      ledgerResolver.logger = logger
+      await ledgerResolver
+        .checkForUpdates()
+        .catch((err) => logger.warn(`Ledger update failed (continuing): ${err}`))
+
+      // checkForUpdates can take seconds; a sign-out/reset may have flipped
+      // `cancelled` meanwhile. Re-check before buildAgent so a discarded run never
+      // (re)creates the Askar store — a factory reset clears the wallet key right
+      // after, orphaning any store written here.
+      if (cancelled) {
+        return
+      }
+
+      const ledgers = Config.LEDGER_URL ? ledgerResolver.ledgers : (cachedLedgers ?? ledgerResolver.ledgers)
+
+      inFlightAgent = buildAgent({
+        ledgers,
+        walletSecret,
+        mediatorUrl,
+        walletLabel,
+        enableProxy,
+        proxyBaseUrl: Config.INDY_VDR_PROXY_URL,
+        logger,
+      })
+
+      await initializeAgent(inFlightAgent)
+      if (cancelled) {
+        return
+      }
+      await inFlightAgent.didcomm.mediationRecipient.initiateMessagePickup(
+        undefined,
+        DidCommMediatorPickupStrategy.PickUpV2LiveMode
+      )
+      if (cancelled) {
+        return
+      }
+      await warmCache(inFlightAgent, credDefs, schemas, cachedLedgers, logger)
+      if (cancelled) {
+        return
+      }
+      await createLinkSecretIfRequired(inFlightAgent)
+      if (cancelled) {
+        return
+      }
+
+      if (usePushNotifications) {
+        activate(inFlightAgent).catch((err) => logger.warn(`Push notification activation failed: ${err}`))
+      }
+
+      refreshAttestationMonitor(inFlightAgent)
+      agentRef.current = inFlightAgent
+      setAgent(inFlightAgent)
+      setStatus('ready')
+      inFlightAgent = undefined
+    }
+
+    // Surface a non-cancellation init failure: log, drop any stale agent so retry
+    // rebuilds fresh instead of re-restarting a broken instance, then set error.
+    const handleInitError = async (err: unknown): Promise<void> => {
+      const appError =
+        err instanceof AppError
+          ? err
+          : AppError.fromErrorDefinition(ErrorRegistry.AGENT_INITIALIZATION_ERROR, { cause: err })
+      logger.error(`[${appError.appEvent}] Agent init failed: ${appError.message}`)
+      if (agentRef.current) {
+        await shutdownAgent(agentRef.current, logger)
+        agentRef.current = null
+        setAgent(null)
+      }
+      setError(appError)
+      setStatus('error')
+    }
+
     const run = async (): Promise<void> => {
       try {
         if (!walletKey) {
@@ -121,110 +243,17 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         const walletSecret = { id: WALLET_ID, key: walletKey }
 
         if (agentRef.current) {
-          const restarted = await restartAgent(agentRef.current, logger)
-          if (cancelled) {
+          const restartResult = await attemptRestart(agentRef.current)
+          if (restartResult !== 'rebuild') {
             return
           }
-          if (restarted) {
-            await restarted.didcomm.mediationRecipient.initiateMessagePickup(
-              undefined,
-              DidCommMediatorPickupStrategy.PickUpV2LiveMode
-            )
-            if (cancelled) {
-              return
-            }
-            refreshAttestationMonitor(restarted)
-            agentRef.current = restarted
-            setAgent(restarted)
-            setStatus('ready')
-            return
-          }
-          // Restart failed — old agent may still hold open transports/listeners.
-          // Best-effort shut it down before falling through to build a fresh one.
-          await shutdownAgent(agentRef.current, logger)
-          agentRef.current = null
-          // Setting agent to null causes BifoldScope to drop AgentProvider,
-          // which remounts child components and clears stale hook state (e.g.
-          // useCredentials) before the fresh agent is provided.
-          setAgent(null)
         }
 
-        // cachedLedgers only gates the expensive pool warm-up in warmCache;
-        // the pool list itself comes from the resolver when LEDGER_URL is set.
-        const cachedLedgers = await loadCachedLedgers()
-        if (cancelled) {
-          return
-        }
-
-        await (ocaBundleResolver as RemoteOCABundleResolver)
-          .checkForUpdates?.()
-          .catch((err) => logger.warn(`OCA bundle update failed (continuing): ${err}`))
-        ledgerResolver.logger = logger
-        await ledgerResolver
-          .checkForUpdates()
-          .catch((err) => logger.warn(`Ledger update failed (continuing): ${err}`))
-
-        const ledgers = Config.LEDGER_URL ? ledgerResolver.ledgers : (cachedLedgers ?? ledgerResolver.ledgers)
-
-        inFlightAgent = buildAgent({
-          ledgers,
-          walletSecret,
-          mediatorUrl,
-          walletLabel,
-          enableProxy,
-          proxyBaseUrl: Config.INDY_VDR_PROXY_URL,
-          logger,
-        })
-
-        await initializeAgent(inFlightAgent)
-
-        if (cancelled) {
-          return
-        }
-        await inFlightAgent.didcomm.mediationRecipient.initiateMessagePickup(
-          undefined,
-          DidCommMediatorPickupStrategy.PickUpV2LiveMode
-        )
-        if (cancelled) {
-          return
-        }
-        await warmCache(inFlightAgent, credDefs, schemas, cachedLedgers, logger)
-        if (cancelled) {
-          return
-        }
-        await createLinkSecretIfRequired(inFlightAgent)
-        if (cancelled) {
-          return
-        }
-
-        if (usePushNotifications) {
-          activate(inFlightAgent).catch((err) => logger.warn(`Push notification activation failed: ${err}`))
-        }
-
-        refreshAttestationMonitor(inFlightAgent)
-
-        agentRef.current = inFlightAgent
-        setAgent(inFlightAgent)
-        setStatus('ready')
-        inFlightAgent = undefined
+        await buildFreshAgent(walletSecret)
       } catch (err) {
-        if (cancelled) {
-          return
+        if (!cancelled) {
+          await handleInitError(err)
         }
-        const appError =
-          err instanceof AppError
-            ? err
-            : AppError.fromErrorDefinition(ErrorRegistry.AGENT_INITIALIZATION_ERROR, { cause: err })
-        logger.error(`[${appError.appEvent}] Agent init failed: ${appError.message}`)
-        // Clear any stale agent so retry takes the fresh build path instead of
-        // re-attempting restart on a broken instance.
-        if (agentRef.current) {
-          await shutdownAgent(agentRef.current, logger)
-          agentRef.current = null
-          setAgent(null)
-        }
-        setError(appError)
-        setStatus('error')
       } finally {
         if (inFlightAgent) {
           // Cancelled or partially-built agent — close its wallet handle. The
@@ -259,53 +288,65 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   ])
 
   const resetWallet = useCallback(async () => {
-    const currentAgent = agentRef.current
-
-    if (!currentAgent) {
-      // Agent is unavailable — a previous reset was likely interrupted mid-shutdown
-      // (e.g. app was killed). Build an uninitialized agent so we can reach the Askar
-      // store manager and delete the store by its file URI without needing it open.
-      if (walletKey) {
-        const tempAgent = buildAgent({
-          ledgers: ledgerResolver.ledgers,
-          walletSecret: { id: WALLET_ID, key: walletKey },
-          mediatorUrl,
-          walletLabel,
-          enableProxy,
-          proxyBaseUrl: Config.INDY_VDR_PROXY_URL,
-          logger,
-        })
-        await tempAgent.modules.askar
-          .deleteStore()
-          .catch((err: unknown) =>
-            logger.warn(`WalletReset: store deletion on recovery failed (may already be deleted): ${err}`)
-          )
-      }
-      setError(null)
-      setStatus('idle')
-      setRetryCount((c) => c + 1)
+    // Ignore re-entrant requests (e.g. button spam). Without this, overlapping
+    // resets race the shared wallet store — double shutdown/delete, or a later
+    // reset deleting the store the prior reset's re-init just rebuilt — which
+    // surfaces as a grab-bag of agent errors. initializingRef covers the window
+    // after a reset bumps retryCount and the re-init is still running.
+    if (resettingRef.current || initializingRef.current) {
+      logger.info('WalletReset: a reset or agent init is already in progress, ignoring request')
       return
     }
+    resettingRef.current = true
 
-    // 1. Stop background attestation polling so it doesn't interfere during teardown
-    attestationMonitor?.stop()
-
-    // 2. deregister push notifications - failures are non-fatal
-    await deactivate(currentAgent).catch((err) => logger.warn(`Push notification deactivation failed: ${err}`))
-
-    // 3. shut down the agent (closes connections, stops transports, etc.)
-    await shutdownAgent(currentAgent, logger)
-
-    // 4. delete the wallet store (credential data, connections, ect.)
     try {
-      await currentAgent.modules.askar.deleteStore()
+      const currentAgent = agentRef.current
+
+      if (!currentAgent) {
+        // Agent is unavailable — a previous reset was likely interrupted mid-shutdown
+        // (e.g. app was killed). Build an uninitialized agent so we can reach the Askar
+        // store manager and delete the store by its file URI without needing it open.
+        if (walletKey) {
+          await purgeWalletStore({
+            ledgers: ledgerResolver.ledgers,
+            walletSecret: { id: WALLET_ID, key: walletKey },
+            mediatorUrl,
+            walletLabel,
+            enableProxy,
+            proxyBaseUrl: Config.INDY_VDR_PROXY_URL,
+            logger,
+          }).catch((err: unknown) =>
+            logger.warn(`WalletReset: store deletion on recovery failed (may already be deleted): ${err}`)
+          )
+        }
+        setError(null)
+        setStatus('idle')
+        setRetryCount((c) => c + 1)
+        return
+      }
+
+      // 1. Stop background attestation polling so it doesn't interfere during teardown
+      attestationMonitor?.stop()
+
+      // 2. deregister push notifications - failures are non-fatal
+      await deactivate(currentAgent).catch((err) => logger.warn(`Push notification deactivation failed: ${err}`))
+
+      // 3. shut down the agent (closes connections, stops transports, etc.)
+      await shutdownAgent(currentAgent, logger)
+
+      // 4. delete the wallet store (credential data, connections, ect.)
+      try {
+        await deleteWalletStore(currentAgent)
+      } finally {
+        // 5. Clear agent state so the setup flow re-initializes a fresh wallet
+        agentRef.current = null
+        setAgent(null)
+        setError(null)
+        setStatus('idle')
+        setRetryCount((c) => c + 1) // triggers useEffect to restart agent setup
+      }
     } finally {
-      // 5. Clear agent state so the setup flow re-initializes a fresh wallet
-      agentRef.current = null
-      setAgent(null)
-      setError(null)
-      setStatus('idle')
-      setRetryCount((c) => c + 1) // triggers useEffect to restart agent setup
+      resettingRef.current = false
     }
   }, [logger, attestationMonitor, walletKey, mediatorUrl, walletLabel, enableProxy])
 

@@ -9,7 +9,7 @@ import {
   LegacyIndyDidCommProofFormatService,
 } from '@credo-ts/anoncreds'
 import { AskarModule } from '@credo-ts/askar'
-import { Agent, DidsModule } from '@credo-ts/core'
+import { Agent, CacheModule, DidsModule, InMemoryLruCache } from '@credo-ts/core'
 import {
   DidCommAutoAcceptCredential,
   DidCommAutoAcceptProof,
@@ -106,6 +106,17 @@ export function getBCAgentModules({
   ]
 
   const modules = {
+    // Use an in-memory cache instead of Credo's default SingleContextStorageLruCache.
+    // The default persists every cache entry into a single Askar record and rewrites
+    // that whole record on each set(), which assumes serial access. BCSC init writes
+    // the DID->ledger cache concurrently (parallel warmCache resolution + the live
+    // mediator pickup loop), so the storage-backed cache collides with itself
+    // ("Duplicate entry" / "error details overwritten" transaction rollbacks). The DID
+    // and AnonCreds-registry caches are pure, re-resolvable optimizations (warmCache
+    // repopulates them on every init), so dropping persistence is safe and removes the
+    // contention entirely. extendModulesWithDefaultModules merges defaults by property
+    // name, so registering a `cache` key here suppresses the storage-backed default.
+    cache: new CacheModule({ cache: new InMemoryLruCache({ limit: 500 }) }),
     askar: new AskarModule({
       askar,
       store: {
