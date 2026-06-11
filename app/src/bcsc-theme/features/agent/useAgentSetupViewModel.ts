@@ -149,7 +149,9 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
           setAgent(null)
         }
 
-        const cachedLedgers = Config.LEDGER_URL ? undefined : await loadCachedLedgers()
+        // cachedLedgers only gates the expensive pool warm-up in warmCache;
+        // the pool list itself comes from the resolver when LEDGER_URL is set.
+        const cachedLedgers = await loadCachedLedgers()
         if (cancelled) {
           return
         }
@@ -162,7 +164,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
           .checkForUpdates()
           .catch((err) => logger.warn(`Ledger update failed (continuing): ${err}`))
 
-        const ledgers = cachedLedgers ?? ledgerResolver.ledgers
+        const ledgers = Config.LEDGER_URL ? ledgerResolver.ledgers : (cachedLedgers ?? ledgerResolver.ledgers)
 
         inFlightAgent = buildAgent({
           ledgers,

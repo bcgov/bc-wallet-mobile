@@ -348,8 +348,10 @@ const useBCAgentSetup = () => {
       }
 
       logger.info('Checking for cached ledgers...')
-      const cachedLedgers = Config.LEDGER_URL ? undefined : await loadCachedLedgers()
-      const ledgers = cachedLedgers ?? ledgerResolver.ledgers
+      // cachedLedgers only gates the expensive pool warm-up in warmUpCache;
+      // the pool list itself comes from the resolver when LEDGER_URL is set.
+      const cachedLedgers = await loadCachedLedgers()
+      const ledgers = Config.LEDGER_URL ? ledgerResolver.ledgers : (cachedLedgers ?? ledgerResolver.ledgers)
 
       logger.info('Creating new agent...')
       const newAgent = await createNewAgent(ledgers, walletSecret, mediatorUrl)
