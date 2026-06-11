@@ -3,7 +3,8 @@ import { useBCSCStack } from '@/bcsc-theme/contexts/BCSCStackContext'
 import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppError } from '@/errors'
-import { ensureAppError } from '@/errors/errorHandler'
+import { isAppError } from '@/errors/appError'
+import { ensureAppError, getRegistryAppError, isDeviceStorageFullError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { getBCSCAppStoreUrl } from '@/utils/links'
 import { TOKENS, useServices } from '@bifold/core'
@@ -108,6 +109,34 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       }
     },
     [emitErrorModal, logger, navigation, stack, t]
+  )
+
+  /**
+   * ERR_100 (storage write failure) normally shows the generic "Problem with App" copy, but
+   * when the underlying cause is the device being out of disk space (e.g. the camera failing
+   * to save an evidence photo or video), reinstalling/retrying can't succeed — only freeing
+   * up space will fix it. Detect that case and show actionable copy instead.
+   */
+  const failedToWriteToLocalStorageAlert = useCallback(
+    (error?: AppError | unknown) => {
+      if (isDeviceStorageFullError(error)) {
+        // Re-wrap as DEVICE_STORAGE_FULL (preserving the original as cause) so analytics and
+        // problem reports can distinguish disk-full failures from other storage write errors.
+        const appError = isAppError(error, AppEventCode.DEVICE_STORAGE_FULL)
+          ? error
+          : getRegistryAppError(AppEventCode.DEVICE_STORAGE_FULL, error)
+
+        emitErrorModal(t('Alerts.DeviceStorageFull.Title'), t('Alerts.DeviceStorageFull.Description'), appError)
+        return
+      }
+
+      emitErrorModal(
+        t('Alerts.ProblemWithApp.Title', { errorCode: '100' }),
+        t('Alerts.ProblemWithApp.Description', { errorCode: '100' }),
+        ensureAppError(error, AppEventCode.ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE)
+      )
+    },
+    [emitErrorModal, t]
   )
 
   const unknownErrorModal = useCallback(
@@ -306,7 +335,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       alreadyVerifiedAlert: _createBasicErrorModal(AppEventCode.ALREADY_VERIFIED, 'AlreadyVerified'),
       fileUploadErrorAlert: _createBasicErrorModal(AppEventCode.FILE_UPLOAD_ERROR, 'FileUploadError'),
       loginSameDeviceInvalidPairingCodeAlert: _createBasicErrorModal(AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE, 'InvalidPairingCodeSameDevice'),
-      failedToWriteToLocalStorageAlert: _createBasicErrorModal(AppEventCode.ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE, 'ProblemWithApp', { errorCode: '100' }),
+      failedToWriteToLocalStorageAlert,
       failedToReadFromLocalStorageAlert: _createBasicErrorModal(AppEventCode.ERR_101_FAILED_TO_READ_LOCAL_STORAGE, 'ProblemWithApp', { errorCode: '101' }),
       clientRegistrationNullAlert: _createBasicErrorModal(AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL, 'ProblemWithApp', { errorCode: '102' }),
       unableToDecryptIdTokenAlert: _createBasicErrorModal(AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN, 'ProblemWithApp', { errorCode: '105' }),
@@ -362,6 +391,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       _createBasicAlert,
       unknownErrorModal,
       factoryResetErrorModal,
+      failedToWriteToLocalStorageAlert,
       _createBasicErrorModal,
       _createProblemWithAccountErrorModal,
     ]

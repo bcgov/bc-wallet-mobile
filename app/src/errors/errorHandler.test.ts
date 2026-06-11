@@ -6,6 +6,7 @@ import {
   extractErrorMessage,
   getErrorDefinition,
   getErrorDefinitionFromAppEventCode,
+  isDeviceStorageFullError,
   toBifoldError,
 } from './errorHandler'
 import { ErrorCategory, ErrorRegistry, ErrorSeverity } from './errorRegistry'
@@ -67,6 +68,59 @@ describe('errorHandler', () => {
       const circular: Record<string, unknown> = { name: 'test' }
       circular.self = circular
       expect(extractErrorMessage(circular)).toBe('[Non-serializable object]')
+    })
+  })
+
+  describe('isDeviceStorageFullError', () => {
+    it('should detect the iOS NSFileWriteOutOfSpaceError message from vision-camera (ERR_2600 report)', () => {
+      const error = new Error(
+        'An unexpected File IO error occurred! Error: You can\'t save the file "ABC123.jpg" because the volume "User" is out of space.'
+      )
+      expect(isDeviceStorageFullError(error)).toBe(true)
+    })
+
+    it('should detect the Android/POSIX ENOSPC message', () => {
+      const error = new Error('An unexpected File IO error occurred! Error: write failed: ENOSPC (No space left on device).')
+      expect(isDeviceStorageFullError(error)).toBe(true)
+    })
+
+    it('should detect an ENOSPC error code even with an unrelated message', () => {
+      const error = new Error('write failed') as Error & { code: string }
+      error.code = 'ENOSPC'
+      expect(isDeviceStorageFullError(error)).toBe(true)
+    })
+
+    it('should detect a SQLite disk-full message', () => {
+      expect(isDeviceStorageFullError(new Error('database or disk is full (code 13 SQLITE_FULL)'))).toBe(true)
+    })
+
+    it('should detect a disk-full cause nested inside an AppError', () => {
+      const cause = new Error('You can\'t save the file "x.jpg" because the volume "User" is out of space.')
+      const appError = AppError.fromErrorDefinition(ErrorRegistry.STORAGE_WRITE_ERROR, { cause, track: false })
+      expect(isDeviceStorageFullError(appError)).toBe(true)
+    })
+
+    it('should detect a plain string error', () => {
+      expect(isDeviceStorageFullError('No space left on device')).toBe(true)
+    })
+
+    it('should return false for a generic write failure', () => {
+      const appError = AppError.fromErrorDefinition(ErrorRegistry.STORAGE_WRITE_ERROR, {
+        cause: new Error('keychain unavailable'),
+        track: false,
+      })
+      expect(isDeviceStorageFullError(appError)).toBe(false)
+    })
+
+    it('should return false for null and undefined', () => {
+      expect(isDeviceStorageFullError(null)).toBe(false)
+      expect(isDeviceStorageFullError(undefined)).toBe(false)
+    })
+
+    it('should not hang on a circular cause chain', () => {
+      const error = new Error('generic failure')
+      error.cause = error
+      expect(isDeviceStorageFullError(error)).toBe(false)
     })
   })
 

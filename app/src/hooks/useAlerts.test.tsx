@@ -810,6 +810,67 @@ describe('useAlerts', () => {
         expect.objectContaining({ appEvent: AppEventCode.ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE })
       )
     })
+
+    it('should keep the generic copy for a write failure unrelated to disk space', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitErrorModal = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.failedToWriteToLocalStorageAlert(new Error('keychain unavailable'))
+
+      expect(mockEmitErrorModal).toHaveBeenCalledWith(
+        'Alerts.ProblemWithApp.Title',
+        'Alerts.ProblemWithApp.Description',
+        expect.objectContaining({ appEvent: AppEventCode.ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE })
+      )
+    })
+
+    it('should show actionable storage-full copy when the device is out of disk space (iOS)', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitErrorModal = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      // Message shape thrown by react-native-vision-camera on iOS when the volume is full
+      result.current.failedToWriteToLocalStorageAlert(
+        new Error(
+          'An unexpected File IO error occurred! Error: You can\'t save the file "photo.jpg" because the volume "User" is out of space.'
+        )
+      )
+
+      expect(mockEmitErrorModal).toHaveBeenCalledWith(
+        'Alerts.DeviceStorageFull.Title',
+        'Alerts.DeviceStorageFull.Description',
+        expect.objectContaining({ appEvent: AppEventCode.DEVICE_STORAGE_FULL })
+      )
+    })
+
+    it('should show actionable storage-full copy when the device is out of disk space (Android ENOSPC)', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitErrorModal = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.failedToWriteToLocalStorageAlert(
+        new Error('An unexpected File IO error occurred! Error: write failed: ENOSPC (No space left on device).')
+      )
+
+      expect(mockEmitErrorModal).toHaveBeenCalledWith(
+        'Alerts.DeviceStorageFull.Title',
+        'Alerts.DeviceStorageFull.Description',
+        expect.objectContaining({ appEvent: AppEventCode.DEVICE_STORAGE_FULL })
+      )
+    })
   })
 
   describe('failedToSerializeJsonAlert', () => {
