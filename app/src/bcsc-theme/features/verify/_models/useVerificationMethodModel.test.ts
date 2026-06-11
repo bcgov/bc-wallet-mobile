@@ -249,7 +249,7 @@ describe('useVerificationMethodModel', () => {
         type: BCDispatchAction.UPDATE_VIDEO_PROMPTS,
         payload: [fetched.prompts],
       })
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.InformationRequired)
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.PhotoInstructions, { forLiveCall: false })
       expect(mockVideoPromptsMissingAlert).not.toHaveBeenCalled()
     })
 
