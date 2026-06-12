@@ -1005,6 +1005,9 @@ class BcscCore: NSObject {
           keyPair = try keyPairManager.getKeyPair(with: newKeyId)
           keyId = newKeyId
         } catch let KeychainError.keychainUnavailable(status) {
+          // Keep the pre-generation inventory here: enumerating while the keychain
+          // is unreadable returns an empty list, which would falsely report
+          // "[keys=0]" — the snapshot from moments ago is the truthful data.
           reject(
             "E_120_KEYCHAIN_UNAVAILABLE_ERROR",
             "Keychain temporarily unavailable while generating replacement key (OSStatus \(status)) \(keyInventorySummary(keys))",
@@ -1014,19 +1017,25 @@ class BcscCore: NSObject {
           )
           return
         } catch KeychainError.keyNotExists {
+          // Re-enumerate so the report shows whether the replacement key is now
+          // visible in discovery — the state that matters for diagnosing this.
+          let postGenerationKeys = keyPairManager.findAllPrivateKeys()
           reject(
             "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
-            "Replacement key was generated but could not be retrieved \(keyInventorySummary(keys))",
-            keychainDiagnosticsError(site: "generate_replacement", underlying: KeychainError.keyNotExists, keys: keys)
+            "Replacement key was generated but could not be retrieved \(keyInventorySummary(postGenerationKeys))",
+            keychainDiagnosticsError(
+              site: "generate_replacement", underlying: KeychainError.keyNotExists, keys: postGenerationKeys
+            )
           )
           return
         } catch {
           // Generation failures (keyGenError, keyAlreadyExists, unexpectedStatus, …)
           // are key-generation errors, not "key doesn't exist".
+          let postGenerationKeys = keyPairManager.findAllPrivateKeys()
           reject(
             "E_120_KEYCHAIN_KEY_GENERATION_ERROR",
-            "Failed to generate a replacement key: \(error.localizedDescription) \(keyInventorySummary(keys))",
-            keychainDiagnosticsError(site: "generate_replacement", underlying: error, keys: keys)
+            "Failed to generate a replacement key: \(error.localizedDescription) \(keyInventorySummary(postGenerationKeys))",
+            keychainDiagnosticsError(site: "generate_replacement", underlying: error, keys: postGenerationKeys)
           )
           return
         }
