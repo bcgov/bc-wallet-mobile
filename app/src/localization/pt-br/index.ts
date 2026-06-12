@@ -1283,6 +1283,10 @@ const translation = {
       "Title": "Problem with App (PT-BR)",
       "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (error {{ errorCode }}) (PT-BR)"
     },
+    "DeviceStorageFull": {
+      "Title": "Not Enough Storage (PT-BR)",
+      "Description": "Your device is out of storage space, so the app can't save your information. Free up space on your device, then try again. (PT-BR)"
+    },
     "ProblemWithService": {
       "Title": "Problem with Service (PT-BR)",
       "Description": "Please try again later. (error {{ errorCode }}) (PT-BR)"

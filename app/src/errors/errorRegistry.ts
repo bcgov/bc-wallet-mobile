@@ -570,6 +570,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.STORAGE,
     message: 'Object toJSONString() serialization threw an exception',
   },
+  DEVICE_STORAGE_FULL: {
+    statusCode: 2609,
+    appEvent: AppEventCode.DEVICE_STORAGE_FULL,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.STORAGE,
+    message: 'Storage write failed because the device is out of disk space',
+  },
 
   // ============================================
   // Device Errors (2700-2799)

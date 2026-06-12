@@ -1278,6 +1278,10 @@ const translation = {
       "Title": "Problem with App",
       "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (error {{ errorCode }})"
     },
+    "DeviceStorageFull": {
+      "Title": "Not Enough Storage",
+      "Description": "Your device is out of storage space, so the app can't save your information. Free up space on your device, then try again."
+    },
     "ProblemWithService": {
       "Title": "Problem with Service",
       "Description": "Please try again later. (error {{ errorCode }})"

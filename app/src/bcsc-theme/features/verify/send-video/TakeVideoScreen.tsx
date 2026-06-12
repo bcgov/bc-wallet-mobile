@@ -21,7 +21,9 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import {
   Camera,
+  CameraCaptureError,
   CameraRuntimeError,
+  PhotoFile,
   useCameraDevice,
   useCameraFormat,
   useCameraPermission,
@@ -194,7 +196,29 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
       return
     }
 
-    const snapshot = await cameraRef.current.takeSnapshot()
+    let snapshot: PhotoFile
+    try {
+      snapshot = await cameraRef.current.takeSnapshot()
+    } catch (error) {
+      // Without this catch a failure here (e.g. device out of disk space) is an unhandled
+      // rejection that leaves the screen stuck on the countdown with no controls.
+      stopTimer()
+      setRecordingInProgress(false)
+      logger.error(`Error capturing video thumbnail snapshot: ${error}`)
+
+      if (error instanceof CameraCaptureError && error.code === 'capture/file-io-error') {
+        failedToWriteToLocalStorageAlert(error)
+      } else {
+        Alert.alert(
+          t('BCSC.SendVideo.TakeVideo.RecordingError'),
+          t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription')
+        )
+      }
+
+      // Back to the previous screen so the user can retry once the issue is resolved
+      navigation.goBack()
+      return
+    }
 
     cameraRef.current.startRecording({
       fileType: 'mp4',
