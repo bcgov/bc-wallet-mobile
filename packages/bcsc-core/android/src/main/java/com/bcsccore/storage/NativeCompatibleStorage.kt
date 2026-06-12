@@ -10,6 +10,7 @@ import com.google.gson.GsonBuilder
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.IOException
 import java.lang.reflect.Type
 import java.util.TimeZone
 
@@ -238,21 +239,54 @@ class NativeCompatibleStorage(
     internal fun writeEncryptedFile(
         file: File,
         content: String,
-    ): Boolean =
-        try {
-            // Ensure parent directory exists
-            file.parentFile?.mkdirs()
+    ): Boolean {
+        // Ensure parent directory exists
+        val parent = file.parentFile
+        parent?.mkdirs()
 
-            // Encrypt and write
-            val encryptedBytes = encryption.encrypt(content)
-            FileOutputStream(file).use { fos ->
+        val encryptedBytes =
+            try {
+                encryption.encrypt(content)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to encrypt file: ${file.absolutePath}", e)
+                return false
+            }
+
+        // Write to a temp file and atomically rename it into place rather than writing
+        // the destination directly. FileOutputStream(file) truncates the destination to
+        // zero bytes before writing, so a crash/kill/full-disk between truncate and write
+        // leaves a 0-byte file that later fails to decrypt ("Decrypted token content is
+        // not valid JSON") and bricks unlock. A temp-write + fsync + rename guarantees a
+        // reader always sees either the previous complete file or the new complete file.
+        // Nullable handle used only for finally cleanup; the file operations below use the
+        // non-null `tmp` val so there is no smart-cast on a nullable var.
+        var tempFile: File? = null
+        return try {
+            val tmp = File.createTempFile("${file.name}_", ".tmp", parent)
+            tempFile = tmp
+            FileOutputStream(tmp).use { fos ->
                 fos.write(encryptedBytes)
+                fos.flush()
+                fos.fd.sync() // flush to disk so the rename can't expose an empty file
+            }
+
+            if (!tmp.renameTo(file)) {
+                // renameTo can fail if the destination already exists on some platforms;
+                // fall back to delete-then-rename.
+                file.delete()
+                if (!tmp.renameTo(file)) {
+                    throw IOException("Failed to rename temp file to ${file.absolutePath}")
+                }
             }
             true
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to encrypt/write file: ${file.absolutePath}", e)
+            Log.e(TAG, "Failed to write file: ${file.absolutePath}", e)
             false
+        } finally {
+            // Clean up the temp file if the rename did not consume it.
+            tempFile?.takeIf { it.exists() }?.delete()
         }
+    }
 
     // MARK: - Account Storage (Native Compatible)
 

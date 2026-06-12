@@ -878,6 +878,11 @@ export const useSecureActions = () => {
       }
 
       const verificationStatus = getCredentialVerificationStatus(credential)
+      const verified = verificationStatus === VerificationStatus.VERIFIED
+
+      // A verified account with no refresh token is unrecoverable
+      // An unverified account with no registration token is unrecoverable
+      const sessionRecoveryRequired = !!account && !refreshToken && (!registrationAccessToken || verified)
 
       // Extract bookmarked service IDs from native client metadata
       const savedServices = (nativeSavedServices ?? [])
@@ -907,7 +912,7 @@ export const useSecureActions = () => {
         registrationAccessToken,
         accessToken,
 
-        verified: verificationStatus === VerificationStatus.VERIFIED,
+        verified,
         verifiedStatus: verificationStatus,
 
         userSkippedEmailVerification: accountFlags.userSkippedEmailVerification,
@@ -924,6 +929,8 @@ export const useSecureActions = () => {
         additionalEvidenceData: cleanedEvidence,
         userMetadata,
         savedServices,
+
+        sessionRecoveryRequired,
       }
 
       logger.debug(`Hydrated secure data: ${JSON.stringify(secureData, null, 2)}`)

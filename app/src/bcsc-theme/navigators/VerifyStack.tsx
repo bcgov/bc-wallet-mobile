@@ -16,6 +16,7 @@ import TransferInstructionsScreen from '../features/account-transfer/transferee/
 import TransferQRScannerScreen from '../features/account-transfer/transferee/TransferQRScannerScreen'
 import NicknameAccountScreen from '../features/account/NicknameAccountScreen'
 import { VerifyRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
+import SessionRecoveryScreen from '../features/auth/SessionRecoveryScreen'
 import { VerifyChangePINScreen } from '../features/auth/VerifyChangePINScreen'
 import { VerifyChangeSecurityScreen } from '../features/auth/VerifyChangeSecurityScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
@@ -77,8 +78,13 @@ const VerifyStack = () => {
 
   return (
     <Stack.Navigator
-      // If the user has a refresh token, they have completed setup and should go to success screen. Otherwise, start at setup steps.
-      initialRouteName={isUserVerified(store.bcscSecure) ? BCSCScreens.VerificationSuccess : BCSCScreens.SetupSteps}
+      initialRouteName={
+        store.bcscSecure.sessionRecoveryRequired
+          ? BCSCScreens.SessionRecovery
+          : isUserVerified(store.bcscSecure)
+            ? BCSCScreens.VerificationSuccess
+            : BCSCScreens.SetupSteps
+      }
       screenOptions={{
         ...defaultStackOptions,
         headerShown: true,
@@ -99,6 +105,11 @@ const VerifyStack = () => {
           headerRight: createVerifyHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOW_TO_SETUP }),
           headerLeft: createVerifySettingsHeaderButton(),
         }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.SessionRecovery}
+        component={SessionRecoveryScreen}
+        options={{ headerLeft: () => null, gestureEnabled: false }}
       />
       <Stack.Screen name={BCSCScreens.NicknameAccount} component={NicknameAccountScreen} />
       <Stack.Screen name={BCSCScreens.IdentitySelection} component={IdentitySelectionScreen} />

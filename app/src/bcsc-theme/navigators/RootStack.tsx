@@ -65,7 +65,7 @@ const BCSCRootStack: React.FC = () => {
     return <AuthStack />
   }
 
-  if (store.bcscSecure.verified === false) {
+  if (store.bcscSecure.sessionRecoveryRequired === true || store.bcscSecure.verified === false) {
     return (
       <BCSCActivityProvider>
         <VerifyStack />
