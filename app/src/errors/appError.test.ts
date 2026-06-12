@@ -3,6 +3,10 @@ import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { AppError, isAppError, isHandledAppError } from './appError'
 import { ErrorCategory, ErrorRegistry, ErrorSeverity } from './errorRegistry'
 
+jest.mock('@/contexts/NavigationContainerContext', () => ({
+  navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
+}))
+
 describe('AppError', () => {
   beforeEach(() => {
     jest.clearAllMocks()

@@ -12,6 +12,7 @@ jest.mock('@/contexts/ErrorAlertContext', () => ({
   useErrorAlert: () => ({ emitErrorModal: jest.fn() }),
 }))
 jest.mock('@/contexts/NavigationContainerContext', () => ({
+  navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
   useNavigationContainer: () => ({ isNavigationReady: true }),
 }))
 jest.mock('../api/hooks/useInitializeAccountStatus')
