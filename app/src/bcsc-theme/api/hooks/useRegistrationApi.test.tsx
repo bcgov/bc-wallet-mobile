@@ -161,6 +161,7 @@ describe('useRegistrationApi', () => {
       [BcscNativeErrorCodes.TOJSONSTRING_METHOD_FAILURE, AppEventCode.ERR_120_TOJSONSTRING_METHOD_FAILURE],
       [BcscNativeErrorCodes.KEYCHAIN_KEY_EXISTS, AppEventCode.ERR_120_KEYCHAIN_KEY_EXISTS_ERROR],
       [BcscNativeErrorCodes.KEYCHAIN_KEY_DOESNT_EXIST, AppEventCode.ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR],
+      [BcscNativeErrorCodes.KEYCHAIN_UNAVAILABLE, AppEventCode.ERR_120_KEYCHAIN_UNAVAILABLE_ERROR],
       [BcscNativeErrorCodes.JWT_DEVICE_INFO_ERROR, AppEventCode.ERR_120_JWT_DEVICE_INFO_ERROR],
     ])('should map native error code %s to AppError with appEvent %s', async (nativeCode, expectedAppEvent) => {
       const nativeError = { code: nativeCode, message: 'native error' } as unknown as BcscNativeError

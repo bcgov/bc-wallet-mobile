@@ -318,6 +318,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       keychainKeyExistsAlert: _createBasicErrorModal(AppEventCode.ERR_120_KEYCHAIN_KEY_EXISTS_ERROR, 'SomethingWentWrong'),
       keychainKeyDoesntExistAlert: _createBasicErrorModal(AppEventCode.ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR, 'SomethingWentWrong'),
       keychainKeyGenerationAlert: _createBasicErrorModal(AppEventCode.ERR_120_KEYCHAIN_KEY_GENERATION_ERROR, 'SomethingWentWrong'),
+      keychainUnavailableAlert: _createBasicErrorModal(AppEventCode.ERR_120_KEYCHAIN_UNAVAILABLE_ERROR, 'KeychainUnavailable'),
       jwtDeviceInfoAlert: _createBasicErrorModal(AppEventCode.ERR_120_JWT_DEVICE_INFO_ERROR, 'SomethingWentWrong'),
       clientRegistrationFailureAlert: _createBasicErrorModal(AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE, 'SomethingWentWrong'),
       missingJwkAlert: _createBasicErrorModal(AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK, 'SomethingWentWrong'),

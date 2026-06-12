@@ -277,6 +277,29 @@ describe('AppError', () => {
       // The 1 MB Buffer must not survive serialization (would be ~MBs as a JSON number array).
       expect(JSON.stringify(json).length).toBeLessThan(2000)
     })
+
+    it('keeps native-module userInfo diagnostics on the summarized cause', () => {
+      const identity = {
+        category: ErrorCategory.STORAGE,
+        appEvent: AppEventCode.ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR,
+        statusCode: 2603,
+      }
+      // Mimic an iOS native rejection carrying keychain diagnostics in userInfo.
+      const nativeLike = Object.assign(new Error('Failed to retrieve key pair'), {
+        code: 'E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR',
+        userInfo: { site: 'retrieve_latest', keyCount: 2, keyTags: ['a/1', 'b/2'] },
+      })
+      const error = new AppError('Keychain lookup returned nil', identity, { cause: nativeLike, track: false })
+
+      const json = error.toJSON()
+
+      expect(json.cause).toEqual({
+        name: 'Error',
+        message: 'Failed to retrieve key pair',
+        code: 'E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR',
+        userInfo: { site: 'retrieve_latest', keyCount: 2, keyTags: ['a/1', 'b/2'] },
+      })
+    })
   })
 
   describe('isHandledAppError', () => {

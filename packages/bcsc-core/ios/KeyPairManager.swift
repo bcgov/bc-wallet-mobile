@@ -9,19 +9,31 @@
 import Foundation
 import Security
 
-enum KeychainError: Error {
+enum KeychainError: Error, LocalizedError {
   case keyAlreadyExists
   case keyNotExists
   case keyGenError
+  /// The keychain cannot be read right now (device locked, auth failure,
+  /// service unavailable) — the key may well exist. Transient; retryable.
+  case keychainUnavailable(OSStatus)
+  /// Any other SecItemCopyMatching failure.
+  case unexpectedStatus(OSStatus)
 
-  var localizedDescription: String {
+  /// LocalizedError (not a plain computed property) so the message survives
+  /// access through the `Error` existential, e.g. in `error.localizedDescription`
+  /// interpolations at the React Native reject sites.
+  var errorDescription: String? {
     switch self {
     case .keyAlreadyExists:
-      return "KeyAlreadyExists error"
+      return "key already exists in the keychain"
     case .keyNotExists:
-      return "KeyNotExists error"
+      return "key does not exist in the keychain"
     case .keyGenError:
-      return "KeyGenError error"
+      return "key pair generation failed"
+    case let .keychainUnavailable(status):
+      return "keychain is temporarily unavailable (OSStatus \(status))"
+    case let .unexpectedStatus(status):
+      return "keychain lookup failed with unexpected OSStatus \(status)"
     }
   }
 }
@@ -52,7 +64,7 @@ protocol KeyPairManagerProtocol {
   func generateKeyPair(withLabel label: String, keyType: KeyType, keySize: Int) throws
     -> (public: SecKey, private: SecKey)
   func getKeyPair(with label: String) throws -> (public: SecKey, private: SecKey)
-  func keyPairExists(with label: String) -> Bool
+  func keyPairExists(with label: String) throws -> Bool
 }
 
 /**
@@ -65,21 +77,26 @@ protocol KeyPairManagerProtocol {
  ````
  */
 class KeyPairManager: KeyPairManagerProtocol {
-  // private let log = Logger(source: "KeyPairManager")
-  /*
+  private let log = AppLogger(
+    subsystem: Bundle.main.bundleIdentifier ?? "ca.bc.gov.id.servicescard", category: "KeyPairManager"
+  )
+
+  /**
    Returns true if a public / private key pair in the KeyChain with the given `label` can be found.
 
    - Parameter label: The unique `kSecAttrApplicationTag` attribute used to find the key.
 
+   - Throws: `KeychainError.keychainUnavailable` / `KeychainError.unexpectedStatus` when
+             existence cannot be determined — only a definitive not-found returns false,
+             so callers never mistake a locked keychain for a missing key.
+
    - Returns: true if the keypair can be found, false otherwise.
-
    */
-
-  func keyPairExists(with label: String) -> Bool {
+  func keyPairExists(with label: String) throws -> Bool {
     do {
-      let pk = findPrivateKey(with: label)
-      return pk != nil
-    } catch {
+      _ = try findKey(withLabel: label)
+      return true
+    } catch KeychainError.keyNotExists {
       return false
     }
   }
@@ -95,11 +112,10 @@ class KeyPairManager: KeyPairManagerProtocol {
 
    */
   func getKeyPair(with label: String) throws -> (public: SecKey, private: SecKey) {
-    guard let privateKeyResult = findKey(withLabel: label),
-          let publicKeyResult = SecKeyCopyPublicKey(privateKeyResult as! SecKey)
-    else { throw KeychainError.keyNotExists }
-    let publicKey = publicKeyResult
-    let privateKey = privateKeyResult as! SecKey
+    let privateKey = try findKey(withLabel: label)
+    guard let publicKey = SecKeyCopyPublicKey(privateKey) else {
+      throw KeychainError.keyNotExists
+    }
 
     return (publicKey, privateKey)
   }
@@ -127,7 +143,7 @@ class KeyPairManager: KeyPairManagerProtocol {
     var result: CFTypeRef?
     let status = SecItemCopyMatching(query, &result)
     guard status == errSecSuccess else {
-      // log.error("findPrivateKey search was unsuccessful. OS status: \(status)")
+      log.error("findPrivateKey: lookup for label '\(label)' failed with OSStatus \(status)")
       return nil
     }
 
@@ -173,14 +189,14 @@ class KeyPairManager: KeyPairManagerProtocol {
     var result: CFTypeRef?
     let status = SecItemCopyMatching(attributes, &result)
     guard status == errSecSuccess else {
-      // log.error("findAllKeys search was unsuccessful. OS status: \(status)")
+      log.error("findAllPrivateKeys: enumeration failed with OSStatus \(status)")
       return []
     }
     let list = result as! [[String: Any]]
     var keys = [PrivateKeyInfo]()
     for dict in list {
       guard let pk = makePrivateKeyInfo(dictionary: dict) else {
-        // log.error("unable to create private key from dict")
+        log.warning("findAllPrivateKeys: skipping keychain item with missing or undecodable key attributes")
         continue
       }
       keys.append(pk)
@@ -211,32 +227,28 @@ class KeyPairManager: KeyPairManagerProtocol {
       kSecPrivateKeyAttrs: privKeyAttrs,
     ]
 
-    let currentDate = Date().timeIntervalSince1970
-    let pkGenDate = Int(currentDate)
-    // log.debug("Private Key was generated at \(currentDate). Integer value was converted to \(pkGenDate)")
-
-    // Defaults.pkLastUpdated = pkGenDate //j
-    // log.debug("PK gen date is \(pkGenDate)")
-    // log.debug("Defaults PK is \(Defaults.pkLastUpdated)")
-
-    if keyPairExists(with: label) {
-      // log.debug("keyPair already exists from a previous invocation so just return it")
+    if try keyPairExists(with: label) {
+      log.debug("generateKeyPair: key pair for label '\(label)' already exists, returning it")
       return try getKeyPair(with: label)
-      // throw KeychainError.keyAlreadyExists
     }
 
     var publicKey: SecKey?
     var privateKey: SecKey?
     let status = SecKeyGeneratePair(parameters, &publicKey, &privateKey)
     if errSecSuccess != status {
+      log.error("generateKeyPair: SecKeyGeneratePair for label '\(label)' failed with OSStatus \(status)")
       if status == errSecDuplicateItem {
         throw KeychainError.keyAlreadyExists
       }
       throw KeychainError.keyGenError
     }
 
-    // FileStorageService().saveDateForPrivateKey(with: label, date: Date())
-    return (publicKey!, privateKey!)
+    guard let publicKey = publicKey, let privateKey = privateKey else {
+      log.error("generateKeyPair: SecKeyGeneratePair reported success but returned nil key(s) for label '\(label)'")
+      throw KeychainError.keyGenError
+    }
+
+    return (publicKey, privateKey)
   }
 
   /**
@@ -249,36 +261,58 @@ class KeyPairManager: KeyPairManagerProtocol {
   func deleteKey(withLabel label: String) -> Bool {
     let query: NSDictionary = [kSecClass: kSecClassKey, kSecAttrApplicationTag: label.data(using: .utf8)!]
     let status = SecItemDelete(query)
-    // log.debug("delete status is \(status)")
-    // FileStorageService().removeDateForPrivateKey(with: label)
+    if status != errSecSuccess {
+      log.error("deleteKey: delete for label '\(label)' failed with OSStatus \(status)")
+    }
     return errSecSuccess == status
   }
 
-  private func findKey(withLabel label: String) -> CFTypeRef? {
-    let attributes: NSDictionary = [
-      kSecClass: kSecClassKey,
-      kSecAttrLabel: label,
-//                                        kSecAttrApplicationTag: label.data(using: .utf8)!,
-      kSecAttrIsPermanent: kCFBooleanTrue,
-      kSecMatchLimit: kSecMatchLimitOne,
-      kSecReturnRef: kCFBooleanTrue,
-    ]
-    var result: CFTypeRef?
-    let status = SecItemCopyMatching(attributes, &result)
-    // log.debug("findKey withLabel \(label) status is \(status)")
-    return result
-  }
+  /**
+    Locate the private key stored under `label`.
 
-  func findLegacyKey(withLabel label: CFString) -> CFTypeRef? {
-    let attributes: NSDictionary = [
+    Keys are created and discovered (`findAllPrivateKeys`) by `kSecAttrApplicationTag`,
+    so the tag query is primary — a label-only query cannot see tag-only items and
+    was the root of error 2603 (key discoverable by tag, unretrievable by label).
+    The label query remains as a fallback for legacy items that predate tag+label
+    parity.
+
+    - Throws: `KeychainError.keyNotExists` when neither query matches,
+              `KeychainError.keychainUnavailable` when the keychain cannot be read
+              right now (device locked, auth failure, service unavailable),
+              `KeychainError.unexpectedStatus` for any other failure.
+   */
+  private func findKey(withLabel label: String) throws -> SecKey {
+    let baseQuery: [NSObject: Any] = [
       kSecClass: kSecClassKey,
-      kSecAttrLabel: label,
-      kSecAttrIsPermanent: kCFBooleanTrue,
+      kSecAttrKeyClass: kSecAttrKeyClassPrivate,
+      kSecAttrIsPermanent: true,
       kSecMatchLimit: kSecMatchLimitOne,
-      kSecReturnRef: kCFBooleanTrue,
+      kSecReturnRef: true,
     ]
+
+    var tagQuery = baseQuery
+    tagQuery[kSecAttrApplicationTag] = label.data(using: .utf8)!
+
     var result: CFTypeRef?
-    SecItemCopyMatching(attributes, &result)
-    return result
+    var status = SecItemCopyMatching(tagQuery as CFDictionary, &result)
+    if status == errSecItemNotFound {
+      var labelQuery = baseQuery
+      labelQuery[kSecAttrLabel] = label
+      status = SecItemCopyMatching(labelQuery as CFDictionary, &result)
+    }
+
+    switch status {
+    case errSecSuccess where result != nil:
+      return (result as! SecKey)
+    case errSecSuccess, errSecItemNotFound:
+      log.error("findKey: no private key found for '\(label)' by tag or label")
+      throw KeychainError.keyNotExists
+    case errSecInteractionNotAllowed, errSecAuthFailed, errSecNotAvailable:
+      log.error("findKey: keychain unavailable while looking up '\(label)' (OSStatus \(status))")
+      throw KeychainError.keychainUnavailable(status)
+    default:
+      log.error("findKey: lookup for '\(label)' failed with OSStatus \(status)")
+      throw KeychainError.unexpectedStatus(status)
+    }
   }
 }
