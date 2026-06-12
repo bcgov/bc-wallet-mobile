@@ -89,8 +89,12 @@ export class AppError extends Error {
     if (!(this.cause instanceof Error)) {
       return null
     }
-    const nativeCode = (this.cause as { code?: string }).code
-    return [nativeCode, this.cause.message].filter(Boolean).join(': ')
+
+    const cause = this.cause as Error & { code?: unknown; isAxiosError?: boolean }
+    const isAxiosError = Boolean(cause.isAxiosError) || cause.name === 'AxiosError'
+    const code = !isAxiosError && typeof cause.code === 'string' ? cause.code : undefined
+
+    return [code, cause.message].filter(Boolean).join(': ')
   }
 
   /**
