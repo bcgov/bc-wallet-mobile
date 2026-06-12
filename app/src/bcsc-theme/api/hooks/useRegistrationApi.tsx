@@ -71,6 +71,7 @@ const dcrNativeErrorMap = new Map<string, ErrorDefinition>([
   [BcscNativeErrorCodes.TOJSONSTRING_METHOD_FAILURE, ErrorRegistry.TOJSONSTRING_METHOD_FAILURE],
   [BcscNativeErrorCodes.KEYCHAIN_KEY_EXISTS, ErrorRegistry.KEYCHAIN_KEY_EXISTS],
   [BcscNativeErrorCodes.KEYCHAIN_KEY_DOESNT_EXIST, ErrorRegistry.KEYCHAIN_KEY_NOT_FOUND],
+  [BcscNativeErrorCodes.KEYCHAIN_UNAVAILABLE, ErrorRegistry.KEYCHAIN_UNAVAILABLE],
   [BcscNativeErrorCodes.JWT_DEVICE_INFO_ERROR, ErrorRegistry.JWT_DEVICE_INFO_ERROR],
   [BcscNativeErrorCodes.JSON_SERIALIZATION_FAILED, ErrorRegistry.SERIALIZE_JSON_ERROR],
 ])
