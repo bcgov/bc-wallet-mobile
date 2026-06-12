@@ -126,7 +126,6 @@ jobs:
   # ─── Dynamic Variant Matrix ──────────────────────────────────────────
   # PRs build only bcwallet-prod + bcsc-dev (fast feedback).
   # Merges to main and workflow_dispatch build all BCSC variants
-  # (bcsc-test temporarily excluded — see TEMP note below).
   compute-variants:
     runs-on: ubuntu-22.04
     outputs:
@@ -138,10 +137,7 @@ jobs:
           if [[ "${{ github.event_name }}" == "pull_request" || "${{ github.event_name }}" == "merge_group" ]]; then
             echo 'variants=["bcwallet-prod","bcsc-dev"]' >> "$GITHUB_OUTPUT"
           else
-            # TEMP (#3995): bcsc-test build disabled on main/dispatch.
-            # To restore: uncomment the original line and delete the reduced one below.
-            # echo 'variants=["bcwallet-prod","bcsc-dev","bcsc-qa","bcsc-test","bcsc-prod"]' >> "$GITHUB_OUTPUT"
-            echo 'variants=["bcwallet-prod","bcsc-dev","bcsc-qa","bcsc-prod"]' >> "$GITHUB_OUTPUT"
+            echo 'variants=["bcwallet-prod","bcsc-dev","bcsc-qa","bcsc-test","bcsc-prod"]' >> "$GITHUB_OUTPUT"
           fi
 
   early-exit-check:
