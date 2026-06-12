@@ -566,6 +566,13 @@ const translation = {
       "WarningContentB": "This includes logging into services like Health Gateway or Canada Revenue Agency (CRA).",
       "WarningRenewButton": "Renew"
     },
+    "SessionRecovery": {
+      "Header": "Reset your app",
+      "Body": "Some of your saved data on this device couldn't be read.",
+      "BodyAction": "To keep using the app, you'll need to re-verify or transfer from another device to use your identity again.",
+      "PrimaryAction": "Reset",
+      "Resetting": "Resetting…"
+    },
     "ForgetAllPairings": {
       "Title": "Forget all pairings?",
       "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step.",

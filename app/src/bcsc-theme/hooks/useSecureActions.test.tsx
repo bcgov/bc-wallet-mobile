@@ -16,6 +16,7 @@ import {
   setAccountFlags,
   setAuthorizationRequest,
   setEvidence,
+  TokenType,
 } from 'react-native-bcsc-core'
 import * as useBCSCApiClientModule from './useBCSCApiClient'
 import { useSecureActions } from './useSecureActions'
@@ -326,6 +327,75 @@ describe('useSecureActions', () => {
           clientID: 'recovered-client-id',
         })
       )
+    })
+
+    const captureSessionRecoveryRequired = () => {
+      const hydrateCall = mockDispatch.mock.calls.find(
+        ([action]) => action.type === BCDispatchAction.HYDRATE_SECURE_STATE
+      )
+      return hydrateCall?.[0]?.payload?.[0]?.sessionRecoveryRequired
+    }
+
+    it('flags sessionRecoveryRequired when an account exists but no refresh or registration token survives', async () => {
+      // beforeEach mocks getToken -> null for all token types (the 0-byte tokens-file signature)
+      jest.mocked(getAccount).mockResolvedValue(baseAccount as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureSessionRecoveryRequired()).toBe(true)
+    })
+
+    it('does not flag sessionRecoveryRequired when a registration token still exists (in-progress verification)', async () => {
+      jest.mocked(getAccount).mockResolvedValue(baseAccount as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
+      jest
+        .mocked(getToken)
+        .mockImplementation(async (type: any) =>
+          type === TokenType.Registration ? ({ token: 'reg-token', type } as any) : null
+        )
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureSessionRecoveryRequired()).toBe(false)
+    })
+
+    it('flags sessionRecoveryRequired when a verified user has a registration token but no refresh token', async () => {
+      jest.mocked(getAccount).mockResolvedValue(baseAccount as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
+      // Verified: a credential exists (no cancel/expire event → VERIFIED)
+      jest.mocked(getCredential).mockResolvedValue({} as any)
+      // Registration token present (e.g. recovered from the V3 providers file), refresh token gone
+      jest
+        .mocked(getToken)
+        .mockImplementation(async (type: any) =>
+          type === TokenType.Registration ? ({ token: 'reg-token', type } as any) : null
+        )
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureSessionRecoveryRequired()).toBe(true)
+    })
+
+    it('does not flag sessionRecoveryRequired when no account exists (fresh install)', async () => {
+      jest.mocked(getAccount).mockResolvedValue(null as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(captureSessionRecoveryRequired()).toBe(false)
     })
   })
 

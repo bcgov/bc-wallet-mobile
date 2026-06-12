@@ -135,6 +135,7 @@ export enum BCSCScreens {
   AccountRenewalInformation = 'Renewal ID requirements',
   AccountRenewalFirstWarning = 'Renewal Instructions',
   AccountRenewalFinalWarning = 'Renewal Warning',
+  SessionRecovery = 'Session Recovery',
   AccountLanding = 'Account Landing',
   EnterPIN = 'Enter/Verify PIN',
   DeviceAuthInfo = 'Device Authentication Prep',
@@ -189,6 +190,7 @@ export type BCSCPromptStackParams = {
 }
 
 export type BCSCVerifyStackParams = {
+  [BCSCScreens.SessionRecovery]: undefined
   [BCSCScreens.VerifyWebView]: { url: string; title: string }
   [BCSCScreens.IdentitySelection]: undefined
   [BCSCScreens.SerialInstructions]: undefined
