@@ -665,7 +665,7 @@ jobs:
           ias_agent_invite_url: ${{ secrets.IAS_AGENT_INVITE_URL }}
           oca_url: ${{ vars.OCA_URL }}
           proof_template_url: ${{ vars.PROOF_TEMPLATE_URL }}
-          ledger_url: ${{ vars.LEDGER_URL }}
+          ledger_auto_update: ${{ vars.LEDGER_AUTO_UPDATE }}
           remote_logging_url: ${{ secrets.REMOTE_LOGGING_URL }}
           indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
           google_services_credentials_base64: ${{ secrets[env.IOS_GOOGLE_SERVICES_SECRET] }}
@@ -952,7 +952,7 @@ jobs:
           ias_agent_invite_url: ${{ secrets.IAS_AGENT_INVITE_URL }}
           oca_url: ${{ vars.OCA_URL }}
           proof_template_url: ${{ vars.PROOF_TEMPLATE_URL }}
-          ledger_url: ${{ vars.LEDGER_URL }}
+          ledger_auto_update: ${{ vars.LEDGER_AUTO_UPDATE }}
           remote_logging_url: ${{ secrets.REMOTE_LOGGING_URL }}
           indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
           google_services_credentials_base64: ${{ secrets[env.ANDROID_GOOGLE_SERVICES_SECRET] }}

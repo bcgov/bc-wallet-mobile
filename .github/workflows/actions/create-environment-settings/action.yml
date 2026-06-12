@@ -22,8 +22,8 @@ inputs:
   proof_template_url:
     description: 'The proof template URL'
     required: true
-  ledger_url:
-    description: 'Base URL for remote ledger config (directory containing ledgers.json)'
+  ledger_auto_update:
+    description: 'Fetch genesis transactions from official sources at startup (unset/true = on, false = off)'
     required: false
   remote_logging_url:
     description: 'The remote logging URL'
@@ -57,7 +57,7 @@ runs:
         IAS_AGENT_INVITE_URL: ${{ inputs.ias_agent_invite_url }}
         OCA_URL: ${{ inputs.oca_url }}
         PROOF_TEMPLATE_URL: ${{ inputs.proof_template_url }}
-        LEDGER_URL: ${{ inputs.ledger_url }}
+        LEDGER_AUTO_UPDATE: ${{ inputs.ledger_auto_update }}
         REMOTE_LOGGING_URL: ${{ inputs.remote_logging_url }}
         INDY_VDR_PROXY_URL: ${{ inputs.indy_vdr_proxy_url }}
         SNOWPLOW_COLLECTOR_URL: ${{ inputs.snowplow_collector_url }}
@@ -69,7 +69,7 @@ runs:
         echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env
         echo "OCA_URL=${OCA_URL}" >>.env
         echo "PROOF_TEMPLATE_URL=${PROOF_TEMPLATE_URL}" >>.env
-        echo "LEDGER_URL=${LEDGER_URL}" >>.env
+        echo "LEDGER_AUTO_UPDATE=${LEDGER_AUTO_UPDATE}" >>.env
         echo "REMOTE_LOGGING_URL=${REMOTE_LOGGING_URL}" >>.env
         echo "INDY_VDR_PROXY_URL=${INDY_VDR_PROXY_URL}" >>.env
         echo "SNOWPLOW_COLLECTOR_URL=${SNOWPLOW_COLLECTOR_URL}" >>.env

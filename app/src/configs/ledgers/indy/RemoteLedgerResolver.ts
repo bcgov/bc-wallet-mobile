@@ -1,17 +1,32 @@
 import { BifoldLogger, FileCache } from '@bifold/core'
 import { IndyVdrPoolConfig } from '@credo-ts/indy-vdr'
 
+import { LedgerSource } from './ledger-sources'
+
 const ledgerCacheStorageDirectory = 'ledgers'
 const ledgerCacheDataFileName = 'ledger-cache.json'
-const ledgerIndexFileName = 'ledgers.json'
+
+interface LedgerCacheData {
+  etags: Record<string, string>
+  updatedAt: string
+}
 
 export class RemoteLedgerResolver extends FileCache {
+  public readonly remoteEnabled: boolean
   private ledgerData: IndyVdrPoolConfig[] | undefined
+  private readonly sources: LedgerSource[]
   private readonly defaultLedgers: IndyVdrPoolConfig[]
 
-  public constructor(indexFileBaseUrl: string, defaultLedgers: IndyVdrPoolConfig[], log?: BifoldLogger) {
-    super(indexFileBaseUrl, ledgerCacheStorageDirectory, ledgerCacheDataFileName, log)
+  public constructor(
+    sources: LedgerSource[],
+    defaultLedgers: IndyVdrPoolConfig[],
+    opts?: { remoteEnabled?: boolean; log?: BifoldLogger }
+  ) {
+    // No base URL — each source carries its own absolute genesis URL
+    super('', ledgerCacheStorageDirectory, ledgerCacheDataFileName, opts?.log)
+    this.sources = sources
     this.defaultLedgers = defaultLedgers
+    this.remoteEnabled = (opts?.remoteEnabled ?? true) && sources.length > 0
   }
 
   public set logger(log: BifoldLogger) {
@@ -23,64 +38,111 @@ export class RemoteLedgerResolver extends FileCache {
   }
 
   public async checkForUpdates(): Promise<void> {
-    if (!this.axiosInstance.defaults.baseURL) {
+    if (!this.remoteEnabled) {
       return
     }
 
     await this.createWorkingDirectoryIfNotExists()
 
-    if (!this.fileEtag) {
-      const cacheData = await this.loadCacheData()
-      if (cacheData) {
-        this.fileEtag = cacheData.fileEtag
-      }
+    const etags = await this.loadEtagMap()
+    const results = await Promise.all(this.sources.map((source) => this.resolveGenesis(source, etags)))
+    const resolved = results.filter((entry): entry is IndyVdrPoolConfig => entry !== undefined)
+
+    if (resolved.length > 0) {
+      this.ledgerData = resolved
     }
 
-    await this.loadLedgerIndex(ledgerIndexFileName)
+    await this.saveEtagMap(etags)
   }
 
-  private loadLedgerIndex = async (filePath: string): Promise<void> => {
-    let remoteFetchSucceeded = false
+  private genesisFileName = (indyNamespace: string): string => `${indyNamespace.replace(/:/g, '-')}.genesis`
+
+  private loadEtagMap = async (): Promise<Record<string, string>> => {
+    const data = await this.loadFileFromLocalStorage(ledgerCacheDataFileName)
+    if (!data) {
+      return {}
+    }
+
     try {
-      const response = await this.axiosInstance.get(filePath)
-      const { status } = response
-      const { etag } = response.headers
+      const cacheData: LedgerCacheData = JSON.parse(data)
+      return cacheData.etags ?? {}
+    } catch {
+      this.log?.warn('Ledger cache data is corrupt, starting fresh')
+      return {}
+    }
+  }
+
+  private saveEtagMap = async (etags: Record<string, string>): Promise<void> => {
+    const cacheData: LedgerCacheData = { etags, updatedAt: new Date().toISOString() }
+    await this.saveFileToLocalStorage(ledgerCacheDataFileName, JSON.stringify(cacheData))
+  }
+
+  /**
+   * Resolve one network's genesis transactions: remote fetch → cached file →
+   * bundled default → omit. Mutates `etags` with the latest ETag on fetch.
+   */
+  private resolveGenesis = async (
+    source: LedgerSource,
+    etags: Record<string, string>
+  ): Promise<IndyVdrPoolConfig | undefined> => {
+    const fileName = this.genesisFileName(source.indyNamespace)
+    let genesisTransactions: string | undefined
+
+    try {
+      const response = await this.axiosInstance.get(source.genesisUrl)
+      const { status, headers, data } = response
+      const body = typeof data === 'string' ? data : JSON.stringify(data)
 
       if (status !== 200) {
-        this.log?.error(`Failed to fetch remote ledger index at ${filePath}`)
-        throw new Error('Failed to fetch remote ledger index')
+        throw new Error(`Unexpected status ${status}`)
       }
 
-      if (etag && this.compareWeakEtags(this.fileEtag, etag)) {
-        this.log?.info(`Ledger index ${filePath} has not changed (ETag match)`)
-        this.ledgerData = response.data
-        return
+      // Every line of a genesis file is a JSON transaction — guards against
+      // moved-file/HTML responses served with a 200.
+      JSON.parse(body.split('\n', 1)[0])
+
+      const etag = headers.etag
+      const storedEtag = etags[source.indyNamespace]
+      if (etag && storedEtag && this.compareWeakEtags(storedEtag, etag)) {
+        this.log?.info(`Genesis for ${source.indyNamespace} unchanged (ETag match)`)
+      } else {
+        await this.saveFileToLocalStorage(fileName, body)
+        if (etag) {
+          etags[source.indyNamespace] = etag
+        }
+        this.log?.info(`Fetched genesis for ${source.indyNamespace}`)
       }
-
-      this.fileEtag = etag
-      this.ledgerData = response.data
-
-      await this.saveFileToLocalStorage(filePath, JSON.stringify(this.ledgerData))
-      remoteFetchSucceeded = true
+      genesisTransactions = body
     } catch (error) {
-      this.log?.error(`Failed to fetch remote ledger index ${filePath}: ${error}`)
+      this.log?.error(`Failed to fetch genesis for ${source.indyNamespace}: ${error}`)
     }
 
-    if (remoteFetchSucceeded) {
-      return
+    if (!genesisTransactions) {
+      genesisTransactions = await this.loadFileFromLocalStorage(fileName)
+      if (genesisTransactions) {
+        this.log?.info(`Using cached genesis for ${source.indyNamespace}`)
+      }
     }
 
-    const data = await this.loadFileFromLocalStorage(filePath)
-    if (!data) {
-      this.log?.warn(`No cached ledger index found for ${filePath}, falling back to bundled default`)
-      return
+    if (!genesisTransactions) {
+      const bundled = this.defaultLedgers.find((ledger) => ledger.indyNamespace === source.indyNamespace)
+      if (!bundled) {
+        this.log?.warn(`No genesis available for ${source.indyNamespace} (no fetch, cache, or bundled entry), omitting`)
+        return undefined
+      }
+      this.log?.info(`Using bundled genesis for ${source.indyNamespace}`)
+      genesisTransactions = bundled.genesisTransactions
     }
 
-    this.log?.info(`Using cached ledger index ${filePath}`)
-    try {
-      this.ledgerData = JSON.parse(data)
-    } catch {
-      this.log?.warn(`Cached ledger index ${filePath} is corrupt, falling back to bundled default`)
+    const config: IndyVdrPoolConfig & { id: string } = {
+      id: source.id ?? source.indyNamespace,
+      indyNamespace: source.indyNamespace,
+      isProduction: source.isProduction ?? false,
+      connectOnStartup: source.connectOnStartup ?? true,
+      genesisTransactions,
+      ...(source.transactionAuthorAgreement && { transactionAuthorAgreement: source.transactionAuthorAgreement }),
     }
+
+    return config
   }
 }

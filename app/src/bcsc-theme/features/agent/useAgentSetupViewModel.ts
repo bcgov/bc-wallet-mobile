@@ -152,7 +152,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     // checkpoint if cancelled, leaving inFlightAgent for run's finally to close.
     const buildFreshAgent = async (walletSecret: AgentWalletSecret): Promise<void> => {
       // cachedLedgers only gates the expensive pool warm-up in warmCache;
-      // the pool list itself comes from the resolver when LEDGER_URL is set.
+      // the pool list itself comes from the resolver when auto-update is on.
       const cachedLedgers = await loadCachedLedgers()
       if (cancelled) {
         return
@@ -172,7 +172,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         return
       }
 
-      const ledgers = Config.LEDGER_URL ? ledgerResolver.ledgers : (cachedLedgers ?? ledgerResolver.ledgers)
+      const ledgers = ledgerResolver.remoteEnabled ? ledgerResolver.ledgers : (cachedLedgers ?? ledgerResolver.ledgers)
 
       inFlightAgent = buildAgent({
         ledgers,
