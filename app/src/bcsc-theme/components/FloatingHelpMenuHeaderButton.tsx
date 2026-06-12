@@ -2,14 +2,16 @@ import { HelpCentreUrl } from '@/constants'
 import { ButtonLocation, IconButton, testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { ReactElement, useCallback, useRef, useState } from 'react'
+import React, { ReactNode, useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useRestartVerification } from '../hooks/useRestartVerification'
 import { BCSCScreens } from '../types/navigators'
 import FloatingHelpMenu, { FloatingHelpMenuRef } from './FloatingHelpMenu'
 import { ListButton, ListButtonGroup, ListButtonProps } from './ListButton'
 
 type FloatingHelpMenuButtonProps = {
-  children: ReactElement<ListButtonProps> | ReactElement<ListButtonProps>[]
+  // ListButton rows; falsy children are filtered out by ListButtonGroup so rows can be conditional
+  children: ReactNode
   ref?: React.Ref<FloatingHelpMenuRef>
 }
 
@@ -56,6 +58,28 @@ type FloatingHelpMenuButtonOptions = {
   webViewScreen: keyof WebViewParamList
   /** Help centre article opened by "Learn More". Defaults to the help centre home page. */
   learnMoreUrl?: HelpCentreUrl
+  /** Show the "Restart verification process" option. Only valid within the verification flow. */
+  showRestartVerification?: boolean
+}
+
+type RestartVerificationListButtonProps = {
+  /** Called when the user confirms the restart, so the owning menu can close itself. */
+  onConfirm: () => void
+} & Pick<ListButtonProps, 'position'>
+
+/**
+ * "Restart verification process" menu row. Kept as its own component so the verification-reset
+ * hooks only run in menus that opt in via `showRestartVerification` (i.e. the verify flow).
+ */
+const RestartVerificationListButton = ({ onConfirm, position }: RestartVerificationListButtonProps) => {
+  const { t } = useTranslation()
+  const promptRestartVerification = useRestartVerification()
+
+  return (
+    <ListButton position={position} onPress={() => promptRestartVerification(onConfirm)}>
+      {t('BCSC.HelpMenu.RestartVerification')}
+    </ListButton>
+  )
 }
 
 /**
@@ -70,6 +94,7 @@ type FloatingHelpMenuButtonOptions = {
 export const createFloatingHelpMenuButton = ({
   webViewScreen,
   learnMoreUrl = HelpCentreUrl.HOME,
+  showRestartVerification = false,
 }: FloatingHelpMenuButtonOptions) => {
   const FloatingHelpMenuHeaderRight = () => {
     const { t } = useTranslation()
@@ -100,6 +125,9 @@ export const createFloatingHelpMenuButton = ({
         >
           {t('BCSC.HelpMenu.ReportProblem')}
         </ListButton>
+        {showRestartVerification && (
+          <RestartVerificationListButton onConfirm={() => floatingHelpMenuRef.current?.close()} />
+        )}
       </FloatingHelpMenuButton>
     )
   }

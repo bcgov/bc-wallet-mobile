@@ -53,6 +53,7 @@ export enum AppEventCode {
   NO_TOKENS_RETURNED = 'no_tokens_returned',
   PHYSICAL_CARD_WILL_EXPIRE = 'physical_card_will_expire',
   PROBLEM_WITH_CONNECTION = 'problem_with_connection',
+  RESTART_VERIFICATION = 'restart_verification',
   SERVER_ERROR = 'server_error',
   UNKNOWN_SERVER_ERROR = 'unknown_server_error', // Non-IAS error code
   SERVER_TIMEOUT = 'server_timeout',
