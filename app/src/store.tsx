@@ -180,6 +180,12 @@ export interface BCSCSecureState {
   walletKey?: string
 
   hasDismissedExpiryAlert?: boolean
+
+  /**
+   * Set during hydration when a native account record exists but its tokens file is
+   * unreadable/corrupt — i.e. neither a refresh nor a registration token survived
+   */
+  sessionRecoveryRequired?: boolean
 }
 
 /** Initial secure state - unhydrated with no data */

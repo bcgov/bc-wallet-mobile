@@ -463,12 +463,20 @@ class BcscCoreModule(
 
                             promise.resolve(null)
                         } catch (e: Exception) {
-                            Log.e(NAME, "Failed to parse decrypted JSON content: ${e.message}", e)
-                            promise.reject("E_STORAGE_ERROR", "Failed to parse decrypted token data: ${e.message}", e)
+                            Log.e(
+                                NAME,
+                                "Failed to parse/migrate decrypted token content for type $tokenType — returning null",
+                                e,
+                            )
+                            promise.resolve(null)
                         }
                     } else {
-                        Log.e(NAME, "Decrypted content is not valid JSON")
-                        promise.reject("E_STORAGE_ERROR", "Decrypted token content is not valid JSON")
+                        Log.w(
+                            NAME,
+                            "Decrypted token content is empty or not valid JSON at $tokenFilePath — " +
+                                "returning null for type $tokenType",
+                        )
+                        promise.resolve(null)
                     }
                 } else {
                     Log.w(
@@ -478,8 +486,13 @@ class BcscCoreModule(
                     promise.resolve(null)
                 }
             } catch (e: DecryptionException) {
-                Log.e(NAME, "Failed to decrypt token file from path: $tokenFilePath - ${e.message}", e)
-                promise.reject("E_STORAGE_ERROR", "Failed to decrypt token file: ${e.message}", e)
+                Log.e(
+                    NAME,
+                    "Failed to decrypt token file from path: $tokenFilePath - ${e.message} — " +
+                        "returning null for type $tokenType",
+                    e,
+                )
+                promise.resolve(null)
             }
         } catch (e: Exception) {
             Log.e(NAME, "Exception occurred while reading/decrypting token file using bcsc-file-port: ${e.message}", e)
