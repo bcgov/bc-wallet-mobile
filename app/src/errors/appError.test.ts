@@ -122,6 +122,20 @@ describe('AppError', () => {
         'Something went wrong\nDebug: [general.unknown_server_error.1234]\nRequest: POST https://example.com/device/token'
       )
     })
+
+    it('should append screen name when screen is set', () => {
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+      const error = new AppError('Something went wrong', identity)
+      error.screen = 'HomeScreen'
+
+      expect(error.fullMessage).toBe(
+        'Something went wrong\nDebug: [general.unknown_server_error.1234]\nScreen: HomeScreen'
+      )
+    })
   })
 
   describe('track', () => {
