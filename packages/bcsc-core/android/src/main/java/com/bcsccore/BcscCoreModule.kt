@@ -952,57 +952,13 @@ class BcscCoreModule(
     override fun getAccount(promise: Promise) {
         Log.d(NAME, "getAccount called")
 
-        // Try to read from native-compatible storage first (based on default issuer name)
-        try {
-            val issuerName = nativeStorage.getDefaultIssuerName()
-            Log.d(NAME, "getAccount - Trying native storage with issuer name: $issuerName")
-
-            val accounts = nativeStorage.readAccounts(issuerName)
-            if (accounts != null && accounts.isNotEmpty()) {
-                val nativeAccount = accounts.first()
-                Log.d(NAME, "getAccount - Found account in native storage: ${nativeAccount.uuid}")
-
-                // Convert to WritableMap for React Native
-                val account = convertNativeAccountToWritableMap(nativeAccount)
-                promise.resolve(account)
-                return
-            }
-
-            Log.d(NAME, "getAccount - No accounts found in native storage for issuer: $issuerName")
-        } catch (e: Exception) {
-            Log.w(NAME, "getAccount - Error reading from native storage: ${e.message}")
+        val account = resolveFirstAccount()
+        if (account != null) {
+            Log.d(NAME, "getAccount - Found account: ${account.uuid}")
+            promise.resolve(convertNativeAccountToWritableMap(account))
+            return
         }
 
-        // Fallback: try reading from old flat file format (for migration)
-        try {
-            val fileReader: FileReader = FileReaderFactory.createSimpleFileReader(reactApplicationContext)
-            val relativePath = "accounts"
-            val accountFileBytes = fileReader.readFile(relativePath)
-
-            if (accountFileBytes != null && accountFileBytes.isNotEmpty()) {
-                val accountFileContent = String(accountFileBytes, Charsets.UTF_8)
-                Log.d(NAME, "getAccount - Found old-format accounts file, parsing...")
-
-                try {
-                    val jsonArray = org.json.JSONArray(accountFileContent)
-                    if (jsonArray.length() > 0) {
-                        val accountObj = jsonArray.getJSONObject(0)
-                        Log.d(NAME, "getAccount - Found account in old format: ${accountObj.optString("uuid")}")
-
-                        // Parse the account data
-                        val account = createNativeAccountFromJson(accountObj)
-                        promise.resolve(account)
-                        return
-                    }
-                } catch (e: Exception) {
-                    Log.w(NAME, "getAccount - Failed to parse old-format accounts: ${e.message}")
-                }
-            }
-        } catch (e: Exception) {
-            Log.w(NAME, "getAccount - Error reading old-format accounts: ${e.message}")
-        }
-
-        // No account found in any storage
         Log.d(NAME, "getAccount - No account found in any storage")
         promise.resolve(null)
     }
@@ -1039,53 +995,80 @@ class BcscCoreModule(
     }
 
     /**
-     * Converts a JSON account object to a NativeAccount WritableMap.
-     * Maps JSON fields to the NativeAccount interface specification.
-     * Used for reading old-format accounts during migration.
+     * Resolves stored accounts like [getAccount]: native-compatible (issuer-scoped) storage
+     * first, then the legacy flat-file format. Auth/PIN methods must use this so an account
+     * that exists for routing isn't read as "not found" and surfaced as a device-auth failure.
      */
-    private fun createNativeAccountFromJson(accountObj: JSONObject): WritableMap {
-        val account: WritableMap = Arguments.createMap()
-
-        // Map JSON fields to NativeAccount interface fields
-        account.putString("id", accountObj.optString("uuid", "unknown")) // uuid -> id
-        account.putString("issuer", accountObj.optString("issuer", ""))
-        account.putString("clientID", accountObj.optString("clientId", "")) // clientId -> clientID
-
-        // Map accountSecurityType to securityMethod enum values
-        val securityType = accountObj.optString("accountSecurityType", "")
-        val securityMethod =
-            when (securityType) {
-                "DeviceSecurity" -> "device_authentication"
-                "PinNoDeviceAuth" -> "app_pin_no_device_authn"
-                "PinWithDeviceAuth" -> "app_pin_has_device_authn"
-                else -> "device_authentication" // Default fallback
+    private fun resolveAccounts(): List<NativeAccount>? {
+        try {
+            val issuerName = nativeStorage.getDefaultIssuerName()
+            val accounts = nativeStorage.readAccounts(issuerName)
+            if (!accounts.isNullOrEmpty()) {
+                return accounts
             }
-        account.putString("securityMethod", securityMethod)
-
-        // Optional fields
-        val nickName = accountObj.optString("nickName", "")
-        if (nickName.isNotEmpty()) {
-            account.putString("displayName", nickName)
-            account.putString("nickname", nickName)
+            Log.d(NAME, "resolveAccounts - no accounts in native storage for issuer: $issuerName")
+        } catch (e: Exception) {
+            Log.w(NAME, "resolveAccounts - error reading native storage: ${e.message}")
         }
 
-        // Parse penalty information
+        // Fall back to legacy flat-file format
+        try {
+            val fileReader: FileReader = FileReaderFactory.createSimpleFileReader(reactApplicationContext)
+            val accountFileBytes = fileReader.readFile("accounts")
+            if (accountFileBytes != null && accountFileBytes.isNotEmpty()) {
+                val content = String(accountFileBytes, Charsets.UTF_8)
+                val jsonArray = org.json.JSONArray(content)
+                if (jsonArray.length() > 0) {
+                    val accounts =
+                        (0 until jsonArray.length()).map { i ->
+                            nativeAccountFromLegacyJson(jsonArray.getJSONObject(i))
+                        }
+                    Log.d(NAME, "resolveAccounts - found ${accounts.size} account(s) in legacy storage")
+                    return accounts
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(NAME, "resolveAccounts - error reading legacy storage: ${e.message}")
+        }
+
+        return null
+    }
+
+    private fun resolveFirstAccount(): NativeAccount? = resolveAccounts()?.firstOrNull()
+
+    /** Builds a [NativeAccount] from a legacy flat-file account JSON object. */
+    private fun nativeAccountFromLegacyJson(accountObj: JSONObject): NativeAccount {
+        val securityType =
+            when (accountObj.optString("accountSecurityType", "")) {
+                "PinNoDeviceAuth", "AppPIN", "app_pin", "app_pin_no_device_authn" -> {
+                    NativeAccountSecurityType.PinNoDeviceAuth
+                }
+
+                "PinWithDeviceAuth", "app_pin_has_device_authn" -> {
+                    NativeAccountSecurityType.PinWithDeviceAuth
+                }
+
+                else -> {
+                    NativeAccountSecurityType.DeviceSecurity
+                }
+            }
+
         val penaltyObj = accountObj.optJSONObject("penalty")
-        val failedAttempts = penaltyObj?.optInt("penaltyAttempts", 0) ?: 0
-        account.putInt("failedAttemptCount", failedAttempts)
+        val penalty =
+            NativePenalty(
+                penaltyAttempts = penaltyObj?.optInt("penaltyAttempts", 0) ?: 0,
+                penaltyEndTime = penaltyObj?.optLong("penaltyEndTime", 0L) ?: 0L,
+            )
 
-        // Default values for fields not available in JSON
-        account.putBoolean("didPostNicknameToServer", false)
-
-        Log.d(
-            NAME,
-            "Created account: id=${account.getString("id")}, " +
-                "issuer=${account.getString("issuer")}, " +
-                "clientID=${account.getString("clientID")}, " +
-                "securityMethod=${account.getString("securityMethod")}",
+        return NativeAccount(
+            uuid = accountObj.optString("uuid", "unknown"),
+            nickName = accountObj.optString("nickName", "").ifEmpty { null },
+            issuer = accountObj.optString("issuer", ""),
+            clientId = accountObj.optString("clientId", ""),
+            createdAt = accountObj.optLong("createdAt", System.currentTimeMillis()),
+            penalty = penalty,
+            accountSecurityType = securityType,
         )
-
-        return account
     }
 
     /**
@@ -2027,42 +2010,10 @@ class BcscCoreModule(
     private fun getAccountSync(): WritableMap? {
         Log.d(NAME, "getAccountSync called")
 
-        // Try native-compatible storage first
-        try {
-            val issuerName = nativeStorage.getDefaultIssuerName()
-            val accounts = nativeStorage.readAccounts(issuerName)
-
-            if (accounts != null && accounts.isNotEmpty()) {
-                val nativeAccount = accounts.first()
-                Log.d(NAME, "getAccountSync - Found account in native storage: ${nativeAccount.uuid}")
-                return convertNativeAccountToWritableMap(nativeAccount)
-            }
-        } catch (e: Exception) {
-            Log.w(NAME, "getAccountSync - Error reading from native storage: ${e.message}")
-        }
-
-        // Fallback: try old flat file format
-        try {
-            val fileReader: FileReader = FileReaderFactory.createSimpleFileReader(reactApplicationContext)
-            val relativePath = "accounts"
-            val accountFileBytes = fileReader.readFile(relativePath)
-
-            if (accountFileBytes != null && accountFileBytes.isNotEmpty()) {
-                val accountFileContent = String(accountFileBytes, Charsets.UTF_8)
-
-                try {
-                    val jsonArray = org.json.JSONArray(accountFileContent)
-                    if (jsonArray.length() > 0) {
-                        val accountObj = jsonArray.getJSONObject(0)
-                        Log.d(NAME, "getAccountSync - Found account in old format: ${accountObj.optString("uuid")}")
-                        return createNativeAccountFromJson(accountObj)
-                    }
-                } catch (e: Exception) {
-                    Log.w(NAME, "getAccountSync - Failed to parse old format: ${e.message}")
-                }
-            }
-        } catch (e: Exception) {
-            Log.w(NAME, "getAccountSync - Error reading old format: ${e.message}")
+        val account = resolveFirstAccount()
+        if (account != null) {
+            Log.d(NAME, "getAccountSync - Found account: ${account.uuid}")
+            return convertNativeAccountToWritableMap(account)
         }
 
         Log.d(NAME, "getAccountSync - No account found")
@@ -2208,15 +2159,12 @@ class BcscCoreModule(
         promise: Promise,
     ) {
         try {
-            val issuerName = nativeStorage.getDefaultIssuerName()
-            val existingAccounts = nativeStorage.readAccounts(issuerName)
-
-            if (existingAccounts == null || existingAccounts.isEmpty()) {
+            val account = resolveFirstAccount()
+            if (account == null) {
                 promise.reject("E_ACCOUNT_NOT_FOUND", "No account found")
                 return
             }
 
-            val account = existingAccounts.first()
             val accountID = account.uuid
 
             // Set PIN and get the hash back (user-created PIN, not auto-generated)
@@ -2246,15 +2194,14 @@ class BcscCoreModule(
         promise: Promise,
     ) {
         try {
-            val issuerName = nativeStorage.getDefaultIssuerName()
-            val existingAccounts = nativeStorage.readAccounts(issuerName)
-
-            if (existingAccounts == null || existingAccounts.isEmpty()) {
+            val account = resolveFirstAccount()
+            if (account == null) {
                 promise.reject("E_ACCOUNT_NOT_FOUND", "No account found")
                 return
             }
 
-            val account = existingAccounts.first()
+            // Penalty writes below always target native storage, migrating legacy accounts forward
+            val issuerName = nativeStorage.getDefaultIssuerName()
             val accountID = account.uuid
             val currentTimeMillis = System.currentTimeMillis()
 
@@ -2340,15 +2287,12 @@ class BcscCoreModule(
     @ReactMethod
     override fun deletePIN(promise: Promise) {
         try {
-            val issuerName = nativeStorage.getDefaultIssuerName()
-            val existingAccounts = nativeStorage.readAccounts(issuerName)
-
-            if (existingAccounts == null || existingAccounts.isEmpty()) {
+            val account = resolveFirstAccount()
+            if (account == null) {
                 promise.reject("E_ACCOUNT_NOT_FOUND", "No account found")
                 return
             }
 
-            val account = existingAccounts.first()
             val accountID = account.uuid
 
             pinService.removePIN(accountID)
@@ -2367,15 +2311,12 @@ class BcscCoreModule(
     @ReactMethod
     override fun hasPINSet(promise: Promise) {
         try {
-            val issuerName = nativeStorage.getDefaultIssuerName()
-            val existingAccounts = nativeStorage.readAccounts(issuerName)
-
-            if (existingAccounts == null || existingAccounts.isEmpty()) {
+            val account = resolveFirstAccount()
+            if (account == null) {
                 promise.reject("E_ACCOUNT_NOT_FOUND", "No account found")
                 return
             }
 
-            val account = existingAccounts.first()
             val accountID = account.uuid
 
             val hasPin = pinService.hasPIN(accountID)
@@ -2551,17 +2492,14 @@ class BcscCoreModule(
                     else -> NativeAccountSecurityType.DeviceSecurity
                 }
 
-            // Get issuer name (same as used for reading/writing accounts)
-            val issuerName = nativeStorage.getDefaultIssuerName()
-
-            // Read existing accounts to get full data
-            val existingAccounts = nativeStorage.readAccounts(issuerName)
-            if (existingAccounts == null || existingAccounts.isEmpty()) {
+            val account = resolveFirstAccount()
+            if (account == null) {
                 promise.reject("E_NO_ACCOUNT", "No account found in storage")
                 return
             }
 
-            val account = existingAccounts.first()
+            // The save below always targets native storage, migrating legacy accounts forward
+            val issuerName = nativeStorage.getDefaultIssuerName()
             val accountID = account.uuid
 
             // Update the account with new security type
@@ -2591,15 +2529,11 @@ class BcscCoreModule(
     @ReactMethod
     override fun getAccountSecurityMethod(promise: Promise) {
         try {
-            val issuerName = nativeStorage.getDefaultIssuerName()
-            val existingAccounts = nativeStorage.readAccounts(issuerName)
-
-            if (existingAccounts == null || existingAccounts.isEmpty()) {
+            val account = resolveFirstAccount()
+            if (account == null) {
                 promise.resolve("device_authentication") // Default
                 return
             }
-
-            val account = existingAccounts.first()
 
             val securityMethod =
                 when (account.accountSecurityType) {
@@ -2624,10 +2558,8 @@ class BcscCoreModule(
     @ReactMethod
     override fun isAccountLocked(promise: Promise) {
         try {
-            val issuerName = nativeStorage.getDefaultIssuerName()
-            val existingAccounts = nativeStorage.readAccounts(issuerName)
-
-            if (existingAccounts == null || existingAccounts.isEmpty()) {
+            val account = resolveFirstAccount()
+            if (account == null) {
                 // No account means no lock
                 val result = Arguments.createMap()
                 result.putBoolean("locked", false)
@@ -2636,7 +2568,6 @@ class BcscCoreModule(
                 return
             }
 
-            val account = existingAccounts.first()
             val currentTimeMillis = System.currentTimeMillis()
             val remainingPenaltyTime = getRemainingPenaltyTime(account.penalty, currentTimeMillis)
 
@@ -2669,15 +2600,12 @@ class BcscCoreModule(
     @ReactMethod
     override fun setupDeviceSecurity(promise: Promise) {
         try {
-            val issuerName = nativeStorage.getDefaultIssuerName()
-            val existingAccounts = nativeStorage.readAccounts(issuerName)
-
-            if (existingAccounts == null || existingAccounts.isEmpty()) {
+            val account = resolveFirstAccount()
+            if (account == null) {
                 promise.reject("E_ACCOUNT_NOT_FOUND", "No account found")
                 return
             }
 
-            val account = existingAccounts.first()
             val accountID = account.uuid
 
             // Generate a cryptographically secure random 6-digit PIN
@@ -2716,15 +2644,12 @@ class BcscCoreModule(
         promise: Promise,
     ) {
         try {
-            val issuerName = nativeStorage.getDefaultIssuerName()
-            val existingAccounts = nativeStorage.readAccounts(issuerName)
-
-            if (existingAccounts == null || existingAccounts.isEmpty()) {
+            val account = resolveFirstAccount()
+            if (account == null) {
                 promise.reject("E_ACCOUNT_NOT_FOUND", "No account found")
                 return
             }
 
-            val account = existingAccounts.first()
             val accountID = account.uuid
 
             val activity = reactApplicationContext.currentActivity
