@@ -1,4 +1,5 @@
 import { RegistrationResponseData } from '@/bcsc-theme/api/hooks/useRegistrationApi'
+import { isAppError } from '@/errors/appError'
 import { BCDispatchAction } from '@/store'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
@@ -54,9 +55,15 @@ export class UpdateDeviceRegistrationSystemCheck implements SystemCheckStrategy 
 
       this.utils.dispatch({ type: BCDispatchAction.UPDATE_APP_VERSION })
     } catch (error) {
+      // This catch is the only trace the automatic update leaves (no modal on
+      // this path), and the problem-report view surfaces only the message text —
+      // so fold fullMessage (registry message + Debug tag + native detail) into
+      // the message itself. toJSON() rides along as structured data for
+      // pipelines that can display it.
+      const detail = isAppError(error) ? `: ${error.fullMessage}` : ''
       this.utils.logger.error(
-        'UpdateDeviceRegistrationSystemCheck: Failed to update device registration',
-        error as Error
+        `UpdateDeviceRegistrationSystemCheck: Failed to update device registration${detail}`,
+        isAppError(error) ? error.toJSON() : (error as Error)
       )
     }
   }

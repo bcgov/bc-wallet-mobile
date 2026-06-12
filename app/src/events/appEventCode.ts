@@ -95,6 +95,7 @@ export enum AppEventCode {
   ERR_120_KEYCHAIN_KEY_EXISTS_ERROR = 'err_120_keychain_key_exists_error',
   ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR = 'err_120_keychain_key_doesnt_exist_error',
   ERR_120_KEYCHAIN_KEY_GENERATION_ERROR = 'err_120_keychain_key_generation_error',
+  ERR_120_KEYCHAIN_UNAVAILABLE_ERROR = 'err_120_keychain_unavailable_error',
   ERR_120_JWT_DEVICE_INFO_ERROR = 'err_120_jwt_device_info_error',
   ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE = 'err_206_missing_or_null_values_in_json_response', //being tracked
   ERR_207_UNABLE_TO_SIGN_CLAIMS_SET = 'err_207_unable_to_sign_claims_set',

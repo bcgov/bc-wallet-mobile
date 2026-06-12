@@ -1146,6 +1146,27 @@ describe('useAlerts', () => {
     })
   })
 
+  describe('keychainUnavailableAlert', () => {
+    it('should show an error modal with the correct title and message', () => {
+      const mockNavigation = { navigate: jest.fn() }
+      const mockEmitAlert = jest.fn()
+      const mockEmitErrorModal = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
+
+      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+      result.current.keychainUnavailableAlert()
+
+      expect(mockEmitErrorModal).toHaveBeenCalledWith(
+        'Alerts.KeychainUnavailable.Title',
+        'Alerts.KeychainUnavailable.Description',
+        expect.objectContaining({ appEvent: AppEventCode.ERR_120_KEYCHAIN_UNAVAILABLE_ERROR })
+      )
+    })
+  })
+
   describe('keychainKeyGenerationAlert', () => {
     it('should show an error modal with the correct title and message', () => {
       const mockNavigation = { navigate: jest.fn() }

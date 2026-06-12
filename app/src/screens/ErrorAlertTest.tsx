@@ -379,7 +379,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
           <Text style={styles.sectionHeader}>{'Storage write failures (error 100 / disk full)'}</Text>
           <Text style={styles.description}>
             {'Simulates camera/storage write errors through failedToWriteToLocalStorageAlert. ' +
-              'The disk-full variants should show the "Not Enough Storage" modal (2609); ' +
+              'The disk-full variants should show the "Not Enough Storage" modal (2610); ' +
               'the generic one should show "Problem with App" (error 100 / 2600).'}
           </Text>
           {Object.keys(storageWriteFailureCallbacks).map((key) => (
