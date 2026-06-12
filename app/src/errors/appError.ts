@@ -91,7 +91,13 @@ export class AppError extends Error {
     }
 
     const cause = this.cause as Error & { code?: unknown; isAxiosError?: boolean }
+
+    // AxiosErrors have their error code written into cause.code
+    // That value is already captured in appEvent, so excluding it here
+    // keeps technicalMessage as server description, which error policies policies match against
     const isAxiosError = Boolean(cause.isAxiosError) || cause.name === 'AxiosError'
+
+    // For non-Axios errors (e.g. native module errors), cause.code is a meaningful prefix like "E_KEY_NOT_FOUND"
     const code = !isAxiosError && typeof cause.code === 'string' ? cause.code : undefined
 
     return [code, cause.message].filter(Boolean).join(': ')
