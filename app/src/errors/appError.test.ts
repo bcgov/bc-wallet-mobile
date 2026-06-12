@@ -3,6 +3,10 @@ import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { AppError, isAppError, isHandledAppError } from './appError'
 import { ErrorCategory, ErrorRegistry, ErrorSeverity } from './errorRegistry'
 
+jest.mock('@/contexts/NavigationContainerContext', () => ({
+  navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
+}))
+
 describe('AppError', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -49,6 +53,18 @@ describe('AppError', () => {
       const error = new AppError('Something went wrong', identity, { cause: 'Not an error' as any })
 
       expect(error.technicalMessage).toBeNull()
+    })
+
+    it('should prefix the native error code when present on the cause', () => {
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+      const cause = Object.assign(new Error("Key pair with alias 'abc' not found."), { code: 'E_KEY_NOT_FOUND' })
+      const error = new AppError('Something went wrong', identity, { cause })
+
+      expect(error.technicalMessage).toBe("E_KEY_NOT_FOUND: Key pair with alias 'abc' not found.")
     })
   })
 
@@ -104,6 +120,20 @@ describe('AppError', () => {
 
       expect(error.fullMessage).toBe(
         'Something went wrong\nDebug: [general.unknown_server_error.1234]\nRequest: POST https://example.com/device/token'
+      )
+    })
+
+    it('should append screen name when screen is set', () => {
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+      const error = new AppError('Something went wrong', identity)
+      error.screen = 'HomeScreen'
+
+      expect(error.fullMessage).toBe(
+        'Something went wrong\nDebug: [general.unknown_server_error.1234]\nScreen: HomeScreen'
       )
     })
   })
