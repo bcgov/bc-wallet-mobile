@@ -9,6 +9,10 @@ import { mockAppError } from '@mocks/helpers/error'
 import { renderHook } from '@testing-library/react-native'
 import * as BcscCore from 'react-native-bcsc-core'
 
+jest.mock('@/contexts/NavigationContainerContext', () => ({
+  navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
+}))
+
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: jest.fn() }),
   createNavigatorFactory: jest.fn(),

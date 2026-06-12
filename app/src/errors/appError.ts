@@ -1,3 +1,4 @@
+import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { ErrorCategory, ErrorDefinition } from './errorRegistry'
@@ -54,6 +55,7 @@ export class AppError extends Error {
   statusCode: number // ie: 2100
   timestamp: string // ISO timestamp of when the error was created
   handled: boolean // Whether this error has been handled by a policy
+  screen: string | undefined // Active screen name at the time the error was created
   url?: string // API endpoint URL that produced this error, if applicable
   method?: string // HTTP method of the request that produced this error, if applicable
 
@@ -67,6 +69,7 @@ export class AppError extends Error {
     this.timestamp = new Date().toISOString()
     this.handled = false
     this.tracked = false
+    this.screen = navigationRef.isReady() ? navigationRef.getCurrentRoute()?.name : undefined
     this.url = undefined
     this.method = undefined
 
@@ -83,7 +86,21 @@ export class AppError extends Error {
    */
   get technicalMessage(): string | null {
     // QUESTION (MD): Should we have a max length? Or detect HTML strings or other non-user-friendly content and truncate/remove it?
-    return this.cause instanceof Error ? this.cause.message : null
+    if (!(this.cause instanceof Error)) {
+      return null
+    }
+
+    const cause = this.cause as Error & { code?: unknown; isAxiosError?: boolean }
+
+    // AxiosErrors have their error code written into cause.code
+    // That value is already captured in appEvent, so excluding it here
+    // keeps technicalMessage as server description, which error policies policies match against
+    const isAxiosError = Boolean(cause.isAxiosError) || cause.name === 'AxiosError'
+
+    // For non-Axios errors (e.g. native module errors), cause.code is a meaningful prefix like "E_KEY_NOT_FOUND"
+    const code = !isAxiosError && typeof cause.code === 'string' ? cause.code : undefined
+
+    return [code, cause.message].filter(Boolean).join(': ')
   }
 
   /**
@@ -102,6 +119,10 @@ export class AppError extends Error {
 
     if (this.technicalMessage) {
       formattedMessage += ` ${this.technicalMessage}`
+    }
+
+    if (this.screen) {
+      formattedMessage += `\nScreen: ${this.screen}`
     }
 
     if (this.url) {
@@ -177,6 +198,7 @@ export class AppError extends Error {
       code: this.code,
       timestamp: this.timestamp,
       handled: this.handled,
+      screen: this.screen,
       url: this.url,
       method: this.method,
       cause: summarizeCause(this.cause),

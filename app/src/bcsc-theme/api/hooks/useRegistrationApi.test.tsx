@@ -21,6 +21,10 @@ const mockLogger = {
   error: jest.fn(),
 }
 
+jest.mock('@/contexts/NavigationContainerContext', () => ({
+  navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
+}))
+
 jest.mock('@bifold/core', () => ({
   useStore: () => [
     {
