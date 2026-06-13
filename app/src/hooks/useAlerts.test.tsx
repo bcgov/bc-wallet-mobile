@@ -844,8 +844,8 @@ describe('useAlerts', () => {
       result.current.failedToWriteToLocalStorageAlert(new Error('keychain unavailable'))
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithApp.Title',
-        'Alerts.ProblemWithApp.Description',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
         expect.objectContaining({ appEvent: AppEventCode.ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE })
       )
     })

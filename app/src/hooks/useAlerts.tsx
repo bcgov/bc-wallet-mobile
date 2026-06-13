@@ -112,7 +112,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
   )
 
   /**
-   * ERR_100 (storage write failure) normally shows the generic "Problem with App" copy, but
+   * ERR_100 (storage write failure) normally shows the generic "Something went wrong" copy, but
    * when the underlying cause is the device being out of disk space (e.g. the camera failing
    * to save an evidence photo or video), reinstalling/retrying can't succeed — only freeing
    * up space will fix it. Detect that case and show actionable copy instead.
@@ -131,8 +131,8 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       }
 
       emitErrorModal(
-        t('Alerts.ProblemWithApp.Title', { errorCode: '100' }),
-        t('Alerts.ProblemWithApp.Description', { errorCode: '100' }),
+        t('Alerts.SomethingWentWrong.Title'),
+        t('Alerts.SomethingWentWrong.Description'),
         ensureAppError(error, AppEventCode.ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE)
       )
     },
