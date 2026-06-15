@@ -232,6 +232,18 @@ const translation = {
       "GiveFeedback": "Give feedback",
       "ReportProblem": "Report a problem",
     },
+    "ReportProblem": {
+      "Title": "Report a problem",
+      "Intro": "Tell us what went wrong. To help us look into it, sending this report turns on diagnostic logging for this session.",
+      "DescriptionLabel": "What happened?",
+      "DescriptionPlaceholder": "Describe the problem (optional)",
+      "ConsentCheckbox": "I understand and want to share diagnostic information.",
+      "Submit": "Send report",
+      "SuccessTitle": "Report sent",
+      "SuccessBody": "Give this reference code to our support team when you contact us so they can find your report.",
+      "ReferenceCode": "Reference code",
+      "Done": "Done",
+    },
     "Contacts": {
       "Title": "Contacts",
       "EmptyTitle": "Your contacts are empty",

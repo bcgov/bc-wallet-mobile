@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { BCSCScreens } from '../types/navigators'
 import FloatingHelpMenu, { FloatingHelpMenuRef } from './FloatingHelpMenu'
 import { ListButton, ListButtonGroup, ListButtonProps } from './ListButton'
+import { ReportProblemModal } from './ReportProblemModal'
 
 type FloatingHelpMenuButtonProps = {
   children: ReactElement<ListButtonProps> | ReactElement<ListButtonProps>[]
@@ -74,32 +75,35 @@ export const createFloatingHelpMenuButton = ({
     const { t } = useTranslation()
     const navigation = useNavigation<StackNavigationProp<WebViewParamList>>()
     const floatingHelpMenuRef = useRef<FloatingHelpMenuRef>(null)
+    const [reportProblemVisible, setReportProblemVisible] = useState(false)
 
     const handleLearnMore = useCallback(() => {
       navigation.navigate(webViewScreen, { url: learnMoreUrl, title: t('HelpCentre.Title') })
       floatingHelpMenuRef.current?.close()
     }, [navigation, t])
 
+    const handleReportProblem = useCallback(() => {
+      // Close the help menu first, then open the fully-custom report modal once the menu has finished
+      // animating out, so two React Native modals aren't presented at the same time.
+      floatingHelpMenuRef.current?.close(() => setReportProblemVisible(true))
+    }, [])
+
     return (
-      <FloatingHelpMenuButton ref={floatingHelpMenuRef}>
-        <ListButton onPress={handleLearnMore}>{t('BCSC.HelpMenu.LearnMore')}</ListButton>
-        <ListButton
-          onPress={() => {
-            // TODO (V4.1.x): Implement Give Feedback page and link here
-            floatingHelpMenuRef.current?.close()
-          }}
-        >
-          {t('BCSC.HelpMenu.GiveFeedback')}
-        </ListButton>
-        <ListButton
-          onPress={() => {
-            // TODO (V4.1.x): Implement Report a Problem page and link here
-            floatingHelpMenuRef.current?.close()
-          }}
-        >
-          {t('BCSC.HelpMenu.ReportProblem')}
-        </ListButton>
-      </FloatingHelpMenuButton>
+      <>
+        <FloatingHelpMenuButton ref={floatingHelpMenuRef}>
+          <ListButton onPress={handleLearnMore}>{t('BCSC.HelpMenu.LearnMore')}</ListButton>
+          <ListButton
+            onPress={() => {
+              // TODO (V4.1.x): Implement Give Feedback page and link here
+              floatingHelpMenuRef.current?.close()
+            }}
+          >
+            {t('BCSC.HelpMenu.GiveFeedback')}
+          </ListButton>
+          <ListButton onPress={handleReportProblem}>{t('BCSC.HelpMenu.ReportProblem')}</ListButton>
+        </FloatingHelpMenuButton>
+        <ReportProblemModal visible={reportProblemVisible} onClose={() => setReportProblemVisible(false)} />
+      </>
     )
   }
 

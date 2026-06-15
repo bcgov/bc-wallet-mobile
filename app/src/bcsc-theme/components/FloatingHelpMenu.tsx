@@ -12,8 +12,10 @@ const ANIMATION_DURATION = 300
 const MENU_MIN_WIDTH = 200
 
 export interface FloatingHelpMenuRef {
-  // Expose a method to allow parent components to programmatically close the menu (includes animation)
-  close: () => void
+  // Expose a method to allow parent components to programmatically close the menu (includes animation).
+  // The optional `onClosed` callback runs once the close animation has finished and the menu has been
+  // dismissed — use it to open a follow-up modal without two modals being presented at the same time.
+  close: (onClosed?: () => void) => void
 }
 
 interface FloatingHelpMenuProps extends PropsWithChildren {
@@ -65,9 +67,13 @@ const FloatingHelpMenu = (props: FloatingHelpMenuProps) => {
     [translateX]
   )
 
-  const handleClose = () => {
-    // After animation complete, call the onClose callback to update parent state and unmount the menu
-    animateTransition(screenWidth, props.onClose)
+  const handleClose = (onClosed?: () => void) => {
+    // After animation complete, call the onClose callback to update parent state and unmount the menu,
+    // then run any caller-supplied onClosed (e.g. to open a follow-up modal once this one is gone).
+    animateTransition(screenWidth, () => {
+      props.onClose()
+      onClosed?.()
+    })
   }
 
   const handleShow = () => {
@@ -117,15 +123,15 @@ const FloatingHelpMenu = (props: FloatingHelpMenuProps) => {
   })
 
   return (
-    <Modal visible={props.open} onShow={handleShow} transparent animationType="none" onRequestClose={handleClose}>
-      <TouchableWithoutFeedback onPress={handleClose} accessible={false}>
+    <Modal visible={props.open} onShow={handleShow} transparent animationType="none" onRequestClose={() => handleClose()}>
+      <TouchableWithoutFeedback onPress={() => handleClose()} accessible={false}>
         <View style={styles.root}>
           <View style={styles.floatingMenuContainer}>
             <TouchableWithoutFeedback onPress={() => {}} accessible={false}>
               <Animated.View style={[styles.container, { transform: [{ translateX }] }]}>
                 <View style={styles.headerContainer}>
                   <PressableOpacity
-                    onPress={handleClose}
+                    onPress={() => handleClose()}
                     hitSlop={hitSlop}
                     accessibilityRole="button"
                     accessibilityLabel={t('Global.Close')}
