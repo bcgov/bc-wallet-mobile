@@ -228,33 +228,51 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
    * Key considerations:
    * - 1080p (1920x1080) provides sufficient resolution for PDF-417 barcodes
    *   (Google ML Kit recommends >=1156px width for dense PDF-417)
-   * - 30 FPS gives 3x more scanning opportunities than 10 FPS, increasing the
-   *   chance of capturing both barcodes in the time window
+   * - 30 FPS is CRITICAL: gives 3x more scanning opportunities than 10 FPS. Essential for catching
+   *   both PDF-417 and Code-39 within the accumulation window. Dropping FPS degrades detection.
    * - On Android, the patched native code now uses this videoResolution for the
    *   code scanner's ImageAnalysis pipeline (previously defaulted to ~640x480)
-   * - On iOS, AVFoundation uses the full active format resolution regardless
+   * - On iOS, some older devices have limited format support; we provide graceful fallbacks
+   *
+   * IMPORTANT: Format filters are applied in order; VisionCamera tries each constraint
+   * and falls back to the next if no format matches. We order from strict to permissive
+   * while preserving FPS (critical for barcode scanning) at each tier.
    */
   const format = useCameraFormat(device, [
-    // Prefer non-HDR formats: HDR video is incompatible with torch on many Android devices,
-    // causing a session rebuild (and visible zoom jump) when the torch is toggled.
-    // SDR is also better for barcode scanning — HDR tone-mapping can soften barcode contrast.
+    // Tier 1: Ideal — 1080p + 30 FPS + non-HDR + stabilization
+    // Primary target for Android and modern iOS devices
     {
       videoHdr: false,
-    },
-    // 1080p video resolution — sufficient for PDF-417 (>=1156px) while keeping
-    // processing fast on Android. The native patch ensures this resolution is
-    // actually used by the code scanner's ImageAnalysis pipeline.
-    {
       videoResolution: { width: 1920, height: 1080 },
+      fps: 30,
+      videoStabilizationMode: 'auto',
     },
-    // 30 FPS provides more scan attempts per second — critical for catching both
-    // PDF-417 and Code-39 within the accumulation window
+    // Tier 2: 1080p + 30 FPS + non-HDR (drop stabilization if needed)
+    // Maintains critical 30 FPS for barcode scanning while dropping optional stabilization
     {
+      videoHdr: false,
+      videoResolution: { width: 1920, height: 1080 },
       fps: 30,
     },
-    // Prefer formats with better video stabilization
+    // Tier 3: 720p + 30 FPS + non-HDR (lower resolution but preserve FPS)
+    // 720p is sufficient for barcode detection; preserves 30 FPS for catching both barcodes
     {
-      videoStabilizationMode: 'auto',
+      videoHdr: false,
+      videoResolution: { width: 1280, height: 720 },
+      fps: 30,
+    },
+    // Tier 4: 720p + 24 FPS + non-HDR (minimum viable FPS for scanning)
+    // If 30 FPS unavailable, 24 FPS still gives 2.4x more attempts than 10 FPS
+    {
+      videoHdr: false,
+      videoResolution: { width: 1280, height: 720 },
+      fps: 24,
+    },
+    // Tier 5: Any resolution + non-HDR (absolute fallback)
+    // Prevents "device/pixel-format-not-supported" errors on iOS devices with limited format support.
+    // Quality degraded but camera will work.
+    {
+      videoHdr: false,
     },
   ])
 
