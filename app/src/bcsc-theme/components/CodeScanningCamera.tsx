@@ -1,6 +1,9 @@
 import { QRScannerTorch, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { a11yLabel } from '@utils/accessibility'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { ensureAppError } from '@/errors/errorHandler'
+import { AppEventCode } from '@/events/appEventCode'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -136,6 +139,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { emitErrorModal } = useErrorAlert()
   const { pauseActivityTracking, resumeActivityTracking } = useBCSCActivity()
   const camera = useRef<Camera>(null)
   const [torchEnabled, setTorchEnabled] = useState(false)
@@ -852,6 +856,18 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     }
   }, [initialZoom, getEffectiveZoom, logger, device, format, zoom, cameraIsReady])
 
+  const handleCameraError = useCallback(
+    (error: unknown) => {
+      logger.error('CodeScanningCamera runtime error', { error: String(error) })
+      emitErrorModal(
+        t('BCSC.CameraDisclosure.Error'),
+        t('BCSC.CameraDisclosure.ErrorMessage'),
+        ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
+      )
+    },
+    [logger, emitErrorModal, t]
+  )
+
   const handleSaveScanZones = useCallback(() => {
     if (!containerSize || !frameSize) {
       Alert.alert('Not Ready', 'Camera dimensions not available yet.')
@@ -1129,6 +1145,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
           torch={torchEnabled ? 'on' : 'off'}
           animatedProps={animatedProps}
           onInitialized={handleCameraInitialized}
+          onError={handleCameraError}
           resizeMode="cover"
         />
 

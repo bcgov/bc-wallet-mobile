@@ -1,9 +1,12 @@
 import { useAlerts } from '@/hooks/useAlerts'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { ensureAppError } from '@/errors/errorHandler'
+import { AppEventCode } from '@/events/appEventCode'
 import { MaskType, SVGOverlay, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { NavigationProp, ParamListBase, useIsFocused } from '@react-navigation/native'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import {
@@ -48,6 +51,7 @@ const MaskedCamera = ({
   const isFocused = useIsFocused()
   const format = useCameraFormat(device, cameraFormatFilter)
   const { failedToWriteToLocalStorageAlert } = useAlerts(navigation)
+  const { emitErrorModal } = useErrorAlert()
   const hasTorch = device?.hasTorch ?? false
 
   const styles = StyleSheet.create({
@@ -129,7 +133,11 @@ const MaskedCamera = ({
   }
   const onError = (error: any) => {
     logger.error(`Camera error: ${error}`)
-    Alert.alert(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorMessage'))
+    emitErrorModal(
+      t('BCSC.CameraDisclosure.Error'),
+      t('BCSC.CameraDisclosure.ErrorMessage'),
+      ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
+    )
   }
 
   const takePhoto = async () => {
@@ -152,7 +160,11 @@ const MaskedCamera = ({
         return
       }
 
-      Alert.alert(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorTakingPhoto'))
+      emitErrorModal(
+        t('BCSC.CameraDisclosure.Error'),
+        t('BCSC.CameraDisclosure.ErrorTakingPhoto'),
+        ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
+      )
     }
   }
 
