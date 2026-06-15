@@ -802,13 +802,16 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
    * Per react-native-vision-camera docs, we reset state to avoid conflicts on remount.
    */
   useEffect(() => {
+    const barcodeReadingsRef = barcodeReadings.current
+    const accumulatedCodesRef = accumulatedCodes.current
+
     return () => {
       // Reset all refs to clean state when component unmounts to avoid stale state
       isLockedRef.current = false
       lockedScanRef.current = null
       isProcessingScan.current = false
-      barcodeReadings.current.clear()
-      accumulatedCodes.current.clear()
+      barcodeReadingsRef.clear()
+      accumulatedCodesRef.clear()
       detectedZoneIndices.current = new Set()
 
       // Clear any pending animation timeouts to prevent memory leaks
