@@ -772,18 +772,58 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     return stopFocusCycling
   }, [scanState, containerSize, startFocusCycling, stopFocusCycling, device])
 
+  /**
+   * LIFECYCLE MANAGEMENT per react-native-vision-camera best practices:
+   * https://github.com/mrousavy/react-native-vision-camera/tree/main/docs/content/docs/lifecycle.mdx
+   *
+   * When screen focus changes, manage activity tracking and torch state.
+   */
   useFocusEffect(
     useCallback(() => {
-      // Pause inactivity timeout while camera is active to prevent auto-lock during scanning
+      // Screen gained focus - pause inactivity timeout while camera is active
       pauseActivityTracking()
 
       return () => {
+        // Screen lost focus - reset camera state and resume inactivity tracking
         setTorchEnabled(false)
         stopFocusCycling()
         resumeActivityTracking()
       }
     }, [pauseActivityTracking, stopFocusCycling, resumeActivityTracking])
   )
+
+  /**
+   * Component unmount cleanup - ensure all resources are released.
+   * This cleanup fires when the component fully unmounts (not just loses focus).
+   * Per react-native-vision-camera docs, we reset state to avoid conflicts on remount.
+   */
+  useEffect(() => {
+    return () => {
+      // Reset all refs to clean state when component unmounts to avoid stale state
+      isLockedRef.current = false
+      lockedScanRef.current = null
+      isProcessingScan.current = false
+      barcodeReadings.current.clear()
+      accumulatedCodes.current.clear()
+      detectedZoneIndices.current = new Set()
+
+      // Clear any pending animation timeouts to prevent memory leaks
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current)
+        highlightTimeoutRef.current = null
+      }
+      if (clearHighlightTimeoutRef.current) {
+        clearTimeout(clearHighlightTimeoutRef.current)
+        clearHighlightTimeoutRef.current = null
+      }
+      if (focusCycleTimerRef.current) {
+        clearInterval(focusCycleTimerRef.current)
+        focusCycleTimerRef.current = null
+      }
+
+      logger.debug('CodeScanningCamera unmounted - all refs and timers cleaned')
+    }
+  }, [logger])
 
   const toggleTorch = () => {
     setTorchEnabled((prev) => !prev)

@@ -42,7 +42,6 @@ const MaskedCamera = ({
   const { t } = useTranslation()
   const safeAreaInsets = useSafeAreaInsets()
   const { Spacing, ColorPalette } = useTheme()
-  const [isActive, setIsActive] = useState(false)
   const [torchOn, setTorchOn] = useState(false)
   const cameraRef = useRef<Camera>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -109,6 +108,12 @@ const MaskedCamera = ({
     }
   }, [device, navigation])
 
+  useEffect(() => {
+    if (!isFocused) {
+      setTorchOn(false)
+    }
+  }, [isFocused])
+
   if (!device) {
     return (
       <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
@@ -129,7 +134,7 @@ const MaskedCamera = ({
 
   const takePhoto = async () => {
     try {
-      if (cameraRef.current && isActive) {
+      if (cameraRef.current && isFocused) {
         const photo = await cameraRef.current.takePhoto({
           flash: 'off',
           enableShutterSound: false,
@@ -158,12 +163,12 @@ const MaskedCamera = ({
         style={styles.camera}
         device={device}
         format={format}
-        isActive={isFocused && isActive}
+        isActive={isFocused}
         photo={true}
         video={true}
         photoQualityBalance="speed"
         isMirrored={false}
-        onInitialized={() => setIsActive(true)}
+        onInitialized={() => logger.debug('MaskedCamera initialized')}
         onError={onError}
         codeScanner={codeScanner}
         torch={torchOn ? 'on' : 'off'}
