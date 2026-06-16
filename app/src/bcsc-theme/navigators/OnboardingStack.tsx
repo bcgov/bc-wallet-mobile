@@ -12,7 +12,6 @@ import { OnboardingRemoveAccountConfirmationScreen } from '../features/account/R
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
-import { VerificationSessionExpired } from '../features/modal/VerificationSessionExpired'
 import AccountSetupScreen from '../features/onboarding/AccountSetupScreen'
 import { CreatePINScreen } from '../features/onboarding/CreatePINScreen'
 import { IntroCarouselScreen } from '../features/onboarding/IntroCarousel'
@@ -161,14 +160,9 @@ const OnboardingStack = (): React.ReactElement => {
         }}
       />
 
-      <Stack.Screen
-        name={BCSCModals.VerificationSessionExpired}
-        component={VerificationSessionExpired}
-        options={{
-          ...getDefaultModalOptions(t('BCSC.Title')),
-          gestureEnabled: false,
-        }}
-      />
+      {/* VerificationSessionExpired is intentionally NOT registered here: this is the post-reset
+          destination stack, and an overlapping route name would let React Navigation preserve the
+          modal across the stack swap so it never dismisses. See issue #4050. */}
 
       <Stack.Screen
         name={BCSCModals.ServiceOutage}

@@ -155,7 +155,9 @@ export type BCSCOnboardingStackParams = {
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
-  [BCSCModals.VerificationSessionExpired]: undefined
+  // VerificationSessionExpired is intentionally NOT registered in the Onboarding stack — it is the
+  // post-reset destination, and an overlapping route name would let React Navigation preserve the
+  // modal across the stack swap so it never dismisses. See issue #4050.
   [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
 }
 
