@@ -1,5 +1,7 @@
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
-import { getAuthorizationRequest } from 'react-native-bcsc-core'
+import { getCredentialVerificationStatus } from '@/bcsc-theme/utils/bcsc-credential'
+import { VerificationStatus } from '@/store'
+import { getAuthorizationRequest, getCredential, getToken, TokenType } from 'react-native-bcsc-core'
 import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
@@ -117,4 +119,25 @@ export async function getPendingDeviceCodeExpiry(): Promise<Date | null> {
     return null
   }
   return new Date(authRequest.expiry * 1000)
+}
+
+/**
+ * Determines whether the user is already verified by reading native storage directly.
+ *
+ * Mirrors `isUserVerified` but sources its answer from native storage instead of the Redux store:
+ * startup checks can run before secure state is hydrated, at which point the store would report an
+ * already-verified user as unverified. Reading native storage avoids that race — and the resulting
+ * risk of factory-resetting a verified account on a stale/expired device_code. See issue #4050.
+ *
+ * @returns {*} {Promise<boolean>} true if a verified credential (or a non-deactivated refresh token) exists.
+ */
+export async function isVerifiedFromNativeStorage(): Promise<boolean> {
+  const [credential, refreshToken] = await Promise.all([getCredential(), getToken(TokenType.Refresh)])
+  const status = getCredentialVerificationStatus(credential)
+
+  if (status === VerificationStatus.VERIFIED) {
+    return true
+  }
+
+  return Boolean(refreshToken?.token) && status !== VerificationStatus.DEACTIVATED
 }

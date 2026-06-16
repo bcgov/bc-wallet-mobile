@@ -1,10 +1,12 @@
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
+import { BCSCEvent } from '@/bcsc-theme/utils/id-token'
 import {
   getPendingDeviceCodeExpiry,
+  isVerifiedFromNativeStorage,
   VerificationSessionExpiredSystemCheck,
 } from '@/services/system-checks/VerificationSessionExpiredSystemCheck'
 import { MockLogger } from '@bifold/core'
-import { getAuthorizationRequest } from 'react-native-bcsc-core'
+import { getAuthorizationRequest, getCredential, getToken } from 'react-native-bcsc-core'
 
 const makeUtils = () => ({
   dispatch: jest.fn(),
@@ -98,5 +100,40 @@ describe('getPendingDeviceCodeExpiry', () => {
     jest.mocked(getAuthorizationRequest).mockResolvedValue({ deviceCode: 'device-code', expiry: 1_700_000_000 } as any)
 
     await expect(getPendingDeviceCodeExpiry()).resolves.toEqual(new Date(1_700_000_000 * 1000))
+  })
+})
+
+describe('isVerifiedFromNativeStorage', () => {
+  beforeEach(() => {
+    jest.mocked(getCredential).mockReset()
+    jest.mocked(getToken).mockReset()
+  })
+
+  it('returns true when a verified credential exists', async () => {
+    jest.mocked(getCredential).mockResolvedValue({} as any) // non-null, no cancel/expire event => VERIFIED
+    jest.mocked(getToken).mockResolvedValue(null)
+
+    await expect(isVerifiedFromNativeStorage()).resolves.toBe(true)
+  })
+
+  it('returns true when unverified but a non-deactivated refresh token is present', async () => {
+    jest.mocked(getCredential).mockResolvedValue(null) // => UNVERIFIED
+    jest.mocked(getToken).mockResolvedValue({ token: 'refresh-token' } as any)
+
+    await expect(isVerifiedFromNativeStorage()).resolves.toBe(true)
+  })
+
+  it('returns false when there is no credential and no refresh token', async () => {
+    jest.mocked(getCredential).mockResolvedValue(null)
+    jest.mocked(getToken).mockResolvedValue(null)
+
+    await expect(isVerifiedFromNativeStorage()).resolves.toBe(false)
+  })
+
+  it('returns false when the credential is deactivated even if a refresh token is present', async () => {
+    jest.mocked(getCredential).mockResolvedValue({ bcscEvent: BCSCEvent.Cancel } as any) // => DEACTIVATED
+    jest.mocked(getToken).mockResolvedValue({ token: 'refresh-token' } as any)
+
+    await expect(isVerifiedFromNativeStorage()).resolves.toBe(false)
   })
 })

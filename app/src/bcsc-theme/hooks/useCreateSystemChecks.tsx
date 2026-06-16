@@ -1,7 +1,6 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
 
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { isUserVerified } from '@/bcsc-theme/utils/bcsc-credential'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { AccountExpiryWarningBannerSystemCheck } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
@@ -14,6 +13,7 @@ import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCh
 import { UpdateDeviceRegistrationSystemCheck } from '@/services/system-checks/UpdateDeviceRegistrationSystemCheck'
 import {
   getPendingDeviceCodeExpiry,
+  isVerifiedFromNativeStorage,
   VerificationSessionExpiredSystemCheck,
 } from '@/services/system-checks/VerificationSessionExpiredSystemCheck'
 import { BCState } from '@/store'
@@ -103,17 +103,14 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
 
     // Only run update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
     if (isBCServicesCardBundle) {
+      // Both the expiry and the verified status are read from native storage (not the Redux store):
+      // startup checks can run before secure state is hydrated, when the store would report a verified
+      // user as unverified — risking a factory reset of their account on a stale device_code (TTL
+      // ~7 days). See issue #4050.
+      const isVerified = await isVerifiedFromNativeStorage()
       systemChecks.push(
         new UpdateAppSystemCheck(serverStatus, navigation, utils),
-        // Detect an expired in-progress verification session (device_code TTL ~7 days).
-        // getPendingDeviceCodeExpiry reads the expiry from native storage rather than the store, since
-        // startup checks can run before secure state is hydrated (isReady below does not gate on it).
-        new VerificationSessionExpiredSystemCheck(
-          getPendingDeviceCodeExpiry,
-          isUserVerified(store.bcscSecure),
-          navigation,
-          utils
-        )
+        new VerificationSessionExpiredSystemCheck(getPendingDeviceCodeExpiry, isVerified, navigation, utils)
       )
     }
 
@@ -125,7 +122,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     logger,
     navigation,
     store.bcsc.analyticsOptIn,
-    store.bcscSecure,
     store.developer.environment.analyticsAppId,
     utils,
   ])

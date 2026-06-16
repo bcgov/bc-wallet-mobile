@@ -84,10 +84,8 @@ jest.mock('@/services/system-checks/ServerClockSkewSystemCheck', () => ({
 
 jest.mock('@/services/system-checks/VerificationSessionExpiredSystemCheck', () => ({
   VerificationSessionExpiredSystemCheck: class VerificationSessionExpiredSystemCheck {},
-}))
-
-jest.mock('@/bcsc-theme/utils/bcsc-credential', () => ({
-  isUserVerified: jest.fn(() => false),
+  getPendingDeviceCodeExpiry: jest.fn(),
+  isVerifiedFromNativeStorage: jest.fn().mockResolvedValue(false),
 }))
 
 jest.mock('@/bcsc-theme/components/AppBanner', () => ({
