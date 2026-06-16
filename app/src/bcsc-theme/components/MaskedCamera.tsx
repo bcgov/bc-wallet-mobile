@@ -4,7 +4,7 @@ import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { MaskType, SVGOverlay, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { NavigationProp, ParamListBase, useIsFocused } from '@react-navigation/native'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -117,7 +117,18 @@ const MaskedCamera = ({
       setTorchOn(false)
     }
   }, [isFocused])
-
+  
+  const onError = useCallback(
+    (error: unknown) => {
+      logger.error('CodeScanningCamera runtime error', error as Error)
+      emitErrorModal(
+        t('BCSC.CameraDisclosure.Error'),
+        t('BCSC.CameraDisclosure.ErrorMessage'),
+        ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
+      )
+    },
+    [logger, emitErrorModal, t]
+  )
   if (!device) {
     return (
       <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
@@ -130,14 +141,6 @@ const MaskedCamera = ({
 
   const handleCancel = () => {
     navigation.goBack()
-  }
-  const onError = (error: any) => {
-    logger.error(`Camera error: ${error}`)
-    emitErrorModal(
-      t('BCSC.CameraDisclosure.Error'),
-      t('BCSC.CameraDisclosure.ErrorMessage'),
-      ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
-    )
   }
 
   const takePhoto = async () => {

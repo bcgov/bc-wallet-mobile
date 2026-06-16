@@ -880,7 +880,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
   const handleCameraError = useCallback(
     (error: unknown) => {
-      logger.error('CodeScanningCamera runtime error', { error: String(error) })
+      logger.error('CodeScanningCamera runtime error', error as Error)
       emitErrorModal(
         t('BCSC.CameraDisclosure.Error'),
         t('BCSC.CameraDisclosure.ErrorMessage'),
