@@ -9,6 +9,7 @@ import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSyst
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClockSkewSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
+import { ReportUUIDSystemCheck } from '@/services/system-checks/ReportUUIDSystemCheck'
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
 import { UpdateDeviceRegistrationSystemCheck } from '@/services/system-checks/UpdateDeviceRegistrationSystemCheck'
 import { BCState } from '@/store'
@@ -86,6 +87,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     const serverStatus = await configApi.getServerStatus()
 
     const systemChecks: SystemCheckStrategy[] = [
+      new ReportUUIDSystemCheck(store.bcsc.reportUUID, dispatch),
       new AnalyticsSystemCheck(
         store.bcsc.analyticsOptIn,
         store.developer.environment.analyticsAppId,
@@ -104,11 +106,13 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     return systemChecks
   }, [
     configApi,
+    dispatch,
     emitAlert,
     isBCServicesCardBundle,
     logger,
     navigation,
     store.bcsc.analyticsOptIn,
+    store.bcsc.reportUUID,
     store.developer.environment.analyticsAppId,
     utils,
   ])
