@@ -62,6 +62,7 @@ exports[`ScanSerial renders correctly 1`] = `
         }
         format={{}}
         isActive={true}
+        onError={[Function]}
         onInitialized={[Function]}
         ref={
           {

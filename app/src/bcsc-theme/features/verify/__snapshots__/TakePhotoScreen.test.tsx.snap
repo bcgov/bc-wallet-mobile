@@ -41,7 +41,7 @@ exports[`TakePhoto renders correctly 1`] = `
           "videoWidth": 640,
         }
       }
-      isActive={false}
+      isActive={true}
       isMirrored={false}
       onError={[Function]}
       onInitialized={[Function]}

@@ -54,6 +54,7 @@ exports[`CodeScanningCamera Camera Type renders with back camera (default) 1`] =
         }
       }
       isActive={true}
+      onError={[Function]}
       resizeMode="cover"
       style={
         {
@@ -321,6 +322,7 @@ exports[`CodeScanningCamera Camera Type renders with front camera 1`] = `
         }
       }
       isActive={true}
+      onError={[Function]}
       resizeMode="cover"
       style={
         {
@@ -587,6 +589,7 @@ exports[`CodeScanningCamera Custom Scan Zones renders with both custom scan zone
         }
       }
       isActive={true}
+      onError={[Function]}
       resizeMode="cover"
       style={
         {
@@ -853,6 +856,7 @@ exports[`CodeScanningCamera Custom Scan Zones renders with custom scan zones 1`]
         }
       }
       isActive={true}
+      onError={[Function]}
       resizeMode="cover"
       style={
         {
@@ -1120,6 +1124,7 @@ exports[`CodeScanningCamera Custom Scan Zones renders with enableScanZones flag 
         }
       }
       isActive={true}
+      onError={[Function]}
       resizeMode="cover"
       style={
         {
@@ -1387,6 +1392,7 @@ exports[`CodeScanningCamera renders correctly with default props 1`] = `
         }
       }
       isActive={true}
+      onError={[Function]}
       resizeMode="cover"
       style={
         {
@@ -1654,6 +1660,7 @@ exports[`CodeScanningCamera renders with barcode highlight enabled 1`] = `
         }
       }
       isActive={true}
+      onError={[Function]}
       resizeMode="cover"
       style={
         {
@@ -1921,6 +1928,7 @@ exports[`CodeScanningCamera renders with custom initial zoom 1`] = `
         }
       }
       isActive={true}
+      onError={[Function]}
       resizeMode="cover"
       style={
         {
@@ -2188,6 +2196,7 @@ exports[`CodeScanningCamera renders with initial zoom set 1`] = `
         }
       }
       isActive={true}
+      onError={[Function]}
       resizeMode="cover"
       style={
         {
