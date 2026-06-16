@@ -37,9 +37,9 @@ import { useCameraPermission, useCodeScanner } from 'react-native-vision-camera'
  * https://github.com/mrousavy/react-native-vision-camera/tree/main/docs/content/docs/lifecycle.mdx
  *
  * Per library docs, using isActive to pause/resume is preferred over full mount/unmount
- * because it keeps the camera session warm and resumes much faster. MaskedCamera now
- * automatically deactivates via useFocusEffect when not focused, and properly resets
- * state on unmount.
+ * because it keeps the camera session warm and resumes much faster. MaskedCamera deactivates
+ * the camera preview when the screen loses focus via `useIsFocused`/`isActive`, and turns off
+ * the torch when focus is lost.
  */
 
 type EvidenceCaptureScreenProps = {
