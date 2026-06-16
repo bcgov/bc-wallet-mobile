@@ -4,6 +4,7 @@ import Config from 'react-native-config'
 import {
   getApplicationName,
   getBuildNumber,
+  getDeviceId,
   getSystemName,
   getSystemVersion,
   getVersion,
@@ -16,6 +17,7 @@ const baseOptions: RemoteLoggerOptions = {
     application: getApplicationName().toLowerCase(),
     version: `${getVersion()}-${getBuildNumber()}`,
     system: `${getSystemName()} v${getSystemVersion()}`,
+    model: getDeviceId(), // NOTE (bm): Not user-friendly model name, actual device model code, ie: iPhone 14 Pro shows up as iPhone 15,2
   },
   autoDisableRemoteLoggingIntervalInMinutes,
 }
