@@ -114,27 +114,57 @@ export const CameraFormat = {
     },
   ] satisfies FormatFilter[],
   /**
-   * Format optimized for masked camera with barcode detection
-   * Higher FPS and resolution for better barcode recognition
+   * Format optimized for masked camera with barcode detection.
+   * Starts with high-FPS / max-resolution tiers (ideal for preview quality),
+   * then falls back through the same tiers as CodeScanningFormat so the camera
+   * still works on devices that can't sustain 60 FPS or max resolution.
    */
   MaskedWithBarcodeDetection: [
-    // Prefer non-HDR (8-bit) formats. Some devices only expose a 10-bit HDR
-    // pixel format (e.g. "btp2") on their max-resolution/60fps formats, which
-    // VisionCamera's default 8-bit pipeline can't use → "pixel-format-not-supported".
+    // Tier 1: Ideal — 60 FPS + max video resolution + non-HDR + 720p photo
+    // Best for preview quality and barcode detection on capable devices.
     {
       videoHdr: false,
+      fps: 60,
+      videoResolution: 'max',
+      photoResolution: PHOTO_RESOLUTION_720P,
     },
-    // Target 60 FPS for smoother camera preview and better barcode detection
+    // Tier 2: 60 FPS + non-HDR (drop resolution requirement)
+    // Keeps high frame rate when max resolution is unavailable.
     {
+      videoHdr: false,
       fps: 60,
     },
-    // Select the highest possible video resolution (for preview quality)
+    // Tier 3: 1080p + 30 FPS + non-HDR + stabilization
+    // Primary fallback — sufficient for barcode scanning on most devices.
     {
-      videoResolution: 'max',
+      videoHdr: false,
+      videoResolution: PHOTO_RESOLUTION_1080P,
+      fps: 30,
+      videoStabilizationMode: 'auto',
     },
-    // Limit photo resolution to 720p for faster processing and lower file sizes
+    // Tier 4: 1080p + 30 FPS + non-HDR (drop stabilization if needed)
     {
-      photoResolution: PHOTO_RESOLUTION_720P,
+      videoHdr: false,
+      videoResolution: PHOTO_RESOLUTION_1080P,
+      fps: 30,
+    },
+    // Tier 5: 720p + 30 FPS + non-HDR
+    // 720p is still sufficient for barcode detection.
+    {
+      videoHdr: false,
+      videoResolution: PHOTO_RESOLUTION_720P,
+      fps: 30,
+    },
+    // Tier 6: 720p + 24 FPS + non-HDR (minimum viable FPS)
+    {
+      videoHdr: false,
+      videoResolution: PHOTO_RESOLUTION_720P,
+      fps: 24,
+    },
+    // Tier 7: Any resolution + non-HDR (absolute fallback)
+    // Prevents "device/pixel-format-not-supported" errors on iOS devices with limited format support.
+    {
+      videoHdr: false,
     },
   ] satisfies FormatFilter[],
 
