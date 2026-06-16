@@ -100,12 +100,11 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
 
     // Only run update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
     if (isBCServicesCardBundle) {
-      systemChecks.push(new UpdateAppSystemCheck(serverStatus, navigation, utils))
-
-      // Detect an expired in-progress verification session (device_code TTL ~7 days). Read the expiry
-      // from native storage rather than the store, since startup checks can run before secure state
-      // is hydrated (see isReady below — it does not gate on store.bcscSecure.isHydrated).
       systemChecks.push(
+        new UpdateAppSystemCheck(serverStatus, navigation, utils),
+        // Detect an expired in-progress verification session (device_code TTL ~7 days). Read the expiry
+        // from native storage rather than the store, since startup checks can run before secure state
+        // is hydrated (see isReady below — it does not gate on store.bcscSecure.isHydrated).
         new VerificationSessionExpiredSystemCheck(
           async () => {
             const authRequest = await getAuthorizationRequest()
