@@ -2,7 +2,7 @@ import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { QRScannerTorch, TOKENS, useServices, useTheme } from '@bifold/core'
-import { useFocusEffect } from '@react-navigation/native'
+import { useFocusEffect, useIsFocused } from '@react-navigation/native'
 import { a11yLabel } from '@utils/accessibility'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -145,6 +145,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const [torchEnabled, setTorchEnabled] = useState(false)
   const { width, height: windowHeight } = useWindowDimensions()
   const { hasPermission, requestPermission } = useCameraPermission()
+  const isFocused = useIsFocused()
   const [focusPoint, setFocusPoint] = useState<{ x: number; y: number } | null>(null)
   const focusOpacity = useRef(new Animated.Value(0)).current
   const focusScale = useRef(new Animated.Value(1)).current
@@ -1160,7 +1161,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
           style={styles.camera}
           device={device}
           format={format}
-          isActive={hasPermission && !frozenFrameUri}
+          isActive={hasPermission && isFocused && !frozenFrameUri}
           video={true}
           codeScanner={codeScanner}
           torch={torchEnabled ? 'on' : 'off'}
