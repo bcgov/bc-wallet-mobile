@@ -82,6 +82,14 @@ jest.mock('@/services/system-checks/ServerClockSkewSystemCheck', () => ({
   ServerClockSkewSystemCheck: class ServerClockSkewSystemCheck {},
 }))
 
+jest.mock('@/services/system-checks/VerificationSessionExpiredSystemCheck', () => ({
+  VerificationSessionExpiredSystemCheck: class VerificationSessionExpiredSystemCheck {},
+}))
+
+jest.mock('@/bcsc-theme/utils/bcsc-credential', () => ({
+  isUserVerified: jest.fn(() => false),
+}))
+
 jest.mock('@/bcsc-theme/components/AppBanner', () => ({
   BCSCBanner: {
     IAS_SERVER_UNAVAILABLE: 'IASServerUnavailableBanner',
@@ -177,11 +185,12 @@ describe('useGetSystemChecks', () => {
 
         const systemChecks = await result.current[SystemCheckScope.STARTUP].getSystemChecks()
 
-        expect(systemChecks).toHaveLength(4) // AnalyticsSystemCheck, ServerStatusSystemCheck, ServerClockSkewSystemCheck, UpdateAppSystemCheck
+        expect(systemChecks).toHaveLength(5) // AnalyticsSystemCheck, ServerStatusSystemCheck, ServerClockSkewSystemCheck, UpdateAppSystemCheck, VerificationSessionExpiredSystemCheck
         expect(systemChecks[0].constructor.name).toBe('AnalyticsSystemCheck')
         expect(systemChecks[1].constructor.name).toBe('ServerStatusSystemCheck')
         expect(systemChecks[2].constructor.name).toBe('ServerClockSkewSystemCheck')
         expect(systemChecks[3].constructor.name).toBe('UpdateAppSystemCheck')
+        expect(systemChecks[4].constructor.name).toBe('VerificationSessionExpiredSystemCheck')
       })
 
       it('should not include UpdateAppSystemCheck for non-BCSC builds', async () => {

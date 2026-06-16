@@ -11,6 +11,7 @@ import TransferInformationScreen from '../features/account-transfer/transferee/T
 import { OnboardingRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
+import { VerificationSessionExpired } from '../features/modal/VerificationSessionExpired'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
 import AccountSetupScreen from '../features/onboarding/AccountSetupScreen'
 import { CreatePINScreen } from '../features/onboarding/CreatePINScreen'
@@ -154,6 +155,15 @@ const OnboardingStack = (): React.ReactElement => {
       <Stack.Screen
         name={BCSCModals.MandatoryUpdate}
         component={MandatoryUpdate}
+        options={{
+          ...getDefaultModalOptions(t('BCSC.Title')),
+          gestureEnabled: false,
+        }}
+      />
+
+      <Stack.Screen
+        name={BCSCModals.VerificationSessionExpired}
+        component={VerificationSessionExpired}
         options={{
           ...getDefaultModalOptions(t('BCSC.Title')),
           gestureEnabled: false,

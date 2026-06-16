@@ -2,7 +2,7 @@ import { AppError, ErrorCategory, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { AxiosError } from 'axios'
 import { VerificationCardError } from '../features/verify/verificationCardError'
-import { BCSCScreens } from '../types/navigators'
+import { BCSCModals, BCSCScreens } from '../types/navigators'
 import {
   alreadyRegisteredErrorPolicy,
   alreadyVerifiedErrorPolicy,
@@ -22,6 +22,7 @@ import {
   pairingCodeErrorPolicy,
   unexpectedServerErrorPolicy,
   updateRequiredErrorPolicy,
+  verificationSessionExpiredErrorPolicy,
   verifyDeviceAssertionErrorPolicy,
   verifyNotCompletedErrorPolicy,
 } from './clientErrorPolicies'
@@ -577,6 +578,59 @@ describe('clientErrorPolicies', () => {
             params: { errorType: VerificationCardError.CardExpired },
           },
         ])
+      })
+    })
+  })
+
+  describe('verificationSessionExpiredErrorPolicy', () => {
+    describe('matches', () => {
+      it('should match a 401 on the evidence endpoint', () => {
+        const error = newError('unknown_server_error')
+        const context = {
+          statusCode: 401,
+          endpoint: 'https://example.com/evidence/v1/verifications',
+          apiEndpoints: { evidence: 'https://example.com/evidence' },
+        }
+        expect(verificationSessionExpiredErrorPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it('should NOT match a non-401 status on the evidence endpoint', () => {
+        const error = newError('unknown_server_error')
+        const context = {
+          statusCode: 500,
+          endpoint: 'https://example.com/evidence/v1/verifications',
+          apiEndpoints: { evidence: 'https://example.com/evidence' },
+        }
+        expect(verificationSessionExpiredErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
+      it('should NOT match a 401 on a non-evidence endpoint', () => {
+        const error = newError('unknown_server_error')
+        const context = {
+          statusCode: 401,
+          endpoint: 'https://example.com/token',
+          apiEndpoints: { evidence: 'https://example.com/evidence' },
+        }
+        expect(verificationSessionExpiredErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle', () => {
+      it('navigates to the VerificationSessionExpired modal', () => {
+        const error = newError('unknown_server_error')
+        const dispatchMock = jest.fn()
+        const loggerMock = { info: jest.fn() }
+        const context = {
+          navigation: { dispatch: dispatchMock },
+          logger: loggerMock,
+        }
+
+        verificationSessionExpiredErrorPolicy.handle(error, context as any)
+
+        expect(dispatchMock).toHaveBeenCalledTimes(1)
+        const dispatchArgs = dispatchMock.mock.calls[0][0]
+        expect(dispatchArgs.type).toBe('NAVIGATE')
+        expect(dispatchArgs.payload.name).toBe(BCSCModals.VerificationSessionExpired)
       })
     })
   })

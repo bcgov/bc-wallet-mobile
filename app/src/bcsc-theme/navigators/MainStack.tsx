@@ -27,6 +27,7 @@ import { MainChangeSecurityScreen } from '../features/auth/MainChangeSecurityScr
 import { DeviceInvalidated } from '../features/modal/DeviceInvalidated'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
+import { VerificationSessionExpired } from '../features/modal/VerificationSessionExpired'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
 import { usePairingService } from '../features/pairing'
 import ManualPairingCode from '../features/pairing/ManualPairing'
@@ -301,6 +302,15 @@ const MainStack: React.FC = () => {
         <Stack.Screen
           name={BCSCModals.MandatoryUpdate}
           component={MandatoryUpdate}
+          options={{
+            ...getDefaultModalOptions(t('BCSC.Title')),
+            gestureEnabled: false,
+          }}
+        />
+
+        <Stack.Screen
+          name={BCSCModals.VerificationSessionExpired}
+          component={VerificationSessionExpired}
           options={{
             ...getDefaultModalOptions(t('BCSC.Title')),
             gestureEnabled: false,

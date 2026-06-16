@@ -341,6 +341,12 @@ const translation = {
         "ContentB": "Please update to the latest version from the {{platformStore}}.",
         "UpdateButton": "Go to {{platformStore}}",
       },
+      "VerificationSessionExpired": {
+        "Header": "Verification session expired",
+        "ContentA": "More than 7 days have passed since you started verifying your identity, so this session has expired.",
+        "ContentB": "To continue, you’ll need to set up the app and verify your identity again.",
+        "Button": "Start again",
+      },
       "DeviceInvalidated": {
         "Header": "Device invalidated",
         "CancelledByCardCancel": "Your account will be removed from this app.",

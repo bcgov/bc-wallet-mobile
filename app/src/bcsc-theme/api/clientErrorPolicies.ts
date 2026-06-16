@@ -8,7 +8,7 @@ import { AxiosError } from 'axios'
 import { TFunction } from 'i18next'
 import { Linking } from 'react-native'
 import { VerificationCardError } from '../features/verify/verificationCardError'
-import { BCSCScreens } from '../types/navigators'
+import { BCSCModals, BCSCScreens } from '../types/navigators'
 import { BCSCEndpoints } from './client'
 
 const UNSUPPORTED_OS_TECHNICAL_MESSAGE = 'unsupported os version'
@@ -422,6 +422,28 @@ export const cardExpiredErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
+/**
+ * Error policy for an expired/superseded verification session on the evidence endpoints.
+ *
+ * Evidence calls authenticate only with the short-lived `device_code`, so a 401 on the evidence base
+ * means that code is expired or has been superseded server-side. Route the user to the verification
+ * session expired modal (which resets the app) instead of the generic error modal, whose
+ * "re-open the app" advice cannot renew the code. See issue #4050.
+ *
+ * @returns ErrorHandlingPolicy
+ */
+export const verificationSessionExpiredErrorPolicy: ErrorHandlingPolicy = {
+  matches: (_error, context) => {
+    return context.statusCode === 401 && context.endpoint.includes(context.apiEndpoints.evidence)
+  },
+  handle: (_error, context) => {
+    context.logger.info(
+      '[VerificationSessionExpiredErrorPolicy] device_code 401 on evidence endpoint, routing to restart'
+    )
+    context.navigation.dispatch(CommonActions.navigate({ name: BCSCModals.VerificationSessionExpired }))
+  },
+}
+
 // Error policy for ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE — bad request due to malformed or misconfigured client
 export const failedToRetrieveStringResourceErrorPolicy: ErrorHandlingPolicy = {
   matches: (error) => {
@@ -463,6 +485,7 @@ export const invalidRegistrationRequestErrorPolicy: ErrorHandlingPolicy = {
 export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   alreadyRegisteredErrorPolicy,
   cardExpiredErrorPolicy,
+  verificationSessionExpiredErrorPolicy,
   birthdateLockoutErrorPolicy,
   noTokensReturnedErrorPolicy,
   updateRequiredErrorPolicy,

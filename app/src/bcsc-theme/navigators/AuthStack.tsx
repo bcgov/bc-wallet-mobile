@@ -13,6 +13,7 @@ import { EnterPINScreen } from '../features/auth/EnterPINScreen'
 import { LockoutScreen } from '../features/auth/LockoutScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
+import { VerificationSessionExpired } from '../features/modal/VerificationSessionExpired'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
 import { AuthPrivacyPolicyScreen } from '../features/settings/AuthPrivacyPolicyScreen'
 import { AuthSettingsScreen } from '../features/settings/AuthSettingsScreen'
@@ -129,6 +130,14 @@ const AuthStack = (): React.ReactElement => {
       <Stack.Screen
         name={BCSCModals.MandatoryUpdate}
         component={MandatoryUpdate}
+        options={{
+          ...getDefaultModalOptions(t('BCSC.Title')),
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
+        name={BCSCModals.VerificationSessionExpired}
+        component={VerificationSessionExpired}
         options={{
           ...getDefaultModalOptions(t('BCSC.Title')),
           gestureEnabled: false,

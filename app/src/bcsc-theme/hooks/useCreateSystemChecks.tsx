@@ -1,6 +1,7 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
 
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { isUserVerified } from '@/bcsc-theme/utils/bcsc-credential'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { AccountExpiryWarningBannerSystemCheck } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
@@ -11,13 +12,14 @@ import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClock
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
 import { UpdateDeviceRegistrationSystemCheck } from '@/services/system-checks/UpdateDeviceRegistrationSystemCheck'
+import { VerificationSessionExpiredSystemCheck } from '@/services/system-checks/VerificationSessionExpiredSystemCheck'
 import { BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { getMaxDevicesBannerLastDisplayedDate } from 'react-native-bcsc-core'
+import { getAuthorizationRequest, getMaxDevicesBannerLastDisplayedDate } from 'react-native-bcsc-core'
 import { getBundleId } from 'react-native-device-info'
 import { SystemCheckStrategy } from '../../services/system-checks/system-checks'
 import useConfigApi from '../api/hooks/useConfigApi'
@@ -99,6 +101,24 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     // Only run update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
     if (isBCServicesCardBundle) {
       systemChecks.push(new UpdateAppSystemCheck(serverStatus, navigation, utils))
+
+      // Detect an expired in-progress verification session (device_code TTL ~7 days). Read the expiry
+      // from native storage rather than the store, since startup checks can run before secure state
+      // is hydrated (see isReady below — it does not gate on store.bcscSecure.isHydrated).
+      systemChecks.push(
+        new VerificationSessionExpiredSystemCheck(
+          async () => {
+            const authRequest = await getAuthorizationRequest()
+            if (!authRequest?.deviceCode || !authRequest.expiry) {
+              return null
+            }
+            return new Date(authRequest.expiry * 1000)
+          },
+          isUserVerified(store.bcscSecure),
+          navigation,
+          utils
+        )
+      )
     }
 
     return systemChecks
@@ -109,6 +129,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     logger,
     navigation,
     store.bcsc.analyticsOptIn,
+    store.bcscSecure,
     store.developer.environment.analyticsAppId,
     utils,
   ])
