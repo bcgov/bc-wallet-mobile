@@ -14,13 +14,13 @@ const mockFocus = jest.fn().mockResolvedValue(undefined)
 let mockHasPermission = true
 let mockCodeScannerCallback: ((codes: any[], frame: any) => void) | null = null
 const mockEmitErrorModal = jest.fn()
-const mockEnsureAppError = jest.fn((error) => ({
+const mockEnsureAppError = jest.fn<{ name: string; message: string }, [unknown, AppEventCode]>(() => ({
   name: 'AppError',
-  message: String(error),
+  message: 'mocked error',
 }))
 
 jest.mock('@/errors/errorHandler', () => ({
-  ensureAppError: (...args: unknown[]) => mockEnsureAppError(...args),
+  ensureAppError: (error: unknown, eventCode: AppEventCode) => mockEnsureAppError(error, eventCode),
 }))
 
 // Mock react-native-vision-camera
@@ -1498,7 +1498,7 @@ describe('CodeScanningCamera', () => {
 
       const camera = getByTestId('mock-camera')
       const runtimeError = new Error('Runtime camera failure')
-      const expectedAppError = { name: 'NormalizedAppError' }
+      const expectedAppError = { name: 'NormalizedAppError', message: 'normalized' }
       mockEnsureAppError.mockReturnValueOnce(expectedAppError)
 
       await act(async () => {
