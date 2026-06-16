@@ -120,7 +120,7 @@ const MaskedCamera = ({
 
   const onError = useCallback(
     (error: unknown) => {
-      logger.error('CodeScanningCamera runtime error', error as Error)
+      logger.error('MaskedCamera runtime error', error as Error)
       emitErrorModal(
         t('BCSC.CameraDisclosure.Error'),
         t('BCSC.CameraDisclosure.ErrorMessage'),

@@ -53,29 +53,6 @@ const __CauseRuntimErrorFormat = [
  * Optimized camera format configurations for various use cases
  */
 export const CameraFormat = {
-  OldCodeScanningFormat: [
-    // Prefer non-HDR formats: HDR video is incompatible with torch on many Android devices,
-    // causing a session rebuild (and visible zoom jump) when the torch is toggled.
-    // SDR is also better for barcode scanning — HDR tone-mapping can soften barcode contrast.
-    {
-      videoHdr: false,
-    },
-    // 1080p video resolution — sufficient for PDF-417 (>=1156px) while keeping
-    // processing fast on Android. The native patch ensures this resolution is
-    // actually used by the code scanner's ImageAnalysis pipeline.
-    {
-      videoResolution: PHOTO_RESOLUTION_1080P,
-    },
-    // 30 FPS provides more scan attempts per second — critical for catching both
-    // PDF-417 and Code-39 within the accumulation window
-    {
-      fps: 30,
-    },
-    // Prefer formats with better video stabilization
-    {
-      videoStabilizationMode: 'auto',
-    },
-  ] satisfies FormatFilter[],
   CodeScanningFormat: [
     // Tier 1: Ideal — 1080p + 30 FPS + non-HDR + stabilization
     // Primary target for Android and modern iOS devices
