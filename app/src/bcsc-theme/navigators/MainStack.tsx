@@ -1,5 +1,5 @@
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
-import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningSystemCheck'
+import { BCDispatchAction, BCState } from '@/store'
 import {
   CredentialDetails,
   Screens,
@@ -7,10 +7,11 @@ import {
   TOKENS,
   useDefaultStackOptions,
   useServices,
+  useStore,
   useTheme,
   useTour,
 } from '@bifold/core'
-import { CommonActions, useNavigation } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -90,6 +91,7 @@ const MainStack: React.FC = () => {
   const defaultStackOptions = useDefaultStackOptions(theme)
   const pairingService = usePairingService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [, dispatch] = useStore<BCState>()
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const { account } = useAccount()
   // Consume any cold-start pairing request once and use it to seed the initial route
@@ -143,11 +145,12 @@ const MainStack: React.FC = () => {
   }, [pairingService, navigation])
 
   useEffect(() => {
-    if (account && isAccountExpired(account.account_expiration_date)) {
-      // If the account is expired, reset the navigation stack and navigate to the AccountExpired screen
-      navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.AccountExpired }] }))
+    if (!account) {
+      return
     }
-  }, [account, navigation])
+    const isExpired = account.account_expiration_date < new Date()
+    dispatch({ type: BCDispatchAction.SET_ACCOUNT_EXPIRY_NOTIFICATION, payload: [isExpired] })
+  }, [account, dispatch])
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>

@@ -1,4 +1,3 @@
-import { ACCOUNT_EXPIRATION_WARNING_DAYS } from '@/constants'
 import { BCDispatchAction } from '@/store'
 import moment from 'moment'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
@@ -23,14 +22,14 @@ export const isAccountExpired = (accountExpiration: Date | string, warningPeriod
 }
 
 /**
- * Checks if the user's account is expiring soon (warning period), but not yet expired.
- * Informs the user how many days until expiration, and links user to renewal information.
+ * Checks if the user's account is expired..
+ * Adds a notification to the home screen to provide context and steps to renew the account
  *
  *
  * @class AccountExpirySystemCheck
  * @implements {SystemCheckStrategy}
  */
-export class AccountExpiryWarningSystemCheck implements SystemCheckStrategy {
+export class AccountExpirySystemCheck implements SystemCheckStrategy {
   private readonly accountExpiration: Date
   private readonly utils: SystemCheckUtils
 
@@ -40,13 +39,12 @@ export class AccountExpiryWarningSystemCheck implements SystemCheckStrategy {
   }
 
   runCheck() {
-    const isExpiringSoon = isAccountExpired(this.accountExpiration, ACCOUNT_EXPIRATION_WARNING_DAYS)
-    // Fail if expiring soon (including already expired — expired case is also handled by MainStack)
-    return !isExpiringSoon
+    const isExpired = isAccountExpired(this.accountExpiration, 0)
+    // Fail if expired (including already expired — expired case is also handled by MainStack)
+    return !isExpired
   }
 
   onFail() {
-    // TODO: change this to Time for Renewal notification
     this.utils.dispatch({ type: BCDispatchAction.SET_ACCOUNT_EXPIRY_NOTIFICATION, payload: [true] })
   }
 

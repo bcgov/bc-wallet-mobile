@@ -1,6 +1,7 @@
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
-import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { InfoBoxType } from '@bifold/core'
+import { CommonActions, useNavigation } from '@react-navigation/native'
 import moment from 'moment'
 import { useTranslation } from 'react-i18next'
 import NotificationCard from './NotificationCard'
@@ -8,7 +9,7 @@ import NotificationCard from './NotificationCard'
 const AccountExpiryNotification = () => {
   const { t } = useTranslation()
   const { account } = useAccount()
-  const secureActions = useSecureActions()
+  const navigation = useNavigation()
 
   const expirationDate = account?.account_expiration_date
   const daysRemaining = expirationDate ? Math.ceil(moment(expirationDate).diff(moment(), 'days', true)) : 0
@@ -20,7 +21,9 @@ const AccountExpiryNotification = () => {
         accountExpiration: expirationDate ? moment(expirationDate).format('LL') : '',
       })}
       buttonTitle={t('Notification.AccountExpiringSoon.ButtonTitle')}
-      onPress={() => secureActions.continueVerificationProcess()}
+      onPress={() => {
+        navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.AccountExpired }] }))
+      }}
       cardType={InfoBoxType.Warn}
     />
   )
