@@ -1,6 +1,10 @@
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
-import { VerificationSessionExpiredSystemCheck } from '@/services/system-checks/VerificationSessionExpiredSystemCheck'
+import {
+  getPendingDeviceCodeExpiry,
+  VerificationSessionExpiredSystemCheck,
+} from '@/services/system-checks/VerificationSessionExpiredSystemCheck'
 import { MockLogger } from '@bifold/core'
+import { getAuthorizationRequest } from 'react-native-bcsc-core'
 
 const makeUtils = () => ({
   dispatch: jest.fn(),
@@ -64,5 +68,35 @@ describe('VerificationSessionExpiredSystemCheck', () => {
 
       expect(navigate).toHaveBeenCalledWith(BCSCModals.VerificationSessionExpired)
     })
+  })
+})
+
+describe('getPendingDeviceCodeExpiry', () => {
+  beforeEach(() => {
+    jest.mocked(getAuthorizationRequest).mockReset()
+  })
+
+  it('returns null when there is no authorization request', async () => {
+    jest.mocked(getAuthorizationRequest).mockResolvedValue(null)
+
+    await expect(getPendingDeviceCodeExpiry()).resolves.toBeNull()
+  })
+
+  it('returns null when the authorization request has no device code', async () => {
+    jest.mocked(getAuthorizationRequest).mockResolvedValue({ expiry: 1_700_000_000 } as any)
+
+    await expect(getPendingDeviceCodeExpiry()).resolves.toBeNull()
+  })
+
+  it('returns null when the authorization request has no expiry', async () => {
+    jest.mocked(getAuthorizationRequest).mockResolvedValue({ deviceCode: 'device-code' } as any)
+
+    await expect(getPendingDeviceCodeExpiry()).resolves.toBeNull()
+  })
+
+  it('converts the Unix-seconds expiry to a Date when a device code is present', async () => {
+    jest.mocked(getAuthorizationRequest).mockResolvedValue({ deviceCode: 'device-code', expiry: 1_700_000_000 } as any)
+
+    await expect(getPendingDeviceCodeExpiry()).resolves.toEqual(new Date(1_700_000_000 * 1000))
   })
 })

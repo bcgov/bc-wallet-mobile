@@ -1,4 +1,5 @@
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
+import { getAuthorizationRequest } from 'react-native-bcsc-core'
 import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
@@ -99,4 +100,21 @@ export class VerificationSessionExpiredSystemCheck implements SystemCheckStrateg
     )
     return this.navigation.navigate(BCSCModals.VerificationSessionExpired)
   }
+}
+
+/**
+ * Reads the pending verification session's `device_code` expiry from native storage.
+ *
+ * Returns null when there is no pending `device_code` (i.e. no in-progress verification); otherwise the
+ * expiry as a Date (native persists it as a Unix-seconds timestamp). Reads from native storage rather
+ * than the Redux store so it is available before secure state is hydrated during startup checks.
+ *
+ * @returns {*} {Promise<Date | null>} The pending device_code expiry, or null when none is pending.
+ */
+export async function getPendingDeviceCodeExpiry(): Promise<Date | null> {
+  const authRequest = await getAuthorizationRequest()
+  if (!authRequest?.deviceCode || !authRequest.expiry) {
+    return null
+  }
+  return new Date(authRequest.expiry * 1000)
 }
