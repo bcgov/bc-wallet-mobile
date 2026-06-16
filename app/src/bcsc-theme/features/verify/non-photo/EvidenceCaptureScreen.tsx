@@ -27,6 +27,19 @@ import { useCameraPermission, useCodeScanner } from 'react-native-vision-camera'
  * Each scanned barcode type produces one entry:
  * - Code-39 or Code-128 (BCSC serial): `{ type, value }`
  * - PDF-417 (driver's licence): `{ type, content_type, document_number, family_name, ... address }`
+ *
+ * ---
+ *
+ * CAMERA LIFECYCLE:
+ * This screen mounts MaskedCamera for each document side (front, back, etc).
+ * The Camera component properly manages its lifecycle via the isActive prop per
+ * react-native-vision-camera best practices:
+ * https://github.com/mrousavy/react-native-vision-camera/tree/main/docs/content/docs/lifecycle.mdx
+ *
+ * Per library docs, using isActive to pause/resume is preferred over full mount/unmount
+ * because it keeps the camera session warm and resumes much faster. MaskedCamera deactivates
+ * the camera preview when the screen loses focus via `useIsFocused`/`isActive`, and turns off
+ * the torch when focus is lost.
  */
 
 type EvidenceCaptureScreenProps = {

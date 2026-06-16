@@ -1,9 +1,12 @@
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { ensureAppError } from '@/errors/errorHandler'
+import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { MaskType, SVGOverlay, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { NavigationProp, ParamListBase, useIsFocused } from '@react-navigation/native'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import {
@@ -42,13 +45,13 @@ const MaskedCamera = ({
   const { t } = useTranslation()
   const safeAreaInsets = useSafeAreaInsets()
   const { Spacing, ColorPalette } = useTheme()
-  const [isActive, setIsActive] = useState(false)
   const [torchOn, setTorchOn] = useState(false)
   const cameraRef = useRef<Camera>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const isFocused = useIsFocused()
   const format = useCameraFormat(device, cameraFormatFilter)
   const { failedToWriteToLocalStorageAlert } = useAlerts(navigation)
+  const { emitErrorModal } = useErrorAlert()
   const hasTorch = device?.hasTorch ?? false
 
   const styles = StyleSheet.create({
@@ -109,6 +112,23 @@ const MaskedCamera = ({
     }
   }, [device, navigation])
 
+  useEffect(() => {
+    if (!isFocused) {
+      setTorchOn(false)
+    }
+  }, [isFocused])
+
+  const onError = useCallback(
+    (error: unknown) => {
+      logger.error('MaskedCamera runtime error', error as Error)
+      emitErrorModal(
+        t('BCSC.CameraDisclosure.Error'),
+        t('BCSC.CameraDisclosure.ErrorMessage'),
+        ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
+      )
+    },
+    [logger, emitErrorModal, t]
+  )
   if (!device) {
     return (
       <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
@@ -122,14 +142,10 @@ const MaskedCamera = ({
   const handleCancel = () => {
     navigation.goBack()
   }
-  const onError = (error: any) => {
-    logger.error(`Camera error: ${error}`)
-    Alert.alert(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorMessage'))
-  }
 
   const takePhoto = async () => {
     try {
-      if (cameraRef.current && isActive) {
+      if (cameraRef.current && isFocused) {
         const photo = await cameraRef.current.takePhoto({
           flash: 'off',
           enableShutterSound: false,
@@ -147,7 +163,11 @@ const MaskedCamera = ({
         return
       }
 
-      Alert.alert(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorTakingPhoto'))
+      emitErrorModal(
+        t('BCSC.CameraDisclosure.Error'),
+        t('BCSC.CameraDisclosure.ErrorTakingPhoto'),
+        ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
+      )
     }
   }
 
@@ -158,12 +178,12 @@ const MaskedCamera = ({
         style={styles.camera}
         device={device}
         format={format}
-        isActive={isFocused && isActive}
+        isActive={isFocused}
         photo={true}
         video={true}
         photoQualityBalance="speed"
         isMirrored={false}
-        onInitialized={() => setIsActive(true)}
+        onInitialized={() => logger.debug('MaskedCamera initialized')}
         onError={onError}
         codeScanner={codeScanner}
         torch={torchOn ? 'on' : 'off'}

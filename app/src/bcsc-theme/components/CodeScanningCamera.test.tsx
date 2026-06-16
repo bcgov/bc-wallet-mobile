@@ -2,6 +2,7 @@ import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Platform } from 'react-native'
 
+import { AppEventCode } from '@/events/appEventCode'
 import { BasicAppContext } from '@mocks/helpers/app'
 import CodeScanningCamera, { ScanZone } from './CodeScanningCamera'
 import { BCSC_SN_SCAN_ZONES } from './utils/camera'
@@ -12,6 +13,15 @@ const mockTakeSnapshot = jest.fn().mockResolvedValue({ path: '/tmp/snapshot.jpg'
 const mockFocus = jest.fn().mockResolvedValue(undefined)
 let mockHasPermission = true
 let mockCodeScannerCallback: ((codes: any[], frame: any) => void) | null = null
+const mockEmitErrorModal = jest.fn()
+const mockEnsureAppError = jest.fn<{ name: string; message: string }, [unknown, AppEventCode]>(() => ({
+  name: 'AppError',
+  message: 'mocked error',
+}))
+
+jest.mock('@/errors/errorHandler', () => ({
+  ensureAppError: (error: unknown, eventCode: AppEventCode) => mockEnsureAppError(error, eventCode),
+}))
 
 // Mock react-native-vision-camera
 jest.mock('react-native-vision-camera', () => {
@@ -92,6 +102,17 @@ jest.mock('../contexts/BCSCActivityContext', () => ({
   })),
 }))
 
+// Mock ErrorAlertContext for camera runtime error handling
+jest.mock('@/contexts/ErrorAlertContext', () => {
+  const actual = jest.requireActual('@/contexts/ErrorAlertContext')
+  return {
+    ...actual,
+    useErrorAlert: jest.fn(() => ({
+      emitErrorModal: mockEmitErrorModal,
+    })),
+  }
+})
+
 // Mock gesture handler
 const mockGestureChain = () => {
   const chain: any = {}
@@ -122,6 +143,7 @@ describe('CodeScanningCamera', () => {
     jest.clearAllMocks()
     mockHasPermission = true
     mockCodeScannerCallback = null
+    mockEmitErrorModal.mockClear()
   })
 
   it('renders correctly with default props', () => {
@@ -1462,6 +1484,33 @@ describe('CodeScanningCamera', () => {
           // The mock triggers onInitialized after a timeout
         },
         { timeout: 100 }
+      )
+    })
+  })
+
+  describe('Camera runtime error handling', () => {
+    it('shows error modal when camera onError fires', async () => {
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} />
+        </BasicAppContext>
+      )
+
+      const camera = getByTestId('mock-camera')
+      const runtimeError = new Error('Runtime camera failure')
+      const expectedAppError = { name: 'NormalizedAppError', message: 'normalized' }
+      mockEnsureAppError.mockReturnValueOnce(expectedAppError)
+
+      await act(async () => {
+        camera.props.onError(runtimeError)
+      })
+
+      expect(mockEnsureAppError).toHaveBeenCalledWith(runtimeError, AppEventCode.ADD_CARD_CAMERA_BROKEN)
+
+      expect(mockEmitErrorModal).toHaveBeenCalledWith(
+        'BCSC.CameraDisclosure.Error',
+        'BCSC.CameraDisclosure.ErrorMessage',
+        expectedAppError
       )
     })
   })

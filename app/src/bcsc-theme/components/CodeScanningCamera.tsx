@@ -1,5 +1,8 @@
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { ensureAppError } from '@/errors/errorHandler'
+import { AppEventCode } from '@/events/appEventCode'
 import { QRScannerTorch, TOKENS, useServices, useTheme } from '@bifold/core'
-import { useFocusEffect } from '@react-navigation/native'
+import { useFocusEffect, useIsFocused } from '@react-navigation/native'
 import { a11yLabel } from '@utils/accessibility'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -38,6 +41,7 @@ import {
 
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
 import {
+  CameraFormat,
   EnhancedCode,
   Rect,
   ScanState,
@@ -136,11 +140,13 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { emitErrorModal } = useErrorAlert()
   const { pauseActivityTracking, resumeActivityTracking } = useBCSCActivity()
   const camera = useRef<Camera>(null)
   const [torchEnabled, setTorchEnabled] = useState(false)
   const { width, height: windowHeight } = useWindowDimensions()
   const { hasPermission, requestPermission } = useCameraPermission()
+  const isFocused = useIsFocused()
   const [focusPoint, setFocusPoint] = useState<{ x: number; y: number } | null>(null)
   const focusOpacity = useRef(new Animated.Value(0)).current
   const focusScale = useRef(new Animated.Value(1)).current
@@ -224,35 +230,17 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
    * Key considerations:
    * - 1080p (1920x1080) provides sufficient resolution for PDF-417 barcodes
    *   (Google ML Kit recommends >=1156px width for dense PDF-417)
-   * - 30 FPS gives 3x more scanning opportunities than 10 FPS, increasing the
-   *   chance of capturing both barcodes in the time window
+   * - 30 FPS is CRITICAL: gives 3x more scanning opportunities than 10 FPS. Essential for catching
+   *   both PDF-417 and Code-39 within the accumulation window. Dropping FPS degrades detection.
    * - On Android, the patched native code now uses this videoResolution for the
    *   code scanner's ImageAnalysis pipeline (previously defaulted to ~640x480)
-   * - On iOS, AVFoundation uses the full active format resolution regardless
+   * - On iOS, some older devices have limited format support; we provide graceful fallbacks
+   *
+   * IMPORTANT: Format filters are applied in order; VisionCamera tries each constraint
+   * and falls back to the next if no format matches. We order from strict to permissive
+   * while preserving FPS (critical for barcode scanning) at each tier.
    */
-  const format = useCameraFormat(device, [
-    // Prefer non-HDR formats: HDR video is incompatible with torch on many Android devices,
-    // causing a session rebuild (and visible zoom jump) when the torch is toggled.
-    // SDR is also better for barcode scanning — HDR tone-mapping can soften barcode contrast.
-    {
-      videoHdr: false,
-    },
-    // 1080p video resolution — sufficient for PDF-417 (>=1156px) while keeping
-    // processing fast on Android. The native patch ensures this resolution is
-    // actually used by the code scanner's ImageAnalysis pipeline.
-    {
-      videoResolution: { width: 1920, height: 1080 },
-    },
-    // 30 FPS provides more scan attempts per second — critical for catching both
-    // PDF-417 and Code-39 within the accumulation window
-    {
-      fps: 30,
-    },
-    // Prefer formats with better video stabilization
-    {
-      videoStabilizationMode: 'auto',
-    },
-  ])
+  const format = useCameraFormat(device, CameraFormat.CodeScanningFormat)
 
   // Calculate effective zoom based on device capabilities
   const getEffectiveZoom = useCallback(
@@ -772,18 +760,61 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     return stopFocusCycling
   }, [scanState, containerSize, startFocusCycling, stopFocusCycling, device])
 
+  /**
+   * LIFECYCLE MANAGEMENT per react-native-vision-camera best practices:
+   * https://github.com/mrousavy/react-native-vision-camera/tree/main/docs/content/docs/lifecycle.mdx
+   *
+   * When screen focus changes, manage activity tracking and torch state.
+   */
   useFocusEffect(
     useCallback(() => {
-      // Pause inactivity timeout while camera is active to prevent auto-lock during scanning
+      // Screen gained focus - pause inactivity timeout while camera is active
       pauseActivityTracking()
 
       return () => {
+        // Screen lost focus - reset camera state and resume inactivity tracking
         setTorchEnabled(false)
         stopFocusCycling()
         resumeActivityTracking()
       }
     }, [pauseActivityTracking, stopFocusCycling, resumeActivityTracking])
   )
+
+  /**
+   * Component unmount cleanup - ensure all resources are released.
+   * This cleanup fires when the component fully unmounts (not just loses focus).
+   * Per react-native-vision-camera docs, we reset state to avoid conflicts on remount.
+   */
+  useEffect(() => {
+    const barcodeReadingsRef = barcodeReadings.current
+    const accumulatedCodesRef = accumulatedCodes.current
+
+    return () => {
+      // Reset all refs to clean state when component unmounts to avoid stale state
+      isLockedRef.current = false
+      lockedScanRef.current = null
+      isProcessingScan.current = false
+      barcodeReadingsRef.clear()
+      accumulatedCodesRef.clear()
+      detectedZoneIndices.current = new Set()
+
+      // Clear any pending animation timeouts to prevent memory leaks
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current)
+        highlightTimeoutRef.current = null
+      }
+      if (clearHighlightTimeoutRef.current) {
+        clearTimeout(clearHighlightTimeoutRef.current)
+        clearHighlightTimeoutRef.current = null
+      }
+      if (focusCycleTimerRef.current) {
+        clearInterval(focusCycleTimerRef.current)
+        focusCycleTimerRef.current = null
+      }
+
+      logger.debug('CodeScanningCamera unmounted - all refs and timers cleaned')
+    }
+  }, [logger])
 
   const toggleTorch = () => {
     setTorchEnabled((prev) => !prev)
@@ -811,6 +842,18 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       logger.debug('Zoom applied after initialization', { zoom: targetZoom })
     }
   }, [initialZoom, getEffectiveZoom, logger, device, format, zoom, cameraIsReady])
+
+  const handleCameraError = useCallback(
+    (error: unknown) => {
+      logger.error('CodeScanningCamera runtime error', error as Error)
+      emitErrorModal(
+        t('BCSC.CameraDisclosure.Error'),
+        t('BCSC.CameraDisclosure.ErrorMessage'),
+        ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
+      )
+    },
+    [logger, emitErrorModal, t]
+  )
 
   const handleSaveScanZones = useCallback(() => {
     if (!containerSize || !frameSize) {
@@ -1083,12 +1126,13 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
           style={styles.camera}
           device={device}
           format={format}
-          isActive={hasPermission && !frozenFrameUri}
+          isActive={isFocused && !frozenFrameUri}
           video={true}
           codeScanner={codeScanner}
           torch={torchEnabled ? 'on' : 'off'}
           animatedProps={animatedProps}
           onInitialized={handleCameraInitialized}
+          onError={handleCameraError}
           resizeMode="cover"
         />
 
