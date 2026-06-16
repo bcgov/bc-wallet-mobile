@@ -66,6 +66,36 @@ describe('AppError', () => {
 
       expect(error.technicalMessage).toBe("E_KEY_NOT_FOUND: Key pair with alias 'abc' not found.")
     })
+
+    it('should append the server response body for AxiosErrors when it is a short string', () => {
+      const identity = {
+        category: ErrorCategory.NETWORK,
+        appEvent: AppEventCode.ERR_209_BAD_REQUEST,
+        statusCode: 2107,
+      }
+      const axiosLike = Object.assign(new Error('Request failed with status code 400'), {
+        isAxiosError: true,
+        response: { data: 'email_address is invalid' },
+      })
+      const error = new AppError('Bad request', identity, { cause: axiosLike, track: false })
+
+      expect(error.technicalMessage).toBe('Request failed with status code 400: email_address is invalid')
+    })
+
+    it('should not append the response body for AxiosErrors when it is not a string', () => {
+      const identity = {
+        category: ErrorCategory.NETWORK,
+        appEvent: AppEventCode.ERR_209_BAD_REQUEST,
+        statusCode: 2107,
+      }
+      const axiosLike = Object.assign(new Error('Request failed with status code 400'), {
+        isAxiosError: true,
+        response: { data: { error: 'bad_request' } },
+      })
+      const error = new AppError('Bad request', identity, { cause: axiosLike, track: false })
+
+      expect(error.technicalMessage).toBe('Request failed with status code 400')
+    })
   })
 
   describe('fullMessage', () => {
@@ -276,6 +306,29 @@ describe('AppError', () => {
       expect(json.cause).toEqual({ name: 'Error', message: 'Network Error', code: 'ERR_NETWORK' })
       // The 1 MB Buffer must not survive serialization (would be ~MBs as a JSON number array).
       expect(JSON.stringify(json).length).toBeLessThan(2000)
+    })
+
+    it('includes the server response body in the summarized cause for AxiosErrors', () => {
+      const identity = {
+        category: ErrorCategory.NETWORK,
+        appEvent: AppEventCode.ERR_209_BAD_REQUEST,
+        statusCode: 2107,
+      }
+      const axiosLike = Object.assign(new Error('Request failed with status code 400'), {
+        isAxiosError: true,
+        code: 'ERR_BAD_REQUEST',
+        response: { status: 400, data: 'email_address is invalid' },
+      })
+      const error = new AppError('Bad request', identity, { cause: axiosLike, track: false })
+
+      const json = error.toJSON()
+
+      expect(json.cause).toEqual({
+        name: 'Error',
+        message: 'Request failed with status code 400',
+        code: 'ERR_BAD_REQUEST',
+        responseData: 'email_address is invalid',
+      })
     })
 
     it('keeps native-module userInfo diagnostics on the summarized cause', () => {

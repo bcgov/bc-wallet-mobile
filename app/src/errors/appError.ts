@@ -3,6 +3,12 @@ import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { ErrorCategory, ErrorDefinition } from './errorRegistry'
 
+let _reportUUID: string | undefined
+
+export function setReportUUID(uuid: string) {
+  _reportUUID = uuid
+}
+
 type AppErrorOptions = ErrorOptions & {
   /**
    * Whether to automatically track this error in analytics upon creation. Defaults to true.
@@ -41,6 +47,10 @@ const summarizeCause = (cause: unknown): unknown => {
   if (userInfo !== undefined) {
     // Native-module rejections carry small, bridge-serializable diagnostics here
     summary.userInfo = userInfo
+  }
+  const responseData = (cause as { response?: { data?: unknown } }).response?.data
+  if (typeof responseData === 'string' && responseData.length <= 500) {
+    summary.responseData = responseData
   }
   return summary
 }
@@ -94,7 +104,7 @@ export class AppError extends Error {
       return null
     }
 
-    const cause = this.cause as Error & { code?: unknown; isAxiosError?: boolean }
+    const cause = this.cause as Error & { code?: unknown; isAxiosError?: boolean; response?: { data?: unknown } }
 
     // AxiosErrors have their error code written into cause.code
     // That value is already captured in appEvent, so excluding it here
@@ -104,7 +114,11 @@ export class AppError extends Error {
     // For non-Axios errors (e.g. native module errors), cause.code is a meaningful prefix like "E_KEY_NOT_FOUND"
     const code = !isAxiosError && typeof cause.code === 'string' ? cause.code : undefined
 
-    return [code, cause.message].filter(Boolean).join(': ')
+    // Include the server's response body when it's a short plain string (e.g. "email_address is invalid")
+    const responseData = isAxiosError ? cause.response?.data : undefined
+    const serverReason = typeof responseData === 'string' && responseData.length <= 500 ? responseData : undefined
+
+    return [code, cause.message, serverReason].filter(Boolean).join(': ')
   }
 
   /**
@@ -132,6 +146,10 @@ export class AppError extends Error {
     if (this.url) {
       const request = this.method ? `${this.method} ${this.url}` : this.url
       formattedMessage += `\nRequest: ${request}`
+    }
+
+    if (_reportUUID) {
+      formattedMessage += `\nReport ID: ${_reportUUID}`
     }
 
     return formattedMessage

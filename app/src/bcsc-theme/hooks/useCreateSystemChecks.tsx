@@ -9,6 +9,7 @@ import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSyst
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClockSkewSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
+import { setReportUUID } from '@/errors/appError'
 import { ReportUUIDSystemCheck } from '@/services/system-checks/ReportUUIDSystemCheck'
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
 import { UpdateDeviceRegistrationSystemCheck } from '@/services/system-checks/UpdateDeviceRegistrationSystemCheck'
@@ -74,6 +75,13 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   useEffect(() => {
     credentialMetadataRef.current = store.bcsc.credentialMetadata
   }, [store.bcsc.credentialMetadata])
+
+  // sync reportUUID to AppError module so it appears in fullMessage debug output
+  useEffect(() => {
+    if (store.bcsc.reportUUID) {
+      setReportUUID(store.bcsc.reportUUID)
+    }
+  }, [store.bcsc.reportUUID])
 
   /**
    * Get system checks to run at app startup
