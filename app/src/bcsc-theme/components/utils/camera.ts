@@ -1,7 +1,7 @@
 import { Platform } from 'react-native'
 import { Code, FormatFilter } from 'react-native-vision-camera'
 
-import { PHOTO_RESOLUTION_720P } from '@/constants'
+import { PHOTO_RESOLUTION_1080P, PHOTO_RESOLUTION_720P } from '@/constants'
 
 // ─── Shared Types ─────────────────────────────────────────────────────────────
 
@@ -40,10 +40,79 @@ export type ScanState = 'scanning' | 'aligned' | 'locked'
 
 // ─── Camera Format Configurations ─────────────────────────────────────────────
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const __CauseRuntimErrorFormat = [
+  {
+    fps: 120,
+    videoResolution: { width: 3840, height: 2160 }, //stupid format to trigger the "device/pixel-format-not-supported" error for testing error handling
+    videoHdr: true,
+  },
+] satisfies FormatFilter[]
+
 /**
  * Optimized camera format configurations for various use cases
  */
 export const CameraFormat = {
+  OldCodeScanningFormat: [
+    // Prefer non-HDR formats: HDR video is incompatible with torch on many Android devices,
+    // causing a session rebuild (and visible zoom jump) when the torch is toggled.
+    // SDR is also better for barcode scanning — HDR tone-mapping can soften barcode contrast.
+    {
+      videoHdr: false,
+    },
+    // 1080p video resolution — sufficient for PDF-417 (>=1156px) while keeping
+    // processing fast on Android. The native patch ensures this resolution is
+    // actually used by the code scanner's ImageAnalysis pipeline.
+    {
+      videoResolution: PHOTO_RESOLUTION_1080P,
+    },
+    // 30 FPS provides more scan attempts per second — critical for catching both
+    // PDF-417 and Code-39 within the accumulation window
+    {
+      fps: 30,
+    },
+    // Prefer formats with better video stabilization
+    {
+      videoStabilizationMode: 'auto',
+    },
+  ] satisfies FormatFilter[],
+  CodeScanningFormat: [
+    // Tier 1: Ideal — 1080p + 30 FPS + non-HDR + stabilization
+    // Primary target for Android and modern iOS devices
+    {
+      videoHdr: false,
+      videoResolution: PHOTO_RESOLUTION_1080P,
+      fps: 30,
+      videoStabilizationMode: 'auto',
+    },
+    // Tier 2: 1080p + 30 FPS + non-HDR (drop stabilization if needed)
+    // Maintains critical 30 FPS for barcode scanning while dropping optional stabilization
+    {
+      videoHdr: false,
+      videoResolution: PHOTO_RESOLUTION_1080P,
+      fps: 30,
+    },
+    // Tier 3: 720p + 30 FPS + non-HDR (lower resolution but preserve FPS)
+    // 720p is sufficient for barcode detection; preserves 30 FPS for catching both barcodes
+    {
+      videoHdr: false,
+      videoResolution: PHOTO_RESOLUTION_720P,
+      fps: 30,
+    },
+    // Tier 4: 720p + 24 FPS + non-HDR (minimum viable FPS for scanning)
+    // If 30 FPS unavailable, 24 FPS still gives 2.4x more attempts than 10 FPS
+    {
+      videoHdr: false,
+      videoResolution: PHOTO_RESOLUTION_720P,
+      fps: 24,
+    },
+    // Tier 5: Any resolution + non-HDR (absolute fallback)
+    // Prevents "device/pixel-format-not-supported" errors on iOS devices with limited format support.
+    // Quality degraded but camera will work.
+    {
+      videoHdr: false,
+    },
+  ] satisfies FormatFilter[],
   /**
    * Format optimized for masked camera with barcode detection
    * Higher FPS and resolution for better barcode recognition

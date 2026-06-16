@@ -117,7 +117,7 @@ const MaskedCamera = ({
       setTorchOn(false)
     }
   }, [isFocused])
-  
+
   const onError = useCallback(
     (error: unknown) => {
       logger.error('CodeScanningCamera runtime error', error as Error)

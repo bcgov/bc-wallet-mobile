@@ -108,6 +108,7 @@ export const enum DaysOfTheWeek {
 // BCSC Video constants
 export const VIDEO_RESOLUTION_480P = { width: 640, height: 480 } // standard definition video resolution
 export const PHOTO_RESOLUTION_720P = { width: 1280, height: 720 } // high definition photo resolution
+export const PHOTO_RESOLUTION_1080P = { width: 1920, height: 1080 } // full high definition photo resolution
 export const SELFIE_VIDEO_FRAME_RATE = 24
 export const MAX_SELFIE_VIDEO_DURATION_SECONDS = 30
 export const DEFAULT_SELFIE_VIDEO_FILENAME = 'selfieVideo.mp4'

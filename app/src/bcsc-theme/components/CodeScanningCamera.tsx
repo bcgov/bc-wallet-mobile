@@ -41,6 +41,7 @@ import {
 
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
 import {
+  CameraFormat,
   EnhancedCode,
   Rect,
   ScanState,
@@ -239,43 +240,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
    * and falls back to the next if no format matches. We order from strict to permissive
    * while preserving FPS (critical for barcode scanning) at each tier.
    */
-  const format = useCameraFormat(device, [
-    // Tier 1: Ideal — 1080p + 30 FPS + non-HDR + stabilization
-    // Primary target for Android and modern iOS devices
-    {
-      videoHdr: false,
-      videoResolution: { width: 1920, height: 1080 },
-      fps: 30,
-      videoStabilizationMode: 'auto',
-    },
-    // Tier 2: 1080p + 30 FPS + non-HDR (drop stabilization if needed)
-    // Maintains critical 30 FPS for barcode scanning while dropping optional stabilization
-    {
-      videoHdr: false,
-      videoResolution: { width: 1920, height: 1080 },
-      fps: 30,
-    },
-    // Tier 3: 720p + 30 FPS + non-HDR (lower resolution but preserve FPS)
-    // 720p is sufficient for barcode detection; preserves 30 FPS for catching both barcodes
-    {
-      videoHdr: false,
-      videoResolution: { width: 1280, height: 720 },
-      fps: 30,
-    },
-    // Tier 4: 720p + 24 FPS + non-HDR (minimum viable FPS for scanning)
-    // If 30 FPS unavailable, 24 FPS still gives 2.4x more attempts than 10 FPS
-    {
-      videoHdr: false,
-      videoResolution: { width: 1280, height: 720 },
-      fps: 24,
-    },
-    // Tier 5: Any resolution + non-HDR (absolute fallback)
-    // Prevents "device/pixel-format-not-supported" errors on iOS devices with limited format support.
-    // Quality degraded but camera will work.
-    {
-      videoHdr: false,
-    },
-  ])
+  const format = useCameraFormat(device, CameraFormat.CodeScanningFormat)
 
   // Calculate effective zoom based on device capabilities
   const getEffectiveZoom = useCallback(
