@@ -83,16 +83,12 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
       throw new Error('Device code is missing. Re install the app and setup try again.')
     }
 
-    // Don't knowingly send an expired device_code — the evidence call would 401. Recovery routing to
-    // the "verification session expired" screen is handled by the startup system check (on relaunch)
-    // and the evidence 401 error policy (for superseded codes that reach the server). See issue #4050.
-    const expiresAt = store.bcscSecure.deviceCodeExpiresAt
-    if (expiresAt && expiresAt.getTime() <= Date.now()) {
-      throw new Error('Device code has expired. The verification session must be restarted.')
-    }
-
+    // Intentionally NOT pre-checking expiry here: a client-side throw bypasses the axios interceptor,
+    // and callers that catch+log would silently drop it. Instead let an expired/superseded device_code
+    // 401 so the centralized verificationSessionExpiredErrorPolicy routes to the restart modal; the
+    // startup system check covers the relaunch case. See issue #4050.
     return code
-  }, [store.bcscSecure.deviceCode, store.bcscSecure.deviceCodeExpiresAt])
+  }, [store.bcscSecure.deviceCode])
 
   const getEvidenceMetadata = useCallback(async (): Promise<EvidenceMetadataResponseData> => {
     const { data } = await apiClient.get<EvidenceMetadataResponseData>(`${apiClient.endpoints.evidence}/metadata`, {

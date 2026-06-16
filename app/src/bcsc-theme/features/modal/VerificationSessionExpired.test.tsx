@@ -50,4 +50,20 @@ describe('VerificationSessionExpired', () => {
       expect(mockFactoryReset).toHaveBeenCalledWith()
     })
   })
+
+  it('logs and does not throw when the factory reset fails', async () => {
+    mockFactoryReset.mockResolvedValueOnce({ success: false, error: new Error('reset failed') })
+
+    const { getByTestId } = render(
+      <BasicAppContext>
+        <VerificationSessionExpired />
+      </BasicAppContext>
+    )
+
+    fireEvent.press(getByTestId(testIdWithKey('VerificationSessionExpiredButton')))
+
+    await waitFor(() => {
+      expect(mockFactoryReset).toHaveBeenCalled()
+    })
+  })
 })

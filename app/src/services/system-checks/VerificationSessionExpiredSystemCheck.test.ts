@@ -40,6 +40,13 @@ describe('VerificationSessionExpiredSystemCheck', () => {
 
       await expect(check.runCheck()).resolves.toBe(false)
     })
+
+    it('returns true (non-blocking) when the expiry lookup throws', async () => {
+      const getExpiry = jest.fn().mockRejectedValue(new Error('native read failed'))
+      const check = new VerificationSessionExpiredSystemCheck(getExpiry, false, {} as any, makeUtils(), now)
+
+      await expect(check.runCheck()).resolves.toBe(true)
+    })
   })
 
   describe('onFail', () => {

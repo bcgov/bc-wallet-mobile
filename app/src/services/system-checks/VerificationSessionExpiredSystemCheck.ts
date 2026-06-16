@@ -60,22 +60,32 @@ export class VerificationSessionExpiredSystemCheck implements SystemCheckStrateg
       return true
     }
 
-    const expiry = await this.getDeviceCodeExpiry()
+    try {
+      const expiry = await this.getDeviceCodeExpiry()
 
-    // No pending device_code means there is no in-progress session to expire.
-    if (!expiry) {
+      // No pending device_code means there is no in-progress session to expire.
+      if (!expiry) {
+        return true
+      }
+
+      const expired = expiry.getTime() <= this.now.getTime()
+
+      this.utils.logger.info('VerificationSessionExpiredSystemCheck', {
+        deviceCodeExpiresAt: expiry.toISOString(),
+        now: this.now.toISOString(),
+        expired,
+      })
+
+      return !expired
+    } catch (error) {
+      // Non-blocking: a native-storage read failure must not reject runSystemChecks' Promise.all,
+      // which would skip every other startup check's failure handling. Treat the session as valid.
+      this.utils.logger.warn(
+        '[VerificationSessionExpiredSystemCheck] Failed to read device_code expiry; treating session as valid',
+        { error }
+      )
       return true
     }
-
-    const expired = expiry.getTime() <= this.now.getTime()
-
-    this.utils.logger.info('VerificationSessionExpiredSystemCheck', {
-      deviceCodeExpiresAt: expiry.toISOString(),
-      now: this.now.toISOString(),
-      expired,
-    })
-
-    return !expired
   }
 
   /**
