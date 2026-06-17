@@ -282,6 +282,42 @@ describe('useResidentialAddressModel', () => {
       expect(mockNavigation.dispatch).toHaveBeenCalled()
       expect(mockAuthorizationApi.authorizeDeviceWithUnknownBCSC).not.toHaveBeenCalled()
     })
+
+    it('should re-authorize (not short-circuit) when the device code is present but expired', async () => {
+      const mockDeviceAuth = {
+        device_code: 'fresh-device-code',
+        user_code: 'fresh-user-code',
+        expires_in: 3600,
+        verification_options: 'video_call',
+        process: 'test-process',
+      }
+      mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockResolvedValue(mockDeviceAuth)
+
+      const storeWithExpiredDeviceCode = {
+        ...mockStore,
+        bcscSecure: {
+          ...mockStore.bcscSecure,
+          deviceCode: 'expired-device-code',
+          deviceCodeExpiresAt: new Date(Date.now() - 3600000),
+        },
+      }
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([storeWithExpiredDeviceCode, mockDispatch])
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      // An expired code must NOT short-circuit; it falls through to mint a fresh code.
+      expect(mockAuthorizationApi.authorizeDeviceWithUnknownBCSC).toHaveBeenCalled()
+      expect(mockUpdateDeviceCodes).toHaveBeenCalledWith({
+        deviceCode: 'fresh-device-code',
+        userCode: 'fresh-user-code',
+        deviceCodeExpiresAt: expect.any(Date),
+      })
+    })
   })
 
   describe('handleSubmit - device authorization', () => {

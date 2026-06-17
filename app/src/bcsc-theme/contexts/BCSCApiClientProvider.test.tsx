@@ -41,6 +41,7 @@ describe('BCSCApiClientProvider', () => {
           iasApiBaseUrl: 'https://example.com',
         },
       },
+      bcsc: {},
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
       },
@@ -82,6 +83,7 @@ describe('BCSCApiClientProvider', () => {
     const mockStore: any = {
       stateLoaded: false,
       developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
+      bcsc: {},
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
       },
@@ -119,6 +121,7 @@ describe('BCSCApiClientProvider', () => {
     const mockStore: any = {
       stateLoaded: true,
       developer: { environment: { iasApiBaseUrl: '' } },
+      bcsc: {},
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
       },
@@ -154,6 +157,7 @@ describe('BCSCApiClientProvider', () => {
     const mockStore: any = {
       stateLoaded: true,
       developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
+      bcsc: {},
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
       },
@@ -205,6 +209,7 @@ describe('BCSCApiClientProvider', () => {
     const mockStore: any = {
       stateLoaded: true,
       developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
+      bcsc: {},
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
       },
@@ -246,6 +251,7 @@ describe('BCSCApiClientProvider', () => {
     const mockStore: any = {
       stateLoaded: true,
       developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
+      bcsc: {},
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
       },
@@ -288,6 +294,7 @@ describe('BCSCApiClientProvider', () => {
     let store: any = {
       stateLoaded: true,
       developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
+      bcsc: {},
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
       },
@@ -326,6 +333,7 @@ describe('BCSCApiClientProvider', () => {
     store = {
       stateLoaded: true,
       developer: { environment: { iasApiBaseUrl: 'https://new.com' } },
+      bcsc: {},
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
       },

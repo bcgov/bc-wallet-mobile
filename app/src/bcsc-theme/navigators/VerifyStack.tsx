@@ -22,6 +22,7 @@ import { VerifyChangeSecurityScreen } from '../features/auth/VerifyChangeSecurit
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
+import { VerificationSessionExpired } from '../features/modal/VerificationSessionExpired'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
 import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { VerifyPrivacyPolicyScreen } from '../features/settings/VerifyPrivacyPolicyScreen'
@@ -63,6 +64,7 @@ import VideoInstructionsScreen from '../features/verify/send-video/VideoInstruct
 import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
+import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { isUserVerified } from '../utils/bcsc-credential'
 
 const VerifyStack = () => {
@@ -75,6 +77,9 @@ const VerifyStack = () => {
 
   // Listen for verification approval push notifications and navigate to success screen
   useVerificationResponseListener()
+
+  // Detect an expired in-progress verification session (device_code) and route to the restart screen.
+  useSystemChecks(SystemCheckScope.VERIFY)
 
   return (
     <Stack.Navigator
@@ -333,6 +338,15 @@ const VerifyStack = () => {
       <Stack.Screen
         name={BCSCModals.MandatoryUpdate}
         component={MandatoryUpdate}
+        options={{
+          ...getDefaultModalOptions(t('BCSC.Title')),
+          gestureEnabled: false,
+        }}
+      />
+
+      <Stack.Screen
+        name={BCSCModals.VerificationSessionExpired}
+        component={VerificationSessionExpired}
         options={{
           ...getDefaultModalOptions(t('BCSC.Title')),
           gestureEnabled: false,

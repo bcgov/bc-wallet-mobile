@@ -96,6 +96,7 @@ export interface BCSCState {
   hasDismissedDeviceAuthInfo?: boolean
   deviceLimitBannerDismissedAt?: string
   credentialMetadata?: CredentialMetadata
+  reportUUID?: string
 }
 
 export enum VerificationStatus {
@@ -274,6 +275,7 @@ enum BCSCDispatchAction {
   DISMISSED_EXPIRY_ALERT = 'bcsc/dismissedExpiryAlert',
   DISMISSED_THIRD_PARTY_KEYBOARD_ALERT = 'bcsc/dismissedThirdPartyKeyboardAlert',
   DISMISSED_DEVICE_LIMIT_BANNER = 'bcsc/dismissedDeviceLimitBanner',
+  SET_REPORT_UUID = 'bcsc/setReportUUID',
 }
 
 enum ModeDispatchAction {
@@ -707,7 +709,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.CLEAR_BCSC: {
       // Optionally accept a partial BCSC state to merge with the initial state
       const partialBcscState = (action?.payload || []).pop() ?? {}
-      const bcsc = { ...initialBCSCState, ...partialBcscState }
+      const bcsc = { ...initialBCSCState, reportUUID: state.bcsc.reportUUID, ...partialBcscState }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
@@ -783,6 +785,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCDispatchAction.UPDATE_CREDENTIAL_METADATA: {
       const credentialMetadata = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, credentialMetadata }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.SET_REPORT_UUID: {
+      const reportUUID = (action?.payload || []).pop()
+      const bcsc = { ...state.bcsc, reportUUID }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

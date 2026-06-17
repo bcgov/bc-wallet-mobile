@@ -7,10 +7,15 @@ import { AccountExpiryWarningBannerSystemCheck } from '@/services/system-checks/
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
+import { ReportUUIDSystemCheck } from '@/services/system-checks/ReportUUIDSystemCheck'
 import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClockSkewSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
 import { UpdateDeviceRegistrationSystemCheck } from '@/services/system-checks/UpdateDeviceRegistrationSystemCheck'
+import {
+  getPendingDeviceCodeExpiry,
+  VerificationSessionExpiredSystemCheck,
+} from '@/services/system-checks/VerificationSessionExpiredSystemCheck'
 import { BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { TOKENS, useServices, useStore } from '@bifold/core'
@@ -86,6 +91,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     const serverStatus = await configApi.getServerStatus()
 
     const systemChecks: SystemCheckStrategy[] = [
+      new ReportUUIDSystemCheck(store.bcsc.reportUUID, dispatch),
       new AnalyticsSystemCheck(
         store.bcsc.analyticsOptIn,
         store.developer.environment.analyticsAppId,
@@ -104,11 +110,13 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     return systemChecks
   }, [
     configApi,
+    dispatch,
     emitAlert,
     isBCServicesCardBundle,
     logger,
     navigation,
     store.bcsc.analyticsOptIn,
+    store.bcsc.reportUUID,
     store.developer.environment.analyticsAppId,
     utils,
   ])
@@ -167,6 +175,19 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     store.bcsc.appBuildNumber,
   ])
 
+  /**
+   * Get system checks to run within the verification flow (VerifyStack).
+   *
+   * VerifyStack is only mounted for an unverified, authenticated user once secure state is hydrated,
+   * so the expired-session check runs in the right place (never on the auth/main stacks) and needs no
+   * verified-status gating. See issue #4050.
+   *
+   * @returns Array of system check strategies
+   */
+  const getVerifySystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
+    return [new VerificationSessionExpiredSystemCheck(getPendingDeviceCodeExpiry, navigation, utils)]
+  }, [navigation, utils])
+
   return useMemo(() => {
     return {
       [SystemCheckScope.STARTUP]: {
@@ -177,12 +198,17 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
         getSystemChecks: getMainSystemChecks,
         isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated && accountExpirationDate),
       },
+      [SystemCheckScope.VERIFY]: {
+        getSystemChecks: getVerifySystemChecks,
+        isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated),
+      },
     }
   }, [
     accountExpirationDate,
     defaultReadiness,
     getMainSystemChecks,
     getStartupSystemChecks,
+    getVerifySystemChecks,
     store.bcscSecure.isHydrated,
     store.stateLoaded,
   ])
