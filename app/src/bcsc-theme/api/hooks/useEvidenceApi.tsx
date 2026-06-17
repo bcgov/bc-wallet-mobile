@@ -82,6 +82,11 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
     if (!code) {
       throw new Error('Device code is missing. Re install the app and setup try again.')
     }
+
+    // Intentionally NOT pre-checking expiry here: a client-side throw bypasses the axios interceptor,
+    // and callers that catch+log would silently drop it. Instead let an expired/superseded device_code
+    // 401 so the centralized verificationSessionExpiredErrorPolicy routes to the restart modal; the
+    // startup system check covers the relaunch case. See issue #4050.
     return code
   }, [store.bcscSecure.deviceCode])
 

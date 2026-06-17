@@ -160,6 +160,10 @@ const OnboardingStack = (): React.ReactElement => {
         }}
       />
 
+      {/* VerificationSessionExpired is intentionally NOT registered here: this is the post-reset
+          destination stack, and an overlapping route name would let React Navigation preserve the
+          modal across the stack swap so it never dismisses. See issue #4050. */}
+
       <Stack.Screen
         name={BCSCModals.ServiceOutage}
         component={ServiceOutage}
