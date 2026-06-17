@@ -9,6 +9,10 @@ export function setReportUUID(uuid: string) {
   _reportUUID = uuid
 }
 
+export function getReportUUID(): string | undefined {
+  return _reportUUID
+}
+
 type AppErrorOptions = ErrorOptions & {
   /**
    * Whether to automatically track this error in analytics upon creation. Defaults to true.
@@ -137,19 +141,6 @@ export class AppError extends Error {
 
     if (this.technicalMessage) {
       formattedMessage += ` ${this.technicalMessage}`
-    }
-
-    if (this.screen) {
-      formattedMessage += `\nScreen: ${this.screen}`
-    }
-
-    if (this.url) {
-      const request = this.method ? `${this.method} ${this.url}` : this.url
-      formattedMessage += `\nRequest: ${request}`
-    }
-
-    if (_reportUUID) {
-      formattedMessage += `\nReport ID: ${_reportUUID}`
     }
 
     return formattedMessage

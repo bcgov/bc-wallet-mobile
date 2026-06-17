@@ -1,4 +1,4 @@
-import { AppError } from '@/errors'
+import { AppError, getReportUUID } from '@/errors'
 import { BCSCErrorModal, ErrorModalAction, ErrorModalPayload } from '@/errors/components/ErrorModal'
 import { AppEventCode } from '@/events/appEventCode'
 import { AlertAction, showAlert } from '@/utils/alert'
@@ -84,6 +84,10 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
         appEvent: error.appEvent,
         stack: error.stack,
         cause: error.cause,
+        screen: error.screen,
+        url: error.url,
+        method: error.method,
+        reportUUID: getReportUUID(),
       })
       setErrorKey((prev) => prev + 1)
     },
