@@ -1622,7 +1622,7 @@ class BcscCoreModule(
     private fun incomingJWEHeader(jweString: String): JweHeaderInfo {
         val parts = jweString.split(".")
         if (parts.size != 5) {
-            return JweHeaderInfo("?", "?", "", parts.size)
+            return JweHeaderInfo("?", "?", "?", parts.size)
         }
         return try {
             var seg = parts[0].replace("-", "+").replace("_", "/")
@@ -1634,7 +1634,7 @@ class BcscCoreModule(
             val obj = org.json.JSONObject(headerJson)
             JweHeaderInfo(obj.optString("alg", "?"), obj.optString("enc", "?"), obj.optString("kid", ""), parts.size)
         } catch (e: Exception) {
-            JweHeaderInfo("?", "?", "", parts.size)
+            JweHeaderInfo("?", "?", "?", parts.size)
         }
     }
 
