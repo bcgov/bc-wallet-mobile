@@ -231,6 +231,7 @@ const translation = {
       "LearnMore": "Learn more",
       "GiveFeedback": "Give feedback",
       "ReportProblem": "Report a problem",
+      "RestartVerification": "Restart verification process",
     },
     "ReportProblem": {
       "Title": "Report a problem",
@@ -1347,6 +1348,12 @@ const translation = {
       "Title": "Are you sure?",
       "Description": "Your verification request sent to Service BC will be deleted. Then you can choose another way to verify.",
       "Action1": "Delete Verify Request",
+    },
+    "RestartVerification": {
+      "Title": "Are you sure?",
+      "Description": "Your verification progress will be deleted and you will start the verification process from the beginning.",
+      "Action1": "Restart Verification",
+      "Loading": "Restarting verification...",
     },
     "DataUseWarning": {
       "Title": "Data Use",

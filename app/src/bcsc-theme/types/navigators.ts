@@ -112,6 +112,7 @@ export enum BCSCScreens {
   OnboardingWebView = `${BCSCStacks.Onboarding} Web view`,
   OnboardingDeveloper = `${BCSCStacks.Onboarding} Developer`,
   VerifyPrompt = `${BCSCStacks.Prompt} Verify Prompt`,
+  PromptWebView = `${BCSCStacks.Prompt} Web view`,
   MainLoading = `${BCSCStacks.Main} Loading`,
   MainSettings = `${BCSCStacks.Main} In App Settings`,
   MainWebView = `${BCSCStacks.Main} Web view`,
@@ -183,6 +184,7 @@ export type BCSCOnboardingStackParams = {
 
 export type BCSCPromptStackParams = {
   [BCSCScreens.VerifyPrompt]: undefined
+  [BCSCScreens.PromptWebView]: { url: string; title: string }
 }
 
 export type BCSCVerifyStackParams = {

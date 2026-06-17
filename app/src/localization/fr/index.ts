@@ -225,6 +225,7 @@ const translation = {
       "LearnMore": "Learn about BCSC app (FR)",
       "GiveFeedback": "Give feedback (FR)",
       "ReportProblem": "Report a problem (FR)",
+      "RestartVerification": "Restart verification process (FR)",
     },
     "ReportProblem": {
       "Title": "Report a problem (FR)",
@@ -1352,6 +1353,12 @@ const translation = {
       "Title": "Are you sure? (FR)",
       "Description": "Your verification request sent to Service BC will be deleted. Then you can choose another way to verify. (FR)",
       "Action1": "Delete Verify Request (FR)",
+    },
+    "RestartVerification": {
+      "Title": "Are you sure? (FR)",
+      "Description": "Your verification progress will be deleted and you will start the verification process from the beginning. (FR)",
+      "Action1": "Restart Verification (FR)",
+      "Loading": "Restarting verification... (FR)",
     },
     "DataUseWarning": {
       "Title": "Data Use (FR)",
