@@ -178,6 +178,33 @@ describe('EnterEmailScreen', () => {
       })
     })
 
+    it('should show error when TLD contains digits', async () => {
+      const { getByTestId, getByText } = render(
+        <BasicAppContext>
+          <ErrorAlertProvider>
+            <EnterEmailScreen
+              navigation={mockNavigation}
+              route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
+            />
+          </ErrorAlertProvider>
+        </BasicAppContext>
+      )
+
+      const emailInput = getByTestId('com.ariesbifold:id/email-input')
+      act(() => {
+        fireEvent.changeText(emailInput, 'user@host.com1')
+      })
+
+      const continueButton = getByTestId('ContinueButton')
+      act(() => {
+        fireEvent.press(continueButton)
+      })
+
+      await waitFor(() => {
+        expect(getByText('BCSC.EmailConfirmation.EmailError')).toBeTruthy()
+      })
+    })
+
     it('should clear error when valid email is entered', async () => {
       mockCreateEmailVerification.mockResolvedValue({ email_address_id: 'test-id' })
 

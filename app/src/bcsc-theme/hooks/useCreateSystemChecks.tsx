@@ -7,6 +7,7 @@ import { AccountExpiryWarningBannerSystemCheck } from '@/services/system-checks/
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
+import { ReportUUIDSystemCheck } from '@/services/system-checks/ReportUUIDSystemCheck'
 import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClockSkewSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
@@ -90,6 +91,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     const serverStatus = await configApi.getServerStatus()
 
     const systemChecks: SystemCheckStrategy[] = [
+      new ReportUUIDSystemCheck(store.bcsc.reportUUID, dispatch),
       new AnalyticsSystemCheck(
         store.bcsc.analyticsOptIn,
         store.developer.environment.analyticsAppId,
@@ -108,11 +110,13 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     return systemChecks
   }, [
     configApi,
+    dispatch,
     emitAlert,
     isBCServicesCardBundle,
     logger,
     navigation,
     store.bcsc.analyticsOptIn,
+    store.bcsc.reportUUID,
     store.developer.environment.analyticsAppId,
     utils,
   ])
