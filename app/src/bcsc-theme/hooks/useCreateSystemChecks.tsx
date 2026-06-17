@@ -76,7 +76,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     credentialMetadataRef.current = store.bcsc.credentialMetadata
   }, [store.bcsc.credentialMetadata])
 
-  // sync reportUUID to AppError module so it appears in fullMessage debug output
+  // sync reportUUID to the AppError module so it can be included in error reports (e.g., "Report this problem")
   useEffect(() => {
     if (store.bcsc.reportUUID) {
       setReportUUID(store.bcsc.reportUUID)
