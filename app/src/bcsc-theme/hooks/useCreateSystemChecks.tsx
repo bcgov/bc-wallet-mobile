@@ -12,6 +12,10 @@ import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSy
 import { TermsOfUseSystemCheck } from '@/services/system-checks/TermsOfUseSystemCheck'
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
 import { UpdateDeviceRegistrationSystemCheck } from '@/services/system-checks/UpdateDeviceRegistrationSystemCheck'
+import {
+  getPendingDeviceCodeExpiry,
+  VerificationSessionExpiredSystemCheck,
+} from '@/services/system-checks/VerificationSessionExpiredSystemCheck'
 import { BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { TOKENS, useServices, useStore } from '@bifold/core'
@@ -205,6 +209,19 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     store.bcsc.acceptedTermsOfUseVersion,
   ])
 
+  /**
+   * Get system checks to run within the verification flow (VerifyStack).
+   *
+   * VerifyStack is only mounted for an unverified, authenticated user once secure state is hydrated,
+   * so the expired-session check runs in the right place (never on the auth/main stacks) and needs no
+   * verified-status gating. See issue #4050.
+   *
+   * @returns Array of system check strategies
+   */
+  const getVerifySystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
+    return [new VerificationSessionExpiredSystemCheck(getPendingDeviceCodeExpiry, navigation, utils)]
+  }, [navigation, utils])
+
   return useMemo(() => {
     return {
       [SystemCheckScope.STARTUP]: {
@@ -217,6 +234,17 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
         // and account-dependent checks are included conditionally in the builder.
         isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated),
       },
+      [SystemCheckScope.VERIFY]: {
+        getSystemChecks: getVerifySystemChecks,
+        isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated),
+      },
     }
-  }, [defaultReadiness, getMainSystemChecks, getStartupSystemChecks, store.bcscSecure.isHydrated, store.stateLoaded])
+  }, [
+    defaultReadiness,
+    getMainSystemChecks,
+    getStartupSystemChecks,
+    getVerifySystemChecks,
+    store.bcscSecure.isHydrated,
+    store.stateLoaded,
+  ])
 }
