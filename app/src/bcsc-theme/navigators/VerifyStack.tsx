@@ -64,6 +64,7 @@ import VideoInstructionsScreen from '../features/verify/send-video/VideoInstruct
 import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
+import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { isUserVerified } from '../utils/bcsc-credential'
 
 const VerifyStack = () => {
@@ -76,6 +77,9 @@ const VerifyStack = () => {
 
   // Listen for verification approval push notifications and navigate to success screen
   useVerificationResponseListener()
+
+  // Detect an expired in-progress verification session (device_code) and route to the restart screen.
+  useSystemChecks(SystemCheckScope.VERIFY)
 
   return (
     <Stack.Navigator

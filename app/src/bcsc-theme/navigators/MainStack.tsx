@@ -28,7 +28,6 @@ import { DeviceInvalidated } from '../features/modal/DeviceInvalidated'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
-import { VerificationSessionExpired } from '../features/modal/VerificationSessionExpired'
 import { usePairingService } from '../features/pairing'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
@@ -302,15 +301,6 @@ const MainStack: React.FC = () => {
         <Stack.Screen
           name={BCSCModals.MandatoryUpdate}
           component={MandatoryUpdate}
-          options={{
-            ...getDefaultModalOptions(t('BCSC.Title')),
-            gestureEnabled: false,
-          }}
-        />
-
-        <Stack.Screen
-          name={BCSCModals.VerificationSessionExpired}
-          component={VerificationSessionExpired}
           options={{
             ...getDefaultModalOptions(t('BCSC.Title')),
             gestureEnabled: false,

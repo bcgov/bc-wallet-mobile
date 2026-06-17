@@ -1,7 +1,5 @@
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
-import { getCredentialVerificationStatus } from '@/bcsc-theme/utils/bcsc-credential'
-import { VerificationStatus } from '@/store'
-import { getAuthorizationRequest, getCredential, getToken, TokenType } from 'react-native-bcsc-core'
+import { getAuthorizationRequest } from 'react-native-bcsc-core'
 import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
@@ -10,12 +8,13 @@ import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './
  * During verification the app holds a short-lived `device_code` (the "verification-in-progress"
  * credential issued before the long-lived tokens) with a server-set TTL of ~7 days. If the user
  * pauses partway through and returns after that window lapses, the code is dead and every evidence
- * call 401s — historically dead-ending on the generic error modal. This check detects the lapse on
- * startup and routes the user to a blocking screen that resets the app so they can start again.
+ * call 401s — historically dead-ending on the generic error modal. This check detects the lapse and
+ * routes the user to a blocking screen that resets the app so they can start again.
  *
- * The check passes (no action) when the user is already verified, or when there is no pending
- * `device_code`. It fails (→ onFail) only when an unverified user is holding a `device_code` whose
- * expiry is in the past.
+ * It runs in the VERIFY scope (the verification flow / VerifyStack), which is only mounted for an
+ * unverified, authenticated user once secure state is hydrated — so it never fires on the auth/main
+ * stacks and needs no verified-status gating. The check passes (no action) when there is no pending
+ * `device_code`, and fails (→ onFail) when the pending code's expiry is in the past. See issue #4050.
  *
  * @see {VerificationSessionExpired.tsx} for the modal displayed on failure.
  *
@@ -24,29 +23,23 @@ import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './
  */
 export class VerificationSessionExpiredSystemCheck implements SystemCheckStrategy {
   private readonly getDeviceCodeExpiry: () => Promise<Date | null>
-  private readonly isVerified: boolean
   private readonly navigation: SystemCheckNavigation
   private readonly utils: SystemCheckUtils
   private readonly now: Date
 
   /**
-   * @param getDeviceCodeExpiry Resolves the pending device_code's expiry (read from native storage to
-   *   avoid the startup hydration race), or null when there is no pending code.
-   * @param isVerified Whether the user is already verified (best-effort guard; verified flows clear
-   *   the device_code so getDeviceCodeExpiry already returns null for them).
+   * @param getDeviceCodeExpiry Resolves the pending device_code's expiry, or null when there is no pending code.
    * @param navigation Navigation used to route to the expired-session modal on failure.
    * @param utils Shared system-check utilities (logger, dispatch, translation).
    * @param now Current time (injectable for testing).
    */
   constructor(
     getDeviceCodeExpiry: () => Promise<Date | null>,
-    isVerified: boolean,
     navigation: SystemCheckNavigation,
     utils: SystemCheckUtils,
     now: Date = new Date()
   ) {
     this.getDeviceCodeExpiry = getDeviceCodeExpiry
-    this.isVerified = isVerified
     this.navigation = navigation
     this.utils = utils
     this.now = now
@@ -58,11 +51,6 @@ export class VerificationSessionExpiredSystemCheck implements SystemCheckStrateg
    * @returns {*} {Promise<boolean>} - true if the session is valid or not applicable, false if expired.
    */
   async runCheck(): Promise<boolean> {
-    // Verified users have no pending device_code to expire.
-    if (this.isVerified) {
-      return true
-    }
-
     try {
       const expiry = await this.getDeviceCodeExpiry()
 
@@ -82,7 +70,7 @@ export class VerificationSessionExpiredSystemCheck implements SystemCheckStrateg
       return !expired
     } catch (error) {
       // Non-blocking: a native-storage read failure must not reject runSystemChecks' Promise.all,
-      // which would skip every other startup check's failure handling. Treat the session as valid.
+      // which would skip the other checks in this scope. Treat the session as valid.
       this.utils.logger.warn(
         '[VerificationSessionExpiredSystemCheck] Failed to read device_code expiry; treating session as valid',
         { error }
@@ -108,8 +96,7 @@ export class VerificationSessionExpiredSystemCheck implements SystemCheckStrateg
  * Reads the pending verification session's `device_code` expiry from native storage.
  *
  * Returns null when there is no pending `device_code` (i.e. no in-progress verification); otherwise the
- * expiry as a Date (native persists it as a Unix-seconds timestamp). Reads from native storage rather
- * than the Redux store so it is available before secure state is hydrated during startup checks.
+ * expiry as a Date (native persists it as a Unix-seconds timestamp).
  *
  * @returns {*} {Promise<Date | null>} The pending device_code expiry, or null when none is pending.
  */
@@ -119,25 +106,4 @@ export async function getPendingDeviceCodeExpiry(): Promise<Date | null> {
     return null
   }
   return new Date(authRequest.expiry * 1000)
-}
-
-/**
- * Determines whether the user is already verified by reading native storage directly.
- *
- * Mirrors `isUserVerified` but sources its answer from native storage instead of the Redux store:
- * startup checks can run before secure state is hydrated, at which point the store would report an
- * already-verified user as unverified. Reading native storage avoids that race — and the resulting
- * risk of factory-resetting a verified account on a stale/expired device_code. See issue #4050.
- *
- * @returns {*} {Promise<boolean>} true if a verified credential (or a non-deactivated refresh token) exists.
- */
-export async function isVerifiedFromNativeStorage(): Promise<boolean> {
-  const [credential, refreshToken] = await Promise.all([getCredential(), getToken(TokenType.Refresh)])
-  const status = getCredentialVerificationStatus(credential)
-
-  if (status === VerificationStatus.VERIFIED) {
-    return true
-  }
-
-  return Boolean(refreshToken?.token) && status !== VerificationStatus.DEACTIVATED
 }

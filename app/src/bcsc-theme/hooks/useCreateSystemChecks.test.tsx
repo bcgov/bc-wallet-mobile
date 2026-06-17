@@ -85,7 +85,6 @@ jest.mock('@/services/system-checks/ServerClockSkewSystemCheck', () => ({
 jest.mock('@/services/system-checks/VerificationSessionExpiredSystemCheck', () => ({
   VerificationSessionExpiredSystemCheck: class VerificationSessionExpiredSystemCheck {},
   getPendingDeviceCodeExpiry: jest.fn(),
-  isVerifiedFromNativeStorage: jest.fn().mockResolvedValue(false),
 }))
 
 jest.mock('@/bcsc-theme/components/AppBanner', () => ({
@@ -183,12 +182,11 @@ describe('useGetSystemChecks', () => {
 
         const systemChecks = await result.current[SystemCheckScope.STARTUP].getSystemChecks()
 
-        expect(systemChecks).toHaveLength(5) // AnalyticsSystemCheck, ServerStatusSystemCheck, ServerClockSkewSystemCheck, UpdateAppSystemCheck, VerificationSessionExpiredSystemCheck
+        expect(systemChecks).toHaveLength(4) // AnalyticsSystemCheck, ServerStatusSystemCheck, ServerClockSkewSystemCheck, UpdateAppSystemCheck
         expect(systemChecks[0].constructor.name).toBe('AnalyticsSystemCheck')
         expect(systemChecks[1].constructor.name).toBe('ServerStatusSystemCheck')
         expect(systemChecks[2].constructor.name).toBe('ServerClockSkewSystemCheck')
         expect(systemChecks[3].constructor.name).toBe('UpdateAppSystemCheck')
-        expect(systemChecks[4].constructor.name).toBe('VerificationSessionExpiredSystemCheck')
       })
 
       it('should not include UpdateAppSystemCheck for non-BCSC builds', async () => {
@@ -319,6 +317,45 @@ describe('useGetSystemChecks', () => {
         expect(systemChecks[2].constructor.name).toBe('EventReasonAlertsSystemCheck')
         expect(systemChecks[3].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
       })
+    })
+  })
+
+  describe('VERIFY scope', () => {
+    const mockHydratedStore = () => {
+      mockUseStore.mockReturnValue([
+        {
+          stateLoaded: true,
+          developer: { environment: { analyticsAppId: 'test-app-id' } },
+          bcsc: { analyticsOptIn: true },
+          bcscSecure: { isHydrated: true },
+        },
+        jest.fn(),
+      ])
+      mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
+      mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
+      mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
+      jest.spyOn(React, 'useContext').mockReturnValue({ account: {} })
+    }
+
+    it('should be ready when secure state is hydrated', () => {
+      jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
+      mockHydratedStore()
+
+      const { result } = renderHook(() => useCreateSystemChecks())
+
+      expect(result.current[SystemCheckScope.VERIFY].isReady).toBe(true)
+    })
+
+    it('should return the VerificationSessionExpiredSystemCheck', async () => {
+      jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
+      mockHydratedStore()
+
+      const { result } = renderHook(() => useCreateSystemChecks())
+
+      const systemChecks = await result.current[SystemCheckScope.VERIFY].getSystemChecks()
+
+      expect(systemChecks).toHaveLength(1)
+      expect(systemChecks[0].constructor.name).toBe('VerificationSessionExpiredSystemCheck')
     })
   })
 })

@@ -261,7 +261,6 @@ export type BCSCMainStackParams = {
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
-  [BCSCModals.VerificationSessionExpired]: undefined
   [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
   [BCSCModals.DeviceInvalidated]: { invalidationReason: BCSCReason }
 }
@@ -280,6 +279,5 @@ export type BCSCAuthStackParams = {
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
-  [BCSCModals.VerificationSessionExpired]: undefined
   [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
 }

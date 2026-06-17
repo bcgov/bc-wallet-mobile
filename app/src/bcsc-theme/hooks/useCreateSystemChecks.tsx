@@ -13,7 +13,6 @@ import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCh
 import { UpdateDeviceRegistrationSystemCheck } from '@/services/system-checks/UpdateDeviceRegistrationSystemCheck'
 import {
   getPendingDeviceCodeExpiry,
-  isVerifiedFromNativeStorage,
   VerificationSessionExpiredSystemCheck,
 } from '@/services/system-checks/VerificationSessionExpiredSystemCheck'
 import { BCState } from '@/store'
@@ -103,15 +102,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
 
     // Only run update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
     if (isBCServicesCardBundle) {
-      // Both the expiry and the verified status are read from native storage (not the Redux store):
-      // startup checks can run before secure state is hydrated, when the store would report a verified
-      // user as unverified — risking a factory reset of their account on a stale device_code (TTL
-      // ~7 days). See issue #4050.
-      const isVerified = await isVerifiedFromNativeStorage()
-      systemChecks.push(
-        new UpdateAppSystemCheck(serverStatus, navigation, utils),
-        new VerificationSessionExpiredSystemCheck(getPendingDeviceCodeExpiry, isVerified, navigation, utils)
-      )
+      systemChecks.push(new UpdateAppSystemCheck(serverStatus, navigation, utils))
     }
 
     return systemChecks
@@ -180,6 +171,19 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     store.bcsc.appBuildNumber,
   ])
 
+  /**
+   * Get system checks to run within the verification flow (VerifyStack).
+   *
+   * VerifyStack is only mounted for an unverified, authenticated user once secure state is hydrated,
+   * so the expired-session check runs in the right place (never on the auth/main stacks) and needs no
+   * verified-status gating. See issue #4050.
+   *
+   * @returns Array of system check strategies
+   */
+  const getVerifySystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
+    return [new VerificationSessionExpiredSystemCheck(getPendingDeviceCodeExpiry, navigation, utils)]
+  }, [navigation, utils])
+
   return useMemo(() => {
     return {
       [SystemCheckScope.STARTUP]: {
@@ -190,12 +194,17 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
         getSystemChecks: getMainSystemChecks,
         isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated && accountExpirationDate),
       },
+      [SystemCheckScope.VERIFY]: {
+        getSystemChecks: getVerifySystemChecks,
+        isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated),
+      },
     }
   }, [
     accountExpirationDate,
     defaultReadiness,
     getMainSystemChecks,
     getStartupSystemChecks,
+    getVerifySystemChecks,
     store.bcscSecure.isHydrated,
     store.stateLoaded,
   ])

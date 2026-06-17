@@ -9,17 +9,25 @@ jest.mock('@/bcsc-theme/api/hooks/useFactoryReset', () => ({
   useFactoryReset: () => mockFactoryReset,
 }))
 
+const mockFactoryResetAlert = jest.fn()
+jest.mock('@/hooks/useAlerts', () => ({
+  useAlerts: () => ({ factoryResetAlert: mockFactoryResetAlert }),
+}))
+
+const renderModal = () =>
+  render(
+    <BasicAppContext>
+      <VerificationSessionExpired {...({ navigation: { navigate: jest.fn() }, route: {} } as any)} />
+    </BasicAppContext>
+  )
+
 describe('VerificationSessionExpired', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
   it('renders the header, content and button', () => {
-    const { getByText } = render(
-      <BasicAppContext>
-        <VerificationSessionExpired />
-      </BasicAppContext>
-    )
+    const { getByText } = renderModal()
 
     expect(getByText('BCSC.Modals.VerificationSessionExpired.Header')).toBeTruthy()
     expect(getByText('BCSC.Modals.VerificationSessionExpired.ContentA')).toBeTruthy()
@@ -28,21 +36,13 @@ describe('VerificationSessionExpired', () => {
   })
 
   it('should match snapshot', () => {
-    const tree = render(
-      <BasicAppContext>
-        <VerificationSessionExpired />
-      </BasicAppContext>
-    )
+    const tree = renderModal()
 
     expect(tree.toJSON()).toMatchSnapshot()
   })
 
   it('runs a factory reset when the button is pressed', async () => {
-    const { getByTestId } = render(
-      <BasicAppContext>
-        <VerificationSessionExpired />
-      </BasicAppContext>
-    )
+    const { getByTestId } = renderModal()
 
     fireEvent.press(getByTestId(testIdWithKey('VerificationSessionExpiredButton')))
 
@@ -51,19 +51,16 @@ describe('VerificationSessionExpired', () => {
     })
   })
 
-  it('logs and does not throw when the factory reset fails', async () => {
-    mockFactoryReset.mockResolvedValueOnce({ success: false, error: new Error('reset failed') })
+  it('surfaces the factory-reset alert when the reset fails', async () => {
+    const error = new Error('reset failed')
+    mockFactoryReset.mockResolvedValueOnce({ success: false, error })
 
-    const { getByTestId } = render(
-      <BasicAppContext>
-        <VerificationSessionExpired />
-      </BasicAppContext>
-    )
+    const { getByTestId } = renderModal()
 
     fireEvent.press(getByTestId(testIdWithKey('VerificationSessionExpiredButton')))
 
     await waitFor(() => {
-      expect(mockFactoryReset).toHaveBeenCalled()
+      expect(mockFactoryResetAlert).toHaveBeenCalledWith(error)
     })
   })
 })
