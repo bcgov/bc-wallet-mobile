@@ -175,10 +175,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
         <ThemedText variant="bold">{t('RemoteLogging.CollectionNoticeBold')}</ThemedText>
         {t('RemoteLogging.CollectionNoticePart2')}
       </ThemedText>
-      <Link
-        linkText={t('RemoteLogging.CollectionNoticeLink')}
-        onPress={() => Linking.openURL(BC_LOGIN_PRIVACY_URL)}
-      />
+      <Link linkText={t('RemoteLogging.CollectionNoticeLink')} onPress={() => Linking.openURL(BC_LOGIN_PRIVACY_URL)} />
 
       <CheckBoxRow
         title={t('BCSC.ReportProblem.ConsentCheckbox')}

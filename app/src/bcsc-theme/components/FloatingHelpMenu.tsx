@@ -123,7 +123,13 @@ const FloatingHelpMenu = (props: FloatingHelpMenuProps) => {
   })
 
   return (
-    <Modal visible={props.open} onShow={handleShow} transparent animationType="none" onRequestClose={() => handleClose()}>
+    <Modal
+      visible={props.open}
+      onShow={handleShow}
+      transparent
+      animationType="none"
+      onRequestClose={() => handleClose()}
+    >
       <TouchableWithoutFeedback onPress={() => handleClose()} accessible={false}>
         <View style={styles.root}>
           <View style={styles.floatingMenuContainer}>
