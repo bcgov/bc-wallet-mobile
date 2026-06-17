@@ -195,13 +195,27 @@ class BcscCore: NSObject {
     return error.localizedDescription
   }
 
+  /// Safe base64url→`Data` for diagnostics: returns `nil` on malformed input instead of
+  /// force-unwrapping like `Base64URL.decode` (`Data(base64Encoded:)!`), which would crash
+  /// on a corrupt header — the exact case this diagnostic exists to report.
+  private func base64URLDecodeSafely(_ segment: String) -> Data? {
+    var base64 = segment.replacingOccurrences(of: "-", with: "+")
+      .replacingOccurrences(of: "_", with: "/")
+    let remainder = base64.count % 4
+    if remainder > 0 {
+      base64 += String(repeating: "=", count: 4 - remainder)
+    }
+    return Data(base64Encoded: base64)
+  }
+
   /// Best-effort read of the *incoming* JWE protected header for diagnostics. Reads the
   /// real `kid` straight off the wire — NOT `JWEHeader.kid`, which the parser overwrites
   /// with the server's own public-key id. Unreadable fields come back as "?".
   private func incomingJWEHeader(_ jweString: String) -> (alg: String, enc: String, kid: String, parts: Int) {
     let parts = jweString.components(separatedBy: ".")
     guard parts.count == 5, let headerSegment = parts.first,
-          let obj = (try? JSONSerialization.jsonObject(with: Base64URL.decode(headerSegment))) as? [String: Any]
+          let headerData = base64URLDecodeSafely(headerSegment),
+          let obj = (try? JSONSerialization.jsonObject(with: headerData)) as? [String: Any]
     else {
       return ("?", "?", "?", parts.count)
     }
