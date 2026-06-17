@@ -31,6 +31,7 @@ export enum SystemCheckScope {
  * Scopes:
  *   - STARTUP: Checks that need to run when the app starts, regardless of user authentication ie: server status, internet connectivity
  *   - MAIN_STACK: Checks that run when the user is authenticated and in the main part of the app ie: current device count
+ *   - VERIFY: Checks that run within the verification flow (VerifyStack) for an unverified, authenticated user ie: expired verification session
  *
  * @param {SystemCheckScope} scope - The scope of the system checks to run
  * @returns {*} {void}
