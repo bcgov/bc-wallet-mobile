@@ -48,7 +48,10 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
   }
 
   const handleSubmit = async () => {
-    if (!email || !/^[-_A-Za-z0-9+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$/.test(email)) {
+    const regexResult = !/^[-_A-Za-z0-9+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$/.test(
+      email
+    )
+    if (!email || regexResult) {
       setError(t('BCSC.EmailConfirmation.EmailError'))
       return
     }
