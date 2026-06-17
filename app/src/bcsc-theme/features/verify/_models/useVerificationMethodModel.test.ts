@@ -253,6 +253,95 @@ describe('useVerificationMethodModel', () => {
       expect(mockVideoPromptsMissingAlert).not.toHaveBeenCalled()
     })
 
+    it('refetches prompts when the request id is persisted but sha is missing (post app-cycle)', async () => {
+      const storeWithoutSha = {
+        ...mockStore,
+        bcsc: { ...mockStore.bcsc, prompts: [{ id: 1, prompt: 'Stale prompt' }] },
+        bcscSecure: {
+          ...mockStore.bcscSecure,
+          verificationRequestId: 'existing-id',
+          verificationRequestSha: undefined,
+        },
+      }
+      jest.mocked(Bifold).useStore.mockReturnValue([storeWithoutSha, mockDispatch])
+
+      const fetched = { id: 'existing-id', sha256: 'fresh-sha', prompts: [{ id: 1, prompt: 'Say your name' }] }
+      mockEvidenceApi.getVerificationRequestPrompts.mockResolvedValue(fetched)
+      jest.mocked(removeFileSafely).mockResolvedValue(undefined)
+
+      const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handlePressSendVideo()
+      })
+
+      expect(mockEvidenceApi.getVerificationRequestPrompts).toHaveBeenCalledWith('existing-id')
+      expect(mockEvidenceApi.createVerificationRequest).not.toHaveBeenCalled()
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_SHA,
+        payload: ['fresh-sha'],
+      })
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.InformationRequired)
+    })
+
+    it('recovers from a stale id by creating a fresh verification request when prompts fetch fails', async () => {
+      const storeWithStaleId = {
+        ...mockStore,
+        bcsc: { ...mockStore.bcsc, prompts: [] },
+        bcscSecure: { ...mockStore.bcscSecure, verificationRequestId: 'stale-id', verificationRequestSha: undefined },
+      }
+      jest.mocked(Bifold).useStore.mockReturnValue([storeWithStaleId, mockDispatch])
+
+      const serverError = new Error('Request failed with status code 500')
+      mockEvidenceApi.getVerificationRequestPrompts.mockRejectedValue(serverError)
+      const fresh = { id: 'fresh-id', sha256: 'fresh-sha', prompts: [{ id: 1, prompt: 'Say your name' }] }
+      mockEvidenceApi.createVerificationRequest.mockResolvedValue(fresh)
+      jest.mocked(removeFileSafely).mockResolvedValue(undefined)
+
+      const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handlePressSendVideo()
+      })
+
+      expect(mockEvidenceApi.getVerificationRequestPrompts).toHaveBeenCalledWith('stale-id')
+      expect(mockEvidenceApi.createVerificationRequest).toHaveBeenCalledTimes(1)
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID,
+        payload: ['fresh-id'],
+      })
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_SHA,
+        payload: ['fresh-sha'],
+      })
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.InformationRequired)
+      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('creating a fresh request'))
+    })
+
+    it('skips the refetch when both id, sha, and prompts are already in state', async () => {
+      const fullyHydrated = {
+        ...mockStore,
+        bcsc: { ...mockStore.bcsc, prompts: [{ id: 1, prompt: 'Say your name' }] },
+        bcscSecure: {
+          ...mockStore.bcscSecure,
+          verificationRequestId: 'existing-id',
+          verificationRequestSha: 'cached-sha',
+        },
+      }
+      jest.mocked(Bifold).useStore.mockReturnValue([fullyHydrated, mockDispatch])
+      jest.mocked(removeFileSafely).mockResolvedValue(undefined)
+
+      const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
+
+      await act(async () => {
+        await result.current.handlePressSendVideo()
+      })
+
+      expect(mockEvidenceApi.createVerificationRequest).not.toHaveBeenCalled()
+      expect(mockEvidenceApi.getVerificationRequestPrompts).not.toHaveBeenCalled()
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.InformationRequired)
+    })
+
     it('aborts with a retryable alert and no navigation when no prompts are returned', async () => {
       // Regression for #4018: the server can return an empty prompt set; never walk the user into
       // TakeVideoScreen (which hard-stops) — show a retryable alert and stay put instead.
