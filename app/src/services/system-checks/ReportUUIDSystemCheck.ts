@@ -20,7 +20,7 @@ export class ReportUUIDSystemCheck implements SystemCheckStrategy {
   onFail(): void {
     this.dispatch({
       type: BCDispatchAction.SET_REPORT_UUID,
-      payload: [uuid.v4()],
+      payload: [uuid.v4().toString()],
     })
   }
 }
