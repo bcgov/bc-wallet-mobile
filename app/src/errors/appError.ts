@@ -133,6 +133,15 @@ export class AppError extends Error {
       formattedMessage += ` ${this.technicalMessage}`
     }
 
+    if (this.screen) {
+      formattedMessage += `\nScreen: ${this.screen}`
+    }
+
+    if (this.url) {
+      const request = this.method ? `${this.method} ${this.url}` : this.url
+      formattedMessage += `\nRequest: ${request}`
+    }
+
     return formattedMessage
   }
 
