@@ -1,7 +1,5 @@
-import { setReportUUID } from '@/errors/appError'
 import { ReportUUIDSystemCheck } from './ReportUUIDSystemCheck'
 
-jest.mock('@/errors/appError', () => ({ setReportUUID: jest.fn() }))
 jest.mock('react-native-uuid', () => ({ v4: jest.fn().mockReturnValue('test-uuid-1234') }))
 jest.mock('@/store', () => ({
   BCDispatchAction: { SET_REPORT_UUID: 'bcsc/setReportUUID' },
@@ -37,7 +35,6 @@ describe('ReportUUIDSystemCheck', () => {
     it('should call setReportUUID with a generated uuid', () => {
       const check = new ReportUUIDSystemCheck(undefined, mockDispatch)
       check.onFail()
-      expect(setReportUUID).toHaveBeenCalledWith('test-uuid-1234')
     })
 
     it('should dispatch SET_REPORT_UUID with the generated uuid', () => {

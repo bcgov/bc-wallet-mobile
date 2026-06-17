@@ -31,7 +31,7 @@
  */
 
 // AppError class
-export { AppError, getReportUUID, setReportUUID } from './appError'
+export { AppError } from './appError'
 
 // Error registry and types
 export {

@@ -3,16 +3,6 @@ import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { ErrorCategory, ErrorDefinition } from './errorRegistry'
 
-let _reportUUID: string | undefined
-
-export function setReportUUID(uuid: string) {
-  _reportUUID = uuid
-}
-
-export function getReportUUID(): string | undefined {
-  return _reportUUID
-}
-
 type AppErrorOptions = ErrorOptions & {
   /**
    * Whether to automatically track this error in analytics upon creation. Defaults to true.

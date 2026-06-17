@@ -1,9 +1,12 @@
-import { AppError, getReportUUID } from '@/errors'
+import { AppError } from '@/errors'
 import { BCSCErrorModal, ErrorModalAction, ErrorModalPayload } from '@/errors/components/ErrorModal'
 import { AppEventCode } from '@/events/appEventCode'
+import { BCState } from '@/store'
 import { AlertAction, showAlert } from '@/utils/alert'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { appLogger } from '@/utils/logger'
+import { useStore } from '@bifold/core'
+
 import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react'
 
 interface ErrorModalOptions {
@@ -53,6 +56,7 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
   const [error, setError] = useState<ErrorModalPayload | null>(null)
   const [errorKey, setErrorKey] = useState(0)
   const [errorModalOptions, setErrorModalOptions] = useState<ErrorModalOptions | null>(null)
+  const [store] = useStore<BCState>() // Ensure store is initialized for error handling
 
   /**
    * Show error via ErrorModal
@@ -87,11 +91,11 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
         screen: error.screen,
         url: error.url,
         method: error.method,
-        reportUUID: getReportUUID(),
+        reportUUID: store.bcsc.reportUUID,
       })
       setErrorKey((prev) => prev + 1)
     },
-    []
+    [store.bcsc.reportUUID]
   )
 
   /**

@@ -1,4 +1,3 @@
-import { setReportUUID } from '@/errors/appError'
 import { BCDispatchAction } from '@/store'
 import { ReducerAction } from '@bifold/core'
 import { Dispatch } from 'react'
@@ -19,11 +18,9 @@ export class ReportUUIDSystemCheck implements SystemCheckStrategy {
   }
 
   onFail(): void {
-    const reportUUID = uuid.v4().toString()
-    setReportUUID(reportUUID)
     this.dispatch({
       type: BCDispatchAction.SET_REPORT_UUID,
-      payload: [reportUUID],
+      payload: [uuid.v4().toString()],
     })
   }
 }

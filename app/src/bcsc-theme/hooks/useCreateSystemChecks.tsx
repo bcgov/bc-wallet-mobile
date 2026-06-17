@@ -3,7 +3,6 @@ import BCSCApiClient from '@/bcsc-theme/api/client'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
-import { setReportUUID } from '@/errors/appError'
 import { AccountExpiryWarningBannerSystemCheck } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
@@ -75,13 +74,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   useEffect(() => {
     credentialMetadataRef.current = store.bcsc.credentialMetadata
   }, [store.bcsc.credentialMetadata])
-
-  // sync reportUUID to the AppError module so it can be included in error reports (e.g., "Report this problem")
-  useEffect(() => {
-    if (store.bcsc.reportUUID) {
-      setReportUUID(store.bcsc.reportUUID)
-    }
-  }, [store.bcsc.reportUUID])
 
   /**
    * Get system checks to run at app startup
