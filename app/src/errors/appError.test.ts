@@ -94,6 +94,27 @@ describe('AppError', () => {
       )
     })
 
+    it('carries native decode diagnostics (code + JWE/key summary) into fullMessage for 2507 reports', () => {
+      // Mirrors useUserApi.getUserInfo: a react-native-bcsc-core rejection (an Error with a
+      // `code` prefix and the enriched diagnostics message) is wrapped as DECRYPT_JWE_ERROR.
+      // The native detail must survive into fullMessage — that is the string the problem
+      // report surfaces, and what lets us tell the 2507 root causes apart in the field.
+      const nativeError: Error & { code?: string } = new Error(
+        'Unable to decode payload: Decryption failed [keys=2, newest=https://idsit.gov.bc.ca/device/abc/2, ' +
+          'jweParts=5, jweAlg=RSA1_5, jweEnc=A256CBC-HS512, jweKid=https://idsit.gov.bc.ca/device/abc/1, ' +
+          'kidMatchesLocal=false]'
+      )
+      nativeError.code = 'E_PAYLOAD_DECODE_ERROR'
+
+      const error = AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_JWE_ERROR, { cause: nativeError })
+
+      expect(error.statusCode).toBe(2507)
+      expect(error.fullMessage).toContain('[token.err_110_unable_to_decrypt_jwe.2507]')
+      expect(error.fullMessage).toContain('E_PAYLOAD_DECODE_ERROR')
+      expect(error.fullMessage).toContain('kidMatchesLocal=false')
+      expect(error.fullMessage).toContain('jweEnc=A256CBC-HS512')
+    })
+
     it('should append URL if set', () => {
       const identity = {
         category: ErrorCategory.GENERAL,
