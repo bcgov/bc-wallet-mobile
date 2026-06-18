@@ -259,12 +259,15 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     // A syntactically valid 5-part JWE: a real (base64url) protected header plus dummy
     // key/iv/ciphertext/tag. Native decrypt fails and rejects with the full diagnostics —
     // the same shape as a real "server encrypted to a key this device no longer holds" error.
+    // base64url-encode the header. Padding is dropped with split('=') rather than an anchored
+    // /=+$/ regex (which static analysis flags for super-linear backtracking) — mirrors the
+    // native Base64URL.encode convention (`components(separatedBy: "=")[0]`).
     const header = btoa(
       JSON.stringify({ alg: 'RSA1_5', enc: 'A256CBC-HS512', kid: 'https://idsit.gov.bc.ca/device/dev-trigger/1' })
     )
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
-      .replace(/=+$/, '')
+      .split('=')[0]
     const fakeJwe = `${header}.ZW5jcnlwdGVkS2V5.aXY.Y2lwaGVydGV4dA.dGFn`
 
     try {
