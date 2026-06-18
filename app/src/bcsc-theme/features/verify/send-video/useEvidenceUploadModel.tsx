@@ -27,7 +27,7 @@ const useEvidenceUploadModel = (
   const [store, dispatch] = useStore<BCState>()
   const isCancelledRef = useRef(false)
   const { evidence } = useApi()
-  const { updateAccountFlags } = useSecureActions()
+  const { updateAccountFlags, updateVerificationRequest } = useSecureActions()
   const { processAdditionalEvidence } = useEvidenceUpload()
   const { t } = useTranslation()
   const [isUploading, setIsUploading] = useState(false)
@@ -130,7 +130,19 @@ const useEvidenceUploadModel = (
       }
 
       if (!verificationRequestId || !verificationRequestSha) {
-        throw new Error('Missing verification request data')
+        logger.warn(
+          '[useEvidenceUploadModel] Missing verification request data at submit; routing back to Verification Method Selection so prompts can be refreshed and video re-recorded'
+        )
+        await updateVerificationRequest(null, null)
+        dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
+        dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: BCSCScreens.VerificationMethodSelection }],
+          })
+        )
+        throw new Error('Missing verification request data, resetting so you can try again.')
       }
 
       if (!photoMetadata) {
@@ -201,6 +213,7 @@ const useEvidenceUploadModel = (
       setUploadMessage(null)
     }
   }, [
+    dispatch,
     fileUploadErrorAlert,
     finalizeVerification,
     logger,
@@ -212,6 +225,7 @@ const useEvidenceUploadModel = (
     prompts,
     t,
     updateAccountFlags,
+    updateVerificationRequest,
     uploadEvidenceFiles,
     uploadEvidenceMetadata,
     verificationRequestId,
