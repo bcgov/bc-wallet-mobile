@@ -193,12 +193,12 @@ describe('useEvidenceUploadModel', () => {
       expect(mockFileUploadErrorAlert).toHaveBeenCalled()
     })
 
-    it('routes back to Verification Method Selection without hitting the evidence API when sha is missing', async () => {
+    it('routes back to Verification Method Selection and surfaces the error alert when sha is missing', async () => {
       // IAS rotates prompts on every GET /prompts, so refetching here would
       // invalidate the user's recorded video (different sha → "invalid sha256"
-      // on finalize). Instead, clear the broken local state and bounce back to
-      // Verification Method Selection where handlePressSendVideo will refetch
-      // once and force a re-record.
+      // on finalize). Instead, clear the broken local state, bounce back to
+      // Verification Method Selection, and let the existing FILE_UPLOAD_ERROR
+      // alert pop on top of that screen so the user knows why they were moved.
       const mockDispatch = jest.fn()
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([
@@ -245,14 +245,14 @@ describe('useEvidenceUploadModel', () => {
       )
       // Navigation reset to Verification Method Selection.
       expect(mockNavigation.dispatch).toHaveBeenCalled()
-      // Silent: no FILE_UPLOAD_ERROR alert.
-      expect(mockFileUploadErrorAlert).not.toHaveBeenCalled()
+      // Error alert pops on top of the destination screen.
+      expect(mockFileUploadErrorAlert).toHaveBeenCalled()
     })
 
-    it('routes back to Verification Method Selection without hitting the evidence API when both id and sha are missing', async () => {
+    it('routes back to Verification Method Selection and surfaces the error alert when both id and sha are missing', async () => {
       // Same path applies for the missing-id case (e.g. a force-kill that lost
       // the id and sha together, or a Bogus dev button). We can't reuse the
-      // recorded video either way, so just clear and bounce.
+      // recorded video either way, so just clear, bounce, and alert.
       const mockDispatch = jest.fn()
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([
@@ -280,7 +280,7 @@ describe('useEvidenceUploadModel', () => {
       expect(mockEvidenceApi.createVerificationRequest).not.toHaveBeenCalled()
       expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(null, null)
       expect(mockNavigation.dispatch).toHaveBeenCalled()
-      expect(mockFileUploadErrorAlert).not.toHaveBeenCalled()
+      expect(mockFileUploadErrorAlert).toHaveBeenCalled()
     })
 
     it('should complete the full upload flow and navigate on success', async () => {

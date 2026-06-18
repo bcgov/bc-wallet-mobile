@@ -139,7 +139,7 @@ const useEvidenceUploadModel = (
             routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.VerificationMethodSelection }],
           })
         )
-        return
+        throw new Error('Missing verification request data, resetting so you can try again.')
       }
 
       if (!photoMetadata) {
