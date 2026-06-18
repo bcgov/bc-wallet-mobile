@@ -40,10 +40,12 @@ jest.mock('@bifold/core', () => {
 })
 
 const mockUpdateAccountFlags = jest.fn().mockResolvedValue(undefined)
+const mockUpdateVerificationRequest = jest.fn().mockResolvedValue(undefined)
 jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   __esModule: true,
   default: jest.fn(() => ({
     updateAccountFlags: mockUpdateAccountFlags,
+    updateVerificationRequest: mockUpdateVerificationRequest,
   })),
 }))
 
@@ -81,6 +83,8 @@ describe('useEvidenceUploadModel', () => {
     uploadVideoEvidenceBinary: jest.fn(),
     sendEvidenceMetadata: jest.fn(),
     sendVerificationRequest: jest.fn(),
+    createVerificationRequest: jest.fn(),
+    getVerificationRequestPrompts: jest.fn(),
   }
 
   const baseStore: any = {
@@ -189,7 +193,13 @@ describe('useEvidenceUploadModel', () => {
       expect(mockFileUploadErrorAlert).toHaveBeenCalled()
     })
 
-    it('should emit fileUploadErrorAlert when verification request data is missing', async () => {
+    it('routes back to Verification Method Selection and surfaces the error alert when sha is missing', async () => {
+      // IAS rotates prompts on every GET /prompts, so refetching here would
+      // invalidate the user's recorded video (different sha → "invalid sha256"
+      // on finalize). Instead, clear the broken local state, bounce back to
+      // Verification Method Selection, and let the existing FILE_UPLOAD_ERROR
+      // alert pop on top of that screen so the user knows why they were moved.
+      const mockDispatch = jest.fn()
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([
         {
@@ -200,9 +210,16 @@ describe('useEvidenceUploadModel', () => {
             videoPath: '/video.mp4',
             videoDuration: 10,
             prompts: [{ text: 'smile' }],
+            photoMetadata: { some: 'metadata' },
+          },
+          bcscSecure: {
+            ...baseStore.bcscSecure,
+            verificationRequestId: 'persisted-id',
+            verificationRequestSha: undefined,
+            additionalEvidenceData: [],
           },
         } as BCState,
-        jest.fn(),
+        mockDispatch,
       ])
 
       const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
@@ -211,6 +228,58 @@ describe('useEvidenceUploadModel', () => {
         await result.current.handleSend()
       })
 
+      // No evidence API calls at all — recovery must not refetch prompts.
+      expect(mockEvidenceApi.getVerificationRequestPrompts).not.toHaveBeenCalled()
+      expect(mockEvidenceApi.createVerificationRequest).not.toHaveBeenCalled()
+      expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).not.toHaveBeenCalled()
+      expect(mockEvidenceApi.sendVerificationRequest).not.toHaveBeenCalled()
+      // Local state cleared: id + sha both nulled so the next handlePressSendVideo
+      // calls createVerificationRequest and gets a fresh, valid request to record
+      // against. The orphaned server-side id is TTL'd by IAS.
+      expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(null, null)
+      expect(mockDispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ type: expect.stringContaining('updateVideoPrompts') })
+      )
+      expect(mockDispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ type: expect.stringContaining('clearPhotoAndVideo') })
+      )
+      // Navigation reset to Verification Method Selection.
+      expect(mockNavigation.dispatch).toHaveBeenCalled()
+      // Error alert pops on top of the destination screen.
+      expect(mockFileUploadErrorAlert).toHaveBeenCalled()
+    })
+
+    it('routes back to Verification Method Selection and surfaces the error alert when both id and sha are missing', async () => {
+      // Same path applies for the missing-id case (e.g. a force-kill that lost
+      // the id and sha together, or a Bogus dev button). We can't reuse the
+      // recorded video either way, so just clear, bounce, and alert.
+      const mockDispatch = jest.fn()
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([
+        {
+          ...baseStore,
+          bcsc: {
+            ...baseStore.bcsc,
+            photoPath: '/photo.jpg',
+            videoPath: '/video.mp4',
+            videoDuration: 10,
+            prompts: [{ text: 'smile' }],
+            photoMetadata: { some: 'metadata' },
+          },
+        } as BCState,
+        mockDispatch,
+      ])
+
+      const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+      await act(async () => {
+        await result.current.handleSend()
+      })
+
+      expect(mockEvidenceApi.getVerificationRequestPrompts).not.toHaveBeenCalled()
+      expect(mockEvidenceApi.createVerificationRequest).not.toHaveBeenCalled()
+      expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(null, null)
+      expect(mockNavigation.dispatch).toHaveBeenCalled()
       expect(mockFileUploadErrorAlert).toHaveBeenCalled()
     })
 

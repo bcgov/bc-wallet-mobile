@@ -11,7 +11,7 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { getVideoMetadata } from '@/bcsc-theme/utils/file-info'
 import { AppError, ErrorRegistry } from '@/errors'
 import { useAlerts } from '@/hooks/useAlerts'
-import { BCState } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
@@ -25,9 +25,9 @@ const useEvidenceUploadModel = (
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.InformationRequired>
 ) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [store] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const { evidence } = useApi()
-  const { updateAccountFlags } = useSecureActions()
+  const { updateAccountFlags, updateVerificationRequest } = useSecureActions()
   const { processAdditionalEvidence } = useEvidenceUpload()
   const { t } = useTranslation()
   const loadingScreen = useLoadingScreen()
@@ -127,7 +127,19 @@ const useEvidenceUploadModel = (
       }
 
       if (!verificationRequestId || !verificationRequestSha) {
-        throw new Error('Missing verification request data')
+        logger.warn(
+          '[useEvidenceUploadModel] Missing verification request data at submit; routing back to Verification Method Selection so prompts can be refreshed and video re-recorded'
+        )
+        await updateVerificationRequest(null, null)
+        dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
+        dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 1,
+            routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.VerificationMethodSelection }],
+          })
+        )
+        throw new Error('Missing verification request data, resetting so you can try again.')
       }
 
       if (!photoMetadata) {
@@ -182,6 +194,7 @@ const useEvidenceUploadModel = (
       stopLoading()
     }
   }, [
+    dispatch,
     fileUploadErrorAlert,
     finalizeVerification,
     loadingScreen,
@@ -194,6 +207,7 @@ const useEvidenceUploadModel = (
     prompts,
     t,
     updateAccountFlags,
+    updateVerificationRequest,
     uploadEvidenceFiles,
     uploadEvidenceMetadata,
     verificationRequestId,

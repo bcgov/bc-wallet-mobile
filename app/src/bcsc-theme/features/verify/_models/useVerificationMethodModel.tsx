@@ -34,11 +34,21 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
         verificationRequest = await evidence.createVerificationRequest()
       }
 
-      // Use `?.length` (not just `!prompts`): an empty array is truthy, so a leftover/empty `[]` would
-      // otherwise skip this refetch and strand the user with no prompts on TakeVideoScreen.
-      if (store.bcscSecure.verificationRequestId && !store.bcsc.prompts?.length) {
-        // NOTE: Making this request too many times will be rate limited by the server.
-        verificationRequest = await evidence.getVerificationRequestPrompts(store.bcscSecure.verificationRequestId)
+      if (
+        store.bcscSecure.verificationRequestId &&
+        (!store.bcscSecure.verificationRequestSha || !store.bcsc.prompts?.length)
+      ) {
+        try {
+          verificationRequest = await evidence.getVerificationRequestPrompts(store.bcscSecure.verificationRequestId)
+        } catch (error) {
+          // IAS returns 500 for any call against a verification id that has been deleted
+          // server-side (TTL expired, agent cancelled, etc.). The local id is now useless —
+          // start a fresh request so the user isn't stuck on a stale id across cycles.
+          logger.warn(
+            `[useVerificationMethodModel] Failed to fetch prompts for stored verification id; creating a fresh request: ${error instanceof Error ? error.message : String(error)}`
+          )
+          verificationRequest = await evidence.createVerificationRequest()
+        }
       }
 
       if (verificationRequest) {
@@ -74,6 +84,7 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     }
   }, [
     store.bcscSecure.verificationRequestId,
+    store.bcscSecure.verificationRequestSha,
     store.bcsc.prompts,
     store.bcsc.videoPath,
     store.bcsc.photoPath,
