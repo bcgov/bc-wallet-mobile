@@ -38,7 +38,7 @@ describe('useUserService', () => {
 
       await expect(result.current.getUserInfo()).rejects.toThrow(mockError)
       expect(userApi.getUserInfo).toHaveBeenCalled()
-      expect(mockAlerts.failedToDeserializeJsonAlert).toHaveBeenCalled()
+      expect(mockAlerts.failedToDeserializeJsonAlert).toHaveBeenCalledWith(mockError)
     })
 
     it('should show alert on JWE decryption error and rethrow error', async () => {
@@ -55,7 +55,10 @@ describe('useUserService', () => {
 
       await expect(result.current.getUserInfo()).rejects.toThrow(mockError)
       expect(userApi.getUserInfo).toHaveBeenCalled()
-      expect(mockAlerts.unableToDecryptJweAlert).toHaveBeenCalled()
+      // Regression: the alert must receive the ORIGINAL AppError. Calling it bare makes
+      // ensureAppError(undefined, …) rebuild a cause-less error, dropping the native decode
+      // diagnostics (E_…_ERROR + [keys=…]) from the problem report.
+      expect(mockAlerts.unableToDecryptJweAlert).toHaveBeenCalledWith(mockError)
     })
 
     it('should show alert on claims set error and rethrow error', async () => {
@@ -72,7 +75,7 @@ describe('useUserService', () => {
 
       await expect(result.current.getUserInfo()).rejects.toThrow(mockError)
       expect(userApi.getUserInfo).toHaveBeenCalled()
-      expect(mockAlerts.failedToGetClaimsSetAlert).toHaveBeenCalled()
+      expect(mockAlerts.failedToGetClaimsSetAlert).toHaveBeenCalledWith(mockError)
     })
 
     it('should show alert on JWS parse error and rethrow error', async () => {
@@ -89,7 +92,7 @@ describe('useUserService', () => {
 
       await expect(result.current.getUserInfo()).rejects.toThrow(mockError)
       expect(userApi.getUserInfo).toHaveBeenCalled()
-      expect(mockAlerts.failedToParseJwsAlert).toHaveBeenCalled()
+      expect(mockAlerts.failedToParseJwsAlert).toHaveBeenCalledWith(mockError)
     })
 
     it('should show alert on token unexpectedly null error and rethrow error', async () => {
@@ -106,7 +109,7 @@ describe('useUserService', () => {
 
       await expect(result.current.getUserInfo()).rejects.toThrow(mockError)
       expect(userApi.getUserInfo).toHaveBeenCalled()
-      expect(mockAlerts.tokenUnexpectedlyNullAlert).toHaveBeenCalled()
+      expect(mockAlerts.tokenUnexpectedlyNullAlert).toHaveBeenCalledWith(mockError)
     })
   })
 
@@ -162,7 +165,7 @@ describe('useUserService', () => {
 
       await expect(result.current.getUserMetadata()).rejects.toThrow(mockError)
       expect(userApi.getUserInfo).toHaveBeenCalled()
-      expect(mockAlerts.failedToDeserializeJsonAlert).toHaveBeenCalled()
+      expect(mockAlerts.failedToDeserializeJsonAlert).toHaveBeenCalledWith(mockError)
     })
 
     it('should show alert on JWE decryption error and rethrow error', async () => {
@@ -179,7 +182,7 @@ describe('useUserService', () => {
 
       await expect(result.current.getUserMetadata()).rejects.toThrow(mockError)
       expect(userApi.getUserInfo).toHaveBeenCalled()
-      expect(mockAlerts.unableToDecryptJweAlert).toHaveBeenCalled()
+      expect(mockAlerts.unableToDecryptJweAlert).toHaveBeenCalledWith(mockError)
     })
 
     it('should show alert on claims set error and rethrow error', async () => {
@@ -196,7 +199,7 @@ describe('useUserService', () => {
 
       await expect(result.current.getUserMetadata()).rejects.toThrow(mockError)
       expect(userApi.getUserInfo).toHaveBeenCalled()
-      expect(mockAlerts.failedToGetClaimsSetAlert).toHaveBeenCalled()
+      expect(mockAlerts.failedToGetClaimsSetAlert).toHaveBeenCalledWith(mockError)
     })
 
     it('should show alert on JWS parse error and rethrow error', async () => {
@@ -213,7 +216,7 @@ describe('useUserService', () => {
 
       await expect(result.current.getUserMetadata()).rejects.toThrow(mockError)
       expect(userApi.getUserInfo).toHaveBeenCalled()
-      expect(mockAlerts.failedToParseJwsAlert).toHaveBeenCalled()
+      expect(mockAlerts.failedToParseJwsAlert).toHaveBeenCalledWith(mockError)
     })
 
     it('should show alert on token unexpectedly null error and rethrow error', async () => {
@@ -230,7 +233,7 @@ describe('useUserService', () => {
 
       await expect(result.current.getUserMetadata()).rejects.toThrow(mockError)
       expect(userApi.getUserInfo).toHaveBeenCalled()
-      expect(mockAlerts.tokenUnexpectedlyNullAlert).toHaveBeenCalled()
+      expect(mockAlerts.tokenUnexpectedlyNullAlert).toHaveBeenCalledWith(mockError)
     })
   })
 

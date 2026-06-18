@@ -65,14 +65,9 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
 
     Analytics.trackAlertActionEvent(error.appEvent as AppEventCode, ANALYTICS_REPORT_THIS_PROBLEM_LABEL)
 
+    // error.message is already AppError.fullMessage, which now includes the Screen/Request lines —
+    // don't re-append them here or they show up twice in the report.
     let reportMessage = error.message
-    if (error.screen) {
-      reportMessage += `\nScreen: ${error.screen}`
-    }
-    if (error.url) {
-      const request = error.method ? `${error.method} ${error.url}` : error.url
-      reportMessage += `\nRequest: ${request}`
-    }
     if (error.reportUUID) {
       reportMessage += `\nReport ID: ${error.reportUUID}`
     }

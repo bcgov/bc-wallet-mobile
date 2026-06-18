@@ -185,6 +185,28 @@ describe('BCSCErrorModal', () => {
       )
     })
 
+    it('does not re-append Screen/Request to the report — fullMessage already carries them', () => {
+      // error.message IS AppError.fullMessage, which now includes the Screen/Request lines.
+      // handleReport must not append them again, or each appears twice in the report.
+      const payload: ErrorModalPayload = {
+        ...validPayload,
+        message:
+          'JWE decryption failed\nDebug: [token.err_110_unable_to_decrypt_jwe.2507]\nScreen: Home\nRequest: GET https://example.com/userinfo',
+        screen: 'Home',
+        url: 'https://example.com/userinfo',
+        method: 'GET',
+        reportUUID: 'report-uuid-123',
+      }
+      const { getByTestId } = renderModal({ error: payload, enableReport: true })
+
+      fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
+
+      const reported = (appLogger.report as jest.Mock).mock.calls[0][0] as BifoldError
+      expect(reported.message.match(/Screen: Home/g)).toHaveLength(1)
+      expect(reported.message.match(/Request: /g)).toHaveLength(1)
+      expect(reported.message).toContain('Report ID: report-uuid-123')
+    })
+
     it('should disable the Report button after being pressed', async () => {
       const { getByTestId } = renderModal({ error: validPayload, enableReport: true })
 
