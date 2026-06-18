@@ -1,4 +1,4 @@
-import AccountExpiryNotification from '@/bcsc-theme/features/notifications/AccountExpiryNotification'
+import CardExpiryNotification from '@/bcsc-theme/features/notifications/CardExpiryNotification'
 import CardRenewalNotification from '@/bcsc-theme/features/notifications/CardRenewalNotification'
 import StartVerificationNotification from '@/bcsc-theme/features/notifications/StartVerificationNotification'
 import { useVerificationStatus } from '@/bcsc-theme/hooks/useVerificationStatus'
@@ -42,7 +42,7 @@ export const useCustomNotifications = () => {
       notifications.push({
         id: CustomNotificationId.AccountExpiringSoon,
         dismissible: false,
-        element: <AccountExpiryNotification key={CustomNotificationId.AccountExpiringSoon} />,
+        element: <CardExpiryNotification key={CustomNotificationId.AccountExpiringSoon} />,
       })
     }
 
@@ -70,7 +70,13 @@ export const useCustomNotifications = () => {
     return notifications
       .filter((notification) => !notification.dismissible || !dismissedIds.has(notification.id))
       .map((notification) => notification.element)
-  }, [store.bcsc.showAccountExpiryNotification, store.bcsc.showCardRenewalNotification, needsVerification, dismissCustomNotification, dismissedIds])
+  }, [
+    store.bcsc.showAccountExpiryNotification,
+    store.bcsc.showCardRenewalNotification,
+    needsVerification,
+    dismissCustomNotification,
+    dismissedIds,
+  ])
 
   return useMemo(
     () => ({
