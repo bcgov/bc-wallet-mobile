@@ -1644,24 +1644,32 @@ class BcscCoreModule(
      * header and whether its kid matches a local key — enough to tell "no key" / "wrong
      * key" / "unsupported alg" / "corrupt" apart from a field report alone. The alias is
      * the same identifier the recovery flow matches against the server's jwks kids.
+     *
+     * Never throws. decodePayload builds this up front on every call (success path
+     * included), so a failure while gathering diagnostics must never break decoding —
+     * the whole body is guarded and degrades to a fallback string.
      */
-    private fun decodeDiagnosticsSummary(jweString: String): String {
-        val header = incomingJWEHeader(jweString)
-        val aliases: List<String> =
-            try {
-                keyPairSource
-                    .getAllBcscKeyPairInfos()
-                    .sortedByDescending { it.getCreatedAt() }
-                    .map { it.getAlias() }
-            } catch (e: Exception) {
-                emptyList()
-            }
-        val newest = aliases.firstOrNull() ?: "none"
-        val kidMatchesLocal = header.kid.isNotEmpty() && aliases.contains(header.kid)
-        val jweKid = if (header.kid.isEmpty()) "none" else header.kid
-        return "[keys=${aliases.size}, newest=$newest, jweParts=${header.parts}, " +
-            "jweAlg=${header.alg}, jweEnc=${header.enc}, jweKid=$jweKid, kidMatchesLocal=$kidMatchesLocal]"
-    }
+    private fun decodeDiagnosticsSummary(jweString: String): String =
+        try {
+            val header = incomingJWEHeader(jweString)
+            val aliases: List<String> =
+                try {
+                    keyPairSource
+                        .getAllBcscKeyPairInfos()
+                        .sortedByDescending { it.getCreatedAt() }
+                        .map { it.getAlias() }
+                } catch (e: Exception) {
+                    emptyList()
+                }
+            val newest = aliases.firstOrNull() ?: "none"
+            val kidMatchesLocal = header.kid.isNotEmpty() && aliases.contains(header.kid)
+            val jweKid = if (header.kid.isEmpty()) "none" else header.kid
+            "[keys=${aliases.size}, newest=$newest, jweParts=${header.parts}, " +
+                "jweAlg=${header.alg}, jweEnc=${header.enc}, jweKid=$jweKid, kidMatchesLocal=$kidMatchesLocal]"
+        } catch (e: Exception) {
+            Log.w(NAME, "decodeDiagnosticsSummary: failed to build diagnostics", e)
+            "[diagnostics unavailable]"
+        }
 
     @ReactMethod
     override fun decodePayload(

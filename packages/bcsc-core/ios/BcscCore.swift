@@ -232,6 +232,11 @@ class BcscCore: NSObject {
   /// inventory plus the incoming JWE header and whether its kid matches any local key —
   /// the essentials for telling "no key" / "wrong key" / "unsupported alg" / "corrupt"
   /// apart from a field report alone.
+  ///
+  /// Non-throwing by construction: `decodePayload` builds this up front on every call
+  /// (success path included), so it must never break decoding. It leans only on crash-safe
+  /// helpers (`incomingJWEHeader`, `base64URLDecodeSafely`) and never force-unwraps — keep
+  /// it that way. (The Android twin can throw, so there the whole body is guarded.)
   private func decodeDiagnosticsSummary(keys: [PrivateKeyInfo], jweString: String) -> String {
     let header = incomingJWEHeader(jweString)
     let newest = keys.sorted(by: { $0.created > $1.created }).first?.tag ?? "none"
