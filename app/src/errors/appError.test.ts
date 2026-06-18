@@ -145,36 +145,10 @@ describe('AppError', () => {
       expect(error.fullMessage).toContain('jweEnc=A256CBC-HS512')
     })
 
-    it('should append URL if set', () => {
-      const identity = {
-        category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
-        statusCode: 1234,
-      }
-      const error = new AppError('Something went wrong', identity)
-      error.url = 'https://example.com/device/token'
-
-      expect(error.fullMessage).toBe(
-        'Something went wrong\nDebug: [general.unknown_server_error.1234]\nRequest: https://example.com/device/token'
-      )
-    })
-
-    it('should include HTTP method with URL when both are set', () => {
-      const identity = {
-        category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
-        statusCode: 1234,
-      }
-      const error = new AppError('Something went wrong', identity)
-      error.url = 'https://example.com/device/token'
-      error.method = 'POST'
-
-      expect(error.fullMessage).toBe(
-        'Something went wrong\nDebug: [general.unknown_server_error.1234]\nRequest: POST https://example.com/device/token'
-      )
-    })
-
-    it('should append screen name when screen is set', () => {
+    it('omits screen and request context — that is report-only, not shown in the user-facing message', () => {
+      // Screen/Request are intentionally kept out of fullMessage (the "Show details" string)
+      // so infra context never alarms the user. They are appended only to the "Report this
+      // problem" payload in ErrorModal.handleReport.
       const identity = {
         category: ErrorCategory.GENERAL,
         appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
@@ -182,10 +156,12 @@ describe('AppError', () => {
       }
       const error = new AppError('Something went wrong', identity)
       error.screen = 'HomeScreen'
+      error.url = 'https://example.com/device/token'
+      error.method = 'POST'
 
-      expect(error.fullMessage).toBe(
-        'Something went wrong\nDebug: [general.unknown_server_error.1234]\nScreen: HomeScreen'
-      )
+      expect(error.fullMessage).toBe('Something went wrong\nDebug: [general.unknown_server_error.1234]')
+      expect(error.fullMessage).not.toContain('Screen:')
+      expect(error.fullMessage).not.toContain('Request:')
     })
   })
 

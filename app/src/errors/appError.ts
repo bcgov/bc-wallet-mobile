@@ -118,6 +118,11 @@ export class AppError extends Error {
   /**
    * Get the full error message, including technical details if available.
    *
+   * This is the user-facing details string (shown behind "Show details" in the error
+   * modal), so it deliberately excludes the active screen and request URL — that infra
+   * context could alarm users. Screen/Request are appended only to the "Report this
+   * problem" payload sent to Loki, never shown to the user. See ErrorModal.handleReport.
+   *
    * @example
    * `No internet connection
    * Debug: [network.err_no_internet.2100] Failed to fetch resource`
@@ -131,15 +136,6 @@ export class AppError extends Error {
 
     if (this.technicalMessage) {
       formattedMessage += ` ${this.technicalMessage}`
-    }
-
-    if (this.screen) {
-      formattedMessage += `\nScreen: ${this.screen}`
-    }
-
-    if (this.url) {
-      const request = this.method ? `${this.method} ${this.url}` : this.url
-      formattedMessage += `\nRequest: ${request}`
     }
 
     return formattedMessage

@@ -185,13 +185,13 @@ describe('BCSCErrorModal', () => {
       )
     })
 
-    it('does not re-append Screen/Request to the report — fullMessage already carries them', () => {
-      // error.message IS AppError.fullMessage, which now includes the Screen/Request lines.
-      // handleReport must not append them again, or each appears twice in the report.
+    it('appends Screen/Request to the report — fullMessage keeps them out of the user-facing message', () => {
+      // error.message IS AppError.fullMessage, which deliberately omits Screen/Request so the
+      // user-facing "Show details" stays clean. handleReport re-adds them — exactly once — so
+      // the Loki problem report still carries the infra context.
       const payload: ErrorModalPayload = {
         ...validPayload,
-        message:
-          'JWE decryption failed\nDebug: [token.err_110_unable_to_decrypt_jwe.2507]\nScreen: Home\nRequest: GET https://example.com/userinfo',
+        message: 'JWE decryption failed\nDebug: [token.err_110_unable_to_decrypt_jwe.2507]',
         screen: 'Home',
         url: 'https://example.com/userinfo',
         method: 'GET',
@@ -203,7 +203,7 @@ describe('BCSCErrorModal', () => {
 
       const reported = (appLogger.report as jest.Mock).mock.calls[0][0] as BifoldError
       expect(reported.message.match(/Screen: Home/g)).toHaveLength(1)
-      expect(reported.message.match(/Request: /g)).toHaveLength(1)
+      expect(reported.message).toContain('Request: GET https://example.com/userinfo')
       expect(reported.message).toContain('Report ID: report-uuid-123')
     })
 

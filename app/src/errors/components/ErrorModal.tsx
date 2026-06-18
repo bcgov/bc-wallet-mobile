@@ -65,9 +65,17 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
 
     Analytics.trackAlertActionEvent(error.appEvent as AppEventCode, ANALYTICS_REPORT_THIS_PROBLEM_LABEL)
 
-    // error.message is already AppError.fullMessage, which now includes the Screen/Request lines —
-    // don't re-append them here or they show up twice in the report.
+    // error.message is AppError.fullMessage — the user-facing details string, which
+    // deliberately omits the screen name and request URL so we don't surface infra
+    // details to the user. Append them here so they still ride along in the Loki report.
     let reportMessage = error.message
+    if (error.screen) {
+      reportMessage += `\nScreen: ${error.screen}`
+    }
+    if (error.url) {
+      const request = error.method ? `${error.method} ${error.url}` : error.url
+      reportMessage += `\nRequest: ${request}`
+    }
     if (error.reportUUID) {
       reportMessage += `\nReport ID: ${error.reportUUID}`
     }
