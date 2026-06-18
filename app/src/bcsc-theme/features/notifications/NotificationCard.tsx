@@ -2,12 +2,57 @@ import { hitSlop } from '@/constants'
 import { Button, ButtonType, IColorPalette, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { Image, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Image, ImageStyle, Pressable, StyleProp, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 const ICON_CIRCLE_SIZE = 36
 const ICON_INNER_SIZE = 20
 const CLOSE_ICON_SIZE = 24
+
+interface NotificationIconProps {
+  logoUrl?: string
+  iconName: string
+  iconColor: string
+  iconStyle?: StyleProp<ViewStyle>
+  circleStyle: ViewStyle
+  logoStyle: ImageStyle
+}
+
+/**
+ * Displays icons for notifications
+ *
+ * @param props
+ * @returns
+ */
+const NotificationIcon: React.FC<NotificationIconProps> = ({
+  logoUrl,
+  iconName,
+  iconColor,
+  iconStyle,
+  circleStyle,
+  logoStyle,
+}) => {
+  if (logoUrl) {
+    return (
+      <Image
+        accessible={false}
+        source={{ uri: logoUrl }}
+        style={logoStyle}
+        testID={testIdWithKey('NotificationLogo')}
+      />
+    )
+  }
+  return (
+    <View style={iconStyle ?? circleStyle}>
+      <Icon
+        accessible={false}
+        name={iconName}
+        size={iconStyle ? ICON_CIRCLE_SIZE : ICON_INNER_SIZE}
+        color={iconColor}
+      />
+    </View>
+  )
+}
 
 /**
  * Display states for notification cards, matching the BCSC notification designs:
@@ -34,6 +79,8 @@ interface NotificationCardProps {
   timestamp?: string
   badge?: string
   icon?: string
+  iconColor?: string
+  iconStyle?: StyleProp<ViewStyle>
   /**
    * Connection logo to display in place of the icon. Per the designs, notifications
    * from connections show the connection's logo when one is available, and fall back
@@ -53,7 +100,7 @@ const NotificationCard: React.FC<NotificationCardProps> = (props) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
   const cardStyle = getCardStyle(props.status, ColorPalette)
-  const iconColor = ColorPalette.grayscale.mediumGrey
+  const iconColor = props.iconColor ?? ColorPalette.grayscale.mediumGrey
 
   const isV1 = !!props.buttonTitle
 
@@ -125,18 +172,14 @@ const NotificationCard: React.FC<NotificationCardProps> = (props) => {
   const content = (
     <View style={styles.container} testID={testIdWithKey('NotificationListItem')}>
       <View style={styles.headerContainer}>
-        {props.logoUrl ? (
-          <Image
-            accessible={false}
-            source={{ uri: props.logoUrl }}
-            style={styles.logoImage}
-            testID={testIdWithKey('NotificationLogo')}
-          />
-        ) : (
-          <View style={styles.iconCircle}>
-            <Icon accessible={false} name={iconName} size={ICON_INNER_SIZE} color="#FFFFFF" />
-          </View>
-        )}
+        <NotificationIcon
+          logoUrl={props.logoUrl}
+          iconName={iconName}
+          iconColor={iconColor}
+          iconStyle={props.iconStyle}
+          circleStyle={styles.iconCircle}
+          logoStyle={styles.logoImage}
+        />
         <ThemedText variant="bold" style={styles.headerText} testID={testIdWithKey('HeaderText')}>
           {props.title}
         </ThemedText>
