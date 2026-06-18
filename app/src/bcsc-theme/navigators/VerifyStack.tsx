@@ -89,7 +89,10 @@ const VerifyStack = () => {
         headerBackTestID: testIdWithKey('Back'),
         headerBackTitleVisible: false,
         header: createHeaderWithoutBanner,
-        headerRight: createFloatingHelpMenuButton({ webViewScreen: BCSCScreens.VerifyWebView }),
+        headerRight: createFloatingHelpMenuButton({
+          webViewScreen: BCSCScreens.VerifyWebView,
+          showRestartVerification: true,
+        }),
       }}
     >
       <Stack.Screen
@@ -101,6 +104,7 @@ const VerifyStack = () => {
           headerRight: createFloatingHelpMenuButton({
             webViewScreen: BCSCScreens.VerifyWebView,
             learnMoreUrl: HelpCentreUrl.HOW_TO_SETUP,
+            showRestartVerification: true,
           }),
         }}
       />
@@ -169,6 +173,7 @@ const VerifyStack = () => {
           headerRight: createFloatingHelpMenuButton({
             webViewScreen: BCSCScreens.VerifyWebView,
             learnMoreUrl: HelpCentreUrl.VERIFICATION_METHODS,
+            showRestartVerification: true,
           }),
         }}
       />
@@ -180,6 +185,7 @@ const VerifyStack = () => {
           headerRight: createFloatingHelpMenuButton({
             webViewScreen: BCSCScreens.VerifyWebView,
             learnMoreUrl: HelpCentreUrl.VERIFY_IN_PERSON,
+            showRestartVerification: true,
           }),
         }}
       />
@@ -235,6 +241,7 @@ const VerifyStack = () => {
           headerRight: createFloatingHelpMenuButton({
             webViewScreen: BCSCScreens.VerifyWebView,
             learnMoreUrl: HelpCentreUrl.ACCEPTED_IDENTITY_DOCUMENTS,
+            showRestartVerification: true,
           }),
         }}
       />
@@ -246,6 +253,7 @@ const VerifyStack = () => {
           headerRight: createFloatingHelpMenuButton({
             webViewScreen: BCSCScreens.VerifyWebView,
             learnMoreUrl: HelpCentreUrl.ACCEPTED_IDENTITY_DOCUMENTS,
+            showRestartVerification: true,
           }),
         }}
       />

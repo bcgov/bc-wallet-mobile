@@ -106,21 +106,20 @@ const translation = {
     },
     "BasicMessage": {
       "Title": "New message",
-      "SentMessage": "{{ label }} sent a message",
-      "ReceivedMessage": "You received a new message",
       "ButtonTitle": "View message"
     },
     "CredentialOffer": {
       "Title": "Credential offer",
-      "Description": "{{ label }} is offering you a credential"
+      "Description": "{{ label }} is offering you a {{ credential }}."
     },
     "ProofRequest": {
       "Title": "Proof request",
-      "Description": "{{ label }} is requesting information",
-      "DefaultDescription": "You received a proof request"
+      "Description": "{{ label }} is requesting for information.",
+      "DefaultDescription": "You're being asked to share information."
     },
     "Revocation": {
-      "Title": "Credential revoked"
+      "Title": "Credential revoked",
+      "Description": "{{ credential }} was revoked."
     }
   },
   "PersonCredential": {
@@ -242,6 +241,7 @@ const translation = {
       "LearnMore": "Learn more",
       "GiveFeedback": "Give feedback",
       "ReportProblem": "Report a problem",
+      "RestartVerification": "Restart verification process",
     },
     "Contacts": {
       "Title": "Contacts",
@@ -706,6 +706,7 @@ const translation = {
       "TryAgain": "Try Again",
       "Connecting": "Connecting…",
       "UnrecognizedQR": "QR code not recognized.",
+      "InvalidConnectionInvitation": "This connection invitation could not be opened.",
       "FeatureUnavailable": "This action isn't available yet.",
       "Unsupported": {
         "OpenID": "OpenID credentials aren't supported in BC Services Card.",
@@ -1193,7 +1194,7 @@ const translation = {
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again.",
     },
     "Wallet": {
-      "EmptyMessage": "Your wallet is empty",
+      "EmptyMessage": "Your wallet is empty!",
       "Reset": "Reset wallet",
       "ResetTitle": "Reset wallet?",
       "ResetDescription": "This will permanently delete all credentials, connections, and chat history stored in your wallet. Your PIN, biometrics, and BC Services Card identity will not be affected. You will not have to re-verify.",
@@ -1288,6 +1289,10 @@ const translation = {
       "Title": "Problem with App",
       "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (error {{ errorCode }})"
     },
+    "DeviceStorageFull": {
+      "Title": "Not Enough Storage",
+      "Description": "Your device is out of storage space, so the app can't save your information. Free up space on your device, then try again."
+    },
     "ProblemWithService": {
       "Title": "Problem with Service",
       "Description": "Please try again later. (error {{ errorCode }})"
@@ -1341,6 +1346,12 @@ const translation = {
       "Title": "Are you sure?",
       "Description": "Your verification request sent to Service BC will be deleted. Then you can choose another way to verify.",
       "Action1": "Delete Verify Request",
+    },
+    "RestartVerification": {
+      "Title": "Are you sure?",
+      "Description": "Your verification progress will be deleted and you will start the verification process from the beginning.",
+      "Action1": "Restart Verification",
+      "Loading": "Restarting verification...",
     },
     "DataUseWarning": {
       "Title": "Data Use",

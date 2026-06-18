@@ -1,5 +1,17 @@
+import { isDidCommInvitation } from '@bifold/core'
+
 import { DeepLinkViewModel } from './DeepLinkViewModel'
 import { DeepLinkPayload } from './services/deep-linking'
+
+// Wholesale-mock @bifold/core (same approach as useScanScreenViewModel.test.ts):
+// the real module is heavy (React Native + Credo) and awkward to load under jest.
+// At runtime this ViewModel only uses isDidCommInvitation — AbstractBifoldLogger is
+// a type-only import and is erased — so stubbing just this export is sufficient.
+jest.mock('@bifold/core', () => ({
+  isDidCommInvitation: jest.fn(),
+}))
+
+const mockIsDidCommInvitation = isDidCommInvitation as jest.Mock
 
 describe('DeepLinkViewModel', () => {
   const pairingPath = '/https%3A%2F%2Fexample.com%2Fdevice%2FMy+Service%2FPAIR123'
@@ -7,6 +19,7 @@ describe('DeepLinkViewModel', () => {
   let capturedHandler: ((payload: DeepLinkPayload) => void) | undefined
   let mockService: { subscribe: jest.Mock; init: jest.Mock }
   let mockPairingService: { handlePairing: jest.Mock }
+  let mockConnectionInvitationService: { handleInvitation: jest.Mock }
   let logger: { info: jest.Mock; warn: jest.Mock }
 
   const buildPayload = (path: string = pairingPath, host: string = 'pair'): DeepLinkPayload => ({
@@ -28,10 +41,19 @@ describe('DeepLinkViewModel', () => {
     mockPairingService = {
       handlePairing: jest.fn(),
     }
+    mockConnectionInvitationService = {
+      handleInvitation: jest.fn(),
+    }
+    mockIsDidCommInvitation.mockReset()
   })
 
   it('initializes deep link service on initialize', () => {
-    const viewModel = new DeepLinkViewModel(mockService as any, logger as any, mockPairingService as any)
+    const viewModel = new DeepLinkViewModel(
+      mockService as any,
+      logger as any,
+      mockPairingService as any,
+      mockConnectionInvitationService as any
+    )
 
     viewModel.initialize()
 
@@ -40,7 +62,12 @@ describe('DeepLinkViewModel', () => {
   })
 
   it('delegates pairing deep link to PairingService', () => {
-    const viewModel = new DeepLinkViewModel(mockService as any, logger as any, mockPairingService as any)
+    const viewModel = new DeepLinkViewModel(
+      mockService as any,
+      logger as any,
+      mockPairingService as any,
+      mockConnectionInvitationService as any
+    )
 
     viewModel.initialize()
     capturedHandler?.(buildPayload())
@@ -53,7 +80,12 @@ describe('DeepLinkViewModel', () => {
   })
 
   it('uses pre-parsed pairing metadata without re-decoding', () => {
-    const viewModel = new DeepLinkViewModel(mockService as any, logger as any, mockPairingService as any)
+    const viewModel = new DeepLinkViewModel(
+      mockService as any,
+      logger as any,
+      mockPairingService as any,
+      mockConnectionInvitationService as any
+    )
 
     viewModel.initialize()
 
@@ -72,7 +104,12 @@ describe('DeepLinkViewModel', () => {
   })
 
   it('parses pairing metadata when URL.pathname is unavailable', () => {
-    const viewModel = new DeepLinkViewModel(mockService as any, logger as any, mockPairingService as any)
+    const viewModel = new DeepLinkViewModel(
+      mockService as any,
+      logger as any,
+      mockPairingService as any,
+      mockConnectionInvitationService as any
+    )
 
     viewModel.initialize()
     capturedHandler?.(buildPayload('/https%3A%2F%2Fidsit.gov.bc.ca%2Fdevice/BC+Parks+Discover+Camping/HHFBYS'))
@@ -86,7 +123,12 @@ describe('DeepLinkViewModel', () => {
   })
 
   it('logs a warning when pairing payload cannot be parsed', () => {
-    const viewModel = new DeepLinkViewModel(mockService as any, logger as any, mockPairingService as any)
+    const viewModel = new DeepLinkViewModel(
+      mockService as any,
+      logger as any,
+      mockPairingService as any,
+      mockConnectionInvitationService as any
+    )
 
     viewModel.initialize()
     capturedHandler?.(buildPayload('/%'))
@@ -96,7 +138,12 @@ describe('DeepLinkViewModel', () => {
   })
 
   it('ignores deep links for other hosts', () => {
-    const viewModel = new DeepLinkViewModel(mockService as any, logger as any, mockPairingService as any)
+    const viewModel = new DeepLinkViewModel(
+      mockService as any,
+      logger as any,
+      mockPairingService as any,
+      mockConnectionInvitationService as any
+    )
 
     viewModel.initialize()
     capturedHandler?.({ rawUrl: 'scheme://other/thing', host: 'other', path: '/thing' })
@@ -105,12 +152,69 @@ describe('DeepLinkViewModel', () => {
   })
 
   it('skips pairing payloads that do not match expected segments', () => {
-    const viewModel = new DeepLinkViewModel(mockService as any, logger as any, mockPairingService as any)
+    const viewModel = new DeepLinkViewModel(
+      mockService as any,
+      logger as any,
+      mockPairingService as any,
+      mockConnectionInvitationService as any
+    )
 
     viewModel.initialize()
     capturedHandler?.(buildPayload('/https%3A%2F%2Fexample.com%2Ffoo'))
 
     expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
     expect(logger.warn).not.toHaveBeenCalled()
+  })
+
+  it('delegates connection-invitation deep link to ConnectionInvitationService', () => {
+    mockIsDidCommInvitation.mockReturnValue(true)
+    const viewModel = new DeepLinkViewModel(
+      mockService as any,
+      logger as any,
+      mockPairingService as any,
+      mockConnectionInvitationService as any
+    )
+
+    viewModel.initialize()
+    const rawUrl = 'bcwallet://aries_connection_invitation?oob=eyJhbGciOi'
+    capturedHandler?.({ rawUrl, host: 'aries_connection_invitation' })
+
+    expect(mockConnectionInvitationService.handleInvitation).toHaveBeenCalledWith({
+      url: rawUrl,
+      source: 'deep-link',
+    })
+    expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
+  })
+
+  it('does not route non-invitation, non-pairing deep links to either service', () => {
+    mockIsDidCommInvitation.mockReturnValue(false)
+    const viewModel = new DeepLinkViewModel(
+      mockService as any,
+      logger as any,
+      mockPairingService as any,
+      mockConnectionInvitationService as any
+    )
+
+    viewModel.initialize()
+    capturedHandler?.({ rawUrl: 'bcwallet://something/else', host: 'something' })
+
+    expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
+    expect(mockConnectionInvitationService.handleInvitation).not.toHaveBeenCalled()
+  })
+
+  it('prefers pairing over connection-invitation routing', () => {
+    mockIsDidCommInvitation.mockReturnValue(true)
+    const viewModel = new DeepLinkViewModel(
+      mockService as any,
+      logger as any,
+      mockPairingService as any,
+      mockConnectionInvitationService as any
+    )
+
+    viewModel.initialize()
+    capturedHandler?.(buildPayload())
+
+    expect(mockPairingService.handlePairing).toHaveBeenCalled()
+    expect(mockConnectionInvitationService.handleInvitation).not.toHaveBeenCalled()
   })
 })

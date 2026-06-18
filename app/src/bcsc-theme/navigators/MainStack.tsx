@@ -36,6 +36,7 @@ import { MainRemoveAccountConfirmationScreen } from '../features/account/RemoveA
 import { AgentReadyGate, BifoldScope, withAgentReadyGate } from '../features/agent'
 import { MainChangePINScreen } from '../features/auth/MainChangePINScreen'
 import { MainChangeSecurityScreen } from '../features/auth/MainChangeSecurityScreen'
+import { useConnectionInvitationDeepLink } from '../features/connection-invitation'
 import ContactChatScreen from '../features/contacts/ContactChatScreen'
 import ContactDetailsScreen from '../features/contacts/ContactDetailsScreen'
 import ContactJSONDetailsScreen from '../features/contacts/ContactJSONDetailsScreen'
@@ -133,6 +134,10 @@ const MainStack: React.FC = () => {
 
   useSystemChecks(SystemCheckScope.MAIN_STACK)
   useBCSCStack(BCSCStacks.Main)
+
+  // Accept connection-invitation deep links (e.g. from the showcase) once the
+  // agent is ready and route to the Connection screen (#2288).
+  useConnectionInvitationDeepLink()
 
   useEffect(() => {
     const unsubscribe = pairingService.onNavigationRequest(({ screen, params }) => {
@@ -243,11 +248,27 @@ const MainStack: React.FC = () => {
           <Stack.Screen
             name={BCSCScreens.ConnectionLoading}
             component={ConnectionLoadingScreen}
-            options={{
-              headerShown: true,
-              headerLeft: () => null,
-              gestureEnabled: false,
-              title: t('BCSC.Scan.Connecting'),
+            options={({ route }) => {
+              // Offers / proof requests opened from a home notification land directly on
+              // the offer / request view, so keep the default back button — backing out
+              // leaves the notification pending (in its read state) instead of forcing
+              // an accept / decline. QR-scan entries (oobRecordId) run the connection
+              // handshake, where backing out mid-exchange isn't supported — the loading
+              // placeholder has its own cancel affordance.
+              const { credentialId, proofId } = route.params
+              if (credentialId || proofId) {
+                return {
+                  headerShown: true,
+                  title: credentialId ? t('Screens.CredentialOffer') : t('Screens.ProofRequest'),
+                }
+              }
+
+              return {
+                headerShown: true,
+                headerLeft: () => null,
+                gestureEnabled: false,
+                title: t('BCSC.Scan.Connecting'),
+              }
             }}
           />
           <Stack.Screen

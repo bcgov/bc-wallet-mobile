@@ -53,6 +53,7 @@ export enum AppEventCode {
   NO_TOKENS_RETURNED = 'no_tokens_returned',
   PHYSICAL_CARD_WILL_EXPIRE = 'physical_card_will_expire',
   PROBLEM_WITH_CONNECTION = 'problem_with_connection',
+  RESTART_VERIFICATION = 'restart_verification',
   SERVER_ERROR = 'server_error',
   UNKNOWN_SERVER_ERROR = 'unknown_server_error', // Non-IAS error code
   SERVER_TIMEOUT = 'server_timeout',
@@ -66,6 +67,7 @@ export enum AppEventCode {
   VERIFY_NOT_COMPLETE = 'verify_not_complete',
   VERIFY_COMPLETE_FEEDBACK = 'verify_complete_feedback',
   ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE = 'err_100_failed_to_write_local_storage',
+  DEVICE_STORAGE_FULL = 'device_storage_full', // Non-IAS error code
   ERR_101_FAILED_TO_READ_LOCAL_STORAGE = 'err_101_failed_to_read_local_storage',
   ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL = 'err_102_client_registration_unexpectedly_null',
   // ERR_103_AUTHORIZATION_REQUEST_UNEXPECTEDLY_NULL deprecated in V4

@@ -1,25 +1,45 @@
 import { hitSlop } from '@/constants'
-import { Button, ButtonType, IColorPalette, InfoBoxType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { Button, ButtonType, IColorPalette, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { Pressable, StyleSheet, TouchableOpacity, View } from 'react-native'
-import Icon from 'react-native-vector-icons/MaterialIcons'
+import { Image, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 const ICON_CIRCLE_SIZE = 36
 const ICON_INNER_SIZE = 20
 const CLOSE_ICON_SIZE = 24
 
+/**
+ * Display states for notification cards, matching the BCSC notification designs:
+ * blue for unread, white for read, red for warnings and yellow for attention.
+ */
+export enum NotificationCardStatus {
+  /** Notifications the user has not opened yet (blue). */
+  Unread = 'Unread',
+  /** Notifications the user has already opened (white). */
+  Read = 'Read',
+  /** Revoked notifications or anything requiring immediate attention (red). */
+  Warning = 'Warning',
+  /** Notifications needing moderate attention, e.g. expiring soon (yellow). */
+  Attention = 'Attention',
+}
+
 interface NotificationCardProps {
   title: string
   description: string
-  cardType: InfoBoxType
+  status: NotificationCardStatus
   onPress: () => void
   onClose?: () => void
   buttonTitle?: string
   timestamp?: string
   badge?: string
   icon?: string
-  backgroundColor?: string
+  /**
+   * Connection logo to display in place of the icon. Per the designs, notifications
+   * from connections show the connection's logo when one is available, and fall back
+   * to an icon matching the purpose of the notification otherwise.
+   */
+  logoUrl?: string
 }
 
 /**
@@ -32,7 +52,7 @@ interface NotificationCardProps {
 const NotificationCard: React.FC<NotificationCardProps> = (props) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
-  const cardStyle = getCardStyle(props.cardType, ColorPalette)
+  const cardStyle = getCardStyle(props.status, ColorPalette)
   const iconColor = ColorPalette.grayscale.mediumGrey
 
   const isV1 = !!props.buttonTitle
@@ -41,9 +61,7 @@ const NotificationCard: React.FC<NotificationCardProps> = (props) => {
     container: {
       paddingHorizontal: Spacing.lg,
       paddingVertical: Spacing.md,
-      backgroundColor: isV1
-        ? ColorPalette.brand.modalTertiaryBackground
-        : (props.backgroundColor ?? cardStyle.backgroundColor),
+      backgroundColor: isV1 ? ColorPalette.brand.modalTertiaryBackground : cardStyle.backgroundColor,
       ...(isV1 && {
         borderWidth: 1,
         borderColor: ColorPalette.notification.infoBorder,
@@ -61,6 +79,12 @@ const NotificationCard: React.FC<NotificationCardProps> = (props) => {
       backgroundColor: iconColor,
       justifyContent: 'center',
       alignItems: 'center',
+      marginRight: 12,
+    },
+    logoImage: {
+      width: ICON_CIRCLE_SIZE,
+      height: ICON_CIRCLE_SIZE,
+      borderRadius: ICON_CIRCLE_SIZE / 2,
       marginRight: 12,
     },
     bodyContainer: {
@@ -101,9 +125,18 @@ const NotificationCard: React.FC<NotificationCardProps> = (props) => {
   const content = (
     <View style={styles.container} testID={testIdWithKey('NotificationListItem')}>
       <View style={styles.headerContainer}>
-        <View style={styles.iconCircle}>
-          <Icon accessible={false} name={iconName} size={ICON_INNER_SIZE} color="#FFFFFF" />
-        </View>
+        {props.logoUrl ? (
+          <Image
+            accessible={false}
+            source={{ uri: props.logoUrl }}
+            style={styles.logoImage}
+            testID={testIdWithKey('NotificationLogo')}
+          />
+        ) : (
+          <View style={styles.iconCircle}>
+            <Icon accessible={false} name={iconName} size={ICON_INNER_SIZE} color="#FFFFFF" />
+          </View>
+        )}
         <ThemedText variant="bold" style={styles.headerText} testID={testIdWithKey('HeaderText')}>
           {props.title}
         </ThemedText>
@@ -165,33 +198,34 @@ interface CardStyle {
 }
 
 /**
- * getCardStyle returns the appropriate background color and default icon for a given notification type, based on the app's color palette.
+ * getCardStyle returns the appropriate background color and default icon for a given notification status, based on the app's color palette.
  *
- * @param {InfoBoxType} cardType
+ * @param {NotificationCardStatus} status
  * @param {IColorPalette} palette
  * @return {*}  {CardStyle}
  */
-function getCardStyle(cardType: InfoBoxType, palette: IColorPalette): CardStyle {
-  switch (cardType) {
-    case InfoBoxType.Success:
+function getCardStyle(status: NotificationCardStatus, palette: IColorPalette): CardStyle {
+  switch (status) {
+    case NotificationCardStatus.Read:
       return {
-        backgroundColor: palette.notification.success,
-        defaultIcon: 'check-circle',
+        backgroundColor: palette.grayscale.white,
+        defaultIcon: 'information',
       }
-    case InfoBoxType.Warn:
-      return {
-        backgroundColor: palette.notification.warn,
-        defaultIcon: 'warning',
-      }
-    case InfoBoxType.Error:
+    case NotificationCardStatus.Warning:
       return {
         backgroundColor: palette.notification.error,
-        defaultIcon: 'error',
+        defaultIcon: 'alert-circle',
       }
+    case NotificationCardStatus.Attention:
+      return {
+        backgroundColor: palette.notification.warn,
+        defaultIcon: 'alert',
+      }
+    case NotificationCardStatus.Unread:
     default:
       return {
         backgroundColor: palette.notification.info,
-        defaultIcon: 'info',
+        defaultIcon: 'information',
       }
   }
 }

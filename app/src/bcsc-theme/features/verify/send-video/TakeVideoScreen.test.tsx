@@ -13,6 +13,7 @@ jest.mock('react-native-vision-camera', () => ({
   useMicrophonePermission: jest.fn().mockReturnValue({ hasPermission: true, requestPermission: jest.fn() }),
   useCameraFormat: jest.fn().mockReturnValue({ videoWidth: 640, videoHeight: 480, fps: 24 }),
   CameraRuntimeError: class extends Error {},
+  CameraCaptureError: class extends Error {},
 }))
 
 const storeWithPrompts = {

@@ -3,6 +3,7 @@ import { Connection } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { render } from '@testing-library/react-native'
 import React from 'react'
+import { BackHandler } from 'react-native'
 
 import ConnectionLoadingScreen from './ConnectionLoadingScreen'
 
@@ -21,9 +22,15 @@ jest.mock('@react-navigation/native', () => ({
 
 const ConnectionMock = Connection as jest.MockedFunction<typeof Connection>
 
-const mkProps = () => {
-  const navigation = { dispatch: jest.fn(), navigate: jest.fn(), getParent: jest.fn() } as any
-  const route = { params: { oobRecordId: 'oob-1' } } as any
+const mkProps = (params: Record<string, string | undefined> = { oobRecordId: 'oob-1' }) => {
+  const navigation = {
+    dispatch: jest.fn(),
+    navigate: jest.fn(),
+    getParent: jest.fn(),
+    canGoBack: jest.fn().mockReturnValue(true),
+    goBack: jest.fn(),
+  } as any
+  const route = { params } as any
   return { navigation, route }
 }
 
@@ -67,5 +74,45 @@ describe('ConnectionLoadingScreen', () => {
         routes: [{ name: BCSCStacks.Tab, state: { routes: [{ name: BCSCScreens.Home }] } }],
       })
     )
+  })
+
+  // Bifold's Connection screen blocks the Android hardware back button. For
+  // notification-opened offers / proof requests the header shows a back button
+  // (see MainStack), so the wrapper registers its own higher-priority handler
+  // to make the hardware button match.
+  describe('hardware back handling', () => {
+    it.each([{ credentialId: 'cred-1' }, { proofId: 'proof-1' }])(
+      'pops the screen on hardware back when opened with %o',
+      (params) => {
+        const spy = jest.spyOn(BackHandler, 'addEventListener')
+        const { navigation, route } = mkProps(params)
+        render(<ConnectionLoadingScreen navigation={navigation} route={route} />)
+
+        expect(spy).toHaveBeenCalledWith('hardwareBackPress', expect.any(Function))
+        const handler = spy.mock.calls.at(-1)![1] as () => boolean
+        expect(handler()).toBe(true)
+        expect(navigation.goBack).toHaveBeenCalled()
+      }
+    )
+
+    it('leaves hardware back alone for QR-scan (oobRecordId) entries', () => {
+      const spy = jest.spyOn(BackHandler, 'addEventListener')
+      const { navigation, route } = mkProps({ oobRecordId: 'oob-1' })
+      render(<ConnectionLoadingScreen navigation={navigation} route={route} />)
+
+      expect(spy).not.toHaveBeenCalled()
+      expect(navigation.goBack).not.toHaveBeenCalled()
+    })
+
+    it('swallows hardware back instead of popping when there is nowhere to go back to', () => {
+      const spy = jest.spyOn(BackHandler, 'addEventListener')
+      const { navigation, route } = mkProps({ credentialId: 'cred-1' })
+      navigation.canGoBack.mockReturnValue(false)
+      render(<ConnectionLoadingScreen navigation={navigation} route={route} />)
+
+      const handler = spy.mock.calls.at(-1)![1] as () => boolean
+      expect(handler()).toBe(true)
+      expect(navigation.goBack).not.toHaveBeenCalled()
+    })
   })
 })

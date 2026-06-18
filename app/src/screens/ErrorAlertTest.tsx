@@ -217,6 +217,33 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     econnaborted: () => injectErrorCodeIntoAxiosResponse(client, 'ECONNABORTED'),
   }
 
+  /**
+   * Simulated platform write-failure errors (ERR_100 / disk full), routed through the real
+   * `failedToWriteToLocalStorageAlert` handler — the same path the camera screens use for
+   * `capture/file-io-error` — so disk-full detection is exercised end to end. The two
+   * disk-full messages replicate what react-native-vision-camera produces on each platform.
+   */
+  const storageWriteFailureCallbacks: Record<string, () => void> = {
+    disk_full_ios_camera: () => {
+      onBack()
+      alerts.failedToWriteToLocalStorageAlert(
+        new Error(
+          'An unexpected File IO error occurred! Error: You can\'t save the file "BCSC-dev-test.jpg" because the volume "User" is out of space.'
+        )
+      )
+    },
+    disk_full_android_camera: () => {
+      onBack()
+      alerts.failedToWriteToLocalStorageAlert(
+        new Error('An unexpected File IO error occurred! Error: write failed: ENOSPC (No space left on device).')
+      )
+    },
+    generic_write_failure: () => {
+      onBack()
+      alerts.failedToWriteToLocalStorageAlert(new Error('Simulated storage write failure unrelated to disk space.'))
+    },
+  }
+
   const getCategoryIcon = (category: ErrorCategory): string => {
     const icons: Record<ErrorCategory, string> = {
       [ErrorCategory.CAMERA]: 'camera-alt',
@@ -339,6 +366,26 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
               </View>
             )
           })}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>{'Storage write failures (error 100 / disk full)'}</Text>
+          <Text style={styles.description}>
+            {'Simulates camera/storage write errors through failedToWriteToLocalStorageAlert. ' +
+              'The disk-full variants should show the "Not Enough Storage" modal (2609); ' +
+              'the generic one should show "Problem with App" (error 100 / 2600).'}
+          </Text>
+          {Object.keys(storageWriteFailureCallbacks).map((key) => (
+            <View key={key} style={styles.buttonRow}>
+              <Button
+                title={key}
+                accessibilityLabel={`Trigger storage write failure ${key}`}
+                testID={`storage-error-${key}`}
+                buttonType={ButtonType.Secondary}
+                onPress={storageWriteFailureCallbacks[key]}
+              />
+            </View>
+          ))}
         </View>
 
         <View style={styles.section}>

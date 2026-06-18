@@ -106,21 +106,20 @@ const translation = {
     },
     "BasicMessage": {
       "Title": "New message (PT-BR)",
-      "SentMessage": "{{ label }} sent a message (PT-BR)",
-      "ReceivedMessage": "You received a new message (PT-BR)",
       "ButtonTitle": "View message (PT-BR)"
     },
     "CredentialOffer": {
       "Title": "Credential offer (PT-BR)",
-      "Description": "{{ label }} is offering you a credential (PT-BR)"
+      "Description": "{{ label }} is offering you a {{ credential }}. (PT-BR)"
     },
     "ProofRequest": {
       "Title": "Proof request (PT-BR)",
-      "Description": "{{ label }} is requesting information (PT-BR)",
-      "DefaultDescription": "You received a proof request (PT-BR)"
+      "Description": "{{ label }} is requesting for information. (PT-BR)",
+      "DefaultDescription": "You're being asked to share information. (PT-BR)"
     },
     "Revocation": {
-      "Title": "Credential revoked (PT-BR)"
+      "Title": "Credential revoked (PT-BR)",
+      "Description": "{{ credential }} was revoked. (PT-BR)"
     }
   },
   "PersonCredential": {
@@ -236,6 +235,7 @@ const translation = {
       "LearnMore": "Learn about BCSC app (PT-BR)",
       "GiveFeedback": "Give feedback (PT-BR)",
       "ReportProblem": "Report a problem (PT-BR)",
+      "RestartVerification": "Restart verification process (PT-BR)",
     },
     "Contacts": {
       "Title": "Contacts (PT-BR)",
@@ -706,6 +706,7 @@ const translation = {
       "TryAgain": "Try Again (PT-BR)",
       "Connecting": "Connecting… (PT-BR)",
       "UnrecognizedQR": "QR code not recognized. (PT-BR)",
+      "InvalidConnectionInvitation": "This connection invitation could not be opened. (PT-BR)",
       "FeatureUnavailable": "This action isn't available yet. (PT-BR)",
       "Unsupported": {
         "OpenID": "OpenID credentials aren't supported in BC Services Card. (PT-BR)",
@@ -1198,7 +1199,7 @@ const translation = {
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again. (PT-BR)",
     },
     "Wallet": {
-      "EmptyMessage": "Your wallet is empty (PT-BR)",
+      "EmptyMessage": "Your wallet is empty! (PT-BR)",
       "Reset": "Reset wallet (PT-BR)",
       "ResetTitle": "Reset wallet? (PT-BR)",
       "ResetDescription": "This will permanently delete all credentials, connections, and chat history stored in your wallet. Your PIN, biometrics, and BC Services Card identity will not be affected. You will not have to re-verify. (PT-BR)",
@@ -1293,6 +1294,10 @@ const translation = {
       "Title": "Problem with App (PT-BR)",
       "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (error {{ errorCode }}) (PT-BR)"
     },
+    "DeviceStorageFull": {
+      "Title": "Not Enough Storage (PT-BR)",
+      "Description": "Your device is out of storage space, so the app can't save your information. Free up space on your device, then try again. (PT-BR)"
+    },
     "ProblemWithService": {
       "Title": "Problem with Service (PT-BR)",
       "Description": "Please try again later. (error {{ errorCode }}) (PT-BR)"
@@ -1346,6 +1351,12 @@ const translation = {
       "Title": "Are you sure? (PT-BR)",
       "Description": "Your verification request sent to Service BC will be deleted. Then you can choose another way to verify. (PT-BR)",
       "Action1": "Delete Verify Request (PT-BR)",
+    },
+    "RestartVerification": {
+      "Title": "Are you sure? (PT-BR)",
+      "Description": "Your verification progress will be deleted and you will start the verification process from the beginning. (PT-BR)",
+      "Action1": "Restart Verification (PT-BR)",
+      "Loading": "Restarting verification... (PT-BR)",
     },
     "DataUseWarning": {
       "Title": "Data Use (PT-BR)",
