@@ -1,4 +1,4 @@
-import { Button, ButtonType, testIdWithKey, useTheme } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey, useAnimatedComponents, useTheme } from '@bifold/core'
 import { PropsWithChildren } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 interface PrimaryActionScreenLayoutProps extends PropsWithChildren {
   primaryActionText: string
   onPressPrimaryAction: () => void
+  isPrimaryActionLoading?: boolean
   secondaryActionText?: undefined
   onPressSecondaryAction?: undefined
 }
@@ -13,6 +14,7 @@ interface PrimaryActionScreenLayoutProps extends PropsWithChildren {
 interface WithSecondaryActionScreenLayoutProps extends PropsWithChildren {
   primaryActionText: string
   onPressPrimaryAction: () => void
+  isPrimaryActionLoading?: boolean
   secondaryActionText: string
   onPressSecondaryAction: () => void
 }
@@ -27,8 +29,16 @@ type ActionScreenLayoutProps = PrimaryActionScreenLayoutProps | WithSecondaryAct
  */
 export const ActionScreenLayout = (props: ActionScreenLayoutProps): React.ReactElement => {
   const { Spacing } = useTheme()
+  const { ButtonLoading } = useAnimatedComponents()
 
-  const { primaryActionText, onPressPrimaryAction, secondaryActionText, onPressSecondaryAction, children } = props
+  const {
+    primaryActionText,
+    onPressPrimaryAction,
+    secondaryActionText,
+    onPressSecondaryAction,
+    isPrimaryActionLoading,
+    children,
+  } = props
 
   const styles = StyleSheet.create({
     container: {
@@ -53,9 +63,12 @@ export const ActionScreenLayout = (props: ActionScreenLayoutProps): React.ReactE
           title={primaryActionText}
           buttonType={ButtonType.Primary}
           onPress={onPressPrimaryAction}
+          disabled={isPrimaryActionLoading}
           testID={testIdWithKey(primaryActionText)}
           accessibilityLabel={primaryActionText}
-        />
+        >
+          {isPrimaryActionLoading && <ButtonLoading />}
+        </Button>
 
         {onPressSecondaryAction ? (
           <Button
