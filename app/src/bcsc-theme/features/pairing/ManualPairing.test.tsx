@@ -5,6 +5,7 @@ import { useNavigation, useRoute } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import React from 'react'
+import { Alert } from 'react-native'
 import ManualPairing from './ManualPairing'
 
 const mockLoginByPairingCode = jest.fn()
@@ -20,6 +21,7 @@ jest.mock('@/bcsc-theme/api/hooks/useApi', () => ({
 
 describe('ManualPairing', () => {
   let mockNavigation: any
+  let alertSpy: any
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -30,6 +32,7 @@ describe('ManualPairing', () => {
 
   afterEach(() => {
     jest.useRealTimers()
+    alertSpy?.mockRestore()
   })
 
   const renderScreen = () =>
@@ -90,15 +93,21 @@ describe('ManualPairing', () => {
       })
     })
 
-    test('shows error when submission fails', async () => {
-      mockLoginByPairingCode.mockRejectedValue(new Error('Network error'))
+    test('shows error when submission fails with 404', async () => {
+      alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {})
+      mockLoginByPairingCode.mockRejectedValue(new Error('Not Found', { cause: { status: 404 } }))
       renderScreen()
 
       const codeInput = screen.getByTestId(testIdWithKey('ManualPairingCodeInput'))
       fireEvent.changeText(codeInput, 'ABCDEF')
 
       await waitFor(() => {
-        expect(screen.getByText('BCSC.ManualPairing.FailedToSubmitPairingCodeMessage')).toBeTruthy()
+        expect(screen.getByText('BCSC.ManualPairing.CodeDoesNotMatchMessage')).toBeTruthy()
+        expect(alertSpy).toHaveBeenCalledWith(
+          'BCSC.ManualPairing.CouldNotVerifyPairingCodeTitle',
+          'BCSC.ManualPairing.CodeDoesNotMatchMessage',
+          expect.any(Array)
+        )
       })
     })
 

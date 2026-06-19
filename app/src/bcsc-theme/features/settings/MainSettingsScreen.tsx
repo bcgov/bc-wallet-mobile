@@ -1,6 +1,9 @@
+import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { parseBirthdateToLocalDate } from '@/bcsc-theme/utils/birthdate'
 import { HELP_URL } from '@/constants'
 import { StackNavigationProp } from '@react-navigation/stack'
+import moment from 'moment'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { SettingsContent } from './SettingsContent'
@@ -15,6 +18,7 @@ type MainSettingsScreenProps = {
  */
 export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
+  const { account } = useAccount()
 
   const onContactUs = () => {
     navigation.navigate(BCSCScreens.MainContactUs)
@@ -72,6 +76,14 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
   }
 
   const onAddDevice = () => {
+    if (account?.birthdate) {
+      const birthdate = parseBirthdateToLocalDate(account.birthdate)
+      const age = moment().diff(moment(birthdate), 'years')
+      if (age < 12) {
+        navigation.navigate(BCSCScreens.TransferAgeRestriction)
+        return
+      }
+    }
     navigation.navigate(BCSCScreens.TransferAccountQRInformation)
   }
 

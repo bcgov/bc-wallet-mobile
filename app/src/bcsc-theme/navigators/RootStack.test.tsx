@@ -13,6 +13,7 @@ jest.mock('@/contexts/ErrorAlertContext', () => ({
   useErrorAlert: () => ({ emitErrorModal: jest.fn() }),
 }))
 jest.mock('@/contexts/NavigationContainerContext', () => ({
+  navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
   useNavigationContainer: () => ({ isNavigationReady: true }),
 }))
 jest.mock('../api/hooks/useInitializeAccountStatus')
@@ -206,6 +207,24 @@ describe('BCSCRootStack', () => {
     const { toJSON } = render(<BCSCRootStack />)
 
     expect(toJSON()).toBe('MainStack')
+  })
+
+  it('renders VerifyStack when sessionRecoveryRequired is set, overriding the verified→Home routing', () => {
+    const mockDispatch = jest.fn()
+    jest.mocked(Bifold.useStore).mockReturnValue([
+      mockStore({
+        bcsc: { hasAccount: true, nicknames: [] },
+        authentication: { didAuthenticate: true },
+        // verified:true would normally route to MainStack — recovery must take precedence.
+        // (VerifyStack starts on the SessionRecovery screen when sessionRecoveryRequired is set.)
+        bcscSecure: { verified: true, sessionRecoveryRequired: true },
+      }),
+      mockDispatch,
+    ] as any)
+
+    const { toJSON } = render(<BCSCRootStack />)
+
+    expect(toJSON()).toBe('VerifyStack')
   })
 
   it('renders MainStack as fallback when verified is undefined', () => {

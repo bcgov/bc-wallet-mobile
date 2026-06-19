@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import DateInput from '@/bcsc-theme/components/DateInput'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { parseBirthdateToLocalDate } from '@/bcsc-theme/utils/birthdate'
 import { isHandledAppError } from '@/errors/appError'
 import {
   Button,
@@ -51,8 +52,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
         navigation.goBack()
         return null
       }
-      // Converting date format from YYYY/MM/DD to YYYY-MM-DD for api
-      await vm.authorizeDevice(vm.serial, moment(birthDate, 'YYYY-MM-DD').toDate())
+      await vm.authorizeDevice(vm.serial, parseBirthdateToLocalDate(birthDate))
     } catch (error) {
       if (isHandledAppError(error)) {
         return
@@ -84,6 +84,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
 
   return (
     <ScreenWrapper
+      keyboardActive
       padded={false}
       controls={controls}
       scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}

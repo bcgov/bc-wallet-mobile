@@ -35,10 +35,23 @@ const TransferQRDisplayScreen: React.FC = () => {
   const [store] = useStore<BCState>()
   const { t } = useTranslation()
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const attestationIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const completedRef = useRef(false)
   const [isLoading, setIsLoading] = useState(true)
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { accountNotFoundAlert } = useAlerts(navigation)
+
+  const stopAllPolling = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+    if (attestationIntervalRef.current) {
+      clearInterval(attestationIntervalRef.current)
+      attestationIntervalRef.current = null
+    }
+  }, [])
 
   const styles = StyleSheet.create({
     qrCodeContainer: {
@@ -84,33 +97,47 @@ const TransferQRDisplayScreen: React.FC = () => {
 
   const checkAttestation = useCallback(
     async (id: string) => {
+      if (completedRef.current) {
+        return
+      }
       try {
         const response = await deviceAttestation.checkAttestationStatus(id)
-        if (response) {
+        // Guard against late responses arriving after we've already navigated. Without this,
+        // the still-mounted screen would re-navigate to TransferAccountSuccess every time a
+        // poll resolved, snapping the user back whenever they tried to leave that screen.
+        if (response && !completedRef.current) {
+          completedRef.current = true
+          stopAllPolling()
           navigation.navigate(BCSCScreens.TransferAccountSuccess)
         }
       } catch (error) {
         // Do nothing, a fail state from this endpoint just means the attestation hasn't been consumed yet
       }
     },
-    [deviceAttestation, navigation]
+    [deviceAttestation, navigation, stopAllPolling]
   )
   const startInterval = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
     }
     intervalRef.current = setInterval(() => {
+      if (completedRef.current) {
+        return
+      }
       createToken()
     }, qrCodeRefreshInterval)
   }, [createToken])
 
   const refreshToken = useCallback(async () => {
+    if (completedRef.current) {
+      return
+    }
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
     }
 
     const success = await createToken()
-    if (success) {
+    if (success && !completedRef.current) {
       startInterval()
     }
   }, [createToken, startInterval])
@@ -118,14 +145,12 @@ const TransferQRDisplayScreen: React.FC = () => {
   useEffect(() => {
     refreshToken()
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-      }
+      stopAllPolling()
     }
-  }, [refreshToken, startInterval])
+  }, [refreshToken, stopAllPolling])
 
   useEffect(() => {
-    if (!qrValue) {
+    if (!qrValue || completedRef.current) {
       return
     }
     // Snapshot the JTI at the time this effect runs. Reading jtiRef.current live inside the
@@ -133,10 +158,18 @@ const TransferQRDisplayScreen: React.FC = () => {
     // switches all in-flight polls to the new JTI, abandoning the consumed one before the 200 is seen.
     const jtiSnapshot = jtiRef.current
     checkAttestation(jtiSnapshot)
-    const interval = setInterval(() => {
+    if (attestationIntervalRef.current) {
+      clearInterval(attestationIntervalRef.current)
+    }
+    attestationIntervalRef.current = setInterval(() => {
       checkAttestation(jtiSnapshot)
     }, attestationPollInterval)
-    return () => clearInterval(interval)
+    return () => {
+      if (attestationIntervalRef.current) {
+        clearInterval(attestationIntervalRef.current)
+        attestationIntervalRef.current = null
+      }
+    }
   }, [checkAttestation, qrValue])
 
   if (isLoading) {

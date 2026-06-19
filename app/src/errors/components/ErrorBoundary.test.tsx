@@ -3,6 +3,10 @@ import React from 'react'
 import { Text } from 'react-native'
 import { ErrorBoundaryWrapper } from './ErrorBoundary'
 
+jest.mock('@/contexts/NavigationContainerContext', () => ({
+  navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
+}))
+
 jest.mock('react-native-device-info', () => ({
   getVersion: () => '1.0.0',
   getBuildNumber: () => '42',

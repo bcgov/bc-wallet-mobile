@@ -1,5 +1,6 @@
 import { VerifyAttestationPayload } from '@/bcsc-theme/api/hooks/useDeviceAttestationApi'
 import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
+import { AppError, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { renderHook } from '@testing-library/react-native'
 import { BasicAppContext } from '__mocks__/helpers/app'
@@ -66,6 +67,7 @@ describe('useTokenApi', () => {
       tokens: mockTokenResponse,
       getTokensForRefreshToken: jest.fn(),
       fetchJwk: jest.fn().mockResolvedValue(mockJwk),
+      recoverTokens: jest.fn().mockResolvedValue(mockTokenResponse),
       logger: {
         info: jest.fn(),
         error: jest.fn(),
@@ -188,14 +190,33 @@ describe('useTokenApi', () => {
       expect(metadata).toEqual(mockMetadata)
     })
 
-    it('should throw AppError with ERR_119 when no tokens are available', async () => {
+    it('should propagate ERR_119 when tokens cannot be recovered', async () => {
       mockApiClient.tokens = null as any
+      mockApiClient.recoverTokens = jest.fn().mockRejectedValue(AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL))
 
       const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
 
       await expect(result.current.getCachedIdTokenMetadata({ refreshCache: false })).rejects.toMatchObject({
         appEvent: AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL,
       })
+    })
+
+    it('should rebuild the cache via recoverTokens without an extra refresh when tokens were missing', async () => {
+      const mockMetadata = { sub: 'user123', exp: 1234567890 }
+      const recoveredTokens = { ...mockTokenResponse, id_token: 'recovered_id_token' }
+      ;(getIdTokenMetadata as jest.Mock).mockReturnValue(mockMetadata)
+      // Cache empty at point of use; recoverTokens rebuilds it from secure storage
+      mockApiClient.tokens = null as any
+      mockApiClient.recoverTokens = jest.fn().mockResolvedValue(recoveredTokens)
+
+      const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
+      // Even with refreshCache true, a just-recovered (already fresh) cache should not refresh again
+      const metadata = await result.current.getCachedIdTokenMetadata({ refreshCache: true })
+
+      expect(mockApiClient.recoverTokens).toHaveBeenCalled()
+      expect(mockApiClient.getTokensForRefreshToken).not.toHaveBeenCalled()
+      expect(getIdTokenMetadata).toHaveBeenCalledWith('recovered_id_token', mockJwk, mockApiClient.logger)
+      expect(metadata).toEqual(mockMetadata)
     })
 
     it('should handle refresh token errors', async () => {

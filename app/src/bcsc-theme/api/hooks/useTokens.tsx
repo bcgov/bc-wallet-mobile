@@ -1,7 +1,6 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
 import { throwAppError } from '@/bcsc-theme/utils/native-error-map'
-import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { useCallback, useMemo } from 'react'
 import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
@@ -87,19 +86,22 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
    */
   const getCachedIdTokenMetadata = useCallback(
     async (config: IdTokenMetadataConfig) => {
-      if (!apiClient.tokens) {
-        throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL, {
-          cause: new Error('apiClient.tokens is null in getCachedIdTokenMetadata'),
-        })
-      }
+      // Ensure the in-memory token cache is populated, rebuilding it from secure
+      // storage if startup hydration left it empty (e.g. a transient network
+      // failure during the startup refresh). Only a genuinely missing refresh
+      // token throws TOKEN_NULL.
+      const cacheWasEmpty = !apiClient.tokens
+      let tokens = await apiClient.recoverTokens()
 
-      if (config.refreshCache) {
+      // A freshly recovered cache already holds newly-fetched tokens, so only pay
+      // for an extra refresh when the caller wants the latest and we had a cache.
+      if (config.refreshCache && !cacheWasEmpty) {
         // Fetch new tokens to ensure we have the latest ID token
-        await apiClient.getTokensForRefreshToken(apiClient.tokens.refresh_token)
+        tokens = await apiClient.getTokensForRefreshToken(tokens.refresh_token)
       }
 
       const jwk = await apiClient.fetchJwk()
-      return getIdTokenMetadata(apiClient.tokens.id_token, jwk, apiClient.logger)
+      return getIdTokenMetadata(tokens.id_token, jwk, apiClient.logger)
     },
     [apiClient]
   )

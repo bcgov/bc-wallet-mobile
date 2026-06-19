@@ -141,6 +141,48 @@ class BcscCore: NSObject {
     return serializedJWT
   }
 
+  /// Diagnostics list the newest N keys; keyCount still reports the true total.
+  private static let keychainDiagnosticsMaxKeys = 5
+
+  /**
+   * Builds an NSError whose userInfo carries keychain diagnostics across the RN bridge.
+   * React Native serializes the NSError's userInfo onto the rejected JS error, so problem
+   * reports can show which lookup failed and what the keychain contained at the time.
+   *
+   * userInfo values must stay bridge-serializable (strings, numbers, arrays thereof),
+   * and the per-key arrays are capped so the payload size stays predictable.
+   */
+  private func keychainDiagnosticsError(
+    site: String, underlying: Error, keys: [PrivateKeyInfo]
+  ) -> NSError {
+    let iso8601 = ISO8601DateFormatter()
+    let newestFirst = keys.sorted(by: { $0.created > $1.created })
+      .prefix(BcscCore.keychainDiagnosticsMaxKeys)
+    return NSError(
+      domain: "BcscCore",
+      code: 0,
+      userInfo: [
+        "site": site,
+        "underlying": underlying.localizedDescription,
+        "keyCount": keys.count,
+        "keyTags": newestFirst.map(\.tag),
+        "keyCreated": newestFirst.map { iso8601.string(from: $0.created) },
+      ]
+    )
+  }
+
+  /**
+   * Compact key inventory for reject MESSAGE strings. The problem-report view
+   * surfaces only the message text (via AppError.technicalMessage), not the
+   * structured userInfo, so the essentials must ride in the message itself.
+   */
+  private func keyInventorySummary(_ keys: [PrivateKeyInfo]) -> String {
+    guard let newest = keys.sorted(by: { $0.created > $1.created }).first else {
+      return "[keys=0]"
+    }
+    return "[keys=\(keys.count), newest=\(newest.tag)]"
+  }
+
   private func signJWT(payload: JWTClaimsSet, reject: @escaping RCTPromiseRejectBlock) -> String? {
     let keyPairManager = KeyPairManager()
     let keys = keyPairManager.findAllPrivateKeys()
@@ -156,7 +198,9 @@ class BcscCore: NSObject {
       signer = RSASigner(privateKey: keyPair.private)
     } catch {
       reject(
-        "E_KEYPAIR_RETRIEVAL_FAILED", "Failed to retrieve key pair: \(error.localizedDescription)", error
+        "E_KEYPAIR_RETRIEVAL_FAILED",
+        "Failed to retrieve key pair: \(error.localizedDescription) \(keyInventorySummary(keys))",
+        keychainDiagnosticsError(site: "sign_jwt", underlying: error, keys: keys)
       )
       return nil
     }
@@ -214,6 +258,68 @@ class BcscCore: NSObject {
     }
 
     resolve(result)
+  }
+
+  /**
+   * Mark a keychain alias as the active (newest) signing key.
+   *
+   * iOS picks the active key by `kSecAttrCreationDate` (newest-first), which is
+   * read-only at the keychain level. The recovery flow's contract is that
+   * setActiveKeyAlias is followed immediately by deleteKey() on every other
+   * alias — once the unmatched aliases are pruned, the matched alias becomes
+   * de-facto active by elimination. This method therefore only verifies the
+   * alias actually exists; the prune step does the heavy lifting.
+   */
+  @objc(setActiveKeyAlias:resolve:reject:)
+  func setActiveKeyAlias(
+    _ alias: String,
+    resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    let keyPairManager = KeyPairManager()
+    let keys = keyPairManager.findAllPrivateKeys()
+    guard keys.contains(where: { $0.tag == alias }) else {
+      reject("E_KEY_NOT_FOUND", "Alias '\(alias)' is not present in the keychain", nil)
+      return
+    }
+    resolve(nil)
+  }
+
+  /**
+   * Permanently delete a keychain alias. Used by the 401 key-recovery flow to
+   * prune local keys the server does not recognise.
+   *
+   * Defence-in-depth: refuses to delete the alias if doing so would leave the
+   * keychain with zero private keys, which would brick signing entirely. The
+   * JS recovery layer is authoritative for never deleting the matched/active
+   * alias — we deliberately do NOT guard "active" here, because on iOS
+   * kSecAttrCreationDate is read-only and the matched alias only becomes
+   * keychain-newest after the unmatched newer alias is pruned (see
+   * setActiveKeyAlias). Guarding by "newest" would block the recovery path.
+   */
+  @objc(deleteKey:resolve:reject:)
+  func deleteKey(
+    _ alias: String,
+    resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    let keyPairManager = KeyPairManager()
+    let keys = keyPairManager.findAllPrivateKeys()
+    let remaining = keys.filter { $0.tag != alias }
+    if remaining.isEmpty {
+      reject(
+        "E_KEY_DELETE_REFUSED_LAST",
+        "Refusing to delete '\(alias)': would leave the keychain with no private keys",
+        nil
+      )
+      return
+    }
+    let deleted = keyPairManager.deleteKey(withLabel: alias)
+    if deleted {
+      resolve(nil)
+    } else {
+      reject("E_KEYSTORE_ERROR", "Failed to delete key '\(alias)' from keychain", nil)
+    }
   }
 
   func getKeyPair(
@@ -338,10 +444,10 @@ class BcscCore: NSObject {
     }
 
     let id = "\(currentAccount.clientID)/tokens/\(tokenType.rawValue)/1"
-    logger.log("getToken: Looking for token with id: \(id)")
+    logger.log("getToken: querying type=\(tokenType.rawValue) id=\(id)")
 
     if let token = tokenStorageService.get(id: id) {
-      logger.log("getToken: Found token of type \(tokenType) with id: \(token.id)")
+      logger.log("getToken: found type=\(tokenType.rawValue) expiry=\(token.expiry?.description ?? "none")")
       var tokenDict: [String: Any?] = [
         "id": token.id,
         "type": token.type.rawValue,
@@ -357,7 +463,7 @@ class BcscCore: NSObject {
 
       resolve(tokenDict)
     } else {
-      logger.log("getToken: Token not found for id: \(id)")
+      logger.log("getToken: NOT found type=\(tokenType.rawValue) id=\(id)")
       resolve(nil)
     }
   }
@@ -873,12 +979,66 @@ class BcscCore: NSObject {
       do {
         keyPair = try keyPairManager.getKeyPair(with: latestKeyInfo.tag)
         keyId = latestKeyInfo.tag
-      } catch {
+      } catch let KeychainError.keychainUnavailable(status) {
+        // The key likely exists but cannot be read right now (e.g. device locked).
+        // Surface a distinct, retryable error — never generate a replacement key
+        // for a transient condition.
         reject(
-          "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
-          "Failed to retrieve key pair: \(error.localizedDescription)", error
+          "E_120_KEYCHAIN_UNAVAILABLE_ERROR",
+          "Keychain temporarily unavailable while retrieving key pair (OSStatus \(status)) \(keyInventorySummary(keys))",
+          keychainDiagnosticsError(
+            site: "retrieve_latest", underlying: KeychainError.keychainUnavailable(status), keys: keys
+          )
         )
         return
+      } catch {
+        // The newest key is genuinely missing or unreadable (e.g. a foreign tag-only
+        // item shadowing the real key). Self-heal: generate a fresh key — this DCR
+        // body carries its public jwks, which replaces the server's registered key
+        // set in the same call; if the request later fails, the 401 key-recovery
+        // flow prunes the orphan.
+        logger.warning(
+          "getDynamicClientRegistrationBody - newest key '\(latestKeyInfo.tag)' unretrievable (\(error.localizedDescription)); generating a replacement key"
+        )
+        do {
+          let newKeyId = try generateKeyPair()
+          keyPair = try keyPairManager.getKeyPair(with: newKeyId)
+          keyId = newKeyId
+        } catch let KeychainError.keychainUnavailable(status) {
+          // Keep the pre-generation inventory here: enumerating while the keychain
+          // is unreadable returns an empty list, which would falsely report
+          // "[keys=0]" — the snapshot from moments ago is the truthful data.
+          reject(
+            "E_120_KEYCHAIN_UNAVAILABLE_ERROR",
+            "Keychain temporarily unavailable while generating replacement key (OSStatus \(status)) \(keyInventorySummary(keys))",
+            keychainDiagnosticsError(
+              site: "generate_replacement", underlying: KeychainError.keychainUnavailable(status), keys: keys
+            )
+          )
+          return
+        } catch KeychainError.keyNotExists {
+          // Re-enumerate so the report shows whether the replacement key is now
+          // visible in discovery — the state that matters for diagnosing this.
+          let postGenerationKeys = keyPairManager.findAllPrivateKeys()
+          reject(
+            "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
+            "Replacement key was generated but could not be retrieved \(keyInventorySummary(postGenerationKeys))",
+            keychainDiagnosticsError(
+              site: "generate_replacement", underlying: KeychainError.keyNotExists, keys: postGenerationKeys
+            )
+          )
+          return
+        } catch {
+          // Generation failures (keyGenError, keyAlreadyExists, unexpectedStatus, …)
+          // are key-generation errors, not "key doesn't exist".
+          let postGenerationKeys = keyPairManager.findAllPrivateKeys()
+          reject(
+            "E_120_KEYCHAIN_KEY_GENERATION_ERROR",
+            "Failed to generate a replacement key: \(error.localizedDescription) \(keyInventorySummary(postGenerationKeys))",
+            keychainDiagnosticsError(site: "generate_replacement", underlying: error, keys: postGenerationKeys)
+          )
+          return
+        }
       }
     } else {
       // No keys found, generate a new one
@@ -890,25 +1050,34 @@ class BcscCore: NSObject {
         case .keyAlreadyExists:
           reject(
             "E_120_KEYCHAIN_KEY_EXISTS_ERROR",
-            "Keychain key already exists: \(error.localizedDescription)", error
+            "Keychain key already exists: \(error.localizedDescription) \(keyInventorySummary(keys))",
+            keychainDiagnosticsError(site: "generate_new", underlying: error, keys: keys)
           )
         case .keyNotExists:
           reject(
             "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
-            "Keychain key does not exist: \(error.localizedDescription)", error
+            "Keychain key does not exist: \(error.localizedDescription) \(keyInventorySummary(keys))",
+            keychainDiagnosticsError(site: "generate_new", underlying: error, keys: keys)
           )
-        case .keyGenError:
+        case .keychainUnavailable:
+          reject(
+            "E_120_KEYCHAIN_UNAVAILABLE_ERROR",
+            "Keychain temporarily unavailable while generating key pair: \(error.localizedDescription) \(keyInventorySummary(keys))",
+            keychainDiagnosticsError(site: "generate_new", underlying: error, keys: keys)
+          )
+        case .keyGenError, .unexpectedStatus:
           reject(
             "E_120_KEYCHAIN_KEY_GENERATION_ERROR",
-            "Failed to generate key pair: \(error.localizedDescription)", error
+            "Failed to generate key pair: \(error.localizedDescription) \(keyInventorySummary(keys))",
+            keychainDiagnosticsError(site: "generate_new", underlying: error, keys: keys)
           )
         }
         return
       } catch {
         reject(
           "E_120_KEYCHAIN_KEY_GENERATION_ERROR",
-          "Failed to generate or retrieve key pair for client registration: \(error.localizedDescription)",
-          error
+          "Failed to generate or retrieve key pair for client registration: \(error.localizedDescription) \(keyInventorySummary(keys))",
+          keychainDiagnosticsError(site: "generate_new", underlying: error, keys: keys)
         )
         return
       }
@@ -916,10 +1085,27 @@ class BcscCore: NSObject {
       do {
         keyPair = try keyPairManager.getKeyPair(with: newKeyId)
         keyId = newKeyId
+      } catch let KeychainError.keychainUnavailable(status) {
+        let postGenerationKeys = keyPairManager.findAllPrivateKeys()
+        reject(
+          "E_120_KEYCHAIN_UNAVAILABLE_ERROR",
+          "Keychain temporarily unavailable while retrieving newly generated key (OSStatus \(status)) \(keyInventorySummary(postGenerationKeys))",
+          keychainDiagnosticsError(
+            site: "retrieve_generated", underlying: KeychainError.keychainUnavailable(status),
+            keys: postGenerationKeys
+          )
+        )
+        return
       } catch {
+        // Re-enumerate so the diagnostics show the post-generation keychain state,
+        // i.e. whether the key we just generated is even visible to discovery.
+        let postGenerationKeys = keyPairManager.findAllPrivateKeys()
         reject(
           "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
-          "Failed to retrieve newly generated key pair: \(error.localizedDescription)", error
+          "Failed to retrieve newly generated key pair: \(error.localizedDescription) \(keyInventorySummary(postGenerationKeys))",
+          keychainDiagnosticsError(
+            site: "retrieve_generated", underlying: error, keys: postGenerationKeys
+          )
         )
         return
       }
@@ -1874,7 +2060,7 @@ class BcscCore: NSObject {
           .deviceOwnerAuthentication, localizedReason: authReason
         )
       } catch {
-        print("Local Authentication error: ", error.localizedDescription)
+        logger.error("unlockWithDeviceSecurity: LAContext error: \(error.localizedDescription)")
         resolve([
           "success": false,
         ])
@@ -2676,9 +2862,7 @@ class BcscCore: NSObject {
     var evidencePhotos = [EvidencePhoto]()
     if let metadataArray = dict["metadata"] as? [[String: Any]] {
       for photoDict in metadataArray {
-        let timestamp = photoDict["date"] as? Double ?? Date().timeIntervalSince1970
-        let base64 = photoDict["photoBase64String"] as? String ?? ""
-        evidencePhotos.append(EvidencePhoto(timestamp: timestamp, photoBase64String: base64))
+        evidencePhotos.append(EvidencePhoto.fromPhotoDict(photoDict))
       }
     }
 
