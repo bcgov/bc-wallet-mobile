@@ -6,7 +6,8 @@ import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useAlerts } from '@/hooks/useAlerts'
-import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningSystemCheck'
+
+import { isAccountExpired } from '@/bcsc-theme/utils/datetime-utils'
 import { BCState } from '@/store'
 import {
   Button,
