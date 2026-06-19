@@ -93,16 +93,32 @@ export class RemoteLedgerResolver extends FileCache {
       // Conditional GET: when we hold an ETag, let the server answer 304 so an
       // unchanged genesis file isn't re-downloaded on every startup. The base
       // axios instance rejects non-2xx by default, so allow 304 through here.
-      const response = await this.axiosInstance.get(source.genesisUrl, {
+      let response = await this.axiosInstance.get(source.genesisUrl, {
         ...(storedEtag && { headers: { 'If-None-Match': storedEtag } }),
         validateStatus: (status) => status === 200 || status === 304,
       })
-      const { status, headers, data } = response
 
-      if (status === 304) {
-        // Cached copy is current — fall through to load it from local storage.
-        this.log?.info(`Genesis for ${source.indyNamespace} unchanged (304)`)
-      } else {
+      if (response.status === 304) {
+        // Server says our cached copy is current — but trust that only if we
+        // still have the file. If the cache was evicted/corrupted while the ETag
+        // map survived, the stored ETag would pin us to bundled genesis forever
+        // (every startup re-sends If-None-Match and gets another 304). Drop the
+        // ETag and re-fetch in full so the cache repopulates.
+        const cached = await this.loadFileFromLocalStorage(fileName)
+        if (cached) {
+          this.log?.info(`Genesis for ${source.indyNamespace} unchanged (304)`)
+          genesisTransactions = cached
+        } else {
+          this.log?.warn(`Genesis for ${source.indyNamespace} returned 304 but cache is missing; re-fetching`)
+          delete etags[source.indyNamespace]
+          response = await this.axiosInstance.get(source.genesisUrl, {
+            validateStatus: (status) => status === 200,
+          })
+        }
+      }
+
+      if (response.status === 200) {
+        const { headers, data } = response
         const body = typeof data === 'string' ? data : JSON.stringify(data)
 
         // Every line of a genesis file is a JSON transaction — guards against
@@ -110,7 +126,10 @@ export class RemoteLedgerResolver extends FileCache {
         JSON.parse(body.split('\n', 1)[0])
 
         const etag = headers.etag
-        if (etag && storedEtag && this.compareWeakEtags(storedEtag, etag)) {
+        // Read the live map (not the captured storedEtag) so a cleared ETag from
+        // the 304-with-missing-cache path forces a save instead of skipping it.
+        const knownEtag = etags[source.indyNamespace]
+        if (etag && knownEtag && this.compareWeakEtags(knownEtag, etag)) {
           this.log?.info(`Genesis for ${source.indyNamespace} unchanged (ETag match)`)
         } else {
           await this.saveFileToLocalStorage(fileName, body)

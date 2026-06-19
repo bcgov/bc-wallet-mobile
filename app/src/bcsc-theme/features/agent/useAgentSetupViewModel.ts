@@ -151,8 +151,10 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     // Build, initialize, and wire up a fresh agent, then mark ready. Bails at any
     // checkpoint if cancelled, leaving inFlightAgent for run's finally to close.
     const buildFreshAgent = async (walletSecret: AgentWalletSecret): Promise<void> => {
-      // cachedLedgers only gates the expensive pool warm-up in warmCache;
-      // the pool list itself comes from the resolver when auto-update is on.
+      // cachedLedgers only gates the expensive pool warm-up in warmCache. The
+      // pool list always comes from the resolver, which serves remote/cached
+      // genesis when auto-update is on and the bundled snapshot when it is off —
+      // so LEDGER_AUTO_UPDATE=false means bundled-only, never a stale prior cache.
       const cachedLedgers = await loadCachedLedgers()
       if (cancelled) {
         return
@@ -172,7 +174,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         return
       }
 
-      const ledgers = ledgerResolver.remoteEnabled ? ledgerResolver.ledgers : (cachedLedgers ?? ledgerResolver.ledgers)
+      const ledgers = ledgerResolver.ledgers
 
       inFlightAgent = buildAgent({
         ledgers,

@@ -348,10 +348,12 @@ const useBCAgentSetup = () => {
       }
 
       logger.info('Checking for cached ledgers...')
-      // cachedLedgers only gates the expensive pool warm-up in warmUpCache;
-      // the pool list itself comes from the resolver when auto-update is on.
+      // cachedLedgers only gates the expensive pool warm-up in warmUpCache. The
+      // pool list always comes from the resolver, which serves remote/cached
+      // genesis when auto-update is on and the bundled snapshot when it is off —
+      // so LEDGER_AUTO_UPDATE=false means bundled-only, never a stale prior cache.
       const cachedLedgers = await loadCachedLedgers()
-      const ledgers = ledgerResolver.remoteEnabled ? ledgerResolver.ledgers : (cachedLedgers ?? ledgerResolver.ledgers)
+      const ledgers = ledgerResolver.ledgers
 
       logger.info('Creating new agent...')
       const newAgent = await createNewAgent(ledgers, walletSecret, mediatorUrl)

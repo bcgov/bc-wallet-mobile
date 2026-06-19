@@ -141,6 +141,28 @@ describe('RemoteLedgerResolver', () => {
     ])
   })
 
+  it('clears the ETag and re-fetches when a 304 has no cached file', async () => {
+    // ETag map survived but the genesis file was evicted/corrupted
+    mockFiles['/caches/ledgers/ledger-cache.json'] = JSON.stringify({
+      etags: { 'bcovrin:test': '"stale"' },
+      updatedAt: 'whenever',
+    })
+    // 304 to the conditional request, then a full 200 on the unconditional retry
+    mockGet.mockResolvedValueOnce(notModified()).mockResolvedValueOnce(ok(GENESIS_A, '"fresh"'))
+    const resolver = new RemoteLedgerResolver([sources[0]], bundled)
+
+    await resolver.checkForUpdates()
+
+    // first request was conditional, retry was unconditional
+    expect(mockGet).toHaveBeenCalledTimes(2)
+    expect(mockGet.mock.calls[0][1].headers).toEqual({ 'If-None-Match': '"stale"' })
+    expect(mockGet.mock.calls[1][1].headers).toBeUndefined()
+    // cache repopulated and the ETag refreshed
+    expect(mockFiles['/caches/ledgers/bcovrin-test.genesis']).toBe(GENESIS_A)
+    expect(JSON.parse(mockFiles['/caches/ledgers/ledger-cache.json']).etags).toEqual({ 'bcovrin:test': '"fresh"' })
+    expect(resolver.ledgers.map((l) => l.genesisTransactions)).toEqual([GENESIS_A])
+  })
+
   it('falls back to the cached genesis file when the fetch fails', async () => {
     mockFiles['/caches/ledgers/bcovrin-test.genesis'] = 'cached-bcovrin-genesis'
     mockGet.mockRejectedValueOnce(new Error('network down')).mockResolvedValueOnce(ok(GENESIS_B))
