@@ -1,7 +1,7 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { computeSetupStepCompletion } from '@/bcsc-theme/utils/setup-step-completion'
 import { BCState } from '@/store'
-import { useStore } from '@bifold/core'
+import { useStore, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import NotificationCard, { NotificationCardStatus } from './NotificationCard'
 
@@ -17,6 +17,7 @@ interface StartVerificationNotificationProps {
  */
 const StartVerificationNotification = (props: StartVerificationNotificationProps) => {
   const { t } = useTranslation()
+  const { ColorPalette } = useTheme()
   const [store] = useStore<BCState>()
   const secureActions = useSecureActions()
 
@@ -31,7 +32,9 @@ const StartVerificationNotification = (props: StartVerificationNotificationProps
       title={t('Notification.StartVerification.Title')}
       description={t('Notification.StartVerification.Description')}
       buttonTitle={buttonTitle}
-      icon="alert-circle"
+      icon="information"
+      iconColor={ColorPalette.brand.primary}
+      iconStyle={{ marginRight: 12 }}
       onPress={() => {
         secureActions.continueVerificationProcess()
       }}
