@@ -179,6 +179,28 @@ export enum AppEventCode {
   ATTESTATION_UNSUPPORTED_PLATFORM = 'attestation_unsupported_platform', // Non-IAS error code
   // Account Errors
   ACCOUNT_NOT_FOUND = 'account_not_found', // Non-IAS error code
+  // Native module errors (#3419) — distinct codes for bcsc-core native rejections
+  TOKEN_SAVE_FAILED = 'token_save_failed', // Non-IAS error code
+  TOKEN_DELETE_FAILED = 'token_delete_failed', // Non-IAS error code
+  JWT_ENCRYPTION_FAILED = 'jwt_encryption_failed', // Non-IAS error code
+  JWT_CREATION_FAILED = 'jwt_creation_failed', // Non-IAS error code
+  NATIVE_STORAGE_READ_FAILED = 'native_storage_read_failed', // Non-IAS error code
+  NATIVE_STORAGE_WRITE_FAILED = 'native_storage_write_failed', // Non-IAS error code
+  NATIVE_STORAGE_DELETE_FAILED = 'native_storage_delete_failed', // Non-IAS error code
+  KEY_EXPORT_FAILED = 'key_export_failed', // Non-IAS error code
+  KEY_OPERATION_ERROR = 'key_operation_error', // Non-IAS error code
+  NO_SIGNING_KEYS = 'no_signing_keys', // Non-IAS error code
+  DEVICE_AUTH_UNAVAILABLE = 'device_auth_unavailable', // Non-IAS error code
+  DEVICE_SECURITY_SETUP_FAILED = 'device_security_setup_failed', // Non-IAS error code
+  UUID_NOT_FOUND = 'uuid_not_found', // Non-IAS error code
+  NATIVE_INVALID_PARAMETERS = 'native_invalid_parameters', // Non-IAS error code
+  NATIVE_ACCOUNT_ID_NOT_FOUND = 'native_account_id_not_found', // Non-IAS error code
+  DCR_BODY_BUILD_FAILED = 'dcr_body_build_failed', // Non-IAS error code
+  DEVICE_CODE_REQUEST_FAILED = 'device_code_request_failed', // Non-IAS error code
+  PIN_SET_FAILED = 'pin_set_failed', // Non-IAS error code
+  PIN_DELETE_FAILED = 'pin_delete_failed', // Non-IAS error code
+  PIN_OPERATION_ERROR = 'pin_operation_error', // Non-IAS error code
+  UNMAPPED_NATIVE_ERROR = 'unmapped_native_error', // Non-IAS error code
 }
 
 const AppEventCodeSet = new Set<string>(Object.values(AppEventCode))

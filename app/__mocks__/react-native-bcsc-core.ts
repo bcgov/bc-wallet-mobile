@@ -43,26 +43,38 @@ export enum BCSCAccountType {
   NoBcscCard = 'Other - no BC Services Card',
 }
 
+// Kept in sync with the real `BcscNativeErrorCodes` in packages/bcsc-core/src/index.ts.
+// Jest cannot currently re-export the real enum (see TODO above), so it is duplicated here.
 export const BcscNativeErrorCodes = {
-  /** toJSON method failed while serializing dynamic client registration body (error 120-1) */
+  // DCR / keychain (E_120_* series)
   TOJSON_METHOD_FAILURE: 'E_120_TOJSON_METHOD_FAILURE',
-  /** toJSONString method failed while serializing device info JWT (error 120-2) */
   TOJSONSTRING_METHOD_FAILURE: 'E_120_TOJSONSTRING_METHOD_FAILURE',
-  /** Keychain key already exists during key pair generation (error 120-3) */
   KEYCHAIN_KEY_EXISTS: 'E_120_KEYCHAIN_KEY_EXISTS_ERROR',
-  /** Keychain key does not exist when retrieving key pair (error 120-4) */
   KEYCHAIN_KEY_DOESNT_EXIST: 'E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR',
-  /** Keychain key generation error during key pair generation (error 120-5) */
   KEYCHAIN_KEY_GENERATION_ERROR: 'E_120_KEYCHAIN_KEY_GENERATION_ERROR',
-  /** Error creating device info JWT during client registration (error 120-6) */
   JWT_DEVICE_INFO_ERROR: 'E_120_JWT_DEVICE_INFO_ERROR',
-  /** JSON serialization failed for a native request or payload */
-  JSON_SERIALIZATION_FAILED: 'E_120_JSON_SERIALIZATION_FAILED',
-  /** Secure hardware / keystore could not generate a new keypair */
-  KEYPAIR_GENERATION_FAILED: 'E_KEYPAIR_GENERATION_FAILED',
-  /** Keypair exists but could not be retrieved from secure storage */
+  KEYCHAIN_UNAVAILABLE: 'E_120_KEYCHAIN_UNAVAILABLE_ERROR',
+  // Account / Token
+  ACCOUNT_NOT_FOUND: 'E_ACCOUNT_NOT_FOUND',
+  INVALID_TOKEN_TYPE: 'E_INVALID_TOKEN_TYPE',
+  TOKEN_DELETE_ERROR: 'E_TOKEN_DELETE_ERROR',
+  // Key operations
+  KEY_NOT_FOUND: 'E_KEY_NOT_FOUND',
+  KEY_EXPORT_FAILED: 'E_KEY_EXPORT_FAILED',
+  KEY_ERROR: 'E_KEY_ERROR',
+  KEYSTORE_UNAVAILABLE: 'E_KEYSTORE_UNAVAILABLE',
+  KEYSTORE_ERROR: 'E_KEYSTORE_ERROR',
+  // JWT / Signing
+  UUID_NOT_FOUND: 'E_UUID_NOT_FOUND',
+  NO_KEYS_FOUND: 'E_NO_KEYS_FOUND',
   KEYPAIR_RETRIEVAL_FAILED: 'E_KEYPAIR_RETRIEVAL_FAILED',
-  /** JWS token could not be parsed (malformed or invalid format) */
+  JWT_SIGN_FAILED: 'E_JWT_SIGN_FAILED',
+  // PIN
+  INVALID_PARAMETERS: 'E_INVALID_PARAMETERS',
+  SET_PIN_FAILED: 'E_SET_PIN_FAILED',
+  DELETE_PIN_FAILED: 'E_DELETE_PIN_FAILED',
+  // Parsing
+  JSON_SERIALIZATION_FAILED: 'E_JSON_SERIALIZATION_FAILED',
   FAILED_TO_PARSE_JWS: 'E_FAILED_TO_PARSE_JWS',
 } as const
 
