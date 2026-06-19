@@ -87,6 +87,16 @@ export const ErrorRegistry = {
     category: ErrorCategory.UNKNOWN,
     message: 'A fatal error occurred — app functionality may be compromised',
   },
+  // Fallback for native bcsc-core rejections whose code is not explicitly mapped. The raw native
+  // code is preserved via the error `cause` (surfaced by AppError.technicalMessage), so the failure
+  // is never hidden — distinct from a true UNKNOWN_ERROR.
+  UNMAPPED_NATIVE_ERROR: {
+    statusCode: 9900, // dedicated 9900-9989 band for unmapped native codes
+    appEvent: AppEventCode.UNMAPPED_NATIVE_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.UNKNOWN,
+    message: 'An unmapped native module error occurred — see technical details for the raw native error code',
+  },
 
   // ============================================
   // Camera/Scanning Errors (2000-2099)
@@ -529,6 +539,35 @@ export const ErrorRegistry = {
     category: ErrorCategory.TOKEN,
     message: 'Failed to embed or extract device info from JWT payload',
   },
+  // --- Native bcsc-core token/crypto errors (#3419) ---
+  TOKEN_SAVE_FAILED: {
+    statusCode: 2515,
+    appEvent: AppEventCode.TOKEN_SAVE_FAILED,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.TOKEN,
+    message: 'Failed to save token to native secure storage — retryable',
+  },
+  TOKEN_DELETE_FAILED: {
+    statusCode: 2516,
+    appEvent: AppEventCode.TOKEN_DELETE_FAILED,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.TOKEN,
+    message: 'Failed to delete token from native secure storage',
+  },
+  JWT_ENCRYPTION_FAILED: {
+    statusCode: 2517,
+    appEvent: AppEventCode.JWT_ENCRYPTION_FAILED,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.TOKEN,
+    message: 'Native JWT/JWE encryption failed — recipient key invalid or cipher error',
+  },
+  JWT_CREATION_FAILED: {
+    statusCode: 2518,
+    appEvent: AppEventCode.JWT_CREATION_FAILED,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.TOKEN,
+    message: 'Native JWT construction or payload creation failed',
+  },
 
   // ============================================
   // Storage Errors (2600-2699)
@@ -611,6 +650,50 @@ export const ErrorRegistry = {
     category: ErrorCategory.STORAGE,
     message: 'Storage write failed because the device is out of disk space',
   },
+  // --- Native bcsc-core storage/key errors (#3419). Android E_GET_*/E_SET_*/E_DELETE_* domain
+  // families collapse by operation; the raw native code is preserved in AppError.technicalMessage. ---
+  NATIVE_STORAGE_READ_FAILED: {
+    statusCode: 2611,
+    appEvent: AppEventCode.NATIVE_STORAGE_READ_FAILED,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.STORAGE,
+    message: 'Native secure storage read failed — retryable (raw native code in technical details)',
+  },
+  NATIVE_STORAGE_WRITE_FAILED: {
+    statusCode: 2612,
+    appEvent: AppEventCode.NATIVE_STORAGE_WRITE_FAILED,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.STORAGE,
+    message: 'Native secure storage write failed — retryable (raw native code in technical details)',
+  },
+  NATIVE_STORAGE_DELETE_FAILED: {
+    statusCode: 2613,
+    appEvent: AppEventCode.NATIVE_STORAGE_DELETE_FAILED,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.STORAGE,
+    message: 'Native secure storage delete failed — retryable (raw native code in technical details)',
+  },
+  KEY_EXPORT_FAILED: {
+    statusCode: 2614,
+    appEvent: AppEventCode.KEY_EXPORT_FAILED,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.STORAGE,
+    message: 'Failed to export or extract key material from the keystore',
+  },
+  KEY_OPERATION_ERROR: {
+    statusCode: 2615,
+    appEvent: AppEventCode.KEY_OPERATION_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.STORAGE,
+    message: 'Unexpected error during a native key/keystore operation',
+  },
+  NO_SIGNING_KEYS: {
+    statusCode: 2616,
+    appEvent: AppEventCode.NO_SIGNING_KEYS,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.STORAGE,
+    message: 'No signing keys available in the keystore — re-registration may be required',
+  },
 
   // ============================================
   // Device Errors (2700-2799)
@@ -670,6 +753,28 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.DEVICE,
     message: 'Device authentication failed — biometric or passcode verification did not succeed',
+  },
+  // --- Native bcsc-core device errors (#3419) ---
+  DEVICE_AUTH_UNAVAILABLE: {
+    statusCode: 2708,
+    appEvent: AppEventCode.DEVICE_AUTH_UNAVAILABLE,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.DEVICE,
+    message: 'Device authentication is not available — no enrolled biometric/passcode or no host activity',
+  },
+  DEVICE_SECURITY_SETUP_FAILED: {
+    statusCode: 2709,
+    appEvent: AppEventCode.DEVICE_SECURITY_SETUP_FAILED,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.DEVICE,
+    message: 'Failed to set up or unlock device security',
+  },
+  UUID_NOT_FOUND: {
+    statusCode: 2710,
+    appEvent: AppEventCode.UUID_NOT_FOUND,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.DEVICE,
+    message: 'Device UUID is not available',
   },
 
   // ============================================
@@ -842,6 +947,56 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.GENERAL,
     message: 'Client metadata is invalid — missing required fields or contains invalid values',
+  },
+  // --- Native bcsc-core general/PIN/account errors (#3419) ---
+  NATIVE_INVALID_PARAMETERS: {
+    statusCode: 2825,
+    appEvent: AppEventCode.NATIVE_INVALID_PARAMETERS,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.GENERAL,
+    message: 'Invalid parameters passed to a native operation',
+  },
+  NATIVE_ACCOUNT_ID_NOT_FOUND: {
+    statusCode: 2826,
+    appEvent: AppEventCode.NATIVE_ACCOUNT_ID_NOT_FOUND,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.GENERAL,
+    message: 'Current account ID not found in native storage',
+  },
+  DCR_BODY_BUILD_FAILED: {
+    statusCode: 2827,
+    appEvent: AppEventCode.DCR_BODY_BUILD_FAILED,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.GENERAL,
+    message: 'Failed to build the dynamic client registration request body (native)',
+  },
+  DEVICE_CODE_REQUEST_FAILED: {
+    statusCode: 2828,
+    appEvent: AppEventCode.DEVICE_CODE_REQUEST_FAILED,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.GENERAL,
+    message: 'Failed to build the device code request body (native)',
+  },
+  PIN_SET_FAILED: {
+    statusCode: 2829,
+    appEvent: AppEventCode.PIN_SET_FAILED,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.GENERAL,
+    message: 'Failed to set PIN (native)',
+  },
+  PIN_DELETE_FAILED: {
+    statusCode: 2830,
+    appEvent: AppEventCode.PIN_DELETE_FAILED,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.GENERAL,
+    message: 'Failed to delete PIN (native)',
+  },
+  PIN_OPERATION_ERROR: {
+    statusCode: 2831,
+    appEvent: AppEventCode.PIN_OPERATION_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.GENERAL,
+    message: 'A native PIN or security-method operation failed',
   },
 
   // ============================================
