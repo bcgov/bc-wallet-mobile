@@ -1,4 +1,3 @@
-import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { AccountRenewalSystemCheck } from '@/services/system-checks/AccountRenewalSystemCheck'
 import { SystemCheckUtils } from '@/services/system-checks/system-checks'
 import { BCDispatchAction } from '@/store'
@@ -57,39 +56,11 @@ describe('AccountRenewalSystemCheck', () => {
       check.onFail()
 
       expect(check['utils'].dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.ADD_BANNER_MESSAGE,
-        payload: [
-          {
-            id: BCSCBanner.ACCOUNT_EXPIRING_SOON,
-            title: 'Expires in 30 days',
-            description: 'Expires in 30 days',
-            type: 'warning',
-            variant: 'summary',
-            dismissible: false,
-          },
-        ],
+        type: BCDispatchAction.SET_CARD_RENEWAL_NOTIFICATION,
+        payload: [true],
       })
     })
 
     it.todo('should not dispatch a banner if the account is already expired')
-  })
-
-  describe('onSuccess', () => {
-    it('should dispatch an action to remove the account expiring soon banner', () => {
-      const date = new Date(Date.now() + 31 * DAY_IN_MS)
-
-      const check = new AccountRenewalSystemCheck(date, {
-        dispatch: jest.fn(),
-        translation: jest.fn() as any,
-        logger: {} as any,
-      })
-
-      check.onSuccess()
-
-      expect(check['utils'].dispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.REMOVE_BANNER_MESSAGE,
-        payload: [BCSCBanner.ACCOUNT_EXPIRING_SOON],
-      })
-    })
   })
 })

@@ -1,8 +1,8 @@
 import { tokenToCredentialMetadata } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
 import { BCSCEvent, BCSCReason, IdToken } from '@/bcsc-theme/utils/id-token'
-import { BCDispatchAction } from '@/store'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { SystemCheckNavigation, SystemCheckUtils } from '@/services/system-checks/system-checks'
+import { BCDispatchAction } from '@/store'
 
 describe('EventReasonAlertsSystemCheck', () => {
   let mockUtils: SystemCheckUtils
@@ -55,35 +55,63 @@ describe('EventReasonAlertsSystemCheck', () => {
   describe('runCheck', () => {
     it('should return false when the event is Cancel and reason is Cancel', async () => {
       const mockIdToken = createMockIdToken({ bcsc_event: BCSCEvent.Cancel, bcsc_reason: BCSCReason.Cancel })
-      const check = new EventReasonAlertsSystemCheck(jest.fn().mockResolvedValue(mockIdToken), undefined, mockUtils, mockNavigation)
+      const check = new EventReasonAlertsSystemCheck(
+        jest.fn().mockResolvedValue(mockIdToken),
+        undefined,
+        mockUtils,
+        mockNavigation
+      )
 
       expect(await check.runCheck()).toBe(false)
     })
 
     it('should return false when the event is Cancel and reason is CanceledByAgent', async () => {
       const mockIdToken = createMockIdToken({ bcsc_event: BCSCEvent.Cancel, bcsc_reason: BCSCReason.CanceledByAgent })
-      const check = new EventReasonAlertsSystemCheck(jest.fn().mockResolvedValue(mockIdToken), undefined, mockUtils, mockNavigation)
+      const check = new EventReasonAlertsSystemCheck(
+        jest.fn().mockResolvedValue(mockIdToken),
+        undefined,
+        mockUtils,
+        mockNavigation
+      )
 
       expect(await check.runCheck()).toBe(false)
     })
 
     it('should return false when the event is Cancel and reason is CanceledByUser', async () => {
       const mockIdToken = createMockIdToken({ bcsc_event: BCSCEvent.Cancel, bcsc_reason: BCSCReason.CanceledByUser })
-      const check = new EventReasonAlertsSystemCheck(jest.fn().mockResolvedValue(mockIdToken), undefined, mockUtils, mockNavigation)
+      const check = new EventReasonAlertsSystemCheck(
+        jest.fn().mockResolvedValue(mockIdToken),
+        undefined,
+        mockUtils,
+        mockNavigation
+      )
 
       expect(await check.runCheck()).toBe(false)
     })
 
     it('should return false when the event is Cancel and reason is CanceledByAdditionalCard', async () => {
-      const mockIdToken = createMockIdToken({ bcsc_event: BCSCEvent.Cancel, bcsc_reason: BCSCReason.CanceledByAdditionalCard })
-      const check = new EventReasonAlertsSystemCheck(jest.fn().mockResolvedValue(mockIdToken), undefined, mockUtils, mockNavigation)
+      const mockIdToken = createMockIdToken({
+        bcsc_event: BCSCEvent.Cancel,
+        bcsc_reason: BCSCReason.CanceledByAdditionalCard,
+      })
+      const check = new EventReasonAlertsSystemCheck(
+        jest.fn().mockResolvedValue(mockIdToken),
+        undefined,
+        mockUtils,
+        mockNavigation
+      )
 
       expect(await check.runCheck()).toBe(false)
     })
 
     it('should return false when the reason is Renew and the metadata is different', async () => {
       const mockIdToken = createMockIdToken({ bcsc_event: BCSCEvent.Renewal, bcsc_reason: BCSCReason.Renew })
-      const check = new EventReasonAlertsSystemCheck(jest.fn().mockResolvedValue(mockIdToken), undefined, mockUtils, mockNavigation)
+      const check = new EventReasonAlertsSystemCheck(
+        jest.fn().mockResolvedValue(mockIdToken),
+        undefined,
+        mockUtils,
+        mockNavigation
+      )
 
       expect(await check.runCheck()).toBe(false)
     })
@@ -91,14 +119,24 @@ describe('EventReasonAlertsSystemCheck', () => {
     it('should return true when the reason is Renew and the metadata is the same', async () => {
       const mockIdToken = createMockIdToken({ bcsc_event: BCSCEvent.Renewal, bcsc_reason: BCSCReason.Renew })
       const metadata = tokenToCredentialMetadata(mockIdToken)
-      const check = new EventReasonAlertsSystemCheck(jest.fn().mockResolvedValue(mockIdToken), metadata, mockUtils, mockNavigation)
+      const check = new EventReasonAlertsSystemCheck(
+        jest.fn().mockResolvedValue(mockIdToken),
+        metadata,
+        mockUtils,
+        mockNavigation
+      )
 
       expect(await check.runCheck()).toBe(true)
     })
 
     it('should return false when the reason is Replace and the metadata is different', async () => {
       const mockIdToken = createMockIdToken({ bcsc_event: BCSCEvent.Replace, bcsc_reason: BCSCReason.Replace })
-      const check = new EventReasonAlertsSystemCheck(jest.fn().mockResolvedValue(mockIdToken), undefined, mockUtils, mockNavigation)
+      const check = new EventReasonAlertsSystemCheck(
+        jest.fn().mockResolvedValue(mockIdToken),
+        undefined,
+        mockUtils,
+        mockNavigation
+      )
 
       expect(await check.runCheck()).toBe(false)
     })
@@ -106,7 +144,12 @@ describe('EventReasonAlertsSystemCheck', () => {
     it('should return true when the reason is Replace and the metadata is the same', async () => {
       const mockIdToken = createMockIdToken({ bcsc_event: BCSCEvent.Replace, bcsc_reason: BCSCReason.Replace })
       const metadata = tokenToCredentialMetadata(mockIdToken)
-      const check = new EventReasonAlertsSystemCheck(jest.fn().mockResolvedValue(mockIdToken), metadata, mockUtils, mockNavigation)
+      const check = new EventReasonAlertsSystemCheck(
+        jest.fn().mockResolvedValue(mockIdToken),
+        metadata,
+        mockUtils,
+        mockNavigation
+      )
 
       expect(await check.runCheck()).toBe(true)
     })
@@ -115,7 +158,12 @@ describe('EventReasonAlertsSystemCheck', () => {
   describe('onFail', () => {
     it('should navigate to DeviceInvalidated modal when event is Cancel', async () => {
       const mockIdToken = createMockIdToken({ bcsc_event: BCSCEvent.Cancel, bcsc_reason: BCSCReason.Cancel })
-      const check = new EventReasonAlertsSystemCheck(jest.fn().mockResolvedValue(mockIdToken), undefined, mockUtils, mockNavigation)
+      const check = new EventReasonAlertsSystemCheck(
+        jest.fn().mockResolvedValue(mockIdToken),
+        undefined,
+        mockUtils,
+        mockNavigation
+      )
       await check.runCheck()
       check.onFail()
 
@@ -127,7 +175,12 @@ describe('EventReasonAlertsSystemCheck', () => {
 
     it('should dispatch SET_CARD_RENEWAL_NOTIFICATION when event is Renewal', async () => {
       const mockIdToken = createMockIdToken({ bcsc_event: BCSCEvent.Renewal, bcsc_reason: BCSCReason.Renew })
-      const check = new EventReasonAlertsSystemCheck(jest.fn().mockResolvedValue(mockIdToken), undefined, mockUtils, mockNavigation)
+      const check = new EventReasonAlertsSystemCheck(
+        jest.fn().mockResolvedValue(mockIdToken),
+        undefined,
+        mockUtils,
+        mockNavigation
+      )
       await check.runCheck()
       check.onFail()
 
@@ -138,7 +191,12 @@ describe('EventReasonAlertsSystemCheck', () => {
 
     it('should dispatch SET_CARD_RENEWAL_NOTIFICATION when event is Replace', async () => {
       const mockIdToken = createMockIdToken({ bcsc_event: BCSCEvent.Replace, bcsc_reason: BCSCReason.Replace })
-      const check = new EventReasonAlertsSystemCheck(jest.fn().mockResolvedValue(mockIdToken), undefined, mockUtils, mockNavigation)
+      const check = new EventReasonAlertsSystemCheck(
+        jest.fn().mockResolvedValue(mockIdToken),
+        undefined,
+        mockUtils,
+        mockNavigation
+      )
       await check.runCheck()
       check.onFail()
 

@@ -65,8 +65,12 @@ jest.mock('@/services/system-checks/DeviceCountSystemCheck', () => ({
   DeviceCountSystemCheck: class DeviceCountSystemCheck {},
 }))
 
-jest.mock('@/services/system-checks/AccountExpiryWarningBannerSystemCheck', () => ({
-  AccountExpiryWarningBannerSystemCheck: class AccountExpiryWarningBannerSystemCheck {},
+jest.mock('@/services/system-checks/AccountExpirySystemCheck', () => ({
+  AccountExpirySystemCheck: class AccountExpirySystemCheck {},
+}))
+
+jest.mock('@/services/system-checks/AccountRenewalSystemCheck', () => ({
+  AccountRenewalSystemCheck: class AccountRenewalSystemCheck {},
 }))
 
 jest.mock('@/services/system-checks/UpdateDeviceRegistrationSystemCheck', () => ({
@@ -305,11 +309,12 @@ describe('useGetSystemChecks', () => {
 
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
 
-        expect(systemChecks).toHaveLength(4) // DeviceCountSystemCheck, AccountExpiryWarningBannerSystemCheck, UpdateDeviceRegistrationSystemCheck
+        expect(systemChecks).toHaveLength(5) // DeviceCountSystemCheck, AccountExpirySystemCheck, AccountRenewalSystemCheck, UpdateDeviceRegistrationSystemCheck
         expect(systemChecks[0].constructor.name).toBe('DeviceCountSystemCheck')
-        expect(systemChecks[1].constructor.name).toBe('AccountExpiryWarningBannerSystemCheck')
-        expect(systemChecks[2].constructor.name).toBe('EventReasonAlertsSystemCheck')
-        expect(systemChecks[3].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
+        expect(systemChecks[1].constructor.name).toBe('AccountRenewalSystemCheck')
+        expect(systemChecks[2].constructor.name).toBe('AccountExpirySystemCheck')
+        expect(systemChecks[3].constructor.name).toBe('EventReasonAlertsSystemCheck')
+        expect(systemChecks[4].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
       })
     })
   })
