@@ -3,7 +3,8 @@ import BCSCApiClient from '@/bcsc-theme/api/client'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
-import { AccountExpiryWarningSystemCheck } from '@/services/system-checks/AccountExpiryWarningSystemCheck'
+import { AccountExpirySystemCheck } from '@/services/system-checks/AccountExpirySystemCheck'
+import { AccountRenewalSystemCheck } from '@/services/system-checks/AccountRenewalSystemCheck'
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
@@ -130,11 +131,9 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
 
     const systemChecks: SystemCheckStrategy[] = [
       new DeviceCountSystemCheck(getIdToken, utils, dismissedAt),
-      new AccountExpiryWarningSystemCheck(accountExpirationDate, utils),
+      new AccountRenewalSystemCheck(accountExpirationDate, utils),
+      new AccountExpirySystemCheck(accountExpirationDate, utils),
       new EventReasonAlertsSystemCheck(getIdToken, credentialMetadataRef.current, utils, navigation),
-      // TODO (ar/bm): v3 doesn't include the checks below; re-add if needed in future
-      // AccountExpiryWarningAlertSystemCheck
-      // AccountExpiryAlertSystemCheck
     ]
 
     // Only run device registration update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
