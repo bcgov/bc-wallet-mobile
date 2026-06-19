@@ -48,6 +48,10 @@ const translation = {
     "ErrorCode": "Código de erro",
     "ReportThisProblem": "Reportar este problema",
     "Reported": "Reportado",
+    "ReferenceCode": "Código de referência",
+    "CopyCode": "Copiar",
+    "CodeCopied": "Copiado",
+    "ShareCodeWithSupport": "Compartilhe este código com o suporte ao entrar em contato.",
     "Unknown": "Desconhecido",
     "Problem": "Algo deu errado",
     "ProblemDescription": "An unexpected error occurred. Please report this error and try again. (PT-BR)"

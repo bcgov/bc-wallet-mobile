@@ -1,7 +1,8 @@
 import { PressableOpacity } from '@/components/PressableOpacity'
 import { hitSlop } from '@/constants'
 import { testIdWithKey } from '@bifold/core'
-import React, { useMemo, useState } from 'react'
+import Clipboard from '@react-native-clipboard/clipboard'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
@@ -37,7 +38,11 @@ export interface ErrorInfoCardProps {
   message?: string
   code?: number
   onDismiss: () => void
-  onReport?: () => void
+  /**
+   * Invoked when the user reports the problem. May return a reference code that
+   * the card then surfaces for the user to share with support.
+   */
+  onReport?: () => string | void
   enableReport?: boolean
   action?: ErrorModalAction
 }
@@ -56,12 +61,38 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
   const { width } = useWindowDimensions()
   const [showDetails, setShowDetails] = useState(false)
   const [reported, setReported] = useState(false)
+  const [referenceCode, setReferenceCode] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+  const copyResetTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (copyResetTimeout.current) {
+        clearTimeout(copyResetTimeout.current)
+      }
+    }
+  }, [])
 
   const formattedDetails = message ? `${t('Error.ErrorCode')} ${code ?? 0} - ${message}` : ''
 
   const handleReport = () => {
     setReported(true)
-    onReport?.()
+    const code = onReport?.()
+    if (code) {
+      setReferenceCode(code)
+    }
+  }
+
+  const handleCopy = () => {
+    if (!referenceCode) {
+      return
+    }
+    Clipboard.setString(referenceCode)
+    setCopied(true)
+    if (copyResetTimeout.current) {
+      clearTimeout(copyResetTimeout.current)
+    }
+    copyResetTimeout.current = setTimeout(() => setCopied(false), 2000)
   }
 
   const containerStyle = useMemo(
@@ -165,6 +196,38 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
               </TouchableOpacity>
             )}
           </View>
+
+          {reported && referenceCode && (
+            <View style={styles.referenceContainer} testID={testIdWithKey('ReferenceCode')}>
+              <Text style={styles.referenceLabel}>{t('Error.ReferenceCode')}</Text>
+              <View style={styles.referenceRow}>
+                <Text
+                  style={styles.referenceCode}
+                  selectable
+                  accessibilityLabel={`${t('Error.ReferenceCode')}: ${referenceCode}`}
+                  testID={testIdWithKey('ReferenceCodeValue')}
+                >
+                  {referenceCode}
+                </Text>
+                <TouchableOpacity
+                  accessibilityLabel={copied ? t('Error.CodeCopied') : t('Error.CopyCode')}
+                  accessibilityRole="button"
+                  testID={testIdWithKey('CopyReferenceCode')}
+                  style={styles.copyButton}
+                  onPress={handleCopy}
+                  activeOpacity={0.7}
+                >
+                  <CommunityIcon
+                    name={copied ? 'check' : 'content-copy'}
+                    size={18}
+                    color={copied ? colors.successIcon : colors.link}
+                  />
+                  <Text style={styles.copyButtonText}>{copied ? t('Error.CodeCopied') : t('Error.CopyCode')}</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.referenceHint}>{t('Error.ShareCodeWithSupport')}</Text>
+            </View>
+          )}
 
           <Text style={styles.footer} testID={testIdWithKey('VersionNumber')}>
             {t('Settings.Version')} {getVersion()} ({getBuildNumber()})
@@ -296,6 +359,51 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.destructiveButtonText,
+  },
+  referenceContainer: {
+    marginTop: 16,
+    marginHorizontal: 4,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    backgroundColor: '#F2F2F2',
+  },
+  referenceLabel: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginBottom: 4,
+  },
+  referenceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  referenceCode: {
+    fontSize: 20,
+    fontWeight: '700',
+    letterSpacing: 2,
+    color: colors.text,
+    flexShrink: 1,
+  },
+  copyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginLeft: 8,
+  },
+  copyButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.link,
+    marginLeft: 4,
+  },
+  referenceHint: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: 8,
+    lineHeight: 18,
   },
   footer: {
     marginTop: 16,

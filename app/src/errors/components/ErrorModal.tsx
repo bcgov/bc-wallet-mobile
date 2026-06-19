@@ -1,6 +1,6 @@
 import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
-import { appLogger } from '@/utils/logger'
+import { reportProblem } from '@/utils/logger'
 import { BifoldError, useTheme } from '@bifold/core'
 import React, { useCallback, useMemo } from 'react'
 import { Modal, Pressable, StyleSheet } from 'react-native'
@@ -52,9 +52,9 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
    * Handler for "Report this problem" action in the error modal.
    * Tracks the event in analytics and sends a report to the logger (Loki Grafana) with error details.
    *
-   * @returns void
+   * @returns the reference code the user can share with support, or undefined if there is no error
    */
-  const handleReport = useCallback(() => {
+  const handleReport = useCallback((): string | undefined => {
     if (!error) {
       return
     }
@@ -65,7 +65,7 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
     reportError.cause = error.cause
     reportError.stack = error.stack
 
-    appLogger.report(reportError)
+    return reportProblem(reportError)
   }, [error])
 
   const overlayStyle = useMemo(
