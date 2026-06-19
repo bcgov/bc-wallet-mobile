@@ -97,9 +97,9 @@ export const reportProblem = (error: BifoldError): string => {
         },
       })
     }
-  } catch (e) {
+  } catch (e: any) {
     // Never let a reporting failure prevent the user from getting their code.
-    appLogger.error?.('Failed to send problem report to Loki', e as Error)
+    appLogger.error?.('Failed to send problem report to Loki', e)
   }
 
   return referenceCode
