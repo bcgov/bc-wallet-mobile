@@ -65,6 +65,9 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
 
     Analytics.trackAlertActionEvent(error.appEvent as AppEventCode, ANALYTICS_REPORT_THIS_PROBLEM_LABEL)
 
+    // error.message is AppError.fullMessage — the user-facing details string, which
+    // deliberately omits the screen name and request URL so we don't surface infra
+    // details to the user. Append them here so they still ride along in the Loki report.
     let reportMessage = error.message
     if (error.screen) {
       reportMessage += `\nScreen: ${error.screen}`

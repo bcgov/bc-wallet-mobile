@@ -1607,17 +1607,84 @@ class BcscCoreModule(
         }
     }
 
+    private data class JweHeaderInfo(
+        val alg: String,
+        val enc: String,
+        val kid: String,
+        val parts: Int,
+    )
+
+    /**
+     * Best-effort read of the *incoming* JWE protected header for diagnostics. Reads the
+     * real `kid` straight off the wire so we can tell whether the server encrypted to a key
+     * this device actually holds. Never throws — unreadable fields come back as "?".
+     */
+    private fun incomingJWEHeader(jweString: String): JweHeaderInfo {
+        val parts = jweString.split(".")
+        if (parts.size != 5) {
+            return JweHeaderInfo("?", "?", "?", parts.size)
+        }
+        return try {
+            var seg = parts[0].replace("-", "+").replace("_", "/")
+            val mod = seg.length % 4
+            if (mod > 0) {
+                seg += "=".repeat(4 - mod)
+            }
+            val headerJson = String(android.util.Base64.decode(seg, android.util.Base64.DEFAULT), Charsets.UTF_8)
+            val obj = org.json.JSONObject(headerJson)
+            JweHeaderInfo(obj.optString("alg", "?"), obj.optString("enc", "?"), obj.optString("kid", ""), parts.size)
+        } catch (e: Exception) {
+            JweHeaderInfo("?", "?", "?", parts.size)
+        }
+    }
+
+    /**
+     * Compact decrypt diagnostics for reject MESSAGE strings (the problem-report view
+     * surfaces only the message text). Carries the alias inventory plus the incoming JWE
+     * header and whether its kid matches a local key — enough to tell "no key" / "wrong
+     * key" / "unsupported alg" / "corrupt" apart from a field report alone. The alias is
+     * the same identifier the recovery flow matches against the server's jwks kids.
+     *
+     * Never throws. decodePayload builds this up front on every call (success path
+     * included), so a failure while gathering diagnostics must never break decoding —
+     * the whole body is guarded and degrades to a fallback string.
+     */
+    private fun decodeDiagnosticsSummary(jweString: String): String =
+        try {
+            val header = incomingJWEHeader(jweString)
+            val aliases: List<String> =
+                try {
+                    keyPairSource
+                        .getAllBcscKeyPairInfos()
+                        .sortedByDescending { it.getCreatedAt() }
+                        .map { it.getAlias() }
+                } catch (e: Exception) {
+                    emptyList()
+                }
+            val newest = aliases.firstOrNull() ?: "none"
+            val kidMatchesLocal = header.kid.isNotEmpty() && aliases.contains(header.kid)
+            val jweKid = if (header.kid.isEmpty()) "none" else header.kid
+            "[keys=${aliases.size}, newest=$newest, jweParts=${header.parts}, " +
+                "jweAlg=${header.alg}, jweEnc=${header.enc}, jweKid=$jweKid, kidMatchesLocal=$kidMatchesLocal]"
+        } catch (e: Exception) {
+            Log.w(NAME, "decodeDiagnosticsSummary: failed to build diagnostics", e)
+            "[diagnostics unavailable]"
+        }
+
     @ReactMethod
     override fun decodePayload(
         jweString: String,
         promise: Promise,
     ) {
+        // Built once up front so every failure path reports the same picture, which is what
+        // makes 2507 reports self-classifying in the field.
+        val diagnostics = decodeDiagnosticsSummary(jweString)
         try {
             // Get the current (latest) key pair for decryption
             val currentKeyPair = keyPairSource.getCurrentBcscKeyPair()
 
             if (currentKeyPair.getKeyPair()?.private == null) {
-                promise.reject("E_NO_KEYS_FOUND", "No private key available for decryption")
+                promise.reject("E_NO_KEYS_FOUND", "No private key available for decryption $diagnostics")
                 return
             }
 
@@ -1634,7 +1701,7 @@ class BcscCoreModule(
             // Parse the JWT to extract and decode the payload (claims)
             val jwtSegments = jwtPayload.split(".")
             if (jwtSegments.size != JWS_COMPACT_SEGMENT_COUNT) {
-                promise.reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload")
+                promise.reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload $diagnostics")
                 return
             }
 
@@ -1658,20 +1725,31 @@ class BcscCoreModule(
             Log.d(NAME, "decodePayload: Successfully decoded JWE payload")
             promise.resolve(decodedPayload)
         } catch (e: BcscException) {
-            Log.e(NAME, "decodePayload: BCSC key error: ${e.devMessage}", e)
-            promise.reject("E_BCSC_DECODE_ERROR", "Error accessing key for JWE decryption: ${e.devMessage}", e)
+            // Key retrieval / keystore problem (key unavailable, OEM keystore error, invalidation).
+            Log.e(NAME, "decodePayload: BCSC key error: ${e.devMessage} $diagnostics", e)
+            promise.reject(
+                "E_BCSC_DECODE_ERROR",
+                "Error accessing key for JWE decryption: ${e.devMessage} $diagnostics",
+                e,
+            )
         } catch (e: java.text.ParseException) {
-            Log.e(NAME, "decodePayload: JWE parse error: ${e.message}", e)
-            promise.reject("E_JWE_PARSE_ERROR", "Invalid JWE format", e)
+            // Malformed / truncated / replaced JWE on the wire (transport corruption).
+            Log.e(NAME, "decodePayload: JWE parse error: ${e.message} $diagnostics", e)
+            promise.reject("E_JWE_PARSE_ERROR", "Invalid JWE format: ${e.message} $diagnostics", e)
         } catch (e: com.nimbusds.jose.JOSEException) {
-            Log.e(NAME, "decodePayload: JWE decryption error: ${e.message}", e)
-            promise.reject("E_JWE_DECRYPT_ERROR", "Failed to decrypt JWE", e)
+            // Wrong key (kidMatchesLocal=false) or unsupported alg/enc — read the diagnostics.
+            Log.e(NAME, "decodePayload: JWE decryption error: ${e.message} $diagnostics", e)
+            promise.reject("E_JWE_DECRYPT_ERROR", "Failed to decrypt JWE: ${e.message} $diagnostics", e)
         } catch (e: IllegalArgumentException) {
-            Log.e(NAME, "decodePayload: Base64 decode error: ${e.message}", e)
-            promise.reject("E_FAILED_TO_PARSE_JWS", "Failed to decode JWS payload segment", e)
+            Log.e(NAME, "decodePayload: Base64 decode error: ${e.message} $diagnostics", e)
+            promise.reject(
+                "E_FAILED_TO_PARSE_JWS",
+                "Failed to decode JWS payload segment: ${e.message} $diagnostics",
+                e,
+            )
         } catch (e: Exception) {
-            Log.e(NAME, "decodePayload: Unexpected error: ${e.message}", e)
-            promise.reject("E_PAYLOAD_DECODE_ERROR", "Unable to decode payload", e)
+            Log.e(NAME, "decodePayload: Unexpected error: ${e.message} $diagnostics", e)
+            promise.reject("E_PAYLOAD_DECODE_ERROR", "Unable to decode payload: ${e.message} $diagnostics", e)
         }
     }
 

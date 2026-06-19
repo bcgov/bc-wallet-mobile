@@ -123,6 +123,46 @@ describe('AppError', () => {
         'Something went wrong\nDebug: [general.unknown_server_error.1234] Technical details about the error'
       )
     })
+
+    it('carries native decode diagnostics (code + JWE/key summary) into fullMessage for 2507 reports', () => {
+      // Mirrors useUserApi.getUserInfo: a react-native-bcsc-core rejection (an Error with a
+      // `code` prefix and the enriched diagnostics message) is wrapped as DECRYPT_JWE_ERROR.
+      // The native detail must survive into fullMessage — that is the string the problem
+      // report surfaces, and what lets us tell the 2507 root causes apart in the field.
+      const nativeError: Error & { code?: string } = new Error(
+        'Unable to decode payload: Decryption failed [keys=2, newest=https://idsit.gov.bc.ca/device/abc/2, ' +
+          'jweParts=5, jweAlg=RSA1_5, jweEnc=A256CBC-HS512, jweKid=https://idsit.gov.bc.ca/device/abc/1, ' +
+          'kidMatchesLocal=false]'
+      )
+      nativeError.code = 'E_PAYLOAD_DECODE_ERROR'
+
+      const error = AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_JWE_ERROR, { cause: nativeError })
+
+      expect(error.statusCode).toBe(2507)
+      expect(error.fullMessage).toContain('[token.err_110_unable_to_decrypt_jwe.2507]')
+      expect(error.fullMessage).toContain('E_PAYLOAD_DECODE_ERROR')
+      expect(error.fullMessage).toContain('kidMatchesLocal=false')
+      expect(error.fullMessage).toContain('jweEnc=A256CBC-HS512')
+    })
+
+    it('omits screen and request context — that is report-only, not shown in the user-facing message', () => {
+      // Screen/Request are intentionally kept out of fullMessage (the "Show details" string)
+      // so infra context never alarms the user. They are appended only to the "Report this
+      // problem" payload in ErrorModal.handleReport.
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+      const error = new AppError('Something went wrong', identity)
+      error.screen = 'HomeScreen'
+      error.url = 'https://example.com/device/token'
+      error.method = 'POST'
+
+      expect(error.fullMessage).toBe('Something went wrong\nDebug: [general.unknown_server_error.1234]')
+      expect(error.fullMessage).not.toContain('Screen:')
+      expect(error.fullMessage).not.toContain('Request:')
+    })
   })
 
   describe('track', () => {

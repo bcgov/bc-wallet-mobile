@@ -1,5 +1,6 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { AppError } from '@/errors'
@@ -11,6 +12,7 @@ import { AxiosError } from 'axios'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
+import { decodePayload } from 'react-native-bcsc-core'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 interface ErrorAlertTestProps {
@@ -248,6 +250,38 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     emitErrorModal('Error Modal Triggered', description, AppError.fromErrorDefinition(ErrorRegistry[key]))
   }
 
+  // Calls the REAL native decodePayload with a deliberately bad JWE so we exercise the same
+  // 2507 path as useUserApi.getUserInfo and surface the native diagnostics (jweParts/jweAlg/
+  // jweEnc/jweKid/kidMatchesLocal). The modal's "Report this problem" action then uploads them to Grafana.
+  const triggerJweDecryptError = async () => {
+    onBack() // close the dev modal so the resulting error modal is visible
+
+    // A syntactically valid 5-part JWE: a real (base64url) protected header plus dummy
+    // key/iv/ciphertext/tag. Native decrypt fails and rejects with the full diagnostics —
+    // the same shape as a real "server encrypted to a key this device no longer holds" error.
+    // base64url-encode the header with literal string ops (no regex — nothing for static
+    // analysis to flag): '+'→'-', '/'→'_', and drop '=' padding via split, mirroring the
+    // native Base64URL.encode convention (`components(separatedBy: "=")[0]`).
+    const header = btoa(
+      JSON.stringify({ alg: 'RSA1_5', enc: 'A256CBC-HS512', kid: 'https://idsit.gov.bc.ca/device/dev-trigger/1' })
+    )
+      .replaceAll('+', '-')
+      .replaceAll('/', '_')
+      .split('=')[0]
+    const fakeJwe = `${header}.ZW5jcnlwdGVkS2V5.aXY.Y2lwaGVydGV4dA.dGFn`
+
+    try {
+      await decodePayload(fakeJwe)
+    } catch (error) {
+      // Wrap as DECRYPT_JWE_ERROR (2507) with the native error as cause, exactly like getUserInfo.
+      emitErrorModal(
+        'JWE Decrypt Error (test)',
+        'Forced a native decodePayload failure to exercise the 2507 diagnostics path.',
+        toAppError(error, ErrorRegistry.DECRYPT_JWE_ERROR)
+      )
+    }
+  }
+
   const triggerErrorAsAlert = (description: string) => {
     emitAlert('Native alert triggered', description, {
       actions: [
@@ -327,6 +361,25 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
               </View>
             )
           })}
+        </View>
+
+        {/* Native decode diagnostics — real decodePayload failure (2507) */}
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>{'Native decode diagnostics'}</Text>
+          <Text style={styles.description}>
+            {'Calls the real native decodePayload with a crafted bad JWE to trigger a genuine ' +
+              'DECRYPT_JWE_ERROR (2507) carrying native diagnostics (jweParts/jweAlg/jweEnc/jweKid/' +
+              'kidMatchesLocal). On the modal, tap "Report this problem" to send it to Grafana.'}
+          </Text>
+          <View style={styles.buttonRow}>
+            <Button
+              title={'Trigger JWE Decrypt Error (2507)'}
+              accessibilityLabel={'Trigger JWE decrypt error'}
+              testID={'error-jwe-decrypt'}
+              buttonType={ButtonType.Secondary}
+              onPress={triggerJweDecryptError}
+            />
+          </View>
         </View>
 
         <View style={styles.section}>
