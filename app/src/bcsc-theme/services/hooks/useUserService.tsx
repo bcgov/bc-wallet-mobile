@@ -21,24 +21,27 @@ export const useUserService = () => {
 
   const handleUserApiError = useCallback(
     (error: unknown): never => {
+      // Forward the caught AppError so its native diagnostics (cause → technicalMessage) survive
+      // into the modal and the problem report. Calling these with no argument builds a fresh,
+      // cause-less AppError via ensureAppError(undefined, …) and drops the diagnostics.
       if (isAppError(error, AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON)) {
-        alerts.failedToDeserializeJsonAlert()
+        alerts.failedToDeserializeJsonAlert(error)
       }
 
       if (isAppError(error, AppEventCode.ERR_110_UNABLE_TO_DECRYPT_JWE)) {
-        alerts.unableToDecryptJweAlert()
+        alerts.unableToDecryptJweAlert(error)
       }
 
       if (isAppError(error, AppEventCode.ERR_114_FAILED_TO_GET_CLAIMS_SET_AFTER_DECRYPT_AND_VERIFY)) {
-        alerts.failedToGetClaimsSetAlert()
+        alerts.failedToGetClaimsSetAlert(error)
       }
 
       if (isAppError(error, AppEventCode.ERR_117_FAILED_TO_PARSE_JWS)) {
-        alerts.failedToParseJwsAlert()
+        alerts.failedToParseJwsAlert(error)
       }
 
       if (isAppError(error, AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL)) {
-        alerts.tokenUnexpectedlyNullAlert()
+        alerts.tokenUnexpectedlyNullAlert(error)
       }
 
       throw error
