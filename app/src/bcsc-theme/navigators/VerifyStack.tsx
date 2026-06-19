@@ -16,6 +16,7 @@ import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferInstructionsScreen from '../features/account-transfer/transferee/TransferInstructionsScreen'
 import TransferQRScannerScreen from '../features/account-transfer/transferee/TransferQRScannerScreen'
 import { VerifyRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
+import SessionRecoveryScreen from '../features/auth/SessionRecoveryScreen'
 import { VerifyChangePINScreen } from '../features/auth/VerifyChangePINScreen'
 import { VerifyChangeSecurityScreen } from '../features/auth/VerifyChangeSecurityScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
@@ -89,7 +90,10 @@ const VerifyStack = () => {
         headerBackTestID: testIdWithKey('Back'),
         headerBackTitleVisible: false,
         header: createHeaderWithoutBanner,
-        headerRight: createFloatingHelpMenuButton({ webViewScreen: BCSCScreens.VerifyWebView }),
+        headerRight: createFloatingHelpMenuButton({
+          webViewScreen: BCSCScreens.VerifyWebView,
+          showRestartVerification: true,
+        }),
       }}
     >
       <Stack.Screen
@@ -101,8 +105,14 @@ const VerifyStack = () => {
           headerRight: createFloatingHelpMenuButton({
             webViewScreen: BCSCScreens.VerifyWebView,
             learnMoreUrl: HelpCentreUrl.HOW_TO_SETUP,
+            showRestartVerification: true,
           }),
         }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.SessionRecovery}
+        component={SessionRecoveryScreen}
+        options={{ headerLeft: () => null, gestureEnabled: false }}
       />
       <Stack.Screen name={BCSCScreens.VerifyPrivacyPolicy} component={VerifyPrivacyPolicyScreen} />
       <Stack.Screen name={BCSCScreens.VerifyContactUs} component={ContactUsScreen} />
@@ -169,6 +179,7 @@ const VerifyStack = () => {
           headerRight: createFloatingHelpMenuButton({
             webViewScreen: BCSCScreens.VerifyWebView,
             learnMoreUrl: HelpCentreUrl.VERIFICATION_METHODS,
+            showRestartVerification: true,
           }),
         }}
       />
@@ -180,6 +191,7 @@ const VerifyStack = () => {
           headerRight: createFloatingHelpMenuButton({
             webViewScreen: BCSCScreens.VerifyWebView,
             learnMoreUrl: HelpCentreUrl.VERIFY_IN_PERSON,
+            showRestartVerification: true,
           }),
         }}
       />
@@ -235,6 +247,7 @@ const VerifyStack = () => {
           headerRight: createFloatingHelpMenuButton({
             webViewScreen: BCSCScreens.VerifyWebView,
             learnMoreUrl: HelpCentreUrl.ACCEPTED_IDENTITY_DOCUMENTS,
+            showRestartVerification: true,
           }),
         }}
       />
@@ -246,6 +259,7 @@ const VerifyStack = () => {
           headerRight: createFloatingHelpMenuButton({
             webViewScreen: BCSCScreens.VerifyWebView,
             learnMoreUrl: HelpCentreUrl.ACCEPTED_IDENTITY_DOCUMENTS,
+            showRestartVerification: true,
           }),
         }}
       />

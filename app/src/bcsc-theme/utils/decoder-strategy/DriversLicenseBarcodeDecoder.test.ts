@@ -67,6 +67,7 @@ describe('DriversLicenseBarcodeDecoder', () => {
 
       expect(decoded).toEqual({
         kind: 'DriversLicenseBarcode',
+        isoIIN: '636028',
         licenseNumber: '2222222',
         firstName: 'test',
         middleNames: 'card',
@@ -91,6 +92,7 @@ describe('DriversLicenseBarcodeDecoder', () => {
 
       expect(decoded).toEqual({
         kind: 'DriversLicenseBarcode',
+        isoIIN: '636028',
         licenseNumber: '2222222',
         firstName: 'test',
         middleNames: 'card',
@@ -115,6 +117,7 @@ describe('DriversLicenseBarcodeDecoder', () => {
 
       expect(decoded).toEqual({
         kind: 'DriversLicenseBarcode',
+        isoIIN: '636028',
         licenseNumber: '2222222',
         firstName: 'test',
         middleNames: 'card',
@@ -150,6 +153,7 @@ describe('DriversLicenseBarcodeDecoder', () => {
 
       expect(decoded).toEqual({
         kind: 'DriversLicenseBarcode',
+        isoIIN: '636028',
         licenseNumber: '004023964',
         firstName: 'standalone',
         middleNames: 'citz four',

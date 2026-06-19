@@ -20,6 +20,12 @@ export type ResumeStepRoute = {
  * `store` would still be stale at navigation time).
  */
 export const getResumeStepRoute = (store: BCState): ResumeStepRoute => {
+  // Corrupted/unreadable token file: the user must re-establish their session
+  // before any other resume logic can be trusted.
+  if (store.bcscSecure.sessionRecoveryRequired) {
+    return { name: BCSCScreens.SessionRecovery }
+  }
+
   if (isUserVerified(store.bcscSecure)) {
     return { name: BCSCScreens.VerificationSuccess }
   }

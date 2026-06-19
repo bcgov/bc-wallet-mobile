@@ -66,6 +66,11 @@ enum class NativeAuthorizationMethod(
  * maintaining the same data structure for migration compatibility.
  */
 data class NativeAuthorizationRequest(
+    // OAuth client context (preserved from v3 storage for migration/recovery).
+    // In v3 Android, these lived on Provider/ClientRegistration; surfaced here so callers
+    // can recover issuer/clientID when the Account record is incomplete after migration.
+    @SerializedName("clientID")
+    val clientID: String? = null,
     // Device/user codes
     @SerializedName("deviceCode")
     val deviceCode: String? = null,

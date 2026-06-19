@@ -68,6 +68,8 @@ export interface DriversLicenseMetadata {
   city: string
   province: string
   postalCode: string
+  /** Issuer Identification Number from AAMVA track 2 (e.g. BC = '636028'). */
+  isoIIN: string
 }
 
 export interface DriversLicenseDecodedBarcode extends DriversLicenseMetadata {

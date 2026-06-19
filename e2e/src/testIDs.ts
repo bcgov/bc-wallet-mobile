@@ -27,13 +27,15 @@ export const BCSC_TestIDs = {
   },
   PrivacyPolicy: {
     Continue: 'com.ariesbifold:id/Continue',
-    LearnMore: 'com.ariesbifold:id/CardButton-LearnMore',
+    Link: 'com.ariesbifold:id/PrivacyPolicyBCLoginLink',
+    LearnMore: 'com.ariesbifold:id/LearnMore',
     Back: 'com.ariesbifold:id/Back',
   },
   OptInAnalytics: {
     Accept: 'com.ariesbifold:id/Accept',
     Decline: 'com.ariesbifold:id/Decline',
     Back: 'com.ariesbifold:id/Back',
+    LearnMore: 'com.ariesbifold:id/LearnMore',
   },
   Notifications: {
     Continue: 'com.ariesbifold:id/Continue',
@@ -69,21 +71,31 @@ export const BCSC_TestIDs = {
     SaveAndContinue: 'com.ariesbifold:id/SaveAndContinue',
     Back: 'com.ariesbifold:id/Back',
   },
+  TransferInstructions: {
+    ScanQRCode: 'com.ariesbifold:id/ScanQRCode',
+    Back: 'com.ariesbifold:id/Back',
+  },
+  TransferQRScanner: {
+    Back: 'com.ariesbifold:id/Back',
+  },
   IdentitySelection: {
     CombinedCard: 'com.ariesbifold:id/CombinedCard',
     PhotoCard: 'com.ariesbifold:id/PhotoCard',
     NoPhotoCard: 'com.ariesbifold:id/NoPhotoCard',
-    CheckForServicesCard: 'com.ariesbifold:id/CheckForServicesCard',
+    CheckForServicesCard: 'CheckForServicesCard',
     OtherID: 'com.ariesbifold:id/OtherID',
+    Back: 'com.ariesbifold:id/Back',
   },
   SerialInstructions: {
     ScanBarcode: 'com.ariesbifold:id/ScanBarcode',
     EnterManually: 'com.ariesbifold:id/EnterManually',
     Help: 'com.ariesbifold:id/Help',
+    Back: 'com.ariesbifold:id/Back',
   },
   ScanSerial: {
     EnterManually: 'com.ariesbifold:id/EnterManually',
     Help: 'com.ariesbifold:id/Help',
+    Back: 'com.ariesbifold:id/Back',
   },
   ManualSerial: {
     SerialPressable: 'com.ariesbifold:id/serial-pressable',
@@ -91,6 +103,7 @@ export const BCSC_TestIDs = {
     SerialInput: 'com.ariesbifold:id/serial-input',
     Continue: 'com.ariesbifold:id/Continue',
     Help: 'com.ariesbifold:id/Help',
+    Back: 'com.ariesbifold:id/Back',
   },
   EnterBirthdate: {
     BirthdateInputPressable: 'com.ariesbifold:id/birthDate-pressable',
@@ -120,27 +133,33 @@ export const BCSC_TestIDs = {
   EvidenceIDCollection: {
     Continue: 'com.ariesbifold:id/EvidenceIDCollectionContinue',
     Cancel: 'com.ariesbifold:id/EvidenceIDCollectionCancel',
+    DriversLicenseEvidenceOption: `com.ariesbifold:id/EvidenceTypeListItem B.C. driver's licence`,
+    PassportEvidenceOption: `com.ariesbifold:id/EvidenceTypeListItem Canadian Passport`,
     DocumentNumberPressable: 'com.ariesbifold:id/documentNumber-pressable',
-    LastNamePressable: 'com.ariesbifold:id/lastName-pressable',
-    FirstNamePressable: 'com.ariesbifold:id/firstName-pressable',
-    MiddleNamesPressable: 'com.ariesbifold:id/middleNames-pressable',
-    BirthdatePressable: 'com.ariesbifold:id/birthDate-pressable',
+    DocumentNumberInput: 'com.ariesbifold:id/documentNumber-input',
+    LastNameInput: 'com.ariesbifold:id/lastName-input',
+    FirstNameInput: 'com.ariesbifold:id/firstName-input',
+    MiddleNamesInput: 'com.ariesbifold:id/middleNames-input',
+    BirthdateInput: 'com.ariesbifold:id/birthDate-input',
     Help: 'com.ariesbifold:id/Help',
   },
   EvidenceTypeList: {
     CanadianPassport: 'com.ariesbifold:id/EvidenceTypeListItem Canadian Passport',
     OtherOptions: 'com.ariesbifold:id/EvidenceTypeListOtherOptions',
     Help: 'com.ariesbifold:id/Help',
+    Back: 'com.ariesbifold:id/Back',
   },
   DualIdentificationRequired: {
     ChooseID: 'com.ariesbifold:id/Choose ID',
     OpenAccountServices: 'com.ariesbifold:id/OpenAccountServices',
     Help: 'com.ariesbifold:id/Help',
+    Back: 'com.ariesbifold:id/Back',
   },
   AdditionalIdentificationRequired: {
     ChooseID: 'com.ariesbifold:id/Choose ID',
     OpenAccountServices: 'com.ariesbifold:id/OpenAccountServices',
     Help: 'com.ariesbifold:id/Help',
+    Back: 'com.ariesbifold:id/Back',
   },
   ResidentialAddress: {
     Continue: 'com.ariesbifold:id/ResidentialAddressContinue',
@@ -149,6 +168,7 @@ export const BCSC_TestIDs = {
     CityInput: 'com.ariesbifold:id/city-input',
     ProvinceInput: 'com.ariesbifold:id/province-input',
     PostalCodeInput: 'com.ariesbifold:id/postalCode-input',
+    ProvinceOptionBritishColumbia: 'com.ariesbifold:id/province-option-BC',
   },
   EnterEmail: {
     EmailInput: 'com.ariesbifold:id/email-input',
@@ -166,11 +186,13 @@ export const BCSC_TestIDs = {
     VideoCall: 'com.ariesbifold:id/Video call',
     InPerson: 'com.ariesbifold:id/In person',
     Help: 'com.ariesbifold:id/Help',
+    Back: 'com.ariesbifold:id/Back',
   },
   InformationRequired: {
     TakePhotoAction: 'com.ariesbifold:id/Take Photo',
     RecordVideoAction: 'com.ariesbifold:id/Record Video',
     SendToServiceBCNow: 'SendToServiceBCNow',
+    Back: 'com.ariesbifold:id/Back',
   },
   PhotoInstructions: {
     TakePhotoButton: 'TakePhotoButton',
@@ -207,9 +229,13 @@ export const BCSC_TestIDs = {
     Continue: 'com.ariesbifold:id/Continue',
     Assistance: 'com.ariesbifold:id/Assistance',
     Help: 'com.ariesbifold:id/Help',
+    Back: 'com.ariesbifold:id/Back',
   },
   StartCall: {
     Help: 'com.ariesbifold:id/Help',
+  },
+  ContactUs: {
+    Back: 'com.ariesbifold:id/Back',
   },
   CallBusyOrClosed: {
     CallStatusTitle: 'com.ariesbifold:id/CallStatusTitle',
@@ -238,6 +264,7 @@ export const BCSC_TestIDs = {
     Step3: 'com.ariesbifold:id/Step 3',
     Step4: 'com.ariesbifold:id/Step 4',
     EditEmail: 'com.ariesbifold:id/EditEmail',
+    EmailAddress: 'com.ariesbifold:id/EmailAddress',
     Step5: 'com.ariesbifold:id/Step 5',
     SettingsMenuButton: 'com.ariesbifold:id/SettingsMenuButton',
     Help: 'com.ariesbifold:id/Help',
@@ -262,13 +289,13 @@ export const BCSC_TestIDs = {
   },
   AccountSelector: {
     SettingsMenuButton: 'com.ariesbifold:id/SettingsMenuButton',
-    ContinueSetup: 'com.ariesbifold:id/ContinueSetup',
+    ContinueSetup: 'com.ariesbifold:id/Continue',
   },
   EnterPIN: {
     PINInput: 'com.ariesbifold:id/PINInput',
     Continue: 'com.ariesbifold:id/Continue',
     GetHelp: 'com.ariesbifold:id/GetHelp',
-    VisibilityButton: 'com.ariesbifold:id/VisibilityButton',
+    VisibilityButton: 'com.ariesbifold:id/PINInputVisibilityButton',
   },
   Lockout: {
     RemoveAccount: 'com.ariesbifold:id/RemoveAccount',
@@ -314,6 +341,7 @@ export const BCSC_TestIDs = {
     ReadPrivacyPolicy: 'com.ariesbifold:id/ReadPrivacyPolicy',
     ServiceLoginContinue: 'com.ariesbifold:id/ServiceLoginContinue',
     ServiceLoginCancel: 'com.ariesbifold:id/ServiceLoginCancel',
+    Back: 'com.ariesbifold:id/Back',
   },
   ManualPairingCode: {
     Submit: 'com.ariesbifold:id/Submit',
@@ -341,9 +369,11 @@ export const BCSC_TestIDs = {
   TransferAccountQRInformation: {
     GetQRCodeButton: 'com.ariesbifold:id/GetQRCodeButton',
     LearnMoreButton: 'com.ariesbifold:id/LearnMoreButton',
+    Back: 'com.ariesbifold:id/Back',
   },
   TransferAccountQRDisplay: {
     GetNewQRCode: 'com.ariesbifold:id/GetNewQRCode',
+    Back: 'com.ariesbifold:id/Back',
   },
   TransferAccountSuccess: {
     TransferSuccessButton: 'com.ariesbifold:id/TransferSuccessButton',

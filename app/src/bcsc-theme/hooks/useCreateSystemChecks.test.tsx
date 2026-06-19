@@ -43,6 +43,7 @@ jest.mock('@react-navigation/native', () => ({
 }))
 
 jest.mock('@/contexts/NavigationContainerContext', () => ({
+  navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
   useNavigationContainer: () => mockUseNavigationContainer(),
 }))
 

@@ -112,6 +112,7 @@ export enum BCSCScreens {
   OnboardingWebView = `${BCSCStacks.Onboarding} Web view`,
   OnboardingDeveloper = `${BCSCStacks.Onboarding} Developer`,
   VerifyPrompt = `${BCSCStacks.Prompt} Verify Prompt`,
+  PromptWebView = `${BCSCStacks.Prompt} Web view`,
   MainLoading = `${BCSCStacks.Main} Loading`,
   MainSettings = `${BCSCStacks.Main} In App Settings`,
   MainWebView = `${BCSCStacks.Main} Web view`,
@@ -129,10 +130,12 @@ export enum BCSCScreens {
   VerifyPrivacyPolicy = `${BCSCStacks.Verify} Privacy Information`,
   VerifyDeveloper = `${BCSCStacks.Verify} Developer`,
   VerifyChangePIN = `${BCSCStacks.Verify} Change PIN`,
+  TransferAgeRestriction = 'BCSCTransferAgeRestriction',
   AccountExpired = 'BCSCAccountExpired',
   AccountRenewalInformation = 'Renewal ID requirements',
   AccountRenewalFirstWarning = 'Renewal Instructions',
   AccountRenewalFinalWarning = 'Renewal Warning',
+  SessionRecovery = 'Session Recovery',
   AccountLanding = 'Account Landing',
   EnterPIN = 'Enter/Verify PIN',
   DeviceAuthInfo = 'Device Authentication Prep',
@@ -183,9 +186,11 @@ export type BCSCOnboardingStackParams = {
 
 export type BCSCPromptStackParams = {
   [BCSCScreens.VerifyPrompt]: undefined
+  [BCSCScreens.PromptWebView]: { url: string; title: string }
 }
 
 export type BCSCVerifyStackParams = {
+  [BCSCScreens.SessionRecovery]: undefined
   [BCSCScreens.VerifyWebView]: { url: string; title: string }
   [BCSCScreens.IdentitySelection]: undefined
   [BCSCScreens.SerialInstructions]: undefined
@@ -274,6 +279,7 @@ export type BCSCMainStackParams = {
   [BCSCScreens.MainAutoLock]: undefined
   [BCSCScreens.MainAppSecurity]: undefined
   [BCSCScreens.MainChangePIN]: { isChangingExistingPIN?: boolean } | undefined
+  [BCSCScreens.TransferAgeRestriction]: undefined
   [BCSCScreens.AccountExpired]: undefined
   [BCSCScreens.AccountRenewalInformation]: undefined
   [BCSCScreens.AccountRenewalFirstWarning]: undefined

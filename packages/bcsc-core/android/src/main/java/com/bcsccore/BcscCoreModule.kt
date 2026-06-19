@@ -222,26 +222,98 @@ class BcscCoreModule(
                 return
             }
 
-            // Get the current key pair (this will create one if none exists)
-            val currentKeyPair = keyPairSource.getCurrentBcscKeyPair()
+            // Enumerate every rsa\d+ alias the keystore actually holds. This is the
+            // source of truth for the recovery flow: matching local keys against the
+            // server's jwks requires visibility into orphan aliases that metadata
+            // may not yet track.
+            val infos = keyPairSource.getAllBcscKeyPairInfos()
 
             val privateKeys: WritableArray = Arguments.createArray()
-            val keyInfo: WritableMap = Arguments.createMap()
-
-            // Add the current key pair info
-            val info = currentKeyPair.getKeyInfo()
-            keyInfo.putString("id", info.getAlias())
-            keyInfo.putString("keyType", "RSA") // bcsc-keypair-port uses RSA keys
-            keyInfo.putInt("keySize", 4096) // bcsc-keypair-port uses 4096-bit RSA keys
-            keyInfo.putDouble("created", info.getCreatedAt().toDouble())
-
-            privateKeys.pushMap(keyInfo)
+            for (info in infos) {
+                val keyInfo: WritableMap = Arguments.createMap()
+                keyInfo.putString("id", info.getAlias())
+                keyInfo.putString("keyType", "RSA")
+                keyInfo.putInt("keySize", 4096)
+                keyInfo.putDouble("created", info.getCreatedAt().toDouble())
+                privateKeys.pushMap(keyInfo)
+            }
 
             promise.resolve(privateKeys)
         } catch (e: BcscException) {
             promise.reject("E_KEYSTORE_ERROR", "Error accessing keystore: ${e.devMessage}", e)
         } catch (e: Exception) {
             promise.reject("E_KEYSTORE_ERROR", "Unexpected error accessing keystore: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Mark a keystore alias as the active (newest) key. Called by the recovery
+     * flow after the server confirms which kid it accepts. Refuses if the alias
+     * is not present in the keystore so the app never points at a missing key.
+     */
+    @ReactMethod
+    fun setActiveKeyAlias(
+        alias: String,
+        promise: Promise,
+    ) {
+        try {
+            if (!keyPairSource.isAvailable()) {
+                promise.reject("E_KEYSTORE_UNAVAILABLE", "Android KeyStore is not available on this device")
+                return
+            }
+            val present = keyPairSource.getAllBcscKeyPairInfos().any { it.getAlias() == alias }
+            if (!present) {
+                promise.reject("E_KEY_NOT_FOUND", "Alias '$alias' is not present in the keystore")
+                return
+            }
+            keyPairSource.markActiveBcscKeyPair(alias)
+            promise.resolve(null)
+        } catch (e: BcscException) {
+            promise.reject("E_KEYSTORE_ERROR", "Error marking active alias: ${e.devMessage}", e)
+        } catch (e: Exception) {
+            promise.reject("E_KEYSTORE_ERROR", "Unexpected error marking active alias: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Permanently delete a keystore alias and its metadata entry. Called by the
+     * recovery flow to prune local keys the server does not recognise.
+     *
+     * Defence-in-depth: refuses to delete the alias if doing so would leave the
+     * keystore with zero rsa\d+ aliases, which would brick signing entirely.
+     * The JS recovery layer is authoritative for never deleting the matched
+     * alias; this guard exists so that a buggy caller (or future regression)
+     * cannot wipe the device's last private key. Mirrors the iOS guard.
+     */
+    @ReactMethod
+    fun deleteKey(
+        alias: String,
+        promise: Promise,
+    ) {
+        try {
+            if (!keyPairSource.isAvailable()) {
+                promise.reject("E_KEYSTORE_UNAVAILABLE", "Android KeyStore is not available on this device")
+                return
+            }
+            val remainingCount =
+                try {
+                    keyPairSource.getAllBcscKeyPairInfos().count { it.getAlias() != alias }
+                } catch (_: Exception) {
+                    -1
+                }
+            if (remainingCount == 0) {
+                promise.reject(
+                    "E_KEY_DELETE_REFUSED_LAST",
+                    "Refusing to delete '$alias': would leave the keystore with no private keys",
+                )
+                return
+            }
+            keyPairSource.deleteBcscKeyPair(alias)
+            promise.resolve(null)
+        } catch (e: BcscException) {
+            promise.reject("E_KEYSTORE_ERROR", "Error deleting key: ${e.devMessage}", e)
+        } catch (e: Exception) {
+            promise.reject("E_KEYSTORE_ERROR", "Unexpected error deleting key: ${e.message}", e)
         }
     }
 
@@ -391,12 +463,20 @@ class BcscCoreModule(
 
                             promise.resolve(null)
                         } catch (e: Exception) {
-                            Log.e(NAME, "Failed to parse decrypted JSON content: ${e.message}", e)
-                            promise.reject("E_STORAGE_ERROR", "Failed to parse decrypted token data: ${e.message}", e)
+                            Log.e(
+                                NAME,
+                                "Failed to parse/migrate decrypted token content for type $tokenType — returning null",
+                                e,
+                            )
+                            promise.resolve(null)
                         }
                     } else {
-                        Log.e(NAME, "Decrypted content is not valid JSON")
-                        promise.reject("E_STORAGE_ERROR", "Decrypted token content is not valid JSON")
+                        Log.w(
+                            NAME,
+                            "Decrypted token content is empty or not valid JSON at $tokenFilePath — " +
+                                "returning null for type $tokenType",
+                        )
+                        promise.resolve(null)
                     }
                 } else {
                     Log.w(
@@ -406,8 +486,13 @@ class BcscCoreModule(
                     promise.resolve(null)
                 }
             } catch (e: DecryptionException) {
-                Log.e(NAME, "Failed to decrypt token file from path: $tokenFilePath - ${e.message}", e)
-                promise.reject("E_STORAGE_ERROR", "Failed to decrypt token file: ${e.message}", e)
+                Log.e(
+                    NAME,
+                    "Failed to decrypt token file from path: $tokenFilePath - ${e.message} — " +
+                        "returning null for type $tokenType",
+                    e,
+                )
+                promise.resolve(null)
             }
         } catch (e: Exception) {
             Log.e(NAME, "Exception occurred while reading/decrypting token file using bcsc-file-port: ${e.message}", e)
@@ -2767,13 +2852,26 @@ class BcscCoreModule(
             val accountId = account.getString("id")
             val issuer = account.getString("issuer")
 
-            if (accountId.isNullOrEmpty() || issuer.isNullOrEmpty()) {
-                Log.d(NAME, "getAuthorizationRequest: No issuer")
+            if (accountId.isNullOrEmpty()) {
+                Log.d(NAME, "getAuthorizationRequest: No account id")
                 promise.resolve(null)
                 return
             }
 
-            val issuerName = nativeStorage.getIssuerNameFromIssuer(issuer)
+            // If the account's issuer is missing (e.g. incomplete v3 migration), fall back
+            // to the default issuer name derived from the issuer file / account directories.
+            // This lets the v3 provider read below recover issuer/clientID for callers.
+            val issuerName =
+                if (issuer.isNullOrEmpty()) {
+                    val fallbackName = nativeStorage.getDefaultIssuerName()
+                    Log.w(
+                        NAME,
+                        "getAuthorizationRequest: account.issuer missing; using default issuer name '$fallbackName' to attempt v3 recovery",
+                    )
+                    fallbackName
+                } else {
+                    nativeStorage.getIssuerNameFromIssuer(issuer)
+                }
 
             // First try to read from our v4 storage location
             var authRequest: NativeAuthorizationRequest? = nativeStorage.readAuthorizationRequest(issuerName, accountId)
@@ -2806,7 +2904,11 @@ class BcscCoreModule(
                     authRequest.firstName?.let { putString("firstName", it) }
                     authRequest.lastName?.let { putString("lastName", it) }
                     authRequest.middleNames?.let { putString("middleNames", it) }
-                    authRequest.issuer?.let { putString("audience", it) }
+                    authRequest.issuer?.let {
+                        putString("issuer", it)
+                        putString("audience", it)
+                    }
+                    authRequest.clientID?.let { putString("clientID", it) }
                     authRequest.verificationOptions?.let { putString("verificationOptions", it) }
                     authRequest.verificationUriVideo?.let { putString("verificationURIVideo", it) }
                     authRequest.backCheckVerificationId?.let { putString("backCheckVerificationId", it) }

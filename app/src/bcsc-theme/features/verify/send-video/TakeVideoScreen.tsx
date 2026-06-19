@@ -1,6 +1,7 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import {
   hitSlop,
   MAX_SELFIE_VIDEO_DURATION_SECONDS,
@@ -8,6 +9,7 @@ import {
   SELFIE_VIDEO_FRAME_RATE,
   VIDEO_RESOLUTION_480P,
 } from '@/constants'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
@@ -21,7 +23,9 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import {
   Camera,
+  CameraCaptureError,
   CameraRuntimeError,
+  PhotoFile,
   useCameraDevice,
   useCameraFormat,
   useCameraPermission,
@@ -74,8 +78,10 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   }, [prompts, prompt])
 
   if (!prompts.length) {
-    // Developer error - prompts must be persisted before reaching this screen.
-    throw new Error('[TakeVideoScreen] No prompts found in store')
+    // Defensive backstop — upstream guards in useVerificationMethodModel should prevent reaching this
+    // screen without prompts. Throw a coded AppError so the ErrorBoundary reports 2412 instead of the
+    // catch-all 9999, giving this condition a specific signal in analytics/Loki.
+    throw toAppError(new Error('[TakeVideoScreen] No prompts found in store'), ErrorRegistry.VIDEO_PROMPTS_MISSING)
   }
 
   const styles = useMemo(
@@ -194,7 +200,29 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
       return
     }
 
-    const snapshot = await cameraRef.current.takeSnapshot()
+    let snapshot: PhotoFile
+    try {
+      snapshot = await cameraRef.current.takePhoto({ flash: 'off', enableShutterSound: false })
+    } catch (error) {
+      // Without this catch a failure here (e.g. device out of disk space) is an unhandled
+      // rejection that leaves the screen stuck on the countdown with no controls.
+      stopTimer()
+      setRecordingInProgress(false)
+      logger.error(`Error capturing video thumbnail snapshot: ${error}`)
+
+      if (error instanceof CameraCaptureError && error.code === 'capture/file-io-error') {
+        failedToWriteToLocalStorageAlert(error)
+      } else {
+        Alert.alert(
+          t('BCSC.SendVideo.TakeVideo.RecordingError'),
+          t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription')
+        )
+      }
+
+      // Back to the previous screen so the user can retry once the issue is resolved
+      navigation.goBack()
+      return
+    }
 
     cameraRef.current.startRecording({
       fileType: 'mp4',
@@ -323,9 +351,12 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           device={device}
           format={format}
           isActive={isActive}
-          video={true}
+          video
+          photo
+          photoQualityBalance="speed"
           onInitialized={onInitialized}
           onError={onError}
+          isMirrored={false}
           audio
         />
 
