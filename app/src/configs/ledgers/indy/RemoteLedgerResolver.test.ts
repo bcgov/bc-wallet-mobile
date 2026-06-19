@@ -43,6 +43,7 @@ const bundled: IndyVdrPoolConfig[] = [
 ]
 
 const ok = (data: string, etag?: string) => ({ status: 200, headers: etag ? { etag } : {}, data })
+const notModified = () => ({ status: 304, headers: {}, data: '' })
 
 describe('RemoteLedgerResolver', () => {
   beforeEach(() => {
@@ -114,6 +115,30 @@ describe('RemoteLedgerResolver', () => {
     expect(mockFiles['/caches/ledgers/bcovrin-test.genesis']).toBeUndefined()
     expect(mockFiles['/caches/ledgers/candy-dev.genesis']).toBeUndefined()
     expect(resolver.ledgers.map((l) => l.genesisTransactions)).toEqual([GENESIS_A, GENESIS_B])
+  })
+
+  it('sends a conditional request and loads the cached genesis on a 304', async () => {
+    mockFiles['/caches/ledgers/ledger-cache.json'] = JSON.stringify({
+      etags: { 'bcovrin:test': '"etag-a"', 'candy:dev': '"etag-b"' },
+      updatedAt: 'whenever',
+    })
+    mockFiles['/caches/ledgers/bcovrin-test.genesis'] = 'cached-bcovrin-genesis'
+    mockFiles['/caches/ledgers/candy-dev.genesis'] = 'cached-candy-genesis'
+    mockGet.mockResolvedValueOnce(notModified()).mockResolvedValueOnce(notModified())
+    const resolver = new RemoteLedgerResolver(sources, bundled)
+
+    await resolver.checkForUpdates()
+
+    // conditional GET issued with the stored ETag
+    expect(mockGet).toHaveBeenCalledWith(
+      'https://official.example/bcovrin/genesis',
+      expect.objectContaining({ headers: { 'If-None-Match': '"etag-a"' } })
+    )
+    // unchanged genesis served from cache, not re-downloaded or rewritten
+    expect(resolver.ledgers.map((l) => l.genesisTransactions)).toEqual([
+      'cached-bcovrin-genesis',
+      'cached-candy-genesis',
+    ])
   })
 
   it('falls back to the cached genesis file when the fetch fails', async () => {

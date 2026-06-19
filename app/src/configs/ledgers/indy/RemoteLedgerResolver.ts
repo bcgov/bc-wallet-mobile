@@ -86,33 +86,41 @@ export class RemoteLedgerResolver extends FileCache {
     etags: Record<string, string>
   ): Promise<IndyVdrPoolConfig | undefined> => {
     const fileName = this.genesisFileName(source.indyNamespace)
+    const storedEtag = etags[source.indyNamespace]
     let genesisTransactions: string | undefined
 
     try {
-      const response = await this.axiosInstance.get(source.genesisUrl)
+      // Conditional GET: when we hold an ETag, let the server answer 304 so an
+      // unchanged genesis file isn't re-downloaded on every startup. The base
+      // axios instance rejects non-2xx by default, so allow 304 through here.
+      const response = await this.axiosInstance.get(source.genesisUrl, {
+        ...(storedEtag && { headers: { 'If-None-Match': storedEtag } }),
+        validateStatus: (status) => status === 200 || status === 304,
+      })
       const { status, headers, data } = response
-      const body = typeof data === 'string' ? data : JSON.stringify(data)
 
-      if (status !== 200) {
-        throw new Error(`Unexpected status ${status}`)
-      }
-
-      // Every line of a genesis file is a JSON transaction — guards against
-      // moved-file/HTML responses served with a 200.
-      JSON.parse(body.split('\n', 1)[0])
-
-      const etag = headers.etag
-      const storedEtag = etags[source.indyNamespace]
-      if (etag && storedEtag && this.compareWeakEtags(storedEtag, etag)) {
-        this.log?.info(`Genesis for ${source.indyNamespace} unchanged (ETag match)`)
+      if (status === 304) {
+        // Cached copy is current — fall through to load it from local storage.
+        this.log?.info(`Genesis for ${source.indyNamespace} unchanged (304)`)
       } else {
-        await this.saveFileToLocalStorage(fileName, body)
-        if (etag) {
-          etags[source.indyNamespace] = etag
+        const body = typeof data === 'string' ? data : JSON.stringify(data)
+
+        // Every line of a genesis file is a JSON transaction — guards against
+        // moved-file/HTML responses served with a 200.
+        JSON.parse(body.split('\n', 1)[0])
+
+        const etag = headers.etag
+        if (etag && storedEtag && this.compareWeakEtags(storedEtag, etag)) {
+          this.log?.info(`Genesis for ${source.indyNamespace} unchanged (ETag match)`)
+        } else {
+          await this.saveFileToLocalStorage(fileName, body)
+          if (etag) {
+            etags[source.indyNamespace] = etag
+          }
+          this.log?.info(`Fetched genesis for ${source.indyNamespace}`)
         }
-        this.log?.info(`Fetched genesis for ${source.indyNamespace}`)
+        genesisTransactions = body
       }
-      genesisTransactions = body
     } catch (error) {
       this.log?.error(`Failed to fetch genesis for ${source.indyNamespace}: ${error}`)
     }
