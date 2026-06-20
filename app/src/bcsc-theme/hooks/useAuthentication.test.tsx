@@ -25,6 +25,7 @@ jest.mock('react-native-bcsc-core', () => ({
   isAccountLocked: jest.fn(),
   canPerformDeviceAuthentication: jest.fn(),
   unlockWithDeviceSecurity: jest.fn(),
+  isBcscNativeError: jest.fn((error: unknown) => error instanceof Error && 'code' in error),
 }))
 
 jest.mock('@/bcsc-theme/hooks/useSecureActions')
@@ -325,6 +326,26 @@ describe('useAuthentication', () => {
       })
 
       expect(mockLogger.error).toHaveBeenCalled()
+    })
+
+    it('treats E_DEVICE_AUTH_CANCELLED as a user cancel — no error alert', async () => {
+      const mockAlert = jest.fn()
+      jest.mocked(useAlertsModule.useAlerts).mockReturnValue({
+        deviceAuthenticationErrorAlert: mockAlert,
+      } as any)
+      jest.mocked(canPerformDeviceAuthentication).mockResolvedValue(true)
+      jest
+        .mocked(unlockWithDeviceSecurity)
+        .mockRejectedValue(Object.assign(new Error('cancelled'), { code: 'E_DEVICE_AUTH_CANCELLED' }))
+
+      const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
+      const { result } = renderHook(() => useAuthentication(navigation))
+
+      await act(async () => {
+        await result.current.performDeviceAuth()
+      })
+
+      expect(mockAlert).not.toHaveBeenCalled()
     })
   })
 

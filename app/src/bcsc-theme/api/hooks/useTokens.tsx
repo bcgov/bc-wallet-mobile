@@ -1,7 +1,6 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
-import { throwAppError } from '@/bcsc-theme/utils/native-error-map'
-import { ErrorRegistry } from '@/errors/errorRegistry'
+import { throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
 import { useCallback, useMemo } from 'react'
 import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
@@ -54,7 +53,12 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
   const checkDeviceCodeStatus = useCallback(
     async (deviceCode: string, confirmationCode: string) => {
       return withAccount<TokenResponse>(async (account) => {
-        const body = await getDeviceCodeRequestBody(deviceCode, account.clientID, account.issuer, confirmationCode)
+        const body = await getDeviceCodeRequestBody(
+          deviceCode,
+          account.clientID,
+          account.issuer,
+          confirmationCode
+        ).catch((error) => throwNativeBcscError(error))
 
         const { data } = await apiClient.post<TokenResponse>(apiClient.endpoints.token, body, {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -65,8 +69,9 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
           apiClient.tokens = data
           await updateTokens({ refreshToken: data.refresh_token, accessToken: data.access_token })
         } catch (error) {
+          // updateTokens → persistTokens already maps native rejections to a distinct AppError; re-throw as-is.
           apiClient.logger.error(`[checkDeviceCodeStatus] Failed to update tokens`, error as Error)
-          throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
+          throw error
         }
 
         return apiClient.tokens!

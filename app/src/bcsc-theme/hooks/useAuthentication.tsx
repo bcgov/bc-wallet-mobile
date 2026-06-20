@@ -1,5 +1,4 @@
-import { toAppError } from '@/bcsc-theme/utils/native-error-map'
-import { ErrorRegistry } from '@/errors/errorRegistry'
+import { mapNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
 import { useAlerts } from '@/hooks/useAlerts'
 import { TOKENS, useServices } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
@@ -11,6 +10,7 @@ import {
   getAccountSecurityMethod,
   getHideDeviceAuthPrepFlag,
   isAccountLocked,
+  isBcscNativeError,
   unlockWithDeviceSecurity,
 } from 'react-native-bcsc-core'
 import { useLoadingScreen } from '../contexts/BCSCLoadingContext'
@@ -61,7 +61,12 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
       await handleSuccessfulAuth(walletKey)
       logger.info('[Authentication:performDeviceAuth] Device authentication successful')
     } catch (error) {
-      const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHENTICATION_ERROR)
+      // A user cancel is control flow, not an error — do not surface an alert or track it.
+      if (isBcscNativeError(error) && error.code === 'E_DEVICE_AUTH_CANCELLED') {
+        logger.info('[Authentication:performDeviceAuth] Device authentication cancelled by user')
+        return
+      }
+      const appError = mapNativeBcscError(error)
       logger.error(`[Authentication:performDeviceAuth] Device authentication error [${appError.appEvent}]`, appError)
       deviceAuthenticationErrorAlert(appError)
     } finally {
@@ -118,7 +123,7 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
 
       await performDeviceAuth()
     } catch (error) {
-      const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
+      const appError = mapNativeBcscError(error)
       logger.error(`[Authentication:UnlockApp] Device authentication error [${appError.appEvent}]`, appError)
     }
   }, [logger, navigation, performDeviceAuth])
