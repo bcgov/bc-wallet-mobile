@@ -1,21 +1,19 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getAttestationErrorLogContext } from '@/bcsc-theme/utils/attestation'
+import { throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 import { AppError, ErrorRegistry } from '@/errors'
-import { ErrorDefinition } from '@/errors/errorRegistry'
 import { TOKENS, useServices } from '@bifold/core'
 import { getAppStoreReceipt, googleAttestation } from '@bifold/react-native-attestation'
 import { useCallback, useMemo } from 'react'
 import { Platform } from 'react-native'
 import {
   AccountSecurityMethod,
-  BcscNativeErrorCodes,
   getAccount,
   getAccountSecurityMethod,
   getDeviceId,
   getDynamicClientRegistrationBody,
   isAccountRegistered,
-  isBcscNativeError,
   setAccount,
 } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
@@ -59,32 +57,6 @@ export interface NonceResponseData {
 }
 
 export type RegistrationApi = ReturnType<typeof useRegistrationApi>
-
-/**
- * Maps native error codes from `getDynamicClientRegistrationBody` to their
- * corresponding ErrorRegistry definitions. Unmatched codes fall through
- * to CLIENT_REGISTRATION_FAILURE.
- */
-const dcrNativeErrorMap = new Map<string, ErrorDefinition>([
-  [BcscNativeErrorCodes.KEYCHAIN_KEY_GENERATION_ERROR, ErrorRegistry.KEYCHAIN_KEY_GENERATION_ERROR],
-  [BcscNativeErrorCodes.TOJSON_METHOD_FAILURE, ErrorRegistry.TOJSON_METHOD_FAILURE],
-  [BcscNativeErrorCodes.TOJSONSTRING_METHOD_FAILURE, ErrorRegistry.TOJSONSTRING_METHOD_FAILURE],
-  [BcscNativeErrorCodes.KEYCHAIN_KEY_EXISTS, ErrorRegistry.KEYCHAIN_KEY_EXISTS],
-  [BcscNativeErrorCodes.KEYCHAIN_KEY_DOESNT_EXIST, ErrorRegistry.KEYCHAIN_KEY_NOT_FOUND],
-  [BcscNativeErrorCodes.KEYCHAIN_UNAVAILABLE, ErrorRegistry.KEYCHAIN_UNAVAILABLE],
-  [BcscNativeErrorCodes.JWT_DEVICE_INFO_ERROR, ErrorRegistry.JWT_DEVICE_INFO_ERROR],
-  [BcscNativeErrorCodes.JSON_SERIALIZATION_FAILED, ErrorRegistry.SERIALIZE_JSON_ERROR],
-])
-
-function throwDcrNativeError(error: unknown): never {
-  if (isBcscNativeError(error)) {
-    const definition = dcrNativeErrorMap.get(error.code)
-    if (definition) {
-      throw AppError.fromErrorDefinition(definition, { cause: error })
-    }
-  }
-  throw AppError.fromErrorDefinition(ErrorRegistry.CLIENT_REGISTRATION_FAILURE, { cause: error })
-}
 
 // The registration API is a special case because it gets called during initialization,
 // so its params are adjusted to account for an api client that may not be ready yet
@@ -174,12 +146,9 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         getNotificationTokens(logger),
       ])
 
-      let body: string | null
-      try {
-        body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation)
-      } catch (error) {
-        throwDcrNativeError(error)
-      }
+      const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation).catch((error) =>
+        throwNativeBcscError(error)
+      )
 
       if (!body) {
         throw AppError.fromErrorDefinition(ErrorRegistry.CLIENT_REGISTRATION_NULL)
@@ -278,12 +247,12 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           getNotificationTokens(logger),
         ])
 
-        let body: string | null
-        try {
-          body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation, selectedNickname)
-        } catch (error) {
-          throwDcrNativeError(error)
-        }
+        const body = await getDynamicClientRegistrationBody(
+          fcmDeviceToken,
+          deviceToken,
+          attestation,
+          selectedNickname
+        ).catch((error) => throwNativeBcscError(error))
 
         if (!body) {
           throw AppError.fromErrorDefinition(ErrorRegistry.CLIENT_REGISTRATION_NULL)

@@ -1,3 +1,4 @@
+import { throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { BCSCEventTypes } from '@/events/eventTypes'
@@ -334,7 +335,9 @@ class BCSCApiClient {
 
   private fetchTokens(refreshToken: string): Promise<TokenResponse> {
     return withAccount(async (account) => {
-      const tokenBody = await getRefreshTokenRequestBody(account.issuer, account.clientID, refreshToken)
+      const tokenBody = await getRefreshTokenRequestBody(account.issuer, account.clientID, refreshToken).catch(
+        (error) => throwNativeBcscError(error)
+      )
 
       const tokensResponse = await this.post<TokenResponse>(this.endpoints.token, tokenBody, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -382,7 +385,7 @@ class BCSCApiClient {
       return this.tokens
     }
 
-    const storedRefreshToken = (await getToken(TokenType.Refresh))?.token
+    const storedRefreshToken = (await getToken(TokenType.Refresh).catch((error) => throwNativeBcscError(error)))?.token
     if (!storedRefreshToken) {
       this.logger.error('[BCSCApiClient] Token cache empty and no refresh token in secure storage')
       throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL, {

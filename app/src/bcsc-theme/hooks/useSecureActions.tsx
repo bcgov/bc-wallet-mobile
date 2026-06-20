@@ -1,10 +1,10 @@
-import { ErrorRegistry } from '@/errors/errorRegistry'
+import { isAppError } from '@/errors/appError'
 import {
   cancelVerificationReminders,
   scheduleVerificationReminders,
 } from '@/services/notifications/verificationReminders'
 import { BCDispatchAction, BCSCSecureState, BCState, NonBCSCUserMetadata, VerificationStatus } from '@/store'
-import { throwAppError } from '@bcsc-theme/utils/native-error-map'
+import { throwNativeBcscError } from '@bcsc-theme/utils/native-error-map'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -124,7 +124,7 @@ export const useSecureActions = () => {
         logger.info(`Tokens persisted to native storage successfully`)
       } catch (error) {
         logger.error('Failed to persist tokens:', error as Error)
-        throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
+        throwNativeBcscError(error)
       }
     },
     [logger]
@@ -144,7 +144,7 @@ export const useSecureActions = () => {
         logger.info('Authorization request persisted to native storage')
       } catch (error) {
         logger.error('Failed to persist authorization request:', error as Error)
-        throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
+        throwNativeBcscError(error)
       }
     },
     [logger]
@@ -164,7 +164,7 @@ export const useSecureActions = () => {
         logger.info('Account flags persisted to native storage')
       } catch (error) {
         logger.error('Failed to persist account flags:', error as Error)
-        throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
+        throwNativeBcscError(error)
       }
     },
     [logger]
@@ -181,7 +181,7 @@ export const useSecureActions = () => {
         logger.info('Evidence persisted to native storage')
       } catch (error) {
         logger.error('Failed to persist evidence metadata:', error as Error)
-        throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
+        throwNativeBcscError(error)
       }
     },
     [logger]
@@ -977,7 +977,12 @@ export const useSecureActions = () => {
       logger.info('Secure state hydrated successfully')
     } catch (error) {
       logger.error('Failed to hydrate secure state:', error as Error)
-      throwAppError(error, ErrorRegistry.STORAGE_READ_ERROR)
+      // Native read failures map to a distinct storage error (raw code preserved); an error already
+      // mapped downstream (e.g. token persistence) is an AppError — re-throw it unchanged.
+      if (isAppError(error)) {
+        throw error
+      }
+      throwNativeBcscError(error)
     }
   }, [logger, apiClient, isClientReady, updateTokens, removeIncompleteEvidence, dispatch])
 
@@ -1031,7 +1036,7 @@ export const useSecureActions = () => {
       logger.info('Secure data deleted from native storage')
     } catch (error) {
       logger.error('Failed to delete secure data:', error as Error)
-      throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
+      throwNativeBcscError(error)
     }
   }, [logger])
 
@@ -1047,7 +1052,7 @@ export const useSecureActions = () => {
       logger.info('Verification data deleted from native storage')
     } catch (error) {
       logger.error('Failed to delete verification data:', error as Error)
-      throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
+      throwNativeBcscError(error)
     }
   }, [logger])
 

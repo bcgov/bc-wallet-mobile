@@ -1,3 +1,4 @@
+import { AppEventCode } from '@/events/appEventCode'
 import {
   cancelVerificationReminders,
   scheduleVerificationReminders,
@@ -21,6 +22,7 @@ import {
   setAccountFlags,
   setAuthorizationRequest,
   setEvidence,
+  setToken,
   TokenType,
 } from 'react-native-bcsc-core'
 import * as useBCSCApiClientModule from './useBCSCApiClient'
@@ -39,6 +41,7 @@ jest.mock('react-native-bcsc-core', () => ({
   setAccountFlags: jest.fn(),
   setAuthorizationRequest: jest.fn(),
   setToken: jest.fn(),
+  isBcscNativeError: jest.fn((error: unknown) => error instanceof Error && 'code' in error),
   getAccount: jest.fn(),
   getAccountFlags: jest.fn(),
   getAccountSecurityMethod: jest.fn(),
@@ -99,6 +102,30 @@ describe('useSecureActions', () => {
       isClientReady: false,
       error: undefined,
     } as any)
+  })
+
+  // #3419: persistence failures surface the distinct native error code instead of a STORAGE_WRITE_ERROR catch-all.
+  describe('native error mapping', () => {
+    const nativeError = (code: string) => Object.assign(new Error(`native ${code}`), { code })
+
+    it('maps a native token-save rejection to TOKEN_SAVE_FAILED', async () => {
+      jest.mocked(setToken).mockRejectedValueOnce(nativeError('E_TOKEN_SAVE_ERROR'))
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.updateTokens({ refreshToken: 'abc' })).rejects.toMatchObject({
+        appEvent: AppEventCode.TOKEN_SAVE_FAILED,
+      })
+    })
+
+    it('groups an Android account-flags write rejection under NATIVE_STORAGE_WRITE_FAILED', async () => {
+      jest.mocked(getAccountFlags).mockResolvedValueOnce({} as any)
+      jest.mocked(setAccountFlags).mockRejectedValueOnce(nativeError('E_SET_ACCOUNT_FLAGS_ERROR'))
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.updateAccountFlags({ isEmailVerified: true })).rejects.toMatchObject({
+        appEvent: AppEventCode.NATIVE_STORAGE_WRITE_FAILED,
+      })
+    })
   })
 
   describe('removeIncompleteEvidence', () => {
