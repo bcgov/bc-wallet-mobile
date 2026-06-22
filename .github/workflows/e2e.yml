@@ -92,7 +92,7 @@ jobs:
       matrix:
         device: ${{ fromJSON(inputs.device_matrix) }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Load variant config
         uses: ./.github/workflows/actions/load-variant-config

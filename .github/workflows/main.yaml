@@ -147,7 +147,7 @@ jobs:
     outputs:
       should_skip_build: ${{ steps.core_files_changed.outputs.result == 'false' }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # Fetch all branches, main needed.
 
@@ -210,7 +210,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
@@ -305,7 +305,7 @@ jobs:
     env:
       GRADLE_USER_HOME: /mnt/gradle-cache
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Prepare directories
         run: |
@@ -462,7 +462,7 @@ jobs:
       NODE_BINARY: $(which node)
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Load variant config
         uses: ./.github/workflows/actions/load-variant-config
@@ -786,7 +786,7 @@ jobs:
     env:
       GRADLE_USER_HOME: /mnt/gradle-cache
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Prepare Gradle cache directory
         run: |
@@ -1068,7 +1068,7 @@ jobs:
           name: ios-${{ matrix.variant }}.ipa
           path: ${{ runner.temp }}/probe
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         if: steps.probe.outcome == 'success'
 
       - name: Load variant config
@@ -1113,7 +1113,7 @@ jobs:
           name: ${{ matrix.platform }}-${{ matrix.variant }}.${{ matrix.platform == 'ios' && 'ipa' || 'apk' }}
           path: ${{ runner.temp }}/probe
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         if: steps.probe.outcome == 'success'
 
       - name: Load variant config
