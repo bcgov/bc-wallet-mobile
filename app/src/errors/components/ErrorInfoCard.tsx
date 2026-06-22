@@ -77,9 +77,9 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
 
   const handleReport = () => {
     setReported(true)
-    const code = onReport?.()
-    if (code) {
-      setReferenceCode(code)
+    const reportedCode = onReport?.()
+    if (reportedCode) {
+      setReferenceCode(reportedCode)
     }
   }
 

@@ -82,13 +82,13 @@ export const appLogger = createAppLogger()
  */
 export const reportProblem = (error: BifoldError): string => {
   const referenceCode = generateReferenceCode()
-  const { title, description, code, message } = error
+  const { title, description, code, message, stack } = error
 
   try {
     if (baseOptions.lokiUrl) {
       lokiTransport({
         msg: title,
-        rawMsg: [{ message: title, data: { description, code, message, report_id: referenceCode } }],
+        rawMsg: [{ message: title, data: { description, code, message, stack, report_id: referenceCode } }],
         level: { severity: 3, text: 'error' },
         options: {
           lokiUrl: baseOptions.lokiUrl,

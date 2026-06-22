@@ -119,6 +119,7 @@ describe('reportProblem', () => {
     description: 'It exploded',
     code: 2800,
     message: 'stack trace details',
+    stack: 'Error: Boom\n    at somewhere (file.ts:1:1)',
   } as unknown as BifoldError
 
   beforeEach(() => {
@@ -141,6 +142,7 @@ describe('reportProblem', () => {
       description: 'It exploded',
       code: 2800,
       message: 'stack trace details',
+      stack: 'Error: Boom\n    at somewhere (file.ts:1:1)',
       report_id: refCode,
     })
   })
