@@ -172,6 +172,8 @@ const translation = {
     "SwitchTheme": "Switch theme (FR)",
     "Testing": "Testing (FR)",
     "ErrorAlertTest": "Error & Alert Testing (FR)",
+    "StaleTermsOfUse": "Stale Terms of Use Acceptance (FR)",
+    "AcceptedTermsVersion": "Accepted version (FR)",
     "ErrorModals": "Error Modals (FR)",
     "ErrorModalsDescription": "Trigger errors that display as modal dialogs with title, description, and technical details. (FR)",
     "ErrorAsNativeAlert": "Errors as Native Alerts (FR)",
@@ -494,6 +496,9 @@ const translation = {
         "Header": "Service unavailable (FR)",
         "CheckAgainButton": "Check again (FR)",
         "LearnMore": "Learn more (FR)",
+      },
+      "TermsOfUseUpdated": {
+        "Header": "The Terms of Use have been updated. Before you continue to use the Service, you must read and accept the updated terms. (FR)",
       },
     },
     "Home": {
