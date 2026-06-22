@@ -8,8 +8,8 @@ import { JSX, useCallback, useMemo, useState } from 'react'
 
 export enum CustomNotificationId {
   BCSCStartVerification = 'BCSCStartVerification',
-  AccountExpiringSoon = 'AccountExpiringSoon',
-  CardStatusUpdated = 'CardStatusUpdated',
+  AccountExpired = 'AccountExpired',
+  AccountRenewalAvailable = 'AccountRenewalAvailable',
 }
 
 /**
@@ -40,17 +40,17 @@ export const useCustomNotifications = () => {
 
     if (store.bcsc.showAccountExpiryNotification) {
       notifications.push({
-        id: CustomNotificationId.AccountExpiringSoon,
+        id: CustomNotificationId.AccountExpired,
         dismissible: false,
-        element: <CardExpiryNotification key={CustomNotificationId.AccountExpiringSoon} />,
+        element: <CardExpiryNotification key={CustomNotificationId.AccountExpired} />,
       })
     }
 
     if (store.bcsc.showCardRenewalNotification) {
       notifications.push({
-        id: CustomNotificationId.CardStatusUpdated,
+        id: CustomNotificationId.AccountRenewalAvailable,
         dismissible: false,
-        element: <CardRenewalNotification key={CustomNotificationId.CardStatusUpdated} />,
+        element: <CardRenewalNotification key={CustomNotificationId.AccountRenewalAvailable} />,
       })
     }
 

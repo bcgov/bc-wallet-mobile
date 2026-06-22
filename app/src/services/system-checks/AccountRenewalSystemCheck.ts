@@ -3,8 +3,6 @@ import { ACCOUNT_EXPIRATION_WARNING_DAYS } from '@/constants'
 import { BCDispatchAction } from '@/store'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
-// This will display a warning banner to the user (only once)
-
 /**
  * Checks if the user's account is expiring soon (warning period), but not yet expired.
  * Informs the user when their BC Services card expires, and links user to renewal information.

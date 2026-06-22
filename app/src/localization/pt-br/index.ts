@@ -93,10 +93,15 @@ const translation = {
       "ButtonTitle": "Start verification (PT-BR)",
       "ContinueButtonTitle": "Continue verification (PT-BR)"
     },
-    "AccountExpiringSoon": {
-      "Title": "Expires in {{days}} days (PT-BR)",
-      "Description": "Renew your account on this device before it expires on {{accountExpiration}}. (PT-BR)",
-      "ButtonTitle": "Renew account (PT-BR)"
+    "AccountExpired": {
+      "Title": "Your BC Services card app has expired (PT-BR)",
+      "Description": "Please reverify yourself to get access to your services (PT-BR)",
+      "ButtonTitle": "Start renewal (PT-BR)"
+    },
+    "AccountRenewal": {
+      "Title": "Time for renewal (PT-BR)",
+      "Description": "Renew your BC Services card app before it expires on {{expiryDate}} (PT-BR)",
+      "ButtonTitle": "Start renewal (PT-BR)"
     },
     "CardStatusUpdated": {
       "Title": "Account Updated (PT-BR)",
@@ -544,6 +549,18 @@ const translation = {
       "StaticBannerDescription": "Your account on this device expired on {{accountExpiration}}. You need to renew it before you can use it to log in. (PT-BR)",
       "RenewButton": "Renew account (PT-BR)",
       "RemoveButton": "Remove account (PT-BR)",
+    },
+    "ReverifyAccount": {
+      "RenewalTitle": "Renew your account (PT-BR)",
+      "ExpiredTitle": "Your BC Services card app has expired (PT-BR)",
+      "Body": "Services require you to re-verify your account. You will need to complete this step in order to access your services online. (PT-BR)",
+      "BulletHeader": "You will need to: (PT-BR)",
+      "BulletOne": "Verify your email (PT-BR)",
+      "BulletTwo": "Add a photo ID (not expired) (PT-BR)",
+      "BulletThree": "Take a photo of your face (PT-BR)",
+      "BulletFour": "Record a short video, have a video call or visit a Service BC office (PT-BR)",
+      "PrimaryAction": "Continue (PT-BR)",
+      "Loading": "Starting verification... (PT-BR)"
     },
     "AccountRenewal": {
       "InformationHeader": "What you need to renew (PT-BR)",

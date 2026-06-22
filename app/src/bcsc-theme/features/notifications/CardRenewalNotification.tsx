@@ -17,9 +17,9 @@ const CardRenewalNotification = () => {
       icon="information"
       iconColor={ColorPalette.brand.primary}
       hideIconCircle={true}
-      title={t('Notification.CardStatusUpdated.Title')}
-      description={t('Notification.CardStatusUpdated.Description', { expiryDate: cardExpiry })}
-      buttonTitle={t('Notification.CardStatusUpdated.ButtonTitle')}
+      title={t('Notification.AccountRenewal.Title')}
+      description={t('Notification.AccountRenewal.Description', { expiryDate: cardExpiry })}
+      buttonTitle={t('Notification.AccountRenewal.ButtonTitle')}
       onPress={() => navigation.navigate(BCSCScreens.ReverifyAccount, { isExpired: false })}
     />
   )
