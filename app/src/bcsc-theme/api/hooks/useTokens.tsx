@@ -2,6 +2,7 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
 import { throwAppError } from '@/bcsc-theme/utils/native-error-map'
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import { cancelVerificationReminders } from '@/services/notifications/verificationReminders'
 import { useCallback, useMemo } from 'react'
 import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
@@ -68,6 +69,9 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
           apiClient.logger.error(`[checkDeviceCodeStatus] Failed to update tokens`, error as Error)
           throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
         }
+
+        // never throws
+        await cancelVerificationReminders(apiClient.logger)
 
         return apiClient.tokens!
       })

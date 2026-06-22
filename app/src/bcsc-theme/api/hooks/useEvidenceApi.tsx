@@ -1,5 +1,6 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { VIDEO_MP4_MIME_TYPE } from '@/constants'
+import { cancelVerificationReminders } from '@/services/notifications/verificationReminders'
 import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
@@ -75,7 +76,46 @@ export interface EvidenceMetadataPayload {
 
 const useEvidenceApi = (apiClient: BCSCApiClient) => {
   const [store] = useStore<BCState>()
-  const { updateVerificationRequest } = useSecureActions()
+  const { updateVerificationRequest, updateDeviceCodes } = useSecureActions()
+
+  /**
+   * Reconciles local verification deadline state against a verification response.
+   *
+   * The evidence-submit (PUT) and status (GET) responses share this shape. Two things ride on them:
+   *
+   *  - A terminal `status` (`verified`/`cancelled`) means the session is over, so any pending
+   *    "verify by ..." reminders are cleared. (Completion is also caught when the device_code is
+   *    exchanged for tokens; this just clears them sooner, and covers an agent-cancelled video.)
+   *  - A possibly-refreshed `expires_in` (seconds). Per the IAS API this "may be different from the
+   *    original device code authorization response to allow for verifications submitted close to expiry
+   *    and weekends" — i.e. it is how the server communicates the video-submission and agent-approval
+   *    extensions. We recompute the deadline as `now + expires_in` and persist it (which also reschedules
+   *    the reminders), but only when it pushes the deadline later, so a stale/shorter value can never cut
+   *    an in-progress session short.
+   */
+  const reconcileVerificationDeadline = useCallback(
+    (data: VerificationStatusResponseData) => {
+      if (data.status === 'verified' || data.status === 'cancelled') {
+        cancelVerificationReminders(apiClient.logger)
+        return
+      }
+
+      if (data.expires_in === undefined) {
+        return
+      }
+      const seconds = Number(data.expires_in)
+      if (!Number.isFinite(seconds) || seconds <= 0) {
+        return
+      }
+      const newExpiry = new Date(Date.now() + seconds * 1000)
+      const currentExpiry = store.bcscSecure.deviceCodeExpiresAt
+      if (currentExpiry && newExpiry.getTime() <= currentExpiry.getTime()) {
+        return
+      }
+      updateDeviceCodes({ deviceCodeExpiresAt: newExpiry })
+    },
+    [apiClient.logger, store.bcscSecure.deviceCodeExpiresAt, updateDeviceCodes]
+  )
 
   const _getDeviceCode = useCallback(() => {
     const code = store.bcscSecure.deviceCode
@@ -173,10 +213,11 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
             skipBearerAuth: true,
           }
         )
+        reconcileVerificationDeadline(data)
         return data
       })
     },
-    [_getDeviceCode, apiClient]
+    [_getDeviceCode, apiClient, reconcileVerificationDeadline]
   )
 
   const getVerificationRequestPrompts = useCallback(
@@ -211,10 +252,11 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
             skipBearerAuth: true,
           }
         )
+        reconcileVerificationDeadline(data)
         return data
       })
     },
-    [_getDeviceCode, apiClient]
+    [_getDeviceCode, apiClient, reconcileVerificationDeadline]
   )
 
   // This is only valid once sendVerificationRequest has been called

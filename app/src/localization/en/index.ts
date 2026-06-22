@@ -347,6 +347,10 @@ const translation = {
         "ContentB": "To continue, you’ll need to set up the app and verify your identity again.",
         "Button": "Start again",
       },
+      "VerificationReminder": {
+        "Title": "Finish verifying your identity",
+        "Body": "Verify your identity to finish setting up the app by {{date}}.",
+      },
       "DeviceInvalidated": {
         "Header": "Device invalidated",
         "CancelledByCardCancel": "Your account will be removed from this app.",
