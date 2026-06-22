@@ -811,12 +811,12 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     }
 
     case BCSCDispatchAction.SET_ACCOUNT_EXPIRY_NOTIFICATION: {
-      const show = (action?.payload || []).pop() as boolean
+      const show = ((action?.payload || []).pop() ?? false) as boolean
       return { ...state, bcsc: { ...state.bcsc, showAccountExpiryNotification: show } }
     }
 
     case BCSCDispatchAction.SET_CARD_RENEWAL_NOTIFICATION: {
-      const show = (action?.payload || []).pop() as boolean
+      const show = ((action?.payload || []).pop() ?? false) as boolean
       return { ...state, bcsc: { ...state.bcsc, showCardRenewalNotification: show } }
     }
 
