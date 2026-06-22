@@ -10,6 +10,7 @@ import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSyst
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClockSkewSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
+import { TermsOfUseSystemCheck } from '@/services/system-checks/TermsOfUseSystemCheck'
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
 import { UpdateDeviceRegistrationSystemCheck } from '@/services/system-checks/UpdateDeviceRegistrationSystemCheck'
 import { BCState } from '@/store'
@@ -68,6 +69,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
 
   const defaultReadiness = isNavigationReady && client && isClientReady
   const accountExpirationDate = accountContext?.account?.account_expiration_date
+  const isVerified = Boolean(store.bcscSecure.verified)
   const isBCServicesCardBundle = getBundleId().includes(BCSC_BUILD_SUFFIX)
 
   // update credential metadata ref on store change
@@ -120,11 +122,13 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
    * @returns Array of system check strategies
    */
   const getMainSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
-    if (!accountExpirationDate) {
-      throw new Error('Account expiration date undefined. Did you forget to check isReady?')
+    // Guard the native call so a failure here cannot throw away the whole batch
+    let dismissedAt: number | undefined
+    try {
+      dismissedAt = await getMaxDevicesBannerLastDisplayedDate()
+    } catch {
+      dismissedAt = undefined
     }
-
-    const dismissedAt = await getMaxDevicesBannerLastDisplayedDate()
     const getIdToken = () => tokenService.getCachedIdTokenMetadata({ refreshCache: false })
     const updateRegistration = () =>
       registrationService.updateRegistration(store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname, {
@@ -133,12 +137,41 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
         suppressTransientAlerts: true,
       })
 
-    const systemChecks: SystemCheckStrategy[] = [
-      new DeviceCountSystemCheck(getIdToken, utils, dismissedAt),
-      new AccountRenewalSystemCheck(accountExpirationDate, utils),
-      new AccountExpirySystemCheck(accountExpirationDate, utils),
-      new EventReasonAlertsSystemCheck(getIdToken, credentialMetadataRef.current, utils, navigation),
-    ]
+    const systemChecks: SystemCheckStrategy[] = []
+
+    // DeviceCount and EventReasonAlerts read the cached id token, which only exists
+    // for verified users; calling getIdToken without one surfaces a user-facing
+    // "token null" error (err 119). Gate them on verification so unverified users
+    // still get the account-independent checks (Terms of Use) below.
+    if (isVerified) {
+      systemChecks.push(new DeviceCountSystemCheck(getIdToken, utils, dismissedAt))
+    }
+
+    // Account expiry is only meaningful once the account metadata has loaded, which
+    // happens only for verified users. Include it conditionally so unverified users
+    // still get the account-independent checks rather than the whole batch being
+    // gated off when accountExpirationDate is undefined.
+    if (accountExpirationDate) {
+      systemChecks.push(new AccountExpirySystemCheck(accountExpirationDate, utils))
+      systemChecks.push(new AccountRenewalSystemCheck(accountExpirationDate, utils))
+    }
+
+    if (isVerified) {
+      systemChecks.push(new EventReasonAlertsSystemCheck(getIdToken, credentialMetadataRef.current, utils, navigation))
+    }
+
+    // Terms of Use applies to every user (the endpoint is public, no token needed)
+    systemChecks.push(
+      new TermsOfUseSystemCheck(
+        () => configApi.getTermsOfUse(),
+        store.bcsc.acceptedTermsOfUseVersion,
+        navigation,
+        utils
+      )
+      // TODO (ar/bm): v3 doesn't include the checks below; re-add if needed in future
+      // AccountExpiryWarningAlertSystemCheck
+      // AccountExpiryAlertSystemCheck
+    )
 
     // Only run device registration update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
     if (isBCServicesCardBundle) {
@@ -154,15 +187,18 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     return systemChecks
   }, [
     accountExpirationDate,
+    isVerified,
     utils,
     navigation,
     isBCServicesCardBundle,
     tokenService,
     registrationService,
+    configApi,
     store.bcscSecure.registrationAccessToken,
     store.bcsc.selectedNickname,
     store.bcsc.appVersion,
     store.bcsc.appBuildNumber,
+    store.bcsc.acceptedTermsOfUseVersion,
   ])
 
   return useMemo(() => {
@@ -173,15 +209,10 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       },
       [SystemCheckScope.MAIN_STACK]: {
         getSystemChecks: getMainSystemChecks,
-        isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated && accountExpirationDate),
+        // Not gated on accountExpirationDate: the batch runs for unverified users too,
+        // and account-dependent checks are included conditionally in the builder.
+        isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated),
       },
     }
-  }, [
-    accountExpirationDate,
-    defaultReadiness,
-    getMainSystemChecks,
-    getStartupSystemChecks,
-    store.bcscSecure.isHydrated,
-    store.stateLoaded,
-  ])
+  }, [defaultReadiness, getMainSystemChecks, getStartupSystemChecks, store.bcscSecure.isHydrated, store.stateLoaded])
 }

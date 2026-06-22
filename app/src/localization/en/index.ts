@@ -47,6 +47,10 @@ const translation = {
     "ErrorCode": "Error Code",
     "ReportThisProblem": "Report this problem",
     "Reported": "Reported",
+    "ReferenceCode": "Reference code",
+    "CopyCode": "Copy",
+    "CodeCopied": "Copied",
+    "ShareCodeWithSupport": "Share this code with support when you contact us.",
     "Unknown": "Unknown",
     "Problem": "Something went wrong",
     "ProblemDescription": "An unexpected error occurred. Please report this error and try again."
@@ -189,6 +193,8 @@ const translation = {
     "SwitchTheme": "Switch theme",
     "Testing": "Testing",
     "ErrorAlertTest": "Error & Alert Testing",
+    "StaleTermsOfUse": "Stale Terms of Use Acceptance",
+    "AcceptedTermsVersion": "Accepted version",
     "ErrorModals": "Error Modals",
     "ErrorModalsDescription": "Trigger errors that display as modal dialogs with title, description, and technical details.",
     "ErrorAsNativeAlert": "Errors as Native Alerts",
@@ -505,6 +511,9 @@ const translation = {
         "Header": "Service unavailable",
         "CheckAgainButton": "Check again",
         "LearnMore": "Learn more",
+      },
+      "TermsOfUseUpdated": {
+        "Header": "The Terms of Use have been updated. Before you continue to use the Service, you must read and accept the updated terms.",
       },
     },
     "Home": {

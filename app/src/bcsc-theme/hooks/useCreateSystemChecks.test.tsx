@@ -86,6 +86,10 @@ jest.mock('@/services/system-checks/ServerClockSkewSystemCheck', () => ({
   ServerClockSkewSystemCheck: class ServerClockSkewSystemCheck {},
 }))
 
+jest.mock('@/services/system-checks/TermsOfUseSystemCheck', () => ({
+  TermsOfUseSystemCheck: class TermsOfUseSystemCheck {},
+}))
+
 jest.mock('@/bcsc-theme/components/AppBanner', () => ({
   BCSCBanner: {
     IAS_SERVER_UNAVAILABLE: 'IASServerUnavailableBanner',
@@ -288,6 +292,7 @@ describe('useGetSystemChecks', () => {
             },
             bcscSecure: {
               isHydrated: true,
+              verified: true,
             },
           },
           jest.fn(),
@@ -305,17 +310,63 @@ describe('useGetSystemChecks', () => {
 
         mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn() })
         mockUseRegistrationApi.mockReturnValue({})
+        mockUseConfigApi.mockReturnValue({ getTermsOfUse: jest.fn() })
 
         const { result } = renderHook(() => useCreateSystemChecks())
 
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
 
-        expect(systemChecks).toHaveLength(5) // DeviceCountSystemCheck, AccountExpirySystemCheck, AccountRenewalSystemCheck, UpdateDeviceRegistrationSystemCheck
+        expect(systemChecks).toHaveLength(5) // DeviceCountSystemCheck, AccountRenewalSystemCheck, AccountExpirySystemCheck, EventReasonAlertsSystemCheck, UpdateDeviceRegistrationSystemCheck
         expect(systemChecks[0].constructor.name).toBe('DeviceCountSystemCheck')
         expect(systemChecks[1].constructor.name).toBe('AccountRenewalSystemCheck')
         expect(systemChecks[2].constructor.name).toBe('AccountExpirySystemCheck')
         expect(systemChecks[3].constructor.name).toBe('EventReasonAlertsSystemCheck')
         expect(systemChecks[4].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
+      })
+
+      it('skips the id-token / account checks for an unverified user but still runs Terms of Use', async () => {
+        jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
+        mockUseStore.mockReturnValue([
+          {
+            stateLoaded: true,
+            developer: {
+              environment: {
+                analyticsAppId: 'test-app-id',
+              },
+            },
+            bcsc: {
+              analyticsOptIn: true,
+            },
+            bcscSecure: {
+              isHydrated: true,
+              verified: false,
+            },
+          },
+          jest.fn(),
+        ])
+
+        mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
+        mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
+        mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
+        mockGetBundleId.mockReturnValue('ca.bc.gov.id.servicescard')
+        // Unverified users have no loaded account
+        jest.spyOn(React, 'useContext').mockReturnValue({ account: null })
+        mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn() })
+        mockUseRegistrationApi.mockReturnValue({})
+        mockUseConfigApi.mockReturnValue({ getTermsOfUse: jest.fn() })
+
+        const { result } = renderHook(() => useCreateSystemChecks())
+
+        const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+        const names = systemChecks.map((check) => check.constructor.name)
+
+        // Token-dependent checks would call getIdToken (which surfaces a user-facing
+        // "token null" error for unverified users), so they are skipped — but the
+        // account-independent Terms of Use check still runs.
+        expect(names).toContain('TermsOfUseSystemCheck')
+        expect(names).not.toContain('DeviceCountSystemCheck')
+        expect(names).not.toContain('EventReasonAlertsSystemCheck')
+        expect(names).not.toContain('AccountExpiryWarningBannerSystemCheck')
       })
     })
   })

@@ -164,7 +164,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
       try {
         const systemCheckStrategies = await scopeSystemCheck.getSystemChecks()
 
-        const results = await runSystemChecks(systemCheckStrategies)
+        const results = await runSystemChecks(systemCheckStrategies, logger)
 
         const systemCheckResults = systemCheckStrategies.reduce<Record<string, boolean>>((acc, check, index) => {
           // Collect results for logging ie: { DeviceCountSystemCheck: true, AccountExpiryWarningSystemCheck: false }

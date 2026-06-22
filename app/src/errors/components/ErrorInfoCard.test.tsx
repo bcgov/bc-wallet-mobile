@@ -1,3 +1,4 @@
+import Clipboard from '@react-native-clipboard/clipboard'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { ErrorInfoCard, ErrorInfoCardProps, colors as errorInfoCardColors } from './ErrorInfoCard'
@@ -192,6 +193,48 @@ describe('ErrorInfoCard', () => {
       fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
 
       expect(getByText('Error.Reported')).toBeTruthy()
+    })
+  })
+
+  describe('reference code', () => {
+    const referenceCode = '7K2P-9XQF'
+
+    it('should display the reference code after reporting when onReport returns one', () => {
+      const onReport = jest.fn(() => referenceCode)
+      const { getByTestId, getByText } = render(<ErrorInfoCard {...defaultProps} enableReport onReport={onReport} />)
+
+      fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
+
+      expect(getByTestId('com.aries.bifold:id/ReferenceCode')).toBeTruthy()
+      expect(getByText(referenceCode)).toBeTruthy()
+      expect(getByText('Error.ShareCodeWithSupport')).toBeTruthy()
+    })
+
+    it('should not display a reference code before reporting', () => {
+      const onReport = jest.fn(() => referenceCode)
+      const { queryByTestId } = render(<ErrorInfoCard {...defaultProps} enableReport onReport={onReport} />)
+
+      expect(queryByTestId('com.aries.bifold:id/ReferenceCode')).toBeNull()
+    })
+
+    it('should not display a reference code when onReport returns nothing', () => {
+      const { getByTestId, queryByTestId } = render(
+        <ErrorInfoCard {...defaultProps} enableReport onReport={mockOnReport} />
+      )
+
+      fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
+
+      expect(queryByTestId('com.aries.bifold:id/ReferenceCode')).toBeNull()
+    })
+
+    it('should copy the reference code to the clipboard when copy is pressed', () => {
+      const onReport = jest.fn(() => referenceCode)
+      const { getByTestId } = render(<ErrorInfoCard {...defaultProps} enableReport onReport={onReport} />)
+
+      fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
+      fireEvent.press(getByTestId('com.aries.bifold:id/CopyReferenceCode'))
+
+      expect(Clipboard.setString).toHaveBeenCalledWith(referenceCode)
     })
   })
 
