@@ -235,6 +235,8 @@ const translation = {
       "Intro": "Tell us what went wrong. To help us look into it, sending this report shares the details with our support team. (PT-BR)",
       "DescriptionLabel": "What happened? (PT-BR)",
       "DescriptionPlaceholder": "Describe the problem (optional) (PT-BR)",
+      "CollectionNotice": "Your description, along with basic app and device information, is included with this report so our support team can investigate. For details on how this information is handled, read the (PT-BR)",
+      "PrivacyPolicyLink": "Privacy Policy. (PT-BR)",
       "ConsentCheckbox": "I understand and want to share diagnostic information. (PT-BR)",
       "Submit": "Send report (PT-BR)",
       "SuccessTitle": "Report sent (PT-BR)",

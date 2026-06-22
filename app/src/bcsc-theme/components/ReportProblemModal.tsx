@@ -33,8 +33,9 @@ export interface ReportProblemModalProps {
  * without registering a per-stack screen.
  *
  * NOTE: The design spec for this flow is not finalised — the layout here is intentionally simple and
- * expected to be restyled once design lands. The privacy / collection-notice copy is reused from the
- * existing remote-troubleshooting feature so the data-collection framing stays consistent.
+ * expected to be restyled once design lands. The collection-notice copy is placeholder text describing
+ * the one-off report (no remote logging is enabled) and should be reviewed with design/privacy before
+ * release.
  */
 export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps) => {
   const { t } = useTranslation()
@@ -167,14 +168,14 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
         />
       </View>
 
-      {/* Factual collection notice reused from the remote-troubleshooting feature so the
-          data-collection framing stays consistent across the app. */}
-      <ThemedText style={styles.noticeText}>
-        {t('RemoteLogging.CollectionNoticePart1')}
-        <ThemedText variant="bold">{t('RemoteLogging.CollectionNoticeBold')}</ThemedText>
-        {t('RemoteLogging.CollectionNoticePart2')}
-      </ThemedText>
-      <Link linkText={t('RemoteLogging.CollectionNoticeLink')} onPress={() => Linking.openURL(BC_LOGIN_PRIVACY_URL)} />
+      {/* Lightweight collection notice for the one-off report: the modal sends the user's description
+          plus basic app/device info to support and no longer enables remote logging. Placeholder copy
+          pending design/privacy review. */}
+      <ThemedText style={styles.noticeText}>{t('BCSC.ReportProblem.CollectionNotice')}</ThemedText>
+      <Link
+        linkText={t('BCSC.ReportProblem.PrivacyPolicyLink')}
+        onPress={() => Linking.openURL(BC_LOGIN_PRIVACY_URL)}
+      />
 
       <CheckBoxRow
         title={t('BCSC.ReportProblem.ConsentCheckbox')}

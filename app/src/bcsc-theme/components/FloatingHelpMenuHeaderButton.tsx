@@ -127,10 +127,10 @@ export const createFloatingHelpMenuButton = ({
             {t('BCSC.HelpMenu.GiveFeedback')}
           </ListButton>
           <ListButton onPress={handleReportProblem}>{t('BCSC.HelpMenu.ReportProblem')}</ListButton>
+          {showRestartVerification && (
+            <RestartVerificationListButton onConfirm={() => floatingHelpMenuRef.current?.close()} />
+          )}
         </FloatingHelpMenuButton>
-        {showRestartVerification && (
-          <RestartVerificationListButton onConfirm={() => floatingHelpMenuRef.current?.close()} />
-        )}
         <ReportProblemModal visible={reportProblemVisible} onClose={() => setReportProblemVisible(false)} />
       </>
     )
