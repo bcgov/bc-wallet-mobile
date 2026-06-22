@@ -107,11 +107,6 @@ const translation = {
       "Description": "Renew your BC Services card app before it expires on {{expiryDate}} (FR)",
       "ButtonTitle": "Start renewal (FR)"
     },
-    "CardStatusUpdated": {
-      "Title": "Account Updated (FR)",
-      "Description": "Your account has been automatically updated with information from your new BC Services Card. (FR)",
-      "ButtonTitle": "Renew account (FR)"
-    },
     "BasicMessage": {
       "Title": "New message (FR)",
       "ButtonTitle": "View message (FR)"

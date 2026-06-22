@@ -67,8 +67,10 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
         this.navigation.navigate(BCSCModals.DeviceInvalidated, { invalidationReason: this.reason })
         break
       case BCSCEvent.Renewal:
-      case BCSCEvent.Replace:
         this.utils.dispatch({ type: BCDispatchAction.SET_CARD_RENEWAL_NOTIFICATION, payload: [true] })
+        break
+      case BCSCEvent.Replace:
+        this.utils.dispatch({ type: BCDispatchAction.SET_ACCOUNT_EXPIRY_NOTIFICATION, payload: [true] })
         break
       default:
         break

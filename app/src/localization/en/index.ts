@@ -107,11 +107,6 @@ const translation = {
       "Description": "Renew your BC Services card app before it expires on {{expiryDate}}",
       "ButtonTitle": "Start renewal"
     },
-    "CardStatusUpdated": {
-      "Title": "Time for renewal",
-      "Description": "Renew your BC Services card app before it expires on {{expiryDate}}",
-      "ButtonTitle": "Start renewal"
-    },
     "BasicMessage": {
       "Title": "New message",
       "ButtonTitle": "View message"

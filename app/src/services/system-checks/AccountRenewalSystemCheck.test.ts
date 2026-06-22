@@ -44,7 +44,7 @@ describe('AccountRenewalSystemCheck', () => {
   })
 
   describe('onFail', () => {
-    it('should dispatch a warning banner if the account is expiring soon', () => {
+    it('should dispatch an action to display the renewal notification', () => {
       const date = new Date(Date.now() + 30 * DAY_IN_MS)
 
       const check = new AccountRenewalSystemCheck(date, {
@@ -60,7 +60,5 @@ describe('AccountRenewalSystemCheck', () => {
         payload: [true],
       })
     })
-
-    it.todo('should not dispatch a banner if the account is already expired')
   })
 })

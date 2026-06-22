@@ -167,6 +167,9 @@ describe('EventReasonAlertsSystemCheck', () => {
       await check.runCheck()
       check.onFail()
 
+      expect(mockUtils.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA })
+      )
       expect(mockNavigation.navigate).toHaveBeenCalledWith(
         expect.stringContaining('DeviceInvalidated'),
         expect.objectContaining({ invalidationReason: BCSCReason.Cancel })
@@ -185,11 +188,14 @@ describe('EventReasonAlertsSystemCheck', () => {
       check.onFail()
 
       expect(mockUtils.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA })
+      )
+      expect(mockUtils.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({ type: BCDispatchAction.SET_CARD_RENEWAL_NOTIFICATION, payload: [true] })
       )
     })
 
-    it('should dispatch SET_CARD_RENEWAL_NOTIFICATION when event is Replace', async () => {
+    it('should dispatch SET_ACCOUNT_EXPIRY_NOTIFICATION when event is Replace', async () => {
       const mockIdToken = createMockIdToken({ bcsc_event: BCSCEvent.Replace, bcsc_reason: BCSCReason.Replace })
       const check = new EventReasonAlertsSystemCheck(
         jest.fn().mockResolvedValue(mockIdToken),
@@ -201,7 +207,10 @@ describe('EventReasonAlertsSystemCheck', () => {
       check.onFail()
 
       expect(mockUtils.dispatch).toHaveBeenCalledWith(
-        expect.objectContaining({ type: BCDispatchAction.SET_CARD_RENEWAL_NOTIFICATION, payload: [true] })
+        expect.objectContaining({ type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA })
+      )
+      expect(mockUtils.dispatch).toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.SET_ACCOUNT_EXPIRY_NOTIFICATION, payload: [true] })
       )
     })
   })
