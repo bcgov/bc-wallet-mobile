@@ -73,27 +73,45 @@ export type SystemCheckNavigation = {
  * @param {SystemCheckStrategy[]} checks - An array of startup checks to run.
  * @returns {*} {Promise<boolean[]>} - An array of boolean results indicating the success of each check.
  */
-export async function runSystemChecks(checks: SystemCheckStrategy[]) {
-  const runCheckPromises: Promise<boolean>[] = []
+export async function runSystemChecks(checks: SystemCheckStrategy[], logger?: BifoldLogger) {
+  // Run every check concurrently but isolate failures: a single check that throws
+  // (e.g. EventReasonAlertsSystemCheck when an unverified user has no cached id token)
+  // must not abort the whole batch and prevent the others (e.g. TermsOfUseSystemCheck)
+  // from running. Promise.allSettled keeps one rejection from sinking the rest.
+  const settled = await Promise.allSettled(checks.map((check) => Promise.resolve(check.runCheck())))
 
-  // Add all startup check promises to array
-  for (const check of checks) {
-    const ensurePromise = Promise.resolve(check.runCheck()) // SonarQube compliance
-    runCheckPromises.push(ensurePromise)
-  }
+  const results: boolean[] = []
 
-  // Wait for all startup checks to complete in parallel
-  const results = await Promise.all(runCheckPromises)
+  // Handle outcomes in order
+  for (let index = 0; index < settled.length; index++) {
+    const outcome = settled[index]
+    const name = checks[index].constructor.name
 
-  // Handle failures in order
-  // To be determined if we want automatic failure handling or not (pass param if not)
-  for (let index = 0; index < results.length; index++) {
-    if (!results[index]) {
-      await checks[index].onFail()
+    if (outcome.status === 'rejected') {
+      // An errored check is inconclusive: record false and skip its handlers
+      logger?.error(
+        `runSystemChecks: ${name} threw during runCheck`,
+        outcome.reason instanceof Error ? outcome.reason : new Error(String(outcome.reason))
+      )
+      results.push(false)
       continue
     }
 
-    await checks[index].onSuccess?.()
+    results.push(outcome.value)
+
+    try {
+      if (!outcome.value) {
+        await checks[index].onFail()
+      } else {
+        await checks[index].onSuccess?.()
+      }
+    } catch (error) {
+      // A failing handler must not prevent the remaining checks from being handled
+      logger?.error(
+        `runSystemChecks: ${name} threw during ${outcome.value ? 'onSuccess' : 'onFail'}`,
+        error instanceof Error ? error : new Error(String(error))
+      )
+    }
   }
 
   return results
