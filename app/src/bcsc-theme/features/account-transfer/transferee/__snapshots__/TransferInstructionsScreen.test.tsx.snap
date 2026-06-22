@@ -79,7 +79,7 @@ exports[`TransferInstructionsScreen renders correctly 1`] = `
         style={
           {
             "alignSelf": "center",
-            "aspectRatio": 2,
+            "aspectRatio": 3,
             "height": 100,
           }
         }

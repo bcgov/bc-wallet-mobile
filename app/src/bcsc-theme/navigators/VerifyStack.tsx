@@ -16,6 +16,7 @@ import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferInstructionsScreen from '../features/account-transfer/transferee/TransferInstructionsScreen'
 import TransferQRScannerScreen from '../features/account-transfer/transferee/TransferQRScannerScreen'
 import { VerifyRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
+import SessionRecoveryScreen from '../features/auth/SessionRecoveryScreen'
 import { VerifyChangePINScreen } from '../features/auth/VerifyChangePINScreen'
 import { VerifyChangeSecurityScreen } from '../features/auth/VerifyChangeSecurityScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
@@ -107,6 +108,11 @@ const VerifyStack = () => {
             showRestartVerification: true,
           }),
         }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.SessionRecovery}
+        component={SessionRecoveryScreen}
+        options={{ headerLeft: () => null, gestureEnabled: false }}
       />
       <Stack.Screen name={BCSCScreens.VerifyPrivacyPolicy} component={VerifyPrivacyPolicyScreen} />
       <Stack.Screen name={BCSCScreens.VerifyContactUs} component={ContactUsScreen} />

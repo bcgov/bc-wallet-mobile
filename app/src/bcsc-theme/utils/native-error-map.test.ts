@@ -3,6 +3,10 @@ import { ErrorRegistry } from '@/errors/errorRegistry'
 
 import { throwAppError, toAppError } from './native-error-map'
 
+jest.mock('@/contexts/NavigationContainerContext', () => ({
+  navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
+}))
+
 jest.mock('react-native', () => ({
   DeviceEventEmitter: { emit: jest.fn() },
   Platform: { OS: 'ios', select: jest.fn((obj: Record<string, unknown>) => obj.ios ?? obj.default) },

@@ -127,7 +127,11 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     const dismissedAt = await getMaxDevicesBannerLastDisplayedDate()
     const getIdToken = () => tokenService.getCachedIdTokenMetadata({ refreshCache: false })
     const updateRegistration = () =>
-      registrationService.updateRegistration(store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname)
+      registrationService.updateRegistration(store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname, {
+        // Automatic check: a transient keychain-unavailable failure retries on the
+        // next launch (UPDATE_APP_VERSION only dispatches on success) — no modal.
+        suppressTransientAlerts: true,
+      })
 
     const systemChecks: SystemCheckStrategy[] = [
       new DeviceCountSystemCheck(getIdToken, utils, dismissedAt),

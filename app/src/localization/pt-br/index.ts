@@ -13,7 +13,6 @@ const translation = {
     "HideDetails": "Ocultar detalhes",
     "Dismiss": "Dispensar",
     "GetHelp": "Get help (PT-BR)",
-    "ContinueSetup": "Continue setup (PT-BR)",
     "Share": "Share (PT-BR)",
     "Skip": "Skip (PT-BR)",
     "A11y": {
@@ -564,6 +563,13 @@ const translation = {
       "WarningContentB": "This includes logging into services like Health Gateway or Canada Revenue Agency (CRA). (PT-BR)",
       "WarningRenewButton": "Renew (PT-BR)"
     },
+    "SessionRecovery": {
+      "Header": "Reset your app (PT-BR)",
+      "Body": "Some of your saved data on this device couldn't be read. (PT-BR)",
+      "BodyAction": "To keep using the app, you'll need to re-verify or transfer from another device to use your identity again. (PT-BR)",
+      "PrimaryAction": "Reset (PT-BR)",
+      "Resetting": "Resetting… (PT-BR)"
+    },
     "ForgetAllPairings": {
       "Title": "Forget all pairings? (PT-BR)",
       "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step. (PT-BR)",
@@ -624,6 +630,8 @@ const translation = {
       "BookmarkService": "Save link to: (PT-BR)",
       "ToggleBookmark": "Toggle bookmark (PT-BR)",
       "BookmarkDescription": "This adds a link to the menu in this app for easier access next time. (PT-BR)",
+      "CouldNotVerifyPairingCodeTitle": "Could not verify pairing code (PT-BR)",
+      "CodeDoesNotMatchMessage": "The code you entered does not match. Try again. (PT-BR)",
     },
     "Onboarding": {
       "LearnMore": "Learn more (PT-BR)",
@@ -875,6 +883,8 @@ const translation = {
     },
     "EmailConfirmation": {
       "ErrorTitle": "Error verifying confirmation code (PT-BR)",
+      "CouldNotVerifyTitle": "Could not verify your email (PT-BR)",
+      "CodeDoesNotMatch": "The code you entered does not match. Try again. (PT-BR)",
       "EmailError": "Please enter a valid email address (name@host.com). (PT-BR)",
       "CodeError": "Please enter a six digit verification code (PT-BR)",
       "ErrorResendingCode": "Error resending code (PT-BR)",
@@ -1298,6 +1308,18 @@ const translation = {
       "Title": "Not Enough Storage (PT-BR)",
       "Description": "Your device is out of storage space, so the app can't save your information. Free up space on your device, then try again. (PT-BR)"
     },
+    "BadRequest": {
+      "Title": "Something went wrong (PT-BR)",
+      "Description": "We couldn't complete your request at this time. Please try again later.\n\nIf the issue persists, close and re-open the app to try again. (PT-BR)"
+    },
+    "SomethingWentWrong": {
+      "Title": "Something went wrong (PT-BR)",
+      "Description": "We're having trouble with the app. Please try again later.\n\nIf the issue persists, close and re-open the app, then try again. (PT-BR)"
+    },
+    "KeychainUnavailable": {
+      "Title": "Secure Storage Unavailable (PT-BR)",
+      "Description": "Your device's secure storage is temporarily unavailable. Please wait a moment and try again.\n\nIf the issue persists, restart your device and try again. (PT-BR)"
+    },
     "ProblemWithService": {
       "Title": "Problem with Service (PT-BR)",
       "Description": "Please try again later. (error {{ errorCode }}) (PT-BR)"
@@ -1390,6 +1412,10 @@ const translation = {
     "FileUploadError": {
       "Title": "Problem with Connection (PT-BR)",
       "Description": "Please try again. (PT-BR)"
+    },
+    "VideoPromptsMissing": {
+      "Title": "Problem Starting Video (PT-BR)",
+      "Description": "We couldn't load your verification steps. Please try again. (PT-BR)"
     },
     "FactoryReset": {
       "Title": "Problem with App (PT-BR)",

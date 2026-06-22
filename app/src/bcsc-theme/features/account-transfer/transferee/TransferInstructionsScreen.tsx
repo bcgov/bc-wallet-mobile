@@ -41,7 +41,7 @@ const TransferInstructionsScreen: React.FC = () => {
       <ThemedText>{t('BCSC.TransferInstructions.Step1')}</ThemedText>
       <Image
         source={TAB_NAVIGATOR}
-        style={{ height: 100, aspectRatio: 2, alignSelf: 'center' }}
+        style={{ height: 100, aspectRatio: 3, alignSelf: 'center' }}
         resizeMode={'contain'}
       />
 

@@ -13,7 +13,6 @@ const translation = {
     "HideDetails": "Hide Details",
     "Dismiss": "Dismiss",
     "GetHelp": "Get help",
-    "ContinueSetup": "Continue setup",
     "Share": "Share",
     "Skip": "Skip",
     "A11y": {
@@ -215,6 +214,10 @@ const translation = {
     "ScanQRCode": "Scan a QR code",
   },
   "BCSC": {
+    "AgeRestrictedTransfer": {
+      "Title": "Not available",
+      "Description": "You must be 12 years or older to transfer your account to another device",
+    },
     "Components": {
       "CloseDropdown": "Close dropdown menu",
     },
@@ -585,6 +588,13 @@ const translation = {
       "WarningContentB": "This includes logging into services like Health Gateway or Canada Revenue Agency (CRA).",
       "WarningRenewButton": "Renew"
     },
+    "SessionRecovery": {
+      "Header": "Reset your app",
+      "Body": "Some of your saved data on this device couldn't be read.",
+      "BodyAction": "To keep using the app, you'll need to re-verify or transfer from another device to use your identity again.",
+      "PrimaryAction": "Reset",
+      "Resetting": "Resetting…"
+    },
     "ForgetAllPairings": {
       "Title": "Forget all pairings?",
       "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step.",
@@ -646,6 +656,8 @@ const translation = {
       "ToggleBookmark": "Toggle bookmark",
       "BookmarkDescription": "This adds a link to the menu in this app for easier access next time.",
       "TabTitle": "Pairing code",
+      "CouldNotVerifyPairingCodeTitle": "Could not verify pairing code",
+      "CodeDoesNotMatchMessage": "The code you entered does not match. Try again.",
     },
     "Onboarding": {
       "LearnMore": "Learn more",
@@ -889,6 +901,8 @@ const translation = {
     },
     "EmailConfirmation": {
       "ErrorTitle": "Error verifying confirmation code",
+      "CouldNotVerifyTitle": "Could not verify your email",
+      "CodeDoesNotMatch": "The code you entered does not match. Try again.",
       "EmailError": "Please enter a valid email address (name@host.com).",
       "CodeError": "Please enter a six digit verification code",
       "ErrorResendingCode": "Error resending code",
@@ -909,6 +923,7 @@ const translation = {
       "WhereToGoLink": "A Service BC Location",
       "WhatToBring": "What to bring",
       "ThisDevice": "This device",
+      "YourID": "Your ID, including",
       "YourBCServicesCard": "Your BC Services Card - if it's a non-photo card, bring your additional ID too",
       "ShowThisConfirmationNumber": "Show this confirmation number",
       "YouMustCompleteThisBy": "You must complete this by",
@@ -1305,6 +1320,18 @@ const translation = {
       "Title": "Not Enough Storage",
       "Description": "Your device is out of storage space, so the app can't save your information. Free up space on your device, then try again."
     },
+    "BadRequest": {
+      "Title": "Something went wrong",
+      "Description": "We couldn't complete your request at this time. Please try again later.\n\nIf the issue persists, close and re-open the app to try again."
+    },
+    "SomethingWentWrong": {
+      "Title": "Something went wrong",
+      "Description": "We're having trouble with the app. Please try again later.\n\nIf the issue persists, close and re-open the app, then try again."
+    },
+    "KeychainUnavailable": {
+      "Title": "Secure Storage Unavailable",
+      "Description": "Your device's secure storage is temporarily unavailable. Please wait a moment and try again.\n\nIf the issue persists, restart your device and try again."
+    },
     "ProblemWithService": {
       "Title": "Problem with Service",
       "Description": "Please try again later. (error {{ errorCode }})"
@@ -1397,6 +1424,10 @@ const translation = {
     "FileUploadError": {
       "Title": "Problem with Connection",
       "Description": "Please try again."
+    },
+    "VideoPromptsMissing": {
+      "Title": "Problem Starting Video",
+      "Description": "We couldn't load your verification steps. Please try again."
     },
     "FactoryReset": {
       "Title": "Problem with App",

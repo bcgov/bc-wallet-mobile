@@ -13,7 +13,6 @@ const translation = {
     "HideDetails": "Masquer les détails",
     "Dismiss": "Fermer",
     "GetHelp": "Get help (FR)",
-    "ContinueSetup": "Continue setup (FR)",
     "Share": "Share (FR)",
     "Skip": "Skip (FR)",
     "A11y": {
@@ -564,6 +563,13 @@ const translation = {
       "WarningContentB": "This includes logging into services like Health Gateway or Canada Revenue Agency (CRA). (FR)",
       "WarningRenewButton": "Renew (FR)"
     },
+    "SessionRecovery": {
+      "Header": "Reset your app (FR)",
+      "Body": "Some of your saved data on this device couldn't be read. (FR)",
+      "BodyAction": "To keep using the app, you'll need to re-verify or transfer from another device to use your identity again. (FR)",
+      "PrimaryAction": "Reset (FR)",
+      "Resetting": "Resetting… (FR)"
+    },
     "ForgetAllPairings": {
       "Title": "Forget all pairings? (FR)",
       "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step. (FR)",
@@ -624,6 +630,8 @@ const translation = {
       "BookmarkService": "Save link to: (FR)",
       "ToggleBookmark": "Toggle bookmark (FR)",
       "BookmarkDescription": "This adds a link to the menu in this app for easier access next time. (FR)",
+      "CouldNotVerifyPairingCodeTitle": "Could not verify pairing code (FR)",
+      "CodeDoesNotMatchMessage": "The code you entered does not match. Try again. (FR)",
     },
     "Onboarding": {
       "LearnMore": "Learn more (FR)",
@@ -875,6 +883,8 @@ const translation = {
     },
     "EmailConfirmation": {
       "ErrorTitle": "Error verifying confirmation code (FR)",
+      "CouldNotVerifyTitle": "Could not verify your email (FR)",
+      "CodeDoesNotMatch": "The code you entered does not match. Try again. (FR)",
       "EmailError": "Please enter a valid email address (name@host.com). (FR)",
       "CodeError": "Please enter a six digit verification code (FR)",
       "ErrorResendingCode": "Error resending code (FR)",
@@ -1298,6 +1308,18 @@ const translation = {
       "Title": "Not Enough Storage (FR)",
       "Description": "Your device is out of storage space, so the app can't save your information. Free up space on your device, then try again. (FR)"
     },
+    "BadRequest": {
+      "Title": "Something went wrong (FR)",
+      "Description": "We couldn't complete your request at this time. Please try again later.\n\nIf the issue persists, close and re-open the app to try again. (FR)"
+    },
+    "SomethingWentWrong": {
+      "Title": "Something went wrong (FR)",
+    "Description": "We're having trouble with the app. Please try again later.\n\nIf the issue persists, close and re-open the app, then try again.(FR)"
+    },
+    "KeychainUnavailable": {
+      "Title": "Secure Storage Unavailable (FR)",
+      "Description": "Your device's secure storage is temporarily unavailable. Please wait a moment and try again.\n\nIf the issue persists, restart your device and try again. (FR)"
+    },
     "ProblemWithService": {
       "Title": "Problem with Service (FR)",
       "Description": "Please try again later. (error {{ errorCode }}) (FR)"
@@ -1390,6 +1412,10 @@ const translation = {
     "FileUploadError": {
       "Title": "Problem with Connection (FR)",
       "Description": "Please try again. (FR)"
+    },
+    "VideoPromptsMissing": {
+      "Title": "Problem Starting Video (FR)",
+      "Description": "We couldn't load your verification steps. Please try again. (FR)"
     },
     "FactoryReset": {
       "Title": "Problem with App (FR)",
