@@ -32,6 +32,7 @@ import { AccountRenewalFinalWarningScreen } from '../features/account/AccountRen
 import { AccountRenewalFirstWarningScreen } from '../features/account/AccountRenewalFirstWarningScreen'
 import { AccountRenewalInformationScreen } from '../features/account/AccountRenewalInformationScreen'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
+import { ReverifyAccountScreen } from '../features/account/ReverifyAccountScreen'
 import { MainRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
 import { AgentReadyGate, BifoldScope, withAgentReadyGate } from '../features/agent'
 import { MainChangePINScreen } from '../features/auth/MainChangePINScreen'
@@ -450,6 +451,13 @@ const MainStack: React.FC = () => {
           <Stack.Screen
             name={BCSCScreens.AccountRenewalFinalWarning}
             component={AccountRenewalFinalWarningScreen}
+            options={() => ({
+              headerShown: true,
+            })}
+          />
+          <Stack.Screen
+            name={BCSCScreens.ReverifyAccount}
+            component={ReverifyAccountScreen}
             options={() => ({
               headerShown: true,
             })}

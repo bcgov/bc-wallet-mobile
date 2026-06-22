@@ -1,6 +1,6 @@
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useTheme } from '@bifold/core'
-import { CommonActions, useNavigation } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
 import NotificationCard, { NotificationCardStatus } from './NotificationCard'
 
@@ -19,7 +19,7 @@ const CardExpiryNotification = () => {
       description={t('Notification.AccountExpired.Description')}
       buttonTitle={t('Notification.AccountExpired.ButtonTitle')}
       onPress={() => {
-        navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.AccountExpired }] }))
+        navigation.navigate(BCSCScreens.ReverifyAccount, { isExpired: true })
       }}
     />
   )

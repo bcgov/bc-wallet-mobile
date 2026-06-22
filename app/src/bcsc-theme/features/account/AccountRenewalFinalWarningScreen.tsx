@@ -1,7 +1,6 @@
 import { ActionScreenLayout } from '@/bcsc-theme/components/ActionScreenLayout'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
-
 import { ThemedText, TOKENS, useServices } from '@bifold/core'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'

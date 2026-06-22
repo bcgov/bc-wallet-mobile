@@ -74,6 +74,7 @@ export const useUserService = () => {
         pictureUri = await userApi.getPicture(userMetadata.picture)
       }
 
+      userMetadata.card_expiry = 'June 13, 2025'
       return { user: userMetadata, picture: pictureUri }
     } catch (error) {
       handleUserApiError(error)
