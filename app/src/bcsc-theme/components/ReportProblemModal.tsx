@@ -6,7 +6,7 @@ import Clipboard from '@react-native-clipboard/clipboard'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { KeyboardAvoidingView, Linking, Modal, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import CommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
@@ -40,6 +40,9 @@ export interface ReportProblemModalProps {
 export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette, TextTheme } = useTheme()
+  // Inset works inside this RN Modal because the app's root SafeAreaProvider context crosses the
+  // modal boundary; applied as scroll padding so the action button clears the home indicator.
+  const insets = useSafeAreaInsets()
 
   const [description, setDescription] = useState('')
   const [consented, setConsented] = useState(false)
@@ -148,7 +151,10 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
   })
 
   const renderForm = () => (
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      contentContainerStyle={[styles.content, { paddingBottom: Spacing.md + insets.bottom }]}
+      keyboardShouldPersistTaps="handled"
+    >
       <ThemedText>{t('BCSC.ReportProblem.Intro')}</ThemedText>
 
       <View>
@@ -170,12 +176,15 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
 
       {/* Lightweight collection notice for the one-off report: the modal sends the user's description
           plus basic app/device info to support and no longer enables remote logging. Placeholder copy
-          pending design/privacy review. */}
-      <ThemedText style={styles.noticeText}>{t('BCSC.ReportProblem.CollectionNotice')}</ThemedText>
-      <Link
-        linkText={t('BCSC.ReportProblem.PrivacyPolicyLink')}
-        onPress={() => Linking.openURL(BC_LOGIN_PRIVACY_URL)}
-      />
+          pending design/privacy review. The Privacy Policy link is inline so the notice reads as one
+          sentence rather than floating on its own row. */}
+      <ThemedText style={styles.noticeText}>
+        {t('BCSC.ReportProblem.CollectionNotice')}{' '}
+        <Link
+          linkText={t('BCSC.ReportProblem.PrivacyPolicyLink')}
+          onPress={() => Linking.openURL(BC_LOGIN_PRIVACY_URL)}
+        />
+      </ThemedText>
 
       <CheckBoxRow
         title={t('BCSC.ReportProblem.ConsentCheckbox')}
@@ -197,7 +206,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
   )
 
   const renderSuccess = () => (
-    <ScrollView contentContainerStyle={styles.content}>
+    <ScrollView contentContainerStyle={[styles.content, { paddingBottom: Spacing.md + insets.bottom }]}>
       <View style={styles.successContainer}>
         <Icon name="check-circle" size={64} color={ColorPalette.brand.primary} />
         <ThemedText variant="headingThree" style={{ textAlign: 'center' }}>
@@ -259,7 +268,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
             accessibilityRole="button"
             accessibilityLabel={t('Global.Close')}
           />
-          <SafeAreaView edges={['bottom']} style={styles.sheet}>
+          <View style={styles.sheet}>
             <View style={styles.header}>
               <ThemedText variant="headingThree">{t('BCSC.ReportProblem.Title')}</ThemedText>
               <PressableOpacity
@@ -273,7 +282,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
               </PressableOpacity>
             </View>
             {submitted ? renderSuccess() : renderForm()}
-          </SafeAreaView>
+          </View>
         </View>
       </KeyboardAvoidingView>
     </Modal>
