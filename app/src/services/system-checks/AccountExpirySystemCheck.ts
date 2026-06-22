@@ -22,7 +22,7 @@ export class AccountExpirySystemCheck implements SystemCheckStrategy {
   runCheck() {
     const isExpired = isAccountExpired(this.accountExpiration)
 
-    // Fail if expired (including already expired — expired case is also handled by MainStack)
+    // Fail if expired (including "expires today")
     return !isExpired
   }
 
