@@ -113,7 +113,10 @@ class NativeCompatiblePinStorage(
                 if (migrated) {
                     Log.i(TAG, "Migrated PIN secret to Base64 key encoding for alias: $alias")
                 } else {
-                    Log.w(TAG, "PIN verified but failed to persist Base64 migration for alias: $alias; will retry next unlock")
+                    Log.w(
+                        TAG,
+                        "PIN verified but failed to persist Base64 migration for alias: $alias; will retry next unlock",
+                    )
                 }
                 return true
             }
@@ -385,7 +388,8 @@ class NativeCompatiblePinStorage(
 
         return try {
             val bytes =
-                key.substring(1, key.length - 1)
+                key
+                    .substring(1, key.length - 1)
                     .split(", ")
                     .map { it.trim().toInt().toByte() }
                     .toByteArray()
@@ -404,7 +408,10 @@ class NativeCompatiblePinStorage(
             if (migrated) {
                 Log.i(TAG, "Migrated legacy PIN key to Base64 for alias: ${secret.id}")
             } else {
-                Log.w(TAG, "Failed to persist legacy PIN key migration for alias: ${secret.id}; returning Base64 in-memory")
+                Log.w(
+                    TAG,
+                    "Failed to persist legacy PIN key migration for alias: ${secret.id}; returning Base64 in-memory",
+                )
             }
             base64
         } catch (e: Exception) {
