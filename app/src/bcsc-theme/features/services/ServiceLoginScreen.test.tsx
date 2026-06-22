@@ -2,6 +2,8 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { PairingService, PairingServiceProvider } from '@/bcsc-theme/features/pairing'
 import * as useServiceLoginStateModule from '@/bcsc-theme/features/services/hooks/useServiceLoginState'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { HelpCentreUrl, REPORT_SUSPICIOUS_URL } from '@/constants'
 import { AppError } from '@/errors/appError'
 import { ErrorCategory } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
@@ -11,7 +13,7 @@ import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
-import { Linking } from 'react-native'
+import { Alert, Linking } from 'react-native'
 import { ServiceLoginScreen } from './ServiceLoginScreen'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi', () => ({
@@ -196,6 +198,69 @@ describe('ServiceLogin', () => {
       expect(getByTestId(testIdWithKey('ReportSuspiciousLink'))).toBeTruthy()
       expect(queryByTestId(testIdWithKey('ReadPrivacyPolicy'))).toBeNull()
     })
+
+    it('opens REPORT_SUSPICIOUS_URL when the report suspicious link is pressed', () => {
+      mockedUseServiceLoginState.mockReturnValue({
+        state: {
+          serviceTitle: 'Test Service',
+          serviceInitiateLoginUri: 'https://login.example.com',
+          claimsDescription: 'Your name and birthdate',
+        },
+        isLoading: false,
+        serviceHydrated: true,
+      })
+
+      const mockOpenURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined)
+      const { getByTestId } = renderScreen(mockNavigation)
+
+      fireEvent.press(getByTestId(testIdWithKey('BCSC.Services.ReportSuspicious')))
+
+      expect(mockOpenURL).toHaveBeenCalledWith(REPORT_SUSPICIOUS_URL)
+      mockOpenURL.mockRestore()
+    })
+  })
+
+  describe('Unavailable view GoToServiceClient', () => {
+    const renderUnavailable = (extraState: Record<string, unknown> = {}) => {
+      mockedUseServiceLoginState.mockReturnValue({
+        state: { serviceTitle: 'Test Service', ...extraState },
+        isLoading: false,
+        serviceHydrated: true,
+      })
+      return renderScreen(mockNavigation)
+    }
+
+    it('does not call Linking.openURL when serviceClientUri is missing', () => {
+      const mockOpenURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined)
+      const { getByTestId } = renderUnavailable()
+
+      fireEvent.press(getByTestId(testIdWithKey('GoToServiceClient')))
+
+      expect(mockOpenURL).not.toHaveBeenCalled()
+      mockOpenURL.mockRestore()
+    })
+
+    it('opens serviceClientUri when GoToServiceClient is pressed', async () => {
+      const mockOpenURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined)
+      const { getByTestId } = renderUnavailable({ serviceClientUri: SERVICE_CLIENT_URI })
+
+      fireEvent.press(getByTestId(testIdWithKey('GoToServiceClient')))
+
+      await waitFor(() => expect(mockOpenURL).toHaveBeenCalledWith(SERVICE_CLIENT_URI))
+      mockOpenURL.mockRestore()
+    })
+
+    it('shows alert when Linking.openURL rejects', async () => {
+      const mockOpenURL = jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('failed'))
+      const mockAlert = jest.spyOn(Alert, 'alert').mockImplementation()
+      const { getByTestId } = renderUnavailable({ serviceClientUri: SERVICE_CLIENT_URI })
+
+      fireEvent.press(getByTestId(testIdWithKey('GoToServiceClient')))
+
+      await waitFor(() => expect(mockAlert).toHaveBeenCalled())
+      mockOpenURL.mockRestore()
+      mockAlert.mockRestore()
+    })
   })
 
   describe('onContinueWithPairingCode error handling', () => {
@@ -339,6 +404,120 @@ describe('ServiceLogin', () => {
       fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
 
       await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalled())
+    })
+
+    it('should show alert and not navigate when Linking.openURL throws', async () => {
+      const quickLoginUrl = 'https://login.example.com/quick'
+      const mockOpenURL = jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('failed'))
+      const mockAlert = jest.spyOn(Alert, 'alert').mockImplementation()
+      const mockGetQuickLoginURL = jest.fn().mockResolvedValue({ success: true, url: quickLoginUrl })
+
+      const tree = renderWithService(mockGetQuickLoginURL, { loginServerErrorAlert: jest.fn() })
+
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
+
+      await waitFor(() => expect(mockAlert).toHaveBeenCalled())
+      expect(mockNavigation.reset).not.toHaveBeenCalled()
+
+      mockOpenURL.mockRestore()
+      mockAlert.mockRestore()
+    })
+  })
+
+  describe('onContinue fallback', () => {
+    it('shows loginServerErrorAlert when no service or pairing code is available', async () => {
+      const mockLoginServerErrorAlert = jest.fn()
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({
+        loginServerErrorAlert: mockLoginServerErrorAlert,
+      } as any)
+      mockedUseServiceLoginState.mockReturnValue({
+        state: {
+          serviceTitle: 'Test Service',
+          serviceInitiateLoginUri: 'https://login.example.com',
+        },
+        isLoading: false,
+        serviceHydrated: true,
+      })
+
+      const tree = renderScreen(mockNavigation)
+      fireEvent.press(tree.getByTestId('com.ariesbifold:id/ServiceLoginContinue'))
+
+      await waitFor(() => expect(mockLoginServerErrorAlert).toHaveBeenCalled())
+    })
+  })
+
+  describe('onOpenInfoShared', () => {
+    const renderDefault = () => {
+      mockedUseServiceLoginState.mockReturnValue({
+        state: {
+          serviceTitle: 'Test Service',
+          serviceInitiateLoginUri: 'https://login.example.com',
+          claimsDescription: 'Your name and birthdate',
+        },
+        isLoading: false,
+        serviceHydrated: true,
+      })
+      return renderScreen(mockNavigation)
+    }
+
+    it('navigates to MainWebView with INFO_SHARED url when help button is pressed', () => {
+      const { getByTestId } = renderDefault()
+
+      fireEvent.press(getByTestId(testIdWithKey('HelpButton')))
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(
+        BCSCScreens.MainWebView,
+        expect.objectContaining({ url: HelpCentreUrl.INFO_SHARED })
+      )
+    })
+
+    it('does not throw when navigation throws', () => {
+      mockNavigation.navigate.mockImplementationOnce(() => {
+        throw new Error('navigation failed')
+      })
+      const { getByTestId } = renderDefault()
+
+      expect(() => fireEvent.press(getByTestId(testIdWithKey('HelpButton')))).not.toThrow()
+    })
+  })
+
+  describe('onOpenPrivacyPolicy', () => {
+    const PRIVACY_URL = 'https://privacy.example.com'
+
+    const renderWithPrivacy = () => {
+      mockedUseServiceLoginState.mockReturnValue({
+        state: {
+          serviceTitle: 'Test Service',
+          serviceInitiateLoginUri: 'https://login.example.com',
+          claimsDescription: 'Your name and birthdate',
+          privacyPolicyUri: PRIVACY_URL,
+        },
+        isLoading: false,
+        serviceHydrated: true,
+      })
+      return renderScreen(mockNavigation)
+    }
+
+    it('opens privacy policy URL when ReadPrivacyPolicy is pressed', async () => {
+      const mockOpenURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined)
+      const { getByTestId } = renderWithPrivacy()
+
+      fireEvent.press(getByTestId(testIdWithKey('ReadPrivacyPolicy')))
+
+      await waitFor(() => expect(mockOpenURL).toHaveBeenCalledWith(PRIVACY_URL))
+      mockOpenURL.mockRestore()
+    })
+
+    it('shows alert when Linking.openURL rejects', async () => {
+      const mockOpenURL = jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('failed'))
+      const mockAlert = jest.spyOn(Alert, 'alert').mockImplementation()
+      const { getByTestId } = renderWithPrivacy()
+
+      fireEvent.press(getByTestId(testIdWithKey('ReadPrivacyPolicy')))
+
+      await waitFor(() => expect(mockAlert).toHaveBeenCalled())
+      mockOpenURL.mockRestore()
+      mockAlert.mockRestore()
     })
   })
 

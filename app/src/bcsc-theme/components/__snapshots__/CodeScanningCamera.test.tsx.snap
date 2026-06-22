@@ -24,11 +24,7 @@ exports[`CodeScanningCamera Camera Type renders with back camera (default) 1`] =
     }
   >
     <View
-      animatedProps={
-        {
-          "zoom": 1,
-        }
-      }
+      animatedProps={{}}
       codeScanner={
         {
           "codeTypes": [
@@ -156,7 +152,7 @@ exports[`CodeScanningCamera Camera Type renders with back camera (default) 1`] =
       }
     >
       Zoom: 
-      1.00
+      2.00
       x
     </Text>
     <Text
@@ -295,11 +291,7 @@ exports[`CodeScanningCamera Camera Type renders with front camera 1`] = `
     }
   >
     <View
-      animatedProps={
-        {
-          "zoom": 1,
-        }
-      }
+      animatedProps={{}}
       codeScanner={
         {
           "codeTypes": [
@@ -427,7 +419,7 @@ exports[`CodeScanningCamera Camera Type renders with front camera 1`] = `
       }
     >
       Zoom: 
-      1.00
+      2.00
       x
     </Text>
     <Text
@@ -566,11 +558,7 @@ exports[`CodeScanningCamera Custom Scan Zones renders with both custom scan zone
     }
   >
     <View
-      animatedProps={
-        {
-          "zoom": 1,
-        }
-      }
+      animatedProps={{}}
       codeScanner={
         {
           "codeTypes": [
@@ -697,7 +685,7 @@ exports[`CodeScanningCamera Custom Scan Zones renders with both custom scan zone
       }
     >
       Zoom: 
-      1.00
+      2.00
       x
     </Text>
     <Text
@@ -836,11 +824,7 @@ exports[`CodeScanningCamera Custom Scan Zones renders with custom scan zones 1`]
     }
   >
     <View
-      animatedProps={
-        {
-          "zoom": 1,
-        }
-      }
+      animatedProps={{}}
       codeScanner={
         {
           "codeTypes": [
@@ -967,7 +951,7 @@ exports[`CodeScanningCamera Custom Scan Zones renders with custom scan zones 1`]
       }
     >
       Zoom: 
-      1.00
+      2.00
       x
     </Text>
     <Text
@@ -1106,11 +1090,7 @@ exports[`CodeScanningCamera Custom Scan Zones renders with enableScanZones flag 
     }
   >
     <View
-      animatedProps={
-        {
-          "zoom": 1,
-        }
-      }
+      animatedProps={{}}
       codeScanner={
         {
           "codeTypes": [
@@ -1238,7 +1218,7 @@ exports[`CodeScanningCamera Custom Scan Zones renders with enableScanZones flag 
       }
     >
       Zoom: 
-      1.00
+      2.00
       x
     </Text>
     <Text
@@ -1377,11 +1357,7 @@ exports[`CodeScanningCamera renders correctly with default props 1`] = `
     }
   >
     <View
-      animatedProps={
-        {
-          "zoom": 1,
-        }
-      }
+      animatedProps={{}}
       codeScanner={
         {
           "codeTypes": [
@@ -1509,7 +1485,7 @@ exports[`CodeScanningCamera renders correctly with default props 1`] = `
       }
     >
       Zoom: 
-      1.00
+      2.00
       x
     </Text>
     <Text
@@ -1648,11 +1624,7 @@ exports[`CodeScanningCamera renders with barcode highlight enabled 1`] = `
     }
   >
     <View
-      animatedProps={
-        {
-          "zoom": 1,
-        }
-      }
+      animatedProps={{}}
       codeScanner={
         {
           "codeTypes": [
@@ -1780,7 +1752,7 @@ exports[`CodeScanningCamera renders with barcode highlight enabled 1`] = `
       }
     >
       Zoom: 
-      1.00
+      2.00
       x
     </Text>
     <Text
@@ -1919,11 +1891,7 @@ exports[`CodeScanningCamera renders with custom initial zoom 1`] = `
     }
   >
     <View
-      animatedProps={
-        {
-          "zoom": 1,
-        }
-      }
+      animatedProps={{}}
       codeScanner={
         {
           "codeTypes": [
@@ -2051,7 +2019,7 @@ exports[`CodeScanningCamera renders with custom initial zoom 1`] = `
       }
     >
       Zoom: 
-      1.00
+      3.00
       x
     </Text>
     <Text
@@ -2190,11 +2158,7 @@ exports[`CodeScanningCamera renders with initial zoom set 1`] = `
     }
   >
     <View
-      animatedProps={
-        {
-          "zoom": 1,
-        }
-      }
+      animatedProps={{}}
       codeScanner={
         {
           "codeTypes": [
@@ -2322,7 +2286,7 @@ exports[`CodeScanningCamera renders with initial zoom set 1`] = `
       }
     >
       Zoom: 
-      1.00
+      2.00
       x
     </Text>
     <Text

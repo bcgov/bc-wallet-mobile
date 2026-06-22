@@ -5,6 +5,8 @@ import { FlatList, Modal, Pressable, StyleProp, StyleSheet, TextStyle, View } fr
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
+import { PressableOpacity } from '@/components/PressableOpacity'
+import { hitSlop } from '@/constants'
 import { a11yLabel } from '@utils/accessibility'
 
 export type DropdownOption<T> = {
@@ -46,7 +48,7 @@ export const DropdownWithValidation = <T extends string | number>({
   subtextProps,
   errorProps,
 }: DropdownWithValidationProps<T>) => {
-  const { Inputs, ColorPalette, Spacing, TextTheme } = useTheme()
+  const { Inputs, ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
 
@@ -91,7 +93,7 @@ export const DropdownWithValidation = <T extends string | number>({
     modalTitle: {
       fontSize: 18,
       fontWeight: '600',
-      color: TextTheme.normal.color,
+      color: ColorPalette.brand.secondary,
       flex: 1,
       textAlign: 'center',
     },
@@ -112,7 +114,7 @@ export const DropdownWithValidation = <T extends string | number>({
     },
     optionText: {
       fontSize: 16,
-      color: TextTheme.normal.color,
+      color: ColorPalette.brand.secondary,
     },
     optionTextSelected: {
       fontWeight: '600',
@@ -134,7 +136,11 @@ export const DropdownWithValidation = <T extends string | number>({
     const isLastItem = index === options.length - 1
     return (
       <Pressable
-        style={[styles.optionItem, isSelected && styles.optionItemSelected, isLastItem && { borderBottomWidth: 0 }]}
+        style={({ pressed }) => [
+          styles.optionItem,
+          (isSelected || pressed) && styles.optionItemSelected,
+          isLastItem && { borderBottomWidth: 0 },
+        ]}
         onPress={() => handleSelect(item.value)}
         testID={testIdWithKey(`${id}-option-${item.value}`)}
         accessibilityLabel={a11yLabel(item.label)}
@@ -193,42 +199,28 @@ export const DropdownWithValidation = <T extends string | number>({
       ) : null}
 
       <Modal visible={isOpen} transparent animationType="slide" onRequestClose={handleClose}>
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={handleClose}
-          accessibilityLabel={a11yLabel(t('BCSC.Components.CloseDropdown'))}
-          accessibilityRole="button"
-          testID={testIdWithKey(`${id}-modal-overlay`)}
-        >
-          <SafeAreaView>
-            <Pressable
-              style={styles.modalContent}
-              onPress={(e) => e.stopPropagation()}
-              testID={testIdWithKey(`${id}-modal-content`)}
-              accessible={false} // Prevent screen readers from focusing this pressable, the focus should be the flatlist component
+        <SafeAreaView style={styles.modalContent} testID={testIdWithKey(`${id}-modal-content`)}>
+          <View style={styles.modalHeader}>
+            <View style={{ width: 32 }} />
+            <ThemedText style={styles.modalTitle}>{subtext}</ThemedText>
+            <PressableOpacity
+              style={styles.closeButton}
+              onPress={handleClose}
+              testID={testIdWithKey(`${id}-close`)}
+              accessibilityLabel={a11yLabel(t('Global.Close'))}
+              accessibilityRole="button"
+              hitSlop={hitSlop}
             >
-              <View style={styles.modalHeader}>
-                <View style={{ width: 32 }} />
-                <ThemedText style={styles.modalTitle}>{subtext}</ThemedText>
-                <Pressable
-                  style={styles.closeButton}
-                  onPress={handleClose}
-                  testID={testIdWithKey(`${id}-close`)}
-                  accessibilityLabel={a11yLabel(t('Global.Close'))}
-                  accessibilityRole="button"
-                >
-                  <Icon name="close" size={24} color={TextTheme.normal.color} />
-                </Pressable>
-              </View>
-              <FlatList
-                data={options}
-                renderItem={renderOption}
-                keyExtractor={(item) => String(item.value)}
-                accessibilityRole="menu"
-              />
-            </Pressable>
-          </SafeAreaView>
-        </Pressable>
+              <Icon name="close" size={24} color={ColorPalette.brand.secondary} />
+            </PressableOpacity>
+          </View>
+          <FlatList
+            data={options}
+            renderItem={renderOption}
+            keyExtractor={(item) => String(item.value)}
+            accessibilityRole="menu"
+          />
+        </SafeAreaView>
       </Modal>
     </View>
   )

@@ -1,3 +1,4 @@
+import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { ErrorCategory, ErrorDefinition } from './errorRegistry'
@@ -16,6 +17,35 @@ export type ErrorIdentity = {
 }
 
 /**
+ * Reduce a `cause` to a small, safe-to-serialize summary.
+ *
+ * The raw cause of an HTTP failure is often an AxiosError whose `config.data` holds the
+ * full request body — for an evidence upload that is the multi-MB photo/video Buffer.
+ * Serializing it (JSON.stringify expands a Buffer to a per-byte number array) can exhaust
+ * memory, so toJSON() keeps only lightweight identifying fields and drops the nested
+ * chain/body. The live `cause` property is left untouched for runtime logic.
+ */
+const summarizeCause = (cause: unknown): unknown => {
+  if (!(cause instanceof Error)) {
+    return cause
+  }
+
+  const { code, status, userInfo } = cause as { code?: unknown; status?: unknown; userInfo?: unknown }
+  const summary: Record<string, unknown> = { name: cause.name, message: cause.message }
+  if (code !== undefined) {
+    summary.code = code
+  }
+  if (status !== undefined) {
+    summary.status = status
+  }
+  if (userInfo !== undefined) {
+    // Native-module rejections carry small, bridge-serializable diagnostics here
+    summary.userInfo = userInfo
+  }
+  return summary
+}
+
+/**
  * Custom application error class with structured information.
  *
  * @extends {Error}
@@ -29,6 +59,9 @@ export class AppError extends Error {
   statusCode: number // ie: 2100
   timestamp: string // ISO timestamp of when the error was created
   handled: boolean // Whether this error has been handled by a policy
+  screen: string | undefined // Active screen name at the time the error was created
+  url?: string // API endpoint URL that produced this error, if applicable
+  method?: string // HTTP method of the request that produced this error, if applicable
 
   constructor(message: string, identity: ErrorIdentity, options?: AppErrorOptions) {
     super(message, options)
@@ -40,6 +73,9 @@ export class AppError extends Error {
     this.timestamp = new Date().toISOString()
     this.handled = false
     this.tracked = false
+    this.screen = navigationRef.isReady() ? navigationRef.getCurrentRoute()?.name : undefined
+    this.url = undefined
+    this.method = undefined
 
     // Track the error in analytics unless explicitly disabled
     if (options?.track !== false) {
@@ -54,7 +90,21 @@ export class AppError extends Error {
    */
   get technicalMessage(): string | null {
     // QUESTION (MD): Should we have a max length? Or detect HTML strings or other non-user-friendly content and truncate/remove it?
-    return this.cause instanceof Error ? this.cause.message : null
+    if (!(this.cause instanceof Error)) {
+      return null
+    }
+
+    const cause = this.cause as Error & { code?: unknown; isAxiosError?: boolean }
+
+    // AxiosErrors have their error code written into cause.code
+    // That value is already captured in appEvent, so excluding it here
+    // keeps technicalMessage as server description, which error policies policies match against
+    const isAxiosError = Boolean(cause.isAxiosError) || cause.name === 'AxiosError'
+
+    // For non-Axios errors (e.g. native module errors), cause.code is a meaningful prefix like "E_KEY_NOT_FOUND"
+    const code = !isAxiosError && typeof cause.code === 'string' ? cause.code : undefined
+
+    return [code, cause.message].filter(Boolean).join(': ')
   }
 
   /**
@@ -75,6 +125,15 @@ export class AppError extends Error {
       formattedMessage += ` ${this.technicalMessage}`
     }
 
+    if (this.screen) {
+      formattedMessage += `\nScreen: ${this.screen}`
+    }
+
+    if (this.url) {
+      const request = this.method ? `${this.method} ${this.url}` : this.url
+      formattedMessage += `\nRequest: ${request}`
+    }
+
     return formattedMessage
   }
 
@@ -88,6 +147,13 @@ export class AppError extends Error {
       return
     }
 
+    // Surface the HTTP context (status + endpoint) when the cause is an HTTP/Axios error. Axios collapses
+    // every 4xx into a single code, so without this the dashboard cannot tell 400/401/403/404 apart — nor
+    // which endpoint produced the error.
+    const httpStatus = (this.cause as { response?: { status?: number } } | undefined)?.response?.status
+    const request = [this.method, this.url].filter(Boolean).join(' ')
+    const context = [httpStatus ? `HTTP ${httpStatus}` : undefined, request || undefined].filter(Boolean).join(' ')
+
     Analytics.trackErrorEvent({
       /**
        * NOTE: We use AppEventCode as the error code for backwards compatibility with V3 and the
@@ -96,9 +162,9 @@ export class AppError extends Error {
        */
       code: this.appEvent,
       /**
-       * TEMP: Inject the error code into the message to provide additional context.
+       * TEMP: Inject the error code (plus HTTP status + endpoint when present) into the message for context.
        */
-      message: `[${this.code}] ${this.message}`,
+      message: context ? `[${this.code}] ${context} ${this.message}` : `[${this.code}] ${this.message}`,
     })
 
     this.tracked = true
@@ -136,7 +202,10 @@ export class AppError extends Error {
       code: this.code,
       timestamp: this.timestamp,
       handled: this.handled,
-      cause: this.cause,
+      screen: this.screen,
+      url: this.url,
+      method: this.method,
+      cause: summarizeCause(this.cause),
     }
   }
 }

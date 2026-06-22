@@ -114,7 +114,12 @@ export const ErrorRegistry = {
     appEvent: AppEventCode.NO_INTERNET,
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.NETWORK,
-    message: 'Network reachability check failed — no active internet connection',
+    // NOTE: This maps from axios `ERR_NETWORK`, which means the request failed at the transport
+    // layer with no HTTP response — NOT necessarily that the device is offline. It also covers
+    // DNS failures, TLS errors, and connection resets against a specific host. Avoid implying a
+    // reachability probe was run (none is).
+    message:
+      'Network request failed before a response was received — device offline, or DNS/TLS/connection error on the target host',
   },
   SERVER_ERROR: {
     statusCode: 2101,
@@ -163,7 +168,7 @@ export const ErrorRegistry = {
     appEvent: AppEventCode.ERR_209_BAD_REQUEST,
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.NETWORK,
-    message: 'Server rejected the request with HTTP 400 — check request payload',
+    message: 'Server rejected the request — check request payload',
   },
   SERVER_OUTAGE: {
     statusCode: 2108,
@@ -199,6 +204,13 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.WARNING,
     category: ErrorCategory.AUTHENTICATION,
     message: 'Maximum retry/attempt count exceeded — request throttled',
+  },
+  NOT_FOUND: {
+    statusCode: 2113,
+    appEvent: AppEventCode.NOT_FOUND,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.NETWORK,
+    message: 'Server returned 404 — requested resource or endpoint was not found',
   },
 
   // ============================================
@@ -273,6 +285,13 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.WARNING,
     category: ErrorCategory.AUTHENTICATION,
     message: 'Account limit reached — user has too many active registrations',
+  },
+  FORBIDDEN: {
+    statusCode: 2210,
+    appEvent: AppEventCode.FORBIDDEN,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.AUTHENTICATION,
+    message: 'HTTP 403 — authenticated but not permitted to access this resource',
   },
 
   // ============================================
@@ -393,6 +412,13 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.INFO,
     category: ErrorCategory.VERIFICATION,
     message: 'Verification request is still pending — agent has yet to verify request',
+  },
+  VIDEO_PROMPTS_MISSING: {
+    statusCode: 2412,
+    appEvent: AppEventCode.VIDEO_PROMPTS_MISSING,
+    severity: ErrorSeverity.WARNING,
+    category: ErrorCategory.VERIFICATION,
+    message: 'Video prompts were missing or empty when entering the capture screen',
   },
 
   // ============================================
@@ -570,8 +596,16 @@ export const ErrorRegistry = {
     category: ErrorCategory.STORAGE,
     message: 'Object toJSONString() serialization threw an exception',
   },
-  DEVICE_STORAGE_FULL: {
+  KEYCHAIN_UNAVAILABLE: {
     statusCode: 2609,
+    appEvent: AppEventCode.ERR_120_KEYCHAIN_UNAVAILABLE_ERROR,
+    severity: ErrorSeverity.WARNING,
+    category: ErrorCategory.STORAGE,
+    message: 'Keychain temporarily unreadable (device locked or secure storage unavailable) — retryable',
+  },
+  // 2610 (not 2609): main assigned 2609 to KEYCHAIN_UNAVAILABLE first; renumbered on v4.1 sync
+  DEVICE_STORAGE_FULL: {
+    statusCode: 2610,
     appEvent: AppEventCode.DEVICE_STORAGE_FULL,
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.STORAGE,

@@ -1,5 +1,5 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
-import { ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
+import { ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
@@ -45,8 +45,12 @@ export const PrivacyPolicyContent: React.FC<PrivacyPolicyContentProps> = ({
         <ThemedText variant="headingFour">{t('BCSC.Onboarding.PrivacyPolicyHeaderSecuringApp')}</ThemedText>
         <ThemedText>{t('BCSC.Onboarding.PrivacyPolicyContentC')}</ThemedText>
       </View>
-
-      <CardButton title={t('BCSC.Onboarding.LearnMore')} onPress={onLearnMore} endIcon="open-in-new" />
+      <CardButton
+        title={t('BCSC.Onboarding.LearnMore')}
+        testID={testIdWithKey('LearnMore')}
+        onPress={onLearnMore}
+        endIcon="open-in-new"
+      />
     </ScreenWrapper>
   )
 }

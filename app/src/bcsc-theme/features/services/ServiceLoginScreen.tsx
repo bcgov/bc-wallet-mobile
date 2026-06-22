@@ -101,13 +101,9 @@ type ReportSuspiciousLinkProps = {
 const ReportSuspiciousLink: React.FC<ReportSuspiciousLinkProps> = ({ t, testID }: ReportSuspiciousLinkProps) => {
   const { Spacing } = useTheme()
   return (
-    <ThemedText variant={'bold'} style={{ marginTop: Spacing.sm }}>
+    <ThemedText variant={'bold'} testID={testID} style={{ marginTop: Spacing.sm }}>
       {t('BCSC.Services.ReportSuspiciousPrefix')}{' '}
-      <Link
-        linkText={t('BCSC.Services.ReportSuspicious')}
-        testID={testID}
-        onPress={() => Linking.openURL(REPORT_SUSPICIOUS_URL)}
-      />
+      <Link linkText={t('BCSC.Services.ReportSuspicious')} onPress={() => Linking.openURL(REPORT_SUSPICIOUS_URL)} />
     </ThemedText>
   )
 }

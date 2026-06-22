@@ -3,6 +3,10 @@ import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { AppError, isAppError, isHandledAppError } from './appError'
 import { ErrorCategory, ErrorRegistry, ErrorSeverity } from './errorRegistry'
 
+jest.mock('@/contexts/NavigationContainerContext', () => ({
+  navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
+}))
+
 describe('AppError', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -50,6 +54,18 @@ describe('AppError', () => {
 
       expect(error.technicalMessage).toBeNull()
     })
+
+    it('should prefix the native error code when present on the cause', () => {
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+      const cause = Object.assign(new Error("Key pair with alias 'abc' not found."), { code: 'E_KEY_NOT_FOUND' })
+      const error = new AppError('Something went wrong', identity, { cause })
+
+      expect(error.technicalMessage).toBe("E_KEY_NOT_FOUND: Key pair with alias 'abc' not found.")
+    })
   })
 
   describe('fullMessage', () => {
@@ -77,6 +93,49 @@ describe('AppError', () => {
         'Something went wrong\nDebug: [general.unknown_server_error.1234] Technical details about the error'
       )
     })
+
+    it('should append URL if set', () => {
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+      const error = new AppError('Something went wrong', identity)
+      error.url = 'https://example.com/device/token'
+
+      expect(error.fullMessage).toBe(
+        'Something went wrong\nDebug: [general.unknown_server_error.1234]\nRequest: https://example.com/device/token'
+      )
+    })
+
+    it('should include HTTP method with URL when both are set', () => {
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+      const error = new AppError('Something went wrong', identity)
+      error.url = 'https://example.com/device/token'
+      error.method = 'POST'
+
+      expect(error.fullMessage).toBe(
+        'Something went wrong\nDebug: [general.unknown_server_error.1234]\nRequest: POST https://example.com/device/token'
+      )
+    })
+
+    it('should append screen name when screen is set', () => {
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+      const error = new AppError('Something went wrong', identity)
+      error.screen = 'HomeScreen'
+
+      expect(error.fullMessage).toBe(
+        'Something went wrong\nDebug: [general.unknown_server_error.1234]\nScreen: HomeScreen'
+      )
+    })
   })
 
   describe('track', () => {
@@ -95,6 +154,27 @@ describe('AppError', () => {
       expect(trackErrorEventSpy).toHaveBeenCalledWith({
         code: AppEventCode.UNKNOWN_SERVER_ERROR,
         message: `[${error.code}] ${error.message}`,
+      })
+    })
+
+    it('should include the HTTP status and endpoint in the tracked message when present', () => {
+      const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
+
+      const identity = {
+        category: ErrorCategory.NETWORK,
+        appEvent: AppEventCode.NOT_FOUND,
+        statusCode: 2113,
+      }
+      // track: false so the constructor's auto-track doesn't fire before url/method are set
+      const error = new AppError('Not found', identity, { cause: { response: { status: 404 } }, track: false })
+      error.url = '/device/userinfo'
+      error.method = 'GET'
+
+      error.track()
+
+      expect(trackErrorEventSpy).toHaveBeenCalledWith({
+        code: AppEventCode.NOT_FOUND,
+        message: `[${error.code}] HTTP 404 GET /device/userinfo Not found`,
       })
     })
   })
@@ -168,11 +248,57 @@ describe('AppError', () => {
         technicalMessage: 'Technical message',
         code: 'general.unknown_server_error.1234',
         timestamp: '2024-01-01T00:00:00.000Z',
-        cause: cause,
+        // cause is summarized (not the raw Error) so large nested bodies never serialize
+        cause: { name: 'Error', message: 'Technical message' },
         handled: false,
+        url: undefined,
+        method: undefined,
       })
 
       jest.useRealTimers()
+    })
+
+    it('summarizes the cause so a large request body is never serialized', () => {
+      const identity = {
+        category: ErrorCategory.NETWORK,
+        appEvent: AppEventCode.NO_INTERNET,
+        statusCode: 2100,
+      }
+      // Mimic an AxiosError carrying a multi-MB evidence-upload body on config.data.
+      const axiosLike = Object.assign(new Error('Network Error'), {
+        code: 'ERR_NETWORK',
+        config: { data: Buffer.alloc(1_000_000) },
+      })
+      const error = new AppError('Upload failed', identity, { cause: axiosLike, track: false })
+
+      const json = error.toJSON()
+
+      expect(json.cause).toEqual({ name: 'Error', message: 'Network Error', code: 'ERR_NETWORK' })
+      // The 1 MB Buffer must not survive serialization (would be ~MBs as a JSON number array).
+      expect(JSON.stringify(json).length).toBeLessThan(2000)
+    })
+
+    it('keeps native-module userInfo diagnostics on the summarized cause', () => {
+      const identity = {
+        category: ErrorCategory.STORAGE,
+        appEvent: AppEventCode.ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR,
+        statusCode: 2603,
+      }
+      // Mimic an iOS native rejection carrying keychain diagnostics in userInfo.
+      const nativeLike = Object.assign(new Error('Failed to retrieve key pair'), {
+        code: 'E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR',
+        userInfo: { site: 'retrieve_latest', keyCount: 2, keyTags: ['a/1', 'b/2'] },
+      })
+      const error = new AppError('Keychain lookup returned nil', identity, { cause: nativeLike, track: false })
+
+      const json = error.toJSON()
+
+      expect(json.cause).toEqual({
+        name: 'Error',
+        message: 'Failed to retrieve key pair',
+        code: 'E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR',
+        userInfo: { site: 'retrieve_latest', keyCount: 2, keyTags: ['a/1', 'b/2'] },
+      })
     })
   })
 
