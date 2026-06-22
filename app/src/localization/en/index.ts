@@ -564,7 +564,8 @@ const translation = {
       "BulletTwo": "Add a photo ID (not expired)",
       "BulletThree": "Take a photo of your face",
       "BulletFour": "Record a short video, have a cideo call or visit a Service BC office",
-      "PrimaryAction": "Continue"
+      "PrimaryAction": "Continue",
+      "Loading": "Starting verification..."
     },
     "AccountRenewal": {
       "InformationHeader": "What you need to renew",

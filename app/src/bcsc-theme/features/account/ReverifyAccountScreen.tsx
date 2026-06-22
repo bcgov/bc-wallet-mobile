@@ -1,9 +1,10 @@
 import { ActionScreenLayout } from '@/bcsc-theme/components/ActionScreenLayout'
+import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import AccountVerificationCta from '@assets/img/account-verification-cta.svg'
-import { ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
+import { ThemedText, TOKENS, useServices } from '@bifold/core'
 import { RouteProp } from '@react-navigation/native'
 import React from 'react'
 
@@ -25,8 +26,8 @@ interface ReverifyAccountScreenProps {
 export const ReverifyAccountScreen = ({ route: _route }: ReverifyAccountScreenProps): React.ReactElement => {
   const isExpired = _route.params.isExpired
   const { t } = useTranslation()
-  const { Spacing } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const loadingScreen = useLoadingScreen()
   const verificationReset = useVerificationReset()
   const { continueVerificationProcess } = useSecureActions()
 
@@ -36,22 +37,26 @@ export const ReverifyAccountScreen = ({ route: _route }: ReverifyAccountScreenPr
     },
   })
 
+  const onPrimaryAction = async () => {
+    const stopLoading = loadingScreen.startLoading(t('BCSC.ReverifyAccount.Loading'))
+    try {
+      await verificationReset()
+      continueVerificationProcess()
+    } catch (error) {
+      logger.error('ReverifyAccountScreen: Error during reset on account re-verification', error as Error)
+    } finally {
+      stopLoading()
+    }
+  }
   const title = isExpired ? t('BCSC.ReverifyAccount.ExpiredTitle') : t('BCSC.ReverifyAccount.RenewalTitle')
   return (
     <ActionScreenLayout
       primaryActionText={t('BCSC.ReverifyAccount.PrimaryAction')}
-      onPressPrimaryAction={async () => {
-        try {
-          await verificationReset()
-          await continueVerificationProcess()
-        } catch (error) {
-          logger.error('ReverifyAccountScreen: Error during reset on account re-verification', error as Error)
-        }
-      }}
+      onPressPrimaryAction={onPrimaryAction}
     >
       <View style={styles.iconContainer}>
-        <AccountVerificationCta width={200} height={200} />
-        <ThemedText variant="headingTwo" style={{ textAlign: 'center' }}>
+        <AccountVerificationCta width={150} height={200} />
+        <ThemedText variant="headingThree" style={{ textAlign: 'center' }}>
           {title}
         </ThemedText>
       </View>
