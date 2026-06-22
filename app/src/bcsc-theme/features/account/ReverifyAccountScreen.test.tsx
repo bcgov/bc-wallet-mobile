@@ -19,8 +19,7 @@ jest.mock('@/bcsc-theme/hooks/useVerificationReset', () => ({
   useVerificationReset: jest.fn(() => jest.fn()),
 }))
 
-const makeRoute = (isExpired: boolean) =>
-  ({ params: { isExpired } }) as any
+const makeRoute = (isExpired: boolean) => ({ params: { isExpired } }) as any
 
 describe('ReverifyAccountScreen', () => {
   beforeEach(() => {
