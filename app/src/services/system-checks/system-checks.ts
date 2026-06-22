@@ -67,10 +67,48 @@ export type SystemCheckNavigation = {
   getState: () => NavigationState | undefined
 }
 
+/** Coerce an unknown thrown value into an Error for logging. */
+function toError(reason: unknown): Error {
+  return reason instanceof Error ? reason : new Error(String(reason))
+}
+
+/**
+ * Handles a single settled check outcome, isolated from the rest of the batch:
+ * logs a thrown runCheck, otherwise runs the matching onSuccess/onFail handler
+ * (catching any handler failure). Returns the check's boolean result — false when
+ * the check threw, since the outcome is then inconclusive.
+ */
+async function handleCheckOutcome(
+  check: SystemCheckStrategy,
+  outcome: PromiseSettledResult<boolean>,
+  logger?: BifoldLogger
+): Promise<boolean> {
+  const name = check.constructor.name
+
+  if (outcome.status === 'rejected') {
+    logger?.error(`runSystemChecks: ${name} threw during runCheck`, toError(outcome.reason))
+    return false
+  }
+
+  const passed = outcome.value
+  try {
+    if (passed) {
+      await check.onSuccess?.()
+    } else {
+      await check.onFail()
+    }
+  } catch (error) {
+    logger?.error(`runSystemChecks: ${name} threw during ${passed ? 'onSuccess' : 'onFail'}`, toError(error))
+  }
+
+  return passed
+}
+
 /**
  * Runs a series of startup checks and handles failures and successes accordingly.
  *
  * @param {SystemCheckStrategy[]} checks - An array of startup checks to run.
+ * @param {BifoldLogger} [logger] - Optional logger used to report isolated check failures.
  * @returns {*} {Promise<boolean[]>} - An array of boolean results indicating the success of each check.
  */
 export async function runSystemChecks(checks: SystemCheckStrategy[], logger?: BifoldLogger) {
@@ -80,38 +118,10 @@ export async function runSystemChecks(checks: SystemCheckStrategy[], logger?: Bi
   // from running. Promise.allSettled keeps one rejection from sinking the rest.
   const settled = await Promise.allSettled(checks.map((check) => Promise.resolve(check.runCheck())))
 
+  // Handle outcomes in order so each check's onFail/onSuccess runs sequentially
   const results: boolean[] = []
-
-  // Handle outcomes in order
   for (let index = 0; index < settled.length; index++) {
-    const outcome = settled[index]
-    const name = checks[index].constructor.name
-
-    if (outcome.status === 'rejected') {
-      // An errored check is inconclusive: record false and skip its handlers
-      logger?.error(
-        `runSystemChecks: ${name} threw during runCheck`,
-        outcome.reason instanceof Error ? outcome.reason : new Error(String(outcome.reason))
-      )
-      results.push(false)
-      continue
-    }
-
-    results.push(outcome.value)
-
-    try {
-      if (!outcome.value) {
-        await checks[index].onFail()
-      } else {
-        await checks[index].onSuccess?.()
-      }
-    } catch (error) {
-      // A failing handler must not prevent the remaining checks from being handled
-      logger?.error(
-        `runSystemChecks: ${name} threw during ${outcome.value ? 'onSuccess' : 'onFail'}`,
-        error instanceof Error ? error : new Error(String(error))
-      )
-    }
+    results.push(await handleCheckOutcome(checks[index], settled[index], logger))
   }
 
   return results
