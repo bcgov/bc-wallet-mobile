@@ -1,36 +1,20 @@
 import { PressableOpacity } from '@/components/PressableOpacity'
 import { BC_LOGIN_PRIVACY_URL, hitSlop } from '@/constants'
-import { BCDispatchAction, BCState } from '@/store'
-import {
-  Button,
-  ButtonType,
-  CheckBoxRow,
-  Link,
-  testIdWithKey,
-  ThemedText,
-  TOKENS,
-  useServices,
-  useStore,
-  useTheme,
-} from '@bifold/core'
-import { RemoteLogger, RemoteLoggerEventTypes } from '@bifold/remote-logs'
-import { useCallback, useState } from 'react'
+import { reportProblem } from '@/utils/logger'
+import { BifoldError, Button, ButtonType, CheckBoxRow, Link, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import Clipboard from '@react-native-clipboard/clipboard'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  DeviceEventEmitter,
-  KeyboardAvoidingView,
-  Linking,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native'
+import { KeyboardAvoidingView, Linking, Modal, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import CommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 const DESCRIPTION_MAX_LENGTH = 500
+// A user-initiated report has no underlying error code; 0 marks it as user-originated in the report payload.
+const USER_REPORT_ERROR_CODE = 0
+// How long the "Copied" confirmation stays visible after copying the reference code.
+const COPY_FEEDBACK_DURATION_MS = 2000
 
 export interface ReportProblemModalProps {
   visible: boolean
@@ -40,9 +24,10 @@ export interface ReportProblemModalProps {
 /**
  * A fully custom (React Native `Modal`) "Report a problem" flow.
  *
- * On submit it enables the app's existing remote troubleshooting (remote logging) and surfaces the
- * `RemoteLogger` session id as a reference code, so a user can quote it to support and the support
- * team can look up the corresponding logs (see issues #3903 and #3952).
+ * On submit it hands the user's description to the shared `reportProblem()` pipeline (see PR #4076),
+ * which sends the report to remote logging (Loki) and returns a short, human-readable reference code.
+ * The user can quote that code to support so the team can look the report up. Generating and sharing
+ * the code (the "receipt") is owned by that shared pipeline rather than implemented here.
  *
  * The modal is self-contained and rendered from the floating help menu, so it works in every stack
  * without registering a per-stack screen.
@@ -54,45 +39,51 @@ export interface ReportProblemModalProps {
 export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette, TextTheme } = useTheme()
-  const [, dispatch] = useStore<BCState>()
-  const [logger] = useServices([TOKENS.UTIL_LOGGER]) as [RemoteLogger]
 
   const [description, setDescription] = useState('')
   const [consented, setConsented] = useState(false)
-  const [referenceCode, setReferenceCode] = useState<number | null>(null)
+  const [referenceCode, setReferenceCode] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+  const copyResetTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const submitted = referenceCode !== null
+
+  // Clear any pending "Copied" reset timer when the modal unmounts.
+  useEffect(() => {
+    return () => {
+      if (copyResetTimeout.current) {
+        clearTimeout(copyResetTimeout.current)
+      }
+    }
+  }, [])
 
   const handleClose = useCallback(() => {
     // Reset so the modal opens fresh next time.
     setDescription('')
     setConsented(false)
     setReferenceCode(null)
+    setCopied(false)
     onClose()
   }, [onClose])
 
   const handleSubmit = useCallback(() => {
-    if (!logger) {
+    // Carry the user's description on a BifoldError and report it through the shared pipeline, which
+    // sends it to remote logging and returns the reference code to surface to the user.
+    const reportError = new BifoldError(t('BCSC.ReportProblem.Title'), description.trim(), '', USER_REPORT_ERROR_CODE)
+    setReferenceCode(reportProblem(reportError))
+  }, [t, description])
+
+  const handleCopy = useCallback(() => {
+    if (!referenceCode) {
       return
     }
-
-    // Enable remote troubleshooting so support can retrieve diagnostics for this session, mirroring
-    // the Developer screen's flow (DeviceEventEmitter + persisted remote-debugging state).
-    DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, true)
-    const sessionId = logger.sessionId
-    dispatch({
-      type: BCDispatchAction.REMOTE_DEBUGGING_STATUS_UPDATE,
-      payload: [{ enabledAt: new Date(), sessionId }],
-    })
-
-    // Record the user's description under this session so support can read it alongside the logs.
-    logger.info('[ReportProblem] Problem reported by user', {
-      referenceCode: sessionId,
-      description: description.trim(),
-    })
-
-    setReferenceCode(sessionId)
-  }, [logger, dispatch, description])
+    Clipboard.setString(referenceCode)
+    setCopied(true)
+    if (copyResetTimeout.current) {
+      clearTimeout(copyResetTimeout.current)
+    }
+    copyResetTimeout.current = setTimeout(() => setCopied(false), COPY_FEEDBACK_DURATION_MS)
+  }, [referenceCode])
 
   const styles = StyleSheet.create({
     root: {
@@ -144,6 +135,14 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
     code: {
       letterSpacing: 4,
       textAlign: 'center',
+    },
+    copyButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    copyButtonText: {
+      color: ColorPalette.brand.primary,
     },
   })
 
@@ -204,17 +203,33 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
           {t('BCSC.ReportProblem.SuccessTitle')}
         </ThemedText>
         <ThemedText style={{ textAlign: 'center' }}>{t('BCSC.ReportProblem.SuccessBody')}</ThemedText>
-        <ThemedText variant="bold">{t('BCSC.ReportProblem.ReferenceCode')}</ThemedText>
+        <ThemedText variant="bold">{t('Error.ReferenceCode')}</ThemedText>
         <View style={styles.codeBox}>
           <ThemedText
             variant="headingTwo"
             style={styles.code}
-            accessibilityLabel={referenceCode?.toString()}
+            accessibilityLabel={`${t('Error.ReferenceCode')}: ${referenceCode}`}
             testID={testIdWithKey('ReportProblemReferenceCode')}
           >
-            {referenceCode?.toString()}
+            {referenceCode}
           </ThemedText>
         </View>
+        <PressableOpacity
+          onPress={handleCopy}
+          style={styles.copyButton}
+          accessibilityRole="button"
+          accessibilityLabel={copied ? t('Error.CodeCopied') : t('Error.CopyCode')}
+          testID={testIdWithKey('ReportProblemCopyCode')}
+        >
+          <CommunityIcon
+            name={copied ? 'check' : 'content-copy'}
+            size={18}
+            color={copied ? ColorPalette.semantic.success : ColorPalette.brand.primary}
+          />
+          <ThemedText variant="bold" style={styles.copyButtonText}>
+            {copied ? t('Error.CodeCopied') : t('Error.CopyCode')}
+          </ThemedText>
+        </PressableOpacity>
       </View>
       <Button
         title={t('BCSC.ReportProblem.Done')}

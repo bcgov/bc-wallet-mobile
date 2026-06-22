@@ -232,14 +232,13 @@ const translation = {
     },
     "ReportProblem": {
       "Title": "Report a problem (FR)",
-      "Intro": "Tell us what went wrong. To help us look into it, sending this report turns on diagnostic logging for this session. (FR)",
+      "Intro": "Tell us what went wrong. To help us look into it, sending this report shares the details with our support team. (FR)",
       "DescriptionLabel": "What happened? (FR)",
       "DescriptionPlaceholder": "Describe the problem (optional) (FR)",
       "ConsentCheckbox": "I understand and want to share diagnostic information. (FR)",
       "Submit": "Send report (FR)",
       "SuccessTitle": "Report sent (FR)",
       "SuccessBody": "Give this reference code to our support team when you contact us so they can find your report. (FR)",
-      "ReferenceCode": "Reference code (FR)",
       "Done": "Done (FR)",
     },
     "Contacts": {
