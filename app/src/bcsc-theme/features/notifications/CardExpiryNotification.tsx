@@ -14,7 +14,7 @@ const CardExpiryNotification = () => {
       status={NotificationCardStatus.Unread}
       icon="information"
       iconColor={ColorPalette.brand.primary}
-      iconStyle={{ marginRight: 12 }}
+      hideIconCircle={true}
       title={t('Notification.AccountExpired.Title')}
       description={t('Notification.AccountExpired.Description')}
       buttonTitle={t('Notification.AccountExpired.ButtonTitle')}

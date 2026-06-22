@@ -34,7 +34,7 @@ const StartVerificationNotification = (props: StartVerificationNotificationProps
       buttonTitle={buttonTitle}
       icon="information"
       iconColor={ColorPalette.brand.primary}
-      iconStyle={{ marginRight: 12 }}
+      hideIconCircle={true}
       onPress={() => {
         secureActions.continueVerificationProcess()
       }}

@@ -16,7 +16,7 @@ const CardRenewalNotification = () => {
       status={NotificationCardStatus.Unread}
       icon="information"
       iconColor={ColorPalette.brand.primary}
-      iconStyle={{ marginRight: 12 }}
+      hideIconCircle={true}
       title={t('Notification.CardStatusUpdated.Title')}
       description={t('Notification.CardStatusUpdated.Description', { expiryDate: cardExpiry })}
       buttonTitle={t('Notification.CardStatusUpdated.ButtonTitle')}

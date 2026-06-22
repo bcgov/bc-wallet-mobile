@@ -2,7 +2,7 @@ import { hitSlop } from '@/constants'
 import { Button, ButtonType, IColorPalette, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { Image, ImageStyle, Pressable, StyleProp, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native'
+import { Image, ImageStyle, Pressable, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 const ICON_CIRCLE_SIZE = 36
@@ -13,7 +13,7 @@ interface NotificationIconProps {
   logoUrl?: string
   iconName: string
   iconColor: string
-  iconStyle?: StyleProp<ViewStyle>
+  hideIconCircle?: boolean
   circleStyle: ViewStyle
   logoStyle: ImageStyle
 }
@@ -28,7 +28,7 @@ const NotificationIcon: React.FC<NotificationIconProps> = ({
   logoUrl,
   iconName,
   iconColor,
-  iconStyle,
+  hideIconCircle,
   circleStyle,
   logoStyle,
 }) => {
@@ -43,11 +43,17 @@ const NotificationIcon: React.FC<NotificationIconProps> = ({
     )
   }
   return (
-    <View style={iconStyle ?? circleStyle}>
+    // <View style={hideIconCircle ? {} : circleStyle}>
+    <View
+      style={{
+        marginRight: 12,
+        ...(hideIconCircle ? {} : circleStyle),
+      }}
+    >
       <Icon
         accessible={false}
         name={iconName}
-        size={iconStyle ? ICON_CIRCLE_SIZE : ICON_INNER_SIZE}
+        size={hideIconCircle ? ICON_CIRCLE_SIZE : ICON_INNER_SIZE}
         color={iconColor}
       />
     </View>
@@ -80,7 +86,7 @@ interface NotificationCardProps {
   badge?: string
   icon?: string
   iconColor?: string
-  iconStyle?: StyleProp<ViewStyle>
+  hideIconCircle?: boolean
   /**
    * Connection logo to display in place of the icon. Per the designs, notifications
    * from connections show the connection's logo when one is available, and fall back
@@ -100,7 +106,7 @@ const NotificationCard: React.FC<NotificationCardProps> = (props) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
   const cardStyle = getCardStyle(props.status, ColorPalette)
-  const iconColor = props.iconColor ?? ColorPalette.grayscale.mediumGrey
+  const iconColor = props.iconColor ?? ColorPalette.grayscale.white
 
   const isV1 = !!props.buttonTitle
 
@@ -123,7 +129,7 @@ const NotificationCard: React.FC<NotificationCardProps> = (props) => {
       width: ICON_CIRCLE_SIZE,
       height: ICON_CIRCLE_SIZE,
       borderRadius: ICON_CIRCLE_SIZE / 2,
-      backgroundColor: iconColor,
+      backgroundColor: ColorPalette.grayscale.mediumGrey,
       justifyContent: 'center',
       alignItems: 'center',
       marginRight: 12,
@@ -176,7 +182,7 @@ const NotificationCard: React.FC<NotificationCardProps> = (props) => {
           logoUrl={props.logoUrl}
           iconName={iconName}
           iconColor={iconColor}
-          iconStyle={props.iconStyle}
+          hideIconCircle={props.hideIconCircle}
           circleStyle={styles.iconCircle}
           logoStyle={styles.logoImage}
         />
