@@ -1,4 +1,4 @@
-import { appLogger } from '@/utils/logger'
+import { reportProblem } from '@/utils/logger'
 import { BifoldError } from '@bifold/core'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
@@ -29,9 +29,7 @@ jest.mock('react-native-safe-area-context', () => {
 jest.mock('react-native-vector-icons/MaterialIcons', () => 'Icon')
 
 jest.mock('@/utils/logger', () => ({
-  appLogger: {
-    report: jest.fn(),
-  },
+  reportProblem: jest.fn(() => 'TEST-CODE'),
 }))
 
 jest.mock('@bifold/core', () => ({
@@ -180,9 +178,19 @@ describe('BCSCErrorModal', () => {
 
       fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
 
-      expect(appLogger.report).toHaveBeenCalledWith(
+      expect(reportProblem).toHaveBeenCalledWith(
         new BifoldError(validPayload.title, validPayload.description, validPayload.message, validPayload.code)
       )
+    })
+
+    it('should surface the reference code returned by reportProblem after reporting', () => {
+      const { getByTestId, getByText } = renderModal({ error: validPayload, enableReport: true })
+
+      fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
+
+      expect(getByTestId('com.aries.bifold:id/ReferenceCode')).toBeTruthy()
+      expect(getByText('TEST-CODE')).toBeTruthy()
+      expect(getByTestId('com.aries.bifold:id/CopyReferenceCode')).toBeTruthy()
     })
 
     it('should disable the Report button after being pressed', async () => {

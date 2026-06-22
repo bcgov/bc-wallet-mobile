@@ -1,4 +1,5 @@
-import { RemoteLogger, RemoteLoggerOptions } from '@bifold/remote-logs'
+import type { BifoldError } from '@bifold/core'
+import { RemoteLogger, RemoteLoggerOptions, lokiTransport } from '@bifold/remote-logs'
 import { LogLevel } from '@credo-ts/core'
 import Config from 'react-native-config'
 import {
@@ -9,6 +10,7 @@ import {
   getVersion,
 } from 'react-native-device-info'
 import { autoDisableRemoteLoggingIntervalInMinutes } from '../constants'
+import { generateReferenceCode } from './reference-code'
 
 const baseOptions: RemoteLoggerOptions = {
   lokiUrl: Config.REMOTE_LOGGING_URL,
@@ -62,3 +64,43 @@ export const createAppLogger = (extraLabels: Record<string, string> = {}, logLev
 // (Optional) Named singleton for legacy code paths;
 // prefer injecting createAppLogger() instead.
 export const appLogger = createAppLogger()
+
+/**
+ * Sends a problem report to Loki and returns a user-facing reference code.
+ *
+ * The reference code is embedded in the report payload as `report_id`, so support
+ * can locate the incident later by searching the `incident-report` job for it
+ * (e.g. in Grafana: `{job="incident-report"} |= "<code>"`). It is intentionally
+ * placed in the log body rather than as a Loki label to avoid high label
+ * cardinality.
+ *
+ * Reporting is best-effort: any transport failure is swallowed so the user is
+ * always given a code to share, even when the network/Loki is unavailable.
+ *
+ * @param error - the error being reported
+ * @returns the reference code to surface to the user
+ */
+export const reportProblem = (error: BifoldError): string => {
+  const referenceCode = generateReferenceCode()
+  const { title, description, code, message, stack } = error
+
+  try {
+    if (baseOptions.lokiUrl) {
+      lokiTransport({
+        msg: title,
+        rawMsg: [{ message: title, data: { description, code, message, stack, report_id: referenceCode } }],
+        level: { severity: 3, text: 'error' },
+        options: {
+          lokiUrl: baseOptions.lokiUrl,
+          lokiLabels: baseOptions.lokiLabels,
+          job: 'incident-report',
+        },
+      })
+    }
+  } catch (e: any) {
+    // Never let a reporting failure prevent the user from getting their code.
+    appLogger.error?.('Failed to send problem report to Loki', e)
+  }
+
+  return referenceCode
+}
