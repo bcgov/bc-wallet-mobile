@@ -50,6 +50,7 @@ import { DeviceInvalidated } from '../features/modal/DeviceInvalidated'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
+import { TermsOfUseUpdated } from '../features/modal/TermsOfUseUpdated'
 import { usePairingService } from '../features/pairing'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
@@ -497,6 +498,15 @@ const MainStack: React.FC = () => {
           <Stack.Screen
             name={BCSCModals.ServiceOutage}
             component={ServiceOutage}
+            options={{
+              ...getDefaultModalOptions(t('BCSC.Title')),
+              gestureEnabled: false,
+            }}
+          />
+
+          <Stack.Screen
+            name={BCSCModals.TermsOfUseUpdated}
+            component={TermsOfUseUpdated}
             options={{
               ...getDefaultModalOptions(t('BCSC.Title')),
               gestureEnabled: false,
