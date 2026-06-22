@@ -72,7 +72,7 @@ exports[`NotificationCard renders correctly 1`] = `
           style={
             [
               {
-                "color": "#606060",
+                "color": "#FFFFFF",
                 "fontSize": 20,
               },
               undefined,

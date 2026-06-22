@@ -60,7 +60,8 @@ export function formatExpiryBadge(expiresTime: Date): string {
  */
 export const isAccountExpired = (dateToCheck: Date | string): boolean => {
   const format = typeof dateToCheck === 'string' ? 'MMMM D, YYYY' : undefined
-  return moment(dateToCheck, format).diff(moment(), 'days') <= 0
+  // add startOf('day') to fix midnight calculation error
+  return moment(dateToCheck, format).startOf('day').diff(moment().startOf('day'), 'days') <= 0
 }
 
 /**
@@ -77,6 +78,7 @@ export const isAccountExpired = (dateToCheck: Date | string): boolean => {
  * @returns {boolean} True if the account expires within the warning period but has not yet expired.
  */
 export const isAccountWithinWarningPeriod = (expiration: Date, warningPeriod: number): boolean => {
-  const daysRemaining = moment(expiration).diff(moment(), 'days')
+  // add startOf('day') to fix midnight calculation error
+  const daysRemaining = moment(expiration).startOf('day').diff(moment().startOf('day'), 'days')
   return 0 < daysRemaining && daysRemaining <= warningPeriod
 }

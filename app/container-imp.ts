@@ -407,6 +407,8 @@ export class AppContainer implements Container {
       bcsc.prompts = undefined
       bcsc.photoMetadata = undefined
       bcsc.videoDuration = undefined
+      bcsc.showAccountExpiryNotification = undefined
+      bcsc.showCardRenewalNotification = undefined
 
       const state = {
         loginAttempt: { ...initialState.loginAttempt, ...loginAttempt },
