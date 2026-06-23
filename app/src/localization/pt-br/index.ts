@@ -1024,11 +1024,11 @@ const translation = {
       "TransferAccount": "Transfer Account (PT-BR)",
     },
     "TransferInstructions": {
-      "Title": "Scan your QR code to transfer your account (PT-BR)",
-      "Step1": "1. On your other device, open the BC Services Card app and go to the Account section. (PT-BR)",
-      "Step2": "2. Choose 'Transfer to another device' to get your QR code. (PT-BR)",
-      "Step3": "3. Continue on this device and scan that QR code. (PT-BR)",
-      "ScanQRCode": "Scan QR Code (PT-BR)",
+      "Title": "Scan your QR code to add your device (PT-BR)",
+      "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘≡’ icon in the top left corner. (PT-BR)",
+      "Step2": "Choose <b>‘Add another device’</b> to get your QR code. (PT-BR)",
+      "Step3": "<b>Scan the QR code</b> that appears on your other device. (PT-BR)",
+      "ScanQRCode": "Scan QR code (PT-BR)",
     },
     "QRDisplay": {
       "SharingDescription": "Sharing this QR code with someone will add them as a Contact. (PT-BR)",

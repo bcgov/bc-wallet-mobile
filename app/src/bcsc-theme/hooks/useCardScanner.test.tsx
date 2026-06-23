@@ -4,6 +4,7 @@ import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
+import { AccountSetupType } from '@/store'
 import * as Bifold from '@bifold/core'
 import * as navigation from '@react-navigation/native'
 import { renderHook } from '@testing-library/react-native'
@@ -31,7 +32,7 @@ describe('useCardScanner', () => {
       const bifoldMock = jest.mocked(Bifold)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcsc: {}, bcscSecure: { additionalEvidenceData: [] } }
+      const mockState: any = { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } }
       const mockAuthorization: any = {
         authorization: {
           authorizeDevice: jest.fn(),
@@ -67,7 +68,7 @@ describe('useCardScanner', () => {
       const bifoldMock = jest.mocked(Bifold)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcsc: {}, bcscSecure: { additionalEvidenceData: [] } }
+      const mockState: any = { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } }
       const mockAuthorization: any = {
         authorization: {
           authorizeDevice: jest.fn(),
@@ -110,7 +111,7 @@ describe('useCardScanner', () => {
       const bifoldMock = jest.mocked(Bifold)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcsc: {}, bcscSecure: { additionalEvidenceData: [] } }
+      const mockState: any = { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } }
       const mockAuthorization: any = {
         authorization: {
           authorizeDevice: jest.fn(),
@@ -152,7 +153,7 @@ describe('useCardScanner', () => {
       const bifoldMock = jest.mocked(Bifold)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcsc: {}, bcscSecure: { additionalEvidenceData: [] } }
+      const mockState: any = { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } }
       const mockAuthorization: any = {
         authorization: {
           authorizeDevice: jest.fn(),
@@ -201,7 +202,7 @@ describe('useCardScanner', () => {
       const navigationMock = jest.mocked(navigation)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcsc: {}, bcscSecure: { additionalEvidenceData: [] } }
+      const mockState: any = { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } }
       const mockUpdateUserInfo = jest.fn()
       const mockUpdateDeviceCodes = jest.fn()
       const mockUpdateCardProcess = jest.fn()
@@ -270,7 +271,7 @@ describe('useCardScanner', () => {
       const useApiMock = jest.mocked(useApi)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcsc: {}, bcscSecure: { additionalEvidenceData: [] } }
+      const mockState: any = { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } }
       const mockAuthorization: any = {
         authorization: {
           authorizeDevice: jest.fn(),
@@ -306,7 +307,7 @@ describe('useCardScanner', () => {
       const useApiMock = jest.mocked(useApi)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcsc: {}, bcscSecure: { additionalEvidenceData: [] } }
+      const mockState: any = { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } }
       const mockAuthorization: any = {
         authorization: {
           authorizeDevice: jest.fn(),
@@ -343,7 +344,7 @@ describe('useCardScanner', () => {
       const navigationMock = jest.mocked(navigation)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcsc: {}, bcscSecure: { additionalEvidenceData: [] } }
+      const mockState: any = { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } }
       const mockUpdateUserInfo = jest.fn()
       const mockAuthorization: any = {
         authorization: {
@@ -399,7 +400,7 @@ describe('useCardScanner', () => {
       const navigationMock = jest.mocked(navigation)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcsc: {}, bcscSecure: { additionalEvidenceData: [] } }
+      const mockState: any = { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } }
       const mockUpdateUserInfo = jest.fn()
       const mockAuthorization: any = {
         authorization: {
@@ -452,7 +453,7 @@ describe('useCardScanner', () => {
       const navigationMock = jest.mocked(navigation)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcsc: {}, bcscSecure: { additionalEvidenceData: [] } }
+      const mockState: any = { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } }
       const mockUpdateDeviceCodes = jest.fn()
       const mockUpdateCardProcess = jest.fn()
       const mockUpdateVerificationOptions = jest.fn()
@@ -504,7 +505,7 @@ describe('useCardScanner', () => {
       const navigationMock = jest.mocked(navigation)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcsc: {}, bcscSecure: { additionalEvidenceData: [] } }
+      const mockState: any = { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } }
       const mockNavigationReset = jest.fn()
 
       useApiMock.mockReturnValue({
