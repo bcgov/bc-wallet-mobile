@@ -78,10 +78,13 @@ const SectionHeader: React.FC<
   }))
 
   const toggleSection = () => {
-    chevronRotation.value = withTiming(showSection ? HALF_ROTATION : DEFAULT_ROTATION, {
-      duration: TRANSITION_IN_DURATION,
+    setShowSection((prev) => {
+      const next = !prev
+      chevronRotation.value = withTiming(next ? DEFAULT_ROTATION : HALF_ROTATION, {
+        duration: TRANSITION_IN_DURATION,
+      })
+      return next
     })
-    setShowSection((show) => !show)
   }
 
   return (
@@ -94,8 +97,8 @@ const SectionHeader: React.FC<
         <PressableOpacity
           onPress={toggleSection}
           hitSlop={hitSlop}
-          testID={testIdWithKey(showSection ? 'CloseSection' : 'OpenSection')}
-          accessibilityLabel={t(showSection ? 'Global.Close' : 'Global.Open')}
+          testID={testIdWithKey('SectionHeaderChevron')}
+          accessibilityLabel={t(showSection ? 'Global.HideDetails' : 'Global.ShowDetails')}
           accessibilityRole="button"
           style={styles.sectionHeaderChevron}
         >
