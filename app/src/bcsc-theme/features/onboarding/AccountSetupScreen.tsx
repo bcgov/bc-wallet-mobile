@@ -1,5 +1,5 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
-import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { AccountSetupType, BCDispatchAction, BCState } from '@/store'
 import AddDeviceHands from '@assets/img/add-device-hands.svg'
 import {
@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next'
 import { Pressable, StyleSheet, Vibration, View } from 'react-native'
 
 interface AccountSetupScreenProps {
-  navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingAccountSetup>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.AccountSetup>
 }
 
 const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
@@ -27,7 +27,7 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
   const { Spacing, ColorPalette } = useTheme()
   const { incrementDeveloperMenuCounter } = useDeveloperMode(() => {
     Vibration.vibrate()
-    navigation.navigate(BCSCScreens.OnboardingDeveloper)
+    navigation.navigate(BCSCScreens.VerifyDeveloper)
   })
 
   const styles = StyleSheet.create({
@@ -44,20 +44,23 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
     },
   })
 
+  // "No, continue setup" — verify a new account on this device via the identity steps.
   const handleAddAccount = useCallback(() => {
     dispatch({
       type: BCDispatchAction.ACCOUNT_SETUP_TYPE,
       payload: [AccountSetupType.AddAccount],
     })
-    navigation.navigate(BCSCScreens.OnboardingPrivacyPolicy)
+    navigation.navigate(BCSCScreens.IdentitySelection)
   }, [navigation, dispatch])
 
+  // "Yes, connect this device" — transfer an already-verified account by scanning the QR
+  // shown on the other device, skipping the identity verification steps.
   const handleTransferAccount = useCallback(() => {
     dispatch({
       type: BCDispatchAction.ACCOUNT_SETUP_TYPE,
       payload: [AccountSetupType.TransferAccount],
     })
-    navigation.navigate(BCSCScreens.TransferAccountInformation)
+    navigation.navigate(BCSCScreens.TransferAccountInstructions)
   }, [navigation, dispatch])
 
   const controls = (

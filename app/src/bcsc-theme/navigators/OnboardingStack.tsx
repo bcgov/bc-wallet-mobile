@@ -7,12 +7,10 @@ import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHead
 import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
-import TransferInformationScreen from '../features/account-transfer/transferee/TransferInformationScreen'
 import { OnboardingRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
-import AccountSetupScreen from '../features/onboarding/AccountSetupScreen'
 import { CreatePINScreen } from '../features/onboarding/CreatePINScreen'
 import { NotificationsScreen } from '../features/onboarding/NotificationsScreen'
 import { OnboardingOptInAnalyticsScreen } from '../features/onboarding/OnboardingOptInAnalyticsScreen'
@@ -37,7 +35,7 @@ const OnboardingStack = (): React.ReactElement => {
 
   return (
     <Stack.Navigator
-      initialRouteName={BCSCScreens.OnboardingAccountSetup}
+      initialRouteName={BCSCScreens.OnboardingPrivacyPolicy}
       screenOptions={{
         ...defaultStackOptions,
         headerShown: false,
@@ -53,11 +51,6 @@ const OnboardingStack = (): React.ReactElement => {
       }}
     >
       <Stack.Screen
-        name={BCSCScreens.OnboardingAccountSetup}
-        component={AccountSetupScreen}
-        options={{ headerShown: true, headerLeft: () => null }}
-      />
-      <Stack.Screen
         name={BCSCScreens.OnboardingDeveloper}
         component={Developer}
         options={{
@@ -71,6 +64,8 @@ const OnboardingStack = (): React.ReactElement => {
         options={{
           title: t('BCSC.Onboarding.PrivacyPolicyTitle'),
           headerShown: true,
+          // First screen in the stack — no destination to go back to.
+          headerLeft: () => null,
         }}
       />
       <Stack.Screen
@@ -119,14 +114,6 @@ const OnboardingStack = (): React.ReactElement => {
           headerShown: true,
           title: route.params.title,
         })}
-      />
-      <Stack.Screen
-        name={BCSCScreens.TransferAccountInformation}
-        component={TransferInformationScreen}
-        options={{
-          title: t('BCSC.TransferInformation.TransferAccount'),
-          headerShown: true,
-        }}
       />
       <Stack.Screen
         name={BCSCScreens.OnboardingRemoveAccountConfirmation}
