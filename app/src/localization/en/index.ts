@@ -1022,7 +1022,7 @@ const translation = {
     },
     "TransferQRInformation": {
       "Title": "Open the BC Services Card app on your other mobile device",
-      "Instructions": "Scan the QR code with the BC Services Card app on your other mobile device.",
+      "Instructions": "Scan the QR code using the BC Services Card app on your other mobile device.",
       "Warning": "Do not scan with the camera app.",
       "GetQRCode": "Get QR Code",
       "LearnMore": "Learn more"
@@ -1056,10 +1056,10 @@ const translation = {
       "ButtonText": "Ok"
     },
     "Verification": {
-      "Title": "You're all set",
-      "Description": "Use this app to securely log in to many different websites.",
-      "ExtraText": "Remember, it is not a health card, vaccine card, driver's license, or photo ID.",
-      "ButtonText": "Ok"
+      "Title": "You're all set!",
+      "Description": "Use this app to access many different websites and services.",
+      "ExtraText": "Remember, the BC Services Card app is not a health card, vaccine card, driver's license or photo ID.",
+      "ButtonText": "Continue"
     },
     "CancelledVerification": {
       "Title": "Your identity couldn't be verified",
