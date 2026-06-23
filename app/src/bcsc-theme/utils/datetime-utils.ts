@@ -57,6 +57,8 @@ export function formatExpiryBadge(expiresTime: Date): string {
  *
  * @param {Date | string} dateToCheck - The expiration date. Strings must be formatted as 'MMMM D, YYYY' (e.g. 'January 1, 1970').
  * @returns {boolean} True if the expiration date is today or has passed, false otherwise.
+ *
+ */
 export const isAccountExpired = (dateToCheck: Date | string): boolean => {
   const format = typeof dateToCheck === 'string' ? 'MMMM D, YYYY' : undefined
   // add startOf('day') to fix midnight calculation error
