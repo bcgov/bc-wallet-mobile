@@ -96,6 +96,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
   const reconcileVerificationDeadline = useCallback(
     async (data: VerificationStatusResponseData) => {
       if (data.status === 'verified' || data.status === 'cancelled') {
+        // doesn't throw
         await cancelVerificationReminders(apiClient.logger)
         return
       }
@@ -116,7 +117,15 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
       if (extendedExpiry.getTime() <= currentExpiry.getTime()) {
         return
       }
-      await updateDeviceCodes({ deviceCodeExpiresAt: extendedExpiry })
+      // Best-effort: persisting the extended expiry (and the reminder reschedule it triggers) must not
+      // fail the verification response it rode in on.
+      try {
+        await updateDeviceCodes({ deviceCodeExpiresAt: extendedExpiry })
+      } catch (error) {
+        apiClient.logger.warn('[reconcileVerificationDeadline] Failed to persist extended expiry', {
+          error,
+        })
+      }
     },
     [apiClient.logger, store.bcscSecure.deviceCodeExpiresAt, updateDeviceCodes]
   )

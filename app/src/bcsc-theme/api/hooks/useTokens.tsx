@@ -70,7 +70,7 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
           throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
         }
 
-        // never throws
+        // doesn't throw
         await cancelVerificationReminders(apiClient.logger)
 
         return apiClient.tokens!

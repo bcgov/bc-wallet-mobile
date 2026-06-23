@@ -341,6 +341,7 @@ export const useSecureActions = () => {
           day: 'numeric',
           year: 'numeric',
         })
+        // doesn't throw
         scheduleVerificationReminders(
           codes.deviceCodeExpiresAt,
           {
@@ -1020,7 +1021,7 @@ export const useSecureActions = () => {
         deleteToken(TokenType.Registration),
         deleteToken(TokenType.Access),
       ])
-      // Account removal — drop any pending verification reminders along with the device_code.
+      // doesn't throw
       await cancelVerificationReminders(logger)
       logger.info('Secure data deleted from native storage')
     } catch (error) {
@@ -1036,7 +1037,7 @@ export const useSecureActions = () => {
   const deleteVerificationData = useCallback(async () => {
     try {
       await Promise.all([deleteAuthorizationRequest(), deleteAccountFlags(), deleteEvidence(), deleteCredential()])
-      // The device_code is gone, so any pending "verify by ..." reminders are now stale.
+      // doesn't throw
       await cancelVerificationReminders(logger)
       logger.info('Verification data deleted from native storage')
     } catch (error) {
