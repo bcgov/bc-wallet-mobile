@@ -23,8 +23,8 @@ interface ReverifyAccountScreenProps {
   route: RouteProp<BCSCMainStackParams, BCSCScreens.ReverifyAccount>
 }
 
-export const ReverifyAccountScreen = ({ route: _route }: ReverifyAccountScreenProps): React.ReactElement => {
-  const isExpired = _route.params.isExpired
+export const ReverifyAccountScreen = ({ route }: ReverifyAccountScreenProps): React.ReactElement => {
+  const isExpired = route.params.isExpired
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const loadingScreen = useLoadingScreen()

@@ -54,15 +54,20 @@ exports[`NotificationCard renders correctly 1`] = `
     >
       <View
         style={
-          {
-            "alignItems": "center",
-            "backgroundColor": "#606060",
-            "borderRadius": 18,
-            "height": 36,
-            "justifyContent": "center",
-            "marginRight": 12,
-            "width": 36,
-          }
+          [
+            {
+              "marginRight": 12,
+            },
+            {
+              "alignItems": "center",
+              "backgroundColor": "#606060",
+              "borderRadius": 18,
+              "height": 36,
+              "justifyContent": "center",
+              "marginRight": 12,
+              "width": 36,
+            },
+          ]
         }
       >
         <Text
