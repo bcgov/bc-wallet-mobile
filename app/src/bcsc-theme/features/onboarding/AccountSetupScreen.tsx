@@ -1,7 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { AccountSetupType, BCDispatchAction, BCState } from '@/store'
-import BCSCLogo from '@assets/img/BCSCLogo.svg'
+import AddDeviceHands from '@assets/img/add-device-hands.svg'
 import {
   Button,
   ButtonType,
@@ -98,10 +98,10 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
         testID={testIdWithKey('DeveloperCounter')}
       >
         <View style={styles.image}>
-          <BCSCLogo width={120} height={120} />
+          <AddDeviceHands width={250} height={250} />
         </View>
       </Pressable>
-      <ThemedText variant={'headingFour'} style={{ textAlign: 'center', color: ColorPalette.brand.primary }}>
+      <ThemedText variant={'headingThree'} style={{ textAlign: 'center', color: ColorPalette.brand.primary }}>
         {t('BCSC.AccountSetup.Title')}
       </ThemedText>
       <ThemedText style={{ textAlign: 'center' }}>{t('BCSC.AccountSetup.Description')}</ThemedText>
