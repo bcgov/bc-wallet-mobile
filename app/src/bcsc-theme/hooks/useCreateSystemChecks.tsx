@@ -168,9 +168,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
         navigation,
         utils
       )
-      // TODO (ar/bm): v3 doesn't include the checks below; re-add if needed in future
-      // AccountExpiryWarningAlertSystemCheck
-      // AccountExpiryAlertSystemCheck
     )
 
     // Only run device registration update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
@@ -211,8 +208,15 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
         getSystemChecks: getMainSystemChecks,
         // Not gated on accountExpirationDate: the batch runs for unverified users too,
         // and account-dependent checks are included conditionally in the builder.
-        isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated),
+        isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated && Boolean(accountExpirationDate)),
       },
     }
-  }, [defaultReadiness, getMainSystemChecks, getStartupSystemChecks, store.bcscSecure.isHydrated, store.stateLoaded])
+  }, [
+    defaultReadiness,
+    getMainSystemChecks,
+    getStartupSystemChecks,
+    store.bcscSecure.isHydrated,
+    store.stateLoaded,
+    accountExpirationDate,
+  ])
 }

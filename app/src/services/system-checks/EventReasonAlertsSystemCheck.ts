@@ -9,8 +9,10 @@ import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './
  * Reasons:
  * Cancel
  *  - displays a modal instructing user to reset their app
- * Renew / Replace:
- *  - shows a home screen notification prompting the user to re-verify
+ * Renew:
+ *  - dispatches SET_CARD_RENEWAL_NOTIFICATION to show a home screen renewal prompt
+ * Replace:
+ *  - dispatches SET_ACCOUNT_EXPIRY_NOTIFICATION to show a home screen re-verification prompt
  *
  * @export
  * @class EventReasonAlertsSystemCheck

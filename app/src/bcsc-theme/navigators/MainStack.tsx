@@ -1,5 +1,5 @@
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import {
   CredentialDetails,
   Screens,
@@ -21,7 +21,6 @@ import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHead
 import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithBanner, createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
-import { useAccount } from '../contexts/BCSCAccountContext'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferQRDisplayScreen from '../features/account-transfer/transferer/TransferQRDisplayScreen'
 import TransferQRInformationScreen from '../features/account-transfer/transferer/TransferQRInformationScreen'
@@ -95,9 +94,8 @@ const MainStack: React.FC = () => {
   const defaultStackOptions = useDefaultStackOptions(theme)
   const pairingService = usePairingService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
-  const { account } = useAccount()
   // Consume any cold-start pairing request once and use it to seed the initial route
   const [pendingPairing] = useState(() => pairingService.consumePendingPairing())
   const pairingInitialParams = useMemo(() => {
@@ -154,14 +152,6 @@ const MainStack: React.FC = () => {
 
     return unsubscribe
   }, [pairingService, navigation])
-
-  useEffect(() => {
-    if (!account) {
-      return
-    }
-    const isExpired = account.account_expiration_date < new Date()
-    dispatch({ type: BCDispatchAction.SET_ACCOUNT_EXPIRY_NOTIFICATION, payload: [isExpired] })
-  }, [account, dispatch])
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>

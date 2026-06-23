@@ -316,7 +316,7 @@ describe('useGetSystemChecks', () => {
 
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
 
-        expect(systemChecks).toHaveLength(6) // DeviceCountSystemCheck, AccountRenewalSystemCheck, AccountExpirySystemCheck, EventReasonAlertsSystemCheck, UpdateDeviceRegistrationSystemCheck
+        expect(systemChecks).toHaveLength(6)
         expect(systemChecks[0].constructor.name).toBe('DeviceCountSystemCheck')
         expect(systemChecks[1].constructor.name).toBe('AccountExpirySystemCheck')
         expect(systemChecks[2].constructor.name).toBe('AccountRenewalSystemCheck')
@@ -367,7 +367,8 @@ describe('useGetSystemChecks', () => {
         expect(names).toContain('TermsOfUseSystemCheck')
         expect(names).not.toContain('DeviceCountSystemCheck')
         expect(names).not.toContain('EventReasonAlertsSystemCheck')
-        expect(names).not.toContain('AccountExpiryWarningBannerSystemCheck')
+        expect(names).not.toContain('AccountExpirySystemCheck')
+        expect(names).not.toContain('AccountRenewalSystemCheck')
       })
     })
   })
