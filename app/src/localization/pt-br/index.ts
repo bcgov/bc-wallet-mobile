@@ -741,7 +741,7 @@ const translation = {
       "OpenAccountServices": "Open account services (PT-BR)",
     },
     "AccountSetup": {
-      "Title": "Welcome to the BCSC App (PT-BR)",
+      "Title": "Have you verified before? (PT-BR)",
       "Description": "Do you already have the BCSC app set up on another nearby phone or tablet? (PT-BR)",
       "AddAccount": "No, continue setup (PT-BR)",
       "TransferAccount": "Yes, connect this device (PT-BR)",

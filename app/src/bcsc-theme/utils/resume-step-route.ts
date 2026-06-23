@@ -34,6 +34,13 @@ export const getResumeStepRoute = (store: BCState): ResumeStepRoute => {
     return { name: BCSCScreens.PendingReview }
   }
 
+  // The user hasn't chosen how to set up this device yet (verify a new account vs. connect
+  // an already-verified device via QR). Ask first — this is the entry of the verify journey,
+  // reached right after the "Verify Your Account" prompt.
+  if (!store.bcsc.accountSetupType) {
+    return { name: BCSCScreens.AccountSetup }
+  }
+
   const completion = computeSetupStepCompletion(store)
 
   switch (completion.currentStep) {

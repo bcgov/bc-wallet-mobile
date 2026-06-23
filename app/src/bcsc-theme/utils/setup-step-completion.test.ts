@@ -1,5 +1,5 @@
 import { computeSetupStepCompletion } from '@/bcsc-theme/utils/setup-step-completion'
-import { initialState } from '@/store'
+import { AccountSetupType, initialState } from '@/store'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 describe('computeSetupStepCompletion', () => {
@@ -488,6 +488,14 @@ describe('computeSetupStepCompletion', () => {
       store.bcscSecure.emailAddress = 'test@email.com'
       store.bcscSecure.isEmailVerified = true
       expect(computeSetupStepCompletion(store).currentStep).toBe('verify')
+    })
+
+    it('should return transfer for a transfer account with no verification progress', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.accountSetupType = AccountSetupType.TransferAccount
+      // A fresh transfer device has none of the id/address/email/verify progress, so
+      // transfer must take priority over the (otherwise-focused) id step.
+      expect(computeSetupStepCompletion(store).currentStep).toBe('transfer')
     })
   })
 

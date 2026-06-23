@@ -91,7 +91,6 @@ export enum BCSCScreens {
   MainResetWalletConfirmation = `${BCSCStacks.Main} Reset Wallet Warning`,
   VerifyRemoveAccountConfirmation = `${BCSCStacks.Verify} Reset App Warning`,
   OnboardingRemoveAccountConfirmation = `${BCSCStacks.Onboarding} Reset App Warning`,
-  TransferAccountInformation = 'Transfer Steps',
   TransferAccountInstructions = 'QR Get Instructions',
   TransferAccountQRDisplay = 'QR Code Display',
   TransferAccountQRScan = 'Scan QR Code',
@@ -100,7 +99,7 @@ export enum BCSCScreens {
   ServiceLogin = 'Login Request',
   EditNickname = 'Change Account Nickname',
   AccountDetails = 'Account Details',
-  OnboardingAccountSetup = 'Start Setup',
+  AccountSetup = 'Start Setup',
   OnboardingSetupTypes = 'Setup Options',
   OnboardingIntroCarousel = 'Intro',
   OnboardingPrivacyPolicy = `${BCSCStacks.Onboarding} Privacy Information`,
@@ -166,9 +165,7 @@ export type BCSCQRCoreTabParams = {
 
 export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingWebView]: { url: string; title: string }
-  [BCSCScreens.OnboardingAccountSetup]: undefined
   [BCSCScreens.OnboardingSetupTypes]: undefined
-  [BCSCScreens.TransferAccountInformation]: undefined
   [BCSCScreens.OnboardingIntroCarousel]: undefined
   [BCSCScreens.OnboardingPrivacyPolicy]: undefined
   [BCSCScreens.OnboardingTermsOfUse]: undefined
@@ -190,6 +187,7 @@ export type BCSCPromptStackParams = {
 }
 
 export type BCSCVerifyStackParams = {
+  [BCSCScreens.AccountSetup]: undefined
   [BCSCScreens.SessionRecovery]: undefined
   [BCSCScreens.VerifyWebView]: { url: string; title: string }
   [BCSCScreens.IdentitySelection]: undefined

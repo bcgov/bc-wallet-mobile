@@ -22,6 +22,7 @@ import { VerifyChangeSecurityScreen } from '../features/auth/VerifyChangeSecurit
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
+import AccountSetupScreen from '../features/onboarding/AccountSetupScreen'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
 import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { VerifyPrivacyPolicyScreen } from '../features/settings/VerifyPrivacyPolicyScreen'
@@ -96,6 +97,15 @@ const VerifyStack = () => {
         }),
       }}
     >
+      <Stack.Screen
+        name={BCSCScreens.AccountSetup}
+        component={AccountSetupScreen}
+        options={{
+          // Entry screen for verification (shown until the user picks new-setup vs. transfer);
+          // it has no back destination, so offer settings rather than a back arrow.
+          headerLeft: createVerifySettingsHeaderButton(),
+        }}
+      />
       <Stack.Screen
         name={BCSCScreens.IdentitySelection}
         component={IdentitySelectionScreen}
