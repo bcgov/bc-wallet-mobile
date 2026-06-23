@@ -34,6 +34,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 const TRANSITION_IN_DURATION = 200
 const TRANSITION_OUT_DURATION = 150
+const DEFAULT_ROTATION = 0
+const HALF_ROTATION = 180
 
 interface SettingsContentProps {
   onContactUs: () => void
@@ -69,15 +71,17 @@ const SectionHeader: React.FC<
   const { t } = useTranslation()
   const { TextTheme } = useTheme()
   const [showSection, setShowSection] = useState(true)
-  const chevronRotation = useSharedValue(0)
+  const chevronRotation = useSharedValue(DEFAULT_ROTATION)
 
   const chevronStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${chevronRotation.value}deg` }],
   }))
 
   const toggleSection = () => {
+    chevronRotation.value = withTiming(showSection ? HALF_ROTATION : DEFAULT_ROTATION, {
+      duration: TRANSITION_IN_DURATION,
+    })
     setShowSection((show) => !show)
-    chevronRotation.value = withTiming(showSection ? 180 : 0, { duration: TRANSITION_IN_DURATION })
   }
 
   return (
