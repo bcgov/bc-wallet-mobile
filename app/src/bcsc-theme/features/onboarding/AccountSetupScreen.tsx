@@ -104,7 +104,7 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
       <ThemedText variant={'headingThree'} style={{ textAlign: 'center', color: ColorPalette.brand.primary }}>
         {t('BCSC.AccountSetup.Title')}
       </ThemedText>
-      <ThemedText style={{ textAlign: 'center' }}>{t('BCSC.AccountSetup.Description')}</ThemedText>
+      <ThemedText style={{ textAlign: 'center', fontSize: 20 }}>{t('BCSC.AccountSetup.Description')}</ThemedText>
     </ScreenWrapper>
   )
 }
