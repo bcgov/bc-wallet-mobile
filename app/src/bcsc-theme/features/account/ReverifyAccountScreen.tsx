@@ -40,8 +40,10 @@ export const ReverifyAccountScreen = ({ route }: ReverifyAccountScreenProps): Re
   const onPrimaryAction = async () => {
     const stopLoading = loadingScreen.startLoading(t('BCSC.ReverifyAccount.Loading'))
     try {
-      await verificationReset()
-      continueVerificationProcess()
+      const success = await verificationReset()
+      if (success) {
+        continueVerificationProcess()
+      }
     } catch (error) {
       logger.error('ReverifyAccountScreen: Error during reset on account re-verification', error as Error)
     } finally {

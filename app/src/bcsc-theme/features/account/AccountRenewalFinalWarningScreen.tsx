@@ -24,8 +24,10 @@ export const AccountRenewalFinalWarningScreen = (): React.ReactElement => {
       onPressPrimaryAction={async () => {
         try {
           setIsLoading(true)
-          await verificationReset()
-          await continueVerificationProcess()
+          const success = await verificationReset()
+          if (success) {
+            continueVerificationProcess()
+          }
         } catch (error) {
           logger.error(
             'AccountRenewalFinalWarningScreen: Error during factory reset on account renewal',
