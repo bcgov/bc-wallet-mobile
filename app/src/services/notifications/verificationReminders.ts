@@ -22,6 +22,10 @@ const REMINDER_HOUR = 10 // 10:00 local, mirrors ias-ios
 const REMINDER_OFFSETS_DAYS = [3, 1]
 const reminderId = (daysBefore: number) => `verification-reminder-${daysBefore}-day`
 
+// TEMP(debug): set this to true to instead fire a single reminder 20 seconds out to test locally
+const DEBUG_QUICK_REMINDER = false
+const DEBUG_QUICK_REMINDER_DELAY_MS = 20 * 1000
+
 /** Minimal logger surface so callers can pass the app's logger (BifoldLogger) without coupling to its type. */
 interface ReminderLogger {
   info: (message: string, data?: Record<string, unknown>) => void
@@ -73,6 +77,30 @@ export async function scheduleVerificationReminders(
         name: 'Verification reminders',
         importance: AndroidImportance.DEFAULT,
       })
+    }
+
+    // TEMP(debug): fire one reminder ~20s out instead of the real cadence so the notification can be
+    // verified on-device
+    if (__DEV__ && DEBUG_QUICK_REMINDER) {
+      await notifee.createTriggerNotification(
+        {
+          id: reminderId(1),
+          title: copy.title,
+          body: copy.body,
+          android: {
+            channelId: CHANNEL_ID,
+            pressAction: { id: 'default' },
+          },
+        },
+        {
+          type: TriggerType.TIMESTAMP,
+          timestamp: now + DEBUG_QUICK_REMINDER_DELAY_MS,
+        }
+      )
+      logger?.info('[verificationReminders] DEBUG quick reminder scheduled', {
+        fireInMs: DEBUG_QUICK_REMINDER_DELAY_MS,
+      })
+      return
     }
 
     let scheduled = 0
