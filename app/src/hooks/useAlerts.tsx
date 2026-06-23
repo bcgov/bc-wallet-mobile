@@ -337,6 +337,10 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       invalidClientMetadataAlert: _createBasicErrorModal(AppEventCode.INVALID_CLIENT_METADATA, 'SomethingWentWrong'),
       serverConfigurationAlert: _createBasicErrorModal(AppEventCode.ADD_CARD_SERVER_CONFIGURATION, 'ProblemWithService', { errorCode: '201' }),
       dynamicRegistrationErrorAlert: _createBasicErrorModal(AppEventCode.ADD_CARD_DYNAMIC_REGISTRATION, 'DynamicRegistrationError', { errorCode: '202' }),
+      // Unsupported-OS rejection (issue #4091): basic alert (OK only, no "Report a Problem"),
+      // matching V3. Reuses the DynamicRegistrationError "(error 202)" copy. Shared by the
+      // registration (2824) and pairing-login (2208) unsupported-OS paths — see clientErrorPolicies.ts.
+      unsupportedOsAlert: _createBasicAlert(AppEventCode.ADD_CARD_DYNAMIC_REGISTRATION, 'DynamicRegistrationError', { errorCode: '202' }),
       termsOfUseErrorAlert: _createBasicErrorModal(AppEventCode.ADD_CARD_TERMS_OF_USE, 'ProblemWithService', { errorCode: '203' }),
       incorrectOsAlert: _createBasicErrorModal(AppEventCode.ADD_CARD_INCORRECT_OS, 'DynamicRegistrationError', { errorCode: '204' }),
       addCardNotAvailableAlert: _createBasicErrorModal(AppEventCode.ADD_CARD_PROVIDER, 'AddCardNotAvailable'),

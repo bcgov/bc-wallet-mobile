@@ -21,6 +21,7 @@ import {
   noTokensReturnedErrorPolicy,
   pairingCodeErrorPolicy,
   unexpectedServerErrorPolicy,
+  unsupportedOsOnAssertionErrorPolicy,
   updateRequiredErrorPolicy,
   verificationSessionExpiredErrorPolicy,
   verifyDeviceAssertionErrorPolicy,
@@ -132,22 +133,91 @@ describe('clientErrorPolicies', () => {
         expect(mockAlert).toHaveBeenCalledWith(error)
       })
 
-      it('should show dynamic registration alert when technicalMessage indicates unsupported os', () => {
+      it('should show the unsupported OS alert (basic, no report) when technicalMessage indicates unsupported os', () => {
         const error = newError('invalid_client_metadata')
         error.cause = new Error('unsupported os version') as AxiosError
         const mockAlert = jest.fn()
-        const context = { alerts: { dynamicRegistrationErrorAlert: mockAlert } }
+        const context = { alerts: { unsupportedOsAlert: mockAlert } }
         invalidClientMetadataErrorPolicy.handle(error, context as any)
-        expect(mockAlert).toHaveBeenCalledWith(error)
+        expect(mockAlert).toHaveBeenCalled()
       })
 
-      it('should match unsupported os check case-insensitively', () => {
+      it('should match the unsupported os check case-insensitively', () => {
         const error = newError('invalid_client_metadata')
         error.cause = new Error('Client registration failed: Unsupported OS Version detected') as AxiosError
         const mockAlert = jest.fn()
-        const context = { alerts: { dynamicRegistrationErrorAlert: mockAlert } }
+        const context = { alerts: { unsupportedOsAlert: mockAlert } }
         invalidClientMetadataErrorPolicy.handle(error, context as any)
-        expect(mockAlert).toHaveBeenCalledWith(error)
+        expect(mockAlert).toHaveBeenCalled()
+      })
+    })
+  })
+
+  describe('unsupportedOsOnAssertionErrorPolicy', () => {
+    const assertionContext = {
+      endpoint: '/api/cardTap/v3/mobile/assertion',
+      statusCode: 401,
+      apiEndpoints: { cardTap: '/api/cardTap' },
+    }
+
+    // Build an ERR_210_UNAUTHORIZED error whose raw response body carries (or omits) the errorMessage marker.
+    const unauthorizedWithErrorMessage = (errorMessage?: unknown): AxiosAppError => {
+      const error = newError('err_210_unauthorized')
+      error.cause = { response: { data: errorMessage === undefined ? {} : { errorMessage } } } as AxiosError
+      return error
+    }
+
+    describe('matches', () => {
+      it('should match a 401 on the assertion endpoint whose errorMessage indicates unsupported OS', () => {
+        const error = unauthorizedWithErrorMessage('unsupported OS')
+        expect(unsupportedOsOnAssertionErrorPolicy.matches(error, assertionContext as any)).toBeTruthy()
+      })
+
+      it('should match case-insensitively', () => {
+        const error = unauthorizedWithErrorMessage('Unsupported OS version detected')
+        expect(unsupportedOsOnAssertionErrorPolicy.matches(error, assertionContext as any)).toBeTruthy()
+      })
+
+      it('should NOT match a genuine 401 with no errorMessage marker', () => {
+        const error = unauthorizedWithErrorMessage()
+        expect(unsupportedOsOnAssertionErrorPolicy.matches(error, assertionContext as any)).toBeFalsy()
+      })
+
+      it('should NOT match the marker on a different endpoint', () => {
+        const error = unauthorizedWithErrorMessage('unsupported OS')
+        const context = { endpoint: '/api/other-endpoint', statusCode: 401, apiEndpoints: { cardTap: '/api/cardTap' } }
+        expect(unsupportedOsOnAssertionErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
+      it('should NOT match a non-401 error even with the marker present', () => {
+        const error = newError('invalid_pairing_code')
+        error.cause = { response: { data: { errorMessage: 'unsupported OS' } } } as AxiosError
+        expect(unsupportedOsOnAssertionErrorPolicy.matches(error, assertionContext as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle', () => {
+      it('should show the unsupported OS alert and mark the error handled', () => {
+        const error = unauthorizedWithErrorMessage('unsupported OS')
+        const mockAlert = jest.fn()
+        const context = { alerts: { unsupportedOsAlert: mockAlert }, logger: { info: jest.fn() } }
+        unsupportedOsOnAssertionErrorPolicy.handle(error, context as any)
+        expect(mockAlert).toHaveBeenCalled()
+        expect(error.handled).toBe(true)
+      })
+    })
+
+    describe('ClientErrorHandlingPolicies find', () => {
+      it('should resolve to unsupportedOsOnAssertionErrorPolicy (before iasErrorPolicy) for an unsupported-OS 401', () => {
+        const error = unauthorizedWithErrorMessage('unsupported OS')
+        const policy = ClientErrorHandlingPolicies.find((p) => p.matches(error, assertionContext as any))
+        expect(policy).toBe(unsupportedOsOnAssertionErrorPolicy)
+      })
+
+      it('should resolve to iasErrorPolicy for a genuine 401 with no marker (Report path preserved)', () => {
+        const error = unauthorizedWithErrorMessage()
+        const policy = ClientErrorHandlingPolicies.find((p) => p.matches(error, assertionContext as any))
+        expect(policy).toBe(iasErrorPolicy)
       })
     })
   })
