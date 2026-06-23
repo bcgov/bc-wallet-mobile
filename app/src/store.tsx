@@ -812,12 +812,18 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
     case BCSCDispatchAction.SET_ACCOUNT_EXPIRY_NOTIFICATION: {
       const show = ((action?.payload || []).pop() ?? false) as boolean
-      return { ...state, bcsc: { ...state.bcsc, showAccountExpiryNotification: show } }
+      const bcsc = { ...state.bcsc, showAccountExpiryNotification: show }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
     }
 
     case BCSCDispatchAction.SET_CARD_RENEWAL_NOTIFICATION: {
       const show = ((action?.payload || []).pop() ?? false) as boolean
-      return { ...state, bcsc: { ...state.bcsc, showCardRenewalNotification: show } }
+      const bcsc = { ...state.bcsc, showCardRenewalNotification: show }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
     }
 
     case BCSCDispatchAction.UPDATE_ACCEPTED_TERMS_OF_USE_VERSION: {
