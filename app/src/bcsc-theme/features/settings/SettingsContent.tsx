@@ -1,5 +1,6 @@
 import { ListButton, ListButtonGroup } from '@/bcsc-theme/components/ListButton'
 import { BCSCIdTokenContext } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
+import { isUserVerified } from '@/bcsc-theme/utils/bcsc-credential'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { PressableOpacity } from '@/components/PressableOpacity'
 import { ACCESSIBILITY_URL, DEFAULT_AUTO_LOCK_TIME_MIN, FEEDBACK_URL, hitSlop, TERMS_OF_USE_URL } from '@/constants'
@@ -196,7 +197,10 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
   // useContext (not useIdToken) so we don't throw when the BCSCIdTokenProvider
   // isn't mounted — settings is reachable before verification completes.
   const deviceCount = useContext(BCSCIdTokenContext)?.data?.bcsc_devices_count
-  const isVerified = store.bcscSecure.verified
+  // Use the canonical verification check (same as getResumeStepRoute) rather than the raw
+  // `verified` flag: device transfer marks the user verified via a refresh token without setting
+  // that flag, and such users still need the device-management options (e.g. "Add another device").
+  const isVerified = isUserVerified(store.bcscSecure)
 
   const showChangePIN = accountSecurityMethod !== AccountSecurityMethod.DeviceAuth && onChangePIN
   const analyticsOptInText = store.bcsc.analyticsOptIn ? 'ON' : 'OFF'
@@ -209,7 +213,7 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
 
   return (
     <>
-      {store.bcscSecure.verified ? (
+      {isVerified ? (
         <View style={styles.sectionContainer}>
           <View style={styles.profileCard}>
             <PressableOpacity
