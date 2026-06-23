@@ -1,59 +1,49 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import QRCodePhone from '@assets/img/qr-code-phone.png'
-import QRScan from '@assets/img/qr-code-scan.png'
-import TabNavigator from '@assets/img/tab-navigator-account.png'
-import { Button, ButtonType, ContentGradient, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
-import { useTranslation } from 'react-i18next'
-import { Image } from 'react-native'
+import { Trans, useTranslation } from 'react-i18next'
+import { View } from 'react-native'
 
-const TAB_NAVIGATOR = Image.resolveAssetSource(TabNavigator)
-const QR_CODE_PHONE = Image.resolveAssetSource(QRCodePhone)
-const QR_SCAN = Image.resolveAssetSource(QRScan)
+const STEP_KEYS = [
+  'BCSC.TransferInstructions.Step1',
+  'BCSC.TransferInstructions.Step2',
+  'BCSC.TransferInstructions.Step3',
+] as const
 
 const TransferInstructionsScreen: React.FC = () => {
-  const { Spacing, ColorPalette } = useTheme()
+  const { Spacing } = useTheme()
   const { t } = useTranslation()
 
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
 
   const controls = (
-    <>
-      <ContentGradient backgroundColor={ColorPalette.brand.primaryBackground} />
-      <Button
-        buttonType={ButtonType.Primary}
-        title={t('BCSC.TransferInstructions.ScanQRCode')}
-        accessibilityLabel={t('BCSC.TransferInstructions.ScanQRCode')}
-        testID={testIdWithKey('ScanQRCode')}
-        onPress={() => {
-          navigation.navigate(BCSCScreens.TransferAccountQRScan)
-        }}
-      />
-    </>
+    <Button
+      buttonType={ButtonType.Primary}
+      title={t('BCSC.TransferInstructions.ScanQRCode')}
+      accessibilityLabel={t('BCSC.TransferInstructions.ScanQRCode')}
+      testID={testIdWithKey('ScanQRCode')}
+      onPress={() => {
+        navigation.navigate(BCSCScreens.TransferAccountQRScan)
+      }}
+    />
   )
 
   return (
     <ScreenWrapper controls={controls} scrollViewContainerStyle={{ gap: Spacing.lg }}>
       <ThemedText variant={'headingThree'}>{t('BCSC.TransferInstructions.Title')}</ThemedText>
 
-      <ThemedText>{t('BCSC.TransferInstructions.Step1')}</ThemedText>
-      <Image
-        source={TAB_NAVIGATOR}
-        style={{ height: 100, aspectRatio: 3, alignSelf: 'center' }}
-        resizeMode={'contain'}
-      />
-
-      <ThemedText>{t('BCSC.TransferInstructions.Step2')}</ThemedText>
-      <Image
-        source={QR_CODE_PHONE}
-        style={{ height: 300, aspectRatio: 0.5, alignSelf: 'center' }}
-        resizeMode={'contain'}
-      />
-
-      <ThemedText>{t('BCSC.TransferInstructions.Step3')}</ThemedText>
-      <Image source={QR_SCAN} style={{ height: 300, aspectRatio: 0.5, alignSelf: 'center' }} resizeMode={'contain'} />
+      {STEP_KEYS.map((stepKey, index) => (
+        // Numbered list with a hanging indent: the number sits in a gutter and the wrapped
+        // step text aligns to the right of it.
+        <View key={stepKey} style={{ flexDirection: 'row', gap: Spacing.sm }}>
+          <ThemedText variant={'bold'}>{`${index + 1}.`}</ThemedText>
+          <ThemedText style={{ flex: 1 }}>
+            <Trans i18nKey={stepKey} components={{ b: <ThemedText variant={'bold'} /> }} t={t} />
+          </ThemedText>
+        </View>
+      ))}
     </ScreenWrapper>
   )
 }
