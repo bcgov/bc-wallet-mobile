@@ -368,10 +368,9 @@ export const unsupportedOsOnAssertionErrorPolicy: ErrorHandlingPolicy = {
       errorMessage.toLowerCase().includes(ASSERTION_UNSUPPORTED_OS_MARKER)
     )
   },
-  handle: (error, context) => {
+  handle: (_error, context) => {
     context.logger.info('[UnsupportedOsOnAssertionErrorPolicy] OS-unsupported 401 on assertion — showing basic alert')
     context.alerts.unsupportedOsAlert()
-    error.handled = true
   },
 }
 
@@ -392,7 +391,6 @@ export const verifyDeviceAssertionErrorPolicy: ErrorHandlingPolicy = {
     }
 
     alert(error)
-    error.handled = true
   },
 }
 
@@ -476,9 +474,8 @@ export const failedToRetrieveStringResourceErrorPolicy: ErrorHandlingPolicy = {
   matches: (error) => {
     return error.appEvent === AppEventCode.ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE
   },
-  handle: (error, context) => {
+  handle: (_error, context) => {
     context.alerts.failedToRetrieveStringResourceAlert()
-    error.handled = true
   },
 }
 
@@ -489,7 +486,6 @@ export const invalidUrlErrorPolicy: ErrorHandlingPolicy = {
   },
   handle: (error, context) => {
     context.alerts.invalidUrlAlert(error)
-    error.handled = true
   },
 }
 
@@ -500,7 +496,6 @@ export const invalidRegistrationRequestErrorPolicy: ErrorHandlingPolicy = {
   },
   handle: (error, context) => {
     context.alerts.invalidRegistrationRequestAlert(error)
-    error.handled = true
   },
 }
 

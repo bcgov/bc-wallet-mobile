@@ -197,13 +197,12 @@ describe('clientErrorPolicies', () => {
     })
 
     describe('handle', () => {
-      it('should show the unsupported OS alert and mark the error handled', () => {
+      it('should show the unsupported OS alert', () => {
         const error = unauthorizedWithErrorMessage('unsupported OS')
         const mockAlert = jest.fn()
         const context = { alerts: { unsupportedOsAlert: mockAlert }, logger: { info: jest.fn() } }
         unsupportedOsOnAssertionErrorPolicy.handle(error, context as any)
         expect(mockAlert).toHaveBeenCalled()
-        expect(error.handled).toBe(true)
       })
     })
 
@@ -892,13 +891,12 @@ describe('clientErrorPolicies', () => {
     })
 
     describe('handle', () => {
-      it('should call failedToRetrieveStringResourceAlert and mark error as handled', () => {
+      it('should call failedToRetrieveStringResourceAlert', () => {
         const error = newError('err_400_failed_to_retrieve_string_resource')
         const mockAlert = jest.fn()
         const context = { alerts: { failedToRetrieveStringResourceAlert: mockAlert } }
         failedToRetrieveStringResourceErrorPolicy.handle(error, context as any)
         expect(mockAlert).toHaveBeenCalled()
-        expect(error.handled).toBe(true)
       })
     })
   })
@@ -917,13 +915,12 @@ describe('clientErrorPolicies', () => {
     })
 
     describe('handle', () => {
-      it('should call invalidUrlAlert and mark error as handled', () => {
+      it('should call invalidUrlAlert', () => {
         const error = newError('err_500_invalid_url')
         const mockAlert = jest.fn()
         const context = { alerts: { invalidUrlAlert: mockAlert } }
         invalidUrlErrorPolicy.handle(error, context as any)
         expect(mockAlert).toHaveBeenCalled()
-        expect(error.handled).toBe(true)
       })
     })
   })
@@ -942,13 +939,12 @@ describe('clientErrorPolicies', () => {
     })
 
     describe('handle', () => {
-      it('should call invalidRegistrationRequestAlert and mark error as handled', () => {
+      it('should call invalidRegistrationRequestAlert', () => {
         const error = newError('err_501_invalid_registration_request')
         const mockAlert = jest.fn()
         const context = { alerts: { invalidRegistrationRequestAlert: mockAlert } }
         invalidRegistrationRequestErrorPolicy.handle(error, context as any)
         expect(mockAlert).toHaveBeenCalled()
-        expect(error.handled).toBe(true)
       })
     })
   })
@@ -1166,7 +1162,6 @@ describe('clientErrorPolicies', () => {
           }
           verifyDeviceAssertionErrorPolicy.handle(error, context as any)
           expect(mockAlert).toHaveBeenCalled()
-          expect(error.handled).toBe(true)
         })
 
         it('should emit the problem with account alert', () => {
@@ -1177,7 +1172,6 @@ describe('clientErrorPolicies', () => {
           }
           verifyDeviceAssertionErrorPolicy.handle(error, context as any)
           expect(mockAlert).toHaveBeenCalled()
-          expect(error.handled).toBe(true)
         })
 
         it('should emit the invalid pairing code alert', () => {
@@ -1188,7 +1182,6 @@ describe('clientErrorPolicies', () => {
           }
           verifyDeviceAssertionErrorPolicy.handle(error, context as any)
           expect(mockAlert).toHaveBeenCalled()
-          expect(error.handled).toBe(true)
         })
 
         it('should emit the login remembered pairing code code alert', () => {
@@ -1199,7 +1192,6 @@ describe('clientErrorPolicies', () => {
           }
           verifyDeviceAssertionErrorPolicy.handle(error, context as any)
           expect(mockAlert).toHaveBeenCalled()
-          expect(error.handled).toBe(true)
         })
 
         it('should emit the login remembered device invalid pairing code alert', () => {
@@ -1210,7 +1202,6 @@ describe('clientErrorPolicies', () => {
           }
           verifyDeviceAssertionErrorPolicy.handle(error, context as any)
           expect(mockAlert).toHaveBeenCalled()
-          expect(error.handled).toBe(true)
         })
       })
     })
