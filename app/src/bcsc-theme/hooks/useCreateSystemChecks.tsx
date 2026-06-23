@@ -152,12 +152,16 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     // still get the account-independent checks rather than the whole batch being
     // gated off when accountExpirationDate is undefined.
     if (accountExpirationDate) {
-      systemChecks.push(new AccountExpirySystemCheck(accountExpirationDate, utils))
-      systemChecks.push(new AccountRenewalSystemCheck(accountExpirationDate, utils))
+      systemChecks.push(
+        new AccountExpirySystemCheck(accountExpirationDate, utils),
+        new AccountRenewalSystemCheck(accountExpirationDate, utils)
+      )
     }
 
     if (isVerified) {
-      systemChecks.push(new EventReasonAlertsSystemCheck(getIdToken, credentialMetadataRef.current, utils, navigation))
+      systemChecks.push(
+        new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation)
+      )
     }
 
     // Terms of Use applies to every user (the endpoint is public, no token needed)
@@ -186,6 +190,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     accountExpirationDate,
     isVerified,
     utils,
+    emitAlert,
     navigation,
     isBCServicesCardBundle,
     tokenService,
@@ -206,9 +211,9 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       },
       [SystemCheckScope.MAIN_STACK]: {
         getSystemChecks: getMainSystemChecks,
-        // Not gated on accountExpirationDate: the batch runs for unverified users too,
-        // and account-dependent checks are included conditionally in the builder.
-        isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated && Boolean(accountExpirationDate)),
+        isReady: Boolean(
+          defaultReadiness && store.bcscSecure.isHydrated && (!isVerified || accountContext?.isAccountSettled)
+        ),
       },
     }
   }, [
@@ -217,6 +222,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     getStartupSystemChecks,
     store.bcscSecure.isHydrated,
     store.stateLoaded,
-    accountExpirationDate,
+    accountContext?.isAccountSettled,
+    isVerified,
   ])
 }
