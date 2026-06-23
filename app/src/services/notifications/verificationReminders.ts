@@ -17,7 +17,6 @@ import { Platform } from 'react-native'
 
 const CHANNEL_ID = 'verification-reminders'
 const REMINDER_HOUR = 10 // 10:00 local, mirrors ias-ios
-const DAY_MS = 24 * 60 * 60 * 1000
 
 // Days-before-expiry for each reminder. Stable ids so a reschedule overwrites the prior trigger.
 const REMINDER_OFFSETS_DAYS = [3, 1]
@@ -78,10 +77,14 @@ export async function scheduleVerificationReminders(
 
     let scheduled = 0
     for (const daysBefore of REMINDER_OFFSETS_DAYS) {
-      const fireDate = new Date(expiry.getTime() - daysBefore * DAY_MS)
+      // Subtract calendar days (not 24h blocks) so DST transitions can't shift the reminder to the
+      // wrong day, then pin to 10:00 local on that day — mirrors ias-ios.
+      const fireDate = new Date(expiry)
+      fireDate.setDate(fireDate.getDate() - daysBefore)
       fireDate.setHours(REMINDER_HOUR, 0, 0, 0)
 
-      // Skip reminders whose 10:00 fire time has already passed
+      // Skip reminders whose 10:00 fire time has already passed (reproduces the iOS cadence: only the
+      // 1-day reminder survives once fewer than 3 days remain, none once fewer than 1).
       if (fireDate.getTime() <= now) {
         continue
       }

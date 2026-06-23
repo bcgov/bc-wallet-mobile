@@ -86,17 +86,17 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
    *  - A terminal `status` (`verified`/`cancelled`) means the session is over, so any pending
    *    "verify by ..." reminders are cleared. (Completion is also caught when the device_code is
    *    exchanged for tokens; this just clears them sooner, and covers an agent-cancelled video.)
-   *  - A possibly-refreshed `expires_in` (seconds). Per the IAS API this "may be different from the
-   *    original device code authorization response to allow for verifications submitted close to expiry
-   *    and weekends" — i.e. it is how the server communicates the video-submission and agent-approval
-   *    extensions. We recompute the deadline as `now + expires_in` and persist it (which also reschedules
-   *    the reminders), but only when it pushes the deadline later, so a stale/shorter value can never cut
-   *    an in-progress session short.
+   *  - A possibly-refreshed `expires_in` (seconds). It is how the server communicates the
+   *    video-submission and agent-approval extensions. Mirroring ias-ios (the source of truth where it
+   *    disagrees with the API docs), this value extends the EXISTING deadline: it is a delta added to the
+   *    current expiry, pinned to end-of-day local, and only ever pushes the deadline later — so a
+   *    stale/shorter value can never cut an in-progress session short. With no existing expiry there is
+   *    nothing to extend. See ias-ios PreBackcheckVideoChecks / `dateBeforeMidnightWithSeconds`.
    */
   const reconcileVerificationDeadline = useCallback(
-    (data: VerificationStatusResponseData) => {
+    async (data: VerificationStatusResponseData) => {
       if (data.status === 'verified' || data.status === 'cancelled') {
-        cancelVerificationReminders(apiClient.logger)
+        await cancelVerificationReminders(apiClient.logger)
         return
       }
 
@@ -107,12 +107,16 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
       if (!Number.isFinite(seconds) || seconds <= 0) {
         return
       }
-      const newExpiry = new Date(Date.now() + seconds * 1000)
       const currentExpiry = store.bcscSecure.deviceCodeExpiresAt
-      if (currentExpiry && newExpiry.getTime() <= currentExpiry.getTime()) {
+      if (!currentExpiry) {
         return
       }
-      updateDeviceCodes({ deviceCodeExpiresAt: newExpiry })
+      const extendedExpiry = new Date(currentExpiry.getTime() + seconds * 1000)
+      extendedExpiry.setHours(23, 59, 59, 0)
+      if (extendedExpiry.getTime() <= currentExpiry.getTime()) {
+        return
+      }
+      await updateDeviceCodes({ deviceCodeExpiresAt: extendedExpiry })
     },
     [apiClient.logger, store.bcscSecure.deviceCodeExpiresAt, updateDeviceCodes]
   )
@@ -213,7 +217,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
             skipBearerAuth: true,
           }
         )
-        reconcileVerificationDeadline(data)
+        await reconcileVerificationDeadline(data)
         return data
       })
     },
@@ -252,7 +256,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
             skipBearerAuth: true,
           }
         )
-        reconcileVerificationDeadline(data)
+        await reconcileVerificationDeadline(data)
         return data
       })
     },

@@ -1,6 +1,10 @@
 import notifee from '@notifee/react-native'
 import { cancelVerificationReminders, scheduleVerificationReminders } from './verificationReminders'
 
+// Use the manual mock at __mocks__/@notifee/react-native.ts (no factory) so notifee's native module is
+// never loaded in the Jest environment.
+jest.mock('@notifee/react-native')
+
 // TZ is pinned to GMT for the test run (see package.json test script), so local-time hour math is GMT.
 const NOW = new Date('2026-06-01T08:00:00Z')
 const DAY_MS = 24 * 60 * 60 * 1000

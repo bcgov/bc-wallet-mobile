@@ -1,6 +1,8 @@
-// Manual mock for @notifee/react-native (auto-applied for node_modules by Jest).
-// Re-uses notifee's official jest mock for the default export (createTriggerNotification,
-// cancelTriggerNotifications, createChannel, etc.) and re-declares the named enums we consume.
+// Manual mock for @notifee/react-native. Tests that exercise notifee opt in with
+// `jest.mock('@notifee/react-native')`, which resolves to this file. It re-uses notifee's official jest
+// mock for the default export (createTriggerNotification, cancelTriggerNotifications, createChannel, etc.)
+// and re-declares the named enums we consume.
+// @ts-expect-error notifee's official jest mock ships no type declarations
 import notifeeMock from '@notifee/react-native/jest-mock'
 
 export default notifeeMock
