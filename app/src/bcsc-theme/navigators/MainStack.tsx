@@ -28,7 +28,7 @@ import { DeviceInvalidated } from '../features/modal/DeviceInvalidated'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
-import { usePairingService } from '../features/pairing'
+import { pairingPayloadToServiceLoginParams, usePairingService } from '../features/pairing'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
@@ -72,11 +72,7 @@ const MainStack: React.FC = () => {
       return undefined
     }
 
-    return {
-      serviceTitle,
-      pairingCode,
-      fromAppSwitch: pendingPairing.source === 'deep-link',
-    }
+    return pairingPayloadToServiceLoginParams(pendingPairing)
   }, [logger, pendingPairing])
   const initialRouteName = pairingInitialParams ? BCSCScreens.ServiceLogin : BCSCStacks.Tab
   useSystemChecks(SystemCheckScope.MAIN_STACK)
