@@ -38,6 +38,10 @@ const TRANSITION_OUT_DURATION = 150
 const DEFAULT_ROTATION = 0
 const HALF_ROTATION = 180
 
+const noop = () => {
+  // TODO: wire to real handler once the destination screen exists
+}
+
 interface SettingsContentProps {
   onContactUs: () => void
   onHelp: () => void
@@ -152,6 +156,63 @@ const Row: React.FC<{
   )
 }
 
+interface ProfileCardProps {
+  isVerified: boolean
+  styles: SectionStyles
+  profileName: string
+  onAccountDetails?: () => void
+  onEditNickname?: () => void
+}
+
+/**
+ * Verified-user profile card (account name + edit pencil). Renders nothing when the user isn't
+ * verified. Extracted from AuthenticatedSection to keep that component's cognitive complexity down.
+ */
+const ProfileCard: React.FC<ProfileCardProps> = ({
+  isVerified,
+  styles,
+  profileName,
+  onAccountDetails,
+  onEditNickname,
+}) => {
+  const { t } = useTranslation()
+  const { ColorPalette } = useTheme()
+
+  if (!isVerified) {
+    return null
+  }
+
+  return (
+    <View style={styles.sectionContainer}>
+      <View style={styles.profileCard}>
+        <PressableOpacity
+          style={styles.profileMain}
+          onPress={onAccountDetails ?? noop}
+          accessibilityRole="button"
+          accessibilityLabel={profileName}
+          testID={testIdWithKey('Profile')}
+        >
+          <Icon name="account" size={24} color={ColorPalette.brand.primary} />
+          <ThemedText variant="bold" style={styles.profileName}>
+            {profileName}
+          </ThemedText>
+        </PressableOpacity>
+        {onEditNickname ? (
+          <PressableOpacity
+            onPress={onEditNickname}
+            hitSlop={hitSlop}
+            accessibilityRole="button"
+            accessibilityLabel={t('BCSC.Settings.EditNickname')}
+            testID={testIdWithKey('EditProfile')}
+          >
+            <Icon name="pencil" size={20} color={ColorPalette.brand.primary} />
+          </PressableOpacity>
+        ) : null}
+      </View>
+    </View>
+  )
+}
+
 interface AuthenticatedSectionProps {
   styles: SectionStyles
   accountSecurityMethod: AccountSecurityMethod | undefined
@@ -192,7 +253,6 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
   onPressRemoveAccount,
 }) => {
   const { t } = useTranslation()
-  const { ColorPalette } = useTheme()
   const [store] = useStore<BCState>()
   // useContext (not useIdToken) so we don't throw when the BCSCIdTokenProvider
   // isn't mounted — settings is reachable before verification completes.
@@ -207,41 +267,15 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
   const autoLockTimeText = `${store.preferences.autoLockTime ?? DEFAULT_AUTO_LOCK_TIME_MIN} min`
   const profileName = store.bcsc.selectedNickname?.trim() || t('BCSC.Title')
 
-  const noop = () => {
-    // TODO: wire to real handler once the destination screen exists
-  }
-
   return (
     <>
-      {isVerified ? (
-        <View style={styles.sectionContainer}>
-          <View style={styles.profileCard}>
-            <PressableOpacity
-              style={styles.profileMain}
-              onPress={onAccountDetails ?? noop}
-              accessibilityRole="button"
-              accessibilityLabel={profileName}
-              testID={testIdWithKey('Profile')}
-            >
-              <Icon name="account" size={24} color={ColorPalette.brand.primary} />
-              <ThemedText variant="bold" style={styles.profileName}>
-                {profileName}
-              </ThemedText>
-            </PressableOpacity>
-            {onEditNickname ? (
-              <PressableOpacity
-                onPress={onEditNickname}
-                hitSlop={hitSlop}
-                accessibilityRole="button"
-                accessibilityLabel={t('BCSC.Settings.EditNickname')}
-                testID={testIdWithKey('EditProfile')}
-              >
-                <Icon name="pencil" size={20} color={ColorPalette.brand.primary} />
-              </PressableOpacity>
-            ) : null}
-          </View>
-        </View>
-      ) : null}
+      <ProfileCard
+        isVerified={isVerified}
+        styles={styles}
+        profileName={profileName}
+        onAccountDetails={onAccountDetails}
+        onEditNickname={onEditNickname}
+      />
 
       <SectionHeader title={t('BCSC.Settings.Features.Header')} iconName="bullhorn-outline" styles={styles}>
         <View style={styles.sectionContainer}>
