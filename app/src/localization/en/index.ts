@@ -364,6 +364,10 @@ const translation = {
         "LearnMore": "Learn more",
       },
     },
+    "VerificationReminder": {
+      "Title": "Finish verifying your identity",
+      "Body": "Verify your identity to finish setting up the app by {{date}}.",
+    },
     "Home": {
       "WhereToUseTitle": "Where to use",
       "WhereToUseAccessibilityLabel": "Find services",

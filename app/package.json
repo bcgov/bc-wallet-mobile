@@ -80,6 +80,7 @@
     "@hyperledger/anoncreds-react-native": "0.3.4",
     "@hyperledger/indy-vdr-react-native": "0.2.4",
     "@hyperledger/indy-vdr-shared": "0.2.4",
+    "@notifee/react-native": "~9.1.8",
     "@openwallet-foundation/askar-react-native": "0.5.0-alpha-20260121132554",
     "@pexip/infinity-api": "~19.1.2",
     "@react-native-async-storage/async-storage": "~2.2.0",

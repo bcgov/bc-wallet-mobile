@@ -4270,6 +4270,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@notifee/react-native@npm:~9.1.8":
+  version: 9.1.8
+  resolution: "@notifee/react-native@npm:9.1.8"
+  peerDependencies:
+    react-native: "*"
+  checksum: 10c0/a41adf0975e826fafa166d79854b12d6b405181a0e1adc2a8dd251d9a480482148a8104fedc882e1aee7a48573ff46ac8c999ebf83d42b410f05de387c040ec1
+  languageName: node
+  linkType: hard
+
 "@npmcli/agent@npm:^4.0.0":
   version: 4.0.0
   resolution: "@npmcli/agent@npm:4.0.0"
@@ -8097,6 +8106,7 @@ __metadata:
     "@hyperledger/anoncreds-react-native": "npm:0.3.4"
     "@hyperledger/indy-vdr-react-native": "npm:0.2.4"
     "@hyperledger/indy-vdr-shared": "npm:0.2.4"
+    "@notifee/react-native": "npm:~9.1.8"
     "@openwallet-foundation/askar-react-native": "npm:0.5.0-alpha-20260121132554"
     "@pexip/infinity-api": "npm:~19.1.2"
     "@react-native-async-storage/async-storage": "npm:~2.2.0"
