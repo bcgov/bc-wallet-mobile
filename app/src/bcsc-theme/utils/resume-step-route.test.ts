@@ -1,5 +1,6 @@
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { AccountSetupType, initialState } from '@/store'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { getResumeStepRoute } from './resume-step-route'
 
 describe('getResumeStepRoute', () => {
@@ -26,5 +27,14 @@ describe('getResumeStepRoute', () => {
     store.bcsc.accountSetupType = AccountSetupType.TransferAccount
     store.bcscSecure.verified = true
     expect(getResumeStepRoute(store).name).toBe(BCSCScreens.VerificationSuccess)
+  })
+
+  it('resumes a user with verification progress but no recorded setup type instead of bouncing to the setup question', () => {
+    const store = structuredClone(initialState)
+    // ID already registered (photo card + serial) but accountSetupType was never recorded — e.g.
+    // migrated from a build that predates the field. Resume at the next step, don't lose progress.
+    store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
+    store.bcscSecure.serial = '123456789'
+    expect(getResumeStepRoute(store).name).toBe(BCSCScreens.ResidentialAddress)
   })
 })
