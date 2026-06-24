@@ -50,7 +50,6 @@ type WebViewParamList = {
   [BCSCScreens.AuthWebView]: { url: string; title: string }
   [BCSCScreens.OnboardingWebView]: { url: string; title: string }
   [BCSCScreens.VerifyWebView]: { url: string; title: string }
-  [BCSCScreens.PromptWebView]: { url: string; title: string }
 }
 
 type FloatingHelpMenuButtonOptions = {
