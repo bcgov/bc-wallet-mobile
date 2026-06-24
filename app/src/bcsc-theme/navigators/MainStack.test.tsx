@@ -195,6 +195,15 @@ describe('MainStack', () => {
   })
 
   it('calls pairingPayloadToServiceLoginParams when there is a valid pending pairing', () => {
+    const payload: PairingPayload = { serviceTitle: 'My Service', pairingCode: 'abc123', source: 'manual' }
+    mockConsumePendingPairing.mockReturnValue(payload)
+
+    render(<MainStack />)
+
+    expect(PairingModule.pairingPayloadToServiceLoginParams).toHaveBeenCalledWith(payload)
+  })
+
+  it('calls pairingPayloadToServiceLoginParams for a deep-link pending pairing (cold start)', () => {
     const payload: PairingPayload = { serviceTitle: 'My Service', pairingCode: 'abc123', source: 'deep-link' }
     mockConsumePendingPairing.mockReturnValue(payload)
 
