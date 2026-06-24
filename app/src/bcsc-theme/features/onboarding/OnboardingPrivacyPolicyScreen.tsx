@@ -1,10 +1,9 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
-import { Button, ButtonType, testIdWithKey, useDeveloperMode } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { Vibration } from 'react-native'
 import { PrivacyPolicyContent } from './components/PrivacyPolicyContent'
 
 interface OnboardingPrivacyPolicyScreenProps {
@@ -18,14 +17,6 @@ interface OnboardingPrivacyPolicyScreenProps {
  */
 export const OnboardingPrivacyPolicyScreen = ({ navigation }: OnboardingPrivacyPolicyScreenProps) => {
   const { t } = useTranslation()
-
-  // Privacy is now the first onboarding screen, so it hosts the hidden developer-menu trigger
-  // (previously on the account-setup screen) so dev/QA can switch the IAS environment before
-  // device registration happens during onboarding.
-  const { incrementDeveloperMenuCounter } = useDeveloperMode(() => {
-    Vibration.vibrate()
-    navigation.navigate(BCSCScreens.OnboardingDeveloper)
-  })
 
   const onPress = () => {
     navigation.navigate(BCSCScreens.OnboardingTermsOfUse)
@@ -50,11 +41,5 @@ export const OnboardingPrivacyPolicyScreen = ({ navigation }: OnboardingPrivacyP
     </ControlContainer>
   )
 
-  return (
-    <PrivacyPolicyContent
-      onLearnMore={handleLearnMore}
-      controls={controls}
-      onHiddenDevPress={incrementDeveloperMenuCounter}
-    />
-  )
+  return <PrivacyPolicyContent onLearnMore={handleLearnMore} controls={controls} />
 }
