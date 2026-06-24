@@ -1,12 +1,13 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { DeveloperModeTrigger } from '@/bcsc-theme/components/DeveloperModeTrigger'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HELP_URL } from '@/constants'
 import WelcomeIllustration from '@assets/img/welcome_phone.svg'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useDeveloperMode, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Pressable, StyleSheet, Vibration, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 
 interface OnboardingIntroScreenProps {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingIntro>
@@ -22,11 +23,6 @@ interface OnboardingIntroScreenProps {
 export const OnboardingIntroScreen = ({ navigation }: OnboardingIntroScreenProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
-
-  const { incrementDeveloperMenuCounter } = useDeveloperMode(() => {
-    Vibration.vibrate()
-    navigation.navigate(BCSCScreens.OnboardingDeveloper)
-  })
 
   const handleContinue = useCallback(() => {
     navigation.navigate(BCSCScreens.OnboardingPrivacyPolicy)
@@ -75,17 +71,11 @@ export const OnboardingIntroScreen = ({ navigation }: OnboardingIntroScreenProps
         padding: Spacing.lg,
       }}
     >
-      <Pressable
-        onPress={incrementDeveloperMenuCounter}
-        accessible={false}
-        accessibilityElementsHidden={true}
-        importantForAccessibility="no-hide-descendants"
-        testID={testIdWithKey('DeveloperCounter')}
-      >
+      <DeveloperModeTrigger onActivate={() => navigation.navigate(BCSCScreens.OnboardingDeveloper)}>
         <View style={styles.image}>
           <WelcomeIllustration width={200} height={187} />
         </View>
-      </Pressable>
+      </DeveloperModeTrigger>
       <ThemedText variant={'headingThree'} style={{ textAlign: 'center', color: ColorPalette.brand.primary }}>
         {t('BCSC.Onboarding.IntroTitle')}
       </ThemedText>
