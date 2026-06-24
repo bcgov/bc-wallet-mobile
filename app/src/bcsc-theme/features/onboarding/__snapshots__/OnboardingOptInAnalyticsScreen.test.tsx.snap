@@ -40,10 +40,7 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
           }
         }
       >
-        <
-          height={196}
-          width={240}
-        />
+        < />
       </View>
       <Text
         maxFontSizeMultiplier={2}
