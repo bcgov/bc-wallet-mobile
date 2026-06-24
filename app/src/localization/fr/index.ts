@@ -1029,7 +1029,7 @@ const translation = {
     "TransferInformation": {
       "Title": "Have this app on another device? (FR)",
       "Instructions": "You can transfer your account to that other device. No need to provide ID or verify your identity again. (FR)",
-      "TransferAccount": "Transfer Account (FR)",
+      "TransferAccount": "Add device (FR)",
     },
     "TransferInstructions": {
       "Title": "Scan your QR code to add your device (FR)",
