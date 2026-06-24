@@ -229,7 +229,7 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
           title={t('BCSC.Onboarding.SecureAppPINTitle')}
           testID={testIdWithKey('ChoosePINButton')}
           subtext={copy.pinSubtext}
-          startIcon={isSettingsContext ? undefined : 'dialpad'}
+          startIcon={isSettingsContext ? undefined : 'password'}
           onPress={onPINPress}
           disabled={isSettingsContext && !isCurrentMethodDeviceAuth}
         />

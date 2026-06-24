@@ -1,7 +1,6 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import Blob from '@assets/img/blob.svg'
 import PushNotificationImage from '@assets/img/push-notifications-image.svg'
 import {
   Button,
@@ -148,8 +147,7 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
       scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
     >
       <View style={styles.imageContainer}>
-        <Blob />
-        <PushNotificationImage style={{ position: 'absolute' }} />
+        <PushNotificationImage />
       </View>
       <ThemedText variant="headingThree" style={{ textAlign: 'center' }}>
         {t('BCSC.Onboarding.NotificationsHeader')}
