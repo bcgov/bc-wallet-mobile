@@ -4,7 +4,6 @@ import { BCDispatchAction, BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
-import * as PushNotifications from '../../../utils/PushNotificationsHelper'
 import { TermsOfUseContent } from './TermsOfUseContent'
 
 interface TermsOfUseScreenProps {
@@ -20,20 +19,15 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): React.R
   const [, dispatch] = useStore<BCState>()
 
   const handleAccept = useCallback(
-    async (termsOfUse: TermsOfUseResponseData) => {
+    (termsOfUse: TermsOfUseResponseData) => {
       dispatch({
         type: BCDispatchAction.UPDATE_ACCEPTED_TERMS_OF_USE_VERSION,
         payload: [String(termsOfUse.version)],
       })
 
-      const status = await PushNotifications.status()
-
-      // if permission is granted, skip notification screen
-      if (status === PushNotifications.NotificationPermissionStatus.GRANTED) {
-        return navigation.navigate(BCSCScreens.OnboardingSecureApp)
-      }
-
-      navigation.navigate(BCSCScreens.OnboardingNotifications)
+      // Analytics opt-in is next; that screen handles skipping the notifications step when
+      // notification permission has already been granted.
+      navigation.navigate(BCSCScreens.OnboardingOptInAnalytics)
     },
     [dispatch, navigation]
   )

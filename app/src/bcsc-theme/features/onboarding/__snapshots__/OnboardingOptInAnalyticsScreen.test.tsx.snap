@@ -37,19 +37,12 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
         style={
           {
             "alignItems": "center",
-            "flex": 1,
-            "justifyContent": "center",
-            "position": "relative",
           }
         }
       >
-        < />
         <
-          style={
-            {
-              "position": "absolute",
-            }
-          }
+          height={196}
+          width={240}
         />
       </View>
       <Text
