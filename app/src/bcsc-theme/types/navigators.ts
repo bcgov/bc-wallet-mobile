@@ -101,7 +101,7 @@ export enum BCSCScreens {
   AccountDetails = 'Account Details',
   AccountSetup = 'Start Setup',
   OnboardingSetupTypes = 'Setup Options',
-  OnboardingIntroCarousel = 'Intro',
+  OnboardingIntro = 'Intro',
   OnboardingPrivacyPolicy = `${BCSCStacks.Onboarding} Privacy Information`,
   OnboardingTermsOfUse = 'Terms of Use Screen',
   OnboardingNotifications = 'Notification Prep',
@@ -166,7 +166,7 @@ export type BCSCQRCoreTabParams = {
 export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingWebView]: { url: string; title: string }
   [BCSCScreens.OnboardingSetupTypes]: undefined
-  [BCSCScreens.OnboardingIntroCarousel]: undefined
+  [BCSCScreens.OnboardingIntro]: undefined
   [BCSCScreens.OnboardingPrivacyPolicy]: undefined
   [BCSCScreens.OnboardingTermsOfUse]: undefined
   [BCSCScreens.OnboardingNotifications]: undefined

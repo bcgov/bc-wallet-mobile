@@ -13,6 +13,7 @@ import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
 import { CreatePINScreen } from '../features/onboarding/CreatePINScreen'
 import { NotificationsScreen } from '../features/onboarding/NotificationsScreen'
+import { OnboardingIntroScreen } from '../features/onboarding/OnboardingIntroScreen'
 import { OnboardingOptInAnalyticsScreen } from '../features/onboarding/OnboardingOptInAnalyticsScreen'
 import { OnboardingPrivacyPolicyScreen } from '../features/onboarding/OnboardingPrivacyPolicyScreen'
 import { SecureAppScreen } from '../features/onboarding/SecureAppScreen'
@@ -35,7 +36,7 @@ const OnboardingStack = (): React.ReactElement => {
 
   return (
     <Stack.Navigator
-      initialRouteName={BCSCScreens.OnboardingPrivacyPolicy}
+      initialRouteName={BCSCScreens.OnboardingIntro}
       screenOptions={{
         ...defaultStackOptions,
         headerShown: false,
@@ -51,6 +52,15 @@ const OnboardingStack = (): React.ReactElement => {
       }}
     >
       <Stack.Screen
+        name={BCSCScreens.OnboardingIntro}
+        component={OnboardingIntroScreen}
+        options={{
+          headerShown: true,
+          // First screen in the stack — no destination to go back to.
+          headerLeft: () => null,
+        }}
+      />
+      <Stack.Screen
         name={BCSCScreens.OnboardingDeveloper}
         component={Developer}
         options={{
@@ -64,8 +74,6 @@ const OnboardingStack = (): React.ReactElement => {
         options={{
           title: t('BCSC.Onboarding.PrivacyPolicyTitle'),
           headerShown: true,
-          // First screen in the stack — no destination to go back to.
-          headerLeft: () => null,
         }}
       />
       <Stack.Screen
