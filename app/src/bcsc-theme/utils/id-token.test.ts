@@ -4,22 +4,24 @@ import { AppEventCode } from '@/events/appEventCode'
 import { MockLogger } from '@bifold/core'
 import * as BcscCore from 'react-native-bcsc-core'
 
+const mockJwk = { kty: 'RSA', e: 'AQAB', kid: 'test-kid', alg: 'RS256', n: 'test-modulus' }
+
 describe('ID Token Utils', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
   describe('getIdTokenMetadata', () => {
-    it('should decode and parse a valid ID token', async () => {
+    it('should decode, verify, and parse a valid ID token', async () => {
       const bcscCoreMock = jest.mocked(BcscCore)
 
       const mockIdToken = {}
       const mockLogger = new MockLogger()
 
-      bcscCoreMock.decodePayload = jest.fn().mockResolvedValue(JSON.stringify(mockIdToken))
+      bcscCoreMock.decodePayload = jest.fn().mockResolvedValue({ verified: true, claims: JSON.stringify(mockIdToken) })
 
-      const idToken = await getIdTokenMetadata('token', mockLogger)
+      const idToken = await getIdTokenMetadata('token', mockJwk, mockLogger)
 
-      expect(bcscCoreMock.decodePayload).toHaveBeenCalledWith('token')
+      expect(bcscCoreMock.decodePayload).toHaveBeenCalledWith('token', mockJwk)
       expect(idToken).toEqual(mockIdToken)
       expect(mockLogger.error).not.toHaveBeenCalled()
     })
@@ -32,11 +34,11 @@ describe('ID Token Utils', () => {
 
       bcscCoreMock.decodePayload = jest.fn().mockRejectedValue(nativeError)
 
-      await expect(getIdTokenMetadata('token', mockLogger)).rejects.toThrow(
+      await expect(getIdTokenMetadata('token', mockJwk, mockLogger)).rejects.toThrow(
         AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_VERIFY_ID_TOKEN_ERROR, { cause: nativeError })
       )
 
-      expect(bcscCoreMock.decodePayload).toHaveBeenCalledWith('token')
+      expect(bcscCoreMock.decodePayload).toHaveBeenCalledWith('token', mockJwk)
       expect(mockLogger.error).toHaveBeenCalledWith(
         '[getIdTokenMetadata] Failed to decode ID token payload',
         nativeError
@@ -51,21 +53,51 @@ describe('ID Token Utils', () => {
 
       bcscCoreMock.decodePayload = jest.fn().mockRejectedValue(mockError)
 
-      await expect(getIdTokenMetadata('token', mockLogger)).rejects.toThrow(
+      await expect(getIdTokenMetadata('token', mockJwk, mockLogger)).rejects.toThrow(
         AppError.fromErrorDefinition(ErrorRegistry.DECRYPT_VERIFY_ID_TOKEN_ERROR, { cause: mockError })
       )
 
-      expect(bcscCoreMock.decodePayload).toHaveBeenCalledWith('token')
+      expect(bcscCoreMock.decodePayload).toHaveBeenCalledWith('token', mockJwk)
       expect(mockLogger.error).toHaveBeenCalledWith('[getIdTokenMetadata] Failed to decode ID token payload', mockError)
+    })
+
+    it('should throw ERR_111 when verification fails and no JWK is available', async () => {
+      const bcscCoreMock = jest.mocked(BcscCore)
+      const mockLogger = new MockLogger()
+
+      bcscCoreMock.decodePayload = jest.fn().mockResolvedValue({ verified: false, claims: '{}' })
+
+      await expect(getIdTokenMetadata('token', null, mockLogger)).rejects.toThrow(
+        expect.objectContaining({
+          appEvent: AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK,
+        })
+      )
+
+      expect(bcscCoreMock.decodePayload).toHaveBeenCalledWith('token', null)
+    })
+
+    it('should throw ERR_112 when verification fails and a JWK is available', async () => {
+      const bcscCoreMock = jest.mocked(BcscCore)
+      const mockLogger = new MockLogger()
+
+      bcscCoreMock.decodePayload = jest.fn().mockResolvedValue({ verified: false, claims: '{}' })
+
+      await expect(getIdTokenMetadata('token', mockJwk, mockLogger)).rejects.toThrow(
+        expect.objectContaining({
+          appEvent: AppEventCode.ERR_112_JWS_VERIFICATION_FAILED,
+        })
+      )
+
+      expect(bcscCoreMock.decodePayload).toHaveBeenCalledWith('token', mockJwk)
     })
 
     it('should throw ERR_114 when decoded payload is null', async () => {
       const bcscCoreMock = jest.mocked(BcscCore)
       const mockLogger = new MockLogger()
 
-      bcscCoreMock.decodePayload = jest.fn().mockResolvedValue('null')
+      bcscCoreMock.decodePayload = jest.fn().mockResolvedValue({ verified: true, claims: 'null' })
 
-      await expect(getIdTokenMetadata('token', mockLogger)).rejects.toThrow(
+      await expect(getIdTokenMetadata('token', mockJwk, mockLogger)).rejects.toThrow(
         expect.objectContaining({
           appEvent: AppEventCode.ERR_114_FAILED_TO_GET_CLAIMS_SET_AFTER_DECRYPT_AND_VERIFY,
         })
@@ -82,11 +114,11 @@ describe('ID Token Utils', () => {
 
       const mockLogger: any = { error: jest.fn() }
 
-      bcscCoreMock.decodePayload = jest.fn().mockResolvedValue(JSON.stringify(mockIdToken))
+      bcscCoreMock.decodePayload = jest.fn().mockResolvedValue({ verified: true, claims: JSON.stringify(mockIdToken) })
 
-      const idToken = await getIdTokenMetadata('token', mockLogger)
+      const idToken = await getIdTokenMetadata('token', mockJwk, mockLogger)
 
-      expect(bcscCoreMock.decodePayload).toHaveBeenCalledWith('token')
+      expect(bcscCoreMock.decodePayload).toHaveBeenCalledWith('token', mockJwk)
       expect(idToken).toEqual({
         bcsc_account_type: BcscCore.BCSCAccountType.NoBcscCard,
         bcsc_card_type: BcscCore.BCSCCardType.NonBcsc,
@@ -104,11 +136,11 @@ describe('ID Token Utils', () => {
 
       const mockLogger: any = { error: jest.fn() }
 
-      bcscCoreMock.decodePayload = jest.fn().mockResolvedValue(JSON.stringify(mockIdToken))
+      bcscCoreMock.decodePayload = jest.fn().mockResolvedValue({ verified: true, claims: JSON.stringify(mockIdToken) })
 
-      const idToken = await getIdTokenMetadata('token', mockLogger)
+      const idToken = await getIdTokenMetadata('token', mockJwk, mockLogger)
 
-      expect(bcscCoreMock.decodePayload).toHaveBeenCalledWith('token')
+      expect(bcscCoreMock.decodePayload).toHaveBeenCalledWith('token', mockJwk)
       expect(idToken).toEqual({
         bcsc_account_type: BcscCore.BCSCAccountType.PhotoCard,
         bcsc_card_type: undefined,
