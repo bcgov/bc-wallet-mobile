@@ -1,36 +1,27 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { BCLocalStorageKeys } from '@/store'
 import { PersistentStorage } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
-import * as PushNotifications from '../../../utils/PushNotificationsHelper'
-import { TermsOfUseScreen } from './TermsOfUseScreen'
+import { TermsOfUseUpdated } from './TermsOfUseUpdated'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
-jest.mock('../../../utils/PushNotificationsHelper', () => ({
-  status: jest.fn(),
-  NotificationPermissionStatus: {
-    DENIED: 'denied',
-    GRANTED: 'granted',
-    UNKNOWN: 'unknown',
-    BLOCKED: 'blocked',
-  },
-}))
 
 const mockTermsOfUseResponse = {
-  version: '1.0',
-  date: '2024-01-01',
-  html: '<p>Terms of Use content</p>',
+  version: '9',
+  date: '2025-06-06',
+  html: '<p>Updated Terms of Use content</p>',
 }
 
-describe('TermsOfUseScreen', () => {
+describe('TermsOfUseUpdated', () => {
   let mockNavigation: any
 
   beforeEach(() => {
     mockNavigation = useNavigation()
+    mockNavigation.canGoBack = jest.fn().mockReturnValue(true)
     jest.clearAllMocks()
     jest.useFakeTimers()
 
@@ -50,7 +41,7 @@ describe('TermsOfUseScreen', () => {
   const renderAndAccept = async () => {
     const tree = render(
       <BasicAppContext>
-        <TermsOfUseScreen navigation={mockNavigation as never} />
+        <TermsOfUseUpdated navigation={mockNavigation as never} route={{} as never} />
       </BasicAppContext>
     )
 
@@ -65,33 +56,31 @@ describe('TermsOfUseScreen', () => {
     return tree
   }
 
-  it('persists the accepted terms version and navigates to notifications when permission not granted', async () => {
+  it('persists the accepted terms version and goes back when accept is pressed', async () => {
     const storageSpy = jest.spyOn(PersistentStorage, 'storeValueForKey').mockResolvedValue()
-    jest
-      .mocked(PushNotifications.status)
-      .mockResolvedValue(PushNotifications.NotificationPermissionStatus.DENIED as never)
+    mockNavigation.canGoBack.mockReturnValue(true)
 
     await renderAndAccept()
 
     await waitFor(() => {
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.OnboardingNotifications)
+      expect(mockNavigation.goBack).toHaveBeenCalled()
     })
 
     expect(storageSpy).toHaveBeenCalledWith(
       BCLocalStorageKeys.BCSC,
-      expect.objectContaining({ acceptedTermsOfUseVersion: '1.0' })
+      expect.objectContaining({ acceptedTermsOfUseVersion: '9' })
     )
   })
 
-  it('navigates to secure app screen when notification permission already granted', async () => {
-    jest
-      .mocked(PushNotifications.status)
-      .mockResolvedValue(PushNotifications.NotificationPermissionStatus.GRANTED as never)
+  it('falls back to the tab stack when there is no screen to go back to', async () => {
+    mockNavigation.canGoBack.mockReturnValue(false)
 
     await renderAndAccept()
 
     await waitFor(() => {
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.OnboardingSecureApp)
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCStacks.Tab, { screen: BCSCScreens.Home })
     })
+
+    expect(mockNavigation.goBack).not.toHaveBeenCalled()
   })
 })

@@ -44,590 +44,812 @@ exports[`MainSettings renders correctly 1`] = `
       >
         <View>
           <View
-            style={
-              {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "gap": 8,
-                "paddingVertical": 16,
-              }
-            }
-          >
-            <Text
-              allowFontScaling={false}
-              selectable={false}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontSize": 22,
-                  },
-                  undefined,
-                  {
-                    "fontFamily": "Material Design Icons",
-                    "fontStyle": "normal",
-                    "fontWeight": "normal",
-                  },
-                  {},
-                ]
-              }
-            >
-              󰘥
-            </Text>
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "bold",
-                  },
-                  {
-                    "flexShrink": 1,
-                  },
-                ]
-              }
-            >
-              BCSC.Settings.HelpHeader
-            </Text>
-          </View>
-          <View
-            style={
-              {
-                "borderRadius": 8,
-                "gap": 2,
-                "overflow": "hidden",
+            layout={
+              LinearTransition {
+                "build": [Function],
+                "durationV": 200,
+                "randomizeDelay": false,
+                "reduceMotionV": "system",
               }
             }
           >
             <View
               style={
                 {
-                  "flexDirection": "column",
-                  "gap": 2,
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 8,
+                  "paddingVertical": 16,
+                }
+              }
+            >
+              <Text
+                allowFontScaling={false}
+                selectable={false}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontSize": 22,
+                    },
+                    undefined,
+                    {
+                      "fontFamily": "Material Design Icons",
+                      "fontStyle": "normal",
+                      "fontWeight": "normal",
+                    },
+                    {},
+                  ]
+                }
+              >
+                󰘥
+              </Text>
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                    },
+                    {
+                      "flexShrink": 1,
+                    },
+                  ]
+                }
+              >
+                BCSC.Settings.HelpHeader
+              </Text>
+              <View
+                accessibilityLabel="Global.HideDetails"
+                accessibilityRole="button"
+                accessibilityState={
+                  {
+                    "busy": undefined,
+                    "checked": undefined,
+                    "disabled": undefined,
+                    "expanded": undefined,
+                    "selected": undefined,
+                  }
+                }
+                accessibilityValue={
+                  {
+                    "max": undefined,
+                    "min": undefined,
+                    "now": undefined,
+                    "text": undefined,
+                  }
+                }
+                accessible={true}
+                collapsable={false}
+                focusable={true}
+                hitSlop={
+                  {
+                    "bottom": 44,
+                    "left": 44,
+                    "right": 44,
+                    "top": 44,
+                  }
+                }
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onResponderGrant={[Function]}
+                onResponderMove={[Function]}
+                onResponderRelease={[Function]}
+                onResponderTerminate={[Function]}
+                onResponderTerminationRequest={[Function]}
+                onStartShouldSetResponder={[Function]}
+                style={
+                  {
+                    "marginLeft": "auto",
+                  }
+                }
+                testID="com.ariesbifold:id/SectionHeaderChevron"
+              >
+                <View
+                  style={
+                    {
+                      "transform": [
+                        {
+                          "rotate": "0deg",
+                        },
+                      ],
+                    }
+                  }
+                >
+                  <Text
+                    allowFontScaling={false}
+                    selectable={false}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontSize": 22,
+                        },
+                        undefined,
+                        {
+                          "fontFamily": "Material Design Icons",
+                          "fontStyle": "normal",
+                          "fontWeight": "normal",
+                        },
+                        {},
+                      ]
+                    }
+                  >
+                    󰅀
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <View
+              entering={
+                FadeIn {
+                  "build": [Function],
+                  "durationV": 200,
+                  "randomizeDelay": false,
+                  "reduceMotionV": "system",
+                }
+              }
+              exiting={
+                FadeOut {
+                  "build": [Function],
+                  "durationV": 150,
+                  "randomizeDelay": false,
+                  "reduceMotionV": "system",
                 }
               }
             >
               <View
-                accessibilityLabel="BCSC.Settings.HelpUsingApp"
-                accessibilityRole="button"
-                accessibilityState={
-                  {
-                    "busy": undefined,
-                    "checked": undefined,
-                    "disabled": undefined,
-                    "expanded": undefined,
-                    "selected": undefined,
-                  }
-                }
-                accessibilityValue={
-                  {
-                    "max": undefined,
-                    "min": undefined,
-                    "now": undefined,
-                    "text": undefined,
-                  }
-                }
-                accessible={true}
-                collapsable={false}
-                focusable={true}
-                onBlur={[Function]}
-                onClick={[Function]}
-                onFocus={[Function]}
-                onResponderGrant={[Function]}
-                onResponderMove={[Function]}
-                onResponderRelease={[Function]}
-                onResponderTerminate={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
                 style={
-                  [
-                    {
-                      "backgroundColor": "#003366",
-                      "padding": 16,
-                    },
-                    {
-                      "borderTopLeftRadius": 8,
-                      "borderTopRightRadius": 8,
-                    },
-                  ]
+                  {
+                    "borderRadius": 8,
+                    "gap": 2,
+                    "overflow": "hidden",
+                  }
                 }
-                testID="com.ariesbifold:id/Help"
               >
                 <View
                   style={
                     {
-                      "alignItems": "center",
-                      "flexDirection": "row",
-                      "gap": 8,
+                      "flexDirection": "column",
+                      "gap": 2,
                     }
                   }
                 >
-                  <Text
-                    maxFontSizeMultiplier={2}
+                  <View
+                    accessibilityLabel="BCSC.Settings.HelpUsingApp"
+                    accessibilityRole="button"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": undefined,
+                        "disabled": undefined,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={true}
+                    collapsable={false}
+                    focusable={true}
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
                     style={
                       [
                         {
-                          "color": "#313132",
-                          "fontFamily": "BCSans-Regular",
-                          "fontSize": 18,
-                          "fontWeight": "normal",
+                          "backgroundColor": "#003366",
+                          "padding": 16,
                         },
                         {
-                          "color": "#FFFFFF",
+                          "borderTopLeftRadius": 8,
+                          "borderTopRightRadius": 8,
                         },
                       ]
                     }
+                    testID="com.ariesbifold:id/Help"
                   >
-                    BCSC.Settings.HelpUsingApp
-                  </Text>
-                </View>
-              </View>
-              <View
-                accessibilityLabel="BCSC.Settings.ContactUs"
-                accessibilityRole="button"
-                accessibilityState={
-                  {
-                    "busy": undefined,
-                    "checked": undefined,
-                    "disabled": undefined,
-                    "expanded": undefined,
-                    "selected": undefined,
-                  }
-                }
-                accessibilityValue={
-                  {
-                    "max": undefined,
-                    "min": undefined,
-                    "now": undefined,
-                    "text": undefined,
-                  }
-                }
-                accessible={true}
-                collapsable={false}
-                focusable={true}
-                onBlur={[Function]}
-                onClick={[Function]}
-                onFocus={[Function]}
-                onResponderGrant={[Function]}
-                onResponderMove={[Function]}
-                onResponderRelease={[Function]}
-                onResponderTerminate={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
-                style={
-                  [
-                    {
-                      "backgroundColor": "#003366",
-                      "padding": 16,
-                    },
-                    {
-                      "borderRadius": 0,
-                    },
-                  ]
-                }
-                testID="com.ariesbifold:id/ContactUs"
-              >
-                <View
-                  style={
-                    {
-                      "alignItems": "center",
-                      "flexDirection": "row",
-                      "gap": 8,
+                    <View
+                      style={
+                        {
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                          "gap": 8,
+                        }
+                      }
+                    >
+                      <Text
+                        maxFontSizeMultiplier={2}
+                        style={
+                          [
+                            {
+                              "color": "#313132",
+                              "fontFamily": "BCSans-Regular",
+                              "fontSize": 18,
+                              "fontWeight": "normal",
+                            },
+                            {
+                              "color": "#FFFFFF",
+                            },
+                          ]
+                        }
+                      >
+                        BCSC.Settings.HelpUsingApp
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    accessibilityLabel="BCSC.Settings.ContactUs"
+                    accessibilityRole="button"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": undefined,
+                        "disabled": undefined,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
                     }
-                  }
-                >
-                  <Text
-                    maxFontSizeMultiplier={2}
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={true}
+                    collapsable={false}
+                    focusable={true}
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
                     style={
                       [
                         {
-                          "color": "#313132",
-                          "fontFamily": "BCSans-Regular",
-                          "fontSize": 18,
-                          "fontWeight": "normal",
+                          "backgroundColor": "#003366",
+                          "padding": 16,
                         },
                         {
-                          "color": "#FFFFFF",
+                          "borderRadius": 0,
                         },
                       ]
                     }
+                    testID="com.ariesbifold:id/ContactUs"
                   >
-                    BCSC.Settings.ContactUs
-                  </Text>
-                </View>
-              </View>
-              <View
-                accessibilityHint="Global.A11y.OpensInBrowser"
-                accessibilityLabel="BCSC.Settings.GiveFeedback"
-                accessibilityRole="button"
-                accessibilityState={
-                  {
-                    "busy": undefined,
-                    "checked": undefined,
-                    "disabled": undefined,
-                    "expanded": undefined,
-                    "selected": undefined,
-                  }
-                }
-                accessibilityValue={
-                  {
-                    "max": undefined,
-                    "min": undefined,
-                    "now": undefined,
-                    "text": undefined,
-                  }
-                }
-                accessible={true}
-                collapsable={false}
-                focusable={true}
-                onBlur={[Function]}
-                onClick={[Function]}
-                onFocus={[Function]}
-                onResponderGrant={[Function]}
-                onResponderMove={[Function]}
-                onResponderRelease={[Function]}
-                onResponderTerminate={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
-                style={
-                  [
-                    {
-                      "backgroundColor": "#003366",
-                      "padding": 16,
-                    },
-                    {
-                      "borderBottomLeftRadius": 8,
-                      "borderBottomRightRadius": 8,
-                    },
-                  ]
-                }
-                testID="com.ariesbifold:id/Feedback"
-              >
-                <View
-                  style={
-                    {
-                      "alignItems": "center",
-                      "flexDirection": "row",
-                      "gap": 8,
+                    <View
+                      style={
+                        {
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                          "gap": 8,
+                        }
+                      }
+                    >
+                      <Text
+                        maxFontSizeMultiplier={2}
+                        style={
+                          [
+                            {
+                              "color": "#313132",
+                              "fontFamily": "BCSans-Regular",
+                              "fontSize": 18,
+                              "fontWeight": "normal",
+                            },
+                            {
+                              "color": "#FFFFFF",
+                            },
+                          ]
+                        }
+                      >
+                        BCSC.Settings.ContactUs
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    accessibilityHint="Global.A11y.OpensInBrowser"
+                    accessibilityLabel="BCSC.Settings.GiveFeedback"
+                    accessibilityRole="button"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": undefined,
+                        "disabled": undefined,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
                     }
-                  }
-                >
-                  <Text
-                    maxFontSizeMultiplier={2}
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={true}
+                    collapsable={false}
+                    focusable={true}
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
                     style={
                       [
                         {
-                          "color": "#313132",
-                          "fontFamily": "BCSans-Regular",
-                          "fontSize": 18,
-                          "fontWeight": "normal",
+                          "backgroundColor": "#003366",
+                          "padding": 16,
                         },
                         {
-                          "color": "#FFFFFF",
+                          "borderBottomLeftRadius": 8,
+                          "borderBottomRightRadius": 8,
                         },
                       ]
                     }
+                    testID="com.ariesbifold:id/Feedback"
                   >
-                    BCSC.Settings.GiveFeedback
-                  </Text>
+                    <View
+                      style={
+                        {
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                          "gap": 8,
+                        }
+                      }
+                    >
+                      <Text
+                        maxFontSizeMultiplier={2}
+                        style={
+                          [
+                            {
+                              "color": "#313132",
+                              "fontFamily": "BCSans-Regular",
+                              "fontSize": 18,
+                              "fontWeight": "normal",
+                            },
+                            {
+                              "color": "#FFFFFF",
+                            },
+                          ]
+                        }
+                      >
+                        BCSC.Settings.GiveFeedback
+                      </Text>
+                    </View>
+                  </View>
                 </View>
               </View>
             </View>
           </View>
           <View
-            style={
-              {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "gap": 8,
-                "paddingVertical": 16,
-              }
-            }
-          >
-            <Text
-              allowFontScaling={false}
-              selectable={false}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontSize": 22,
-                  },
-                  undefined,
-                  {
-                    "fontFamily": "Material Design Icons",
-                    "fontStyle": "normal",
-                    "fontWeight": "normal",
-                  },
-                  {},
-                ]
-              }
-            >
-              󰋽
-            </Text>
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "bold",
-                  },
-                  {
-                    "flexShrink": 1,
-                  },
-                ]
-              }
-            >
-              BCSC.Settings.MoreInfoHeader
-            </Text>
-          </View>
-          <View
-            style={
-              {
-                "borderRadius": 8,
-                "gap": 2,
-                "overflow": "hidden",
+            layout={
+              LinearTransition {
+                "build": [Function],
+                "durationV": 200,
+                "randomizeDelay": false,
+                "reduceMotionV": "system",
               }
             }
           >
             <View
               style={
                 {
-                  "flexDirection": "column",
-                  "gap": 2,
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 8,
+                  "paddingVertical": 16,
+                }
+              }
+            >
+              <Text
+                allowFontScaling={false}
+                selectable={false}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontSize": 22,
+                    },
+                    undefined,
+                    {
+                      "fontFamily": "Material Design Icons",
+                      "fontStyle": "normal",
+                      "fontWeight": "normal",
+                    },
+                    {},
+                  ]
+                }
+              >
+                󰋽
+              </Text>
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                    },
+                    {
+                      "flexShrink": 1,
+                    },
+                  ]
+                }
+              >
+                BCSC.Settings.MoreInfoHeader
+              </Text>
+              <View
+                accessibilityLabel="Global.HideDetails"
+                accessibilityRole="button"
+                accessibilityState={
+                  {
+                    "busy": undefined,
+                    "checked": undefined,
+                    "disabled": undefined,
+                    "expanded": undefined,
+                    "selected": undefined,
+                  }
+                }
+                accessibilityValue={
+                  {
+                    "max": undefined,
+                    "min": undefined,
+                    "now": undefined,
+                    "text": undefined,
+                  }
+                }
+                accessible={true}
+                collapsable={false}
+                focusable={true}
+                hitSlop={
+                  {
+                    "bottom": 44,
+                    "left": 44,
+                    "right": 44,
+                    "top": 44,
+                  }
+                }
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onResponderGrant={[Function]}
+                onResponderMove={[Function]}
+                onResponderRelease={[Function]}
+                onResponderTerminate={[Function]}
+                onResponderTerminationRequest={[Function]}
+                onStartShouldSetResponder={[Function]}
+                style={
+                  {
+                    "marginLeft": "auto",
+                  }
+                }
+                testID="com.ariesbifold:id/SectionHeaderChevron"
+              >
+                <View
+                  style={
+                    {
+                      "transform": [
+                        {
+                          "rotate": "0deg",
+                        },
+                      ],
+                    }
+                  }
+                >
+                  <Text
+                    allowFontScaling={false}
+                    selectable={false}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontSize": 22,
+                        },
+                        undefined,
+                        {
+                          "fontFamily": "Material Design Icons",
+                          "fontStyle": "normal",
+                          "fontWeight": "normal",
+                        },
+                        {},
+                      ]
+                    }
+                  >
+                    󰅀
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <View
+              entering={
+                FadeIn {
+                  "build": [Function],
+                  "durationV": 200,
+                  "randomizeDelay": false,
+                  "reduceMotionV": "system",
+                }
+              }
+              exiting={
+                FadeOut {
+                  "build": [Function],
+                  "durationV": 150,
+                  "randomizeDelay": false,
+                  "reduceMotionV": "system",
                 }
               }
             >
               <View
-                accessibilityHint="Global.A11y.OpensInBrowser"
-                accessibilityLabel="BCSC.Settings.Accessibility"
-                accessibilityRole="button"
-                accessibilityState={
-                  {
-                    "busy": undefined,
-                    "checked": undefined,
-                    "disabled": undefined,
-                    "expanded": undefined,
-                    "selected": undefined,
-                  }
-                }
-                accessibilityValue={
-                  {
-                    "max": undefined,
-                    "min": undefined,
-                    "now": undefined,
-                    "text": undefined,
-                  }
-                }
-                accessible={true}
-                collapsable={false}
-                focusable={true}
-                onBlur={[Function]}
-                onClick={[Function]}
-                onFocus={[Function]}
-                onResponderGrant={[Function]}
-                onResponderMove={[Function]}
-                onResponderRelease={[Function]}
-                onResponderTerminate={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
                 style={
-                  [
-                    {
-                      "backgroundColor": "#003366",
-                      "padding": 16,
-                    },
-                    {
-                      "borderTopLeftRadius": 8,
-                      "borderTopRightRadius": 8,
-                    },
-                  ]
+                  {
+                    "borderRadius": 8,
+                    "gap": 2,
+                    "overflow": "hidden",
+                  }
                 }
-                testID="com.ariesbifold:id/Accessibility"
               >
                 <View
                   style={
                     {
-                      "alignItems": "center",
-                      "flexDirection": "row",
-                      "gap": 8,
+                      "flexDirection": "column",
+                      "gap": 2,
                     }
                   }
                 >
-                  <Text
-                    maxFontSizeMultiplier={2}
+                  <View
+                    accessibilityHint="Global.A11y.OpensInBrowser"
+                    accessibilityLabel="BCSC.Settings.Accessibility"
+                    accessibilityRole="button"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": undefined,
+                        "disabled": undefined,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={true}
+                    collapsable={false}
+                    focusable={true}
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
                     style={
                       [
                         {
-                          "color": "#313132",
-                          "fontFamily": "BCSans-Regular",
-                          "fontSize": 18,
-                          "fontWeight": "normal",
+                          "backgroundColor": "#003366",
+                          "padding": 16,
                         },
                         {
-                          "color": "#FFFFFF",
+                          "borderTopLeftRadius": 8,
+                          "borderTopRightRadius": 8,
                         },
                       ]
                     }
+                    testID="com.ariesbifold:id/Accessibility"
                   >
-                    BCSC.Settings.Accessibility
-                  </Text>
-                </View>
-              </View>
-              <View
-                accessibilityHint="Global.A11y.OpensInBrowser"
-                accessibilityLabel="BCSC.Settings.TermsOfUse"
-                accessibilityRole="button"
-                accessibilityState={
-                  {
-                    "busy": undefined,
-                    "checked": undefined,
-                    "disabled": undefined,
-                    "expanded": undefined,
-                    "selected": undefined,
-                  }
-                }
-                accessibilityValue={
-                  {
-                    "max": undefined,
-                    "min": undefined,
-                    "now": undefined,
-                    "text": undefined,
-                  }
-                }
-                accessible={true}
-                collapsable={false}
-                focusable={true}
-                onBlur={[Function]}
-                onClick={[Function]}
-                onFocus={[Function]}
-                onResponderGrant={[Function]}
-                onResponderMove={[Function]}
-                onResponderRelease={[Function]}
-                onResponderTerminate={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
-                style={
-                  [
-                    {
-                      "backgroundColor": "#003366",
-                      "padding": 16,
-                    },
-                    {
-                      "borderRadius": 0,
-                    },
-                  ]
-                }
-                testID="com.ariesbifold:id/TermsOfUse"
-              >
-                <View
-                  style={
-                    {
-                      "alignItems": "center",
-                      "flexDirection": "row",
-                      "gap": 8,
+                    <View
+                      style={
+                        {
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                          "gap": 8,
+                        }
+                      }
+                    >
+                      <Text
+                        maxFontSizeMultiplier={2}
+                        style={
+                          [
+                            {
+                              "color": "#313132",
+                              "fontFamily": "BCSans-Regular",
+                              "fontSize": 18,
+                              "fontWeight": "normal",
+                            },
+                            {
+                              "color": "#FFFFFF",
+                            },
+                          ]
+                        }
+                      >
+                        BCSC.Settings.Accessibility
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    accessibilityHint="Global.A11y.OpensInBrowser"
+                    accessibilityLabel="BCSC.Settings.TermsOfUse"
+                    accessibilityRole="button"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": undefined,
+                        "disabled": undefined,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
                     }
-                  }
-                >
-                  <Text
-                    maxFontSizeMultiplier={2}
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={true}
+                    collapsable={false}
+                    focusable={true}
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
                     style={
                       [
                         {
-                          "color": "#313132",
-                          "fontFamily": "BCSans-Regular",
-                          "fontSize": 18,
-                          "fontWeight": "normal",
+                          "backgroundColor": "#003366",
+                          "padding": 16,
                         },
                         {
-                          "color": "#FFFFFF",
+                          "borderRadius": 0,
                         },
                       ]
                     }
+                    testID="com.ariesbifold:id/TermsOfUse"
                   >
-                    BCSC.Settings.TermsOfUse
-                  </Text>
-                </View>
-              </View>
-              <View
-                accessibilityLabel="BCSC.Settings.Privacy"
-                accessibilityRole="button"
-                accessibilityState={
-                  {
-                    "busy": undefined,
-                    "checked": undefined,
-                    "disabled": undefined,
-                    "expanded": undefined,
-                    "selected": undefined,
-                  }
-                }
-                accessibilityValue={
-                  {
-                    "max": undefined,
-                    "min": undefined,
-                    "now": undefined,
-                    "text": undefined,
-                  }
-                }
-                accessible={true}
-                collapsable={false}
-                focusable={true}
-                onBlur={[Function]}
-                onClick={[Function]}
-                onFocus={[Function]}
-                onResponderGrant={[Function]}
-                onResponderMove={[Function]}
-                onResponderRelease={[Function]}
-                onResponderTerminate={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
-                style={
-                  [
-                    {
-                      "backgroundColor": "#003366",
-                      "padding": 16,
-                    },
-                    {
-                      "borderBottomLeftRadius": 8,
-                      "borderBottomRightRadius": 8,
-                    },
-                  ]
-                }
-                testID="com.ariesbifold:id/Privacy"
-              >
-                <View
-                  style={
-                    {
-                      "alignItems": "center",
-                      "flexDirection": "row",
-                      "gap": 8,
+                    <View
+                      style={
+                        {
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                          "gap": 8,
+                        }
+                      }
+                    >
+                      <Text
+                        maxFontSizeMultiplier={2}
+                        style={
+                          [
+                            {
+                              "color": "#313132",
+                              "fontFamily": "BCSans-Regular",
+                              "fontSize": 18,
+                              "fontWeight": "normal",
+                            },
+                            {
+                              "color": "#FFFFFF",
+                            },
+                          ]
+                        }
+                      >
+                        BCSC.Settings.TermsOfUse
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    accessibilityLabel="BCSC.Settings.Privacy"
+                    accessibilityRole="button"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": undefined,
+                        "disabled": undefined,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
                     }
-                  }
-                >
-                  <Text
-                    maxFontSizeMultiplier={2}
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={true}
+                    collapsable={false}
+                    focusable={true}
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
                     style={
                       [
                         {
-                          "color": "#313132",
-                          "fontFamily": "BCSans-Regular",
-                          "fontSize": 18,
-                          "fontWeight": "normal",
+                          "backgroundColor": "#003366",
+                          "padding": 16,
                         },
                         {
-                          "color": "#FFFFFF",
+                          "borderBottomLeftRadius": 8,
+                          "borderBottomRightRadius": 8,
                         },
                       ]
                     }
+                    testID="com.ariesbifold:id/Privacy"
                   >
-                    BCSC.Settings.Privacy
-                  </Text>
+                    <View
+                      style={
+                        {
+                          "alignItems": "center",
+                          "flexDirection": "row",
+                          "gap": 8,
+                        }
+                      }
+                    >
+                      <Text
+                        maxFontSizeMultiplier={2}
+                        style={
+                          [
+                            {
+                              "color": "#313132",
+                              "fontFamily": "BCSans-Regular",
+                              "fontSize": 18,
+                              "fontWeight": "normal",
+                            },
+                            {
+                              "color": "#FFFFFF",
+                            },
+                          ]
+                        }
+                      >
+                        BCSC.Settings.Privacy
+                      </Text>
+                    </View>
+                  </View>
                 </View>
               </View>
             </View>

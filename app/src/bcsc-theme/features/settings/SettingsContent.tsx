@@ -18,12 +18,25 @@ import {
   useTheme,
 } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
-import React, { ReactNode, useCallback, useContext, useState } from 'react'
+import React, { PropsWithChildren, ReactNode, useCallback, useContext, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, StyleSheet, TouchableWithoutFeedback, Vibration, View } from 'react-native'
 import { AccountSecurityMethod, getAccountSecurityMethod } from 'react-native-bcsc-core'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
+import Animated, {
+  FadeIn,
+  FadeOut,
+  LinearTransition,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+
+const TRANSITION_IN_DURATION = 200
+const TRANSITION_OUT_DURATION = 150
+const DEFAULT_ROTATION = 0
+const HALF_ROTATION = 180
 
 interface SettingsContentProps {
   onContactUs: () => void
@@ -49,19 +62,61 @@ interface SettingsContentProps {
 
 type SectionStyles = ReturnType<typeof makeStyles>
 
-const SectionHeader: React.FC<{
-  title: string
-  iconName: string
-  styles: SectionStyles
-}> = ({ title, iconName, styles }) => {
+const SectionHeader: React.FC<
+  PropsWithChildren<{
+    title: string
+    iconName: string
+    styles: SectionStyles
+  }>
+> = ({ title, iconName, styles, children }) => {
+  const { t } = useTranslation()
   const { TextTheme } = useTheme()
+  const [showSection, setShowSection] = useState(true)
+  const chevronRotation = useSharedValue(DEFAULT_ROTATION)
+
+  const chevronStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${chevronRotation.value}deg` }],
+  }))
+
+  const toggleSection = () => {
+    setShowSection((prev) => {
+      const next = !prev
+      chevronRotation.value = withTiming(next ? DEFAULT_ROTATION : HALF_ROTATION, {
+        duration: TRANSITION_IN_DURATION,
+      })
+      return next
+    })
+  }
+
   return (
-    <View style={styles.sectionHeader}>
-      <Icon name={iconName} size={22} color={TextTheme.bold.color} />
-      <ThemedText variant="bold" style={styles.sectionHeaderText}>
-        {title}
-      </ThemedText>
-    </View>
+    <Animated.View layout={LinearTransition.duration(TRANSITION_IN_DURATION)}>
+      <View style={styles.sectionHeader}>
+        <Icon name={iconName} size={22} color={TextTheme.bold.color} />
+        <ThemedText variant="bold" style={styles.sectionHeaderText}>
+          {title}
+        </ThemedText>
+        <PressableOpacity
+          onPress={toggleSection}
+          hitSlop={hitSlop}
+          testID={testIdWithKey('SectionHeaderChevron')}
+          accessibilityLabel={t(showSection ? 'Global.HideDetails' : 'Global.ShowDetails')}
+          accessibilityRole="button"
+          style={styles.sectionHeaderChevron}
+        >
+          <Animated.View style={chevronStyle}>
+            <Icon name="chevron-down" size={22} color={TextTheme.bold.color} />
+          </Animated.View>
+        </PressableOpacity>
+      </View>
+      {showSection ? (
+        <Animated.View
+          entering={FadeIn.duration(TRANSITION_IN_DURATION)}
+          exiting={FadeOut.duration(TRANSITION_OUT_DURATION)}
+        >
+          {children}
+        </Animated.View>
+      ) : null}
+    </Animated.View>
   )
 }
 
@@ -188,81 +243,83 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
         </View>
       ) : null}
 
-      <SectionHeader title={t('BCSC.Settings.Features.Header')} iconName="bullhorn-outline" styles={styles} />
-      <View style={styles.sectionContainer}>
-        <ListButtonGroup>
-          {[
-            onContacts ? (
-              <ListButton key="contacts" onPress={onContacts} testID={testIdWithKey('Contacts')}>
-                {t('BCSC.Settings.Features.Contacts')}
-              </ListButton>
-            ) : null,
-            <ListButton key="scanqr" onPress={onScanMyQR ?? noop} testID={testIdWithKey('ScanQR')}>
-              {t('BCSC.Settings.Features.ScanQR')}
-            </ListButton>,
-            <ListButton key="proof" onPress={onSendProofRequest ?? noop} testID={testIdWithKey('SendProofRequest')}>
-              {t('BCSC.Settings.Features.SendProofRequest')}
-            </ListButton>,
-          ]}
-        </ListButtonGroup>
-      </View>
+      <SectionHeader title={t('BCSC.Settings.Features.Header')} iconName="bullhorn-outline" styles={styles}>
+        <View style={styles.sectionContainer}>
+          <ListButtonGroup>
+            {[
+              onContacts ? (
+                <ListButton key="contacts" onPress={onContacts} testID={testIdWithKey('Contacts')}>
+                  {t('BCSC.Settings.Features.Contacts')}
+                </ListButton>
+              ) : null,
+              <ListButton key="scanqr" onPress={onScanMyQR ?? noop} testID={testIdWithKey('ScanQR')}>
+                {t('BCSC.Settings.Features.ScanQR')}
+              </ListButton>,
+              <ListButton key="proof" onPress={onSendProofRequest ?? noop} testID={testIdWithKey('SendProofRequest')}>
+                {t('BCSC.Settings.Features.SendProofRequest')}
+              </ListButton>,
+            ]}
+          </ListButtonGroup>
+        </View>
+      </SectionHeader>
 
-      <SectionHeader title={t('BCSC.Settings.HeaderA')} iconName="cog-outline" styles={styles} />
-      <View style={styles.sectionContainer}>
-        <ListButtonGroup>
-          {[
-            onAppSecurity ? (
-              <ListButton key="security" onPress={onAppSecurity} testID={testIdWithKey('AppSecurity')}>
-                {t('BCSC.Settings.AppSecurity.ChangeAppSecurity')}
-              </ListButton>
-            ) : null,
-            showChangePIN ? (
-              <ListButton key="pin" onPress={onChangePIN!} testID={testIdWithKey('ChangePIN')}>
-                {t('BCSC.Settings.ChangePIN.ButtonTitle')}
-              </ListButton>
-            ) : null,
-            onAutoLock ? (
-              <ListButton key="lock" onPress={onAutoLock} testID={testIdWithKey('AutoLock')}>
-                <Row title={t('BCSC.Settings.AutoLockTime')} endAdornment={autoLockTimeText} />
-              </ListButton>
-            ) : null,
-            <ListButton key="notifications" onPress={onNotifications ?? noop} testID={testIdWithKey('Notifications')}>
-              {t('BCSC.Settings.Notifications')}
-            </ListButton>,
-            <ListButton key="analytics" onPress={onPressOptInAnalytics} testID={testIdWithKey('AnalyticsOptIn')}>
-              <Row title={t('BCSC.Settings.AnalyticsOptIn')} endAdornment={analyticsOptInText} />
-            </ListButton>,
-            isVerified ? (
-              <ListButton key="adddevice" onPress={onAddDevice ?? noop} testID={testIdWithKey('AddDevice')}>
-                {t('BCSC.Settings.AddDevice')}
-              </ListButton>
-            ) : null,
-            isVerified ? (
-              <ListButton key="mydevices" onPress={onMyDevices ?? noop} testID={testIdWithKey('MyDevices')}>
-                <Row
-                  title={t('BCSC.Settings.MyDevices')}
-                  endAdornment={deviceCount ? t('BCSC.Settings.MyDevicesCount', { count: deviceCount }) : undefined}
-                />
-              </ListButton>
-            ) : null,
-            isVerified && onForgetAllPairings ? (
-              <ListButton key="forget" onPress={onForgetAllPairings} testID={testIdWithKey('ForgetPairings')}>
-                {t('BCSC.Settings.ForgetPairings')}
-              </ListButton>
-            ) : null,
-            onResetWallet ? (
-              <ListButton key="reset" onPress={onResetWallet} testID={testIdWithKey('ResetWallet')}>
-                <Row title={t('BCSC.Settings.ResetWallet')} />
-              </ListButton>
-            ) : null,
-            onPressRemoveAccount ? (
-              <ListButton key="remove" onPress={onPressRemoveAccount} testID={testIdWithKey('RemoveAccount')}>
-                <Row title={t('BCSC.Settings.RemoveAccount')} />
-              </ListButton>
-            ) : null,
-          ]}
-        </ListButtonGroup>
-      </View>
+      <SectionHeader title={t('BCSC.Settings.HeaderA')} iconName="cog-outline" styles={styles}>
+        <View style={styles.sectionContainer}>
+          <ListButtonGroup>
+            {[
+              onAppSecurity ? (
+                <ListButton key="security" onPress={onAppSecurity} testID={testIdWithKey('AppSecurity')}>
+                  {t('BCSC.Settings.AppSecurity.ChangeAppSecurity')}
+                </ListButton>
+              ) : null,
+              showChangePIN ? (
+                <ListButton key="pin" onPress={onChangePIN!} testID={testIdWithKey('ChangePIN')}>
+                  {t('BCSC.Settings.ChangePIN.ButtonTitle')}
+                </ListButton>
+              ) : null,
+              onAutoLock ? (
+                <ListButton key="lock" onPress={onAutoLock} testID={testIdWithKey('AutoLock')}>
+                  <Row title={t('BCSC.Settings.AutoLockTime')} endAdornment={autoLockTimeText} />
+                </ListButton>
+              ) : null,
+              <ListButton key="notifications" onPress={onNotifications ?? noop} testID={testIdWithKey('Notifications')}>
+                {t('BCSC.Settings.Notifications')}
+              </ListButton>,
+              <ListButton key="analytics" onPress={onPressOptInAnalytics} testID={testIdWithKey('AnalyticsOptIn')}>
+                <Row title={t('BCSC.Settings.AnalyticsOptIn')} endAdornment={analyticsOptInText} />
+              </ListButton>,
+              isVerified ? (
+                <ListButton key="adddevice" onPress={onAddDevice ?? noop} testID={testIdWithKey('AddDevice')}>
+                  {t('BCSC.Settings.AddDevice')}
+                </ListButton>
+              ) : null,
+              isVerified ? (
+                <ListButton key="mydevices" onPress={onMyDevices ?? noop} testID={testIdWithKey('MyDevices')}>
+                  <Row
+                    title={t('BCSC.Settings.MyDevices')}
+                    endAdornment={deviceCount ? t('BCSC.Settings.MyDevicesCount', { count: deviceCount }) : undefined}
+                  />
+                </ListButton>
+              ) : null,
+              isVerified && onForgetAllPairings ? (
+                <ListButton key="forget" onPress={onForgetAllPairings} testID={testIdWithKey('ForgetPairings')}>
+                  {t('BCSC.Settings.ForgetPairings')}
+                </ListButton>
+              ) : null,
+              onResetWallet ? (
+                <ListButton key="reset" onPress={onResetWallet} testID={testIdWithKey('ResetWallet')}>
+                  <Row title={t('BCSC.Settings.ResetWallet')} />
+                </ListButton>
+              ) : null,
+              onPressRemoveAccount ? (
+                <ListButton key="remove" onPress={onPressRemoveAccount} testID={testIdWithKey('RemoveAccount')}>
+                  <Row title={t('BCSC.Settings.RemoveAccount')} />
+                </ListButton>
+              ) : null,
+            ]}
+          </ListButtonGroup>
+        </View>
+      </SectionHeader>
     </>
   )
 }
@@ -288,6 +345,9 @@ const makeStyles = (
       gap: Spacing.xs / 2,
       borderRadius: Spacing.sm,
       overflow: 'hidden',
+    },
+    sectionHeaderChevron: {
+      marginLeft: 'auto',
     },
     profileCard: {
       flexDirection: 'row',
@@ -436,52 +496,54 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
         />
       ) : null}
 
-      <SectionHeader title={t('BCSC.Settings.HelpHeader')} iconName="help-circle-outline" styles={styles} />
-      <View style={styles.sectionContainer}>
-        <ListButtonGroup>
-          <ListButton onPress={onHelp} testID={testIdWithKey('Help')}>
-            {t('BCSC.Settings.HelpUsingApp')}
-          </ListButton>
-          <ListButton onPress={onContactUs} testID={testIdWithKey('ContactUs')}>
-            {t('BCSC.Settings.ContactUs')}
-          </ListButton>
-          <ListButton
-            onPress={onPressFeedback}
-            testID={testIdWithKey('Feedback')}
-            accessibilityHint={t('Global.A11y.OpensInBrowser')}
-          >
-            {t('BCSC.Settings.GiveFeedback')}
-          </ListButton>
-        </ListButtonGroup>
-      </View>
-
-      <SectionHeader title={t('BCSC.Settings.MoreInfoHeader')} iconName="information-outline" styles={styles} />
-      <View style={styles.sectionContainer}>
-        <ListButtonGroup>
-          <ListButton
-            onPress={onPressAccessibility}
-            testID={testIdWithKey('Accessibility')}
-            accessibilityHint={t('Global.A11y.OpensInBrowser')}
-          >
-            {t('BCSC.Settings.Accessibility')}
-          </ListButton>
-          <ListButton
-            onPress={onPressTermsOfUse}
-            testID={testIdWithKey('TermsOfUse')}
-            accessibilityHint={t('Global.A11y.OpensInBrowser')}
-          >
-            {t('BCSC.Settings.TermsOfUse')}
-          </ListButton>
-          <ListButton onPress={onPrivacy} testID={testIdWithKey('Privacy')}>
-            {t('BCSC.Settings.Privacy')}
-          </ListButton>
-          {store.preferences.developerModeEnabled ? (
-            <ListButton key="dev" onPress={onPressDeveloperMode} testID={testIdWithKey('DeveloperMode')}>
-              {t('BCSC.Settings.DeveloperOptions')}
+      <SectionHeader title={t('BCSC.Settings.HelpHeader')} iconName="help-circle-outline" styles={styles}>
+        <View style={styles.sectionContainer}>
+          <ListButtonGroup>
+            <ListButton onPress={onHelp} testID={testIdWithKey('Help')}>
+              {t('BCSC.Settings.HelpUsingApp')}
             </ListButton>
-          ) : null}
-        </ListButtonGroup>
-      </View>
+            <ListButton onPress={onContactUs} testID={testIdWithKey('ContactUs')}>
+              {t('BCSC.Settings.ContactUs')}
+            </ListButton>
+            <ListButton
+              onPress={onPressFeedback}
+              testID={testIdWithKey('Feedback')}
+              accessibilityHint={t('Global.A11y.OpensInBrowser')}
+            >
+              {t('BCSC.Settings.GiveFeedback')}
+            </ListButton>
+          </ListButtonGroup>
+        </View>
+      </SectionHeader>
+
+      <SectionHeader title={t('BCSC.Settings.MoreInfoHeader')} iconName="information-outline" styles={styles}>
+        <View style={styles.sectionContainer}>
+          <ListButtonGroup>
+            <ListButton
+              onPress={onPressAccessibility}
+              testID={testIdWithKey('Accessibility')}
+              accessibilityHint={t('Global.A11y.OpensInBrowser')}
+            >
+              {t('BCSC.Settings.Accessibility')}
+            </ListButton>
+            <ListButton
+              onPress={onPressTermsOfUse}
+              testID={testIdWithKey('TermsOfUse')}
+              accessibilityHint={t('Global.A11y.OpensInBrowser')}
+            >
+              {t('BCSC.Settings.TermsOfUse')}
+            </ListButton>
+            <ListButton onPress={onPrivacy} testID={testIdWithKey('Privacy')}>
+              {t('BCSC.Settings.Privacy')}
+            </ListButton>
+            {store.preferences.developerModeEnabled ? (
+              <ListButton key="dev" onPress={onPressDeveloperMode} testID={testIdWithKey('DeveloperMode')}>
+                {t('BCSC.Settings.DeveloperOptions')}
+              </ListButton>
+            ) : null}
+          </ListButtonGroup>
+        </View>
+      </SectionHeader>
 
       <View style={styles.versionContainer}>
         <TouchableWithoutFeedback
