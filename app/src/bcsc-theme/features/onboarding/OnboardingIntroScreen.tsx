@@ -2,15 +2,7 @@ import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HELP_URL } from '@/constants'
 import WelcomeIllustration from '@assets/img/welcome_phone.svg'
-import {
-  Button,
-  ButtonType,
-  ScreenWrapper,
-  testIdWithKey,
-  ThemedText,
-  useDeveloperMode,
-  useTheme,
-} from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useDeveloperMode, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'

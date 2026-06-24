@@ -32,7 +32,10 @@ describe('useCardScanner', () => {
       const bifoldMock = jest.mocked(Bifold)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } }
+      const mockState: any = {
+        bcsc: { accountSetupType: AccountSetupType.AddAccount },
+        bcscSecure: { additionalEvidenceData: [] },
+      }
       const mockAuthorization: any = {
         authorization: {
           authorizeDevice: jest.fn(),
@@ -68,7 +71,10 @@ describe('useCardScanner', () => {
       const bifoldMock = jest.mocked(Bifold)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } }
+      const mockState: any = {
+        bcsc: { accountSetupType: AccountSetupType.AddAccount },
+        bcscSecure: { additionalEvidenceData: [] },
+      }
       const mockAuthorization: any = {
         authorization: {
           authorizeDevice: jest.fn(),
@@ -111,7 +117,10 @@ describe('useCardScanner', () => {
       const bifoldMock = jest.mocked(Bifold)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } }
+      const mockState: any = {
+        bcsc: { accountSetupType: AccountSetupType.AddAccount },
+        bcscSecure: { additionalEvidenceData: [] },
+      }
       const mockAuthorization: any = {
         authorization: {
           authorizeDevice: jest.fn(),
@@ -153,7 +162,10 @@ describe('useCardScanner', () => {
       const bifoldMock = jest.mocked(Bifold)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } }
+      const mockState: any = {
+        bcsc: { accountSetupType: AccountSetupType.AddAccount },
+        bcscSecure: { additionalEvidenceData: [] },
+      }
       const mockAuthorization: any = {
         authorization: {
           authorizeDevice: jest.fn(),
@@ -202,7 +214,10 @@ describe('useCardScanner', () => {
       const navigationMock = jest.mocked(navigation)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } }
+      const mockState: any = {
+        bcsc: { accountSetupType: AccountSetupType.AddAccount },
+        bcscSecure: { additionalEvidenceData: [] },
+      }
       const mockUpdateUserInfo = jest.fn()
       const mockUpdateDeviceCodes = jest.fn()
       const mockUpdateCardProcess = jest.fn()
@@ -271,7 +286,10 @@ describe('useCardScanner', () => {
       const useApiMock = jest.mocked(useApi)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } }
+      const mockState: any = {
+        bcsc: { accountSetupType: AccountSetupType.AddAccount },
+        bcscSecure: { additionalEvidenceData: [] },
+      }
       const mockAuthorization: any = {
         authorization: {
           authorizeDevice: jest.fn(),
@@ -307,7 +325,10 @@ describe('useCardScanner', () => {
       const useApiMock = jest.mocked(useApi)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } }
+      const mockState: any = {
+        bcsc: { accountSetupType: AccountSetupType.AddAccount },
+        bcscSecure: { additionalEvidenceData: [] },
+      }
       const mockAuthorization: any = {
         authorization: {
           authorizeDevice: jest.fn(),
@@ -344,7 +365,10 @@ describe('useCardScanner', () => {
       const navigationMock = jest.mocked(navigation)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } }
+      const mockState: any = {
+        bcsc: { accountSetupType: AccountSetupType.AddAccount },
+        bcscSecure: { additionalEvidenceData: [] },
+      }
       const mockUpdateUserInfo = jest.fn()
       const mockAuthorization: any = {
         authorization: {
@@ -400,7 +424,10 @@ describe('useCardScanner', () => {
       const navigationMock = jest.mocked(navigation)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } }
+      const mockState: any = {
+        bcsc: { accountSetupType: AccountSetupType.AddAccount },
+        bcscSecure: { additionalEvidenceData: [] },
+      }
       const mockUpdateUserInfo = jest.fn()
       const mockAuthorization: any = {
         authorization: {
@@ -453,7 +480,10 @@ describe('useCardScanner', () => {
       const navigationMock = jest.mocked(navigation)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } }
+      const mockState: any = {
+        bcsc: { accountSetupType: AccountSetupType.AddAccount },
+        bcscSecure: { additionalEvidenceData: [] },
+      }
       const mockUpdateDeviceCodes = jest.fn()
       const mockUpdateCardProcess = jest.fn()
       const mockUpdateVerificationOptions = jest.fn()
@@ -505,7 +535,10 @@ describe('useCardScanner', () => {
       const navigationMock = jest.mocked(navigation)
       const useSecureActionsMock = jest.mocked(useSecureActions)
 
-      const mockState: any = { bcsc: { accountSetupType: AccountSetupType.AddAccount }, bcscSecure: { additionalEvidenceData: [] } }
+      const mockState: any = {
+        bcsc: { accountSetupType: AccountSetupType.AddAccount },
+        bcscSecure: { additionalEvidenceData: [] },
+      }
       const mockNavigationReset = jest.fn()
 
       useApiMock.mockReturnValue({
