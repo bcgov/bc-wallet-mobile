@@ -729,6 +729,41 @@ describe('BCSC Client', () => {
 
       expect(result).toBeNull()
     })
+
+    it('should cache the JWK and not refetch while baseURL is unchanged', async () => {
+      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const client = new BCSCApiClient('https://example.com', mockLogger as any)
+
+      const mockJwk = { kty: 'RSA', kid: 'key-1' }
+      const getSpy = jest.spyOn(client, 'get').mockResolvedValue({
+        data: { keys: [mockJwk] },
+      } as any)
+
+      const first = await client.fetchJwk()
+      const second = await client.fetchJwk()
+
+      expect(first).toEqual(mockJwk)
+      expect(second).toEqual(mockJwk)
+      expect(getSpy).toHaveBeenCalledTimes(1)
+    })
+
+    it('should refetch the JWK when baseURL changes', async () => {
+      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const client = new BCSCApiClient('https://example.com', mockLogger as any)
+
+      const getSpy = jest.spyOn(client, 'get').mockResolvedValue({
+        data: { keys: [{ kty: 'RSA', kid: 'key-1' }] },
+      } as any)
+
+      await client.fetchJwk()
+
+      const mutableClient = client as unknown as { baseURL: string }
+      mutableClient.baseURL = 'https://example.com/other'
+
+      await client.fetchJwk()
+
+      expect(getSpy).toHaveBeenCalledTimes(2)
+    })
   })
 
   describe('tokens race condition smoke test', () => {

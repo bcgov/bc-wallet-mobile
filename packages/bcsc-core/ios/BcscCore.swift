@@ -1283,7 +1283,7 @@ class BcscCore: NSObject {
       do {
         jws = try JWS.parse(s: payload)
       } catch {
-        reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload", nil)
+        reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload", error)
         return
       }
       let verified = verifyJws(jws, key: key)
@@ -1306,7 +1306,7 @@ class BcscCore: NSObject {
       }
       resolve(["verified": verified, "claims": claims])
     } catch {
-      reject("E_PAYLOAD_DECODE_ERROR", "Unable to decode payload", nil)
+      reject("E_PAYLOAD_DECODE_ERROR", "Unable to decode payload", error)
     }
   }
 
