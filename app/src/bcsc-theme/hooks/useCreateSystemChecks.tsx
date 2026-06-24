@@ -173,8 +173,11 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       // AccountExpiryAlertSystemCheck
     )
 
-    // Only run device registration update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
-    if (isBCServicesCardBundle) {
+    // Only run device registration update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard).
+    // updateRegistration needs both the registration access token and the user's chosen nickname; a fresh or
+    // not-yet-verified device has no nickname (and nothing to re-register), so gate on both. Otherwise the
+    // check fails with "No client name found for registration update" on every launch until setup completes.
+    if (isBCServicesCardBundle && store.bcscSecure.registrationAccessToken && store.bcsc.selectedNickname) {
       systemChecks.push(
         new UpdateDeviceRegistrationSystemCheck(
           store.bcsc.appVersion,

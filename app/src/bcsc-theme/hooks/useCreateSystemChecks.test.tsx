@@ -285,10 +285,12 @@ describe('useGetSystemChecks', () => {
             },
             bcsc: {
               analyticsOptIn: true,
+              selectedNickname: 'Test Device',
             },
             bcscSecure: {
               isHydrated: true,
               verified: true,
+              registrationAccessToken: 'test-registration-token',
             },
           },
           jest.fn(),
@@ -363,6 +365,9 @@ describe('useGetSystemChecks', () => {
         expect(names).not.toContain('DeviceCountSystemCheck')
         expect(names).not.toContain('EventReasonAlertsSystemCheck')
         expect(names).not.toContain('AccountExpiryWarningBannerSystemCheck')
+        // No chosen nickname / registration token yet, so there's nothing to re-register — the
+        // device-registration update check is skipped (otherwise it throws "No client name found").
+        expect(names).not.toContain('UpdateDeviceRegistrationSystemCheck')
       })
     })
   })
