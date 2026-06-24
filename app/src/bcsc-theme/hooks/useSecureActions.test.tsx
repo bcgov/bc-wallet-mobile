@@ -1,8 +1,13 @@
+import {
+  cancelVerificationReminders,
+  scheduleVerificationReminders,
+} from '@/services/notifications/verificationReminders'
 import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import {
   AccountSecurityMethod,
+  deleteAuthorizationRequest,
   EvidenceMetadata,
   getAccount,
   getAccountFlags,
@@ -42,8 +47,26 @@ jest.mock('react-native-bcsc-core', () => ({
   getEvidence: jest.fn(),
   getSavedServices: jest.fn(),
   getToken: jest.fn(),
+  deleteAuthorizationRequest: jest.fn().mockResolvedValue(true),
+  deleteAccountFlags: jest.fn().mockResolvedValue(true),
+  deleteEvidence: jest.fn().mockResolvedValue(true),
+  deleteSavedServices: jest.fn().mockResolvedValue(true),
+  deleteCredential: jest.fn().mockResolvedValue(undefined),
+  deleteToken: jest.fn().mockResolvedValue(true),
 }))
 jest.mock('./useBCSCApiClient')
+jest.mock('@/services/notifications/verificationReminders', () => ({
+  scheduleVerificationReminders: jest.fn(),
+  cancelVerificationReminders: jest.fn(),
+}))
+
+// LocaleStringFormat must resolve to a real locale so Date.toLocaleString doesn't throw; other keys
+// pass through so we can assert on them directly.
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => (key === 'BCSC.LocaleStringFormat' ? 'en-CA' : key),
+  }),
+}))
 
 const mockDispatch = jest.fn()
 const mockLogger = {
@@ -671,6 +694,61 @@ describe('useSecureActions', () => {
       })
 
       expect(captureHydratedSecureData()?.emailAddress).toBe('legacy@example.com')
+    })
+  })
+
+  describe('updateDeviceCodes', () => {
+    it('persists the expiry and schedules reminders when an expiry is provided', async () => {
+      const expiresAt = new Date('2026-06-08T12:00:00Z')
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.updateDeviceCodes({ deviceCode: 'dc', userCode: 'uc', deviceCodeExpiresAt: expiresAt })
+      })
+
+      expect(setAuthorizationRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ expiry: Math.floor(expiresAt.getTime() / 1000), deviceCode: 'dc', userCode: 'uc' })
+      )
+      expect(scheduleVerificationReminders).toHaveBeenCalledWith(
+        expiresAt,
+        { title: 'BCSC.VerificationReminder.Title', body: 'BCSC.VerificationReminder.Body' },
+        mockLogger
+      )
+    })
+
+    it('does not schedule reminders when no expiry is provided', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.updateDeviceCodes({ deviceCode: 'dc' })
+      })
+
+      expect(scheduleVerificationReminders).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('deleteVerificationData', () => {
+    it('deletes the authorization request and cancels reminders', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.deleteVerificationData()
+      })
+
+      expect(deleteAuthorizationRequest).toHaveBeenCalled()
+      expect(cancelVerificationReminders).toHaveBeenCalledWith(mockLogger)
+    })
+  })
+
+  describe('deleteSecureData', () => {
+    it('cancels reminders when secure data is removed', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.deleteSecureData()
+      })
+
+      expect(cancelVerificationReminders).toHaveBeenCalledWith(mockLogger)
     })
   })
 })

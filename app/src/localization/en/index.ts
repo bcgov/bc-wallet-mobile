@@ -519,6 +519,10 @@ const translation = {
         "Header": "The Terms of Use have been updated. Before you continue to use the Service, you must read and accept the updated terms.",
       },
     },
+    "VerificationReminder": {
+      "Title": "Finish verifying your identity",
+      "Body": "Verify your identity to finish setting up the app by {{date}}.",
+    },
     "Home": {
       "WhereToUseTitle": "Where to use",
       "WhereToUseAccessibilityLabel": "Find services",
