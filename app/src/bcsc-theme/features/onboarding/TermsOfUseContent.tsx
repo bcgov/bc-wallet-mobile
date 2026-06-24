@@ -130,7 +130,12 @@ export const TermsOfUseContent = ({ onAccept, headerText }: TermsOfUseContentPro
   }
 
   return (
-    <ScreenWrapper scrollable={false} padded={false} controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
+    <ScreenWrapper
+      scrollable={false}
+      padded={false}
+      controls={controls}
+      scrollViewContainerStyle={styles.scrollContainer}
+    >
       <WebViewContent
         html={createTermsOfUseHtml(
           {
