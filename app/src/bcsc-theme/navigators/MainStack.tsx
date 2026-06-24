@@ -75,6 +75,7 @@ const MainStack: React.FC = () => {
     return {
       serviceTitle,
       pairingCode,
+      fromAppSwitch: pendingPairing.source === 'deep-link',
     }
   }, [logger, pendingPairing])
   const initialRouteName = pairingInitialParams ? BCSCScreens.ServiceLogin : BCSCStacks.Tab
