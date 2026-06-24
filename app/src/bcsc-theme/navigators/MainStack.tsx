@@ -74,6 +74,7 @@ const MainStack: React.FC = () => {
 
     return pairingPayloadToServiceLoginParams(pendingPairing)
   }, [logger, pendingPairing])
+
   const initialRouteName = pairingInitialParams ? BCSCScreens.ServiceLogin : BCSCStacks.Tab
   useSystemChecks(SystemCheckScope.MAIN_STACK)
   useBCSCStack(BCSCStacks.Main)
