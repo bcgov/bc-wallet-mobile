@@ -78,11 +78,19 @@ export const appLogger = createAppLogger()
  * always given a code to share, even when the network/Loki is unavailable.
  *
  * @param error - the error being reported
+ * @param options.includeDeviceDetails - when false, the app `version` and OS `system` labels are
+ *   omitted so a user can submit a report without sharing device details (defaults to true to
+ *   preserve existing error-report behaviour)
  * @returns the reference code to surface to the user
  */
-export const reportProblem = (error: BifoldError): string => {
+export const reportProblem = (error: BifoldError, options?: { includeDeviceDetails?: boolean }): string => {
   const referenceCode = generateReferenceCode()
   const { title, description, code, message, stack } = error
+  const { includeDeviceDetails = true } = options ?? {}
+
+  // Drop the app version / OS labels when the user opts out; keep the application name so support
+  // still knows which app the report came from.
+  const lokiLabels = includeDeviceDetails ? baseOptions.lokiLabels : { application: getApplicationName().toLowerCase() }
 
   try {
     if (baseOptions.lokiUrl) {
@@ -92,7 +100,7 @@ export const reportProblem = (error: BifoldError): string => {
         level: { severity: 3, text: 'error' },
         options: {
           lokiUrl: baseOptions.lokiUrl,
-          lokiLabels: baseOptions.lokiLabels,
+          lokiLabels,
           job: 'incident-report',
         },
       })

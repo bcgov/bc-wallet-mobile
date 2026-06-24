@@ -1,20 +1,16 @@
 import { PressableOpacity } from '@/components/PressableOpacity'
-import { BC_LOGIN_PRIVACY_URL, hitSlop } from '@/constants'
+import { BC_LOGIN_PRIVACY_URL, CONTACT_US_GOVERNMENT_WEBSITE_URL, hitSlop } from '@/constants'
 import { reportProblem } from '@/utils/logger'
 import { BifoldError, Button, ButtonType, CheckBoxRow, Link, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import Clipboard from '@react-native-clipboard/clipboard'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { KeyboardAvoidingView, Linking, Modal, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import CommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 const DESCRIPTION_MAX_LENGTH = 500
 // A user-initiated report has no underlying error code; 0 marks it as user-originated in the report payload.
 const USER_REPORT_ERROR_CODE = 0
-// How long the "Copied" confirmation stays visible after copying the reference code.
-const COPY_FEEDBACK_DURATION_MS = 2000
 
 export interface ReportProblemModalProps {
   visible: boolean
@@ -24,18 +20,12 @@ export interface ReportProblemModalProps {
 /**
  * A fully custom (React Native `Modal`) "Report a problem" flow.
  *
- * On submit it hands the user's description to the shared `reportProblem()` pipeline (see PR #4076),
- * which sends the report to remote logging (Loki) and returns a short, human-readable reference code.
- * The user can quote that code to support so the team can look the report up. Generating and sharing
- * the code (the "receipt") is owned by that shared pipeline rather than implemented here.
+ * The form collects a free-text description and, optionally, basic app/device details. On submit it
+ * hands the report to the shared `reportProblem()` pipeline (see PR #4076), which sends it to remote
+ * logging (Loki), then closes — it is intentionally fire-and-forget (no reference-code receipt).
  *
  * The modal is self-contained and rendered from the floating help menu, so it works in every stack
  * without registering a per-stack screen.
- *
- * NOTE: The design spec for this flow is not finalised — the layout here is intentionally simple and
- * expected to be restyled once design lands. The collection-notice copy is placeholder text describing
- * the one-off report (no remote logging is enabled) and should be reviewed with design/privacy before
- * release.
  */
 export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps) => {
   const { t } = useTranslation()
@@ -45,49 +35,23 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
   const insets = useSafeAreaInsets()
 
   const [description, setDescription] = useState('')
-  const [consented, setConsented] = useState(false)
-  const [referenceCode, setReferenceCode] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
-  const copyResetTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const submitted = referenceCode !== null
-
-  // Clear any pending "Copied" reset timer when the modal unmounts.
-  useEffect(() => {
-    return () => {
-      if (copyResetTimeout.current) {
-        clearTimeout(copyResetTimeout.current)
-      }
-    }
-  }, [])
+  const [includeDeviceDetails, setIncludeDeviceDetails] = useState(false)
 
   const handleClose = useCallback(() => {
     // Reset so the modal opens fresh next time.
     setDescription('')
-    setConsented(false)
-    setReferenceCode(null)
-    setCopied(false)
+    setIncludeDeviceDetails(false)
     onClose()
   }, [onClose])
 
   const handleSubmit = useCallback(() => {
-    // Carry the user's description on a BifoldError and report it through the shared pipeline, which
-    // sends it to remote logging and returns the reference code to surface to the user.
+    // Send the report through the shared pipeline. The description rides on a BifoldError; device labels
+    // are attached only when the user opted in. The returned reference code is intentionally ignored —
+    // this flow is fire-and-forget, so we just close once the report has been handed off.
     const reportError = new BifoldError(t('BCSC.ReportProblem.Title'), description.trim(), '', USER_REPORT_ERROR_CODE)
-    setReferenceCode(reportProblem(reportError))
-  }, [t, description])
-
-  const handleCopy = useCallback(() => {
-    if (!referenceCode) {
-      return
-    }
-    Clipboard.setString(referenceCode)
-    setCopied(true)
-    if (copyResetTimeout.current) {
-      clearTimeout(copyResetTimeout.current)
-    }
-    copyResetTimeout.current = setTimeout(() => setCopied(false), COPY_FEEDBACK_DURATION_MS)
-  }, [referenceCode])
+    reportProblem(reportError, { includeDeviceDetails })
+    handleClose()
+  }, [t, description, includeDeviceDetails, handleClose])
 
   const styles = StyleSheet.create({
     root: {
@@ -103,14 +67,22 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
     },
     header: {
       flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
+      justifyContent: 'flex-end',
       paddingHorizontal: Spacing.md,
       paddingTop: Spacing.md,
     },
     content: {
-      padding: Spacing.md,
+      paddingHorizontal: Spacing.md,
+      paddingTop: Spacing.sm,
       gap: Spacing.md,
+    },
+    title: {
+      textAlign: 'center',
+      color: ColorPalette.brand.primary,
+    },
+    fieldLabel: {
+      color: ColorPalette.brand.primary,
+      marginBottom: Spacing.sm,
     },
     input: {
       ...TextTheme.normal,
@@ -120,136 +92,22 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
       borderRadius: 8,
       padding: Spacing.sm,
       textAlignVertical: 'top',
+      backgroundColor: ColorPalette.grayscale.veryLightGrey,
     },
-    noticeText: {
-      color: TextTheme.normal.color,
+    fineText: {
+      ...TextTheme.caption,
+      // caption (14px) ships no lineHeight, so it falls back to BCSans' loose natural leading.
+      // Set an explicit tighter line height to match the Figma spacing for this fine print.
+      lineHeight: 18,
+      color: ColorPalette.grayscale.darkGrey,
     },
-    successContainer: {
-      alignItems: 'center',
-      gap: Spacing.md,
-      paddingVertical: Spacing.lg,
-    },
-    codeBox: {
-      borderWidth: 1,
-      borderColor: ColorPalette.brand.primary,
-      borderRadius: 8,
-      paddingVertical: Spacing.md,
-      paddingHorizontal: Spacing.xl,
-    },
-    code: {
-      letterSpacing: 4,
-      textAlign: 'center',
-    },
-    copyButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: Spacing.xs,
-    },
-    copyButtonText: {
-      color: ColorPalette.brand.primary,
+    // Link inside the fine print: match the 14px size/leading but intentionally set NO color, so the
+    // Link's own blue link colour shows through (setting a color here would override it to grey).
+    fineTextLink: {
+      fontSize: TextTheme.caption.fontSize,
+      lineHeight: 18,
     },
   })
-
-  const renderForm = () => (
-    <ScrollView
-      contentContainerStyle={[styles.content, { paddingBottom: Spacing.md + insets.bottom }]}
-      keyboardShouldPersistTaps="handled"
-    >
-      <ThemedText>{t('BCSC.ReportProblem.Intro')}</ThemedText>
-
-      <View>
-        <ThemedText variant="bold" style={{ marginBottom: Spacing.sm }}>
-          {t('BCSC.ReportProblem.DescriptionLabel')}
-        </ThemedText>
-        <TextInput
-          style={styles.input}
-          multiline
-          maxLength={DESCRIPTION_MAX_LENGTH}
-          value={description}
-          onChangeText={setDescription}
-          placeholder={t('BCSC.ReportProblem.DescriptionPlaceholder')}
-          placeholderTextColor={ColorPalette.grayscale.mediumGrey}
-          accessibilityLabel={t('BCSC.ReportProblem.DescriptionLabel')}
-          testID={testIdWithKey('ReportProblemDescription')}
-        />
-      </View>
-
-      {/* Lightweight collection notice for the one-off report: the modal sends the user's description
-          plus basic app/device info to support and no longer enables remote logging. Placeholder copy
-          pending design/privacy review. The Privacy Policy link is inline so the notice reads as one
-          sentence rather than floating on its own row. */}
-      <ThemedText style={styles.noticeText}>
-        {t('BCSC.ReportProblem.CollectionNotice')}{' '}
-        <Link
-          linkText={t('BCSC.ReportProblem.PrivacyPolicyLink')}
-          onPress={() => Linking.openURL(BC_LOGIN_PRIVACY_URL)}
-        />
-      </ThemedText>
-
-      <CheckBoxRow
-        title={t('BCSC.ReportProblem.ConsentCheckbox')}
-        accessibilityLabel={t('BCSC.ReportProblem.ConsentCheckbox')}
-        testID={testIdWithKey('ReportProblemConsent')}
-        checked={consented}
-        onPress={() => setConsented((prev) => !prev)}
-      />
-
-      <Button
-        title={t('BCSC.ReportProblem.Submit')}
-        accessibilityLabel={t('BCSC.ReportProblem.Submit')}
-        testID={testIdWithKey('ReportProblemSubmit')}
-        buttonType={ButtonType.Primary}
-        disabled={!consented}
-        onPress={handleSubmit}
-      />
-    </ScrollView>
-  )
-
-  const renderSuccess = () => (
-    <ScrollView contentContainerStyle={[styles.content, { paddingBottom: Spacing.md + insets.bottom }]}>
-      <View style={styles.successContainer}>
-        <Icon name="check-circle" size={64} color={ColorPalette.brand.primary} />
-        <ThemedText variant="headingThree" style={{ textAlign: 'center' }}>
-          {t('BCSC.ReportProblem.SuccessTitle')}
-        </ThemedText>
-        <ThemedText style={{ textAlign: 'center' }}>{t('BCSC.ReportProblem.SuccessBody')}</ThemedText>
-        <ThemedText variant="bold">{t('Error.ReferenceCode')}</ThemedText>
-        <View style={styles.codeBox}>
-          <ThemedText
-            variant="headingTwo"
-            style={styles.code}
-            accessibilityLabel={`${t('Error.ReferenceCode')}: ${referenceCode}`}
-            testID={testIdWithKey('ReportProblemReferenceCode')}
-          >
-            {referenceCode}
-          </ThemedText>
-        </View>
-        <PressableOpacity
-          onPress={handleCopy}
-          style={styles.copyButton}
-          accessibilityRole="button"
-          accessibilityLabel={copied ? t('Error.CodeCopied') : t('Error.CopyCode')}
-          testID={testIdWithKey('ReportProblemCopyCode')}
-        >
-          <CommunityIcon
-            name={copied ? 'check' : 'content-copy'}
-            size={18}
-            color={copied ? ColorPalette.semantic.success : ColorPalette.brand.primary}
-          />
-          <ThemedText variant="bold" style={styles.copyButtonText}>
-            {copied ? t('Error.CodeCopied') : t('Error.CopyCode')}
-          </ThemedText>
-        </PressableOpacity>
-      </View>
-      <Button
-        title={t('BCSC.ReportProblem.Done')}
-        accessibilityLabel={t('BCSC.ReportProblem.Done')}
-        testID={testIdWithKey('ReportProblemDone')}
-        buttonType={ButtonType.Primary}
-        onPress={handleClose}
-      />
-    </ScrollView>
-  )
 
   return (
     <Modal
@@ -270,7 +128,6 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
           />
           <View style={styles.sheet}>
             <View style={styles.header}>
-              <ThemedText variant="headingThree">{t('BCSC.ReportProblem.Title')}</ThemedText>
               <PressableOpacity
                 onPress={handleClose}
                 hitSlop={hitSlop}
@@ -281,7 +138,71 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
                 <Icon name="close" size={24} color={ColorPalette.brand.headerText} />
               </PressableOpacity>
             </View>
-            {submitted ? renderSuccess() : renderForm()}
+            <ScrollView
+              contentContainerStyle={[styles.content, { paddingBottom: Spacing.md + insets.bottom }]}
+              keyboardShouldPersistTaps="handled"
+            >
+              <ThemedText variant="headingThree" style={styles.title}>
+                {t('BCSC.ReportProblem.Title')}
+              </ThemedText>
+
+              <ThemedText>{t('BCSC.ReportProblem.Intro')}</ThemedText>
+
+              <View>
+                <ThemedText variant="bold" style={styles.fieldLabel}>
+                  {t('BCSC.ReportProblem.DescriptionLabel')}
+                </ThemedText>
+                <TextInput
+                  style={styles.input}
+                  multiline
+                  maxLength={DESCRIPTION_MAX_LENGTH}
+                  value={description}
+                  onChangeText={setDescription}
+                  placeholder={t('BCSC.ReportProblem.DescriptionPlaceholder')}
+                  placeholderTextColor={ColorPalette.grayscale.mediumGrey}
+                  accessibilityLabel={t('BCSC.ReportProblem.DescriptionLabel')}
+                  testID={testIdWithKey('ReportProblemDescription')}
+                />
+              </View>
+
+              {/* Reporting-only disclaimer with an inline link to BC support for users who need a reply. */}
+              <ThemedText>
+                <ThemedText variant="bold">{t('BCSC.ReportProblem.NotePrefix')}</ThemedText>
+                {t('BCSC.ReportProblem.NoteBody')}
+                <Link
+                  linkText={t('BCSC.ReportProblem.ContactUsLink')}
+                  onPress={() => Linking.openURL(CONTACT_US_GOVERNMENT_WEBSITE_URL)}
+                />
+              </ThemedText>
+
+              {/* Fine-print collection notice with an inline Privacy Policy link. */}
+              <ThemedText style={styles.fineText}>
+                {t('BCSC.ReportProblem.CollectionNotice')}
+                {' ['}
+                <Link
+                  style={styles.fineTextLink}
+                  linkText={t('BCSC.ReportProblem.PrivacyPolicyLink')}
+                  onPress={() => Linking.openURL(BC_LOGIN_PRIVACY_URL)}
+                />
+                {']'}
+              </ThemedText>
+
+              <CheckBoxRow
+                title={t('BCSC.ReportProblem.IncludeDeviceDetails')}
+                accessibilityLabel={t('BCSC.ReportProblem.IncludeDeviceDetails')}
+                testID={testIdWithKey('ReportProblemIncludeDeviceDetails')}
+                checked={includeDeviceDetails}
+                onPress={() => setIncludeDeviceDetails((prev) => !prev)}
+              />
+
+              <Button
+                title={t('BCSC.ReportProblem.Submit')}
+                accessibilityLabel={t('BCSC.ReportProblem.Submit')}
+                testID={testIdWithKey('ReportProblemSubmit')}
+                buttonType={ButtonType.Primary}
+                onPress={handleSubmit}
+              />
+            </ScrollView>
           </View>
         </View>
       </KeyboardAvoidingView>
