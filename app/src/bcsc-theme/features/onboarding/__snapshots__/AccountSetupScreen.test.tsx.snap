@@ -117,6 +117,7 @@ exports[`AccountSetup renders correctly 1`] = `
               "fontWeight": "normal",
             },
             {
+              "fontSize": 20,
               "textAlign": "center",
             },
           ]
