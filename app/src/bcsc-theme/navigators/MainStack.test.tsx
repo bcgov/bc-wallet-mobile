@@ -4,10 +4,27 @@ import { useNavigation } from '@react-navigation/native'
 import { render } from '@testing-library/react-native'
 import React from 'react'
 import * as PairingModule from '../features/pairing'
+import { PairingNavigationListener, PairingPayload } from '../features/pairing/types'
 import { BCSCScreens } from '../types/navigators'
 import MainStack from './MainStack'
 
+let capturedNavigationListener: PairingNavigationListener | undefined
+
+const mockUnsubscribe = jest.fn()
+const mockOnNavigationRequest = jest.fn((listener: PairingNavigationListener) => {
+  capturedNavigationListener = listener
+  return mockUnsubscribe
+})
+const mockConsumePendingPairing = jest.fn((): PairingPayload | null => null)
+const mockLogger = { error: jest.fn() }
+
+const makePairingService = () => ({
+  consumePendingPairing: mockConsumePendingPairing,
+  onNavigationRequest: mockOnNavigationRequest,
+})
+
 jest.mock('@bifold/core')
+jest.mock('@react-navigation/native')
 jest.mock('@react-navigation/stack', () => {
   const Screen = ({ children }: any) => children
   Screen.displayName = 'Screen'
@@ -98,22 +115,13 @@ jest.mock('../features/settings/MainPrivacyPolicyScreen', () => ({
 jest.mock('../features/settings/MainSettingsScreen', () => ({ MainSettingsScreen: 'MainSettingsScreen' }))
 jest.mock('../features/webview/WebViewScreen', () => ({ WebViewScreen: 'WebViewScreen' }))
 
-const mockUnsubscribe = jest.fn()
-const mockOnNavigationRequest = jest.fn(() => mockUnsubscribe)
-const mockConsumePendingPairing = jest.fn(() => null)
-const mockLogger = { error: jest.fn() }
-
-const makePairingService = () => ({
-  consumePendingPairing: mockConsumePendingPairing,
-  onNavigationRequest: mockOnNavigationRequest,
-})
-
 describe('MainStack', () => {
-  let mockNavigation: ReturnType<typeof useNavigation>
+  let mockNavigation: { dispatch: (...args: any[]) => void; navigate: (...args: any[]) => void }
 
   beforeEach(() => {
+    capturedNavigationListener = undefined
     jest.clearAllMocks()
-    mockNavigation = useNavigation()
+    mockNavigation = useNavigation() as typeof mockNavigation
     jest.mocked(Bifold.useDefaultStackOptions).mockReturnValue({} as any)
     jest.mocked(Bifold.useTheme).mockReturnValue({} as any)
     jest.mocked(Bifold.useTour).mockReturnValue({ currentStep: undefined } as any)
@@ -164,29 +172,17 @@ describe('MainStack', () => {
   })
 
   it('navigates to ServiceLogin when pairing service emits a navigation request', () => {
-    let capturedListener: ((args: any) => void) | undefined
-    mockOnNavigationRequest.mockImplementation((listener) => {
-      capturedListener = listener
-      return mockUnsubscribe
-    })
-
     render(<MainStack />)
 
-    const params = { pairingCode: 'abc123' }
-    capturedListener!({ screen: BCSCScreens.ServiceLogin, params })
+    const params = { serviceTitle: 'My Service', pairingCode: 'abc123' }
+    capturedNavigationListener!({ screen: BCSCScreens.ServiceLogin, params })
 
     expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.ServiceLogin, params)
   })
 
   it('does not navigate when pairing service emits a non-ServiceLogin screen', () => {
-    let capturedListener: ((args: any) => void) | undefined
-    mockOnNavigationRequest.mockImplementation((listener) => {
-      capturedListener = listener
-      return mockUnsubscribe
-    })
-
     render(<MainStack />)
-    capturedListener!({ screen: 'SomeOtherScreen', params: {} })
+    capturedNavigationListener!({ screen: 'SomeOtherScreen' as any, params: {} as any })
 
     expect(mockNavigation.navigate).not.toHaveBeenCalled()
   })
@@ -199,7 +195,7 @@ describe('MainStack', () => {
   })
 
   it('calls pairingPayloadToServiceLoginParams when there is a valid pending pairing', () => {
-    const payload = { serviceTitle: 'My Service', pairingCode: 'abc123' }
+    const payload: PairingPayload = { serviceTitle: 'My Service', pairingCode: 'abc123', source: 'manual' }
     mockConsumePendingPairing.mockReturnValue(payload)
 
     render(<MainStack />)
@@ -208,7 +204,7 @@ describe('MainStack', () => {
   })
 
   it('logs an error and skips pairingPayloadToServiceLoginParams when pending pairing is missing fields', () => {
-    mockConsumePendingPairing.mockReturnValue({ serviceTitle: null, pairingCode: null })
+    mockConsumePendingPairing.mockReturnValue({ serviceTitle: null, pairingCode: null } as unknown as PairingPayload)
 
     render(<MainStack />)
 
