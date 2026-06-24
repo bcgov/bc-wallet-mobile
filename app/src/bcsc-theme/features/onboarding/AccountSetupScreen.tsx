@@ -1,21 +1,13 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { DeveloperModeTrigger } from '@/bcsc-theme/components/DeveloperModeTrigger'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { AccountSetupType, BCDispatchAction, BCState } from '@/store'
 import AddDeviceHands from '@assets/img/add-device-hands.svg'
-import {
-  Button,
-  ButtonType,
-  ScreenWrapper,
-  testIdWithKey,
-  ThemedText,
-  useDeveloperMode,
-  useStore,
-  useTheme,
-} from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Pressable, StyleSheet, Vibration, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 
 interface AccountSetupScreenProps {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.AccountSetup>
@@ -25,10 +17,6 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
   const [, dispatch] = useStore<BCState>()
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
-  const { incrementDeveloperMenuCounter } = useDeveloperMode(() => {
-    Vibration.vibrate()
-    navigation.navigate(BCSCScreens.VerifyDeveloper)
-  })
 
   const styles = StyleSheet.create({
     contentContainer: {
@@ -92,18 +80,14 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
         padding: Spacing.lg,
       }}
     >
-      <Pressable
-        onPress={incrementDeveloperMenuCounter}
+      <DeveloperModeTrigger
+        onActivate={() => navigation.navigate(BCSCScreens.VerifyDeveloper)}
         style={styles.pressableArea}
-        accessible={false}
-        accessibilityElementsHidden={true}
-        importantForAccessibility="no-hide-descendants"
-        testID={testIdWithKey('DeveloperCounter')}
       >
         <View style={styles.image}>
           <AddDeviceHands width={250} height={250} />
         </View>
-      </Pressable>
+      </DeveloperModeTrigger>
       <ThemedText variant={'headingThree'} style={{ textAlign: 'center', color: ColorPalette.brand.primary }}>
         {t('BCSC.AccountSetup.Title')}
       </ThemedText>

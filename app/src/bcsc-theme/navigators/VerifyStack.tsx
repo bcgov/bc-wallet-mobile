@@ -128,6 +128,9 @@ const VerifyStack = () => {
           // Entry screen for verification (shown until the user picks new-setup vs. transfer);
           // it has no back destination, so offer settings rather than a back arrow.
           headerLeft: createVerifySettingsHeaderButton(),
+          // No back destination: stop an iOS edge-swipe from popping back to the one-time
+          // VerifyPrompt sitting beneath it in the stack.
+          gestureEnabled: false,
         }}
       />
       <Stack.Screen
