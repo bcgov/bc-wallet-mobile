@@ -649,7 +649,7 @@ const translation = {
     "Onboarding": {
       "LearnMore": "Learn more",
       "IntroTitle": "Welcome to the \n BC Services Card app",
-      "IntroDescription": "A safe and simple way to sign in to BC government services.",
+      "IntroDescription": "A safe and simple way to access BC government services and BC Services Card app partners online.",
       "AcceptAndContinueButton": "Accept terms of use",
       "TermsOfUseLoadError": "Terms of use failed to load, please retry",
       "TermsOfUseHeader": "Before you use the Service, you must read and accept the terms set out in this Agreement",

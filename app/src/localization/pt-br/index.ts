@@ -635,7 +635,7 @@ const translation = {
     "Onboarding": {
       "LearnMore": "Learn more (PT-BR)",
       "IntroTitle": "Welcome to the \n BC Services Card app (PT-BR)",
-      "IntroDescription": "A safe and simple way to sign in to BC government services. (PT-BR)",
+      "IntroDescription": "A safe and simple way to access BC government services and BC Services Card app partners online. (PT-BR)",
       "AcceptAndContinueButton": "Accept terms of use (PT-BR)",
       "TermsOfUseLoadError": "Terms of use failed to load, please retry (PT-BR)",
       "TermsOfUseHeader": "Before you use the Service, you must read and accept the terms set out in this Agreement (PT-BR)",
