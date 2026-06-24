@@ -378,6 +378,7 @@ const MainStack: React.FC = () => {
             component={TransferQRDisplayScreen}
             options={() => ({
               headerShown: true,
+              title: t('BCSC.TransferInformation.TransferAccount'),
             })}
           />
           <Stack.Screen
