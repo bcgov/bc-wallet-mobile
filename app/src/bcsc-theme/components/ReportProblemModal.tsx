@@ -2,9 +2,19 @@ import { PressableOpacity } from '@/components/PressableOpacity'
 import { BC_LOGIN_PRIVACY_URL, CONTACT_US_GOVERNMENT_WEBSITE_URL, hitSlop } from '@/constants'
 import { reportProblem } from '@/utils/logger'
 import { BifoldError, Button, ButtonType, CheckBoxRow, Link, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { KeyboardAvoidingView, Linking, Modal, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native'
+import {
+  KeyboardAvoidingView,
+  Linking,
+  Modal,
+  PixelRatio,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
@@ -37,6 +47,18 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
   const [description, setDescription] = useState('')
   const [includeDeviceDetails, setIncludeDeviceDetails] = useState(false)
 
+  // One-shot submit guard. The Bifold Button has no tap throttle and stays mounted/pressable through the
+  // slide-out animation, so without this a fast double-tap would send two reports. Reset on each (re)open.
+  const submittedRef = useRef(false)
+  useEffect(() => {
+    if (visible) {
+      submittedRef.current = false
+    }
+  }, [visible])
+
+  // Don't allow an empty/whitespace-only report — it would just be noise in the incident logs.
+  const canSubmit = description.trim().length > 0
+
   const handleClose = useCallback(() => {
     // Reset so the modal opens fresh next time.
     setDescription('')
@@ -45,6 +67,11 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
   }, [onClose])
 
   const handleSubmit = useCallback(() => {
+    // Guard against double-submit (see submittedRef above) and empty content.
+    if (submittedRef.current || description.trim().length === 0) {
+      return
+    }
+    submittedRef.current = true
     // Send the report through the shared pipeline. The description rides on a BifoldError; device labels
     // are attached only when the user opted in. The returned reference code is intentionally ignored —
     // this flow is fire-and-forget, so we just close once the report has been handed off.
@@ -52,6 +79,11 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
     reportProblem(reportError, { includeDeviceDetails })
     handleClose()
   }, [t, description, includeDeviceDetails, handleClose])
+
+  // RN scales fontSize with the OS font setting but NOT lineHeight, so a fixed 18px line box clips the
+  // fine print at large font sizes. Scale the tightened leading with the font setting to preserve the
+  // Figma spacing at the default size while staying legible when the user bumps their font scale up.
+  const fineLineHeight = Math.round(18 * PixelRatio.getFontScale())
 
   const styles = StyleSheet.create({
     root: {
@@ -98,14 +130,14 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
       ...TextTheme.caption,
       // caption (14px) ships no lineHeight, so it falls back to BCSans' loose natural leading.
       // Set an explicit tighter line height to match the Figma spacing for this fine print.
-      lineHeight: 18,
+      lineHeight: fineLineHeight,
       color: ColorPalette.grayscale.darkGrey,
     },
     // Link inside the fine print: match the 14px size/leading but intentionally set NO color, so the
     // Link's own blue link colour shows through (setting a color here would override it to grey).
     fineTextLink: {
       fontSize: TextTheme.caption.fontSize,
-      lineHeight: 18,
+      lineHeight: fineLineHeight,
     },
   })
 
@@ -117,14 +149,15 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
       onRequestClose={handleClose}
       testID={testIdWithKey('ReportProblemModal')}
     >
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={styles.root}>
-          {/* Backdrop tap dismisses the modal. */}
+          {/* Backdrop tap dismisses the modal. Hidden from the accessibility tree so screen-reader users
+              don't land on a full-screen "Close" target ahead of the form; they use the header X instead. */}
           <PressableOpacity
             style={StyleSheet.absoluteFill}
             onPress={handleClose}
-            accessibilityRole="button"
-            accessibilityLabel={t('Global.Close')}
+            accessible={false}
+            importantForAccessibility="no-hide-descendants"
           />
           <View style={styles.sheet}>
             <View style={styles.header}>
@@ -201,6 +234,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
                 testID={testIdWithKey('ReportProblemSubmit')}
                 buttonType={ButtonType.Primary}
                 onPress={handleSubmit}
+                disabled={!canSubmit}
               />
             </ScrollView>
           </View>

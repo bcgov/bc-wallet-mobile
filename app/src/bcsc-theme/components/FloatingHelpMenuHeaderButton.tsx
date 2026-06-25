@@ -109,9 +109,12 @@ export const createFloatingHelpMenuButton = ({
     }, [navigation, t])
 
     const handleReportProblem = useCallback(() => {
-      // Close the help menu first, then open the fully-custom report modal once the menu has finished
-      // animating out, so two React Native modals aren't presented at the same time.
-      floatingHelpMenuRef.current?.close(() => setReportProblemVisible(true))
+      // Close the help menu first, then open the report modal on the next frame. Deferring the open to a
+      // later tick than the menu modal's dismissal avoids the iOS "attempt to present while a presentation
+      // is in progress" race — presenting both in the same commit can leave the report modal not showing.
+      floatingHelpMenuRef.current?.close(() => {
+        requestAnimationFrame(() => setReportProblemVisible(true))
+      })
     }, [])
 
     return (

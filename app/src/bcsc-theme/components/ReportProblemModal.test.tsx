@@ -26,6 +26,10 @@ describe('ReportProblemModal', () => {
       </BasicAppContext>
     )
 
+  // Submit is disabled until there's a non-empty description, so most tests need to type first.
+  const enterDescription = (getByTestId: (id: string) => unknown, text = 'Something went wrong') =>
+    fireEvent.changeText(getByTestId(testIdWithKey('ReportProblemDescription')) as never, text)
+
   it('renders correctly', () => {
     const tree = renderModal()
     expect(tree.toJSON()).toMatchSnapshot()
@@ -35,15 +39,38 @@ describe('ReportProblemModal', () => {
     const onClose = jest.fn()
     const { getByTestId } = renderModal(onClose)
 
+    enterDescription(getByTestId)
     fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
 
     expect(mockReportProblem).toHaveBeenCalledTimes(1)
     expect(onClose).toHaveBeenCalled()
   })
 
+  it('does not submit an empty (whitespace-only) report', () => {
+    const onClose = jest.fn()
+    const { getByTestId } = renderModal(onClose)
+
+    enterDescription(getByTestId, '   ')
+    fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
+
+    expect(mockReportProblem).not.toHaveBeenCalled()
+    expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it('sends only one report when "Send report" is double-tapped', () => {
+    const { getByTestId } = renderModal()
+
+    enterDescription(getByTestId)
+    fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
+    fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
+
+    expect(mockReportProblem).toHaveBeenCalledTimes(1)
+  })
+
   it('omits device details by default', () => {
     const { getByTestId } = renderModal()
 
+    enterDescription(getByTestId)
     fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
 
     expect(mockReportProblem).toHaveBeenCalledWith(expect.anything(), { includeDeviceDetails: false })
@@ -52,6 +79,7 @@ describe('ReportProblemModal', () => {
   it('includes device details once the toggle is checked', () => {
     const { getByTestId } = renderModal()
 
+    enterDescription(getByTestId)
     fireEvent.press(getByTestId(testIdWithKey('ReportProblemIncludeDeviceDetails')))
     fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
 

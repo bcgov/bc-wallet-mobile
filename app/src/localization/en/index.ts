@@ -250,7 +250,7 @@ const translation = {
       "NotePrefix": "Please note",
       "NoteBody": " this form is for reporting issues only. You won't receive a reply. If you need help with a problem, please ",
       "ContactUsLink": "contact us.",
-      "CollectionNotice": "When you send a report, we include basic app and device details to help us understand the problem.",
+      "CollectionNotice": "When you send a report, you can include basic app and device details to help us understand the problem.",
       "PrivacyPolicyLink": "Privacy Policy",
       "IncludeDeviceDetails": "Include app and device details",
       "Submit": "Send report",

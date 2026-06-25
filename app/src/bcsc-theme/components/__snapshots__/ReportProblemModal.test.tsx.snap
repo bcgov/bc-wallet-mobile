@@ -31,8 +31,6 @@ exports[`ReportProblemModal renders correctly 1`] = `
       }
     >
       <View
-        accessibilityLabel="Global.Close"
-        accessibilityRole="button"
         accessibilityState={
           {
             "busy": undefined,
@@ -50,9 +48,10 @@ exports[`ReportProblemModal renders correctly 1`] = `
             "text": undefined,
           }
         }
-        accessible={true}
+        accessible={false}
         collapsable={false}
         focusable={true}
+        importantForAccessibility="no-hide-descendants"
         onBlur={[Function]}
         onClick={[Function]}
         onFocus={[Function]}
@@ -329,7 +328,7 @@ exports[`ReportProblemModal renders correctly 1`] = `
                     "fontFamily": "BCSans-Regular",
                     "fontSize": 14,
                     "fontWeight": "normal",
-                    "lineHeight": 18,
+                    "lineHeight": 36,
                   },
                 ]
               }
@@ -358,7 +357,7 @@ exports[`ReportProblemModal renders correctly 1`] = `
                       },
                       {
                         "fontSize": 14,
-                        "lineHeight": 18,
+                        "lineHeight": 36,
                       },
                     ],
                   ]
@@ -480,7 +479,7 @@ exports[`ReportProblemModal renders correctly 1`] = `
                 {
                   "busy": undefined,
                   "checked": undefined,
-                  "disabled": false,
+                  "disabled": true,
                   "expanded": undefined,
                   "selected": undefined,
                 }
@@ -495,7 +494,7 @@ exports[`ReportProblemModal renders correctly 1`] = `
               }
               accessible={true}
               collapsable={false}
-              focusable={true}
+              focusable={false}
               onClick={[Function]}
               onResponderGrant={[Function]}
               onResponderMove={[Function]}
@@ -505,7 +504,7 @@ exports[`ReportProblemModal renders correctly 1`] = `
               onStartShouldSetResponder={[Function]}
               style={
                 {
-                  "backgroundColor": "#003366",
+                  "backgroundColor": "#757575",
                   "borderRadius": 4,
                   "opacity": 1,
                   "padding": 16,
@@ -540,7 +539,13 @@ exports[`ReportProblemModal renders correctly 1`] = `
                           "fontWeight": "bold",
                           "textAlign": "center",
                         },
-                        false,
+                        {
+                          "color": "#FFFFFF",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "bold",
+                          "textAlign": "center",
+                        },
                         false,
                       ],
                     ]
