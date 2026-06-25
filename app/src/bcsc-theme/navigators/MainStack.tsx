@@ -77,6 +77,8 @@ const ScopedCredentialDetails: React.FC<React.ComponentProps<typeof CredentialDe
   </AgentReadyGate>
 )
 
+const VerifyPromptScreenNoSkip = () => <VerifyPromptScreen showSkip={false} />
+
 // Contact screens call Bifold connection hooks (useConnections / useConnectionById)
 // that require the providers BifoldScope only mounts once the agent is ready.
 // Gate them so an early mount — a cold-start quick-tap into Settings → Contacts,
@@ -470,7 +472,7 @@ const MainStack: React.FC = () => {
           />
           <Stack.Screen
             name={BCSCScreens.VerifyPrompt}
-            component={() => <VerifyPromptScreen showSkip={false} />}
+            component={VerifyPromptScreenNoSkip}
             options={() => ({
               headerShown: true,
             })}

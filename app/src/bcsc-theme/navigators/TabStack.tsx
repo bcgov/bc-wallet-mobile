@@ -140,7 +140,15 @@ const BCSCTabStack: React.FC = () => {
     <View style={{ flex: 1 }}>
       <Tab.Navigator
         screenListeners={({ route }) => ({
-          focus: () => setActiveTab(route.name),
+          focus: () => {
+            // Hijack the focus event for the Services tab if the user is not verified
+            if (route.name === BCSCScreens.Services && !isVerified) {
+              navigation.navigate(BCSCScreens.VerifyPrompt)
+              return
+            }
+
+            setActiveTab(route.name)
+          },
           tabPress: (event) => {
             // Hijack the tab press event for the Services tab if the user is not verified
             if (route.name === BCSCScreens.Services && !isVerified) {

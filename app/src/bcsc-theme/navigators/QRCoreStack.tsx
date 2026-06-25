@@ -92,6 +92,13 @@ const QRCoreStack: React.FC = () => {
     <>
       <Tab.Navigator
         screenListeners={({ route }) => ({
+          focus: () => {
+            // Hijack the focus event for the PairingCode tab if the user is not verified
+            if (route.name === BCSCQRCoreScreens.PairingCode && !isVerified) {
+              navigation.navigate(BCSCScreens.VerifyPrompt)
+              return
+            }
+          },
           tabPress: (event) => {
             // Hijack the tab press event for the PairingCode tab if the user is not verified
             if (route.name === BCSCQRCoreScreens.PairingCode && !isVerified) {
