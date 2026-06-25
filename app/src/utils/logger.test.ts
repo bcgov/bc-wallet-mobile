@@ -157,6 +157,37 @@ describe('reportProblem', () => {
     expect(data).toMatchObject({ description: 'It exploded', code: 2800, message: 'stack trace details' })
   })
 
+  it('includes app version and OS system labels by default (includeDeviceDetails defaults to true)', () => {
+    reportProblem(fakeError)
+
+    const labels = lokiTransportMock.mock.calls[0][0].options.lokiLabels
+    expect(labels).toEqual({
+      application: 'testapp',
+      version: '1.2.3-77',
+      system: 'iOS v17.0',
+    })
+  })
+
+  it('includes app version and OS system labels when includeDeviceDetails is true', () => {
+    reportProblem(fakeError, { includeDeviceDetails: true })
+
+    const labels = lokiTransportMock.mock.calls[0][0].options.lokiLabels
+    expect(labels).toEqual({
+      application: 'testapp',
+      version: '1.2.3-77',
+      system: 'iOS v17.0',
+    })
+  })
+
+  it('drops the version and system labels but keeps the application when includeDeviceDetails is false', () => {
+    reportProblem(fakeError, { includeDeviceDetails: false })
+
+    const labels = lokiTransportMock.mock.calls[0][0].options.lokiLabels
+    expect(labels).toEqual({ application: 'testapp' })
+    expect(labels).not.toHaveProperty('version')
+    expect(labels).not.toHaveProperty('system')
+  })
+
   it('never throws and still returns a code when the transport fails', () => {
     lokiTransportMock.mockImplementationOnce(() => {
       throw new Error('network down')
