@@ -77,7 +77,8 @@ const _getVerifyDeviceAssertionAlertMap = (alerts?: AppAlerts) => {
   ])
 }
 
-// Alert map for IAS errors 201–300 (add_card_*, err_206–213, err_299, err_300)
+// Alert map for IAS errors 201–300 (add_card_*, err_206–213, err_299, err_300) plus
+// status-mapped HTTP client errors (403 forbidden, 404 not found) that share the same modal style.
 const _getIasErrorAlertMap = (alerts?: AppAlerts) => {
   return new Map([
     [AppEventCode.ADD_CARD_SERVER_CONFIGURATION, alerts?.serverConfigurationAlert],
@@ -90,6 +91,8 @@ const _getIasErrorAlertMap = (alerts?: AppAlerts) => {
     [AppEventCode.ERR_208_UNEXPECTED_NETWORK_CALL_EXCEPTION, alerts?.unexpectedNetworkCallAlert],
     [AppEventCode.ERR_209_BAD_REQUEST, alerts?.badRequestAlert],
     [AppEventCode.ERR_210_UNAUTHORIZED, alerts?.unauthorizedAlert],
+    [AppEventCode.FORBIDDEN, alerts?.forbiddenAlert],
+    [AppEventCode.NOT_FOUND, alerts?.notFoundAlert],
     [AppEventCode.ERR_211_SERVER_OUTAGE, alerts?.serverOutageAlert],
     [AppEventCode.ERR_212_RETRY_LATER, alerts?.retryLaterAlert],
     [AppEventCode.ERR_213_FAILED_CREATING_CLIENT_REGISTRATION, alerts?.creatingClientRegistrationFailedAlert],
@@ -251,6 +254,42 @@ export const attestationPollingErrorPolicy: ErrorHandlingPolicy = {
   handle: (_error, context) => {
     context.logger.info(
       '[AttestationPollingErrorPolicy] 400 or 404 expected during polling — attestation not yet consumed or already consumed'
+    )
+  },
+}
+
+// Error policy for email verification code submission — 404 indicates a wrong or
+// expired code, which is a user-input error. Suppress the global modal so the
+// EmailConfirmationScreen can show its own inline error instead of the misleading
+// "App not installed correctly (error 209)" alert.
+//
+// Matches by path pattern (PUT /v1/emails/{id}) rather than the full evidence base URL,
+// because the discovery-provided evidence_endpoint can differ from the fallback (trailing
+// slash, version suffix, etc.) and we don't want this match to silently break.
+const EMAIL_VERIFICATION_PATH_PATTERN = /\/v1\/emails\/[^/?#]+/
+export const emailVerificationCodeErrorPolicy: ErrorHandlingPolicy = {
+  matches: (_, context) => {
+    return context.statusCode === 404 && EMAIL_VERIFICATION_PATH_PATTERN.test(context.endpoint)
+  },
+  handle: (_error, context) => {
+    context.logger.info(
+      '[EmailVerificationCodeErrorPolicy] Suppressing global alert — confirmation screen will show inline error for invalid code'
+    )
+  },
+}
+
+// Error policy for pairing code submission — 404 indicates a wrong or
+// expired code, which is a user-input error. Suppress the global modal so the
+// ManualPairing screen can show its own alert error instead of the misleading
+// "App not installed correctly (error 209)" alert.
+const PAIRING_CODE_PATH_PATTERN = /\/v3\/mobile\/assertion/
+export const pairingCodeErrorPolicy: ErrorHandlingPolicy = {
+  matches: (_, context) => {
+    return context.statusCode === 404 && PAIRING_CODE_PATH_PATTERN.test(context.endpoint)
+  },
+  handle: (_error, context) => {
+    context.logger.info(
+      '[PairingCodeErrorPolicy] Suppressing global alert — manual pairing screen will show inline error and alert for invalid pairing code'
     )
   },
 }
@@ -446,6 +485,8 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   invalidRegistrationRequestErrorPolicy,
   videoSessionErrorPolicy,
   attestationPollingErrorPolicy,
+  emailVerificationCodeErrorPolicy,
+  pairingCodeErrorPolicy,
   invalidClientMetadataErrorPolicy,
   iasErrorPolicy,
   // Specific polices listed above, followed by global policies

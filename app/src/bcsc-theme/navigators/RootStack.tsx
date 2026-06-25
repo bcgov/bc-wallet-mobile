@@ -20,7 +20,6 @@ import { toAppError } from '../utils/native-error-map'
 import AuthStack from './AuthStack'
 import BCSCMainStack from './MainStack'
 import OnboardingStack from './OnboardingStack'
-import PromptStack from './PromptStack'
 import VerifyStack from './VerifyStack'
 
 const BCSCRootStack: React.FC = () => {
@@ -69,13 +68,24 @@ const BCSCRootStack: React.FC = () => {
     return <AuthStack />
   }
 
-  if (!store.bcsc.hasSeenVerifyPrompt && needsVerification) {
-    return <PromptStack />
+  if (store.bcscSecure.sessionRecoveryRequired === true) {
+    return (
+      <BCSCActivityProvider>
+        <VerifyStack />
+      </BCSCActivityProvider>
+    )
   }
+
+  // Render the verify journey (which now opens on the one-time verify prompt) when the user hasn't
+  // seen the prompt yet, OR whenever verification is actively in progress. Combining both into a
+  // single VerifyStack render keeps it mounted across the prompt → in-progress transition, so
+  // VerifyPrompt → AccountSetup animates as an in-stack slide instead of a RootStack swap.
+  const showVerifyStack =
+    (!store.bcsc.hasSeenVerifyPrompt && needsVerification) || (!isVerified && isVerificationInProgress)
 
   return (
     <BCSCAgentProvider>
-      {!isVerified && isVerificationInProgress ? (
+      {showVerifyStack ? (
         <BCSCActivityProvider>
           <VerifyStack />
         </BCSCActivityProvider>

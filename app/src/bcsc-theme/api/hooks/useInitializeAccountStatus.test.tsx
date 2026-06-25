@@ -167,9 +167,9 @@ describe('useInitializeAccountStatus', () => {
     expect(mockDispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: BCDispatchAction.ADD_NICKNAME }))
   })
 
-  it('does not dispatch ADD_NICKNAME when account has no nickname', async () => {
+  it('does not dispatch ADD_NICKNAME when account has no nickname or displayName', async () => {
     const mockDispatch = jest.fn()
-    const mockAccount = { nickname: undefined }
+    const mockAccount = { nickname: undefined, displayName: undefined }
     jest
       .mocked(Bifold.useStore)
       .mockReturnValue([{ stateLoaded: true, bcsc: { hasAccount: false, nicknames: [] } } as any, mockDispatch])
@@ -181,6 +181,72 @@ describe('useInitializeAccountStatus', () => {
     await act(async () => {})
 
     expect(mockDispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: BCDispatchAction.ADD_NICKNAME }))
+  })
+
+  it('falls back to displayName when nickname is missing (e.g. v3 ias-ios migrated users)', async () => {
+    const mockDispatch = jest.fn()
+    const mockAccount = { nickname: undefined, displayName: 'Jane' }
+    jest
+      .mocked(Bifold.useStore)
+      .mockReturnValue([{ stateLoaded: true, bcsc: { hasAccount: false, nicknames: [] } } as any, mockDispatch])
+    jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
+    jest.mocked(retryModule.retryAsync).mockResolvedValue(mockAccount)
+
+    renderHook(() => useInitializeAccountStatus())
+
+    await act(async () => {})
+
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: BCDispatchAction.ADD_NICKNAME,
+      payload: ['Jane'],
+    })
+  })
+
+  it('prefers nickname over displayName when both are present', async () => {
+    const mockDispatch = jest.fn()
+    const mockAccount = { nickname: 'My Wallet', displayName: 'Jane' }
+    jest
+      .mocked(Bifold.useStore)
+      .mockReturnValue([{ stateLoaded: true, bcsc: { hasAccount: false, nicknames: [] } } as any, mockDispatch])
+    jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
+    jest.mocked(retryModule.retryAsync).mockResolvedValue(mockAccount)
+
+    renderHook(() => useInitializeAccountStatus())
+
+    await act(async () => {})
+
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: BCDispatchAction.ADD_NICKNAME,
+      payload: ['My Wallet'],
+    })
+    expect(mockDispatch).not.toHaveBeenCalledWith({
+      type: BCDispatchAction.ADD_NICKNAME,
+      payload: ['Jane'],
+    })
+  })
+
+  it('falls back to displayName when nickname is an empty string', async () => {
+    // Uses `||` (not `??`) so empty-string nicknames fall through to displayName.
+    const mockDispatch = jest.fn()
+    const mockAccount = { nickname: '', displayName: 'Jane' }
+    jest
+      .mocked(Bifold.useStore)
+      .mockReturnValue([{ stateLoaded: true, bcsc: { hasAccount: false, nicknames: [] } } as any, mockDispatch])
+    jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
+    jest.mocked(retryModule.retryAsync).mockResolvedValue(mockAccount)
+
+    renderHook(() => useInitializeAccountStatus())
+
+    await act(async () => {})
+
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: BCDispatchAction.ADD_NICKNAME,
+      payload: ['Jane'],
+    })
+    expect(mockDispatch).not.toHaveBeenCalledWith({
+      type: BCDispatchAction.ADD_NICKNAME,
+      payload: [''],
+    })
   })
 
   it('logs error when getAccount throws', async () => {

@@ -13,6 +13,7 @@ jest.mock('@/contexts/ErrorAlertContext', () => ({
   useErrorAlert: () => ({ emitErrorModal: jest.fn() }),
 }))
 jest.mock('@/contexts/NavigationContainerContext', () => ({
+  navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
   useNavigationContainer: () => ({ isNavigationReady: true }),
 }))
 jest.mock('../api/hooks/useInitializeAccountStatus')
@@ -49,10 +50,6 @@ jest.mock('./OnboardingStack', () => ({
 jest.mock('./VerifyStack', () => ({
   __esModule: true,
   default: () => 'VerifyStack',
-}))
-jest.mock('./PromptStack', () => ({
-  __esModule: true,
-  default: () => 'PromptStack',
 }))
 jest.mock('../contexts/BCSCActivityContext', () => ({
   BCSCActivityProvider: ({ children }: any) => children,
@@ -208,6 +205,24 @@ describe('BCSCRootStack', () => {
     expect(toJSON()).toBe('MainStack')
   })
 
+  it('renders VerifyStack when sessionRecoveryRequired is set, overriding the verified→Home routing', () => {
+    const mockDispatch = jest.fn()
+    jest.mocked(Bifold.useStore).mockReturnValue([
+      mockStore({
+        bcsc: { hasAccount: true, nicknames: [] },
+        authentication: { didAuthenticate: true },
+        // verified:true would normally route to MainStack — recovery must take precedence.
+        // (VerifyStack starts on the SessionRecovery screen when sessionRecoveryRequired is set.)
+        bcscSecure: { verified: true, sessionRecoveryRequired: true },
+      }),
+      mockDispatch,
+    ] as any)
+
+    const { toJSON } = render(<BCSCRootStack />)
+
+    expect(toJSON()).toBe('VerifyStack')
+  })
+
   it('renders MainStack as fallback when verified is undefined', () => {
     const mockDispatch = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([
@@ -224,7 +239,7 @@ describe('BCSCRootStack', () => {
     expect(toJSON()).toBe('MainStack')
   })
 
-  it('renders PromptStack when user has not seen verify prompt and is not verified', () => {
+  it('renders VerifyStack (which opens on the verify prompt) when the user has not seen the prompt and is not verified', () => {
     const mockDispatch = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([
       mockStore({
@@ -237,7 +252,7 @@ describe('BCSCRootStack', () => {
 
     const { toJSON } = render(<BCSCRootStack />)
 
-    expect(toJSON()).toBe('PromptStack')
+    expect(toJSON()).toBe('VerifyStack')
   })
 
   it('calls loadState when stateLoaded is false', () => {

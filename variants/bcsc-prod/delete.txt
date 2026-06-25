@@ -1,0 +1,7 @@
+app/ios/Media.xcassets/AppIcon.appiconset/iTunesArtwork_Dark.png
+app/ios/Media.xcassets/AppIcon.appiconset/iTunesArtwork_Tinted.png
+app/android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png
+app/android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png
+app/android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png
+app/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png
+app/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png

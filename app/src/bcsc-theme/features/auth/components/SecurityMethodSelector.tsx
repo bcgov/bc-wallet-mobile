@@ -11,6 +11,7 @@ import {
   useServices,
   useTheme,
 } from '@bifold/core'
+import { TFunction } from 'i18next'
 import { upperFirst } from 'lodash'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -51,6 +52,49 @@ interface SecurityMethodSelectorProps {
    * Optional custom prompt for device authentication.
    */
   deviceAuthPrompt?: string
+}
+
+interface SecurityCopy {
+  header: string
+  content: string
+  deviceAuthTitle: string
+  deviceAuthSubtext: string
+  pinSubtext: string
+}
+
+/**
+ * Builds the localized copy for the selector based on context (onboarding vs settings).
+ * Extracted to module scope to keep the component's cognitive complexity low.
+ */
+const getSecurityCopy = (
+  t: TFunction,
+  {
+    isSettingsContext,
+    isCurrentMethodDeviceAuth,
+    deviceAuthMethodName,
+  }: { isSettingsContext: boolean; isCurrentMethodDeviceAuth: boolean; deviceAuthMethodName: string }
+): SecurityCopy => {
+  if (!isSettingsContext) {
+    return {
+      header: t('BCSC.Onboarding.SecureAppOnboardingHeader'),
+      content: t('BCSC.Onboarding.SecureAppOnboardingContent'),
+      deviceAuthTitle: t('BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle'),
+      deviceAuthSubtext: t('BCSC.Onboarding.SecureAppOnboardingDeviceAuthSubtext'),
+      pinSubtext: t('BCSC.Onboarding.SecureAppPINSubtext'),
+    }
+  }
+
+  const platformName = Platform.OS === 'ios' ? 'iPhone or iPad' : 'Android device'
+  const currentlySelected = t('BCSC.Settings.AppSecurity.CurrentlySelected')
+  return {
+    header: t('BCSC.Onboarding.SecureAppHeader'),
+    content: t('BCSC.Onboarding.SecureAppContent'),
+    deviceAuthTitle: t('BCSC.Onboarding.SecureAppDeviceAuthTitle', { deviceAuthMethodName }),
+    deviceAuthSubtext: isCurrentMethodDeviceAuth
+      ? currentlySelected
+      : t('BCSC.Onboarding.SecureAppDeviceAuthSubtext', { platform: platformName }),
+    pinSubtext: isCurrentMethodDeviceAuth ? t('BCSC.Onboarding.SecureAppPINSubtext') : currentlySelected,
+  }
 }
 
 /**
@@ -145,29 +189,11 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
   }
 
   // Pre-compute conditional values
-  const platformName = Platform.OS === 'ios' ? 'iPhone or iPad' : 'Android device'
   const currentMethodIcon = isCurrentMethodDeviceAuth ? 'fingerprint' : 'lock'
   const currentMethodLabel = isCurrentMethodDeviceAuth
     ? deviceAuthMethodName || t('BCSC.Settings.AppSecurity.DeviceAuth')
     : t('BCSC.Settings.AppSecurity.PIN')
-  const currentlySelected = t('BCSC.Settings.AppSecurity.CurrentlySelected')
-  const copy = isSettingsContext
-    ? {
-        header: t('BCSC.Onboarding.SecureAppHeader'),
-        content: t('BCSC.Onboarding.SecureAppContent'),
-        deviceAuthTitle: t('BCSC.Onboarding.SecureAppDeviceAuthTitle', { deviceAuthMethodName }),
-        deviceAuthSubtext: isCurrentMethodDeviceAuth
-          ? currentlySelected
-          : t('BCSC.Onboarding.SecureAppDeviceAuthSubtext', { platform: platformName }),
-        pinSubtext: isCurrentMethodDeviceAuth ? t('BCSC.Onboarding.SecureAppPINSubtext') : currentlySelected,
-      }
-    : {
-        header: t('BCSC.Onboarding.SecureAppOnboardingHeader'),
-        content: t('BCSC.Onboarding.SecureAppOnboardingContent'),
-        deviceAuthTitle: t('BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle'),
-        deviceAuthSubtext: t('BCSC.Onboarding.SecureAppOnboardingDeviceAuthSubtext'),
-        pinSubtext: t('BCSC.Onboarding.SecureAppPINSubtext'),
-      }
+  const copy = getSecurityCopy(t, { isSettingsContext, isCurrentMethodDeviceAuth, deviceAuthMethodName })
 
   // Current method indicator (only shown in settings context)
   const currentMethodIndicator = isSettingsContext ? (
@@ -229,7 +255,7 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
           title={t('BCSC.Onboarding.SecureAppPINTitle')}
           testID={testIdWithKey('ChoosePINButton')}
           subtext={copy.pinSubtext}
-          startIcon={isSettingsContext ? undefined : 'dialpad'}
+          startIcon={isSettingsContext ? undefined : 'password'}
           onPress={onPINPress}
           disabled={isSettingsContext && !isCurrentMethodDeviceAuth}
         />

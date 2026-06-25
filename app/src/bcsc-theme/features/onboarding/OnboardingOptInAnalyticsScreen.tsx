@@ -4,7 +4,6 @@ import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navig
 import { BCDispatchAction, BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import AnalyticsIcon from '@assets/img/analytics-icon.svg'
-import Blob from '@assets/img/blob.svg'
 import {
   Button,
   ButtonType,
@@ -40,9 +39,6 @@ export const OnboardingOptInAnalyticsScreen: React.FC<OnboardingOptInAnalyticsSc
 
   const styles = StyleSheet.create({
     imageContainer: {
-      flex: 1,
-      position: 'relative',
-      justifyContent: 'center',
       alignItems: 'center',
     },
   })
@@ -105,8 +101,7 @@ export const OnboardingOptInAnalyticsScreen: React.FC<OnboardingOptInAnalyticsSc
       scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
     >
       <View style={styles.imageContainer}>
-        <Blob />
-        <AnalyticsIcon style={{ position: 'absolute' }} />
+        <AnalyticsIcon />
       </View>
       <ThemedText variant="headingThree" style={{ textAlign: 'center' }}>
         {t('BCSC.Onboarding.AnalyticsTitle')}

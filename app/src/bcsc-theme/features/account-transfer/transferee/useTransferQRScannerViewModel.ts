@@ -27,6 +27,7 @@ const useTransferQRScannerViewModel = (navigation: StackNavigationProp<BCSCVerif
   const deviceCodeRef = useRef<string | undefined>(store.bcscSecure.deviceCode)
   const registrationPromiseRef = useRef<Promise<void>>(Promise.resolve())
   const isProcessingRef = useRef(false)
+  const isNavigatingRef = useRef(false)
 
   const registerDevice = useCallback(async () => {
     // we already have a device code, no need to authorize again
@@ -69,8 +70,8 @@ const useTransferQRScannerViewModel = (navigation: StackNavigationProp<BCSCVerif
 
   const handleScan = useCallback(
     async (value: string) => {
-      // exit early if processing a scan already or if there's an error showing
-      if (isProcessingRef.current || scanError != null) {
+      // exit early if scanning already, navigating away or if an error is showing
+      if (isProcessingRef.current || isNavigatingRef.current || scanError != null) {
         return
       }
 
@@ -131,8 +132,12 @@ const useTransferQRScannerViewModel = (navigation: StackNavigationProp<BCSCVerif
         apiClient.tokens = deviceToken
         await updateTokens({ refreshToken: deviceToken.refresh_token, accessToken: deviceToken.access_token })
 
+        isNavigatingRef.current = true
         navigation.navigate(BCSCScreens.VerificationSuccess)
       } catch (error) {
+        if (isNavigatingRef.current) {
+          return
+        }
         if (error instanceof QrCodeScanError) {
           setScanError(error)
         } else {

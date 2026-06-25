@@ -5,6 +5,7 @@ import { BasicAppContext } from '@mocks/helpers/app'
 import { CommonActions } from '@react-navigation/native'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import React from 'react'
+import { Alert } from 'react-native'
 import Toast from 'react-native-toast-message'
 import EmailConfirmationScreen from './EmailConfirmationScreen'
 
@@ -125,8 +126,9 @@ describe('EmailConfirmation', () => {
       })
     })
 
-    test('shows error when submission fails', async () => {
-      mockSendEmailVerificationCode.mockRejectedValue(new Error('API Error'))
+    test('shows native alert when submission fails', async () => {
+      const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {})
+      mockSendEmailVerificationCode.mockRejectedValue(new Error('Not Found', { cause: { status: 404 } }))
       renderScreen()
 
       const codeInput = screen.getByTestId(testIdWithKey('EmailConfirmationCodeInput'))
@@ -134,8 +136,15 @@ describe('EmailConfirmation', () => {
       fireEvent.press(screen.getByTestId('ContinueButton'))
 
       await waitFor(() => {
-        expect(screen.getByText('BCSC.EmailConfirmation.ErrorTitle')).toBeTruthy()
+        expect(screen.getByText('BCSC.EmailConfirmation.CodeDoesNotMatch')).toBeTruthy()
+        expect(alertSpy).toHaveBeenCalledWith(
+          'BCSC.EmailConfirmation.CouldNotVerifyTitle',
+          'BCSC.EmailConfirmation.CodeDoesNotMatch',
+          [{ text: 'Global.OK' }]
+        )
       })
+
+      alertSpy.mockRestore()
     })
   })
 

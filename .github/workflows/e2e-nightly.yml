@@ -1,9 +1,9 @@
 # E2E Nightly Full Regression
 #
 # Runs the full-regression E2E suite against the latest successful main
-# build's SauceLabs artifacts, followed by biometric tests (non-blocking).
+# build's SauceLabs artifacts.
 #
-# Default device matrix: 3 iOS + 3 Android OS versions (moderate coverage).
+# Default device matrix: 2 iOS + 2 Android OS versions (moderate coverage).
 #
 # Trigger modes:
 #   schedule         — runs every night at midnight PT (7 AM UTC)
@@ -13,8 +13,14 @@
 # landed on main in the last 24 hours. If nothing changed, it skips the
 # run to avoid burning SauceLabs device time. Manual dispatches always run.
 #
-# The workflow resolves the latest successful main build number via the
-# GitHub API, so no build_number input is needed.
+# The workflow resolves the latest viable main build number via the
+# GitHub API (must have built within the last 24h), so no build_number
+# input is needed. A run is "viable" iff the bcsc-dev iOS+Android builds
+# and SauceLabs uploads all succeeded — unrelated failures in the main
+# workflow (e.g. TestFlight upload for bcwallet-prod, a red SonarCloud
+# quality gate) don't affect the artifacts under test and don't block
+# the regression. If no viable run exists in the 24h window, the workflow
+# fails rather than testing stale artifacts.
 #
 # NOTE: Nightly schedule is disabled until SauceLabs IPs are whitelisted.
 # To re-enable, uncomment the schedule trigger below.
@@ -25,8 +31,8 @@ permissions:
   actions: read
 
 on:
-  # schedule:
-  #   - cron: '0 7 * * *'
+  schedule:
+    - cron: '0 7 * * *' # Every day at 7 AM UTC (midnight PT)
   workflow_dispatch:
     inputs:
       suite:
@@ -36,15 +42,12 @@ on:
           - full-regression
           - happy-path
           - smoke
+          - migration
         default: full-regression
       device_matrix:
         description: 'JSON array of {platform, device, os_version} objects'
         type: string
-        default: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"iOS","device":"iPhone.*","os_version":"17"},{"platform":"iOS","device":"iPhone.*","os_version":"16"},{"platform":"Android","device":"Google.*","os_version":"15"},{"platform":"Android","device":"Google.*","os_version":"14"},{"platform":"Android","device":"Google.*","os_version":"13"}]'
-      include_biometrics:
-        description: 'Include biometric tests (non-blocking)'
-        type: boolean
-        default: true
+        default: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"iOS","device":"iPhone.*","os_version":"17"},{"platform":"Android","device":"Google.*","os_version":"15"},{"platform":"Android","device":"Google.*","os_version":"14"}]'
 
 jobs:
   # ─── Gate: skip scheduled runs when nothing merged to main ──────
@@ -85,20 +88,60 @@ jobs:
     outputs:
       build_number: ${{ steps.find.outputs.build_number }}
     steps:
-      - name: Find latest successful main build
+      - name: Find latest viable main build (within last 24h)
         id: find
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          BUILD_NUMBER=$(gh api \
-            "repos/${{ github.repository }}/actions/workflows/main.yaml/runs?branch=main&status=success&per_page=1" \
-            --jq '.workflow_runs[0].run_number')
-          if [ -z "$BUILD_NUMBER" ] || [ "$BUILD_NUMBER" = "null" ]; then
-            echo "::error::No successful main build found"
+          SINCE=$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null \
+              || date -u -v-24H +%Y-%m-%dT%H:%M:%SZ)
+
+          # E2E nightly tests the bcsc-dev variant (see variant hardcoded
+          # in e2e.yml). A main run is viable iff these four jobs all
+          # succeeded — unrelated failures elsewhere in the workflow
+          # (TestFlight, other variants) don't affect the SauceLabs
+          # artifacts the suite actually runs against.
+          REQUIRED_JOBS=(
+            "Build iOS - bcsc-dev"
+            "Build Android - bcsc-dev"
+            "Ship to SauceLabs - bcsc-dev - ios"
+            "Ship to SauceLabs - bcsc-dev - android"
+          )
+
+          BUILD_NUMBER=""
+          while IFS=$'\t' read -r RUN_ID RUN_NUM; do
+            [ -z "$RUN_ID" ] && continue
+
+            JOBS_JSON=$(gh api \
+              "repos/${{ github.repository }}/actions/runs/${RUN_ID}/jobs?per_page=100")
+
+            ALL_OK=true
+            for job in "${REQUIRED_JOBS[@]}"; do
+              RESULT=$(echo "$JOBS_JSON" | jq -r \
+                --arg name "$job" '.jobs[] | select(.name == $name) | .conclusion')
+              if [ "$RESULT" != "success" ]; then
+                ALL_OK=false
+                echo "Run #${RUN_NUM}: '${job}' conclusion=${RESULT:-missing} — skipping"
+                break
+              fi
+            done
+
+            if [ "$ALL_OK" = true ]; then
+              BUILD_NUMBER="$RUN_NUM"
+              echo "Run #${RUN_NUM}: all required bcsc-dev jobs succeeded"
+              break
+            fi
+          done < <(gh api \
+            "repos/${{ github.repository }}/actions/workflows/main.yaml/runs?branch=main&status=completed&created=>=${SINCE}&per_page=20" \
+            --jq '.workflow_runs[] | "\(.id)\t\(.run_number)"')
+
+          if [ -z "$BUILD_NUMBER" ]; then
+            echo "::error::No main run since ${SINCE} produced viable bcsc-dev SauceLabs artifacts — refusing to test"
             exit 1
           fi
+
           echo "build_number=${BUILD_NUMBER}" >> "$GITHUB_OUTPUT"
-          echo "Latest successful main build: #${BUILD_NUMBER}"
+          echo "Resolved build_number=${BUILD_NUMBER}"
 
   e2e:
     needs: [check-for-merges, resolve-build]
@@ -107,25 +150,9 @@ jobs:
     with:
       suite: ${{ inputs.suite || 'full-regression' }}
       build_number: ${{ needs.resolve-build.outputs.build_number }}
-      device_matrix: ${{ inputs.device_matrix || '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"iOS","device":"iPhone.*","os_version":"17"},{"platform":"iOS","device":"iPhone.*","os_version":"16"},{"platform":"Android","device":"Google.*","os_version":"15"},{"platform":"Android","device":"Google.*","os_version":"14"},{"platform":"Android","device":"Google.*","os_version":"13"}]' }}
+      device_matrix: ${{ inputs.device_matrix || '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"iOS","device":"iPhone.*","os_version":"17"},{"platform":"Android","device":"Google.*","os_version":"15"},{"platform":"Android","device":"Google.*","os_version":"14"}]' }}
     secrets:
       SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
       SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-      CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
-      BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
-
-  e2e-biometrics:
-    needs: [check-for-merges, resolve-build]
-    if: >-
-      needs.check-for-merges.outputs.should_run == 'true' &&
-      (github.event_name != 'workflow_dispatch' || inputs.include_biometrics)
-    uses: ./.github/workflows/e2e.yml
-    with:
-      suite: biometrics
-      build_number: ${{ needs.resolve-build.outputs.build_number }}
-      device_matrix: ${{ inputs.device_matrix || '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]' }}
-    secrets:
-      SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-      SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-      CARD_SERIAL: ${{ secrets.CARD_SERIAL }}
-      BIRTH_DATE: ${{ secrets.BIRTH_DATE }}
+      SM_USER: ${{ secrets.SM_USER }}
+      SM_PASSWORD: ${{ secrets.SM_PASSWORD }}

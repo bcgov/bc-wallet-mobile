@@ -13,7 +13,6 @@ const translation = {
     "HideDetails": "Hide Details",
     "Dismiss": "Dismiss",
     "GetHelp": "Get help",
-    "ContinueSetup": "Continue setup",
     "Share": "Share",
     "Skip": "Skip",
     "A11y": {
@@ -48,6 +47,10 @@ const translation = {
     "ErrorCode": "Error Code",
     "ReportThisProblem": "Report this problem",
     "Reported": "Reported",
+    "ReferenceCode": "Reference code",
+    "CopyCode": "Copy",
+    "CodeCopied": "Copied",
+    "ShareCodeWithSupport": "Share this code with support when you contact us.",
     "Unknown": "Unknown",
     "Problem": "Something went wrong",
     "ProblemDescription": "An unexpected error occurred. Please report this error and try again."
@@ -175,6 +178,8 @@ const translation = {
     "SwitchTheme": "Switch theme",
     "Testing": "Testing",
     "ErrorAlertTest": "Error & Alert Testing",
+    "StaleTermsOfUse": "Stale Terms of Use Acceptance",
+    "AcceptedTermsVersion": "Accepted version",
     "ErrorModals": "Error Modals",
     "ErrorModalsDescription": "Trigger errors that display as modal dialogs with title, description, and technical details.",
     "ErrorAsNativeAlert": "Errors as Native Alerts",
@@ -205,6 +210,10 @@ const translation = {
     "ScanQRCode": "Scan a QR code",
   },
   "BCSC": {
+    "AgeRestrictedTransfer": {
+      "Title": "Not available",
+      "Description": "You must be 12 years or older to transfer your account to another device",
+    },
     "Components": {
       "CloseDropdown": "Close dropdown menu",
     },
@@ -231,6 +240,7 @@ const translation = {
       "LearnMore": "Learn more",
       "GiveFeedback": "Give feedback",
       "ReportProblem": "Report a problem",
+      "RestartVerification": "Restart verification process",
     },
     "Contacts": {
       "Title": "Contacts",
@@ -435,8 +445,7 @@ const translation = {
       "CatalogueSearch": "Search services",
       "WantToLogin": "Do you want to log in to",
       "RequestedInformation": "They will receive the following information:",
-      "FromAccountPrefix": "From your",
-      "FromAccount": "Account",
+      "FromAccount": "From your Account",
       "PrivacyNotice": "Privacy notice",
       "ReportSuspiciousPrefix": "Not you?",
       "ReportSuspicious": "Report Suspicious Activity",
@@ -486,6 +495,9 @@ const translation = {
         "Header": "Service unavailable",
         "CheckAgainButton": "Check again",
         "LearnMore": "Learn more",
+      },
+      "TermsOfUseUpdated": {
+        "Header": "The Terms of Use have been updated. Before you continue to use the Service, you must read and accept the updated terms.",
       },
     },
     "Home": {
@@ -562,6 +574,13 @@ const translation = {
       "WarningContentB": "This includes logging into services like Health Gateway or Canada Revenue Agency (CRA).",
       "WarningRenewButton": "Renew"
     },
+    "SessionRecovery": {
+      "Header": "Reset your app",
+      "Body": "Some of your saved data on this device couldn't be read.",
+      "BodyAction": "To keep using the app, you'll need to re-verify or transfer from another device to use your identity again.",
+      "PrimaryAction": "Reset",
+      "Resetting": "Resetting…"
+    },
     "ForgetAllPairings": {
       "Title": "Forget all pairings?",
       "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step.",
@@ -623,15 +642,20 @@ const translation = {
       "ToggleBookmark": "Toggle bookmark",
       "BookmarkDescription": "This adds a link to the menu in this app for easier access next time.",
       "TabTitle": "Pairing code",
+      "CouldNotVerifyPairingCodeTitle": "Could not verify pairing code",
+      "CodeDoesNotMatchMessage": "The code you entered does not match. Try again.",
     },
     "Onboarding": {
       "LearnMore": "Learn more",
-      "AcceptAndContinueButton": "Accept and continue",
+      "IntroTitle": "Welcome to the\nBC Services Card app",
+      "IntroDescription": "A safe and simple way to access BC government services and BC Services Card app partners online.",
+      "AcceptAndContinueButton": "Accept terms of use",
       "TermsOfUseLoadError": "Terms of use failed to load, please retry",
       "TermsOfUseHeader": "Before you use the Service, you must read and accept the terms set out in this Agreement",
       "TermsOfUseSubtitle": "BC Login Service Terms of Use",
       "TermsOfUseVersion": "Version",
       "PrivacyPolicyTitle": "Privacy",
+      "PrivacyPolicyButton": "I understand",
       "PrivacyPolicyHeaderSetup": "App Setup",
       "PrivacyPolicyHeaderSecuringApp": "Securing the App",
       "PrivacyPolicyContentA": "Your personal information is collected for the purpose of setting up the app on your mobile device and using it to authenticate your identity for accessing government services online under sections 26(c), 26(e) and 26(h) of the Freedom of Information and Protection of Privacy Act.",
@@ -642,8 +666,8 @@ const translation = {
       "NotificationsTitle": "Notifications",
       "NotificationsHeader": "Enable Notifications?",
       "NotificationsContent": "Stay informed about account updates, credential changes and service interruptions.",
-      "EnableNotifications": "Enable Notifications",
-      "SkipNotifications": "Skip",
+      "EnableNotifications": "Enable notifications",
+      "SkipNotifications": "Skip notifications",
       "SecureAppHeader": "Choose how to secure this app",
       "SecureAppContent": "Protect your identity. For example, if your device is lost or stolen. Keep your access confidential",
       "SecureAppOnboardingHeader": "How to secure this app",
@@ -658,10 +682,10 @@ const translation = {
       "SecureAppNoDeviceAuthContent2": "It prevents others from using this app to access services as you. For example, if your phone is lost or stolen.",
       "AnalyticsTitle": "Enable Analytics?",
       "AnalyticsHeader": "Help us improve your BC Services Card experience",
-      "AnalyticsContent": "With your permission, we'll collect additional app usage and device details to help us improve this app.",
-      "AnalyticsAnonymousInfo": "All information is collected anonymously",
-      "AcceptAnalytics": "Enable Analytics",
-      "DenyAnalytics": "Skip",
+      "AnalyticsContent": "With your permission, we'll collect additional usage and device details to help us improve this app.",
+      "AnalyticsAnonymousInfo": "All information is collected anonymously.",
+      "AcceptAnalytics": "Enable analytics",
+      "DenyAnalytics": "Skip analytics",
     },
     "IdentitySelection": {
       "HaveABCSC": "Have a BC Services Card?",
@@ -730,7 +754,7 @@ const translation = {
       "OpenAccountServices": "Open account services",
     },
     "AccountSetup": {
-      "Title": "Welcome to the BCSC App",
+      "Title": "Have you verified before?",
       "Description": "Do you already have the BCSC app set up on another nearby phone or tablet?",
       "AddAccount": "No, continue setup",
       "TransferAccount": "Yes, connect this device",
@@ -866,6 +890,8 @@ const translation = {
     },
     "EmailConfirmation": {
       "ErrorTitle": "Error verifying confirmation code",
+      "CouldNotVerifyTitle": "Could not verify your email",
+      "CodeDoesNotMatch": "The code you entered does not match. Try again.",
       "EmailError": "Please enter a valid email address (name@host.com).",
       "CodeError": "Please enter a six digit verification code",
       "ErrorResendingCode": "Error resending code",
@@ -886,6 +912,7 @@ const translation = {
       "WhereToGoLink": "A Service BC Location",
       "WhatToBring": "What to bring",
       "ThisDevice": "This device",
+      "YourID": "Your ID, including",
       "YourBCServicesCard": "Your BC Services Card - if it's a non-photo card, bring your additional ID too",
       "ShowThisConfirmationNumber": "Show this confirmation number",
       "YouMustCompleteThisBy": "You must complete this by",
@@ -1002,7 +1029,7 @@ const translation = {
     },
     "TransferQRInformation": {
       "Title": "Open the BC Services Card app on your other mobile device",
-      "Instructions": "Scan the QR code with the BC Services Card app on your other mobile device.",
+      "Instructions": "Scan the QR code using the BC Services Card app on your other mobile device.",
       "Warning": "Do not scan with the camera app.",
       "GetQRCode": "Get QR Code",
       "LearnMore": "Learn more"
@@ -1010,14 +1037,14 @@ const translation = {
     "TransferInformation": {
       "Title": "Have this app on another device?",
       "Instructions": "You can transfer your account to that other device. No need to provide ID or verify your identity again.",
-      "TransferAccount": "Transfer Account",
+      "TransferAccount": "Add device",
     },
     "TransferInstructions": {
-      "Title": "Scan your QR code to transfer your account",
-      "Step1": "1. On your other device, open the BC Services Card app and go to the Account section.",
-      "Step2": "2. Choose 'Transfer to another device' to get your QR code.",
-      "Step3": "3. Continue on this device and scan that QR code.",
-      "ScanQRCode": "Scan QR Code",
+      "Title": "Scan your QR code to add your device",
+      "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘≡’ icon in the top left corner.",
+      "Step2": "Choose <b>‘Add another device’</b> to get your QR code.",
+      "Step3": "<b>Scan the QR code</b> that appears on your other device.",
+      "ScanQRCode": "Scan QR code",
     },
     "QRDisplay": {
       "SharingDescription": "Sharing this QR code with someone will add them as a Contact.",
@@ -1036,10 +1063,10 @@ const translation = {
       "ButtonText": "Ok"
     },
     "Verification": {
-      "Title": "You're all set",
-      "Description": "Use this app to securely log in to many different websites.",
-      "ExtraText": "Remember, it is not a health card, vaccine card, driver's license, or photo ID.",
-      "ButtonText": "Ok"
+      "Title": "You're all set!",
+      "Description": "Use this app to access many different websites and services.",
+      "ExtraText": "Remember, the BC Services Card app is not a health card, vaccine card, driver's license or photo ID.",
+      "ButtonText": "Continue"
     },
     "CancelledVerification": {
       "Title": "Your identity couldn't be verified",
@@ -1278,6 +1305,22 @@ const translation = {
       "Title": "Problem with App",
       "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (error {{ errorCode }})"
     },
+    "DeviceStorageFull": {
+      "Title": "Not Enough Storage",
+      "Description": "Your device is out of storage space, so the app can't save your information. Free up space on your device, then try again."
+    },
+    "BadRequest": {
+      "Title": "Something went wrong",
+      "Description": "We couldn't complete your request at this time. Please try again later.\n\nIf the issue persists, close and re-open the app to try again."
+    },
+    "SomethingWentWrong": {
+      "Title": "Something went wrong",
+      "Description": "We're having trouble with the app. Please try again later.\n\nIf the issue persists, close and re-open the app, then try again."
+    },
+    "KeychainUnavailable": {
+      "Title": "Secure Storage Unavailable",
+      "Description": "Your device's secure storage is temporarily unavailable. Please wait a moment and try again.\n\nIf the issue persists, restart your device and try again."
+    },
     "ProblemWithService": {
       "Title": "Problem with Service",
       "Description": "Please try again later. (error {{ errorCode }})"
@@ -1332,6 +1375,12 @@ const translation = {
       "Description": "Your verification request sent to Service BC will be deleted. Then you can choose another way to verify.",
       "Action1": "Delete Verify Request",
     },
+    "RestartVerification": {
+      "Title": "Are you sure?",
+      "Description": "Your verification progress will be deleted and you will start the verification process from the beginning.",
+      "Action1": "Restart Verification",
+      "Loading": "Restarting verification...",
+    },
     "DataUseWarning": {
       "Title": "Data Use",
       "Description": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network.",
@@ -1364,6 +1413,10 @@ const translation = {
     "FileUploadError": {
       "Title": "Problem with Connection",
       "Description": "Please try again."
+    },
+    "VideoPromptsMissing": {
+      "Title": "Problem Starting Video",
+      "Description": "We couldn't load your verification steps. Please try again."
     },
     "FactoryReset": {
       "Title": "Problem with App",

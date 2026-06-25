@@ -171,7 +171,7 @@ exports[`OnboardingPrivacyPolicy renders correctly 1`] = `
             undefined,
           ]
         }
-        testID="com.ariesbifold:id/CardButton-BCSC.Onboarding.LearnMore"
+        testID="com.ariesbifold:id/LearnMore"
       >
         <View
           style={
@@ -304,7 +304,7 @@ exports[`OnboardingPrivacyPolicy renders correctly 1`] = `
         }
       >
         <View
-          accessibilityLabel="Global.Continue"
+          accessibilityLabel="BCSC.Onboarding.PrivacyPolicyButton"
           accessibilityRole="button"
           accessibilityState={
             {
@@ -376,7 +376,7 @@ exports[`OnboardingPrivacyPolicy renders correctly 1`] = `
                 ]
               }
             >
-              Global.Continue
+              BCSC.Onboarding.PrivacyPolicyButton
             </Text>
           </View>
         </View>

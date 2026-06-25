@@ -1,5 +1,7 @@
 import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
+import moment from 'moment'
 import { useCallback, useMemo } from 'react'
+import type { BarcodePayload } from 'react-native-bcsc-core'
 import { BCSCCardProcess, createDeviceSignedJWT } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
@@ -62,7 +64,9 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
           response_type: 'device_code',
           client_id: account.clientID,
           card_serial_number: serial ?? undefined,
-          birth_date: birthdate?.toISOString().split('T')[0] ?? undefined,
+          // Format in local time. toISOString() shifts to UTC, which moves the date back a day
+          // for any TZ east of UTC (e.g. Sauce Labs cloud devices) and breaks IAS card lookup.
+          birth_date: birthdate ? moment(birthdate).format('YYYY-MM-DD') : undefined,
           scope: IAS_SCOPE,
         }
 
@@ -102,7 +106,8 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
             iat: Math.floor(Date.now() / 1000),
             exp: Math.floor(Date.now() / 1000) + 60 * 10, // ten minutes
             family_name: config.lastName,
-            given_name: config.firstName,
+            // Omit given name if not provided or empty string (mononyms have no first name)
+            given_name: config.firstName || undefined,
             birthdate: config.birthdate,
             address: {
               street_address: config.address.streetAddress,
@@ -133,12 +138,44 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
     [apiClient]
   )
 
+  /**
+   * Authorize a device from scanned card barcodes. Posts the decoded barcodes
+   * (CODE_128 serial + PDF_417/AAMVA) to the backend, which determines whether
+   * they belong to an active BC Services Card and, if so, returns a device
+   * authorization. Used by the Non-BCSC evidence flow to let the backend — not
+   * the client — discriminate the card type (matches v3's `/device/barcodes`).
+   *
+   * The backend returns an error (handled by the caller as "not a BCSC,
+   * continue") when the barcodes don't match an active card.
+   *
+   * @param {BarcodePayload[]} barcodes - Decoded barcodes from the scanned card.
+   * @returns {Promise<DeviceAuthorizationResponse>}
+   */
+  const authorizeDeviceWithBarcodes = useCallback(
+    async (barcodes: BarcodePayload[]): Promise<DeviceAuthorizationResponse> => {
+      return withAccount<DeviceAuthorizationResponse>(async (account) => {
+        const { data } = await apiClient.post<DeviceAuthorizationResponse>(
+          `${apiClient.endpoints.barcodes}/${account.clientID}`,
+          { barcodes },
+          {
+            headers: { 'Content-Type': 'application/json' },
+            skipBearerAuth: true,
+          }
+        )
+
+        return data
+      })
+    },
+    [apiClient]
+  )
+
   return useMemo(
     () => ({
       authorizeDevice,
       authorizeDeviceWithUnknownBCSC,
+      authorizeDeviceWithBarcodes,
     }),
-    [authorizeDevice, authorizeDeviceWithUnknownBCSC]
+    [authorizeDevice, authorizeDeviceWithUnknownBCSC, authorizeDeviceWithBarcodes]
   )
 }
 

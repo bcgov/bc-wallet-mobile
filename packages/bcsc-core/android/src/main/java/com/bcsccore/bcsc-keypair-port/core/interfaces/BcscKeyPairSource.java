@@ -3,10 +3,12 @@ package com.bcsccore.keypair.core.interfaces;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.bcsccore.keypair.core.models.BcscKeyPair;
+import com.bcsccore.keypair.core.models.KeyPairInfo;
 import com.bcsccore.keypair.core.exceptions.BcscException;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import java.util.List;
 
 /**
  * Interface for BC Services Card key pair operations.
@@ -53,6 +55,26 @@ public interface BcscKeyPairSource {
    * @throws BcscException if deletion fails
    */
   void deleteBcscKeyPair(@NonNull String alias) throws BcscException;
+
+  /**
+   * Enumerate every key pair backed by an entry in the platform keystore.
+   * The createdAt on each result reflects metadata when present, or 0 when
+   * the alias exists in the keystore but has no metadata entry yet.
+   * Used by the recovery flow to match local keys against the server jwks.
+   * @return list of KeyPairInfo entries; empty list if the keystore is empty.
+   * @throws BcscException if the keystore cannot be read
+   */
+  @NonNull
+  List<KeyPairInfo> getAllBcscKeyPairInfos() throws BcscException;
+
+  /**
+   * Mark the given alias as the active (newest) key by stamping its
+   * createdAt to now. Creates a metadata entry if none exists. Does not
+   * touch the keystore.
+   * @param alias the alias to mark active
+   * @throws BcscException if metadata cannot be written
+   */
+  void markActiveBcscKeyPair(@NonNull String alias) throws BcscException;
 
   /**
    * Clean up old key pairs to manage storage.

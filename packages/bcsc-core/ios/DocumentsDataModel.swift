@@ -314,6 +314,23 @@ class EvidencePhoto: NSObject, NSSecureCoding {
     timestamp = decoder.decodeObject(forKey: CodingKeys.timestamp.rawValue) as? Double
     photoBase64String = decoder.decodeObject(forKey: CodingKeys.photoBase64String.rawValue) as? String
   }
+
+  /// Builds an `EvidencePhoto` from a JS-side PhotoMetadata dictionary as passed through
+  /// the React Native bridge by `setEvidence`. JS sends `file_path` (written earlier by
+  /// `saveEvidencePhoto`); we read the bytes from disk and base64-encode them so the
+  /// archived photo retains the data. Without this, `content_length` comes back as 0
+  /// after the next hydration.
+  static func fromPhotoDict(_ photoDict: [String: Any]) -> EvidencePhoto {
+    let timestamp = photoDict["date"] as? Double ?? Date().timeIntervalSince1970
+
+    if let filePath = photoDict["file_path"] as? String, !filePath.isEmpty,
+       let fileData = try? Data(contentsOf: URL(fileURLWithPath: filePath))
+    {
+      return EvidencePhoto(timestamp: timestamp, photoBase64String: fileData.base64EncodedString())
+    }
+
+    return EvidencePhoto(timestamp: timestamp, photoBase64String: "")
+  }
 }
 
 // MARK: - EvidenceModel

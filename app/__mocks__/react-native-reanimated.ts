@@ -1,4 +1,5 @@
 import { View } from 'react-native'
+import * as Reanimated from 'react-native-reanimated'
 
 const Easing = {
   linear: (t: number) => t,
@@ -7,6 +8,7 @@ const Easing = {
 
 module.exports = {
   __esModule: true,
+  ...Reanimated,
   default: {
     addWhitelistedNativeProps: jest.fn(),
     createAnimatedComponent: (component: any) => component,

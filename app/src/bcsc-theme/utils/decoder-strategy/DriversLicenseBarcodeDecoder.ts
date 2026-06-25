@@ -50,10 +50,12 @@ export class DriversLicenseBarcodeDecoder implements DecoderStrategy {
     const address = this.parseLicenseAddress(barcode.value)
     const dates = this.parseLicenseDates(barcode.value)
     const licenseNumber = this.parseLicenseNumber(barcode.value)
+    const isoIIN = this.parseIsoIIN(barcode.value)
 
     return {
       kind: DecodedCodeKind.DriversLicenseBarcode,
       licenseNumber: licenseNumber,
+      isoIIN: isoIIN,
       firstName: names.firstName,
       middleNames: names.middleNames,
       lastName: names.lastName,
@@ -143,5 +145,15 @@ export class DriversLicenseBarcodeDecoder implements DecoderStrategy {
       throw new Error('Failed to parse license number from AAMVA track 2')
     }
     return match[1].trim()
+  }
+
+  /**
+   * Extract the Issuer Identification Number (IIN) from AAMVA track 2.
+   * Track 2 format: `;[IIN(6)][license#]=...` — the IIN is the first 6 digits
+   * (BC = '636028'). Returns '' when absent so decoding never fails on it.
+   */
+  private parseIsoIIN(value: string): string {
+    const match = value.match(/;(\d{6})\d+=/)
+    return match ? match[1] : ''
   }
 }

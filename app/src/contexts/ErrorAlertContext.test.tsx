@@ -9,6 +9,10 @@ import { Analytics } from '../utils/analytics/analytics-singleton'
 import { appLogger } from '../utils/logger'
 import { ErrorAlertProvider, useErrorAlert } from './ErrorAlertContext'
 
+jest.mock('@/contexts/NavigationContainerContext', () => ({
+  navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
+}))
+
 const mockBCSCErrorModal = jest.fn()
 jest.mock('@/errors/components/ErrorModal', () => ({
   BCSCErrorModal: (props: any) => mockBCSCErrorModal(props),

@@ -55,6 +55,7 @@ export class BCComboCardBarcodeDecoder implements DecoderStrategy {
     return {
       kind: DecodedCodeKind.BCServicesComboCardCardBarcode,
       bcscSerial: bcscSerial,
+      isoIIN: decodedDriversLicense.isoIIN,
       licenseNumber: decodedDriversLicense.licenseNumber,
       firstName: decodedDriversLicense.firstName,
       middleNames: decodedDriversLicense.middleNames,

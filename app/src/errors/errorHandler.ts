@@ -34,6 +34,51 @@ export function extractErrorMessage(error: unknown): string {
 }
 
 /**
+ * Signatures emitted by the OS when a write fails because the disk is full.
+ *
+ * - iOS (NSFileWriteOutOfSpaceError): `You can't save the file "x.jpg" because the volume "User" is out of space.`
+ * - POSIX/Android (ENOSPC): `write failed: ENOSPC (No space left on device)`
+ * - SQLite (SQLITE_FULL): `database or disk is full`
+ */
+const OUT_OF_STORAGE_PATTERNS: RegExp[] = [
+  /out of space/i,
+  /no space left on device/i,
+  /\bENOSPC\b/,
+  /\bSQLITE_FULL\b/i,
+  /database or disk is full/i,
+  /not enough (?:free |disk |storage )?space/i,
+]
+
+/**
+ * Detect whether an error (or anything in its cause chain) was ultimately caused by
+ * the device running out of disk space, so callers can show actionable "free up space"
+ * guidance instead of a generic storage failure message.
+ *
+ * @param error - The error to inspect, including its nested `cause` chain
+ * @returns True if any error in the chain matches a known out-of-disk-space signature
+ */
+export function isDeviceStorageFullError(error: unknown): boolean {
+  let current: unknown = error
+
+  // Bounded walk of the cause chain to guard against cycles
+  for (let depth = 0; current != null && depth < 10; depth++) {
+    const code = (current as { code?: unknown }).code
+    if (typeof code === 'string' && code.toUpperCase() === 'ENOSPC') {
+      return true
+    }
+
+    const message = extractErrorMessage(current)
+    if (OUT_OF_STORAGE_PATTERNS.some((pattern) => pattern.test(message))) {
+      return true
+    }
+
+    current = (current as { cause?: unknown }).cause
+  }
+
+  return false
+}
+
+/**
  * Get error definition by key (useful for custom error handling)
  *
  * @param errorKey - The key of the error definition to retrieve from the ErrorRegistry.

@@ -1,6 +1,6 @@
 import { AppError, ErrorRegistry } from '@/errors'
 import { BifoldLogger } from '@bifold/core'
-import { BCSCAccountType, BCSCCardType, decodePayload } from 'react-native-bcsc-core'
+import { BCSCAccountType, BCSCCardType, decodePayload, DecodePayloadResult, JWK } from 'react-native-bcsc-core'
 
 import { StatusNotification } from '../features/fcm/services/fcm-service'
 import { throwAppError } from './native-error-map'
@@ -90,27 +90,42 @@ export interface IdToken {
 }
 
 /**
- * Decode and parse the BCSC ID token to extract metadata.
+ * Decode, verify, and parse the BCSC ID token to extract metadata.
  *
  * @throws AppError with code `ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN` when payload decoding fails.
+ * @throws AppError with code `ERR_111_UNABLE_TO_VERIFY_MISSING_JWK` when no JWK is available to verify the signature.
+ * @throws AppError with code `ERR_112_JWS_VERIFICATION_FAILED` when the signature does not verify against the JWK.
  * @throws AppError with code `ERR_109_FAILED_TO_DESERIALIZE_JSON` if JSON parsing of the payload fails.
  *
  * @param idToken - The BCSC ID token (JWE).
+ * @param jwk - Public key used to verify the inner JWS signature, or null when unavailable.
  * @param logger - Logger instance for error logging.
  * @returns Parsed ID token payload as a IdToken object.
  */
-export async function getIdTokenMetadata(idToken: string, logger: BifoldLogger): Promise<IdToken> {
-  let payloadString: string
+export async function getIdTokenMetadata(idToken: string, jwk: JWK | null, logger: BifoldLogger): Promise<IdToken> {
+  let result: DecodePayloadResult
   try {
-    payloadString = await decodePayload(idToken)
+    result = await decodePayload(idToken, jwk)
   } catch (error) {
     logger.error('[getIdTokenMetadata] Failed to decode ID token payload', error as Error)
     return throwAppError(error, ErrorRegistry.DECRYPT_VERIFY_ID_TOKEN_ERROR)
   }
 
+  if (!result.verified) {
+    // Distinguish "no key to verify against" (ERR_111) from "signature did not match" (ERR_112).
+    if (!jwk) {
+      const appError = AppError.fromErrorDefinition(ErrorRegistry.MISSING_JWK_ERROR)
+      logger.warn(`[getIdTokenMetadata] [${appError.appEvent}] JWK unavailable, cannot verify JWS`)
+      throw appError
+    }
+    const appError = AppError.fromErrorDefinition(ErrorRegistry.JWS_VERIFICATION_FAILED)
+    logger.warn(`[getIdTokenMetadata] [${appError.appEvent}] JWS verification failed`)
+    throw appError
+  }
+
   let payload: IdToken
   try {
-    payload = JSON.parse(payloadString)
+    payload = JSON.parse(result.claims)
   } catch (error) {
     logger.error('[getIdTokenMetadata] Failed to parse json', error as Error)
     throw AppError.fromErrorDefinition(ErrorRegistry.DESERIALIZE_JSON_ERROR, { cause: error })

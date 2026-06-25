@@ -74,6 +74,7 @@ describe('BCComboCardBarcodeDecoder', () => {
       expect(decoded).toEqual({
         kind: 'BCServicesComboCardCardBarcode',
         bcscSerial: 'S00023254',
+        isoIIN: '636028',
         licenseNumber: '2222222',
         firstName: 'test',
         middleNames: 'card',

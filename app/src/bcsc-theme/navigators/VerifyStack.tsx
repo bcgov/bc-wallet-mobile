@@ -16,11 +16,14 @@ import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferInstructionsScreen from '../features/account-transfer/transferee/TransferInstructionsScreen'
 import TransferQRScannerScreen from '../features/account-transfer/transferee/TransferQRScannerScreen'
 import { VerifyRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
+import SessionRecoveryScreen from '../features/auth/SessionRecoveryScreen'
 import { VerifyChangePINScreen } from '../features/auth/VerifyChangePINScreen'
 import { VerifyChangeSecurityScreen } from '../features/auth/VerifyChangeSecurityScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
+import AccountSetupScreen from '../features/onboarding/AccountSetupScreen'
+import { VerifyPromptScreen } from '../features/onboarding/VerifyPromptScreen'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
 import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { VerifyPrivacyPolicyScreen } from '../features/settings/VerifyPrivacyPolicyScreen'
@@ -61,6 +64,7 @@ import VideoInstructionsScreen from '../features/verify/send-video/VideoInstruct
 import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
+import { useVerificationStatus } from '../hooks/useVerificationStatus'
 import { getResumeStepRoute } from '../utils/resume-step-route'
 
 const VerifyStack = () => {
@@ -69,7 +73,15 @@ const VerifyStack = () => {
   const { t } = useTranslation()
   const defaultStackOptions = useDefaultStackOptions(theme)
   const [store] = useStore<BCState>()
+  const { needsVerification } = useVerificationStatus()
   const resumeRoute = getResumeStepRoute(store)
+  // Show the verify prompt as the first screen the first time the user enters the verify journey
+  // (post-PIN, not yet verified, prompt unseen) so that prompt → setup question animates as an
+  // in-stack slide rather than a RootStack swap. Session recovery always takes precedence.
+  const initialRouteName =
+    !store.bcscSecure.sessionRecoveryRequired && !store.bcsc.hasSeenVerifyPrompt && needsVerification
+      ? BCSCScreens.VerifyPrompt
+      : resumeRoute.name
   useBCSCStack(BCSCStacks.Verify)
 
   // Listen for verification approval push notifications and navigate to success screen
@@ -78,7 +90,7 @@ const VerifyStack = () => {
   return (
     <Stack.Navigator
       // Users resume their verification journey directly at the step they are on.
-      initialRouteName={resumeRoute.name}
+      initialRouteName={initialRouteName}
       screenOptions={{
         ...defaultStackOptions,
         headerShown: true,
@@ -89,9 +101,38 @@ const VerifyStack = () => {
         headerBackTestID: testIdWithKey('Back'),
         headerBackTitleVisible: false,
         header: createHeaderWithoutBanner,
-        headerRight: createFloatingHelpMenuButton({ webViewScreen: BCSCScreens.VerifyWebView }),
+        headerRight: createFloatingHelpMenuButton({
+          webViewScreen: BCSCScreens.VerifyWebView,
+          showRestartVerification: true,
+        }),
       }}
     >
+      <Stack.Screen
+        name={BCSCScreens.VerifyPrompt}
+        options={{
+          // First screen of the verify journey — no back destination; help menu without "restart"
+          // since verification hasn't started yet.
+          headerLeft: () => null,
+          headerRight: createFloatingHelpMenuButton({
+            webViewScreen: BCSCScreens.VerifyWebView,
+            learnMoreUrl: HelpCentreUrl.HOW_TO_SETUP,
+          }),
+        }}
+      >
+        {({ navigation }) => <VerifyPromptScreen onContinue={() => navigation.navigate(BCSCScreens.AccountSetup)} />}
+      </Stack.Screen>
+      <Stack.Screen
+        name={BCSCScreens.AccountSetup}
+        component={AccountSetupScreen}
+        options={{
+          // Entry screen for verification (shown until the user picks new-setup vs. transfer);
+          // it has no back destination, so offer settings rather than a back arrow.
+          headerLeft: createVerifySettingsHeaderButton(),
+          // No back destination: stop an iOS edge-swipe from popping back to the one-time
+          // VerifyPrompt sitting beneath it in the stack.
+          gestureEnabled: false,
+        }}
+      />
       <Stack.Screen
         name={BCSCScreens.IdentitySelection}
         component={IdentitySelectionScreen}
@@ -101,8 +142,14 @@ const VerifyStack = () => {
           headerRight: createFloatingHelpMenuButton({
             webViewScreen: BCSCScreens.VerifyWebView,
             learnMoreUrl: HelpCentreUrl.HOW_TO_SETUP,
+            showRestartVerification: true,
           }),
         }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.SessionRecovery}
+        component={SessionRecoveryScreen}
+        options={{ headerLeft: () => null, gestureEnabled: false }}
       />
       <Stack.Screen name={BCSCScreens.VerifyPrivacyPolicy} component={VerifyPrivacyPolicyScreen} />
       <Stack.Screen name={BCSCScreens.VerifyContactUs} component={ContactUsScreen} />
@@ -169,6 +216,7 @@ const VerifyStack = () => {
           headerRight: createFloatingHelpMenuButton({
             webViewScreen: BCSCScreens.VerifyWebView,
             learnMoreUrl: HelpCentreUrl.VERIFICATION_METHODS,
+            showRestartVerification: true,
           }),
         }}
       />
@@ -180,6 +228,7 @@ const VerifyStack = () => {
           headerRight: createFloatingHelpMenuButton({
             webViewScreen: BCSCScreens.VerifyWebView,
             learnMoreUrl: HelpCentreUrl.VERIFY_IN_PERSON,
+            showRestartVerification: true,
           }),
         }}
       />
@@ -235,6 +284,7 @@ const VerifyStack = () => {
           headerRight: createFloatingHelpMenuButton({
             webViewScreen: BCSCScreens.VerifyWebView,
             learnMoreUrl: HelpCentreUrl.ACCEPTED_IDENTITY_DOCUMENTS,
+            showRestartVerification: true,
           }),
         }}
       />
@@ -246,6 +296,7 @@ const VerifyStack = () => {
           headerRight: createFloatingHelpMenuButton({
             webViewScreen: BCSCScreens.VerifyWebView,
             learnMoreUrl: HelpCentreUrl.ACCEPTED_IDENTITY_DOCUMENTS,
+            showRestartVerification: true,
           }),
         }}
       />

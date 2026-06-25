@@ -35,8 +35,13 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.UnrecoverableEntryException;
 import java.security.interfaces.RSAPublicKey;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Android KeyStore implementation of BcscKeyPairSource.
@@ -59,6 +64,7 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
   private static final String ALIAS_RSA = RSA_ALIAS_PREFIX + "1";
   private static final String KEYSTORE_TYPE = "AndroidKeyStore";
   private static final String TAG = "BcscKeyPairRepo";
+  private static final Pattern RSA_ALIAS_PATTERN = Pattern.compile("^" + RSA_ALIAS_PREFIX + "(\\d+)$");
 
   @NonNull
   private final KeyPairInfoSource keyPairInfoSource;
@@ -86,14 +92,47 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
     try {
       KeyStore keyStore = loadAndroidKeyStore();
 
-      KeyPairInfo info = getNewestKeyPairInfo(keyPairInfoSource.getKeyPairInfo());
+      // Log full keystore contents on entry so we can diagnose both the
+      // v3→older-v4→this-v4 path and the direct v3→this-v4 path.
+      // Non-rsa\d+ aliases here indicate v3 keys that reconcile will ignore.
+      try {
+        java.util.List<String> allAliases = new java.util.ArrayList<>();
+        Enumeration<String> en = keyStore.aliases();
+        while (en.hasMoreElements()) allAliases.add(en.nextElement());
+        SimpleLog.d(TAG, "getCurrentBcscKeyPair: keystore aliases=" + allAliases);
+      } catch (KeyStoreException kse) {
+        SimpleLog.d(TAG, "getCurrentBcscKeyPair: could not list keystore aliases: " + kse.getMessage());
+      }
+      SimpleLog.d(TAG, "getCurrentBcscKeyPair: rsa keystore aliases="
+          + findRsaAliasesInKeyStore(keyStore).values());
+
+      // Reconcile metadata with the keystore before picking the active key.
+      // Required for v3 -> v4 migrated users whose v4 SharedPreferences was
+      // initialized with a stale rsa1 entry by an earlier code path, while
+      // the AndroidKeyStore (preserved across the in-place upgrade) still
+      // holds higher-numbered rsa\d+ aliases that are the keys actually
+      // registered with IAS.
+      reconcileKeyPairInfoWithKeyStore(keyStore);
+
+      HashMap<String, KeyPairInfo> allInfo = keyPairInfoSource.getKeyPairInfo();
+      SimpleLog.d(TAG, "getCurrentBcscKeyPair: KeyPairInfo after reconcile=" + allInfo.keySet());
+
+      KeyPairInfo info = getNewestKeyPairInfo(allInfo);
 
       if (info == null) {
+        SimpleLog.d(TAG, "getCurrentBcscKeyPair: no KeyPairInfo found — seeding fresh " + ALIAS_RSA);
         info = new KeyPairInfo(ALIAS_RSA, System.currentTimeMillis());
         keyPairInfoSource.saveKeyPairInfo(info);
+      } else {
+        SimpleLog.d(TAG, "getCurrentBcscKeyPair: newest KeyPairInfo="
+            + info.getAlias() + " createdAt=" + info.getCreatedAt());
       }
 
-      if (!keyStore.containsAlias(info.getAlias())) {
+      boolean aliasPresent = keyStore.containsAlias(info.getAlias());
+      SimpleLog.d(TAG, "getCurrentBcscKeyPair: alias '" + info.getAlias()
+          + "' present in keystore=" + aliasPresent);
+      if (!aliasPresent) {
+        SimpleLog.d(TAG, "getCurrentBcscKeyPair: generating new key pair for alias " + info.getAlias());
         generateKeyPair(info.getAlias());
       }
 
@@ -104,7 +143,7 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
         throw new KeyNotFoundException(
             "Failed to retrieve key pair for alias '" + info.getAlias() + "': " + e.getMessage(), e);
       }
-      SimpleLog.d(TAG, "Current active key pair " + info.getAlias());
+      SimpleLog.d(TAG, "getCurrentBcscKeyPair: returning active key pair " + info.getAlias());
       return new BcscKeyPair(keyPair, info);
     } catch (KeypairGenerationException e) {
       throw e;
@@ -141,6 +180,10 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
   public BcscKeyPair getNewBcscKeyPair() throws BcscException {
     try {
       KeyStore keyStore = loadAndroidKeyStore();
+
+      // Reconcile so rotation increments off the highest existing rsa\d+
+      // alias rather than colliding with a leftover v3 keystore entry.
+      reconcileKeyPairInfoWithKeyStore(keyStore);
 
       KeyPairInfo info = getNewestKeyPairInfo(keyPairInfoSource.getKeyPairInfo());
 
@@ -241,6 +284,116 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
   }
 
   /**
+   * Conservative bootstrap for KeyPairInfo metadata when nothing is tracked yet.
+   *
+   * Source of truth for "which kid is active" is the server (validated via
+   * GET /device/register/{client_id} and the recovery flow in the app layer).
+   * This method exists only to bootstrap metadata when we have no other
+   * information at all: e.g. a v3 user upgraded in place, keystore preserved,
+   * but SharedPreferences empty.
+   *
+   * Behaviour:
+   *   - If metadata already has any entry, this is a no-op. We trust metadata;
+   *     orphaned keystore aliases (e.g. left over from a v3 account reset) are
+   *     intentionally NOT promoted to "newest" here. The recovery flow will
+   *     prune them once the server confirms which kid is real.
+   *   - If metadata is empty AND keystore has rsa\d+ aliases, backfill them
+   *     with synthetic createdAt values so the highest-numbered alias becomes
+   *     newest. This is a last-resort guess (numeric ordering is wrong after
+   *     a v3 account reset that restarts at rsa1); the recovery flow corrects
+   *     it on the first 401.
+   */
+  private void reconcileKeyPairInfoWithKeyStore(@NonNull KeyStore keyStore) throws BcscException {
+    HashMap<String, KeyPairInfo> existing = keyPairInfoSource.getKeyPairInfo();
+    if (!existing.isEmpty()) {
+      SimpleLog.d(TAG, "reconcile: metadata non-empty; trusting existing entries (" + existing.keySet() + ")");
+      return;
+    }
+
+    java.util.TreeMap<Integer, String> keystoreAliases = findRsaAliasesInKeyStore(keyStore);
+    if (keystoreAliases.isEmpty()) {
+      SimpleLog.d(TAG, "reconcile: metadata empty and no rsa\\d+ aliases in keystore; nothing to do");
+      return;
+    }
+
+    long now = System.currentTimeMillis();
+    int highestId = keystoreAliases.lastKey();
+    for (java.util.Map.Entry<Integer, String> entry : keystoreAliases.entrySet()) {
+      long createdAt = now - (long) (highestId - entry.getKey());
+      keyPairInfoSource.saveKeyPairInfo(new KeyPairInfo(entry.getValue(), createdAt));
+    }
+    SimpleLog.d(TAG, "reconcile: bootstrapped empty metadata from keystore aliases "
+        + keystoreAliases.values() + " (synthetic timestamps; will be corrected on first 401 recovery)");
+  }
+
+  /**
+   * Enumerate every rsa\d+ alias that exists in the AndroidKeyStore, augmented
+   * with the createdAt from metadata when present. This is the source of truth
+   * for "what private keys does this device actually hold" — used by the
+   * recovery flow to match local keys against the server's jwks.
+   *
+   * @return list of KeyPairInfo, one per keystore alias matching rsa\d+. The
+   *         createdAt is 0 for aliases not yet tracked in metadata. Empty list
+   *         (never null) if the keystore can't be read.
+   */
+  @NonNull
+  @Override
+  public List<KeyPairInfo> getAllBcscKeyPairInfos() throws BcscException {
+    try {
+      KeyStore keyStore = loadAndroidKeyStore();
+      java.util.TreeMap<Integer, String> keystoreAliases = findRsaAliasesInKeyStore(keyStore);
+      HashMap<String, KeyPairInfo> metadata = keyPairInfoSource.getKeyPairInfo();
+      List<KeyPairInfo> result = new ArrayList<>(keystoreAliases.size());
+      for (String alias : keystoreAliases.values()) {
+        KeyPairInfo tracked = metadata.get(alias);
+        result.add(tracked != null ? tracked : new KeyPairInfo(alias, 0L));
+      }
+      return result;
+    } catch (BcscException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new BcscException("Failed to enumerate keystore aliases: " + e.getMessage());
+    }
+  }
+
+  /**
+   * Mark the given alias as the active (newest) key in metadata. Called by
+   * the recovery flow after the server confirms which kid it accepts.
+   *
+   * Updates createdAt = now so getNewestKeyPairInfo returns this alias on
+   * subsequent calls. If the alias has no metadata entry yet (e.g. it was a
+   * keystore-only orphan before recovery), an entry is created.
+   */
+  @Override
+  public void markActiveBcscKeyPair(@NonNull String alias) throws BcscException {
+    keyPairInfoSource.saveKeyPairInfo(new KeyPairInfo(alias, System.currentTimeMillis()));
+    SimpleLog.d(TAG, "markActiveBcscKeyPair: " + alias + " stamped as newest");
+  }
+
+  /**
+   * Return every keystore alias that looks like rsa\d+, keyed by its number
+   * so iteration is in numeric order. Returns an empty map (never null) if
+   * the keystore can't be read.
+   */
+  @NonNull
+  private java.util.TreeMap<Integer, String> findRsaAliasesInKeyStore(@NonNull KeyStore keyStore) {
+    java.util.TreeMap<Integer, String> result = new java.util.TreeMap<>();
+    try {
+      Enumeration<String> aliases = keyStore.aliases();
+      while (aliases.hasMoreElements()) {
+        String alias = aliases.nextElement();
+        Matcher m = RSA_ALIAS_PATTERN.matcher(alias);
+        if (m.matches()) {
+          result.put(Integer.parseInt(m.group(1)), alias);
+        }
+      }
+    } catch (KeyStoreException e) {
+      SimpleLog.e(TAG, "Failed to enumerate keystore aliases for reconciliation", e);
+    }
+    return result;
+  }
+
+  /**
    * Generate a new RSA key pair in Android KeyStore.
    * Creates a 4096-bit RSA key with SHA-512 digest for signing.
    * 
@@ -334,8 +487,12 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
   @NonNull
   public SignedJWT signClaimsSet(@NonNull JWTClaimsSet claimsSet) throws BcscException {
     try {
-      SignedJWT signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.RS512), claimsSet);
-      signedJWT.sign(new RSASSASigner(getCurrentBcscKeyPair().getKeyPair().getPrivate()));
+      BcscKeyPair currentKeyPair = getCurrentBcscKeyPair();
+      JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.RS512)
+          .keyID(currentKeyPair.getKeyInfo().getAlias())
+          .build();
+      SignedJWT signedJWT = new SignedJWT(header, claimsSet);
+      signedJWT.sign(new RSASSASigner(currentKeyPair.getKeyPair().getPrivate()));
       return signedJWT;
     } catch (Exception e) {
       throw new BcscException(AlertKey.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET, e.getMessage());

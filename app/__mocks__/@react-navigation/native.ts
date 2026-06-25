@@ -43,5 +43,19 @@ const CommonActions = {
 
 const useFocusEffect = jest.fn()
 const createNavigatorFactory = jest.fn()
+const createNavigationContainerRef = jest.fn(() => ({
+  isReady: jest.fn(() => false),
+  getCurrentRoute: jest.fn(() => undefined),
+  navigate: jest.fn(),
+  dispatch: jest.fn(),
+}))
 
-export { CommonActions, createNavigatorFactory, useFocusEffect, useIsFocused, useNavigation, useRoute }
+export {
+  CommonActions,
+  createNavigationContainerRef,
+  createNavigatorFactory,
+  useFocusEffect,
+  useIsFocused,
+  useNavigation,
+  useRoute,
+}

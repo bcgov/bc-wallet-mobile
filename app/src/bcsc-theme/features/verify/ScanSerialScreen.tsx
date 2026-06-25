@@ -144,9 +144,9 @@ const IdCardMaskOverlay: React.FC<IdCardMaskOverlayProps> = ({
           strokeWidth={3}
         />
 
-        {/* Magstripe — solid bar along the right edge (the card's top edge, held upright) */}
+        {/* Magstripe — solid bar along the left edge (the card's top edge, held upright) */}
         <Rect
-          x={x + cardWidth * 0.68}
+          x={x + cardWidth * 0.09}
           y={y}
           width={cardWidth * 0.23}
           height={cardHeight}
@@ -154,20 +154,20 @@ const IdCardMaskOverlay: React.FC<IdCardMaskOverlayProps> = ({
           fillOpacity={0.5}
         />
 
-        {/* 2D (PDF417) barcode — tall band along the left edge */}
+        {/* 2D (PDF417) barcode — tall band along the right edge, lower half */}
         <BarcodeGuide
-          x={x + cardWidth * 0.04}
-          y={y + cardHeight * 0.04}
+          x={x + cardWidth * 0.76}
+          y={y + cardHeight * 0.36}
           width={cardWidth * 0.2}
           height={cardHeight * 0.6}
           bars="horizontal"
           pattern={BARCODE_PATTERN_2D}
         />
 
-        {/* 1D barcode — horizontal band near the bottom */}
+        {/* 1D barcode — horizontal band near the top, right of the magstripe */}
         <BarcodeGuide
-          x={x + cardWidth * 0.05}
-          y={y + cardHeight * 0.89}
+          x={x + cardWidth * 0.4}
+          y={y + cardHeight * 0.04}
           width={cardWidth * 0.55}
           height={cardHeight * 0.07}
           bars="vertical"

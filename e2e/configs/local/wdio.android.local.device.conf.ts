@@ -54,7 +54,7 @@ config.capabilities = [
     'appium:app': resolve(__dirname, '../../apps', process.env.ANDROID_APP || 'BCWallet.apk'),
     'appium:noReset': process.env.NO_RESET === 'true',
     'appium:newCommandTimeout': 180,
-    'appium:autoGrantPermissions': true,
+    'appium:autoGrantPermissions': false,
   },
 ]
 

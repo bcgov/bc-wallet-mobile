@@ -23,7 +23,8 @@ import { useSecureActions } from './useSecureActions'
  *
  * A factory reset alert is shown if any error occurs so the user isn't stuck with a broken app
  *
- * @returns {() => Promise<void>} Callback that performs the verification reset
+ * @returns {() => Promise<boolean>} Callback that performs the verification reset and resolves
+ * with whether the reset completed successfully
  */
 export const useVerificationReset = () => {
   const [store] = useStore<BCState>()
@@ -67,7 +68,7 @@ export const useVerificationReset = () => {
     [logger, registrationService, store.bcscSecure.registrationAccessToken]
   )
 
-  const verificationReset = useCallback(async () => {
+  const verificationReset = useCallback(async (): Promise<boolean> => {
     try {
       await withAccount(async (account) => {
         if (!store.bcscSecure.registrationAccessToken) {
@@ -112,9 +113,12 @@ export const useVerificationReset = () => {
           logger.info(`[useVerificationReset] New registration created with client_id: ${temp.client_id}`)
         logger.info('[useVerificationReset] New IAS registration created. Renewal reset complete.')
       })
+
+      return true
     } catch (error) {
       logger.error('[useVerificationReset] Error during account renewal reset', error as Error)
       factoryResetAlert(error)
+      return false
     }
   }, [
     store.bcscSecure.registrationAccessToken,

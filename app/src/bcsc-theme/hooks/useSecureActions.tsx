@@ -19,6 +19,7 @@ import {
   EvidenceType,
   getAccount,
   getAccountFlags,
+  getAccountSecurityMethod,
   getAuthorizationRequest,
   getCredential,
   getEvidence,
@@ -27,6 +28,7 @@ import {
   NativeAuthorizationRequest,
   NativeSavedService,
   PhotoMetadata,
+  setAccount,
   setAccountFlags,
   setAuthorizationRequest,
   setCredential,
@@ -40,6 +42,7 @@ import { TokenResponse } from '../api/hooks/useTokens'
 import { ProvinceCode } from '../utils/address-utils'
 import { createMinimalCredential, getCredentialVerificationStatus } from '../utils/bcsc-credential'
 import { isCardEvidenceComplete } from '../utils/card-utils'
+import { performKeyRecovery } from '../utils/key-recovery'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 
 /**
@@ -254,15 +257,29 @@ export const useSecureActions = () => {
       if (userInfo.serial) {
         authRequestData.csn = userInfo.serial
       }
-      if (userInfo.email) {
+      // Only persist as verifiedEmail when the email has actually been verified.
+      // Otherwise an unverified email captured mid-flow would look verified after re-auth (see hydrateSecureState).
+      if (userInfo.email && userInfo.isEmailVerified) {
         authRequestData.verifiedEmail = userInfo.email
       }
 
       if (Object.keys(authRequestData).length > 0) {
         await persistAuthorizationRequest(authRequestData)
       }
+
+      // Persist email + verification flag to accountFlags so they survive auto-lock during verification.
+      const accountFlagsData: AccountFlags = {}
+      if (userInfo.email !== undefined) {
+        accountFlagsData.emailAddress = userInfo.email
+      }
+      if (userInfo.isEmailVerified !== undefined) {
+        accountFlagsData.isEmailVerified = userInfo.isEmailVerified
+      }
+      if (Object.keys(accountFlagsData).length > 0) {
+        await persistAccountFlags(accountFlagsData)
+      }
     },
-    [dispatch, persistAuthorizationRequest]
+    [dispatch, persistAuthorizationRequest, persistAccountFlags]
   )
 
   /**
@@ -740,6 +757,7 @@ export const useSecureActions = () => {
 
       // Load all data from native storage in parallel
       const [
+        account,
         authRequest,
         refreshTokenObj,
         registrationAccessTokenObj,
@@ -749,6 +767,7 @@ export const useSecureActions = () => {
         credential,
         nativeSavedServices,
       ] = await Promise.all([
+        getAccount(),
         getAuthorizationRequest(),
         getToken(TokenType.Refresh),
         getToken(TokenType.Registration),
@@ -768,6 +787,44 @@ export const useSecureActions = () => {
         logger.warn('[IsVerified] No credential found but refresh token exists — treating as not verified.')
       }
 
+      let issuer = account?.issuer
+      let clientID = account?.clientID
+
+      if (account && (!issuer || !clientID)) {
+        // Account is missing issuer or clientID - this prevents token refresh from working.
+        // Recover from authRequest, which preserves these fields from older v3 storage during migration.
+        logger.warn(
+          `[hydrateSecureState] Account missing required fields: issuer=${!issuer ? 'MISSING' : 'OK'}, clientID=${!clientID ? 'MISSING' : 'OK'}. Attempting recovery from authorization request.`
+        )
+
+        if (authRequest) {
+          try {
+            issuer = issuer || authRequest.issuer
+            clientID = clientID || authRequest.clientID
+
+            if (issuer && clientID) {
+              const securityMethod = await getAccountSecurityMethod()
+              const updatedAccount = {
+                ...account,
+                issuer,
+                clientID,
+                securityMethod,
+              }
+              logger.info('[hydrateSecureState] Recovered issuer/clientID from authorization request; updating account')
+              await setAccount(updatedAccount)
+            } else {
+              logger.warn(
+                `[hydrateSecureState] Could not recover account fields from authorization request: issuer=${issuer ? 'OK' : 'MISSING'}, clientID=${clientID ? 'OK' : 'MISSING'}`
+              )
+            }
+          } catch (error) {
+            logger.warn(
+              `[hydrateSecureState] Failed to update account with recovered values: ${error instanceof Error ? error.message : String(error)}`
+            )
+          }
+        }
+      }
+
       let freshTokens: TokenResponse | null = null
       if (refreshToken && apiClient && isClientReady) {
         try {
@@ -775,6 +832,21 @@ export const useSecureActions = () => {
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error)
           logger.error(`[hydrateSecureState] Failed to refresh tokens with stored refresh token: ${message}`)
+          if (clientID && registrationAccessToken) {
+            logger.info('[hydrateSecureState] Attempting key recovery in case of signing key mismatch...')
+            const recovered = await performKeyRecovery(apiClient, clientID, registrationAccessToken, logger)
+            if (recovered) {
+              try {
+                freshTokens = await apiClient.getTokensForRefreshToken(refreshToken)
+                logger.info('[hydrateSecureState] token refresh succeeded after key recovery')
+              } catch (retryError) {
+                const retryMessage = retryError instanceof Error ? retryError.message : String(retryError)
+                logger.error(`[hydrateSecureState] token refresh still failed after key recovery: ${retryMessage}`)
+              }
+            } else {
+              logger.warn('[hydrateSecureState] Key recovery did not occur or did not succeed; tokens remain stale.')
+            }
+          }
         }
       }
 
@@ -813,6 +885,11 @@ export const useSecureActions = () => {
       }
 
       const verificationStatus = getCredentialVerificationStatus(credential)
+      const verified = verificationStatus === VerificationStatus.VERIFIED
+
+      // A verified account with no refresh token is unrecoverable
+      // An unverified account with no registration token is unrecoverable
+      const sessionRecoveryRequired = !!account && !refreshToken && (!registrationAccessToken || verified)
 
       // Extract bookmarked service IDs from native client metadata
       const savedServices = (nativeSavedServices ?? [])
@@ -842,7 +919,7 @@ export const useSecureActions = () => {
         registrationAccessToken,
         accessToken,
 
-        verified: verificationStatus === VerificationStatus.VERIFIED,
+        verified,
         verifiedStatus: verificationStatus,
 
         userSkippedEmailVerification: accountFlags.userSkippedEmailVerification,
@@ -859,6 +936,8 @@ export const useSecureActions = () => {
         additionalEvidenceData: cleanedEvidence,
         userMetadata,
         savedServices,
+
+        sessionRecoveryRequired,
       }
 
       logger.debug(`Hydrated secure data: ${JSON.stringify(secureData, null, 2)}`)

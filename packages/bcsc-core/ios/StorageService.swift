@@ -43,7 +43,7 @@ class StorageService {
   /// Maps environment directory names (as produced by getIssuerNameFromIssuer) to issuer URLs.
   /// Priority order matters: prod is checked first, then non-prod environments.
   private let issuerDirectoryToURL: [(name: String, url: String)] = [
-    ("prod", "https://id.gov.bc.ca"),
+    ("PROD", "https://id.gov.bc.ca"),
     ("SIT", "https://idsit.gov.bc.ca"),
     ("QA", "https://idqa.gov.bc.ca"),
     ("DEV", "https://iddev.gov.bc.ca"),
@@ -85,7 +85,6 @@ class StorageService {
           .appendingPathComponent(accountListURLComponent)
 
       guard FileManager.default.fileExists(atPath: accountListFileUrl.path) else {
-        logger.error("account_list file does not exist at \(accountListFileUrl.path).")
         return nil
       }
 
@@ -131,7 +130,10 @@ class StorageService {
       logger.error("currentIssuer: Could not read issuer file: \(error).")
       // Fallback: infer issuer from directory structure (v3 migration path)
       if let inferred = findIssuerFromAccountDirectories() {
-        logger.log("currentIssuer: Inferred issuer from account directories: \(inferred)")
+        logger
+          .log(
+            "currentIssuer: Inferred issuer from account directories: \(inferred) (env: \(getIssuerNameFromIssuer(issuer: inferred)))"
+          )
         return inferred
       }
       logger.log("currentIssuer: Defaulting to production issuer")
@@ -446,6 +448,8 @@ class StorageService {
     let accountsDirURL = rootURL
       .appendingPathComponent("\(currentBundleID)/data/accounts_dir")
 
+    logger.log("findIssuerFromAccountDirectories: scanning \(accountsDirURL.path)")
+
     guard let uuidRegex = try? NSRegularExpression(
       pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
       options: .caseInsensitive
@@ -455,43 +459,46 @@ class StorageService {
       let envDirURL = accountsDirURL.appendingPathComponent(entry.name)
       guard let contents = try? FileManager.default.contentsOfDirectory(
         at: envDirURL, includingPropertiesForKeys: [.isDirectoryKey], options: .skipsHiddenFiles
-      ) else { continue }
+      ) else {
+        continue
+      }
 
-      let hasUUIDSubdir = contents.contains { url in
+      let uuidDirs = contents.filter { url in
         guard (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
         else { return false }
         let name = url.lastPathComponent
-        return uuidRegex.firstMatch(
-          in: name, range: NSRange(name.startIndex..., in: name)
-        ) != nil
+        return uuidRegex.firstMatch(in: name, range: NSRange(name.startIndex..., in: name)) != nil
       }
 
-      if hasUUIDSubdir {
+      if !uuidDirs.isEmpty {
         logger.log(
-          "findIssuerFromAccountDirectories: Found accounts in '\(entry.name)', using issuer \(entry.url)"
+          "findIssuerFromAccountDirectories: Found \(uuidDirs.count) account(s) in '\(entry.name)', using issuer \(entry.url)"
         )
         return entry.url
       }
     }
 
+    logger.log("findIssuerFromAccountDirectories: No accounts found in any known environment directory")
     return nil
   }
 
-  /// https://id.gov.bc.ca -> "prod"
-  /// https://iddev.gov.bc.ca -> "dev"
+  /// https://id.gov.bc.ca -> "PROD"
+  /// https://iddev.gov.bc.ca -> "DEV"
   private func getIssuerNameFromIssuer(issuer: String) -> String {
     guard let host = URLComponents(string: issuer)?.host else {
-      return "prod"
+      return "PROD"
     }
 
     if host.hasPrefix("id") {
       let remainder = host.dropFirst(2) // remove "id"
 
-      if let env = remainder.split(separator: ".").first, !env.isEmpty {
-        return String(env).uppercased() // "DEV", "TEST"
+      // Production is "id.gov.bc.ca" — remainder starts with "." (no env segment after "id").
+      // Non-prod is "id{env}.gov.bc.ca" — remainder starts with the env name.
+      if !remainder.hasPrefix("."), let env = remainder.split(separator: ".").first, !env.isEmpty {
+        return String(env).uppercased() // "DEV", "SIT", "TEST", etc.
       }
     }
 
-    return "prod"
+    return "PROD"
   }
 }

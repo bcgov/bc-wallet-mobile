@@ -20,7 +20,7 @@ export const buildBarcodePayload = (
       content_type: 'AAMVA_3TRACK_PDF417',
       version: '',
       jurisdiction_version: '',
-      iso_iin: '',
+      iso_iin: license.isoIIN ?? '',
       customer_id: '',
       document_number: license.licenseNumber ?? '',
       family_name: license.lastName ?? '',

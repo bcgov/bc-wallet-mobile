@@ -1,5 +1,6 @@
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
 import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
+import { BCState } from '@/store'
 import {
   CredentialDetails,
   Screens,
@@ -7,6 +8,7 @@ import {
   TOKENS,
   useDefaultStackOptions,
   useServices,
+  useStore,
   useTheme,
   useTour,
 } from '@bifold/core'
@@ -32,6 +34,7 @@ import { AccountRenewalFirstWarningScreen } from '../features/account/AccountRen
 import { AccountRenewalInformationScreen } from '../features/account/AccountRenewalInformationScreen'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import { MainRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
+import TransferAgeRestrictionScreen from '../features/account/TransferAgeRestrictionScreen'
 import { AgentReadyGate, BifoldScope, withAgentReadyGate } from '../features/agent'
 import { MainChangePINScreen } from '../features/auth/MainChangePINScreen'
 import { MainChangeSecurityScreen } from '../features/auth/MainChangeSecurityScreen'
@@ -47,6 +50,7 @@ import { DeviceInvalidated } from '../features/modal/DeviceInvalidated'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
+import { TermsOfUseUpdated } from '../features/modal/TermsOfUseUpdated'
 import { usePairingService } from '../features/pairing'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
@@ -91,6 +95,7 @@ const MainStack: React.FC = () => {
   const defaultStackOptions = useDefaultStackOptions(theme)
   const pairingService = usePairingService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [store] = useStore<BCState>()
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const { account } = useAccount()
   // Consume any cold-start pairing request once and use it to seed the initial route
@@ -126,7 +131,10 @@ const MainStack: React.FC = () => {
     })
   }, [apiClient.endpoints.accountDevices, navigation, t])
 
-  const headerWithBanner = useMemo(() => createHeaderWithBanner(handleManageDevices), [handleManageDevices])
+  const headerWithBanner = useMemo(
+    () => createHeaderWithBanner(handleManageDevices, store.bcsc.bannerMessages),
+    [handleManageDevices, store.bcsc.bannerMessages]
+  )
 
   const initialRouteName = pairingInitialParams ? BCSCScreens.ServiceLogin : BCSCStacks.Tab
 
@@ -370,11 +378,19 @@ const MainStack: React.FC = () => {
             component={TransferQRDisplayScreen}
             options={() => ({
               headerShown: true,
+              title: t('BCSC.TransferInformation.TransferAccount'),
             })}
           />
           <Stack.Screen
             name={BCSCScreens.TransferAccountSuccess}
             component={TransferSuccessScreen}
+            options={() => ({
+              headerShown: true,
+            })}
+          />
+          <Stack.Screen
+            name={BCSCScreens.TransferAgeRestriction}
+            component={TransferAgeRestrictionScreen}
             options={() => ({
               headerShown: true,
             })}
@@ -483,6 +499,15 @@ const MainStack: React.FC = () => {
           <Stack.Screen
             name={BCSCModals.ServiceOutage}
             component={ServiceOutage}
+            options={{
+              ...getDefaultModalOptions(t('BCSC.Title')),
+              gestureEnabled: false,
+            }}
+          />
+
+          <Stack.Screen
+            name={BCSCModals.TermsOfUseUpdated}
+            component={TermsOfUseUpdated}
             options={{
               ...getDefaultModalOptions(t('BCSC.Title')),
               gestureEnabled: false,

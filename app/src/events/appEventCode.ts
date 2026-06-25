@@ -53,6 +53,7 @@ export enum AppEventCode {
   NO_TOKENS_RETURNED = 'no_tokens_returned',
   PHYSICAL_CARD_WILL_EXPIRE = 'physical_card_will_expire',
   PROBLEM_WITH_CONNECTION = 'problem_with_connection',
+  RESTART_VERIFICATION = 'restart_verification',
   SERVER_ERROR = 'server_error',
   UNKNOWN_SERVER_ERROR = 'unknown_server_error', // Non-IAS error code
   SERVER_TIMEOUT = 'server_timeout',
@@ -66,6 +67,7 @@ export enum AppEventCode {
   VERIFY_NOT_COMPLETE = 'verify_not_complete',
   VERIFY_COMPLETE_FEEDBACK = 'verify_complete_feedback',
   ERR_100_FAILED_TO_WRITE_LOCAL_STORAGE = 'err_100_failed_to_write_local_storage',
+  DEVICE_STORAGE_FULL = 'device_storage_full', // Non-IAS error code
   ERR_101_FAILED_TO_READ_LOCAL_STORAGE = 'err_101_failed_to_read_local_storage',
   ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL = 'err_102_client_registration_unexpectedly_null',
   // ERR_103_AUTHORIZATION_REQUEST_UNEXPECTEDLY_NULL deprecated in V4
@@ -94,12 +96,15 @@ export enum AppEventCode {
   ERR_120_KEYCHAIN_KEY_EXISTS_ERROR = 'err_120_keychain_key_exists_error',
   ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR = 'err_120_keychain_key_doesnt_exist_error',
   ERR_120_KEYCHAIN_KEY_GENERATION_ERROR = 'err_120_keychain_key_generation_error',
+  ERR_120_KEYCHAIN_UNAVAILABLE_ERROR = 'err_120_keychain_unavailable_error',
   ERR_120_JWT_DEVICE_INFO_ERROR = 'err_120_jwt_device_info_error',
   ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE = 'err_206_missing_or_null_values_in_json_response', //being tracked
   ERR_207_UNABLE_TO_SIGN_CLAIMS_SET = 'err_207_unable_to_sign_claims_set',
   ERR_208_UNEXPECTED_NETWORK_CALL_EXCEPTION = 'err_208_unexpected_network_call_exception', //being tracked
   ERR_209_BAD_REQUEST = 'err_209_bad_request',
   ERR_210_UNAUTHORIZED = 'err_210_unauthorized',
+  FORBIDDEN = 'forbidden',
+  NOT_FOUND = 'not_found',
   ERR_212_RETRY_LATER = 'err_212_retry_later',
   ERR_211_SERVER_OUTAGE = 'err_211_server_outage',
   ERR_213_FAILED_CREATING_CLIENT_REGISTRATION = 'err_213_failed_creating_client_registration',
@@ -135,6 +140,7 @@ export enum AppEventCode {
   FILE_UPLOAD_ERROR = 'file_upload_error',
   NO_DOCUMENT_NUMBER_ENTERED_ERROR = 'no_document_number_entered_error',
   VIDEO_VERIFY_NOT_COMPLETE = 'video_verify_not_complete',
+  VIDEO_PROMPTS_MISSING = 'video_prompts_missing',
   REMOVE_UNVERIFIED_CARD = 'remove_unverified_card',
   REMOVE_VERIFIED_CARD = 'remove_verified_card',
   ALREADY_VERIFIED = 'already_verified',

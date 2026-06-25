@@ -7,6 +7,7 @@ import { createContext, PropsWithChildren, useContext, useEffect, useMemo } from
 import { DeviceEventEmitter } from 'react-native'
 import { UserInfoResponseData } from '../api/hooks/useUserApi'
 import useDataLoader from '../hooks/useDataLoader'
+import { useRetryOnReconnect } from '../hooks/useRetryOnReconnect'
 import { useUserService } from '../services/hooks/useUserService'
 
 export interface BCSCAccount extends Omit<UserInfoResponseData, 'picture'> {
@@ -55,6 +56,9 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
 
     return () => subscription.remove()
   }, [refresh, logger])
+
+  // If the load failed while offline, retry when connectivity returns
+  useRetryOnReconnect(() => !data && !isLoading, refresh)
 
   const accountContextValue = useMemo(() => {
     if (!data) {

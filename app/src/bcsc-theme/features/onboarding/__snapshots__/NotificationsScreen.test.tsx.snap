@@ -45,13 +45,6 @@ exports[`Notifications renders correctly 1`] = `
         }
       >
         < />
-        <
-          style={
-            {
-              "position": "absolute",
-            }
-          }
-        />
       </View>
       <Text
         maxFontSizeMultiplier={2}

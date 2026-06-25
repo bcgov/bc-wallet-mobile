@@ -4,6 +4,12 @@
 
 RCT_EXTERN_METHOD(getAllKeys : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(setActiveKeyAlias : (NSString *)alias resolve : (RCTPromiseResolveBlock)
+                      resolve reject : (RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(deleteKey : (NSString *)alias resolve : (RCTPromiseResolveBlock)
+                      resolve reject : (RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(getKeyPair : (NSString *)label resolve : (RCTPromiseResolveBlock)
                       resolve reject : (RCTPromiseRejectBlock)reject)
 
@@ -47,8 +53,8 @@ RCT_EXTERN_METHOD(getDeviceCodeRequestBody : (NSString *)deviceCode clientID : (
     NSString *)issuer confirmationCode : (NSString *)confirmationCode resolve : (RCTPromiseResolveBlock)
                       resolve reject : (RCTPromiseRejectBlock)reject)
 
-RCT_EXTERN_METHOD(decodePayload : (NSString *)jweString resolve : (RCTPromiseResolveBlock)
-                      resolve reject : (RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(decodePayload : (NSString *)jweString key : (NSDictionary *_Nullable)
+                      key resolve : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(decodeLoginChallenge : (NSString *)jwt key : (NSDictionary *_Nullable)
                       key resolve : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)

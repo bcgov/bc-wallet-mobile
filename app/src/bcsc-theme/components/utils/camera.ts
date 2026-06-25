@@ -49,6 +49,12 @@ export const CameraFormat = {
    * Higher FPS and resolution for better barcode recognition
    */
   MaskedWithBarcodeDetection: [
+    // Prefer non-HDR (8-bit) formats. Some devices only expose a 10-bit HDR
+    // pixel format (e.g. "btp2") on their max-resolution/60fps formats, which
+    // VisionCamera's default 8-bit pipeline can't use → "pixel-format-not-supported".
+    {
+      videoHdr: false,
+    },
     // Target 60 FPS for smoother camera preview and better barcode detection
     {
       fps: 60,
@@ -72,6 +78,11 @@ export const CameraFormat = {
    * - PDF417: ~50mm x 9mm
    */
   SmallBarcodeScanning: [
+    // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
+    // pixel format (e.g. "btp2") is incompatible with VisionCamera's pipeline.
+    {
+      videoHdr: false,
+    },
     // High FPS for better real-time detection
     {
       fps: 60,

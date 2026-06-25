@@ -58,11 +58,7 @@ exports[`ScanSerial renders correctly 1`] = `
         }
       >
         <Camera
-          animatedProps={
-            {
-              "zoom": 1,
-            }
-          }
+          animatedProps={{}}
           codeScanner={
             {
               "codeTypes": [

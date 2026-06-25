@@ -13,7 +13,6 @@ const translation = {
     "HideDetails": "Ocultar detalhes",
     "Dismiss": "Dispensar",
     "GetHelp": "Get help (PT-BR)",
-    "ContinueSetup": "Continue setup (PT-BR)",
     "Share": "Share (PT-BR)",
     "Skip": "Skip (PT-BR)",
     "A11y": {
@@ -48,6 +47,10 @@ const translation = {
     "ErrorCode": "Código de erro",
     "ReportThisProblem": "Reportar este problema",
     "Reported": "Reportado",
+    "ReferenceCode": "Código de referência",
+    "CopyCode": "Copiar",
+    "CodeCopied": "Copiado",
+    "ShareCodeWithSupport": "Compartilhe este código com o suporte ao entrar em contato.",
     "Unknown": "Desconhecido",
     "Problem": "Algo deu errado",
     "ProblemDescription": "An unexpected error occurred. Please report this error and try again. (PT-BR)"
@@ -169,6 +172,8 @@ const translation = {
     "SwitchTheme": "Switch theme (PT-BR)",
     "Testing": "Testing (PT-BR)",
     "ErrorAlertTest": "Error & Alert Testing (PT-BR)",
+    "StaleTermsOfUse": "Stale Terms of Use Acceptance (PT-BR)",
+    "AcceptedTermsVersion": "Accepted version (PT-BR)",
     "ErrorModals": "Error Modals (PT-BR)",
     "ErrorModalsDescription": "Trigger errors that display as modal dialogs with title, description, and technical details. (PT-BR)",
     "ErrorAsNativeAlert": "Errors as Native Alerts (PT-BR)",
@@ -225,6 +230,7 @@ const translation = {
       "LearnMore": "Learn about BCSC app (PT-BR)",
       "GiveFeedback": "Give feedback (PT-BR)",
       "ReportProblem": "Report a problem (PT-BR)",
+      "RestartVerification": "Restart verification process (PT-BR)",
     },
     "Contacts": {
       "Title": "Contacts (PT-BR)",
@@ -426,8 +432,7 @@ const translation = {
       "CatalogueSearch": "Search services (PT-BR)",
       "WantToLogin": "Do you want to log in to (PT-BR)",
       "RequestedInformation": "They will receive the following information: (PT-BR)",
-      "FromAccountPrefix": "From your (PT-BR)",
-      "FromAccount": "Account (PT-BR)",
+      "FromAccount": "From your Account (PT-BR)",
       "PrivacyNotice": "Privacy notice (PT-BR)",
       "ReportSuspiciousPrefix": "Not you? (PT-BR)",
       "ReportSuspicious": "Report Suspicious Activity (PT-BR)",
@@ -477,6 +482,9 @@ const translation = {
         "Header": "Service unavailable (PT-BR)",
         "CheckAgainButton": "Check again (PT-BR)",
         "LearnMore": "Learn more (PT-BR)",
+      },
+      "TermsOfUseUpdated": {
+        "Header": "The Terms of Use have been updated. Before you continue to use the Service, you must read and accept the updated terms. (PT-BR)",
       },
     },
     "Home": {
@@ -553,6 +561,13 @@ const translation = {
       "WarningContentB": "This includes logging into services like Health Gateway or Canada Revenue Agency (CRA). (PT-BR)",
       "WarningRenewButton": "Renew (PT-BR)"
     },
+    "SessionRecovery": {
+      "Header": "Reset your app (PT-BR)",
+      "Body": "Some of your saved data on this device couldn't be read. (PT-BR)",
+      "BodyAction": "To keep using the app, you'll need to re-verify or transfer from another device to use your identity again. (PT-BR)",
+      "PrimaryAction": "Reset (PT-BR)",
+      "Resetting": "Resetting… (PT-BR)"
+    },
     "ForgetAllPairings": {
       "Title": "Forget all pairings? (PT-BR)",
       "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step. (PT-BR)",
@@ -613,15 +628,20 @@ const translation = {
       "BookmarkService": "Save link to: (PT-BR)",
       "ToggleBookmark": "Toggle bookmark (PT-BR)",
       "BookmarkDescription": "This adds a link to the menu in this app for easier access next time. (PT-BR)",
+      "CouldNotVerifyPairingCodeTitle": "Could not verify pairing code (PT-BR)",
+      "CodeDoesNotMatchMessage": "The code you entered does not match. Try again. (PT-BR)",
     },
     "Onboarding": {
       "LearnMore": "Learn more (PT-BR)",
-      "AcceptAndContinueButton": "Accept and continue (PT-BR)",
+      "IntroTitle": "Welcome to the\nBC Services Card app (PT-BR)",
+      "IntroDescription": "A safe and simple way to access BC government services and BC Services Card app partners online. (PT-BR)",
+      "AcceptAndContinueButton": "Accept terms of use (PT-BR)",
       "TermsOfUseLoadError": "Terms of use failed to load, please retry (PT-BR)",
       "TermsOfUseHeader": "Before you use the Service, you must read and accept the terms set out in this Agreement (PT-BR)",
       "TermsOfUseSubtitle": "BC Login Service Terms of Use (PT-BR)",
       "TermsOfUseVersion": "Version (PT-BR)",
       "PrivacyPolicyTitle": "Privacy (PT-BR)",
+      "PrivacyPolicyButton": "I understand (PT-BR)",
       "PrivacyPolicyHeaderSetup": "App Setup (PT-BR)",
       "PrivacyPolicyHeaderSecuringApp": "Securing the App (PT-BR)",
       "PrivacyPolicyContentA": "Your personal information is collected for the purpose of setting up the app on your mobile device and using it to authenticate your identity for accessing government services online under sections 26(c), 26(e) and 26(h) of the Freedom of Information and Protection of Privacy Act. (PT-BR)",
@@ -632,8 +652,8 @@ const translation = {
       "NotificationsTitle": "Notifications (PT-BR)",
       "NotificationsHeader": "Enable Notifications? (PT-BR)",
       "NotificationsContent": "Stay informed about account updates, credential changes and service interruptions. (PT-BR)",
-      "EnableNotifications": "Enable Notifications (PT-BR)",
-      "SkipNotifications": "Skip (PT-BR)",
+      "EnableNotifications": "Enable notifications (PT-BR)",
+      "SkipNotifications": "Skip notifications (PT-BR)",
       "SecureAppHeader": "Choose how to secure this app (PT-BR)",
       "SecureAppContent": "Protect your identity. For example, if your device is lost or stolen. Keep your access confidential (PT-BR)",
       "SecureAppOnboardingHeader": "How to secure this app (PT-BR)",
@@ -650,8 +670,8 @@ const translation = {
       "AnalyticsHeader": "Help us improve your BC Services Card experience (PT-BR)",
       "AnalyticsContent": "With your permission, we'll collect additional app usage and device details to help us improve this app. (PT-BR)",
       "AnalyticsAnonymousInfo": "All information is collected anonymously (PT-BR)",
-      "AcceptAnalytics": "Enable Analytics (PT-BR)",
-      "DenyAnalytics":  "Skip (PT-BR)",
+      "AcceptAnalytics": "Enable analytics (PT-BR)",
+      "DenyAnalytics":  "Skip analytics (PT-BR)",
     },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have? (PT-BR)",
@@ -728,7 +748,7 @@ const translation = {
       "OpenAccountServices": "Open account services (PT-BR)",
     },
     "AccountSetup": {
-      "Title": "Welcome to the BCSC App (PT-BR)",
+      "Title": "Have you verified before? (PT-BR)",
       "Description": "Do you already have the BCSC app set up on another nearby phone or tablet? (PT-BR)",
       "AddAccount": "No, continue setup (PT-BR)",
       "TransferAccount": "Yes, connect this device (PT-BR)",
@@ -864,6 +884,8 @@ const translation = {
     },
     "EmailConfirmation": {
       "ErrorTitle": "Error verifying confirmation code (PT-BR)",
+      "CouldNotVerifyTitle": "Could not verify your email (PT-BR)",
+      "CodeDoesNotMatch": "The code you entered does not match. Try again. (PT-BR)",
       "EmailError": "Please enter a valid email address (name@host.com). (PT-BR)",
       "CodeError": "Please enter a six digit verification code (PT-BR)",
       "ErrorResendingCode": "Error resending code (PT-BR)",
@@ -1006,14 +1028,14 @@ const translation = {
     "TransferInformation": {
       "Title": "Have this app on another device? (PT-BR)",
       "Instructions": "You can transfer your account to that other device. No need to provide ID or verify your identity again. (PT-BR)",
-      "TransferAccount": "Transfer Account (PT-BR)",
+      "TransferAccount": "Add device (PT-BR)",
     },
     "TransferInstructions": {
-      "Title": "Scan your QR code to transfer your account (PT-BR)",
-      "Step1": "1. On your other device, open the BC Services Card app and go to the Account section. (PT-BR)",
-      "Step2": "2. Choose 'Transfer to another device' to get your QR code. (PT-BR)",
-      "Step3": "3. Continue on this device and scan that QR code. (PT-BR)",
-      "ScanQRCode": "Scan QR Code (PT-BR)",
+      "Title": "Scan your QR code to add your device (PT-BR)",
+      "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘≡’ icon in the top left corner. (PT-BR)",
+      "Step2": "Choose <b>‘Add another device’</b> to get your QR code. (PT-BR)",
+      "Step3": "<b>Scan the QR code</b> that appears on your other device. (PT-BR)",
+      "ScanQRCode": "Scan QR code (PT-BR)",
     },
     "QRDisplay": {
       "SharingDescription": "Sharing this QR code with someone will add them as a Contact. (PT-BR)",
@@ -1283,6 +1305,22 @@ const translation = {
       "Title": "Problem with App (PT-BR)",
       "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (error {{ errorCode }}) (PT-BR)"
     },
+    "DeviceStorageFull": {
+      "Title": "Not Enough Storage (PT-BR)",
+      "Description": "Your device is out of storage space, so the app can't save your information. Free up space on your device, then try again. (PT-BR)"
+    },
+    "BadRequest": {
+      "Title": "Something went wrong (PT-BR)",
+      "Description": "We couldn't complete your request at this time. Please try again later.\n\nIf the issue persists, close and re-open the app to try again. (PT-BR)"
+    },
+    "SomethingWentWrong": {
+      "Title": "Something went wrong (PT-BR)",
+      "Description": "We're having trouble with the app. Please try again later.\n\nIf the issue persists, close and re-open the app, then try again. (PT-BR)"
+    },
+    "KeychainUnavailable": {
+      "Title": "Secure Storage Unavailable (PT-BR)",
+      "Description": "Your device's secure storage is temporarily unavailable. Please wait a moment and try again.\n\nIf the issue persists, restart your device and try again. (PT-BR)"
+    },
     "ProblemWithService": {
       "Title": "Problem with Service (PT-BR)",
       "Description": "Please try again later. (error {{ errorCode }}) (PT-BR)"
@@ -1337,6 +1375,12 @@ const translation = {
       "Description": "Your verification request sent to Service BC will be deleted. Then you can choose another way to verify. (PT-BR)",
       "Action1": "Delete Verify Request (PT-BR)",
     },
+    "RestartVerification": {
+      "Title": "Are you sure? (PT-BR)",
+      "Description": "Your verification progress will be deleted and you will start the verification process from the beginning. (PT-BR)",
+      "Action1": "Restart Verification (PT-BR)",
+      "Loading": "Restarting verification... (PT-BR)",
+    },
     "DataUseWarning": {
       "Title": "Data Use (PT-BR)",
       "Description": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network. (PT-BR)",
@@ -1369,6 +1413,10 @@ const translation = {
     "FileUploadError": {
       "Title": "Problem with Connection (PT-BR)",
       "Description": "Please try again. (PT-BR)"
+    },
+    "VideoPromptsMissing": {
+      "Title": "Problem Starting Video (PT-BR)",
+      "Description": "We couldn't load your verification steps. Please try again. (PT-BR)"
     },
     "FactoryReset": {
       "Title": "Problem with App (PT-BR)",

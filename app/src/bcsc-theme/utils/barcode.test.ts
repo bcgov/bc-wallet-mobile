@@ -12,6 +12,7 @@ const makeLicense = (overrides?: Partial<DriversLicenseMetadata>): DriversLicens
   city: 'VICTORIA',
   province: 'BC',
   postalCode: 'V8W 3Y8',
+  isoIIN: '636028',
   ...overrides,
 })
 
@@ -39,7 +40,7 @@ describe('buildBarcodePayload', () => {
       content_type: 'AAMVA_3TRACK_PDF417',
       version: '',
       jurisdiction_version: '',
-      iso_iin: '',
+      iso_iin: '636028',
       customer_id: '',
       document_number: '2222222',
       family_name: 'SPECIMEN',
@@ -93,5 +94,11 @@ describe('buildBarcodePayload', () => {
     expect(payload.address.locality).toBe('')
     expect(payload.address.province).toBe('')
     expect(payload.address.postal_code).toBe('')
+  })
+
+  it('should fall back to empty iso_iin when the license has none', () => {
+    const result = buildBarcodePayload(null, makeLicense({ isoIIN: '' }))
+
+    expect(result[0]).toMatchObject({ iso_iin: '' })
   })
 })

@@ -234,6 +234,50 @@ describe('useTransferQRScannerViewModel', () => {
       expect(result.current.scanError?.message).toBe('BCSC.Scan.InvalidQrCode')
     })
 
+    it('should not set scanError if navigation.navigate throws after isNavigating is set', async () => {
+      mockAuthorizeDevice.mockResolvedValue(mockDeviceAuth)
+      mockNavigation.navigate.mockImplementation(() => {
+        throw new Error('navigation error')
+      })
+
+      const { result } = renderHook(() => useTransferQRScannerViewModel(mockNavigation))
+
+      await waitFor(() => {
+        expect(mockAuthorizeDevice).toHaveBeenCalled()
+      })
+
+      await act(async () => {
+        await result.current.handleScan(validQrValue)
+      })
+
+      expect(result.current.scanError).toBeNull()
+    })
+
+    it('should not show scan error when camera re-fires after navigation is triggered', async () => {
+      mockAuthorizeDevice.mockResolvedValue(mockDeviceAuth)
+
+      const { result } = renderHook(() => useTransferQRScannerViewModel(mockNavigation))
+
+      await waitFor(() => {
+        expect(mockAuthorizeDevice).toHaveBeenCalled()
+      })
+
+      // First scan succeeds and triggers navigation
+      await act(async () => {
+        await result.current.handleScan(validQrValue)
+      })
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationSuccess)
+
+      // Camera still active during nav transition — fires again with an invalid QR
+      await act(async () => {
+        await result.current.handleScan('https://example.com')
+      })
+
+      // Should be suppressed — no error shown on the VerificationSuccess screen
+      expect(result.current.scanError).toBeNull()
+    })
+
     it('should handle non-Error throws with String fallback', async () => {
       mockAuthorizeDevice.mockResolvedValue(mockDeviceAuth)
       mockVerifyAttestation.mockRejectedValue('raw string error')

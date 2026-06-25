@@ -1,6 +1,8 @@
+import { AppEventCode } from '@/events/appEventCode'
 import { UpdateDeviceRegistrationSystemCheck } from '@/services/system-checks/UpdateDeviceRegistrationSystemCheck'
 import { BCDispatchAction } from '@/store'
 import { MockLogger } from '@bifold/core'
+import { mockAppError } from '@mocks/helpers/error'
 import deviceInfo from 'react-native-device-info'
 
 describe('UpdateDeviceRegistrationSystemCheck', () => {
@@ -135,6 +137,24 @@ describe('UpdateDeviceRegistrationSystemCheck', () => {
       expect(mockUtils.logger.error).toHaveBeenCalledWith(
         'UpdateDeviceRegistrationSystemCheck: Failed to update device registration',
         error
+      )
+    })
+    it('should fold AppError fullMessage into the log message so it reaches problem reports', async () => {
+      const mockUtils = {
+        dispatch: jest.fn(),
+        translation: jest.fn() as any,
+        logger: new MockLogger(),
+      }
+      const appError = mockAppError(AppEventCode.ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR)
+      const updateRegistrationMock = jest.fn().mockRejectedValue(appError)
+
+      const systemCheck = new UpdateDeviceRegistrationSystemCheck('1.0.0', '100', updateRegistrationMock, mockUtils)
+
+      await systemCheck.onFail()
+
+      expect(mockUtils.logger.error).toHaveBeenCalledWith(
+        `UpdateDeviceRegistrationSystemCheck: Failed to update device registration: ${appError.fullMessage}`,
+        appError.toJSON()
       )
     })
   })

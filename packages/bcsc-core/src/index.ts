@@ -1,5 +1,6 @@
 import { NativeModules, Platform } from 'react-native';
 import NativeBcscCoreSpec, {
+  type DecodePayloadResult,
   type JWK,
   type JWTClaims,
   type LoginChallengeResult,
@@ -10,6 +11,7 @@ import NativeBcscCoreSpec, {
 } from './NativeBcscCore';
 export { AccountSecurityMethod, BCSCCardProcess } from './NativeBcscCore';
 export type {
+  DecodePayloadResult,
   JWK,
   LoginChallenge,
   LoginChallengeResult,
@@ -39,6 +41,11 @@ export const BcscNativeErrorCodes = {
   KEYCHAIN_KEY_GENERATION_ERROR: 'E_120_KEYCHAIN_KEY_GENERATION_ERROR',
   /** Error creating device info JWT during client registration (error 120-6) */
   JWT_DEVICE_INFO_ERROR: 'E_120_JWT_DEVICE_INFO_ERROR',
+  /**
+   * Keychain/secure storage temporarily unreadable (device locked, auth failure) during
+   * client registration — transient and retryable, the signing key may well exist (iOS-only)
+   */
+  KEYCHAIN_UNAVAILABLE: 'E_120_KEYCHAIN_UNAVAILABLE_ERROR',
 
   // --- Native error codes (see per-entry docs for platform availability) ---
 
@@ -93,6 +100,12 @@ export const BcscNativeErrorCodes = {
  */
 export interface BcscNativeError extends Error {
   code: string;
+  /**
+   * Diagnostics attached by the native layer (iOS: the rejected NSError's userInfo).
+   * Keychain failures include the failure site, underlying error, and key inventory.
+   * Bridge-serializable values only; absent on Android rejections.
+   */
+  userInfo?: Record<string, unknown>;
 }
 
 /**
@@ -262,6 +275,25 @@ const BcscCore =
  */
 export const getAllKeys = (): Promise<PrivateKeyInfo[]> => {
   return BcscCore.getAllKeys();
+};
+
+/**
+ * Marks a keystore alias as the active (newest) signing key. Used by the 401
+ * key-recovery flow to point the wallet at the kid the server confirms it
+ * accepts. Rejects with `E_KEY_NOT_FOUND` if the alias is not in the keystore.
+ */
+export const setActiveKeyAlias = (alias: string): Promise<void> => {
+  return BcscCore.setActiveKeyAlias(alias);
+};
+
+/**
+ * Permanently deletes a keystore alias and its metadata entry. Used by the
+ * 401 key-recovery flow to prune local keys the server does not recognise.
+ * Rejects with `E_KEY_DELETE_REFUSED_LAST` if deleting the alias would leave
+ * the device with no private keys (defence-in-depth against bricking signing).
+ */
+export const deleteKey = (alias: string): Promise<void> => {
+  return BcscCore.deleteKey(alias);
 };
 
 /**
@@ -470,8 +502,8 @@ export const getDeviceCodeRequestBody = async (
   return BcscCore.getDeviceCodeRequestBody(deviceCode, clientId, issuer, confirmationCode);
 };
 
-export const decodePayload = async (jweString: string): Promise<any> => {
-  return BcscCore.decodePayload(jweString);
+export const decodePayload = async (jweString: string, key?: JWK | null): Promise<DecodePayloadResult> => {
+  return BcscCore.decodePayload(jweString, key ?? null);
 };
 
 export const decodeLoginChallenge = async (jwt: string, key?: JWK): Promise<LoginChallengeResult> => {

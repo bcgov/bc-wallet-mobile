@@ -1,6 +1,20 @@
 import { BifoldLogger } from '@bifold/core'
 import type { Result as PexipTokenResult } from '@pexip/infinity-api/dist/token/types'
-import { buildIceServers } from './connect'
+import { Platform } from 'react-native'
+import { RTCPeerConnection } from 'react-native-webrtc'
+import { buildIceServers, createPeerConnection } from './connect'
+
+jest.mock('react-native', () => ({
+  Platform: {
+    OS: 'ios',
+  },
+}))
+
+jest.mock('react-native-webrtc', () => ({
+  RTCPeerConnection: jest.fn(function (config) {
+    this.config = config
+  }),
+}))
 
 const mockLogger: BifoldLogger = {
   info: jest.fn(),
@@ -177,5 +191,49 @@ describe('buildIceServers', () => {
     )
 
     expect(mockLogger.info).toHaveBeenCalledWith('ICE servers configured:', { count: 2 })
+  })
+})
+
+describe('createPeerConnection', () => {
+  const mockLocalStream = {
+    getTracks: jest.fn(() => []),
+  } as any
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it("should set iceTransportPolicy to 'nohost' on iOS", async () => {
+    Platform.OS = 'ios'
+
+    await createPeerConnection(mockLocalStream, baseTokenResult, mockLogger)
+
+    const config = (RTCPeerConnection as jest.Mock).mock.calls[0][0]
+    expect(config.iceTransportPolicy).toBe('nohost')
+  })
+
+  it('should not set iceTransportPolicy on Android', async () => {
+    Platform.OS = 'android'
+
+    await createPeerConnection(mockLocalStream, baseTokenResult, mockLogger)
+
+    const config = (RTCPeerConnection as jest.Mock).mock.calls[0][0]
+    expect(config.iceTransportPolicy).toBeUndefined()
+  })
+
+  it('should include iceServers in configuration on all platforms', async () => {
+    Platform.OS = 'android'
+
+    await createPeerConnection(
+      mockLocalStream,
+      {
+        ...baseTokenResult,
+        stun: [{ url: 'stun:example.com:3478' }],
+      },
+      mockLogger
+    )
+
+    const config = (RTCPeerConnection as jest.Mock).mock.calls[0][0]
+    expect(config.iceServers).toEqual([{ url: 'stun:example.com:3478' }])
   })
 })

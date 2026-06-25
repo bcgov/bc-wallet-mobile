@@ -7,7 +7,6 @@ import { FormattedServicePeriod } from '../utils/service-hours-formatter'
 
 export enum BCSCStacks {
   Onboarding = 'BCSCOnboardingStack',
-  Prompt = 'BCSCPromptStack',
   Auth = 'BCSCAuthStack',
   Verify = 'BCSCVerifyStack',
   Tab = 'BCSCTabStack',
@@ -19,6 +18,7 @@ export enum BCSCModals {
   MandatoryUpdate = 'BCSCMandatoryUpdate',
   DeviceInvalidated = 'BCSCDeviceInvalidated',
   ServiceOutage = 'BCSCServiceOutage',
+  TermsOfUseUpdated = 'BCSCTermsOfUseUpdated',
 }
 
 /**
@@ -91,7 +91,6 @@ export enum BCSCScreens {
   MainResetWalletConfirmation = `${BCSCStacks.Main} Reset Wallet Warning`,
   VerifyRemoveAccountConfirmation = `${BCSCStacks.Verify} Reset App Warning`,
   OnboardingRemoveAccountConfirmation = `${BCSCStacks.Onboarding} Reset App Warning`,
-  TransferAccountInformation = 'Transfer Steps',
   TransferAccountInstructions = 'QR Get Instructions',
   TransferAccountQRDisplay = 'QR Code Display',
   TransferAccountQRScan = 'Scan QR Code',
@@ -100,9 +99,9 @@ export enum BCSCScreens {
   ServiceLogin = 'Login Request',
   EditNickname = 'Change Account Nickname',
   AccountDetails = 'Account Details',
-  OnboardingAccountSetup = 'Start Setup',
+  AccountSetup = 'Start Setup',
   OnboardingSetupTypes = 'Setup Options',
-  OnboardingIntroCarousel = 'Intro',
+  OnboardingIntro = 'Intro',
   OnboardingPrivacyPolicy = `${BCSCStacks.Onboarding} Privacy Information`,
   OnboardingTermsOfUse = 'Terms of Use Screen',
   OnboardingNotifications = 'Notification Prep',
@@ -111,7 +110,7 @@ export enum BCSCScreens {
   OnboardingOptInAnalytics = 'Analytics Opt In', // NOTE: New V4 screen, not in V3
   OnboardingWebView = `${BCSCStacks.Onboarding} Web view`,
   OnboardingDeveloper = `${BCSCStacks.Onboarding} Developer`,
-  VerifyPrompt = `${BCSCStacks.Prompt} Verify Prompt`,
+  VerifyPrompt = `${BCSCStacks.Verify} Verify Prompt`,
   MainLoading = `${BCSCStacks.Main} Loading`,
   MainSettings = `${BCSCStacks.Main} In App Settings`,
   MainWebView = `${BCSCStacks.Main} Web view`,
@@ -129,10 +128,12 @@ export enum BCSCScreens {
   VerifyPrivacyPolicy = `${BCSCStacks.Verify} Privacy Information`,
   VerifyDeveloper = `${BCSCStacks.Verify} Developer`,
   VerifyChangePIN = `${BCSCStacks.Verify} Change PIN`,
+  TransferAgeRestriction = 'BCSCTransferAgeRestriction',
   AccountExpired = 'BCSCAccountExpired',
   AccountRenewalInformation = 'Renewal ID requirements',
   AccountRenewalFirstWarning = 'Renewal Instructions',
   AccountRenewalFinalWarning = 'Renewal Warning',
+  SessionRecovery = 'Session Recovery',
   AccountLanding = 'Account Landing',
   EnterPIN = 'Enter/Verify PIN',
   DeviceAuthInfo = 'Device Authentication Prep',
@@ -163,10 +164,8 @@ export type BCSCQRCoreTabParams = {
 
 export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingWebView]: { url: string; title: string }
-  [BCSCScreens.OnboardingAccountSetup]: undefined
   [BCSCScreens.OnboardingSetupTypes]: undefined
-  [BCSCScreens.TransferAccountInformation]: undefined
-  [BCSCScreens.OnboardingIntroCarousel]: undefined
+  [BCSCScreens.OnboardingIntro]: undefined
   [BCSCScreens.OnboardingPrivacyPolicy]: undefined
   [BCSCScreens.OnboardingTermsOfUse]: undefined
   [BCSCScreens.OnboardingNotifications]: undefined
@@ -181,11 +180,10 @@ export type BCSCOnboardingStackParams = {
   [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
 }
 
-export type BCSCPromptStackParams = {
-  [BCSCScreens.VerifyPrompt]: undefined
-}
-
 export type BCSCVerifyStackParams = {
+  [BCSCScreens.VerifyPrompt]: undefined
+  [BCSCScreens.AccountSetup]: undefined
+  [BCSCScreens.SessionRecovery]: undefined
   [BCSCScreens.VerifyWebView]: { url: string; title: string }
   [BCSCScreens.IdentitySelection]: undefined
   [BCSCScreens.SerialInstructions]: undefined
@@ -274,6 +272,7 @@ export type BCSCMainStackParams = {
   [BCSCScreens.MainAutoLock]: undefined
   [BCSCScreens.MainAppSecurity]: undefined
   [BCSCScreens.MainChangePIN]: { isChangingExistingPIN?: boolean } | undefined
+  [BCSCScreens.TransferAgeRestriction]: undefined
   [BCSCScreens.AccountExpired]: undefined
   [BCSCScreens.AccountRenewalInformation]: undefined
   [BCSCScreens.AccountRenewalFirstWarning]: undefined
@@ -297,6 +296,7 @@ export type BCSCMainStackParams = {
   [BCSCModals.MandatoryUpdate]: undefined
   [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
   [BCSCModals.DeviceInvalidated]: { invalidationReason: BCSCReason }
+  [BCSCModals.TermsOfUseUpdated]: undefined
 }
 
 export type BCSCAuthStackParams = {

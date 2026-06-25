@@ -1,8 +1,9 @@
-import { RemoteLogger } from '@bifold/remote-logs'
+import type { BifoldError } from '@bifold/core'
+import { RemoteLogger, lokiTransport } from '@bifold/remote-logs'
 import { LogLevel } from '@credo-ts/core'
 import Config from 'react-native-config'
 import { autoDisableRemoteLoggingIntervalInMinutes } from '../constants'
-import { appLogger, createAppLogger } from './logger'
+import { appLogger, createAppLogger, reportProblem } from './logger'
 
 type ConfigModule = {
   REMOTE_LOGGING_URL: string
@@ -25,11 +26,17 @@ jest.mock('react-native-config', () => ({
 jest.mock('@bifold/remote-logs', () => {
   return {
     RemoteLogger: jest.fn().mockImplementation((options) => ({ options })),
+    lokiTransport: jest.fn(),
   }
 })
 
 const mockedConfig = Config as ConfigModule
 const RemoteLoggerMock = RemoteLogger as unknown as jest.Mock
+const lokiTransportMock = lokiTransport as unknown as jest.Mock
+
+// Matches the ambiguity-free alphabet used by generateReferenceCode
+// (digits 2-9 and A-Z excluding I, L, O, U), grouped as XXXX-XXXX.
+const REFERENCE_CODE_PATTERN = /^[2-9A-HJKMNP-TV-Z]{4}-[2-9A-HJKMNP-TV-Z]{4}$/
 
 describe('createAppLogger', () => {
   beforeEach(() => {
@@ -103,5 +110,52 @@ describe('createAppLogger', () => {
     createAppLogger()
 
     expect(RemoteLoggerMock).toHaveBeenCalledWith(expect.objectContaining({ logLevel: expectedLevel }))
+  })
+})
+
+describe('reportProblem', () => {
+  const fakeError = {
+    title: 'Boom',
+    description: 'It exploded',
+    code: 2800,
+    message: 'stack trace details',
+    stack: 'Error: Boom\n    at somewhere (file.ts:1:1)',
+  } as unknown as BifoldError
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('returns a reference code matching the expected format', () => {
+    expect(reportProblem(fakeError)).toMatch(REFERENCE_CODE_PATTERN)
+  })
+
+  it('sends an incident-report to Loki with the reference code as report_id', () => {
+    const refCode = reportProblem(fakeError)
+
+    expect(lokiTransportMock).toHaveBeenCalledTimes(1)
+    const payload = lokiTransportMock.mock.calls[0][0]
+    expect(payload.options.job).toBe('incident-report')
+    expect(payload.options.lokiUrl).toBe('https://logs.example')
+    expect(payload.rawMsg[0].message).toBe('Boom')
+    expect(payload.rawMsg[0].data).toMatchObject({
+      description: 'It exploded',
+      code: 2800,
+      message: 'stack trace details',
+      stack: 'Error: Boom\n    at somewhere (file.ts:1:1)',
+      report_id: refCode,
+    })
+  })
+
+  it('never throws and still returns a code when the transport fails', () => {
+    lokiTransportMock.mockImplementationOnce(() => {
+      throw new Error('network down')
+    })
+
+    let refCode: string | undefined
+    expect(() => {
+      refCode = reportProblem(fakeError)
+    }).not.toThrow()
+    expect(refCode).toMatch(REFERENCE_CODE_PATTERN)
   })
 })

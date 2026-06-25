@@ -22,6 +22,7 @@ import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Alert } from 'react-native'
 import Toast from 'react-native-toast-message'
 
 type EmailConfirmationScreenProps = {
@@ -70,7 +71,14 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
         })
       )
     } catch (error) {
-      setError(t('BCSC.EmailConfirmation.ErrorTitle'))
+      if ((error as any)?.cause?.status === 404) {
+        setError(t('BCSC.EmailConfirmation.CodeDoesNotMatch'))
+        Alert.alert(t('BCSC.EmailConfirmation.CouldNotVerifyTitle'), t('BCSC.EmailConfirmation.CodeDoesNotMatch'), [
+          { text: t('Global.OK') },
+        ])
+      } else {
+        setError(t('BCSC.EmailConfirmation.ErrorTitle'))
+      }
     } finally {
       setLoading(false)
     }

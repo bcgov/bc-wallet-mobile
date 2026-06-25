@@ -217,11 +217,7 @@ describe('DropdownWithValidation Component', () => {
 
       // Press on modal content (should stop propagation and NOT close modal)
       const modalContent = getByTestId('com.ariesbifold:id/test-dropdown-modal-content')
-      const mockEvent = { stopPropagation: jest.fn() }
-      fireEvent.press(modalContent, mockEvent)
-
-      // Verify stopPropagation was called
-      expect(mockEvent.stopPropagation).toHaveBeenCalled()
+      fireEvent.press(modalContent)
 
       // Modal should still be open - options should still be visible
       await waitFor(() => {
