@@ -151,8 +151,12 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
   )
 
   const onPressContinue = useCallback(async () => {
+    if (loading) {
+      return
+    }
+
     await validateAndContinue(currentPIN1, currentPIN2)
-  }, [currentPIN1, currentPIN2, validateAndContinue])
+  }, [currentPIN1, currentPIN2, loading, validateAndContinue])
 
   const handlePIN1Change = useCallback((pin: string) => {
     setCurrentPIN1(pin)

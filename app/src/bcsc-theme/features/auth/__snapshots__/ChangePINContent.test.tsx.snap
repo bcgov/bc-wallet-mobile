@@ -655,7 +655,7 @@ exports[`ChangePINContent when changing existing PIN (isChangingExistingPIN = tr
                   {
                     "busy": undefined,
                     "checked": undefined,
-                    "disabled": true,
+                    "disabled": false,
                     "expanded": undefined,
                     "selected": undefined,
                   }
@@ -670,7 +670,7 @@ exports[`ChangePINContent when changing existing PIN (isChangingExistingPIN = tr
                 }
                 accessible={true}
                 collapsable={false}
-                focusable={false}
+                focusable={true}
                 onClick={[Function]}
                 onResponderGrant={[Function]}
                 onResponderMove={[Function]}
@@ -680,7 +680,7 @@ exports[`ChangePINContent when changing existing PIN (isChangingExistingPIN = tr
                 onStartShouldSetResponder={[Function]}
                 style={
                   {
-                    "backgroundColor": "#757575",
+                    "backgroundColor": "#003366",
                     "borderRadius": 4,
                     "opacity": 1,
                     "padding": 16,
@@ -715,13 +715,7 @@ exports[`ChangePINContent when changing existing PIN (isChangingExistingPIN = tr
                             "fontWeight": "bold",
                             "textAlign": "center",
                           },
-                          {
-                            "color": "#FFFFFF",
-                            "fontFamily": "BCSans-Regular",
-                            "fontSize": 18,
-                            "fontWeight": "bold",
-                            "textAlign": "center",
-                          },
+                          false,
                           false,
                         ],
                       ]
@@ -1662,7 +1656,7 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
                       {
                         "busy": undefined,
                         "checked": undefined,
-                        "disabled": true,
+                        "disabled": false,
                         "expanded": undefined,
                         "selected": undefined,
                       }
@@ -1677,7 +1671,7 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
                     }
                     accessible={true}
                     collapsable={false}
-                    focusable={false}
+                    focusable={true}
                     onClick={[Function]}
                     onResponderGrant={[Function]}
                     onResponderMove={[Function]}
@@ -1687,7 +1681,7 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
                     onStartShouldSetResponder={[Function]}
                     style={
                       {
-                        "backgroundColor": "#757575",
+                        "backgroundColor": "#003366",
                         "borderRadius": 4,
                         "opacity": 1,
                         "padding": 16,
@@ -1722,13 +1716,7 @@ exports[`ChangePINContent when switching from Device Auth to PIN (isChangingExis
                                 "fontWeight": "bold",
                                 "textAlign": "center",
                               },
-                              {
-                                "color": "#FFFFFF",
-                                "fontFamily": "BCSans-Regular",
-                                "fontSize": 18,
-                                "fontWeight": "bold",
-                                "textAlign": "center",
-                              },
+                              false,
                               false,
                             ],
                           ]

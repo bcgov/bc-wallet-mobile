@@ -5,7 +5,7 @@ import QRScanner from '@/bcsc-theme/features/qr-core/QRScanner'
 import { useVerificationStatus } from '@/bcsc-theme/hooks/useVerificationStatus'
 import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
-import { ButtonLocation, IconButton, testIdWithKey, useTheme } from '@bifold/core'
+import { ButtonLocation, IconButton, testIdWithKey, TOKENS, useServices, useTheme } from '@bifold/core'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -81,6 +81,7 @@ const QRCoreStack: React.FC = () => {
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const { isVerified } = useVerificationStatus()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
     tabBarIcon: {
@@ -95,15 +96,17 @@ const QRCoreStack: React.FC = () => {
           focus: () => {
             // Hijack the focus event for the PairingCode tab if the user is not verified
             if (route.name === BCSCQRCoreScreens.PairingCode && !isVerified) {
-              navigation.navigate(BCSCScreens.VerifyPrompt)
+              logger.debug('[QRCoreStack] User is not verified, redirecting to VerifyPrompt screen')
+              navigation.navigate(BCSCScreens.MainVerifyPrompt)
               return
             }
           },
           tabPress: (event) => {
             // Hijack the tab press event for the PairingCode tab if the user is not verified
             if (route.name === BCSCQRCoreScreens.PairingCode && !isVerified) {
+              logger.debug('[QRCoreStack] User is not verified, redirecting to VerifyPrompt screen')
               event.preventDefault() // Prevents navigation to the PairingCode tab
-              navigation.navigate(BCSCScreens.VerifyPrompt)
+              navigation.navigate(BCSCScreens.MainVerifyPrompt)
             }
           },
         })}

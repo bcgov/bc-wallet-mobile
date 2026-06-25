@@ -471,7 +471,7 @@ const MainStack: React.FC = () => {
             })}
           />
           <Stack.Screen
-            name={BCSCScreens.VerifyPrompt}
+            name={BCSCScreens.MainVerifyPrompt}
             component={VerifyPromptScreenNoSkip}
             options={() => ({
               headerShown: true,

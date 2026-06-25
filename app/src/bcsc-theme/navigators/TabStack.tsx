@@ -1,5 +1,12 @@
 import { useCustomNotifications } from '@/hooks/useCustomNotifications'
-import { CredentialStack, OpenIDCredentialRecordProvider, testIdWithKey, useTheme } from '@bifold/core'
+import {
+  CredentialStack,
+  OpenIDCredentialRecordProvider,
+  testIdWithKey,
+  TOKENS,
+  useServices,
+  useTheme,
+} from '@bifold/core'
 import { BottomTabBar, BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -114,6 +121,7 @@ const BCSCTabStack: React.FC = () => {
   const { bottom: safeAreaBottom } = useSafeAreaInsets()
   const { t } = useTranslation()
   const { isVerified } = useVerificationStatus()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   // FIXME (V4.1.x): Add custom notifications and credential notifications together to calculate badge count.
   // Need to wait until useNotifications doesn't throw an error when un-wrapped by the providers.
@@ -143,7 +151,8 @@ const BCSCTabStack: React.FC = () => {
           focus: () => {
             // Hijack the focus event for the Services tab if the user is not verified
             if (route.name === BCSCScreens.Services && !isVerified) {
-              navigation.navigate(BCSCScreens.VerifyPrompt)
+              logger.debug('[BCSCTabStack] User is not verified, redirecting to VerifyPrompt screen')
+              navigation.navigate(BCSCScreens.MainVerifyPrompt)
               return
             }
 
@@ -152,8 +161,9 @@ const BCSCTabStack: React.FC = () => {
           tabPress: (event) => {
             // Hijack the tab press event for the Services tab if the user is not verified
             if (route.name === BCSCScreens.Services && !isVerified) {
+              logger.debug('[BCSCTabStack] User is not verified, redirecting to VerifyPrompt screen')
               event.preventDefault() // Prevents navigation to the Services tab
-              navigation.navigate(BCSCScreens.VerifyPrompt)
+              navigation.navigate(BCSCScreens.MainVerifyPrompt)
             }
           },
         })}

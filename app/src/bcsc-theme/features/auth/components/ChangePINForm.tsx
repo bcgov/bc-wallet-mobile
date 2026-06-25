@@ -138,8 +138,12 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
   )
 
   const onPressChangePIN = useCallback(async () => {
+    if (loading) {
+      return
+    }
+
     await validateAndChangePIN(currentPIN, newPIN, confirmPIN)
-  }, [currentPIN, newPIN, confirmPIN, validateAndChangePIN])
+  }, [loading, validateAndChangePIN, currentPIN, newPIN, confirmPIN])
 
   const handleCurrentPINChange = useCallback((pin: string) => {
     setCurrentPIN(pin)

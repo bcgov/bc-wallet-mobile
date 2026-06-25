@@ -111,6 +111,7 @@ export enum BCSCScreens {
   OnboardingWebView = `${BCSCStacks.Onboarding} Web view`,
   OnboardingDeveloper = `${BCSCStacks.Onboarding} Developer`,
   VerifyPrompt = `${BCSCStacks.Verify} Verify Prompt`,
+  MainVerifyPrompt = `${BCSCStacks.Main} Verify Prompt`,
   MainLoading = `${BCSCStacks.Main} Loading`,
   MainSettings = `${BCSCStacks.Main} In App Settings`,
   MainWebView = `${BCSCStacks.Main} Web view`,
@@ -291,7 +292,7 @@ export type BCSCMainStackParams = {
 
   [BCSCScreens.QRCore]: NavigatorScreenParams<BCSCQRCoreTabParams> | undefined
   [BCSCScreens.ConnectionLoading]: { oobRecordId?: string; credentialId?: string; proofId?: string }
-  [BCSCScreens.VerifyPrompt]: undefined
+  [BCSCScreens.MainVerifyPrompt]: undefined
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
