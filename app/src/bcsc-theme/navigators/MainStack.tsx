@@ -62,6 +62,9 @@ import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsS
 import { MainPrivacyPolicyScreen } from '../features/settings/MainPrivacyPolicyScreen'
 import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
 import { MainResetWalletConfirmationScreen } from '../features/settings/ResetWalletConfirmationScreen'
+import { useVerificationResponseListener } from '../features/verification-response/useVerificationResponseListener'
+import CancelledReview from '../features/verify/send-video/CancelledReview'
+import VerificationSuccessScreen from '../features/verify/VerificationSuccessScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { useBCSCApiClient } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
@@ -161,6 +164,11 @@ const MainStack: React.FC = () => {
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.AccountExpired }] }))
     }
   }, [account, navigation])
+
+  useVerificationResponseListener({
+    onSuccess: () => navigation.navigate(BCSCScreens.VerificationSuccess),
+    onCancelled: (reason) => navigation.navigate(BCSCScreens.CancelledReview, { agentReason: reason }),
+  })
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
@@ -462,6 +470,20 @@ const MainStack: React.FC = () => {
           <Stack.Screen
             name={BCSCScreens.AccountRenewalFinalWarning}
             component={AccountRenewalFinalWarningScreen}
+            options={() => ({
+              headerShown: true,
+            })}
+          />
+          <Stack.Screen
+            name={BCSCScreens.VerificationSuccess}
+            component={VerificationSuccessScreen}
+            options={() => ({
+              headerShown: true,
+            })}
+          />
+          <Stack.Screen
+            name={BCSCScreens.CancelledReview}
+            component={CancelledReview}
             options={() => ({
               headerShown: true,
             })}

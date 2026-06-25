@@ -7,6 +7,7 @@ import { BCSCModals, BCSCScreens, BCSCStacks, BCSCVerifyStackParams } from '@/bc
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
 import { BCState } from '@/store'
 import { testIdWithKey, useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
+import { useNavigation } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
@@ -66,6 +67,7 @@ import { getResumeStepRoute } from '../utils/resume-step-route'
 
 const VerifyStack = () => {
   const Stack = createStackNavigator<BCSCVerifyStackParams>()
+  const navigation = useNavigation()
   const theme = useTheme()
   const { t } = useTranslation()
   const defaultStackOptions = useDefaultStackOptions(theme)
@@ -74,7 +76,20 @@ const VerifyStack = () => {
   useBCSCStack(BCSCStacks.Verify)
 
   // Listen for verification approval push notifications and navigate to success screen
-  useVerificationResponseListener()
+  useVerificationResponseListener({
+    onSuccess: () => {
+      // Navigate to success screen - tokens have been fetched; it will handle final account setup and cleanup
+      navigation?.dispatch(
+        navigation?.reset({
+          index: 0,
+          routes: [{ name: BCSCScreens.VerificationSuccess }],
+        })
+      )
+    },
+    onCancelled: (agentReason?: string) => {
+      navigation?.navigate(BCSCScreens.CancelledReview, { agentReason })
+    },
+  })
 
   return (
     <Stack.Navigator
