@@ -51,6 +51,7 @@ import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
 import { TermsOfUseUpdated } from '../features/modal/TermsOfUseUpdated'
+import { VerifyPromptScreen } from '../features/onboarding/VerifyPromptScreen'
 import { usePairingService } from '../features/pairing'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
@@ -467,7 +468,13 @@ const MainStack: React.FC = () => {
               headerShown: true,
             })}
           />
-
+          <Stack.Screen
+            name={BCSCScreens.VerifyPrompt}
+            component={() => <VerifyPromptScreen showSkip={false} />}
+            options={() => ({
+              headerShown: true,
+            })}
+          />
           {/* React navigation docs suggest modals at bottom of stack */}
           <Stack.Screen
             name={BCSCModals.InternetDisconnected}

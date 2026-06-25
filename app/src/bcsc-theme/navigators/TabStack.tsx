@@ -13,7 +13,6 @@ import { createTabHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainSettingsHeaderButton } from '../components/SettingsHeaderButton'
 import { AgentReadyGate } from '../features/agent'
 import Home from '../features/home/Home'
-import { VerifyPromptScreen } from '../features/onboarding/VerifyPromptScreen'
 import { FloatingScanButton } from '../features/scan'
 import Services from '../features/services/Services'
 import { useVerificationStatus } from '../hooks/useVerificationStatus'
@@ -26,11 +25,6 @@ const ScopedCredentialStack: React.FC = () => (
     </OpenIDCredentialRecordProvider>
   </AgentReadyGate>
 )
-
-const ServicesScreen: React.FC = () => {
-  const { isVerified } = useVerificationStatus()
-  return isVerified ? <Services /> : <VerifyPromptScreen showSkip={false} edges={['left', 'right']} />
-}
 
 type TabBarIconProps = {
   focused: boolean
@@ -119,6 +113,7 @@ const BCSCTabStack: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const { bottom: safeAreaBottom } = useSafeAreaInsets()
   const { t } = useTranslation()
+  const { isVerified } = useVerificationStatus()
 
   // FIXME (V4.1.x): Add custom notifications and credential notifications together to calculate badge count.
   // Need to wait until useNotifications doesn't throw an error when un-wrapped by the providers.
@@ -146,6 +141,13 @@ const BCSCTabStack: React.FC = () => {
       <Tab.Navigator
         screenListeners={({ route }) => ({
           focus: () => setActiveTab(route.name),
+          tabPress: (event) => {
+            // Hijack the tab press event for the Services tab if the user is not verified
+            if (route.name === BCSCScreens.Services && !isVerified) {
+              event.preventDefault() // Prevents navigation to the Services tab
+              navigation.navigate(BCSCScreens.VerifyPrompt)
+            }
+          },
         })}
         initialRouteName={BCSCScreens.Home}
         tabBar={(props) => <AnimatedTabBar {...props} />}
@@ -178,7 +180,7 @@ const BCSCTabStack: React.FC = () => {
         />
         <Tab.Screen
           name={BCSCScreens.Services}
-          component={ServicesScreen}
+          component={Services}
           options={{
             tabBarIconStyle: styles.tabBarIcon,
             tabBarIcon: createTabBarIcon('Services', 'view-list-outline'),
