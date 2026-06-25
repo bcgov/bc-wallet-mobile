@@ -8,6 +8,7 @@ import { useRestartVerification } from '../hooks/useRestartVerification'
 import { BCSCScreens } from '../types/navigators'
 import FloatingHelpMenu, { FloatingHelpMenuRef } from './FloatingHelpMenu'
 import { ListButton, ListButtonGroup, ListButtonProps } from './ListButton'
+import { ReportProblemModal } from './ReportProblemModal'
 
 type FloatingHelpMenuButtonProps = {
   // ListButton rows; falsy children are filtered out by ListButtonGroup so rows can be conditional
@@ -99,35 +100,44 @@ export const createFloatingHelpMenuButton = ({
     const { t } = useTranslation()
     const navigation = useNavigation<StackNavigationProp<WebViewParamList>>()
     const floatingHelpMenuRef = useRef<FloatingHelpMenuRef>(null)
+    const [reportProblemVisible, setReportProblemVisible] = useState(false)
 
     const handleLearnMore = useCallback(() => {
       navigation.navigate(webViewScreen, { url: learnMoreUrl, title: t('HelpCentre.Title') })
       floatingHelpMenuRef.current?.close()
     }, [navigation, t])
 
+    // Opens the report modal on the next frame. Deferring to a later tick than the menu modal's dismissal
+    // avoids the iOS "attempt to present while a presentation is in progress" race — presenting both in the
+    // same commit can leave the report modal not showing.
+    const showReportProblemModal = useCallback(() => {
+      requestAnimationFrame(() => setReportProblemVisible(true))
+    }, [])
+
+    const handleReportProblem = useCallback(() => {
+      // Close the help menu first, then open the report modal once the dismissal completes.
+      floatingHelpMenuRef.current?.close(showReportProblemModal)
+    }, [showReportProblemModal])
+
     return (
-      <FloatingHelpMenuButton ref={floatingHelpMenuRef}>
-        <ListButton onPress={handleLearnMore}>{t('BCSC.HelpMenu.LearnMore')}</ListButton>
-        <ListButton
-          onPress={() => {
-            // TODO (V4.1.x): Implement Give Feedback page and link here
-            floatingHelpMenuRef.current?.close()
-          }}
-        >
-          {t('BCSC.HelpMenu.GiveFeedback')}
-        </ListButton>
-        <ListButton
-          onPress={() => {
-            // TODO (V4.1.x): Implement Report a Problem page and link here
-            floatingHelpMenuRef.current?.close()
-          }}
-        >
-          {t('BCSC.HelpMenu.ReportProblem')}
-        </ListButton>
-        {showRestartVerification && (
-          <RestartVerificationListButton onConfirm={() => floatingHelpMenuRef.current?.close()} />
-        )}
-      </FloatingHelpMenuButton>
+      <>
+        <FloatingHelpMenuButton ref={floatingHelpMenuRef}>
+          <ListButton onPress={handleLearnMore}>{t('BCSC.HelpMenu.LearnMore')}</ListButton>
+          <ListButton
+            onPress={() => {
+              // TODO (V4.1.x): Implement Give Feedback page and link here
+              floatingHelpMenuRef.current?.close()
+            }}
+          >
+            {t('BCSC.HelpMenu.GiveFeedback')}
+          </ListButton>
+          <ListButton onPress={handleReportProblem}>{t('BCSC.HelpMenu.ReportProblem')}</ListButton>
+          {showRestartVerification && (
+            <RestartVerificationListButton onConfirm={() => floatingHelpMenuRef.current?.close()} />
+          )}
+        </FloatingHelpMenuButton>
+        <ReportProblemModal visible={reportProblemVisible} onClose={() => setReportProblemVisible(false)} />
+      </>
     )
   }
 
