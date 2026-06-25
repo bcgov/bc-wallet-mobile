@@ -96,7 +96,14 @@ export const reportProblem = (error: BifoldError, options?: { includeDeviceDetai
     if (baseOptions.lokiUrl) {
       lokiTransport({
         msg: title,
-        rawMsg: [{ message: title, data: { description, code, message, stack, report_id: referenceCode } }],
+        // Only attach `stack` when the error actually carries one — user-initiated reports have no real
+        // trace, so the field is omitted rather than logging meaningless construction frames.
+        rawMsg: [
+          {
+            message: title,
+            data: { description, code, message, ...(stack ? { stack } : {}), report_id: referenceCode },
+          },
+        ],
         level: { severity: 3, text: 'error' },
         options: {
           lokiUrl: baseOptions.lokiUrl,

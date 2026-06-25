@@ -76,6 +76,10 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
     // are attached only when the user opted in. The returned reference code is intentionally ignored —
     // this flow is fire-and-forget, so we just close once the report has been handed off.
     const reportError = new BifoldError(t('BCSC.ReportProblem.Title'), description.trim(), '', USER_REPORT_ERROR_CODE)
+    // A user-initiated report isn't a thrown error, so the stack `new BifoldError` auto-captures is just
+    // this submit handler's frames — noise in the incident log. Drop it so the report carries only the
+    // user's description (real failures still keep their stack via the ErrorModal "Report" path).
+    reportError.stack = undefined
     reportProblem(reportError, { includeDeviceDetails })
     handleClose()
   }, [t, description, includeDeviceDetails, handleClose])

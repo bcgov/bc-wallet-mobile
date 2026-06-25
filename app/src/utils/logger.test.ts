@@ -147,6 +147,16 @@ describe('reportProblem', () => {
     })
   })
 
+  it('omits stack from the payload when the error has no stack', () => {
+    const errorWithoutStack = { ...fakeError, stack: undefined } as unknown as BifoldError
+
+    reportProblem(errorWithoutStack)
+
+    const data = lokiTransportMock.mock.calls[0][0].rawMsg[0].data
+    expect(data).not.toHaveProperty('stack')
+    expect(data).toMatchObject({ description: 'It exploded', code: 2800, message: 'stack trace details' })
+  })
+
   it('never throws and still returns a code when the transport fails', () => {
     lokiTransportMock.mockImplementationOnce(() => {
       throw new Error('network down')

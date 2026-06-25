@@ -46,6 +46,16 @@ describe('ReportProblemModal', () => {
     expect(onClose).toHaveBeenCalled()
   })
 
+  it('sends a report without an auto-captured stack trace', () => {
+    const { getByTestId } = renderModal()
+
+    enterDescription(getByTestId)
+    fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
+
+    const reportedError = mockReportProblem.mock.calls[0][0]
+    expect(reportedError.stack).toBeUndefined()
+  })
+
   it('does not submit an empty (whitespace-only) report', () => {
     const onClose = jest.fn()
     const { getByTestId } = renderModal(onClose)
