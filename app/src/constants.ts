@@ -6,12 +6,33 @@ export const autoDisableRemoteLoggingIntervalInMinutes = 60
 export const surveyMonkeyUrl = 'https://www.surveymonkey.com/r/7BMHJL8'
 export const surveyMonkeyExitUrl = 'https://www.surveymonkey.com/survey-thanks'
 export const hitSlop = { top: 44, bottom: 44, left: 44, right: 44 }
-interface AttestationRestrictionEnvironment {
+export interface CredentialRestrictionEnvironment {
   credDefIDs: readonly string[]
   invitationUrl: string
 }
 
-export const AttestationRestrictions: { [key: string]: AttestationRestrictionEnvironment } = {
+/**
+ * Per-environment Auto fetch credential configuration.
+ *
+ * TODO: Replace placeholder cred def IDs and invitation URLs with real values
+ * from the IAS team once they are available.
+ */
+export const AutoFetchCredentialConfig: Record<string, CredentialRestrictionEnvironment> = {
+  Development: {
+    credDefIDs: ['GLMSn8ABPSvGnk42xUU7Fo:3:CL:3190179:DigitalServicesCard'],
+    invitationUrl: 'PLACEHOLDER_DEV_ACCOUNT_ID_INVITATION_URL',
+  },
+  Test: {
+    credDefIDs: ['PLACEHOLDER_TEST_ACCOUNT_ID_CRED_DEF_ID'],
+    invitationUrl: 'PLACEHOLDER_TEST_ACCOUNT_ID_INVITATION_URL',
+  },
+  Production: {
+    credDefIDs: ['PLACEHOLDER_PROD_ACCOUNT_ID_CRED_DEF_ID'],
+    invitationUrl: 'PLACEHOLDER_PROD_ACCOUNT_ID_INVITATION_URL',
+  },
+} as const
+
+export const AttestationRestrictions: { [key: string]: CredentialRestrictionEnvironment } = {
   Development: {
     credDefIDs: ['NXp6XcGeCR2MviWuY51Dva:3:CL:33557:bcwallet', 'NXp6XcGeCR2MviWuY51Dva:3:CL:33557:bcwallet_dev_v2'],
     invitationUrl:
