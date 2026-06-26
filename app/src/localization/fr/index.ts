@@ -230,6 +230,7 @@ const translation = {
       "LearnMore": "Learn about BCSC app (FR)",
       "GiveFeedback": "Give feedback (FR)",
       "ReportProblem": "Report a problem (FR)",
+      "BackToHome": "Back to home (FR)",
       "RestartVerification": "Restart verification process (FR)",
     },
     "ReportProblem": {
