@@ -50,7 +50,6 @@ describe('useVerificationMethodModel', () => {
     bcsc: {
       appVersion: '1.0.0',
       cardType: BCSCCardType.ComboCard,
-      nicknames: ['Bob'],
       selectedNickname: 'Bob',
       bookmarks: [],
       bannerMessages: [],
