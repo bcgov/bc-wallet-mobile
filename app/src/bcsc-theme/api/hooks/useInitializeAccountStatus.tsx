@@ -31,12 +31,6 @@ export const useInitializeAccountStatus = () => {
       const account = await retryAsync(getAccount, ACCOUNT_FETCH_MAX_RETRIES, ACCOUNT_FETCH_RETRY_DELAY_MS, true)
 
       dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [Boolean(account)] })
-
-      const nickname = account?.nickname || account?.displayName
-
-      // if (nickname && !store.bcsc.nicknames.includes(nickname)) {
-      //   dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [nickname] })
-      // }
     } catch (error) {
       logger.error('[useInitializeAccountStatus] Error checking for existing account:', error as Error)
     } finally {

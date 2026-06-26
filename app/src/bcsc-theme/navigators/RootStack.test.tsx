@@ -67,7 +67,7 @@ jest.mock('../features/agent/BCSCAgentProvider', () => ({
 
 const mockStore = (overrides: Record<string, any> = {}) => ({
   stateLoaded: true,
-  bcsc: { hasAccount: false, nicknames: [] },
+  bcsc: { hasAccount: false },
   bcscSecure: { verified: false },
   authentication: { didAuthenticate: false },
   ...overrides,
@@ -149,9 +149,7 @@ describe('BCSCRootStack', () => {
 
   it('renders OnboardingStack when hasAccount is false', () => {
     const mockDispatch = jest.fn()
-    jest
-      .mocked(Bifold.useStore)
-      .mockReturnValue([mockStore({ bcsc: { hasAccount: false, nicknames: [] } }), mockDispatch] as any)
+    jest.mocked(Bifold.useStore).mockReturnValue([mockStore({ bcsc: { hasAccount: false } }), mockDispatch] as any)
 
     const { toJSON } = render(<BCSCRootStack />)
 
@@ -162,7 +160,7 @@ describe('BCSCRootStack', () => {
     const mockDispatch = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([
       mockStore({
-        bcsc: { hasAccount: true, nicknames: [] },
+        bcsc: { hasAccount: true },
         authentication: { didAuthenticate: false },
       }),
       mockDispatch,
@@ -177,7 +175,7 @@ describe('BCSCRootStack', () => {
     const mockDispatch = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([
       mockStore({
-        bcsc: { hasAccount: true, nicknames: [] },
+        bcsc: { hasAccount: true },
         authentication: { didAuthenticate: true },
         bcscSecure: { verified: false, verifiedStatus: VerificationStatus.IN_PROGRESS },
       }),
@@ -193,7 +191,7 @@ describe('BCSCRootStack', () => {
     const mockDispatch = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([
       mockStore({
-        bcsc: { hasAccount: true, nicknames: [] },
+        bcsc: { hasAccount: true },
         authentication: { didAuthenticate: true },
         bcscSecure: { verified: true },
       }),
@@ -209,7 +207,7 @@ describe('BCSCRootStack', () => {
     const mockDispatch = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([
       mockStore({
-        bcsc: { hasAccount: true, nicknames: [] },
+        bcsc: { hasAccount: true },
         authentication: { didAuthenticate: true },
         // verified:true would normally route to MainStack — recovery must take precedence.
         // (VerifyStack starts on the SessionRecovery screen when sessionRecoveryRequired is set.)
@@ -227,7 +225,7 @@ describe('BCSCRootStack', () => {
     const mockDispatch = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([
       mockStore({
-        bcsc: { hasAccount: true, nicknames: [], hasSeenVerifyPrompt: true },
+        bcsc: { hasAccount: true, hasSeenVerifyPrompt: true },
         authentication: { didAuthenticate: true },
         bcscSecure: { verified: undefined },
       }),
@@ -243,7 +241,7 @@ describe('BCSCRootStack', () => {
     const mockDispatch = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([
       mockStore({
-        bcsc: { hasAccount: true, nicknames: [], hasSeenVerifyPrompt: false },
+        bcsc: { hasAccount: true, hasSeenVerifyPrompt: false },
         authentication: { didAuthenticate: true },
         bcscSecure: { verified: false },
       }),
