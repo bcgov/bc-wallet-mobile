@@ -200,6 +200,8 @@ export class AppError extends Error {
       message: this.message,
       technicalMessage: this.technicalMessage,
       code: this.code,
+      appEvent: this.appEvent,
+      statusCode: this.statusCode,
       timestamp: this.timestamp,
       handled: this.handled,
       screen: this.screen,

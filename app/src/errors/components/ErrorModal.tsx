@@ -4,6 +4,7 @@ import { reportProblem } from '@/utils/logger'
 import { BifoldError, useTheme } from '@bifold/core'
 import React, { useCallback, useMemo } from 'react'
 import { Modal, Pressable, StyleSheet } from 'react-native'
+import { AppError } from '..'
 import { ErrorInfoCard } from './ErrorInfoCard'
 
 const ANALYTICS_REPORT_THIS_PROBLEM_LABEL = 'Report this problem'
@@ -17,15 +18,11 @@ export interface ErrorModalAction {
 export interface ErrorModalPayload {
   title: string
   description: string
-  message: string
-  code: number
-  appEvent: string
-  cause?: unknown
-  stack?: string
+  error: AppError
 }
 
 export interface BCSCErrorModalProps {
-  error: ErrorModalPayload | null
+  payload: ErrorModalPayload | null
   errorKey: number
   onDismiss: () => void
   action?: ErrorModalAction
@@ -40,7 +37,7 @@ export interface BCSCErrorModalProps {
  * emitters or listeners involved.
  */
 export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
-  error,
+  payload,
   errorKey,
   onDismiss,
   action,
@@ -55,13 +52,15 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
    * @returns the reference code the user can share with support, or undefined if there is no error
    */
   const handleReport = useCallback((): string | undefined => {
-    if (!error) {
+    if (!payload) {
       return
     }
 
+    const error = payload.error
+
     Analytics.trackAlertActionEvent(error.appEvent as AppEventCode, ANALYTICS_REPORT_THIS_PROBLEM_LABEL)
 
-    const reportError = new BifoldError(error.title, error.description, error.message, error.code)
+    const reportError = new BifoldError(payload.title, payload.description, error.message, error.statusCode)
     reportError.cause = error.cause
     reportError.stack = error.stack
 

@@ -79,6 +79,7 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
       setError({
         title,
         description,
+        error: error,
         message: error.fullMessage,
         code: error.statusCode,
         appEvent: error.appEvent,
@@ -117,7 +118,7 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
     <ErrorAlertContext.Provider value={value}>
       {children}
       <BCSCErrorModal
-        error={error}
+        payload={error}
         errorKey={errorKey}
         onDismiss={dismissErrorModal}
         enableReport={enableReport}

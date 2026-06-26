@@ -1,4 +1,4 @@
-import type { BifoldError } from '@bifold/core'
+import { ErrorModalPayload } from '@/errors/components/ErrorModal'
 import { RemoteLogger, RemoteLoggerOptions, lokiTransport } from '@bifold/remote-logs'
 import { LogLevel } from '@credo-ts/core'
 import Config from 'react-native-config'
@@ -83,9 +83,9 @@ export const appLogger = createAppLogger()
  *   preserve existing error-report behaviour)
  * @returns the reference code to surface to the user
  */
-export const reportProblem = (error: BifoldError, options?: { includeDeviceDetails?: boolean }): string => {
+export const reportProblem = (payload: ErrorModalPayload, options?: { includeDeviceDetails?: boolean }): string => {
   const referenceCode = generateReferenceCode()
-  const { title, description, code, message, stack } = error
+  const { title, description, error } = payload
   const { includeDeviceDetails = true } = options ?? {}
 
   // Drop the app version / OS labels when the user opts out; keep the application name so support
@@ -96,12 +96,17 @@ export const reportProblem = (error: BifoldError, options?: { includeDeviceDetai
     if (baseOptions.lokiUrl) {
       lokiTransport({
         msg: title,
-        // Only attach `stack` when the error actually carries one — user-initiated reports have no real
-        // trace, so the field is omitted rather than logging meaningless construction frames.
         rawMsg: [
           {
             message: title,
-            data: { description, code, message, ...(stack ? { stack } : {}), report_id: referenceCode },
+            data: {
+              ...error.toJSON(),
+              description,
+              // Only attach `stack` when the error actually carries one — user-initiated reports have no real
+              // trace, so the field is omitted rather than logging meaningless construction frames.
+              ...(error.stack ? { stack: error.stack } : {}),
+              report_id: referenceCode,
+            },
           },
         ],
         level: { severity: 3, text: 'error' },
