@@ -3,8 +3,7 @@ import { getAttestationErrorLogContext } from '@/bcsc-theme/utils/attestation'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 import { AppError, ErrorRegistry } from '@/errors'
 import { ErrorDefinition } from '@/errors/errorRegistry'
-import { BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { getAppStoreReceipt, googleAttestation } from '@bifold/react-native-attestation'
 import { useCallback, useMemo } from 'react'
 import { Platform } from 'react-native'
@@ -89,7 +88,6 @@ function throwDcrNativeError(error: unknown): never {
 // The registration API is a special case because it gets called during initialization,
 // so its params are adjusted to account for an api client that may not be ready yet
 const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: boolean = true) => {
-  const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { updateTokens } = useSecureActions()
   /**
