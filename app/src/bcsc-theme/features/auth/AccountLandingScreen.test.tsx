@@ -1,4 +1,3 @@
-import { BCDispatchAction } from '@/store'
 import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render } from '@testing-library/react-native'
@@ -60,7 +59,7 @@ describe('AccountLanding', () => {
       expect(tree).toMatchSnapshot()
     })
 
-    it('dispatches SELECT_ACCOUNT and calls unlockApp when Unlock is pressed', () => {
+    it('calls unlockApp when Unlock is pressed', () => {
       const tree = render(
         <BasicAppContext initialStateOverride={{ bcsc: { nicknames: ['John'] } as any }}>
           <AccountLandingScreen navigation={mockNavigation as never} />
@@ -70,7 +69,6 @@ describe('AccountLanding', () => {
       const unlockButton = tree.getByTestId('com.ariesbifold:id/Unlock')
       fireEvent.press(unlockButton)
 
-      expect(mockDispatch).toHaveBeenCalledWith({ type: BCDispatchAction.SELECT_ACCOUNT, payload: ['John'] })
       expect(mockUnlockApp).toHaveBeenCalled()
     })
   })

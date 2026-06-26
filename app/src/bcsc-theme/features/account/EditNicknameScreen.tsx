@@ -23,16 +23,12 @@ const EditNicknameScreen: React.FC = () => {
       // only dispatch if the API is successful
       dispatch({
         type: BCDispatchAction.UPDATE_NICKNAME,
-        payload: [{ nickname: store.bcsc.selectedNickname, newNickname: trimmedNickname }],
-      })
-      dispatch({
-        type: BCDispatchAction.SELECT_ACCOUNT,
         payload: [trimmedNickname],
       })
 
       navigation.goBack()
     },
-    [dispatch, store.bcsc.selectedNickname, store.bcscSecure.registrationAccessToken, navigation, registration, logger]
+    [dispatch, store.bcscSecure.registrationAccessToken, navigation, registration, logger]
   )
 
   return <NicknameForm onSubmit={handleSubmit} isRenaming />

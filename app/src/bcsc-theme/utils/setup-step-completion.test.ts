@@ -24,7 +24,6 @@ describe('computeSetupStepCompletion', () => {
   describe('ID Step', () => {
     it('Combo Card: should be completed when serial and email provided', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
 
       expect(computeSetupStepCompletion(store).id.completed).toBe(false)
@@ -41,7 +40,6 @@ describe('computeSetupStepCompletion', () => {
 
     it('NonPhoto Card: should not show needs additional card when only cardType is set (user backed out before serial)', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCNonPhoto
       // Note: serial is NOT set - simulates user selecting card type but backing out
@@ -56,7 +54,6 @@ describe('computeSetupStepCompletion', () => {
 
     it('Other Card: should not show needs additional card when only cardType is set (user backed out before evidence)', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.NonBCSC
       // Note: no evidence data - simulates user selecting card type but backing out
@@ -71,7 +68,6 @@ describe('computeSetupStepCompletion', () => {
 
     it('Non-Photo Card: should be completed when serial, email, and photo ID provided', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
 
       let result = computeSetupStepCompletion(store)
@@ -106,7 +102,6 @@ describe('computeSetupStepCompletion', () => {
 
     it('Non-BCSC Card: should be completed when 2 IDs provided', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
 
       let result = computeSetupStepCompletion(store)
@@ -163,7 +158,6 @@ describe('computeSetupStepCompletion', () => {
   describe('Residential Address Step', () => {
     it('should be focused when ID step completed but address not yet completed', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
@@ -177,7 +171,6 @@ describe('computeSetupStepCompletion', () => {
 
     it('should be completed when device code is provided', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
@@ -194,7 +187,6 @@ describe('computeSetupStepCompletion', () => {
   describe('Email Step', () => {
     it('should be focused when ID step completed, address step completed, but email not yet completed', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
@@ -209,7 +201,6 @@ describe('computeSetupStepCompletion', () => {
 
     it('should be focused when BCSC card (Photo/NonPhoto) has serial but no email after completing ID and address steps', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
@@ -233,7 +224,6 @@ describe('computeSetupStepCompletion', () => {
 
     it('should be focused with NonPhoto card type when serial available but email is falsey', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCNonPhoto
       store.bcscSecure.serial = '123456789'
@@ -263,7 +253,6 @@ describe('computeSetupStepCompletion', () => {
 
     it('should not be completed when email is provided but emailConfirmed is false', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
@@ -279,7 +268,6 @@ describe('computeSetupStepCompletion', () => {
 
     it('should not be completed when emailConfirmed is true but email is missing', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
@@ -295,7 +283,6 @@ describe('computeSetupStepCompletion', () => {
 
     it('should be completed when both email and emailConfirmed are true (email may be set to BCSC_EMAIL_NOT_PROVIDED)', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
@@ -311,7 +298,6 @@ describe('computeSetupStepCompletion', () => {
 
     it('should be completed when user skipped email (userSkippedEmailVerification=true, no emailAddress — v3 migration case)', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
@@ -328,7 +314,6 @@ describe('computeSetupStepCompletion', () => {
 
     it('should not be completed when email entered but not verified, even if userSkippedEmailVerification was previously set', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
@@ -347,7 +332,6 @@ describe('computeSetupStepCompletion', () => {
   describe('Verify Step', () => {
     it('should be focused when ID step completed, address step completed, email step completed, but verify not yet completed', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
@@ -364,7 +348,6 @@ describe('computeSetupStepCompletion', () => {
 
     it('should be completed when verified is true', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
@@ -382,7 +365,6 @@ describe('computeSetupStepCompletion', () => {
 
     it('should be completed when userSubmittedVerificationVideo is true', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
       store.bcscSecure.cardProcess = BCSCCardProcess.BCSCPhoto
       store.bcscSecure.serial = '123456789'
@@ -413,7 +395,6 @@ describe('computeSetupStepCompletion', () => {
       expect(result.verify.completed).toBe(false)
       expect(result.verify.focused).toBe(false)
 
-      store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
 
       result = computeSetupStepCompletion(store)
