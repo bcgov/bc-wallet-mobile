@@ -167,6 +167,7 @@ describe('reportProblem', () => {
       application: 'testapp',
       version: '1.2.3-77',
       system: 'iOS v17.0',
+      model: 'iPhone15,2',
     })
   })
 
@@ -178,6 +179,7 @@ describe('reportProblem', () => {
       application: 'testapp',
       version: '1.2.3-77',
       system: 'iOS v17.0',
+      model: 'iPhone15,2',
     })
   })
 
