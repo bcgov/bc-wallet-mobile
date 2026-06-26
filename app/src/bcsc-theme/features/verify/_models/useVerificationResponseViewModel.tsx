@@ -27,8 +27,7 @@ const useVerificationResponseViewModel = () => {
 
   const updateNicknameInLocalStorage = useCallback(
     (nickname: string) => {
-      dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [nickname] })
-      dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [nickname] })
+      dispatch({ type: BCDispatchAction.UPDATE_NICKNAME, payload: [nickname] })
     },
     [dispatch]
   )
@@ -40,7 +39,8 @@ const useVerificationResponseViewModel = () => {
       await updateUserMetadata(null)
       // force a token exchange so the backend activates the device registration before navigation
       const token = await getCachedIdTokenMetadata({ refreshCache: true })
-      const nickname = token?.given_name || token?.family_name || 'Default'
+      // fallback to family_name to support mononymns
+      const nickname = token?.given_name || token?.family_name || 'User'
       // update local store with nickname
       updateNicknameInLocalStorage(nickname)
       // this updates their registration status with their nickname and new access tokens

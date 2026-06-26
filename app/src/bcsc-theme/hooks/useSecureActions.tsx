@@ -977,7 +977,6 @@ export const useSecureActions = () => {
     logger.info('Logging out user - clearing secure state and marking as not authenticated')
     clearSecureState()
     dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [true] })
-    dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [undefined] })
     dispatch({
       type: DispatchAction.DID_AUTHENTICATE,
       payload: [false],

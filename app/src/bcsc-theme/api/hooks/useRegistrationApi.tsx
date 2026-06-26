@@ -198,7 +198,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         clientID: data.client_id,
         issuer: apiClient.endpoints.issuer,
         securityMethod,
-        nickname: store.bcsc.selectedNickname,
       })
 
       logger.info(`Account set with clientID: ${data.client_id}`)
@@ -211,7 +210,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
       return data
     },
-    [isClientReady, apiClient, logger, store.bcsc.selectedNickname, getAttestation, updateTokens]
+    [isClientReady, apiClient, logger, getAttestation, updateTokens]
   )
 
   /**

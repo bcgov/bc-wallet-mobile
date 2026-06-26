@@ -4,7 +4,7 @@ import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { NotificationBannerContainer } from '@/bcsc-theme/components/NotificationBannerContainer'
 import { useAuthentication } from '@/bcsc-theme/hooks/useAuthentication'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
@@ -16,7 +16,7 @@ interface AccountLandingScreenProps {
 }
 
 const AccountLandingScreen = ({ navigation }: AccountLandingScreenProps) => {
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const { t } = useTranslation()
   const { Spacing } = useTheme()
   const authentication = useAuthentication(navigation)
@@ -36,12 +36,8 @@ const AccountLandingScreen = ({ navigation }: AccountLandingScreenProps) => {
   })
 
   const handleAccountSelect = useCallback(async () => {
-    const nickname = store.bcsc.nicknames?.[0]
-    if (nickname) {
-      dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [nickname] })
-    }
     await authentication.unlockApp()
-  }, [authentication, dispatch, store.bcsc.nicknames])
+  }, [authentication])
 
   const controls = (
     <ControlContainer>

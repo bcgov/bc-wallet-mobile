@@ -34,15 +34,15 @@ export const useInitializeAccountStatus = () => {
 
       const nickname = account?.nickname || account?.displayName
 
-      if (nickname && !store.bcsc.nicknames.includes(nickname)) {
-        dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [nickname] })
-      }
+      // if (nickname && !store.bcsc.nicknames.includes(nickname)) {
+      //   dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [nickname] })
+      // }
     } catch (error) {
       logger.error('[useInitializeAccountStatus] Error checking for existing account:', error as Error)
     } finally {
       setHasCheckedAccount(true)
     }
-  }, [dispatch, logger, store.bcsc.nicknames])
+  }, [dispatch, logger])
 
   useEffect(() => {
     if (!store.stateLoaded || hasCheckedAccount) {
