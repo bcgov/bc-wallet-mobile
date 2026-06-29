@@ -12,6 +12,7 @@ import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSy
 import { TermsOfUseSystemCheck } from '@/services/system-checks/TermsOfUseSystemCheck'
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
 import { UpdateDeviceRegistrationSystemCheck } from '@/services/system-checks/UpdateDeviceRegistrationSystemCheck'
+import { VerificationRequestStatusSystemCheck } from '@/services/system-checks/VerificationRequestStatusSystemCheck'
 import { BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { TOKENS, useServices, useStore } from '@bifold/core'
@@ -22,6 +23,7 @@ import { getMaxDevicesBannerLastDisplayedDate } from 'react-native-bcsc-core'
 import { getBundleId } from 'react-native-device-info'
 import { SystemCheckStrategy } from '../../services/system-checks/system-checks'
 import useConfigApi from '../api/hooks/useConfigApi'
+import useEvidenceApi from '../api/hooks/useEvidenceApi'
 import { BCSCAccountContext } from '../contexts/BCSCAccountContext'
 import { useRegistrationService } from '../services/hooks/useRegistrationService'
 import { useTokenService } from '../services/hooks/useTokenService'
@@ -56,6 +58,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const [store, dispatch] = useStore<BCState>()
   const { client, isClientReady } = useBCSCApiClientState()
   const configApi = useConfigApi(client as BCSCApiClient)
+  const evidenceApi = useEvidenceApi(client as BCSCApiClient)
   const tokenService = useTokenService()
   const registrationService = useRegistrationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -70,6 +73,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const accountExpirationDate = accountContext?.account?.account_expiration_date
   const isVerified = Boolean(store.bcscSecure.verified)
   const isBCServicesCardBundle = getBundleId().includes(BCSC_BUILD_SUFFIX)
+  const verificationRequestId = store.bcscSecure.verificationRequestId
 
   // update credential metadata ref on store change
   useEffect(() => {
@@ -160,6 +164,16 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       )
     }
 
+    // Only meaningful when a verification request has been submitted and is awaiting review
+    if (!isVerified && verificationRequestId) {
+      systemChecks.push(
+        new VerificationRequestStatusSystemCheck(
+          () => evidenceApi.getVerificationRequestStatus(verificationRequestId),
+          utils
+        )
+      )
+    }
+
     // Terms of Use applies to every user (the endpoint is public, no token needed)
     systemChecks.push(
       new TermsOfUseSystemCheck(
@@ -188,6 +202,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   }, [
     accountExpirationDate,
     isVerified,
+    verificationRequestId,
+    evidenceApi,
     utils,
     emitAlert,
     navigation,
