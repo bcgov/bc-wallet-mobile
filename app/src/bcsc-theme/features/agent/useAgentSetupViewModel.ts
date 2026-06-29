@@ -34,14 +34,16 @@ export interface AgentSetupResult {
 
 const useAgentSetupViewModel = (): AgentSetupResult => {
   const [store] = useStore<BCState>()
-  const [logger, attestationMonitor, credentialProvisioningMonitor, credDefs, schemas, ocaBundleResolver] = useServices([
-    TOKENS.UTIL_LOGGER,
-    TOKENS.UTIL_ATTESTATION_MONITOR,
-    TOKENS.UTIL_CREDENTIAL_PROVISIONING_MONITOR,
-    TOKENS.CACHE_CRED_DEFS,
-    TOKENS.CACHE_SCHEMAS,
-    TOKENS.UTIL_OCA_RESOLVER,
-  ])
+  const [logger, attestationMonitor, credentialProvisioningMonitor, credDefs, schemas, ocaBundleResolver] = useServices(
+    [
+      TOKENS.UTIL_LOGGER,
+      TOKENS.UTIL_ATTESTATION_MONITOR,
+      TOKENS.UTIL_CREDENTIAL_PROVISIONING_MONITOR,
+      TOKENS.CACHE_CRED_DEFS,
+      TOKENS.CACHE_SCHEMAS,
+      TOKENS.UTIL_OCA_RESOLVER,
+    ]
+  )
 
   const [status, setStatus] = useState<AgentSetupStatus>('idle')
   const [agent, setAgent] = useState<Agent | null>(null)
