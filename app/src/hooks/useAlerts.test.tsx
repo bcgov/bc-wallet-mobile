@@ -1414,6 +1414,28 @@ describe('useAlerts', () => {
       })
     })
 
+    describe('unsupportedOsAlert', () => {
+      it('should show a basic alert (no error modal) with the unsupported OS copy', () => {
+        const mockNavigation = { navigate: jest.fn(), dispatch: jest.fn() }
+        const mockEmitAlert = jest.fn()
+        const mockEmitErrorModal = jest.fn()
+        jest
+          .spyOn(ErrorAlertContext, 'useErrorAlert')
+          .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
+
+        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+
+        result.current.unsupportedOsAlert()
+
+        expect(mockEmitAlert).toHaveBeenCalledWith(
+          'Alerts.DynamicRegistrationError.Title',
+          'Alerts.DynamicRegistrationError.Description',
+          expect.objectContaining({ event: AppEventCode.ADD_CARD_DYNAMIC_REGISTRATION })
+        )
+        expect(mockEmitErrorModal).not.toHaveBeenCalled()
+      })
+    })
+
     describe('termsOfUseErrorAlert', () => {
       it('should show an alert with the correct title and message', () => {
         const mockNavigation = { navigate: jest.fn(), dispatch: jest.fn() }
