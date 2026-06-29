@@ -151,6 +151,10 @@ export interface BCSCSecureState {
   verificationRequestId?: string
   /** SHA hash for verification request */
   verificationRequestSha?: string
+  /** Status of a submitted verification request, as last reported by the server */
+  verificationRequestStatus?: 'pending' | 'cancelled'
+  /** Optional message accompanying a cancelled verification request */
+  verificationRequestStatusMessage?: string
   /** Available verification options from authorization request */
   verificationOptions?: DeviceVerificationOption[]
 
@@ -270,6 +274,8 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_USER_SUBMITTED_VERIFICATION_VIDEO = 'bcsc/updateSecureUserSubmittedVerificationVideo',
   UPDATE_SECURE_VERIFICATION_REQUEST_ID = 'bcsc/updateSecureVerificationRequestId',
   UPDATE_SECURE_VERIFICATION_REQUEST_SHA = 'bcsc/updateSecureVerificationRequestSha',
+  UPDATE_SECURE_VERIFICATION_REQUEST_STATUS = 'bcsc/updateSecureVerificationRequestStatus',
+  UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE = 'bcsc/updateSecureVerificationRequestStatusMessage',
   UPDATE_SECURE_VERIFICATION_OPTIONS = 'bcsc/updateSecureVerificationOptions',
   UPDATE_SECURE_VERIFIED = 'bcsc/updateSecureVerified',
   UPDATE_SECURE_VERIFIED_STATUS = 'bcsc/updateSecureVerifiedStatus',
@@ -682,6 +688,16 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_SHA: {
       const verificationRequestSha = (action?.payload || []).pop() ?? undefined
       const bcscSecure = { ...state.bcscSecure, verificationRequestSha }
+      return { ...state, bcscSecure }
+    }
+    case BCSCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS: {
+      const verificationRequestStatus = (action?.payload || []).pop() ?? undefined
+      const bcscSecure = { ...state.bcscSecure, verificationRequestStatus }
+      return { ...state, bcscSecure }
+    }
+    case BCSCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE: {
+      const verificationRequestStatusMessage = (action?.payload || []).pop() ?? undefined
+      const bcscSecure = { ...state.bcscSecure, verificationRequestStatusMessage }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_VERIFICATION_OPTIONS: {

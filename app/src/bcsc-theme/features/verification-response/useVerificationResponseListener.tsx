@@ -3,7 +3,7 @@ import {
   useVerificationResponseService,
   VerificationResponseNavigationEvent,
 } from '@/bcsc-theme/features/verification-response'
-import { BCState } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback, useEffect } from 'react'
 
@@ -32,7 +32,7 @@ type VerificationResponseCallback = {
  */
 export const useVerificationResponseListener = ({ onSuccess, onCancelled }: VerificationResponseCallback) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [store] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const { evidence, token } = useApi()
   const verificationResponseService = useVerificationResponseService()
 
@@ -61,20 +61,29 @@ export const useVerificationResponseListener = ({ onSuccess, onCancelled }: Veri
       logger.info(`[useVerificationResponseListener] Verification request status: ${status}`)
 
       if (status === 'verified') {
+        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: [undefined] })
+        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
         // Status is verified - fetch and update tokens
         await token.checkDeviceCodeStatus(deviceCode, userCode)
         // Tokens have been fetched; call onSuccess =
-        onSuccess()
+        // onSuccess()
         return
       }
 
       if (status === 'cancelled') {
+        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: ['cancelled'] })
+        dispatch({
+          type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE,
+          payload: [status_message],
+        })
         logger.info('[useVerificationResponseListener] Verification request cancelled, navigating to CancelledReview')
-        onCancelled(status_message)
+        // onCancelled(status_message)
         return
       }
 
       if (status === 'pending') {
+        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: ['pending'] })
+        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
         // Status is pending - user should check manually via the UI
         logger.info(`[useVerificationResponseListener] Verification status is '${status}', not navigating`)
         return
@@ -83,7 +92,7 @@ export const useVerificationResponseListener = ({ onSuccess, onCancelled }: Veri
       const message = error instanceof Error ? error.message : String(error)
       logger.error(`[useVerificationResponseListener] Failed to handle request reviewed: ${message}`)
     }
-  }, [logger, store.bcscSecure, evidence, token, onSuccess, onCancelled])
+  }, [logger, store.bcscSecure, evidence, token, dispatch])
 
   /**
    * Route the event to the appropriate handler based on event type.
