@@ -1,6 +1,12 @@
 import { AbstractBifoldLogger } from '@bifold/core'
 import { BCSCScreens } from '../../types/navigators'
-import { PairingNavigationEvent, PairingNavigationListener, PairingPayload, PendingPairingListener } from './types'
+import {
+  PairingNavigationEvent,
+  PairingNavigationListener,
+  PairingPayload,
+  PendingPairingListener,
+  pairingPayloadToServiceLoginParams,
+} from './types'
 
 /**
  * Central service for handling pairing requests from any source.
@@ -110,11 +116,7 @@ export class PairingService {
   private emitNavigation(payload: PairingPayload) {
     const event: PairingNavigationEvent = {
       screen: BCSCScreens.ServiceLogin,
-      params: {
-        serviceTitle: payload.serviceTitle,
-        pairingCode: payload.pairingCode,
-        fromAppSwitch: payload.source === 'deep-link',
-      },
+      params: pairingPayloadToServiceLoginParams(payload),
     }
     this.navigationListeners.forEach((listener) => listener(event))
   }
