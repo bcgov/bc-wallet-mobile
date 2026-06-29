@@ -51,7 +51,7 @@ import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
 import { TermsOfUseUpdated } from '../features/modal/TermsOfUseUpdated'
-import { usePairingService } from '../features/pairing'
+import { pairingPayloadToServiceLoginParams, usePairingService } from '../features/pairing'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import ConnectionLoadingScreen from '../features/qr-core/ConnectionLoadingScreen'
@@ -116,10 +116,7 @@ const MainStack: React.FC = () => {
       return undefined
     }
 
-    return {
-      serviceTitle,
-      pairingCode,
-    }
+    return pairingPayloadToServiceLoginParams(pendingPairing)
   }, [logger, pendingPairing])
 
   const apiClient = useBCSCApiClient()
