@@ -67,7 +67,7 @@ exports[`AccountLanding renders Unlock button 1`] = `
             ]
           }
         >
-          BCSC.AccountSetup.Title
+          BCSC.Title
         </Text>
       </View>
     </RCTScrollView>

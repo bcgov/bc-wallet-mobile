@@ -3,9 +3,7 @@ import useResidentialAddressModel from '@/bcsc-theme/features/verify/_models/use
 import { isCanadianPostalCode } from '@/bcsc-theme/utils/address-utils'
 import { BCState } from '@/store'
 import * as Bifold from '@bifold/core'
-import { ToastType } from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
-import Toast from 'react-native-toast-message'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
 jest.mock('@/bcsc-theme/utils/address-utils')
@@ -21,6 +19,14 @@ jest.mock('@bifold/core', () => {
     useTheme: jest.fn(),
   }
 })
+
+const mockEmitErrorModal = jest.fn()
+jest.mock('@/contexts/ErrorAlertContext', () => ({
+  useErrorAlert: jest.fn(() => ({
+    emitErrorModal: mockEmitErrorModal,
+    emitAlert: jest.fn(),
+  })),
+}))
 
 const mockUpdateUserMetadata = jest.fn().mockResolvedValue(undefined)
 const mockUpdateDeviceCodes = jest.fn().mockResolvedValue(undefined)
@@ -336,14 +342,6 @@ describe('useResidentialAddressModel', () => {
       })
       expect(mockUpdateVerificationOptions).toHaveBeenCalledWith(['video_call', 'back_check'])
 
-      expect(Toast.show).toHaveBeenCalledWith({
-        type: ToastType.Success,
-        text1: expect.any(String),
-        bottomOffset: 16,
-        autoHide: true,
-        visibilityTime: 1500,
-      })
-
       expect(mockNavigation.dispatch).toHaveBeenCalled()
       expect(mockUpdateCardProcess).toHaveBeenCalledWith('test-process')
     })
@@ -448,7 +446,7 @@ describe('useResidentialAddressModel', () => {
       expect(result.current.isSubmitting).toBe(false)
     })
 
-    it('should handle authorization error and show toast', async () => {
+    it('should handle authorization error and show error modal', async () => {
       const mockError = new Error('Authorization failed')
       mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockRejectedValue(mockError)
 
@@ -471,12 +469,11 @@ describe('useResidentialAddressModel', () => {
         'ResidentialAddressScreen.handleSubmit -> device authorization failed',
         { error: mockError }
       )
-      expect(Toast.show).toHaveBeenCalledWith({
-        type: 'error',
-        text1: expect.any(String),
-        text2: expect.any(String),
-        position: 'bottom',
-      })
+      expect(mockEmitErrorModal).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(String),
+        expect.objectContaining({ cause: mockError })
+      )
       expect(result.current.isSubmitting).toBe(false)
     })
 
