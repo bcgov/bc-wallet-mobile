@@ -353,6 +353,10 @@ const useBCAgentSetup = () => {
       // genesis when auto-update is on and the bundled snapshot when it is off —
       // so LEDGER_AUTO_UPDATE=false means bundled-only, never a stale prior cache.
       const cachedLedgers = await loadCachedLedgers()
+      // The ledger resolver is refreshed by the caller (Splash) before
+      // initializeAgent runs; this path intentionally consumes the
+      // already-resolved list rather than re-fetching. The BCSC path
+      // (useAgentSetupViewModel) owns its own refresh.
       const ledgers = ledgerResolver.ledgers
 
       logger.info('Creating new agent...')
