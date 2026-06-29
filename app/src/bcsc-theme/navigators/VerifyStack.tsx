@@ -4,13 +4,13 @@ import { createProgressHeader } from '@/bcsc-theme/components/VerifyProgressHead
 import { useVerificationResponseListener } from '@/bcsc-theme/features/verification-response/useVerificationResponseListener'
 import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
 import { BCSCModals, BCSCScreens, BCSCStacks, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
+import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE } from '@/constants'
 import { BCState } from '@/store'
 import { testIdWithKey, useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
-import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
+import { createVerifyHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferInstructionsScreen from '../features/account-transfer/transferee/TransferInstructionsScreen'
@@ -101,10 +101,7 @@ const VerifyStack = () => {
         headerBackTestID: testIdWithKey('Back'),
         headerBackTitleVisible: false,
         header: createHeaderWithoutBanner,
-        headerRight: createFloatingHelpMenuButton({
-          webViewScreen: BCSCScreens.VerifyWebView,
-          showRestartVerification: true,
-        }),
+        headerRight: createVerifyHelpMenuButton({ showRestartVerification: true }),
       }}
     >
       <Stack.Screen
@@ -113,10 +110,7 @@ const VerifyStack = () => {
           // First screen of the verify journey — no back destination; help menu without "restart"
           // since verification hasn't started yet.
           headerLeft: () => null,
-          headerRight: createFloatingHelpMenuButton({
-            webViewScreen: BCSCScreens.VerifyWebView,
-            learnMoreUrl: HelpCentreUrl.HOW_TO_SETUP,
-          }),
+          headerRight: createVerifyHelpMenuButton(),
         }}
       >
         {({ navigation }) => <VerifyPromptScreen onContinue={() => navigation.navigate(BCSCScreens.AccountSetup)} />}
@@ -139,11 +133,6 @@ const VerifyStack = () => {
         options={{
           header: createProgressHeader(1, 10),
           headerLeft: createVerifySettingsHeaderButton(),
-          headerRight: createFloatingHelpMenuButton({
-            webViewScreen: BCSCScreens.VerifyWebView,
-            learnMoreUrl: HelpCentreUrl.HOW_TO_SETUP,
-            showRestartVerification: true,
-          }),
         }}
       />
       <Stack.Screen
@@ -213,24 +202,12 @@ const VerifyStack = () => {
         options={{
           header: createProgressHeader(5, 20),
           headerLeft: createVerifySettingsHeaderButton(),
-          headerRight: createFloatingHelpMenuButton({
-            webViewScreen: BCSCScreens.VerifyWebView,
-            learnMoreUrl: HelpCentreUrl.VERIFICATION_METHODS,
-            showRestartVerification: true,
-          }),
         }}
       />
       <Stack.Screen
         name={BCSCScreens.VerifyInPerson}
         component={VerifyInPersonScreen}
-        options={{
-          header: createProgressHeader(5, 70),
-          headerRight: createFloatingHelpMenuButton({
-            webViewScreen: BCSCScreens.VerifyWebView,
-            learnMoreUrl: HelpCentreUrl.VERIFY_IN_PERSON,
-            showRestartVerification: true,
-          }),
-        }}
+        options={{ header: createProgressHeader(5, 70) }}
       />
       <Stack.Screen
         name={BCSCScreens.PhotoInstructions}
@@ -281,24 +258,12 @@ const VerifyStack = () => {
         options={{
           header: createProgressHeader(2, 30),
           headerLeft: createVerifySettingsHeaderButton(),
-          headerRight: createFloatingHelpMenuButton({
-            webViewScreen: BCSCScreens.VerifyWebView,
-            learnMoreUrl: HelpCentreUrl.ACCEPTED_IDENTITY_DOCUMENTS,
-            showRestartVerification: true,
-          }),
         }}
       />
       <Stack.Screen
         name={BCSCScreens.DualIdentificationRequired}
         component={DualIdentificationRequiredScreen}
-        options={{
-          header: createProgressHeader(2, 30),
-          headerRight: createFloatingHelpMenuButton({
-            webViewScreen: BCSCScreens.VerifyWebView,
-            learnMoreUrl: HelpCentreUrl.ACCEPTED_IDENTITY_DOCUMENTS,
-            showRestartVerification: true,
-          }),
-        }}
+        options={{ header: createProgressHeader(2, 30) }}
       />
       <Stack.Screen
         name={BCSCScreens.IDPhotoInformation}
