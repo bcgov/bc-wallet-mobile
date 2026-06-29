@@ -2,7 +2,7 @@ import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FlatList, Modal, Pressable, StyleProp, StyleSheet, TextStyle, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 import { PressableOpacity } from '@/components/PressableOpacity'
@@ -49,6 +49,10 @@ export const DropdownWithValidation = <T extends string | number>({
   errorProps,
 }: DropdownWithValidationProps<T>) => {
   const { Inputs, ColorPalette, Spacing } = useTheme()
+  // RN's <Modal> renders in a separate native window where react-native-safe-area-context's native
+  // <SafeAreaView> measures zero insets, so the header would collide with the status bar. The
+  // useSafeAreaInsets() context value does cross the modal boundary, so apply it as padding instead.
+  const insets = useSafeAreaInsets()
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
 
@@ -93,7 +97,7 @@ export const DropdownWithValidation = <T extends string | number>({
     modalTitle: {
       fontSize: 18,
       fontWeight: '600',
-      color: ColorPalette.brand.secondary,
+      color: ColorPalette.brand.headerText,
       flex: 1,
       textAlign: 'center',
     },
@@ -114,7 +118,8 @@ export const DropdownWithValidation = <T extends string | number>({
     },
     optionText: {
       fontSize: 16,
-      color: ColorPalette.brand.secondary,
+      // No explicit color: ThemedText applies the theme foreground (dark on white in Light,
+      // light on dark-blue in Dark), which is legible on the modal's primaryBackground in both themes.
     },
     optionTextSelected: {
       fontWeight: '600',
@@ -199,7 +204,10 @@ export const DropdownWithValidation = <T extends string | number>({
       ) : null}
 
       <Modal visible={isOpen} transparent animationType="slide" onRequestClose={handleClose}>
-        <SafeAreaView style={styles.modalContent} testID={testIdWithKey(`${id}-modal-content`)}>
+        <View
+          style={[styles.modalContent, { paddingTop: insets.top, paddingBottom: insets.bottom }]}
+          testID={testIdWithKey(`${id}-modal-content`)}
+        >
           <View style={styles.modalHeader}>
             <View style={{ width: 32 }} />
             <ThemedText style={styles.modalTitle}>{subtext}</ThemedText>
@@ -211,7 +219,7 @@ export const DropdownWithValidation = <T extends string | number>({
               accessibilityRole="button"
               hitSlop={hitSlop}
             >
-              <Icon name="close" size={24} color={ColorPalette.brand.secondary} />
+              <Icon name="close" size={24} color={ColorPalette.brand.icon} />
             </PressableOpacity>
           </View>
           <FlatList
@@ -220,7 +228,7 @@ export const DropdownWithValidation = <T extends string | number>({
             keyExtractor={(item) => String(item.value)}
             accessibilityRole="menu"
           />
-        </SafeAreaView>
+        </View>
       </Modal>
     </View>
   )
