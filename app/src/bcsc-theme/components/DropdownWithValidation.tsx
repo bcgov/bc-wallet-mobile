@@ -114,7 +114,10 @@ export const DropdownWithValidation = <T extends string | number>({
       borderBottomColor: ColorPalette.grayscale.lightGrey,
     },
     optionItemSelected: {
-      backgroundColor: ColorPalette.brand.secondaryBackground,
+      // primaryLight, not secondaryBackground: the latter is white in Light theme (== the modal's
+      // primaryBackground), so the selected/pressed highlight would be invisible. primaryLight is the
+      // app's highlighted-surface token and contrasts in both themes.
+      backgroundColor: ColorPalette.brand.primaryLight,
     },
     optionText: {
       fontSize: 16,
