@@ -108,6 +108,7 @@ abstract class BcscCoreSpec internal constructor(
 
     abstract fun decodePayload(
         jweString: String,
+        key: com.facebook.react.bridge.ReadableMap?,
         promise: Promise,
     )
 

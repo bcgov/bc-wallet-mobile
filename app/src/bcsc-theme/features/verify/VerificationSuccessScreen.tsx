@@ -14,6 +14,9 @@ const VerificationSuccessScreen = () => {
 
   const styles = StyleSheet.create({
     contentContainer: {
+      // flexGrow lets the ScrollView content fill the viewport so justifyContent can actually
+      // center it vertically (without it the content stays top-aligned and looks top-heavy).
+      flexGrow: 1,
       justifyContent: 'center',
       alignItems: 'center',
       padding: Spacing.lg,

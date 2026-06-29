@@ -32,11 +32,11 @@ export const OnboardingPrivacyPolicyScreen = ({ navigation }: OnboardingPrivacyP
   const controls = (
     <ControlContainer>
       <Button
-        title={t('Global.Continue')}
+        title={t('BCSC.Onboarding.PrivacyPolicyButton')}
         buttonType={ButtonType.Primary}
         onPress={onPress}
         testID={testIdWithKey('Continue')}
-        accessibilityLabel={t('Global.Continue')}
+        accessibilityLabel={t('BCSC.Onboarding.PrivacyPolicyButton')}
       />
     </ControlContainer>
   )

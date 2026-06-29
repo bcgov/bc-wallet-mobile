@@ -50,6 +50,14 @@ const determineCurrentStep = (focused: {
   step4: boolean
   step5: boolean
 }): StepCompletionResult['currentStep'] => {
+  // Transfer users move an already-verified account onto this device by scanning a
+  // QR code; they never complete the id/address/email/verify steps. Steps 1–4 are
+  // derived purely from verification progress, so a fresh transfer user always
+  // reports step1 as focused — transfer must therefore be resolved FIRST, otherwise
+  // the branch is unreachable and the user is wrongly routed into regular verification.
+  if (focused.step5) {
+    return 'transfer'
+  }
   if (focused.step1) {
     return 'id'
   }
@@ -61,9 +69,6 @@ const determineCurrentStep = (focused: {
   }
   if (focused.step4) {
     return 'verify'
-  }
-  if (focused.step5) {
-    return 'transfer'
   }
   return null
 }

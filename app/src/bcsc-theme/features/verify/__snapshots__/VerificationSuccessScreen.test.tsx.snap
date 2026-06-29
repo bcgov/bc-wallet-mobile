@@ -26,6 +26,7 @@ exports[`VerificationSuccess renders correctly 1`] = `
         false,
         {
           "alignItems": "center",
+          "flexGrow": 1,
           "justifyContent": "center",
           "padding": 24,
         },

@@ -98,6 +98,50 @@ describe('System Checks', () => {
       expect(results).toEqual([true, true])
       expect(mockOnSuccess).toHaveBeenCalledTimes(2)
     })
+
+    it('isolates a check that throws in runCheck so the rest of the batch still runs', async () => {
+      const throwingOnFail = jest.fn()
+      const survivorOnFail = jest.fn()
+
+      const throwingCheck: SystemCheckStrategy = {
+        runCheck: jest.fn().mockRejectedValue(new Error('no id token')),
+        onFail: throwingOnFail,
+      }
+
+      const survivorCheck: SystemCheckStrategy = {
+        runCheck: jest.fn().mockResolvedValue(false),
+        onFail: survivorOnFail,
+      }
+
+      const results = await runSystemChecks([throwingCheck, survivorCheck])
+
+      // The thrown check is recorded as false and its handler is skipped...
+      expect(results).toEqual([false, false])
+      expect(throwingOnFail).not.toHaveBeenCalled()
+      // ...but the surviving check is still handled
+      expect(survivorOnFail).toHaveBeenCalledTimes(1)
+    })
+
+    it('isolates a check whose handler throws so later checks are still handled', async () => {
+      const laterOnFail = jest.fn()
+
+      const checkWithThrowingHandler: SystemCheckStrategy = {
+        runCheck: jest.fn().mockResolvedValue(false),
+        onFail: jest.fn().mockImplementation(() => {
+          throw new Error('handler boom')
+        }),
+      }
+
+      const laterCheck: SystemCheckStrategy = {
+        runCheck: jest.fn().mockResolvedValue(false),
+        onFail: laterOnFail,
+      }
+
+      const results = await runSystemChecks([checkWithThrowingHandler, laterCheck])
+
+      expect(results).toEqual([false, false])
+      expect(laterOnFail).toHaveBeenCalledTimes(1)
+    })
   })
 
   describe('DeviceCountSystemCheck', () => {

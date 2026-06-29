@@ -1,246 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`TermsOfUse renders correctly after loading terms 1`] = `
-<RNCSafeAreaView
-  edges={
-    {
-      "bottom": "additive",
-      "left": "additive",
-      "right": "additive",
-      "top": "off",
-    }
-  }
-  style={
-    [
-      {
-        "backgroundColor": "#F2F2F2",
-        "flex": 1,
-      },
-      undefined,
-    ]
-  }
->
-  <View
-    style={
-      {
-        "flex": 1,
-        "marginBottom": 16,
-      }
-    }
-  >
-    <View
-      allowsBackForwardNavigationGestures={true}
-      bounces={false}
-      domStorageEnabled={true}
-      javaScriptEnabled={true}
-      mixedContentMode="compatibility"
-      onError={[Function]}
-      onHttpError={[Function]}
-      onLoad={[Function]}
-      originWhitelist={
-        [
-          "*",
-        ]
-      }
-      renderLoading={[Function]}
-      sharedCookiesEnabled={true}
-      source={
-        {
-          "baseUrl": "",
-          "html": "<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-  body {
-    background-color: #F2F2F2;
-    color: #313132;
-    font-family: -apple-system, system-ui, sans-serif;
-    font-size: 32px !important;
-    padding: 0 16px 16px 16px;
-    line-height: 1.6;
-    margin: 0;
-  }
-  body, body * {
-    background-color: #F2F2F2 !important;
-    color: #313132 !important;
-  }
-  p, li, dd, dt {
-    margin-bottom: 0.75em;
-  }
-  a, a *, a:visited, a:visited *, a:hover, a:hover *, a:active, a:active * {
-    color: #1A5A96 !important;
-    text-decoration-color: #1A5A96 !important;
-    border-color: #1A5A96 !important;
-  }
-</style>
-</head>
-<body>
-<h4>BCSC.Onboarding.TermsOfUseHeader</h4>
-<p>BCSC.Onboarding.TermsOfUseSubtitle<br/>BCSC.Onboarding.TermsOfUseVersion 1.0, January 1, 2024</p>
-<p>Terms of Use content</p>
-</body>
-</html>",
-        }
-      }
-      startInLoadingState={true}
-      style={
-        {
-          "backgroundColor": "#F2F2F2",
-        }
-      }
-      testID="mocked-webview"
-      textZoom={200}
-      thirdPartyCookiesEnabled={true}
-      userAgent="BCServicesCard/4.0.0 (iOS 17.4; Build 142)"
-    />
-  </View>
-  <View
-    style={
-      [
-        {
-          "gap": 16,
-        },
-        false,
-        undefined,
-      ]
-    }
-  >
-    <View
-      style={
-        {
-          "flexGrow": 1,
-          "width": "100%",
-        }
-      }
-    >
-      <View
-        style={
-          {
-            "left": 0,
-            "position": "absolute",
-            "right": 0,
-            "shadowColor": "#000",
-            "shadowOffset": {
-              "height": -3,
-              "width": 0,
-            },
-            "shadowOpacity": 0.9,
-            "shadowRadius": 3,
-            "top": 0,
-            "zIndex": -1,
-          }
-        }
-      >
-        <View
-          style={
-            {
-              "backgroundColor": "#F2F2F2",
-              "height": 1,
-            }
-          }
-        />
-      </View>
-      <View
-        style={
-          {
-            "backgroundColor": "#F2F2F2",
-            "flexGrow": 1,
-            "gap": 8,
-            "padding": 24,
-          }
-        }
-      >
-        <View
-          accessibilityLabel="BCSC.Onboarding.AcceptAndContinueButton"
-          accessibilityRole="button"
-          accessibilityState={
-            {
-              "busy": undefined,
-              "checked": undefined,
-              "disabled": true,
-              "expanded": undefined,
-              "selected": undefined,
-            }
-          }
-          accessibilityValue={
-            {
-              "max": undefined,
-              "min": undefined,
-              "now": undefined,
-              "text": undefined,
-            }
-          }
-          accessible={true}
-          collapsable={false}
-          focusable={false}
-          onClick={[Function]}
-          onResponderGrant={[Function]}
-          onResponderMove={[Function]}
-          onResponderRelease={[Function]}
-          onResponderTerminate={[Function]}
-          onResponderTerminationRequest={[Function]}
-          onStartShouldSetResponder={[Function]}
-          style={
-            {
-              "backgroundColor": "#757575",
-              "borderRadius": 4,
-              "opacity": 1,
-              "padding": 16,
-            }
-          }
-          testID="com.ariesbifold:id/AcceptAndContinue"
-        >
-          <View
-            style={
-              {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "justifyContent": "center",
-              }
-            }
-          >
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "normal",
-                  },
-                  [
-                    {
-                      "color": "#FFFFFF",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "bold",
-                      "textAlign": "center",
-                    },
-                    {
-                      "color": "#FFFFFF",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "bold",
-                      "textAlign": "center",
-                    },
-                    false,
-                  ],
-                ]
-              }
-            >
-              BCSC.Onboarding.AcceptAndContinueButton
-            </Text>
-          </View>
-        </View>
-      </View>
-    </View>
-  </View>
-</RNCSafeAreaView>
-`;
-
-exports[`TermsOfUse shows loading indicator while fetching terms 1`] = `
+exports[`OnboardingIntro renders correctly 1`] = `
 <RNCSafeAreaView
   edges={
     {
@@ -265,7 +25,8 @@ exports[`TermsOfUse shows loading indicator while fetching terms 1`] = `
       [
         false,
         {
-          "flex": 1,
+          "flexGrow": 1,
+          "gap": 16,
           "padding": 24,
         },
       ]
@@ -274,18 +35,90 @@ exports[`TermsOfUse shows loading indicator while fetching terms 1`] = `
   >
     <View>
       <View
-        style={
+        accessibilityElementsHidden={true}
+        accessibilityState={
           {
-            "alignItems": "center",
-            "flex": 1,
-            "justifyContent": "center",
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
           }
         }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={false}
+        collapsable={false}
+        focusable={true}
+        importantForAccessibility="no-hide-descendants"
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        testID="com.ariesbifold:id/DeveloperCounter"
       >
-        <ActivityIndicator
-          size="large"
-        />
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "marginTop": 40,
+            }
+          }
+        >
+          <
+            height={187}
+            width={200}
+          />
+        </View>
       </View>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 26,
+              "fontWeight": "bold",
+            },
+            {
+              "color": "#003366",
+              "textAlign": "center",
+            },
+          ]
+        }
+      >
+        BCSC.Onboarding.IntroTitle
+      </Text>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+            {
+              "textAlign": "center",
+            },
+          ]
+        }
+      >
+        BCSC.Onboarding.IntroDescription
+      </Text>
     </View>
   </RCTScrollView>
   <View
@@ -345,13 +178,13 @@ exports[`TermsOfUse shows loading indicator while fetching terms 1`] = `
         }
       >
         <View
-          accessibilityLabel="BCSC.Onboarding.AcceptAndContinueButton"
+          accessibilityLabel="Global.Continue"
           accessibilityRole="button"
           accessibilityState={
             {
               "busy": undefined,
               "checked": undefined,
-              "disabled": true,
+              "disabled": false,
               "expanded": undefined,
               "selected": undefined,
             }
@@ -366,7 +199,7 @@ exports[`TermsOfUse shows loading indicator while fetching terms 1`] = `
           }
           accessible={true}
           collapsable={false}
-          focusable={false}
+          focusable={true}
           onClick={[Function]}
           onResponderGrant={[Function]}
           onResponderMove={[Function]}
@@ -376,13 +209,13 @@ exports[`TermsOfUse shows loading indicator while fetching terms 1`] = `
           onStartShouldSetResponder={[Function]}
           style={
             {
-              "backgroundColor": "#757575",
+              "backgroundColor": "#003366",
               "borderRadius": 4,
               "opacity": 1,
               "padding": 16,
             }
           }
-          testID="com.ariesbifold:id/AcceptAndContinue"
+          testID="com.ariesbifold:id/Continue"
         >
           <View
             style={
@@ -411,19 +244,91 @@ exports[`TermsOfUse shows loading indicator while fetching terms 1`] = `
                       "fontWeight": "bold",
                       "textAlign": "center",
                     },
+                    false,
+                    false,
+                  ],
+                ]
+              }
+            >
+              Global.Continue
+            </Text>
+          </View>
+        </View>
+        <View
+          accessibilityLabel="BCSC.Onboarding.LearnMore"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "borderColor": "#003366",
+              "borderRadius": 4,
+              "borderWidth": 2,
+              "opacity": 1,
+              "padding": 16,
+            }
+          }
+          testID="com.ariesbifold:id/LearnMore"
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "center",
+              }
+            }
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  [
                     {
-                      "color": "#FFFFFF",
+                      "color": "#003366",
                       "fontFamily": "BCSans-Regular",
                       "fontSize": 18,
                       "fontWeight": "bold",
                       "textAlign": "center",
                     },
                     false,
+                    false,
                   ],
                 ]
               }
             >
-              BCSC.Onboarding.AcceptAndContinueButton
+              BCSC.Onboarding.LearnMore
             </Text>
           </View>
         </View>

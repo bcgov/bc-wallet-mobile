@@ -296,6 +296,15 @@ const Developer: React.FC = () => {
     }
   }
 
+  const staleTermsOfUseAcceptance = () => {
+    // Set a version that will never match the server's, so the Terms of Use
+    // re-acceptance modal is presented on the next unlock (MainStack mount)
+    dispatch({
+      type: BCDispatchAction.UPDATE_ACCEPTED_TERMS_OF_USE_VERSION,
+      payload: ['-1'],
+    })
+  }
+
   const toggleMode = () => {
     lockOutUser(LockoutReason.Logout)
 
@@ -580,8 +589,25 @@ const Developer: React.FC = () => {
               accessibilityLabel={t('Developer.ErrorAlertTest')}
               testID={testIdWithKey('ErrorAlertTest')}
               onPress={() => setErrorAlertTestModalVisible(true)}
+              showRowSeparator
             >
               <Icon name="chevron-right" size={24} color={ColorPalette.brand.link} />
+            </SectionRow>
+            <SectionRow
+              title={t('Developer.StaleTermsOfUse')}
+              accessibilityLabel={t('Developer.StaleTermsOfUse')}
+              testID={testIdWithKey('StaleTermsOfUse')}
+              onPress={staleTermsOfUseAcceptance}
+              subContent={
+                <Text style={[styles.rowTitle, { marginTop: 10 }]}>
+                  {`${t('Developer.AcceptedTermsVersion')}: `}
+                  <Text style={[styles.rowTitle, { fontWeight: 'bold' }]}>
+                    {store.bcsc.acceptedTermsOfUseVersion ?? '—'}
+                  </Text>
+                </Text>
+              }
+            >
+              <Icon name="restore" size={24} color={ColorPalette.brand.link} />
             </SectionRow>
           </>
         ) : null}

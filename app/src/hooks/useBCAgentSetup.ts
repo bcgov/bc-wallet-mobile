@@ -47,19 +47,22 @@ const useBCAgentSetup = () => {
   const [agent, setAgent] = useState<Agent | null>(null)
   const agentInstanceRef = useRef<Agent | null>(null)
   const [store] = useStore<BCState>()
-  const [logger, attestationMonitor, credDefs, schemas] = useServices([
+  const [logger, attestationMonitor, credentialProvisioningMonitor, credDefs, schemas] = useServices([
     TOKENS.UTIL_LOGGER,
     TOKENS.UTIL_ATTESTATION_MONITOR,
+    TOKENS.UTIL_CREDENTIAL_PROVISIONING_MONITOR,
     TOKENS.CACHE_CRED_DEFS,
     TOKENS.CACHE_SCHEMAS,
   ])
 
-  const refreshAttestationMonitor = useCallback(
+  const refreshMonitors = useCallback(
     (agent: Agent) => {
       attestationMonitor?.stop()
       attestationMonitor?.start(agent)
+      credentialProvisioningMonitor?.stop()
+      credentialProvisioningMonitor?.start(agent)
     },
-    [attestationMonitor]
+    [attestationMonitor, credentialProvisioningMonitor]
   )
 
   const restartExistingAgent = useCallback(
@@ -340,7 +343,7 @@ const useBCAgentSetup = () => {
             undefined,
             DidCommMediatorPickupStrategy.PickUpV2LiveMode
           )
-          refreshAttestationMonitor(restartedAgent)
+          refreshMonitors(restartedAgent)
           agentInstanceRef.current = restartedAgent
           setAgent(restartedAgent)
           return
@@ -389,7 +392,7 @@ const useBCAgentSetup = () => {
 
       // In case the old attestationMonitor is still active, stop it and start a new one
       logger.info('Starting attestation monitor...')
-      refreshAttestationMonitor(newAgent)
+      refreshMonitors(newAgent)
 
       logger.info('Tag mediation connection with last seen time')
       updateLastSeen(newAgent).catch((e) =>
@@ -406,7 +409,7 @@ const useBCAgentSetup = () => {
       logger,
       createNewAgent,
       warmUpCache,
-      refreshAttestationMonitor,
+      refreshMonitors,
       restartExistingAgent,
       updateLastSeen,
       recoverMediationIfExpired,

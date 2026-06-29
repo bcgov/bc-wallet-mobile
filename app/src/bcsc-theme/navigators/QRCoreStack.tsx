@@ -4,7 +4,7 @@ import ManualPairing from '@/bcsc-theme/features/pairing/ManualPairing'
 import QRDisplay from '@/bcsc-theme/features/qr-core/QRDisplay'
 import QRScanner from '@/bcsc-theme/features/qr-core/QRScanner'
 import { useVerificationStatus } from '@/bcsc-theme/hooks/useVerificationStatus'
-import { BCSCQRCoreScreens, BCSCQRCoreTabParams } from '@/bcsc-theme/types/navigators'
+import { BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
 import { ButtonLocation, IconButton, testIdWithKey, useTheme } from '@bifold/core'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next'
 import { Platform, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { createAuthHelpHeaderButton } from '../components/HelpHeaderButton'
+import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 
 type TabBarIconProps = {
   focused: boolean
@@ -115,7 +115,10 @@ const QRCoreStack: React.FC = () => {
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: t('Scan.ScanQRCode'),
             tabBarTestID: testIdWithKey('ScanQRCode'),
-            headerRight: createAuthHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.COMPUTER_LOGIN }),
+            headerRight: createFloatingHelpMenuButton({
+              webViewScreen: BCSCScreens.MainWebView,
+              learnMoreUrl: HelpCentreUrl.COMPUTER_LOGIN,
+            }),
           }}
         />
         <Tab.Screen
@@ -140,7 +143,10 @@ const QRCoreStack: React.FC = () => {
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: t('BCSC.ManualPairing.TabTitle'),
             tabBarTestID: testIdWithKey('PairingCode'),
-            headerRight: createAuthHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.COMPUTER_LOGIN }),
+            headerRight: createFloatingHelpMenuButton({
+              webViewScreen: BCSCScreens.MainWebView,
+              learnMoreUrl: HelpCentreUrl.COMPUTER_LOGIN,
+            }),
           }}
         />
       </Tab.Navigator>

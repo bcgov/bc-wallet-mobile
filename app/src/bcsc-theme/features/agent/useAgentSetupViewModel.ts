@@ -34,9 +34,10 @@ export interface AgentSetupResult {
 
 const useAgentSetupViewModel = (): AgentSetupResult => {
   const [store] = useStore<BCState>()
-  const [logger, attestationMonitor, credDefs, schemas, ocaBundleResolver] = useServices([
+  const [logger, attestationMonitor, credentialProvisioningMonitor, credDefs, schemas, ocaBundleResolver] = useServices([
     TOKENS.UTIL_LOGGER,
     TOKENS.UTIL_ATTESTATION_MONITOR,
+    TOKENS.UTIL_CREDENTIAL_PROVISIONING_MONITOR,
     TOKENS.CACHE_CRED_DEFS,
     TOKENS.CACHE_SCHEMAS,
     TOKENS.UTIL_OCA_RESOLVER,
@@ -61,12 +62,14 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   const enableProxy = store.developer.enableProxy
   const usePushNotifications = store.preferences.usePushNotifications
 
-  const refreshAttestationMonitor = useCallback(
+  const refreshMonitors = useCallback(
     (liveAgent: Agent) => {
       attestationMonitor?.stop()
       attestationMonitor?.start(liveAgent)
+      credentialProvisioningMonitor?.stop()
+      credentialProvisioningMonitor?.start(liveAgent)
     },
-    [attestationMonitor]
+    [attestationMonitor, credentialProvisioningMonitor]
   )
 
   const retry = useCallback(() => {
@@ -141,7 +144,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
       if (cancelled) {
         return 'cancelled'
       }
-      refreshAttestationMonitor(restarted)
+      refreshMonitors(restarted)
       agentRef.current = restarted
       setAgent(restarted)
       setStatus('ready')
@@ -210,7 +213,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         activate(inFlightAgent).catch((err) => logger.warn(`Push notification activation failed: ${err}`))
       }
 
-      refreshAttestationMonitor(inFlightAgent)
+      refreshMonitors(inFlightAgent)
       agentRef.current = inFlightAgent
       setAgent(inFlightAgent)
       setStatus('ready')
@@ -283,8 +286,8 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     logger,
     credDefs,
     schemas,
+    refreshMonitors,
     ocaBundleResolver,
-    refreshAttestationMonitor,
   ])
 
   const resetWallet = useCallback(async () => {

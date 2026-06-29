@@ -51,10 +51,6 @@ jest.mock('./VerifyStack', () => ({
   __esModule: true,
   default: () => 'VerifyStack',
 }))
-jest.mock('./PromptStack', () => ({
-  __esModule: true,
-  default: () => 'PromptStack',
-}))
 jest.mock('../contexts/BCSCActivityContext', () => ({
   BCSCActivityProvider: ({ children }: any) => children,
 }))
@@ -243,7 +239,7 @@ describe('BCSCRootStack', () => {
     expect(toJSON()).toBe('MainStack')
   })
 
-  it('renders PromptStack when user has not seen verify prompt and is not verified', () => {
+  it('renders VerifyStack (which opens on the verify prompt) when the user has not seen the prompt and is not verified', () => {
     const mockDispatch = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([
       mockStore({
@@ -256,7 +252,7 @@ describe('BCSCRootStack', () => {
 
     const { toJSON } = render(<BCSCRootStack />)
 
-    expect(toJSON()).toBe('PromptStack')
+    expect(toJSON()).toBe('VerifyStack')
   })
 
   it('calls loadState when stateLoaded is false', () => {
