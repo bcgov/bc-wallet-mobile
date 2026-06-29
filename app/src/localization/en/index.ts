@@ -97,6 +97,14 @@ const translation = {
       "ButtonTitle": "Start verification",
       "ContinueButtonTitle": "Continue verification"
     },
+    "PendingReview": {
+      "Title": "Verification in progress",
+      "Description": "Your submission is being reviewed. We'll notify you when it's complete."
+    },
+    "CancelledReview": {
+      "Title": "Verification unsuccessful",
+      "Description": "Your verification was not approved. You can restart the process at any time."
+    },
     "BasicMessage": {
       "Title": "New message",
       "ButtonTitle": "View message"
