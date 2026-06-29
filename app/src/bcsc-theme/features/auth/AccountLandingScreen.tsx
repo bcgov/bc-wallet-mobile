@@ -63,7 +63,7 @@ const AccountLandingScreen = ({ navigation }: AccountLandingScreenProps) => {
           <BCSCLogo width={120} height={120} />
         </View>
         <ThemedText variant={'headingFour'} style={{ textAlign: 'center' }}>
-          {t('BCSC.AccountSetup.Title')}
+          {t('BCSC.Title')}
         </ThemedText>
       </ScreenWrapper>
     </>

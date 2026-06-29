@@ -52,7 +52,7 @@ const AuthStack = (): React.ReactElement => {
         name={BCSCScreens.AccountLanding}
         component={AccountLanding}
         options={{
-          title: t('BCSC.Title'),
+          title: '',
           headerLeft: createAuthSettingsHeaderButton(),
         }}
       />
