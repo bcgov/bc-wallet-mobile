@@ -225,7 +225,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
     async (securityMethod: AccountSecurityMethod) => {
       const account = await getAccount()
       // If an account already exists, we don't need to register again
-      if (account && isAccountRegistered(account)) {
+      if (isAccountRegistered(account)) {
         logger.info('[RegistrationService] Account already exists, skipping registration')
         return
       }

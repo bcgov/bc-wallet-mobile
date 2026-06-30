@@ -410,8 +410,8 @@ export const getAccount = async (): Promise<Omit<NativeAccount, 'securityMethod'
  * @param account The Account object to check (without securityMethod).
  * @returns True if an account is registered, false otherwise.
  */
-export const isAccountRegistered = (account: Omit<NativeAccount, 'securityMethod'>): boolean => {
-  return Boolean(account.clientID);
+export const isAccountRegistered = (account: Omit<NativeAccount, 'securityMethod'> | null): boolean => {
+  return Boolean(account?.clientID);
 };
 
 /**

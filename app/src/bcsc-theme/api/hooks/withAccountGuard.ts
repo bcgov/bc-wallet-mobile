@@ -9,7 +9,7 @@ import { getAccount, isAccountRegistered } from 'react-native-bcsc-core'
 export const withAccount = async <T>(fn: (account: any) => Promise<T>): Promise<T> => {
   const account = await getAccount()
 
-  if (!account || !isAccountRegistered(account)) {
+  if (!isAccountRegistered(account)) {
     throw new Error('No account found. Please register first.')
   }
 
