@@ -44,6 +44,21 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
   }
 
   /**
+   * Whether the InternetDisconnected modal can be navigated to from the currently-mounted navigator.
+   *
+   * Guards the root-stack swap window (e.g. onboarding → verify after biometric setup), where the
+   * single child navigator is mid-remount and `getState()` is undefined, and the non-navigator
+   * LoadingScreen branch. Navigating in those windows logs "NAVIGATE ... was not handled by any
+   * navigator". Safe because this getter and `navigate` are read synchronously in `onFail` with no
+   * await between them, so they observe the same container navigator.
+   *
+   * @returns {*} {boolean} True if the modal route is registered in the current navigator.
+   */
+  private get canShowModal() {
+    return this.navigation.getState()?.routeNames?.includes(BCSCModals.InternetDisconnected) ?? false
+  }
+
+  /**
    * Runs the internet connectivity check.
    *
    * @returns {boolean} True if the device is connected to the internet and internet is reachable or unknown, false otherwise.
@@ -63,6 +78,12 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
 
     // Only navigate if the modal is not already visible
     if (this.isModalVisible) {
+      return
+    }
+
+    if (!this.canShowModal) {
+      // Root stack is mid-swap / on the non-navigator LoadingScreen; skip to avoid an unhandled
+      // NAVIGATE. The next NetInfo/foreground check re-runs once a stack is mounted.
       return
     }
 
