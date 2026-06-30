@@ -1,6 +1,5 @@
 import { NativeModules, Platform } from 'react-native';
 import NativeBcscCoreSpec, {
-  AccountSecurityMethod,
   type DecodePayloadResult,
   type JWK,
   type JWTClaims,
