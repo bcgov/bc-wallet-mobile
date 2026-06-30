@@ -1,7 +1,7 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { fireEvent, render, screen } from '@testing-library/react-native'
+import { fireEvent, render, screen, within } from '@testing-library/react-native'
 import React from 'react'
 import { SettingsContent } from './SettingsContent'
 
@@ -58,6 +58,12 @@ describe('SettingsContent', () => {
       authentication: { didAuthenticate: true },
     })
     expect(await screen.findByTestId(tid('ChangePIN'))).toBeTruthy()
+  })
+
+  it('shows the Notifications row ON when OS notification permission is granted', async () => {
+    renderWithState({ authentication: { didAuthenticate: true } })
+    const row = await screen.findByTestId(tid('Notifications'))
+    expect(await within(row).findByText('ON')).toBeTruthy()
   })
 
   it('renders the Analytics Opt-In row and accepts press without throwing', async () => {
