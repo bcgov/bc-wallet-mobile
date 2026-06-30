@@ -195,3 +195,6 @@ export const SHADOW_OPACITY = 0.9
 export const SHADOW_RADIUS = SHADOW_SIZE
 export const SHADOW_OFFSET_DOWN = { width: 0, height: SHADOW_SIZE }
 export const SHADOW_OFFSET_UP = { width: 0, height: -SHADOW_SIZE }
+
+// Account constants
+export const TEMPORARY_ACCOUNT_CLIENT_ID = ''

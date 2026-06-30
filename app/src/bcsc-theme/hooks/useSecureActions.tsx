@@ -888,8 +888,7 @@ export const useSecureActions = () => {
       const verified = verificationStatus === VerificationStatus.VERIFIED
 
       // A verified account with no refresh token is unrecoverable
-      // An unverified account with no registration token is unrecoverable
-      const sessionRecoveryRequired = !!account && !refreshToken && (!registrationAccessToken || verified)
+      const sessionRecoveryRequired = Boolean(verified && account && !refreshToken)
 
       // Extract bookmarked service IDs from native client metadata
       const savedServices = (nativeSavedServices ?? [])

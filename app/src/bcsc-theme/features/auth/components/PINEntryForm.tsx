@@ -2,8 +2,10 @@ import { Callout } from '@/bcsc-theme/components/Callout'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
+import { TEMPORARY_ACCOUNT_CLIENT_ID } from '@/constants'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import {
   Button,
@@ -21,7 +23,13 @@ import { a11yLabel } from '@utils/accessibility'
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Keyboard, StyleSheet, TextInput, View } from 'react-native'
-import { AccountSecurityMethod, canPerformDeviceAuthentication, setPIN as setNativePIN } from 'react-native-bcsc-core'
+import {
+  AccountSecurityMethod,
+  canPerformDeviceAuthentication,
+  getAccount,
+  setAccount,
+  setPIN as setNativePIN,
+} from 'react-native-bcsc-core'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 export interface PINEntryResult {
@@ -80,6 +88,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
   const [errorMessage2, setErrorMessage2] = useState<string | undefined>(undefined)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { register } = useRegistrationService()
+  const client = useBCSCApiClient()
   const pin2Ref = useRef<TextInput>(null)
 
   const { Spacing, TextTheme } = useTheme()
@@ -122,11 +131,22 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         // All validations passed, show a full screen loading indicator
         stopLoading = startLoading(loadingMessage ?? tWithPrefix('SettingUpPIN'))
 
-        // Register with the appropriate security method
-        const isDeviceAuthAvailable = await canPerformDeviceAuthentication()
-        await register(
-          isDeviceAuthAvailable ? AccountSecurityMethod.PinWithDeviceAuth : AccountSecurityMethod.PinNoDeviceAuth
-        )
+        const account = await getAccount()
+
+        if (!account) {
+          // Register with the appropriate security method
+          const isDeviceAuthAvailable = await canPerformDeviceAuthentication()
+          const deviceSecurityMethod = isDeviceAuthAvailable
+            ? AccountSecurityMethod.PinWithDeviceAuth
+            : AccountSecurityMethod.PinNoDeviceAuth
+
+          // Note: account must exist before setting the PIN
+          await setAccount({
+            clientID: TEMPORARY_ACCOUNT_CLIENT_ID,
+            issuer: client.endpoints.issuer,
+            securityMethod: deviceSecurityMethod,
+          })
+        }
 
         // Set the PIN using native module
         const { success, walletKey } = await setNativePIN(pin1)

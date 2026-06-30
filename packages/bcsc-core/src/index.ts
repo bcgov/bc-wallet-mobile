@@ -1,5 +1,6 @@
 import { NativeModules, Platform } from 'react-native';
 import NativeBcscCoreSpec, {
+  AccountSecurityMethod,
   type DecodePayloadResult,
   type JWK,
   type JWTClaims,
@@ -403,6 +404,15 @@ export const setAccount = async (account: Omit<NativeAccount, 'id'>): Promise<vo
  */
 export const getAccount = async (): Promise<Omit<NativeAccount, 'securityMethod'> | null> => {
   return BcscCore.getAccount();
+};
+
+/**
+ * Checks if an account is registered by verifying the presence of a client ID.
+ * @param account The Account object to check (without securityMethod).
+ * @returns A promise that resolves to true if an account is registered, false otherwise.
+ */
+export const isAccountRegistered = (account: Omit<NativeAccount, 'securityMethod'>): boolean => {
+  return Boolean(account.clientID);
 };
 
 /**
