@@ -98,12 +98,14 @@ const translation = {
       "ContinueButtonTitle": "Continue verification"
     },
     "PendingReview": {
-      "Title": "Verification in progress",
-      "Description": "Your submission is being reviewed. We'll notify you when it's complete."
+      "Title": "Your identity verification is pending",
+      "Description": "We've received your request to verify your identity.",
+      "ButtonTitle": "Check status"
     },
     "CancelledReview": {
-      "Title": "Verification unsuccessful",
-      "Description": "Your verification was not approved. You can restart the process at any time."
+      "Title": "Your identity could not be verifed",
+      "Description": "Verify your identity again to access services.",
+      "ButtonTitle": "Restart verification"
     },
     "BasicMessage": {
       "Title": "New message",

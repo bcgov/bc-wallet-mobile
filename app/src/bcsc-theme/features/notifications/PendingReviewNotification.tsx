@@ -10,9 +10,10 @@ const PendingReviewNotification = () => {
     <NotificationCard
       title={t('Notification.PendingReview.Title')}
       description={t('Notification.PendingReview.Description')}
-      icon="clock-outline"
-      status={NotificationCardStatus.Attention}
+      buttonTitle={'Check status'}
+      icon="alert-circle"
       onPress={() => secureActions.continueVerificationProcess()}
+      status={NotificationCardStatus.Unread}
     />
   )
 }

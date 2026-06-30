@@ -16,8 +16,9 @@ const CancelledReviewNotification = () => {
     <NotificationCard
       title={t('Notification.CancelledReview.Title')}
       description={t('Notification.CancelledReview.Description')}
+      buttonTitle={t('Notification.CancelledReview.ButtonTitle')}
       icon="alert-circle"
-      status={NotificationCardStatus.Warning}
+      status={NotificationCardStatus.Unread}
       onPress={() => navigation.navigate(BCSCScreens.CancelledReview, { agentReason })}
     />
   )

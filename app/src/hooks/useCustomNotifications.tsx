@@ -20,7 +20,7 @@ export enum CustomNotificationId {
 export const useCustomNotifications = () => {
   const { needsVerification } = useVerificationStatus()
   const [store] = useStore<BCState>()
-  const verificationRequestStatus = store.bcscSecure.verificationRequestStatus
+  const { verificationRequestStatus, verificationRequestId } = store.bcscSecure
   const [dismissedIds, setDismissedIds] = useState<Set<CustomNotificationId>>(new Set())
 
   const dismissCustomNotification = useCallback((id: CustomNotificationId) => {
@@ -36,7 +36,7 @@ export const useCustomNotifications = () => {
       return [<PendingReviewNotification key={CustomNotificationId.BCSCPendingReview} />]
     }
 
-    if (needsVerification && !dismissedIds.has(CustomNotificationId.BCSCStartVerification)) {
+    if (needsVerification && !verificationRequestId && !dismissedIds.has(CustomNotificationId.BCSCStartVerification)) {
       return [
         <StartVerificationNotification
           key={CustomNotificationId.BCSCStartVerification}
@@ -46,7 +46,7 @@ export const useCustomNotifications = () => {
     }
 
     return []
-  }, [verificationRequestStatus, needsVerification, dismissedIds, dismissCustomNotification])
+  }, [verificationRequestStatus, verificationRequestId, needsVerification, dismissedIds, dismissCustomNotification])
 
   return useMemo(
     () => ({

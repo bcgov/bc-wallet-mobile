@@ -1,13 +1,10 @@
-import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { CommonActions } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useEffect } from 'react'
+import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
+import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SystemModal } from '../../modal/components/SystemModal'
 import useCancelledReviewViewModel from './CancelledRerivewViewModel'
 
 interface CancelledReviewProps {
-  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.CancelledReview>
   route: {
     params: {
       agentReason?: string
@@ -21,10 +18,12 @@ interface CancelledReviewProps {
  * @param agentReason - A reason provided by the reviewing agent on why the verification request was cancelled
  * @returns
  */
-const CancelledReview = ({ navigation, route }: CancelledReviewProps) => {
+const CancelledReview = ({ route }: CancelledReviewProps) => {
   const { agentReason } = route.params
+  const factoryReset = useFactoryReset()
   const { t } = useTranslation()
   const { cleanUpVerificationData } = useCancelledReviewViewModel()
+  const [isLoading, setLoading] = useState(false)
 
   useEffect(() => {
     cleanUpVerificationData()
@@ -40,13 +39,10 @@ const CancelledReview = ({ navigation, route }: CancelledReviewProps) => {
         }),
       ]}
       buttonText={t('BCSC.CancelledVerification.Button')}
+      buttonDisabled={isLoading}
       onButtonPress={() => {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: BCSCScreens.VerificationMethodSelection }],
-          })
-        )
+        setLoading(true)
+        factoryReset()
       }}
     />
   )
