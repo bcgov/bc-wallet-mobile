@@ -26,8 +26,7 @@ interface AccountSetupScreenProps {
 }
 
 const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
-  const [store] = useStore<BCState>()
-  const [, dispatch] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
