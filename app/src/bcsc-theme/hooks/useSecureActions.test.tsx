@@ -336,7 +336,7 @@ describe('useSecureActions', () => {
       return hydrateCall?.[0]?.payload?.[0]?.sessionRecoveryRequired
     }
 
-    it('flags sessionRecoveryRequired when an account exists but no refresh or registration token survives', async () => {
+    it('does not flag sessionRecoveryRequired for an unverified account with no tokens (can restart verification)', async () => {
       // beforeEach mocks getToken -> null for all token types (the 0-byte tokens-file signature)
       jest.mocked(getAccount).mockResolvedValue(baseAccount as any)
       jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
@@ -346,7 +346,7 @@ describe('useSecureActions', () => {
         await result.current.hydrateSecureState()
       })
 
-      expect(captureSessionRecoveryRequired()).toBe(true)
+      expect(captureSessionRecoveryRequired()).toBe(false)
     })
 
     it('does not flag sessionRecoveryRequired when a registration token still exists (in-progress verification)', async () => {

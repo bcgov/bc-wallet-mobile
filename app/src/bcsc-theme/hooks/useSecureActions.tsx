@@ -888,8 +888,7 @@ export const useSecureActions = () => {
       const verified = verificationStatus === VerificationStatus.VERIFIED
 
       // A verified account with no refresh token is unrecoverable
-      // An unverified account with no registration token is unrecoverable
-      const sessionRecoveryRequired = !!account && !refreshToken && (!registrationAccessToken || verified)
+      const sessionRecoveryRequired = Boolean(verified && account && !refreshToken)
 
       // Extract bookmarked service IDs from native client metadata
       const savedServices = (nativeSavedServices ?? [])
@@ -977,7 +976,6 @@ export const useSecureActions = () => {
     logger.info('Logging out user - clearing secure state and marking as not authenticated')
     clearSecureState()
     dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [true] })
-    dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [undefined] })
     dispatch({
       type: DispatchAction.DID_AUTHENTICATE,
       payload: [false],

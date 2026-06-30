@@ -23,7 +23,6 @@ describe('WalletNameDisplay', () => {
             appVersion: '',
             appBuildNumber: '',
             hasAccount: false,
-            nicknames: [],
             bannerMessages: [],
             analyticsOptIn: false,
           },

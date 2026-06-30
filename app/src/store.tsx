@@ -80,7 +80,6 @@ export interface BCSCState {
   appVersion: string
   appBuildNumber: string
   hasAccount: boolean
-  nicknames: string[]
   selectedNickname?: string
   prompts?: VerificationPrompt[]
   videoDuration?: number
@@ -231,9 +230,7 @@ enum RemoteDebuggingDispatchAction {
 
 enum BCSCDispatchAction {
   UPDATE_APP_VERSION = 'bcsc/updateAppVersion',
-  ADD_NICKNAME = 'bcsc/addNickname',
   UPDATE_NICKNAME = 'bcsc/updateNickname',
-  SELECT_ACCOUNT = 'bcsc/selectAccount',
   UPDATE_VIDEO_PROMPTS = 'bcsc/updateVideoPrompts',
   SAVE_PHOTO = 'bcsc/savePhoto',
   SAVE_VIDEO = 'bcsc/saveVideo',
@@ -397,7 +394,6 @@ export const initialBCSCState: BCSCState = {
   appVersion: '',
   appBuildNumber: '',
   hasAccount: false,
-  nicknames: [],
   selectedNickname: undefined,
   bannerMessages: [],
   analyticsOptIn: false,
@@ -508,25 +504,9 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
-    case BCSCDispatchAction.ADD_NICKNAME: {
-      const nickname = (action?.payload || []).pop() ?? ''
-      const newNicknames = [...state.bcsc.nicknames, nickname]
-      const bcsc = { ...state.bcsc, nicknames: newNicknames }
-      const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
-    }
-    case BCSCDispatchAction.SELECT_ACCOUNT: {
-      const selectedNickname = (action?.payload || []).pop() ?? undefined
-      const bcsc = { ...state.bcsc, selectedNickname }
-      const newState = { ...state, bcsc }
-      // do not persist, should be checked on every app start
-      return newState
-    }
     case BCSCDispatchAction.UPDATE_NICKNAME: {
-      const { nickname, newNickname } = (action?.payload || []).pop() ?? {}
-      const newNicknames = state.bcsc.nicknames.filter((n) => n !== nickname).concat([newNickname])
-      const bcsc = { ...state.bcsc, nicknames: newNicknames }
+      const nickname = (action?.payload || []).pop() ?? undefined
+      const bcsc = { ...state.bcsc, selectedNickname: nickname }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

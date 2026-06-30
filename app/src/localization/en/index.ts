@@ -240,6 +240,7 @@ const translation = {
       "LearnMore": "Learn more",
       "GiveFeedback": "Give feedback",
       "ReportProblem": "Report a problem",
+      "BackToHome": "Back to home",
       "RestartVerification": "Restart verification process",
     },
     "ReportProblem": {
