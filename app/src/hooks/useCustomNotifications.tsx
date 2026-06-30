@@ -1,6 +1,7 @@
 import CancelledReviewNotification from '@/bcsc-theme/features/notifications/CancelledReviewNotification'
 import PendingReviewNotification from '@/bcsc-theme/features/notifications/PendingReviewNotification'
 import StartVerificationNotification from '@/bcsc-theme/features/notifications/StartVerificationNotification'
+import VerifiedNotification from '@/bcsc-theme/features/notifications/VerifiedNotification'
 import { useVerificationStatus } from '@/bcsc-theme/hooks/useVerificationStatus'
 import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
@@ -10,6 +11,7 @@ export enum CustomNotificationId {
   BCSCStartVerification = 'BCSCStartVerification',
   BCSCPendingReview = 'BCSCPendingReview',
   BCSCCancelledReview = 'BCSCCancelledReview',
+  BCSCVerified = 'BCSCVerified',
 }
 
 /**
@@ -28,6 +30,10 @@ export const useCustomNotifications = () => {
   }, [])
 
   const customNotifications = useMemo((): JSX.Element[] => {
+    if (verificationRequestStatus === 'verified') {
+      return [<VerifiedNotification key={CustomNotificationId.BCSCVerified} />]
+    }
+
     if (verificationRequestStatus === 'cancelled') {
       return [<CancelledReviewNotification key={CustomNotificationId.BCSCCancelledReview} />]
     }

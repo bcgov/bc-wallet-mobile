@@ -14,6 +14,8 @@ const useCancelledReviewViewModel = () => {
     updateVerificationRequest(null, null)
     dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
     dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
+    dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: [undefined] })
+    dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
     updateAccountFlags({ userSubmittedVerificationVideo: false })
   }, [dispatch, updateAccountFlags, updateVerificationRequest])
   const goToMethodSelection = () => continueVerificationProcess()

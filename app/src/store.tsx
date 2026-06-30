@@ -152,7 +152,7 @@ export interface BCSCSecureState {
   /** SHA hash for verification request */
   verificationRequestSha?: string
   /** Status of a submitted verification request, as last reported by the server */
-  verificationRequestStatus?: 'pending' | 'cancelled'
+  verificationRequestStatus?: 'pending' | 'cancelled' | 'verified'
   /** Optional message accompanying a cancelled verification request */
   verificationRequestStatusMessage?: string
   /** Available verification options from authorization request */

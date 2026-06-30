@@ -107,6 +107,11 @@ const translation = {
       "Description": "Verify your identity again to access services.",
       "ButtonTitle": "Restart verification"
     },
+    "Verified": {
+      "Title": "Your identity has been verified",
+      "Description": "Complete the verification process.",
+      "ButtonTitle": "Finish up"
+    },
     "BasicMessage": {
       "Title": "New message",
       "ButtonTitle": "View message"

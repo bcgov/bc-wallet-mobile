@@ -50,7 +50,8 @@ const useVerificationResponseViewModel = () => {
       await handleUpdateRegistration(nickname)
       // this marks their account as verified, so we know to navigate them to the correct stack
       await updateVerified(true)
-
+      dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: [undefined] })
+      dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
       // all done here, back to the home screen
       navigation.navigate(BCSCStacks.Tab, { screen: BCSCScreens.Home })
     } catch (error) {
@@ -66,6 +67,7 @@ const useVerificationResponseViewModel = () => {
     logger,
     updateNicknameInLocalStorage,
     navigation,
+    dispatch,
   ])
   return {
     isSettingUpAccount,

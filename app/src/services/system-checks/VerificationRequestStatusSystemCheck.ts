@@ -17,10 +17,7 @@ export class VerificationRequestStatusSystemCheck implements SystemCheckStrategy
   private status: 'pending' | 'cancelled' | null = null
   private statusMessage: string | undefined = undefined
 
-  constructor(
-    getVerificationRequestStatus: () => Promise<VerificationStatusResponseData>,
-    utils: SystemCheckUtils
-  ) {
+  constructor(getVerificationRequestStatus: () => Promise<VerificationStatusResponseData>, utils: SystemCheckUtils) {
     this.getVerificationRequestStatus = getVerificationRequestStatus
     this.utils = utils
   }
