@@ -103,7 +103,7 @@ export const getRegistrationToken = jest.fn().mockResolvedValue(null)
 // Account Management
 export const setAccount = jest.fn().mockResolvedValue(undefined)
 export const getAccount = jest.fn().mockResolvedValue(null)
-export const isAccountRegistered = jest.fn().mockResolvedValue(false)
+export const isAccountRegistered = jest.fn().mockReturnValue(false)
 export const removeAccount = jest.fn().mockResolvedValue(undefined)
 export const getDeviceId = jest.fn().mockResolvedValue('mock-device-id')
 
