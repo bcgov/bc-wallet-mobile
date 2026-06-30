@@ -70,9 +70,9 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
       payload: [AccountSetupType.AddAccount],
     })
 
-    navigation.navigate(BCSCScreens.IdentitySelection)
-
     await registerAccountWithBackend()
+
+    navigation.navigate(BCSCScreens.IdentitySelection)
   }, [navigation, dispatch, registerAccountWithBackend])
 
   // "Yes, connect this device" — transfer an already-verified account by scanning the QR
@@ -83,9 +83,9 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
       payload: [AccountSetupType.TransferAccount],
     })
 
-    navigation.navigate(BCSCScreens.TransferAccountInstructions)
-
     await registerAccountWithBackend()
+
+    navigation.navigate(BCSCScreens.TransferAccountInstructions)
   }, [dispatch, registerAccountWithBackend, navigation])
 
   const controls = (
