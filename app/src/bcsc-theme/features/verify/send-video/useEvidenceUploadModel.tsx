@@ -8,6 +8,7 @@ import useEvidenceUpload from '@/bcsc-theme/hooks/useEvidenceUpload'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info'
+import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
 import { AppError, ErrorRegistry } from '@/errors'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCDispatchAction, BCState } from '@/store'
@@ -139,7 +140,7 @@ const useEvidenceUploadModel = (
         navigation.dispatch(
           CommonActions.reset({
             index: 0,
-            routes: [{ name: BCSCScreens.VerificationMethodSelection }],
+            routes: [getResumeStepRoute(store)],
           })
         )
         throw new Error('Missing verification request data, resetting so you can try again.')
@@ -223,6 +224,7 @@ const useEvidenceUploadModel = (
     prepareLocalFiles,
     processAdditionalEvidence,
     prompts,
+    store,
     t,
     updateAccountFlags,
     updateVerificationRequest,
