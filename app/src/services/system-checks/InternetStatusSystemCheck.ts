@@ -1,5 +1,6 @@
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BifoldLogger } from '@bifold/core'
+import { NavigationState } from '@react-navigation/native'
 import { SystemCheckNavigation, SystemCheckStrategy } from './system-checks'
 
 /**
@@ -35,27 +36,26 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
   /**
    * Checks if the InternetDisconnected modal is currently visible.
    *
+   * @param {NavigationState | undefined} state The navigation state to inspect.
    * @returns {*} {boolean} True if the modal is visible, false otherwise.
    */
-  private get isModalVisible() {
-    const state = this.navigation.getState()
-    const currentRouteName = state?.routes[state.index].name
-    return currentRouteName === BCSCModals.InternetDisconnected
+  private isModalVisible(state: NavigationState | undefined) {
+    return state?.routes?.[state.index]?.name === BCSCModals.InternetDisconnected
   }
 
   /**
    * Whether the InternetDisconnected modal can be navigated to from the currently-mounted navigator.
    *
-   * Guards the root-stack swap window (e.g. onboarding → verify after biometric setup), where the
-   * single child navigator is mid-remount and `getState()` is undefined, and the non-navigator
-   * LoadingScreen branch. Navigating in those windows logs "NAVIGATE ... was not handled by any
-   * navigator". Safe because this getter and `navigate` are read synchronously in `onFail` with no
-   * await between them, so they observe the same container navigator.
+   * False during the root-stack swap window (e.g. onboarding → verify after biometric setup), where
+   * the single child navigator is mid-remount and `getState()` is undefined, and on the
+   * non-navigator LoadingScreen branch — navigating in those windows logs "NAVIGATE ... was not
+   * handled by any navigator".
    *
+   * @param {NavigationState | undefined} state The navigation state to inspect.
    * @returns {*} {boolean} True if the modal route is registered in the current navigator.
    */
-  private get canShowModal() {
-    return this.navigation.getState()?.routeNames?.includes(BCSCModals.InternetDisconnected) ?? false
+  private canShowModal(state: NavigationState | undefined) {
+    return state?.routeNames?.includes(BCSCModals.InternetDisconnected) ?? false
   }
 
   /**
@@ -76,14 +76,17 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
   onFail() {
     this.logger.warn('InternetStatusSystemCheck: No internet connection detected')
 
+    // Read the navigation state once so both guards and the navigate observe the same snapshot
+    const state = this.navigation.getState()
+
     // Only navigate if the modal is not already visible
-    if (this.isModalVisible) {
+    if (this.isModalVisible(state)) {
       return
     }
 
-    if (!this.canShowModal) {
+    if (!this.canShowModal(state)) {
       // Root stack is mid-swap / on the non-navigator LoadingScreen; skip to avoid an unhandled
-      // NAVIGATE. The next NetInfo/foreground check re-runs once a stack is mounted.
+      // NAVIGATE. The next NetInfo change or app-foreground event re-runs the check.
       return
     }
 
@@ -98,7 +101,7 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
    */
   onSuccess() {
     // Only navigate back if the modal is visible
-    if (!this.isModalVisible || !this.navigation.canGoBack()) {
+    if (!this.isModalVisible(this.navigation.getState()) || !this.navigation.canGoBack()) {
       return
     }
 
