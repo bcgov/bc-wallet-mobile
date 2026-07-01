@@ -808,7 +808,8 @@ jobs:
           output_artifact_ref: ios-${{ matrix.variant }}
 
       - name: Ship to Apple App Store
-        if: github.ref_name == 'main'
+        # release/v4.1.0 publishes only the DEV (bcsc-dev) build — issue #3965
+        if: github.ref_name == 'main' || (github.ref_name == 'release/v4.1.0' && matrix.variant == 'bcsc-dev')
         uses: ./.github/workflows/actions/ship-to-itunes
         with:
           app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -1029,7 +1030,8 @@ jobs:
           retention-days: 7
 
       - name: Ship to Google Play
-        if: github.ref_name == 'main'
+        # release/v4.1.0 publishes only the DEV (bcsc-dev) build — issue #3965
+        if: github.ref_name == 'main' || (github.ref_name == 'release/v4.1.0' && matrix.variant == 'bcsc-dev')
         # working-directory: app/android
         env:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
@@ -1106,7 +1108,9 @@ jobs:
   # blocks the iOS build critical path.
   distribute-testflight:
     name: 'Distribute TestFlight - ${{ matrix.variant }}'
-    if: ${{ always() && !cancelled() && github.ref_name == 'main' }}
+    # Branch gate here (job-level if cannot read matrix); the bcsc-dev
+    # restriction for release/v4.1.0 lives on the inner steps below — issue #3965
+    if: ${{ always() && !cancelled() && (github.ref_name == 'main' || github.ref_name == 'release/v4.1.0') }}
     needs: [build-ios, compute-variants]
     runs-on: ubuntu-22.04
     permissions:
@@ -1125,16 +1129,16 @@ jobs:
           path: ${{ runner.temp }}/probe
 
       - uses: actions/checkout@v6
-        if: steps.probe.outcome == 'success'
+        if: steps.probe.outcome == 'success' && (github.ref_name == 'main' || matrix.variant == 'bcsc-dev')
 
       - name: Load variant config
-        if: steps.probe.outcome == 'success'
+        if: steps.probe.outcome == 'success' && (github.ref_name == 'main' || matrix.variant == 'bcsc-dev')
         uses: ./.github/workflows/actions/load-variant-config
         with:
           variant: ${{ matrix.variant }}
 
       - name: Distribute to TestFlight
-        if: steps.probe.outcome == 'success'
+        if: steps.probe.outcome == 'success' && (github.ref_name == 'main' || matrix.variant == 'bcsc-dev')
         uses: ./.github/workflows/actions/distribute-testflight
         with:
           app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
