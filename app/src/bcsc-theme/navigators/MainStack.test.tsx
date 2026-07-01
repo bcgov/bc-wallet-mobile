@@ -61,10 +61,25 @@ jest.mock('../features/pairing', () => ({
   usePairingService: jest.fn(),
   pairingPayloadToServiceLoginParams: jest.fn(),
 }))
+jest.mock('../features/connection-invitation', () => ({
+  useConnectionInvitationDeepLink: jest.fn(),
+}))
+jest.mock('../features/agent', () => ({
+  AgentReadyGate: ({ children }: any) => children,
+  BifoldScope: ({ children }: any) => children,
+  withAgentReadyGate: (Component: any) => Component,
+}))
+jest.mock('../hooks/useBCSCApiClient', () => ({
+  useBCSCApiClient: jest.fn(() => ({ endpoints: { accountDevices: 'https://example.com/devices' } })),
+}))
+jest.mock('../components/FloatingHelpMenuHeaderButton', () => ({
+  createFloatingHelpMenuButton: jest.fn(() => () => null),
+}))
 jest.mock('../components/HeaderBackButton', () => ({
   createHeaderBackButton: jest.fn(() => null),
 }))
 jest.mock('../components/HeaderWithBanner', () => ({
+  createHeaderWithBanner: jest.fn(() => () => null),
   createHeaderWithoutBanner: jest.fn(() => null),
 }))
 jest.mock('../components/HelpHeaderButton', () => ({
@@ -126,6 +141,7 @@ describe('MainStack', () => {
     jest.mocked(Bifold.useTheme).mockReturnValue({} as any)
     jest.mocked(Bifold.useTour).mockReturnValue({ currentStep: undefined } as any)
     jest.mocked(Bifold.useServices).mockReturnValue([mockLogger] as any)
+    jest.mocked(Bifold.useStore).mockReturnValue([{ bcsc: { bannerMessages: [] } }, jest.fn()] as any)
     jest.mocked(Bifold.testIdWithKey).mockImplementation((key: string) => key)
     jest.mocked(PairingModule.usePairingService).mockReturnValue(makePairingService() as any)
     jest.mocked(PairingModule.pairingPayloadToServiceLoginParams).mockReturnValue({ pairingCode: 'code' } as any)
