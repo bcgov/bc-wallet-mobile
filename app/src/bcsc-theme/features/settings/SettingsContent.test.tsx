@@ -7,6 +7,13 @@ import { SettingsContent } from './SettingsContent'
 
 const tid = (key: string) => testIdWithKey(key)
 
+const mockStatus = jest.fn()
+
+jest.mock('@/utils/PushNotificationsHelper', () => ({
+  NotificationPermissionStatus: { DENIED: 'denied', GRANTED: 'granted', UNKNOWN: 'unknown', BLOCKED: 'blocked' },
+  status: (...args: unknown[]) => mockStatus(...args),
+}))
+
 const baseProps = {
   onContactUs: jest.fn(),
   onHelp: jest.fn(),
@@ -33,6 +40,7 @@ const renderWithState = (override: Record<string, unknown> = {}) =>
 describe('SettingsContent', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockStatus.mockResolvedValue('granted')
   })
 
   it('renders only public rows when unauthenticated', () => {
@@ -61,9 +69,17 @@ describe('SettingsContent', () => {
   })
 
   it('shows the Notifications row ON when OS notification permission is granted', async () => {
+    mockStatus.mockResolvedValue('granted')
     renderWithState({ authentication: { didAuthenticate: true } })
     const row = await screen.findByTestId(tid('Notifications'))
     expect(await within(row).findByText('ON')).toBeTruthy()
+  })
+
+  it('shows the Notifications row OFF when OS notification permission is denied', async () => {
+    mockStatus.mockResolvedValue('denied')
+    renderWithState({ authentication: { didAuthenticate: true } })
+    const row = await screen.findByTestId(tid('Notifications'))
+    expect(await within(row).findByText('OFF')).toBeTruthy()
   })
 
   it('renders the Analytics Opt-In row and accepts press without throwing', async () => {

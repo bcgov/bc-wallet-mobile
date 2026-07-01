@@ -26,11 +26,20 @@ export const useNotificationPermissionStatus = (): NotificationPermissionStatusR
   )
 
   const refresh = useCallback(async () => {
-    setStatus(await PushNotifications.status())
+    try {
+      setStatus(await PushNotifications.status())
+    } catch {
+      // Called fire-and-forget from effects/listeners; on failure keep the last
+      // known status rather than surfacing an unhandled rejection.
+    }
   }, [])
 
   // Initial read on mount, plus a refresh when the app returns to the foreground
   // (e.g. back from the OS Settings app).
+  //
+  // The mount-time refresh() looks redundant with the useFocusEffect below (which
+  // also fires on initial focus), but jest mocks useFocusEffect as a no-op, so this
+  // is the only path that populates status under test. Do not remove it.
   useEffect(() => {
     refresh()
 
