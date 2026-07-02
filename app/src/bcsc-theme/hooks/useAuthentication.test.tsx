@@ -1,4 +1,6 @@
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
 import * as useAlertsModule from '@/hooks/useAlerts'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
@@ -25,7 +27,8 @@ jest.mock('react-native-bcsc-core', () => ({
   isAccountLocked: jest.fn(),
   canPerformDeviceAuthentication: jest.fn(),
   unlockWithDeviceSecurity: jest.fn(),
-  isBcscNativeError: jest.fn((error: unknown) => error instanceof Error && 'code' in error),
+  // Delegate to the central manual mock so the predicate can't drift from the real implementation.
+  isBcscNativeError: jest.requireActual('../../../__mocks__/react-native-bcsc-core').isBcscNativeError,
 }))
 
 jest.mock('@/bcsc-theme/hooks/useSecureActions')
@@ -328,15 +331,17 @@ describe('useAuthentication', () => {
       expect(mockLogger.error).toHaveBeenCalled()
     })
 
-    it('treats E_DEVICE_AUTH_CANCELLED as a user cancel — no error alert', async () => {
+    it('preserves the specific appEvent when handleSuccessfulAuth throws an already-mapped AppError', async () => {
       const mockAlert = jest.fn()
       jest.mocked(useAlertsModule.useAlerts).mockReturnValue({
         deviceAuthenticationErrorAlert: mockAlert,
       } as any)
       jest.mocked(canPerformDeviceAuthentication).mockResolvedValue(true)
-      jest
-        .mocked(unlockWithDeviceSecurity)
-        .mockRejectedValue(Object.assign(new Error('cancelled'), { code: 'E_DEVICE_AUTH_CANCELLED' }))
+      jest.mocked(unlockWithDeviceSecurity).mockResolvedValue({ success: true, walletKey: 'key' })
+      const mappedError = AppError.fromErrorDefinition(ErrorRegistry.TOKEN_SAVE_FAILED, { track: false })
+      jest.mocked(useSecureActionsModule.default).mockReturnValue({
+        handleSuccessfulAuth: jest.fn().mockRejectedValue(mappedError),
+      } as any)
 
       const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
       const { result } = renderHook(() => useAuthentication(navigation))
@@ -345,7 +350,9 @@ describe('useAuthentication', () => {
         await result.current.performDeviceAuth()
       })
 
-      expect(mockAlert).not.toHaveBeenCalled()
+      // The mapper passes already-mapped errors through — the alert surfaces TOKEN_SAVE_FAILED,
+      // not a re-wrapped UNMAPPED_NATIVE_ERROR.
+      expect(mockAlert).toHaveBeenCalledWith(mappedError)
     })
   })
 
