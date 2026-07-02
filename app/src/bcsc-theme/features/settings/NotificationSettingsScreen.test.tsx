@@ -26,9 +26,9 @@ jest.mock('@/bcsc-theme/features/agent/BCSCAgentProvider', () => ({
 
 const tid = (key: string) => testIdWithKey(key)
 
-const renderScreen = () =>
+const renderScreen = (stateOverride: Record<string, unknown> = {}) =>
   render(
-    <BasicAppContext>
+    <BasicAppContext initialStateOverride={stateOverride as never}>
       <NotificationSettingsScreen />
     </BasicAppContext>
   )
@@ -63,15 +63,26 @@ describe('NotificationSettingsScreen', () => {
     await waitFor(() => expect(mockActivate).toHaveBeenCalled())
   })
 
-  it('opens OS settings to turn off when permission is already granted', async () => {
+  it('opens OS settings to turn off when permission is granted and the preference is on', async () => {
     mockStatus.mockResolvedValue(NPStatus.GRANTED)
     const spy = jest.spyOn(Linking, 'openSettings').mockResolvedValue(undefined as never)
 
-    renderScreen()
+    renderScreen({ preferences: { usePushNotifications: true } })
 
     fireEvent.press(await screen.findByTestId(tid('OpenNotificationSettings')))
 
     expect(spy).toHaveBeenCalled()
     spy.mockRestore()
+  })
+
+  it('offers the enable flow when permission is granted but the preference is off', async () => {
+    mockStatus.mockResolvedValue(NPStatus.GRANTED)
+
+    renderScreen({ preferences: { usePushNotifications: false } })
+
+    fireEvent.press(await screen.findByTestId(tid('EnableNotifications')))
+
+    await waitFor(() => expect(mockSetup).toHaveBeenCalled())
+    await waitFor(() => expect(mockActivate).toHaveBeenCalled())
   })
 })

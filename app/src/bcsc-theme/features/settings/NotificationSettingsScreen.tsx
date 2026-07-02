@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { useBCSCAgentSafe } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
+import { BCState } from '@/store'
 import * as PushNotifications from '@/utils/PushNotificationsHelper'
 import PushNotificationImage from '@assets/img/push-notifications-image.svg'
 import {
@@ -25,16 +26,19 @@ import { useNotificationPermissionStatus } from './useNotificationPermissionStat
  *
  * Mirrors Bifold core's `TogglePushNotifications`, built from BCSC components:
  * - Permission previously declined/blocked -> manual OS instructions (`PermissionDisabled`).
- * - Permission granted -> "Open Settings" to turn notifications off in the OS (OS-level
- *   permissions can't be revoked from within the app).
- * - Otherwise -> enable notifications (request OS permission, register the device with the mediator).
+ * - Permission granted and the app preference enabled -> "Open Settings" to turn notifications
+ *   off in the OS (OS-level permissions can't be revoked from within the app).
+ * - Otherwise -> enable notifications (request OS permission if needed, register the device with
+ *   the mediator). This includes permission granted but the app preference still off — e.g. the
+ *   user enabled the permission in OS settings after previously declining — so setup can be
+ *   completed end-to-end.
  *
  * @returns {React.ReactElement} The NotificationSettingsScreen component.
  */
 export const NotificationSettingsScreen = (): React.ReactElement => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
-  const [, dispatch] = useStore()
+  const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const agent = useBCSCAgentSafe()?.agent ?? null
   const { status, refresh } = useNotificationPermissionStatus()
@@ -51,10 +55,18 @@ export const NotificationSettingsScreen = (): React.ReactElement => {
   })
 
   useEffect(() => {
-    PushNotifications.hasPromptedForNotifications().then(setHasPrompted)
+    PushNotifications.hasPromptedForNotifications()
+      .then(setHasPrompted)
+      .catch(() => {
+        // Storage read failed; keep the default (false) so the enable flow stays available.
+      })
   }, [])
 
   const isGranted = status === PushNotifications.NotificationPermissionStatus.GRANTED
+  // Fully enabled means the OS permission is granted AND the app preference is on (the flag that
+  // gates mediator registration). Granted-but-preference-off happens when the user enables the
+  // permission in OS settings after previously declining; offer the enable flow to finish setup.
+  const notificationsActive = isGranted && store.preferences.usePushNotifications
   const isDeniedOrBlocked =
     status === PushNotifications.NotificationPermissionStatus.DENIED ||
     status === PushNotifications.NotificationPermissionStatus.BLOCKED
@@ -91,7 +103,7 @@ export const NotificationSettingsScreen = (): React.ReactElement => {
 
   const controls = (
     <ControlContainer>
-      {isGranted ? (
+      {notificationsActive ? (
         <Button
           title={t('BCSC.PermissionDisabled.OpenSettings')}
           buttonType={ButtonType.Primary}
@@ -121,10 +133,12 @@ export const NotificationSettingsScreen = (): React.ReactElement => {
         <PushNotificationImage />
       </View>
       <ThemedText variant="headingThree" style={{ textAlign: 'center' }}>
-        {isGranted ? t('BCSC.Settings.NotificationsEnabledHeader') : t('BCSC.Onboarding.NotificationsHeader')}
+        {notificationsActive ? t('BCSC.Settings.NotificationsEnabledHeader') : t('BCSC.Onboarding.NotificationsHeader')}
       </ThemedText>
       <ThemedText style={{ textAlign: 'center' }}>
-        {isGranted ? t('BCSC.Settings.NotificationsEnabledContent') : t('BCSC.Onboarding.NotificationsContent')}
+        {notificationsActive
+          ? t('BCSC.Settings.NotificationsEnabledContent')
+          : t('BCSC.Onboarding.NotificationsContent')}
       </ThemedText>
     </ScreenWrapper>
   )
