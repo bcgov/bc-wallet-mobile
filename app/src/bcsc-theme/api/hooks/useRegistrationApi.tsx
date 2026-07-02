@@ -129,7 +129,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * @throws AppError with code `ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR` if keychain key not found
    * @throws AppError with code `ERR_120_KEYCHAIN_KEY_GENERATION_ERROR` if keypair generation fails
    * @throws AppError with code `ERR_120_JWT_DEVICE_INFO_ERROR` if device info JWT creation fails
-   * @throws AppError with code `ERR_120_CLIENT_REGISTRATION_FAILURE` if building the registration body fails
+   * @throws AppError with code `DCR_BODY_BUILD_FAILED` (or `UNMAPPED_NATIVE_ERROR` for unmapped native codes) if building the registration body fails
    * @throws AppError with code `ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL` if registration response is null
    * @throws AppError with code `ERR_115_FAILED_TO_SERIALIZE_JSON` if native JSON serialization fails
    *
@@ -218,7 +218,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * @throws AppError with code `ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR` if keychain key not found
    * @throws AppError with code `ERR_120_KEYCHAIN_KEY_GENERATION_ERROR` if keypair generation fails
    * @throws AppError with code `ERR_120_JWT_DEVICE_INFO_ERROR` if device info JWT creation fails
-   * @throws AppError with code `ERR_120_CLIENT_REGISTRATION_FAILURE` if building the registration body fails
+   * @throws AppError with code `DCR_BODY_BUILD_FAILED` (or `UNMAPPED_NATIVE_ERROR` for unmapped native codes) if building the registration body fails
    * @throws AppError with code `ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL` if registration response is null
    * @throws AppError with code `ERR_109_FAILED_TO_DESERIALIZE_JSON` if response body cannot be parsed as JSON
    * @throws AppError with code `ERR_115_FAILED_TO_SERIALIZE_JSON` if native JSON serialization fails

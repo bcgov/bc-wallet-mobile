@@ -1,4 +1,3 @@
-import { isAppError } from '@/errors/appError'
 import {
   cancelVerificationReminders,
   scheduleVerificationReminders,
@@ -978,10 +977,7 @@ export const useSecureActions = () => {
     } catch (error) {
       logger.error('Failed to hydrate secure state:', error as Error)
       // Native read failures map to a distinct storage error (raw code preserved); an error already
-      // mapped downstream (e.g. token persistence) is an AppError — re-throw it unchanged.
-      if (isAppError(error)) {
-        throw error
-      }
+      // mapped downstream (e.g. token persistence) passes through the mapper unchanged.
       throwNativeBcscError(error)
     }
   }, [logger, apiClient, isClientReady, updateTokens, removeIncompleteEvidence, dispatch])

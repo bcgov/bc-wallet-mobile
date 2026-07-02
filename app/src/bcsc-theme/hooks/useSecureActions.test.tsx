@@ -41,7 +41,8 @@ jest.mock('react-native-bcsc-core', () => ({
   setAccountFlags: jest.fn(),
   setAuthorizationRequest: jest.fn(),
   setToken: jest.fn(),
-  isBcscNativeError: jest.fn((error: unknown) => error instanceof Error && 'code' in error),
+  // Delegate to the central manual mock so the predicate can't drift from the real implementation.
+  isBcscNativeError: jest.requireActual('../../../__mocks__/react-native-bcsc-core').isBcscNativeError,
   getAccount: jest.fn(),
   getAccountFlags: jest.fn(),
   getAccountSecurityMethod: jest.fn(),
