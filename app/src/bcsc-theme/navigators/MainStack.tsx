@@ -1,5 +1,4 @@
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
-import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
 import { BCState } from '@/store'
 import {
   CredentialDetails,
@@ -12,7 +11,7 @@ import {
   useTheme,
   useTour,
 } from '@bifold/core'
-import { CommonActions, useNavigation } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -22,7 +21,6 @@ import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHead
 import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithBanner, createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
-import { useAccount } from '../contexts/BCSCAccountContext'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferQRDisplayScreen from '../features/account-transfer/transferer/TransferQRDisplayScreen'
 import TransferQRInformationScreen from '../features/account-transfer/transferer/TransferQRInformationScreen'
@@ -34,6 +32,7 @@ import { AccountRenewalFirstWarningScreen } from '../features/account/AccountRen
 import { AccountRenewalInformationScreen } from '../features/account/AccountRenewalInformationScreen'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import { MainRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
+import { ReverifyAccountScreen } from '../features/account/ReverifyAccountScreen'
 import TransferAgeRestrictionScreen from '../features/account/TransferAgeRestrictionScreen'
 import { AgentReadyGate, BifoldScope, withAgentReadyGate } from '../features/agent'
 import { MainChangePINScreen } from '../features/auth/MainChangePINScreen'
@@ -97,7 +96,6 @@ const MainStack: React.FC = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store] = useStore<BCState>()
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
-  const { account } = useAccount()
   // Consume any cold-start pairing request once and use it to seed the initial route
   const [pendingPairing] = useState(() => pairingService.consumePendingPairing())
   const pairingInitialParams = useMemo(() => {
@@ -151,13 +149,6 @@ const MainStack: React.FC = () => {
 
     return unsubscribe
   }, [pairingService, navigation])
-
-  useEffect(() => {
-    if (account && isAccountExpired(account.account_expiration_date)) {
-      // If the account is expired, reset the navigation stack and navigate to the AccountExpired screen
-      navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.AccountExpired }] }))
-    }
-  }, [account, navigation])
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
@@ -460,6 +451,13 @@ const MainStack: React.FC = () => {
           <Stack.Screen
             name={BCSCScreens.AccountRenewalFinalWarning}
             component={AccountRenewalFinalWarningScreen}
+            options={() => ({
+              headerShown: true,
+            })}
+          />
+          <Stack.Screen
+            name={BCSCScreens.ReverifyAccount}
+            component={ReverifyAccountScreen}
             options={() => ({
               headerShown: true,
             })}

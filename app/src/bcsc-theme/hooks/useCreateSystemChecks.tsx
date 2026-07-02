@@ -3,7 +3,8 @@ import BCSCApiClient from '@/bcsc-theme/api/client'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
-import { AccountExpiryWarningBannerSystemCheck } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
+import { AccountExpirySystemCheck } from '@/services/system-checks/AccountExpirySystemCheck'
+import { AccountRenewalSystemCheck } from '@/services/system-checks/AccountRenewalSystemCheck'
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
@@ -159,7 +160,10 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     // still get the account-independent checks rather than the whole batch being
     // gated off when accountExpirationDate is undefined.
     if (accountExpirationDate) {
-      systemChecks.push(new AccountExpiryWarningBannerSystemCheck(accountExpirationDate, utils))
+      systemChecks.push(
+        new AccountExpirySystemCheck(accountExpirationDate, utils),
+        new AccountRenewalSystemCheck(accountExpirationDate, utils)
+      )
     }
 
     if (isVerified) {
@@ -176,9 +180,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
         navigation,
         utils
       )
-      // TODO (ar/bm): v3 doesn't include the checks below; re-add if needed in future
-      // AccountExpiryWarningAlertSystemCheck
-      // AccountExpiryAlertSystemCheck
     )
 
     // Only run device registration update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard).
@@ -234,9 +235,9 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       },
       [SystemCheckScope.MAIN_STACK]: {
         getSystemChecks: getMainSystemChecks,
-        // Not gated on accountExpirationDate: the batch runs for unverified users too,
-        // and account-dependent checks are included conditionally in the builder.
-        isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated),
+        isReady: Boolean(
+          defaultReadiness && store.bcscSecure.isHydrated && (!isVerified || accountContext?.isAccountSettled)
+        ),
       },
       [SystemCheckScope.VERIFY]: {
         getSystemChecks: getVerifySystemChecks,
@@ -247,8 +248,10 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     defaultReadiness,
     getMainSystemChecks,
     getStartupSystemChecks,
-    getVerifySystemChecks,
     store.bcscSecure.isHydrated,
     store.stateLoaded,
+    accountContext?.isAccountSettled,
+    isVerified,
+    getVerifySystemChecks,
   ])
 }

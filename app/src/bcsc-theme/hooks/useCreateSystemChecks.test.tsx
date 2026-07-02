@@ -66,8 +66,12 @@ jest.mock('@/services/system-checks/DeviceCountSystemCheck', () => ({
   DeviceCountSystemCheck: class DeviceCountSystemCheck {},
 }))
 
-jest.mock('@/services/system-checks/AccountExpiryWarningBannerSystemCheck', () => ({
-  AccountExpiryWarningBannerSystemCheck: class AccountExpiryWarningBannerSystemCheck {},
+jest.mock('@/services/system-checks/AccountExpirySystemCheck', () => ({
+  AccountExpirySystemCheck: class AccountExpirySystemCheck {},
+}))
+
+jest.mock('@/services/system-checks/AccountRenewalSystemCheck', () => ({
+  AccountRenewalSystemCheck: class AccountRenewalSystemCheck {},
 }))
 
 jest.mock('@/services/system-checks/UpdateDeviceRegistrationSystemCheck', () => ({
@@ -326,12 +330,13 @@ describe('useGetSystemChecks', () => {
 
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
 
-        expect(systemChecks).toHaveLength(5) // DeviceCountSystemCheck, AccountExpiryWarningBannerSystemCheck, EventReasonAlertsSystemCheck, TermsOfUseSystemCheck, UpdateDeviceRegistrationSystemCheck
+        expect(systemChecks).toHaveLength(6)
         expect(systemChecks[0].constructor.name).toBe('DeviceCountSystemCheck')
-        expect(systemChecks[1].constructor.name).toBe('AccountExpiryWarningBannerSystemCheck')
-        expect(systemChecks[2].constructor.name).toBe('EventReasonAlertsSystemCheck')
-        expect(systemChecks[3].constructor.name).toBe('TermsOfUseSystemCheck')
-        expect(systemChecks[4].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
+        expect(systemChecks[1].constructor.name).toBe('AccountExpirySystemCheck')
+        expect(systemChecks[2].constructor.name).toBe('AccountRenewalSystemCheck')
+        expect(systemChecks[3].constructor.name).toBe('EventReasonAlertsSystemCheck')
+        expect(systemChecks[4].constructor.name).toBe('TermsOfUseSystemCheck')
+        expect(systemChecks[5].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
       })
 
       it('skips the id-token / account checks for an unverified user but still runs Terms of Use', async () => {
@@ -376,6 +381,8 @@ describe('useGetSystemChecks', () => {
         expect(names).toContain('TermsOfUseSystemCheck')
         expect(names).not.toContain('DeviceCountSystemCheck')
         expect(names).not.toContain('EventReasonAlertsSystemCheck')
+        expect(names).not.toContain('AccountExpirySystemCheck')
+        expect(names).not.toContain('AccountRenewalSystemCheck')
         expect(names).not.toContain('AccountExpiryWarningBannerSystemCheck')
         // No chosen nickname / registration token yet, so there's nothing to re-register — the
         // device-registration update check is skipped (otherwise it throws "No client name found").
