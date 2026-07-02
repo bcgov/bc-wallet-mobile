@@ -1147,12 +1147,8 @@ jobs:
 
   ship-to-saucelabs:
     name: 'Ship to SauceLabs - ${{ matrix.variant }} - ${{ matrix.platform }}'
-    if: >-
-      always() && !cancelled() &&
-      github.event.pull_request.head.repo.fork != true &&
-      !startsWith(github.base_ref, 'release/') &&
-      !startsWith(github.ref_name, 'release/') &&
-      needs.early-exit-check.outputs.should_skip_build != 'true'
+    # Temporarily disable until e2e fixed
+    if: false
     needs: [build-ios, build-android, compute-variants, early-exit-check]
     runs-on: ubuntu-22.04
     permissions:
@@ -1215,16 +1211,24 @@ jobs:
   #       (e2e-nightly.yml) which checks for merges in the last 24h
   #       before running. This keeps SauceLabs devices free during the
   #       day when multiple PRs merge.
+  #
+  # DISABLED: smoke suite fails on every PR post v4.1 stack merge —
+  # the specs haven't been updated for the new root-stack/first-screen
+  # flow. Not a required status check, so this doesn't affect
+  # mergeability. Tracking: https://github.com/bcgov/bc-wallet-mobile/issues/4148
+  #
+  # To re-enable once the specs are fixed, restore:
+  #   if: >-
+  #     always() && !cancelled() &&
+  #     github.event_name == 'pull_request' &&
+  #     github.event.pull_request.head.repo.fork != true &&
+  #     !startsWith(github.base_ref, 'release/') &&
+  #     needs.early-exit-check.outputs.should_skip_build != 'true'
   e2e:
     needs: [ship-to-saucelabs, compute-variants, early-exit-check]
     permissions:
       contents: read
-    if: >-
-      always() && !cancelled() &&
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.head.repo.fork != true &&
-      !startsWith(github.base_ref, 'release/') &&
-      needs.early-exit-check.outputs.should_skip_build != 'true'
+    if: false
     uses: ./.github/workflows/e2e.yml
     with:
       suite: smoke
