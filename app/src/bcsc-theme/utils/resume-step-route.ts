@@ -36,6 +36,16 @@ export const getResumeStepRoute = (store: BCState): ResumeStepRoute => {
 
   const completion = computeSetupStepCompletion(store)
 
+  // The user hasn't chosen how to set up this device yet (verify a new account vs. connect
+  // an already-verified device via QR). Ask first — this is the entry of the verify journey,
+  // reached right after the "Verify Your Account" prompt. Only bounce them here when there's no
+  // verification progress to resume (id step still focused); a user who already has progress but
+  // no recorded setup type (e.g. migrated from a build predating accountSetupType) must resume
+  // their step rather than be sent back to the question and lose it.
+  if (!store.bcsc.accountSetupType && completion.id.focused) {
+    return { name: BCSCScreens.AccountSetup }
+  }
+
   switch (completion.currentStep) {
     case 'id':
       if (completion.id.nonBcscNeedsAdditionalCard) {

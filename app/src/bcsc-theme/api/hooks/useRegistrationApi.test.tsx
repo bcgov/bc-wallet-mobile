@@ -125,7 +125,6 @@ describe('useRegistrationApi', () => {
         clientID: 'test-client-id',
         issuer: mockApiClient.endpoints.issuer,
         securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
-        nickname: 'TestNickname',
       })
       expect(mockUpdateTokens).toHaveBeenCalledWith({
         registrationAccessToken: 'new-reg-access-token',

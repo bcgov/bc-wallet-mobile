@@ -1,5 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
-import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { DeveloperModeTrigger } from '@/bcsc-theme/components/DeveloperModeTrigger'
+import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { AccountSetupType, BCDispatchAction, BCState } from '@/store'
 import AddDeviceHands from '@assets/img/add-device-hands.svg'
 import {
@@ -8,27 +10,27 @@ import {
   ScreenWrapper,
   testIdWithKey,
   ThemedText,
-  useDeveloperMode,
+  TOKENS,
+  useServices,
   useStore,
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Pressable, StyleSheet, Vibration, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
+import { getAccountSecurityMethod } from 'react-native-bcsc-core'
 
 interface AccountSetupScreenProps {
-  navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingAccountSetup>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.AccountSetup>
 }
 
 const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
-  const [, dispatch] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
-  const { incrementDeveloperMenuCounter } = useDeveloperMode(() => {
-    Vibration.vibrate()
-    navigation.navigate(BCSCScreens.OnboardingDeveloper)
-  })
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const registrationService = useRegistrationService()
 
   const styles = StyleSheet.create({
     contentContainer: {
@@ -44,21 +46,47 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
     },
   })
 
-  const handleAddAccount = useCallback(() => {
+  const registerAccountWithBackend = useCallback(async () => {
+    // 1. Check if account is already registered
+    if (store.bcscSecure.registrationAccessToken) {
+      return
+    }
+
+    // 2. Register the account with the backend
+    try {
+      const securityMethod = await getAccountSecurityMethod()
+
+      // Note: Fetches registration access token and updates the account's `clientID`
+      await registrationService.register(securityMethod)
+    } catch (error) {
+      logger.error('[AccountSetupScreen] Error creating registration with backend', error as Error)
+    }
+  }, [logger, registrationService, store.bcscSecure.registrationAccessToken])
+
+  // "No, continue setup" — verify a new account on this device via the identity steps.
+  const handleAddAccount = useCallback(async () => {
     dispatch({
       type: BCDispatchAction.ACCOUNT_SETUP_TYPE,
       payload: [AccountSetupType.AddAccount],
     })
-    navigation.navigate(BCSCScreens.OnboardingPrivacyPolicy)
-  }, [navigation, dispatch])
 
-  const handleTransferAccount = useCallback(() => {
+    await registerAccountWithBackend()
+
+    navigation.navigate(BCSCScreens.IdentitySelection)
+  }, [navigation, dispatch, registerAccountWithBackend])
+
+  // "Yes, connect this device" — transfer an already-verified account by scanning the QR
+  // shown on the other device, skipping the identity verification steps.
+  const handleTransferAccount = useCallback(async () => {
     dispatch({
       type: BCDispatchAction.ACCOUNT_SETUP_TYPE,
       payload: [AccountSetupType.TransferAccount],
     })
-    navigation.navigate(BCSCScreens.TransferAccountInformation)
-  }, [navigation, dispatch])
+
+    await registerAccountWithBackend()
+
+    navigation.navigate(BCSCScreens.TransferAccountInstructions)
+  }, [dispatch, registerAccountWithBackend, navigation])
 
   const controls = (
     <ControlContainer>
@@ -89,18 +117,14 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
         padding: Spacing.lg,
       }}
     >
-      <Pressable
-        onPress={incrementDeveloperMenuCounter}
+      <DeveloperModeTrigger
+        onActivate={() => navigation.navigate(BCSCScreens.VerifyDeveloper)}
         style={styles.pressableArea}
-        accessible={false}
-        accessibilityElementsHidden={true}
-        importantForAccessibility="no-hide-descendants"
-        testID={testIdWithKey('DeveloperCounter')}
       >
         <View style={styles.image}>
           <AddDeviceHands width={250} height={250} />
         </View>
-      </Pressable>
+      </DeveloperModeTrigger>
       <ThemedText variant={'headingThree'} style={{ textAlign: 'center', color: ColorPalette.brand.primary }}>
         {t('BCSC.AccountSetup.Title')}
       </ThemedText>

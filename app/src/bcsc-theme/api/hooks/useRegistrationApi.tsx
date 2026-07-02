@@ -3,8 +3,7 @@ import { getAttestationErrorLogContext } from '@/bcsc-theme/utils/attestation'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 import { AppError, ErrorRegistry } from '@/errors'
 import { ErrorDefinition } from '@/errors/errorRegistry'
-import { BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { getAppStoreReceipt, googleAttestation } from '@bifold/react-native-attestation'
 import { useCallback, useMemo } from 'react'
 import { Platform } from 'react-native'
@@ -15,6 +14,7 @@ import {
   getAccountSecurityMethod,
   getDeviceId,
   getDynamicClientRegistrationBody,
+  isAccountRegistered,
   isBcscNativeError,
   setAccount,
 } from 'react-native-bcsc-core'
@@ -89,7 +89,6 @@ function throwDcrNativeError(error: unknown): never {
 // The registration API is a special case because it gets called during initialization,
 // so its params are adjusted to account for an api client that may not be ready yet
 const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: boolean = true) => {
-  const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { updateTokens } = useSecureActions()
   /**
@@ -198,7 +197,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         clientID: data.client_id,
         issuer: apiClient.endpoints.issuer,
         securityMethod,
-        nickname: store.bcsc.selectedNickname,
       })
 
       logger.info(`Account set with clientID: ${data.client_id}`)
@@ -211,7 +209,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
       return data
     },
-    [isClientReady, apiClient, logger, store.bcsc.selectedNickname, getAttestation, updateTokens]
+    [isClientReady, apiClient, logger, getAttestation, updateTokens]
   )
 
   /**
@@ -227,7 +225,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
     async (securityMethod: AccountSecurityMethod) => {
       const account = await getAccount()
       // If an account already exists, we don't need to register again
-      if (account) {
+      if (isAccountRegistered(account)) {
         logger.info('[RegistrationService] Account already exists, skipping registration')
         return
       }

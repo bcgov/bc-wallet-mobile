@@ -6,11 +6,7 @@ import {
   AnonCredsRequestedAttributeMatch,
   AnonCredsRequestedPredicateMatch,
 } from '@credo-ts/anoncreds'
-import {
-  DidCommCredentialExchangeRecord,
-  DidCommProofExchangeRecord,
-  GetCredentialsForProofRequestReturn,
-} from '@credo-ts/didcomm'
+import { DidCommCredentialExchangeRecord, GetCredentialsForProofRequestReturn } from '@credo-ts/didcomm'
 import { BCAgent } from '@utils/bc-agent-modules'
 
 export type Fields = Record<string, AnonCredsRequestedAttributeMatch[] | AnonCredsRequestedPredicateMatch[]>
@@ -175,19 +171,19 @@ const formatForProofWithId = async (agent: BCAgent, proofId: string, filterByNon
  * proof request in the required format.
  *
  * @param agent The AFJ agent
- * @param proof The proof request
+ * @param proofId The id of the proof request
  * @param filterByNonRevocationRequirements Whether to filter by non-revocation requirements
  * @returns Credentials that match the given proof request
  * @throws {Error} Will throw an error if a problem looking up data occurs
  */
 export const credentialsMatchForProof = async (
   agent: BCAgent,
-  proof: DidCommProofExchangeRecord,
+  proofId: string,
   filterByNonRevocationRequirements = true
 ): Promise<GetCredentialsForProofRequestReturn> => {
-  const proofFormats = await formatForProofWithId(agent, proof.id, filterByNonRevocationRequirements)
+  const proofFormats = await formatForProofWithId(agent, proofId, filterByNonRevocationRequirements)
   const credentials = await agent.didcomm.proofs.getCredentialsForRequest({
-    proofExchangeRecordId: proof.id,
+    proofExchangeRecordId: proofId,
     proofFormats,
   })
 

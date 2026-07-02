@@ -213,7 +213,7 @@ const translation = {
     "Retry": "Retry",
     "Failed": "We couldn't load your wallet. Please try again.",
     "Starting": "Starting...",
-    "CheckingOCA": "Checking for OCA updates...",
+    "CheckingRemoteResources": "Checking for updates...",
     "InitializingAgent": "Initializing agent...",
     "Finishing": "Finishing..."
   },
@@ -255,7 +255,21 @@ const translation = {
       "LearnMore": "Learn more",
       "GiveFeedback": "Give feedback",
       "ReportProblem": "Report a problem",
+      "BackToHome": "Back to home",
       "RestartVerification": "Restart verification process",
+    },
+    "ReportProblem": {
+      "Title": "Report a problem",
+      "Intro": "Use this form to tell us about a problem with the app. We review reports to help fix issues and improve the app.",
+      "DescriptionLabel": "Describe the issue",
+      "DescriptionPlaceholder": "Tell us what you were trying to do and what happened.",
+      "NotePrefix": "Please note",
+      "NoteBody": " this form is for reporting issues only. You won't receive a reply. If you need help with a problem, please ",
+      "ContactUsLink": "contact us.",
+      "CollectionNotice": "When you send a report, you can include basic app and device details to help us understand the problem.",
+      "PrivacyPolicyLink": "Privacy Policy",
+      "IncludeDeviceDetails": "Include app and device details",
+      "Submit": "Send report",
     },
     "Contacts": {
       "Title": "Contacts",
@@ -460,8 +474,7 @@ const translation = {
       "CatalogueSearch": "Search services",
       "WantToLogin": "Do you want to log in to",
       "RequestedInformation": "They will receive the following information:",
-      "FromAccountPrefix": "From your",
-      "FromAccount": "Account",
+      "FromAccount": "From your Account",
       "PrivacyNotice": "Privacy notice",
       "ReportSuspiciousPrefix": "Not you?",
       "ReportSuspicious": "Report Suspicious Activity",
@@ -496,6 +509,12 @@ const translation = {
         "ContentB": "Please update to the latest version from the {{platformStore}}.",
         "UpdateButton": "Go to {{platformStore}}",
       },
+      "VerificationSessionExpired": {
+        "Header": "Verification session expired",
+        "ContentA": "More than 7 days have passed since you started verifying your identity, so this session has expired.",
+        "ContentB": "To continue, you’ll need to set up the app and verify your identity again.",
+        "Button": "Start again",
+      },
       "DeviceInvalidated": {
         "Header": "Device invalidated",
         "CancelledByCardCancel": "Your account will be removed from this app.",
@@ -515,6 +534,10 @@ const translation = {
       "TermsOfUseUpdated": {
         "Header": "The Terms of Use have been updated. Before you continue to use the Service, you must read and accept the updated terms.",
       },
+    },
+    "VerificationReminder": {
+      "Title": "Finish verifying your identity",
+      "Body": "Verify your identity to finish setting up the app by {{date}}.",
     },
     "Home": {
       "WhereToUseTitle": "Where to use",
@@ -663,12 +686,15 @@ const translation = {
     },
     "Onboarding": {
       "LearnMore": "Learn more",
-      "AcceptAndContinueButton": "Accept and continue",
+      "IntroTitle": "Welcome to the\nBC Services Card app",
+      "IntroDescription": "A safe and simple way to access BC government services and BC Services Card app partners online.",
+      "AcceptAndContinueButton": "Accept terms of use",
       "TermsOfUseLoadError": "Terms of use failed to load, please retry",
       "TermsOfUseHeader": "Before you use the Service, you must read and accept the terms set out in this Agreement",
       "TermsOfUseSubtitle": "BC Login Service Terms of Use",
       "TermsOfUseVersion": "Version",
       "PrivacyPolicyTitle": "Privacy",
+      "PrivacyPolicyButton": "I understand",
       "PrivacyPolicyHeaderSetup": "App Setup",
       "PrivacyPolicyHeaderSecuringApp": "Securing the App",
       "PrivacyPolicyContentA": "Your personal information is collected for the purpose of setting up the app on your mobile device and using it to authenticate your identity for accessing government services online under sections 26(c), 26(e) and 26(h) of the Freedom of Information and Protection of Privacy Act.",
@@ -679,8 +705,8 @@ const translation = {
       "NotificationsTitle": "Notifications",
       "NotificationsHeader": "Enable Notifications?",
       "NotificationsContent": "Stay informed about account updates, credential changes and service interruptions.",
-      "EnableNotifications": "Enable Notifications",
-      "SkipNotifications": "Skip",
+      "EnableNotifications": "Enable notifications",
+      "SkipNotifications": "Skip notifications",
       "SecureAppHeader": "Choose how to secure this app",
       "SecureAppContent": "Protect your identity. For example, if your device is lost or stolen. Keep your access confidential",
       "SecureAppOnboardingHeader": "How to secure this app",
@@ -695,10 +721,10 @@ const translation = {
       "SecureAppNoDeviceAuthContent2": "It prevents others from using this app to access services as you. For example, if your phone is lost or stolen.",
       "AnalyticsTitle": "Enable Analytics?",
       "AnalyticsHeader": "Help us improve your BC Services Card experience",
-      "AnalyticsContent": "With your permission, we'll collect additional app usage and device details to help us improve this app.",
-      "AnalyticsAnonymousInfo": "All information is collected anonymously",
-      "AcceptAnalytics": "Enable Analytics",
-      "DenyAnalytics": "Skip",
+      "AnalyticsContent": "With your permission, we'll collect additional usage and device details to help us improve this app.",
+      "AnalyticsAnonymousInfo": "All information is collected anonymously.",
+      "AcceptAnalytics": "Enable analytics",
+      "DenyAnalytics": "Skip analytics",
     },
     "IdentitySelection": {
       "HaveABCSC": "Have a BC Services Card?",
@@ -767,7 +793,7 @@ const translation = {
       "OpenAccountServices": "Open account services",
     },
     "AccountSetup": {
-      "Title": "Welcome to the BCSC App",
+      "Title": "Have you verified before?",
       "Description": "Do you already have the BCSC app set up on another nearby phone or tablet?",
       "AddAccount": "No, continue setup",
       "TransferAccount": "Yes, connect this device",
@@ -1042,7 +1068,7 @@ const translation = {
     },
     "TransferQRInformation": {
       "Title": "Open the BC Services Card app on your other mobile device",
-      "Instructions": "Scan the QR code with the BC Services Card app on your other mobile device.",
+      "Instructions": "Scan the QR code using the BC Services Card app on your other mobile device.",
       "Warning": "Do not scan with the camera app.",
       "GetQRCode": "Get QR Code",
       "LearnMore": "Learn more"
@@ -1050,14 +1076,14 @@ const translation = {
     "TransferInformation": {
       "Title": "Have this app on another device?",
       "Instructions": "You can transfer your account to that other device. No need to provide ID or verify your identity again.",
-      "TransferAccount": "Transfer Account",
+      "TransferAccount": "Add device",
     },
     "TransferInstructions": {
-      "Title": "Scan your QR code to transfer your account",
-      "Step1": "1. On your other device, open the BC Services Card app and go to the Account section.",
-      "Step2": "2. Choose 'Transfer to another device' to get your QR code.",
-      "Step3": "3. Continue on this device and scan that QR code.",
-      "ScanQRCode": "Scan QR Code",
+      "Title": "Scan your QR code to add your device",
+      "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘≡’ icon in the top left corner.",
+      "Step2": "Choose <b>‘Add another device’</b> to get your QR code.",
+      "Step3": "<b>Scan the QR code</b> that appears on your other device.",
+      "ScanQRCode": "Scan QR code",
     },
     "QRDisplay": {
       "SharingDescription": "Sharing this QR code with someone will add them as a Contact.",
@@ -1076,10 +1102,10 @@ const translation = {
       "ButtonText": "Ok"
     },
     "Verification": {
-      "Title": "You're all set",
-      "Description": "Use this app to securely log in to many different websites.",
-      "ExtraText": "Remember, it is not a health card, vaccine card, driver's license, or photo ID.",
-      "ButtonText": "Ok"
+      "Title": "You're all set!",
+      "Description": "Use this app to access many different websites and services.",
+      "ExtraText": "Remember, the BC Services Card app is not a health card, vaccine card, driver's license or photo ID.",
+      "ButtonText": "Continue"
     },
     "CancelledVerification": {
       "Title": "Your identity couldn't be verified",

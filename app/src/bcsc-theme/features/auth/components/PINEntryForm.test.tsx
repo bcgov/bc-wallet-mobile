@@ -8,6 +8,8 @@ import { PINEntryForm } from './PINEntryForm'
 jest.mock('react-native-bcsc-core', () => ({
   setPIN: jest.fn(),
   canPerformDeviceAuthentication: jest.fn().mockResolvedValue(false),
+  getAccount: jest.fn().mockResolvedValue({ clientID: 'test-client-id', issuer: 'https://mock-issuer' }),
+  setAccount: jest.fn().mockResolvedValue(undefined),
   isBcscNativeError: jest.fn().mockReturnValue(false),
   BcscNativeErrorCodes: {
     KEYPAIR_GENERATION_FAILED: 'E_KEYPAIR_GENERATION_FAILED',
@@ -20,6 +22,9 @@ jest.mock('react-native-bcsc-core', () => ({
 }))
 
 jest.mock('@/bcsc-theme/hooks/useBCSCApiClient', () => ({
+  useBCSCApiClient: () => ({
+    endpoints: { issuer: 'https://mock-issuer' },
+  }),
   useBCSCApiClientState: () => ({
     client: {},
     isClientReady: true,

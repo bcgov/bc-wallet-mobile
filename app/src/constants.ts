@@ -6,12 +6,33 @@ export const autoDisableRemoteLoggingIntervalInMinutes = 60
 export const surveyMonkeyUrl = 'https://www.surveymonkey.com/r/7BMHJL8'
 export const surveyMonkeyExitUrl = 'https://www.surveymonkey.com/survey-thanks'
 export const hitSlop = { top: 44, bottom: 44, left: 44, right: 44 }
-interface AttestationRestrictionEnvironment {
+export interface CredentialRestrictionEnvironment {
   credDefIDs: readonly string[]
   invitationUrl: string
 }
 
-export const AttestationRestrictions: { [key: string]: AttestationRestrictionEnvironment } = {
+/**
+ * Per-environment Auto fetch credential configuration.
+ *
+ * TODO: Replace placeholder cred def IDs and invitation URLs with real values
+ * from the IAS team once they are available.
+ */
+export const AutoFetchCredentialConfig: Record<string, CredentialRestrictionEnvironment> = {
+  Development: {
+    credDefIDs: ['GLMSn8ABPSvGnk42xUU7Fo:3:CL:3190179:DigitalServicesCard'],
+    invitationUrl: 'PLACEHOLDER_DEV_ACCOUNT_ID_INVITATION_URL',
+  },
+  Test: {
+    credDefIDs: ['PLACEHOLDER_TEST_ACCOUNT_ID_CRED_DEF_ID'],
+    invitationUrl: 'PLACEHOLDER_TEST_ACCOUNT_ID_INVITATION_URL',
+  },
+  Production: {
+    credDefIDs: ['PLACEHOLDER_PROD_ACCOUNT_ID_CRED_DEF_ID'],
+    invitationUrl: 'PLACEHOLDER_PROD_ACCOUNT_ID_INVITATION_URL',
+  },
+} as const
+
+export const AttestationRestrictions: { [key: string]: CredentialRestrictionEnvironment } = {
   Development: {
     credDefIDs: ['NXp6XcGeCR2MviWuY51Dva:3:CL:33557:bcwallet', 'NXp6XcGeCR2MviWuY51Dva:3:CL:33557:bcwallet_dev_v2'],
     invitationUrl:
@@ -124,6 +145,7 @@ export const enum DaysOfTheWeek {
 // BCSC Video constants
 export const VIDEO_RESOLUTION_480P = { width: 640, height: 480 } // standard definition video resolution
 export const PHOTO_RESOLUTION_720P = { width: 1280, height: 720 } // high definition photo resolution
+export const PHOTO_RESOLUTION_1080P = { width: 1920, height: 1080 } // full high definition photo resolution
 export const SELFIE_VIDEO_FRAME_RATE = 24
 export const MAX_SELFIE_VIDEO_DURATION_SECONDS = 30
 export const DEFAULT_SELFIE_VIDEO_FILENAME = 'selfieVideo.mp4'
@@ -174,3 +196,6 @@ export const SHADOW_OPACITY = 0.9
 export const SHADOW_RADIUS = SHADOW_SIZE
 export const SHADOW_OFFSET_DOWN = { width: 0, height: SHADOW_SIZE }
 export const SHADOW_OFFSET_UP = { width: 0, height: -SHADOW_SIZE }
+
+// Account constants
+export const TEMPORARY_ACCOUNT_CLIENT_ID = ''

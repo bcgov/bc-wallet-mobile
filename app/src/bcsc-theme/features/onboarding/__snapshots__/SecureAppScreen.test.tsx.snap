@@ -286,7 +286,7 @@ exports[`SecureApp renders correctly when device auth IS available 1`] = `
                   ]
                 }
               >
-                
+                
               </Text>
               <View
                 style={

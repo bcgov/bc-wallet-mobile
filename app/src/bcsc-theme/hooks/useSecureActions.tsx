@@ -1,8 +1,13 @@
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import {
+  cancelVerificationReminders,
+  scheduleVerificationReminders,
+} from '@/services/notifications/verificationReminders'
 import { BCDispatchAction, BCSCSecureState, BCState, NonBCSCUserMetadata, VerificationStatus } from '@/store'
 import { throwAppError } from '@bcsc-theme/utils/native-error-map'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   AccountFlags,
   BarcodePayload,
@@ -80,6 +85,7 @@ import { useBCSCApiClientState } from './useBCSCApiClient'
 export const useSecureActions = () => {
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { t } = useTranslation()
   const { client: apiClient, isClientReady } = useBCSCApiClientState()
 
   // ============================================================================
@@ -323,8 +329,30 @@ export const useSecureActions = () => {
       if (Object.keys(authRequestData).length > 0) {
         await persistAuthorizationRequest(authRequestData)
       }
+
+      // (Re)schedule the local "verify by ..." reminders off the latest expiry. This fires on the
+      // initial device-authorization and again whenever the server extends the deadline, so the
+      // reminders always track the current expiry. Cancellation happens at terminal states (completion,
+      // agent-cancel, reset) — not here and not on lock/logout, so reminders survive the user closing
+      // the app mid-verification.
+      if (codes.deviceCodeExpiresAt) {
+        const formattedDate = codes.deviceCodeExpiresAt.toLocaleString(t('BCSC.LocaleStringFormat'), {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+        })
+        // doesn't throw
+        scheduleVerificationReminders(
+          codes.deviceCodeExpiresAt,
+          {
+            title: t('BCSC.VerificationReminder.Title'),
+            body: t('BCSC.VerificationReminder.Body', { date: formattedDate }),
+          },
+          logger
+        )
+      }
     },
-    [dispatch, persistAuthorizationRequest]
+    [dispatch, persistAuthorizationRequest, t, logger]
   )
 
   /**
@@ -888,8 +916,7 @@ export const useSecureActions = () => {
       const verified = verificationStatus === VerificationStatus.VERIFIED
 
       // A verified account with no refresh token is unrecoverable
-      // An unverified account with no registration token is unrecoverable
-      const sessionRecoveryRequired = !!account && !refreshToken && (!registrationAccessToken || verified)
+      const sessionRecoveryRequired = Boolean(verified && account && !refreshToken)
 
       // Extract bookmarked service IDs from native client metadata
       const savedServices = (nativeSavedServices ?? [])
@@ -977,7 +1004,6 @@ export const useSecureActions = () => {
     logger.info('Logging out user - clearing secure state and marking as not authenticated')
     clearSecureState()
     dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [true] })
-    dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [undefined] })
     dispatch({
       type: DispatchAction.DID_AUTHENTICATE,
       payload: [false],
@@ -1000,6 +1026,8 @@ export const useSecureActions = () => {
         deleteToken(TokenType.Registration),
         deleteToken(TokenType.Access),
       ])
+      // doesn't throw
+      await cancelVerificationReminders(logger)
       logger.info('Secure data deleted from native storage')
     } catch (error) {
       logger.error('Failed to delete secure data:', error as Error)
@@ -1014,6 +1042,8 @@ export const useSecureActions = () => {
   const deleteVerificationData = useCallback(async () => {
     try {
       await Promise.all([deleteAuthorizationRequest(), deleteAccountFlags(), deleteEvidence(), deleteCredential()])
+      // doesn't throw
+      await cancelVerificationReminders(logger)
       logger.info('Verification data deleted from native storage')
     } catch (error) {
       logger.error('Failed to delete verification data:', error as Error)

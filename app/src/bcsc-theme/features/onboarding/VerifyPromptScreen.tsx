@@ -19,9 +19,15 @@ import VerifiedCheck from '@assets/img/verified.svg'
 interface VerifyPromptScreenProps {
   showSkip?: boolean
   edges?: Edges
+  /**
+   * Optional callback fired right after "Continue" records the choice. When the prompt is the
+   * entry screen of VerifyStack, this navigates (with a slide) to the next step within the same
+   * navigator instead of relying on a RootStack stack swap, which would jump.
+   */
+  onContinue?: () => void
 }
 
-export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({ showSkip = true, edges }) => {
+export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({ showSkip = true, edges, onContinue }) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [, dispatch] = useStore<BCState>()
@@ -36,7 +42,10 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({ showSkip
       type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS,
       payload: [VerificationStatus.IN_PROGRESS],
     })
-  }, [dispatch, markPromptSeen])
+    // These dispatches keep VerifyStack mounted (verification is now in progress), so onContinue
+    // can navigate within it for a normal slide transition.
+    onContinue?.()
+  }, [dispatch, markPromptSeen, onContinue])
 
   const handleLater = useCallback(() => {
     markPromptSeen()

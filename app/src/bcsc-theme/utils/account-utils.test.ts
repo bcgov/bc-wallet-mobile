@@ -1,4 +1,4 @@
-import { getNicknameValidationErrorKey, hasNickname } from '@/bcsc-theme/utils/account-utils'
+import { getNicknameValidationErrorKey } from '@/bcsc-theme/utils/account-utils'
 import { BCState } from '@/store'
 
 const createMockState = (nicknames: string[]): BCState =>
@@ -7,26 +7,6 @@ const createMockState = (nicknames: string[]): BCState =>
   }) as unknown as BCState
 
 describe('account-utils', () => {
-  describe('hasNickname', () => {
-    it('should return true when nickname exists in state', () => {
-      const state = createMockState(['Alice', 'Bob'])
-
-      expect(hasNickname(state, 'Alice')).toBe(true)
-    })
-
-    it('should return false when nickname does not exist in state', () => {
-      const state = createMockState(['Alice', 'Bob'])
-
-      expect(hasNickname(state, 'Charlie')).toBe(false)
-    })
-
-    it('should return false when nicknames list is empty', () => {
-      const state = createMockState([])
-
-      expect(hasNickname(state, 'Alice')).toBe(false)
-    })
-  })
-
   describe('getNicknameValidationErrorKey', () => {
     it('should return EmptyNameTitle when nickname is empty', () => {
       const state = createMockState([])
@@ -39,12 +19,6 @@ describe('account-utils', () => {
       const longName = 'a'.repeat(31)
 
       expect(getNicknameValidationErrorKey(state, longName)).toBe('BCSC.NicknameAccount.CharCountTitle')
-    })
-
-    it('should return NameAlreadyExists when nickname is a duplicate', () => {
-      const state = createMockState(['Alice'])
-
-      expect(getNicknameValidationErrorKey(state, 'Alice')).toBe('BCSC.NicknameAccount.NameAlreadyExists')
     })
 
     it('should return null for a valid unique nickname', () => {

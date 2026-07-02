@@ -100,11 +100,7 @@ describe('useVerificationResponseViewModel', () => {
       expect(mockUpdateUserMetadata).toHaveBeenCalledWith(null)
       expect(mockGetCachedIdTokenMetadata).toHaveBeenCalledWith({ refreshCache: true })
       expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.ADD_NICKNAME,
-        payload: ['TestNickname'],
-      })
-      expect(mockDispatch).toHaveBeenNthCalledWith(2, {
-        type: BCDispatchAction.SELECT_ACCOUNT,
+        type: BCDispatchAction.UPDATE_NICKNAME,
         payload: ['TestNickname'],
       })
       expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'TestNickname')
@@ -128,11 +124,7 @@ describe('useVerificationResponseViewModel', () => {
       // Should be false after completion
       expect(result.current.isSettingUpAccount).toBe(false)
       expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.ADD_NICKNAME,
-        payload: ['TestNickname'],
-      })
-      expect(mockDispatch).toHaveBeenNthCalledWith(2, {
-        type: BCDispatchAction.SELECT_ACCOUNT,
+        type: BCDispatchAction.UPDATE_NICKNAME,
         payload: ['TestNickname'],
       })
     })
@@ -148,11 +140,7 @@ describe('useVerificationResponseViewModel', () => {
 
       expect(result.current.isSettingUpAccount).toBe(false)
       expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.ADD_NICKNAME,
-        payload: ['TestNickname'],
-      })
-      expect(mockDispatch).toHaveBeenNthCalledWith(2, {
-        type: BCDispatchAction.SELECT_ACCOUNT,
+        type: BCDispatchAction.UPDATE_NICKNAME,
         payload: ['TestNickname'],
       })
       expect(mockLogger.error).toHaveBeenCalled()
@@ -168,11 +156,7 @@ describe('useVerificationResponseViewModel', () => {
         await result.current.handleAccountSetup()
       })
       expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.ADD_NICKNAME,
-        payload: ['TestNickname'],
-      })
-      expect(mockDispatch).toHaveBeenNthCalledWith(2, {
-        type: BCDispatchAction.SELECT_ACCOUNT,
+        type: BCDispatchAction.UPDATE_NICKNAME,
         payload: ['TestNickname'],
       })
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -193,11 +177,7 @@ describe('useVerificationResponseViewModel', () => {
       expect(mockRegistrationService.updateRegistration).toHaveBeenCalled()
       expect(mockGetCachedIdTokenMetadata).toHaveBeenCalledWith({ refreshCache: true })
       expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.ADD_NICKNAME,
-        payload: ['TestNickname'],
-      })
-      expect(mockDispatch).toHaveBeenNthCalledWith(2, {
-        type: BCDispatchAction.SELECT_ACCOUNT,
+        type: BCDispatchAction.UPDATE_NICKNAME,
         payload: ['TestNickname'],
       })
       expect(mockUpdateVerified).toHaveBeenCalledWith(true)
@@ -212,11 +192,7 @@ describe('useVerificationResponseViewModel', () => {
         await result.current.handleAccountSetup()
       })
       expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.ADD_NICKNAME,
-        payload: ['TestNickname'],
-      })
-      expect(mockDispatch).toHaveBeenNthCalledWith(2, {
-        type: BCDispatchAction.SELECT_ACCOUNT,
+        type: BCDispatchAction.UPDATE_NICKNAME,
         payload: ['TestNickname'],
       })
       expect(mockUpdateVerified).toHaveBeenCalledWith(true)
@@ -233,11 +209,7 @@ describe('useVerificationResponseViewModel', () => {
 
       expect(mockUpdateUserMetadata).toHaveBeenCalledWith(null)
       expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.ADD_NICKNAME,
-        payload: ['TestNickname'],
-      })
-      expect(mockDispatch).toHaveBeenNthCalledWith(2, {
-        type: BCDispatchAction.SELECT_ACCOUNT,
+        type: BCDispatchAction.UPDATE_NICKNAME,
         payload: ['TestNickname'],
       })
     })
@@ -251,11 +223,7 @@ describe('useVerificationResponseViewModel', () => {
         await result.current.handleAccountSetup()
       })
       expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.ADD_NICKNAME,
-        payload: ['TestNickname'],
-      })
-      expect(mockDispatch).toHaveBeenNthCalledWith(2, {
-        type: BCDispatchAction.SELECT_ACCOUNT,
+        type: BCDispatchAction.UPDATE_NICKNAME,
         payload: ['TestNickname'],
       })
       expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'TestNickname')
@@ -271,11 +239,7 @@ describe('useVerificationResponseViewModel', () => {
         await result.current.handleAccountSetup()
       })
       expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.ADD_NICKNAME,
-        payload: ['TestNickname'],
-      })
-      expect(mockDispatch).toHaveBeenNthCalledWith(2, {
-        type: BCDispatchAction.SELECT_ACCOUNT,
+        type: BCDispatchAction.UPDATE_NICKNAME,
         payload: ['TestNickname'],
       })
       expect(mockLogger.error).toHaveBeenCalled()
@@ -291,11 +255,7 @@ describe('useVerificationResponseViewModel', () => {
         await result.current.handleAccountSetup()
       })
       expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.ADD_NICKNAME,
-        payload: ['TestNickname'],
-      })
-      expect(mockDispatch).toHaveBeenNthCalledWith(2, {
-        type: BCDispatchAction.SELECT_ACCOUNT,
+        type: BCDispatchAction.UPDATE_NICKNAME,
         payload: ['TestNickname'],
       })
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -312,11 +272,7 @@ describe('useVerificationResponseViewModel', () => {
         await result.current.handleAccountSetup()
       })
       expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.ADD_NICKNAME,
-        payload: ['TestNickname'],
-      })
-      expect(mockDispatch).toHaveBeenNthCalledWith(2, {
-        type: BCDispatchAction.SELECT_ACCOUNT,
+        type: BCDispatchAction.UPDATE_NICKNAME,
         payload: ['TestNickname'],
       })
       expect(mockLogger.error).toHaveBeenCalled()
@@ -347,11 +303,7 @@ describe('useVerificationResponseViewModel', () => {
         await result.current.handleAccountSetup()
       })
       expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.ADD_NICKNAME,
-        payload: ['TestNickname'],
-      })
-      expect(mockDispatch).toHaveBeenNthCalledWith(2, {
-        type: BCDispatchAction.SELECT_ACCOUNT,
+        type: BCDispatchAction.UPDATE_NICKNAME,
         payload: ['TestNickname'],
       })
 
@@ -411,11 +363,7 @@ describe('useVerificationResponseViewModel', () => {
       expect(mockUpdateUserMetadata).toHaveBeenCalledWith(null)
       expect(mockGetCachedIdTokenMetadata).toHaveBeenCalledWith({ refreshCache: true })
       expect(mockDispatch).toHaveBeenNthCalledWith(1, {
-        type: BCDispatchAction.ADD_NICKNAME,
-        payload: ['TestNickname'],
-      })
-      expect(mockDispatch).toHaveBeenNthCalledWith(2, {
-        type: BCDispatchAction.SELECT_ACCOUNT,
+        type: BCDispatchAction.UPDATE_NICKNAME,
         payload: ['TestNickname'],
       })
       expect(mockUpdateVerified).toHaveBeenCalledWith(true)

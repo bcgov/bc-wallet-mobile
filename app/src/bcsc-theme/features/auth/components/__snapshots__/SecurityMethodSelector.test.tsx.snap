@@ -1613,7 +1613,7 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
                   ]
                 }
               >
-                
+                
               </Text>
               <View
                 style={
