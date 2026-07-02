@@ -75,7 +75,8 @@
     "axios": "1.15.0",
     "@credo-ts/anoncreds@npm:0.6.3": "patch:@credo-ts/anoncreds@npm%3A0.6.3#~/.yarn/patches/@credo-ts-anoncreds-npm-0.6.3-95e0920301.patch",
     "@credo-ts/anoncreds@npm:^0.6.1": "patch:@credo-ts/anoncreds@npm%3A0.6.3#~/.yarn/patches/@credo-ts-anoncreds-npm-0.6.3-95e0920301.patch",
-    "metro": "0.83.7"
+    "metro": "0.83.7",
+    "shell-quote": "1.8.4"
   },
   "dependencies": {
     "react-native-bcsc-core": "workspace:*"

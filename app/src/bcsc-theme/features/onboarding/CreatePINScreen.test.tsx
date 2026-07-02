@@ -16,6 +16,9 @@ jest.mock('react-native-bcsc-core', () => ({
 }))
 
 jest.mock('@/bcsc-theme/hooks/useBCSCApiClient', () => ({
+  useBCSCApiClient: () => ({
+    endpoints: { issuer: 'https://mock-issuer' },
+  }),
   useBCSCApiClientState: () => ({
     client: {},
     isClientReady: true,

@@ -2,6 +2,7 @@ import { useBCSCAgentSafe } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { deleteWalletStore, purgeWalletStore, shutdownAgent } from '@/bcsc-theme/features/agent/services/agent-service'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { ledgerResolver } from '@/configs/ledgers/indy/ledgerResolver'
 import { WALLET_ID } from '@/constants'
 import { BCDispatchAction, BCSCState, BCState } from '@/store'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
@@ -38,7 +39,7 @@ export const useFactoryReset = () => {
   const { client, isClientReady } = useBCSCApiClientState()
   const registration = useRegistrationApi(client, Boolean(isClientReady))
   const [store, dispatch] = useStore<BCState>()
-  const [logger, indyLedgers] = useServices([TOKENS.UTIL_LOGGER, TOKENS.UTIL_LEDGERS])
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { clearSecureState, deleteSecureData } = useSecureActions()
   const agentCtx = useBCSCAgentSafe()
 
@@ -143,7 +144,7 @@ export const useFactoryReset = () => {
           try {
             logger.info('FactoryReset: No active agent; purging any orphaned wallet store...')
             await purgeWalletStore({
-              ledgers: indyLedgers,
+              ledgers: ledgerResolver.ledgers,
               walletSecret: { id: WALLET_ID, key: store.bcscSecure.walletKey },
               mediatorUrl: store.preferences?.selectedMediator ?? '',
               walletLabel: store.preferences?.walletName || 'BC Wallet',
@@ -187,7 +188,6 @@ export const useFactoryReset = () => {
       dispatch,
       client,
       agentCtx,
-      indyLedgers,
       store.bcscSecure.walletKey,
       store.preferences?.selectedMediator,
       store.preferences?.walletName,

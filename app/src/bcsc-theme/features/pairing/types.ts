@@ -26,3 +26,14 @@ export type PairingNavigationEvent = {
 
 export type PairingNavigationListener = (event: PairingNavigationEvent) => void
 export type PendingPairingListener = (hasPending: boolean) => void
+
+/**
+ * Converts a PairingPayload to the parameters required for service login
+ * @param payload The pairing payload to convert
+ * @returns PairingNavigationEvent['params'] containing serviceTitle, pairingCode, and optional fromAppSwitch
+ */
+export const pairingPayloadToServiceLoginParams = (payload: PairingPayload): PairingNavigationEvent['params'] => ({
+  serviceTitle: payload.serviceTitle,
+  pairingCode: payload.pairingCode,
+  fromAppSwitch: payload.source === 'deep-link',
+})

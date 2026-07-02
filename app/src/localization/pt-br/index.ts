@@ -192,7 +192,7 @@ const translation = {
     "Retry": "Retry (PT-BR)",
     "Failed": "We couldn't load your wallet. Please try again. (PT-BR)",
     "Starting": "Starting... (PT-BR)",
-    "CheckingOCA": "Checking for OCA updates... (PT-BR)",
+    "CheckingRemoteResources": "Checking for updates... (PT-BR)",
     "InitializingAgent": "Initializing agent... (PT-BR)",
     "Finishing": "Finishing... (PT-BR)"
   },
@@ -272,7 +272,6 @@ const translation = {
         "PinContact": "Pin contact (PT-BR)",
         "UnpinContact": "Unpin contact (PT-BR)",
         "EditName": "Edit Contact Name (PT-BR)",
-        "ViewHistory": "View history (PT-BR)",
         "ViewJSON": "View JSON details (PT-BR)",
         "RemoveContact": "Remove Contact (PT-BR)",
       },
@@ -480,6 +479,12 @@ const translation = {
         "ContentA": "You must update this app to continue. (PT-BR)",
         "ContentB": "Please update to the latest version from the {{platformStore}}. (PT-BR)",
         "UpdateButton": "Go to {{platformStore}} (PT-BR)",
+      },
+      "VerificationSessionExpired": {
+        "Header": "Verification session expired (PT-BR)",
+        "ContentA": "More than 7 days have passed since you started verifying your identity, so this session has expired. (PT-BR)",
+        "ContentB": "To continue, you’ll need to set up the app and verify your identity again. (PT-BR)",
+        "Button": "Start again (PT-BR)",
       },
       "DeviceInvalidated": {
         "Header": "Device invalidated (PT-BR)",
