@@ -18,7 +18,7 @@ import {
   useTheme,
 } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
-import React, { PropsWithChildren, ReactNode, useCallback, useContext, useState } from 'react'
+import React, { PropsWithChildren, ReactNode, useCallback, useContext, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, StyleSheet, TouchableWithoutFeedback, Vibration, View } from 'react-native'
 import { AccountSecurityMethod, getAccountSecurityMethod } from 'react-native-bcsc-core'
@@ -76,6 +76,7 @@ const SectionHeader: React.FC<
   const { t } = useTranslation()
   const { TextTheme } = useTheme()
   const [showSection, setShowSection] = useState(true)
+  const hasToggled = useRef(false) // NOTE: Prevents the animation from running on mount
   const chevronRotation = useSharedValue(DEFAULT_ROTATION)
 
   const chevronStyle = useAnimatedStyle(() => ({
@@ -83,6 +84,7 @@ const SectionHeader: React.FC<
   }))
 
   const toggleSection = () => {
+    hasToggled.current = true
     setShowSection((prev) => {
       const next = !prev
       chevronRotation.value = withTiming(next ? DEFAULT_ROTATION : HALF_ROTATION, {
@@ -114,7 +116,7 @@ const SectionHeader: React.FC<
       </View>
       {showSection ? (
         <Animated.View
-          entering={FadeIn.duration(TRANSITION_IN_DURATION)}
+          entering={hasToggled.current ? FadeIn.duration(TRANSITION_IN_DURATION) : undefined}
           exiting={FadeOut.duration(TRANSITION_OUT_DURATION)}
         >
           {children}

@@ -51,6 +51,7 @@ import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
 import { TermsOfUseUpdated } from '../features/modal/TermsOfUseUpdated'
+import { VerifyPromptScreen } from '../features/onboarding/VerifyPromptScreen'
 import { pairingPayloadToServiceLoginParams, usePairingService } from '../features/pairing'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
@@ -75,6 +76,8 @@ const ScopedCredentialDetails: React.FC<React.ComponentProps<typeof CredentialDe
     <CredentialDetails {...props} />
   </AgentReadyGate>
 )
+
+const VerifyPromptScreenNoSkip = () => <VerifyPromptScreen showSkip={false} />
 
 // Contact screens call Bifold connection hooks (useConnections / useConnectionById)
 // that require the providers BifoldScope only mounts once the agent is ready.
@@ -464,7 +467,13 @@ const MainStack: React.FC = () => {
               headerShown: true,
             })}
           />
-
+          <Stack.Screen
+            name={BCSCScreens.MainVerifyPrompt}
+            component={VerifyPromptScreenNoSkip}
+            options={() => ({
+              headerShown: true,
+            })}
+          />
           {/* React navigation docs suggest modals at bottom of stack */}
           <Stack.Screen
             name={BCSCModals.InternetDisconnected}

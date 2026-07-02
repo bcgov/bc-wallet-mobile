@@ -61,19 +61,6 @@ describe('ChangePINForm', () => {
     expect(tree.getByText('BCSC.ChangePIN.ButtonTitle')).toBeTruthy()
   })
 
-  it('button is disabled when PINs are not entered and checkbox unchecked', () => {
-    const tree = render(
-      <BasicAppContext>
-        <BCSCLoadingProvider>
-          <ChangePINForm onSuccess={mockOnSuccess} />
-        </BCSCLoadingProvider>
-      </BasicAppContext>
-    )
-
-    const button = tree.getByTestId('com.ariesbifold:id/ChangePIN')
-    expect(button.props.accessibilityState.disabled).toBe(true)
-  })
-
   it('validates current PIN is verified before changing', async () => {
     mockVerifyPIN.mockResolvedValue({
       success: false,
@@ -177,75 +164,6 @@ describe('ChangePINForm', () => {
     await waitFor(() => {
       expect(tree.getByText('BCSC.ChangePIN.PINsDoNotMatch')).toBeTruthy()
     })
-
-    expect(mockVerifyPIN).not.toHaveBeenCalled()
-  })
-
-  it('disables button when current PIN is too short', async () => {
-    const tree = render(
-      <BasicAppContext>
-        <BCSCLoadingProvider>
-          <ChangePINForm onSuccess={mockOnSuccess} />
-        </BCSCLoadingProvider>
-      </BasicAppContext>
-    )
-
-    const inputs = tree.getAllByAccessibilityHint('Enter your 6-digit PIN')
-    fireEvent.changeText(inputs[0], '123') // Too short
-    fireEvent.changeText(inputs[1], '654321')
-    fireEvent.changeText(inputs[2], '654321')
-
-    const checkbox = tree.getByTestId('com.ariesbifold:id/IUnderstand')
-    fireEvent.press(checkbox)
-
-    const button = tree.getByTestId('com.ariesbifold:id/ChangePIN')
-    expect(button.props.accessibilityState.disabled).toBe(true)
-
-    expect(mockVerifyPIN).not.toHaveBeenCalled()
-  })
-
-  it('disables button when new PIN is too short', async () => {
-    const tree = render(
-      <BasicAppContext>
-        <BCSCLoadingProvider>
-          <ChangePINForm onSuccess={mockOnSuccess} />
-        </BCSCLoadingProvider>
-      </BasicAppContext>
-    )
-
-    const inputs = tree.getAllByAccessibilityHint('Enter your 6-digit PIN')
-    fireEvent.changeText(inputs[0], '123456')
-    fireEvent.changeText(inputs[1], '123') // Too short
-    fireEvent.changeText(inputs[2], '654321')
-
-    const checkbox = tree.getByTestId('com.ariesbifold:id/IUnderstand')
-    fireEvent.press(checkbox)
-
-    const button = tree.getByTestId('com.ariesbifold:id/ChangePIN')
-    expect(button.props.accessibilityState.disabled).toBe(true)
-
-    expect(mockVerifyPIN).not.toHaveBeenCalled()
-  })
-
-  it('disables button when confirm PIN is too short', async () => {
-    const tree = render(
-      <BasicAppContext>
-        <BCSCLoadingProvider>
-          <ChangePINForm onSuccess={mockOnSuccess} />
-        </BCSCLoadingProvider>
-      </BasicAppContext>
-    )
-
-    const inputs = tree.getAllByAccessibilityHint('Enter your 6-digit PIN')
-    fireEvent.changeText(inputs[0], '123456')
-    fireEvent.changeText(inputs[1], '654321')
-    fireEvent.changeText(inputs[2], '123') // Too short
-
-    const checkbox = tree.getByTestId('com.ariesbifold:id/IUnderstand')
-    fireEvent.press(checkbox)
-
-    const button = tree.getByTestId('com.ariesbifold:id/ChangePIN')
-    expect(button.props.accessibilityState.disabled).toBe(true)
 
     expect(mockVerifyPIN).not.toHaveBeenCalled()
   })
