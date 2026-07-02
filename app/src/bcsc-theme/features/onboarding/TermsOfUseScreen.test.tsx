@@ -6,19 +6,9 @@ import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
-import * as PushNotifications from '../../../utils/PushNotificationsHelper'
 import { TermsOfUseScreen } from './TermsOfUseScreen'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
-jest.mock('../../../utils/PushNotificationsHelper', () => ({
-  status: jest.fn(),
-  NotificationPermissionStatus: {
-    DENIED: 'denied',
-    GRANTED: 'granted',
-    UNKNOWN: 'unknown',
-    BLOCKED: 'blocked',
-  },
-}))
 
 const mockTermsOfUseResponse = {
   version: '1.0',
@@ -65,33 +55,19 @@ describe('TermsOfUseScreen', () => {
     return tree
   }
 
-  it('persists the accepted terms version and navigates to notifications when permission not granted', async () => {
+  it('persists the accepted terms version and navigates to the analytics opt-in screen', async () => {
     const storageSpy = jest.spyOn(PersistentStorage, 'storeValueForKey').mockResolvedValue()
-    jest
-      .mocked(PushNotifications.status)
-      .mockResolvedValue(PushNotifications.NotificationPermissionStatus.DENIED as never)
 
     await renderAndAccept()
 
+    // The analytics screen is next; it owns the logic for skipping the notifications step.
     await waitFor(() => {
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.OnboardingNotifications)
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.OnboardingOptInAnalytics)
     })
 
     expect(storageSpy).toHaveBeenCalledWith(
       BCLocalStorageKeys.BCSC,
       expect.objectContaining({ acceptedTermsOfUseVersion: '1.0' })
     )
-  })
-
-  it('navigates to secure app screen when notification permission already granted', async () => {
-    jest
-      .mocked(PushNotifications.status)
-      .mockResolvedValue(PushNotifications.NotificationPermissionStatus.GRANTED as never)
-
-    await renderAndAccept()
-
-    await waitFor(() => {
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.OnboardingSecureApp)
-    })
   })
 })

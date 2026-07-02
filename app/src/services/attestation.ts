@@ -651,7 +651,7 @@ export class AttestationMonitor implements AttestationMonitorI {
     agent.config.logger.info('Second check if proof is requesting attestation')
 
     agent.config.logger.info('Checking if credentials match for proof request')
-    const credentials = await credentialsMatchForProof(agent, proof)
+    const credentials = await credentialsMatchForProof(agent, proof.id)
 
     if (!credentials) {
       return true

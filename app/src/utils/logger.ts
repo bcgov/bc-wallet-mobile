@@ -5,6 +5,7 @@ import Config from 'react-native-config'
 import {
   getApplicationName,
   getBuildNumber,
+  getDeviceId,
   getSystemName,
   getSystemVersion,
   getVersion,
@@ -18,6 +19,7 @@ const baseOptions: RemoteLoggerOptions = {
     application: getApplicationName().toLowerCase(),
     version: `${getVersion()}-${getBuildNumber()}`,
     system: `${getSystemName()} v${getSystemVersion()}`,
+    model: getDeviceId(), // NOTE (bm): Not user-friendly model name, actual device model code, ie: iPhone 14 Pro shows up as iPhone 15,2
   },
   autoDisableRemoteLoggingIntervalInMinutes,
 }
@@ -78,21 +80,36 @@ export const appLogger = createAppLogger()
  * always given a code to share, even when the network/Loki is unavailable.
  *
  * @param error - the error being reported
+ * @param options.includeDeviceDetails - when false, the app `version` and OS `system` labels are
+ *   omitted so a user can submit a report without sharing device details (defaults to true to
+ *   preserve existing error-report behaviour)
  * @returns the reference code to surface to the user
  */
-export const reportProblem = (error: BifoldError): string => {
+export const reportProblem = (error: BifoldError, options?: { includeDeviceDetails?: boolean }): string => {
   const referenceCode = generateReferenceCode()
   const { title, description, code, message, stack } = error
+  const { includeDeviceDetails = true } = options ?? {}
+
+  // Drop the app version / OS labels when the user opts out; keep the application name so support
+  // still knows which app the report came from.
+  const lokiLabels = includeDeviceDetails ? baseOptions.lokiLabels : { application: getApplicationName().toLowerCase() }
 
   try {
     if (baseOptions.lokiUrl) {
       lokiTransport({
         msg: title,
-        rawMsg: [{ message: title, data: { description, code, message, stack, report_id: referenceCode } }],
+        // Only attach `stack` when the error actually carries one — user-initiated reports have no real
+        // trace, so the field is omitted rather than logging meaningless construction frames.
+        rawMsg: [
+          {
+            message: title,
+            data: { description, code, message, ...(stack ? { stack } : {}), report_id: referenceCode },
+          },
+        ],
         level: { severity: 3, text: 'error' },
         options: {
           lokiUrl: baseOptions.lokiUrl,
-          lokiLabels: baseOptions.lokiLabels,
+          lokiLabels,
           job: 'incident-report',
         },
       })

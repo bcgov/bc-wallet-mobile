@@ -133,4 +133,31 @@ describe('SettingsContent', () => {
     fireEvent.press(row)
     expect(row).toBeTruthy()
   })
+
+  it('hides the section content when its chevron is pressed, and shows it again on a second press', () => {
+    renderWithState()
+
+    // Unauthenticated view renders exactly two collapsible sections: Help, then More Info.
+    // Index 0 is the Help section's chevron.
+    const [helpChevron] = screen.getAllByTestId(tid('SectionHeaderChevron'))
+
+    expect(screen.getByTestId(tid('Help'))).toBeTruthy()
+    expect(screen.getByTestId(tid('ContactUs'))).toBeTruthy()
+    expect(screen.getByTestId(tid('Feedback'))).toBeTruthy()
+
+    fireEvent.press(helpChevron)
+
+    expect(screen.queryByTestId(tid('Help'))).toBeNull()
+    expect(screen.queryByTestId(tid('ContactUs'))).toBeNull()
+    expect(screen.queryByTestId(tid('Feedback'))).toBeNull()
+    // The other section's content is untouched.
+    expect(screen.getByTestId(tid('Accessibility'))).toBeTruthy()
+    expect(screen.getByTestId(tid('TermsOfUse'))).toBeTruthy()
+
+    fireEvent.press(helpChevron)
+
+    expect(screen.getByTestId(tid('Help'))).toBeTruthy()
+    expect(screen.getByTestId(tid('ContactUs'))).toBeTruthy()
+    expect(screen.getByTestId(tid('Feedback'))).toBeTruthy()
+  })
 })

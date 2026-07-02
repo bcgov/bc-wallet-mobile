@@ -183,6 +183,68 @@ class BcscCore: NSObject {
     return "[keys=\(keys.count), newest=\(newest.tag)]"
   }
 
+  /// Human-readable message for a thrown error. `JOSEException` is a bare `struct`
+  /// (not `LocalizedError`), so `localizedDescription` would hide its real text
+  /// ("Decryption failed", "Unsupported JWE algorithm […]", "Expected … 5 parts […]").
+  /// Reach into it explicitly; fall back to `localizedDescription` for everything else
+  /// (e.g. `KeychainError`, which IS `LocalizedError`).
+  private func errorMessage(_ error: Error) -> String {
+    if let jose = error as? JOSEException {
+      return jose.description
+    }
+    return error.localizedDescription
+  }
+
+  /// Safe base64url→`Data` for diagnostics: returns `nil` on malformed input instead of
+  /// force-unwrapping like `Base64URL.decode` (`Data(base64Encoded:)!`), which would crash
+  /// on a corrupt header — the exact case this diagnostic exists to report.
+  private func base64URLDecodeSafely(_ segment: String) -> Data? {
+    var base64 = segment.replacingOccurrences(of: "-", with: "+")
+      .replacingOccurrences(of: "_", with: "/")
+    let remainder = base64.count % 4
+    if remainder > 0 {
+      base64 += String(repeating: "=", count: 4 - remainder)
+    }
+    return Data(base64Encoded: base64)
+  }
+
+  /// Best-effort read of the *incoming* JWE protected header for diagnostics. Reads the
+  /// real `kid` straight off the wire — NOT `JWEHeader.kid`, which the parser overwrites
+  /// with the server's own public-key id. Unreadable fields come back as "?".
+  private func incomingJWEHeader(_ jweString: String) -> (alg: String, enc: String, kid: String, parts: Int) {
+    let parts = jweString.components(separatedBy: ".")
+    guard parts.count == 5, let headerSegment = parts.first,
+          let headerData = base64URLDecodeSafely(headerSegment),
+          let obj = (try? JSONSerialization.jsonObject(with: headerData)) as? [String: Any]
+    else {
+      return ("?", "?", "?", parts.count)
+    }
+    return (
+      (obj["alg"] as? String) ?? "?",
+      (obj["enc"] as? String) ?? "?",
+      (obj["kid"] as? String) ?? "",
+      parts.count
+    )
+  }
+
+  /// Compact decrypt diagnostics for reject MESSAGE strings (the problem-report view
+  /// surfaces only the message text, not the structured userInfo). Carries the key
+  /// inventory plus the incoming JWE header and whether its kid matches any local key —
+  /// the essentials for telling "no key" / "wrong key" / "unsupported alg" / "corrupt"
+  /// apart from a field report alone.
+  ///
+  /// Non-throwing by construction: `decodePayload` builds this up front on every call
+  /// (success path included), so it must never break decoding. It leans only on crash-safe
+  /// helpers (`incomingJWEHeader`, `base64URLDecodeSafely`) and never force-unwraps — keep
+  /// it that way. (The Android twin can throw, so there the whole body is guarded.)
+  private func decodeDiagnosticsSummary(keys: [PrivateKeyInfo], jweString: String) -> String {
+    let header = incomingJWEHeader(jweString)
+    let newest = keys.sorted(by: { $0.created > $1.created }).first?.tag ?? "none"
+    let kidMatchesLocal = !header.kid.isEmpty && keys.contains { $0.tag == header.kid }
+    let jweKid = header.kid.isEmpty ? "none" : header.kid
+    return "[keys=\(keys.count), newest=\(newest), jweParts=\(header.parts), jweAlg=\(header.alg), jweEnc=\(header.enc), jweKid=\(jweKid), kidMatchesLocal=\(kidMatchesLocal)]"
+  }
+
   private func signJWT(payload: JWTClaimsSet, reject: @escaping RCTPromiseRejectBlock) -> String? {
     let keyPairManager = KeyPairManager()
     let keys = keyPairManager.findAllPrivateKeys()
@@ -1240,37 +1302,86 @@ class BcscCore: NSObject {
     resolve(body)
   }
 
-  /// Decodes a JWE string payload into a JWT and extracts the base64 encoded string from the JWT's payload.
+  /// Decodes a JWE string into its inner JWT, verifies the inner JWS signature (when a key is
+  /// provided), and extracts the JWT's payload as a raw JSON string.
   ///
   /// - Parameters:
   ///   - jweString: A string representing the JWE to decode.
-  ///   - resolve: The decoded JWT payload as a base64 encoded string.
-  ///   - reject: An error if the JWE cannot be parsed or the payload cannot be decoded.
+  ///   - key: Optional JWK public key used to verify the inner JWS signature. When omitted,
+  ///     `verified` is `false` and the claims are still returned (the caller gates on `verified`).
+  ///   - resolve: A `["verified": Bool, "claims": String]` map; `claims` is the decoded payload JSON string.
+  ///   - reject: An error if the JWE cannot be parsed/decrypted or the payload cannot be decoded.
   func decodePayload(
-    _ jweString: String, resolve: @escaping RCTPromiseResolveBlock,
+    _ jweString: String, key: NSDictionary?,
+    resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
     let keyPairManager = KeyPairManager()
     let keys = keyPairManager.findAllPrivateKeys()
+    // Built once up front so every failure path reports the same picture: key
+    // inventory + the incoming JWE's alg/enc/kid + whether that kid matches a local
+    // key. This is what makes 2507 reports self-classifying in the field.
+    let diagnostics = decodeDiagnosticsSummary(keys: keys, jweString: jweString)
 
     guard let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first else {
-      reject("E_NO_KEYS_FOUND", "No keys available to sign the JWT.", nil)
+      reject(
+        "E_NO_KEYS_FOUND",
+        "No keys available to decrypt JWE \(diagnostics)",
+        keychainDiagnosticsError(site: "decode_payload_no_keys", underlying: KeychainError.keyNotExists, keys: keys)
+      )
+      return
+    }
+
+    let keyPair: (public: SecKey, private: SecKey)
+    do {
+      keyPair = try keyPairManager.getKeyPair(with: latestKeyInfo.tag)
+    } catch let KeychainError.keychainUnavailable(status) {
+      // The key likely exists but can't be read right now (device locked, auth
+      // failure, or launched in the background before first unlock). Distinct,
+      // retryable signal — do not conflate with a genuine decryption failure.
+      reject(
+        "E_KEYCHAIN_UNAVAILABLE",
+        "Keychain temporarily unavailable while retrieving decrypt key (OSStatus \(status)) \(diagnostics)",
+        keychainDiagnosticsError(
+          site: "decode_payload_retrieve_key", underlying: KeychainError.keychainUnavailable(status), keys: keys
+        )
+      )
+      return
+    } catch {
+      reject(
+        "E_KEYPAIR_RETRIEVAL_FAILED",
+        "Failed to retrieve decrypt key: \(errorMessage(error)) \(diagnostics)",
+        keychainDiagnosticsError(site: "decode_payload_retrieve_key", underlying: error, keys: keys)
+      )
       return
     }
 
     do {
-      let keyPair = try keyPairManager.getKeyPair(with: latestKeyInfo.tag)
       let jwe = try JWE.parse(s: jweString)
       let decrypter = RSADecrypter(privateKey: keyPair.private)
-      // Decrpyt payload into JWT
+      // Decrypt JWE payload into the inner JWT (compact JWS)
       let payload = try jwe.decrypt(withDecrypter: decrypter)
 
-      // Break down and decode JWT
+      // Validate the decrypted payload is a compact JWS
       let segments = payload.components(separatedBy: ".")
       guard segments.count == BcscCore.jwsCompactSegmentCount else {
-        reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload", nil)
+        reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload \(diagnostics)", nil)
         return
       }
+
+      // Parse the inner JWS and verify its signature. `verified` is a flag (never throws); the
+      // caller decides what to do when it is false. A malformed inner token maps to
+      // E_FAILED_TO_PARSE_JWS, distinct from the outer decrypt/parse failure handled by the catch.
+      let jws: JWS
+      do {
+        jws = try JWS.parse(s: payload)
+      } catch {
+        reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload", error)
+        return
+      }
+      let verified = verifyJws(jws, key: key)
+
+      // Decode the claims segment (base64url) into the raw JSON string
       var base64String = segments[1]
       let requiredLength = Int(4 * ceil(Float(base64String.count) / 4.0))
       let nbrPaddings = requiredLength - base64String.count
@@ -1281,14 +1392,24 @@ class BcscCore: NSObject {
       base64String = base64String.replacingOccurrences(of: "-", with: "+")
       base64String = base64String.replacingOccurrences(of: "_", with: "/")
       guard let decodedData = Data(base64Encoded: base64String),
-            let base64Decoded = String(data: decodedData, encoding: .utf8)
+            let claims = String(data: decodedData, encoding: .utf8)
       else {
-        reject("E_FAILED_TO_PARSE_JWS", "Failed to decode JWS payload segment", nil)
+        reject("E_FAILED_TO_PARSE_JWS", "Failed to decode JWS payload segment \(diagnostics)", nil)
         return
       }
-      resolve(base64Decoded)
+      resolve(["verified": verified, "claims": claims])
     } catch {
-      reject("E_PAYLOAD_DECODE_ERROR", "Unable to decode payload", nil)
+      // Wrong key, unsupported alg, corrupted/garbled ciphertext, or a malformed JWE all
+      // land here. The diagnostics string is what tells them apart downstream:
+      //   [keys=0]              → no usable key
+      //   kidMatchesLocal=false → server encrypted to a key this device doesn't hold
+      //   jweAlg/jweEnc unsupported → algorithm mismatch (iOS supports RSA1_5 + CBC-HMAC)
+      //   jweParts!=5 / jweAlg=? → corrupted or replaced ciphertext in transit
+      reject(
+        "E_PAYLOAD_DECODE_ERROR",
+        "Unable to decode payload: \(errorMessage(error)) \(diagnostics)",
+        keychainDiagnosticsError(site: "decode_payload_decrypt", underlying: error, keys: keys)
+      )
     }
   }
 
@@ -1333,13 +1454,7 @@ class BcscCore: NSObject {
       }
 
       // 3. Verify signature if key is provided
-      var verified = false
-      if let keyDict = key, let jwk = JWK(json: keyDict) {
-        if let secKey = JWK.jwkToSecKey(jwk: jwk) {
-          let verifier = RSAVerifier(rsaKey: secKey)
-          verified = (try? jws.verify(verifier: verifier)) ?? false
-        }
-      }
+      let verified = verifyJws(jws, key: key)
 
       // 4. Build claims response
       let claims: [String: Any] = [
@@ -1364,6 +1479,21 @@ class BcscCore: NSObject {
         "Unable to decode login challenge: \(error.localizedDescription)", error
       )
     }
+  }
+
+  /// Verifies a JWS signature against an optional JWK public key.
+  ///
+  /// Returns `false` when no key is provided, the JWK is invalid/unconvertible, or verification
+  /// fails. This never throws — an absent or failed verification is represented as `false`, not an
+  /// error, so callers can gate on the result (e.g. distinguish a missing key from a bad signature).
+  private func verifyJws(_ jws: JWS, key: NSDictionary?) -> Bool {
+    guard let keyDict = key, let jwk = JWK(json: keyDict),
+          let secKey = JWK.jwkToSecKey(jwk: jwk)
+    else {
+      return false
+    }
+    let verifier = RSAVerifier(rsaKey: secKey)
+    return (try? jws.verify(verifier: verifier)) ?? false
   }
 
   /// Creates a quick login JWT assertion matching the format used in ias-ios app.

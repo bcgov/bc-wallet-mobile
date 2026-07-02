@@ -1,3 +1,4 @@
+import { ledgerResolver } from '@/configs/ledgers/indy/ledgerResolver'
 import { AppError, ErrorRegistry } from '@/errors'
 import { toBifoldError } from '@/errors/errorHandler'
 import { BCState } from '@/store'
@@ -83,7 +84,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
   }, [logger, initError])
 
   const steps: string[] = useMemo(
-    () => [t('Init.Starting'), t('Init.CheckingOCA'), t('Init.InitializingAgent'), t('Init.Finishing')],
+    () => [t('Init.Starting'), t('Init.CheckingRemoteResources'), t('Init.InitializingAgent'), t('Init.Finishing')],
     [t]
   )
 
@@ -115,7 +116,11 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
     const initAgentAsyncEffect = async (): Promise<void> => {
       try {
         setStep(2)
-        await (ocaBundleResolver as RemoteOCABundleResolver).checkForUpdates?.()
+        await (ocaBundleResolver as RemoteOCABundleResolver)
+          .checkForUpdates?.()
+          .catch((err) => logger.warn(`OCA update failed (continuing): ${err}`))
+        ledgerResolver.logger = logger
+        await ledgerResolver.checkForUpdates().catch((err) => logger.warn(`Ledger update failed (continuing): ${err}`))
 
         setStep(3)
         await initializeAgent(walletSecret)

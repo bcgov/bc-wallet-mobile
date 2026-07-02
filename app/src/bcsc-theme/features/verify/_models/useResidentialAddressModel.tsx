@@ -4,14 +4,16 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { isCanadianPostalCode, ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { ensureAppError } from '@/errors/errorHandler'
+import { AppEventCode } from '@/events/appEventCode'
 import { BCState, NonBCSCUserMetadata } from '@/store'
-import { ToastType, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import moment from 'moment'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import Toast from 'react-native-toast-message'
 
 export type ResidentialAddressFormState = {
   streetAddress: string
@@ -41,10 +43,10 @@ type useResidentialAddressModelProps = {
  */
 const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelProps) => {
   const { t } = useTranslation()
-  const { Spacing } = useTheme()
   const [store] = useStore<BCState>()
   const { authorization } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { emitErrorModal } = useErrorAlert()
   const { updateCardProcess, updateUserMetadata, updateDeviceCodes, updateVerificationOptions } = useSecureActions()
 
   const [formState, setFormState] = useState<ResidentialAddressFormState>({
@@ -131,8 +133,16 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
     }
     await updateUserMetadata(updatedUserMetadata)
 
-    // A2: device is already authorized — advance to whatever step the user is now on
-    if (store.bcscSecure.deviceCode && store.bcscSecure.deviceCodeExpiresAt) {
+    // A2: device is already authorized — only short-circuit when the device_code is still valid.
+    // A present-but-expired code must fall through to re-authorize (mint a fresh code) rather than
+    // proceed with a dead one, which would 401 on the evidence calls. See issue #4050.
+    const deviceCodeStillValid = Boolean(
+      store.bcscSecure.deviceCode &&
+        store.bcscSecure.deviceCodeExpiresAt &&
+        store.bcscSecure.deviceCodeExpiresAt.getTime() > Date.now()
+    )
+    if (deviceCodeStillValid) {
+      // Resume at whatever step the user is now on (v4.1 routing), using the just-updated metadata.
       const predictedStore: BCState = {
         ...store,
         bcscSecure: { ...store.bcscSecure, userMetadata: updatedUserMetadata },
@@ -178,14 +188,6 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
         return
       }
 
-      Toast.show({
-        type: ToastType.Success,
-        text1: t('BCSC.Address.AddressSaved'),
-        bottomOffset: Spacing.lg,
-        autoHide: true,
-        visibilityTime: 1500,
-      })
-
       logger.info(`Updating deviceCode: ${deviceAuth.device_code}`)
 
       const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
@@ -211,12 +213,11 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [getResumeStepRoute(predictedStore)] }))
     } catch (error) {
       logger.error('ResidentialAddressScreen.handleSubmit -> device authorization failed', { error })
-      Toast.show({
-        type: 'error',
-        text1: t('BCSC.Address.AuthorizationErrorTitle'),
-        text2: t('BCSC.Address.AuthorizationErrorMessage'),
-        position: 'bottom',
-      })
+      emitErrorModal(
+        t('BCSC.Address.AuthorizationErrorTitle'),
+        t('BCSC.Address.AuthorizationErrorMessage'),
+        ensureAppError(error, AppEventCode.DEVICE_AUTHORIZATION_ERROR)
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -227,9 +228,9 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
     updateUserMetadata,
     navigation,
     logger,
+    emitErrorModal,
     t,
     authorization,
-    Spacing.lg,
     updateDeviceCodes,
     updateVerificationOptions,
     updateCardProcess,

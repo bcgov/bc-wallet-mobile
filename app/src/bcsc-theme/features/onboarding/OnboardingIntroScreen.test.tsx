@@ -1,9 +1,10 @@
+import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { render } from '@testing-library/react-native'
 import React from 'react'
-import TransferInformationScreen from './TransferInformationScreen'
+import { OnboardingIntroScreen } from './OnboardingIntroScreen'
 
-describe('TransferInformation', () => {
+describe('OnboardingIntro', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
@@ -14,9 +15,11 @@ describe('TransferInformation', () => {
   })
 
   it('renders correctly', () => {
+    const mockNavigation = useNavigation()
+
     const tree = render(
       <BasicAppContext>
-        <TransferInformationScreen />
+        <OnboardingIntroScreen navigation={mockNavigation as never} />
       </BasicAppContext>
     )
 

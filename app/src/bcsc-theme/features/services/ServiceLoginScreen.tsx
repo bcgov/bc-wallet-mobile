@@ -5,7 +5,6 @@ import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types
 import { HelpCentreUrl, hitSlop, REPORT_SUSPICIOUS_URL } from '@/constants'
 import { isHandledAppError } from '@/errors/appError'
 import { useAlerts } from '@/hooks/useAlerts'
-import { BCState, Mode } from '@/store'
 import {
   Button,
   ButtonType,
@@ -15,7 +14,6 @@ import {
   ThemedText,
   TOKENS,
   useServices,
-  useStore,
   useTheme,
 } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
@@ -202,6 +200,8 @@ const ServiceLoginDefaultView = ({
         buttonType={ButtonType.Secondary}
         onPress={onCancel}
       />
+
+      <ReportSuspiciousLink t={t} testID={testIdWithKey('ReportSuspiciousLink')} />
     </ControlContainer>
   )
 
@@ -233,13 +233,7 @@ const ServiceLoginDefaultView = ({
               marginBottom: Spacing.sm,
             }}
           >
-            <ThemedText style={styles.infoHeader}>
-              {t('BCSC.Services.FromAccountPrefix')}
-              <ThemedText variant={'bold'} style={{ color: ColorPalette.brand.primary }}>
-                {' '}
-                {t('BCSC.Services.FromAccount')}
-              </ThemedText>
-            </ThemedText>
+            <ThemedText style={styles.infoHeader}>{t('BCSC.Services.FromAccount')}</ThemedText>
             <TouchableOpacity
               testID={testIdWithKey('HelpButton')}
               accessibilityLabel={a11yLabel(t('BCSC.Screens.HelpCentre'))}
@@ -250,7 +244,7 @@ const ServiceLoginDefaultView = ({
               <Icon name="help-outline" size={24} color={ColorPalette.brand.primary} />
             </TouchableOpacity>
           </View>
-          <ThemedText>{state.claimsDescription}</ThemedText>
+          <ThemedText style={styles.infoText}>{state.claimsDescription}</ThemedText>
         </View>
 
         {state.privacyPolicyUri ? (
@@ -263,13 +257,12 @@ const ServiceLoginDefaultView = ({
             onPress={onOpenPrivacyPolicy}
           >
             <View style={[styles.infoContainer, styles.privacyNoticeContainer]}>
-              <ThemedText style={styles.infoHeader}>{t('BCSC.Services.PrivacyNotice')}</ThemedText>
-              <Icon name="open-in-new" size={30} color={ColorPalette.brand.primary} />
+              <ThemedText style={styles.infoText}>{t('BCSC.Services.PrivacyNotice')}</ThemedText>
+              <Icon name="open-in-new" size={24} color={ColorPalette.brand.primary} />
             </View>
           </TouchableOpacity>
         ) : null}
       </View>
-      <ReportSuspiciousLink t={t} testID={testIdWithKey('ReportSuspiciousLink')} />
     </ScreenWrapper>
   )
 }
@@ -285,12 +278,10 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
 }: ServiceLoginScreenProps) => {
   const { serviceClientId, serviceTitle, pairingCode, fromAppSwitch } = route.params ?? {}
   const { t } = useTranslation()
-  const [store] = useStore<BCState>()
   const { Spacing, ColorPalette, TextTheme, Buttons } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const alerts = useAlerts(navigation)
   const pairingService = usePairingService()
-  const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
   const { pairing, metadata } = useApi()
   const getQuickLoginURL = useQuickLoginURL()
   const { state, isLoading, serviceHydrated } = useServiceLoginState({
@@ -313,13 +304,16 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       display: 'flex',
       overflow: 'hidden',
       gap: Spacing.md,
-      borderRadius: Spacing.sm,
-      borderColor: isBCSCMode ? '#1E5189' : '#D8D8D8',
-      borderWidth: 1,
-      backgroundColor: ColorPalette.brand.secondaryBackground,
+      borderRadius: Spacing.xs,
+      backgroundColor: ColorPalette.brand.tertiaryBackground,
       padding: Spacing.md,
     },
     infoHeader: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: ColorPalette.brand.primary,
+    },
+    infoText: {
       flexShrink: 1,
       fontSize: TextTheme.headerTitle.fontSize,
       color: ColorPalette.brand.primary,

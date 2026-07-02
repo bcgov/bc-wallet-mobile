@@ -1,10 +1,11 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { TermsOfUseResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
+import { ContentShadow } from '@/bcsc-theme/components/ContentShadow'
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { createTermsOfUseHtml } from '@/bcsc-theme/utils/webview-utils'
 import {
   Button,
   ButtonType,
-  ContentGradient,
   ScreenWrapper,
   testIdWithKey,
   ThemedText,
@@ -79,36 +80,40 @@ export const TermsOfUseContent = ({ onAccept, headerText }: TermsOfUseContentPro
 
   const controls = (
     <View style={{ width: '100%' }}>
-      <ContentGradient backgroundColor={ColorPalette.brand.primaryBackground} />
-      {error ? (
-        <Button
-          title={t('Init.Retry')}
-          buttonType={ButtonType.Primary}
-          onPress={fetchTermsOfUse}
-          testID={testIdWithKey('RetryTermsOfUse')}
-          accessibilityLabel={a11yLabel(t('Init.Retry'))}
-          disabled={isLoading}
-        />
-      ) : (
-        <Button
-          title={t('BCSC.Onboarding.AcceptAndContinueButton')}
-          buttonType={ButtonType.Primary}
-          onPress={async () => {
-            if (termsOfUse) {
-              await onAccept(termsOfUse)
-            }
-          }}
-          testID={testIdWithKey('AcceptAndContinue')}
-          accessibilityLabel={a11yLabel(t('BCSC.Onboarding.AcceptAndContinueButton'))}
-          disabled={!webViewIsLoaded || isLoading}
-        />
-      )}
+      {/* SVG shadow (not a CSS/elevation shadow) so it composites over the native WebView the
+          terms render in; ControlContainer below gives the opaque button bar the content scrolls under. */}
+      <ContentShadow />
+      <ControlContainer>
+        {error ? (
+          <Button
+            title={t('Init.Retry')}
+            buttonType={ButtonType.Primary}
+            onPress={fetchTermsOfUse}
+            testID={testIdWithKey('RetryTermsOfUse')}
+            accessibilityLabel={a11yLabel(t('Init.Retry'))}
+            disabled={isLoading}
+          />
+        ) : (
+          <Button
+            title={t('BCSC.Onboarding.AcceptAndContinueButton')}
+            buttonType={ButtonType.Primary}
+            onPress={async () => {
+              if (termsOfUse) {
+                await onAccept(termsOfUse)
+              }
+            }}
+            testID={testIdWithKey('AcceptAndContinue')}
+            accessibilityLabel={a11yLabel(t('BCSC.Onboarding.AcceptAndContinueButton'))}
+            disabled={!webViewIsLoaded || isLoading}
+          />
+        )}
+      </ControlContainer>
     </View>
   )
 
   if (!termsOfUse) {
     return (
-      <ScreenWrapper controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
+      <ScreenWrapper padded={false} controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
         <View style={styles.loadingContainer}>
           {error && !isLoading ? (
             <View style={{ flexDirection: 'row' }}>
@@ -125,7 +130,12 @@ export const TermsOfUseContent = ({ onAccept, headerText }: TermsOfUseContentPro
   }
 
   return (
-    <ScreenWrapper scrollable={false} controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
+    <ScreenWrapper
+      scrollable={false}
+      padded={false}
+      controls={controls}
+      scrollViewContainerStyle={styles.scrollContainer}
+    >
       <WebViewContent
         html={createTermsOfUseHtml(
           {

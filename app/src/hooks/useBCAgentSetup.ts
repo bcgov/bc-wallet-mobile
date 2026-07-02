@@ -1,3 +1,4 @@
+import { ledgerResolver } from '@/configs/ledgers/indy/ledgerResolver'
 import { BCLocalStorageKeys, BCState } from '@/store'
 import { activate } from '@/utils/PushNotificationsHelper'
 import { getBCAgentModules } from '@/utils/bc-agent-modules'
@@ -46,20 +47,22 @@ const useBCAgentSetup = () => {
   const [agent, setAgent] = useState<Agent | null>(null)
   const agentInstanceRef = useRef<Agent | null>(null)
   const [store] = useStore<BCState>()
-  const [logger, indyLedgers, attestationMonitor, credDefs, schemas] = useServices([
+  const [logger, attestationMonitor, credentialProvisioningMonitor, credDefs, schemas] = useServices([
     TOKENS.UTIL_LOGGER,
-    TOKENS.UTIL_LEDGERS,
     TOKENS.UTIL_ATTESTATION_MONITOR,
+    TOKENS.UTIL_CREDENTIAL_PROVISIONING_MONITOR,
     TOKENS.CACHE_CRED_DEFS,
     TOKENS.CACHE_SCHEMAS,
   ])
 
-  const refreshAttestationMonitor = useCallback(
+  const refreshMonitors = useCallback(
     (agent: Agent) => {
       attestationMonitor?.stop()
       attestationMonitor?.start(agent)
+      credentialProvisioningMonitor?.stop()
+      credentialProvisioningMonitor?.start(agent)
     },
-    [attestationMonitor]
+    [attestationMonitor, credentialProvisioningMonitor]
   )
 
   const restartExistingAgent = useCallback(
@@ -340,7 +343,7 @@ const useBCAgentSetup = () => {
             undefined,
             DidCommMediatorPickupStrategy.PickUpV2LiveMode
           )
-          refreshAttestationMonitor(restartedAgent)
+          refreshMonitors(restartedAgent)
           agentInstanceRef.current = restartedAgent
           setAgent(restartedAgent)
           return
@@ -348,8 +351,16 @@ const useBCAgentSetup = () => {
       }
 
       logger.info('Checking for cached ledgers...')
+      // cachedLedgers only gates the expensive pool warm-up in warmUpCache. The
+      // pool list always comes from the resolver, which serves remote/cached
+      // genesis when auto-update is on and the bundled snapshot when it is off —
+      // so LEDGER_AUTO_UPDATE=false means bundled-only, never a stale prior cache.
       const cachedLedgers = await loadCachedLedgers()
-      const ledgers = cachedLedgers ?? indyLedgers
+      // The ledger resolver is refreshed by the caller (Splash) before
+      // initializeAgent runs; this path intentionally consumes the
+      // already-resolved list rather than re-fetching. The BCSC path
+      // (useAgentSetupViewModel) owns its own refresh.
+      const ledgers = ledgerResolver.ledgers
 
       logger.info('Creating new agent...')
       const newAgent = await createNewAgent(ledgers, walletSecret, mediatorUrl)
@@ -381,7 +392,7 @@ const useBCAgentSetup = () => {
 
       // In case the old attestationMonitor is still active, stop it and start a new one
       logger.info('Starting attestation monitor...')
-      refreshAttestationMonitor(newAgent)
+      refreshMonitors(newAgent)
 
       logger.info('Tag mediation connection with last seen time')
       updateLastSeen(newAgent).catch((e) =>
@@ -396,10 +407,9 @@ const useBCAgentSetup = () => {
       store.preferences.selectedMediator,
       store.preferences.usePushNotifications,
       logger,
-      indyLedgers,
       createNewAgent,
       warmUpCache,
-      refreshAttestationMonitor,
+      refreshMonitors,
       restartExistingAgent,
       updateLastSeen,
       recoverMediationIfExpired,

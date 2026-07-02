@@ -2,6 +2,7 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
 import { throwAppError } from '@/bcsc-theme/utils/native-error-map'
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import { cancelVerificationReminders } from '@/services/notifications/verificationReminders'
 import { useCallback, useMemo } from 'react'
 import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
@@ -69,6 +70,9 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
           throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
         }
 
+        // doesn't throw
+        await cancelVerificationReminders(apiClient.logger)
+
         return apiClient.tokens!
       })
     },
@@ -100,7 +104,8 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
         tokens = await apiClient.getTokensForRefreshToken(tokens.refresh_token)
       }
 
-      return getIdTokenMetadata(tokens.id_token, apiClient.logger)
+      const jwk = await apiClient.fetchJwk()
+      return getIdTokenMetadata(tokens.id_token, jwk, apiClient.logger)
     },
     [apiClient]
   )

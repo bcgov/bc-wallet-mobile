@@ -2,6 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useEnterBirthdateViewModel } from '@/bcsc-theme/features/verify/EnterBirthdate/useEnterBirthdateViewModel'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { AccountSetupType } from '@/store'
 import * as Bifold from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { renderHook, waitFor } from '@testing-library/react-native'
@@ -46,7 +47,7 @@ describe('EnterBirthdateViewModel', () => {
   const mockSerial = '123456789'
   const mockBirthdate = new Date('1990-01-15')
   const mockStore: any = {
-    bcsc: {},
+    bcsc: { accountSetupType: AccountSetupType.AddAccount },
     bcscSecure: {
       serial: mockSerial,
       birthdate: mockBirthdate,

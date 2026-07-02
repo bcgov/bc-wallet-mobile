@@ -7,14 +7,13 @@ import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHead
 import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
-import TransferInformationScreen from '../features/account-transfer/transferee/TransferInformationScreen'
 import { OnboardingRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
-import AccountSetupScreen from '../features/onboarding/AccountSetupScreen'
 import { CreatePINScreen } from '../features/onboarding/CreatePINScreen'
 import { NotificationsScreen } from '../features/onboarding/NotificationsScreen'
+import { OnboardingIntroScreen } from '../features/onboarding/OnboardingIntroScreen'
 import { OnboardingOptInAnalyticsScreen } from '../features/onboarding/OnboardingOptInAnalyticsScreen'
 import { OnboardingPrivacyPolicyScreen } from '../features/onboarding/OnboardingPrivacyPolicyScreen'
 import { SecureAppScreen } from '../features/onboarding/SecureAppScreen'
@@ -37,7 +36,7 @@ const OnboardingStack = (): React.ReactElement => {
 
   return (
     <Stack.Navigator
-      initialRouteName={BCSCScreens.OnboardingAccountSetup}
+      initialRouteName={BCSCScreens.OnboardingIntro}
       screenOptions={{
         ...defaultStackOptions,
         headerShown: false,
@@ -53,9 +52,13 @@ const OnboardingStack = (): React.ReactElement => {
       }}
     >
       <Stack.Screen
-        name={BCSCScreens.OnboardingAccountSetup}
-        component={AccountSetupScreen}
-        options={{ headerShown: true, headerLeft: () => null }}
+        name={BCSCScreens.OnboardingIntro}
+        component={OnboardingIntroScreen}
+        options={{
+          headerShown: true,
+          // First screen in the stack — no destination to go back to.
+          headerLeft: () => null,
+        }}
       />
       <Stack.Screen
         name={BCSCScreens.OnboardingDeveloper}
@@ -121,14 +124,6 @@ const OnboardingStack = (): React.ReactElement => {
         })}
       />
       <Stack.Screen
-        name={BCSCScreens.TransferAccountInformation}
-        component={TransferInformationScreen}
-        options={{
-          title: t('BCSC.TransferInformation.TransferAccount'),
-          headerShown: true,
-        }}
-      />
-      <Stack.Screen
         name={BCSCScreens.OnboardingRemoveAccountConfirmation}
         component={OnboardingRemoveAccountConfirmationScreen}
         options={() => ({
@@ -154,6 +149,10 @@ const OnboardingStack = (): React.ReactElement => {
           gestureEnabled: false,
         }}
       />
+
+      {/* VerificationSessionExpired is intentionally NOT registered here: this is the post-reset
+          destination stack, and an overlapping route name would let React Navigation preserve the
+          modal across the stack swap so it never dismisses. See issue #4050. */}
 
       <Stack.Screen
         name={BCSCModals.ServiceOutage}

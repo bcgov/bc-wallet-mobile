@@ -30,11 +30,9 @@ export const DeviceInvalidated = ({ route }: DeviceInvalidatedProps): React.Reac
     const factoryResetParams: Partial<Record<BCSCReason, Partial<BCSCState>>> = {
       // Can add more cases here for different BCSCReason types in the future
       [BCSCReason.Cancel]: {
-        nicknames: store.bcsc.nicknames,
         selectedNickname: store.bcsc.selectedNickname,
       },
       [BCSCReason.CanceledByAgent]: {
-        nicknames: store.bcsc.nicknames,
         selectedNickname: store.bcsc.selectedNickname,
       },
       [BCSCReason.CanceledByUser]: {}, // Empty for a 'new install state'
@@ -48,7 +46,7 @@ export const DeviceInvalidated = ({ route }: DeviceInvalidatedProps): React.Reac
     if (!result.success) {
       logger.error('Factory reset failed', result.error)
     }
-  }, [factoryReset, logger, store.bcsc.nicknames, store.bcsc.selectedNickname, invalidationReason])
+  }, [factoryReset, logger, store.bcsc.selectedNickname, invalidationReason])
 
   const contentTextMap: Partial<Record<BCSCReason, string>> = {
     // Can add more cases here for different BCSCReason types in the future

@@ -50,108 +50,141 @@ exports[`TransferInstructionsScreen renders correctly 1`] = `
       >
         BCSC.TransferInstructions.Title
       </Text>
-      <Text
-        maxFontSizeMultiplier={2}
+      <View
         style={
-          [
-            {
-              "color": "#313132",
-              "fontFamily": "BCSans-Regular",
-              "fontSize": 18,
-              "fontWeight": "normal",
-            },
-            undefined,
-          ]
+          {
+            "flexDirection": "row",
+            "gap": 8,
+          }
         }
       >
-        BCSC.TransferInstructions.Step1
-      </Text>
-      <Image
-        resizeMode="contain"
-        source={
-          {
-            "height": 100,
-            "scale": 1,
-            "uri": "mocked-image-uri",
-            "width": 100,
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "bold",
+              },
+              undefined,
+            ]
           }
-        }
+        >
+          1.
+        </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              {
+                "flex": 1,
+              },
+            ]
+          }
+        >
+          <span>
+            BCSC.TransferInstructions.Step1
+          </span>
+        </Text>
+      </View>
+      <View
         style={
           {
-            "alignSelf": "center",
-            "aspectRatio": 3,
-            "height": 100,
+            "flexDirection": "row",
+            "gap": 8,
           }
-        }
-      />
-      <Text
-        maxFontSizeMultiplier={2}
-        style={
-          [
-            {
-              "color": "#313132",
-              "fontFamily": "BCSans-Regular",
-              "fontSize": 18,
-              "fontWeight": "normal",
-            },
-            undefined,
-          ]
         }
       >
-        BCSC.TransferInstructions.Step2
-      </Text>
-      <Image
-        resizeMode="contain"
-        source={
-          {
-            "height": 100,
-            "scale": 1,
-            "uri": "mocked-image-uri",
-            "width": 100,
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "bold",
+              },
+              undefined,
+            ]
           }
-        }
+        >
+          2.
+        </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              {
+                "flex": 1,
+              },
+            ]
+          }
+        >
+          <span>
+            BCSC.TransferInstructions.Step2
+          </span>
+        </Text>
+      </View>
+      <View
         style={
           {
-            "alignSelf": "center",
-            "aspectRatio": 0.5,
-            "height": 300,
+            "flexDirection": "row",
+            "gap": 8,
           }
-        }
-      />
-      <Text
-        maxFontSizeMultiplier={2}
-        style={
-          [
-            {
-              "color": "#313132",
-              "fontFamily": "BCSans-Regular",
-              "fontSize": 18,
-              "fontWeight": "normal",
-            },
-            undefined,
-          ]
         }
       >
-        BCSC.TransferInstructions.Step3
-      </Text>
-      <Image
-        resizeMode="contain"
-        source={
-          {
-            "height": 100,
-            "scale": 1,
-            "uri": "mocked-image-uri",
-            "width": 100,
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "bold",
+              },
+              undefined,
+            ]
           }
-        }
-        style={
-          {
-            "alignSelf": "center",
-            "aspectRatio": 0.5,
-            "height": 300,
+        >
+          3.
+        </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              {
+                "flex": 1,
+              },
+            ]
           }
-        }
-      />
+        >
+          <span>
+            BCSC.TransferInstructions.Step3
+          </span>
+        </Text>
+      </View>
     </View>
   </RCTScrollView>
   <View
@@ -168,90 +201,6 @@ exports[`TransferInstructionsScreen renders correctly 1`] = `
       ]
     }
   >
-    <View
-      style={
-        {
-          "height": 30,
-          "position": "absolute",
-          "top": -30,
-          "width": "100%",
-        }
-      }
-    >
-      <RNSVGSvgView
-        bbHeight="30"
-        bbWidth="100%"
-        focusable={false}
-        height="30"
-        style={
-          [
-            {
-              "backgroundColor": "transparent",
-              "borderWidth": 0,
-            },
-            {
-              "bottom": 0,
-              "left": 0,
-              "position": "absolute",
-              "right": 0,
-              "top": 0,
-            },
-            {
-              "flex": 0,
-              "height": 30,
-              "width": "100%",
-            },
-          ]
-        }
-        width="100%"
-      >
-        <RNSVGGroup
-          fill={
-            {
-              "payload": 4278190080,
-              "type": 0,
-            }
-          }
-        >
-          <RNSVGDefs>
-            <RNSVGLinearGradient
-              gradient={
-                [
-                  0,
-                  15921906,
-                  1,
-                  -855310,
-                ]
-              }
-              gradientTransform={null}
-              gradientUnits={0}
-              name="gradient"
-              x1="0%"
-              x2="0%"
-              y1="0%"
-              y2="100%"
-            />
-          </RNSVGDefs>
-          <RNSVGRect
-            fill={
-              {
-                "brushRef": "gradient",
-                "type": 1,
-              }
-            }
-            height="30"
-            propList={
-              [
-                "fill",
-              ]
-            }
-            width="100%"
-            x={0}
-            y={0}
-          />
-        </RNSVGGroup>
-      </RNSVGSvgView>
-    </View>
     <View
       accessibilityLabel="BCSC.TransferInstructions.ScanQRCode"
       accessibilityRole="button"

@@ -43,6 +43,7 @@ import { activate, deactivate, setup, status } from '@utils/PushNotificationsHel
 import { expirationOverrideInMinutes } from '@utils/expiration'
 import { createAppLogger } from '@utils/logger'
 import { TFunction } from 'i18next'
+import { buildDigitalServicesCardCredentialRule } from './src/bcsc-theme/services/digitalServicesCardProvisioner'
 import AddCredentialSlider from './src/bcwallet-theme/components/AddCredentialSlider'
 import EmptyList from './src/bcwallet-theme/components/EmptyList'
 import HomeFooterView from './src/bcwallet-theme/components/HomeFooterView'
@@ -65,6 +66,7 @@ import Preface from './src/screens/Preface'
 import Splash from './src/screens/Splash'
 import Terms, { TermsVersion } from './src/screens/Terms'
 import { AttestationMonitor, allCredDefIds } from './src/services/attestation'
+import { AutoCredentialMonitor } from './src/services/auto-credential'
 import { VersionCheckService } from './src/services/version'
 import {
   BCDispatchAction,
@@ -115,6 +117,10 @@ export class AppContainer implements Container {
     }
 
     this._container.registerInstance(TOKENS.UTIL_ATTESTATION_MONITOR, new AttestationMonitor(this.logger, options))
+    this._container.registerInstance(
+      TOKENS.UTIL_CREDENTIAL_PROVISIONING_MONITOR,
+      new AutoCredentialMonitor(this.logger, { rules: [buildDigitalServicesCardCredentialRule()] })
+    )
     this._container.registerInstance(TOKENS.UTIL_APP_VERSION_MONITOR, new VersionCheckService(this.logger))
     // Here you can register any component to override components in core package
     // Example: Replacing button in core with custom button

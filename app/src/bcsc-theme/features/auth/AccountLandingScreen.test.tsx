@@ -1,4 +1,3 @@
-import { BCDispatchAction } from '@/store'
 import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render } from '@testing-library/react-native'
@@ -48,56 +47,27 @@ describe('AccountLanding', () => {
     jest.useRealTimers()
   })
 
-  describe('when nicknames exist', () => {
-    it('renders correctly with unlock button', () => {
-      const tree = render(
-        <BasicAppContext initialStateOverride={{ bcsc: { nicknames: ['John', 'Jane'] } as any }}>
-          <AccountLandingScreen navigation={mockNavigation as never} />
-        </BasicAppContext>
-      )
+  it('renders Unlock button', () => {
+    const tree = render(
+      <BasicAppContext initialStateOverride={{ bcsc: {} as any }}>
+        <AccountLandingScreen navigation={mockNavigation as never} />
+      </BasicAppContext>
+    )
 
-      expect(tree.getByTestId('com.ariesbifold:id/Unlock')).toBeTruthy()
-      expect(tree).toMatchSnapshot()
-    })
-
-    it('dispatches SELECT_ACCOUNT and calls unlockApp when Unlock is pressed', () => {
-      const tree = render(
-        <BasicAppContext initialStateOverride={{ bcsc: { nicknames: ['John'] } as any }}>
-          <AccountLandingScreen navigation={mockNavigation as never} />
-        </BasicAppContext>
-      )
-
-      const unlockButton = tree.getByTestId('com.ariesbifold:id/Unlock')
-      fireEvent.press(unlockButton)
-
-      expect(mockDispatch).toHaveBeenCalledWith({ type: BCDispatchAction.SELECT_ACCOUNT, payload: ['John'] })
-      expect(mockUnlockApp).toHaveBeenCalled()
-    })
+    expect(tree.getByTestId('com.ariesbifold:id/Unlock')).toBeTruthy()
+    expect(tree).toMatchSnapshot()
   })
 
-  describe('when no nicknames exist', () => {
-    it('renders Unlock button', () => {
-      const tree = render(
-        <BasicAppContext initialStateOverride={{ bcsc: { nicknames: [] } as any }}>
-          <AccountLandingScreen navigation={mockNavigation as never} />
-        </BasicAppContext>
-      )
+  it('calls unlockApp when Unlock button is pressed', () => {
+    const tree = render(
+      <BasicAppContext initialStateOverride={{ bcsc: {} as any }}>
+        <AccountLandingScreen navigation={mockNavigation as never} />
+      </BasicAppContext>
+    )
 
-      expect(tree.getByTestId('com.ariesbifold:id/Unlock')).toBeTruthy()
-      expect(tree).toMatchSnapshot()
-    })
+    const unlockButton = tree.getByTestId('com.ariesbifold:id/Unlock')
+    fireEvent.press(unlockButton)
 
-    it('calls unlockApp when Unlock button is pressed', () => {
-      const tree = render(
-        <BasicAppContext initialStateOverride={{ bcsc: { nicknames: [] } as any }}>
-          <AccountLandingScreen navigation={mockNavigation as never} />
-        </BasicAppContext>
-      )
-
-      const unlockButton = tree.getByTestId('com.ariesbifold:id/Unlock')
-      fireEvent.press(unlockButton)
-
-      expect(mockUnlockApp).toHaveBeenCalled()
-    })
+    expect(mockUnlockApp).toHaveBeenCalled()
   })
 })
