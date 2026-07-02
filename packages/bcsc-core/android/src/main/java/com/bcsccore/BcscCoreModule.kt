@@ -854,8 +854,11 @@ class BcscCoreModule(
             val clientID = account.getString("clientID")
             val securityMethod = account.getString("securityMethod")
 
-            if (issuer.isNullOrEmpty() || clientID.isNullOrEmpty() || securityMethod.isNullOrEmpty()) {
-                promise.reject("E_INVALID_PARAMETERS", "Account issuer, clientID, and securityMethod cannot be empty")
+            // clientID may be an empty placeholder for accounts created before registration
+            // completes (see TEMPORARY_ACCOUNT_CLIENT_ID); only issuer and securityMethod are
+            // required to be non-empty. Matches iOS, which never rejects on an empty clientID.
+            if (issuer.isNullOrEmpty() || clientID == null || securityMethod.isNullOrEmpty()) {
+                promise.reject("E_INVALID_PARAMETERS", "Account issuer and securityMethod cannot be empty")
                 return
             }
 
