@@ -8,6 +8,14 @@ import * as agentService from './services/agent-service'
 import useAgentSetupViewModel from './useAgentSetupViewModel'
 
 jest.mock('@bifold/core')
+jest.mock('@/configs/ledgers/indy/ledgerResolver', () => ({
+  ledgerResolver: {
+    checkForUpdates: jest.fn().mockResolvedValue(undefined),
+    ledgers: [],
+    remoteEnabled: false,
+    set logger(_: unknown) {},
+  },
+}))
 jest.mock('@/utils/PushNotificationsHelper', () => ({
   activate: jest.fn().mockResolvedValue(undefined),
   deactivate: jest.fn().mockResolvedValue(undefined),
@@ -49,7 +57,7 @@ describe('useAgentSetupViewModel', () => {
     jest.clearAllMocks()
     jest
       .mocked(Bifold.useServices)
-      .mockReturnValue([logger, [], attestationMonitor, undefined, [], [], ocaBundleResolver] as never)
+      .mockReturnValue([logger, attestationMonitor, undefined, [], [], ocaBundleResolver] as never)
     jest.mocked(Bifold.useStore).mockReturnValue(mockedStore() as never)
     jest.mocked(Bifold.createLinkSecretIfRequired).mockResolvedValue(undefined as never)
     jest.mocked(agentService.loadCachedLedgers).mockResolvedValue(undefined)

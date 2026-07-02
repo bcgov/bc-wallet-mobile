@@ -133,8 +133,16 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
     }
     await updateUserMetadata(updatedUserMetadata)
 
-    // A2: device is already authorized — advance to whatever step the user is now on
-    if (store.bcscSecure.deviceCode && store.bcscSecure.deviceCodeExpiresAt) {
+    // A2: device is already authorized — only short-circuit when the device_code is still valid.
+    // A present-but-expired code must fall through to re-authorize (mint a fresh code) rather than
+    // proceed with a dead one, which would 401 on the evidence calls. See issue #4050.
+    const deviceCodeStillValid = Boolean(
+      store.bcscSecure.deviceCode &&
+        store.bcscSecure.deviceCodeExpiresAt &&
+        store.bcscSecure.deviceCodeExpiresAt.getTime() > Date.now()
+    )
+    if (deviceCodeStillValid) {
+      // Resume at whatever step the user is now on (v4.1 routing), using the just-updated metadata.
       const predictedStore: BCState = {
         ...store,
         bcscSecure: { ...store.bcscSecure, userMetadata: updatedUserMetadata },

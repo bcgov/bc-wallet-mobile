@@ -22,6 +22,10 @@ export interface ErrorModalPayload {
   appEvent: string
   cause?: unknown
   stack?: string
+  screen?: string
+  url?: string
+  method?: string
+  reportUUID?: string
 }
 
 export interface BCSCErrorModalProps {
@@ -61,7 +65,22 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
 
     Analytics.trackAlertActionEvent(error.appEvent as AppEventCode, ANALYTICS_REPORT_THIS_PROBLEM_LABEL)
 
-    const reportError = new BifoldError(error.title, error.description, error.message, error.code)
+    // error.message is AppError.fullMessage — the user-facing details string, which
+    // deliberately omits the screen name and request URL so we don't surface infra
+    // details to the user. Append them here so they still ride along in the Loki report.
+    let reportMessage = error.message
+    if (error.screen) {
+      reportMessage += `\nScreen: ${error.screen}`
+    }
+    if (error.url) {
+      const request = error.method ? `${error.method} ${error.url}` : error.url
+      reportMessage += `\nRequest: ${request}`
+    }
+    if (error.reportUUID) {
+      reportMessage += `\nReport ID: ${error.reportUUID}`
+    }
+
+    const reportError = new BifoldError(error.title, error.description, reportMessage, error.code)
     reportError.cause = error.cause
     reportError.stack = error.stack
 

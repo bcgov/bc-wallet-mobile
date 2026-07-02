@@ -19,6 +19,7 @@ jest.mock('react-native-bcsc-core', () => ({
   deleteToken: jest.fn(),
   getAccount: jest.fn(),
   getAccountSecurityMethod: jest.fn(),
+  isAccountRegistered: jest.fn().mockReturnValue(true),
   TokenType: {
     Refresh: 'Refresh',
     Access: 'Access',

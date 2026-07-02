@@ -1,3 +1,4 @@
+import { ledgerResolver } from '@/configs/ledgers/indy/ledgerResolver'
 import { BCLocalStorageKeys, BCState } from '@/store'
 import { activate } from '@/utils/PushNotificationsHelper'
 import { getBCAgentModules } from '@/utils/bc-agent-modules'
@@ -46,9 +47,8 @@ const useBCAgentSetup = () => {
   const [agent, setAgent] = useState<Agent | null>(null)
   const agentInstanceRef = useRef<Agent | null>(null)
   const [store] = useStore<BCState>()
-  const [logger, indyLedgers, attestationMonitor, credentialProvisioningMonitor, credDefs, schemas] = useServices([
+  const [logger, attestationMonitor, credentialProvisioningMonitor, credDefs, schemas] = useServices([
     TOKENS.UTIL_LOGGER,
-    TOKENS.UTIL_LEDGERS,
     TOKENS.UTIL_ATTESTATION_MONITOR,
     TOKENS.UTIL_CREDENTIAL_PROVISIONING_MONITOR,
     TOKENS.CACHE_CRED_DEFS,
@@ -351,8 +351,16 @@ const useBCAgentSetup = () => {
       }
 
       logger.info('Checking for cached ledgers...')
+      // cachedLedgers only gates the expensive pool warm-up in warmUpCache. The
+      // pool list always comes from the resolver, which serves remote/cached
+      // genesis when auto-update is on and the bundled snapshot when it is off —
+      // so LEDGER_AUTO_UPDATE=false means bundled-only, never a stale prior cache.
       const cachedLedgers = await loadCachedLedgers()
-      const ledgers = cachedLedgers ?? indyLedgers
+      // The ledger resolver is refreshed by the caller (Splash) before
+      // initializeAgent runs; this path intentionally consumes the
+      // already-resolved list rather than re-fetching. The BCSC path
+      // (useAgentSetupViewModel) owns its own refresh.
+      const ledgers = ledgerResolver.ledgers
 
       logger.info('Creating new agent...')
       const newAgent = await createNewAgent(ledgers, walletSecret, mediatorUrl)
@@ -399,7 +407,6 @@ const useBCAgentSetup = () => {
       store.preferences.selectedMediator,
       store.preferences.usePushNotifications,
       logger,
-      indyLedgers,
       createNewAgent,
       warmUpCache,
       refreshMonitors,

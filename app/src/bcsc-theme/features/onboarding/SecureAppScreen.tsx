@@ -1,15 +1,15 @@
 import { SecurityMethodSelector } from '@/bcsc-theme/features/auth/components/SecurityMethodSelector'
+import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
-import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
+import { SECURE_APP_LEARN_MORE_URL, TEMPORARY_ACCOUNT_CLIENT_ID } from '@/constants'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { TOKENS, useServices } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AccountSecurityMethod, setupDeviceSecurity } from 'react-native-bcsc-core'
+import { AccountSecurityMethod, setAccount, setupDeviceSecurity } from 'react-native-bcsc-core'
 
 interface SecureAppScreenProps {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingSecureApp>
@@ -23,14 +23,17 @@ interface SecureAppScreenProps {
 export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.ReactElement => {
   const { t } = useTranslation()
   const { handleSuccessfulAuth } = useSecureActions()
-  const { register } = useRegistrationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const client = useBCSCApiClient()
 
   const handleDeviceAuthPress = useCallback(async () => {
     try {
-      // IMPORTANT: register() must be called FIRST to create the account
-      // setupDeviceSecurity() requires an account to already exist
-      await register(AccountSecurityMethod.DeviceAuth)
+      // IMPORTANT: Account must exist before setting up device security.
+      await setAccount({
+        clientID: TEMPORARY_ACCOUNT_CLIENT_ID,
+        issuer: client.endpoints.issuer,
+        securityMethod: AccountSecurityMethod.DeviceAuth,
+      })
 
       // Now setup device security (generates random PIN and stores it securely)
       const { success, walletKey } = await setupDeviceSecurity()
@@ -45,7 +48,7 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
       const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
       logger.error(`Error completing device security setup: ${appError.technicalMessage ?? appError.message}`)
     }
-  }, [register, handleSuccessfulAuth, logger])
+  }, [client.endpoints.issuer, handleSuccessfulAuth, logger])
 
   const handlePINPress = useCallback(() => {
     navigation.navigate(BCSCScreens.OnboardingCreatePIN)

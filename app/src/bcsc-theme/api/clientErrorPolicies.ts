@@ -8,11 +8,14 @@ import { AxiosError } from 'axios'
 import { TFunction } from 'i18next'
 import { Linking } from 'react-native'
 import { VerificationCardError } from '../features/verify/verificationCardError'
-import { BCSCScreens } from '../types/navigators'
+import { BCSCModals, BCSCScreens } from '../types/navigators'
 import { ResumeStepRoute } from '../utils/resume-step-route'
 import { BCSCEndpoints } from './client'
 
 const UNSUPPORTED_OS_TECHNICAL_MESSAGE = 'unsupported os version'
+// Assertion-401 unsupported-OS marker lives in the response body's `errorMessage` field (V3 parity);
+// V3 matched the looser "unsupported os" substring (the server sends e.g. "unsupported OS").
+const ASSERTION_UNSUPPORTED_OS_MARKER = 'unsupported os'
 
 export type ErrorMatcherContext = {
   endpoint: string // current route name for context
@@ -129,8 +132,9 @@ export const invalidClientMetadataErrorPolicy: ErrorHandlingPolicy = {
     return error.appEvent === AppEventCode.INVALID_CLIENT_METADATA
   },
   handle: (error, context) => {
+    // Unsupported-OS rejection (issue #4091): show the basic alert (no "Report a Problem"), matching V3.
     if (error.technicalMessage?.toLowerCase().includes(UNSUPPORTED_OS_TECHNICAL_MESSAGE)) {
-      return context.alerts.dynamicRegistrationErrorAlert(error)
+      return context.alerts.unsupportedOsAlert()
     }
 
     context.alerts.invalidClientMetadataAlert(error)
@@ -355,6 +359,28 @@ export const birthdateLockoutErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
+// Error policy for unsupported-OS rejection on the pairing-code login (assertion) endpoint (issue #4091).
+// Mirrors V3: the assertion 401 carries the marker in the response body's `errorMessage` field, which the
+// V4 error pipeline does not surface into `technicalMessage` — so match it from the raw body. Show the basic
+// unsupported-OS alert (no "Report a Problem") instead of the generic "Something went wrong" modal. Genuine
+// auth failures carry no such marker and fall through to the normal unauthorized path.
+export const unsupportedOsOnAssertionErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    const responseData = error.cause.response?.data as { errorMessage?: unknown } | undefined
+    const errorMessage = responseData?.errorMessage
+    return (
+      error.appEvent === AppEventCode.ERR_210_UNAUTHORIZED &&
+      context.endpoint === `${context.apiEndpoints.cardTap}/${VERIFY_DEVICE_ASSERTION_PATH}` &&
+      typeof errorMessage === 'string' &&
+      errorMessage.toLowerCase().includes(ASSERTION_UNSUPPORTED_OS_MARKER)
+    )
+  },
+  handle: (_error, context) => {
+    context.logger.info('[UnsupportedOsOnAssertionErrorPolicy] OS-unsupported 401 on assertion — showing basic alert')
+    context.alerts.unsupportedOsAlert()
+  },
+}
+
 // Error policy for verify device assertion endpoint errors
 export const verifyDeviceAssertionErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
@@ -372,7 +398,6 @@ export const verifyDeviceAssertionErrorPolicy: ErrorHandlingPolicy = {
     }
 
     alert(error)
-    error.handled = true
   },
 }
 
@@ -429,14 +454,35 @@ export const cardExpiredErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
+/**
+ * Error policy for an expired/superseded verification session on the evidence endpoints.
+ *
+ * Evidence calls authenticate only with the short-lived `device_code`, so a 401 on the evidence base
+ * means that code is expired or has been superseded server-side. Route the user to the verification
+ * session expired modal (which resets the app) instead of the generic error modal, whose
+ * "re-open the app" advice cannot renew the code. See issue #4050.
+ *
+ * @returns ErrorHandlingPolicy
+ */
+export const verificationSessionExpiredErrorPolicy: ErrorHandlingPolicy = {
+  matches: (_error, context) => {
+    return context.statusCode === 401 && context.endpoint.includes(context.apiEndpoints.evidence)
+  },
+  handle: (_error, context) => {
+    context.logger.info(
+      '[VerificationSessionExpiredErrorPolicy] device_code 401 on evidence endpoint, routing to restart'
+    )
+    context.navigation.dispatch(CommonActions.navigate({ name: BCSCModals.VerificationSessionExpired }))
+  },
+}
+
 // Error policy for ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE — bad request due to malformed or misconfigured client
 export const failedToRetrieveStringResourceErrorPolicy: ErrorHandlingPolicy = {
   matches: (error) => {
     return error.appEvent === AppEventCode.ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE
   },
-  handle: (error, context) => {
+  handle: (_error, context) => {
     context.alerts.failedToRetrieveStringResourceAlert()
-    error.handled = true
   },
 }
 
@@ -447,7 +493,6 @@ export const invalidUrlErrorPolicy: ErrorHandlingPolicy = {
   },
   handle: (error, context) => {
     context.alerts.invalidUrlAlert(error)
-    error.handled = true
   },
 }
 
@@ -458,7 +503,6 @@ export const invalidRegistrationRequestErrorPolicy: ErrorHandlingPolicy = {
   },
   handle: (error, context) => {
     context.alerts.invalidRegistrationRequestAlert(error)
-    error.handled = true
   },
 }
 
@@ -470,10 +514,12 @@ export const invalidRegistrationRequestErrorPolicy: ErrorHandlingPolicy = {
 export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   alreadyRegisteredErrorPolicy,
   cardExpiredErrorPolicy,
+  verificationSessionExpiredErrorPolicy,
   birthdateLockoutErrorPolicy,
   noTokensReturnedErrorPolicy,
   updateRequiredErrorPolicy,
   verifyNotCompletedErrorPolicy,
+  unsupportedOsOnAssertionErrorPolicy,
   verifyDeviceAssertionErrorPolicy,
   expiredAppSetupErrorPolicy,
   loginRejectedOnClientMetadataErrorPolicy,
