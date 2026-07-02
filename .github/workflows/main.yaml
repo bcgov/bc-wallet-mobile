@@ -1147,17 +1147,8 @@ jobs:
 
   ship-to-saucelabs:
     name: 'Ship to SauceLabs - ${{ matrix.variant }} - ${{ matrix.platform }}'
-    # PR-triggered uploads are skipped while the `e2e` smoke job below is
-    # disabled (#4148) — it was the only PR-side consumer. Push-to-main
-    # uploads still run: e2e-nightly.yml's full-regression suite depends
-    # on them. Restore alongside the `e2e` job once #4148 lands.
-    if: >-
-      always() && !cancelled() &&
-      github.event_name != 'pull_request' &&
-      github.event.pull_request.head.repo.fork != true &&
-      !startsWith(github.base_ref, 'release/') &&
-      !startsWith(github.ref_name, 'release/') &&
-      needs.early-exit-check.outputs.should_skip_build != 'true'
+    # Temporarily disable until e2e fixed
+    if: false
     needs: [build-ios, build-android, compute-variants, early-exit-check]
     runs-on: ubuntu-22.04
     permissions:
