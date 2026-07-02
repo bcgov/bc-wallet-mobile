@@ -380,6 +380,8 @@ const translation = {
       "EditNickname": "Edit Nickname (PT-BR)",
       "AutoLockTime": "Auto lock time (PT-BR)",
       "Notifications": "Notifications (PT-BR)",
+      "NotificationsEnabledHeader": "Notifications are on (PT-BR)",
+      "NotificationsEnabledContent": "You're getting notifications about account updates, credential changes and service interruptions. To turn them off, open your device settings. (PT-BR)",
       "ForgetPairings": "Forget pairings (PT-BR)",
       "AddDevice": "Add another device (PT-BR)",
       "MyDevices": "My devices (PT-BR)",
