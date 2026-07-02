@@ -462,6 +462,21 @@ export const invalidRegistrationRequestErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
+// Error policy for cancelling a verification request that has already been cancelled (404)
+export const cancelVerificationRequestErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    return (
+      error.statusCode === 404 &&
+      context.endpoint.includes(`${context.apiEndpoints.evidence}/v1/verifications`) &&
+      error.cause.request.method === 'DELETE'
+    )
+  },
+  handle: (error, context) => {
+    context.logger.info('[CancelVerificationRequestErrorPolicy] Verification request already cancelled')
+    error.handled = true
+  },
+}
+
 // ----------------------------------------
 // Error Handling Policy Factories
 // ----------------------------------------
