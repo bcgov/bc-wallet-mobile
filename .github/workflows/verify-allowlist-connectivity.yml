@@ -31,8 +31,11 @@ jobs:
         run: |
           set -uo pipefail
           IP=""
+          # Force IPv4 (-4): the egress IP is compared against IPv4 allowlist
+          # ranges, and on a dual-stack runner these services may otherwise
+          # return the runner's IPv6 address.
           for SRC in https://api.ipify.org https://ifconfig.me https://icanhazip.com; do
-            IP=$(curl -fsS --max-time 10 "$SRC" 2>/dev/null | tr -d '[:space:]' || true)
+            IP=$(curl -4 -fsS --max-time 10 "$SRC" 2>/dev/null | tr -d '[:space:]' || true)
             if [[ -n "$IP" ]]; then
               echo "Egress IP (resolved via $SRC): $IP"
               break
@@ -47,10 +50,13 @@ jobs:
           # Verify the egress IP falls within the whitelisted ranges
           IN_RANGE="unknown"
           if [[ "$IP" != "unknown" ]]; then
-            if python3 - <<PY
-          import ipaddress, sys
+            # Pass IP via the environment and read it with os.environ; the quoted
+            # heredoc (<<'PY') stops the shell interpolating the externally
+            # resolved value into the Python source. Avoids code injection.
+            if CHECK_IP="$IP" python3 - <<'PY'
+          import ipaddress, os, sys
           try:
-              ip = ipaddress.ip_address("$IP")
+              ip = ipaddress.ip_address(os.environ["CHECK_IP"])
           except ValueError:
               sys.exit(2)
           ranges = ["20.10.68.0/28", "130.131.47.80/28"]
@@ -69,6 +75,14 @@ jobs:
       - name: Verify endpoint reachability
         id: verify
         shell: bash
+        env:
+          # Bind expression values to env vars so untrusted input — the
+          # workflow_dispatch runner_label and the externally-resolved egress
+          # IP — reaches the script as data rather than text spliced into it at
+          # expression-expansion time. Avoids shell injection.
+          RUNNER_LABEL: ${{ inputs.runner_label }}
+          EGRESS_IP: ${{ steps.egress.outputs.egress_ip }}
+          IN_RANGE: ${{ steps.egress.outputs.in_range }}
         run: |
           set -uo pipefail
 
@@ -87,9 +101,9 @@ jobs:
           {
             echo "## Allowlist Connectivity Verification"
             echo
-            echo "**Runner label:** \`${{ inputs.runner_label }}\`  "
-            echo "**Egress IP:** \`${{ steps.egress.outputs.egress_ip }}\`  "
-            echo "**In whitelisted range:** \`${{ steps.egress.outputs.in_range }}\`  "
+            echo "**Runner label:** \`${RUNNER_LABEL}\`  "
+            echo "**Egress IP:** \`${EGRESS_IP}\`  "
+            echo "**In whitelisted range:** \`${IN_RANGE}\`  "
             echo "**Expected ranges:** \`$EXPECTED_RANGES\`"
             echo
             echo "| Endpoint | DNS | TCP:443 | HTTPS | Result |"
@@ -106,7 +120,9 @@ jobs:
             echo "::group::Checking ${LABEL} (${URL})"
 
             # ---- DNS ---------------------------------------------------------
-            DNS_IPS=$(getent hosts "$HOST" 2>/dev/null | awk '{print $1}' | paste -sd',' -)
+            # IPv4-only (ahostsv4) so reported addresses match the IPv4 allowlist
+            # ranges; sort -u collapses ahostsv4's per-socktype duplicate rows.
+            DNS_IPS=$(getent ahostsv4 "$HOST" 2>/dev/null | awk '{print $1}' | sort -u | paste -sd',' -)
             if [[ -n "$DNS_IPS" ]]; then
               DNS_CELL="✅ ${DNS_IPS}"
               echo "DNS: $DNS_IPS"
@@ -116,7 +132,10 @@ jobs:
             fi
 
             # ---- TCP/443 -----------------------------------------------------
-            if timeout 5 bash -c "</dev/tcp/${HOST}/443" 2>/dev/null; then
+            # Connect to the resolved IPv4 (not the hostname) so the probe can't
+            # fall back to IPv6 on a dual-stack runner.
+            IPV4="${DNS_IPS%%,*}"
+            if timeout 5 bash -c "</dev/tcp/${IPV4:-$HOST}/443" 2>/dev/null; then
               TCP_CELL="✅"
               TCP_OK=1
               echo "TCP/443: open"
@@ -127,7 +146,7 @@ jobs:
             fi
 
             # ---- HTTPS -------------------------------------------------------
-            if HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" \
+            if HTTP_CODE=$(curl -4 -sS -o /dev/null -w "%{http_code}" \
               --max-time 15 --connect-timeout 10 \
               -A "bcgov-connectivity-check/1.0" \
               "$URL" 2>/dev/null); then
