@@ -10,7 +10,6 @@ import {
   getAccountSecurityMethod,
   getHideDeviceAuthPrepFlag,
   isAccountLocked,
-  isBcscNativeError,
   unlockWithDeviceSecurity,
 } from 'react-native-bcsc-core'
 import { useLoadingScreen } from '../contexts/BCSCLoadingContext'
@@ -61,11 +60,8 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
       await handleSuccessfulAuth(walletKey)
       logger.info('[Authentication:performDeviceAuth] Device authentication successful')
     } catch (error) {
-      // A user cancel is control flow, not an error — do not surface an alert or track it.
-      if (isBcscNativeError(error) && error.code === 'E_DEVICE_AUTH_CANCELLED') {
-        logger.info('[Authentication:performDeviceAuth] Device authentication cancelled by user')
-        return
-      }
+      // Note: a user cancel never lands here — unlockWithDeviceSecurity resolves
+      // { success: false } on cancel (both platforms), handled above.
       const appError = mapNativeBcscError(error)
       logger.error(`[Authentication:performDeviceAuth] Device authentication error [${appError.appEvent}]`, appError)
       deviceAuthenticationErrorAlert(appError)
