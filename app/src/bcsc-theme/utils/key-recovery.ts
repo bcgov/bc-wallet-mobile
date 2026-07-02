@@ -2,11 +2,18 @@ import { BifoldLogger } from '@bifold/core'
 import { deleteKey, getAllKeys, setActiveKeyAlias } from 'react-native-bcsc-core'
 import BCSCApiClient from '../api/client'
 
-/** Format a caught error for logging, surfacing the native error code (e.g. E_KEY_NOT_FOUND) when present. */
+/**
+ * Format a caught error for logging, surfacing the native error code (e.g. E_KEY_NOT_FOUND) when
+ * present. Handles plain-object rejections ({ code, message }) as well as Error instances, so the
+ * code is never lost to an "[object Object]" string.
+ */
 const describeError = (err: unknown): string => {
-  if (err instanceof Error) {
-    const code = (err as { code?: unknown }).code
-    return typeof code === 'string' ? `${code}: ${err.message}` : err.message
+  if (err && typeof err === 'object') {
+    const { code, message } = err as { code?: unknown; message?: unknown }
+    const parts = [code, message].filter((part): part is string => typeof part === 'string')
+    if (parts.length > 0) {
+      return parts.join(': ')
+    }
   }
   return String(err)
 }
