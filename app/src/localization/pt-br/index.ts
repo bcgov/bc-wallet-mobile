@@ -272,7 +272,6 @@ const translation = {
         "PinContact": "Pin contact (PT-BR)",
         "UnpinContact": "Unpin contact (PT-BR)",
         "EditName": "Edit Contact Name (PT-BR)",
-        "ViewHistory": "View history (PT-BR)",
         "ViewJSON": "View JSON details (PT-BR)",
         "RemoveContact": "Remove Contact (PT-BR)",
       },
