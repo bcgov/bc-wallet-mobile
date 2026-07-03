@@ -1,12 +1,11 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
+import AccountVerificationCta from '@assets/img/account-verification-cta.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import { Edges } from 'react-native-safe-area-context'
-
-import AccountVerificationCta from '@assets/img/account-verification-cta.svg'
 
 /**
  * One-time prompt shown after onboarding completes (PIN created) and before the
