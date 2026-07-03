@@ -198,7 +198,7 @@ const translation = {
     "Retry": "Retry",
     "Failed": "We couldn't load your wallet. Please try again.",
     "Starting": "Starting...",
-    "CheckingOCA": "Checking for OCA updates...",
+    "CheckingRemoteResources": "Checking for updates...",
     "InitializingAgent": "Initializing agent...",
     "Finishing": "Finishing..."
   },
@@ -282,7 +282,6 @@ const translation = {
         "PinContact": "Pin contact",
         "UnpinContact": "Unpin contact",
         "EditName": "Edit Contact Name",
-        "ViewHistory": "View history",
         "ViewJSON": "View JSON details",
         "RemoveContact": "Remove Contact",
       },
@@ -496,6 +495,12 @@ const translation = {
         "ContentB": "Please update to the latest version from the {{platformStore}}.",
         "UpdateButton": "Go to {{platformStore}}",
       },
+      "VerificationSessionExpired": {
+        "Header": "Verification session expired",
+        "ContentA": "More than 7 days have passed since you started verifying your identity, so this session has expired.",
+        "ContentB": "To continue, you’ll need to set up the app and verify your identity again.",
+        "Button": "Start again",
+      },
       "DeviceInvalidated": {
         "Header": "Device invalidated",
         "CancelledByCardCancel": "Your account will be removed from this app.",
@@ -515,6 +520,10 @@ const translation = {
       "TermsOfUseUpdated": {
         "Header": "The Terms of Use have been updated. Before you continue to use the Service, you must read and accept the updated terms.",
       },
+    },
+    "VerificationReminder": {
+      "Title": "Finish verifying your identity",
+      "Body": "Verify your identity to finish setting up the app by {{date}}.",
     },
     "Home": {
       "WhereToUseTitle": "Where to use",

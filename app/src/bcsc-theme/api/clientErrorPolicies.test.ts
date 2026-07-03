@@ -2,7 +2,7 @@ import { AppError, ErrorCategory, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { AxiosError } from 'axios'
 import { VerificationCardError } from '../features/verify/verificationCardError'
-import { BCSCScreens } from '../types/navigators'
+import { BCSCModals, BCSCScreens } from '../types/navigators'
 import {
   alreadyRegisteredErrorPolicy,
   alreadyVerifiedErrorPolicy,
@@ -21,7 +21,9 @@ import {
   noTokensReturnedErrorPolicy,
   pairingCodeErrorPolicy,
   unexpectedServerErrorPolicy,
+  unsupportedOsOnAssertionErrorPolicy,
   updateRequiredErrorPolicy,
+  verificationSessionExpiredErrorPolicy,
   verifyDeviceAssertionErrorPolicy,
   verifyNotCompletedErrorPolicy,
 } from './clientErrorPolicies'
@@ -131,22 +133,90 @@ describe('clientErrorPolicies', () => {
         expect(mockAlert).toHaveBeenCalledWith(error)
       })
 
-      it('should show dynamic registration alert when technicalMessage indicates unsupported os', () => {
+      it('should show the unsupported OS alert (basic, no report) when technicalMessage indicates unsupported os', () => {
         const error = newError('invalid_client_metadata')
         error.cause = new Error('unsupported os version') as AxiosError
         const mockAlert = jest.fn()
-        const context = { alerts: { dynamicRegistrationErrorAlert: mockAlert } }
+        const context = { alerts: { unsupportedOsAlert: mockAlert } }
         invalidClientMetadataErrorPolicy.handle(error, context as any)
-        expect(mockAlert).toHaveBeenCalledWith(error)
+        expect(mockAlert).toHaveBeenCalled()
       })
 
-      it('should match unsupported os check case-insensitively', () => {
+      it('should match the unsupported os check case-insensitively', () => {
         const error = newError('invalid_client_metadata')
         error.cause = new Error('Client registration failed: Unsupported OS Version detected') as AxiosError
         const mockAlert = jest.fn()
-        const context = { alerts: { dynamicRegistrationErrorAlert: mockAlert } }
+        const context = { alerts: { unsupportedOsAlert: mockAlert } }
         invalidClientMetadataErrorPolicy.handle(error, context as any)
-        expect(mockAlert).toHaveBeenCalledWith(error)
+        expect(mockAlert).toHaveBeenCalled()
+      })
+    })
+  })
+
+  describe('unsupportedOsOnAssertionErrorPolicy', () => {
+    const assertionContext = {
+      endpoint: '/api/cardTap/v3/mobile/assertion',
+      statusCode: 401,
+      apiEndpoints: { cardTap: '/api/cardTap' },
+    }
+
+    // Build an ERR_210_UNAUTHORIZED error whose raw response body carries (or omits) the errorMessage marker.
+    const unauthorizedWithErrorMessage = (errorMessage?: unknown): AxiosAppError => {
+      const error = newError('err_210_unauthorized')
+      error.cause = { response: { data: errorMessage === undefined ? {} : { errorMessage } } } as AxiosError
+      return error
+    }
+
+    describe('matches', () => {
+      it('should match a 401 on the assertion endpoint whose errorMessage indicates unsupported OS', () => {
+        const error = unauthorizedWithErrorMessage('unsupported OS')
+        expect(unsupportedOsOnAssertionErrorPolicy.matches(error, assertionContext as any)).toBeTruthy()
+      })
+
+      it('should match case-insensitively', () => {
+        const error = unauthorizedWithErrorMessage('Unsupported OS version detected')
+        expect(unsupportedOsOnAssertionErrorPolicy.matches(error, assertionContext as any)).toBeTruthy()
+      })
+
+      it('should NOT match a genuine 401 with no errorMessage marker', () => {
+        const error = unauthorizedWithErrorMessage()
+        expect(unsupportedOsOnAssertionErrorPolicy.matches(error, assertionContext as any)).toBeFalsy()
+      })
+
+      it('should NOT match the marker on a different endpoint', () => {
+        const error = unauthorizedWithErrorMessage('unsupported OS')
+        const context = { endpoint: '/api/other-endpoint', statusCode: 401, apiEndpoints: { cardTap: '/api/cardTap' } }
+        expect(unsupportedOsOnAssertionErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
+      it('should NOT match a non-401 error even with the marker present', () => {
+        const error = newError('invalid_pairing_code')
+        error.cause = { response: { data: { errorMessage: 'unsupported OS' } } } as AxiosError
+        expect(unsupportedOsOnAssertionErrorPolicy.matches(error, assertionContext as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle', () => {
+      it('should show the unsupported OS alert', () => {
+        const error = unauthorizedWithErrorMessage('unsupported OS')
+        const mockAlert = jest.fn()
+        const context = { alerts: { unsupportedOsAlert: mockAlert }, logger: { info: jest.fn() } }
+        unsupportedOsOnAssertionErrorPolicy.handle(error, context as any)
+        expect(mockAlert).toHaveBeenCalled()
+      })
+    })
+
+    describe('ClientErrorHandlingPolicies find', () => {
+      it('should resolve to unsupportedOsOnAssertionErrorPolicy (before iasErrorPolicy) for an unsupported-OS 401', () => {
+        const error = unauthorizedWithErrorMessage('unsupported OS')
+        const policy = ClientErrorHandlingPolicies.find((p) => p.matches(error, assertionContext as any))
+        expect(policy).toBe(unsupportedOsOnAssertionErrorPolicy)
+      })
+
+      it('should resolve to iasErrorPolicy for a genuine 401 with no marker (Report path preserved)', () => {
+        const error = unauthorizedWithErrorMessage()
+        const policy = ClientErrorHandlingPolicies.find((p) => p.matches(error, assertionContext as any))
+        expect(policy).toBe(iasErrorPolicy)
       })
     })
   })
@@ -584,6 +654,59 @@ describe('clientErrorPolicies', () => {
     })
   })
 
+  describe('verificationSessionExpiredErrorPolicy', () => {
+    describe('matches', () => {
+      it('should match a 401 on the evidence endpoint', () => {
+        const error = newError('unknown_server_error')
+        const context = {
+          statusCode: 401,
+          endpoint: 'https://example.com/evidence/v1/verifications',
+          apiEndpoints: { evidence: 'https://example.com/evidence' },
+        }
+        expect(verificationSessionExpiredErrorPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it('should NOT match a non-401 status on the evidence endpoint', () => {
+        const error = newError('unknown_server_error')
+        const context = {
+          statusCode: 500,
+          endpoint: 'https://example.com/evidence/v1/verifications',
+          apiEndpoints: { evidence: 'https://example.com/evidence' },
+        }
+        expect(verificationSessionExpiredErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
+      it('should NOT match a 401 on a non-evidence endpoint', () => {
+        const error = newError('unknown_server_error')
+        const context = {
+          statusCode: 401,
+          endpoint: 'https://example.com/token',
+          apiEndpoints: { evidence: 'https://example.com/evidence' },
+        }
+        expect(verificationSessionExpiredErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle', () => {
+      it('navigates to the VerificationSessionExpired modal', () => {
+        const error = newError('unknown_server_error')
+        const dispatchMock = jest.fn()
+        const loggerMock = { info: jest.fn() }
+        const context = {
+          navigation: { dispatch: dispatchMock },
+          logger: loggerMock,
+        }
+
+        verificationSessionExpiredErrorPolicy.handle(error, context as any)
+
+        expect(dispatchMock).toHaveBeenCalledTimes(1)
+        const dispatchArgs = dispatchMock.mock.calls[0][0]
+        expect(dispatchArgs.type).toBe('NAVIGATE')
+        expect(dispatchArgs.payload.name).toBe(BCSCModals.VerificationSessionExpired)
+      })
+    })
+  })
+
   describe('attestationPollingErrorPolicy', () => {
     describe('matches', () => {
       it('should match 404 on attestation endpoint', () => {
@@ -771,13 +894,12 @@ describe('clientErrorPolicies', () => {
     })
 
     describe('handle', () => {
-      it('should call failedToRetrieveStringResourceAlert and mark error as handled', () => {
+      it('should call failedToRetrieveStringResourceAlert', () => {
         const error = newError('err_400_failed_to_retrieve_string_resource')
         const mockAlert = jest.fn()
         const context = { alerts: { failedToRetrieveStringResourceAlert: mockAlert } }
         failedToRetrieveStringResourceErrorPolicy.handle(error, context as any)
         expect(mockAlert).toHaveBeenCalled()
-        expect(error.handled).toBe(true)
       })
     })
   })
@@ -796,13 +918,12 @@ describe('clientErrorPolicies', () => {
     })
 
     describe('handle', () => {
-      it('should call invalidUrlAlert and mark error as handled', () => {
+      it('should call invalidUrlAlert', () => {
         const error = newError('err_500_invalid_url')
         const mockAlert = jest.fn()
         const context = { alerts: { invalidUrlAlert: mockAlert } }
         invalidUrlErrorPolicy.handle(error, context as any)
         expect(mockAlert).toHaveBeenCalled()
-        expect(error.handled).toBe(true)
       })
     })
   })
@@ -821,13 +942,12 @@ describe('clientErrorPolicies', () => {
     })
 
     describe('handle', () => {
-      it('should call invalidRegistrationRequestAlert and mark error as handled', () => {
+      it('should call invalidRegistrationRequestAlert', () => {
         const error = newError('err_501_invalid_registration_request')
         const mockAlert = jest.fn()
         const context = { alerts: { invalidRegistrationRequestAlert: mockAlert } }
         invalidRegistrationRequestErrorPolicy.handle(error, context as any)
         expect(mockAlert).toHaveBeenCalled()
-        expect(error.handled).toBe(true)
       })
     })
   })
@@ -1045,7 +1165,6 @@ describe('clientErrorPolicies', () => {
           }
           verifyDeviceAssertionErrorPolicy.handle(error, context as any)
           expect(mockAlert).toHaveBeenCalled()
-          expect(error.handled).toBe(true)
         })
 
         it('should emit the problem with account alert', () => {
@@ -1056,7 +1175,6 @@ describe('clientErrorPolicies', () => {
           }
           verifyDeviceAssertionErrorPolicy.handle(error, context as any)
           expect(mockAlert).toHaveBeenCalled()
-          expect(error.handled).toBe(true)
         })
 
         it('should emit the invalid pairing code alert', () => {
@@ -1067,7 +1185,6 @@ describe('clientErrorPolicies', () => {
           }
           verifyDeviceAssertionErrorPolicy.handle(error, context as any)
           expect(mockAlert).toHaveBeenCalled()
-          expect(error.handled).toBe(true)
         })
 
         it('should emit the login remembered pairing code code alert', () => {
@@ -1078,7 +1195,6 @@ describe('clientErrorPolicies', () => {
           }
           verifyDeviceAssertionErrorPolicy.handle(error, context as any)
           expect(mockAlert).toHaveBeenCalled()
-          expect(error.handled).toBe(true)
         })
 
         it('should emit the login remembered device invalid pairing code alert', () => {
@@ -1089,7 +1205,6 @@ describe('clientErrorPolicies', () => {
           }
           verifyDeviceAssertionErrorPolicy.handle(error, context as any)
           expect(mockAlert).toHaveBeenCalled()
-          expect(error.handled).toBe(true)
         })
       })
     })

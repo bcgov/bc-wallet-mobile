@@ -39,6 +39,11 @@ on:
         description: 'JSON array of {platform, device, os_version} objects'
         type: string
         required: true
+      runner_label:
+        description: 'Label of the large runner with whitelisted egress IPs'
+        type: string
+        required: false
+        default: 'large'
     secrets:
       SAUCE_USERNAME:
         required: true
@@ -69,6 +74,10 @@ on:
         description: 'JSON array of {platform, device, os_version} objects'
         type: string
         default: '[{"platform":"iOS","device":"iPhone.*","os_version":""},{"platform":"Android","device":"Google.*","os_version":""}]'
+      runner_label:
+        description: 'Label of the large runner with whitelisted egress IPs'
+        type: string
+        default: 'large'
 
 jobs:
   # ─── E2E Tests ─────────────────────────────────────────────────────
@@ -81,7 +90,7 @@ jobs:
   # do not gate the pipeline.
   e2e-tests:
     name: '${{ inputs.suite }} - ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
-    runs-on: ubuntu-latest-m
+    runs-on: ${{ inputs.runner_label }}
     permissions:
       contents: read
     timeout-minutes: 45

@@ -19,6 +19,7 @@ export enum BCSCModals {
   DeviceInvalidated = 'BCSCDeviceInvalidated',
   ServiceOutage = 'BCSCServiceOutage',
   TermsOfUseUpdated = 'BCSCTermsOfUseUpdated',
+  VerificationSessionExpired = 'BCSCVerificationSessionExpired',
 }
 
 /**
@@ -111,6 +112,7 @@ export enum BCSCScreens {
   OnboardingWebView = `${BCSCStacks.Onboarding} Web view`,
   OnboardingDeveloper = `${BCSCStacks.Onboarding} Developer`,
   VerifyPrompt = `${BCSCStacks.Verify} Verify Prompt`,
+  MainVerifyPrompt = `${BCSCStacks.Main} Verify Prompt`,
   MainLoading = `${BCSCStacks.Main} Loading`,
   MainSettings = `${BCSCStacks.Main} In App Settings`,
   MainWebView = `${BCSCStacks.Main} Web view`,
@@ -179,6 +181,9 @@ export type BCSCOnboardingStackParams = {
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
+  // VerificationSessionExpired is intentionally NOT registered in the Onboarding stack — it is the
+  // post-reset destination, and an overlapping route name would let React Navigation preserve the
+  // modal across the stack swap so it never dismisses. See issue #4050.
   [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
 }
 
@@ -237,6 +242,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.VerifyChangePIN]: { isChangingExistingPIN?: boolean } | undefined
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
+  [BCSCModals.VerificationSessionExpired]: undefined
   [BCSCModals.ServiceOutage]: { statusMessage?: string; contactLink?: string }
   [BCSCScreens.TransferAccountInstructions]: undefined
   [BCSCScreens.TransferAccountQRScan]: undefined
@@ -295,6 +301,7 @@ export type BCSCMainStackParams = {
 
   [BCSCScreens.QRCore]: NavigatorScreenParams<BCSCQRCoreTabParams> | undefined
   [BCSCScreens.ConnectionLoading]: { oobRecordId?: string; credentialId?: string; proofId?: string }
+  [BCSCScreens.MainVerifyPrompt]: undefined
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined

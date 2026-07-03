@@ -406,6 +406,15 @@ export const getAccount = async (): Promise<Omit<NativeAccount, 'securityMethod'
 };
 
 /**
+ * Checks if an account is registered by verifying the presence of a client ID.
+ * @param account The Account object to check (without securityMethod).
+ * @returns True if an account is registered, false otherwise.
+ */
+export const isAccountRegistered = (account: Omit<NativeAccount, 'securityMethod'> | null): boolean => {
+  return Boolean(account?.clientID);
+};
+
+/**
  * Gets the device ID using the platform-specific stable identifier.
  * On Android: Uses Settings.Secure.ANDROID_ID
  * On iOS: Uses UIDevice.current.identifierForVendor

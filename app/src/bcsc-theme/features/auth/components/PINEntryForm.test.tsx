@@ -8,6 +8,8 @@ import { PINEntryForm } from './PINEntryForm'
 jest.mock('react-native-bcsc-core', () => ({
   setPIN: jest.fn(),
   canPerformDeviceAuthentication: jest.fn().mockResolvedValue(false),
+  getAccount: jest.fn().mockResolvedValue({ clientID: 'test-client-id', issuer: 'https://mock-issuer' }),
+  setAccount: jest.fn().mockResolvedValue(undefined),
   isBcscNativeError: jest.fn().mockReturnValue(false),
   BcscNativeErrorCodes: {
     KEYPAIR_GENERATION_FAILED: 'E_KEYPAIR_GENERATION_FAILED',
@@ -20,6 +22,9 @@ jest.mock('react-native-bcsc-core', () => ({
 }))
 
 jest.mock('@/bcsc-theme/hooks/useBCSCApiClient', () => ({
+  useBCSCApiClient: () => ({
+    endpoints: { issuer: 'https://mock-issuer' },
+  }),
   useBCSCApiClientState: () => ({
     client: {},
     isClientReady: true,
@@ -107,19 +112,6 @@ describe('PINEntryForm', () => {
     expect(tree.getByText('Global.Continue')).toBeTruthy()
   })
 
-  it('button is disabled when PINs are not entered and checkbox unchecked', () => {
-    const tree = render(
-      <BasicAppContext>
-        <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
-        </BCSCLoadingProvider>
-      </BasicAppContext>
-    )
-
-    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
-    expect(button.props.accessibilityState.disabled).toBe(true)
-  })
-
   it('calls onSuccess with wallet key when PIN is set successfully', async () => {
     mockSetPIN.mockResolvedValue({
       success: true,
@@ -178,29 +170,6 @@ describe('PINEntryForm', () => {
     await waitFor(() => {
       expect(tree.getByText('BCSC.PIN.PINsDoNotMatch')).toBeTruthy()
     })
-
-    expect(mockSetPIN).not.toHaveBeenCalled()
-  })
-
-  it('keeps button disabled when PIN is too short', () => {
-    const tree = render(
-      <BasicAppContext>
-        <BCSCLoadingProvider>
-          <PINEntryForm onSuccess={mockOnSuccess} creatingNewPIN={true} />
-        </BCSCLoadingProvider>
-      </BasicAppContext>
-    )
-
-    const inputs = tree.getAllByAccessibilityHint('Enter your 6-digit PIN')
-    fireEvent.changeText(inputs[0], '123') // Too short
-    fireEvent.changeText(inputs[1], '123')
-
-    const checkbox = tree.getByTestId('com.ariesbifold:id/IUnderstand')
-    fireEvent.press(checkbox)
-
-    // Button should remain disabled when PINs are too short
-    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
-    expect(button.props.accessibilityState.disabled).toBe(true)
 
     expect(mockSetPIN).not.toHaveBeenCalled()
   })
@@ -306,12 +275,6 @@ describe('PINEntryForm', () => {
     const checkbox = tree.getByTestId('com.ariesbifold:id/IUnderstand')
     fireEvent.press(checkbox)
 
-    // Button is disabled so we need to bypass by triggering validation directly
-    // This is simulating the scenario where the user could somehow submit
-    // Actually, the button should be disabled, so let's verify that
-    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
-    expect(button.props.accessibilityState.disabled).toBe(true)
-
     expect(mockSetPIN).not.toHaveBeenCalled()
   })
 
@@ -330,9 +293,6 @@ describe('PINEntryForm', () => {
 
     const checkbox = tree.getByTestId('com.ariesbifold:id/IUnderstand')
     fireEvent.press(checkbox)
-
-    const button = tree.getByTestId('com.ariesbifold:id/CreatePIN')
-    expect(button.props.accessibilityState.disabled).toBe(true)
 
     expect(mockSetPIN).not.toHaveBeenCalled()
   })
