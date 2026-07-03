@@ -142,7 +142,7 @@ async function _getServerRegistration(
     return data
   } catch (error) {
     // 403 is expected if the server needs key recovery. In that case, we treat it as "no jwks" and skip recovery. Any other error is fatal.
-    if (isAxiosAppError(error) && error.cause.response?.status === 403) {
+    if (isAxiosAppError(error, 403)) {
       logger.info(`[performKeyRecovery] server returned 403 on registration probe; treating as no jwks`)
       return null
     }

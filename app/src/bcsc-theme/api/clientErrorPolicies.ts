@@ -12,12 +12,6 @@ import { BCSCScreens } from '../types/navigators'
 import { ResumeStepRoute } from '../utils/resume-step-route'
 import { BCSCEndpoints } from './client'
 
-enum HTTPMethod {
-  POST = 'POST',
-  GET = 'GET',
-  DELETE = 'DELETE',
-}
-
 const UNSUPPORTED_OS_TECHNICAL_MESSAGE = 'unsupported os version'
 
 export type ErrorMatcherContext = {
@@ -473,20 +467,6 @@ export const invalidRegistrationRequestErrorPolicy: ErrorHandlingPolicy = {
   handle: (error, context) => {
     context.alerts.invalidRegistrationRequestAlert(error)
     error.handled = true
-  },
-}
-
-// Error policy for cancelling a verification request that has already been cancelled (404)
-export const cancelVerificationRequestErrorPolicy: ErrorHandlingPolicy = {
-  matches: (error, context) => {
-    return (
-      error.statusCode === 404 &&
-      context.endpoint.includes(`${context.apiEndpoints.evidence}/v1/verifications`) &&
-      error.cause.request.method === HTTPMethod.DELETE
-    )
-  },
-  handle: (_error, context) => {
-    context.logger.info('[CancelVerificationRequestErrorPolicy] Verification request already cancelled')
   },
 }
 

@@ -244,8 +244,13 @@ export function isAppError<TAppEventCode extends AppEventCode>(
  * Check if an error is an AxiosAppError, which is an AppError with an AxiosError cause.
  *
  * @param error - The error to check
+ * @param status - Optional HTTP status code to match against the error's cause response status
  * @returns True if the error is an AxiosAppError, false otherwise
  */
-export function isAxiosAppError(error: unknown): error is AxiosAppError {
+export function isAxiosAppError(error: unknown, status?: number): error is AxiosAppError {
+  if (status !== undefined) {
+    return isAppError(error) && isAxiosError(error.cause) && error.cause.response?.status === status
+  }
+
   return isAppError(error) && isAxiosError(error.cause)
 }

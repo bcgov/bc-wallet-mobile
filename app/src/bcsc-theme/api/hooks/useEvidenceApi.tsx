@@ -229,12 +229,10 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
           }
         )
 
-        updateVerificationRequest(null, null)
-
         return data
       })
     },
-    [_getDeviceCode, apiClient, updateVerificationRequest]
+    [_getDeviceCode, apiClient]
   )
 
   const createEmailVerification = useCallback(
