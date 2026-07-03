@@ -12,6 +12,12 @@ import { BCSCScreens } from '../types/navigators'
 import { ResumeStepRoute } from '../utils/resume-step-route'
 import { BCSCEndpoints } from './client'
 
+enum HTTPMethod {
+  POST = 'POST',
+  GET = 'GET',
+  DELETE = 'DELETE',
+}
+
 const UNSUPPORTED_OS_TECHNICAL_MESSAGE = 'unsupported os version'
 
 export type ErrorMatcherContext = {
@@ -47,8 +53,8 @@ type ErrorHandlingPolicy = {
 // Helper Functions + Alert Maps
 // ----------------------------------------
 
-// Global alert map for app events that can occur across multiple endpoints (e.g. network errors, server errors)
-const _getGlobalAlertMap = (alerts?: AppAlerts) => {
+// HTTP alert map for network and server errors that can occur on multiple endpoints (client metadata fetch, device authorization, token, etc.)
+const _getHTTPAlertMap = (alerts?: AppAlerts) => {
   return new Map([
     [AppEventCode.UNSECURED_NETWORK, alerts?.unsecuredNetworkAlert],
     [AppEventCode.SERVER_TIMEOUT, alerts?.serverTimeoutAlert],
@@ -101,6 +107,14 @@ const _getIasErrorAlertMap = (alerts?: AppAlerts) => {
   ])
 }
 
+// Global alert map for all predefined app event codes that can be handled by the global alert policy
+export const getGlobalAlertMap = (alerts: AppAlerts) => {
+  const httpAlertMap = _getHTTPAlertMap(alerts)
+  const iasAlertMap = _getIasErrorAlertMap(alerts)
+
+  return new Map([...httpAlertMap, ...iasAlertMap])
+}
+
 // ----------------------------------------
 // Error Handling Policies
 // https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574122/Mobile+App+Alerts#MobileAppAlerts-Alertswithouterrorcodes
@@ -140,10 +154,10 @@ export const invalidClientMetadataErrorPolicy: ErrorHandlingPolicy = {
 // Global alert policy for predefined app event codes
 export const globalAlertErrorPolicy: ErrorHandlingPolicy = {
   matches: (error) => {
-    return _getGlobalAlertMap().has(error.appEvent)
+    return _getHTTPAlertMap().has(error.appEvent)
   },
   handle: (error, context) => {
-    const alert = _getGlobalAlertMap(context.alerts).get(error.appEvent)
+    const alert = _getHTTPAlertMap(context.alerts).get(error.appEvent)
 
     if (!alert) {
       context.logger.warn(`[GlobalAlertErrorPolicy] No alert defined for app event: ${error.appEvent}`)
@@ -468,12 +482,11 @@ export const cancelVerificationRequestErrorPolicy: ErrorHandlingPolicy = {
     return (
       error.statusCode === 404 &&
       context.endpoint.includes(`${context.apiEndpoints.evidence}/v1/verifications`) &&
-      error.cause.request.method === 'DELETE'
+      error.cause.request.method === HTTPMethod.DELETE
     )
   },
-  handle: (error, context) => {
+  handle: (_error, context) => {
     context.logger.info('[CancelVerificationRequestErrorPolicy] Verification request already cancelled')
-    error.handled = true
   },
 }
 
