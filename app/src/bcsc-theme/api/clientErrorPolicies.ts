@@ -12,6 +12,27 @@ import { BCSCScreens } from '../types/navigators'
 import { ResumeStepRoute } from '../utils/resume-step-route'
 import { BCSCEndpoints } from './client'
 
+/**
+ * TODO (MD): Phase out client error policies in favor of
+ * per-call error handling in use<Name>Service hooks.
+ *
+ * WHY: Every policy here is matched against every API error, so opting a single
+ * call out of alert handling means adding endpoint-matching logic to this shared
+ * file (e.g. videoSessionErrorPolicy, attestationPollingErrorPolicy), and the
+ * error behavior for any given call is invisible from the call site itself.
+ *
+ * DIRECTION: Error handling should live in the use<Name>Service hook that wraps
+ * the relevant use<Name>Api call, where each call can handle its own errors —
+ * including suppressing alerts — inline. New calls should not add policies here.
+ * When touching an existing policy, prefer migrating it out rather than extending
+ * it in place. Remove this file once all policies have been migrated.
+ *
+ * NOTE: Use `skipOnErrorHandler` API client option to disable injected error
+ * handling for a specific call.
+ *
+ * @link useEvidenceService.tsx -> cancelVerificationRequest
+ */
+
 const UNSUPPORTED_OS_TECHNICAL_MESSAGE = 'unsupported os version'
 
 export type ErrorMatcherContext = {

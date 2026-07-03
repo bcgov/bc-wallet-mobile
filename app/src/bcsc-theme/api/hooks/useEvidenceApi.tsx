@@ -1,4 +1,3 @@
-import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { VIDEO_MP4_MIME_TYPE } from '@/constants'
 import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
@@ -75,7 +74,6 @@ export interface EvidenceMetadataPayload {
 
 const useEvidenceApi = (apiClient: BCSCApiClient) => {
   const [store] = useStore<BCState>()
-  const { updateVerificationRequest } = useSecureActions()
 
   const _getDeviceCode = useCallback(() => {
     const code = store.bcscSecure.deviceCode
@@ -226,6 +224,8 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
+            // Note: Errors handled in `useEvidenceService`
+            skipOnErrorHandler: true,
           }
         )
 

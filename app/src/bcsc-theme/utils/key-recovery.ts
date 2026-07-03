@@ -43,9 +43,9 @@ export async function performKeyRecovery(
   registrationAccessToken: string,
   logger: BifoldLogger
 ): Promise<boolean> {
-  const serverRegistration = await _getServerRegistration(apiClient, clientId, registrationAccessToken, logger)
-
   try {
+    const serverRegistration = await _getServerRegistration(apiClient, clientId, registrationAccessToken, logger)
+
     const serverKids = (serverRegistration?.jwks?.keys ?? [])
       .map((k) => k?.kid)
       .filter((k): k is string => typeof k === 'string' && k.length > 0)
