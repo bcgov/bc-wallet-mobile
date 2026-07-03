@@ -20,7 +20,7 @@ import { BCSC_SN_SCAN_ZONES, ScanState } from '../../components/utils/camera'
  * How long the initial "Scan your card" guidance shows before falling back to
  * the steady-hold help text + manual-entry button.
  */
-const SCAN_HELP_TIMEOUT_MS = 10000
+const SCAN_HELP_TIMEOUT_MS = 0
 
 type ScanSerialScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.ManualSerial>

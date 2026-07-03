@@ -5,14 +5,15 @@ import { useVerificationResponseListener } from '@/bcsc-theme/features/verificat
 import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
 import { BCSCModals, BCSCScreens, BCSCStacks, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE } from '@/constants'
-import { BCState } from '@/store'
+import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
 import { testIdWithKey, useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
+import { HeaderBackButtonProps } from '@react-navigation/elements'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
 import { createVerifyHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
-import { createHeaderBackButton } from '../components/HeaderBackButton'
+import { createHeaderBackButton, HeaderBackButton } from '../components/HeaderBackButton'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferInstructionsScreen from '../features/account-transfer/transferee/TransferInstructionsScreen'
 import TransferQRScannerScreen from '../features/account-transfer/transferee/TransferQRScannerScreen'
@@ -69,6 +70,17 @@ import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { useVerificationStatus } from '../hooks/useVerificationStatus'
 import { getResumeStepRoute } from '../utils/resume-step-route'
+
+// When PendingReview is the initial route (entered from the home screen notification),
+// there is no navigation history — dispatch UNVERIFIED to swap back to MainStack instead.
+const PendingReviewBackButton = (props: HeaderBackButtonProps) => {
+  const [, dispatch] = useStore<BCState>()
+  const handlePress = () => {
+    dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS, payload: [VerificationStatus.UNVERIFIED] })
+  }
+
+  return <HeaderBackButton {...props} onPress={handlePress} />
+}
 
 const VerifyStack = () => {
   const Stack = createStackNavigator<BCSCVerifyStackParams>()
@@ -243,7 +255,7 @@ const VerifyStack = () => {
         component={PendingReviewScreen}
         options={{
           header: createProgressHeader(5, 80),
-          headerLeft: createVerifySettingsHeaderButton(),
+          headerLeft: (props) => <PendingReviewBackButton {...props} />,
         }}
       />
       <Stack.Screen
