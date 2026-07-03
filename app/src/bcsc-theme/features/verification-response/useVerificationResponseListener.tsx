@@ -61,12 +61,10 @@ export const useVerificationResponseListener = ({ onSuccess, onCancelled }: Veri
       logger.info(`[useVerificationResponseListener] Verification request status: ${status}`)
 
       if (status === 'verified') {
-        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: [undefined] })
-        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
         // Status is verified - fetch and update tokens
         await token.checkDeviceCodeStatus(deviceCode, userCode)
-        // Tokens have been fetched; call onSuccess =
-        // onSuccess()
+        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: ['verified'] })
+        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
         return
       }
 
