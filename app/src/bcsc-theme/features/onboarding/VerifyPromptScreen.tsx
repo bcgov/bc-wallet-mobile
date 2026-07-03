@@ -6,9 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import { Edges } from 'react-native-safe-area-context'
 
-import AccountCircle from '@assets/img/account_circle.svg'
-import Blob from '@assets/img/blob.svg'
-import VerifiedCheck from '@assets/img/verified.svg'
+import AccountVerificationCta from '@assets/img/account-verification-cta.svg'
 
 /**
  * One-time prompt shown after onboarding completes (PIN created) and before the
@@ -84,11 +82,7 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({ showSkip
       }}
     >
       <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-        <Blob height={120} width={120} />
-        <View style={{ position: 'absolute', justifyContent: 'center', alignItems: 'center' }}>
-          <AccountCircle height={100} width={100} />
-          <VerifiedCheck style={{ position: 'absolute', bottom: '5%', right: '10%' }} />
-        </View>
+        <AccountVerificationCta width={120} height={120} />
       </View>
       <ThemedText variant="headingThree" style={{ color: ColorPalette.brand.primary, textAlign: 'center' }}>
         {t('BCSC.VerifyPrompt.Title')}

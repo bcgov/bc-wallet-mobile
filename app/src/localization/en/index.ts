@@ -806,8 +806,8 @@ const translation = {
       "ContinueAs": "Continue as:",
     },
     "VerifyPrompt": {
-      "Title": "Verify Your Account",
-      "Description": "Verify your account to access services that may need additional information.",
+      "Title": "Verify your account",
+      "Description": "Services may require a verified account. It gives you access to more services that need to know who you are.",
       "YouWillNeedTo": "You will need to:",
       "Bullet1": "Verify your email",
       "Bullet2": "Add a photo ID",
