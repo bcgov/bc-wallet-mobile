@@ -1,20 +1,16 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
-import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { useLeaveVerification } from '@/bcsc-theme/hooks/useLeaveVerification'
 
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
-import { CommonActions, useFocusEffect } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
+import { useFocusEffect } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
 import { BackHandler, StyleSheet } from 'react-native'
 
-type SuccessfullySentScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.SuccessfullySent>
-}
-
-const SuccessfullySentScreen = ({ navigation }: SuccessfullySentScreenProps) => {
+const SuccessfullySentScreen = () => {
   const { Spacing } = useTheme()
   const { t } = useTranslation()
+  const leaveVerification = useLeaveVerification()
 
   const styles = StyleSheet.create({
     contentContainer: {
@@ -37,14 +33,7 @@ const SuccessfullySentScreen = ({ navigation }: SuccessfullySentScreenProps) => 
         accessibilityLabel={t('BCSC.SendVideo.SuccessfullySent.ButtonText')}
         title={t('BCSC.SendVideo.SuccessfullySent.ButtonText')}
         buttonType={ButtonType.Primary}
-        onPress={() =>
-          navigation.dispatch(
-            CommonActions.reset({
-              index: 0,
-              routes: [{ name: BCSCScreens.PendingReview }],
-            })
-          )
-        }
+        onPress={() => leaveVerification()}
       />
     </ControlContainer>
   )

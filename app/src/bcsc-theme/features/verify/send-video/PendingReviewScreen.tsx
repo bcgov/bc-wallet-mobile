@@ -1,10 +1,13 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useVerificationPendingActions } from '@/bcsc-theme/hooks/useVerificationPendingActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { BackHandler, StyleSheet, View } from 'react-native'
 
 type PendingReviewScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.PendingReview>
@@ -13,7 +16,18 @@ type PendingReviewScreenProps = {
 const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
   const { Spacing } = useTheme()
   const { t } = useTranslation()
+  const [, dispatch] = useStore<BCState>()
   const { isCheckingStatus, handleCheckStatus, handleCancelVerification } = useVerificationPendingActions(navigation)
+
+  useFocusEffect(
+    useCallback(() => {
+      const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS, payload: [VerificationStatus.UNVERIFIED] })
+        return true
+      })
+      return subscription.remove
+    }, [dispatch])
+  )
 
   const styles = StyleSheet.create({
     bulletContainer: {

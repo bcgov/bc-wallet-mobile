@@ -1,9 +1,11 @@
-import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
+import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
+import { BCState } from '@/store'
+import { useStore } from '@bifold/core'
+import { useNavigation } from '@react-navigation/native'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SystemModal } from '../../modal/components/SystemModal'
 import useCancelledReviewViewModel from './CancelledRerivewViewModel'
-
 interface CancelledReviewProps {
   route: {
     params: {
@@ -20,12 +22,15 @@ interface CancelledReviewProps {
  */
 const CancelledReview = ({ route }: CancelledReviewProps) => {
   const { agentReason } = route.params
-  const factoryReset = useFactoryReset()
+  const verificationReset = useVerificationReset()
   const { t } = useTranslation()
+  const navigation = useNavigation()
   const { cleanUpVerificationData } = useCancelledReviewViewModel()
   const [isLoading, setLoading] = useState(false)
+  const [, dispatch] = useStore<BCState>()
 
   useEffect(() => {
+    // This clears up verification request artifacts (images, address data ect.)
     cleanUpVerificationData()
   }, [cleanUpVerificationData])
 
@@ -40,9 +45,11 @@ const CancelledReview = ({ route }: CancelledReviewProps) => {
       ]}
       buttonText={t('BCSC.CancelledVerification.Button')}
       buttonDisabled={isLoading}
-      onButtonPress={() => {
+      onButtonPress={async () => {
         setLoading(true)
-        factoryReset()
+        // Clear everything related to verification so it appears as if the user has never started the process before
+        await verificationReset()
+        navigation.goBack()
       }}
     />
   )

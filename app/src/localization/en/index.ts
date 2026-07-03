@@ -1108,7 +1108,7 @@ const translation = {
     },
     "CancelledVerification": {
       "Title": "Your identity couldn't be verified",
-      "Label": "Details from Service BC agent: \n {{reason}}",
+      "Label": "Details from Service BC agent: \n{{reason}}",
       "Button": "Ok",
       "NoReason": "No reason provided"
     },
