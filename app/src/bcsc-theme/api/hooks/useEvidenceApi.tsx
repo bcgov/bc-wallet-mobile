@@ -97,7 +97,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
     async (data: VerificationStatusResponseData) => {
       if (data.status === 'verified' || data.status === 'cancelled') {
         // doesn't throw
-        await cancelVerificationReminders(apiClient.logger)
+        await cancelVerificationReminders(apiClient?.logger)
         return
       }
 
@@ -122,12 +122,12 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
       try {
         await updateDeviceCodes({ deviceCodeExpiresAt: extendedExpiry })
       } catch (error) {
-        apiClient.logger.warn('[reconcileVerificationDeadline] Failed to persist extended expiry', {
+        apiClient?.logger?.warn('[reconcileVerificationDeadline] Failed to persist extended expiry', {
           error,
         })
       }
     },
-    [apiClient.logger, store.bcscSecure.deviceCodeExpiresAt, updateDeviceCodes]
+    [apiClient?.logger, store.bcscSecure.deviceCodeExpiresAt, updateDeviceCodes]
   )
 
   const _getDeviceCode = useCallback(() => {
