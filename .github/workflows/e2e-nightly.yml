@@ -22,8 +22,13 @@
 # the regression. If no viable run exists in the 24h window, the workflow
 # fails rather than testing stale artifacts.
 #
-# NOTE: Nightly schedule is disabled until SauceLabs IPs are whitelisted.
-# To re-enable, uncomment the schedule trigger below.
+# Runner egress allowlist: the in-person verification step runs the SiteMinder /
+# IDcheck approval flow in-process on the runner (e2e/scripts/login.mjs), so it
+# is the RUNNER's egress IP — not SauceLabs — that BC Gov SIT must allowlist. The
+# e2e job runs on the whitelisted `large` runner (the default `runner_label` in
+# e2e.yml), whose egress ranges (20.10.68.0/28, 130.131.47.80/28) are opened on
+# the ID Broker / IDcheck firewalls. Use the "Verify Allowlist Connectivity"
+# workflow to confirm reachability before relying on a scheduled run.
 name: E2E Nightly
 
 permissions:
