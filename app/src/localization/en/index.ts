@@ -1084,7 +1084,7 @@ const translation = {
     },
     "TransferInstructions": {
       "Title": "Scan your QR code to add your device",
-      "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘≡’ icon in the top left corner.",
+      "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘☰’ icon in the top left corner.",
       "Step2": "Choose <b>‘Add another device’</b> to get your QR code.",
       "Step3": "<b>Scan the QR code</b> that appears on your other device.",
       "ScanQRCode": "Scan QR code",

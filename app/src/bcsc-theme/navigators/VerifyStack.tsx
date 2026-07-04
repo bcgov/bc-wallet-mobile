@@ -4,14 +4,14 @@ import { createProgressHeader } from '@/bcsc-theme/components/VerifyProgressHead
 import { useVerificationResponseListener } from '@/bcsc-theme/features/verification-response/useVerificationResponseListener'
 import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
 import { BCSCModals, BCSCScreens, BCSCStacks, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE } from '@/constants'
+import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
 import { BCState } from '@/store'
 import { testIdWithKey, useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
-import { createVerifyHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
-import { createHeaderBackButton } from '../components/HeaderBackButton'
+import { createFloatingHelpMenuButton, createVerifyHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
+import { createHeaderBackButton, HeaderBackButton } from '../components/HeaderBackButton'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferInstructionsScreen from '../features/account-transfer/transferee/TransferInstructionsScreen'
 import TransferQRScannerScreen from '../features/account-transfer/transferee/TransferQRScannerScreen'
@@ -328,10 +328,23 @@ const VerifyStack = () => {
       <Stack.Screen
         name={BCSCScreens.TransferAccountInstructions}
         component={TransferInstructionsScreen}
-        options={{
-          header: createProgressHeader(5, 30),
-          headerLeft: createVerifySettingsHeaderButton(),
-        }}
+        options={({ navigation }) => ({
+          // This screen can be the stack's initial route when the user resumes a transfer
+          // (accountSetupType persisted); with nothing beneath it, back returns to the setup
+          // question instead so the user can still choose a traditional setup.
+          headerLeft: (props) => (
+            <HeaderBackButton
+              {...props}
+              onPress={() =>
+                navigation.canGoBack() ? navigation.goBack() : navigation.replace(BCSCScreens.AccountSetup)
+              }
+            />
+          ),
+          headerRight: createFloatingHelpMenuButton({
+            webViewScreen: BCSCScreens.VerifyWebView,
+            learnMoreUrl: HelpCentreUrl.QUICK_SETUP_OF_ADDITIONAL_DEVICES,
+          }),
+        })}
       />
       <Stack.Screen
         name={BCSCScreens.TransferAccountQRScan}
