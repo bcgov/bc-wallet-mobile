@@ -1,7 +1,8 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
+import { QRScannerOverlay } from '@/bcsc-theme/components/QRScannerOverlay'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { DismissiblePopupModal, MaskType, ScanCamera, SVGOverlay, ThemedText, useTheme } from '@bifold/core'
+import { DismissiblePopupModal, ScanCamera, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -34,6 +35,10 @@ const TransferQRScannerScreen: React.FC<TransferQRScannerScreenProps> = ({ navig
       alignSelf: 'center',
       paddingTop: 30,
     },
+    messageText: {
+      color: ColorPalette.grayscale.white,
+      flexShrink: 1,
+    },
   })
 
   if (isPermissionLoading) {
@@ -52,11 +57,11 @@ const TransferQRScannerScreen: React.FC<TransferQRScannerScreenProps> = ({ navig
     <View style={styles.container}>
       <ScanCamera handleCodeScan={handleScan} enableCameraOnError={true} error={scanError} />
       <View pointerEvents="none">
-        <SVGOverlay maskType={MaskType.QR_CODE} strokeColor={ColorPalette.grayscale.white} />
+        <QRScannerOverlay />
       </View>
       <View style={styles.messageContainer}>
         <Icon name="qrcode-scan" size={40} style={styles.icon} />
-        <ThemedText variant="title">{t('BCSC.Scan.WillScanAutomatically')}</ThemedText>
+        <ThemedText style={styles.messageText}>{t('BCSC.Scan.WillScanAutomatically')}</ThemedText>
       </View>
       {scanError && (
         <DismissiblePopupModal

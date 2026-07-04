@@ -1,0 +1,138 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`QRScannerOverlay renders correctly 1`] = `
+<RNSVGSvgView
+  bbHeight={1334}
+  bbWidth={750}
+  focusable={false}
+  height={1334}
+  style={
+    [
+      {
+        "backgroundColor": "transparent",
+        "borderWidth": 0,
+      },
+      {
+        "position": "absolute",
+      },
+      {
+        "flex": 0,
+        "height": 1334,
+        "width": 750,
+      },
+    ]
+  }
+  width={750}
+>
+  <RNSVGGroup
+    fill={
+      {
+        "payload": 4278190080,
+        "type": 0,
+      }
+    }
+  >
+    <RNSVGDefs>
+      <RNSVGMask
+        fill={
+          {
+            "payload": 4278190080,
+            "type": 0,
+          }
+        }
+        height="100%"
+        maskContentUnits={1}
+        maskType={0}
+        maskUnits={0}
+        name="reticleMask"
+        width="100%"
+        x="0%"
+        y="0%"
+      >
+        <RNSVGRect
+          fill={
+            {
+              "payload": 4294967295,
+              "type": 0,
+            }
+          }
+          height={1334}
+          propList={
+            [
+              "fill",
+            ]
+          }
+          width={750}
+          x={0}
+          y={0}
+        />
+        <RNSVGRect
+          fill={
+            {
+              "payload": 4278190080,
+              "type": 0,
+            }
+          }
+          height={508}
+          propList={
+            [
+              "fill",
+            ]
+          }
+          rx={17}
+          width={508}
+          x={121}
+          y={413}
+        />
+      </RNSVGMask>
+    </RNSVGDefs>
+    <RNSVGRect
+      fill={
+        {
+          "payload": 4278190080,
+          "type": 0,
+        }
+      }
+      fillOpacity={0.6}
+      height={1334}
+      mask="reticleMask"
+      propList={
+        [
+          "fill",
+          "fillOpacity",
+        ]
+      }
+      width={750}
+      x={0}
+      y={0}
+    />
+    <RNSVGRect
+      fill={
+        {
+          "payload": 0,
+          "type": 0,
+        }
+      }
+      height={508}
+      propList={
+        [
+          "fill",
+          "stroke",
+          "strokeWidth",
+        ]
+      }
+      rx={17}
+      stroke={
+        {
+          "payload": 4294967295,
+          "type": 0,
+        }
+      }
+      strokeWidth={3}
+      width={508}
+      x={121}
+      y={413}
+    />
+  </RNSVGGroup>
+</RNSVGSvgView>
+`;

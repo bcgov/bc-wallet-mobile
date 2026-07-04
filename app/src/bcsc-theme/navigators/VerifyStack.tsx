@@ -349,7 +349,13 @@ const VerifyStack = () => {
       <Stack.Screen
         name={BCSCScreens.TransferAccountQRScan}
         component={TransferQRScannerScreen}
-        options={{ header: createProgressHeader(5, 70) }}
+        options={{
+          title: t('BCSC.Screens.TransferAccountScan'),
+          headerRight: createFloatingHelpMenuButton({
+            webViewScreen: BCSCScreens.VerifyWebView,
+            learnMoreUrl: HelpCentreUrl.QUICK_SETUP_OF_ADDITIONAL_DEVICES,
+          }),
+        }}
       />
       <Stack.Screen
         name={BCSCScreens.VerifyRemoveAccountConfirmation}
