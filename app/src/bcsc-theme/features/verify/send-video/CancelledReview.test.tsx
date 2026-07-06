@@ -1,7 +1,5 @@
-import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useNavigation } from '@mocks/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { CommonActions } from '@react-navigation/native'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import CancelledReview from './CancelledReview'
@@ -28,7 +26,7 @@ describe('CancelledReview', () => {
 
     const tree = render(
       <BasicAppContext>
-        <CancelledReview navigation={mockNavigation} route={route} />
+        <CancelledReview route={route} />
       </BasicAppContext>
     )
 
@@ -46,7 +44,7 @@ describe('CancelledReview', () => {
 
     const tree = render(
       <BasicAppContext>
-        <CancelledReview navigation={mockNavigation} route={route} />
+        <CancelledReview route={route} />
       </BasicAppContext>
     )
 
@@ -61,7 +59,7 @@ describe('CancelledReview', () => {
 
     const tree = render(
       <BasicAppContext>
-        <CancelledReview navigation={mockNavigation} route={route} />
+        <CancelledReview route={route} />
       </BasicAppContext>
     )
 
@@ -69,7 +67,7 @@ describe('CancelledReview', () => {
     expect(tree.getByText('BCSC.CancelledVerification.Label')).toBeTruthy()
   })
 
-  it('resets navigation to verification method selection when OK button is pressed', async () => {
+  it('calls goBack when OK button is pressed', async () => {
     const agentReason = 'Test reason'
     const route = {
       params: {
@@ -79,24 +77,15 @@ describe('CancelledReview', () => {
 
     const tree = render(
       <BasicAppContext>
-        <CancelledReview navigation={mockNavigation} route={route} />
+        <CancelledReview route={route} />
       </BasicAppContext>
     )
-    await waitFor(() => {
-      const okButton = tree.getByText('BCSC.CancelledVerification.Button')
-      expect(okButton).toBeTruthy()
-    })
 
     const okButton = tree.getByText('BCSC.CancelledVerification.Button')
     fireEvent.press(okButton)
 
     await waitFor(() => {
-      expect(mockNavigation.dispatch).toHaveBeenCalledWith(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: BCSCScreens.VerificationMethodSelection }],
-        })
-      )
+      expect(mockNavigation.goBack).toHaveBeenCalled()
     })
   })
 
@@ -109,7 +98,7 @@ describe('CancelledReview', () => {
 
     const tree = render(
       <BasicAppContext>
-        <CancelledReview navigation={mockNavigation} route={route} />
+        <CancelledReview route={route} />
       </BasicAppContext>
     )
 
@@ -126,7 +115,7 @@ describe('CancelledReview', () => {
 
     const tree = render(
       <BasicAppContext>
-        <CancelledReview navigation={mockNavigation} route={route} />
+        <CancelledReview route={route} />
       </BasicAppContext>
     )
 

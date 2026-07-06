@@ -70,7 +70,6 @@ export const useVerificationResponseListener = () => {
           payload: [status_message],
         })
         logger.info('[useVerificationResponseListener] Verification request cancelled, navigating to CancelledReview')
-        // onCancelled(status_message)
         return
       }
 

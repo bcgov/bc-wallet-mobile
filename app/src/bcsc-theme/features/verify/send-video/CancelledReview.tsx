@@ -1,6 +1,4 @@
 import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
-import { BCState } from '@/store'
-import { useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -27,7 +25,6 @@ const CancelledReview = ({ route }: CancelledReviewProps) => {
   const navigation = useNavigation()
   const { cleanUpVerificationData } = useCancelledReviewViewModel()
   const [isLoading, setLoading] = useState(false)
-  const [, dispatch] = useStore<BCState>()
 
   useEffect(() => {
     // This clears up verification request artifacts (images, address data ect.)

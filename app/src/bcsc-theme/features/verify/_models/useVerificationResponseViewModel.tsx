@@ -1,14 +1,15 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { useTokenService } from '@/bcsc-theme/services/hooks/useTokenService'
-import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
+import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useState } from 'react'
 
 const useVerificationResponseViewModel = () => {
-  const navigation = useNavigation()
+  const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const registration = useRegistrationService()
