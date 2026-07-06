@@ -1,3 +1,5 @@
+import { WALLET_LEARN_MORE_URL } from '@/constants'
+import { openLink } from '@/utils/links'
 import EmptyWalletIllustration from '@assets/img/bcsc-empty-wallet.svg'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
@@ -5,6 +7,8 @@ import { useHeaderHeight } from '@react-navigation/elements'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, useWindowDimensions, View } from 'react-native'
+
+import { CardButton } from './CardButton'
 
 const styles = StyleSheet.create({
   container: {
@@ -19,7 +23,8 @@ const styles = StyleSheet.create({
 /**
  * BCSC empty state for the Wallet tab. Replaces Bifold's BC-Wallet-branded
  * EmptyList in BCSC mode. Shows the style-guide wallet illustration above a
- * localized heading. (Faux-credential / "Try the showcase" CTA tracked under #3737.)
+ * localized heading, plus a "Learn more about the wallet" link that opens an
+ * external page. (Faux-credential / "Try the showcase" CTA tracked under #3737.)
  */
 const EmptyWalletList: React.FC = () => {
   const { Spacing, ColorPalette } = useTheme()
@@ -44,6 +49,14 @@ const EmptyWalletList: React.FC = () => {
       <ThemedText variant="headingThree" style={[styles.message, { color: ColorPalette.brand.primary }]}>
         {t('BCSC.Wallet.EmptyMessage')}
       </ThemedText>
+      <View style={{ alignSelf: 'stretch', marginTop: Spacing.lg }}>
+        <CardButton
+          title={t('BCSC.Wallet.EmptyLearnMore')}
+          endIcon="open-in-new"
+          onPress={() => openLink(WALLET_LEARN_MORE_URL)}
+          testID={testIdWithKey('Wallet.EmptyLearnMore')}
+        />
+      </View>
     </View>
   )
 }

@@ -1229,7 +1229,8 @@ const translation = {
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again. (PT-BR)",
     },
     "Wallet": {
-      "EmptyMessage": "Your wallet is empty! (PT-BR)",
+      "EmptyMessage": "Your wallet is empty (PT-BR)",
+      "EmptyLearnMore": "Learn more about the wallet (PT-BR)",
       "Reset": "Reset wallet (PT-BR)",
       "ResetTitle": "Reset wallet? (PT-BR)",
       "ResetDescription": "This will permanently delete all credentials, connections, and chat history stored in your wallet. Your PIN, biometrics, and BC Services Card identity will not be affected. You will not have to re-verify. (PT-BR)",
