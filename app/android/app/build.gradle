@@ -144,7 +144,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode System.getenv("VERSION_CODE") ? System.getenv("VERSION_CODE").toInteger() : 2801
-        versionName System.getenv("VERSION_NAME") ? System.getenv("VERSION_NAME").toString() : "4.0.0"
+        versionName System.getenv("VERSION_NAME") ? System.getenv("VERSION_NAME").toString() : "4.1.0"
 
         missingDimensionStrategy 'react-native-camera', 'general'
         ndk {
