@@ -165,10 +165,7 @@ const MainStack: React.FC = () => {
     }
   }, [account, navigation])
 
-  useVerificationResponseListener({
-    onSuccess: () => navigation.navigate(BCSCScreens.VerificationSuccess),
-    onCancelled: (reason) => navigation.navigate(BCSCScreens.CancelledReview, { agentReason: reason }),
-  })
+  useVerificationResponseListener()
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>

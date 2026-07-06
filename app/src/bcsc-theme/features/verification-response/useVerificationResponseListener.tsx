@@ -7,11 +7,6 @@ import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback, useEffect } from 'react'
 
-type VerificationResponseCallback = {
-  onSuccess: () => void
-  onCancelled: (agentReason?: string) => void
-}
-
 /**
  * Hook that listens for verification response push notifications and navigates accordingly.
  *
@@ -30,7 +25,7 @@ type VerificationResponseCallback = {
  * final account setup (marking verified, metadata cleanup, registration update).
  * This follows the same pattern as the "Check Status" button on PendingReviewScreen.
  */
-export const useVerificationResponseListener = ({ onSuccess, onCancelled }: VerificationResponseCallback) => {
+export const useVerificationResponseListener = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store, dispatch] = useStore<BCState>()
   const { evidence, token } = useApi()

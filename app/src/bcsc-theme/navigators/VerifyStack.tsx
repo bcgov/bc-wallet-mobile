@@ -8,7 +8,6 @@ import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE } from '@/constants'
 import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
 import { testIdWithKey, useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
 import { HeaderBackButtonProps } from '@react-navigation/elements'
-import { CommonActions, useNavigation } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
@@ -84,7 +83,6 @@ const PendingReviewBackButton = (props: HeaderBackButtonProps) => {
 
 const VerifyStack = () => {
   const Stack = createStackNavigator<BCSCVerifyStackParams>()
-  const navigation = useNavigation()
   const theme = useTheme()
   const { t } = useTranslation()
   const defaultStackOptions = useDefaultStackOptions(theme)
@@ -100,16 +98,8 @@ const VerifyStack = () => {
       : resumeRoute.name
   useBCSCStack(BCSCStacks.Verify)
 
-  // Listen for verification approval push notifications and navigate to success screen
-  useVerificationResponseListener({
-    onSuccess: () => {
-      // Navigate to success screen - tokens have been fetched; it will handle final account setup and cleanup
-      navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.VerificationSuccess }] }))
-    },
-    onCancelled: (agentReason?: string) => {
-      navigation?.navigate(BCSCScreens.CancelledReview, { agentReason })
-    },
-  })
+  // Listen for verification status push notifications and add appropriate notification card
+  useVerificationResponseListener()
 
   // Detect an expired in-progress verification session (device_code) and route to the restart screen.
   useSystemChecks(SystemCheckScope.VERIFY)
