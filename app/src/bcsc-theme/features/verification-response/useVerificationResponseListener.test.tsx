@@ -1,5 +1,4 @@
 import { VerificationResponseService } from '@/bcsc-theme/features/verification-response'
-import { CommonActions } from '@react-navigation/native'
 import { act, renderHook, waitFor } from '@testing-library/react-native'
 import { BCSCScreens } from '../../types/navigators'
 import { useVerificationResponseListener } from './useVerificationResponseListener'
@@ -24,8 +23,13 @@ const mockLogger = {
   error: jest.fn(),
   debug: jest.fn(),
 }
+const mockStoreDispatch = jest.fn()
 
 jest.mock('@bifold/core', () => ({
+  defaultState: { preferences: {}, tours: {}, onboarding: {}, loginAttempt: {}, migration: {} },
+  mergeReducers: jest.fn((_base: any, custom: any) => custom),
+  reducer: jest.fn(),
+  PersistentStorage: { storeValueForKey: jest.fn() },
   TOKENS: { UTIL_LOGGER: 'UTIL_LOGGER' },
   useServices: jest.fn(() => [mockLogger]),
   useStore: jest.fn(() => [
@@ -36,6 +40,7 @@ jest.mock('@bifold/core', () => ({
         verificationRequestId: 'test-verification-request-id',
       },
     },
+    mockStoreDispatch,
   ]),
 }))
 
@@ -108,15 +113,14 @@ describe('useVerificationResponseListener', () => {
     // Now mount the hook
     renderHook(() => useVerificationResponseListener())
 
-    // The pending approval should be processed and navigation should occur
+    // The pending approval should be processed and store should be updated
     await waitFor(() => {
       expect(mockVerificationResponseService.hasPendingApproval).toBe(false)
     })
 
-    expect(mockDispatch).toHaveBeenCalled()
-    expect(CommonActions.reset).toHaveBeenCalledWith({
-      index: 0,
-      routes: [{ name: BCSCScreens.VerificationSuccess }],
+    expect(mockStoreDispatch).toHaveBeenCalledWith({
+      type: 'bcsc/updateSecureVerificationRequestStatus',
+      payload: ['verified'],
     })
   })
 
@@ -141,12 +145,11 @@ describe('useVerificationResponseListener', () => {
         expect(mockCheckDeviceCodeStatus).toHaveBeenCalledWith('test-device-code', 'test-user-code')
       })
       await waitFor(() => {
-        expect(CommonActions.reset).toHaveBeenCalledWith({
-          index: 0,
-          routes: [{ name: BCSCScreens.VerificationSuccess }],
+        expect(mockStoreDispatch).toHaveBeenCalledWith({
+          type: 'bcsc/updateSecureVerificationRequestStatus',
+          payload: ['verified'],
         })
       })
-      expect(mockDispatch).toHaveBeenCalled()
     })
 
     it('should navigate to CancelledReview when status is cancelled', async () => {
@@ -166,12 +169,15 @@ describe('useVerificationResponseListener', () => {
       })
 
       await waitFor(() => {
-        expect(CommonActions.navigate).toHaveBeenCalledWith({
-          name: BCSCScreens.CancelledReview,
-          params: { agentReason: 'Face does not match' },
+        expect(mockStoreDispatch).toHaveBeenCalledWith({
+          type: 'bcsc/updateSecureVerificationRequestStatus',
+          payload: ['cancelled'],
+        })
+        expect(mockStoreDispatch).toHaveBeenCalledWith({
+          type: 'bcsc/updateSecureVerificationRequestStatusMessage',
+          payload: ['Face does not match'],
         })
       })
-      expect(mockDispatch).toHaveBeenCalled()
       expect(mockCheckDeviceCodeStatus).not.toHaveBeenCalled()
     })
 
@@ -185,12 +191,15 @@ describe('useVerificationResponseListener', () => {
       })
 
       await waitFor(() => {
-        expect(CommonActions.navigate).toHaveBeenCalledWith({
-          name: BCSCScreens.CancelledReview,
-          params: { agentReason: undefined },
+        expect(mockStoreDispatch).toHaveBeenCalledWith({
+          type: 'bcsc/updateSecureVerificationRequestStatus',
+          payload: ['cancelled'],
+        })
+        expect(mockStoreDispatch).toHaveBeenCalledWith({
+          type: 'bcsc/updateSecureVerificationRequestStatusMessage',
+          payload: [undefined],
         })
       })
-      expect(mockDispatch).toHaveBeenCalled()
       expect(mockCheckDeviceCodeStatus).not.toHaveBeenCalled()
     })
 

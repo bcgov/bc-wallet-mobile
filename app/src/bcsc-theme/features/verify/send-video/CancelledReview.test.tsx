@@ -1,8 +1,17 @@
-import { useNavigation } from '@mocks/@react-navigation/core'
+import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import CancelledReview from './CancelledReview'
+
+jest.mock('@/bcsc-theme/hooks/useVerificationReset', () => ({
+  useVerificationReset: jest.fn(() => jest.fn().mockResolvedValue(true)),
+}))
+
+jest.mock('./CancelledRerivewViewModel', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({ cleanUpVerificationData: jest.fn() })),
+}))
 
 describe('CancelledReview', () => {
   let mockNavigation: any

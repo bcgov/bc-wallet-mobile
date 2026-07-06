@@ -64,6 +64,9 @@ jest.mock('../features/pairing', () => ({
 jest.mock('../features/connection-invitation', () => ({
   useConnectionInvitationDeepLink: jest.fn(),
 }))
+jest.mock('../features/verification-response/useVerificationResponseListener', () => ({
+  useVerificationResponseListener: jest.fn(),
+}))
 jest.mock('../features/agent', () => ({
   AgentReadyGate: ({ children }: any) => children,
   BifoldScope: ({ children }: any) => children,
