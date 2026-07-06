@@ -115,7 +115,7 @@ def nativeArchitectures = project.getProperties().get("reactNativeDebugArchitect
 def releaseArchitectures = project.getProperties().get("reactNativeArchitectures", "armeabi-v7a,arm64-v8a,x86,x86_64")
 
 android {
-    namespace 'ca.bc.gov.BCWallet'
+    namespace 'ca.bc.gov.id.servicescard.dev'
     ndkVersion rootProject.ext.ndkVersion
     compileSdk rootProject.ext.compileSdkVersion
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -140,11 +140,11 @@ android {
     }
 
     defaultConfig {
-        applicationId "ca.bc.gov.BCWallet"
+        applicationId "ca.bc.gov.id.servicescard.dev"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode System.getenv("VERSION_CODE") ? System.getenv("VERSION_CODE").toInteger() : 1
-        versionName System.getenv("VERSION_NAME") ? System.getenv("VERSION_NAME").toString() : "0.0.1"
+        versionCode System.getenv("VERSION_CODE") ? System.getenv("VERSION_CODE").toInteger() : 2801
+        versionName System.getenv("VERSION_NAME") ? System.getenv("VERSION_NAME").toString() : "4.0.0"
 
         missingDimensionStrategy 'react-native-camera', 'general'
         ndk {
