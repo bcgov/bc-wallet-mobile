@@ -19,14 +19,13 @@ import { View } from 'react-native'
 import Developer from '../../screens/Developer'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
-import { createHeaderWithBanner, createHeaderWithoutBanner } from '../components/HeaderWithBanner'
+import { createHeaderWithBanner } from '../components/HeaderWithBanner'
 import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferQRDisplayScreen from '../features/account-transfer/transferer/TransferQRDisplayScreen'
 import TransferQRInformationScreen from '../features/account-transfer/transferer/TransferQRInformationScreen'
 import TransferSuccessScreen from '../features/account-transfer/transferer/TransferSuccessScreen'
 import AccountDetailsScreen from '../features/account/AccountDetailsScreen'
-import { AccountExpiredScreen } from '../features/account/AccountExpiredScreen'
 import { AccountRenewalFinalWarningScreen } from '../features/account/AccountRenewalFinalWarningScreen'
 import { AccountRenewalFirstWarningScreen } from '../features/account/AccountRenewalFirstWarningScreen'
 import { AccountRenewalInformationScreen } from '../features/account/AccountRenewalInformationScreen'
@@ -424,18 +423,6 @@ const MainStack: React.FC = () => {
             options={() => ({
               title: t('Developer.DeveloperMode'),
               headerShown: true,
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.AccountExpired}
-            component={AccountExpiredScreen}
-            options={() => ({
-              animationEnabled: false,
-              title: t('BCSC.Title'),
-              headerShown: true,
-              // This screen has its own banner inside the screen component
-              header: createHeaderWithoutBanner,
-              headerLeft: () => null,
             })}
           />
           <Stack.Screen
