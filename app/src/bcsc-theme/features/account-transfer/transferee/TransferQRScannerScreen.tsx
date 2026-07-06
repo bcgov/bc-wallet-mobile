@@ -1,12 +1,12 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
-import { QRScannerOverlay } from '@/bcsc-theme/components/QRScannerOverlay'
+import { getCutoutRect, QRScannerOverlay } from '@/bcsc-theme/components/QRScannerOverlay'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { DismissiblePopupModal, ScanCamera, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React from 'react'
+import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, useWindowDimensions, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import useTransferQRScannerViewModel from './useTransferQRScannerViewModel'
 
@@ -20,6 +20,13 @@ const TransferQRScannerScreen: React.FC<TransferQRScannerScreenProps> = ({ navig
   const { isLoading, isPermissionLoading, hasPermission, scanError, handleScan, dismissError } =
     useTransferQRScannerViewModel(navigation)
 
+  // Camera area dimensions drive the overlay's reticle position and the instructions
+  // placement. The window is a close-enough first render; onLayout provides the real
+  // size (the window includes the header, which sits above this screen's container).
+  const window = useWindowDimensions()
+  const [cameraArea, setCameraArea] = useState({ width: window.width, height: window.height })
+  const cutout = getCutoutRect(cameraArea.width, cameraArea.height)
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -29,11 +36,16 @@ const TransferQRScannerScreen: React.FC<TransferQRScannerScreenProps> = ({ navig
       padding: Spacing.md,
     },
     messageContainer: {
-      marginHorizontal: 40,
+      // Centered in the gap between the header and the reticle
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: cutout.y,
+      paddingHorizontal: 40,
       flexDirection: 'row',
       alignItems: 'center',
-      alignSelf: 'center',
-      paddingTop: 30,
+      justifyContent: 'center',
     },
     messageText: {
       color: ColorPalette.grayscale.white,
@@ -54,10 +66,15 @@ const TransferQRScannerScreen: React.FC<TransferQRScannerScreenProps> = ({ navig
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      onLayout={(event) =>
+        setCameraArea({ width: event.nativeEvent.layout.width, height: event.nativeEvent.layout.height })
+      }
+    >
       <ScanCamera handleCodeScan={handleScan} enableCameraOnError={true} error={scanError} />
       <View pointerEvents="none">
-        <QRScannerOverlay />
+        <QRScannerOverlay width={cameraArea.width} height={cameraArea.height} />
       </View>
       <View style={styles.messageContainer}>
         <Icon name="qrcode-scan" size={40} style={styles.icon} />

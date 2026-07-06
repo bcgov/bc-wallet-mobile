@@ -2,6 +2,7 @@
 
 exports[`TransferQRScanner renders correctly 1`] = `
 <View
+  onLayout={[Function]}
   style={
     {
       "flex": 1,
@@ -112,7 +113,7 @@ exports[`TransferQRScanner renders correctly 1`] = `
               rx={17}
               width={508}
               x={121}
-              y={413}
+              y={361.11173974540304}
             />
           </RNSVGMask>
         </RNSVGDefs>
@@ -161,7 +162,7 @@ exports[`TransferQRScanner renders correctly 1`] = `
           strokeWidth={3}
           width={508}
           x={121}
-          y={413}
+          y={361.11173974540304}
         />
       </RNSVGGroup>
     </RNSVGSvgView>
@@ -170,10 +171,14 @@ exports[`TransferQRScanner renders correctly 1`] = `
     style={
       {
         "alignItems": "center",
-        "alignSelf": "center",
         "flexDirection": "row",
-        "marginHorizontal": 40,
-        "paddingTop": 30,
+        "height": 361.11173974540304,
+        "justifyContent": "center",
+        "left": 0,
+        "paddingHorizontal": 40,
+        "position": "absolute",
+        "right": 0,
+        "top": 0,
       }
     }
   >
