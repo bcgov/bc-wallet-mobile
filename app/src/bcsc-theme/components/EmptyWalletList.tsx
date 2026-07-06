@@ -1,7 +1,7 @@
 import { WALLET_LEARN_MORE_URL } from '@/constants'
 import { openLink } from '@/utils/links'
 import EmptyWalletIllustration from '@assets/img/bcsc-empty-wallet.svg'
-import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs'
 import { useHeaderHeight } from '@react-navigation/elements'
 import React from 'react'
@@ -32,11 +32,20 @@ const EmptyWalletList: React.FC = () => {
   const { height } = useWindowDimensions()
   const headerHeight = useHeaderHeight()
   const tabBarHeight = useBottomTabBarHeight()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   // Bifold's credential FlatList renders this empty component without a growing
   // content container, so `flex: 1` collapses to content height. Size it to the
   // viewport between the header and tab bar so the illustration + heading center.
   const minHeight = Math.max(0, height - headerHeight - tabBarHeight)
+
+  const handleLearnMore = async () => {
+    try {
+      await openLink(WALLET_LEARN_MORE_URL)
+    } catch (error) {
+      logger.error('[EmptyWalletList] Failed to open learn-more URL', error as Error)
+    }
+  }
 
   return (
     <View style={[styles.container, { padding: Spacing.lg, minHeight }]} testID={testIdWithKey('Wallet.Empty')}>
@@ -53,7 +62,7 @@ const EmptyWalletList: React.FC = () => {
         <CardButton
           title={t('BCSC.Wallet.EmptyLearnMore')}
           endIcon="open-in-new"
-          onPress={() => openLink(WALLET_LEARN_MORE_URL)}
+          onPress={handleLearnMore}
           testID={testIdWithKey('Wallet.EmptyLearnMore')}
         />
       </View>
