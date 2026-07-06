@@ -2,10 +2,10 @@
 
 exports[`QRScannerOverlay renders correctly 1`] = `
 <RNSVGSvgView
-  bbHeight={1334}
-  bbWidth={750}
+  bbHeight={707}
+  bbWidth={375}
   focusable={false}
-  height={1334}
+  height={707}
   style={
     [
       {
@@ -17,12 +17,12 @@ exports[`QRScannerOverlay renders correctly 1`] = `
       },
       {
         "flex": 0,
-        "height": 1334,
-        "width": 750,
+        "height": 707,
+        "width": 375,
       },
     ]
   }
-  width={750}
+  width={375}
 >
   <RNSVGGroup
     fill={
@@ -56,13 +56,13 @@ exports[`QRScannerOverlay renders correctly 1`] = `
               "type": 0,
             }
           }
-          height={1334}
+          height={707}
           propList={
             [
               "fill",
             ]
           }
-          width={750}
+          width={375}
           x={0}
           y={0}
         />
@@ -73,16 +73,16 @@ exports[`QRScannerOverlay renders correctly 1`] = `
               "type": 0,
             }
           }
-          height={508}
+          height={254}
           propList={
             [
               "fill",
             ]
           }
           rx={17}
-          width={508}
-          x={121}
-          y={413}
+          width={254}
+          x={60.5}
+          y={199}
         />
       </RNSVGMask>
     </RNSVGDefs>
@@ -94,7 +94,7 @@ exports[`QRScannerOverlay renders correctly 1`] = `
         }
       }
       fillOpacity={0.6}
-      height={1334}
+      height={707}
       mask="reticleMask"
       propList={
         [
@@ -102,7 +102,7 @@ exports[`QRScannerOverlay renders correctly 1`] = `
           "fillOpacity",
         ]
       }
-      width={750}
+      width={375}
       x={0}
       y={0}
     />
@@ -113,7 +113,7 @@ exports[`QRScannerOverlay renders correctly 1`] = `
           "type": 0,
         }
       }
-      height={508}
+      height={254}
       propList={
         [
           "fill",
@@ -129,9 +129,9 @@ exports[`QRScannerOverlay renders correctly 1`] = `
         }
       }
       strokeWidth={3}
-      width={508}
-      x={121}
-      y={413}
+      width={254}
+      x={60.5}
+      y={199}
     />
   </RNSVGGroup>
 </RNSVGSvgView>
