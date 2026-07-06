@@ -748,7 +748,7 @@ const translation = {
       "NoAttestationResponse": "No attestation response, check your connection and try again.",
       "NoDeviceCodeFound": "No device code found",
       "InvalidQrCode": "Invalid QR code",
-      "WillScanAutomatically": "A valid QR code will scan automatically",
+      "WillScanAutomatically": "A valid QR code will\nscan automatically",
       "HoldSteadyHelp": "Can not see the card clearly? Try holding your phone steady.",
       "ScanYourCard": "Scan your card",
       "LineUpHelp": "Line up your ID inside the frame and hold still until the camera takes the picture automatically.",

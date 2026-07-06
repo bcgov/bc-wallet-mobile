@@ -172,6 +172,7 @@ exports[`TransferQRScanner renders correctly 1`] = `
       {
         "alignItems": "center",
         "flexDirection": "row",
+        "gap": 16,
         "height": 361.11173974540304,
         "justifyContent": "center",
         "left": 0,
@@ -193,7 +194,6 @@ exports[`TransferQRScanner renders correctly 1`] = `
           },
           {
             "color": "#FFFFFF",
-            "padding": 16,
           },
           {
             "fontFamily": "Material Design Icons",
