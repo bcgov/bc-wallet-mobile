@@ -6,7 +6,14 @@ import { DismissiblePopupModal, ScanCamera, ThemedText, useTheme } from '@bifold
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, StyleSheet, useWindowDimensions, View } from 'react-native'
+import {
+  ActivityIndicator,
+  NativeSyntheticEvent,
+  StyleSheet,
+  TextLayoutEventData,
+  useWindowDimensions,
+  View,
+} from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import useTransferQRScannerViewModel from './useTransferQRScannerViewModel'
 
@@ -26,6 +33,20 @@ const TransferQRScannerScreen: React.FC<TransferQRScannerScreenProps> = ({ navig
   const window = useWindowDimensions()
   const [cameraArea, setCameraArea] = useState({ width: window.width, height: window.height })
   const cutout = getCutoutRect(cameraArea.width, cameraArea.height)
+
+  // Wrapped text fills all the width it's offered, which would push the icon+text row
+  // edge-to-edge and off the reticle's center line. Shrink the text box to its widest
+  // rendered line so the row hugs its content and centers properly.
+  const [messageTextWidth, setMessageTextWidth] = useState<number | undefined>(undefined)
+  const handleMessageTextLayout = (event: NativeSyntheticEvent<TextLayoutEventData>) => {
+    const { lines } = event.nativeEvent
+    if (!lines.length) {
+      return
+    }
+
+    const widestLine = Math.ceil(Math.max(...lines.map((line) => line.width)))
+    setMessageTextWidth((current) => (current === widestLine ? current : widestLine))
+  }
 
   const styles = StyleSheet.create({
     container: {
@@ -78,7 +99,12 @@ const TransferQRScannerScreen: React.FC<TransferQRScannerScreenProps> = ({ navig
       </View>
       <View style={styles.messageContainer}>
         <Icon name="qrcode-scan" size={40} style={styles.icon} />
-        <ThemedText style={styles.messageText}>{t('BCSC.Scan.WillScanAutomatically')}</ThemedText>
+        <ThemedText
+          style={[styles.messageText, messageTextWidth !== undefined && { width: messageTextWidth }]}
+          onTextLayout={handleMessageTextLayout}
+        >
+          {t('BCSC.Scan.WillScanAutomatically')}
+        </ThemedText>
       </View>
       {scanError && (
         <DismissiblePopupModal

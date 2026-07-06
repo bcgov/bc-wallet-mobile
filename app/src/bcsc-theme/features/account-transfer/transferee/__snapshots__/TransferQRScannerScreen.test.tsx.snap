@@ -208,6 +208,7 @@ exports[`TransferQRScanner renders correctly 1`] = `
     </Text>
     <Text
       maxFontSizeMultiplier={2}
+      onTextLayout={[Function]}
       style={
         [
           {
@@ -216,10 +217,13 @@ exports[`TransferQRScanner renders correctly 1`] = `
             "fontSize": 18,
             "fontWeight": "normal",
           },
-          {
-            "color": "#FFFFFF",
-            "flexShrink": 1,
-          },
+          [
+            {
+              "color": "#FFFFFF",
+              "flexShrink": 1,
+            },
+            false,
+          ],
         ]
       }
     >
