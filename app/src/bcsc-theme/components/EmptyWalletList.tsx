@@ -43,7 +43,10 @@ const EmptyWalletList: React.FC = () => {
     try {
       await openLink(WALLET_LEARN_MORE_URL)
     } catch (error) {
-      logger.error('[EmptyWalletList] Failed to open learn-more URL', error as Error)
+      logger.error(
+        '[EmptyWalletList] Failed to open learn-more URL',
+        error instanceof Error ? error : new Error(String(error))
+      )
     }
   }
 
