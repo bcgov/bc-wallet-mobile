@@ -33,7 +33,6 @@ const TransferQRScannerScreen: React.FC<TransferQRScannerScreenProps> = ({ navig
     },
     icon: {
       color: ColorPalette.grayscale.white,
-      padding: Spacing.md,
     },
     messageContainer: {
       // Centered in the gap between the header and the reticle
@@ -46,6 +45,7 @@ const TransferQRScannerScreen: React.FC<TransferQRScannerScreenProps> = ({ navig
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
+      gap: Spacing.md,
     },
     messageText: {
       color: ColorPalette.grayscale.white,
