@@ -23,6 +23,7 @@ export enum SystemCheckScope {
   STARTUP = 'STARTUP',
   MAIN_STACK = 'MAIN_STACK',
   VERIFY = 'VERIFY',
+  ACCOUNT = 'ACCOUNT',
 }
 
 /**

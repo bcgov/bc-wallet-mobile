@@ -155,17 +155,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       systemChecks.push(new DeviceCountSystemCheck(getIdToken, utils, dismissedAt))
     }
 
-    // Account expiry is only meaningful once the account metadata has loaded, which
-    // happens only for verified users. Include it conditionally so unverified users
-    // still get the account-independent checks rather than the whole batch being
-    // gated off when accountExpirationDate is undefined.
-    if (accountExpirationDate) {
-      systemChecks.push(
-        new AccountExpirySystemCheck(accountExpirationDate, utils),
-        new AccountRenewalSystemCheck(accountExpirationDate, utils)
-      )
-    }
-
     if (isVerified) {
       systemChecks.push(
         new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation)
@@ -198,7 +187,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     }
     return systemChecks
   }, [
-    accountExpirationDate,
     isVerified,
     utils,
     emitAlert,
@@ -227,6 +215,18 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     return [new VerificationSessionExpiredSystemCheck(getPendingDeviceCodeExpiry, navigation, utils)]
   }, [navigation, utils])
 
+  const getAccountSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
+    let checks: SystemCheckStrategy[] = []
+
+    if (accountExpirationDate) {
+      checks = [
+        new AccountExpirySystemCheck(accountExpirationDate, utils),
+        new AccountRenewalSystemCheck(accountExpirationDate, utils),
+      ]
+    }
+    return checks
+  }, [accountExpirationDate, utils])
+
   return useMemo(() => {
     return {
       [SystemCheckScope.STARTUP]: {
@@ -235,13 +235,15 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       },
       [SystemCheckScope.MAIN_STACK]: {
         getSystemChecks: getMainSystemChecks,
-        isReady: Boolean(
-          defaultReadiness && store.bcscSecure.isHydrated && (!isVerified || accountContext?.isAccountSettled)
-        ),
+        isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated),
       },
       [SystemCheckScope.VERIFY]: {
         getSystemChecks: getVerifySystemChecks,
         isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated),
+      },
+      [SystemCheckScope.ACCOUNT]: {
+        getSystemChecks: getAccountSystemChecks,
+        isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated && !!accountContext?.account),
       },
     }
   }, [
@@ -250,8 +252,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     getStartupSystemChecks,
     store.bcscSecure.isHydrated,
     store.stateLoaded,
-    accountContext?.isAccountSettled,
-    isVerified,
     getVerifySystemChecks,
+    getAccountSystemChecks,
+    accountContext?.account,
   ])
 }

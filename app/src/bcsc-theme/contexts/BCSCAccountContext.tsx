@@ -19,7 +19,6 @@ export interface BCSCAccount extends Omit<UserInfoResponseData, 'picture'> {
 export interface BCSCAccountContextType {
   account: BCSCAccount | null
   isLoadingAccount: boolean
-  isAccountSettled: boolean // account fetch has finished loading (success or failure) and is not in a loading state
   refreshAccount: () => void
 }
 
@@ -36,7 +35,7 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store] = useStore<BCState>()
 
-  const { data, load, isLoading, refresh, isReady, error } = useDataLoader(userService.getUserMetadata, {
+  const { data, load, isLoading, refresh } = useDataLoader(userService.getUserMetadata, {
     onError: (error) => {
       logger.error('BCSCAccountProvider: Failed to load user metadata', { error })
     },
@@ -66,7 +65,6 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
       return {
         account: null,
         isLoadingAccount: isLoading,
-        isAccountSettled: isReady || !!error,
         refreshAccount: refresh,
       }
     }
@@ -88,10 +86,9 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
         account_expiration_date: moment(data.user.card_expiry, ACCOUNT_EXPIRATION_DATE_FORMAT).toDate(),
       },
       isLoadingAccount: false,
-      isAccountSettled: true,
       refreshAccount: refresh,
     }
-  }, [data, isLoading, refresh, isReady, error])
+  }, [data, isLoading, refresh])
 
   return <BCSCAccountContext.Provider value={accountContextValue}>{children}</BCSCAccountContext.Provider>
 }

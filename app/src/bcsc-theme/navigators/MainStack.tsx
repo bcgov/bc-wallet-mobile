@@ -137,6 +137,7 @@ const MainStack: React.FC = () => {
   const initialRouteName = pairingInitialParams ? BCSCScreens.ServiceLogin : BCSCStacks.Tab
 
   useSystemChecks(SystemCheckScope.MAIN_STACK)
+  useSystemChecks(SystemCheckScope.ACCOUNT)
   useBCSCStack(BCSCStacks.Main)
 
   // Accept connection-invitation deep links (e.g. from the showcase) once the
