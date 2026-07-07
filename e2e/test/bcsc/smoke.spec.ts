@@ -15,8 +15,8 @@ import {
  * on launch and so failed on every PR. This spec targets the real v4.1 entry flow.
  *
  * It also seeds the new action-based screen-object DSL (FND-1): specs drive screens by semantic
- * role (`expectVisible()`, `tap('primary')`) via descriptors under `src/screens/onboarding/`, so a
- * renamed testID is a one-line descriptor edit rather than spec churn.
+ * role (`expectVisible()`, `tap('primary')`) via per-stack descriptors in `src/screens/onboarding.ts`,
+ * so a renamed testID is a one-line descriptor edit rather than spec churn.
  */
 describe('BCSC smoke: app launch + onboarding entry', () => {
   const { variant } = getE2EConfig()
@@ -27,6 +27,8 @@ describe('BCSC smoke: app launch + onboarding entry', () => {
   })
 
   it('advances Intro → Privacy Policy → Terms of Use', async () => {
+    // Self-contained: assert the precondition rather than depending on the previous `it`'s end state.
+    await OnboardingIntroScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     await OnboardingIntroScreen.tap('primary')
     await OnboardingPrivacyPolicyScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
 

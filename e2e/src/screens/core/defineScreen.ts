@@ -45,6 +45,16 @@ type ElementKeys<S> = S extends { elements: infer E } ? Extract<keyof E, string>
 /** Any named target — link, input, or element. */
 type NamedKeys<S> = LinkKeys<S> | InputKeys<S> | ElementKeys<S>
 
+type BackNamespace = { readonly tap: () => Promise<void> }
+type HelpNamespace = { readonly open: () => Promise<void> }
+/**
+ * `back` / `help` are exposed only when the descriptor declares that role, so `screen.back.tap()` on
+ * a screen without a `back` role is a **compile-time** error — the same guarantee `tap(role)` gives,
+ * rather than only throwing at runtime.
+ */
+type RoleNamespaces<S> = ('back' extends PresentRoles<S> ? { readonly back: BackNamespace } : unknown) &
+  ('help' extends PresentRoles<S> ? { readonly help: HelpNamespace } : unknown)
+
 /** Resolve a (possibly platform-specific) {@link TestId} to a concrete id string for the live driver. */
 export function resolveTestId(testId: TestId): string {
   if (typeof testId === 'string') return testId
@@ -214,7 +224,9 @@ export class Screen<S extends ScreenSpec> {
  *
  * The `const` type parameter preserves literal role/link/input/element keys, which gives
  * autocomplete on the returned {@link Screen} and turns an undeclared role into a **compile-time**
- * error (e.g. `tap('menu')` on a screen with no `menu`).
+ * error (e.g. `tap('menu')` on a screen with no `menu`). The return type also gates the `back` /
+ * `help` namespaces on the declared roles (see {@link RoleNamespaces}), so `screen.back.tap()` only
+ * compiles when the descriptor declares `back`.
  *
  * ```ts
  * export const OnboardingIntroScreen = defineScreen({
@@ -224,6 +236,8 @@ export class Screen<S extends ScreenSpec> {
  * })
  * ```
  */
-export function defineScreen<const S extends ScreenSpec>(spec: S): Screen<S> {
-  return new Screen<S>(spec)
+export function defineScreen<const S extends ScreenSpec>(
+  spec: S
+): Omit<Screen<S>, 'back' | 'help'> & RoleNamespaces<S> {
+  return new Screen<S>(spec) as unknown as Omit<Screen<S>, 'back' | 'help'> & RoleNamespaces<S>
 }
