@@ -86,7 +86,6 @@ jest.mock('../../screens/Developer', () => 'Developer')
 jest.mock('../features/account-transfer/transferer/TransferQRDisplayScreen', () => 'TransferQRDisplayScreen')
 jest.mock('../features/account-transfer/transferer/TransferQRInformationScreen', () => 'TransferQRInformationScreen')
 jest.mock('../features/account-transfer/transferer/TransferSuccessScreen', () => 'TransferSuccessScreen')
-jest.mock('../features/account/AccountExpiredScreen', () => ({ AccountExpiredScreen: 'AccountExpiredScreen' }))
 jest.mock('../features/account/AccountRenewalFinalWarningScreen', () => ({
   AccountRenewalFinalWarningScreen: 'AccountRenewalFinalWarningScreen',
 }))
