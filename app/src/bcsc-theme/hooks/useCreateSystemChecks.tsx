@@ -3,7 +3,8 @@ import BCSCApiClient from '@/bcsc-theme/api/client'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
-import { AccountExpiryWarningBannerSystemCheck } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
+import { AccountExpirySystemCheck } from '@/services/system-checks/AccountExpirySystemCheck'
+import { AccountRenewalSystemCheck } from '@/services/system-checks/AccountRenewalSystemCheck'
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
@@ -158,14 +159,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       systemChecks.push(new DeviceCountSystemCheck(getIdToken, utils, dismissedAt))
     }
 
-    // Account expiry is only meaningful once the account metadata has loaded, which
-    // happens only for verified users. Include it conditionally so unverified users
-    // still get the account-independent checks rather than the whole batch being
-    // gated off when accountExpirationDate is undefined.
-    if (accountExpirationDate) {
-      systemChecks.push(new AccountExpiryWarningBannerSystemCheck(accountExpirationDate, utils))
-    }
-
     if (isVerified) {
       systemChecks.push(
         new EventReasonAlertsSystemCheck(getIdToken, emitAlert, credentialMetadataRef.current, utils, navigation)
@@ -190,9 +183,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
         navigation,
         utils
       )
-      // TODO (ar/bm): v3 doesn't include the checks below; re-add if needed in future
-      // AccountExpiryWarningAlertSystemCheck
-      // AccountExpiryAlertSystemCheck
     )
 
     // Only run device registration update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard).
@@ -211,7 +201,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     }
     return systemChecks
   }, [
-    accountExpirationDate,
     isVerified,
     verificationRequestId,
     evidenceApi,
@@ -242,6 +231,18 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     return [new VerificationSessionExpiredSystemCheck(getPendingDeviceCodeExpiry, navigation, utils)]
   }, [navigation, utils])
 
+  const getAccountSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
+    let checks: SystemCheckStrategy[] = []
+
+    if (accountExpirationDate) {
+      checks = [
+        new AccountExpirySystemCheck(accountExpirationDate, utils),
+        new AccountRenewalSystemCheck(accountExpirationDate, utils),
+      ]
+    }
+    return checks
+  }, [accountExpirationDate, utils])
+
   return useMemo(() => {
     return {
       [SystemCheckScope.STARTUP]: {
@@ -250,21 +251,25 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       },
       [SystemCheckScope.MAIN_STACK]: {
         getSystemChecks: getMainSystemChecks,
-        // Not gated on accountExpirationDate: the batch runs for unverified users too,
-        // and account-dependent checks are included conditionally in the builder.
         isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated),
       },
       [SystemCheckScope.VERIFY]: {
         getSystemChecks: getVerifySystemChecks,
         isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated),
       },
+      [SystemCheckScope.ACCOUNT]: {
+        getSystemChecks: getAccountSystemChecks,
+        isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated && !!accountContext?.account),
+      },
     }
   }, [
     defaultReadiness,
     getMainSystemChecks,
     getStartupSystemChecks,
-    getVerifySystemChecks,
     store.bcscSecure.isHydrated,
     store.stateLoaded,
+    getVerifySystemChecks,
+    getAccountSystemChecks,
+    accountContext?.account,
   ])
 }

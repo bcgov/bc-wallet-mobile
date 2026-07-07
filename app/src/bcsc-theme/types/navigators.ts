@@ -131,7 +131,7 @@ export enum BCSCScreens {
   VerifyDeveloper = `${BCSCStacks.Verify} Developer`,
   VerifyChangePIN = `${BCSCStacks.Verify} Change PIN`,
   TransferAgeRestriction = 'BCSCTransferAgeRestriction',
-  AccountExpired = 'BCSCAccountExpired',
+  ReverifyAccount = 'BCSCReverifyAccount',
   AccountRenewalInformation = 'Renewal ID requirements',
   AccountRenewalFirstWarning = 'Renewal Instructions',
   AccountRenewalFinalWarning = 'Renewal Warning',
@@ -279,7 +279,7 @@ export type BCSCMainStackParams = {
   [BCSCScreens.MainAppSecurity]: undefined
   [BCSCScreens.MainChangePIN]: { isChangingExistingPIN?: boolean } | undefined
   [BCSCScreens.TransferAgeRestriction]: undefined
-  [BCSCScreens.AccountExpired]: undefined
+  [BCSCScreens.ReverifyAccount]: { isExpired: boolean }
   [BCSCScreens.AccountRenewalInformation]: undefined
   [BCSCScreens.AccountRenewalFirstWarning]: undefined
   [BCSCScreens.AccountRenewalFinalWarning]: undefined

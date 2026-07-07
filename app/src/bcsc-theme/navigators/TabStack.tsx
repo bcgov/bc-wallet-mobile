@@ -18,7 +18,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createTabHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainSettingsHeaderButton } from '../components/SettingsHeaderButton'
-import { AgentReadyGate } from '../features/agent'
+import { AgentReadyGate, CredentialsReadyGate } from '../features/agent'
 import Home from '../features/home/Home'
 import { FloatingScanButton } from '../features/scan'
 import Services from '../features/services/Services'
@@ -28,7 +28,9 @@ import { BCSCMainStackParams, BCSCScreens, BCSCTabStackParams } from '../types/n
 const ScopedCredentialStack: React.FC = () => (
   <AgentReadyGate testID={testIdWithKey('Wallet.Loading')}>
     <OpenIDCredentialRecordProvider>
-      <CredentialStack />
+      <CredentialsReadyGate testID={testIdWithKey('Wallet.Loading')}>
+        <CredentialStack />
+      </CredentialsReadyGate>
     </OpenIDCredentialRecordProvider>
   </AgentReadyGate>
 )

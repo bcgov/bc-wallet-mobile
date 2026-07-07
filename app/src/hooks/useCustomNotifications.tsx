@@ -12,6 +12,8 @@ export enum CustomNotificationId {
   BCSCPendingReview = 'BCSCPendingReview',
   BCSCCancelledReview = 'BCSCCancelledReview',
   BCSCVerified = 'BCSCVerified',
+  AccountExpired = 'AccountExpired',
+  AccountRenewalAvailable = 'AccountRenewalAvailable',
 }
 
 /**

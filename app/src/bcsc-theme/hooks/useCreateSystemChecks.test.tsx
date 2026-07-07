@@ -66,8 +66,12 @@ jest.mock('@/services/system-checks/DeviceCountSystemCheck', () => ({
   DeviceCountSystemCheck: class DeviceCountSystemCheck {},
 }))
 
-jest.mock('@/services/system-checks/AccountExpiryWarningBannerSystemCheck', () => ({
-  AccountExpiryWarningBannerSystemCheck: class AccountExpiryWarningBannerSystemCheck {},
+jest.mock('@/services/system-checks/AccountExpirySystemCheck', () => ({
+  AccountExpirySystemCheck: class AccountExpirySystemCheck {},
+}))
+
+jest.mock('@/services/system-checks/AccountRenewalSystemCheck', () => ({
+  AccountRenewalSystemCheck: class AccountRenewalSystemCheck {},
 }))
 
 jest.mock('@/services/system-checks/UpdateDeviceRegistrationSystemCheck', () => ({
@@ -326,12 +330,11 @@ describe('useGetSystemChecks', () => {
 
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
 
-        expect(systemChecks).toHaveLength(5) // DeviceCountSystemCheck, AccountExpiryWarningBannerSystemCheck, EventReasonAlertsSystemCheck, TermsOfUseSystemCheck, UpdateDeviceRegistrationSystemCheck
+        expect(systemChecks).toHaveLength(4)
         expect(systemChecks[0].constructor.name).toBe('DeviceCountSystemCheck')
-        expect(systemChecks[1].constructor.name).toBe('AccountExpiryWarningBannerSystemCheck')
-        expect(systemChecks[2].constructor.name).toBe('EventReasonAlertsSystemCheck')
-        expect(systemChecks[3].constructor.name).toBe('TermsOfUseSystemCheck')
-        expect(systemChecks[4].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
+        expect(systemChecks[1].constructor.name).toBe('EventReasonAlertsSystemCheck')
+        expect(systemChecks[2].constructor.name).toBe('TermsOfUseSystemCheck')
+        expect(systemChecks[3].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
       })
 
       it('skips the id-token / account checks for an unverified user but still runs Terms of Use', async () => {
@@ -376,6 +379,8 @@ describe('useGetSystemChecks', () => {
         expect(names).toContain('TermsOfUseSystemCheck')
         expect(names).not.toContain('DeviceCountSystemCheck')
         expect(names).not.toContain('EventReasonAlertsSystemCheck')
+        expect(names).not.toContain('AccountExpirySystemCheck')
+        expect(names).not.toContain('AccountRenewalSystemCheck')
         expect(names).not.toContain('AccountExpiryWarningBannerSystemCheck')
         // No chosen nickname / registration token yet, so there's nothing to re-register — the
         // device-registration update check is skipped (otherwise it throws "No client name found").
@@ -420,6 +425,47 @@ describe('useGetSystemChecks', () => {
 
       expect(systemChecks).toHaveLength(1)
       expect(systemChecks[0].constructor.name).toBe('VerificationSessionExpiredSystemCheck')
+    })
+  })
+
+  describe('ACCOUNT scope', () => {
+    const mockHydratedStore = () => {
+      mockUseStore.mockReturnValue([
+        {
+          stateLoaded: true,
+          developer: { environment: { analyticsAppId: 'test-app-id' } },
+          bcsc: { analyticsOptIn: true },
+          bcscSecure: { isHydrated: true },
+        },
+        jest.fn(),
+      ])
+      mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
+      mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
+      mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
+      jest.spyOn(React, 'useContext').mockReturnValue({ account: {} })
+    }
+
+    it('should return no AccountSystemChecks with no accountExpirationDate', async () => {
+      jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
+      mockHydratedStore()
+
+      const { result } = renderHook(() => useCreateSystemChecks())
+      const systemChecks = await result.current[SystemCheckScope.ACCOUNT].getSystemChecks()
+
+      expect(systemChecks).toHaveLength(0)
+    })
+
+    it('should return 2 AccountSystemChecks with accountExpirationDate set', async () => {
+      jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
+      mockHydratedStore()
+      jest.spyOn(React, 'useContext').mockReturnValue({ account: { account_expiration_date: new Date() } })
+
+      const { result } = renderHook(() => useCreateSystemChecks())
+      const systemChecks = await result.current[SystemCheckScope.ACCOUNT].getSystemChecks()
+
+      expect(systemChecks).toHaveLength(2)
+      expect(systemChecks[0].constructor.name).toBe('AccountExpirySystemCheck')
+      expect(systemChecks[1].constructor.name).toBe('AccountRenewalSystemCheck')
     })
   })
 })
