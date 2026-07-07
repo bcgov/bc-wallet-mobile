@@ -396,8 +396,6 @@ const translation = {
       "ForgetPairings": "Forget pairings",
       "AddDevice": "Add another device",
       "MyDevices": "My devices",
-      "MyDevicesCount_one": "{{count}} Device",
-      "MyDevicesCount_other": "{{count}} Devices",
       "DeveloperOptions": "Developer options",
       "Privacy": "Privacy",
       "ContactUs": "Contact us",
