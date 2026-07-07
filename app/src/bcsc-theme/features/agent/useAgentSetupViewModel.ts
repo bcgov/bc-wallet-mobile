@@ -1,3 +1,4 @@
+import { ledgerResolver } from '@/configs/ledgers/indy/ledgerResolver'
 import { WALLET_ID } from '@/constants'
 import { AppError, ErrorRegistry } from '@/errors'
 import { BCState } from '@/store'
@@ -33,16 +34,16 @@ export interface AgentSetupResult {
 
 const useAgentSetupViewModel = (): AgentSetupResult => {
   const [store] = useStore<BCState>()
-  const [logger, indyLedgers, attestationMonitor, credentialProvisioningMonitor, credDefs, schemas, ocaBundleResolver] =
-    useServices([
+  const [logger, attestationMonitor, credentialProvisioningMonitor, credDefs, schemas, ocaBundleResolver] = useServices(
+    [
       TOKENS.UTIL_LOGGER,
-      TOKENS.UTIL_LEDGERS,
       TOKENS.UTIL_ATTESTATION_MONITOR,
       TOKENS.UTIL_CREDENTIAL_PROVISIONING_MONITOR,
       TOKENS.CACHE_CRED_DEFS,
       TOKENS.CACHE_SCHEMAS,
       TOKENS.UTIL_OCA_RESOLVER,
-    ])
+    ]
+  )
 
   const [status, setStatus] = useState<AgentSetupStatus>('idle')
   const [agent, setAgent] = useState<Agent | null>(null)
@@ -155,15 +156,20 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     // Build, initialize, and wire up a fresh agent, then mark ready. Bails at any
     // checkpoint if cancelled, leaving inFlightAgent for run's finally to close.
     const buildFreshAgent = async (walletSecret: AgentWalletSecret): Promise<void> => {
+      // cachedLedgers only gates the expensive pool warm-up in warmCache. The
+      // pool list always comes from the resolver, which serves remote/cached
+      // genesis when auto-update is on and the bundled snapshot when it is off —
+      // so LEDGER_AUTO_UPDATE=false means bundled-only, never a stale prior cache.
       const cachedLedgers = await loadCachedLedgers()
       if (cancelled) {
         return
       }
-      const ledgers = cachedLedgers ?? indyLedgers
 
       await (ocaBundleResolver as RemoteOCABundleResolver)
         .checkForUpdates?.()
         .catch((err) => logger.warn(`OCA bundle update failed (continuing): ${err}`))
+      ledgerResolver.logger = logger
+      await ledgerResolver.checkForUpdates().catch((err) => logger.warn(`Ledger update failed (continuing): ${err}`))
 
       // checkForUpdates can take seconds; a sign-out/reset may have flipped
       // `cancelled` meanwhile. Re-check before buildAgent so a discarded run never
@@ -172,6 +178,8 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
       if (cancelled) {
         return
       }
+
+      const ledgers = ledgerResolver.ledgers
 
       inFlightAgent = buildAgent({
         ledgers,
@@ -278,7 +286,6 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     usePushNotifications,
     retryCount,
     logger,
-    indyLedgers,
     credDefs,
     schemas,
     refreshMonitors,
@@ -306,7 +313,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         // store manager and delete the store by its file URI without needing it open.
         if (walletKey) {
           await purgeWalletStore({
-            ledgers: indyLedgers,
+            ledgers: ledgerResolver.ledgers,
             walletSecret: { id: WALLET_ID, key: walletKey },
             mediatorUrl,
             walletLabel,
@@ -346,7 +353,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     } finally {
       resettingRef.current = false
     }
-  }, [logger, attestationMonitor, walletKey, indyLedgers, mediatorUrl, walletLabel, enableProxy])
+  }, [logger, attestationMonitor, walletKey, mediatorUrl, walletLabel, enableProxy])
 
   return { agent, status, error, retry, resetWallet }
 }

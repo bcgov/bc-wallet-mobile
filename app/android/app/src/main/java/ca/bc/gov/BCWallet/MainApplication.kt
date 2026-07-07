@@ -1,4 +1,4 @@
-package ca.bc.gov.BCWallet
+package ca.bc.gov.id.servicescard.dev
 
 import android.app.Application
 import android.content.res.Configuration

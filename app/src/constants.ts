@@ -83,6 +83,7 @@ export const ANALYTICS_URL =
 export const BC_SERVICE_LOCATION_URL = 'https://www2.gov.bc.ca/gov/content?id=FD6DB5BA2A5248038EEF54D9F9F37C4D'
 export const REPORT_SUSPICIOUS_URL =
   'https://www2.gov.bc.ca/gov/content/governments/government-id/bcservicescardapp/help'
+export const WALLET_LEARN_MORE_URL = 'https://digital.gov.bc.ca/design/digital-trust/'
 
 export enum HelpCentreUrl {
   HOME = 'https://id.gov.bc.ca/static/help/topics.html?fromapp=1',
@@ -145,6 +146,7 @@ export const enum DaysOfTheWeek {
 // BCSC Video constants
 export const VIDEO_RESOLUTION_480P = { width: 640, height: 480 } // standard definition video resolution
 export const PHOTO_RESOLUTION_720P = { width: 1280, height: 720 } // high definition photo resolution
+export const PHOTO_RESOLUTION_1080P = { width: 1920, height: 1080 } // full high definition photo resolution
 export const SELFIE_VIDEO_FRAME_RATE = 24
 export const MAX_SELFIE_VIDEO_DURATION_SECONDS = 30
 export const DEFAULT_SELFIE_VIDEO_FILENAME = 'selfieVideo.mp4'

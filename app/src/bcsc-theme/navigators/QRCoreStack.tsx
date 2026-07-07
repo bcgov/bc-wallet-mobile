@@ -1,14 +1,14 @@
 import { AgentReadyGate } from '@/bcsc-theme/features/agent'
-import { VerifyPromptScreen } from '@/bcsc-theme/features/onboarding/VerifyPromptScreen'
 import ManualPairing from '@/bcsc-theme/features/pairing/ManualPairing'
 import QRDisplay from '@/bcsc-theme/features/qr-core/QRDisplay'
 import QRScanner from '@/bcsc-theme/features/qr-core/QRScanner'
 import { useVerificationStatus } from '@/bcsc-theme/hooks/useVerificationStatus'
-import { BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
-import { ButtonLocation, IconButton, testIdWithKey, useTheme } from '@bifold/core'
+import { ButtonLocation, IconButton, testIdWithKey, TOKENS, useServices, useTheme } from '@bifold/core'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Platform, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
@@ -18,11 +18,6 @@ import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHead
 
 type TabBarIconProps = {
   focused: boolean
-}
-
-const PairingCodeScreen: React.FC = () => {
-  const { isVerified } = useVerificationStatus()
-  return isVerified ? <ManualPairing /> : <VerifyPromptScreen showSkip={false} edges={['left', 'right']} />
 }
 
 // QRScanner uses URI strategies that require the BCSC agent for OOB parsing,
@@ -84,6 +79,9 @@ const QRCoreStack: React.FC = () => {
   const Tab = createBottomTabNavigator<BCSCQRCoreTabParams>()
   const { TabTheme } = useTheme()
   const { t } = useTranslation()
+  const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
+  const { isVerified } = useVerificationStatus()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
     tabBarIcon: {
@@ -94,6 +92,24 @@ const QRCoreStack: React.FC = () => {
   return (
     <>
       <Tab.Navigator
+        screenListeners={({ route }) => ({
+          focus: () => {
+            // Hijack the focus event for the PairingCode tab if the user is not verified
+            if (route.name === BCSCQRCoreScreens.PairingCode && !isVerified) {
+              logger.debug('[QRCoreStack] User is not verified, redirecting to VerifyPrompt screen')
+              navigation.navigate(BCSCScreens.MainVerifyPrompt)
+              return
+            }
+          },
+          tabPress: (event) => {
+            // Hijack the tab press event for the PairingCode tab if the user is not verified
+            if (route.name === BCSCQRCoreScreens.PairingCode && !isVerified) {
+              logger.debug('[QRCoreStack] User is not verified, redirecting to VerifyPrompt screen')
+              event.preventDefault() // Prevents navigation to the PairingCode tab
+              navigation.navigate(BCSCScreens.MainVerifyPrompt)
+            }
+          },
+        })}
         screenOptions={{
           unmountOnBlur: false,
           lazy: true,
@@ -135,7 +151,7 @@ const QRCoreStack: React.FC = () => {
         />
         <Tab.Screen
           name={BCSCQRCoreScreens.PairingCode}
-          component={PairingCodeScreen}
+          component={ManualPairing}
           options={{
             title: t('BCSC.ManualPairing.TabTitle'),
             tabBarIconStyle: styles.tabBarIcon,

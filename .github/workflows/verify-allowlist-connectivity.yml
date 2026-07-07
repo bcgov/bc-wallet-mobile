@@ -1,0 +1,190 @@
+name: Verify Allowlist Connectivity
+
+# Manual-only workflow. Confirms the large runner has network reach to the
+# ID Broker / IDcheck endpoints whose firewalls have been opened for the
+# runner's egress IP ranges (20.10.68.0/28 and 130.131.47.80/28).
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner_label:
+        description: 'Label of the large runner with whitelisted egress IPs'
+        required: true
+        default: 'large'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify connectivity to ID servers
+    runs-on: ${{ inputs.runner_label }}
+    timeout-minutes: 10
+
+    env:
+      EXPECTED_RANGES: '20.10.68.0/28, 130.131.47.80/28'
+
+    steps:
+      - name: Report runner egress IP
+        id: egress
+        shell: bash
+        run: |
+          set -uo pipefail
+          IP=""
+          # Force IPv4 (-4): the egress IP is compared against IPv4 allowlist
+          # ranges, and on a dual-stack runner these services may otherwise
+          # return the runner's IPv6 address.
+          for SRC in https://api.ipify.org https://ifconfig.me https://icanhazip.com; do
+            IP=$(curl -4 -fsS --max-time 10 "$SRC" 2>/dev/null | tr -d '[:space:]' || true)
+            if [[ -n "$IP" ]]; then
+              echo "Egress IP (resolved via $SRC): $IP"
+              break
+            fi
+          done
+          if [[ -z "$IP" ]]; then
+            IP="unknown"
+            echo "::warning::Could not determine egress IP from any source"
+          fi
+          echo "egress_ip=$IP" >> "$GITHUB_OUTPUT"
+
+          # Verify the egress IP falls within the whitelisted ranges
+          IN_RANGE="unknown"
+          if [[ "$IP" != "unknown" ]]; then
+            # Pass IP via the environment and read it with os.environ; the quoted
+            # heredoc (<<'PY') stops the shell interpolating the externally
+            # resolved value into the Python source. Avoids code injection.
+            if CHECK_IP="$IP" python3 - <<'PY'
+          import ipaddress, os, sys
+          try:
+              ip = ipaddress.ip_address(os.environ["CHECK_IP"])
+          except ValueError:
+              sys.exit(2)
+          ranges = ["20.10.68.0/28", "130.131.47.80/28"]
+          sys.exit(0 if any(ip in ipaddress.ip_network(r) for r in ranges) else 1)
+          PY
+            then
+              IN_RANGE="yes"
+              echo "Egress IP is within whitelisted ranges ✅"
+            else
+              IN_RANGE="no"
+              echo "::warning::Egress IP $IP is NOT within $EXPECTED_RANGES"
+            fi
+          fi
+          echo "in_range=$IN_RANGE" >> "$GITHUB_OUTPUT"
+
+      - name: Verify endpoint reachability
+        id: verify
+        shell: bash
+        env:
+          # Bind expression values to env vars so untrusted input — the
+          # workflow_dispatch runner_label and the externally-resolved egress
+          # IP — reaches the script as data rather than text spliced into it at
+          # expression-expansion time. Avoids shell injection.
+          RUNNER_LABEL: ${{ inputs.runner_label }}
+          EGRESS_IP: ${{ steps.egress.outputs.egress_ip }}
+          IN_RANGE: ${{ steps.egress.outputs.in_range }}
+        run: |
+          set -uo pipefail
+
+          # endpoint definitions: "label|host|path"
+          # Any HTTP response (2xx/3xx/4xx/5xx) proves reachability; only
+          # network-level failures (curl exit / code 000) count as a failure.
+          ENDPOINTS=(
+            "iddev /idcheck|iddev.gov.bc.ca|/idcheck"
+            "support.iddev|support.iddev.gov.bc.ca|/"
+            "idsit /idcheck|idsit.gov.bc.ca|/idcheck"
+            "support.idsit|support.idsit.gov.bc.ca|/"
+          )
+
+          OVERALL=0
+          SUMMARY="$RUNNER_TEMP/summary.md"
+          {
+            echo "## Allowlist Connectivity Verification"
+            echo
+            echo "**Runner label:** \`${RUNNER_LABEL}\`  "
+            echo "**Egress IP:** \`${EGRESS_IP}\`  "
+            echo "**In whitelisted range:** \`${IN_RANGE}\`  "
+            echo "**Expected ranges:** \`$EXPECTED_RANGES\`"
+            echo
+            echo "| Endpoint | DNS | TCP:443 | HTTPS | Result |"
+            echo "|---|---|---|---|---|"
+          } > "$SUMMARY"
+
+          for entry in "${ENDPOINTS[@]}"; do
+            LABEL="${entry%%|*}"
+            REST="${entry#*|}"
+            HOST="${REST%%|*}"
+            URL_PATH="${REST#*|}"
+            URL="https://${HOST}${URL_PATH}"
+
+            echo "::group::Checking ${LABEL} (${URL})"
+
+            # ---- DNS ---------------------------------------------------------
+            # IPv4-only (ahostsv4) so reported addresses match the IPv4 allowlist
+            # ranges; sort -u collapses ahostsv4's per-socktype duplicate rows.
+            DNS_IPS=$(getent ahostsv4 "$HOST" 2>/dev/null | awk '{print $1}' | sort -u | paste -sd',' -)
+            if [[ -n "$DNS_IPS" ]]; then
+              DNS_CELL="✅ ${DNS_IPS}"
+              echo "DNS: $DNS_IPS"
+            else
+              DNS_CELL="❌"
+              echo "::error::DNS resolution failed for $HOST"
+            fi
+
+            # ---- TCP/443 -----------------------------------------------------
+            # Connect to the resolved IPv4 (not the hostname) so the probe can't
+            # fall back to IPv6 on a dual-stack runner.
+            IPV4="${DNS_IPS%%,*}"
+            if timeout 5 bash -c "</dev/tcp/${IPV4:-$HOST}/443" 2>/dev/null; then
+              TCP_CELL="✅"
+              TCP_OK=1
+              echo "TCP/443: open"
+            else
+              TCP_CELL="❌"
+              TCP_OK=0
+              echo "::error::TCP/443 connection failed for $HOST"
+            fi
+
+            # ---- HTTPS -------------------------------------------------------
+            if HTTP_CODE=$(curl -4 -sS -o /dev/null -w "%{http_code}" \
+              --max-time 15 --connect-timeout 10 \
+              -A "bcgov-connectivity-check/1.0" \
+              "$URL" 2>/dev/null); then
+              :
+            else
+              HTTP_CODE="000"
+            fi
+            if [[ "$HTTP_CODE" == "000" ]]; then
+              HTTPS_CELL="❌ no response"
+              HTTPS_OK=0
+            else
+              HTTPS_CELL="✅ HTTP ${HTTP_CODE}"
+              HTTPS_OK=1
+            fi
+            echo "HTTPS: $HTTPS_CELL"
+
+            # ---- Verdict -----------------------------------------------------
+            # Pass if we got either a TCP handshake or any HTTP response.
+            if [[ "$TCP_OK" -eq 1 || "$HTTPS_OK" -eq 1 ]]; then
+              RESULT="**PASS**"
+            else
+              RESULT="**FAIL**"
+              OVERALL=1
+            fi
+            echo "Result: $RESULT"
+            echo "::endgroup::"
+
+            echo "| \`${LABEL}\` | ${DNS_CELL} | ${TCP_CELL} | ${HTTPS_CELL} | ${RESULT} |" >> "$SUMMARY"
+          done
+
+          {
+            echo
+            if [[ "$OVERALL" -eq 0 ]]; then
+              echo "### ✅ Overall: all endpoints reachable"
+            else
+              echo "### ❌ Overall: one or more endpoints unreachable"
+            fi
+          } >> "$SUMMARY"
+
+          cat "$SUMMARY" >> "$GITHUB_STEP_SUMMARY"
+          exit $OVERALL

@@ -1,5 +1,4 @@
 import { ListButton, ListButtonGroup } from '@/bcsc-theme/components/ListButton'
-import { BCSCIdTokenContext } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
 import { isUserVerified } from '@/bcsc-theme/utils/bcsc-credential'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { PressableOpacity } from '@/components/PressableOpacity'
@@ -18,7 +17,7 @@ import {
   useTheme,
 } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
-import React, { PropsWithChildren, ReactNode, useCallback, useContext, useState } from 'react'
+import React, { PropsWithChildren, ReactNode, useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, StyleSheet, TouchableWithoutFeedback, Vibration, View } from 'react-native'
 import { AccountSecurityMethod, getAccountSecurityMethod } from 'react-native-bcsc-core'
@@ -76,6 +75,7 @@ const SectionHeader: React.FC<
   const { t } = useTranslation()
   const { TextTheme } = useTheme()
   const [showSection, setShowSection] = useState(true)
+  const hasToggled = useRef(false) // NOTE: Prevents the animation from running on mount
   const chevronRotation = useSharedValue(DEFAULT_ROTATION)
 
   const chevronStyle = useAnimatedStyle(() => ({
@@ -83,6 +83,7 @@ const SectionHeader: React.FC<
   }))
 
   const toggleSection = () => {
+    hasToggled.current = true
     setShowSection((prev) => {
       const next = !prev
       chevronRotation.value = withTiming(next ? DEFAULT_ROTATION : HALF_ROTATION, {
@@ -114,7 +115,7 @@ const SectionHeader: React.FC<
       </View>
       {showSection ? (
         <Animated.View
-          entering={FadeIn.duration(TRANSITION_IN_DURATION)}
+          entering={hasToggled.current ? FadeIn.duration(TRANSITION_IN_DURATION) : undefined}
           exiting={FadeOut.duration(TRANSITION_OUT_DURATION)}
         >
           {children}
@@ -254,9 +255,6 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
 }) => {
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
-  // useContext (not useIdToken) so we don't throw when the BCSCIdTokenProvider
-  // isn't mounted — settings is reachable before verification completes.
-  const deviceCount = useContext(BCSCIdTokenContext)?.data?.bcsc_devices_count
   // Use the canonical verification check (same as getResumeStepRoute) rather than the raw
   // `verified` flag: device transfer marks the user verified via a refresh token without setting
   // that flag, and such users still need the device-management options (e.g. "Add another device").
@@ -329,10 +327,7 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
               ) : null,
               isVerified ? (
                 <ListButton key="mydevices" onPress={onMyDevices ?? noop} testID={testIdWithKey('MyDevices')}>
-                  <Row
-                    title={t('BCSC.Settings.MyDevices')}
-                    endAdornment={deviceCount ? t('BCSC.Settings.MyDevicesCount', { count: deviceCount }) : undefined}
-                  />
+                  <Row title={t('BCSC.Settings.MyDevices')} />
                 </ListButton>
               ) : null,
               isVerified && onForgetAllPairings ? (

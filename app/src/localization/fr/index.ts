@@ -97,6 +97,16 @@ const translation = {
       "ButtonTitle": "Start verification (FR)",
       "ContinueButtonTitle": "Continue verification (FR)"
     },
+    "AccountExpired": {
+      "Title": "Your BC Services card app has expired (FR)",
+      "Description": "Please reverify yourself to get access to your services (FR)",
+      "ButtonTitle": "Start renewal (FR)"
+    },
+    "AccountRenewal": {
+      "Title": "Time for renewal (FR)",
+      "Description": "Renew your BC Services card app before it expires on {{expiryDate}} (FR)",
+      "ButtonTitle": "Start renewal (FR)"
+    },
     "BasicMessage": {
       "Title": "New message (FR)",
       "ButtonTitle": "View message (FR)"
@@ -192,7 +202,7 @@ const translation = {
     "Retry": "Réessayer",
     "Failed": "Impossible de charger votre portefeuille. Veuillez réessayer.",
     "Starting": "Démarrage...",
-    "CheckingOCA": "Checking for OCA updates... (FR)",
+    "CheckingRemoteResources": "Checking for updates... (FR)",
     "InitializingAgent": "Initialisation de l'agent...",
     "Finishing": "Finalisation..."
   },
@@ -272,7 +282,6 @@ const translation = {
         "PinContact": "Pin contact (FR)",
         "UnpinContact": "Unpin contact (FR)",
         "EditName": "Edit Contact Name (FR)",
-        "ViewHistory": "View history (FR)",
         "ViewJSON": "View JSON details (FR)",
         "RemoveContact": "Remove Contact (FR)",
       },
@@ -384,8 +393,6 @@ const translation = {
       "ForgetPairings": "Forget pairings (FR)",
       "AddDevice": "Add another device (FR)",
       "MyDevices": "My devices (FR)",
-      "MyDevicesCount_one": "{{count}} Device (FR)",
-      "MyDevicesCount_other": "{{count}} Devices (FR)",
       "DeveloperOptions": "Developer options (FR)",
       "Privacy": "Privacy (FR)",
       "ContactUs": "Contact us (FR)",
@@ -481,6 +488,12 @@ const translation = {
         "ContentB": "Please update to the latest version from the {{platformStore}}. (FR)",
         "UpdateButton": "Go to {{platformStore}} (FR)",
       } ,
+      "VerificationSessionExpired": {
+        "Header": "Verification session expired (FR)",
+        "ContentA": "More than 7 days have passed since you started verifying your identity, so this session has expired. (FR)",
+        "ContentB": "To continue, you’ll need to set up the app and verify your identity again. (FR)",
+        "Button": "Start again (FR)",
+      },
       "DeviceInvalidated": {
         "Header": "Device invalidated (FR)",
         "CancelledByCardCancel": "This device has been invalidated by an agent. You must contact BC Services to continue. (FR)",
@@ -556,6 +569,18 @@ const translation = {
       "StaticBannerDescription": "Your account on this device expired on {{accountExpiration}}. You need to renew it before you can use it to log in. (FR)",
       "RenewButton": "Renew account (FR)",
       "RemoveButton": "Remove account (FR)",
+    },
+    "ReverifyAccount": {
+      "RenewalTitle": "Renew your account (FR)",
+      "ExpiredTitle": "Your BC Services card app has expired (FR)",
+      "Body": "Services require you to re-verify your account. You will need to complete this step in order to access your services online. (FR)",
+      "BulletHeader": "You will need to: (FR)",
+      "BulletOne": "Verify your email (FR)",
+      "BulletTwo": "Add a photo ID (not expired) (FR)",
+      "BulletThree": "Take a photo of your face (FR)",
+      "BulletFour": "Record a short video, have a video call or visit a Service BC office (FR)",
+      "PrimaryAction": "Continue (FR)",
+      "Loading": "Starting verification... (FR)"
     },
     "AccountRenewal": {
       "InformationHeader": "What you need to renew (FR)",
@@ -1224,7 +1249,8 @@ const translation = {
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again. (FR)",
     },
     "Wallet": {
-      "EmptyMessage": "Your wallet is empty! (FR)",
+      "EmptyMessage": "Your wallet is empty (FR)",
+      "EmptyLearnMore": "Learn more about the wallet (FR)",
       "Reset": "Reset wallet (FR)",
       "ResetTitle": "Reset wallet? (FR)",
       "ResetDescription": "This will permanently delete all credentials, connections, and chat history stored in your wallet. Your PIN, biometrics, and BC Services Card identity will not be affected. You will not have to re-verify. (FR)",

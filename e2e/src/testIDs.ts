@@ -223,14 +223,6 @@ export const BCSC_TestIDs = {
   SuccessfullySent: {
     Ok: 'com.ariesbifold:id/Ok',
   },
-  BeforeYouCall: {
-    BeforeYouCallTitle: 'com.ariesbifold:id/BeforeYouCallTitle',
-    HoursOfServiceTitle: 'com.ariesbifold:id/HoursOfServiceTitle',
-    Continue: 'com.ariesbifold:id/Continue',
-    Assistance: 'com.ariesbifold:id/Assistance',
-    Help: 'com.ariesbifold:id/Help',
-    Back: 'com.ariesbifold:id/Back',
-  },
   StartCall: {
     Help: 'com.ariesbifold:id/Help',
   },

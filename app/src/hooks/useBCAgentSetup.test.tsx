@@ -1,3 +1,11 @@
+jest.mock('@/configs/ledgers/indy/ledgerResolver', () => ({
+  ledgerResolver: {
+    checkForUpdates: jest.fn().mockResolvedValue(undefined),
+    ledgers: [],
+    remoteEnabled: false,
+    set logger(_: unknown) {},
+  },
+}))
 jest.mock('@/store', () => ({
   BCLocalStorageKeys: {
     GenesisTransactions: 'GenesisTransactions',
@@ -210,7 +218,7 @@ describe('useBCAgentSetup', () => {
     jest.mocked(useStoreBifold).mockReturnValue([mockStore as any, jest.fn()])
     jest
       .mocked(useServices)
-      .mockReturnValue([mockLogger, [], { stop: jest.fn(), start: jest.fn() }, undefined, [], []] as any)
+      .mockReturnValue([mockLogger, { stop: jest.fn(), start: jest.fn() }, undefined, [], []] as any)
   })
 
   afterEach(() => {

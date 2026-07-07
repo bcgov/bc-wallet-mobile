@@ -185,14 +185,6 @@ exports[`AuthSettings renders correctly 1`] = `
               </View>
             </View>
             <View
-              entering={
-                FadeIn {
-                  "build": [Function],
-                  "durationV": 200,
-                  "randomizeDelay": false,
-                  "reduceMotionV": "system",
-                }
-              }
               exiting={
                 FadeOut {
                   "build": [Function],
@@ -590,14 +582,6 @@ exports[`AuthSettings renders correctly 1`] = `
               </View>
             </View>
             <View
-              entering={
-                FadeIn {
-                  "build": [Function],
-                  "durationV": 200,
-                  "randomizeDelay": false,
-                  "reduceMotionV": "system",
-                }
-              }
               exiting={
                 FadeOut {
                   "build": [Function],

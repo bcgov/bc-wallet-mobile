@@ -1,4 +1,5 @@
 export { PairingService } from './PairingService'
 export { PairingServiceProvider, usePairingService } from './PairingServiceContext'
+export { pairingPayloadToServiceLoginParams } from './types'
 export type { PairingNavigationEvent, PairingNavigationListener, PairingPayload, PendingPairingListener } from './types'
 export { usePendingPairing } from './usePendingPairing'

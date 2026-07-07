@@ -1,5 +1,4 @@
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
-import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
 import { BCState } from '@/store'
 import {
   CredentialDetails,
@@ -12,7 +11,7 @@ import {
   useTheme,
   useTour,
 } from '@bifold/core'
-import { CommonActions, useNavigation } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -20,20 +19,19 @@ import { View } from 'react-native'
 import Developer from '../../screens/Developer'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
-import { createHeaderWithBanner, createHeaderWithoutBanner } from '../components/HeaderWithBanner'
+import { createHeaderWithBanner } from '../components/HeaderWithBanner'
 import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
-import { useAccount } from '../contexts/BCSCAccountContext'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferQRDisplayScreen from '../features/account-transfer/transferer/TransferQRDisplayScreen'
 import TransferQRInformationScreen from '../features/account-transfer/transferer/TransferQRInformationScreen'
 import TransferSuccessScreen from '../features/account-transfer/transferer/TransferSuccessScreen'
 import AccountDetailsScreen from '../features/account/AccountDetailsScreen'
-import { AccountExpiredScreen } from '../features/account/AccountExpiredScreen'
 import { AccountRenewalFinalWarningScreen } from '../features/account/AccountRenewalFinalWarningScreen'
 import { AccountRenewalFirstWarningScreen } from '../features/account/AccountRenewalFirstWarningScreen'
 import { AccountRenewalInformationScreen } from '../features/account/AccountRenewalInformationScreen'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import { MainRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
+import { ReverifyAccountScreen } from '../features/account/ReverifyAccountScreen'
 import TransferAgeRestrictionScreen from '../features/account/TransferAgeRestrictionScreen'
 import { AgentReadyGate, BifoldScope, withAgentReadyGate } from '../features/agent'
 import { MainChangePINScreen } from '../features/auth/MainChangePINScreen'
@@ -51,7 +49,8 @@ import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
 import { TermsOfUseUpdated } from '../features/modal/TermsOfUseUpdated'
-import { usePairingService } from '../features/pairing'
+import { VerifyPromptScreen } from '../features/onboarding/VerifyPromptScreen'
+import { pairingPayloadToServiceLoginParams, usePairingService } from '../features/pairing'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import ConnectionLoadingScreen from '../features/qr-core/ConnectionLoadingScreen'
@@ -76,6 +75,8 @@ const ScopedCredentialDetails: React.FC<React.ComponentProps<typeof CredentialDe
   </AgentReadyGate>
 )
 
+const VerifyPromptScreenNoSkip = () => <VerifyPromptScreen showSkip={false} />
+
 // Contact screens call Bifold connection hooks (useConnections / useConnectionById)
 // that require the providers BifoldScope only mounts once the agent is ready.
 // Gate them so an early mount — a cold-start quick-tap into Settings → Contacts,
@@ -97,7 +98,6 @@ const MainStack: React.FC = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store] = useStore<BCState>()
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
-  const { account } = useAccount()
   // Consume any cold-start pairing request once and use it to seed the initial route
   const [pendingPairing] = useState(() => pairingService.consumePendingPairing())
   const pairingInitialParams = useMemo(() => {
@@ -116,10 +116,7 @@ const MainStack: React.FC = () => {
       return undefined
     }
 
-    return {
-      serviceTitle,
-      pairingCode,
-    }
+    return pairingPayloadToServiceLoginParams(pendingPairing)
   }, [logger, pendingPairing])
 
   const apiClient = useBCSCApiClient()
@@ -139,6 +136,7 @@ const MainStack: React.FC = () => {
   const initialRouteName = pairingInitialParams ? BCSCScreens.ServiceLogin : BCSCStacks.Tab
 
   useSystemChecks(SystemCheckScope.MAIN_STACK)
+  useSystemChecks(SystemCheckScope.ACCOUNT)
   useBCSCStack(BCSCStacks.Main)
 
   // Accept connection-invitation deep links (e.g. from the showcase) once the
@@ -154,13 +152,6 @@ const MainStack: React.FC = () => {
 
     return unsubscribe
   }, [pairingService, navigation])
-
-  useEffect(() => {
-    if (account && isAccountExpired(account.account_expiration_date)) {
-      // If the account is expired, reset the navigation stack and navigate to the AccountExpired screen
-      navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.AccountExpired }] }))
-    }
-  }, [account, navigation])
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
@@ -435,18 +426,6 @@ const MainStack: React.FC = () => {
             })}
           />
           <Stack.Screen
-            name={BCSCScreens.AccountExpired}
-            component={AccountExpiredScreen}
-            options={() => ({
-              animationEnabled: false,
-              title: t('BCSC.Title'),
-              headerShown: true,
-              // This screen has its own banner inside the screen component
-              header: createHeaderWithoutBanner,
-              headerLeft: () => null,
-            })}
-          />
-          <Stack.Screen
             name={BCSCScreens.AccountRenewalInformation}
             component={AccountRenewalInformationScreen}
             options={() => ({
@@ -467,7 +446,20 @@ const MainStack: React.FC = () => {
               headerShown: true,
             })}
           />
-
+          <Stack.Screen
+            name={BCSCScreens.ReverifyAccount}
+            component={ReverifyAccountScreen}
+            options={() => ({
+              headerShown: true,
+            })}
+          />
+          <Stack.Screen
+            name={BCSCScreens.MainVerifyPrompt}
+            component={VerifyPromptScreenNoSkip}
+            options={() => ({
+              headerShown: true,
+            })}
+          />
           {/* React navigation docs suggest modals at bottom of stack */}
           <Stack.Screen
             name={BCSCModals.InternetDisconnected}
