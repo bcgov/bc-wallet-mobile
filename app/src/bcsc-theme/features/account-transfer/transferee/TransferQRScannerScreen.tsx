@@ -89,9 +89,10 @@ const TransferQRScannerScreen: React.FC<TransferQRScannerScreenProps> = ({ navig
   return (
     <View
       style={styles.container}
-      onLayout={(event) =>
-        setCameraArea({ width: event.nativeEvent.layout.width, height: event.nativeEvent.layout.height })
-      }
+      onLayout={(event) => {
+        const { width, height } = event.nativeEvent.layout
+        setCameraArea((current) => (current.width === width && current.height === height ? current : { width, height }))
+      }}
     >
       <ScanCamera handleCodeScan={handleScan} enableCameraOnError={true} error={scanError} />
       <View pointerEvents="none">
