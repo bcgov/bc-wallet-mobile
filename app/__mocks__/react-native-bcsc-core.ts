@@ -88,6 +88,7 @@ export const getIssuer = jest.fn().mockResolvedValue(null)
 
 // Key Management
 export const getAllKeys = jest.fn().mockResolvedValue([])
+export const getAllKeysWithPublicInfo = jest.fn().mockResolvedValue([])
 export const getKeyPair = jest.fn().mockResolvedValue({
   id: 'test-key',
   public: 'mock-public-key',
