@@ -383,8 +383,6 @@ const translation = {
       "ForgetPairings": "Forget pairings (FR)",
       "AddDevice": "Add another device (FR)",
       "MyDevices": "My devices (FR)",
-      "MyDevicesCount_one": "{{count}} Device (FR)",
-      "MyDevicesCount_other": "{{count}} Devices (FR)",
       "DeveloperOptions": "Developer options (FR)",
       "Privacy": "Privacy (FR)",
       "ContactUs": "Contact us (FR)",

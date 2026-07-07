@@ -1,4 +1,5 @@
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { parseBirthdateToLocalDate } from '@/bcsc-theme/utils/birthdate'
 import { HELP_URL } from '@/constants'
@@ -19,6 +20,7 @@ type MainSettingsScreenProps = {
 export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { account } = useAccount()
+  const apiClient = useBCSCApiClient()
 
   const onContactUs = () => {
     navigation.navigate(BCSCScreens.MainContactUs)
@@ -91,6 +93,13 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
     navigation.navigate(BCSCScreens.QRCore, { screen: BCSCQRCoreScreens.Display })
   }
 
+  const onMyDevices = () => {
+    navigation.navigate(BCSCScreens.MainWebView, {
+      url: apiClient.endpoints.accountDevices,
+      title: t('BCSC.Screens.ManageDevices'),
+    })
+  }
+
   return (
     <SettingsContent
       onContactUs={onContactUs}
@@ -107,6 +116,7 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
       onRemoveAccount={onRemoveAccount}
       onContacts={onContacts}
       onAddDevice={onAddDevice}
+      onMyDevices={onMyDevices}
       onScanMyQR={onScanMyQR}
     />
   )
