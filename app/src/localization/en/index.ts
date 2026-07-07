@@ -97,6 +97,16 @@ const translation = {
       "ButtonTitle": "Start verification",
       "ContinueButtonTitle": "Continue verification"
     },
+    "AccountExpired": {
+      "Title": "Your BC Services card app has expired",
+      "Description": "Please reverify yourself to get access to your services",
+      "ButtonTitle": "Start renewal"
+    },
+    "AccountRenewal": {
+      "Title": "Time for renewal",
+      "Description": "Renew your BC Services card app before it expires on {{expiryDate}}",
+      "ButtonTitle": "Start renewal"
+    },
     "BasicMessage": {
       "Title": "New message",
       "ButtonTitle": "View message"
@@ -577,6 +587,18 @@ const translation = {
       "RenewButton": "Renew account",
       "RemoveButton": "Remove account",
     },
+    "ReverifyAccount": {
+      "RenewalTitle": "Renew your account",
+      "ExpiredTitle": "Your BC Services card app has expired",
+      "Body": "Services require you to re-verify your account. You will need to complete this step in order to access your services online.",
+      "BulletHeader": "You will need to:",
+      "BulletOne": "Verify your email",
+      "BulletTwo": "Add a photo ID (not expired)",
+      "BulletThree": "Take a photo of your face",
+      "BulletFour": "Record a short video, have a video call or visit a Service BC office",
+      "PrimaryAction": "Continue",
+      "Loading": "Starting verification..."
+    },
     "AccountRenewal": {
       "InformationHeader": "What you need to renew",
       "InformationBCServicesCardSubHeader": "1. BC Services Card",
@@ -782,8 +804,8 @@ const translation = {
       "ContinueAs": "Continue as:",
     },
     "VerifyPrompt": {
-      "Title": "Verify Your Account",
-      "Description": "Verify your account to access services that may need additional information.",
+      "Title": "Verify your account",
+      "Description": "Services may require a verified account. It gives you access to more services that need to know who you are.",
       "YouWillNeedTo": "You will need to:",
       "Bullet1": "Verify your email",
       "Bullet2": "Add a photo ID",

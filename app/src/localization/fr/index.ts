@@ -97,6 +97,16 @@ const translation = {
       "ButtonTitle": "Start verification (FR)",
       "ContinueButtonTitle": "Continue verification (FR)"
     },
+    "AccountExpired": {
+      "Title": "Your BC Services card app has expired (FR)",
+      "Description": "Please reverify yourself to get access to your services (FR)",
+      "ButtonTitle": "Start renewal (FR)"
+    },
+    "AccountRenewal": {
+      "Title": "Time for renewal (FR)",
+      "Description": "Renew your BC Services card app before it expires on {{expiryDate}} (FR)",
+      "ButtonTitle": "Start renewal (FR)"
+    },
     "BasicMessage": {
       "Title": "New message (FR)",
       "ButtonTitle": "View message (FR)"
@@ -559,6 +569,18 @@ const translation = {
       "StaticBannerDescription": "Your account on this device expired on {{accountExpiration}}. You need to renew it before you can use it to log in. (FR)",
       "RenewButton": "Renew account (FR)",
       "RemoveButton": "Remove account (FR)",
+    },
+    "ReverifyAccount": {
+      "RenewalTitle": "Renew your account (FR)",
+      "ExpiredTitle": "Your BC Services card app has expired (FR)",
+      "Body": "Services require you to re-verify your account. You will need to complete this step in order to access your services online. (FR)",
+      "BulletHeader": "You will need to: (FR)",
+      "BulletOne": "Verify your email (FR)",
+      "BulletTwo": "Add a photo ID (not expired) (FR)",
+      "BulletThree": "Take a photo of your face (FR)",
+      "BulletFour": "Record a short video, have a video call or visit a Service BC office (FR)",
+      "PrimaryAction": "Continue (FR)",
+      "Loading": "Starting verification... (FR)"
     },
     "AccountRenewal": {
       "InformationHeader": "What you need to renew (FR)",
