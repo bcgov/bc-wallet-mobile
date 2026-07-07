@@ -390,6 +390,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       failedToRetrieveStringResourceAlert: _createBasicErrorModal(AppEventCode.ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE, 'SomethingWentWrong'),
       invalidUrlAlert: _createBasicErrorModal(AppEventCode.ERR_500_INVALID_URL, 'SomethingWentWrong'),
       invalidRegistrationRequestAlert: _createBasicErrorModal(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST, 'SomethingWentWrong'),
+      registrationKeyNotConfirmedAlert: _createBasicErrorModal(AppEventCode.ERR_121_REGISTRATION_KEY_NOT_CONFIRMED, 'SomethingWentWrong'),
     }),
     [
       appUpdateRequiredAlert,

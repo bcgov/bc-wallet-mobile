@@ -1,9 +1,10 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getAttestationErrorLogContext } from '@/bcsc-theme/utils/attestation'
+import { normalizeModulus } from '@/bcsc-theme/utils/jwk-modulus'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 import { AppError, ErrorRegistry } from '@/errors'
 import { ErrorDefinition } from '@/errors/errorRegistry'
-import { TOKENS, useServices } from '@bifold/core'
+import { BifoldLogger, TOKENS, useServices } from '@bifold/core'
 import { getAppStoreReceipt, googleAttestation } from '@bifold/react-native-attestation'
 import { useCallback, useMemo } from 'react'
 import { Platform } from 'react-native'
@@ -86,6 +87,54 @@ function throwDcrNativeError(error: unknown): never {
   throw AppError.fromErrorDefinition(ErrorRegistry.CLIENT_REGISTRATION_FAILURE, { cause: error })
 }
 
+/**
+ * Confirms the signing key sent during INITIAL client registration actually landed in the
+ * server's echoed jwks, matched on modulus bytes (never kid — see jwk-modulus.ts). Scoped to
+ * createRegistration only: v4 does not rotate keys, so there is no equivalent confirmation
+ * for updateRegistration (only one key ever lives in the keychain at initial-registration
+ * time) — see issue #4166.
+ *
+ * Hard-fails (throws AppError ERR_121) only on a DEFINITE mismatch: the sent modulus decodes,
+ * the server returned at least one decodable modulus, and the sent modulus isn't among them.
+ * An unparseable/empty side (a server- or body-shape surprise, not a confirmed desync) is
+ * logged and treated as pass-through so setup is never bricked by a parsing edge case.
+ */
+function confirmRegisteredKey(body: string, data: RegistrationResponseData, logger: BifoldLogger): void {
+  let sentN: string | undefined
+  try {
+    const parsedBody = JSON.parse(body) as { jwks?: { keys?: Array<{ n?: string }> } }
+    sentN = parsedBody.jwks?.keys?.[0]?.n
+  } catch (error) {
+    logger.warn(
+      `[RegistrationApi] Could not parse sent registration body to confirm signing key, proceeding: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    )
+    return
+  }
+
+  const sentModulus = normalizeModulus(sentN)
+  const serverModuli = (data.jwks?.keys ?? [])
+    .map((key) => normalizeModulus(key?.n))
+    .filter((n): n is string => n !== null)
+
+  if (!sentModulus || serverModuli.length === 0) {
+    logger.warn(
+      '[RegistrationApi] Could not confirm signing key registration — sent or server jwks unparseable/empty; proceeding'
+    )
+    return
+  }
+
+  if (!serverModuli.includes(sentModulus)) {
+    logger.error(
+      '[RegistrationApi] Sent signing key modulus was not found in the server-confirmed jwks after initial registration'
+    )
+    throw AppError.fromErrorDefinition(ErrorRegistry.REGISTRATION_KEY_NOT_CONFIRMED)
+  }
+
+  logger.info('[RegistrationApi] Confirmed sent signing key modulus is present in server jwks')
+}
+
 // The registration API is a special case because it gets called during initialization,
 // so its params are adjusted to account for an api client that may not be ready yet
 const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: boolean = true) => {
@@ -160,6 +209,8 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * @throws AppError with code `ERR_120_CLIENT_REGISTRATION_FAILURE` if building the registration body fails
    * @throws AppError with code `ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL` if registration response is null
    * @throws AppError with code `ERR_115_FAILED_TO_SERIALIZE_JSON` if native JSON serialization fails
+   * @throws AppError with code `ERR_121_REGISTRATION_KEY_NOT_CONFIRMED` if the sent signing key's modulus is
+   *   definitively absent from the server's echoed jwks (see {@link confirmRegisteredKey})
    *
    * @returns Promise resolving to registration response data or void if account exists
    */
@@ -192,6 +243,8 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
       })
 
       logger.info('Completed registration request')
+
+      confirmRegisteredKey(body, data, logger)
 
       await setAccount({
         clientID: data.client_id,

@@ -91,6 +91,18 @@ const mockRegistrationResponse = {
   default_acr_values: ['urn:mace:incommon:iap:silver'],
 }
 
+// An arbitrary "modulus" whose first byte has its high bit set — the shape that forces DER's
+// ASN.1 INTEGER encoding to prepend a 0x00 sign byte, matching the real iOS DCR path.
+const REAL_MODULUS_BYTES = [0xc0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]
+const toStdBase64 = (bytes: number[]) => Buffer.from(bytes).toString('base64')
+const toBase64UrlUnpadded = (bytes: number[]) =>
+  Buffer.from(bytes).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+
+// Sent (iOS-shaped, std base64 with leading 0x00) vs. echoed (Android-shaped, canonical
+// base64url) encodings of the SAME modulus — confirms encoding-tolerant comparison.
+const SENT_N_IOS_SHAPE = toStdBase64([0x00, ...REAL_MODULUS_BYTES])
+const SERVER_N_ANDROID_SHAPE = toBase64UrlUnpadded(REAL_MODULUS_BYTES)
+
 describe('useRegistrationApi', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -207,6 +219,91 @@ describe('useRegistrationApi', () => {
         expect(error).toBeInstanceOf(AppError)
         expect((error as AppError).appEvent).toBe(AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE)
       }
+    })
+
+    // -------------------------------------------------------------------------
+    // Signing-key confirmation (#4166)
+    // -------------------------------------------------------------------------
+    describe('signing-key confirmation', () => {
+      it('resolves and completes setup when the sent modulus is echoed among multiple server keys in a different encoding', async () => {
+        jest
+          .mocked(getDynamicClientRegistrationBody)
+          .mockResolvedValue(JSON.stringify({ jwks: { keys: [{ n: SENT_N_IOS_SHAPE, kid: 'device-key' }] } }))
+        mockApiClient.post.mockResolvedValue({
+          data: {
+            ...mockRegistrationResponse,
+            jwks: {
+              keys: [
+                { kty: 'RSA', e: 'AQAB', kid: 'other-server-key', alg: 'RS512', n: toStdBase64([0x11, 0x22, 0x33]) },
+                { kty: 'RSA', e: 'AQAB', kid: 'device-key', alg: 'RS512', n: SERVER_N_ANDROID_SHAPE },
+              ],
+            },
+          },
+        })
+
+        const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
+
+        const data = await result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+
+        expect(setAccount).toHaveBeenCalled()
+        expect(mockUpdateTokens).toHaveBeenCalled()
+        expect(data.jwks.keys).toHaveLength(2)
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          expect.stringContaining('Confirmed sent signing key modulus is present in server jwks')
+        )
+      })
+
+      it('throws ERR_121_REGISTRATION_KEY_NOT_CONFIRMED when the server jwks omits the sent modulus', async () => {
+        jest
+          .mocked(getDynamicClientRegistrationBody)
+          .mockResolvedValue(JSON.stringify({ jwks: { keys: [{ n: SENT_N_IOS_SHAPE, kid: 'device-key' }] } }))
+        mockApiClient.post.mockResolvedValue({
+          data: {
+            ...mockRegistrationResponse,
+            jwks: {
+              keys: [{ kty: 'RSA', e: 'AQAB', kid: 'device-key', alg: 'RS512', n: toStdBase64([0x11, 0x22, 0x33]) }],
+            },
+          },
+        })
+
+        const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
+
+        try {
+          await result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+          fail('Expected an error to be thrown')
+        } catch (error) {
+          expect(error).toBeInstanceOf(AppError)
+          expect((error as AppError).appEvent).toBe(AppEventCode.ERR_121_REGISTRATION_KEY_NOT_CONFIRMED)
+        }
+
+        expect(setAccount).not.toHaveBeenCalled()
+        expect(mockUpdateTokens).not.toHaveBeenCalled()
+      })
+
+      it('proceeds (warns only) when the sent registration body cannot be parsed as JSON', async () => {
+        jest.mocked(getDynamicClientRegistrationBody).mockResolvedValue('not valid json {{{')
+
+        const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
+
+        const data = await result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+
+        expect(data).toEqual(mockRegistrationResponse)
+        expect(setAccount).toHaveBeenCalled()
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('Could not parse sent registration body to confirm signing key')
+        )
+      })
+
+      it('proceeds (warns only) when neither the sent nor server jwks contain a decodable modulus', async () => {
+        // Default mocks: DCR body has no jwks at all, and mockRegistrationResponse.jwks.keys is empty.
+        const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
+
+        const data = await result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+
+        expect(data).toEqual(mockRegistrationResponse)
+        expect(setAccount).toHaveBeenCalled()
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('unparseable/empty'))
+      })
     })
   })
 

@@ -20,6 +20,7 @@ const getRegistrationAlertMap = (alerts: AppAlerts): Partial<Record<AppEventCode
   [AppEventCode.ERR_120_KEYCHAIN_UNAVAILABLE_ERROR]: alerts.keychainUnavailableAlert,
   [AppEventCode.ERR_120_JWT_DEVICE_INFO_ERROR]: alerts.jwtDeviceInfoAlert,
   [AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE]: alerts.clientRegistrationFailureAlert,
+  [AppEventCode.ERR_121_REGISTRATION_KEY_NOT_CONFIRMED]: alerts.registrationKeyNotConfirmedAlert,
   [AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL]: alerts.clientRegistrationNullAlert,
   [AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON]: alerts.failedToDeserializeJsonAlert,
   [AppEventCode.ERR_115_FAILED_TO_SERIALIZE_JSON]: alerts.failedToSerializeJsonAlert,
