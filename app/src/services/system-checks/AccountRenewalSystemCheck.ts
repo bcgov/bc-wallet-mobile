@@ -15,7 +15,7 @@ export class AccountRenewalSystemCheck implements SystemCheckStrategy {
   private readonly accountExpiration: Date | string
   private readonly utils: SystemCheckUtils
 
-  constructor(accountExpiration: Date, utils: SystemCheckUtils) {
+  constructor(accountExpiration: Date | string, utils: SystemCheckUtils) {
     this.accountExpiration = accountExpiration
     this.utils = utils
   }
