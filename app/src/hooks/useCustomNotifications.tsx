@@ -1,4 +1,6 @@
 import CancelledReviewNotification from '@/bcsc-theme/features/notifications/CancelledReviewNotification'
+import CardExpiryNotification from '@/bcsc-theme/features/notifications/CardExpiryNotification'
+import CardRenewalNotification from '@/bcsc-theme/features/notifications/CardRenewalNotification'
 import PendingReviewNotification from '@/bcsc-theme/features/notifications/PendingReviewNotification'
 import StartVerificationNotification from '@/bcsc-theme/features/notifications/StartVerificationNotification'
 import VerifiedNotification from '@/bcsc-theme/features/notifications/VerifiedNotification'
@@ -45,16 +47,26 @@ export const useCustomNotifications = () => {
     }
 
     if (needsVerification && !verificationRequestId && !dismissedIds.has(CustomNotificationId.BCSCStartVerification)) {
-      return [
-        <StartVerificationNotification
-          key={CustomNotificationId.BCSCStartVerification}
-          onClose={() => dismissCustomNotification(CustomNotificationId.BCSCStartVerification)}
-        />,
-      ]
+      return [<StartVerificationNotification key={CustomNotificationId.BCSCStartVerification} />]
+    }
+
+    if (store.bcsc.showAccountExpiryNotification) {
+      return [<CardExpiryNotification key={CustomNotificationId.AccountExpired} />]
+    }
+
+    if (store.bcsc.showCardRenewalNotification) {
+      return [<CardRenewalNotification key={CustomNotificationId.AccountRenewalAvailable} />]
     }
 
     return []
-  }, [verificationRequestStatus, verificationRequestId, needsVerification, dismissedIds, dismissCustomNotification])
+  }, [
+    verificationRequestStatus,
+    verificationRequestId,
+    needsVerification,
+    dismissedIds,
+    store.bcsc.showAccountExpiryNotification,
+    store.bcsc.showCardRenewalNotification,
+  ])
 
   return useMemo(
     () => ({

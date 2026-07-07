@@ -42,8 +42,12 @@ const NotificationIcon: React.FC<NotificationIconProps> = ({
       />
     )
   }
+
+  const styles = StyleSheet.create({
+    icon: { marginRight: 12 },
+  })
   return (
-    <View style={[{ marginRight: 12 }, hideIconCircle ? undefined : circleStyle]}>
+    <View style={[styles.icon, hideIconCircle ? undefined : circleStyle]}>
       <Icon
         accessible={false}
         name={iconName}

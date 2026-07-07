@@ -76,7 +76,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const utils = useMemo(() => ({ dispatch, translation: t, logger }), [dispatch, logger, t])
 
   const defaultReadiness = isNavigationReady && client && isClientReady
-  const accountExpirationDate = accountContext?.account?.account_expiration_date
+  const accountExpirationDate = accountContext?.account?.card_expiry
   const isVerified = Boolean(store.bcscSecure.verified)
   const isBCServicesCardBundle = getBundleId().includes(BCSC_BUILD_SUFFIX)
   const verificationRequestId = store.bcscSecure.verificationRequestId

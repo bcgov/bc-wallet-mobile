@@ -12,7 +12,7 @@ import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
  * @implements {SystemCheckStrategy}
  */
 export class AccountRenewalSystemCheck implements SystemCheckStrategy {
-  private readonly accountExpiration: Date
+  private readonly accountExpiration: Date | string
   private readonly utils: SystemCheckUtils
 
   constructor(accountExpiration: Date, utils: SystemCheckUtils) {
