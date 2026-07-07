@@ -8,7 +8,7 @@ import {
   setActiveKeyAlias,
 } from 'react-native-bcsc-core'
 import BCSCApiClient from '../api/client'
-import { modulusInSet, normalizeModulus } from './jwk-modulus'
+import { normalizeModulus } from './jwk-modulus'
 import { getNotificationTokens } from './push-notification-tokens'
 
 interface ServerJwk {
@@ -103,9 +103,14 @@ export async function performKeyRecovery(
     const localIds = localKeys.map((k) => k.id)
 
     // Newest-created wins if more than one local key happens to share a modulus with the
-    // server set (shouldn't normally happen, but stay deterministic if it does).
+    // server set (shouldn't normally happen, but stay deterministic if it does). Membership is
+    // tested against the SAME pre-normalized `serverModuli` the prune loop uses below, so the
+    // two can never disagree about what counts as "in the server set".
     const matched = localKeys
-      .filter((k) => modulusInSet(k.n, serverNs))
+      .filter((k) => {
+        const n = normalizeModulus(k.n)
+        return n !== null && serverModuli.includes(n)
+      })
       .sort((a, b) => (b.created ?? 0) - (a.created ?? 0))[0]
 
     if (!matched) {
