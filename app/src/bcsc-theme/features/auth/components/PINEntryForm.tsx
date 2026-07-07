@@ -189,14 +189,10 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
     setCurrentPIN2(pin)
   }, [])
 
-  const handlePIN2Complete = useCallback(
-    (completedPIN: string) => {
-      setErrorMessage2(undefined)
-      Keyboard.dismiss()
-      validateAndContinue(currentPIN1, completedPIN)
-    },
-    [currentPIN1, validateAndContinue]
-  )
+  const handlePIN2Complete = useCallback(() => {
+    setErrorMessage2(undefined)
+    Keyboard.dismiss()
+  }, [])
 
   const styles = StyleSheet.create({
     pinEntryContent: {

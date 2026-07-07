@@ -538,7 +538,11 @@ describe('System Checks', () => {
         const isConnected = false
         const isInternetReachable = false
         const mockNavigation = {
-          getState: jest.fn().mockReturnValue({ routes: [{ name: 'Home' }], index: 0 }),
+          getState: jest.fn().mockReturnValue({
+            routes: [{ name: 'Home' }],
+            index: 0,
+            routeNames: ['Home', BCSCModals.InternetDisconnected],
+          }),
           navigate: jest.fn(),
         } as any
         const mockLogger = { warn: jest.fn() } as any
@@ -554,6 +558,50 @@ describe('System Checks', () => {
 
         expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('No internet'))
         expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.InternetDisconnected)
+      })
+
+      it('should not navigate when no navigator is mounted (root-stack swap window)', () => {
+        const isConnected = false
+        const isInternetReachable = false
+        const mockNavigation = {
+          getState: jest.fn().mockReturnValue(undefined),
+          navigate: jest.fn(),
+        } as any
+        const mockLogger = { warn: jest.fn() } as any
+
+        const internetStatusCheck = new InternetStatusSystemCheck(
+          isConnected,
+          isInternetReachable,
+          mockNavigation,
+          mockLogger
+        )
+
+        internetStatusCheck.onFail()
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('No internet'))
+        expect(mockNavigation.navigate).not.toHaveBeenCalled()
+      })
+
+      it('should not navigate when the current navigator does not register the modal route', () => {
+        const isConnected = false
+        const isInternetReachable = false
+        const mockNavigation = {
+          getState: jest.fn().mockReturnValue({ routes: [{ name: 'Home' }], index: 0, routeNames: ['Home'] }),
+          navigate: jest.fn(),
+        } as any
+        const mockLogger = { warn: jest.fn() } as any
+
+        const internetStatusCheck = new InternetStatusSystemCheck(
+          isConnected,
+          isInternetReachable,
+          mockNavigation,
+          mockLogger
+        )
+
+        internetStatusCheck.onFail()
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('No internet'))
+        expect(mockNavigation.navigate).not.toHaveBeenCalled()
       })
 
       it('should not navigate if already on InternetDisconnected modal', () => {
