@@ -1,6 +1,6 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getAttestationErrorLogContext } from '@/bcsc-theme/utils/attestation'
-import { normalizeModulus } from '@/bcsc-theme/utils/jwk-modulus'
+import { modulusInSet, normalizeModulus } from '@/bcsc-theme/utils/jwk-modulus'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 import { AppError, ErrorRegistry } from '@/errors'
 import { ErrorDefinition } from '@/errors/errorRegistry'
@@ -89,10 +89,16 @@ function throwDcrNativeError(error: unknown): never {
 
 /**
  * Confirms the signing key sent during INITIAL client registration actually landed in the
- * server's echoed jwks, matched on modulus bytes (never kid — see jwk-modulus.ts). Scoped to
- * createRegistration only: v4 does not rotate keys, so there is no equivalent confirmation
- * for updateRegistration (only one key ever lives in the keychain at initial-registration
- * time) — see issue #4166.
+ * server's echoed jwks, matched on modulus bytes (never kid — see jwk-modulus.ts).
+ *
+ * Scoped to createRegistration only — NOT called from updateRegistration. This isn't because
+ * only one key can ever exist at that point (a corrupted-key self-heal inside the native DCR
+ * body builder can mint a replacement even on an update call): it's a deliberate scope
+ * decision from issue #4166 ("We only need to check the new key is sent on initial
+ * registration and it matches ... AND the recovery (healing) mechanics for people who upgrade
+ * from previous versions"). Confirming updateRegistration's key too was explicitly out of
+ * scope; the separate key-recovery flow (key-recovery.ts) is what catches a desync from any
+ * cause, on the next hydration.
  *
  * Hard-fails (throws AppError ERR_121) only on a DEFINITE mismatch: the sent modulus decodes,
  * the server returned at least one decodable modulus, and the sent modulus isn't among them.
@@ -113,19 +119,18 @@ function confirmRegisteredKey(body: string, data: RegistrationResponseData, logg
     return
   }
 
+  const serverNs = (data.jwks?.keys ?? []).map((key) => key?.n)
   const sentModulus = normalizeModulus(sentN)
-  const serverModuli = (data.jwks?.keys ?? [])
-    .map((key) => normalizeModulus(key?.n))
-    .filter((n): n is string => n !== null)
+  const hasDecodableServerModulus = serverNs.some((n) => normalizeModulus(n) !== null)
 
-  if (!sentModulus || serverModuli.length === 0) {
+  if (!sentModulus || !hasDecodableServerModulus) {
     logger.warn(
       '[RegistrationApi] Could not confirm signing key registration — sent or server jwks unparseable/empty; proceeding'
     )
     return
   }
 
-  if (!serverModuli.includes(sentModulus)) {
+  if (!modulusInSet(sentN, serverNs)) {
     logger.error(
       '[RegistrationApi] Sent signing key modulus was not found in the server-confirmed jwks after initial registration'
     )
@@ -346,7 +351,9 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         let updatePayload
         try {
           updatePayload = body ? JSON.parse(body) : body
-          // Add required fields for PUT request: client_id and scope
+          // Add required fields for PUT request: client_id and scope. Scope mirrors
+          // useAuthorizationApi.tsx's IAS_SCOPE and key-recovery.ts's reRegisterNewestKey —
+          // keep all three in sync if it ever changes.
           updatePayload.client_id = account.clientID
           updatePayload.scope = 'openid profile email address offline_access'
         } catch (error) {

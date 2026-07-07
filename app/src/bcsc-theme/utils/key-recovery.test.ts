@@ -116,6 +116,57 @@ describe('performKeyRecovery', () => {
     expect(mockedSetActive).toHaveBeenCalledWith('rsa1')
     expect(mockedDeleteKey).toHaveBeenCalledTimes(1)
     expect(mockedDeleteKey).toHaveBeenCalledWith('rsa2')
+    // No post-prune mismatch error should fire since the verification mock reports rsa1 as the
+    // sole (and therefore newest) key after prune.
+    expect(logger.error).not.toHaveBeenCalled()
+  })
+
+  it('never deletes a local key whose OWN modulus fails to decode — treats "unknown" as distinct from "confirmed absent"', async () => {
+    const apiClient = makeApiClient({ keys: [{ kid: 'server-kid', n: n(1) }] })
+    mockedGetAllKeysWithPublicInfo.mockResolvedValue([
+      { id: 'rsa1', n: n(1), e: 'AQAB', created: 3000 }, // matched, newest
+      { id: 'rsa_corrupt', n: 'not-valid-base64!!!', e: 'AQAB', created: 500 }, // undecodable, older
+    ] as any)
+    mockedSetActive.mockResolvedValue(undefined as any)
+    mockedGetAllKeys.mockResolvedValue([
+      { id: 'rsa1', created: 3000 } as any,
+      { id: 'rsa_corrupt', created: 500 } as any,
+    ])
+    const logger = makeLogger()
+
+    const result = await performKeyRecovery(apiClient, CLIENT_ID, REG_TOKEN, logger)
+
+    // rsa_corrupt is left in place rather than deleted, and since it isn't the newest key it
+    // doesn't block the post-prune gate either — recovery still succeeds.
+    expect(result.status).toBe('recovered')
+    expect(mockedDeleteKey).not.toHaveBeenCalled()
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining(`local key 'rsa_corrupt' has an undecodable modulus; skipping`)
+    )
+  })
+
+  it('an undecodable local key that IS the keychain-newest still blocks the post-prune gate (never deleted, but recovery correctly reports failed)', async () => {
+    const apiClient = makeApiClient({ keys: [{ kid: 'server-kid', n: n(1) }] })
+    mockedGetAllKeysWithPublicInfo.mockResolvedValue([
+      { id: 'rsa1', n: n(1), e: 'AQAB', created: 1000 }, // matched
+      { id: 'rsa_corrupt', n: 'not-valid-base64!!!', e: 'AQAB', created: 2000 }, // undecodable, newer
+    ] as any)
+    mockedSetActive.mockResolvedValue(undefined as any)
+    // rsa_corrupt was never deleted, so it's still present and still keychain-newest.
+    mockedGetAllKeys.mockResolvedValue([
+      { id: 'rsa1', created: 1000 } as any,
+      { id: 'rsa_corrupt', created: 2000 } as any,
+    ])
+    const logger = makeLogger()
+
+    const result = await performKeyRecovery(apiClient, CLIENT_ID, REG_TOKEN, logger)
+
+    // The safety fix (never delete on "can't tell") composes correctly with the hard post-prune
+    // gate: recovery is honestly reported as failed rather than falsely 'recovered', since the
+    // undecodable key is still the one that would actually get used for signing.
+    expect(result.status).toBe('failed')
+    expect(mockedDeleteKey).not.toHaveBeenCalled()
+    expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('event=post_prune_active_mismatch'))
   })
 
   it('preserves local keys whose modulus IS in the server set (recent-previous versions, no prune)', async () => {
@@ -232,6 +283,21 @@ describe('performKeyRecovery', () => {
 
     expect(result.status).toBe('failed')
     expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('event=post_prune_verification_failed'))
+  })
+
+  it('reports failed (not recovered) when the post-prune keystore enumerates as empty', async () => {
+    // Pins a stricter-than-original behaviour: reporting zero remaining keys must never be
+    // read as "success by default" just because there's no non-matching newest to compare against.
+    const apiClient = makeApiClient({ keys: [{ kid: 'server-kid', n: n(1) }] })
+    mockedGetAllKeysWithPublicInfo.mockResolvedValue([{ id: 'rsa1', n: n(1), e: 'AQAB', created: 1000 }] as any)
+    mockedSetActive.mockResolvedValue(undefined as any)
+    mockedGetAllKeys.mockResolvedValue([])
+    const logger = makeLogger()
+
+    const result = await performKeyRecovery(apiClient, CLIENT_ID, REG_TOKEN, logger)
+
+    expect(result.status).toBe('failed')
+    expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('event=post_prune_active_mismatch'))
   })
 
   it('tolerates a prune failure of an OLDER (non-newest) unmatched key — still recovered', async () => {

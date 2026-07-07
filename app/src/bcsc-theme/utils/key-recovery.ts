@@ -8,11 +8,11 @@ import {
   setActiveKeyAlias,
 } from 'react-native-bcsc-core'
 import BCSCApiClient from '../api/client'
-import { normalizeModulus } from './jwk-modulus'
+import { modulusInSet, normalizeModulus } from './jwk-modulus'
 import { getNotificationTokens } from './push-notification-tokens'
 
 interface ServerJwk {
-  /** No longer used for matching (kid drifts across migrations) — kept only for diagnostics. */
+  /** No longer used for matching (kid drifts across migrations) — logged for diagnostics only. */
   kid?: string
   kty?: string
   n?: string
@@ -53,11 +53,13 @@ export type KeyRecoveryResult = {
  *  2. Enumerate every local key (with its public RSA components) via getAllKeysWithPublicInfo().
  *  3. Intersect by normalized modulus. If a local key matches, mark it active via
  *     setActiveKeyAlias() so the next sign uses it.
- *  4. Prune local keys whose modulus is NOT in the server set (recent-previous versions stay).
- *     Guarded by `serverModuli.length >= 1` so an unexpectedly empty/undecodable jwks response
- *     never wipes the device; this loop additionally skips `matched.id` so the just-selected
- *     active alias is never a prune target. The native delete has its own last-line-of-defence
- *     guard that refuses to remove the final remaining alias.
+ *  4. Prune local keys whose modulus is confirmed NOT in the server set (recent-previous
+ *     versions stay). Guarded by `serverModuli.length >= 1` so an unexpectedly empty/
+ *     undecodable jwks response never wipes the device; this loop additionally skips
+ *     `matched.id` (never a prune target) and any local key whose OWN modulus fails to decode
+ *     (an unknown modulus is not a confirmed-absent one — never delete on "can't tell", only on
+ *     "confirmed not present"). The native delete has its own last-line-of-defence guard that
+ *     refuses to remove the final remaining alias.
  *  5. HARD post-prune gate: re-run getAllKeys() and require the newest-by-created entry to be
  *     `matched.id`. On iOS, setActiveKeyAlias is verify-only (activation is prune-by-
  *     elimination), so a swallowed prune failure of a newer unmatched key would otherwise let
@@ -86,11 +88,13 @@ export async function performKeyRecovery(
     newRegistrationAccessToken = data?.registration_access_token
 
     const serverKeys = data?.jwks?.keys ?? []
-    const serverModuli = serverKeys.map((k) => normalizeModulus(k?.n)).filter((n): n is string => n !== null)
+    const serverNs = serverKeys.map((k) => k?.n)
+    const serverKidsForLog = JSON.stringify(serverKeys.map((k) => k?.kid))
+    const serverModuli = serverNs.map((n) => normalizeModulus(n)).filter((n): n is string => n !== null)
 
     if (serverModuli.length === 0) {
       logger.warn(
-        '[performKeyRecovery] event=failed_empty_jwks server returned no decodable jwks moduli; refusing to prune or reassign'
+        `[performKeyRecovery] event=failed_empty_jwks server returned no decodable jwks moduli; refusing to prune or reassign (serverKids=${serverKidsForLog})`
       )
       return { status: 'failed', newRegistrationAccessToken }
     }
@@ -101,15 +105,12 @@ export async function performKeyRecovery(
     // Newest-created wins if more than one local key happens to share a modulus with the
     // server set (shouldn't normally happen, but stay deterministic if it does).
     const matched = localKeys
-      .filter((k) => {
-        const n = normalizeModulus(k.n)
-        return n !== null && serverModuli.includes(n)
-      })
+      .filter((k) => modulusInSet(k.n, serverNs))
       .sort((a, b) => (b.created ?? 0) - (a.created ?? 0))[0]
 
     if (!matched) {
       logger.warn(
-        `[performKeyRecovery] event=failed_no_match no local key modulus matches server jwks (local=${JSON.stringify(localIds)})`
+        `[performKeyRecovery] event=failed_no_match no local key modulus matches server jwks (local=${JSON.stringify(localIds)}, serverKids=${serverKidsForLog})`
       )
       return { status: 'no_match', newRegistrationAccessToken }
     }
@@ -124,7 +125,16 @@ export async function performKeyRecovery(
         continue
       }
       const n = normalizeModulus(k.n)
-      if (n !== null && serverModuli.includes(n)) {
+      if (n === null) {
+        // Can't decode this local key's OWN modulus, so we can't confirm it's absent from the
+        // server set — an unknown modulus is not the same as a confirmed-absent one.
+        // getAllKeysWithPublicInfo() is contracted (both platforms) to skip-and-log any alias it
+        // can't derive RSA components for, so this shouldn't happen in practice; if it ever does,
+        // never delete on "can't tell" — worst case a stale key lingers one more recovery pass.
+        logger.warn(`[performKeyRecovery] local key '${k.id}' has an undecodable modulus; skipping (not pruning)`)
+        continue
+      }
+      if (serverModuli.includes(n)) {
         // Still recognised by the server (e.g. a recent-previous registration version) — keep.
         continue
       }
@@ -196,8 +206,9 @@ export async function reRegisterNewestKey(
   logger: BifoldLogger
 ): Promise<ReRegisterResult> {
   try {
-    const account = await getAccount()
-    const { fcmDeviceToken, deviceToken } = await getNotificationTokens(logger)
+    // account (local read) and notification tokens (Firebase round trip) are independent —
+    // fetch concurrently rather than serializing an unrelated native/network wait.
+    const [account, { fcmDeviceToken, deviceToken }] = await Promise.all([getAccount(), getNotificationTokens(logger)])
     const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, null, account?.nickname)
 
     if (!body) {
@@ -207,6 +218,8 @@ export async function reRegisterNewestKey(
 
     const payload = JSON.parse(body) as Record<string, unknown>
     payload.client_id = clientId
+    // Mirrors the scope used by useAuthorizationApi.tsx's IAS_SCOPE and
+    // useRegistrationApi.tsx's updateRegistration — keep all three in sync if it ever changes.
     payload.scope = 'openid profile email address offline_access'
 
     const { data } = await apiClient.put<{ registration_access_token?: string }>(
