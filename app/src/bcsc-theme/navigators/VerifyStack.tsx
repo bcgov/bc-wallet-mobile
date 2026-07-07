@@ -245,7 +245,7 @@ const VerifyStack = () => {
         component={PendingReviewScreen}
         options={{
           header: createProgressHeader(5, 80),
-          headerLeft: (props) => <PendingReviewBackButton {...props} />,
+          headerLeft: PendingReviewBackButton,
         }}
       />
       <Stack.Screen
