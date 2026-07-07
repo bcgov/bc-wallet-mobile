@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>BC Wallet</string>
+	<string>BC Services Card</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -22,6 +22,18 @@
 	<string>????</string>
 	<key>CFBundleURLTypes</key>
 	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>ca.bc.gov.iddev.servicescard</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>ca.bc.gov.iddev.servicescard.v2</string>
+			</array>
+		</dict>
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
@@ -70,9 +82,9 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Camera used for QR Code scanning and video calls</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>BC Wallet wants to use your FaceID/TouchID to authenticate your identity</string>
+	<string>BC Services Card wants to use your FaceID/TouchID to authenticate your identity</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>BC Wallet needs access to your microphone to enable video calls</string>
+	<string>BC Services Card needs access to your microphone to enable video calls</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UIAppFonts</key>
