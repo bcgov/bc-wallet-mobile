@@ -1,47 +1,79 @@
 import { BifoldLogger } from '@bifold/core'
-import { deleteKey, getAllKeys, setActiveKeyAlias } from 'react-native-bcsc-core'
+import {
+  deleteKey,
+  getAccount,
+  getAllKeys,
+  getAllKeysWithPublicInfo,
+  getDynamicClientRegistrationBody,
+  setActiveKeyAlias,
+} from 'react-native-bcsc-core'
 import BCSCApiClient from '../api/client'
+import { normalizeModulus } from './jwk-modulus'
+import { getNotificationTokens } from './push-notification-tokens'
 
 interface ServerJwk {
-  kid: string
+  /** No longer used for matching (kid drifts across migrations) — kept only for diagnostics. */
+  kid?: string
   kty?: string
+  n?: string
 }
 
 interface ServerClientRegistrationView {
   client_id: string
+  /** RFC 7592: the reg token MAY rotate on GET/PUT. Surfaced so the caller can persist it. */
+  registration_access_token?: string
   jwks?: { keys?: ServerJwk[] }
 }
 
+export type KeyRecoveryStatus = 'recovered' | 'no_match' | 'failed'
+
+export type KeyRecoveryResult = {
+  status: KeyRecoveryStatus
+  /** Present when the GET response carried a rotated registration_access_token, regardless
+   * of `status` — the caller should persist it even on a 'failed' outcome. */
+  newRegistrationAccessToken?: string
+}
+
 /**
- * Probe the BCSC server for its current view of registered signing keys and
- * realign local key state to match. Called when /device/token returns 401,
- * which (after the conservative reconcile) is overwhelmingly caused by the
- * wallet signing with a kid the server no longer recognises (e.g. post-v3-
- * reset, post-keystore-restore, or post-rotation desync).
+ * Probe the BCSC server for its current view of registered signing keys and realign local key
+ * state to match. Called (from `useSecureActions.hydrateSecureState`) when a startup token
+ * refresh throws, which is overwhelmingly caused by the wallet signing with a key the server
+ * no longer recognises (e.g. post-v3-reset, post-keystore-restore, or an upgrade from a
+ * previous version that left multiple keys in the keychain/keystore).
+ *
+ * Matching is done on RSA modulus BYTES, never kid (see jwk-modulus.ts): device kids have
+ * drifted across migrations, and the server verifies a signature by trying ALL stored keys,
+ * so the modulus is what actually determines validity. A kid-string match can both activate
+ * the wrong key AND prune the right one (see issue #4166).
  *
  * Steps:
- *  1. GET /device/register/{client_id} with the registration_access_token
- *     to read jwks.keys[].kid (the server's source of truth).
- *  2. Enumerate every rsa\d+ key in the local keystore via getAllKeys().
- *  3. Intersect by kid string. If a local kid matches, mark it active via
+ *  1. GET /device/register/{client_id} with the registration_access_token to read
+ *     jwks.keys[].n (the server's source of truth). The GET may return MULTIPLE keys (the
+ *     server merges recent registration versions) — this is a MEMBERSHIP test.
+ *  2. Enumerate every local key (with its public RSA components) via getAllKeysWithPublicInfo().
+ *  3. Intersect by normalized modulus. If a local key matches, mark it active via
  *     setActiveKeyAlias() so the next sign uses it.
- *  4. Prune local keys whose kid is NOT in the server set. Guarded by
- *     `serverKids.length >= 1` so an unexpectedly empty jwks response never
- *     wipes the device; this loop additionally skips `matched.id` so the
- *     just-selected active alias is never a prune target. The native delete
- *     has its own last-line-of-defence guard that refuses to remove the
- *     final remaining alias.
+ *  4. Prune local keys whose modulus is NOT in the server set (recent-previous versions stay).
+ *     Guarded by `serverModuli.length >= 1` so an unexpectedly empty/undecodable jwks response
+ *     never wipes the device; this loop additionally skips `matched.id` so the just-selected
+ *     active alias is never a prune target. The native delete has its own last-line-of-defence
+ *     guard that refuses to remove the final remaining alias.
+ *  5. HARD post-prune gate: re-run getAllKeys() and require the newest-by-created entry to be
+ *     `matched.id`. On iOS, setActiveKeyAlias is verify-only (activation is prune-by-
+ *     elimination), so a swallowed prune failure of a newer unmatched key would otherwise let
+ *     the app "succeed" while still signing with the bad key — this gate turns that into a
+ *     `'failed'` result instead of a silently-wrong success.
  *
- * @returns true if recovery completed and the caller should retry token
- *   refresh once; false if no recovery occurred (no token, no match,
- *   network/probe failure, or empty server jwks).
+ * @returns a {@link KeyRecoveryResult}. `newRegistrationAccessToken`, when present, should be
+ *   persisted by the caller regardless of `status`.
  */
 export async function performKeyRecovery(
   apiClient: BCSCApiClient,
   clientId: string,
   registrationAccessToken: string,
   logger: BifoldLogger
-): Promise<boolean> {
+): Promise<KeyRecoveryResult> {
+  let newRegistrationAccessToken: string | undefined
   try {
     const { data } = await apiClient.get<ServerClientRegistrationView>(
       `${apiClient.endpoints.registration}/${clientId}`,
@@ -50,70 +82,147 @@ export async function performKeyRecovery(
         headers: { Authorization: `Bearer ${registrationAccessToken}` },
       }
     )
-    const serverKids = (data?.jwks?.keys ?? [])
-      .map((k) => k?.kid)
-      .filter((k): k is string => typeof k === 'string' && k.length > 0)
-    if (serverKids.length === 0) {
-      logger.warn('[performKeyRecovery] event=failed_empty_jwks server returned no jwks; refusing to prune or reassign')
-      return false
+
+    newRegistrationAccessToken = data?.registration_access_token
+
+    const serverKeys = data?.jwks?.keys ?? []
+    const serverModuli = serverKeys.map((k) => normalizeModulus(k?.n)).filter((n): n is string => n !== null)
+
+    if (serverModuli.length === 0) {
+      logger.warn(
+        '[performKeyRecovery] event=failed_empty_jwks server returned no decodable jwks moduli; refusing to prune or reassign'
+      )
+      return { status: 'failed', newRegistrationAccessToken }
     }
-    const localKeys = await getAllKeys()
+
+    const localKeys = await getAllKeysWithPublicInfo()
     const localIds = localKeys.map((k) => k.id)
-    const matched = localKeys.find((k) => serverKids.includes(k.id))
+
+    // Newest-created wins if more than one local key happens to share a modulus with the
+    // server set (shouldn't normally happen, but stay deterministic if it does).
+    const matched = localKeys
+      .filter((k) => {
+        const n = normalizeModulus(k.n)
+        return n !== null && serverModuli.includes(n)
+      })
+      .sort((a, b) => (b.created ?? 0) - (a.created ?? 0))[0]
+
     if (!matched) {
       logger.warn(
-        `[performKeyRecovery] event=failed_no_match no local key matches server kids (server=${JSON.stringify(serverKids)}, local=${JSON.stringify(localIds)})`
+        `[performKeyRecovery] event=failed_no_match no local key modulus matches server jwks (local=${JSON.stringify(localIds)})`
       )
-      return false
+      return { status: 'no_match', newRegistrationAccessToken }
     }
-    logger.info(`[performKeyRecovery] matched local kid '${matched.id}' against server jwks`)
+
+    logger.info(`[performKeyRecovery] matched local key '${matched.id}' against server jwks by modulus`)
     await setActiveKeyAlias(matched.id)
+
     let prunedCount = 0
     let pruneFailures = 0
     for (const k of localKeys) {
       if (k.id === matched.id) {
         continue
       }
-      if (serverKids.includes(k.id)) {
+      const n = normalizeModulus(k.n)
+      if (n !== null && serverModuli.includes(n)) {
+        // Still recognised by the server (e.g. a recent-previous registration version) — keep.
         continue
       }
       try {
         await deleteKey(k.id)
         prunedCount++
-        logger.info(`[performKeyRecovery] pruned local kid '${k.id}'`)
+        logger.info(`[performKeyRecovery] pruned local key '${k.id}'`)
       } catch (err) {
         pruneFailures++
         const m = err instanceof Error ? err.message : String(err)
         logger.warn(`[performKeyRecovery] failed to prune '${k.id}': ${m}`)
       }
     }
-    // Post-prune invariant check. On iOS, setActiveKeyAlias is validate-only
-    // (kSecAttrCreationDate is read-only) — the matched alias only becomes
-    // de-facto active once everything newer is gone. On Android, the active
-    // alias is whichever has the newest createdAt. Either way, after recovery
-    // the highest-created entry returned by getAllKeys() should be `matched`.
-    // If it isn't, signing will still hit the wrong kid and we'll just loop
-    // back into recovery on the next request — loud log is preferable to
-    // silent loop.
+
+    // Hard post-prune gate (see doc comment above). Unlike per-key prune failures logged just
+    // above — which are tolerated as long as they don't affect who ends up "newest" — this
+    // check is the authoritative success/failure signal, so a failure to even verify counts
+    // as 'failed' too, not a swallowed warning.
     try {
       const post = await getAllKeys()
       const newest = post.slice().sort((a, b) => (b.created ?? 0) - (a.created ?? 0))[0]
-      if (newest && newest.id !== matched.id) {
+      if (!newest || newest.id !== matched.id) {
         logger.error(
-          `[performKeyRecovery] event=post_prune_active_mismatch expected newest='${matched.id}' but got '${newest.id}' (remaining=${JSON.stringify(post.map((k) => k.id))})`
+          `[performKeyRecovery] event=post_prune_active_mismatch expected newest='${matched.id}' but got '${newest?.id}' (remaining=${JSON.stringify(post.map((k) => k.id))})`
         )
+        return { status: 'failed', newRegistrationAccessToken }
       }
     } catch (verifyErr) {
       const m = verifyErr instanceof Error ? verifyErr.message : String(verifyErr)
-      logger.warn(`[performKeyRecovery] post-prune verification failed: ${m}`)
+      logger.error(`[performKeyRecovery] event=post_prune_verification_failed could not confirm activation: ${m}`)
+      return { status: 'failed', newRegistrationAccessToken }
     }
+
     logger.info(
       `[performKeyRecovery] event=succeeded active='${matched.id}' pruned=${prunedCount} prune_failures=${pruneFailures}`
     )
-    return true
+    return { status: 'recovered', newRegistrationAccessToken }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     logger.error(`[performKeyRecovery] event=failed_probe recovery probe failed: ${message}`)
-    return false
+    return { status: 'failed', newRegistrationAccessToken }
+  }
+}
+
+export type ReRegisterResult = {
+  success: boolean
+  /** Rotated registration_access_token from the PUT response, if the server issued one. */
+  newRegistrationAccessToken?: string
+}
+
+/**
+ * No-match fallback for key recovery: the server's jwks doesn't contain any local key's
+ * modulus (e.g. the device's local keystore was restored independently of the server-side
+ * registration). Rather than forcing the user through a full card re-setup, PUT a fresh
+ * registration for the current newest local key using the existing registration_access_token
+ * — the same request shape as `useRegistrationApi.updateRegistration`'s PUT, rebuilt here
+ * without the hook since this runs from the key-recovery path, outside React.
+ *
+ * Deliberately does NOT round-trip GET metadata into the PUT (only jwks + client_id are
+ * echoed by the server; scopes/grants/etc. are server policy) and NEVER prunes local keys —
+ * an unattended re-registration is not the place to be deleting key material. If this
+ * succeeds, the server now recognises the (unchanged) newest local key; the *next* recovery
+ * pass's ordinary membership-prune will clean up any leftovers.
+ */
+export async function reRegisterNewestKey(
+  apiClient: BCSCApiClient,
+  clientId: string,
+  registrationAccessToken: string,
+  logger: BifoldLogger
+): Promise<ReRegisterResult> {
+  try {
+    const account = await getAccount()
+    const { fcmDeviceToken, deviceToken } = await getNotificationTokens(logger)
+    const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, null, account?.nickname)
+
+    if (!body) {
+      logger.error('[reRegisterNewestKey] event=failed native DCR body was null')
+      return { success: false }
+    }
+
+    const payload = JSON.parse(body) as Record<string, unknown>
+    payload.client_id = clientId
+    payload.scope = 'openid profile email address offline_access'
+
+    const { data } = await apiClient.put<{ registration_access_token?: string }>(
+      `${apiClient.endpoints.registration}/${clientId}`,
+      payload,
+      {
+        skipBearerAuth: true,
+        headers: { Authorization: `Bearer ${registrationAccessToken}` },
+      }
+    )
+
+    logger.info('[reRegisterNewestKey] event=succeeded re-registered newest local key with server')
+    return { success: true, newRegistrationAccessToken: data?.registration_access_token }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    logger.error(`[reRegisterNewestKey] event=failed ${message}`)
+    return { success: false }
   }
 }

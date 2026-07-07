@@ -47,7 +47,7 @@ import { TokenResponse } from '../api/hooks/useTokens'
 import { ProvinceCode } from '../utils/address-utils'
 import { createMinimalCredential, getCredentialVerificationStatus } from '../utils/bcsc-credential'
 import { isCardEvidenceComplete } from '../utils/card-utils'
-import { performKeyRecovery } from '../utils/key-recovery'
+import { performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 
 /**
@@ -854,6 +854,10 @@ export const useSecureActions = () => {
       }
 
       let freshTokens: TokenResponse | null = null
+      // Populated when the recovery probe (or the no-match re-registration fallback) surfaces a
+      // rotated registration_access_token — always persisted below when present, regardless of
+      // which branch this ends up taking (RFC 7592: the reg token may rotate on GET or PUT).
+      let recoveredRegistrationAccessToken: string | undefined
       if (refreshToken && apiClient && isClientReady) {
         try {
           freshTokens = await apiClient.getTokensForRefreshToken(refreshToken)
@@ -862,14 +866,42 @@ export const useSecureActions = () => {
           logger.error(`[hydrateSecureState] Failed to refresh tokens with stored refresh token: ${message}`)
           if (clientID && registrationAccessToken) {
             logger.info('[hydrateSecureState] Attempting key recovery in case of signing key mismatch...')
-            const recovered = await performKeyRecovery(apiClient, clientID, registrationAccessToken, logger)
-            if (recovered) {
+            const recovery = await performKeyRecovery(apiClient, clientID, registrationAccessToken, logger)
+            recoveredRegistrationAccessToken = recovery.newRegistrationAccessToken
+
+            if (recovery.status === 'recovered') {
               try {
                 freshTokens = await apiClient.getTokensForRefreshToken(refreshToken)
                 logger.info('[hydrateSecureState] token refresh succeeded after key recovery')
               } catch (retryError) {
                 const retryMessage = retryError instanceof Error ? retryError.message : String(retryError)
                 logger.error(`[hydrateSecureState] token refresh still failed after key recovery: ${retryMessage}`)
+              }
+            } else if (recovery.status === 'no_match') {
+              logger.info(
+                '[hydrateSecureState] No local key matches server jwks; attempting to re-register the newest local key...'
+              )
+              const reRegisterResult = await reRegisterNewestKey(
+                apiClient,
+                clientID,
+                recoveredRegistrationAccessToken ?? registrationAccessToken,
+                logger
+              )
+              recoveredRegistrationAccessToken =
+                reRegisterResult.newRegistrationAccessToken ?? recoveredRegistrationAccessToken
+
+              if (reRegisterResult.success) {
+                try {
+                  freshTokens = await apiClient.getTokensForRefreshToken(refreshToken)
+                  logger.info('[hydrateSecureState] token refresh succeeded after re-registration')
+                } catch (retryError) {
+                  const retryMessage = retryError instanceof Error ? retryError.message : String(retryError)
+                  logger.error(`[hydrateSecureState] token refresh still failed after re-registration: ${retryMessage}`)
+                }
+              } else {
+                logger.warn(
+                  '[hydrateSecureState] Re-registration of newest local key did not succeed; tokens remain stale.'
+                )
               }
             } else {
               logger.warn('[hydrateSecureState] Key recovery did not occur or did not succeed; tokens remain stale.')
@@ -880,7 +912,7 @@ export const useSecureActions = () => {
 
       await updateTokens({
         refreshToken: freshTokens?.refresh_token ?? refreshToken,
-        registrationAccessToken,
+        registrationAccessToken: recoveredRegistrationAccessToken ?? registrationAccessToken,
         accessToken: freshTokens?.access_token ?? accessToken,
       })
 
