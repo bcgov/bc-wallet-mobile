@@ -21,7 +21,7 @@ describe('QRScannerOverlay', () => {
   it('positions the reticle per the design at design dimensions', () => {
     const cutout = getCutoutRect(DESIGN_WIDTH, DESIGN_HEIGHT)
 
-    // 254pt square at x=61, 199pt below the header (Figma node 1229:3987)
+    // 254pt square centered horizontally (x=60.5), 199pt below the header (Figma node 1229:3987)
     expect(cutout.size).toBeCloseTo(254)
     expect(cutout.x).toBeCloseTo(60.5)
     expect(cutout.y).toBeCloseTo(199)
