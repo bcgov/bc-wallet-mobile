@@ -23,7 +23,9 @@
  * hand-rolled from standard base64.
  */
 
-const BASE64_CHARS_RE = /^[A-Za-z0-9+/]*=*$/
+// At most two trailing '=' and never interior — a stricter shape than "any number of trailing
+// padding chars" (see the comment at its call site below for why that laxer form is unsafe).
+const BASE64_CHARS_RE = /^[A-Za-z0-9+/]*={0,2}$/
 
 /**
  * Decode a base64 OR base64url string (padded or unpadded) into raw bytes.
@@ -37,18 +39,23 @@ export function decodeBase64Loose(value?: string): Uint8Array | null {
   // base64url -> standard base64 alphabet
   const base64 = value.replace(/-/g, '+').replace(/_/g, '/')
 
+  // Reject malformed padding/charset up front, BEFORE the length-based repad below — and on
+  // the un-padded string, not the padded one. Buffer.from(..., 'base64') decodes leniently:
+  // over-padded input like 'AQI====' (4 trailing '=' where only 1 is valid) is silently
+  // accepted as if it were 'AQI=', a "clean" decode from malformed input. A charset check
+  // that allows any *number* of trailing '=' (rather than at most two) would not catch this,
+  // and checking after repadding could let the repad step add still more '=' on top of an
+  // already-excessive count.
+  if (!BASE64_CHARS_RE.test(base64)) {
+    return null
+  }
+
   const remainder = base64.length % 4
   if (remainder === 1) {
     // Not a valid base64/base64url length under any padding scheme.
     return null
   }
   const padded = remainder === 0 ? base64 : base64 + '='.repeat(4 - remainder)
-
-  if (!BASE64_CHARS_RE.test(padded)) {
-    // Reject up front — Buffer.from(..., 'base64') silently ignores invalid characters
-    // rather than throwing, which would otherwise let garbage input decode "successfully".
-    return null
-  }
 
   const bytes = Buffer.from(padded, 'base64')
   if (bytes.length === 0) {

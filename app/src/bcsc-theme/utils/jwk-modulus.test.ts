@@ -34,7 +34,7 @@ describe('jwk-modulus', () => {
     })
 
     it('treats padded and unpadded encodings of the same modulus as equal', () => {
-      const padded = toBase64(OTHER_MODULUS_BYTES) // 4 bytes -> no padding needed at 3-byte boundary
+      const padded = toBase64(OTHER_MODULUS_BYTES) // 4 bytes -> 4 % 3 == 1, so base64 needs 2 padding chars ('AQIDBA==')
       const twoBytePadded = Buffer.from([0x01, 0x02]).toString('base64') // 'AQI=' — has padding
       const twoByteUnpadded = twoBytePadded.replace(/=+$/, '') // 'AQI'
 
@@ -70,7 +70,7 @@ describe('jwk-modulus', () => {
   })
 
   describe('undecodable / empty input', () => {
-    it.each([undefined, '', 'not-valid-base64!!!', '===='])('normalizeModulus(%p) -> null', (input) => {
+    it.each([undefined, '', 'not-valid-base64!!!', '====', 'AQI===='])('normalizeModulus(%p) -> null', (input) => {
       expect(normalizeModulus(input)).toBeNull()
     })
 
@@ -96,6 +96,22 @@ describe('jwk-modulus', () => {
       expect(decodeBase64Loose('')).toBeNull()
       expect(decodeBase64Loose('a')).toBeNull() // length % 4 === 1 is never valid
       expect(decodeBase64Loose('not valid base64 at all!!!')).toBeNull()
+    })
+
+    it('rejects over-padded input instead of silently decoding it like a well-formed value', () => {
+      // 'AQI====' has 4 trailing '=' where only 1 is valid for 3 significant chars. Node's
+      // Buffer.from(..., 'base64') is lenient enough to decode this identically to the
+      // well-formed 'AQI=' — a false "clean" decode from malformed input — so this must be
+      // rejected before it ever reaches Buffer.from.
+      expect(decodeBase64Loose('AQI====')).toBeNull()
+      expect(normalizeModulus('AQI====')).toBeNull()
+
+      // Regression: legitimately padded and unpadded encodings of the same value must still
+      // decode/normalize as before, and to the same result as each other.
+      expect(Array.from(decodeBase64Loose('AQI=') ?? [])).toEqual([0x01, 0x02])
+      expect(Array.from(decodeBase64Loose('AQI') ?? [])).toEqual([0x01, 0x02])
+      expect(normalizeModulus('AQI=')).not.toBeNull()
+      expect(normalizeModulus('AQI=')).toBe(normalizeModulus('AQI'))
     })
   })
 })

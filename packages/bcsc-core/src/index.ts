@@ -127,7 +127,7 @@ export interface PrivateKeyInfo {
   id: string; // 'id' for platform neutrality
   keyType?: string;
   keySize?: number;
-  created?: number; // Timestamp
+  created?: number; // Timestamp — SECONDS since epoch on iOS, MILLISECONDS on Android (see KeyPublicInfo.created)
 }
 
 /**
@@ -143,6 +143,13 @@ export interface KeyPublicInfo {
   id: string;
   n: string;
   e: string;
+  /**
+   * Creation timestamp — platform units differ, same as {@link PrivateKeyInfo.created} /
+   * `getAllKeys()`: iOS reports SECONDS since epoch (`Date.timeIntervalSince1970`), Android
+   * reports MILLISECONDS since epoch (`System.currentTimeMillis()`-based). Never compare this
+   * value across platforms. Key-recovery's newest-wins ordering is safe regardless, because it
+   * only ever compares `created` values gathered from a single device's platform at runtime.
+   */
   created?: number;
 }
 
