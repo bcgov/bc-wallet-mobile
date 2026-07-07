@@ -7,7 +7,7 @@ import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useInitializeAccountStatus } from '../api/hooks/useInitializeAccountStatus'
 import useThirdPartyKeyboardWarning from '../api/hooks/useThirdPartyKeyboardWarning'
-import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
+import { BCSCAccountProvider, useAccount } from '../contexts/BCSCAccountContext'
 import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
 import { BCSCIdTokenProvider } from '../contexts/BCSCIdTokenContext'
 import { LoadingScreen } from '../contexts/BCSCLoadingContext'
@@ -16,11 +16,26 @@ import { useFcmService } from '../features/fcm'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { useVerificationStatus } from '../hooks/useVerificationStatus'
+import { isAccountExpired } from '../utils/datetime-utils'
 import { toAppError } from '../utils/native-error-map'
 import AuthStack from './AuthStack'
 import BCSCMainStack from './MainStack'
 import OnboardingStack from './OnboardingStack'
 import VerifyStack from './VerifyStack'
+
+// Keeps FcmViewModel in sync with card expiry so it can drop challenges for expired users.
+// Must live inside BCSCAccountProvider.
+const FcmCardExpirySync: React.FC = () => {
+  const { account } = useAccount()
+  const fcmService = useFcmService()
+
+  useEffect(() => {
+    const isExpired = account != null ? isAccountExpired(account.account_expiration_date) : false
+    fcmService.viewModel.setCardExpired(isExpired)
+  }, [account, fcmService.viewModel])
+
+  return null
+}
 
 const BCSCRootStack: React.FC = () => {
   const { t } = useTranslation()
@@ -92,6 +107,7 @@ const BCSCRootStack: React.FC = () => {
       ) : (
         <BCSCActivityProvider>
           <BCSCAccountProvider>
+            <FcmCardExpirySync />
             {isVerified ? (
               <BCSCIdTokenProvider>
                 <BCSCMainStack />

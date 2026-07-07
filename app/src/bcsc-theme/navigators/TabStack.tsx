@@ -22,7 +22,7 @@ import { AgentReadyGate, CredentialsReadyGate } from '../features/agent'
 import Home from '../features/home/Home'
 import { FloatingScanButton } from '../features/scan'
 import Services from '../features/services/Services'
-import { useVerificationStatus } from '../hooks/useVerificationStatus'
+import { useCardStatus } from '../hooks/useCardStatus'
 import { BCSCMainStackParams, BCSCScreens, BCSCTabStackParams } from '../types/navigators'
 
 const ScopedCredentialStack: React.FC = () => (
@@ -122,7 +122,7 @@ const BCSCTabStack: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const { bottom: safeAreaBottom } = useSafeAreaInsets()
   const { t } = useTranslation()
-  const { isVerified } = useVerificationStatus()
+  const { isActivelyVerified, isExpired } = useCardStatus()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   // FIXME (V4.1.x): Add custom notifications and credential notifications together to calculate badge count.
@@ -152,9 +152,14 @@ const BCSCTabStack: React.FC = () => {
         screenListeners={({ route }) => ({
           focus: () => {
             // Hijack the focus event for the Services tab if the user is not verified
-            if (route.name === BCSCScreens.Services && !isVerified) {
-              logger.debug('[BCSCTabStack] User is not verified, redirecting to VerifyPrompt screen')
-              navigation.navigate(BCSCScreens.MainVerifyPrompt)
+            if (route.name === BCSCScreens.Services && !isActivelyVerified) {
+              if (isExpired) {
+                logger.debug('[BCSCTabStack] User is expired, redirecting to Expired screen')
+                navigation.navigate(BCSCScreens.ReverifyAccount, { isExpired })
+              } else {
+                logger.debug('[BCSCTabStack] User is not verified, redirecting to VerifyPrompt screen')
+                navigation.navigate(BCSCScreens.MainVerifyPrompt)
+              }
               return
             }
 
@@ -162,10 +167,15 @@ const BCSCTabStack: React.FC = () => {
           },
           tabPress: (event) => {
             // Hijack the tab press event for the Services tab if the user is not verified
-            if (route.name === BCSCScreens.Services && !isVerified) {
-              logger.debug('[BCSCTabStack] User is not verified, redirecting to VerifyPrompt screen')
+            if (route.name === BCSCScreens.Services && !isActivelyVerified) {
               event.preventDefault() // Prevents navigation to the Services tab
-              navigation.navigate(BCSCScreens.MainVerifyPrompt)
+              if (isExpired) {
+                logger.debug('[BCSCTabStack] User is expired, redirecting to Expired screen')
+                navigation.navigate(BCSCScreens.ReverifyAccount, { isExpired })
+              } else {
+                logger.debug('[BCSCTabStack] User is not verified, redirecting to VerifyPrompt screen')
+                navigation.navigate(BCSCScreens.MainVerifyPrompt)
+              }
             }
           },
         })}
