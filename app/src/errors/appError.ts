@@ -1,4 +1,4 @@
-import { AxiosAppError } from '@/bcsc-theme/api/clientErrorPolicies'
+import type { AxiosAppError } from '@/bcsc-theme/api/clientErrorPolicies'
 import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'

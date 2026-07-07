@@ -1,6 +1,7 @@
 import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
-import { AppError, isAppError, isHandledAppError } from './appError'
+import { AxiosError } from 'axios'
+import { AppError, isAppError, isAxiosAppError, isHandledAppError } from './appError'
 import { ErrorCategory, ErrorRegistry, ErrorSeverity } from './errorRegistry'
 
 jest.mock('@/contexts/NavigationContainerContext', () => ({
@@ -415,6 +416,31 @@ describe('AppError', () => {
       const error = new AppError('Error', identity)
 
       expect(isAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)).toBe(false)
+    })
+  })
+
+  describe('isAxiosAppError', () => {
+    it('should return true for AppError with AxiosError cause', () => {
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+
+      const axiosAppError = new AppError('Error', identity, { cause: new AxiosError() })
+
+      expect(isAxiosAppError(axiosAppError)).toBe(true)
+    })
+
+    it('should return false for AppError without AxiosError cause', () => {
+      const identity = {
+        category: ErrorCategory.GENERAL,
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+        statusCode: 1234,
+      }
+
+      const appError = new AppError('Error', identity)
+      expect(isAxiosAppError(appError)).toBe(false)
     })
   })
 })
