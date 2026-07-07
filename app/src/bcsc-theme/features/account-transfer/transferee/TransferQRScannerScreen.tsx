@@ -1,20 +1,12 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
-import { getCutoutRect, QRScannerOverlay } from '@/bcsc-theme/components/QRScannerOverlay'
+import { QRScannerFrame } from '@/bcsc-theme/components/QRScannerFrame'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { DismissiblePopupModal, ScanCamera, ThemedText, useTheme } from '@bifold/core'
+import { DismissiblePopupModal, ScanCamera } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useState } from 'react'
+import React from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  ActivityIndicator,
-  NativeSyntheticEvent,
-  StyleSheet,
-  TextLayoutEventData,
-  useWindowDimensions,
-  View,
-} from 'react-native'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import useTransferQRScannerViewModel from './useTransferQRScannerViewModel'
 
 type TransferQRScannerScreenProps = {
@@ -22,55 +14,13 @@ type TransferQRScannerScreenProps = {
 }
 
 const TransferQRScannerScreen: React.FC<TransferQRScannerScreenProps> = ({ navigation }) => {
-  const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
   const { isLoading, isPermissionLoading, hasPermission, scanError, handleScan, dismissError } =
     useTransferQRScannerViewModel(navigation)
 
-  // Camera area dimensions drive the overlay's reticle position and the instructions
-  // placement. The window is a close-enough first render; onLayout provides the real
-  // size (the window includes the header, which sits above this screen's container).
-  const window = useWindowDimensions()
-  const [cameraArea, setCameraArea] = useState({ width: window.width, height: window.height })
-  const cutout = getCutoutRect(cameraArea.width, cameraArea.height)
-
-  // Wrapped text fills all the width it's offered, which would push the icon+text row
-  // edge-to-edge and off the reticle's center line. Shrink the text box to its widest
-  // rendered line so the row hugs its content and centers properly.
-  const [messageTextWidth, setMessageTextWidth] = useState<number | undefined>(undefined)
-  const handleMessageTextLayout = (event: NativeSyntheticEvent<TextLayoutEventData>) => {
-    const { lines } = event.nativeEvent
-    if (!lines.length) {
-      return
-    }
-
-    const widestLine = Math.ceil(Math.max(...lines.map((line) => line.width)))
-    setMessageTextWidth((current) => (current === widestLine ? current : widestLine))
-  }
-
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-    },
-    icon: {
-      color: ColorPalette.grayscale.white,
-    },
-    messageContainer: {
-      // Centered in the gap between the header and the reticle
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: cutout.y,
-      paddingHorizontal: 40,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: Spacing.md,
-    },
-    messageText: {
-      color: ColorPalette.grayscale.white,
-      flexShrink: 1,
     },
   })
 
@@ -87,26 +37,9 @@ const TransferQRScannerScreen: React.FC<TransferQRScannerScreenProps> = ({ navig
   }
 
   return (
-    <View
-      style={styles.container}
-      onLayout={(event) => {
-        const { width, height } = event.nativeEvent.layout
-        setCameraArea((current) => (current.width === width && current.height === height ? current : { width, height }))
-      }}
-    >
+    <View style={styles.container}>
       <ScanCamera handleCodeScan={handleScan} enableCameraOnError={true} error={scanError} />
-      <View pointerEvents="none">
-        <QRScannerOverlay width={cameraArea.width} height={cameraArea.height} />
-      </View>
-      <View style={styles.messageContainer}>
-        <Icon name="qrcode-scan" size={40} style={styles.icon} />
-        <ThemedText
-          style={[styles.messageText, messageTextWidth !== undefined && { width: messageTextWidth }]}
-          onTextLayout={handleMessageTextLayout}
-        >
-          {t('BCSC.Scan.WillScanAutomatically')}
-        </ThemedText>
-      </View>
+      <QRScannerFrame message={t('BCSC.Scan.WillScanAutomatically')} />
       {scanError && (
         <DismissiblePopupModal
           title={t('BCSC.Scan.ErrorDetails')}

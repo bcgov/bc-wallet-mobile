@@ -6,9 +6,11 @@ import useScanScreenViewModel from './useScanScreenViewModel'
 
 jest.mock('@bifold/core', () => ({
   ScanCamera: jest.fn().mockReturnValue(null),
-  SVGOverlay: jest.fn().mockReturnValue(null),
-  MaskType: { QR_CODE: 'QR_CODE' },
-  ThemedText: ({ children }: any) => children,
+  ThemedText: ({ children, ...props }: any) => {
+    const ActualReact = jest.requireActual('react')
+    const { Text } = jest.requireActual('react-native')
+    return ActualReact.createElement(Text, props, children)
+  },
   DismissiblePopupModal: ({ description }: any) => description ?? null,
   testIdWithKey: (k: string) => `id/${k}`,
   useTheme: () => ({
@@ -62,6 +64,11 @@ describe('QRScanner', () => {
   it('renders the scanner when camera permission is granted', () => {
     render(<QRScanner />)
     expect(Bifold.ScanCamera).toHaveBeenCalled()
+  })
+
+  it('shows the scan instructions inside the scanner frame', () => {
+    render(<QRScanner />)
+    expect(screen.getByText('BCSC.Scan.WillScanAutomatically')).toBeTruthy()
   })
 
   it('shows PermissionDisabled when camera permission is not granted', () => {
