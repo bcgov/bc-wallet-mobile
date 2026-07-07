@@ -286,27 +286,46 @@ _Each leaf config only contains **capabilities** (device name, platform version,
 
 ### _Screen Objects & TestIDs_
 
-_Screen interactions use_ `BaseScreen` _instances backed by the central_ `BCSC_TestIDs` _registry in_ `src/testIDs.ts`_. Each screen group is created by passing its TestID section to_ `BaseScreen`_:_
+_Screens are described with the action-based **screen-object DSL** (`defineScreen`). A descriptor maps **semantic roles** (`primary`, `secondary`, `back`, `help`, `menu`) plus named `links` / `inputs` / `elements` to test IDs; specs then drive screens **by role**, so a renamed test ID is a one-line descriptor edit rather than churn across every spec. Descriptors live **one file per stack** under_ `src/screens/<stack>.ts`_, built on the low-level_ `BaseScreen` _engine in_ `src/screens/core/`_._
+
+_A spec speaks in roles — never raw test IDs:_
 
 ```typescript
-import { BaseScreen } from '../../src/screens/BaseScreen.js'
-import { BCSC_TestIDs } from '../../src/testIDs.js'
-
-const AccountSetup = new BaseScreen(BCSC_TestIDs.AccountSetup)
-const IntroCarousel = new BaseScreen(BCSC_TestIDs.IntroCarousel)
+import { Timeouts } from '../../src/constants.js'
+import { OnboardingIntroScreen, OnboardingPrivacyPolicyScreen } from '../../src/screens/onboarding.js'
 
 describe('App Launch', () => {
-  it('should launch and display the first screen', async () => {
-    await AccountSetup.waitFor('AddAccount')
+  it('cold-starts on the onboarding intro screen', async () => {
+    await OnboardingIntroScreen.expectVisible(Timeouts.APP_LAUNCH)
   })
 
-  it('should navigate through setup', async () => {
-    await AccountSetup.tap('AddAccount')
-    await IntroCarousel.waitFor('CarouselNext', 20_000)
-    await IntroCarousel.tap('CarouselNext')
+  it('advances Intro → Privacy Policy', async () => {
+    await OnboardingIntroScreen.tap('primary') // 'menu' here would be a compile error — no such role
+    await OnboardingPrivacyPolicyScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 })
 ```
+
+_A descriptor declares the roles a screen exposes._ `Screen` _methods:_ `expectVisible()`_,_ `tap(role)`_,_ `tapWhenEnabled(role)`_,_ `link(name)`_,_ `scrollToLink(name)`_,_ `fill(name, value)`_,_ `read(name)`_,_ `isVisible(name)`_,_ `back.tap()`_,_ `help.open()`_,_ `el(rawTestId)`_. A_ `const` _type parameter keeps role/name keys literal, so undeclared roles fail at compile time and everything autocompletes:_
+
+```typescript
+// src/screens/onboarding.ts
+import { TestIds } from '../test-ids/registry.js'
+import { bcsc, defineScreen } from './core/index.js'
+
+const ob = TestIds.onboarding
+
+export const OnboardingIntroScreen = defineScreen({
+  self: bcsc(ob.intro.continue), // proves the screen mounted (defaults to `primary`)
+  primary: bcsc(ob.intro.continue), // → Privacy Policy
+  secondary: bcsc(ob.intro.learnMore),
+  help: bcsc(TestIds.common.help),
+})
+```
+
+**_Single source of test IDs._** _Test ID **keys** and the_ `com.ariesbifold:id/` _prefix live in one dependency-free registry,_ `src/test-ids/registry.ts`_;_ `bcsc(key)` _wraps a key into the selector both platforms use. That key is the same one the app passes to bifold's_ `testIdWithKey`_, and the registry is written to move into an app-owned/shared location so the app and the tests draw from it — a renamed key then updates both, enforced by_ `tsc`_. Pass a_ `{ ios, android }` _pair instead of a bare key for the rare element whose id differs per platform._
+
+> _**Legacy:** not-yet-migrated specs still use_ `new BaseScreen(BCSC_TestIDs.X)` _with the flat registry in_ `src/testIDs.ts` _(re-exported through the_ `src/screens/BaseScreen.ts` _shim). New specs and screens use the DSL; stacks are being migrated file by file — see_ [`.notes/rework/`](.notes/rework/README.md)_._
 
 _Element lookup is cross-platform with no branching:_
 
@@ -401,7 +420,7 @@ _Place local builds in_ `e2e/apps/` _for local testing. See_ [`apps/README.md`](
 
 1. **_One test suite, many targets_** _— the same specs run locally and on SauceLabs. Config files are the only difference._
 2. **_Variant + suite driven_** _— the_ `VARIANT` _env var selects which test directory to run (e.g._ `test/bcsc/`_), while_ `--suite` _selects the depth:_ `smoke` _for a quick sanity check,_ `happy-path` _for a straight-through flow,_ `full-regression` _for full coverage with detours and additional verification._
-3. **_Generic screen objects_** _— a single_ `BaseScreen` _class paired with a central_ `BCSC_TestIDs` _registry replaces per-screen page objects, keeping selectors in one place and screen interactions uniform._
+3. **_Action-based screen objects_** _— specs drive screens by semantic role via typed descriptors (_`defineScreen`_, one file per stack under_ `src/screens/`_) on the_ `BaseScreen` _engine in_ `src/screens/core/`_. Test IDs come from one dependency-free registry (_`src/test-ids/registry.ts`_), so a renamed id is a single edit and undeclared roles fail at compile time._
 4. **_Workspace package_** _—_ `e2e/` _is a Yarn workspace package with its own_ `package.json`_, isolated from_ `app/`_._
 
 ## _Directory Structure_
@@ -440,8 +459,11 @@ e2e/
 ├── src/
 │   ├── constants.ts                         # timeouts, TestUsers, and shared values
 │   ├── e2eConfig.ts                         # variant detection (bcsc / bc-wallet)
-│   ├── testIDs.ts                           # central registry of accessibility / resource IDs
+│   ├── testIDs.ts                           # legacy flat registry (BCSC_TestIDs) — used by un-migrated specs
 │   ├── v3TestIDs.ts                         # v3 native app selectors (iOS + Android) for migration
+│   │
+│   ├── test-ids/
+│   │   └── registry.ts                      # single source of testID keys + com.ariesbifold:id/ prefix
 │   │
 │   ├── helpers/
 │   │   ├── alerts.ts                        # iOS system alert acceptance (permissions, dialogs)
@@ -451,8 +473,17 @@ e2e/
 │   │   ├── gestures.ts                      # swipe, scroll, tap-at-coordinate wrappers
 │   │   └── sauce.ts                         # SauceLabs-specific utilities (detection, annotations)
 │   │
-│   └── screens/                             # screen objects — generic base + BCSC_TestIDs registry
-│       └── BaseScreen.ts                    # cross-platform element lookup, tap, wait, scroll
+│   └── screens/                             # action-based screen-object DSL, one file per stack
+│       ├── core/
+│       │   ├── BaseScreen.ts                # cross-platform element lookup, tap, wait, scroll (engine)
+│       │   ├── defineScreen.ts              # role → testID descriptor + typed Screen<S>
+│       │   ├── appId.ts                     # bcsc(key): wraps a key in the shared prefix
+│       │   └── index.ts                     # core barrel
+│       ├── onboarding.ts                    # onboarding stack descriptors (migrated to DSL)
+│       ├── auth.ts                          # auth stack (placeholder)
+│       ├── verify.ts                        # verify stack (placeholder)
+│       ├── main.ts                          # main stack (placeholder)
+│       └── BaseScreen.ts                    # deprecated shim → core/BaseScreen (keeps old specs compiling)
 │
 ├── test/
 │   ├── bc-wallet/                           # BC Wallet variant test suite

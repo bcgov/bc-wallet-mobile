@@ -1,25 +1,36 @@
+import { Timeouts } from '../../src/constants.js'
 import { getE2EConfig } from '../../src/e2eConfig.js'
 import { annotate } from '../../src/helpers/sauce.js'
-import { BaseScreen } from '../../src/screens/BaseScreen.js'
-import { BCSC_TestIDs } from '../../src/testIDs.js'
+import {
+  OnboardingIntroScreen,
+  OnboardingPrivacyPolicyScreen,
+  OnboardingTermsOfUseScreen,
+} from '../../src/screens/onboarding.js'
 
-const AccountSetup = new BaseScreen(BCSC_TestIDs.AccountSetup)
-const SetupTypes = new BaseScreen(BCSC_TestIDs.SetupTypes)
-const IntroCarousel = new BaseScreen(BCSC_TestIDs.IntroCarousel)
-
-describe('App Launch', () => {
+/**
+ * BCSC smoke: prove the app cold-starts and the first onboarding screens navigate.
+ *
+ * v4.1 changed the launch flow — a fresh install now opens on `OnboardingIntro`, not the old
+ * AccountSetup screen (which moved into `VerifyStack`). The previous smoke waited for `AddAccount`
+ * on launch and so failed on every PR. This spec targets the real v4.1 entry flow.
+ *
+ * It also seeds the new action-based screen-object DSL (FND-1): specs drive screens by semantic
+ * role (`expectVisible()`, `tap('primary')`) via descriptors under `src/screens/onboarding/`, so a
+ * renamed testID is a one-line descriptor edit rather than spec churn.
+ */
+describe('BCSC smoke: app launch + onboarding entry', () => {
   const { variant } = getE2EConfig()
 
-  it('should launch and display the first screen', async () => {
+  it('cold-starts on the onboarding intro screen', async () => {
     await annotate(`Variant: ${variant}`)
-    await AccountSetup.waitFor('AddAccount')
+    await OnboardingIntroScreen.expectVisible(Timeouts.APP_LAUNCH)
   })
 
-  it('should complete initial onboarding navigation', async () => {
-    await AccountSetup.tap('AddAccount')
-    await SetupTypes.waitFor('Continue', 20_000)
-    await SetupTypes.tap('Continue')
-    await IntroCarousel.waitFor('CarouselNext', 20_000)
-    await IntroCarousel.tap('CarouselNext')
+  it('advances Intro → Privacy Policy → Terms of Use', async () => {
+    await OnboardingIntroScreen.tap('primary')
+    await OnboardingPrivacyPolicyScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+
+    await OnboardingPrivacyPolicyScreen.tap('primary')
+    await OnboardingTermsOfUseScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 })
