@@ -1,19 +1,18 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useTranslation } from 'react-i18next'
-import NotificationCard, { NotificationCardStatus } from './NotificationCard'
+import NotificationActionCard from './NotificationActionCard'
 
 const PendingReviewNotification = () => {
   const { t } = useTranslation()
   const secureActions = useSecureActions()
 
   return (
-    <NotificationCard
+    <NotificationActionCard
       title={t('Notification.PendingReview.Title')}
       description={t('Notification.PendingReview.Description')}
       buttonTitle={t('Notification.PendingReview.ButtonTitle')}
       icon="alert-circle"
       onPress={() => secureActions.continueVerificationProcess()}
-      status={NotificationCardStatus.Unread}
     />
   )
 }

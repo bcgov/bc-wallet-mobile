@@ -93,9 +93,13 @@ const translation = {
   "Notification": {
     "StartVerification": {
       "Title": "You're not verified",
-      "Description": "You can continue the verification process at any time.",
+      "Description": "You can continue the verification process at anytime.",
       "ButtonTitle": "Start verification",
-      "ContinueButtonTitle": "Continue verification"
+    },
+    "ContinueVerification": {
+      "Title": "You're not verified",
+      "Description": "Complete the verification process at anytime.",
+      "ButtonTitle": "Continue",
     },
     "PendingReview": {
       "Title": "Your identity verification is pending",
@@ -103,7 +107,7 @@ const translation = {
       "ButtonTitle": "Check status"
     },
     "CancelledReview": {
-      "Title": "Your identity could not be verifed",
+      "Title": "Your identity could not be verified",
       "Description": "Verify your identity again to access services.",
       "ButtonTitle": "Restart verification"
     },

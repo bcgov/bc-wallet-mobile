@@ -3,7 +3,7 @@ import { computeSetupStepCompletion } from '@/bcsc-theme/utils/setup-step-comple
 import { BCState } from '@/store'
 import { useStore, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
-import NotificationCard, { NotificationCardStatus } from './NotificationCard'
+import NotificationActionCard from './NotificationActionCard'
 
 /**
  * StartVerificationNotification is a component that displays a notification card prompting the user to start the verification process for their BCSC account.
@@ -24,7 +24,7 @@ const StartVerificationNotification = () => {
     : t('Notification.StartVerification.ButtonTitle')
 
   return (
-    <NotificationCard
+    <NotificationActionCard
       title={t('Notification.StartVerification.Title')}
       description={t('Notification.StartVerification.Description')}
       buttonTitle={buttonTitle}
@@ -34,7 +34,6 @@ const StartVerificationNotification = () => {
       onPress={() => {
         secureActions.continueVerificationProcess()
       }}
-      status={NotificationCardStatus.Unread}
     />
   )
 }

@@ -4,7 +4,7 @@ import { useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import NotificationCard, { NotificationCardStatus } from './NotificationCard'
+import NotificationActionCard from './NotificationActionCard'
 
 const CancelledReviewNotification = () => {
   const { t } = useTranslation()
@@ -13,12 +13,11 @@ const CancelledReviewNotification = () => {
   const agentReason = store.bcscSecure.verificationRequestStatusMessage
 
   return (
-    <NotificationCard
+    <NotificationActionCard
       title={t('Notification.CancelledReview.Title')}
       description={t('Notification.CancelledReview.Description')}
       buttonTitle={t('Notification.CancelledReview.ButtonTitle')}
       icon="alert-circle"
-      status={NotificationCardStatus.Unread}
       onPress={() => navigation.navigate(BCSCScreens.CancelledReview, { agentReason })}
     />
   )
