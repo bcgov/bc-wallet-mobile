@@ -294,6 +294,11 @@ const VerifyStack = () => {
       <Stack.Screen
         name={BCSCScreens.EvidenceIDCollection}
         component={EvidenceIDCollectionScreen}
+        initialParams={
+          resumeRoute.name === BCSCScreens.EvidenceIDCollection
+            ? (resumeRoute.params as BCSCVerifyStackParams[typeof BCSCScreens.EvidenceIDCollection])
+            : undefined
+        }
         options={{ header: createProgressHeader(2, 75) }}
       />
       <Stack.Screen name={BCSCScreens.VerifyWebView} component={WebViewScreen} />

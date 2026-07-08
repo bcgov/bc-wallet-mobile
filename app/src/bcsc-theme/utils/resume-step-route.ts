@@ -2,6 +2,7 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { BCState } from '@/store'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { isUserVerified } from './bcsc-credential'
+import { isEvidenceAwaitingDocumentNumber } from './card-utils'
 import { computeSetupStepCompletion } from './setup-step-completion'
 
 export type ResumeStepRoute = {
@@ -47,7 +48,20 @@ export const getResumeStepRoute = (store: BCState): ResumeStepRoute => {
   }
 
   switch (completion.currentStep) {
-    case 'id':
+    case 'id': {
+      // A half-finished evidence — all required photos captured but no document number
+      // entered yet — means the user left while on EvidenceIDCollection. Resume them
+      // straight back there so their photos aren't discarded by EvidenceTypeList's
+      // incomplete-evidence cleanup (which would otherwise send them to the flow's start).
+      const evidenceAwaitingDocumentNumber = store.bcscSecure.additionalEvidenceData.find(
+        isEvidenceAwaitingDocumentNumber
+      )
+      if (evidenceAwaitingDocumentNumber?.evidenceType) {
+        return {
+          name: BCSCScreens.EvidenceIDCollection,
+          params: { cardType: evidenceAwaitingDocumentNumber.evidenceType },
+        }
+      }
       if (completion.id.nonBcscNeedsAdditionalCard) {
         return { name: BCSCScreens.EvidenceTypeList, params: { cardProcess: BCSCCardProcess.NonBCSC } }
       }
@@ -55,6 +69,7 @@ export const getResumeStepRoute = (store: BCState): ResumeStepRoute => {
         return { name: BCSCScreens.AdditionalIdentificationRequired }
       }
       return { name: BCSCScreens.IdentitySelection }
+    }
     case 'address':
       return { name: BCSCScreens.ResidentialAddress }
     case 'email':
