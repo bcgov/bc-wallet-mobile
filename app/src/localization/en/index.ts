@@ -1128,7 +1128,8 @@ const translation = {
       "CheckYourIDBullet1": "Both IDs should have the same name",
       "CheckYourIDBullet2": "At least one must be issued in Canada",
       "CheckYourIDBullet3": "One must have a recent photo",
-      "CheckYourIDBullet4": "Both must not be expired",
+      "CheckYourIDBullet4": "Both must be valid",
+      "SeeAcceptedID": "See accepted ID",
     },
     "IDPhotoInformation": {
       "Heading": "Take a photo of your ID. An agent will look at this photo when verifying your identity.",

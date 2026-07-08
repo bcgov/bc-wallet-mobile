@@ -90,11 +90,8 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
                 "alignContent": "center",
                 "alignItems": "flex-start",
                 "flexDirection": "row",
-                "marginVertical": 8,
               },
-              {
-                "marginVertical": 4,
-              },
+              undefined,
             ]
           }
         >
@@ -157,11 +154,8 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
                 "alignContent": "center",
                 "alignItems": "flex-start",
                 "flexDirection": "row",
-                "marginVertical": 8,
               },
-              {
-                "marginVertical": 4,
-              },
+              undefined,
             ]
           }
         >
@@ -224,11 +218,8 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
                 "alignContent": "center",
                 "alignItems": "flex-start",
                 "flexDirection": "row",
-                "marginVertical": 8,
               },
-              {
-                "marginVertical": 4,
-              },
+              undefined,
             ]
           }
         >
@@ -291,11 +282,8 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
                 "alignContent": "center",
                 "alignItems": "flex-start",
                 "flexDirection": "row",
-                "marginVertical": 8,
               },
-              {
-                "marginVertical": 4,
-              },
+              undefined,
             ]
           }
         >
@@ -352,6 +340,34 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
           </Text>
         </View>
       </View>
+      <Text
+        accessibilityLabel="BCSC.DualNonBCSCEvidence.SeeAcceptedID"
+        accessibilityRole="link"
+        accessible={true}
+        maxFontSizeMultiplier={2}
+        onPress={[Function]}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+            [
+              {
+                "alignSelf": "flex-start",
+                "color": "#1A5A96",
+                "textDecorationLine": "underline",
+              },
+              {},
+            ],
+          ]
+        }
+        testID="com.ariesbifold:id/SeeAcceptedID"
+      >
+        BCSC.DualNonBCSCEvidence.SeeAcceptedID
+      </Text>
       <Text
         maxFontSizeMultiplier={2}
         style={
