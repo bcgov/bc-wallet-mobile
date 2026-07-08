@@ -305,6 +305,15 @@ const Developer: React.FC = () => {
     })
   }
 
+  const resetOnboardingIntro = () => {
+    // Clear the "seen" flag so the welcome/intro is shown again the next time AuthStack mounts
+    // (i.e. the next app launch or unlock) — mirrors how the intro is gated for returning users.
+    dispatch({
+      type: BCDispatchAction.SEEN_ONBOARDING_INTRO,
+      payload: [false],
+    })
+  }
+
   const toggleMode = () => {
     lockOutUser(LockoutReason.Logout)
 
@@ -598,11 +607,28 @@ const Developer: React.FC = () => {
               accessibilityLabel={t('Developer.StaleTermsOfUse')}
               testID={testIdWithKey('StaleTermsOfUse')}
               onPress={staleTermsOfUseAcceptance}
+              showRowSeparator
               subContent={
                 <Text style={[styles.rowTitle, { marginTop: 10 }]}>
                   {`${t('Developer.AcceptedTermsVersion')}: `}
                   <Text style={[styles.rowTitle, { fontWeight: 'bold' }]}>
                     {store.bcsc.acceptedTermsOfUseVersion ?? '—'}
+                  </Text>
+                </Text>
+              }
+            >
+              <Icon name="restore" size={24} color={ColorPalette.brand.link} />
+            </SectionRow>
+            <SectionRow
+              title={t('Developer.ResetOnboardingIntro')}
+              accessibilityLabel={t('Developer.ResetOnboardingIntro')}
+              testID={testIdWithKey('ResetOnboardingIntro')}
+              onPress={resetOnboardingIntro}
+              subContent={
+                <Text style={[styles.rowTitle, { marginTop: 10 }]}>
+                  {`${t('Developer.OnboardingIntroSeen')}: `}
+                  <Text style={[styles.rowTitle, { fontWeight: 'bold' }]}>
+                    {String(store.bcsc.hasSeenOnboardingIntro ?? false)}
                   </Text>
                 </Text>
               }
