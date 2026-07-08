@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { BLUE_LIGHT } from '@/theme/light'
 
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
 import { CommonActions, useFocusEffect } from '@react-navigation/native'
@@ -61,7 +62,7 @@ const SuccessfullySentScreen = ({ navigation }: SuccessfullySentScreenProps) => 
         bullets={[t('BCSC.SendVideo.SuccessfullySent.Bullet1'), t('BCSC.SendVideo.SuccessfullySent.Bullet2')]}
         description2={t('BCSC.SendVideo.SuccessfullySent.Description2')}
         description3={t('BCSC.SendVideo.SuccessfullySent.Description3')}
-        iconColor="#7AB8F9"
+        iconColor={BLUE_LIGHT}
         iconSize={150}
       />
     </ScreenWrapper>
