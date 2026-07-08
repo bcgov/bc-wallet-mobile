@@ -232,7 +232,11 @@ const VerifyStack = () => {
         options={{ header: createProgressHeader(5, 50) }}
       />
       <Stack.Screen name={BCSCScreens.TakeVideo} component={TakeVideoScreen} options={{ headerShown: false }} />
-      <Stack.Screen name={BCSCScreens.VideoReview} component={VideoReviewScreen} options={{ headerShown: false }} />
+      <Stack.Screen
+        name={BCSCScreens.VideoReview}
+        component={VideoReviewScreen}
+        options={{ header: createProgressHeader(5, 50) }}
+      />
       <Stack.Screen
         name={BCSCScreens.PendingReview}
         component={PendingReviewScreen}
