@@ -16,7 +16,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
  * @returns A Pressable component that changes opacity when pressed, similar to TouchableOpacity
  */
 export const PressableOpacity = (props: React.ComponentProps<typeof Pressable>) => {
-  const animatedOpacity = useRef(new Animated.Value(1)).current
+  const animatedOpacity = useRef(new Animated.Value(OPACITY_MAXIMUM_VALUE)).current
   const { preventDoublePress } = usePreventDoublePress()
   const [pressed, setPressed] = useState(false)
 
@@ -35,7 +35,7 @@ export const PressableOpacity = (props: React.ComponentProps<typeof Pressable>) 
   return (
     <AnimatedPressable
       {...props}
-      style={[resolvedStyle, { opacity: animatedOpacity }]}
+      style={[{ opacity: animatedOpacity }, resolvedStyle]} // Allow the opacity to be overridden
       onPress={preventDoublePress(props.onPress)}
       onPressIn={(event) => {
         setPressed(true)

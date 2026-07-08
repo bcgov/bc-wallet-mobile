@@ -33,6 +33,7 @@ jest.mock('@/utils/logger', () => ({
 }))
 
 jest.mock('@bifold/core', () => ({
+  ...jest.requireActual('@bifold/core'),
   testIdWithKey: (key: string) => `com.aries.bifold:id/${key}`,
   BifoldError: jest.requireActual('@bifold/core').BifoldError,
   useTheme: () => ({

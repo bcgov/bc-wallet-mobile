@@ -12,6 +12,7 @@ jest.mock('react-native-vector-icons/MaterialIcons', () => 'Icon')
 jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'CommunityIcon')
 
 jest.mock('@bifold/core', () => ({
+  ...jest.requireActual('@bifold/core'),
   testIdWithKey: (key: string) => `com.aries.bifold:id/${key}`,
 }))
 
