@@ -49,7 +49,7 @@ describe('VerifyInPerson', () => {
     expect(tree).toMatchSnapshot()
   })
 
-  it('renders NonBCSC card process without serial number and with evidence types bullet', () => {
+  it('renders NonBCSC card process without serial number and with pieces-of-ID bullet', () => {
     const tree = render(
       <BasicAppContext
         initialStateOverride={{
