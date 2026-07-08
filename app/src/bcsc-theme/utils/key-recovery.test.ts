@@ -205,4 +205,26 @@ describe('performKeyRecovery', () => {
     expect(mockedDeleteKey).toHaveBeenCalledWith('rsa3')
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining(`failed to prune 'rsa2'`))
   })
+
+  it('logs a non-fatal post-prune verification failure via the describeError string fallback', async () => {
+    const apiClient = makeApiClient({ keys: [{ kid: 'rsa1' }] })
+    mockedGetAllKeys.mockResolvedValueOnce([
+      { id: 'rsa1', algorithm: 'RSA', size: 4096, created: 1000 } as any,
+      { id: 'rsa2', algorithm: 'RSA', size: 4096, created: 2000 } as any,
+    ])
+    // Post-prune verification re-fetch rejects with a bare (non-Error) value, exercising
+    // describeError's String(err) fallback rather than the code/message extraction path.
+    mockedGetAllKeys.mockRejectedValueOnce('keystore unavailable')
+    mockedSetActive.mockResolvedValue(undefined as any)
+    mockedDeleteKey.mockResolvedValue(undefined as any)
+    const logger = makeLogger()
+
+    const ok = await performKeyRecovery(apiClient, CLIENT_ID, REG_TOKEN, logger)
+
+    // Verification is best-effort; recovery still reports success.
+    expect(ok).toBe(true)
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('post-prune verification failed: keystore unavailable')
+    )
+  })
 })

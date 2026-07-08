@@ -1,4 +1,7 @@
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { AppError } from '@/errors/appError'
+import { ErrorRegistry } from '@/errors/errorRegistry'
+import { AppEventCode } from '@/events/appEventCode'
 import * as useAlertsModule from '@/hooks/useAlerts'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
@@ -25,6 +28,8 @@ jest.mock('react-native-bcsc-core', () => ({
   isAccountLocked: jest.fn(),
   canPerformDeviceAuthentication: jest.fn(),
   unlockWithDeviceSecurity: jest.fn(),
+  // Delegate to the central manual mock so the predicate can't drift from the real implementation.
+  isBcscNativeError: jest.requireActual('../../../__mocks__/react-native-bcsc-core').isBcscNativeError,
 }))
 
 jest.mock('@/bcsc-theme/hooks/useSecureActions')
@@ -88,6 +93,29 @@ describe('useAuthentication', () => {
             routes: [{ name: BCSCScreens.Lockout }],
           }),
         })
+      )
+    })
+  })
+
+  describe('native error mapping', () => {
+    it('routes an unexpected native failure in unlockApp through the native mapper', async () => {
+      const errorSpy = jest.fn()
+      jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: errorSpy }] as any)
+      jest
+        .mocked(getAccountSecurityMethod)
+        .mockRejectedValue(Object.assign(new Error('native failure'), { code: 'E_GET_SECURITY_METHOD_ERROR' }))
+
+      const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
+      const { result } = renderHook(() => useAuthentication(navigation))
+
+      // unlockApp swallows the error (no throw), but must log the mapped AppError with its distinct appEvent.
+      await act(async () => {
+        await result.current.unlockApp()
+      })
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining(AppEventCode.PIN_OPERATION_ERROR),
+        expect.objectContaining({ appEvent: AppEventCode.PIN_OPERATION_ERROR })
       )
     })
   })
@@ -325,6 +353,30 @@ describe('useAuthentication', () => {
       })
 
       expect(mockLogger.error).toHaveBeenCalled()
+    })
+
+    it('preserves the specific appEvent when handleSuccessfulAuth throws an already-mapped AppError', async () => {
+      const mockAlert = jest.fn()
+      jest.mocked(useAlertsModule.useAlerts).mockReturnValue({
+        deviceAuthenticationErrorAlert: mockAlert,
+      } as any)
+      jest.mocked(canPerformDeviceAuthentication).mockResolvedValue(true)
+      jest.mocked(unlockWithDeviceSecurity).mockResolvedValue({ success: true, walletKey: 'key' })
+      const mappedError = AppError.fromErrorDefinition(ErrorRegistry.TOKEN_SAVE_FAILED, { track: false })
+      jest.mocked(useSecureActionsModule.default).mockReturnValue({
+        handleSuccessfulAuth: jest.fn().mockRejectedValue(mappedError),
+      } as any)
+
+      const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
+      const { result } = renderHook(() => useAuthentication(navigation))
+
+      await act(async () => {
+        await result.current.performDeviceAuth()
+      })
+
+      // The mapper passes already-mapped errors through — the alert surfaces TOKEN_SAVE_FAILED,
+      // not a re-wrapped UNMAPPED_NATIVE_ERROR.
+      expect(mockAlert).toHaveBeenCalledWith(mappedError)
     })
   })
 

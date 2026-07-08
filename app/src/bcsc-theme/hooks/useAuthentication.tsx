@@ -1,5 +1,4 @@
-import { toAppError } from '@/bcsc-theme/utils/native-error-map'
-import { ErrorRegistry } from '@/errors/errorRegistry'
+import { mapNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
 import { useAlerts } from '@/hooks/useAlerts'
 import { TOKENS, useServices } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
@@ -61,7 +60,9 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
       await handleSuccessfulAuth(walletKey)
       logger.info('[Authentication:performDeviceAuth] Device authentication successful')
     } catch (error) {
-      const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHENTICATION_ERROR)
+      // Note: a user cancel never lands here — unlockWithDeviceSecurity resolves
+      // { success: false } on cancel (both platforms), handled above.
+      const appError = mapNativeBcscError(error)
       logger.error(`[Authentication:performDeviceAuth] Device authentication error [${appError.appEvent}]`, appError)
       deviceAuthenticationErrorAlert(appError)
     } finally {
@@ -118,7 +119,7 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
 
       await performDeviceAuth()
     } catch (error) {
-      const appError = toAppError(error, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
+      const appError = mapNativeBcscError(error)
       logger.error(`[Authentication:UnlockApp] Device authentication error [${appError.appEvent}]`, appError)
     }
   }, [logger, navigation, performDeviceAuth])
