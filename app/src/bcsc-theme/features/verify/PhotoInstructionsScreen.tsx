@@ -1,5 +1,6 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import BulletPointList from '@/components/BulletPointList'
 import WhiteHandHoldingPhone from '@assets/img/white-hand-holding-phone.svg'
 import { Button, ButtonType, ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
 import { RouteProp } from '@react-navigation/native'
@@ -58,23 +59,15 @@ const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenP
       padded={false}
     >
       <WhiteHandHoldingPhone style={styles.image} height={styles.image.height} width={styles.image.width} />
-      <ThemedText variant={'headingThree'}>{t('BCSC.PhotoInstructions.Heading')}</ThemedText>
-      <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.PhotoInstructions.Bullet1')}</ThemedText>
-      </View>
-      <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.PhotoInstructions.Bullet2')}</ThemedText>
-      </View>
-      <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.PhotoInstructions.Bullet3')}</ThemedText>
-      </View>
-      <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.PhotoInstructions.Bullet4')}</ThemedText>
-      </View>
+      <ThemedText variant={'headingFour'}>{t('BCSC.PhotoInstructions.Heading')}</ThemedText>
+     <BulletPointList
+        translationKeys={[
+          t('BCSC.PhotoInstructions.Bullet1'),
+          t('BCSC.PhotoInstructions.Bullet2'),
+          t('BCSC.PhotoInstructions.Bullet3'),
+          t('BCSC.PhotoInstructions.Bullet4'),
+        ]}
+      />
     </ScreenWrapper>
   )
 }

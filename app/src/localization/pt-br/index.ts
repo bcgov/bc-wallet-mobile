@@ -1051,11 +1051,11 @@ const translation = {
     },
     "PhotoInstructions": {
       "Heading": "Take a photo of your face. The agent will use this photo when verifying your identity. (PT-BR)",
-      "Bullet1": "Hold your phone in front of you (PT-BR)",
+      "Bullet1": "Hold your phone in front of your face (PT-BR)",
       "Bullet2": "Remove your glasses for the photo only (PT-BR)",
       "Bullet3": "Be the only person in the photo (PT-BR)",
       "Bullet4": "Look like the photo on your BC Services Card or photo ID (PT-BR)",
-      "TakePhoto": "Take Photo of Face (PT-BR)",
+      "TakePhoto": "Take photo (PT-BR)",
       "TakePhotoAccessibilityLabel": "Take photo (PT-BR)",
     },
     "PhotoReview": {

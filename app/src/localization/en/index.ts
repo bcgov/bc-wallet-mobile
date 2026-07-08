@@ -1062,11 +1062,11 @@ const translation = {
     },
     "PhotoInstructions": {
       "Heading": "Take a photo of your face. The agent will use this photo when verifying your identity.",
-      "Bullet1": "Hold your phone in front of you",
+      "Bullet1": "Hold your phone in front of your face",
       "Bullet2": "Remove your glasses - if possible",
       "Bullet3": "Be the only person in the photo",
       "Bullet4": "Look like the photo on your BC Services Card or photo ID",
-      "TakePhoto": "Take Photo of Face",
+      "TakePhoto": "Take photo",
       "TakePhotoAccessibilityLabel": "Take photo",
     },
     "PhotoReview": {
