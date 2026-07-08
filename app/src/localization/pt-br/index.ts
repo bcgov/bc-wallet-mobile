@@ -1033,8 +1033,8 @@ const translation = {
     },
     "MismatchedSerial": {
       "Heading": "Card not found (PT-BR)",
-      "Description1": "Check the card serial number and birthdate match what is on your card: (PT-BR)",
-      "Description2": "Check your card is a BC Services Card by looking at the front of your card: (PT-BR)",
+      "Description1": "Enter the letters and numbers by the barcode on the back of your card. (PT-BR)",
+      "Description2": "Check the serial number and birthdate match what is on your card. (PT-BR)",
       "SerialNumber": "Serial number: {{serial}} (PT-BR)",
       "Birthdate": "Birthdate: {{birthdate}} (PT-BR)",
     },
