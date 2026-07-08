@@ -1,5 +1,4 @@
 import { ListButton, ListButtonGroup } from '@/bcsc-theme/components/ListButton'
-import { BCSCIdTokenContext } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
 import { isUserVerified } from '@/bcsc-theme/utils/bcsc-credential'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { PressableOpacity } from '@/components/PressableOpacity'
@@ -7,6 +6,7 @@ import { ACCESSIBILITY_URL, DEFAULT_AUTO_LOCK_TIME_MIN, FEEDBACK_URL, hitSlop, T
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { BCDispatchAction, BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
+import * as PushNotifications from '@/utils/PushNotificationsHelper'
 import {
   ScreenWrapper,
   testIdWithKey,
@@ -18,7 +18,7 @@ import {
   useTheme,
 } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
-import React, { PropsWithChildren, ReactNode, useCallback, useContext, useRef, useState } from 'react'
+import React, { PropsWithChildren, ReactNode, useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, StyleSheet, TouchableWithoutFeedback, Vibration, View } from 'react-native'
 import { AccountSecurityMethod, getAccountSecurityMethod } from 'react-native-bcsc-core'
@@ -32,6 +32,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { useNotificationPermissionStatus } from './useNotificationPermissionStatus'
 
 const TRANSITION_IN_DURATION = 200
 const TRANSITION_OUT_DURATION = 150
@@ -256,16 +257,23 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
 }) => {
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
-  // useContext (not useIdToken) so we don't throw when the BCSCIdTokenProvider
-  // isn't mounted — settings is reachable before verification completes.
-  const deviceCount = useContext(BCSCIdTokenContext)?.data?.bcsc_devices_count
   // Use the canonical verification check (same as getResumeStepRoute) rather than the raw
   // `verified` flag: device transfer marks the user verified via a refresh token without setting
   // that flag, and such users still need the device-management options (e.g. "Add another device").
   const isVerified = isUserVerified(store.bcscSecure)
 
+  const { status: notificationStatus } = useNotificationPermissionStatus()
+
   const showChangePIN = accountSecurityMethod !== AccountSecurityMethod.DeviceAuth && onChangePIN
   const analyticsOptInText = store.bcsc.analyticsOptIn ? 'ON' : 'OFF'
+  // No adornment while the async permission check is unresolved (or failed) — only
+  // assert ON/OFF for explicitly known states.
+  const notificationsOnText =
+    notificationStatus === PushNotifications.NotificationPermissionStatus.UNKNOWN
+      ? undefined
+      : notificationStatus === PushNotifications.NotificationPermissionStatus.GRANTED
+        ? 'ON'
+        : 'OFF'
   const autoLockTimeText = `${store.preferences.autoLockTime ?? DEFAULT_AUTO_LOCK_TIME_MIN} min`
   const profileName = store.bcsc.selectedNickname?.trim() || t('BCSC.Title')
 
@@ -319,7 +327,7 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
                 </ListButton>
               ) : null,
               <ListButton key="notifications" onPress={onNotifications ?? noop} testID={testIdWithKey('Notifications')}>
-                {t('BCSC.Settings.Notifications')}
+                <Row title={t('BCSC.Settings.Notifications')} endAdornment={notificationsOnText} />
               </ListButton>,
               <ListButton key="analytics" onPress={onPressOptInAnalytics} testID={testIdWithKey('AnalyticsOptIn')}>
                 <Row title={t('BCSC.Settings.AnalyticsOptIn')} endAdornment={analyticsOptInText} />
@@ -331,10 +339,7 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
               ) : null,
               isVerified ? (
                 <ListButton key="mydevices" onPress={onMyDevices ?? noop} testID={testIdWithKey('MyDevices')}>
-                  <Row
-                    title={t('BCSC.Settings.MyDevices')}
-                    endAdornment={deviceCount ? t('BCSC.Settings.MyDevicesCount', { count: deviceCount }) : undefined}
-                  />
+                  <Row title={t('BCSC.Settings.MyDevices')} />
                 </ListButton>
               ) : null,
               isVerified && onForgetAllPairings ? (

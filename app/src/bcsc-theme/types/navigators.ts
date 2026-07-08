@@ -120,22 +120,25 @@ export enum BCSCScreens {
   MainPrivacyPolicy = `${BCSCStacks.Main} Privacy Information`,
   MainDeveloper = `${BCSCStacks.Main} Developer`,
   MainAutoLock = 'BCSCMainAutoLock',
+  MainNotificationSettings = 'BCSCMainNotificationSettings',
   MainAppSecurity = `${BCSCStacks.Main} App Security Setting`,
   MainChangePIN = `${BCSCStacks.Main} Change PIN`,
   VerifySettings = `${BCSCStacks.Verify} In App Settings`,
   VerifyWebView = `${BCSCStacks.Verify} Web view`,
   VerifyAutoLock = 'BCSCVerifyAutoLock',
+  VerifyNotificationSettings = 'BCSCVerifyNotificationSettings',
   VerifyAppSecurity = `${BCSCStacks.Verify} App Security Setting`,
   VerifyContactUs = `${BCSCStacks.Verify} Contact Us`,
   VerifyPrivacyPolicy = `${BCSCStacks.Verify} Privacy Information`,
   VerifyDeveloper = `${BCSCStacks.Verify} Developer`,
   VerifyChangePIN = `${BCSCStacks.Verify} Change PIN`,
   TransferAgeRestriction = 'BCSCTransferAgeRestriction',
-  AccountExpired = 'BCSCAccountExpired',
+  ReverifyAccount = 'BCSCReverifyAccount',
   AccountRenewalInformation = 'Renewal ID requirements',
   AccountRenewalFirstWarning = 'Renewal Instructions',
   AccountRenewalFinalWarning = 'Renewal Warning',
   SessionRecovery = 'Session Recovery',
+  AuthIntro = 'Auth Intro',
   AccountLanding = 'Account Landing',
   EnterPIN = 'Enter/Verify PIN',
   DeviceAuthInfo = 'Device Authentication Prep',
@@ -235,6 +238,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.VerifyContactUs]: undefined
   [BCSCScreens.VerifyDeveloper]: undefined
   [BCSCScreens.VerifyAutoLock]: undefined
+  [BCSCScreens.VerifyNotificationSettings]: undefined
   [BCSCScreens.VerifyAppSecurity]: undefined
   [BCSCScreens.VerifyChangePIN]: { isChangingExistingPIN?: boolean } | undefined
   [BCSCModals.InternetDisconnected]: undefined
@@ -276,10 +280,11 @@ export type BCSCMainStackParams = {
   [BCSCScreens.AccountDetails]: undefined
   [BCSCScreens.MainDeveloper]: undefined
   [BCSCScreens.MainAutoLock]: undefined
+  [BCSCScreens.MainNotificationSettings]: undefined
   [BCSCScreens.MainAppSecurity]: undefined
   [BCSCScreens.MainChangePIN]: { isChangingExistingPIN?: boolean } | undefined
   [BCSCScreens.TransferAgeRestriction]: undefined
-  [BCSCScreens.AccountExpired]: undefined
+  [BCSCScreens.ReverifyAccount]: { isExpired: boolean }
   [BCSCScreens.AccountRenewalInformation]: undefined
   [BCSCScreens.AccountRenewalFirstWarning]: undefined
   [BCSCScreens.AccountRenewalFinalWarning]: undefined
@@ -309,6 +314,7 @@ export type BCSCMainStackParams = {
 export type BCSCAuthStackParams = {
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string; fromAppSwitch?: boolean }
   [BCSCScreens.EditNickname]: undefined
+  [BCSCScreens.AuthIntro]: undefined
   [BCSCScreens.AccountLanding]: undefined
   [BCSCScreens.EnterPIN]: undefined
   [BCSCScreens.DeviceAuthInfo]: undefined

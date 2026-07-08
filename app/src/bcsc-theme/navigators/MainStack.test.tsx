@@ -1,4 +1,3 @@
-import { isAccountExpired } from '@/services/system-checks/AccountExpiryWarningBannerSystemCheck'
 import * as Bifold from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { render } from '@testing-library/react-native'
@@ -44,14 +43,8 @@ jest.mock('@/constants', () => ({
   DEFAULT_HEADER_TITLE_CONTAINER_STYLE: {},
   HelpCentreUrl: { COMPUTER_LOGIN: 'https://example.com' },
 }))
-jest.mock('@/services/system-checks/AccountExpiryWarningBannerSystemCheck', () => ({
-  isAccountExpired: jest.fn(),
-}))
 jest.mock('../contexts/BCSCStackContext', () => ({
   useBCSCStack: jest.fn(),
-}))
-jest.mock('../contexts/BCSCAccountContext', () => ({
-  useAccount: jest.fn(),
 }))
 jest.mock('../hooks/useSystemChecks', () => ({
   SystemCheckScope: { MAIN_STACK: 'MAIN_STACK' },
@@ -93,7 +86,6 @@ jest.mock('../../screens/Developer', () => 'Developer')
 jest.mock('../features/account-transfer/transferer/TransferQRDisplayScreen', () => 'TransferQRDisplayScreen')
 jest.mock('../features/account-transfer/transferer/TransferQRInformationScreen', () => 'TransferQRInformationScreen')
 jest.mock('../features/account-transfer/transferer/TransferSuccessScreen', () => 'TransferSuccessScreen')
-jest.mock('../features/account/AccountExpiredScreen', () => ({ AccountExpiredScreen: 'AccountExpiredScreen' }))
 jest.mock('../features/account/AccountRenewalFinalWarningScreen', () => ({
   AccountRenewalFinalWarningScreen: 'AccountRenewalFinalWarningScreen',
 }))
@@ -145,46 +137,11 @@ describe('MainStack', () => {
     jest.mocked(Bifold.testIdWithKey).mockImplementation((key: string) => key)
     jest.mocked(PairingModule.usePairingService).mockReturnValue(makePairingService() as any)
     jest.mocked(PairingModule.pairingPayloadToServiceLoginParams).mockReturnValue({ pairingCode: 'code' } as any)
-    jest.requireMock('../contexts/BCSCAccountContext').useAccount.mockReturnValue({ account: null })
-    jest.mocked(isAccountExpired).mockReturnValue(false)
   })
 
   it('renders correctly', () => {
     const { toJSON } = render(<MainStack />)
     expect(toJSON()).toMatchSnapshot()
-  })
-
-  it('navigates to AccountExpired when account is expired', () => {
-    jest.requireMock('../contexts/BCSCAccountContext').useAccount.mockReturnValue({
-      account: { account_expiration_date: '2020-01-01' },
-    })
-    jest.mocked(isAccountExpired).mockReturnValue(true)
-
-    render(<MainStack />)
-
-    expect(mockNavigation.dispatch).toHaveBeenCalledWith({
-      type: 'RESET',
-      payload: { index: 0, routes: [{ name: BCSCScreens.AccountExpired }] },
-    })
-  })
-
-  it('does not navigate to AccountExpired when account is not expired', () => {
-    jest.requireMock('../contexts/BCSCAccountContext').useAccount.mockReturnValue({
-      account: { account_expiration_date: '2099-01-01' },
-    })
-    jest.mocked(isAccountExpired).mockReturnValue(false)
-
-    render(<MainStack />)
-
-    expect(mockNavigation.dispatch).not.toHaveBeenCalled()
-  })
-
-  it('does not navigate to AccountExpired when there is no account', () => {
-    jest.requireMock('../contexts/BCSCAccountContext').useAccount.mockReturnValue({ account: null })
-
-    render(<MainStack />)
-
-    expect(mockNavigation.dispatch).not.toHaveBeenCalled()
   })
 
   it('navigates to ServiceLogin when pairing service emits a navigation request', () => {

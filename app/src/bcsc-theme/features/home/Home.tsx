@@ -1,4 +1,3 @@
-import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { CardButton } from '@/bcsc-theme/components/CardButton'
 import { GENERIC_CARD_SIZE_SMALL } from '@/bcsc-theme/components/GenericCardImage'
 import { NotificationBannerContainer } from '@/bcsc-theme/components/NotificationBannerContainer'
@@ -66,8 +65,6 @@ export const HomeV4_0_x: React.FC<HomeProps> = ({ navigation }) => {
     navigation.getParent()?.navigate(BCSCScreens.ManualPairingCode)
   }
 
-  const filteredBannerMessages = store.bcsc.bannerMessages.filter((b) => b.id === BCSCBanner.ACCOUNT_EXPIRING_SOON)
-
   if (!account) {
     return <LoadingScreen />
   }
@@ -93,7 +90,7 @@ export const HomeV4_0_x: React.FC<HomeProps> = ({ navigation }) => {
             onPress={handlePairingCodePress}
             testID={testIdWithKey('LogInFromComputer')}
           />
-          {filteredBannerMessages.length > 0 && (
+          {store.bcsc.bannerMessages.length > 0 && (
             <View style={{ marginTop: Spacing.lg }}>
               <CardButton
                 title={t('BCSC.AccountRenewal.WarningRenewButton')}

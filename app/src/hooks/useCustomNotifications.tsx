@@ -1,9 +1,15 @@
+import CardExpiryNotification from '@/bcsc-theme/features/notifications/CardExpiryNotification'
+import CardRenewalNotification from '@/bcsc-theme/features/notifications/CardRenewalNotification'
 import StartVerificationNotification from '@/bcsc-theme/features/notifications/StartVerificationNotification'
 import { useVerificationStatus } from '@/bcsc-theme/hooks/useVerificationStatus'
+import { BCState } from '@/store'
+import { useStore } from '@bifold/core'
 import { JSX, useCallback, useMemo, useState } from 'react'
 
 export enum CustomNotificationId {
   BCSCStartVerification = 'BCSCStartVerification',
+  AccountExpired = 'AccountExpired',
+  AccountRenewalAvailable = 'AccountRenewalAvailable',
 }
 
 /**
@@ -13,6 +19,7 @@ export enum CustomNotificationId {
  */
 export const useCustomNotifications = () => {
   const { needsVerification } = useVerificationStatus()
+  const [store] = useStore<BCState>()
   const [dismissedIds, setDismissedIds] = useState<Set<CustomNotificationId>>(new Set())
 
   /**
@@ -29,11 +36,28 @@ export const useCustomNotifications = () => {
    * Generates an array of custom notifications to be displayed.
    */
   const customNotifications = useMemo((): JSX.Element[] => {
-    const notifications = []
+    const notifications: { id: CustomNotificationId; dismissible: boolean; element: JSX.Element }[] = []
+
+    if (store.bcsc.showAccountExpiryNotification) {
+      notifications.push({
+        id: CustomNotificationId.AccountExpired,
+        dismissible: false,
+        element: <CardExpiryNotification key={CustomNotificationId.AccountExpired} />,
+      })
+    }
+
+    if (store.bcsc.showCardRenewalNotification) {
+      notifications.push({
+        id: CustomNotificationId.AccountRenewalAvailable,
+        dismissible: false,
+        element: <CardRenewalNotification key={CustomNotificationId.AccountRenewalAvailable} />,
+      })
+    }
 
     if (needsVerification) {
       notifications.push({
         id: CustomNotificationId.BCSCStartVerification,
+        dismissible: true,
         element: (
           <StartVerificationNotification
             key={CustomNotificationId.BCSCStartVerification}
@@ -44,9 +68,15 @@ export const useCustomNotifications = () => {
     }
 
     return notifications
-      .filter((notification) => !dismissedIds.has(notification.id))
+      .filter((notification) => !notification.dismissible || !dismissedIds.has(notification.id))
       .map((notification) => notification.element)
-  }, [needsVerification, dismissCustomNotification, dismissedIds])
+  }, [
+    store.bcsc.showAccountExpiryNotification,
+    store.bcsc.showCardRenewalNotification,
+    needsVerification,
+    dismissCustomNotification,
+    dismissedIds,
+  ])
 
   return useMemo(
     () => ({

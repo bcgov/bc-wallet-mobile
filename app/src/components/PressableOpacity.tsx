@@ -1,15 +1,13 @@
+import { usePreventDoublePress } from '@bifold/core'
 import { useRef, useState } from 'react'
 import { Animated, Easing, Pressable } from 'react-native'
-import { SinglePressable } from './SinglePressable'
 
-// https://github.com/react/react-native/blob/715eeaad69ad4b69dc5694fb5fba6dbde922ca06/packages/react-native/Libraries/Components/Touchable/TouchableOpacity.js#L149
 const ANIMATE_PRESS_IN_MS = 100
-// https://github.com/react/react-native/blob/715eeaad69ad4b69dc5694fb5fba6dbde922ca06/packages/react-native/Libraries/Components/Touchable/TouchableOpacity.js#L156
-const ANIMATE_PRESS_OUT_MS = 250
+const ANIMATE_PRESS_OUT_MS = 150
 const OPACITY_MINIMUM_VALUE = 0.2
 const OPACITY_MAXIMUM_VALUE = 1
 
-const AnimatedSinglePressable = Animated.createAnimatedComponent(SinglePressable)
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
 /**
  * A wrapper around Pressable that mimics the opacity change of TouchableOpacity when pressed.
@@ -19,6 +17,7 @@ const AnimatedSinglePressable = Animated.createAnimatedComponent(SinglePressable
  */
 export const PressableOpacity = (props: React.ComponentProps<typeof Pressable>) => {
   const animatedOpacity = useRef(new Animated.Value(1)).current
+  const { preventDoublePress } = usePreventDoublePress()
   const [pressed, setPressed] = useState(false)
 
   const setOpacityTo = (toValue: number, duration: number) => {
@@ -37,9 +36,10 @@ export const PressableOpacity = (props: React.ComponentProps<typeof Pressable>) 
   const resolvedStyle = typeof props.style === 'function' ? props.style({ pressed }) : props.style
 
   return (
-    <AnimatedSinglePressable
+    <AnimatedPressable
       {...props}
       style={[resolvedStyle, { opacity: animatedOpacity }]}
+      onPress={preventDoublePress(props.onPress)}
       onPressIn={(event) => {
         setPressed(true)
         setOpacityTo(OPACITY_MINIMUM_VALUE, ANIMATE_PRESS_IN_MS)
