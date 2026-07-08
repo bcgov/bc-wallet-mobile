@@ -9,6 +9,7 @@ import { act, renderHook } from '@testing-library/react-native'
 import {
   AccountSecurityMethod,
   deleteAuthorizationRequest,
+  deleteEvidence,
   EvidenceMetadata,
   getAccount,
   getAccountFlags,
@@ -125,6 +126,52 @@ describe('useSecureActions', () => {
 
       await expect(result.current.updateAccountFlags({ isEmailVerified: true })).rejects.toMatchObject({
         appEvent: AppEventCode.NATIVE_STORAGE_WRITE_FAILED,
+      })
+    })
+
+    it('maps an authorization-request write rejection to NATIVE_STORAGE_WRITE_FAILED', async () => {
+      jest.mocked(getAuthorizationRequest).mockResolvedValueOnce(undefined as any)
+      jest.mocked(setAuthorizationRequest).mockRejectedValueOnce(nativeError('E_SET_AUTH_REQUEST_ERROR'))
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.updateVerificationOptions([])).rejects.toMatchObject({
+        appEvent: AppEventCode.NATIVE_STORAGE_WRITE_FAILED,
+      })
+    })
+
+    it('maps an evidence write rejection to NATIVE_STORAGE_WRITE_FAILED', async () => {
+      jest.mocked(setEvidence).mockRejectedValueOnce(nativeError('E_SET_EVIDENCE_ERROR'))
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.addEvidenceType({ evidence_type: 'drivers_licence' } as any)).rejects.toMatchObject({
+        appEvent: AppEventCode.NATIVE_STORAGE_WRITE_FAILED,
+      })
+    })
+
+    it('maps a native read rejection during hydration to NATIVE_STORAGE_READ_FAILED', async () => {
+      jest.mocked(getAccount).mockRejectedValueOnce(nativeError('E_GET_ACCOUNT_ERROR'))
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.hydrateSecureState()).rejects.toMatchObject({
+        appEvent: AppEventCode.NATIVE_STORAGE_READ_FAILED,
+      })
+    })
+
+    it('maps a delete rejection during deleteSecureData to NATIVE_STORAGE_DELETE_FAILED', async () => {
+      jest.mocked(deleteAuthorizationRequest).mockRejectedValueOnce(nativeError('E_DELETE_AUTH_REQUEST_ERROR'))
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.deleteSecureData()).rejects.toMatchObject({
+        appEvent: AppEventCode.NATIVE_STORAGE_DELETE_FAILED,
+      })
+    })
+
+    it('maps a delete rejection during deleteVerificationData to NATIVE_STORAGE_DELETE_FAILED', async () => {
+      jest.mocked(deleteEvidence).mockRejectedValueOnce(nativeError('E_DELETE_EVIDENCE_ERROR'))
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.deleteVerificationData()).rejects.toMatchObject({
+        appEvent: AppEventCode.NATIVE_STORAGE_DELETE_FAILED,
       })
     })
   })

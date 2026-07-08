@@ -1,6 +1,7 @@
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import { AppEventCode } from '@/events/appEventCode'
 import * as useAlertsModule from '@/hooks/useAlerts'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
@@ -92,6 +93,29 @@ describe('useAuthentication', () => {
             routes: [{ name: BCSCScreens.Lockout }],
           }),
         })
+      )
+    })
+  })
+
+  describe('native error mapping', () => {
+    it('routes an unexpected native failure in unlockApp through the native mapper', async () => {
+      const errorSpy = jest.fn()
+      jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: errorSpy }] as any)
+      jest
+        .mocked(getAccountSecurityMethod)
+        .mockRejectedValue(Object.assign(new Error('native failure'), { code: 'E_GET_SECURITY_METHOD_ERROR' }))
+
+      const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
+      const { result } = renderHook(() => useAuthentication(navigation))
+
+      // unlockApp swallows the error (no throw), but must log the mapped AppError with its distinct appEvent.
+      await act(async () => {
+        await result.current.unlockApp()
+      })
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining(AppEventCode.PIN_OPERATION_ERROR),
+        expect.objectContaining({ appEvent: AppEventCode.PIN_OPERATION_ERROR })
       )
     })
   })
