@@ -196,7 +196,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const [size, setSize] = useState<{ width: number; height: number } | null>(null)
   const [scanState, setScanState] = useState<ScanState>('scanning')
   // Starts on mount; after the timeout we swap the initial guidance for the
-  // steady-hold help text and reveal the manual-entry button.
+  // steady-hold help text.
   const [showHelp, setShowHelp] = useState(false)
 
   useEffect(() => {
@@ -329,14 +329,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
           <View style={styles.torchRow} pointerEvents="box-none">
             <TorchButton active={torchOn} onPress={toggleTorch} />
           </View>
-          {/* Always reserves its space so the torch above doesn't shift; only
-              becomes visible/interactive once the timeout elapses. */}
-          <View
-            style={[styles.buttonBlock, { paddingBottom: insets.bottom + Spacing.lg, opacity: showHelp ? 1 : 0 }]}
-            pointerEvents={showHelp ? 'auto' : 'none'}
-            accessibilityElementsHidden={!showHelp}
-            importantForAccessibility={showHelp ? 'auto' : 'no-hide-descendants'}
-          >
+          <View style={[styles.buttonBlock, { paddingBottom: insets.bottom + Spacing.lg }]}>
             <Button
               title={t('BCSC.Instructions.EnterManually')}
               accessibilityLabel={t('BCSC.Instructions.EnterManually')}

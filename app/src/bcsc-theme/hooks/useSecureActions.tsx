@@ -356,6 +356,36 @@ export const useSecureActions = () => {
   )
 
   /**
+   * Clear device authorization codes from state and native storage.
+   *
+   * Used when the user abandons a flow that issued a device code (e.g. backing out of a
+   * device transfer) so a later verification flow doesn't silently reuse an authorization
+   * with no identity attached. Clearing codes that don't exist succeeds.
+   */
+  const clearDeviceCodes = useCallback(async () => {
+    dispatch({ type: BCDispatchAction.UPDATE_SECURE_DEVICE_CODE, payload: [] })
+    dispatch({ type: BCDispatchAction.UPDATE_SECURE_USER_CODE, payload: [] })
+    dispatch({ type: BCDispatchAction.UPDATE_SECURE_DEVICE_CODE_EXPIRES_AT, payload: [] })
+
+    try {
+      const existingData = await getAuthorizationRequest()
+      if (!existingData) {
+        return
+      }
+
+      const remainingData = { ...existingData }
+      delete remainingData.deviceCode
+      delete remainingData.userCode
+      delete remainingData.expiry
+      await setAuthorizationRequest(remainingData)
+      logger.info('Device authorization codes cleared from native storage')
+    } catch (error) {
+      logger.error('Failed to clear device authorization codes:', error as Error)
+      throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
+    }
+  }, [dispatch, logger])
+
+  /**
    * Update the identification process type in state and persist to native storage.
    * Process value determines which verification flow to use (e.g., 'IDIM L3 Remote BCSC Photo Identity Verification').
    */
@@ -1070,6 +1100,7 @@ export const useSecureActions = () => {
     updateTokens,
     updateUserInfo,
     updateDeviceCodes,
+    clearDeviceCodes,
     updateCardProcess,
     updateUserMetadata,
     updateVerified,
