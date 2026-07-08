@@ -218,7 +218,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.VideoReview]: { videoPath: string; videoThumbnailPath: string }
   [BCSCScreens.VideoTooLong]: { videoLengthSeconds: number }
   [BCSCScreens.EvidenceUploading]: undefined
-  [BCSCScreens.SuccessfullySent]: undefined
+  [BCSCScreens.SuccessfullySent]: { avgTurnaroundTimeMessage?: string } | undefined
   [BCSCScreens.PendingReview]: undefined
   [BCSCScreens.CancelledReview]: { agentReason?: string }
   [BCSCScreens.VerificationSuccess]: undefined

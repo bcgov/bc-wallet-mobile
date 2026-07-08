@@ -987,7 +987,8 @@ const translation = {
         "Bullet1": "Monday to Friday, 9am to 5pm",
         "Bullet2": "In the order they're received",
         "Description1": "We review requests:",
-        "Description2": "Requests are usually reviewed within 24 hours.",
+        "Description2": "Requests are usually reviewed {{turnaround}}.",
+        "DefaultTurnaround": "within 2 business days",
         "Description3": "You'll get an email after we review your request. You can also check the status in this app.",
         "ButtonText": "Go to home"
       },

@@ -973,12 +973,14 @@ const translation = {
         "ButtonText": "Ok (FR)",
       },
       "SuccessfullySent": {
-        "Heading": "We've received your request to verify your identity. (FR)",
+        "Heading": "We've received your request to verify your identity (FR)",
         "Description1": "We review requests: (FR)",
         "Bullet1": "Monday to Friday, 9am to 5pm (FR)",
         "Bullet2": "In the order they're received (FR)",
-        "Description3": "Usually, we review requests within 2 business days. During busy periods, it may take longer. (FR)",
-        "ButtonText": "Ok (FR)"
+        "Description2": "Requests are usually reviewed {{turnaround}}. (FR)",
+        "DefaultTurnaround": "within 2 business days (FR)",
+        "Description3": "You'll get an email after we review your request. You can also check the status in this app. (FR)",
+        "ButtonText": "Go to home (FR)"
       },
       "TakePhoto": {
         "CameraInstructions": "Position your face within the oval and press the button on the screen (FR)",

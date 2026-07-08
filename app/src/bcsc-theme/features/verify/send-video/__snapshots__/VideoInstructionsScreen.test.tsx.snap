@@ -385,61 +385,10 @@ exports[`VideoInstructions renders correctly 1`] = `
           BCSC.SendVideo.VideoInstructions.Heading4
         </Text>
       </View>
-    </View>
-  </RCTScrollView>
-  <View
-    style={
-      [
-        {
-          "gap": 16,
-        },
-        false,
-        undefined,
-      ]
-    }
-  >
-    <View
-      style={
-        {
-          "flexGrow": 1,
-          "width": "100%",
-        }
-      }
-    >
       <View
         style={
           {
-            "left": 0,
-            "position": "absolute",
-            "right": 0,
-            "shadowColor": "#000",
-            "shadowOffset": {
-              "height": -3,
-              "width": 0,
-            },
-            "shadowOpacity": 0.9,
-            "shadowRadius": 3,
-            "top": 0,
-            "zIndex": -1,
-          }
-        }
-      >
-        <View
-          style={
-            {
-              "backgroundColor": "#F2F2F2",
-              "height": 1,
-            }
-          }
-        />
-      </View>
-      <View
-        style={
-          {
-            "backgroundColor": "#F2F2F2",
-            "flexGrow": 1,
-            "gap": 8,
-            "padding": 24,
+            "marginTop": 24,
           }
         }
       >
@@ -522,6 +471,6 @@ exports[`VideoInstructions renders correctly 1`] = `
         </View>
       </View>
     </View>
-  </View>
+  </RCTScrollView>
 </RNCSafeAreaView>
 `;

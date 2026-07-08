@@ -974,12 +974,14 @@ const translation = {
         "ButtonText": "Ok (PT-BR)",
       },
       "SuccessfullySent": {
-        "Heading": "We've received your request to verify your identity. (PT-BR)",
+        "Heading": "We've received your request to verify your identity (PT-BR)",
         "Description1": "We review requests: (PT-BR)",
         "Bullet1": "Monday to Friday, 9am to 5pm (PT-BR)",
         "Bullet2": "In the order they're received (PT-BR)",
-        "Description3": "Usually, we review requests within 2 business days. During busy periods, it may take longer. (PT-BR)",
-        "ButtonText": "Ok (PT-BR)"
+        "Description2": "Requests are usually reviewed {{turnaround}}. (PT-BR)",
+        "DefaultTurnaround": "within 2 business days (PT-BR)",
+        "Description3": "You'll get an email after we review your request. You can also check the status in this app. (PT-BR)",
+        "ButtonText": "Go to home (PT-BR)"
       },
       "TakePhoto": {
         "CameraInstructions": "Position your face within the oval and press the button on the screen (PT-BR)",
