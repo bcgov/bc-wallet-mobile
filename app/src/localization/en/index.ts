@@ -97,6 +97,16 @@ const translation = {
       "ButtonTitle": "Start verification",
       "ContinueButtonTitle": "Continue verification"
     },
+    "AccountExpired": {
+      "Title": "Your BC Services card app has expired",
+      "Description": "Please reverify yourself to get access to your services",
+      "ButtonTitle": "Start renewal"
+    },
+    "AccountRenewal": {
+      "Title": "Time for renewal",
+      "Description": "Renew your BC Services card app before it expires on {{expiryDate}}",
+      "ButtonTitle": "Start renewal"
+    },
     "BasicMessage": {
       "Title": "New message",
       "ButtonTitle": "View message"
@@ -393,11 +403,13 @@ const translation = {
       "EditNickname": "Edit Nickname",
       "AutoLockTime": "Auto lock time",
       "Notifications": "Notifications",
+      "NotificationsStatusHeader": "Notifications are {{status}}",
+      "NotificationsStatusContent": "Notifications keep you informed about account updates, credential changes and service interruptions. To turn them on or off, open your device settings.",
+      "NotificationsStatusOn": "on",
+      "NotificationsStatusOff": "off",
       "ForgetPairings": "Forget pairings",
       "AddDevice": "Add another device",
       "MyDevices": "My devices",
-      "MyDevicesCount_one": "{{count}} Device",
-      "MyDevicesCount_other": "{{count}} Devices",
       "DeveloperOptions": "Developer options",
       "Privacy": "Privacy",
       "ContactUs": "Contact us",
@@ -578,6 +590,18 @@ const translation = {
       "StaticBannerDescription": "Your account on this device expired on {{accountExpiration}}. You need to renew it before you can use it to log in.",
       "RenewButton": "Renew account",
       "RemoveButton": "Remove account",
+    },
+    "ReverifyAccount": {
+      "RenewalTitle": "Renew your account",
+      "ExpiredTitle": "Your BC Services card app has expired",
+      "Body": "Services require you to re-verify your account. You will need to complete this step in order to access your services online.",
+      "BulletHeader": "You will need to:",
+      "BulletOne": "Verify your email",
+      "BulletTwo": "Add a photo ID (not expired)",
+      "BulletThree": "Take a photo of your face",
+      "BulletFour": "Record a short video, have a video call or visit a Service BC office",
+      "PrimaryAction": "Continue",
+      "Loading": "Starting verification..."
     },
     "AccountRenewal": {
       "InformationHeader": "What you need to renew",
@@ -784,8 +808,8 @@ const translation = {
       "ContinueAs": "Continue as:",
     },
     "VerifyPrompt": {
-      "Title": "Verify Your Account",
-      "Description": "Verify your account to access services that may need additional information.",
+      "Title": "Verify your account",
+      "Description": "Services may require a verified account. It gives you access to more services that need to know who you are.",
       "YouWillNeedTo": "You will need to:",
       "Bullet1": "Verify your email",
       "Bullet2": "Add a photo ID",
@@ -1233,10 +1257,19 @@ const translation = {
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again.",
     },
     "Wallet": {
-      "EmptyMessage": "Your wallet is empty!",
+      "EmptyMessage": "Your wallet is empty",
+      "EmptyLearnMore": "Learn more about the wallet",
       "Reset": "Reset wallet",
-      "ResetTitle": "Reset wallet?",
-      "ResetDescription": "This will permanently delete all credentials, connections, and chat history stored in your wallet. Your PIN, biometrics, and BC Services Card identity will not be affected. You will not have to re-verify.",
+      "ResetTitle": "Reset your wallet?",
+      "ResetIntro": "Are you having issues with your wallet features?",
+      "ResetFeatureContacts": "Contacts",
+      "ResetFeatureCredentials": "Credentials",
+      "ResetFeatureProofRequests": "Proof Requests",
+      "ResetFeatureWalletTab": "Wallet tab",
+      "ResetExplanation": "You can reset these features without losing your verification status. You will lose:",
+      "ResetLossCredentials": "All your stored credentials",
+      "ResetLossContacts": "All contacts and interactions",
+      "ResetLossProofRequests": "Any created proof requests",
       "Resetting": "Resetting wallet...",
       "ResetSuccess": "Wallet reset successfully.",
       "ResetError": "Failed to reset wallet. Please try again.",

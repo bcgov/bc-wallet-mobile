@@ -97,6 +97,16 @@ const translation = {
       "ButtonTitle": "Start verification (PT-BR)",
       "ContinueButtonTitle": "Continue verification (PT-BR)"
     },
+    "AccountExpired": {
+      "Title": "Your BC Services card app has expired (PT-BR)",
+      "Description": "Please reverify yourself to get access to your services (PT-BR)",
+      "ButtonTitle": "Start renewal (PT-BR)"
+    },
+    "AccountRenewal": {
+      "Title": "Time for renewal (PT-BR)",
+      "Description": "Renew your BC Services card app before it expires on {{expiryDate}} (PT-BR)",
+      "ButtonTitle": "Start renewal (PT-BR)"
+    },
     "BasicMessage": {
       "Title": "New message (PT-BR)",
       "ButtonTitle": "View message (PT-BR)"
@@ -380,11 +390,13 @@ const translation = {
       "EditNickname": "Edit Nickname (PT-BR)",
       "AutoLockTime": "Auto lock time (PT-BR)",
       "Notifications": "Notifications (PT-BR)",
+      "NotificationsStatusHeader": "Notifications are {{status}} (PT-BR)",
+      "NotificationsStatusContent": "Notifications keep you informed about account updates, credential changes and service interruptions. To turn them on or off, open your device settings. (PT-BR)",
+      "NotificationsStatusOn": "on",
+      "NotificationsStatusOff": "off",
       "ForgetPairings": "Forget pairings (PT-BR)",
       "AddDevice": "Add another device (PT-BR)",
       "MyDevices": "My devices (PT-BR)",
-      "MyDevicesCount_one": "{{count}} Device (PT-BR)",
-      "MyDevicesCount_other": "{{count}} Devices (PT-BR)",
       "DeveloperOptions": "Developer options (PT-BR)",
       "Privacy": "Privacy (PT-BR)",
       "ContactUs": "Contact us (PT-BR)",
@@ -561,6 +573,18 @@ const translation = {
       "StaticBannerDescription": "Your account on this device expired on {{accountExpiration}}. You need to renew it before you can use it to log in. (PT-BR)",
       "RenewButton": "Renew account (PT-BR)",
       "RemoveButton": "Remove account (PT-BR)",
+    },
+    "ReverifyAccount": {
+      "RenewalTitle": "Renew your account (PT-BR)",
+      "ExpiredTitle": "Your BC Services card app has expired (PT-BR)",
+      "Body": "Services require you to re-verify your account. You will need to complete this step in order to access your services online. (PT-BR)",
+      "BulletHeader": "You will need to: (PT-BR)",
+      "BulletOne": "Verify your email (PT-BR)",
+      "BulletTwo": "Add a photo ID (not expired) (PT-BR)",
+      "BulletThree": "Take a photo of your face (PT-BR)",
+      "BulletFour": "Record a short video, have a video call or visit a Service BC office (PT-BR)",
+      "PrimaryAction": "Continue (PT-BR)",
+      "Loading": "Starting verification... (PT-BR)"
     },
     "AccountRenewal": {
       "InformationHeader": "What you need to renew (PT-BR)",
@@ -1229,10 +1253,19 @@ const translation = {
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again. (PT-BR)",
     },
     "Wallet": {
-      "EmptyMessage": "Your wallet is empty! (PT-BR)",
+      "EmptyMessage": "Your wallet is empty (PT-BR)",
+      "EmptyLearnMore": "Learn more about the wallet (PT-BR)",
       "Reset": "Reset wallet (PT-BR)",
-      "ResetTitle": "Reset wallet? (PT-BR)",
-      "ResetDescription": "This will permanently delete all credentials, connections, and chat history stored in your wallet. Your PIN, biometrics, and BC Services Card identity will not be affected. You will not have to re-verify. (PT-BR)",
+      "ResetTitle": "Reset your wallet? (PT-BR)",
+      "ResetIntro": "Are you having issues with your wallet features? (PT-BR)",
+      "ResetFeatureContacts": "Contacts (PT-BR)",
+      "ResetFeatureCredentials": "Credentials (PT-BR)",
+      "ResetFeatureProofRequests": "Proof Requests (PT-BR)",
+      "ResetFeatureWalletTab": "Wallet tab (PT-BR)",
+      "ResetExplanation": "You can reset these features without losing your verification status. You will lose: (PT-BR)",
+      "ResetLossCredentials": "All your stored credentials (PT-BR)",
+      "ResetLossContacts": "All contacts and interactions (PT-BR)",
+      "ResetLossProofRequests": "Any created proof requests (PT-BR)",
       "Resetting": "Resetting wallet... (PT-BR)",
       "ResetSuccess": "Wallet reset successfully. (PT-BR)",
       "ResetError": "Failed to reset wallet. Please try again. (PT-BR)",

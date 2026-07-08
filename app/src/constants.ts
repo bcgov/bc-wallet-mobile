@@ -83,6 +83,7 @@ export const ANALYTICS_URL =
 export const BC_SERVICE_LOCATION_URL = 'https://www2.gov.bc.ca/gov/content?id=FD6DB5BA2A5248038EEF54D9F9F37C4D'
 export const REPORT_SUSPICIOUS_URL =
   'https://www2.gov.bc.ca/gov/content/governments/government-id/bcservicescardapp/help'
+export const WALLET_LEARN_MORE_URL = 'https://digital.gov.bc.ca/design/digital-trust/'
 
 export enum HelpCentreUrl {
   HOME = 'https://id.gov.bc.ca/static/help/topics.html?fromapp=1',

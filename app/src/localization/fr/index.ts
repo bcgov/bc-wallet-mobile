@@ -97,6 +97,16 @@ const translation = {
       "ButtonTitle": "Start verification (FR)",
       "ContinueButtonTitle": "Continue verification (FR)"
     },
+    "AccountExpired": {
+      "Title": "Your BC Services card app has expired (FR)",
+      "Description": "Please reverify yourself to get access to your services (FR)",
+      "ButtonTitle": "Start renewal (FR)"
+    },
+    "AccountRenewal": {
+      "Title": "Time for renewal (FR)",
+      "Description": "Renew your BC Services card app before it expires on {{expiryDate}} (FR)",
+      "ButtonTitle": "Start renewal (FR)"
+    },
     "BasicMessage": {
       "Title": "New message (FR)",
       "ButtonTitle": "View message (FR)"
@@ -380,11 +390,13 @@ const translation = {
       "EditNickname": "Edit Nickname (FR)",
       "AutoLockTime": "Auto lock time (FR)",
       "Notifications": "Notifications (FR)",
+      "NotificationsStatusHeader": "Notifications are {{status}} (FR)",
+      "NotificationsStatusContent": "Notifications keep you informed about account updates, credential changes and service interruptions. To turn them on or off, open your device settings. (FR)",
+      "NotificationsStatusOn": "on",
+      "NotificationsStatusOff": "off",
       "ForgetPairings": "Forget pairings (FR)",
       "AddDevice": "Add another device (FR)",
       "MyDevices": "My devices (FR)",
-      "MyDevicesCount_one": "{{count}} Device (FR)",
-      "MyDevicesCount_other": "{{count}} Devices (FR)",
       "DeveloperOptions": "Developer options (FR)",
       "Privacy": "Privacy (FR)",
       "ContactUs": "Contact us (FR)",
@@ -561,6 +573,18 @@ const translation = {
       "StaticBannerDescription": "Your account on this device expired on {{accountExpiration}}. You need to renew it before you can use it to log in. (FR)",
       "RenewButton": "Renew account (FR)",
       "RemoveButton": "Remove account (FR)",
+    },
+    "ReverifyAccount": {
+      "RenewalTitle": "Renew your account (FR)",
+      "ExpiredTitle": "Your BC Services card app has expired (FR)",
+      "Body": "Services require you to re-verify your account. You will need to complete this step in order to access your services online. (FR)",
+      "BulletHeader": "You will need to: (FR)",
+      "BulletOne": "Verify your email (FR)",
+      "BulletTwo": "Add a photo ID (not expired) (FR)",
+      "BulletThree": "Take a photo of your face (FR)",
+      "BulletFour": "Record a short video, have a video call or visit a Service BC office (FR)",
+      "PrimaryAction": "Continue (FR)",
+      "Loading": "Starting verification... (FR)"
     },
     "AccountRenewal": {
       "InformationHeader": "What you need to renew (FR)",
@@ -1229,10 +1253,19 @@ const translation = {
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again. (FR)",
     },
     "Wallet": {
-      "EmptyMessage": "Your wallet is empty! (FR)",
+      "EmptyMessage": "Your wallet is empty (FR)",
+      "EmptyLearnMore": "Learn more about the wallet (FR)",
       "Reset": "Reset wallet (FR)",
-      "ResetTitle": "Reset wallet? (FR)",
-      "ResetDescription": "This will permanently delete all credentials, connections, and chat history stored in your wallet. Your PIN, biometrics, and BC Services Card identity will not be affected. You will not have to re-verify. (FR)",
+      "ResetTitle": "Reset your wallet? (FR)",
+      "ResetIntro": "Are you having issues with your wallet features? (FR)",
+      "ResetFeatureContacts": "Contacts (FR)",
+      "ResetFeatureCredentials": "Credentials (FR)",
+      "ResetFeatureProofRequests": "Proof Requests (FR)",
+      "ResetFeatureWalletTab": "Wallet tab (FR)",
+      "ResetExplanation": "You can reset these features without losing your verification status. You will lose: (FR)",
+      "ResetLossCredentials": "All your stored credentials (FR)",
+      "ResetLossContacts": "All contacts and interactions (FR)",
+      "ResetLossProofRequests": "Any created proof requests (FR)",
       "Resetting": "Resetting wallet... (FR)",
       "ResetSuccess": "Wallet reset successfully. (FR)",
       "ResetError": "Failed to reset wallet. Please try again. (FR)",

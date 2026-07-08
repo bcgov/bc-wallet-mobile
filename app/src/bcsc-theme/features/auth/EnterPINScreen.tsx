@@ -1,3 +1,4 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
@@ -109,7 +110,7 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
   )
 
   const controls = (
-    <>
+    <ControlContainer>
       <Button
         buttonType={ButtonType.Primary}
         title={t('Global.Continue')}
@@ -127,11 +128,11 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         testID={testIdWithKey('GetHelp')}
         onPress={onPressGetHelp}
       />
-    </>
+    </ControlContainer>
   )
 
   return (
-    <ScreenWrapper keyboardActive controls={controls}>
+    <ScreenWrapper padded={false} keyboardActive controls={controls} scrollViewContainerStyle={{ padding: Spacing.lg }}>
       <View style={{ gap: Spacing.sm }}>
         <ThemedText variant={'bold'}>{`Enter your 6-digit PIN`}</ThemedText>
         <PINInput
