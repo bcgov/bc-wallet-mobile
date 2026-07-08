@@ -1,5 +1,4 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
-import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { useBCSCAgentSafe } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { BCState } from '@/store'
 import * as PushNotifications from '@/utils/PushNotificationsHelper'
@@ -24,14 +23,16 @@ import { useNotificationPermissionStatus } from './useNotificationPermissionStat
 /**
  * Settings sub-screen for managing push notifications.
  *
- * Mirrors Bifold core's `TogglePushNotifications`, built from BCSC components:
- * - Permission previously declined/blocked -> manual OS instructions (`PermissionDisabled`).
- * - Permission granted and the app preference enabled -> "Open Settings" to turn notifications
- *   off in the OS (OS-level permissions can't be revoked from within the app).
- * - Otherwise -> enable notifications (request OS permission if needed, register the device with
- *   the mediator). This includes permission granted but the app preference still off — e.g. the
- *   user enabled the permission in OS settings after previously declining — so setup can be
- *   completed end-to-end.
+ * Mirrors Bifold core's `TogglePushNotifications`, built from BCSC components. There are three
+ * states, keyed on the OS permission status:
+ * - ON (permission granted and the app preference enabled) -> "Notifications are on" + "Open
+ *   Settings" to turn them off in the OS (OS-level permissions can't be revoked from within the app).
+ * - OFF (permission previously declined/blocked, i.e. the user chose "No" during onboarding or later
+ *   turned notifications off in the OS) -> "Notifications are off" + "Open Settings" to turn them
+ *   back on. The symmetric opposite of the ON screen.
+ * - UNSET (never prompted, e.g. the user tapped "Skip" during onboarding, or permission granted but
+ *   the app preference is still off) -> enable notifications in-app (request OS permission if needed,
+ *   register the device with the mediator) so setup can be completed end-to-end.
  *
  * @returns {React.ReactElement} The NotificationSettingsScreen component.
  */
@@ -71,9 +72,10 @@ export const NotificationSettingsScreen = (): React.ReactElement => {
     status === PushNotifications.NotificationPermissionStatus.DENIED ||
     status === PushNotifications.NotificationPermissionStatus.BLOCKED
 
-  // Mirror onboarding: only route to OS-settings instructions once we've prompted, to dodge the
-  // React Native fresh-install bug where the permission status can be wrong before the first prompt.
-  const showPermissionDisabled = hasPrompted && isDeniedOrBlocked
+  // The OFF state: the user declined ("No" during onboarding) or later turned notifications off in
+  // the OS. Gate on hasPrompted so a fresh install — where React Native can report the wrong status
+  // before the first prompt — falls through to the UNSET enable flow instead of showing OFF.
+  const notificationsDisabled = hasPrompted && isDeniedOrBlocked
 
   const enableNotifications = useCallback(async () => {
     logger.debug('[NotificationSettingsScreen] Requesting push notification permission')
@@ -97,13 +99,24 @@ export const NotificationSettingsScreen = (): React.ReactElement => {
     }
   }, [agent, dispatch, logger, refresh])
 
-  if (showPermissionDisabled) {
-    return <PermissionDisabled permissionType="notifications" />
-  }
+  // ON and OFF are both OS-managed states: same layout, shared body, and an "Open Settings" button —
+  // only the header's on/off word differs. UNSET (never prompted, or granted-but-preference-off)
+  // keeps the in-app enable flow.
+  const osManaged = notificationsActive || notificationsDisabled
+
+  const header = osManaged
+    ? t('BCSC.Settings.NotificationsStatusHeader', {
+        status: notificationsActive
+          ? t('BCSC.Settings.NotificationsStatusOn')
+          : t('BCSC.Settings.NotificationsStatusOff'),
+      })
+    : t('BCSC.Onboarding.NotificationsHeader')
+
+  const content = osManaged ? t('BCSC.Settings.NotificationsStatusContent') : t('BCSC.Onboarding.NotificationsContent')
 
   const controls = (
     <ControlContainer>
-      {notificationsActive ? (
+      {osManaged ? (
         <Button
           title={t('BCSC.PermissionDisabled.OpenSettings')}
           buttonType={ButtonType.Primary}
@@ -133,13 +146,9 @@ export const NotificationSettingsScreen = (): React.ReactElement => {
         <PushNotificationImage />
       </View>
       <ThemedText variant="headingThree" style={{ textAlign: 'center' }}>
-        {notificationsActive ? t('BCSC.Settings.NotificationsEnabledHeader') : t('BCSC.Onboarding.NotificationsHeader')}
+        {header}
       </ThemedText>
-      <ThemedText style={{ textAlign: 'center' }}>
-        {notificationsActive
-          ? t('BCSC.Settings.NotificationsEnabledContent')
-          : t('BCSC.Onboarding.NotificationsContent')}
-      </ThemedText>
+      <ThemedText style={{ textAlign: 'center' }}>{content}</ThemedText>
     </ScreenWrapper>
   )
 }

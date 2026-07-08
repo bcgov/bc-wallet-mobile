@@ -42,13 +42,17 @@ describe('NotificationSettingsScreen', () => {
     mockHasPrompted.mockResolvedValue(false)
   })
 
-  it('shows OS-settings instructions when permission was previously declined', async () => {
+  it('shows the "off" screen with Open Settings when permission was previously declined', async () => {
     mockStatus.mockResolvedValue(NPStatus.DENIED)
     mockHasPrompted.mockResolvedValue(true)
 
     renderScreen()
 
-    expect(await screen.findByTestId(tid('OpenSettings'))).toBeTruthy()
+    expect(await screen.findByTestId(tid('OpenNotificationSettings'))).toBeTruthy()
+    // The status screen (ON/OFF) renders, not the onboarding enable screen.
+    expect(screen.getByText('BCSC.Settings.NotificationsStatusHeader')).toBeTruthy()
+    // The in-app enable flow is not offered in the OFF state.
+    expect(screen.queryByTestId(tid('EnableNotifications'))).toBeNull()
   })
 
   it('requests permission and registers with the mediator when enabling', async () => {
