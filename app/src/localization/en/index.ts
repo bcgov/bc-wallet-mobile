@@ -1129,9 +1129,9 @@ const translation = {
       "ButtonText": "Ok"
     },
     "Verification": {
-      "Title": "You're all set!",
-      "Description": "Use this app to access many different websites and services.",
-      "ExtraText": "Remember, the BC Services Card app is not a health card, vaccine card, driver's license or photo ID.",
+      "Title": "Your identity has been verified",
+      "Description": "You're now able to access services with your verified identity.",
+      "ExtraText": "Remember, it's not a health card, vaccine card, driver's license, or photo ID.",
       "ButtonText": "Continue"
     },
     "CancelledVerification": {

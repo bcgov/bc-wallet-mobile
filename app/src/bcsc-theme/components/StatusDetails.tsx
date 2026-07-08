@@ -24,7 +24,7 @@ const StatusDetails: React.FC<StatusScreenProps> = ({
   description2,
   description3,
 }) => {
-  const { ColorPalette, Spacing } = useTheme()
+  const { Spacing } = useTheme()
 
   const styles = StyleSheet.create({
     bulletContainer: { width: '100%', marginBottom: Spacing.lg, marginLeft: Spacing.lg },
@@ -39,17 +39,13 @@ const StatusDetails: React.FC<StatusScreenProps> = ({
       width: '100%',
       marginBottom: Spacing.md,
       textAlign: 'left',
+      fontSize: 18,
     },
   })
 
   return (
     <>
-      <Icon
-        name={iconName}
-        size={iconSize}
-        color={iconColor ?? ColorPalette.brand.primary}
-        style={{ padding: Spacing.lg }}
-      />
+      <Icon name={iconName} size={iconSize} color={iconColor ?? '#7AB8F9'} style={{ padding: Spacing.lg }} />
       <ThemedText variant={'headingThree'} style={{ marginVertical: Spacing.md, textAlign: 'center' }}>
         {title}
       </ThemedText>
