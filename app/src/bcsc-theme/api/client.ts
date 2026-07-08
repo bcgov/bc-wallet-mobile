@@ -26,6 +26,8 @@ const TOKEN_EXPIRY_BUFFER_MS = 30 * 1000
 declare module 'axios' {
   export interface AxiosRequestConfig {
     skipBearerAuth?: boolean
+    // Internal: marks a request to skip the onError callback, so the caller can handle it themselves
+    skipOnErrorHandler?: boolean
     // Note: Useful for endpoints that return expected error codes
     suppressStatusCodeLogs?: number[]
     // Internal: marks a request already retried once after a 401, to prevent refresh/retry loops
@@ -181,14 +183,16 @@ class BCSCApiClient {
       }
 
       // 4. Invoke onError callback if provided which marks as handled
-      try {
-        this.onError?.(appError as AxiosAppError, {
-          endpoint: String(error.config?.url),
-          statusCode: error.response?.status ?? 0,
-          apiEndpoints: this.endpoints,
-        })
-      } catch (handlerError) {
-        this.logger.error('[BCSCApiClient] Error handler threw', handlerError as Error)
+      if (error.config?.skipOnErrorHandler !== true) {
+        try {
+          this.onError?.(appError as AxiosAppError, {
+            endpoint: String(error.config?.url),
+            statusCode: error.response?.status ?? 0,
+            apiEndpoints: this.endpoints,
+          })
+        } catch (handlerError) {
+          this.logger.error('[BCSCApiClient] Error handler threw', handlerError as Error)
+        }
       }
 
       throw appError
