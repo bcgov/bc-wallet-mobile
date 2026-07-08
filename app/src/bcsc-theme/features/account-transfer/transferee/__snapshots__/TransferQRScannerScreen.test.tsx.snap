@@ -2,6 +2,7 @@
 
 exports[`TransferQRScanner renders correctly 1`] = `
 <View
+  onLayout={[Function]}
   style={
     {
       "flex": 1,
@@ -74,7 +75,7 @@ exports[`TransferQRScanner renders correctly 1`] = `
             maskContentUnits={1}
             maskType={0}
             maskUnits={0}
-            name="overlayMask"
+            name="reticleMask"
             width="100%"
             x="0%"
             y="0%"
@@ -103,24 +104,16 @@ exports[`TransferQRScanner renders correctly 1`] = `
                   "type": 0,
                 }
               }
-              height={675}
+              height={508}
               propList={
                 [
                   "fill",
-                  "stroke",
-                  "strokeWidth",
                 ]
               }
-              stroke={
-                {
-                  "payload": 4294967295,
-                  "type": 0,
-                }
-              }
-              strokeWidth={2}
-              width={675}
-              x={37.5}
-              y={217}
+              rx={17}
+              width={508}
+              x={121}
+              y={361.11173974540304}
             />
           </RNSVGMask>
         </RNSVGDefs>
@@ -133,7 +126,7 @@ exports[`TransferQRScanner renders correctly 1`] = `
           }
           fillOpacity={0.6}
           height={1334}
-          mask="overlayMask"
+          mask="reticleMask"
           propList={
             [
               "fill",
@@ -151,7 +144,7 @@ exports[`TransferQRScanner renders correctly 1`] = `
               "type": 0,
             }
           }
-          height={675}
+          height={508}
           propList={
             [
               "fill",
@@ -159,16 +152,17 @@ exports[`TransferQRScanner renders correctly 1`] = `
               "strokeWidth",
             ]
           }
+          rx={17}
           stroke={
             {
               "payload": 4294967295,
               "type": 0,
             }
           }
-          strokeWidth={2}
-          width={675}
-          x={37.5}
-          y={217}
+          strokeWidth={3}
+          width={508}
+          x={121}
+          y={361.11173974540304}
         />
       </RNSVGGroup>
     </RNSVGSvgView>
@@ -177,10 +171,15 @@ exports[`TransferQRScanner renders correctly 1`] = `
     style={
       {
         "alignItems": "center",
-        "alignSelf": "center",
         "flexDirection": "row",
-        "marginHorizontal": 40,
-        "paddingTop": 30,
+        "gap": 16,
+        "height": 361.11173974540304,
+        "justifyContent": "center",
+        "left": 0,
+        "paddingHorizontal": 40,
+        "position": "absolute",
+        "right": 0,
+        "top": 0,
       }
     }
   >
@@ -195,7 +194,6 @@ exports[`TransferQRScanner renders correctly 1`] = `
           },
           {
             "color": "#FFFFFF",
-            "padding": 16,
           },
           {
             "fontFamily": "Material Design Icons",
@@ -210,15 +208,22 @@ exports[`TransferQRScanner renders correctly 1`] = `
     </Text>
     <Text
       maxFontSizeMultiplier={2}
+      onTextLayout={[Function]}
       style={
         [
           {
             "color": "#313132",
             "fontFamily": "BCSans-Regular",
-            "fontSize": 20,
-            "fontWeight": "bold",
+            "fontSize": 18,
+            "fontWeight": "normal",
           },
-          undefined,
+          [
+            {
+              "color": "#FFFFFF",
+              "flexShrink": 1,
+            },
+            false,
+          ],
         ]
       }
     >
