@@ -2,8 +2,8 @@ import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { useMemo } from 'react'
 import { useAccount } from '../contexts/BCSCAccountContext'
-import { BCSCReason } from '../utils/id-token'
 import { isAccountExpired } from '../utils/datetime-utils'
+import { BCSCReason } from '../utils/id-token'
 import { useVerificationStatus } from './useVerificationStatus'
 
 /**
