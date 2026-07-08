@@ -1,3 +1,4 @@
+import { isAxiosAppError } from '@/errors/appError'
 import { BifoldLogger } from '@bifold/core'
 import { deleteKey, getAllKeys, setActiveKeyAlias } from 'react-native-bcsc-core'
 import BCSCApiClient from '../api/client'
@@ -43,14 +44,9 @@ export async function performKeyRecovery(
   logger: BifoldLogger
 ): Promise<boolean> {
   try {
-    const { data } = await apiClient.get<ServerClientRegistrationView>(
-      `${apiClient.endpoints.registration}/${clientId}`,
-      {
-        skipBearerAuth: true,
-        headers: { Authorization: `Bearer ${registrationAccessToken}` },
-      }
-    )
-    const serverKids = (data?.jwks?.keys ?? [])
+    const serverRegistration = await _getServerRegistration(apiClient, clientId, registrationAccessToken, logger)
+
+    const serverKids = (serverRegistration?.jwks?.keys ?? [])
       .map((k) => k?.kid)
       .filter((k): k is string => typeof k === 'string' && k.length > 0)
     if (serverKids.length === 0) {
@@ -115,5 +111,42 @@ export async function performKeyRecovery(
     const message = error instanceof Error ? error.message : String(error)
     logger.error(`[performKeyRecovery] event=failed_probe recovery probe failed: ${message}`)
     return false
+  }
+}
+
+/**
+ * Helper to GET /device/register/{client_id} with the registration_access_token and return the server's registration view.
+ *
+ * @param apiClient - The BCSCApiClient instance to use for the request
+ * @param clientId - The client ID to probe
+ * @param registrationAccessToken - The registration access token for authorization
+ * @param logger - The logger instance for logging
+ * @returns The server's registration view, or null if the server returns 403 (indicating key recovery is needed)
+ */
+async function _getServerRegistration(
+  apiClient: BCSCApiClient,
+  clientId: string,
+  registrationAccessToken: string,
+  logger: BifoldLogger
+) {
+  try {
+    const { data } = await apiClient.get<ServerClientRegistrationView>(
+      `${apiClient.endpoints.registration}/${clientId}`,
+      {
+        skipBearerAuth: true,
+        skipOnErrorHandler: true, // we want to handle 403 ourselves, not via the global error handler
+        headers: { Authorization: `Bearer ${registrationAccessToken}` },
+      }
+    )
+
+    return data
+  } catch (error) {
+    // 403 is expected if the server needs key recovery. In that case, we treat it as "no jwks" and skip recovery. Any other error is fatal.
+    if (isAxiosAppError(error, 403)) {
+      logger.info(`[performKeyRecovery] server returned 403 on registration probe; treating as no jwks`)
+      return null
+    }
+
+    throw error
   }
 }
