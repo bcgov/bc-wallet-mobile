@@ -57,6 +57,10 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
     navigation.navigate(BCSCScreens.MainAutoLock)
   }
 
+  const onNotifications = () => {
+    navigation.navigate(BCSCScreens.MainNotificationSettings)
+  }
+
   const onAppSecurity = () => {
     navigation.navigate(BCSCScreens.MainAppSecurity)
   }
@@ -110,6 +114,7 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
       onAccountDetails={onAccountDetails}
       onForgetAllPairings={onForgetAllPairings}
       onAutoLock={onAutoLock}
+      onNotifications={onNotifications}
       onAppSecurity={onAppSecurity}
       onChangePIN={onChangePIN}
       onResetWallet={onResetWallet}
