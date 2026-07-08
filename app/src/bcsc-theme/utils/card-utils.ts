@@ -1,4 +1,10 @@
-import { BCSCCardProcess, BCSCCardType, EvidenceMetadata } from 'react-native-bcsc-core'
+import {
+  BCSCCardProcess,
+  BCSCCardType,
+  EvidenceImageSide,
+  EvidenceMetadata,
+  PhotoMetadata,
+} from 'react-native-bcsc-core'
 
 /**
  * Get the card process for a given card type.
@@ -41,4 +47,56 @@ export function isCardEvidenceComplete(card?: EvidenceMetadata): boolean {
   }
   const requiredPhotos = card.evidenceType.image_sides?.length || 1
   return card.metadata.length >= requiredPhotos
+}
+
+/**
+ * Legacy label map: the /v1/photos (selfie) endpoint uses lowercase "front"/"back",
+ * while /v1/documents expects "FRONT_SIDE"/"BACK_SIDE". Single source of truth for
+ * normalizing either form so callers can compare/dedupe labels consistently.
+ */
+const LEGACY_EVIDENCE_LABEL_MAP: Record<string, string> = { front: 'FRONT_SIDE', back: 'BACK_SIDE' }
+
+/**
+ * Normalizes an evidence image label to the /v1/documents form (`FRONT_SIDE`/`BACK_SIDE`),
+ * mapping the legacy lowercase `front`/`back` labels used by /v1/photos. Any other label is
+ * returned unchanged.
+ *
+ * @param label - The evidence image label to normalize.
+ * @returns The normalized label.
+ */
+export function normalizeEvidenceImageLabel(label: string): string {
+  return LEGACY_EVIDENCE_LABEL_MAP[label] ?? label
+}
+
+/**
+ * Heals evidence photo metadata that has more entries than the card's defined image sides.
+ *
+ * A stale local photo can be left behind when the user navigates back from Evidence ID
+ * Collection to retake/re-accept an already-captured side, producing an n+1 metadata array
+ * (e.g. `[FRONT, BACK, BACK]`) that gets persisted and uploaded 1:1, causing an unrecoverable
+ * "unexpected images count" 400 from the server (see issue #4159).
+ *
+ * This is a read-side heal only — it does not mutate or persist the underlying metadata.
+ * Dedupes by normalized label, keeping the LAST occurrence of each label (the most recent
+ * capture wins), with the result ordered by each label's first appearance. A final defensive
+ * slice guarantees the result never exceeds the expected count even if labels are all distinct.
+ *
+ * @param metadata - The captured photo metadata, potentially over-count.
+ * @param imageSides - The card's defined image sides; determines the expected count.
+ * @returns The metadata, healed to at most `imageSides.length` entries.
+ */
+export function clampEvidenceImagesToSides(
+  metadata: PhotoMetadata[],
+  imageSides?: EvidenceImageSide[]
+): PhotoMetadata[] {
+  if (!imageSides?.length || metadata.length <= imageSides.length) {
+    return metadata
+  }
+
+  const lastByLabel = new Map<string, PhotoMetadata>()
+  for (const item of metadata) {
+    lastByLabel.set(normalizeEvidenceImageLabel(item.label), item)
+  }
+
+  return Array.from(lastByLabel.values()).slice(0, imageSides.length)
 }
