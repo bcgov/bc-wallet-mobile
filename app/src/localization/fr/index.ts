@@ -918,7 +918,7 @@ const translation = {
       "EmailSkipButton2": "Skip (FR)",
       "EnterEmailAddress": "Enter an email address (FR)",
       "EmailAddress": "Email address (FR)",
-      "EmailExample": "laurie.beaumont@gmail.com",
+      "EmailExample": "laurie.beaumont@gov.bc.ca",
       "EmailDescription1": "Adding an email to your account allows you to stay informed about account activity, and is recommended for security purposes. (FR)",
       "EmailDescription2": "You will receive notifications for: (FR)",
       "NotificationsBullet1": "Security alerts (FR)",
