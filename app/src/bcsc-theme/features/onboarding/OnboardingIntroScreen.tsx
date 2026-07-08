@@ -10,24 +10,22 @@ import { StyleSheet, View } from 'react-native'
 
 interface OnboardingIntroScreenProps {
   /**
-   * Fired after "Continue" records that the intro has been seen. In the onboarding stack this
-   * advances to the privacy policy. When the screen is shown as the one-time RootStack gate for
-   * already-onboarded users it is omitted: marking the intro seen re-renders RootStack, which then
-   * routes the user to their proper destination (auth, verify or main).
+   * Fired after "Continue" records that the intro has been seen. In OnboardingStack this advances a
+   * new user to the privacy policy; in AuthStack it slides an already-onboarded user to the unlock
+   * screen (see the respective navigators).
    */
   onContinue?: () => void
-  /** Fired when the hidden developer-menu trigger activates. Omitted outside the onboarding stack. */
+  /** Fired when the hidden developer-menu trigger activates (tap the illustration). */
   onActivateDeveloper?: () => void
 }
 
 /**
- * First onboarding screen. Welcomes the user before the privacy/terms/PIN flow and hosts the
- * hidden developer-menu trigger (tap the illustration) so dev/QA can reach the developer (IAS
- * environment) menu before any registration happens.
+ * Welcome/intro screen shown before the privacy/terms/PIN flow. Hosts the hidden developer-menu
+ * trigger (tap the illustration) so dev/QA can reach the developer (IAS environment) menu.
  *
- * It is also shown once to every already-onboarded user (as a RootStack-level gate) so the app
- * refresh is announced to existing users. Continue records `SEEN_ONBOARDING_INTRO` so the screen
- * is not shown again on subsequent launches.
+ * It appears in two navigators: as the first screen of OnboardingStack for new users, and once to
+ * every already-onboarded user on launch via AuthStack's AuthIntro route (announcing the app
+ * refresh). Continue records `SEEN_ONBOARDING_INTRO` so it is not shown again on later launches.
  *
  * @returns {*} {React.ReactElement} The OnboardingIntroScreen component.
  */
