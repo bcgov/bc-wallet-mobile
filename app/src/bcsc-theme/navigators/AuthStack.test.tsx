@@ -69,6 +69,7 @@ describe('AuthStack', () => {
     jest.clearAllMocks()
     jest.mocked(Bifold.useDefaultStackOptions).mockReturnValue({} as any)
     jest.mocked(Bifold.useTheme).mockReturnValue({} as any)
+    jest.mocked(Bifold.useStore).mockReturnValue([{ bcsc: {} }, jest.fn()] as any)
   })
 
   it('renders correctly', () => {
