@@ -948,6 +948,7 @@ const translation = {
       "EnterCodeWithin": "Please enter the code within 5 minutes.",
       "CantFindCode": "Can't find the code? ",
       "SendNewCode": "Send a new code",
+      "GoToMyEmail": "Go to my email",
     },
     "EmailVerified": {
       "Title": "Your email has been verified",

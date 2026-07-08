@@ -938,6 +938,7 @@ const translation = {
       "EnterCodeWithin": "Please enter the code within 5 minutes. (PT-BR)",
       "CantFindCode": "Can't find the code? (PT-BR) ",
       "SendNewCode": "Send a new code (PT-BR)",
+      "GoToMyEmail": "Go to my email (PT-BR)",
     },
     "EmailVerified": {
       "Title": "Your email has been verified (PT-BR)",
