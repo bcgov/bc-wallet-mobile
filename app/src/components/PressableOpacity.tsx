@@ -29,10 +29,7 @@ export const PressableOpacity = (props: React.ComponentProps<typeof Pressable>) 
     }).start()
   }
 
-  /**
-   * Resolve the style ourselves so we can hand AnimatedPressable a plain
-   * array/object — createAnimatedComponent can't intercept function-styles.
-   */
+  // Animated components have a slightly different style type than normal components
   const resolvedStyle = typeof props.style === 'function' ? props.style({ pressed }) : props.style
 
   return (
