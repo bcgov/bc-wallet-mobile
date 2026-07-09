@@ -1066,11 +1066,10 @@ const translation = {
       "RetakePhoto": "Retake photo (PT-BR)",
     },
     "TransferQRInformation": {
-      "Title": "Open the BC Services Card app on your other mobile device (PT-BR)",
+      "Title": "Open the BC Services Card app on your other device (PT-BR)",
       "Instructions": "Scan the QR code with the BC Services Card app on your other mobile device. (PT-BR)",
       "Warning" : "Do not scan with the camera app. (PT-BR)",
       "GetQRCode": "Get QR Code (PT-BR)",
-      "LearnMore": "Learn more (PT-BR)"
     },
     "TransferInformation": {
       "Title": "Have this app on another device? (PT-BR)",
