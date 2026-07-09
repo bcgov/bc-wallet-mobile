@@ -13,12 +13,12 @@ interface InformationCardProps {
    */
   title: string
   /**
-   * Optional subtext to display below the title
+   * Subtext to display below the title
    *
    * @example "This is a subtext"
    * @type {string}
    */
-  subtext?: string
+  subtext: string
   /**
    * MaterialIcon compatible icon name shown to the left of the title
    *

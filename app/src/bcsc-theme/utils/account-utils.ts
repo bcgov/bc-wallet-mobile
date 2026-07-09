@@ -27,19 +27,23 @@ export const getNicknameValidationErrorKey = (_state: BCState, nickname: string)
 export const formatAccountName = (account: { firstName?: string; middleNames?: string; lastName?: string }): string => {
   const formattedNameParts: string[] = []
 
-  if (account.lastName) {
-    formattedNameParts.push(account.lastName.trim())
+  const firstName = account.firstName?.trim()
+  const middleNames = account.middleNames?.trim()
+  const lastName = account.lastName?.trim()
+
+  if (lastName) {
+    formattedNameParts.push(lastName)
   }
 
-  if (account.firstName) {
-    formattedNameParts.push(account.firstName.trim())
+  if (firstName) {
+    formattedNameParts.push(firstName)
   }
 
-  if (account.middleNames) {
-    formattedNameParts.push(account.middleNames.trim())
+  if (middleNames) {
+    formattedNameParts.push(middleNames)
   }
 
-  if (formattedNameParts.length > 1 && account.lastName) {
+  if (formattedNameParts.length > 1 && lastName) {
     formattedNameParts[0] = formattedNameParts[0] += ','
   }
 

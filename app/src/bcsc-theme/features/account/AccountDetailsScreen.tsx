@@ -127,8 +127,6 @@ const AccountDetailsScreen: React.FC<AccountDetailsScreenProps> = ({ navigation 
     : account.card_expiry
   const accountType = account.card_type ?? t('BCSC.Account.AccountInfo.AccountTypeNonBCServicesCard')
 
-  console.log({ account: account })
-
   const controls = (
     <ControlContainer>
       <Button

@@ -146,5 +146,15 @@ describe('account-utils', () => {
 
       expect(name).toBe('')
     })
+
+    it('should handle empty strings for first name, middle names, and last name', () => {
+      const name = formatAccountName({
+        firstName: '',
+        middleNames: '',
+        lastName: '',
+      })
+
+      expect(name).toBe('')
+    })
   })
 })
