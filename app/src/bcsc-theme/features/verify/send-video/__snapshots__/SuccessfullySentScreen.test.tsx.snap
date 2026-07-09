@@ -110,7 +110,6 @@ exports[`SuccessfullySent renders correctly 1`] = `
           style={
             {
               "flexDirection": "row",
-              "marginBottom": 16,
             }
           }
         >
@@ -153,7 +152,6 @@ exports[`SuccessfullySent renders correctly 1`] = `
           style={
             {
               "flexDirection": "row",
-              "marginBottom": 16,
             }
           }
         >

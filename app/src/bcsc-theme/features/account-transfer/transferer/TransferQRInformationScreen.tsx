@@ -1,5 +1,5 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { HelpCentreUrl } from '@/constants'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -19,7 +19,7 @@ const TransferQRInformationScreen: React.FC = () => {
   })
 
   const controls = (
-    <>
+    <ControlContainer>
       <Button
         buttonType={ButtonType.Primary}
         title={t('BCSC.TransferQRInformation.GetQRCode')}
@@ -28,25 +28,22 @@ const TransferQRInformationScreen: React.FC = () => {
         }}
         testID={testIdWithKey('GetQRCodeButton')}
       />
-      <Button
-        buttonType={ButtonType.Secondary}
-        title={t('BCSC.TransferQRInformation.LearnMore')}
-        onPress={() => {
-          navigation.navigate(BCSCScreens.MainWebView, {
-            url: HelpCentreUrl.QUICK_SETUP_OF_ADDITIONAL_DEVICES,
-            title: t('HelpCentre.Title'),
-          })
-        }}
-        testID={testIdWithKey('LearnMoreButton')}
-      />
-    </>
+    </ControlContainer>
   )
   return (
-    <ScreenWrapper controls={controls}>
+    <ScreenWrapper
+      controls={controls}
+      padded={false}
+      scrollViewContainerStyle={{
+        flexGrow: 1,
+        gap: Spacing.md,
+        padding: Spacing.lg,
+      }}
+    >
       <View style={styles.contentContainer}>
         <ThemedText variant={'headingThree'}>{t('BCSC.TransferQRInformation.Title')}</ThemedText>
         <ThemedText>{t('BCSC.TransferQRInformation.Instructions')}</ThemedText>
-        <ThemedText variant={'bold'}>{t('BCSC.TransferQRInformation.Warning')}</ThemedText>
+        <ThemedText>{t('BCSC.TransferQRInformation.Warning')}</ThemedText>
       </View>
     </ScreenWrapper>
   )

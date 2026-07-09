@@ -30,7 +30,6 @@ const StatusDetails: React.FC<StatusScreenProps> = ({
     bulletContainer: { width: '100%', marginBottom: Spacing.lg, marginLeft: Spacing.lg },
     bulletItemContainer: {
       flexDirection: 'row',
-      marginBottom: Spacing.md,
     },
     bullet: {
       marginRight: Spacing.xs,

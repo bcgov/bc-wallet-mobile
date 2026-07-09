@@ -534,6 +534,7 @@ const translation = {
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification (PT-BR)",
       "CheckStatus": "Check status (PT-BR)",
       "ChooseAnotherWayToVerify": "Choose another way to verify (PT-BR)",
+      "Status": "Status (PT-BR)",
     },
     "SystemChecks": {
       "Devices": {
@@ -614,10 +615,11 @@ const translation = {
       "Resetting": "Resetting… (PT-BR)"
     },
     "ForgetAllPairings": {
-      "Title": "Forget all pairings? (PT-BR)",
-      "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step. (PT-BR)",
+      "Title": "Forget all paired devices? (PT-BR)",
+      "Description1": "When you use this app to log in on another device, you are asked if you want to remember this device to skip the pairing step. (PT-BR)",
       "Description2": "By forgetting all pairings this device will be removed as an option on any computer you previously paired with. You can use this app again to log in on another computer by pairing it again. (PT-BR)",
       "ButtonTitle": "Forget all pairings (PT-BR)",
+      "ScreenTitle": "Forget pairings (PT-BR)",
     },
     "ContactUs": {
       "Title": "Service BC Help Desk (PT-BR)",
@@ -922,7 +924,7 @@ const translation = {
       "EmailSkipButton2": "Skip (PT-BR)",
       "EnterEmailAddress": "Enter an email address (PT-BR)",
       "EmailAddress": "Email address (PT-BR)",
-      "EmailExample": "laurie.beaumont@gmail.com",
+      "EmailExample": "laurie.beaumont@gov.bc.ca",
       "EmailDescription1": "Adding an email to your account allows you to stay informed about account activity, and is recommended for security purposes. (PT-BR)",
       "EmailDescription2": "You will receive notifications for: (PT-BR)",
       "NotificationsBullet1": "Security alerts (PT-BR)",
@@ -942,20 +944,21 @@ const translation = {
       "EnterCodeWithin": "Please enter the code within 5 minutes. (PT-BR)",
       "CantFindCode": "Can't find the code? (PT-BR) ",
       "SendNewCode": "Send a new code (PT-BR)",
+      "GoToMyEmail": "Go to my email (PT-BR)",
     },
     "EmailVerified": {
       "Title": "Your email has been verified (PT-BR)",
     },
     "VerifyIdentity": {
       "DeviceCodeError": "Device code or user code is missing in the store. (PT-BR)",
-      "VerifyInPersonTitle": "Verify in person (PT-BR)",
-      "WhereToGo": "Where to go (PT-BR)",
-      "WhereToGoLink": "A Service BC Location (PT-BR)",
+      "VerifyInPersonTitle": "Verify in person at any service BC location (PT-BR)",
+      "WhereToGoLink": "List of Service BC locations (PT-BR)",
       "WhatToBring": "What to bring (PT-BR)",
       "ThisDevice": "This device (PT-BR)",
-      "YourBCServicesCard": "Your BC Services Card - if it's a non-photo card, bring your additional ID too (PT-BR)",
+      "PiecesOfID": "The pieces of ID you used as part of the verification process (PT-BR)",
+      "YourBCServicesCard": "Your BC Services Card - if it's a non-photo card, bring your additional ID (PT-BR)",
       "ShowThisConfirmationNumber": "Show this confirmation number (PT-BR)",
-      "YouMustCompleteThisBy": "You must complete this by (PT-BR)",
+      "YouMustCompleteThisBy": "You must complete this by: (PT-BR)",
       "YouHaveNotBeenVerified": "You have not yet been verified (PT-BR)",
       "Complete": "Complete (PT-BR)",
       "CardSerialNumber": "Card serial number: {{ serial }} (PT-BR)",
@@ -972,12 +975,14 @@ const translation = {
         "ButtonText": "Ok (PT-BR)",
       },
       "SuccessfullySent": {
-        "Heading": "We've received your request to verify your identity. (PT-BR)",
+        "Heading": "We've received your request to verify your identity (PT-BR)",
         "Description1": "We review requests: (PT-BR)",
         "Bullet1": "Monday to Friday, 9am to 5pm (PT-BR)",
         "Bullet2": "In the order they're received (PT-BR)",
-        "Description3": "Usually, we review requests within 2 business days. During busy periods, it may take longer. (PT-BR)",
-        "ButtonText": "Ok (PT-BR)"
+        "Description2": "Requests are usually reviewed {{turnaround}}. (PT-BR)",
+        "DefaultTurnaround": "within 2 business days (PT-BR)",
+        "Description3": "You'll get an email after we review your request. You can also check the status in this app. (PT-BR)",
+        "ButtonText": "Go to home (PT-BR)"
       },
       "TakePhoto": {
         "CameraInstructions": "Position your face within the oval and press the button on the screen (PT-BR)",
@@ -1035,8 +1040,8 @@ const translation = {
     },
     "MismatchedSerial": {
       "Heading": "Card not found (PT-BR)",
-      "Description1": "Check the card serial number and birthdate match what is on your card: (PT-BR)",
-      "Description2": "Check your card is a BC Services Card by looking at the front of your card: (PT-BR)",
+      "Description1": "Enter the letters and numbers by the barcode on the back of your card. (PT-BR)",
+      "Description2": "Check the serial number and birthdate match what is on your card. (PT-BR)",
       "SerialNumber": "Serial number: {{serial}} (PT-BR)",
       "Birthdate": "Birthdate: {{birthdate}} (PT-BR)",
     },
@@ -1053,11 +1058,11 @@ const translation = {
     },
     "PhotoInstructions": {
       "Heading": "Take a photo of your face. The agent will use this photo when verifying your identity. (PT-BR)",
-      "Bullet1": "Hold your phone in front of you (PT-BR)",
+      "Bullet1": "Hold your phone in front of your face (PT-BR)",
       "Bullet2": "Remove your glasses for the photo only (PT-BR)",
       "Bullet3": "Be the only person in the photo (PT-BR)",
       "Bullet4": "Look like the photo on your BC Services Card or photo ID (PT-BR)",
-      "TakePhoto": "Take Photo of Face (PT-BR)",
+      "TakePhoto": "Take photo (PT-BR)",
       "TakePhotoAccessibilityLabel": "Take photo (PT-BR)",
     },
     "PhotoReview": {
@@ -1066,11 +1071,10 @@ const translation = {
       "RetakePhoto": "Retake photo (PT-BR)",
     },
     "TransferQRInformation": {
-      "Title": "Open the BC Services Card app on your other mobile device (PT-BR)",
+      "Title": "Open the BC Services Card app on your other device (PT-BR)",
       "Instructions": "Scan the QR code with the BC Services Card app on your other mobile device. (PT-BR)",
       "Warning" : "Do not scan with the camera app. (PT-BR)",
       "GetQRCode": "Get QR Code (PT-BR)",
-      "LearnMore": "Learn more (PT-BR)"
     },
     "TransferInformation": {
       "Title": "Have this app on another device? (PT-BR)",
@@ -1119,7 +1123,8 @@ const translation = {
       "CheckYourIDBullet1": "Both IDs should have the same name (PT-BR)",
       "CheckYourIDBullet2": "At least one must be issued in Canada (PT-BR)",
       "CheckYourIDBullet3": "One must have a recent photo (PT-BR)",
-      "CheckYourIDBullet4": "Both must not be expired (PT-BR)",
+      "CheckYourIDBullet4": "Both must be valid (PT-BR)",
+      "SeeAcceptedID": "See accepted ID (PT-BR)",
     },
     "IDPhotoInformation": {
       "Heading": "Take a photo of your ID. An agent will look at this photo when verifying your identity. (PT-BR)",

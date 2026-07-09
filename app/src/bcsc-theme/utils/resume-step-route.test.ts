@@ -37,4 +37,23 @@ describe('getResumeStepRoute', () => {
     store.bcscSecure.serial = '123456789'
     expect(getResumeStepRoute(store).name).toBe(BCSCScreens.ResidentialAddress)
   })
+
+  it('resumes an in-progress evidence (photos captured, document number pending) back to EvidenceIDCollection', () => {
+    const store = structuredClone(initialState)
+    store.bcsc.accountSetupType = AccountSetupType.AddAccount
+    store.bcscSecure.cardProcess = BCSCCardProcess.NonBCSC
+    // User captured the required photo for this ID but left before entering the document
+    // number (app locked while on EvidenceIDCollection). Resume there rather than sending them
+    // back to the start, where EvidenceTypeList's cleanup would discard the captured photo.
+    store.bcscSecure.additionalEvidenceData = [
+      {
+        evidenceType: { evidence_type: 'passport', image_sides: [{}] },
+        metadata: ['photo-front'],
+      },
+    ] as any
+
+    const route = getResumeStepRoute(store)
+    expect(route.name).toBe(BCSCScreens.EvidenceIDCollection)
+    expect((route.params as { cardType: { evidence_type: string } }).cardType.evidence_type).toBe('passport')
+  })
 })

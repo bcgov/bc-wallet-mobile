@@ -8,7 +8,7 @@ import { initLanguages } from '@bifold/core'
 import { AxiosError } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import { DeviceEventEmitter } from 'react-native'
-import { getAccount, getToken, TokenType } from 'react-native-bcsc-core'
+import { getAccount, getRefreshTokenRequestBody, getToken, TokenType } from 'react-native-bcsc-core'
 
 jest.mock('jwt-decode', () => ({
   jwtDecode: jest.fn(),
@@ -228,6 +228,41 @@ describe('BCSC Client', () => {
         appEvent: AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL,
       })
       expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('no refresh token in secure storage'))
+    })
+  })
+
+  describe('native error mapping', () => {
+    const nativeError = (code: string) => Object.assign(new Error(`native ${code}`), { code })
+
+    beforeEach(() => {
+      // Earlier suites replace the prototype `fetchTokens` via jest.spyOn without restoring it;
+      // restore so these tests exercise the real method (and its native-error `.catch`).
+      const proto = BCSCApiClient.prototype as any
+      if (jest.isMockFunction(proto.fetchTokens)) {
+        proto.fetchTokens.mockRestore()
+      }
+    })
+
+    it('maps a native getRefreshTokenRequestBody rejection during fetchTokens', async () => {
+      const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+      const client = new BCSCApiClient('https://example.com', mockLogger as any)
+      ;(getAccount as jest.Mock).mockResolvedValueOnce({ clientID: 'c', issuer: 'https://issuer' })
+      ;(getRefreshTokenRequestBody as jest.Mock).mockRejectedValueOnce(nativeError('E_NO_KEYS_FOUND'))
+
+      await expect(client.getTokensForRefreshToken('refresh-token')).rejects.toMatchObject({
+        appEvent: AppEventCode.NO_SIGNING_KEYS,
+      })
+    })
+
+    it('maps a native getToken rejection during recoverTokens', async () => {
+      const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+      const client = new BCSCApiClient('https://example.com', mockLogger as any)
+      client.tokens = undefined
+      ;(getToken as jest.Mock).mockRejectedValueOnce(nativeError('E_KEYSTORE_UNAVAILABLE'))
+
+      await expect(client.recoverTokens()).rejects.toMatchObject({
+        appEvent: AppEventCode.ERR_120_KEYCHAIN_UNAVAILABLE_ERROR,
+      })
     })
   })
 

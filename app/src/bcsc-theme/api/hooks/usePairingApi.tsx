@@ -1,4 +1,4 @@
-import { throwAppError } from '@/bcsc-theme/utils/native-error-map'
+import { throwAppError, throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 import { VERIFY_DEVICE_ASSERTION_PATH } from '@/constants'
 import { ErrorRegistry } from '@/errors/errorRegistry'
@@ -37,7 +37,7 @@ const usePairingApi = (apiClient: BCSCApiClient) => {
         try {
           signedCode = await signPairingCode(code, issuer, clientID, fcmDeviceToken, deviceToken)
         } catch (error) {
-          return throwAppError(error, ErrorRegistry.SIGN_CLAIMS_ERROR)
+          return throwNativeBcscError(error)
         }
         if (!signedCode) {
           return throwAppError(new Error('signPairingCode returned null'), ErrorRegistry.SIGN_CLAIMS_ERROR)

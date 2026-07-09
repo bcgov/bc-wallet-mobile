@@ -148,6 +148,12 @@ describe('native-error-map', () => {
       expect(mapNativeBcscError(new Error('plain')).appEvent).toBe(ErrorRegistry.UNMAPPED_NATIVE_ERROR.appEvent)
       expect(mapNativeBcscError('a string').appEvent).toBe(ErrorRegistry.UNMAPPED_NATIVE_ERROR.appEvent)
     })
+
+    it('returns an already-mapped AppError unchanged (no re-wrap, no second analytics event)', () => {
+      const alreadyMapped = mapNativeBcscError(nativeError('E_TOKEN_SAVE_FAILED'))
+
+      expect(mapNativeBcscError(alreadyMapped)).toBe(alreadyMapped)
+    })
   })
 
   describe('throwNativeBcscError', () => {

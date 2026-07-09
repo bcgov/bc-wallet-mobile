@@ -118,7 +118,6 @@ exports[`StartCall renders correctly 1`] = `
               "alignContent": "center",
               "alignItems": "flex-start",
               "flexDirection": "row",
-              "marginVertical": 8,
             },
             undefined,
           ]
@@ -183,7 +182,6 @@ exports[`StartCall renders correctly 1`] = `
               "alignContent": "center",
               "alignItems": "flex-start",
               "flexDirection": "row",
-              "marginVertical": 8,
             },
             undefined,
           ]
@@ -248,7 +246,6 @@ exports[`StartCall renders correctly 1`] = `
               "alignContent": "center",
               "alignItems": "flex-start",
               "flexDirection": "row",
-              "marginVertical": 8,
             },
             undefined,
           ]

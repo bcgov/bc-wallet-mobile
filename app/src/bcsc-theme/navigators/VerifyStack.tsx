@@ -233,20 +233,29 @@ const VerifyStack = () => {
         options={{ header: createProgressHeader(5, 30) }}
       />
       <Stack.Screen name={BCSCScreens.TakePhoto} component={TakePhotoScreen} options={{ headerShown: false }} />
-      <Stack.Screen name={BCSCScreens.PhotoReview} component={PhotoReviewScreen} options={{ headerShown: false }} />
+      <Stack.Screen
+        name={BCSCScreens.PhotoReview}
+        component={PhotoReviewScreen}
+        options={{ header: createProgressHeader(5, 30) }}
+      />
       <Stack.Screen
         name={BCSCScreens.VideoInstructions}
         component={VideoInstructionsScreen}
         options={{ header: createProgressHeader(5, 50) }}
       />
       <Stack.Screen name={BCSCScreens.TakeVideo} component={TakeVideoScreen} options={{ headerShown: false }} />
-      <Stack.Screen name={BCSCScreens.VideoReview} component={VideoReviewScreen} options={{ headerShown: false }} />
+      <Stack.Screen
+        name={BCSCScreens.VideoReview}
+        component={VideoReviewScreen}
+        options={{ header: createProgressHeader(5, 50) }}
+      />
       <Stack.Screen
         name={BCSCScreens.PendingReview}
         component={PendingReviewScreen}
         options={{
           header: createProgressHeader(5, 80),
           headerLeft: PendingReviewBackButton,
+          title: t('BCSC.Steps.Status'),
         }}
       />
       <Stack.Screen
@@ -306,6 +315,11 @@ const VerifyStack = () => {
       <Stack.Screen
         name={BCSCScreens.EvidenceIDCollection}
         component={EvidenceIDCollectionScreen}
+        initialParams={
+          resumeRoute.name === BCSCScreens.EvidenceIDCollection
+            ? (resumeRoute.params as BCSCVerifyStackParams[typeof BCSCScreens.EvidenceIDCollection])
+            : undefined
+        }
         options={{ header: createProgressHeader(2, 75) }}
       />
       <Stack.Screen name={BCSCScreens.VerifyWebView} component={WebViewScreen} />
