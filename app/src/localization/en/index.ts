@@ -632,10 +632,11 @@ const translation = {
       "Resetting": "Resetting…"
     },
     "ForgetAllPairings": {
-      "Title": "Forget all pairings?",
-      "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step.",
+      "Title": "Forget all paired devices?",
+      "Description1": "When you use this app to log in on another device, you are asked if you want to remember this device to skip the pairing step.",
       "Description2": "By forgetting all pairings this device will be removed as an option on any computer you previously paired with. You can use this app again to log in on another computer by pairing it again.",
       "ButtonTitle": "Forget all pairings",
+      "ScreenTitle": "Forget pairings"
     },
     "ContactUs": {
       "Title": "Service BC Help Desk",
@@ -1082,11 +1083,10 @@ const translation = {
       "RetakePhoto": "Retake photo",
     },
     "TransferQRInformation": {
-      "Title": "Open the BC Services Card app on your other mobile device",
+      "Title": "Open the BC Services Card app on your other device",
       "Instructions": "Scan the QR code using the BC Services Card app on your other mobile device.",
       "Warning": "Do not scan with the camera app.",
       "GetQRCode": "Get QR Code",
-      "LearnMore": "Learn more"
     },
     "TransferInformation": {
       "Title": "Have this app on another device?",

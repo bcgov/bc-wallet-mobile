@@ -1,4 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useAlerts } from '@/hooks/useAlerts'
 import {
@@ -37,7 +38,9 @@ export const ForgetAllPairingsScreen = ({ navigation }: ForgetAllPairingsScreenP
 
   const styles = StyleSheet.create({
     scrollContainer: {
-      gap: Spacing.lg,
+      flexGrow: 1,
+      gap: Spacing.md,
+      padding: Spacing.lg,
     },
   })
 
@@ -59,20 +62,22 @@ export const ForgetAllPairingsScreen = ({ navigation }: ForgetAllPairingsScreenP
   }, [pairing, forgetPairingsAlert, navigation, logger, unknownErrorModal])
 
   const controls = (
-    <Button
-      title={t('BCSC.ForgetAllPairings.ButtonTitle')}
-      buttonType={ButtonType.Primary}
-      onPress={handleForgetAllPairings}
-      testID={testIdWithKey('ForgetAllPairings')}
-      accessibilityLabel={t('BCSC.ForgetAllPairings.ButtonTitle')}
-      disabled={isLoading}
-    >
-      {isLoading && <ButtonLoading />}
-    </Button>
+    <ControlContainer>
+      <Button
+        title={t('BCSC.ForgetAllPairings.ButtonTitle')}
+        buttonType={ButtonType.Critical}
+        onPress={handleForgetAllPairings}
+        testID={testIdWithKey('ForgetAllPairings')}
+        accessibilityLabel={t('BCSC.ForgetAllPairings.ButtonTitle')}
+        disabled={isLoading}
+      >
+        {isLoading && <ButtonLoading />}
+      </Button>
+    </ControlContainer>
   )
 
   return (
-    <ScreenWrapper controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
+    <ScreenWrapper controls={controls} scrollViewContainerStyle={styles.scrollContainer} padded={false}>
       <ThemedText variant={'headingThree'}>{t('BCSC.ForgetAllPairings.Title')}</ThemedText>
 
       <ThemedText>{t('BCSC.ForgetAllPairings.Description1')}</ThemedText>
