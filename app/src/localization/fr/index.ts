@@ -789,11 +789,11 @@ const translation = {
     },
     "Birthdate": {
       "InvalidDate": "Entered birthdate is invalid. Please enter a valid date. (FR)",
-      "ExampleDate": "The birthdate format is: YYYY/MM/DD (FR)",
+      "ExampleDate": "Your birthdate in format YYYY/MM/DD (FR)",
       "CardSerialNumber": "Card serial number: {{ serial }} (FR)",
       "Heading": "Enter your birthdate (FR)",
       "Paragraph": "Your birthdate is only used to to set up this app. It is not shared. (FR)",
-      "Label": "Birthdate (FR)",
+      "Label": "Enter birthdate (FR)",
     },
     "AdditionalEvidence": {
       "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't include a photo (FR)",

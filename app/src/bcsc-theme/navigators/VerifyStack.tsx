@@ -74,13 +74,14 @@ import { useVerificationStatus } from '../hooks/useVerificationStatus'
 import { getResumeStepRoute } from '../utils/resume-step-route'
 
 /**
- * Back button for the AccountSetup screen, which is reached two ways:
- *  - Pushed on top of the one-time VerifyPrompt ("Continue") — a normal pop returns to the prompt.
- *  - As the stack's initial route when the user resumes verification from the home screen — nothing
- *    sits beneath it, so there is no destination to pop to; instead leave the verification flow and
- *    return home, preserving progress (see {@link useLeaveVerification}).
+ * Back button for a verify-stack screen that can be the stack's initial route when the user resumes
+ * verification (see {@link getResumeStepRoute}). Such a screen is reached two ways:
+ *  - Pushed on top of an earlier screen — a normal pop returns to it.
+ *  - As the stack's initial route on resume — nothing sits beneath it, so there is no destination to
+ *    pop to; instead leave the verification flow and return home, preserving progress (see
+ *    {@link useLeaveVerification}).
  */
-const AccountSetupHeaderBackButton = (props: HeaderBackButtonProps) => {
+const VerifyResumeHeaderBackButton = (props: HeaderBackButtonProps) => {
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
   const leaveVerification = useLeaveVerification()
 
@@ -144,13 +145,7 @@ const VerifyStack = () => {
         name={BCSCScreens.AccountSetup}
         component={AccountSetupScreen}
         options={{
-          // Back either pops to the one-time VerifyPrompt (when pushed from it) or leaves the flow
-          // for home (when this is the stack's initial route on resume); the button decides which
-          // at press time based on whether there is a screen beneath it to pop to.
-          headerLeft: (props) => <AccountSetupHeaderBackButton {...props} />,
-          // Keep the iOS edge-swipe disabled: when this is the initial route there is nothing to
-          // pop to, and when pushed from VerifyPrompt we don't want a swipe back to that one-time
-          // prompt — the header button is the single, explicit back affordance.
+          headerLeft: (props) => <VerifyResumeHeaderBackButton {...props} />,
           gestureEnabled: false,
         }}
       />
@@ -158,8 +153,8 @@ const VerifyStack = () => {
         name={BCSCScreens.IdentitySelection}
         component={IdentitySelectionScreen}
         options={{
+          headerLeft: (props) => <VerifyResumeHeaderBackButton {...props} />,
           header: createProgressHeader(1, 10),
-          headerLeft: createVerifySettingsHeaderButton(),
         }}
       />
       <Stack.Screen
@@ -188,7 +183,13 @@ const VerifyStack = () => {
       <Stack.Screen
         name={BCSCScreens.EnterBirthdate}
         component={EnterBirthdateScreen}
-        options={{ header: createProgressHeader(1, 60) }}
+        options={{
+          header: createProgressHeader(1, 60),
+          // Can be the stack's initial route when the user resumes after entering a serial (see
+          // getResumeStepRoute); with nothing beneath it, back leaves the flow home rather than
+          // being a dead button.
+          headerLeft: (props) => <VerifyResumeHeaderBackButton {...props} />,
+        }}
       />
       <Stack.Screen
         name={BCSCScreens.VerificationCardError}

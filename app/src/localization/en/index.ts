@@ -791,9 +791,9 @@ const translation = {
       "CardSerialNumber": "Card serial number: {{ serial }}",
       "Heading": "Enter your birthdate",
       "Paragraph": "Your birthdate is only used to to set up this app. It will not be stored on this device.",
-      "Label": "Birthdate",
+      "Label": "Enter birthdate",
       "InvalidDate": "Entered birthdate is invalid. Please enter a valid date.",
-      "ExampleDate": "The birthdate format is: YYYY/MM/DD",
+      "ExampleDate": "Your birthdate in format YYYY/MM/DD",
     },
     "AdditionalEvidence": {
       "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't include a photo",

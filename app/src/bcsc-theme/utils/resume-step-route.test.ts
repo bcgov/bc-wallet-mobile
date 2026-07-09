@@ -38,6 +38,26 @@ describe('getResumeStepRoute', () => {
     expect(getResumeStepRoute(store).name).toBe(BCSCScreens.ResidentialAddress)
   })
 
+  it('resumes to the birthdate screen when a serial was entered but the device is not yet authorized', () => {
+    const store = structuredClone(initialState)
+    store.bcsc.accountSetupType = AccountSetupType.AddAccount
+    // Serial saved (manual entry or single-barcode scan) but the user left before completing the
+    // birthdate → device-authorization step: no deviceCode, no cardProcess yet. Resume on the
+    // birthdate screen instead of the start of the ID step so the serial isn't discarded.
+    store.bcscSecure.serial = '123456789'
+    expect(getResumeStepRoute(store).name).toBe(BCSCScreens.EnterBirthdate)
+  })
+
+  it('does not route to the birthdate screen for a Non-BCSC evidence flow that carries a stale serial', () => {
+    const store = structuredClone(initialState)
+    store.bcsc.accountSetupType = AccountSetupType.AddAccount
+    // A serial can be left behind by a failed combo-card scan while capturing evidence in the
+    // Non-BCSC flow. cardProcess is set, so this must stay in the evidence flow, not jump to birthdate.
+    store.bcscSecure.serial = '123456789'
+    store.bcscSecure.cardProcess = BCSCCardProcess.NonBCSC
+    expect(getResumeStepRoute(store).name).not.toBe(BCSCScreens.EnterBirthdate)
+  })
+
   it('resumes an in-progress evidence (photos captured, document number pending) back to EvidenceIDCollection', () => {
     const store = structuredClone(initialState)
     store.bcsc.accountSetupType = AccountSetupType.AddAccount

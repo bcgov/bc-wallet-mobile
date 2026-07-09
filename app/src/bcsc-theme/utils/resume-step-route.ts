@@ -68,6 +68,15 @@ export const getResumeStepRoute = (store: BCState): ResumeStepRoute => {
       if (completion.id.nonPhotoBcscNeedsAdditionalCard) {
         return { name: BCSCScreens.AdditionalIdentificationRequired }
       }
+      // The user entered (or scanned) a BC Services Card serial and left before finishing the
+      // birthdate → device-authorization step. Their serial is still saved, so resume them on the
+      // birthdate screen rather than sending them back to the start of the ID step. A set
+      // cardProcess or deviceCode means the card is already authorized, or the user is in the
+      // Non-BCSC evidence flow — both handled above — so this only catches the pre-authorization
+      // serial state.
+      if (store.bcscSecure.serial && !store.bcscSecure.deviceCode && !store.bcscSecure.cardProcess) {
+        return { name: BCSCScreens.EnterBirthdate }
+      }
       return { name: BCSCScreens.IdentitySelection }
     }
     case 'address':
