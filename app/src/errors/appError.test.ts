@@ -83,7 +83,7 @@ describe('AppError', () => {
       expect(error.technicalMessage).toBe('Request failed with status code 400: email_address is invalid')
     })
 
-    it('should not append the response body for AxiosErrors when it is not a string', () => {
+    it('should not append the response body for objects without a string message', () => {
       const identity = {
         category: ErrorCategory.NETWORK,
         appEvent: AppEventCode.ERR_209_BAD_REQUEST,
@@ -96,6 +96,68 @@ describe('AppError', () => {
       const error = new AppError('Bad request', identity, { cause: axiosLike, track: false })
 
       expect(error.technicalMessage).toBe('Request failed with status code 400')
+    })
+
+    it('should not append the response body when the JSON message field is not a string', () => {
+      const identity = {
+        category: ErrorCategory.NETWORK,
+        appEvent: AppEventCode.ERR_209_BAD_REQUEST,
+        statusCode: 2107,
+      }
+      const axiosLike = Object.assign(new Error('Request failed with status code 400'), {
+        isAxiosError: true,
+        response: { data: { message: 42 } },
+      })
+      const error = new AppError('Bad request', identity, { cause: axiosLike, track: false })
+
+      expect(error.technicalMessage).toBe('Request failed with status code 400')
+    })
+
+    it('should append the JSON message field for AxiosErrors when the response body is an object (e.g. IAS 4xx evidence rejections)', () => {
+      const identity = {
+        category: ErrorCategory.NETWORK,
+        appEvent: AppEventCode.ERR_209_BAD_REQUEST,
+        statusCode: 2107,
+      }
+      const axiosLike = Object.assign(new Error('Request failed with status code 400'), {
+        isAxiosError: true,
+        response: { data: { message: 'unexpected images count' } },
+      })
+      const error = new AppError('Bad request', identity, { cause: axiosLike, track: false })
+
+      expect(error.technicalMessage).toBe('Request failed with status code 400: unexpected images count')
+    })
+
+    it('should truncate a JSON message field longer than 500 chars', () => {
+      const identity = {
+        category: ErrorCategory.NETWORK,
+        appEvent: AppEventCode.ERR_209_BAD_REQUEST,
+        statusCode: 2107,
+      }
+      const longMessage = 'x'.repeat(600)
+      const axiosLike = Object.assign(new Error('Request failed with status code 400'), {
+        isAxiosError: true,
+        response: { data: { message: longMessage } },
+      })
+      const error = new AppError('Bad request', identity, { cause: axiosLike, track: false })
+
+      expect(error.technicalMessage).toBe(`Request failed with status code 400: ${'x'.repeat(500)}`)
+    })
+
+    it('should truncate a string response body longer than 500 chars', () => {
+      const identity = {
+        category: ErrorCategory.NETWORK,
+        appEvent: AppEventCode.ERR_209_BAD_REQUEST,
+        statusCode: 2107,
+      }
+      const longBody = 'y'.repeat(600)
+      const axiosLike = Object.assign(new Error('Request failed with status code 400'), {
+        isAxiosError: true,
+        response: { data: longBody },
+      })
+      const error = new AppError('Bad request', identity, { cause: axiosLike, track: false })
+
+      expect(error.technicalMessage).toBe(`Request failed with status code 400: ${'y'.repeat(500)}`)
     })
   })
 
@@ -122,6 +184,28 @@ describe('AppError', () => {
 
       expect(error.fullMessage).toBe(
         'Something went wrong\nDebug: [general.unknown_server_error.1234] Technical details about the error'
+      )
+    })
+
+    it('carries the JSON message field from an evidence 4xx rejection into fullMessage for problem reports', () => {
+      // Mirrors an IAS evidence API rejection (e.g. POST /evidence/v1/documents): the body is
+      // JSON `{"message":"unexpected images count"}`. fullMessage embeds technicalMessage, and
+      // fullMessage is what ErrorAlertContext.emitErrorModal forwards as `message` to
+      // ErrorModal.handleReport -> logger.reportProblem, which is what reaches Loki when the
+      // user taps "Report a problem". The server's real reason must survive that whole path.
+      const identity = {
+        category: ErrorCategory.NETWORK,
+        appEvent: AppEventCode.ERR_209_BAD_REQUEST,
+        statusCode: 2107,
+      }
+      const axiosLike = Object.assign(new Error('Request failed with status code 400'), {
+        isAxiosError: true,
+        response: { data: { message: 'unexpected images count' } },
+      })
+      const error = new AppError('Bad request', identity, { cause: axiosLike, track: false })
+
+      expect(error.fullMessage).toBe(
+        'Bad request\nDebug: [network.err_209_bad_request.2107] Request failed with status code 400: unexpected images count'
       )
     })
 
@@ -327,6 +411,26 @@ describe('AppError', () => {
         code: 'ERR_BAD_REQUEST',
         responseData: 'email_address is invalid',
       })
+    })
+
+    it('includes the JSON message field in the serialized technicalMessage for evidence 4xx rejections', () => {
+      // toJSON().technicalMessage is what client.ts and ErrorAlertContext auto-log to Loki for
+      // every AppError (not just user-initiated "Report a problem"), so the lifted JSON `message`
+      // must survive serialization too.
+      const identity = {
+        category: ErrorCategory.NETWORK,
+        appEvent: AppEventCode.ERR_209_BAD_REQUEST,
+        statusCode: 2107,
+      }
+      const axiosLike = Object.assign(new Error('Request failed with status code 400'), {
+        isAxiosError: true,
+        response: { status: 400, data: { message: 'unexpected images count' } },
+      })
+      const error = new AppError('Bad request', identity, { cause: axiosLike, track: false })
+
+      const json = error.toJSON()
+
+      expect(json.technicalMessage).toBe('Request failed with status code 400: unexpected images count')
     })
 
     it('keeps native-module userInfo diagnostics on the summarized cause', () => {

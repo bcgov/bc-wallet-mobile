@@ -52,6 +52,25 @@ const summarizeCause = (cause: unknown): unknown => {
 }
 
 /**
+ * Lift a human-readable reason from an HTTP error response body.
+ * Handles plain-string bodies (e.g. "email_address is invalid", 5xx HTML pages)
+ * and JSON bodies with a string `message` (e.g. {"message":"unexpected images count"}).
+ * Capped at 500 chars so oversized bodies never bloat logs.
+ */
+const extractServerReason = (responseData: unknown): string | undefined => {
+  if (typeof responseData === 'string' && responseData.length > 0) {
+    return responseData.slice(0, 500)
+  }
+  if (responseData && typeof responseData === 'object') {
+    const message = (responseData as { message?: unknown }).message
+    if (typeof message === 'string' && message.length > 0) {
+      return message.slice(0, 500)
+    }
+  }
+  return undefined
+}
+
+/**
  * Custom application error class with structured information.
  *
  * @extends {Error}
@@ -110,9 +129,8 @@ export class AppError extends Error {
     // For non-Axios errors (e.g. native module errors), cause.code is a meaningful prefix like "E_KEY_NOT_FOUND"
     const code = !isAxiosError && typeof cause.code === 'string' ? cause.code : undefined
 
-    // Include the server's response body when it's a short plain string (e.g. "email_address is invalid")
-    const responseData = isAxiosError ? cause.response?.data : undefined
-    const serverReason = typeof responseData === 'string' && responseData.length <= 500 ? responseData : undefined
+    // Include the server's reason: a short string body, or the `message` field of a JSON body
+    const serverReason = extractServerReason(isAxiosError ? cause.response?.data : undefined)
 
     return [code, cause.message, serverReason].filter(Boolean).join(': ')
   }
