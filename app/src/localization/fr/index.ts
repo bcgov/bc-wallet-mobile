@@ -614,10 +614,11 @@ const translation = {
       "Resetting": "Resetting… (FR)"
     },
     "ForgetAllPairings": {
-      "Title": "Forget all pairings? (FR)",
+      "Title": "Forget all paired devices? (FR)",
       "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step. (FR)",
       "Description2": "By forgetting all pairings this device will be removed as an option on any computer you previously paired with. You can use this app again to log in on another computer by pairing it again. (FR)",
       "ButtonTitle": "Forget all pairings (FR)",
+      "ScreenTitle": "Forget pairings (FR)"
     },
     "ContactUs": {
       "Title": "Service BC Help Desk (FR)",

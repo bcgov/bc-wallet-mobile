@@ -424,6 +424,7 @@ const MainStack: React.FC = () => {
             component={ForgetAllPairingsScreen}
             options={() => ({
               headerShown: true,
+              title: t('BCSC.ForgetAllPairings.ScreenTitle'),
             })}
           />
           <Stack.Screen
