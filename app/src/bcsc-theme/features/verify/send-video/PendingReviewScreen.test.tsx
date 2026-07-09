@@ -1,9 +1,9 @@
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { render } from '@testing-library/react-native'
+import moment from 'moment'
 import React from 'react'
 import PendingReviewScreen from './PendingReviewScreen'
-import moment from 'moment'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi', () => ({
   __esModule: true,
