@@ -121,6 +121,7 @@ export class FcmViewModel {
     const { jwt } = data
     this.logger.info(`[FcmViewModel] Processing challenge request`)
 
+    // If the mobile card is expired, we don't want to be handling any login challenges
     if (this.isCardExpired) {
       this.logger.info('[FcmViewModel] Card is expired, dropping challenge')
       const appError = AppError.fromErrorDefinition(ErrorRegistry.CARD_STATUS_EXPIRED)

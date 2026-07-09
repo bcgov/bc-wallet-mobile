@@ -27,8 +27,9 @@ exports[`VerificationSuccess renders correctly 1`] = `
         {
           "alignItems": "center",
           "flexGrow": 1,
-          "justifyContent": "center",
+          "gap": 24,
           "padding": 24,
+          "paddingTop": 40,
         },
       ]
     }
@@ -41,8 +42,8 @@ exports[`VerificationSuccess renders correctly 1`] = `
         style={
           [
             {
-              "color": "#003366",
-              "fontSize": 108,
+              "color": "#7AB8F9",
+              "fontSize": 150,
             },
             {
               "padding": 24,
@@ -88,6 +89,7 @@ exports[`VerificationSuccess renders correctly 1`] = `
               "fontWeight": "normal",
             },
             {
+              "fontSize": 18,
               "marginBottom": 16,
               "textAlign": "left",
               "width": "100%",
@@ -108,6 +110,7 @@ exports[`VerificationSuccess renders correctly 1`] = `
               "fontWeight": "normal",
             },
             {
+              "fontSize": 18,
               "marginBottom": 16,
               "textAlign": "left",
               "width": "100%",

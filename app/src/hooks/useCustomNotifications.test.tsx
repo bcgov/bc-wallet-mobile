@@ -1,8 +1,9 @@
-import { act, renderHook } from '@testing-library/react-native'
+import { renderHook } from '@testing-library/react-native'
 import { CustomNotificationId, useCustomNotifications } from './useCustomNotifications'
 
 const mockUseStore = jest.fn()
 const mockUseVerificationStatus = jest.fn()
+const mockComputeSetupStepCompletion = jest.fn()
 
 jest.mock('@bifold/core', () => ({
   useStore: () => mockUseStore(),
@@ -12,12 +13,23 @@ jest.mock('@/bcsc-theme/hooks/useVerificationStatus', () => ({
   useVerificationStatus: () => mockUseVerificationStatus(),
 }))
 
+jest.mock('@/bcsc-theme/utils/setup-step-completion', () => ({
+  computeSetupStepCompletion: (...args: unknown[]) => mockComputeSetupStepCompletion(...args),
+}))
+
 jest.mock('@/bcsc-theme/features/notifications/VerifiedNotification', () => 'VerifiedNotification')
 jest.mock('@/bcsc-theme/features/notifications/CancelledReviewNotification', () => 'CancelledReviewNotification')
 jest.mock('@/bcsc-theme/features/notifications/PendingReviewNotification', () => 'PendingReviewNotification')
 jest.mock('@/bcsc-theme/features/notifications/StartVerificationNotification', () => 'StartVerificationNotification')
+jest.mock(
+  '@/bcsc-theme/features/notifications/ContinueVerificationNotification',
+  () => 'ContinueVerificationNotification'
+)
 
-const buildStore = (bcscSecure: object) => [{ bcscSecure }, jest.fn()]
+const buildStore = (bcscSecure: object, bcsc: object = {}) => [
+  { bcscSecure, bcsc: { showAccountExpiryNotification: false, showCardRenewalNotification: false, ...bcsc } },
+  jest.fn(),
+]
 
 const baseVerificationStatus = {
   needsVerification: false,
@@ -26,11 +38,27 @@ const baseVerificationStatus = {
   isDeactivated: false,
 }
 
+const buildIdStepCompletion = (idCompleted: boolean) => ({
+  id: {
+    completed: idCompleted,
+    focused: !idCompleted,
+    nonBcscNeedsAdditionalCard: false,
+    nonPhotoBcscNeedsAdditionalCard: false,
+  },
+  address: { completed: false, focused: false },
+  email: { completed: false, focused: false },
+  verify: { completed: false, focused: false },
+  transfer: { completed: false, focused: false },
+  currentStep: idCompleted ? null : ('id' as const),
+  allCompleted: false,
+})
+
 describe('useCustomNotifications', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockUseVerificationStatus.mockReturnValue(baseVerificationStatus)
     mockUseStore.mockReturnValue(buildStore({ verificationRequestStatus: null, verificationRequestId: null }))
+    mockComputeSetupStepCompletion.mockReturnValue(buildIdStepCompletion(false))
   })
 
   it('returns an empty array when there is nothing to show', () => {
@@ -86,28 +114,45 @@ describe('useCustomNotifications', () => {
 
       expect(result.current.customNotifications).toHaveLength(0)
     })
+  })
 
-    it('is hidden after dismissCustomNotification is called', () => {
+  describe('ContinueVerificationNotification', () => {
+    beforeEach(() => {
+      mockUseVerificationStatus.mockReturnValue({ ...baseVerificationStatus, needsVerification: true })
+      mockUseStore.mockReturnValue(buildStore({ verificationRequestStatus: null, verificationRequestId: null }))
+      mockComputeSetupStepCompletion.mockReturnValue(buildIdStepCompletion(true))
+    })
+
+    it('is shown when needsVerification is true and id step is completed', () => {
       const { result } = renderHook(() => useCustomNotifications())
 
       expect(result.current.customNotifications).toHaveLength(1)
+      expect(result.current.customNotifications[0].key).toBe(CustomNotificationId.BCSCContinueVerification)
+    })
 
-      act(() => {
-        result.current.dismissCustomNotification(CustomNotificationId.BCSCStartVerification)
-      })
+    it('is not shown when id step is not yet completed (StartVerification shown instead)', () => {
+      mockComputeSetupStepCompletion.mockReturnValue(buildIdStepCompletion(false))
+
+      const { result } = renderHook(() => useCustomNotifications())
+
+      expect(result.current.customNotifications).toHaveLength(1)
+      expect(result.current.customNotifications[0].key).toBe(CustomNotificationId.BCSCStartVerification)
+    })
+
+    it('is not shown when there is no needsVerification', () => {
+      mockUseVerificationStatus.mockReturnValue(baseVerificationStatus)
+
+      const { result } = renderHook(() => useCustomNotifications())
 
       expect(result.current.customNotifications).toHaveLength(0)
     })
 
-    it('dismissing an unrelated id does not hide the notification', () => {
+    it('verified status takes priority over ContinueVerification', () => {
+      mockUseStore.mockReturnValue(buildStore({ verificationRequestStatus: 'verified', verificationRequestId: null }))
+
       const { result } = renderHook(() => useCustomNotifications())
 
-      act(() => {
-        result.current.dismissCustomNotification(CustomNotificationId.BCSCVerified)
-      })
-
-      expect(result.current.customNotifications).toHaveLength(1)
-      expect(result.current.customNotifications[0].key).toBe(CustomNotificationId.BCSCStartVerification)
+      expect(result.current.customNotifications[0].key).toBe(CustomNotificationId.BCSCVerified)
     })
   })
 

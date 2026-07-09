@@ -87,6 +87,7 @@ exports[`SuccessfullySent renders correctly 1`] = `
               "fontWeight": "normal",
             },
             {
+              "fontSize": 18,
               "marginBottom": 16,
               "textAlign": "left",
               "width": "100%",
@@ -203,6 +204,7 @@ exports[`SuccessfullySent renders correctly 1`] = `
               "fontWeight": "normal",
             },
             {
+              "fontSize": 18,
               "marginBottom": 16,
               "textAlign": "left",
               "width": "100%",
@@ -223,6 +225,7 @@ exports[`SuccessfullySent renders correctly 1`] = `
               "fontWeight": "normal",
             },
             {
+              "fontSize": 18,
               "marginBottom": 16,
               "textAlign": "left",
               "width": "100%",
