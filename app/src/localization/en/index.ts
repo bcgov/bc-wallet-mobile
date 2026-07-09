@@ -632,7 +632,7 @@ const translation = {
     },
     "ForgetAllPairings": {
       "Title": "Forget all paired devices?",
-      "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step.",
+      "Description1": "When you use this app to log in on another device, you are asked if you want to remember this device to skip the pairing step.",
       "Description2": "By forgetting all pairings this device will be removed as an option on any computer you previously paired with. You can use this app again to log in on another computer by pairing it again.",
       "ButtonTitle": "Forget all pairings",
       "ScreenTitle": "Forget pairings"
