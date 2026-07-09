@@ -105,12 +105,15 @@ import argparse
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageChops, ImageDraw
+try:
+    from PIL import Image, ImageChops, ImageDraw
+except ModuleNotFoundError as e:
+    raise SystemExit("This tool requires Pillow. Install it with: pip install Pillow") from e
 
 # ─── Constants ──────────────────────────────────────────────────
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_SRC = Path("/Users/jleach/Workspace/bcgov/bc-wallet-mobile-icons")
+DEFAULT_SRC = REPO_ROOT.parent / "bc-wallet-mobile-icons"
 
 CANVAS = 1024
 FOREGROUND_TARGET_PX = 650  # ~63% of 1024 -- adaptive foreground + all mono assets
