@@ -1,5 +1,5 @@
 import { HelpCentreUrl } from '@/constants'
-import { ButtonLocation, IconButton, testIdWithKey } from '@bifold/core'
+import { ButtonLocation, IconButton, testIdWithKey, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { ReactNode, useCallback, useRef, useState } from 'react'
@@ -33,6 +33,7 @@ type FloatingHelpMenuButtonProps = {
  */
 const FloatingHelpMenuButton = (props: FloatingHelpMenuButtonProps) => {
   const { t } = useTranslation()
+  const { ColorPalette } = useTheme()
   const [open, setOpen] = useState(false)
 
   return (
@@ -40,6 +41,7 @@ const FloatingHelpMenuButton = (props: FloatingHelpMenuButtonProps) => {
       <IconButton
         buttonLocation={ButtonLocation.Right}
         icon={props.icon}
+        iconTintColor={ColorPalette.brand.primary}
         accessibilityLabel={t('BCSC.HelpMenu.AccessibilityLabel')}
         testID={testIdWithKey('HelpMenu')}
         onPress={() => setOpen(true)}
