@@ -521,6 +521,7 @@ const translation = {
       },
     },
     "Home": {
+      "Title": "Home (FR)",
       "WhereToUseTitle": "Where to use (FR)",
       "WhereToUseAccessibilityLabel": "Find services (FR)",
       "WhereToUseDescription": "Find the websites you can log in to with this app. (FR)",

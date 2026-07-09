@@ -538,6 +538,7 @@ const translation = {
       "Body": "Verify your identity to finish setting up the app by {{date}}.",
     },
     "Home": {
+      "Title": "Home",
       "WhereToUseTitle": "Where to use",
       "WhereToUseAccessibilityLabel": "Find services",
       "WhereToUseDescription": "Find the websites you can log in to with this app.",
