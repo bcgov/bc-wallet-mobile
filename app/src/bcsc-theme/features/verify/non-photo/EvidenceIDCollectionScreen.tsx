@@ -1,3 +1,4 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import DateInput from '@/bcsc-theme/components/DateInput'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
@@ -17,6 +18,7 @@ import {
   useAnimatedComponents,
   useServices,
   useStore,
+  useTheme,
 } from '@bifold/core'
 import { CommonActions, RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -57,6 +59,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const { updateUserInfo, updateUserMetadata, updateEvidenceDocumentNumber, removeEvidenceByType } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
+  const { Spacing } = useTheme()
   const { ButtonLoading } = useAnimatedComponents()
   const { toCanonicalBirthDate, validateEvidence } = useEvidenceIDCollectionModel()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -216,7 +219,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   }
 
   const controls = (
-    <>
+    <ControlContainer>
       <Button
         title="Continue"
         accessibilityLabel={a11yLabel(t('Global.Continue'))}
@@ -234,11 +237,17 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
         buttonType={ButtonType.Secondary}
         onPress={handleOnCancel}
       />
-    </>
+    </ControlContainer>
   )
 
   return (
-    <ScreenWrapper keyboardActive={true} controls={controls} scrollViewRef={scrollViewRef}>
+    <ScreenWrapper
+      keyboardActive={true}
+      padded={false}
+      controls={controls}
+      scrollViewRef={scrollViewRef}
+      scrollViewContainerStyle={{ flexGrow: 1, padding: Spacing.lg }}
+    >
       <ThemedText variant={'headingThree'}>{cardType.evidence_type_label}</ThemedText>
       <ThemedText style={{ paddingVertical: 16 }}>
         {t('BCSC.EvidenceIDCollection.Heading1')}{' '}

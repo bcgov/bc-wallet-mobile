@@ -1,5 +1,4 @@
 import { VerificationPrompt } from '@/bcsc-theme/api/hooks/useEvidenceApi'
-import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
 import BrownHandHoldingPhone from '@assets/img/brown-hand-holding-phone.svg'
@@ -34,7 +33,7 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
   })
 
   const controls = (
-    <ControlContainer>
+    <View style={{ marginTop: Spacing.lg }}>
       <Button
         buttonType={ButtonType.Primary}
         title={t('BCSC.SendVideo.VideoInstructions.StartRecordingButton')}
@@ -44,12 +43,11 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
         testID={'StartRecordingButton'}
         accessibilityLabel={t('BCSC.SendVideo.VideoInstructions.StartRecordingButton')}
       />
-    </ControlContainer>
+    </View>
   )
 
   return (
     <ScreenWrapper
-      controls={controls}
       padded={false}
       edges={['top', 'bottom', 'left', 'right']}
       scrollViewContainerStyle={{ padding: Spacing.lg }}
@@ -119,6 +117,7 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
           {t('BCSC.SendVideo.VideoInstructions.Heading4')}
         </ThemedText>
       </View>
+      {controls}
     </ScreenWrapper>
   )
 }

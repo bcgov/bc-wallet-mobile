@@ -378,7 +378,7 @@ exports[`EnterBirthdate renders correctly 1`] = `
                   {
                     "busy": undefined,
                     "checked": undefined,
-                    "disabled": true,
+                    "disabled": false,
                     "expanded": undefined,
                     "selected": undefined,
                   }
@@ -393,7 +393,7 @@ exports[`EnterBirthdate renders correctly 1`] = `
                 }
                 accessible={true}
                 collapsable={false}
-                focusable={false}
+                focusable={true}
                 onClick={[Function]}
                 onResponderGrant={[Function]}
                 onResponderMove={[Function]}
@@ -403,7 +403,7 @@ exports[`EnterBirthdate renders correctly 1`] = `
                 onStartShouldSetResponder={[Function]}
                 style={
                   {
-                    "backgroundColor": "#757575",
+                    "backgroundColor": "#003366",
                     "borderRadius": 4,
                     "opacity": 1,
                     "padding": 16,
@@ -438,13 +438,7 @@ exports[`EnterBirthdate renders correctly 1`] = `
                             "fontWeight": "bold",
                             "textAlign": "center",
                           },
-                          {
-                            "color": "#FFFFFF",
-                            "fontFamily": "BCSans-Regular",
-                            "fontSize": 18,
-                            "fontWeight": "bold",
-                            "textAlign": "center",
-                          },
+                          false,
                           false,
                         ],
                       ]

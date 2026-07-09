@@ -1,4 +1,5 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import useLeaveVerification from '@/bcsc-theme/hooks/useLeaveVerification'
 import { useVerificationPendingActions } from '@/bcsc-theme/hooks/useVerificationPendingActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
@@ -13,7 +14,8 @@ type PendingReviewScreenProps = {
 const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
   const { Spacing } = useTheme()
   const { t } = useTranslation()
-  const { isCheckingStatus, handleCheckStatus, handleCancelVerification } = useVerificationPendingActions(navigation)
+  const { handleCancelVerification } = useVerificationPendingActions(navigation)
+  const leaveVerification = useLeaveVerification()
 
   const styles = StyleSheet.create({
     bulletContainer: {
@@ -28,12 +30,11 @@ const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
   const controls = (
     <ControlContainer>
       <Button
-        testID={testIdWithKey('CheckStatus')}
-        accessibilityLabel={t('BCSC.Steps.CheckStatus')}
-        title={t('BCSC.Steps.CheckStatus')}
+        testID={testIdWithKey('GoToHome')}
+        accessibilityLabel={t('BCSC.SendVideo.SuccessfullySent.ButtonText')}
+        title={t('BCSC.SendVideo.SuccessfullySent.ButtonText')}
         buttonType={ButtonType.Primary}
-        disabled={isCheckingStatus}
-        onPress={handleCheckStatus}
+        onPress={() => leaveVerification()}
       />
       <Button
         testID={testIdWithKey('ChooseAnotherWayToVerify')}

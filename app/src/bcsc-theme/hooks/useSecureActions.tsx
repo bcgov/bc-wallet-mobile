@@ -45,7 +45,7 @@ import { DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
 import { TokenResponse } from '../api/hooks/useTokens'
 import { ProvinceCode } from '../utils/address-utils'
 import { createMinimalCredential, getCredentialVerificationStatus } from '../utils/bcsc-credential'
-import { isCardEvidenceComplete } from '../utils/card-utils'
+import { isCardEvidenceComplete, isEvidenceAwaitingDocumentNumber } from '../utils/card-utils'
 import { performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 
@@ -733,6 +733,46 @@ export const useSecureActions = () => {
   )
 
   /**
+   * Remove abandoned evidence entries (a card was selected but no photos were ever
+   * captured) and persist the result.
+   *
+   * Unlike {@link removeIncompleteEvidence}, this PRESERVES evidence whose photos are all
+   * captured but whose document number is still pending — the state a user is in while on
+   * EvidenceIDCollection. This is used during hydration (which runs on every unlock) so
+   * locking the app mid-collection doesn't discard the captured photos; the user resumes
+   * on EvidenceIDCollection instead of being bounced to the start of the ID flow.
+   *
+   * @param evidence Array of evidence metadata to filter and persist
+   * @returns An updated list with abandoned (never-captured) entries removed
+   */
+  const removeAbandonedEvidence = useCallback(
+    async (evidence: EvidenceMetadata[]) => {
+      if (!evidence.length) {
+        return []
+      }
+
+      const updatedEvidence = evidence.filter(
+        (item) => isCardEvidenceComplete(item) || isEvidenceAwaitingDocumentNumber(item)
+      )
+
+      if (updatedEvidence.length === evidence.length) {
+        // Only persist if there was a change to avoid unnecessary writes
+        return evidence
+      }
+
+      dispatch({
+        type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
+        payload: [updatedEvidence],
+      })
+
+      await persistEvidenceData(updatedEvidence)
+
+      return updatedEvidence
+    },
+    [dispatch, persistEvidenceData]
+  )
+
+  /**
    * Clear all additional evidence data and persist to native storage
    */
   const clearAdditionalEvidence = useCallback(async () => {
@@ -990,10 +1030,13 @@ export const useSecureActions = () => {
 
       let cleanedEvidence = evidenceData
       try {
-        cleanedEvidence = await removeIncompleteEvidence(evidenceData)
+        // Only drop abandoned selections (no photos captured). Evidence that has its photos
+        // but no document number yet is in-progress collection — preserve it so a user who
+        // locked the app on EvidenceIDCollection can resume there instead of losing the photo.
+        cleanedEvidence = await removeAbandonedEvidence(evidenceData)
       } catch (error) {
-        // If removing incomplete evidence fails, log the error but continue hydration
-        logger.error('Error removing incomplete evidence during hydration:', error as Error)
+        // If removing abandoned evidence fails, log the error but continue hydration
+        logger.error('Error removing abandoned evidence during hydration:', error as Error)
       }
 
       const secureData: BCSCSecureState = {
@@ -1046,7 +1089,7 @@ export const useSecureActions = () => {
       // mapped downstream (e.g. token persistence) passes through the mapper unchanged.
       throwNativeBcscError(error)
     }
-  }, [logger, apiClient, isClientReady, updateTokens, removeIncompleteEvidence, dispatch])
+  }, [logger, apiClient, isClientReady, updateTokens, removeAbandonedEvidence, dispatch])
 
   /**
    * Clears secure state from store (does not delete from native storage).
@@ -1152,6 +1195,7 @@ export const useSecureActions = () => {
     updateEvidenceDocumentNumber,
     removeEvidenceByType,
     removeIncompleteEvidence,
+    removeAbandonedEvidence,
     clearAdditionalEvidence,
     updateSavedService,
     handleSuccessfulAuth,

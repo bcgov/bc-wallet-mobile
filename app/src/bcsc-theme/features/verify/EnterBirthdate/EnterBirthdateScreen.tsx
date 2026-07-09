@@ -35,13 +35,21 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [loading, setLoading] = useState(false)
   const [birthDate, setBirthDate] = useState<string>(vm.initialDate ? moment(vm.initialDate).format('YYYY/MM/DD') : '')
+  const [birthDateError, setBirthDateError] = useState<string | undefined>(undefined)
 
   const isBirthDateComplete = birthDate.length === 10
-  const isBirthDateInvalid = isBirthDateComplete && !vm.isDateValid(birthDate)
-  const birthDateError = isBirthDateInvalid ? t('BCSC.Birthdate.InvalidDate') : undefined
+
+  const handleChangeBirthDate = (value: string) => {
+    setBirthDate(value)
+    // Surface the invalid-date error as soon as a full date is typed; clear it while editing.
+    setBirthDateError(value.length === 10 && !vm.isDateValid(value) ? t('BCSC.Birthdate.InvalidDate') : undefined)
+  }
 
   const handleSubmit = async () => {
-    if (!birthDate) {
+    // Continue stays enabled for every input state; validate here so tapping it with an empty,
+    // incomplete, or invalid date shows an error instead of silently doing nothing.
+    if (!isBirthDateComplete || !vm.isDateValid(birthDate)) {
+      setBirthDateError(t('BCSC.Birthdate.InvalidDate'))
       return
     }
 
@@ -75,7 +83,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
         testID={testIdWithKey('Continue')}
         onPress={handleSubmit}
         buttonType={ButtonType.Primary}
-        disabled={loading || !isBirthDateComplete || isBirthDateInvalid}
+        disabled={loading}
       >
         {loading && <ButtonLoading />}
       </Button>
@@ -96,7 +104,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
           id={'birthDate'}
           label={t('BCSC.Birthdate.Label')}
           value={birthDate}
-          onChange={setBirthDate}
+          onChange={handleChangeBirthDate}
           subtext={t('BCSC.Birthdate.ExampleDate')}
           error={birthDateError}
         />

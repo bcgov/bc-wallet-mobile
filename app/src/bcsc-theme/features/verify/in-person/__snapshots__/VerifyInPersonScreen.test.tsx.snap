@@ -43,57 +43,154 @@ exports[`VerifyInPerson renders BCSC photo card process with serial number and "
               "fontSize": 26,
               "fontWeight": "bold",
             },
-            undefined,
+            {
+              "textAlign": "center",
+            },
           ]
         }
       >
         BCSC.VerifyIdentity.VerifyInPersonTitle
       </Text>
-      <View>
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "bold",
-              },
-              undefined,
-            ]
+      <View
+        style={
+          {
+            "paddingVertical": 8,
           }
-        >
-          BCSC.VerifyIdentity.WhereToGo
-        </Text>
-        <Text
+        }
+      >
+        <View
+          accessibilityHint="Global.A11y.OpensInBrowser"
           accessibilityLabel="BCSC.VerifyIdentity.WhereToGoLink"
-          accessibilityRole="link"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
           accessible={true}
-          maxFontSizeMultiplier={2}
-          onPress={[Function]}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
           style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              [
-                {
-                  "alignSelf": "flex-start",
-                  "color": "#1A5A96",
-                  "textDecorationLine": "underline",
-                },
-                {},
-              ],
-            ]
+            {
+              "borderColor": "#003366",
+              "borderRadius": 4,
+              "borderWidth": 2,
+              "opacity": 1,
+              "padding": 16,
+            }
           }
           testID="com.ariesbifold:id/ServiceBCLink"
         >
-          BCSC.VerifyIdentity.WhereToGoLink
-        </Text>
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "center",
+              }
+            }
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "flexShrink": 1,
+                  "flexWrap": "wrap",
+                  "gap": 8,
+                  "justifyContent": "center",
+                }
+              }
+            >
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    {
+                      "color": "#003366",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
+                  ]
+                }
+              >
+                BCSC.VerifyIdentity.WhereToGoLink
+              </Text>
+              <Text
+                allowFontScaling={false}
+                selectable={false}
+                style={
+                  [
+                    {
+                      "color": "#003366",
+                      "fontSize": 24,
+                    },
+                    undefined,
+                    {
+                      "fontFamily": "Material Design Icons",
+                      "fontStyle": "normal",
+                      "fontWeight": "normal",
+                    },
+                    {},
+                  ]
+                }
+              >
+                󰏌
+              </Text>
+            </View>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "color": "#003366",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
+                    false,
+                    false,
+                  ],
+                ]
+              }
+            />
+          </View>
+        </View>
       </View>
       <View>
         <Text
@@ -106,7 +203,9 @@ exports[`VerifyInPerson renders BCSC photo card process with serial number and "
                 "fontSize": 18,
                 "fontWeight": "bold",
               },
-              undefined,
+              {
+                "color": "#FFFFFF",
+              },
             ]
           }
         >
@@ -208,7 +307,9 @@ exports[`VerifyInPerson renders BCSC photo card process with serial number and "
                 "fontSize": 18,
                 "fontWeight": "bold",
               },
-              undefined,
+              {
+                "color": "#FFFFFF",
+              },
             ]
           }
         >
@@ -224,11 +325,16 @@ exports[`VerifyInPerson renders BCSC photo card process with serial number and "
                 "fontSize": 32,
                 "fontWeight": "bold",
               },
-              {
-                "fontWeight": "normal",
-                "letterSpacing": 7,
-                "marginBottom": 16,
-              },
+              [
+                {
+                  "color": "#000000",
+                  "fontWeight": "normal",
+                },
+                {
+                  "letterSpacing": 7,
+                  "marginBottom": 16,
+                },
+              ],
             ]
           }
           testID="com.ariesbifold:id/ConfirmationCode"
@@ -247,7 +353,9 @@ exports[`VerifyInPerson renders BCSC photo card process with serial number and "
                 "fontSize": 18,
                 "fontWeight": "bold",
               },
-              undefined,
+              {
+                "color": "#FFFFFF",
+              },
             ]
           }
         >
@@ -264,6 +372,7 @@ exports[`VerifyInPerson renders BCSC photo card process with serial number and "
                 "fontWeight": "bold",
               },
               {
+                "color": "#000000",
                 "fontWeight": "normal",
               },
             ]
@@ -435,7 +544,7 @@ exports[`VerifyInPerson renders BCSC photo card process with serial number and "
 </RNCSafeAreaView>
 `;
 
-exports[`VerifyInPerson renders NonBCSC card process without serial number and with evidence types bullet 1`] = `
+exports[`VerifyInPerson renders NonBCSC card process without serial number and with pieces-of-ID bullet 1`] = `
 <RNCSafeAreaView
   edges={
     {
@@ -478,57 +587,154 @@ exports[`VerifyInPerson renders NonBCSC card process without serial number and w
               "fontSize": 26,
               "fontWeight": "bold",
             },
-            undefined,
+            {
+              "textAlign": "center",
+            },
           ]
         }
       >
         BCSC.VerifyIdentity.VerifyInPersonTitle
       </Text>
-      <View>
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "bold",
-              },
-              undefined,
-            ]
+      <View
+        style={
+          {
+            "paddingVertical": 8,
           }
-        >
-          BCSC.VerifyIdentity.WhereToGo
-        </Text>
-        <Text
+        }
+      >
+        <View
+          accessibilityHint="Global.A11y.OpensInBrowser"
           accessibilityLabel="BCSC.VerifyIdentity.WhereToGoLink"
-          accessibilityRole="link"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
           accessible={true}
-          maxFontSizeMultiplier={2}
-          onPress={[Function]}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
           style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              [
-                {
-                  "alignSelf": "flex-start",
-                  "color": "#1A5A96",
-                  "textDecorationLine": "underline",
-                },
-                {},
-              ],
-            ]
+            {
+              "borderColor": "#003366",
+              "borderRadius": 4,
+              "borderWidth": 2,
+              "opacity": 1,
+              "padding": 16,
+            }
           }
           testID="com.ariesbifold:id/ServiceBCLink"
         >
-          BCSC.VerifyIdentity.WhereToGoLink
-        </Text>
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "center",
+              }
+            }
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "flexShrink": 1,
+                  "flexWrap": "wrap",
+                  "gap": 8,
+                  "justifyContent": "center",
+                }
+              }
+            >
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    {
+                      "color": "#003366",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
+                  ]
+                }
+              >
+                BCSC.VerifyIdentity.WhereToGoLink
+              </Text>
+              <Text
+                allowFontScaling={false}
+                selectable={false}
+                style={
+                  [
+                    {
+                      "color": "#003366",
+                      "fontSize": 24,
+                    },
+                    undefined,
+                    {
+                      "fontFamily": "Material Design Icons",
+                      "fontStyle": "normal",
+                      "fontWeight": "normal",
+                    },
+                    {},
+                  ]
+                }
+              >
+                󰏌
+              </Text>
+            </View>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "color": "#003366",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
+                    false,
+                    false,
+                  ],
+                ]
+              }
+            />
+          </View>
+        </View>
       </View>
       <View>
         <Text
@@ -541,7 +747,9 @@ exports[`VerifyInPerson renders NonBCSC card process without serial number and w
                 "fontSize": 18,
                 "fontWeight": "bold",
               },
-              undefined,
+              {
+                "color": "#FFFFFF",
+              },
             ]
           }
         >
@@ -628,7 +836,7 @@ exports[`VerifyInPerson renders NonBCSC card process without serial number and w
               ]
             }
           >
-            BCSC.VerifyIdentity.YourID Passport, Driver’s License
+            BCSC.VerifyIdentity.PiecesOfID
           </Text>
         </View>
       </View>
@@ -643,7 +851,9 @@ exports[`VerifyInPerson renders NonBCSC card process without serial number and w
                 "fontSize": 18,
                 "fontWeight": "bold",
               },
-              undefined,
+              {
+                "color": "#FFFFFF",
+              },
             ]
           }
         >
@@ -659,11 +869,16 @@ exports[`VerifyInPerson renders NonBCSC card process without serial number and w
                 "fontSize": 32,
                 "fontWeight": "bold",
               },
-              {
-                "fontWeight": "normal",
-                "letterSpacing": 7,
-                "marginBottom": 16,
-              },
+              [
+                {
+                  "color": "#000000",
+                  "fontWeight": "normal",
+                },
+                {
+                  "letterSpacing": 7,
+                  "marginBottom": 16,
+                },
+              ],
             ]
           }
           testID="com.ariesbifold:id/ConfirmationCode"
@@ -682,7 +897,9 @@ exports[`VerifyInPerson renders NonBCSC card process without serial number and w
                 "fontSize": 18,
                 "fontWeight": "bold",
               },
-              undefined,
+              {
+                "color": "#FFFFFF",
+              },
             ]
           }
         >
@@ -699,6 +916,7 @@ exports[`VerifyInPerson renders NonBCSC card process without serial number and w
                 "fontWeight": "bold",
               },
               {
+                "color": "#000000",
                 "fontWeight": "normal",
               },
             ]
@@ -896,57 +1114,154 @@ exports[`VerifyInPerson renders correctly 1`] = `
               "fontSize": 26,
               "fontWeight": "bold",
             },
-            undefined,
+            {
+              "textAlign": "center",
+            },
           ]
         }
       >
         BCSC.VerifyIdentity.VerifyInPersonTitle
       </Text>
-      <View>
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "bold",
-              },
-              undefined,
-            ]
+      <View
+        style={
+          {
+            "paddingVertical": 8,
           }
-        >
-          BCSC.VerifyIdentity.WhereToGo
-        </Text>
-        <Text
+        }
+      >
+        <View
+          accessibilityHint="Global.A11y.OpensInBrowser"
           accessibilityLabel="BCSC.VerifyIdentity.WhereToGoLink"
-          accessibilityRole="link"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
           accessible={true}
-          maxFontSizeMultiplier={2}
-          onPress={[Function]}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
           style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              [
-                {
-                  "alignSelf": "flex-start",
-                  "color": "#1A5A96",
-                  "textDecorationLine": "underline",
-                },
-                {},
-              ],
-            ]
+            {
+              "borderColor": "#003366",
+              "borderRadius": 4,
+              "borderWidth": 2,
+              "opacity": 1,
+              "padding": 16,
+            }
           }
           testID="com.ariesbifold:id/ServiceBCLink"
         >
-          BCSC.VerifyIdentity.WhereToGoLink
-        </Text>
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "center",
+              }
+            }
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "flexShrink": 1,
+                  "flexWrap": "wrap",
+                  "gap": 8,
+                  "justifyContent": "center",
+                }
+              }
+            >
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    {
+                      "color": "#003366",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
+                  ]
+                }
+              >
+                BCSC.VerifyIdentity.WhereToGoLink
+              </Text>
+              <Text
+                allowFontScaling={false}
+                selectable={false}
+                style={
+                  [
+                    {
+                      "color": "#003366",
+                      "fontSize": 24,
+                    },
+                    undefined,
+                    {
+                      "fontFamily": "Material Design Icons",
+                      "fontStyle": "normal",
+                      "fontWeight": "normal",
+                    },
+                    {},
+                  ]
+                }
+              >
+                󰏌
+              </Text>
+            </View>
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "color": "#003366",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
+                    false,
+                    false,
+                  ],
+                ]
+              }
+            />
+          </View>
+        </View>
       </View>
       <View>
         <Text
@@ -959,7 +1274,9 @@ exports[`VerifyInPerson renders correctly 1`] = `
                 "fontSize": 18,
                 "fontWeight": "bold",
               },
-              undefined,
+              {
+                "color": "#FFFFFF",
+              },
             ]
           }
         >
@@ -1061,7 +1378,9 @@ exports[`VerifyInPerson renders correctly 1`] = `
                 "fontSize": 18,
                 "fontWeight": "bold",
               },
-              undefined,
+              {
+                "color": "#FFFFFF",
+              },
             ]
           }
         >
@@ -1077,11 +1396,16 @@ exports[`VerifyInPerson renders correctly 1`] = `
                 "fontSize": 32,
                 "fontWeight": "bold",
               },
-              {
-                "fontWeight": "normal",
-                "letterSpacing": 7,
-                "marginBottom": 16,
-              },
+              [
+                {
+                  "color": "#000000",
+                  "fontWeight": "normal",
+                },
+                {
+                  "letterSpacing": 7,
+                  "marginBottom": 16,
+                },
+              ],
             ]
           }
           testID="com.ariesbifold:id/ConfirmationCode"
@@ -1100,7 +1424,9 @@ exports[`VerifyInPerson renders correctly 1`] = `
                 "fontSize": 18,
                 "fontWeight": "bold",
               },
-              undefined,
+              {
+                "color": "#FFFFFF",
+              },
             ]
           }
         >
@@ -1117,6 +1443,7 @@ exports[`VerifyInPerson renders correctly 1`] = `
                 "fontWeight": "bold",
               },
               {
+                "color": "#000000",
                 "fontWeight": "normal",
               },
             ]

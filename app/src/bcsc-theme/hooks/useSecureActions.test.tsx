@@ -317,6 +317,87 @@ describe('useSecureActions', () => {
     })
   })
 
+  describe('removeAbandonedEvidence', () => {
+    it('should return empty array when given empty evidence', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      let cleaned: EvidenceMetadata[] = []
+      await act(async () => {
+        cleaned = await result.current.removeAbandonedEvidence([])
+      })
+
+      expect(cleaned).toEqual([])
+      expect(mockDispatch).not.toHaveBeenCalled()
+      expect(setEvidence).not.toHaveBeenCalled()
+    })
+
+    it('should preserve in-progress evidence (all photos captured, document number pending)', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      // User captured all sides but hasn't entered the document number yet — they were on
+      // EvidenceIDCollection. This must survive hydration so they can resume there.
+      const inProgress = makeEvidence({
+        evidenceType: { evidence_type: 'drivers_licence', image_sides: [{}, {}] } as any,
+        metadata: [{ uri: 'front.jpg' } as any, { uri: 'back.jpg' } as any],
+        // no documentNumber
+      })
+
+      let cleaned: EvidenceMetadata[] = []
+      await act(async () => {
+        cleaned = await result.current.removeAbandonedEvidence([inProgress])
+      })
+
+      expect(cleaned).toEqual([inProgress])
+      // Nothing removed → no persist/dispatch
+      expect(setEvidence).not.toHaveBeenCalled()
+      expect(mockDispatch).not.toHaveBeenCalled()
+    })
+
+    it('should remove an abandoned selection with no photos captured', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      const abandoned = makeEvidence({
+        evidenceType: { evidence_type: 'passport', image_sides: [{}] } as any,
+        metadata: [],
+      })
+
+      let cleaned: EvidenceMetadata[] = []
+      await act(async () => {
+        cleaned = await result.current.removeAbandonedEvidence([abandoned])
+      })
+
+      expect(cleaned).toEqual([])
+      expect(setEvidence).toHaveBeenCalledWith([])
+    })
+
+    it('should keep complete and in-progress entries while removing abandoned ones', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      const complete = makeEvidence({
+        evidenceType: { evidence_type: 'drivers_licence', image_sides: [{}, {}] } as any,
+        metadata: [{ uri: 'front.jpg' } as any, { uri: 'back.jpg' } as any],
+        documentNumber: 'DL456',
+      })
+      const inProgress = makeEvidence({
+        evidenceType: { evidence_type: 'passport', image_sides: [{}] } as any,
+        metadata: [{ uri: 'page.jpg' } as any],
+        // no documentNumber — resumable
+      })
+      const abandoned = makeEvidence({
+        evidenceType: { evidence_type: 'other_two_sided', image_sides: [{}, {}] } as any,
+        metadata: [],
+      })
+
+      let cleaned: EvidenceMetadata[] = []
+      await act(async () => {
+        cleaned = await result.current.removeAbandonedEvidence([complete, inProgress, abandoned])
+      })
+
+      expect(cleaned).toEqual([complete, inProgress])
+      expect(setEvidence).toHaveBeenCalledWith([complete, inProgress])
+    })
+  })
+
   describe('hydrateSecureState account recovery', () => {
     const baseAccount = {
       id: 'account-1',

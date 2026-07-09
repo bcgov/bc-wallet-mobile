@@ -442,6 +442,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [accountSecurityMethod, setAccountSecurityMethod] = useState<AccountSecurityMethod>()
+  const isAuthenticated = store.authentication.didAuthenticate
 
   const styles = makeStyles(Spacing, ColorPalette)
 
@@ -453,6 +454,13 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
   useFocusEffect(
     useCallback(() => {
+      // The account security method is read via a device authorization grant, which only succeeds
+      // once the device is registered/approved. During onboarding the device isn't registered yet,
+      // so the grant fails with a device_authorization_error. The value is also only consumed by
+      // AuthenticatedSection, so skip the fetch entirely when unauthenticated.
+      if (!isAuthenticated) {
+        return
+      }
       const fetchAccountSecurityMethod = async () => {
         try {
           const method = await getAccountSecurityMethod()
@@ -463,7 +471,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
         }
       }
       fetchAccountSecurityMethod()
-    }, [logger])
+    }, [logger, isAuthenticated])
   )
 
   const onPressTermsOfUse = async () => {
@@ -510,8 +518,6 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
       )
     }
   }
-
-  const isAuthenticated = store.authentication.didAuthenticate
 
   return (
     <ScreenWrapper padded={false} scrollViewContainerStyle={styles.container}>

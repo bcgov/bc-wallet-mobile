@@ -1,10 +1,10 @@
-import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
 import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
+import { Linking } from 'react-native'
 import VerifyNotCompleteScreen from './VerifyNotComplete'
 
 describe('VerifyNotComplete', () => {
@@ -30,7 +30,8 @@ describe('VerifyNotComplete', () => {
     expect(tree).toMatchSnapshot()
   })
 
-  it('navigates to VerifyWebView with audio/video troubleshooting help when Having trouble is pressed', () => {
+  it('opens the audio/video troubleshooting help externally when Having trouble is pressed', () => {
+    const openURLSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined as never)
     const tree = render(
       <BasicAppContext>
         <VerifyNotCompleteScreen navigation={mockNavigation as never} />
@@ -39,9 +40,8 @@ describe('VerifyNotComplete', () => {
 
     fireEvent.press(tree.getByTestId(testIdWithKey('Trouble')))
 
-    expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerifyWebView, {
-      url: HelpCentreUrl.AUDIO_VIDEO_TROUBLESHOOTING,
-      title: expect.any(String),
-    })
+    expect(openURLSpy).toHaveBeenCalledWith(HelpCentreUrl.AUDIO_VIDEO_TROUBLESHOOTING)
+
+    openURLSpy.mockRestore()
   })
 })

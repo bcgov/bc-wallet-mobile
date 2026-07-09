@@ -5,6 +5,7 @@ import { GrayscaleColors, NotificationColors } from '@bcwallet-theme/theme'
 import { createAppTheme } from './factory'
 
 const BC_BLUE = '#003366'
+export const BLUE_LIGHT = '#7AB8F9'
 const LIGHT_GREY_BG = '#F2F2F2'
 const BC_BLUE_LINK = '#1A5A96'
 const OFF_WHITE = '#F7F9FC'
