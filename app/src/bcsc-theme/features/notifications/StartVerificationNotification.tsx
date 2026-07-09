@@ -5,17 +5,12 @@ import { useStore, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import NotificationCard, { NotificationCardStatus } from './NotificationCard'
 
-interface StartVerificationNotificationProps {
-  onClose: () => void
-}
-
 /**
  * StartVerificationNotification is a component that displays a notification card prompting the user to start the verification process for their BCSC account.
  *
- * @param props - The properties for the StartVerificationNotification component, including an onClose callback to handle when the notification is dismissed.
  * @returns React.Element - The rendered StartVerificationNotification component.
  */
-const StartVerificationNotification = (props: StartVerificationNotificationProps) => {
+const StartVerificationNotification = () => {
   const { t } = useTranslation()
   const { ColorPalette } = useTheme()
   const [store] = useStore<BCState>()
@@ -38,7 +33,6 @@ const StartVerificationNotification = (props: StartVerificationNotificationProps
       onPress={() => {
         secureActions.continueVerificationProcess()
       }}
-      onClose={props.onClose}
       status={NotificationCardStatus.Unread}
     />
   )
