@@ -17,10 +17,14 @@
  * Usage:
  *   node scripts/apply-variant.mjs <variant-name>
  *
+ * The project default (checked-in) working tree is the bcsc-dev variant.
+ * Applying bcsc-dev is therefore idempotent; bcwallet-prod reverts the tree
+ * back to the BC Wallet configuration.
+ *
  * Examples:
- *   node scripts/apply-variant.mjs bcsc-dev
+ *   node scripts/apply-variant.mjs bcwallet-prod
  *   node scripts/apply-variant.mjs bcsc-prod
- *   node scripts/apply-variant.mjs bcwallet-prod   # no-op (project defaults)
+ *   node scripts/apply-variant.mjs bcsc-dev   # idempotent (project default)
  *
  * Variant names map to directories under variants/:
  *   variants/bcsc-dev/variant.env
@@ -457,12 +461,6 @@ function main() {
   }
 
   const variantName = args[0]
-
-  // bcwallet-prod is a no-op (project defaults)
-  if (variantName === 'bcwallet-prod') {
-    console.log('Variant bcwallet-prod is the project default. No changes needed.')
-    process.exit(0)
-  }
 
   applyVariant(variantName)
 }

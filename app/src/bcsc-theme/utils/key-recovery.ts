@@ -23,6 +23,22 @@ const modulusFingerprint = (n: string | null): string => {
   return n.length <= 16 ? n : `${n.slice(0, 8)}...${n.slice(-8)} (len=${n.length})`
 }
 
+/**
+ * Format a caught error for logging, surfacing the native error code (e.g. E_KEY_NOT_FOUND) when
+ * present. Handles plain-object rejections ({ code, message }) as well as Error instances, so the
+ * code is never lost to an "[object Object]" string.
+ */
+const describeError = (err: unknown): string => {
+  if (err && typeof err === 'object') {
+    const { code, message } = err as { code?: unknown; message?: unknown }
+    const parts = [code, message].filter((part): part is string => typeof part === 'string')
+    if (parts.length > 0) {
+      return parts.join(': ')
+    }
+  }
+  return String(err)
+}
+
 interface ServerJwk {
   /** No longer used for matching (kid drifts across migrations) — logged for diagnostics only. */
   kid?: string
@@ -183,8 +199,7 @@ export async function performKeyRecovery(
         logger.info(`[performKeyRecovery] pruned local key '${k.id}'`)
       } catch (err) {
         pruneFailures++
-        const m = err instanceof Error ? err.message : String(err)
-        logger.warn(`[performKeyRecovery] failed to prune '${k.id}': ${m}`)
+        logger.warn(`[performKeyRecovery] failed to prune '${k.id}': ${describeError(err)}`)
       }
     }
 
@@ -202,8 +217,9 @@ export async function performKeyRecovery(
         return { status: 'failed', newRegistrationAccessToken }
       }
     } catch (verifyErr) {
-      const m = verifyErr instanceof Error ? verifyErr.message : String(verifyErr)
-      logger.error(`[performKeyRecovery] event=post_prune_verification_failed could not confirm activation: ${m}`)
+      logger.error(
+        `[performKeyRecovery] event=post_prune_verification_failed could not confirm activation: ${describeError(verifyErr)}`
+      )
       return { status: 'failed', newRegistrationAccessToken }
     }
 
@@ -212,8 +228,7 @@ export async function performKeyRecovery(
     )
     return { status: 'recovered', newRegistrationAccessToken }
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    logger.error(`[performKeyRecovery] event=failed_probe recovery probe failed: ${message}`)
+    logger.error(`[performKeyRecovery] event=failed_probe recovery probe failed: ${describeError(error)}`)
     return { status: 'failed', newRegistrationAccessToken }
   }
 }
@@ -273,8 +288,7 @@ export async function reRegisterNewestKey(
     logger.info('[reRegisterNewestKey] event=succeeded re-registered newest local key with server')
     return { success: true, newRegistrationAccessToken: data?.registration_access_token }
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    logger.error(`[reRegisterNewestKey] event=failed ${message}`)
+    logger.error(`[reRegisterNewestKey] event=failed ${describeError(error)}`)
     return { success: false }
   }
 }

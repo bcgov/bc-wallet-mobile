@@ -190,7 +190,7 @@ describe('useRegistrationApi', () => {
       }
     })
 
-    it('should fall through to CLIENT_REGISTRATION_FAILURE for unknown native errors', async () => {
+    it('maps an unmapped native error code to UNMAPPED_NATIVE_ERROR', async () => {
       const unknownError = { code: 'E_UNKNOWN', message: 'unknown native error' }
       jest.mocked(getDynamicClientRegistrationBody).mockRejectedValue(unknownError)
       jest.mocked(isBcscNativeError).mockReturnValue(true)
@@ -202,11 +202,11 @@ describe('useRegistrationApi', () => {
         fail('Expected an error to be thrown')
       } catch (error) {
         expect(error).toBeInstanceOf(AppError)
-        expect((error as AppError).appEvent).toBe(AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE)
+        expect((error as AppError).appEvent).toBe(AppEventCode.UNMAPPED_NATIVE_ERROR)
       }
     })
 
-    it('should fall through to CLIENT_REGISTRATION_FAILURE for non-native errors', async () => {
+    it('maps a non-native error to UNMAPPED_NATIVE_ERROR', async () => {
       jest.mocked(getDynamicClientRegistrationBody).mockRejectedValue(new Error('generic JS error'))
       jest.mocked(isBcscNativeError).mockReturnValue(false)
 
@@ -217,7 +217,7 @@ describe('useRegistrationApi', () => {
         fail('Expected an error to be thrown')
       } catch (error) {
         expect(error).toBeInstanceOf(AppError)
-        expect((error as AppError).appEvent).toBe(AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE)
+        expect((error as AppError).appEvent).toBe(AppEventCode.UNMAPPED_NATIVE_ERROR)
       }
     })
 

@@ -1,6 +1,7 @@
 import { BasicAppContext } from '@mocks/helpers/app'
-import { render } from '@testing-library/react-native'
+import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
+import { StyleSheet } from 'react-native'
 import TransferQRScannerScreen from './TransferQRScannerScreen'
 
 const mockNavigation = {
@@ -43,5 +44,18 @@ describe('TransferQRScanner', () => {
     )
 
     expect(tree).toMatchSnapshot()
+  })
+
+  it('shrinks the instruction text to its widest rendered line so it centers with the reticle', () => {
+    const { getByText } = render(
+      <BasicAppContext>
+        <TransferQRScannerScreen navigation={mockNavigation} />
+      </BasicAppContext>
+    )
+
+    const message = getByText('BCSC.Scan.WillScanAutomatically')
+    fireEvent(message, 'textLayout', { nativeEvent: { lines: [{ width: 156.5 }, { width: 120 }] } })
+
+    expect(StyleSheet.flatten(message.props.style).width).toBe(157)
   })
 })

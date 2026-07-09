@@ -23,9 +23,9 @@
  *                       If not provided, the script will try to apply the patch to a temp branch.
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs'
-import { join, dirname, basename } from 'path'
 import { spawnSync } from 'child_process'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
+import { dirname, join } from 'path'
 
 // ─── Helpers ────────────────────────────────────────────────────
 
@@ -40,9 +40,8 @@ function run(cmd, args = [], opts = {}) {
     throw result.error
   }
   if (result.status !== 0) {
-    const msg = encoding === 'buffer'
-      ? (result.stderr || '').toString().trim()
-      : (result.stderr || result.stdout || '').trim()
+    const msg =
+      encoding === 'buffer' ? (result.stderr || '').toString().trim() : (result.stderr || result.stdout || '').trim()
     throw new Error(`Command failed: ${cmd} ${args.join(' ')}\n${msg}`)
   }
   if (encoding === 'buffer') return result.stdout
@@ -226,7 +225,7 @@ function main() {
 
 # App metadata
 APP_NAME="BC Services Card"
-APP_VERSION="4.0.0"
+APP_VERSION="4.1.0"
 BUILD_TARGET="bcsc"
 
 # Android

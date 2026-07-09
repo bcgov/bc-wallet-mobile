@@ -1,13 +1,10 @@
 import { BCDispatchAction, BCState } from '@/store'
 import { openLink } from '@/utils/links'
 import { SafeAreaModal, TOKENS, useServices, useStore } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useRef, useState } from 'react'
 import { View } from 'react-native'
 import { setMaxDevicesBannerLastDisplayedDate } from 'react-native-bcsc-core'
 import { ReviewDevices } from '../features/settings/components/ReviewDevices'
-import { BCSCMainStackParams, BCSCScreens } from '../types/navigators'
 import { AppBanner, BCSCBanner, BCSCBannerMessage } from './AppBanner'
 
 interface NotificationBannerContainerProps {
@@ -26,7 +23,6 @@ export const NotificationBannerContainer = ({ onManageDevices, bannerMessages }:
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [devicesModalVisible, setDevicesModalVisible] = useState(false)
   const devicesModalShouldAnimate = useRef(true)
-  const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
 
   const handleBannerPress = async (banner: BCSCBannerMessage): Promise<void> => {
     const bannerId = banner.id
@@ -34,10 +30,6 @@ export const NotificationBannerContainer = ({ onManageDevices, bannerMessages }:
 
     if (banner.id === BCSCBanner.DEVICE_LIMIT_EXCEEDED) {
       return setDevicesModalVisible(true)
-    }
-
-    if (banner.id === BCSCBanner.ACCOUNT_EXPIRING_SOON) {
-      navigation.navigate(BCSCScreens.AccountRenewalInformation)
     }
 
     if (

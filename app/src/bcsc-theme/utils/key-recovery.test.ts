@@ -300,14 +300,20 @@ describe('performKeyRecovery', () => {
     expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('event=post_prune_active_mismatch'))
   })
 
-  it('tolerates a prune failure of an OLDER (non-newest) unmatched key — still recovered', async () => {
+  it('tolerates a prune failure of an OLDER (non-newest) unmatched key — still recovered, native error code surfaced via describeError', async () => {
     const apiClient = makeApiClient({ keys: [{ kid: 'server-kid', n: n(1) }] })
     mockedGetAllKeysWithPublicInfo.mockResolvedValue([
       { id: 'rsa1', n: n(1), e: 'AQAB', created: 3000 }, // matched, newest
       { id: 'rsa_old', n: n(2), e: 'AQAB', created: 500 }, // unmatched, oldest — prune will fail
     ] as any)
     mockedSetActive.mockResolvedValue(undefined as any)
-    mockedDeleteKey.mockRejectedValue(new Error('E_KEY_DELETE_REFUSED_LAST'))
+    // Shaped like a real native-module rejection ({code, message}, not an Error instance) so
+    // this also pins describeError actually surfacing the native code in the log, rather than
+    // it being lost to an "[object Object]" string.
+    mockedDeleteKey.mockRejectedValue({
+      code: 'E_KEY_DELETE_REFUSED_LAST',
+      message: "Refusing to delete 'rsa_old': would leave the keystore with no private keys",
+    })
     // Even though the prune failed, rsa1 is still (and was always) the newest remaining key.
     mockedGetAllKeys.mockResolvedValue([{ id: 'rsa1', created: 3000 } as any, { id: 'rsa_old', created: 500 } as any])
     const logger = makeLogger()
@@ -315,7 +321,9 @@ describe('performKeyRecovery', () => {
     const result = await performKeyRecovery(apiClient, CLIENT_ID, REG_TOKEN, logger)
 
     expect(result.status).toBe('recovered')
-    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining(`failed to prune 'rsa_old'`))
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining(`failed to prune 'rsa_old': E_KEY_DELETE_REFUSED_LAST: Refusing to delete`)
+    )
   })
 
   it('surfaces a rotated registration_access_token from the GET response regardless of match outcome', async () => {

@@ -76,7 +76,7 @@ export interface EvidenceMetadataPayload {
 
 const useEvidenceApi = (apiClient: BCSCApiClient) => {
   const [store] = useStore<BCState>()
-  const { updateVerificationRequest, updateDeviceCodes } = useSecureActions()
+  const { updateDeviceCodes } = useSecureActions()
 
   /**
    * Reconciles local verification deadline state against a verification response.
@@ -286,15 +286,15 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
+            // Note: Errors handled in `useEvidenceService`
+            skipOnErrorHandler: true,
           }
         )
-
-        updateVerificationRequest(null, null)
 
         return data
       })
     },
-    [_getDeviceCode, apiClient, updateVerificationRequest]
+    [_getDeviceCode, apiClient]
   )
 
   const createEmailVerification = useCallback(
