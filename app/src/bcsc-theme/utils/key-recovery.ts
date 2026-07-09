@@ -16,7 +16,7 @@ import { getNotificationTokens } from './push-notification-tokens'
  * logs, without dumping the full (public but long) key material. Returns 'none' for a null
  * modulus. This is a diagnostic aid only — matching is always done on the full modulus bytes.
  */
-function modulusFingerprint(n: string | null): string {
+const modulusFingerprint = (n: string | null): string => {
   if (!n) {
     return 'none'
   }
