@@ -35,7 +35,7 @@ export const PressableOpacity = (props: React.ComponentProps<typeof Pressable>) 
   return (
     <AnimatedPressable
       {...props}
-      style={[{ opacity: animatedOpacity }, resolvedStyle]} // Allow the opacity to be overridden
+      style={[resolvedStyle, { opacity: animatedOpacity }]}
       onPress={preventDoublePress(props.onPress)}
       onPressIn={(event) => {
         setPressed(true)

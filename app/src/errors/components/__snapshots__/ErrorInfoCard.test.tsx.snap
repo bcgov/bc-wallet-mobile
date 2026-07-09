@@ -109,6 +109,11 @@ exports[`ErrorInfoCard snapshots should match snapshot with default props 1`] = 
         onResponderTerminate={[Function]}
         onResponderTerminationRequest={[Function]}
         onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "opacity": 1,
+          }
+        }
         testID="com.aries.bifold:id/CloseButton"
       >
         <Icon
@@ -285,6 +290,11 @@ exports[`ErrorInfoCard snapshots should match snapshot with details expanded 1`]
         onResponderTerminate={[Function]}
         onResponderTerminationRequest={[Function]}
         onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "opacity": 1,
+          }
+        }
         testID="com.aries.bifold:id/CloseButton"
       >
         <Icon

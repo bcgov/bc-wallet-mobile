@@ -145,6 +145,7 @@ exports[`AuthSettings renders correctly 1`] = `
                 style={
                   {
                     "marginLeft": "auto",
+                    "opacity": 1,
                   }
                 }
                 testID="com.ariesbifold:id/SectionHeaderChevron"
@@ -244,16 +245,13 @@ exports[`AuthSettings renders correctly 1`] = `
                     onResponderTerminationRequest={[Function]}
                     onStartShouldSetResponder={[Function]}
                     style={
-                      [
-                        {
-                          "backgroundColor": "#003366",
-                          "padding": 16,
-                        },
-                        {
-                          "borderTopLeftRadius": 8,
-                          "borderTopRightRadius": 8,
-                        },
-                      ]
+                      {
+                        "backgroundColor": "#003366",
+                        "borderTopLeftRadius": 8,
+                        "borderTopRightRadius": 8,
+                        "opacity": 1,
+                        "padding": 16,
+                      }
                     }
                     testID="com.ariesbifold:id/Help"
                   >
@@ -319,15 +317,12 @@ exports[`AuthSettings renders correctly 1`] = `
                     onResponderTerminationRequest={[Function]}
                     onStartShouldSetResponder={[Function]}
                     style={
-                      [
-                        {
-                          "backgroundColor": "#003366",
-                          "padding": 16,
-                        },
-                        {
-                          "borderRadius": 0,
-                        },
-                      ]
+                      {
+                        "backgroundColor": "#003366",
+                        "borderRadius": 0,
+                        "opacity": 1,
+                        "padding": 16,
+                      }
                     }
                     testID="com.ariesbifold:id/ContactUs"
                   >
@@ -394,16 +389,13 @@ exports[`AuthSettings renders correctly 1`] = `
                     onResponderTerminationRequest={[Function]}
                     onStartShouldSetResponder={[Function]}
                     style={
-                      [
-                        {
-                          "backgroundColor": "#003366",
-                          "padding": 16,
-                        },
-                        {
-                          "borderBottomLeftRadius": 8,
-                          "borderBottomRightRadius": 8,
-                        },
-                      ]
+                      {
+                        "backgroundColor": "#003366",
+                        "borderBottomLeftRadius": 8,
+                        "borderBottomRightRadius": 8,
+                        "opacity": 1,
+                        "padding": 16,
+                      }
                     }
                     testID="com.ariesbifold:id/Feedback"
                   >
@@ -542,6 +534,7 @@ exports[`AuthSettings renders correctly 1`] = `
                 style={
                   {
                     "marginLeft": "auto",
+                    "opacity": 1,
                   }
                 }
                 testID="com.ariesbifold:id/SectionHeaderChevron"
@@ -642,16 +635,13 @@ exports[`AuthSettings renders correctly 1`] = `
                     onResponderTerminationRequest={[Function]}
                     onStartShouldSetResponder={[Function]}
                     style={
-                      [
-                        {
-                          "backgroundColor": "#003366",
-                          "padding": 16,
-                        },
-                        {
-                          "borderTopLeftRadius": 8,
-                          "borderTopRightRadius": 8,
-                        },
-                      ]
+                      {
+                        "backgroundColor": "#003366",
+                        "borderTopLeftRadius": 8,
+                        "borderTopRightRadius": 8,
+                        "opacity": 1,
+                        "padding": 16,
+                      }
                     }
                     testID="com.ariesbifold:id/Accessibility"
                   >
@@ -718,15 +708,12 @@ exports[`AuthSettings renders correctly 1`] = `
                     onResponderTerminationRequest={[Function]}
                     onStartShouldSetResponder={[Function]}
                     style={
-                      [
-                        {
-                          "backgroundColor": "#003366",
-                          "padding": 16,
-                        },
-                        {
-                          "borderRadius": 0,
-                        },
-                      ]
+                      {
+                        "backgroundColor": "#003366",
+                        "borderRadius": 0,
+                        "opacity": 1,
+                        "padding": 16,
+                      }
                     }
                     testID="com.ariesbifold:id/TermsOfUse"
                   >
@@ -792,16 +779,13 @@ exports[`AuthSettings renders correctly 1`] = `
                     onResponderTerminationRequest={[Function]}
                     onStartShouldSetResponder={[Function]}
                     style={
-                      [
-                        {
-                          "backgroundColor": "#003366",
-                          "padding": 16,
-                        },
-                        {
-                          "borderBottomLeftRadius": 8,
-                          "borderBottomRightRadius": 8,
-                        },
-                      ]
+                      {
+                        "backgroundColor": "#003366",
+                        "borderBottomLeftRadius": 8,
+                        "borderBottomRightRadius": 8,
+                        "opacity": 1,
+                        "padding": 16,
+                      }
                     }
                     testID="com.ariesbifold:id/Privacy"
                   >

@@ -206,16 +206,12 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              [
-                {
-                  "backgroundColor": "#003366",
-                  "borderRadius": 4,
-                  "padding": 16,
-                },
-                {
-                  "opacity": 0.6,
-                },
-              ]
+              {
+                "backgroundColor": "#003366",
+                "borderRadius": 4,
+                "opacity": 1,
+                "padding": 16,
+              }
             }
             testID="com.ariesbifold:id/ChooseDeviceAuthButton"
           >
@@ -319,14 +315,12 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              [
-                {
-                  "backgroundColor": "#003366",
-                  "borderRadius": 4,
-                  "padding": 16,
-                },
-                false,
-              ]
+              {
+                "backgroundColor": "#003366",
+                "borderRadius": 4,
+                "opacity": 1,
+                "padding": 16,
+              }
             }
             testID="com.ariesbifold:id/ChoosePINButton"
           >
@@ -430,14 +424,12 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) disable
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              [
-                {
-                  "backgroundColor": "#003366",
-                  "borderRadius": 4,
-                  "padding": 16,
-                },
-                undefined,
-              ]
+              {
+                "backgroundColor": "#003366",
+                "borderRadius": 4,
+                "opacity": 1,
+                "padding": 16,
+              }
             }
             testID="com.ariesbifold:id/LearnMoreButton"
           >
@@ -1438,14 +1430,12 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              [
-                {
-                  "backgroundColor": "#003366",
-                  "borderRadius": 4,
-                  "padding": 16,
-                },
-                false,
-              ]
+              {
+                "backgroundColor": "#003366",
+                "borderRadius": 4,
+                "opacity": 1,
+                "padding": 16,
+              }
             }
             testID="com.ariesbifold:id/ChooseDeviceAuthButton"
           >
@@ -1572,14 +1562,12 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              [
-                {
-                  "backgroundColor": "#003366",
-                  "borderRadius": 4,
-                  "padding": 16,
-                },
-                false,
-              ]
+              {
+                "backgroundColor": "#003366",
+                "borderRadius": 4,
+                "opacity": 1,
+                "padding": 16,
+              }
             }
             testID="com.ariesbifold:id/ChoosePINButton"
           >

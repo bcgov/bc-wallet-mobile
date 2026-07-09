@@ -65,6 +65,7 @@ exports[`ReportProblemModal renders correctly 1`] = `
           {
             "bottom": 0,
             "left": 0,
+            "opacity": 1,
             "position": "absolute",
             "right": 0,
             "top": 0,
@@ -131,6 +132,11 @@ exports[`ReportProblemModal renders correctly 1`] = `
             onResponderTerminate={[Function]}
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "opacity": 1,
+              }
+            }
             testID="com.ariesbifold:id/ReportProblemClose"
           >
             <Text
