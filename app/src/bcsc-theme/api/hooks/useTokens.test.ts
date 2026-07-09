@@ -4,7 +4,7 @@ import { AppError, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { renderHook } from '@testing-library/react-native'
 import { BasicAppContext } from '__mocks__/helpers/app'
-import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
+import { getDeviceCodeRequestBody, setToken } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import useTokenApi, { TokenResponse } from './useTokens'
 import { withAccount } from './withAccountGuard'
@@ -23,6 +23,8 @@ jest.mock('react-native-bcsc-core', () => ({
   getToken: jest.fn().mockResolvedValue(null),
   setToken: jest.fn().mockResolvedValue(true),
   deleteToken: jest.fn().mockResolvedValue(true),
+  // Delegate to the central manual mock so the predicate can't drift from the real implementation.
+  isBcscNativeError: jest.requireActual('../../../../__mocks__/react-native-bcsc-core').isBcscNativeError,
 }))
 
 jest.mock('./withAccountGuard', () => ({
@@ -159,6 +161,47 @@ describe('useTokenApi', () => {
 
       await expect(result.current.checkDeviceCodeStatus('test_device_code', 'test_confirmation')).rejects.toThrow(
         'Account not found'
+      )
+    })
+
+    it('maps a native getDeviceCodeRequestBody rejection to a distinct AppError', async () => {
+      const mockAccount = { clientID: 'mock_client_id', issuer: 'mock_issuer' }
+      ;(withAccount as jest.Mock).mockImplementation(async (callback) => callback(mockAccount))
+      ;(getDeviceCodeRequestBody as jest.Mock).mockRejectedValueOnce(
+        Object.assign(new Error('native failure'), { code: 'E_DEVICE_CODE_ERROR' })
+      )
+
+      const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
+
+      await expect(result.current.checkDeviceCodeStatus('test_device_code', 'test_confirmation')).rejects.toMatchObject(
+        {
+          appEvent: AppEventCode.DEVICE_CODE_REQUEST_FAILED,
+        }
+      )
+      expect(mockApiClient.post).not.toHaveBeenCalled()
+    })
+
+    it('re-throws the mapped token-persistence error as-is when updateTokens fails', async () => {
+      const mockAccount = { clientID: 'mock_client_id', issuer: 'mock_issuer' }
+      ;(withAccount as jest.Mock).mockImplementation(async (callback) => callback(mockAccount))
+      ;(getDeviceCodeRequestBody as jest.Mock).mockResolvedValue('mock-body')
+      mockApiClient.post.mockResolvedValue(mockAxiosResponse)
+      // Native token write fails → real updateTokens maps it to TOKEN_SAVE_FAILED, which
+      // checkDeviceCodeStatus must re-throw unchanged (not re-wrap under a storage catch-all).
+      ;(setToken as jest.Mock).mockRejectedValue(
+        Object.assign(new Error('native failure'), { code: 'E_TOKEN_SAVE_ERROR' })
+      )
+
+      const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
+
+      await expect(result.current.checkDeviceCodeStatus('test_device_code', 'test_confirmation')).rejects.toMatchObject(
+        {
+          appEvent: AppEventCode.TOKEN_SAVE_FAILED,
+        }
+      )
+      expect(mockApiClient.logger.error).toHaveBeenCalledWith(
+        '[checkDeviceCodeStatus] Failed to update tokens',
+        expect.anything()
       )
     })
   })

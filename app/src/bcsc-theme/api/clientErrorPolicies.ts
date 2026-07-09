@@ -12,6 +12,27 @@ import { BCSCModals, BCSCScreens } from '../types/navigators'
 import { ResumeStepRoute } from '../utils/resume-step-route'
 import { BCSCEndpoints } from './client'
 
+/**
+ * TODO (MD): Phase out client error policies in favor of
+ * per-call error handling in use<Name>Service hooks.
+ *
+ * WHY: Every policy here is matched against every API error, so opting a single
+ * call out of alert handling means adding endpoint-matching logic to this shared
+ * file (e.g. videoSessionErrorPolicy, attestationPollingErrorPolicy), and the
+ * error behavior for any given call is invisible from the call site itself.
+ *
+ * DIRECTION: Error handling should live in the use<Name>Service hook that wraps
+ * the relevant use<Name>Api call, where each call can handle its own errors —
+ * including suppressing alerts — inline. New calls should not add policies here.
+ * When touching an existing policy, prefer migrating it out rather than extending
+ * it in place. Remove this file once all policies have been migrated.
+ *
+ * NOTE: Use `skipOnErrorHandler` API client option to disable injected error
+ * handling for a specific call.
+ *
+ * @link useEvidenceService.tsx -> cancelVerificationRequest
+ */
+
 const UNSUPPORTED_OS_TECHNICAL_MESSAGE = 'unsupported os version'
 // Assertion-401 unsupported-OS marker lives in the response body's `errorMessage` field (V3 parity);
 // V3 matched the looser "unsupported os" substring (the server sends e.g. "unsupported OS").
@@ -50,8 +71,8 @@ type ErrorHandlingPolicy = {
 // Helper Functions + Alert Maps
 // ----------------------------------------
 
-// Global alert map for app events that can occur across multiple endpoints (e.g. network errors, server errors)
-const _getGlobalAlertMap = (alerts?: AppAlerts) => {
+// HTTP alert map for network and server errors that can occur on multiple endpoints (client metadata fetch, device authorization, token, etc.)
+const _getHTTPAlertMap = (alerts?: AppAlerts) => {
   return new Map([
     [AppEventCode.UNSECURED_NETWORK, alerts?.unsecuredNetworkAlert],
     [AppEventCode.SERVER_TIMEOUT, alerts?.serverTimeoutAlert],
@@ -104,6 +125,14 @@ const _getIasErrorAlertMap = (alerts?: AppAlerts) => {
   ])
 }
 
+// Global alert map for all predefined app event codes that can be handled by the global alert policy
+export const getGlobalAlertMap = (alerts: AppAlerts) => {
+  const httpAlertMap = _getHTTPAlertMap(alerts)
+  const iasAlertMap = _getIasErrorAlertMap(alerts)
+
+  return new Map([...httpAlertMap, ...iasAlertMap])
+}
+
 // ----------------------------------------
 // Error Handling Policies
 // https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574122/Mobile+App+Alerts#MobileAppAlerts-Alertswithouterrorcodes
@@ -144,10 +173,10 @@ export const invalidClientMetadataErrorPolicy: ErrorHandlingPolicy = {
 // Global alert policy for predefined app event codes
 export const globalAlertErrorPolicy: ErrorHandlingPolicy = {
   matches: (error) => {
-    return _getGlobalAlertMap().has(error.appEvent)
+    return _getHTTPAlertMap().has(error.appEvent)
   },
   handle: (error, context) => {
-    const alert = _getGlobalAlertMap(context.alerts).get(error.appEvent)
+    const alert = _getHTTPAlertMap(context.alerts).get(error.appEvent)
 
     if (!alert) {
       context.logger.warn(`[GlobalAlertErrorPolicy] No alert defined for app event: ${error.appEvent}`)

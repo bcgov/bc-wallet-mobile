@@ -1,3 +1,4 @@
+import { throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { BCSCEventTypes } from '@/events/eventTypes'
@@ -26,6 +27,8 @@ const TOKEN_EXPIRY_BUFFER_MS = 30 * 1000
 declare module 'axios' {
   export interface AxiosRequestConfig {
     skipBearerAuth?: boolean
+    // Internal: marks a request to skip the onError callback, so the caller can handle it themselves
+    skipOnErrorHandler?: boolean
     // Note: Useful for endpoints that return expected error codes
     suppressStatusCodeLogs?: number[]
     // Internal: marks a request already retried once after a 401, to prevent refresh/retry loops
@@ -181,14 +184,16 @@ class BCSCApiClient {
       }
 
       // 4. Invoke onError callback if provided which marks as handled
-      try {
-        this.onError?.(appError as AxiosAppError, {
-          endpoint: String(error.config?.url),
-          statusCode: error.response?.status ?? 0,
-          apiEndpoints: this.endpoints,
-        })
-      } catch (handlerError) {
-        this.logger.error('[BCSCApiClient] Error handler threw', handlerError as Error)
+      if (error.config?.skipOnErrorHandler !== true) {
+        try {
+          this.onError?.(appError as AxiosAppError, {
+            endpoint: String(error.config?.url),
+            statusCode: error.response?.status ?? 0,
+            apiEndpoints: this.endpoints,
+          })
+        } catch (handlerError) {
+          this.logger.error('[BCSCApiClient] Error handler threw', handlerError as Error)
+        }
       }
 
       throw appError
@@ -334,7 +339,9 @@ class BCSCApiClient {
 
   private fetchTokens(refreshToken: string): Promise<TokenResponse> {
     return withAccount(async (account) => {
-      const tokenBody = await getRefreshTokenRequestBody(account.issuer, account.clientID, refreshToken)
+      const tokenBody = await getRefreshTokenRequestBody(account.issuer, account.clientID, refreshToken).catch(
+        (error) => throwNativeBcscError(error)
+      )
 
       const tokensResponse = await this.post<TokenResponse>(this.endpoints.token, tokenBody, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -382,7 +389,7 @@ class BCSCApiClient {
       return this.tokens
     }
 
-    const storedRefreshToken = (await getToken(TokenType.Refresh))?.token
+    const storedRefreshToken = (await getToken(TokenType.Refresh).catch((error) => throwNativeBcscError(error)))?.token
     if (!storedRefreshToken) {
       this.logger.error('[BCSCApiClient] Token cache empty and no refresh token in secure storage')
       throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL, {

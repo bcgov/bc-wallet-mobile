@@ -1,4 +1,5 @@
 import { AppError, ErrorRegistry } from '@/errors'
+import { isAppError } from '@/errors/appError'
 import { ErrorDefinition } from '@/errors/errorRegistry'
 import { isBcscNativeError } from 'react-native-bcsc-core'
 
@@ -118,7 +119,8 @@ export const nativeBcscErrorMap: ReadonlyMap<string, ErrorDefinition> = new Map<
   ['E_DELETE_SAVED_SERVICES_ERROR', ErrorRegistry.NATIVE_STORAGE_DELETE_FAILED],
 
   // --- Device auth / security. NOTE: E_DEVICE_AUTH_CANCELLED is intentionally NOT mapped — a user
-  // cancel is control flow, handled at the call site, never surfaced as an error. ---
+  // cancel is control flow, never surfaced as an error. Only Android's performDeviceAuthentication
+  // rejects it; unlockWithDeviceSecurity resolves { success: false } on cancel on both platforms. ---
   ['E_CAN_DEVICE_AUTH_ERROR', ErrorRegistry.DEVICE_AUTH_UNAVAILABLE],
   ['E_NO_ACTIVITY', ErrorRegistry.DEVICE_AUTH_UNAVAILABLE],
   ['E_DEVICE_AUTH_ERROR', ErrorRegistry.DEVICE_SECURITY_SETUP_FAILED],
@@ -160,8 +162,17 @@ export const nativeBcscErrorMap: ReadonlyMap<string, ErrorDefinition> = new Map<
  * Mapped native codes become their specific AppError. Unmapped native codes — and non-native errors
  * — fall back to {@link ErrorRegistry.UNMAPPED_NATIVE_ERROR}; the raw native code is never lost
  * because it is preserved on the error `cause` and surfaced by `AppError.technicalMessage`.
+ *
+ * An error that is already an {@link AppError} is returned unchanged.
  */
 export const mapNativeBcscError = (error: unknown): AppError => {
+  // An AppError also satisfies isBcscNativeError (it's an Error with a `code`), but its dotted
+  // code never matches the map — re-wrapping would bury the specific code under
+  // UNMAPPED_NATIVE_ERROR and fire a second analytics event for the same failure.
+  if (isAppError(error)) {
+    return error
+  }
+
   if (isBcscNativeError(error)) {
     const definition = nativeBcscErrorMap.get(error.code)
     if (definition) {

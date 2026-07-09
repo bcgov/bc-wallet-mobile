@@ -19,6 +19,7 @@ jest.mock('@/bcsc-theme/api/hooks/useApi', () => ({
 
 jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   __esModule: true,
+  useSecureActions: jest.fn(() => ({})),
   default: jest.fn(() => ({
     updateVerificationRequest: jest.fn(),
     updateAccountFlags: jest.fn().mockResolvedValue(undefined),

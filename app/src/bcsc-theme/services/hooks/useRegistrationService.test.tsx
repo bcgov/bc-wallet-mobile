@@ -190,6 +190,30 @@ describe('useRegistrationService', () => {
       })
     })
 
+    // #3419: the unified native mapper replaced the old CLIENT_REGISTRATION_FAILURE fallback with
+    // DCR_BODY_BUILD_FAILED / UNMAPPED_NATIVE_ERROR — both must still surface the generic modal.
+    describe.each([AppEventCode.DCR_BODY_BUILD_FAILED, AppEventCode.UNMAPPED_NATIVE_ERROR])(
+      'App error %s',
+      (appEvent) => {
+        it('should show clientRegistrationFailureAlert', async () => {
+          const mockError = mockAppError(appEvent)
+          const registrationApi = {
+            register: jest.fn().mockRejectedValue(mockError),
+          } as any
+          const clientRegistrationFailureAlert = jest.fn()
+          const mockAlerts = { clientRegistrationFailureAlert }
+
+          jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+          jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+          const { result } = renderHook(() => useRegistrationService())
+
+          await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
+          expect(clientRegistrationFailureAlert).toHaveBeenCalledWith(mockError)
+        })
+      }
+    )
+
     describe('App error ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL', () => {
       it('should show the alert for the app error', async () => {
         const mockError = mockAppError(AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)

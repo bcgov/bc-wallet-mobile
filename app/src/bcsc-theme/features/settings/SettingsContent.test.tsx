@@ -2,7 +2,7 @@ import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, screen, within } from '@testing-library/react-native'
-import React from 'react'
+import React, { act } from 'react'
 import { SettingsContent } from './SettingsContent'
 
 const tid = (key: string) => testIdWithKey(key)
@@ -164,7 +164,7 @@ describe('SettingsContent', () => {
     expect(row).toBeTruthy()
   })
 
-  it('hides the section content when its chevron is pressed, and shows it again on a second press', () => {
+  it('hides the section content when its chevron is pressed, and shows it again on a second press', async () => {
     renderWithState()
 
     // Unauthenticated view renders exactly two collapsible sections: Help, then More Info.
@@ -176,6 +176,11 @@ describe('SettingsContent', () => {
     expect(screen.getByTestId(tid('Feedback'))).toBeTruthy()
 
     fireEvent.press(helpChevron)
+
+    // NOTE: The chevron uses `preventDoublePress` under the hood,
+    // this await triggers the next tick to ensure the second press
+    // is not ignored by the double-press prevention logic.
+    await act(async () => {})
 
     expect(screen.queryByTestId(tid('Help'))).toBeNull()
     expect(screen.queryByTestId(tid('ContactUs'))).toBeNull()

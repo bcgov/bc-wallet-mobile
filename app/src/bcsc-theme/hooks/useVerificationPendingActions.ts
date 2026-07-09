@@ -8,6 +8,7 @@ import { TOKENS, useServices, useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useEvidenceService } from '../services/hooks/useEvidenceService'
 
 /**
  * Hook providing the actions a user can take while a verification request is pending:
@@ -18,7 +19,8 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const { updateVerificationRequest, updateAccountFlags } = useSecureActions()
-  const { evidence, token } = useApi()
+  const { token } = useApi()
+  const evidenceService = useEvidenceService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [isCheckingStatus, setIsCheckingStatus] = useState(false)
   const { cancelVerificationRequestAlert } = useAlerts(navigation)
@@ -35,7 +37,7 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
         throw new Error(t('BCSC.Steps.VerificationIDMissing'))
       }
 
-      const { status, status_message } = await evidence.getVerificationRequestStatus(
+      const { status, status_message } = await evidenceService.getVerificationRequestStatus(
         store.bcscSecure.verificationRequestId
       )
       if (status === 'verified') {
@@ -58,7 +60,7 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
     } finally {
       setIsCheckingStatus(false)
     }
-  }, [store.bcscSecure, evidence, navigation, t, token, logger])
+  }, [store.bcscSecure, evidenceService, navigation, t, token, logger])
 
   const handleCancelVerification = useCallback(async () => {
     cancelVerificationRequestAlert(async () => {
@@ -66,7 +68,7 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
         if (!store.bcscSecure.verificationRequestId) {
           return
         }
-        await evidence.cancelVerificationRequest(store.bcscSecure.verificationRequestId)
+        await evidenceService.cancelVerificationRequest(store.bcscSecure.verificationRequestId)
       } catch (error) {
         logger.error(`Error cancelling verification request: ${error}`)
       } finally {
@@ -82,7 +84,7 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
   }, [
     cancelVerificationRequestAlert,
     store.bcscSecure.verificationRequestId,
-    evidence,
+    evidenceService,
     logger,
     updateVerificationRequest,
     dispatch,
