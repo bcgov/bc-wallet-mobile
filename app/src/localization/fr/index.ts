@@ -126,6 +126,12 @@ const translation = {
     }
   },
   "PersonCredential": {
+    "Notification": {
+      "PageTitle": "Person Credential (FR)",
+      "Title": "Get your Person credential (FR)",
+      "Description": "Add your Person credential to your wallet and use it to get access to services online (FR)",
+      "ButtonTitle": "Start (FR)"
+    },
     "ServicesCardInstalled": "Étape 1: BC Services Card est déjà installé",
     "InstallServicesCard": "Étape 1: Installation de l'application BC Services Card",
     "InstallApp": "Installer l'application",
@@ -216,6 +222,10 @@ const translation = {
     "ScanQRCode": "Scanner un code QR",
   },
   "BCSC": {
+    "AgeRestrictedTransfer": {
+      "Title": "Not available (FR)",
+      "Description": "You must be 12 years or older to transfer your account to another device (FR)",
+    },
     "Components": {
       "CloseDropdown": "Close dropdown menu (FR)",
     },
@@ -326,6 +336,9 @@ const translation = {
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online (FR)",
       "AppStartup": "Getting your BCSC App ready... (FR)"
+    },
+    "AccountLanding": {
+      "Unlock": "Unlock (FR)",
     },
     "Security": {
       "AuthenticatePrompt": "Authenticate to secure your app (FR)",
@@ -520,6 +533,10 @@ const translation = {
         "Header": "The Terms of Use have been updated. Before you continue to use the Service, you must read and accept the updated terms. (FR)",
       },
     },
+    "VerificationReminder": {
+      "Title": "Finish verifying your identity (FR)",
+      "Body": "Verify your identity to finish setting up the app by {{date}}. (FR)",
+    },
     "Home": {
       "Title": "Home (FR)",
       "WhereToUseTitle": "Where to use (FR)",
@@ -659,6 +676,7 @@ const translation = {
       "RenameSuccessToastMessage": "Account nickname updated successfully (FR)",
     },
     "ManualPairing": {
+      "TabTitle": "Pairing code (FR)",
       "EnterPairingCodeTitle": "Enter pairing code (FR)",
       "PairingCodeLabel": "Pairing code (FR)",
       "EnterPairingCodeMessage": "A pairing code will be provided when you log in to a website on another device. (FR)",
@@ -722,25 +740,12 @@ const translation = {
       "AcceptAnalytics": "Enable analytics (FR)",
       "DenyAnalytics":  "Skip analytics (FR)",
     },
-    "ChooseYourID": {
-      "WhatCardDoYou": "What BC Services Card do you have? (FR)",
-      "SomePeopleStillCallIt": "Some people still call it a CareCard or a Health Card. It has your personal health number (PHN) on the back. (FR)",
-      "CombinedCard": "Combined card (FR)",
-      "CombinedCardActionText": "It's combined with my driver's licence (FR)",
-      "CombinedCardDescription": "Use this card for a faster way to set up the app. (FR)",
-      "PhotoCard": "Photo card (FR)",
-      "PhotoCardActionText": "A card with my photo (FR)",
-      "PhotoCardDescription": "Use this card for a faster way to set up the app. (FR)",
-      "NoPhotoCard": "Non photo card (FR)",
-      "NoPhotoCardActionText": "A card without a photo (FR)",
-      "NoPhotoCardDescription": "Use this card + photo ID to set up the app. (FR)",
-      "DontHaveOne": "Don't have one? (FR)",
-      "CheckBefore": "Check before you continue. It's faster to set up with one of the above. (FR)",
-      "CheckForServicesCard": "Check for BC Services Card (FR)",
-      "CheckIfIHave": "Check if I have a BC Services Card (FR)",
-      "OtherID": "Other ID (FR)",
-      "OtherIDActionText": "Set up with other ID (FR)",
-      "OtherIDDescription": "This option takes the longest to set up. You'll need 2 IDs to set up the app and have limited access to services. (FR)",
+    "IdentitySelection": {
+      "HaveABCSC": "Have a BC Services Card? (FR)",
+      "ScanTheBack": "Scan the back of your ID (FR)",
+      "LineUpParagraph": "Line up your ID inside the frames and hold still until the camera takes the picture automatically. (FR)",
+      "Scan": "Scan (FR)",
+      "UseOtherID": "Use another ID (FR)",
     },
     "Instructions": {
       "Heading": "Provide the card serial number on the back right side of your card. (FR)",
@@ -749,6 +754,9 @@ const translation = {
       "EnterManually": "Enter Serial Number Manually (FR)",
     },
     "Scan": {
+      "HoldSteadyHelp": "Can not see the card clearly? Try holding your phone steady. (FR)",
+      "ScanYourCard": "Scan your card (FR)",
+      "LineUpHelp": "Line up your ID inside the frame and hold still until the camera takes the picture automatically. (FR)",
       "NoAccountFound": "No account found, restart the app and try again. (FR)",
       "NoAttestationResponse": "No attestation response, check your connection and try again. (FR)",
       "NoDeviceCodeFound": "No device code found (FR)",
@@ -780,6 +788,8 @@ const translation = {
       "CharCountError": "Cannot exceed 15 characters (FR)",
     },
     "Birthdate": {
+      "InvalidDate": "Entered birthdate is invalid. Please enter a valid date. (FR)",
+      "ExampleDate": "The birthdate format is: YYYY/MM/DD (FR)",
       "CardSerialNumber": "Card serial number: {{ serial }} (FR)",
       "Heading": "Enter your birthdate (FR)",
       "Paragraph": "Your birthdate is only used to to set up this app. It is not shared. (FR)",
@@ -1039,6 +1049,7 @@ const translation = {
       }
     },
     "MismatchedSerial": {
+      "TryAnotherCard": "Try another card (FR)",
       "Heading": "Card not found (FR)",
       "Description1": "Enter the letters and numbers by the barcode on the back of your card. (FR)",
       "Description2": "Check the serial number and birthdate match what is on your card. (FR)",
@@ -1146,17 +1157,8 @@ const translation = {
       "DeviceCodeError": "Missing device or user code (FR)",
       "ServiceBC": "Service BC (FR)",
       "CallingAgent": "Calling agent to verify your identity... (FR)",
-      "BeforeYouCallTitle": "Before you call (FR)",
-      "WiFiRecommended": "Wi-Fi Recommended (FR)",
-      "StandardDataCharges": "Standard data charges may apply for calls over a cellular network. (FR)",
-      "CellularNetworkWarning": "The app detected you're on a cellular network.  (FR)",
-      "FindPrivatePlace": "Find a Private Place to Talk (FR)",
-      "MakeSureOnlyYou": "Make sure you'll be the only person in the video. (FR)",
       "DefaultHours": "Monday to Friday\n7:30am - 5:00pm Pacific Time (FR)",
-      "ContactCentrePrivacy": "Contact Centre Privacy (FR)",
-      "PrivacyNotice": "During a video call, Service BC will ask for and collect personal information. The personal information you will provide is collected for the purpose of verification of your BC Services Card. This information is collected under the authority of Section 26(c) and 26(e) of the Freedom of Information and Protection of Privacy Act (FIPPA). (FR)",
-      "PrivacyContactInfo": "If you have further questions about privacy, please contact Chief Privacy Officer, 100 - 722 Johnson Street, Victoria, BC, V8W 1N1, or by phone\n250-405-3726 (FR)",
-      "Assistance": "Need assistance? (FR)",
+      "StartVideoCallTitle": "Start a video call to talk with a Service BC agent. (FR)",
       "StartVideoCallDescription": "Start a video call with a Service BC agent. They will verify your identity to finish setting up this app. (FR)",
       "YouShould": "You should: (FR)",
       "StartCall": "Start call (FR)",

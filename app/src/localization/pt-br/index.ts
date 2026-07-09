@@ -126,6 +126,12 @@ const translation = {
     }
   },
   "PersonCredential": {
+    "Notification": {
+      "PageTitle": "Person Credential (PT-BR)",
+      "Title": "Get your Person credential (PT-BR)",
+      "Description": "Add your Person credential to your wallet and use it to get access to services online (PT-BR)",
+      "ButtonTitle": "Start (PT-BR)"
+    },
     "ServicesCardInstalled": "Step 1: BC Services Card app installed (PT-BR)",
     "InstallServicesCard": "Step 1: Install the BC Services Card app (PT-BR)",
     "InstallApp": "Install the app (PT-BR)",
@@ -216,6 +222,10 @@ const translation = {
     "ScanQRCode": "Scan a QR code (PT-BR)",
   },
   "BCSC": {
+    "AgeRestrictedTransfer": {
+      "Title": "Not available (PT-BR)",
+      "Description": "You must be 12 years or older to transfer your account to another device (PT-BR)",
+    },
     "Components": {
       "CloseDropdown": "Close dropdown menu (PT-BR)",
     },
@@ -326,6 +336,9 @@ const translation = {
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online (PT-BR)",
       "AppStartup": "Getting your BCSC App ready... (PT-BR)"
+    },
+    "AccountLanding": {
+      "Unlock": "Unlock (PT-BR)",
     },
     "Security": {
       "AuthenticatePrompt": "Authenticate to secure your app (PT-BR)",
@@ -520,6 +533,10 @@ const translation = {
         "Header": "The Terms of Use have been updated. Before you continue to use the Service, you must read and accept the updated terms. (PT-BR)",
       },
     },
+    "VerificationReminder": {
+      "Title": "Finish verifying your identity (PT-BR)",
+      "Body": "Verify your identity to finish setting up the app by {{date}}. (PT-BR)",
+    },
     "Home": {
       "Title": "Home (PT-BR)",
       "WhereToUseTitle": "Where to use (PT-BR)",
@@ -659,6 +676,7 @@ const translation = {
       "RenameSuccessToastMessage": "Account nickname updated successfully (PT-BR)",
     },
     "ManualPairing": {
+      "TabTitle": "Pairing code (PT-BR)",
       "EnterPairingCodeTitle": "Enter pairing code (PT-BR)",
       "PairingCodeLabel": "Pairing code (PT-BR)",
       "EnterPairingCodeMessage": "A pairing code will be provided when you log in to a website on another device. (PT-BR)",
@@ -722,25 +740,12 @@ const translation = {
       "AcceptAnalytics": "Enable analytics (PT-BR)",
       "DenyAnalytics":  "Skip analytics (PT-BR)",
     },
-    "ChooseYourID": {
-      "WhatCardDoYou": "What BC Services Card do you have? (PT-BR)",
-      "SomePeopleStillCallIt": "Some people still call it a CareCard or a Health Card. It has your personal health number (PHN) on the back. (PT-BR)",
-      "CombinedCard": "Combined card (PT-BR)",
-      "CombinedCardActionText": "It's combined with my driver's licence (PT-BR)",
-      "CombinedCardDescription": "Use this card for a faster way to set up the app. (PT-BR)",
-      "PhotoCard": "Photo card (PT-BR)",
-      "PhotoCardActionText": "A card with my photo (PT-BR)",
-      "PhotoCardDescription": "Use this card for a faster way to set up the app. (PT-BR)",
-      "NoPhotoCard": "Non photo card (PT-BR)",
-      "NoPhotoCardActionText": "A card without a photo (PT-BR)",
-      "NoPhotoCardDescription": "Use this card + photo ID to set up the app. (PT-BR)",
-      "DontHaveOne": "Don't have one? (PT-BR)",
-      "CheckBefore": "Check before you continue. It's faster to set up with one of the above. (PT-BR)",
-      "CheckForServicesCard": "Check for BC Services Card (PT-BR)",
-      "CheckIfIHave": "Check if I have a BC Services Card (PT-BR)",
-      "OtherID": "Other ID (PT-BR)",
-      "OtherIDActionText": "Set up with other ID (PT-BR)",
-      "OtherIDDescription": "This option takes the longest to set up. You'll need 2 IDs to set up the app and have limited access to services. (PT-BR)",
+    "IdentitySelection": {
+      "HaveABCSC": "Have a BC Services Card? (PT-BR)",
+      "ScanTheBack": "Scan the back of your ID (PT-BR)",
+      "LineUpParagraph": "Line up your ID inside the frames and hold still until the camera takes the picture automatically. (PT-BR)",
+      "Scan": "Scan (PT-BR)",
+      "UseOtherID": "Use another ID (PT-BR)",
     },
     "Instructions": {
       "Heading": "Provide the card serial number on the back right side of your card. (PT-BR)",
@@ -749,6 +754,9 @@ const translation = {
       "EnterManually": "Enter Serial Number Manually (PT-BR)",
     },
     "Scan": {
+      "HoldSteadyHelp": "Can not see the card clearly? Try holding your phone steady. (PT-BR)",
+      "ScanYourCard": "Scan your card (PT-BR)",
+      "LineUpHelp": "Line up your ID inside the frame and hold still until the camera takes the picture automatically. (PT-BR)",
       "NoAccountFound": "No account found, restart the app and try again. (PT-BR)",
       "NoAttestationResponse": "No attestation response, check your connection and try again. (PT-BR)",
       "NoDeviceCodeFound": "No device code found (PT-BR)",
@@ -780,6 +788,8 @@ const translation = {
       "CharCountError": "Cannot exceed 15 characters (PT-BR)",
     },
     "Birthdate": {
+      "InvalidDate": "Entered birthdate is invalid. Please enter a valid date. (PT-BR)",
+      "ExampleDate": "The birthdate format is: YYYY/MM/DD (PT-BR)",
       "CardSerialNumber": "Card serial number: {{ serial }} (PT-BR)",
       "Heading": "Enter your birthdate (PT-BR)",
       "Paragraph": "Your birthdate is only used to to set up this app. It is not shared. (PT-BR)",
@@ -1039,6 +1049,7 @@ const translation = {
       }
     },
     "MismatchedSerial": {
+      "TryAnotherCard": "Try another card (PT-BR)",
       "Heading": "Card not found (PT-BR)",
       "Description1": "Enter the letters and numbers by the barcode on the back of your card. (PT-BR)",
       "Description2": "Check the serial number and birthdate match what is on your card. (PT-BR)",
@@ -1146,17 +1157,8 @@ const translation = {
       "DeviceCodeError": "Missing device or user code (PT-BR)",
       "ServiceBC": "Service BC (PT-BR)",
       "CallingAgent": "Calling agent to verify your identity... (PT-BR)",
-      "BeforeYouCallTitle": "Before you call (PT-BR)",
-      "WiFiRecommended": "Wi-Fi Recommended (PT-BR)",
-      "StandardDataCharges": "Standard data charges may apply for calls over a cellular network. (PT-BR)",
-      "CellularNetworkWarning": "The app detected you're on a cellular network.  (PT-BR)",
-      "FindPrivatePlace": "Find a Private Place to Talk (PT-BR)",
-      "MakeSureOnlyYou": "Make sure you'll be the only person in the video. (PT-BR)",
       "DefaultHours": "Monday to Friday\n7:30am - 5:00pm Pacific Time (PT-BR)",
-      "ContactCentrePrivacy": "Contact Centre Privacy (PT-BR)",
-      "PrivacyNotice": "During a video call, Service BC will ask for and collect personal information. The personal information you will provide is collected for the purpose of verification of your BC Services Card. This information is collected under the authority of Section 26(c) and 26(e) of the Freedom of Information and Protection of Privacy Act (FIPPA). (PT-BR)",
-      "PrivacyContactInfo": "If you have further questions about privacy, please contact Chief Privacy Officer, 100 - 722 Johnson Street, Victoria, BC, V8W 1N1, or by phone\n250-405-3726 (PT-BR)",
-      "Assistance": "Need assistance? (PT-BR)",
+      "StartVideoCallTitle": "Start a video call to talk with a Service BC agent. (PT-BR)",
       "StartVideoCallDescription": "Start a video call with a Service BC agent. They will verify your identity to finish setting up this app. (PT-BR)",
       "YouShould": "You should: (PT-BR)",
       "StartCall": "Start call (PT-BR)",
