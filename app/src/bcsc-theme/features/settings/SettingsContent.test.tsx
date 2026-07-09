@@ -2,7 +2,7 @@ import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, screen, within } from '@testing-library/react-native'
-import React, { act } from 'react'
+import React from 'react'
 import { SettingsContent } from './SettingsContent'
 
 const tid = (key: string) => testIdWithKey(key)
@@ -175,12 +175,10 @@ describe('SettingsContent', () => {
     expect(screen.getByTestId(tid('ContactUs'))).toBeTruthy()
     expect(screen.getByTestId(tid('Feedback'))).toBeTruthy()
 
-    fireEvent.press(helpChevron)
-
     // NOTE: The chevron uses `preventDoublePress` under the hood,
     // this await triggers the next tick to ensure the second press
     // is not ignored by the double-press prevention logic.
-    await act(async () => {})
+    await fireEvent.press(helpChevron)
 
     expect(screen.queryByTestId(tid('Help'))).toBeNull()
     expect(screen.queryByTestId(tid('ContactUs'))).toBeNull()
