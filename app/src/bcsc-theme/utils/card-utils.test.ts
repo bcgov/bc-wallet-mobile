@@ -2,6 +2,7 @@ import {
   clampEvidenceImagesToSides,
   getCardProcessForCardType,
   isCardEvidenceComplete,
+  isEvidenceAwaitingDocumentNumber,
   normalizeEvidenceImageLabel,
 } from '@/bcsc-theme/utils/card-utils'
 import { BCSCCardProcess, BCSCCardType, EvidenceImageSide, PhotoMetadata } from 'react-native-bcsc-core'
@@ -189,6 +190,69 @@ describe('Card Utils', () => {
       const result = clampEvidenceImagesToSides(metadata, sides(2))
 
       expect(result).toEqual([photo('A', 'a'), photo('B', 'b')])
+    })
+  })
+
+  describe('isEvidenceAwaitingDocumentNumber', () => {
+    const twoSidedEvidenceType = { image_sides: [{}, {}] }
+    const oneSidedEvidenceType = { image_sides: [{}] }
+
+    it('should return true when all photos are captured but the document number is missing', () => {
+      const inProgressCard = {
+        evidenceType: twoSidedEvidenceType,
+        metadata: ['meta1', 'meta2'],
+      }
+
+      expect(isEvidenceAwaitingDocumentNumber(inProgressCard as any)).toBe(true)
+    })
+
+    it('should return true for a one-sided card with its photo captured and no document number', () => {
+      const inProgressCard = {
+        evidenceType: oneSidedEvidenceType,
+        metadata: ['meta1'],
+      }
+
+      expect(isEvidenceAwaitingDocumentNumber(inProgressCard as any)).toBe(true)
+    })
+
+    it('should return false once the document number has been entered (evidence complete)', () => {
+      const completeCard = {
+        evidenceType: twoSidedEvidenceType,
+        documentNumber: '123456789',
+        metadata: ['meta1', 'meta2'],
+      }
+
+      expect(isEvidenceAwaitingDocumentNumber(completeCard as any)).toBe(false)
+    })
+
+    it('should return false for an abandoned selection with no photos', () => {
+      const abandonedCard = {
+        evidenceType: twoSidedEvidenceType,
+        metadata: [],
+      }
+
+      expect(isEvidenceAwaitingDocumentNumber(abandonedCard as any)).toBe(false)
+    })
+
+    it('should return false when a two-sided card only has one photo captured', () => {
+      const partialCard = {
+        evidenceType: twoSidedEvidenceType,
+        metadata: ['meta1'],
+      }
+
+      expect(isEvidenceAwaitingDocumentNumber(partialCard as any)).toBe(false)
+    })
+
+    it('should return false when missing evidence type', () => {
+      const noTypeCard = {
+        metadata: ['meta1', 'meta2'],
+      }
+
+      expect(isEvidenceAwaitingDocumentNumber(noTypeCard as any)).toBe(false)
+    })
+
+    it('should return false when card is undefined', () => {
+      expect(isEvidenceAwaitingDocumentNumber(undefined)).toBe(false)
     })
   })
 })

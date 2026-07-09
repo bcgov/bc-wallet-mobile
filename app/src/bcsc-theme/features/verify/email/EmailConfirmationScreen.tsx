@@ -22,7 +22,7 @@ import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert } from 'react-native'
+import { Alert, Linking, Platform } from 'react-native'
 import Toast from 'react-native-toast-message'
 
 type EmailConfirmationScreenProps = {
@@ -115,6 +115,18 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
     }
   }
 
+  const handleGoToEmail = async () => {
+    // iOS: message:// opens the Mail inbox. Android has no inbox URL scheme, so mailto:
+    // opens the user's default mail app (via its compose entry point). openURL doesn't
+    // require LSApplicationQueriesSchemes, so no Info.plist changes are needed.
+    const emailAppUrl = Platform.OS === 'ios' ? 'message://' : 'mailto:'
+    try {
+      await Linking.openURL(emailAppUrl)
+    } catch (error) {
+      logger.error('Failed to open email app', error as Error)
+    }
+  }
+
   const controls = (
     <ControlContainer>
       <Button
@@ -136,11 +148,11 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
       controls={controls}
       scrollViewContainerStyle={{
         flexGrow: 1,
-        gap: Spacing.md,
-        padding: Spacing.lg,
+        gap: Spacing.xs,
+        padding: Spacing.xl,
       }}
     >
-      <ThemedText variant={'headingThree'} style={{ textAlign: 'center', color: 'black' }}>
+      <ThemedText variant={'headingTwo'} style={{ textAlign: 'center', color: ColorPalette.grayscale.black }}>
         {t('BCSC.EmailConfirmation.EnterVerificationCode')}
       </ThemedText>
       <ThemedText style={{ textAlign: 'center' }}>{t('BCSC.EmailConfirmation.CodeSentTo')} </ThemedText>
@@ -163,12 +175,12 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
           accessibilityLabel: 'Confirmation-Code-Input',
         }}
       />
-      <HighlightDivider />
+      <HighlightDivider style={{ marginVertical: Spacing.md }} />
       <ThemedText style={{ textAlign: 'center' }} variant={'caption'}>
         {t('BCSC.EmailConfirmation.CantFindCode')}
         <ThemedText
           variant={'caption'}
-          style={{ color: ColorPalette.brand.link, fontWeight: 'bold' }}
+          style={{ color: ColorPalette.brand.link }}
           onPress={handleResendCode}
           accessibilityRole={'link'}
           accessibilityLabel={t('BCSC.EmailConfirmation.SendNewCode')}
@@ -176,6 +188,16 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
         >
           {t('BCSC.EmailConfirmation.SendNewCode')}
         </ThemedText>
+      </ThemedText>
+      <ThemedText
+        variant={'caption'}
+        style={{ textAlign: 'center', color: ColorPalette.brand.link, marginTop: Spacing.md }}
+        onPress={handleGoToEmail}
+        accessibilityRole={'link'}
+        accessibilityLabel={t('BCSC.EmailConfirmation.GoToMyEmail')}
+        testID={'GoToMyEmailLink'}
+      >
+        {t('BCSC.EmailConfirmation.GoToMyEmail')}
       </ThemedText>
     </ScreenWrapper>
   )

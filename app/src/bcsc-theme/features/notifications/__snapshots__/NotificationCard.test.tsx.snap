@@ -61,11 +61,11 @@ exports[`NotificationCard renders correctly 1`] = `
             {
               "alignItems": "center",
               "backgroundColor": "#606060",
-              "borderRadius": 18,
-              "height": 36,
+              "borderRadius": 16,
+              "height": 32,
               "justifyContent": "center",
               "marginRight": 12,
-              "width": 36,
+              "width": 32,
             },
           ]
         }
@@ -78,7 +78,7 @@ exports[`NotificationCard renders correctly 1`] = `
             [
               {
                 "color": "#FFFFFF",
-                "fontSize": 20,
+                "fontSize": 18,
               },
               undefined,
               {
@@ -116,7 +116,7 @@ exports[`NotificationCard renders correctly 1`] = `
     <View
       style={
         {
-          "marginLeft": 48,
+          "marginLeft": 44,
           "marginTop": 4,
         }
       }

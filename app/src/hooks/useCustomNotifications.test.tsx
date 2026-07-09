@@ -88,7 +88,7 @@ describe('useCustomNotifications', () => {
     expect(result.current.customNotifications[0].type).toBe(StartVerificationNotification)
   })
 
-  it('dismissing StartVerificationNotification removes it from the list', () => {
+  it('does not remove StartVerification when dismissed (non-dismissible)', () => {
     jest.mocked(VerificationStatusModule.useVerificationStatus).mockReturnValue({
       needsVerification: true,
       isVerified: false,
@@ -103,7 +103,7 @@ describe('useCustomNotifications', () => {
       result.current.dismissCustomNotification(CustomNotificationId.BCSCStartVerification)
     })
 
-    expect(result.current.customNotifications).toHaveLength(0)
+    expect(result.current.customNotifications).toHaveLength(1)
   })
 
   it('does not remove CardExpiryNotification when dismissed (non-dismissible)', () => {

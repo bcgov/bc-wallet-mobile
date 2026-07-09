@@ -6,6 +6,7 @@ import { ACCESSIBILITY_URL, DEFAULT_AUTO_LOCK_TIME_MIN, FEEDBACK_URL, hitSlop, T
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { BCDispatchAction, BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
+import * as PushNotifications from '@/utils/PushNotificationsHelper'
 import {
   ScreenWrapper,
   testIdWithKey,
@@ -31,6 +32,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { useNotificationPermissionStatus } from './useNotificationPermissionStatus'
 
 const TRANSITION_IN_DURATION = 200
 const TRANSITION_OUT_DURATION = 150
@@ -260,8 +262,18 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
   // that flag, and such users still need the device-management options (e.g. "Add another device").
   const isVerified = isUserVerified(store.bcscSecure)
 
+  const { status: notificationStatus } = useNotificationPermissionStatus()
+
   const showChangePIN = accountSecurityMethod !== AccountSecurityMethod.DeviceAuth && onChangePIN
   const analyticsOptInText = store.bcsc.analyticsOptIn ? 'ON' : 'OFF'
+  // No adornment while the async permission check is unresolved (or failed) — only
+  // assert ON/OFF for explicitly known states.
+  const notificationsOnText =
+    notificationStatus === PushNotifications.NotificationPermissionStatus.UNKNOWN
+      ? undefined
+      : notificationStatus === PushNotifications.NotificationPermissionStatus.GRANTED
+        ? 'ON'
+        : 'OFF'
   const autoLockTimeText = `${store.preferences.autoLockTime ?? DEFAULT_AUTO_LOCK_TIME_MIN} min`
   const profileName = store.bcsc.selectedNickname?.trim() || t('BCSC.Title')
 
@@ -315,7 +327,7 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
                 </ListButton>
               ) : null,
               <ListButton key="notifications" onPress={onNotifications ?? noop} testID={testIdWithKey('Notifications')}>
-                {t('BCSC.Settings.Notifications')}
+                <Row title={t('BCSC.Settings.Notifications')} endAdornment={notificationsOnText} />
               </ListButton>,
               <ListButton key="analytics" onPress={onPressOptInAnalytics} testID={testIdWithKey('AnalyticsOptIn')}>
                 <Row title={t('BCSC.Settings.AnalyticsOptIn')} endAdornment={analyticsOptInText} />
@@ -430,6 +442,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [accountSecurityMethod, setAccountSecurityMethod] = useState<AccountSecurityMethod>()
+  const isAuthenticated = store.authentication.didAuthenticate
 
   const styles = makeStyles(Spacing, ColorPalette)
 
@@ -441,6 +454,13 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
 
   useFocusEffect(
     useCallback(() => {
+      // The account security method is read via a device authorization grant, which only succeeds
+      // once the device is registered/approved. During onboarding the device isn't registered yet,
+      // so the grant fails with a device_authorization_error. The value is also only consumed by
+      // AuthenticatedSection, so skip the fetch entirely when unauthenticated.
+      if (!isAuthenticated) {
+        return
+      }
       const fetchAccountSecurityMethod = async () => {
         try {
           const method = await getAccountSecurityMethod()
@@ -451,7 +471,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
         }
       }
       fetchAccountSecurityMethod()
-    }, [logger])
+    }, [logger, isAuthenticated])
   )
 
   const onPressTermsOfUse = async () => {
@@ -498,8 +518,6 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
       )
     }
   }
-
-  const isAuthenticated = store.authentication.didAuthenticate
 
   return (
     <ScreenWrapper padded={false} scrollViewContainerStyle={styles.container}>

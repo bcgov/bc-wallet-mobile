@@ -315,7 +315,11 @@ describe('useEvidenceUploadModel', () => {
       mockEvidenceApi.uploadVideoEvidenceMetadata.mockResolvedValue({ upload_uri: 'video-uri' })
       mockEvidenceApi.uploadPhotoEvidenceBinary.mockResolvedValue(undefined)
       mockEvidenceApi.uploadVideoEvidenceBinary.mockResolvedValue(undefined)
-      mockEvidenceApi.sendVerificationRequest.mockResolvedValue(undefined)
+      mockEvidenceApi.sendVerificationRequest.mockResolvedValue({
+        id: 'req-123',
+        status: 'pending',
+        avg_turnaround_time_message: 'within 24 hours',
+      })
 
       const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 
@@ -332,7 +336,13 @@ describe('useEvidenceUploadModel', () => {
         sha256: 'sha-456',
       })
       expect(mockUpdateAccountFlags).toHaveBeenCalledWith({ userSubmittedVerificationVideo: true })
+      // Navigates to the confirmation screen, forwarding the API turnaround message as a route param
       expect(mockNavigation.dispatch).toHaveBeenCalled()
+      const dispatchArg = mockNavigation.dispatch.mock.calls[0][0]
+      const resetRoutes = dispatchArg.payload?.routes ?? dispatchArg.routes
+      expect(resetRoutes[0].params).toEqual({
+        avgTurnaroundTimeMessage: 'within 24 hours',
+      })
     })
 
     it('should emit fileUploadErrorAlert when video cache is missing', async () => {

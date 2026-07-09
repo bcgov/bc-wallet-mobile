@@ -1,6 +1,8 @@
+import type { AxiosAppError } from '@/bcsc-theme/api/clientErrorPolicies'
 import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
+import { isAxiosError } from 'axios'
 import { ErrorCategory, ErrorDefinition } from './errorRegistry'
 
 type AppErrorOptions = ErrorOptions & {
@@ -240,4 +242,19 @@ export function isAppError<TAppEventCode extends AppEventCode>(
   }
 
   return error instanceof AppError
+}
+
+/**
+ * Check if an error is an AxiosAppError, which is an AppError with an AxiosError cause.
+ *
+ * @param error - The error to check
+ * @param status - Optional HTTP status code to match against the error's cause response status
+ * @returns True if the error is an AxiosAppError, false otherwise
+ */
+export function isAxiosAppError(error: unknown, status?: number): error is AxiosAppError {
+  if (status !== undefined) {
+    return isAppError(error) && isAxiosError(error.cause) && error.cause.response?.status === status
+  }
+
+  return isAppError(error) && isAxiosError(error.cause)
 }

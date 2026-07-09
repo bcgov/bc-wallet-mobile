@@ -1,12 +1,18 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import BulletPointList from '@/components/BulletPointList'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { Button, ButtonType, Link, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 
 export type InstructionsSection = {
   heading: string
   paragraph?: string
   bullets?: string[]
+  /** Optional inline link rendered before the section heading (e.g. "See accepted ID"). */
+  link?: {
+    label: string
+    onPress: () => void
+    testID?: string
+  }
 }
 
 type BulletedInstructionsScreenProps = {
@@ -78,6 +84,13 @@ type SectionProps = {
 
 const Section = ({ section, iconColor, iconSize }: SectionProps) => (
   <>
+    {section.link ? (
+      <Link
+        testID={section.link.testID ?? testIdWithKey(section.link.label)}
+        linkText={section.link.label}
+        onPress={section.link.onPress}
+      />
+    ) : null}
     <ThemedText variant={'headingFour'}>{section.heading}</ThemedText>
     {section.paragraph ? <ThemedText>{section.paragraph}</ThemedText> : null}
     {section.bullets && section.bullets.length > 0 ? (

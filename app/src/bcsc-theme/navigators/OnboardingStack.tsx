@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
+import { createOnboardingSettingsHeaderButton } from '../components/SettingsHeaderButton'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import { OnboardingRemoveAccountConfirmationScreen } from '../features/account/RemoveAccountConfirmationScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
@@ -18,12 +19,17 @@ import { OnboardingOptInAnalyticsScreen } from '../features/onboarding/Onboardin
 import { OnboardingPrivacyPolicyScreen } from '../features/onboarding/OnboardingPrivacyPolicyScreen'
 import { SecureAppScreen } from '../features/onboarding/SecureAppScreen'
 import { TermsOfUseScreen } from '../features/onboarding/TermsOfUseScreen'
+import { ContactUsScreen } from '../features/settings/ContactUsScreen'
+import { OnboardingPrivacyInformationScreen } from '../features/settings/OnboardingPrivacyInformationScreen'
+import { OnboardingSettingsScreen } from '../features/settings/OnboardingSettingsScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { BCSCModals, BCSCOnboardingStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import { getDefaultModalOptions } from './stack-utils'
 
 /**
- * Renders the onboarding stack. These screens are shown to the user only **once**, when they first install the app.
+ * Renders the onboarding stack. These screens are shown to the user only **once**, when they first
+ * install the app. (The one-time welcome/intro is also shown to already-onboarded users on launch
+ * via AuthStack — see its AuthIntro screen.)
  *
  * @returns {*} {React.ReactElement} The OnboardingStack component.
  */
@@ -53,13 +59,19 @@ const OnboardingStack = (): React.ReactElement => {
     >
       <Stack.Screen
         name={BCSCScreens.OnboardingIntro}
-        component={OnboardingIntroScreen}
         options={{
           headerShown: true,
           // First screen in the stack — no destination to go back to.
-          headerLeft: () => null,
+          headerLeft: createOnboardingSettingsHeaderButton(),
         }}
-      />
+      >
+        {({ navigation }) => (
+          <OnboardingIntroScreen
+            onContinue={() => navigation.navigate(BCSCScreens.OnboardingPrivacyPolicy)}
+            onActivateDeveloper={() => navigation.navigate(BCSCScreens.OnboardingDeveloper)}
+          />
+        )}
+      </Stack.Screen>
       <Stack.Screen
         name={BCSCScreens.OnboardingDeveloper}
         component={Developer}
@@ -73,6 +85,14 @@ const OnboardingStack = (): React.ReactElement => {
         component={OnboardingPrivacyPolicyScreen}
         options={{
           title: t('BCSC.Onboarding.PrivacyPolicyTitle'),
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.OnboardingPrivacyInformation}
+        component={OnboardingPrivacyInformationScreen}
+        options={{
+          title: t('BCSC.Screens.PrivacyInformation'),
           headerShown: true,
         }}
       />
@@ -116,12 +136,28 @@ const OnboardingStack = (): React.ReactElement => {
         }}
       />
       <Stack.Screen
+        name={BCSCScreens.OnboardingSettings}
+        component={OnboardingSettingsScreen}
+        options={{
+          headerShown: true,
+          title: t('BCSC.Screens.Settings'),
+        }}
+      />
+      <Stack.Screen
         name={BCSCScreens.OnboardingWebView}
         component={WebViewScreen}
         options={({ route }) => ({
           headerShown: true,
           title: route.params.title,
         })}
+      />
+      <Stack.Screen
+        name={BCSCScreens.OnboardingContactUs}
+        component={ContactUsScreen}
+        options={{
+          headerShown: true,
+          title: t('BCSC.Screens.ContactUs'),
+        }}
       />
       <Stack.Screen
         name={BCSCScreens.OnboardingRemoveAccountConfirmation}

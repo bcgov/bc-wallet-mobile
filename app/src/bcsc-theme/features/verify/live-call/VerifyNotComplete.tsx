@@ -4,8 +4,8 @@ import { HelpCentreUrl } from '@/constants'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Linking, StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 type VerifyNotCompleteScreenProps = {
@@ -14,18 +14,18 @@ type VerifyNotCompleteScreenProps = {
 
 const VerifyNotCompleteScreen = ({ navigation }: VerifyNotCompleteScreenProps) => {
   const { t } = useTranslation()
-  const { ColorPalette, Spacing } = useTheme()
+  const { ColorPalette, Spacing, Buttons } = useTheme()
 
-  const navigateToWebView = useCallback(
-    (url: string, title: string) => {
-      navigation.navigate(BCSCScreens.VerifyWebView, { url, title })
+  const styles = StyleSheet.create({
+    linkButtonContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: Spacing.sm,
+      flexWrap: 'wrap',
+      flexShrink: 1,
     },
-    [navigation]
-  )
-
-  const onPressTrouble = () => {
-    navigateToWebView(HelpCentreUrl.AUDIO_VIDEO_TROUBLESHOOTING, t('HelpCentre.Title'))
-  }
+  })
 
   const onPressSendVideo = () => {
     navigation.dispatch(
@@ -65,12 +65,20 @@ const VerifyNotCompleteScreen = ({ navigation }: VerifyNotCompleteScreenProps) =
       </ThemedText>
       <Button
         buttonType={ButtonType.Secondary}
-        testID={testIdWithKey('Trouble')}
+        title={''}
+        onPress={() => Linking.openURL(HelpCentreUrl.AUDIO_VIDEO_TROUBLESHOOTING)}
         accessibilityLabel={t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble')}
-        title={t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble')}
-        onPress={onPressTrouble}
+        testID={testIdWithKey('Trouble')}
       >
-        <Icon style={{ paddingRight: Spacing.sm }} name={'open-in-new'} color={ColorPalette.brand.primary} size={24} />
+        <View style={styles.linkButtonContent}>
+          <ThemedText style={Buttons.secondaryText}>{t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble')}</ThemedText>
+          <Icon
+            style={{ paddingRight: Spacing.sm }}
+            name={'open-in-new'}
+            color={ColorPalette.brand.primary}
+            size={24}
+          />
+        </View>
       </Button>
       <ThemedText style={{ marginTop: Spacing.sm }}>
         {t('BCSC.VideoCall.VerifyNotComplete.TroubleshootingTips')}

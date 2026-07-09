@@ -91,6 +91,9 @@ const translation = {
     }
   },
   "Notification": {
+    "EmptyNotification": {
+      "Title": "You have no new notifications (FR)",
+    },
     "StartVerification": {
       "Title": "You're not verified (FR)",
       "Description": "You can continue the verification process at any time. (FR)",
@@ -184,6 +187,8 @@ const translation = {
     "ErrorAlertTest": "Error & Alert Testing (FR)",
     "StaleTermsOfUse": "Stale Terms of Use Acceptance (FR)",
     "AcceptedTermsVersion": "Accepted version (FR)",
+    "ResetOnboardingIntro": "Reset Welcome Intro (FR)",
+    "OnboardingIntroSeen": "Intro seen (FR)",
     "ErrorModals": "Error Modals (FR)",
     "ErrorModalsDescription": "Trigger errors that display as modal dialogs with title, description, and technical details. (FR)",
     "ErrorAsNativeAlert": "Errors as Native Alerts (FR)",
@@ -225,7 +230,7 @@ const translation = {
       "SetupTypes": "BC Services Card (FR)",
       "VerificationMethodSelection": "Choose How to Verify (FR)",
       "TransferAccountInstructions": "Transfer Instructions (FR)",
-      "TransferAccountScan": "Scan QR Code (FR)",
+      "TransferAccountScan": "Scan QR code (FR)",
       "ContactUs": "Contact Us (FR)",
       "HelpCentre": "Help Centre (FR)",
       "PrivacyInformation": "Privacy Information (FR)",
@@ -390,6 +395,10 @@ const translation = {
       "EditNickname": "Edit Nickname (FR)",
       "AutoLockTime": "Auto lock time (FR)",
       "Notifications": "Notifications (FR)",
+      "NotificationsStatusHeader": "Notifications are {{status}} (FR)",
+      "NotificationsStatusContent": "Notifications keep you informed about account updates, credential changes and service interruptions. To turn them on or off, open your device settings. (FR)",
+      "NotificationsStatusOn": "on",
+      "NotificationsStatusOff": "off",
       "ForgetPairings": "Forget pairings (FR)",
       "AddDevice": "Add another device (FR)",
       "MyDevices": "My devices (FR)",
@@ -528,6 +537,7 @@ const translation = {
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification (FR)",
       "CheckStatus": "Check status (FR)",
       "ChooseAnotherWayToVerify": "Choose another way to verify (FR)",
+      "Status": "Status (FR)",
     },
     "SystemChecks": {
       "Devices": {
@@ -608,10 +618,11 @@ const translation = {
       "Resetting": "Resetting… (FR)"
     },
     "ForgetAllPairings": {
-      "Title": "Forget all pairings? (FR)",
-      "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step. (FR)",
+      "Title": "Forget all paired devices? (FR)",
+      "Description1": "When you use this app to log in on another device, you are asked if you want to remember this device to skip the pairing step. (FR)",
       "Description2": "By forgetting all pairings this device will be removed as an option on any computer you previously paired with. You can use this app again to log in on another computer by pairing it again. (FR)",
       "ButtonTitle": "Forget all pairings (FR)",
+      "ScreenTitle": "Forget pairings (FR)"
     },
     "ContactUs": {
       "Title": "Service BC Help Desk (FR)",
@@ -673,7 +684,9 @@ const translation = {
     "Onboarding": {
       "LearnMore": "Learn more (FR)",
       "IntroTitle": "Welcome to the\nBC Services Card app (FR)",
-      "IntroDescription": "A safe and simple way to access BC government services and BC Services Card app partners online. (FR)",
+      "IntroDescription": "A safe and simple way to access participating government services online. (FR)",
+      "IntroCalloutTitle": "We have improved the app! (FR)",
+      "IntroCalloutBody": "A refreshed design and better performance. (FR)",
       "AcceptAndContinueButton": "Accept terms of use (FR)",
       "TermsOfUseLoadError": "Terms of use failed to load, please retry (FR)",
       "TermsOfUseHeader": "Before you use the Service, you must read and accept the terms set out in this Agreement (FR)",
@@ -743,7 +756,7 @@ const translation = {
       "NoAttestationResponse": "No attestation response, check your connection and try again. (FR)",
       "NoDeviceCodeFound": "No device code found (FR)",
       "InvalidQrCode": "Invalid QR code (FR)",
-      "WillScanAutomatically": "A valid QR Code will scan automatically (FR)",
+      "WillScanAutomatically": "A valid QR code will scan automatically (FR)",
       "TorchOn": "Turn flashlight on (FR)",
       "TorchOff": "Turn flashlight off (FR)",
       "ErrorDetails": "Error details (FR)",
@@ -914,7 +927,7 @@ const translation = {
       "EmailSkipButton2": "Skip (FR)",
       "EnterEmailAddress": "Enter an email address (FR)",
       "EmailAddress": "Email address (FR)",
-      "EmailExample": "laurie.beaumont@gmail.com",
+      "EmailExample": "laurie.beaumont@gov.bc.ca",
       "EmailDescription1": "Adding an email to your account allows you to stay informed about account activity, and is recommended for security purposes. (FR)",
       "EmailDescription2": "You will receive notifications for: (FR)",
       "NotificationsBullet1": "Security alerts (FR)",
@@ -934,20 +947,21 @@ const translation = {
       "EnterCodeWithin": "Please enter the code within 5 minutes. (FR)",
       "CantFindCode": "Can't find the code? (FR) ",
       "SendNewCode": "Send a new code (FR)",
+      "GoToMyEmail": "Go to my email (FR)",
     },
     "EmailVerified": {
       "Title": "Your email has been verified (FR)",
     },
     "VerifyIdentity": {
       "DeviceCodeError": "Device code or user code is missing in the store. (FR)",
-      "VerifyInPersonTitle": "Verify in person (FR)",
-      "WhereToGo": "Where to go (FR)",
-      "WhereToGoLink": "A Service BC Location (FR)",
+      "VerifyInPersonTitle": "Verify in person at any service BC location (FR)",
+      "WhereToGoLink": "List of Service BC locations (FR)",
       "WhatToBring": "What to bring (FR)",
       "ThisDevice": "This device (FR)",
-      "YourBCServicesCard": "Your BC Services Card - if it's a non-photo card, bring your additional ID too (FR)",
+      "PiecesOfID": "The pieces of ID you used as part of the verification process (FR)",
+      "YourBCServicesCard": "Your BC Services Card - if it's a non-photo card, bring your additional ID (FR)",
       "ShowThisConfirmationNumber": "Show this confirmation number (FR)",
-      "YouMustCompleteThisBy": "You must complete this by (FR)",
+      "YouMustCompleteThisBy": "You must complete this by: (FR)",
       "YouHaveNotBeenVerified": "You have not yet been verified (FR)",
       "Complete": "Complete (FR)",
       "CardSerialNumber": "Card serial number: {{ serial }} (FR)",
@@ -964,12 +978,14 @@ const translation = {
         "ButtonText": "Ok (FR)",
       },
       "SuccessfullySent": {
-        "Heading": "We've received your request to verify your identity. (FR)",
+        "Heading": "We've received your request to verify your identity (FR)",
         "Description1": "We review requests: (FR)",
         "Bullet1": "Monday to Friday, 9am to 5pm (FR)",
         "Bullet2": "In the order they're received (FR)",
-        "Description3": "Usually, we review requests within 2 business days. During busy periods, it may take longer. (FR)",
-        "ButtonText": "Ok (FR)"
+        "Description2": "Requests are usually reviewed {{turnaround}}. (FR)",
+        "DefaultTurnaround": "within 2 business days (FR)",
+        "Description3": "You'll get an email after we review your request. You can also check the status in this app. (FR)",
+        "ButtonText": "Go to home (FR)"
       },
       "TakePhoto": {
         "CameraInstructions": "Position your face within the oval and press the button on the screen (FR)",
@@ -1027,8 +1043,8 @@ const translation = {
     },
     "MismatchedSerial": {
       "Heading": "Card not found (FR)",
-      "Description1": "Check the card serial number and birthdate match what is on your card: (FR)",
-      "Description2": "Check your card is a BC Services Card by looking at the front of your card: (FR)",
+      "Description1": "Enter the letters and numbers by the barcode on the back of your card. (FR)",
+      "Description2": "Check the serial number and birthdate match what is on your card. (FR)",
       "SerialNumber": "Serial number: {{serial}} (FR)",
       "Birthdate": "Birthdate: {{birthdate}} (FR)",
     },
@@ -1045,11 +1061,11 @@ const translation = {
     },
     "PhotoInstructions": {
       "Heading": "Take a photo of your face. The agent will use this photo when verifying your identity. (FR)",
-      "Bullet1": "Hold your phone in front of you (FR)",
+      "Bullet1": "Hold your phone in front of your face (FR)",
       "Bullet2": "Remove your glasses for the photo only (FR)",
       "Bullet3": "Be the only person in the photo (FR)",
       "Bullet4": "Look like the photo on your BC Services Card or photo ID (FR)",
-      "TakePhoto": "Take Photo of Face (FR)",
+      "TakePhoto": "Take photo (FR)",
       "TakePhotoAccessibilityLabel": "Take photo (FR)",
     },
     "PhotoReview": {
@@ -1058,11 +1074,10 @@ const translation = {
       "RetakePhoto": "Retake photo (FR)",
     },
     "TransferQRInformation": {
-      "Title": "Open the BC Services Card app on your other mobile device (FR)",
+      "Title": "Open the BC Services Card app on your other device (FR)",
       "Instructions": "Scan the QR code with the BC Services Card app on your other mobile device. (FR)",
       "Warning" : "Do not scan with the camera app. (FR)",
       "GetQRCode": "Get QR Code (FR)",
-      "LearnMore": "Learn more (FR)"
     },
     "TransferInformation": {
       "Title": "Have this app on another device? (FR)",
@@ -1071,7 +1086,7 @@ const translation = {
     },
     "TransferInstructions": {
       "Title": "Scan your QR code to add your device (FR)",
-      "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘≡’ icon in the top left corner. (FR)",
+      "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘☰’ icon in the top left corner. (FR)",
       "Step2": "Choose <b>‘Add another device’</b> to get your QR code. (FR)",
       "Step3": "<b>Scan the QR code</b> that appears on your other device. (FR)",
       "ScanQRCode": "Scan QR code (FR)",
@@ -1111,7 +1126,8 @@ const translation = {
       "CheckYourIDBullet1": "Both IDs should have the same name (FR)",
       "CheckYourIDBullet2": "At least one must be issued in Canada (FR)",
       "CheckYourIDBullet3": "One must have a recent photo (FR)",
-      "CheckYourIDBullet4": "Both must not be expired (FR)",
+      "CheckYourIDBullet4": "Both must be valid (FR)",
+      "SeeAcceptedID": "See accepted ID (FR)",
     },
     "IDPhotoInformation": {
       "Heading": "Take a photo of your ID. An agent will look at this photo when verifying your identity. (FR)",

@@ -100,3 +100,24 @@ export function clampEvidenceImagesToSides(
 
   return Array.from(lastByLabel.values()).slice(0, imageSides.length)
 }
+
+/**
+ * Check whether an evidence entry has all its required photos captured but is still
+ * missing a document number — i.e. the user left partway through EvidenceIDCollection.
+ *
+ * This is the resumable "in-progress" state: distinct from a completed evidence (has a
+ * document number) and from an abandoned card selection (no photos, which should be
+ * cleaned up rather than resumed). Photos are only persisted to the store once every
+ * required side has been captured, so `metadata.length >= requiredPhotos` reliably means
+ * capture finished.
+ *
+ * @param card - The card evidence metadata to check.
+ * @returns True if all photos are captured but the document number has not been entered.
+ */
+export function isEvidenceAwaitingDocumentNumber(card?: EvidenceMetadata): boolean {
+  if (!card?.evidenceType || card.documentNumber) {
+    return false
+  }
+  const requiredPhotos = card.evidenceType.image_sides?.length || 1
+  return card.metadata.length >= requiredPhotos
+}

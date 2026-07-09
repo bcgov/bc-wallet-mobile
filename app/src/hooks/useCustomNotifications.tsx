@@ -57,13 +57,8 @@ export const useCustomNotifications = () => {
     if (needsVerification) {
       notifications.push({
         id: CustomNotificationId.BCSCStartVerification,
-        dismissible: true,
-        element: (
-          <StartVerificationNotification
-            key={CustomNotificationId.BCSCStartVerification}
-            onClose={() => dismissCustomNotification(CustomNotificationId.BCSCStartVerification)}
-          />
-        ),
+        dismissible: false,
+        element: <StartVerificationNotification key={CustomNotificationId.BCSCStartVerification} />,
       })
     }
 
@@ -74,7 +69,6 @@ export const useCustomNotifications = () => {
     store.bcsc.showAccountExpiryNotification,
     store.bcsc.showCardRenewalNotification,
     needsVerification,
-    dismissCustomNotification,
     dismissedIds,
   ])
 

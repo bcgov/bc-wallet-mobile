@@ -1,12 +1,13 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import BulletPointList from '@/components/BulletPointList'
 import WhiteHandHoldingPhone from '@assets/img/white-hand-holding-phone.svg'
 import { Button, ButtonType, ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { StyleSheet } from 'react-native'
 
 type PhotoInstructionsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.PhotoInstructions>
@@ -21,13 +22,7 @@ const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenP
   const styles = StyleSheet.create({
     image: {
       width: '100%',
-      height: 200,
-    },
-    bulletContainer: {
-      flexDirection: 'row',
-    },
-    bullet: {
-      marginRight: Spacing.xs,
+      height: 250,
     },
   })
 
@@ -53,28 +48,20 @@ const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenP
   return (
     <ScreenWrapper
       controls={controls}
-      scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
+      scrollViewContainerStyle={{ gap: Spacing.lg, padding: Spacing.lg }}
       edges={['bottom', 'left', 'right']}
       padded={false}
     >
       <WhiteHandHoldingPhone style={styles.image} height={styles.image.height} width={styles.image.width} />
-      <ThemedText variant={'headingThree'}>{t('BCSC.PhotoInstructions.Heading')}</ThemedText>
-      <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.PhotoInstructions.Bullet1')}</ThemedText>
-      </View>
-      <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.PhotoInstructions.Bullet2')}</ThemedText>
-      </View>
-      <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.PhotoInstructions.Bullet3')}</ThemedText>
-      </View>
-      <View style={styles.bulletContainer}>
-        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-        <ThemedText>{t('BCSC.PhotoInstructions.Bullet4')}</ThemedText>
-      </View>
+      <ThemedText variant={'headingFour'}>{t('BCSC.PhotoInstructions.Heading')}</ThemedText>
+      <BulletPointList
+        translationKeys={[
+          t('BCSC.PhotoInstructions.Bullet1'),
+          t('BCSC.PhotoInstructions.Bullet2'),
+          t('BCSC.PhotoInstructions.Bullet3'),
+          t('BCSC.PhotoInstructions.Bullet4'),
+        ]}
+      />
     </ScreenWrapper>
   )
 }

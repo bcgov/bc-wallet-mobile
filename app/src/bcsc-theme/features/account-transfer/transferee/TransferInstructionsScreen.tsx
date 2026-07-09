@@ -1,3 +1,4 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
@@ -19,19 +20,25 @@ const TransferInstructionsScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
 
   const controls = (
-    <Button
-      buttonType={ButtonType.Primary}
-      title={t('BCSC.TransferInstructions.ScanQRCode')}
-      accessibilityLabel={t('BCSC.TransferInstructions.ScanQRCode')}
-      testID={testIdWithKey('ScanQRCode')}
-      onPress={() => {
-        navigation.navigate(BCSCScreens.TransferAccountQRScan)
-      }}
-    />
+    <ControlContainer>
+      <Button
+        buttonType={ButtonType.Primary}
+        title={t('BCSC.TransferInstructions.ScanQRCode')}
+        accessibilityLabel={t('BCSC.TransferInstructions.ScanQRCode')}
+        testID={testIdWithKey('ScanQRCode')}
+        onPress={() => {
+          navigation.navigate(BCSCScreens.TransferAccountQRScan)
+        }}
+      />
+    </ControlContainer>
   )
 
   return (
-    <ScreenWrapper controls={controls} scrollViewContainerStyle={{ gap: Spacing.lg }}>
+    <ScreenWrapper
+      padded={false}
+      controls={controls}
+      scrollViewContainerStyle={{ padding: Spacing.lg, gap: Spacing.lg }}
+    >
       <ThemedText variant={'headingThree'}>{t('BCSC.TransferInstructions.Title')}</ThemedText>
 
       {STEP_KEYS.map((stepKey, index) => (
