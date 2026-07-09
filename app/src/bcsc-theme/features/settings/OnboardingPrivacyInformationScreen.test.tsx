@@ -2,9 +2,9 @@ import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { render } from '@testing-library/react-native'
 import React from 'react'
-import SuccessfullySentScreen from './SuccessfullySentScreen'
+import { OnboardingPrivacyInformationScreen } from './OnboardingPrivacyInformationScreen'
 
-describe('SuccessfullySent', () => {
+describe('OnboardingPrivacyInformationScreen', () => {
   let mockNavigation: any
 
   beforeEach(() => {
@@ -17,14 +17,10 @@ describe('SuccessfullySent', () => {
     jest.useRealTimers()
   })
 
-  // Note: the turnaround-sentence composition and the "reviewed by" date both run through i18n
-  // interpolation, which the react-i18next test mock returns as the raw key — so those strings are
-  // exercised via the flow (useEvidenceUploadModel forwards the API turnaround as a route param) and
-  // by typecheck, not asserted here.
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <SuccessfullySentScreen navigation={mockNavigation as never} route={{ params: {} } as never} />
+        <OnboardingPrivacyInformationScreen navigation={mockNavigation as never} />
       </BasicAppContext>
     )
 

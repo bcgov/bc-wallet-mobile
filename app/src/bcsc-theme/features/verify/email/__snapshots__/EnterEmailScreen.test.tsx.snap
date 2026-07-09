@@ -254,11 +254,8 @@ exports[`EnterEmailScreen Rendering should match snapshot 1`] = `
                     "alignContent": "center",
                     "alignItems": "flex-start",
                     "flexDirection": "row",
-                    "marginVertical": 8,
                   },
-                  {
-                    "marginVertical": 4,
-                  },
+                  undefined,
                 ]
               }
             >
@@ -321,11 +318,8 @@ exports[`EnterEmailScreen Rendering should match snapshot 1`] = `
                     "alignContent": "center",
                     "alignItems": "flex-start",
                     "flexDirection": "row",
-                    "marginVertical": 8,
                   },
-                  {
-                    "marginVertical": 4,
-                  },
+                  undefined,
                 ]
               }
             >
@@ -388,11 +382,8 @@ exports[`EnterEmailScreen Rendering should match snapshot 1`] = `
                     "alignContent": "center",
                     "alignItems": "flex-start",
                     "flexDirection": "row",
-                    "marginVertical": 8,
                   },
-                  {
-                    "marginVertical": 4,
-                  },
+                  undefined,
                 ]
               }
             >

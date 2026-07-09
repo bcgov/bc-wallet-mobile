@@ -96,11 +96,8 @@ exports[`ReverifyAccountScreen renders correctly for a renewal notification 1`] 
                   "alignContent": "center",
                   "alignItems": "flex-start",
                   "flexDirection": "row",
-                  "marginVertical": 8,
                 },
-                {
-                  "marginVertical": 4,
-                },
+                undefined,
               ]
             }
           >
@@ -163,11 +160,8 @@ exports[`ReverifyAccountScreen renders correctly for a renewal notification 1`] 
                   "alignContent": "center",
                   "alignItems": "flex-start",
                   "flexDirection": "row",
-                  "marginVertical": 8,
                 },
-                {
-                  "marginVertical": 4,
-                },
+                undefined,
               ]
             }
           >
@@ -230,11 +224,8 @@ exports[`ReverifyAccountScreen renders correctly for a renewal notification 1`] 
                   "alignContent": "center",
                   "alignItems": "flex-start",
                   "flexDirection": "row",
-                  "marginVertical": 8,
                 },
-                {
-                  "marginVertical": 4,
-                },
+                undefined,
               ]
             }
           >
@@ -297,11 +288,8 @@ exports[`ReverifyAccountScreen renders correctly for a renewal notification 1`] 
                   "alignContent": "center",
                   "alignItems": "flex-start",
                   "flexDirection": "row",
-                  "marginVertical": 8,
                 },
-                {
-                  "marginVertical": 4,
-                },
+                undefined,
               ]
             }
           >
@@ -546,11 +534,8 @@ exports[`ReverifyAccountScreen renders correctly for an expiry notification 1`] 
                   "alignContent": "center",
                   "alignItems": "flex-start",
                   "flexDirection": "row",
-                  "marginVertical": 8,
                 },
-                {
-                  "marginVertical": 4,
-                },
+                undefined,
               ]
             }
           >
@@ -613,11 +598,8 @@ exports[`ReverifyAccountScreen renders correctly for an expiry notification 1`] 
                   "alignContent": "center",
                   "alignItems": "flex-start",
                   "flexDirection": "row",
-                  "marginVertical": 8,
                 },
-                {
-                  "marginVertical": 4,
-                },
+                undefined,
               ]
             }
           >
@@ -680,11 +662,8 @@ exports[`ReverifyAccountScreen renders correctly for an expiry notification 1`] 
                   "alignContent": "center",
                   "alignItems": "flex-start",
                   "flexDirection": "row",
-                  "marginVertical": 8,
                 },
-                {
-                  "marginVertical": 4,
-                },
+                undefined,
               ]
             }
           >
@@ -747,11 +726,8 @@ exports[`ReverifyAccountScreen renders correctly for an expiry notification 1`] 
                   "alignContent": "center",
                   "alignItems": "flex-start",
                   "flexDirection": "row",
-                  "marginVertical": 8,
                 },
-                {
-                  "marginVertical": 4,
-                },
+                undefined,
               ]
             }
           >

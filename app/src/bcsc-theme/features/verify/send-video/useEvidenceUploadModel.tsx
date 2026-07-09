@@ -109,11 +109,12 @@ const useEvidenceUploadModel = (
       requestSha: string
     ) => {
       const allUploadUris = [photoUploadUri, videoUploadUri, ...additionalUploadUris]
-      await evidence.sendVerificationRequest(requestId, {
+      const response = await evidence.sendVerificationRequest(requestId, {
         upload_uris: allUploadUris,
         sha256: requestSha,
       })
       logger.debug('Completed verification request')
+      return response
     },
     [evidence, logger]
   )
@@ -180,7 +181,7 @@ const useEvidenceUploadModel = (
 
       setUploadMessage(t('BCSC.SendVideo.UploadProgress.FinalizingVerification'))
       const additionalUploadUris = additionalEvidence.map(({ uploadUri }) => uploadUri)
-      await finalizeVerification(
+      const verificationResponse = await finalizeVerification(
         evidenceMetadata.photoMetadataResponse.upload_uri,
         evidenceMetadata.videoMetadataResponse.upload_uri,
         additionalUploadUris,
@@ -195,7 +196,12 @@ const useEvidenceUploadModel = (
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
-          routes: [{ name: BCSCScreens.SuccessfullySent }],
+          routes: [
+            {
+              name: BCSCScreens.SuccessfullySent,
+              params: { avgTurnaroundTimeMessage: verificationResponse?.avg_turnaround_time_message },
+            },
+          ],
         })
       )
     } catch (error) {
