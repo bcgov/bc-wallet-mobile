@@ -59,7 +59,7 @@ struct PrivateKeyInfo {
 
 protocol KeyPairManagerProtocol {
   func deleteKey(withLabel label: String) -> Bool
-  func findAllPrivateKeys() -> [PrivateKeyInfo]
+  func findAllPrivateKeys() throws -> [PrivateKeyInfo]
   func findPrivateKey(with label: String) -> PrivateKeyInfo?
   func generateKeyPair(withLabel label: String, keyType: KeyType, keySize: Int) throws
     -> (public: SecKey, private: SecKey)
@@ -172,10 +172,15 @@ class KeyPairManager: KeyPairManagerProtocol {
   /**
    Find and return a list of all private keys in the KeyChain that have a kSecAttrApplicationTag
 
+   - Throws: `KeychainError.keychainUnavailable` when the keychain cannot be read right now
+             (device locked, auth failure, service unavailable); `KeychainError.unexpectedStatus`
+             for any other enumeration failure. A definitive "no items" (`errSecItemNotFound`)
+             is NOT an error — it's the normal fresh-install state — and returns an empty list.
+
    - Returns: A list of any found PrivateKeyInfo objects, empty if none were found
 
    */
-  func findAllPrivateKeys() -> [PrivateKeyInfo] {
+  func findAllPrivateKeys() throws -> [PrivateKeyInfo] {
     let attributes: NSDictionary = [
       kSecClass: kSecClassKey,
       kSecAttrKeyClass: kSecAttrKeyClassPrivate,
@@ -188,10 +193,15 @@ class KeyPairManager: KeyPairManagerProtocol {
     ]
     var result: CFTypeRef?
     let status = SecItemCopyMatching(attributes, &result)
-    guard status == errSecSuccess else {
+    do {
+      guard try KeyPairManager.shouldDecodeEnumerationResult(status: status) else {
+        return []
+      }
+    } catch {
       log.error("findAllPrivateKeys: enumeration failed with OSStatus \(status)")
-      return []
+      throw error
     }
+
     let list = result as! [[String: Any]]
     var keys = [PrivateKeyInfo]()
     for dict in list {
@@ -202,6 +212,31 @@ class KeyPairManager: KeyPairManagerProtocol {
       keys.append(pk)
     }
     return keys
+  }
+
+  /**
+   Classifies a `SecItemCopyMatching` status from the "enumerate all private keys" query.
+
+   A small, pure, unit-testable seam so the OSStatus → outcome mapping can be pinned without a
+   live keychain (the entitlement-less SPM test runner can exercise this even though it can't
+   exercise the keychain itself). Mirrors `findKey(withLabel:)`'s classification.
+
+   - Returns: `true` when the caller should decode `result` as a list of key attributes,
+              `false` when the query definitively found no items (fresh install, no keys yet).
+   - Throws: `KeychainError.keychainUnavailable` when the keychain cannot be read right now,
+             `KeychainError.unexpectedStatus` for any other failure.
+   */
+  static func shouldDecodeEnumerationResult(status: OSStatus) throws -> Bool {
+    switch status {
+    case errSecSuccess:
+      return true
+    case errSecItemNotFound:
+      return false
+    case errSecInteractionNotAllowed, errSecAuthFailed, errSecNotAvailable:
+      throw KeychainError.keychainUnavailable(status)
+    default:
+      throw KeychainError.unexpectedStatus(status)
+    }
   }
 
   func generateKeyPair(

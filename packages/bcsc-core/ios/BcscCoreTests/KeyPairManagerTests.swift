@@ -17,6 +17,65 @@ final class KeychainErrorTests: XCTestCase {
   }
 }
 
+/// Pins the OSStatus → outcome classification behind `findAllPrivateKeys()`'s enumeration
+/// query (issue #3422). Pure and synchronous — no live keychain involved — so, unlike
+/// `KeyPairManagerTests` below, these run even in the entitlement-less SPM test runner.
+final class KeyPairManagerEnumerationClassifierTests: XCTestCase {
+  func testSuccessDecodesResult() throws {
+    XCTAssertTrue(try KeyPairManager.shouldDecodeEnumerationResult(status: errSecSuccess))
+  }
+
+  func testItemNotFoundIsEmptyNotAnError() throws {
+    XCTAssertFalse(
+      try KeyPairManager.shouldDecodeEnumerationResult(status: errSecItemNotFound),
+      "a fresh install with no keys yet must not be treated as a failure"
+    )
+  }
+
+  func testInteractionNotAllowedThrowsKeychainUnavailable() {
+    XCTAssertThrowsError(
+      try KeyPairManager.shouldDecodeEnumerationResult(status: errSecInteractionNotAllowed)
+    ) { error in
+      guard case let KeychainError.keychainUnavailable(status) = error else {
+        return XCTFail("expected KeychainError.keychainUnavailable, got \(error)")
+      }
+      XCTAssertEqual(status, errSecInteractionNotAllowed)
+    }
+  }
+
+  func testAuthFailedThrowsKeychainUnavailable() {
+    XCTAssertThrowsError(try KeyPairManager.shouldDecodeEnumerationResult(status: errSecAuthFailed)) { error in
+      guard case let KeychainError.keychainUnavailable(status) = error else {
+        return XCTFail("expected KeychainError.keychainUnavailable, got \(error)")
+      }
+      XCTAssertEqual(status, errSecAuthFailed)
+    }
+  }
+
+  func testNotAvailableThrowsKeychainUnavailable() {
+    XCTAssertThrowsError(try KeyPairManager.shouldDecodeEnumerationResult(status: errSecNotAvailable)) { error in
+      guard case let KeychainError.keychainUnavailable(status) = error else {
+        return XCTFail("expected KeychainError.keychainUnavailable, got \(error)")
+      }
+      XCTAssertEqual(status, errSecNotAvailable)
+    }
+  }
+
+  func testArbitraryStatusThrowsUnexpectedStatus() {
+    // errSecMissingEntitlement: the actual status the entitlement-less SPM runner sees on
+    // every real Security call — a good stand-in for "some other OSStatus we don't special-case".
+    let errSecMissingEntitlement: OSStatus = -34018
+    XCTAssertThrowsError(
+      try KeyPairManager.shouldDecodeEnumerationResult(status: errSecMissingEntitlement)
+    ) { error in
+      guard case let KeychainError.unexpectedStatus(status) = error else {
+        return XCTFail("expected KeychainError.unexpectedStatus, got \(error)")
+      }
+      XCTAssertEqual(status, errSecMissingEntitlement)
+    }
+  }
+}
+
 /// Exercises the real simulator keychain. Covers the key lifecycle relied on by
 /// dynamic client registration (issue #4032 / error 2603): generation, discovery
 /// via `findAllPrivateKeys`, and retrieval via `getKeyPair`.
@@ -92,7 +151,7 @@ final class KeyPairManagerTests: XCTestCase {
   func testFindAllPrivateKeysIncludesGeneratedKey() throws {
     _ = try manager.generateKeyPair(withLabel: testLabel, keyType: KeyType.RSA, keySize: 2048)
 
-    let keys = manager.findAllPrivateKeys()
+    let keys = try manager.findAllPrivateKeys()
     XCTAssertTrue(keys.contains { $0.tag == testLabel }, "discovery should list the generated key by tag")
   }
 
@@ -150,7 +209,7 @@ final class KeyPairManagerTests: XCTestCase {
     // Import through the legacy path exactly as production code did.
     let imported = RSAUtil.insertPublicKey(tag: pollutionTag, exponent: exponent, modulus: modulus)
 
-    let keys = manager.findAllPrivateKeys()
+    let keys = try manager.findAllPrivateKeys()
     XCTAssertFalse(
       keys.contains { $0.tag == pollutionTag },
       """
