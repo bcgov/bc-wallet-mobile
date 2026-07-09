@@ -5,7 +5,7 @@ import { BasicAppContext } from '@mocks/helpers/app'
 import { CommonActions } from '@react-navigation/native'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 import React from 'react'
-import { Alert } from 'react-native'
+import { Alert, Linking, Platform } from 'react-native'
 import Toast from 'react-native-toast-message'
 import EmailConfirmationScreen from './EmailConfirmationScreen'
 
@@ -200,6 +200,22 @@ describe('EmailConfirmation', () => {
       await waitFor(() => {
         expect(mockSendEmailVerificationCode).toHaveBeenCalledWith('654321', 'new-email-id')
       })
+    })
+  })
+
+  describe('Go to my email', () => {
+    test('opens the device email app when pressed', async () => {
+      const openURLSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined as never)
+      const expectedUrl = Platform.OS === 'ios' ? 'message://' : 'mailto:'
+      renderScreen()
+
+      fireEvent.press(screen.getByTestId('GoToMyEmailLink'))
+
+      await waitFor(() => {
+        expect(openURLSpy).toHaveBeenCalledWith(expectedUrl)
+      })
+
+      openURLSpy.mockRestore()
     })
   })
 })

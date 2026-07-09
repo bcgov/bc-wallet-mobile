@@ -534,6 +534,7 @@ const translation = {
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification (FR)",
       "CheckStatus": "Check status (FR)",
       "ChooseAnotherWayToVerify": "Choose another way to verify (FR)",
+      "Status": "Status (FR)",
     },
     "SystemChecks": {
       "Devices": {
@@ -922,7 +923,7 @@ const translation = {
       "EmailSkipButton2": "Skip (FR)",
       "EnterEmailAddress": "Enter an email address (FR)",
       "EmailAddress": "Email address (FR)",
-      "EmailExample": "laurie.beaumont@gmail.com",
+      "EmailExample": "laurie.beaumont@gov.bc.ca",
       "EmailDescription1": "Adding an email to your account allows you to stay informed about account activity, and is recommended for security purposes. (FR)",
       "EmailDescription2": "You will receive notifications for: (FR)",
       "NotificationsBullet1": "Security alerts (FR)",
@@ -942,20 +943,21 @@ const translation = {
       "EnterCodeWithin": "Please enter the code within 5 minutes. (FR)",
       "CantFindCode": "Can't find the code? (FR) ",
       "SendNewCode": "Send a new code (FR)",
+      "GoToMyEmail": "Go to my email (FR)",
     },
     "EmailVerified": {
       "Title": "Your email has been verified (FR)",
     },
     "VerifyIdentity": {
       "DeviceCodeError": "Device code or user code is missing in the store. (FR)",
-      "VerifyInPersonTitle": "Verify in person (FR)",
-      "WhereToGo": "Where to go (FR)",
-      "WhereToGoLink": "A Service BC Location (FR)",
+      "VerifyInPersonTitle": "Verify in person at any service BC location (FR)",
+      "WhereToGoLink": "List of Service BC locations (FR)",
       "WhatToBring": "What to bring (FR)",
       "ThisDevice": "This device (FR)",
-      "YourBCServicesCard": "Your BC Services Card - if it's a non-photo card, bring your additional ID too (FR)",
+      "PiecesOfID": "The pieces of ID you used as part of the verification process (FR)",
+      "YourBCServicesCard": "Your BC Services Card - if it's a non-photo card, bring your additional ID (FR)",
       "ShowThisConfirmationNumber": "Show this confirmation number (FR)",
-      "YouMustCompleteThisBy": "You must complete this by (FR)",
+      "YouMustCompleteThisBy": "You must complete this by: (FR)",
       "YouHaveNotBeenVerified": "You have not yet been verified (FR)",
       "Complete": "Complete (FR)",
       "CardSerialNumber": "Card serial number: {{ serial }} (FR)",
@@ -972,12 +974,14 @@ const translation = {
         "ButtonText": "Ok (FR)",
       },
       "SuccessfullySent": {
-        "Heading": "We've received your request to verify your identity. (FR)",
+        "Heading": "We've received your request to verify your identity (FR)",
         "Description1": "We review requests: (FR)",
         "Bullet1": "Monday to Friday, 9am to 5pm (FR)",
         "Bullet2": "In the order they're received (FR)",
-        "Description3": "Usually, we review requests within 2 business days. During busy periods, it may take longer. (FR)",
-        "ButtonText": "Ok (FR)"
+        "Description2": "Requests are usually reviewed {{turnaround}}. (FR)",
+        "DefaultTurnaround": "within 2 business days (FR)",
+        "Description3": "You'll get an email after we review your request. You can also check the status in this app. (FR)",
+        "ButtonText": "Go to home (FR)"
       },
       "TakePhoto": {
         "CameraInstructions": "Position your face within the oval and press the button on the screen (FR)",
@@ -1035,8 +1039,8 @@ const translation = {
     },
     "MismatchedSerial": {
       "Heading": "Card not found (FR)",
-      "Description1": "Check the card serial number and birthdate match what is on your card: (FR)",
-      "Description2": "Check your card is a BC Services Card by looking at the front of your card: (FR)",
+      "Description1": "Enter the letters and numbers by the barcode on the back of your card. (FR)",
+      "Description2": "Check the serial number and birthdate match what is on your card. (FR)",
       "SerialNumber": "Serial number: {{serial}} (FR)",
       "Birthdate": "Birthdate: {{birthdate}} (FR)",
     },
@@ -1053,11 +1057,11 @@ const translation = {
     },
     "PhotoInstructions": {
       "Heading": "Take a photo of your face. The agent will use this photo when verifying your identity. (FR)",
-      "Bullet1": "Hold your phone in front of you (FR)",
+      "Bullet1": "Hold your phone in front of your face (FR)",
       "Bullet2": "Remove your glasses for the photo only (FR)",
       "Bullet3": "Be the only person in the photo (FR)",
       "Bullet4": "Look like the photo on your BC Services Card or photo ID (FR)",
-      "TakePhoto": "Take Photo of Face (FR)",
+      "TakePhoto": "Take photo (FR)",
       "TakePhotoAccessibilityLabel": "Take photo (FR)",
     },
     "PhotoReview": {
@@ -1119,7 +1123,8 @@ const translation = {
       "CheckYourIDBullet1": "Both IDs should have the same name (FR)",
       "CheckYourIDBullet2": "At least one must be issued in Canada (FR)",
       "CheckYourIDBullet3": "One must have a recent photo (FR)",
-      "CheckYourIDBullet4": "Both must not be expired (FR)",
+      "CheckYourIDBullet4": "Both must be valid (FR)",
+      "SeeAcceptedID": "See accepted ID (FR)",
     },
     "IDPhotoInformation": {
       "Heading": "Take a photo of your ID. An agent will look at this photo when verifying your identity. (FR)",

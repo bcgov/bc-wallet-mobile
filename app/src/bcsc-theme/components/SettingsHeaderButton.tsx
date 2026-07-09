@@ -4,7 +4,13 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { t } from 'i18next'
 
 import { a11yLabel } from '@utils/accessibility'
-import { BCSCAuthStackParams, BCSCMainStackParams, BCSCScreens, BCSCVerifyStackParams } from '../types/navigators'
+import {
+  BCSCAuthStackParams,
+  BCSCMainStackParams,
+  BCSCOnboardingStackParams,
+  BCSCScreens,
+  BCSCVerifyStackParams,
+} from '../types/navigators'
 
 /**
  * Creates a Settings Header Button for the Main Stack that navigates to MainSettings.
@@ -64,4 +70,26 @@ export const createAuthSettingsHeaderButton = () => {
     )
   }
   return AuthSettingsHeaderButton
+}
+
+/**
+ * Creates a Settings Header Button for the Onboarding Stack that navigates to OnboardingSettings.
+ *
+ * @return {*}
+ */
+export const createOnboardingSettingsHeaderButton = () => {
+  const OnboardingSettingsHeaderButton = () => {
+    const navigation = useNavigation<StackNavigationProp<BCSCOnboardingStackParams>>()
+
+    return (
+      <IconButton
+        buttonLocation={ButtonLocation.Left}
+        icon={'menu'}
+        accessibilityLabel={a11yLabel(t('BCSC.Screens.Settings'))}
+        testID={testIdWithKey('SettingsMenuButton')}
+        onPress={() => navigation.navigate(BCSCScreens.OnboardingSettings)}
+      />
+    )
+  }
+  return OnboardingSettingsHeaderButton
 }
