@@ -119,6 +119,7 @@ CANVAS = 1024
 FOREGROUND_TARGET_PX = 650  # ~63% of 1024 -- adaptive foreground + all mono assets
 LEGACY_TARGET_PX = 580  # ~57% of 1024 -- legacy launcher composite
 SUPERSAMPLE = 4  # circular-mask supersample factor before downscaling
+LANCZOS = getattr(Image, "Resampling", Image).LANCZOS  # Pillow >=9.1 enum, else legacy flat attr
 
 DENSITIES = [
     ("mdpi", 1.0),
@@ -206,7 +207,7 @@ def normalize_on_canvas(im: Image.Image, target_px: int, canvas: int = CANVAS) -
     scale = target_px / max(cropped.size)
     new_w = max(1, round(cropped.width * scale))
     new_h = max(1, round(cropped.height * scale))
-    resized = cropped.resize((new_w, new_h), Image.Resampling.LANCZOS)
+    resized = cropped.resize((new_w, new_h), LANCZOS)
     out = Image.new("RGBA", (canvas, canvas), (0, 0, 0, 0))
     out.paste(resized, ((canvas - new_w) // 2, (canvas - new_h) // 2), resized)
     return out
@@ -221,7 +222,7 @@ def circular_mask(im: Image.Image, supersample: int = SUPERSAMPLE) -> Image.Imag
     hi = size * supersample
     mask_hi = Image.new("L", (hi, hi), 0)
     ImageDraw.Draw(mask_hi).ellipse((0, 0, hi - 1, hi - 1), fill=255)
-    mask = mask_hi.resize((size, size), Image.Resampling.LANCZOS)
+    mask = mask_hi.resize((size, size), LANCZOS)
     out = im.copy()
     out.putalpha(ImageChops.multiply(out.getchannel("A"), mask))
     return out
@@ -230,7 +231,7 @@ def circular_mask(im: Image.Image, supersample: int = SUPERSAMPLE) -> Image.Imag
 def downscale(im: Image.Image, size: int) -> Image.Image:
     if im.size == (size, size):
         return im.copy()
-    return im.resize((size, size), Image.Resampling.LANCZOS)
+    return im.resize((size, size), LANCZOS)
 
 
 def composite_over(bg: Image.Image, fg_normalized: Image.Image) -> Image.Image:
