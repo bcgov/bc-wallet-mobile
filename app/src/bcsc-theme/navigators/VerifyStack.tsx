@@ -292,7 +292,7 @@ const VerifyStack = () => {
         component={AdditionalIdentificationRequiredScreen}
         options={{
           header: createProgressHeader(2, 30),
-          headerLeft: createVerifySettingsHeaderButton(),
+          headerLeft: (props) => <VerifyResumeHeaderBackButton {...props} />,
         }}
       />
       <Stack.Screen
