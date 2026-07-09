@@ -7,7 +7,7 @@ export type InstructionsSection = {
   heading: string
   paragraph?: string
   bullets?: string[]
-  /** Optional inline link rendered after the bullets (e.g. "See accepted ID"). */
+  /** Optional inline link rendered before the section heading (e.g. "See accepted ID"). */
   link?: {
     label: string
     onPress: () => void

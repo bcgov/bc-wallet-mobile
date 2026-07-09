@@ -534,6 +534,7 @@ const translation = {
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification (PT-BR)",
       "CheckStatus": "Check status (PT-BR)",
       "ChooseAnotherWayToVerify": "Choose another way to verify (PT-BR)",
+      "Status": "Status (PT-BR)",
     },
     "SystemChecks": {
       "Devices": {
@@ -950,8 +951,7 @@ const translation = {
     "VerifyIdentity": {
       "DeviceCodeError": "Device code or user code is missing in the store. (PT-BR)",
       "VerifyInPersonTitle": "Verify in person at any service BC location (PT-BR)",
-      "WhereToGo": "List of Service BC locations (PT-BR)",
-      "WhereToGoLink": "A Service BC Location (PT-BR)",
+      "WhereToGoLink": "List of Service BC locations (PT-BR)",
       "WhatToBring": "What to bring (PT-BR)",
       "ThisDevice": "This device (PT-BR)",
       "PiecesOfID": "The pieces of ID you used as part of the verification process (PT-BR)",

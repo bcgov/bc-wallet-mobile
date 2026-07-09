@@ -534,6 +534,7 @@ const translation = {
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification (FR)",
       "CheckStatus": "Check status (FR)",
       "ChooseAnotherWayToVerify": "Choose another way to verify (FR)",
+      "Status": "Status (FR)",
     },
     "SystemChecks": {
       "Devices": {
