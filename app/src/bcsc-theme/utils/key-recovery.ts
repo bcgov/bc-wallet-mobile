@@ -11,6 +11,18 @@ import BCSCApiClient from '../api/client'
 import { normalizeModulus } from './jwk-modulus'
 import { getNotificationTokens } from './push-notification-tokens'
 
+/**
+ * Short fingerprint of a normalized modulus for correlating local vs server keys in remote
+ * logs, without dumping the full (public but long) key material. Returns 'none' for a null
+ * modulus. This is a diagnostic aid only — matching is always done on the full modulus bytes.
+ */
+function modulusFingerprint(n: string | null): string {
+  if (!n) {
+    return 'none'
+  }
+  return n.length <= 16 ? n : `${n.slice(0, 8)}...${n.slice(-8)} (len=${n.length})`
+}
+
 interface ServerJwk {
   /** No longer used for matching (kid drifts across migrations) — logged for diagnostics only. */
   kid?: string
@@ -77,6 +89,9 @@ export async function performKeyRecovery(
 ): Promise<KeyRecoveryResult> {
   let newRegistrationAccessToken: string | undefined
   try {
+    logger.info(
+      `[performKeyRecovery] event=triggered client_id=${clientId} — probing server for its registered signing keys`
+    )
     const { data } = await apiClient.get<ServerClientRegistrationView>(
       `${apiClient.endpoints.registration}/${clientId}`,
       {
@@ -92,6 +107,12 @@ export async function performKeyRecovery(
     const serverKidsForLog = JSON.stringify(serverKeys.map((k) => k?.kid))
     const serverModuli = serverNs.map((n) => normalizeModulus(n)).filter((n): n is string => n !== null)
 
+    logger.info(
+      `[performKeyRecovery] server returned ${serverKeys.length} key(s), ${serverModuli.length} with a decodable modulus [${serverModuli
+        .map(modulusFingerprint)
+        .join(', ')}] (serverKids=${serverKidsForLog})`
+    )
+
     if (serverModuli.length === 0) {
       logger.warn(
         `[performKeyRecovery] event=failed_empty_jwks server returned no decodable jwks moduli; refusing to prune or reassign (serverKids=${serverKidsForLog})`
@@ -102,16 +123,28 @@ export async function performKeyRecovery(
     const localKeys = await getAllKeysWithPublicInfo()
     const localIds = localKeys.map((k) => k.id)
 
-    // Newest-created wins if more than one local key happens to share a modulus with the
-    // server set (shouldn't normally happen, but stay deterministic if it does). Membership is
-    // tested against the SAME pre-normalized `serverModuli` the prune loop uses below, so the
-    // two can never disagree about what counts as "in the server set".
-    const matched = localKeys
-      .filter((k) => {
-        const n = normalizeModulus(k.n)
-        return n !== null && serverModuli.includes(n)
-      })
-      .sort((a, b) => (b.created ?? 0) - (a.created ?? 0))[0]
+    logger.info(
+      `[performKeyRecovery] checking ${localKeys.length} local key(s) ${JSON.stringify(localIds)} against the server set for a modulus match`
+    )
+
+    // Evaluate each local key explicitly (rather than a silent filter) so remote logs record
+    // which key was checked and whether its modulus matched — the crux of diagnosing a desync.
+    // Membership is tested against the SAME pre-normalized `serverModuli` the prune loop uses
+    // below, so the two can never disagree about what counts as "in the server set".
+    const matches: typeof localKeys = []
+    for (const k of localKeys) {
+      const n = normalizeModulus(k.n)
+      const isMatch = n !== null && serverModuli.includes(n)
+      const outcome = n === null ? 'skipped (undecodable modulus)' : isMatch ? 'MATCH' : 'no match'
+      logger.info(`[performKeyRecovery] checking local key '${k.id}' (modulus=${modulusFingerprint(n)}): ${outcome}`)
+      if (isMatch) {
+        matches.push(k)
+      }
+    }
+
+    // Newest-created wins if more than one local key matches (shouldn't normally happen, but
+    // stay deterministic if it does).
+    const matched = matches.sort((a, b) => (b.created ?? 0) - (a.created ?? 0))[0]
 
     if (!matched) {
       logger.warn(
@@ -120,7 +153,7 @@ export async function performKeyRecovery(
       return { status: 'no_match', newRegistrationAccessToken }
     }
 
-    logger.info(`[performKeyRecovery] matched local key '${matched.id}' against server jwks by modulus`)
+    logger.info(`[performKeyRecovery] activating matched key '${matched.id}' as the signing key (setActiveKeyAlias)`)
     await setActiveKeyAlias(matched.id)
 
     let prunedCount = 0
@@ -144,6 +177,7 @@ export async function performKeyRecovery(
         continue
       }
       try {
+        logger.info(`[performKeyRecovery] pruning local key '${k.id}' — its modulus is not in the server set`)
         await deleteKey(k.id)
         prunedCount++
         logger.info(`[performKeyRecovery] pruned local key '${k.id}'`)
