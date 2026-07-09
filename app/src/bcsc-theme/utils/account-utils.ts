@@ -44,7 +44,7 @@ export const formatAccountName = (account: { firstName?: string; middleNames?: s
   }
 
   if (formattedNameParts.length > 1 && lastName) {
-    formattedNameParts[0] = formattedNameParts[0] += ','
+    formattedNameParts[0] += ','
   }
 
   return formattedNameParts.join(' ')
