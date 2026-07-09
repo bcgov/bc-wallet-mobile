@@ -278,6 +278,7 @@ describe('useEvidenceUploadModel', () => {
     })
 
     it('should complete the full upload flow and navigate on success', async () => {
+      const mockStoreDispatch = jest.fn()
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([
         {
@@ -297,7 +298,7 @@ describe('useEvidenceUploadModel', () => {
             additionalEvidenceData: [],
           },
         } as BCState,
-        jest.fn(),
+        mockStoreDispatch,
       ])
 
       const mockReadFile = jest.mocked(readFileInChunks)
@@ -336,6 +337,10 @@ describe('useEvidenceUploadModel', () => {
         sha256: 'sha-456',
       })
       expect(mockUpdateAccountFlags).toHaveBeenCalledWith({ userSubmittedVerificationVideo: true })
+      expect(mockStoreDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT,
+        payload: [expect.any(Date)],
+      })
       // Navigates to the confirmation screen, forwarding the API turnaround message as a route param
       expect(mockNavigation.dispatch).toHaveBeenCalled()
       const dispatchArg = mockNavigation.dispatch.mock.calls[0][0]

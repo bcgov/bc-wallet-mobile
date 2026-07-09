@@ -27,7 +27,8 @@ exports[`SuccessfullySent renders correctly 1`] = `
         {
           "alignItems": "center",
           "justifyContent": "center",
-          "padding": 24,
+          "paddingHorizontal": 16,
+          "paddingTop": 75,
         },
       ]
     }
@@ -87,7 +88,6 @@ exports[`SuccessfullySent renders correctly 1`] = `
               "fontWeight": "normal",
             },
             {
-              "fontSize": 18,
               "marginBottom": 16,
               "textAlign": "left",
               "width": "100%",
@@ -202,7 +202,6 @@ exports[`SuccessfullySent renders correctly 1`] = `
               "fontWeight": "normal",
             },
             {
-              "fontSize": 18,
               "marginBottom": 16,
               "textAlign": "left",
               "width": "100%",
@@ -223,7 +222,6 @@ exports[`SuccessfullySent renders correctly 1`] = `
               "fontWeight": "normal",
             },
             {
-              "fontSize": 18,
               "marginBottom": 16,
               "textAlign": "left",
               "width": "100%",

@@ -89,7 +89,6 @@ exports[`VerificationSuccess renders correctly 1`] = `
               "fontWeight": "normal",
             },
             {
-              "fontSize": 18,
               "marginBottom": 16,
               "textAlign": "left",
               "width": "100%",
@@ -110,7 +109,6 @@ exports[`VerificationSuccess renders correctly 1`] = `
               "fontWeight": "normal",
             },
             {
-              "fontSize": 18,
               "marginBottom": 16,
               "textAlign": "left",
               "width": "100%",

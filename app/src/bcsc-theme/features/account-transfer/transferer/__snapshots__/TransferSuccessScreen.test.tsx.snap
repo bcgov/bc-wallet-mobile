@@ -40,7 +40,7 @@ exports[`TransferSuccess Render tests renders correctly 1`] = `
         style={
           [
             {
-              "color": "#7AB8F9",
+              "color": "#003366",
               "fontSize": 108,
             },
             {
@@ -87,7 +87,6 @@ exports[`TransferSuccess Render tests renders correctly 1`] = `
               "fontWeight": "normal",
             },
             {
-              "fontSize": 18,
               "marginBottom": 16,
               "textAlign": "left",
               "width": "100%",
@@ -108,7 +107,6 @@ exports[`TransferSuccess Render tests renders correctly 1`] = `
               "fontWeight": "normal",
             },
             {
-              "fontSize": 18,
               "marginBottom": 16,
               "textAlign": "left",
               "width": "100%",
