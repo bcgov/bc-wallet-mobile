@@ -422,7 +422,7 @@ const translation = {
       },
       "AppSecurity": {
         "ScreenTitle": "App Security (FR)",
-        "ChangeAppSecurity": "Change App Security (FR)",
+        "ChangeAppSecurity": "Change app security (FR)",
         "Title": "App Security (FR)",
         "Description": "Choose how you want to secure this app and access your credentials. You can switch between using your device's biometric authentication or a PIN. (FR)",
         "CurrentMethod": "Current security method (FR)",
