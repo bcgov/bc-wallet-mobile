@@ -241,8 +241,7 @@ const VerifyStack = () => {
         name={BCSCScreens.PendingReview}
         component={PendingReviewScreen}
         options={{
-          header: createProgressHeader(5, 80),
-          headerLeft: createVerifySettingsHeaderButton(),
+          title: t('BCSC.Steps.Status'),
         }}
       />
       <Stack.Screen

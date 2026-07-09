@@ -551,6 +551,7 @@ const translation = {
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification",
       "CheckStatus": "Check status",
       "ChooseAnotherWayToVerify": "Choose another way to verify",
+      "Status": "Status"
     },
     "SystemChecks": {
       "Devices": {
@@ -992,6 +993,7 @@ const translation = {
         "Description3": "You'll get an email after we review your request. You can also check the status in this app.",
         "ButtonText": "Go to home"
       },
+      
       "TakePhoto": {
         "CameraInstructions": "Position your face within the oval and press the button on the screen",
       },
