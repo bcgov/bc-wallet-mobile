@@ -229,8 +229,6 @@ const translation = {
     "Components": {
       "CloseDropdown": "Close dropdown menu (PT-BR)",
     },
-    "Title": "BC Services Card (PT-BR)",
-    "FullTitle": "BC Services Card App (PT-BR)",
     "LocaleStringFormat": "pt-BR",
     "Screens": {
       "Settings": "Menu (PT-BR)",
@@ -338,6 +336,8 @@ const translation = {
       "AppStartup": "Getting your BCSC App ready... (PT-BR)"
     },
     "AccountLanding": {
+      "Title": "BC Services card (PT-BR)",
+      "Description": "A secure way to prove\nwho you are online (PT-BR)",
       "Unlock": "Unlock (PT-BR)",
     },
     "Security": {
