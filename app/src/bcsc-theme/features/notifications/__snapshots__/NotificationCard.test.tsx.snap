@@ -111,7 +111,7 @@ exports[`NotificationCard renders correctly 1`] = `
     <View
       style={
         {
-          "marginLeft": 44,
+          "marginLeft": 48,
           "marginTop": 4,
         }
       }
