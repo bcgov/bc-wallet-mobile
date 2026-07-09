@@ -37,7 +37,7 @@ exports[`CardButton Component renders correctly when disabled 1`] = `
     {
       "backgroundColor": "#003366",
       "borderRadius": 4,
-      "opacity": 1,
+      "opacity": 0.6,
       "padding": 16,
     }
   }

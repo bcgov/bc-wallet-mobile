@@ -35,7 +35,8 @@ export const PressableOpacity = (props: React.ComponentProps<typeof Pressable>) 
   return (
     <AnimatedPressable
       {...props}
-      style={[resolvedStyle, { opacity: animatedOpacity }]}
+      // Note: This order allows props to override the opacity (ie: disabled button state)
+      style={[{ opacity: animatedOpacity }, resolvedStyle]}
       onPress={preventDoublePress(props.onPress)}
       onPressIn={(event) => {
         setPressed(true)

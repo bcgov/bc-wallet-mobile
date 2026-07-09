@@ -209,7 +209,7 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
               {
                 "backgroundColor": "#003366",
                 "borderRadius": 4,
-                "opacity": 1,
+                "opacity": 0.6,
                 "padding": 16,
               }
             }
@@ -1115,7 +1115,7 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
               {
                 "backgroundColor": "#003366",
                 "borderRadius": 4,
-                "opacity": 1,
+                "opacity": 0.6,
                 "padding": 16,
               }
             }
