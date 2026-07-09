@@ -27,7 +27,7 @@ import { BCAgent } from '@utils/bc-agent-modules'
 import { useEffect, useMemo, useState } from 'react'
 import { getBundleId } from 'react-native-device-info'
 
-const BC_WALLET_SUFFIX = 'BCWallet'
+const BC_WALLET_SUFFIX = 'bcwallet'
 const isBCWalletBundle = getBundleId().toLowerCase().includes(BC_WALLET_SUFFIX)
 
 export type CredentialNotificationRecord = DidCommBasicMessageRecord | CredentialRecord | DidCommProofExchangeRecord
