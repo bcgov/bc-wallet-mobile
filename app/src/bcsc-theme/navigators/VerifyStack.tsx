@@ -7,7 +7,9 @@ import { BCSCModals, BCSCScreens, BCSCStacks, BCSCVerifyStackParams } from '@/bc
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
 import { BCState } from '@/store'
 import { testIdWithKey, useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
-import { createStackNavigator } from '@react-navigation/stack'
+import { HeaderBackButtonProps } from '@react-navigation/elements'
+import { useNavigation } from '@react-navigation/native'
+import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
 import { createFloatingHelpMenuButton, createVerifyHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
@@ -66,9 +68,26 @@ import VideoInstructionsScreen from '../features/verify/send-video/VideoInstruct
 import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
+import { useLeaveVerification } from '../hooks/useLeaveVerification'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { useVerificationStatus } from '../hooks/useVerificationStatus'
 import { getResumeStepRoute } from '../utils/resume-step-route'
+
+/**
+ * Back button for the AccountSetup screen, which is reached two ways:
+ *  - Pushed on top of the one-time VerifyPrompt ("Continue") — a normal pop returns to the prompt.
+ *  - As the stack's initial route when the user resumes verification from the home screen — nothing
+ *    sits beneath it, so there is no destination to pop to; instead leave the verification flow and
+ *    return home, preserving progress (see {@link useLeaveVerification}).
+ */
+const AccountSetupHeaderBackButton = (props: HeaderBackButtonProps) => {
+  const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
+  const leaveVerification = useLeaveVerification()
+
+  return (
+    <HeaderBackButton {...props} onPress={() => (navigation.canGoBack() ? navigation.goBack() : leaveVerification())} />
+  )
+}
 
 const VerifyStack = () => {
   const Stack = createStackNavigator<BCSCVerifyStackParams>()
@@ -125,11 +144,13 @@ const VerifyStack = () => {
         name={BCSCScreens.AccountSetup}
         component={AccountSetupScreen}
         options={{
-          // Entry screen for verification (shown until the user picks new-setup vs. transfer);
-          // it has no back destination, so offer settings rather than a back arrow.
-          headerLeft: createVerifySettingsHeaderButton(),
-          // No back destination: stop an iOS edge-swipe from popping back to the one-time
-          // VerifyPrompt sitting beneath it in the stack.
+          // Back either pops to the one-time VerifyPrompt (when pushed from it) or leaves the flow
+          // for home (when this is the stack's initial route on resume); the button decides which
+          // at press time based on whether there is a screen beneath it to pop to.
+          headerLeft: (props) => <AccountSetupHeaderBackButton {...props} />,
+          // Keep the iOS edge-swipe disabled: when this is the initial route there is nothing to
+          // pop to, and when pushed from VerifyPrompt we don't want a swipe back to that one-time
+          // prompt — the header button is the single, explicit back affordance.
           gestureEnabled: false,
         }}
       />

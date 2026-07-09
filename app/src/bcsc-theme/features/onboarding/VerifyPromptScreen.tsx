@@ -1,4 +1,5 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import useLeaveVerification from '@/bcsc-theme/hooks/useLeaveVerification'
 import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
 import AccountVerificationCta from '@assets/img/account-verification-cta.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
@@ -29,6 +30,8 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({ showSkip
   const { Spacing, ColorPalette } = useTheme()
   const [, dispatch] = useStore<BCState>()
 
+  const leaveVerification = useLeaveVerification()
+
   const markPromptSeen = useCallback(() => {
     dispatch({ type: BCDispatchAction.SEEN_VERIFY_PROMPT, payload: [true] })
   }, [dispatch])
@@ -46,7 +49,8 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({ showSkip
 
   const handleLater = useCallback(() => {
     markPromptSeen()
-  }, [markPromptSeen])
+    leaveVerification()
+  }, [markPromptSeen, leaveVerification])
 
   const controls = (
     <ControlContainer>
