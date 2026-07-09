@@ -117,13 +117,13 @@ const translation = {
       "ButtonTitle": "Finish up"
     },
     "AccountExpired": {
-      "Title": "Your BC Services card app has expired",
+      "Title": "Your BC Services card account has expired",
       "Description": "Please reverify yourself to get access to your services",
       "ButtonTitle": "Start renewal"
     },
     "AccountRenewal": {
       "Title": "Time for renewal",
-      "Description": "Renew your BC Services card app before it expires on {{expiryDate}}",
+      "Description": "Renew your BC Services card account before it expires on {{expiryDate}}",
       "ButtonTitle": "Start renewal"
     },
     "BasicMessage": {
@@ -615,7 +615,7 @@ const translation = {
     },
     "ReverifyAccount": {
       "RenewalTitle": "Renew your account",
-      "ExpiredTitle": "Your BC Services card app has expired",
+      "ExpiredTitle": "Your BC Services card account has expired",
       "Body": "Services require you to re-verify your account. You will need to complete this step in order to access your services online.",
       "BulletHeader": "You will need to:",
       "BulletOne": "Verify your email",
