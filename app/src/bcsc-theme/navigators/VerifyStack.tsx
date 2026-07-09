@@ -67,24 +67,27 @@ import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
-import { useVerificationStatus } from '../hooks/useVerificationStatus'
 import { getResumeStepRoute } from '../utils/resume-step-route'
 
-const VerifyStack = () => {
+interface VerifyStackProps {
+  /**
+   * Opens the stack on the one-time verify prompt rather than the user's resume step. Set by
+   * RootStack for the single mount of the prompt that follows onboarding
+   */
+  showVerifyPrompt?: boolean
+  onVerifyPromptAnswered?: () => void
+}
+
+const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: VerifyStackProps) => {
   const Stack = createStackNavigator<BCSCVerifyStackParams>()
   const theme = useTheme()
   const { t } = useTranslation()
   const defaultStackOptions = useDefaultStackOptions(theme)
   const [store] = useStore<BCState>()
-  const { needsVerification } = useVerificationStatus()
   const resumeRoute = getResumeStepRoute(store)
-  // Show the verify prompt as the first screen the first time the user enters the verify journey
-  // (post-PIN, not yet verified, prompt unseen) so that prompt → setup question animates as an
-  // in-stack slide rather than a RootStack swap. Session recovery always takes precedence.
-  const initialRouteName =
-    !store.bcscSecure.sessionRecoveryRequired && !store.bcsc.hasSeenVerifyPrompt && needsVerification
-      ? BCSCScreens.VerifyPrompt
-      : resumeRoute.name
+  // Opening on the prompt (rather than swapping stacks to reach it) lets prompt → setup question
+  // animate as an in-stack slide. Everyone else resumes at the step they left off on.
+  const initialRouteName = showVerifyPrompt ? BCSCScreens.VerifyPrompt : resumeRoute.name
   useBCSCStack(BCSCStacks.Verify)
 
   // Listen for verification approval push notifications and navigate to success screen
@@ -119,7 +122,12 @@ const VerifyStack = () => {
           headerRight: createVerifyHelpMenuButton(),
         }}
       >
-        {({ navigation }) => <VerifyPromptScreen onContinue={() => navigation.navigate(BCSCScreens.AccountSetup)} />}
+        {({ navigation }) => (
+          <VerifyPromptScreen
+            onAnswered={onVerifyPromptAnswered}
+            onContinue={() => navigation.navigate(BCSCScreens.AccountSetup)}
+          />
+        )}
       </Stack.Screen>
       <Stack.Screen
         name={BCSCScreens.AccountSetup}
