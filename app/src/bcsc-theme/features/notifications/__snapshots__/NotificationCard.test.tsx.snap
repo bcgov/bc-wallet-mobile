@@ -73,7 +73,7 @@ exports[`NotificationCard renders correctly 1`] = `
             [
               {
                 "color": "#FFFFFF",
-                "fontSize": 20,
+                "fontSize": 18,
               },
               undefined,
               {
@@ -111,7 +111,7 @@ exports[`NotificationCard renders correctly 1`] = `
     <View
       style={
         {
-          "marginLeft": 48,
+          "marginLeft": 44,
           "marginTop": 4,
         }
       }

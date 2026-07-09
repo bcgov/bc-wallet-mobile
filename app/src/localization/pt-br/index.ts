@@ -91,6 +91,9 @@ const translation = {
     }
   },
   "Notification": {
+    "EmptyNotification": {
+      "Title": "You have no new notifications (PT-BR)",
+    },
     "StartVerification": {
       "Title": "You're not verified (PT-BR)",
       "Description": "You can continue the verification process at any time. (PT-BR)",

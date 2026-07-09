@@ -1,4 +1,4 @@
-import { CLOSE_ICON_SIZE, hitSlop, ICON_CIRCLE_SIZE, ICON_INNER_SIZE } from '@/constants'
+import { CLOSE_ICON_SIZE, hitSlop, ICON_CIRCLE_INNER_ICON_SIZE, ICON_CIRCLE_SIZE, ICON_SIZE } from '@/constants'
 import { IColorPalette, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -55,7 +55,7 @@ export const NotificationIcon: React.FC<NotificationIconProps> = ({ logoUrl, ico
       <Icon
         accessible={false}
         name={iconName}
-        size={hideIconCircle ? ICON_CIRCLE_SIZE : ICON_INNER_SIZE}
+        size={hideIconCircle ? ICON_SIZE : ICON_CIRCLE_INNER_ICON_SIZE}
         color={iconColor}
       />
     </View>

@@ -1,9 +1,11 @@
+import { useNotifications } from '@/hooks/notifications'
 import { useCustomNotifications } from '@/hooks/useCustomNotifications'
 import {
   CredentialStack,
   OpenIDCredentialRecordProvider,
   testIdWithKey,
   TOKENS,
+  useDefaultStackOptions,
   useServices,
   useTheme,
 } from '@bifold/core'
@@ -14,7 +16,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Animated, Platform, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import CommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
+import MaterialIcon from 'react-native-vector-icons/MaterialIcons'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createTabHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainSettingsHeaderButton } from '../components/SettingsHeaderButton'
@@ -46,6 +49,8 @@ const createTabBarIcon = (label: string, iconName: string) => {
     const { TabTheme, TextTheme, Spacing } = useTheme()
     const { fontScale } = useWindowDimensions()
     const showLabels = fontScale * TabTheme.tabBarTextStyle.fontSize < 18
+
+    const Icon = MaterialIcon.hasIcon(iconName) ? MaterialIcon : CommunityIcon
 
     return (
       <View style={{ ...TabTheme.tabBarContainerStyle, justifyContent: showLabels ? 'flex-end' : 'center' }}>
@@ -116,7 +121,8 @@ const AnimatedTabBar: React.FC<BottomTabBarProps> = (props) => {
 
 const BCSCTabStack: React.FC = () => {
   const Tab = createBottomTabNavigator<BCSCTabStackParams>()
-  const { TabTheme, ColorPalette, Spacing } = useTheme()
+  const theme = useTheme()
+  const notifications = useNotifications()
   const { customNotifications } = useCustomNotifications()
   const [activeTab, setActiveTab] = useState<string>(BCSCScreens.Home)
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
@@ -124,11 +130,11 @@ const BCSCTabStack: React.FC = () => {
   const { t } = useTranslation()
   const { isActivelyVerified, isExpired } = useCardStatus()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const defaultStackOptions = useDefaultStackOptions(theme)
 
-  // FIXME (V4.1.x): Add custom notifications and credential notifications together to calculate badge count.
-  // Need to wait until useNotifications doesn't throw an error when un-wrapped by the providers.
-  // If that's not possible, call navigation.setOptions({ tabBarBadge: badgeCount }) to update the badge count when notifications change.
-  const homeNotificationsBadgeCount = customNotifications.length || undefined
+  const { TabTheme, ColorPalette, Spacing } = theme
+
+  const homeNotificationsBadgeCount = customNotifications.length + notifications.length || undefined
 
   const handleScanPress = useCallback(() => {
     navigation.navigate(BCSCScreens.QRCore)
@@ -182,6 +188,7 @@ const BCSCTabStack: React.FC = () => {
         initialRouteName={BCSCScreens.Home}
         tabBar={(props) => <AnimatedTabBar {...props} />}
         screenOptions={{
+          ...defaultStackOptions,
           unmountOnBlur: false,
           lazy: true,
           tabBarStyle: TabTheme.tabBarStyle,
@@ -190,7 +197,6 @@ const BCSCTabStack: React.FC = () => {
           },
           tabBarActiveTintColor: TabTheme.tabBarActiveTintColor,
           tabBarInactiveTintColor: TabTheme.tabBarInactiveTintColor,
-          title: '',
           header: createTabHeaderWithoutBanner,
           headerRight: createFloatingHelpMenuButton({ webViewScreen: BCSCScreens.MainWebView }),
         }}
@@ -202,12 +208,13 @@ const BCSCTabStack: React.FC = () => {
             title: 'Home',
             headerTitleAlign: 'center',
             tabBarIconStyle: styles.tabBarIcon,
-            tabBarIcon: createTabBarIcon('Home', 'home'),
+            tabBarIcon: createTabBarIcon('Home', 'home-outline'),
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: 'Home',
             tabBarTestID: testIdWithKey('Home'),
             tabBarBadge: homeNotificationsBadgeCount,
             headerLeft: createMainSettingsHeaderButton(),
+            title: 'Home',
           }}
         />
         <Tab.Screen
@@ -215,7 +222,7 @@ const BCSCTabStack: React.FC = () => {
           component={Services}
           options={{
             tabBarIconStyle: styles.tabBarIcon,
-            tabBarIcon: createTabBarIcon('Services', 'view-list-outline'),
+            tabBarIcon: createTabBarIcon('Services', 'list-alt'),
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: 'Services',
             tabBarTestID: testIdWithKey('Services'),
@@ -228,7 +235,7 @@ const BCSCTabStack: React.FC = () => {
           component={ScopedCredentialStack}
           options={{
             tabBarIconStyle: styles.tabBarIcon,
-            tabBarIcon: createTabBarIcon('Wallet', 'wallet-outline'),
+            tabBarIcon: createTabBarIcon('Wallet', 'wallet'),
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: 'Wallet',
             tabBarTestID: testIdWithKey('Wallet'),

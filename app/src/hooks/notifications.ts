@@ -12,7 +12,7 @@ import {
   credentialCustomMetadata,
   useStore,
 } from '@bifold/core'
-import { useAgent, useBasicMessages, useCredentialByState, useProofByState } from '@bifold/react-hooks'
+import { useBasicMessages, useCredentialByState, useOptionalAgent, useProofByState } from '@bifold/react-hooks'
 import { ProofCustomMetadata, ProofMetadata } from '@bifold/verifier'
 import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds'
 import {
@@ -25,11 +25,15 @@ import {
 import { isProofRequestingAttestation } from '@services/attestation'
 import { BCAgent } from '@utils/bc-agent-modules'
 import { useEffect, useMemo, useState } from 'react'
+import { getBundleId } from 'react-native-device-info'
+
+const BC_WALLET_SUFFIX = 'bcwallet'
+const isBCWalletBundle = getBundleId().toLowerCase().includes(BC_WALLET_SUFFIX)
 
 export type CredentialNotificationRecord = DidCommBasicMessageRecord | CredentialRecord | DidCommProofExchangeRecord
 
 export const useNotifications = (): Array<CredentialNotificationRecord> => {
-  const { agent } = useAgent<BCAgent>()
+  const { agent } = useOptionalAgent<BCAgent>()
   const [store] = useStore<BCState>()
   const offers = useCredentialByState(DidCommCredentialState.OfferReceived)
   const proofsRequested = useProofByState(DidCommProofState.RequestReceived)
@@ -81,11 +85,15 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
     const credentialDefinitionIDs = credentials.map(
       (c) => c.metadata.data[AnonCredsCredentialMetadataKey].credentialDefinitionId as string
     )
-    const custom =
-      showPersonCredentialSelector(credentialDefinitionIDs) &&
-      !store.dismissPersonCredentialOffer.personCredentialOfferDismissed
-        ? [{ type: 'CustomNotification', createdAt: new Date(), id: 'custom' }]
-        : []
+
+    const custom: { type: 'CustomNotification'; createdAt: Date; id: string }[] = []
+
+    // TODO (MD) V4.1: Remove this block once we don't support BCWallet anymore
+    const showPersonCredential = showPersonCredentialSelector(credentialDefinitionIDs)
+    const personCredentialOfferDismissed = store.dismissPersonCredentialOffer.personCredentialOfferDismissed
+    if (isBCWalletBundle && showPersonCredential && !personCredentialOfferDismissed) {
+      custom.push({ type: 'CustomNotification', createdAt: new Date(), id: 'custom' })
+    }
 
     const proofs = nonAttestationProofs.filter((proof) => {
       const isDone = [DidCommProofState.Done, DidCommProofState.PresentationReceived].includes(proof.state)
@@ -118,6 +126,10 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
   ])
 
   useEffect(() => {
+    if (!agent) {
+      return
+    }
+
     Promise.all(
       [...proofsRequested, ...proofsDone].map(async (proof: DidCommProofExchangeRecord) => {
         const isAttestation = await isProofRequestingAttestation(proof, agent, AttestationRestrictions)
