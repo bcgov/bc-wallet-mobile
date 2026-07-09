@@ -174,6 +174,8 @@ export interface BCSCSecureState {
   temporaryEmailId?: string
   /** Whether user has submitted a verification video */
   userSubmittedVerificationVideo?: boolean
+  /** Timestamp of when the verification video upload process completed successfully */
+  verificationVideoSubmittedAt?: Date
 
   // === from Evidence Data ===
   /** Additional evidence data for non-BCSC verification */
@@ -273,6 +275,7 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_EMAIL_ADDRESS = 'bcsc/updateSecureEmailAddress',
   UPDATE_SECURE_TEMPORARY_EMAIL_ID = 'bcsc/updateSecureTemporaryEmailId',
   UPDATE_SECURE_USER_SUBMITTED_VERIFICATION_VIDEO = 'bcsc/updateSecureUserSubmittedVerificationVideo',
+  UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT = 'bcsc/updateSecureVerificationVideoSubmittedAt',
   UPDATE_SECURE_VERIFICATION_REQUEST_ID = 'bcsc/updateSecureVerificationRequestId',
   UPDATE_SECURE_VERIFICATION_REQUEST_SHA = 'bcsc/updateSecureVerificationRequestSha',
   UPDATE_SECURE_VERIFICATION_REQUEST_STATUS = 'bcsc/updateSecureVerificationRequestStatus',
@@ -666,6 +669,11 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.UPDATE_SECURE_USER_SUBMITTED_VERIFICATION_VIDEO: {
       const userSubmittedVerificationVideo = (action?.payload || []).pop() ?? undefined
       const bcscSecure = { ...state.bcscSecure, userSubmittedVerificationVideo }
+      return { ...state, bcscSecure }
+    }
+    case BCSCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT: {
+      const verificationVideoSubmittedAt = (action?.payload || []).pop() ?? undefined
+      const bcscSecure = { ...state.bcscSecure, verificationVideoSubmittedAt }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID: {

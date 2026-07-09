@@ -994,14 +994,14 @@ const translation = {
     },
     "SendVideo": {
       "PendingReview": {
-        "Heading": "Request pending review",
-        "Description1": "We review requests:",
+        "Heading": "Your identity verification is pending",
+        "Description1": "Verification request received",
+        "BulletHeader": "We review requests:",
         "Bullet1": "Monday to Friday, 9am to 5pm",
         "Bullet2": "In the order they're received",
-        "Description2": "Usually, we review requests within 2 business days. During busy periods, it may take longer.",
-        "Description3": "After it's reviewed, you will get an email if your provided your email.",
-        "Description4": "Do not resend your video. If you do, your request will go to the back of the queue.",
-        "ButtonText": "Ok",
+        "Description2": "Usually, we review requests within 2 business days.",
+        "Description3": "Requests sent in on the weekend will be reviewed after we open on Monday.",
+        "Description4": "It may take up to 10 business days.",
       },
       "SuccessfullySent": {
         "Heading": "We've received your request to verify your identity",

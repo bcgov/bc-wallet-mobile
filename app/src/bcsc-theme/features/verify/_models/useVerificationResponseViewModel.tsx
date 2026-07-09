@@ -53,6 +53,7 @@ const useVerificationResponseViewModel = () => {
       await updateVerified(true)
       dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: [undefined] })
       dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
+      dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [undefined] })
       setIsSettingUpAccount(false)
       // all done here, back to the home screen
       navigation.navigate(BCSCStacks.Tab, { screen: BCSCScreens.Home })
