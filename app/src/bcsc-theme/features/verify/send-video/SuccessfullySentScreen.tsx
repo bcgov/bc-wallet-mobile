@@ -6,10 +6,12 @@ import { BLUE_LIGHT } from '@/theme/light'
 
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack/lib/typescript/src/types'
 import { useTranslation } from 'react-i18next'
 import { BackHandler, StyleSheet } from 'react-native'
 
 type SuccessfullySentScreenProps = {
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.SuccessfullySent>
   route: RouteProp<BCSCVerifyStackParams, BCSCScreens.SuccessfullySent>
 }
 
