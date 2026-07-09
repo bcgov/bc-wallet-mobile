@@ -4,7 +4,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 const ICON_SIZE = 24
 
-interface InfoCardProps {
+interface InformationCardProps {
   /**
    * Title text to display at the top of the card
    *
@@ -28,7 +28,13 @@ interface InfoCardProps {
   startIcon?: string
 }
 
-export const InformationCard = (props: InfoCardProps) => {
+/**
+ * A reusable information card component that displays a title, optional subtext, and an optional icon.
+ *
+ * @param props - The InformationCard component props
+ * @returns The InformationCard component
+ */
+export const InformationCard = (props: InformationCardProps) => {
   const { Spacing, ColorPalette } = useTheme()
 
   const styles = StyleSheet.create({
