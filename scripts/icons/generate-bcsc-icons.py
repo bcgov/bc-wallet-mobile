@@ -186,16 +186,20 @@ def load_source(src_dir: Path, name: str) -> Image.Image:
     path = src_dir / name
     if not path.exists():
         raise FileNotFoundError(f"Missing source asset: {path}")
-    im = Image.open(path)
-    if im.size != (CANVAS, CANVAS):
-        raise AssertionError(f"{path} is {im.size[0]}x{im.size[1]}, expected {CANVAS}x{CANVAS}")
-    return im.convert("RGBA")
+    with Image.open(path) as im:
+        im.load()
+        if im.size != (CANVAS, CANVAS):
+            raise AssertionError(f"{path} is {im.size[0]}x{im.size[1]}, expected {CANVAS}x{CANVAS}")
+        return im.convert("RGBA")
 
 
 def normalize_on_canvas(im: Image.Image, target_px: int, canvas: int = CANVAS) -> Image.Image:
     """Trim to the alpha bounding box, scale the longest side to target_px,
     and re-centre on a fresh transparent canvas x canvas RGBA image."""
-    bbox = im.getbbox()
+    # Trim by the alpha channel specifically -- getbbox() alone considers all
+    # bands, so fully-transparent pixels with non-zero RGB would not be
+    # trimmed. Fall back to the whole-image bbox for alpha-less sources.
+    bbox = im.getchannel("A").getbbox() if "A" in im.getbands() else im.getbbox()
     if bbox is None:
         raise AssertionError("source image is fully transparent, cannot normalize")
     cropped = im.crop(bbox)
@@ -448,6 +452,8 @@ def verify_outputs(out_dir: Path) -> list[str]:
 
 
 def main() -> int:
+    written_files.clear()  # reset so repeated in-process invocations don't accumulate
+
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--src", type=Path, default=DEFAULT_SRC, help="Absolute path to the source-asset folder")
     parser.add_argument("--out", type=Path, default=Path("variants"), help="Path to the variants/ directory to write into")
