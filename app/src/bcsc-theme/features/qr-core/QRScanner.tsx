@@ -1,16 +1,9 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
+import { QRScannerFrame } from '@/bcsc-theme/components/QRScannerFrame'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { hitSlop } from '@/constants'
-import {
-  DismissiblePopupModal,
-  MaskType,
-  ScanCamera,
-  SVGOverlay,
-  testIdWithKey,
-  ThemedText,
-  useTheme,
-} from '@bifold/core'
+import { DismissiblePopupModal, ScanCamera, testIdWithKey, useTheme } from '@bifold/core'
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -59,16 +52,6 @@ const QRScanner: React.FC = () => {
 
   const styles = StyleSheet.create({
     container: { flex: 1 },
-    overlay: { ...StyleSheet.absoluteFillObject },
-    messageContainer: {
-      marginHorizontal: 40,
-      flexDirection: 'row',
-      alignItems: 'center',
-      alignSelf: 'center',
-      paddingTop: 30,
-    },
-    icon: { color: ColorPalette.grayscale.white, padding: Spacing.md },
-    text: { color: ColorPalette.grayscale.white },
     torchButton: {
       position: 'absolute',
       bottom: Spacing.lg,
@@ -102,15 +85,7 @@ const QRScanner: React.FC = () => {
   return (
     <View style={styles.container}>
       <ScanCamera handleCodeScan={handleScan} enableCameraOnError={true} torchActive={torchActive} error={scanError} />
-      <View pointerEvents="none" style={styles.overlay}>
-        <SVGOverlay maskType={MaskType.QR_CODE} strokeColor={ColorPalette.grayscale.white} />
-      </View>
-      <View style={styles.messageContainer}>
-        <Icon name="qrcode-scan" size={40} style={styles.icon} />
-        <ThemedText variant="title" style={styles.text}>
-          {t('BCSC.Scan.WillScanAutomatically')}
-        </ThemedText>
-      </View>
+      <QRScannerFrame message={t('BCSC.Scan.WillScanAutomatically')} />
       <TouchableOpacity
         style={styles.torchButton}
         onPress={() => setTorchActive((v) => !v)}
