@@ -408,13 +408,14 @@ def verify_outputs(out_dir: Path) -> list[str]:
     failures: list[str] = []
 
     def alpha_extrema(path: Path) -> tuple[int, int]:
-        im = Image.open(path).convert("RGBA")
-        return im.getchannel("A").getextrema()
+        with Image.open(path) as im:
+            return im.convert("RGBA").getchannel("A").getextrema()
 
     for path in written_files:
         name = path.name
         if name == "iTunesArtwork.png":
-            mode = Image.open(path).mode
+            with Image.open(path) as im:
+                mode = im.mode
             if mode != "RGB":
                 failures.append(f"{path}: mode {mode} != RGB (App Store rejects alpha)")
         elif name in ("iTunesArtwork_Dark.png", "iTunesArtwork_Tinted.png"):
@@ -426,9 +427,10 @@ def verify_outputs(out_dir: Path) -> list[str]:
             if lo != 255:
                 failures.append(f"{path}: alpha_min={lo}, expected 255 (must be fully opaque)")
         elif name in ("ic_launcher_round.png", "ic_launcher_mono_round.webp"):
-            im = Image.open(path).convert("RGBA")
-            w, h = im.size
-            corners = [im.getpixel((0, 0)), im.getpixel((w - 1, 0)), im.getpixel((0, h - 1)), im.getpixel((w - 1, h - 1))]
+            with Image.open(path) as im:
+                im = im.convert("RGBA")
+                w, h = im.size
+                corners = [im.getpixel((0, 0)), im.getpixel((w - 1, 0)), im.getpixel((0, h - 1)), im.getpixel((w - 1, h - 1))]
             for c in corners:
                 if c[3] != 0:
                     failures.append(f"{path}: corner alpha={c[3]}, expected 0 (transparent)")
@@ -437,8 +439,8 @@ def verify_outputs(out_dir: Path) -> list[str]:
     # Prod background solid-colour check (any pixel; it's a flat fill)
     prod_bg_path = out_dir / "bcsc-prod" / "overlay" / "app" / "android" / "app" / "src" / "main" / "res" / "mipmap-mdpi" / "ic_launcher_background.png"
     if prod_bg_path in written_files:
-        im = Image.open(prod_bg_path).convert("RGBA")
-        px = im.getpixel((im.width // 2, im.height // 2))
+        with Image.open(prod_bg_path) as im:
+            px = im.convert("RGBA").getpixel((im.width // 2, im.height // 2))
         if px[:3] != PROD_BG_RGB:
             failures.append(f"{prod_bg_path}: center pixel {px[:3]} != expected {PROD_BG_RGB} (#013366)")
 
