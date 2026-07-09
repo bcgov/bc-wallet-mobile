@@ -202,7 +202,12 @@ class KeyPairManager: KeyPairManagerProtocol {
       throw error
     }
 
-    let list = result as! [[String: Any]]
+    guard let list = result as? [[String: Any]] else {
+      log.error(
+        "findAllPrivateKeys: SecItemCopyMatching returned success but result was not the expected [[String: Any]] shape"
+      )
+      throw KeychainError.unexpectedStatus(status)
+    }
     var keys = [PrivateKeyInfo]()
     for dict in list {
       guard let pk = makePrivateKeyInfo(dictionary: dict) else {
