@@ -16,6 +16,7 @@ jest.mock('react-native-device-info', () => ({
   getBuildNumber: jest.fn(() => '77'),
   getSystemName: jest.fn(() => 'iOS'),
   getSystemVersion: jest.fn(() => '17.0'),
+  getDeviceId: jest.fn(() => 'iPhone15,2'),
 }))
 
 jest.mock('react-native-config', () => ({
@@ -61,6 +62,7 @@ describe('createAppLogger', () => {
         application: 'testapp',
         version: '1.2.3-77',
         system: 'iOS v17.0',
+        model: 'iPhone15,2',
         subsystem: 'demo',
       },
       autoDisableRemoteLoggingIntervalInMinutes,
@@ -165,6 +167,7 @@ describe('reportProblem', () => {
       application: 'testapp',
       version: '1.2.3-77',
       system: 'iOS v17.0',
+      model: 'iPhone15,2',
     })
   })
 
@@ -176,6 +179,7 @@ describe('reportProblem', () => {
       application: 'testapp',
       version: '1.2.3-77',
       system: 'iOS v17.0',
+      model: 'iPhone15,2',
     })
   })
 

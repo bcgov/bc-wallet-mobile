@@ -8,6 +8,7 @@ import useEvidenceUpload from '@/bcsc-theme/hooks/useEvidenceUpload'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info'
+import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
 import { AppError, ErrorRegistry } from '@/errors'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCDispatchAction, BCState } from '@/store'
@@ -27,7 +28,7 @@ const useEvidenceUploadModel = (
   const [store, dispatch] = useStore<BCState>()
   const isCancelledRef = useRef(false)
   const { evidence } = useApi()
-  const { updateAccountFlags } = useSecureActions()
+  const { updateAccountFlags, updateVerificationRequest } = useSecureActions()
   const { processAdditionalEvidence } = useEvidenceUpload()
   const { t } = useTranslation()
   const [isUploading, setIsUploading] = useState(false)
@@ -130,7 +131,19 @@ const useEvidenceUploadModel = (
       }
 
       if (!verificationRequestId || !verificationRequestSha) {
-        throw new Error('Missing verification request data')
+        logger.warn(
+          '[useEvidenceUploadModel] Missing verification request data at submit; routing back to Verification Method Selection so prompts can be refreshed and video re-recorded'
+        )
+        await updateVerificationRequest(null, null)
+        dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
+        dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [getResumeStepRoute(store)],
+          })
+        )
+        throw new Error('Missing verification request data, resetting so you can try again.')
       }
 
       if (!photoMetadata) {
@@ -201,6 +214,7 @@ const useEvidenceUploadModel = (
       setUploadMessage(null)
     }
   }, [
+    dispatch,
     fileUploadErrorAlert,
     finalizeVerification,
     logger,
@@ -210,8 +224,10 @@ const useEvidenceUploadModel = (
     prepareLocalFiles,
     processAdditionalEvidence,
     prompts,
+    store,
     t,
     updateAccountFlags,
+    updateVerificationRequest,
     uploadEvidenceFiles,
     uploadEvidenceMetadata,
     verificationRequestId,

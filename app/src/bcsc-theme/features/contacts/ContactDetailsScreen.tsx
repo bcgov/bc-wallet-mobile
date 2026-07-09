@@ -121,14 +121,6 @@ const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) 
     navigation.navigate(BCSCScreens.EditContactName, { connectionId })
   }, [navigation, connectionId])
 
-  const onViewHistory = useCallback(() => {
-    const blob = JSON.stringify(connection?.toJSON?.() ?? connection ?? {}, null, 2)
-    navigation.navigate(BCSCScreens.ContactJSONDetails, {
-      jsonBlob: blob,
-      title: t('BCSC.Contacts.Details.ViewHistory'),
-    })
-  }, [connection, navigation, t])
-
   const onViewJSON = useCallback(() => {
     const blob = JSON.stringify(connection?.toJSON?.() ?? connection ?? {}, null, 2)
     navigation.navigate(BCSCScreens.ContactJSONDetails, { jsonBlob: blob })
@@ -181,24 +173,17 @@ const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) 
           cardStyle={styles.actionCard}
           labelStyle={styles.actionLabel}
         />
-        <ActionCard
-          icon="history"
-          label={t('BCSC.Contacts.Details.ViewHistory')}
-          onPress={onViewHistory}
-          testID={testIdWithKey('ViewHistory')}
-          iconColor={ColorPalette.brand.primary}
-          cardStyle={styles.actionCard}
-          labelStyle={styles.actionLabel}
-        />
-        <ActionCard
-          icon="code-braces"
-          label={t('BCSC.Contacts.Details.ViewJSON')}
-          onPress={onViewJSON}
-          testID={testIdWithKey('ViewJSON')}
-          iconColor={ColorPalette.brand.primary}
-          cardStyle={styles.actionCard}
-          labelStyle={styles.actionLabel}
-        />
+        {store.preferences.developerModeEnabled ? (
+          <ActionCard
+            icon="code-braces"
+            label={t('BCSC.Contacts.Details.ViewJSON')}
+            onPress={onViewJSON}
+            testID={testIdWithKey('ViewJSON')}
+            iconColor={ColorPalette.brand.primary}
+            cardStyle={styles.actionCard}
+            labelStyle={styles.actionLabel}
+          />
+        ) : null}
       </View>
 
       <Pressable

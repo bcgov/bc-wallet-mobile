@@ -81,6 +81,7 @@ exports[`ScanSerial renders correctly 1`] = `
           }
           format={{}}
           isActive={true}
+          onError={[Function]}
           onInitialized={[Function]}
           ref={
             {
@@ -263,9 +264,6 @@ exports[`ScanSerial renders correctly 1`] = `
         </View>
       </View>
       <View
-        accessibilityElementsHidden={true}
-        importantForAccessibility="no-hide-descendants"
-        pointerEvents="none"
         style={
           [
             {
@@ -273,7 +271,6 @@ exports[`ScanSerial renders correctly 1`] = `
               "padding": 24,
             },
             {
-              "opacity": 0,
               "paddingBottom": 24,
             },
           ]

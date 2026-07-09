@@ -169,8 +169,12 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
   )
 
   const onPressContinue = useCallback(async () => {
+    if (loading) {
+      return
+    }
+
     await validateAndContinue(currentPIN1, currentPIN2)
-  }, [currentPIN1, currentPIN2, validateAndContinue])
+  }, [currentPIN1, currentPIN2, loading, validateAndContinue])
 
   const handlePIN1Change = useCallback((pin: string) => {
     setCurrentPIN1(pin)
@@ -185,14 +189,10 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
     setCurrentPIN2(pin)
   }, [])
 
-  const handlePIN2Complete = useCallback(
-    (completedPIN: string) => {
-      setErrorMessage2(undefined)
-      Keyboard.dismiss()
-      validateAndContinue(currentPIN1, completedPIN)
-    },
-    [currentPIN1, validateAndContinue]
-  )
+  const handlePIN2Complete = useCallback(() => {
+    setErrorMessage2(undefined)
+    Keyboard.dismiss()
+  }, [])
 
   const styles = StyleSheet.create({
     pinEntryContent: {
@@ -223,7 +223,6 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         title={creatingNewPIN ? tWithPrefix('CreatePINShort') : t('Global.Continue')}
         accessibilityLabel={a11yLabel(creatingNewPIN ? tWithPrefix('CreatePINShort') : t('Global.Continue'))}
         testID={testIdWithKey(creatingNewPIN ? 'CreatePIN' : 'Continue')}
-        disabled={loading || currentPIN1.length < 6 || currentPIN2.length < 6 || !checked}
         onPress={onPressContinue}
       >
         {loading && <ButtonLoading />}

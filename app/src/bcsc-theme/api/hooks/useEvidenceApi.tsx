@@ -1,5 +1,6 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { VIDEO_MP4_MIME_TYPE } from '@/constants'
+import { cancelVerificationReminders } from '@/services/notifications/verificationReminders'
 import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
@@ -75,13 +76,70 @@ export interface EvidenceMetadataPayload {
 
 const useEvidenceApi = (apiClient: BCSCApiClient) => {
   const [store] = useStore<BCState>()
-  const { updateVerificationRequest } = useSecureActions()
+  const { updateDeviceCodes } = useSecureActions()
+
+  /**
+   * Reconciles local verification deadline state against a verification response.
+   *
+   * The evidence-submit (PUT) and status (GET) responses share this shape. Two things ride on them:
+   *
+   *  - A terminal `status` (`verified`/`cancelled`) means the session is over, so any pending
+   *    "verify by ..." reminders are cleared. (Completion is also caught when the device_code is
+   *    exchanged for tokens; this just clears them sooner, and covers an agent-cancelled video.)
+   *  - A possibly-refreshed `expires_in` (seconds). It is how the server communicates the
+   *    video-submission and agent-approval extensions. Mirroring ias-ios (the source of truth where it
+   *    disagrees with the API docs), this value extends the EXISTING deadline: it is a delta added to the
+   *    current expiry, pinned to end-of-day local, and only ever pushes the deadline later — so a
+   *    stale/shorter value can never cut an in-progress session short. With no existing expiry there is
+   *    nothing to extend. See ias-ios PreBackcheckVideoChecks / `dateBeforeMidnightWithSeconds`.
+   */
+  const reconcileVerificationDeadline = useCallback(
+    async (data: VerificationStatusResponseData) => {
+      if (data.status === 'verified' || data.status === 'cancelled') {
+        // doesn't throw
+        await cancelVerificationReminders(apiClient.logger)
+        return
+      }
+
+      if (data.expires_in === undefined) {
+        return
+      }
+      const seconds = Number(data.expires_in)
+      if (!Number.isFinite(seconds) || seconds <= 0) {
+        return
+      }
+      const currentExpiry = store.bcscSecure.deviceCodeExpiresAt
+      if (!currentExpiry) {
+        return
+      }
+      const extendedExpiry = new Date(currentExpiry.getTime() + seconds * 1000)
+      extendedExpiry.setHours(23, 59, 59, 0)
+      if (extendedExpiry.getTime() <= currentExpiry.getTime()) {
+        return
+      }
+      // Best-effort: persisting the extended expiry (and the reminder reschedule it triggers) must not
+      // fail the verification response it rode in on.
+      try {
+        await updateDeviceCodes({ deviceCodeExpiresAt: extendedExpiry })
+      } catch (error) {
+        apiClient.logger.warn('[reconcileVerificationDeadline] Failed to persist extended expiry', {
+          error,
+        })
+      }
+    },
+    [apiClient.logger, store.bcscSecure.deviceCodeExpiresAt, updateDeviceCodes]
+  )
 
   const _getDeviceCode = useCallback(() => {
     const code = store.bcscSecure.deviceCode
     if (!code) {
       throw new Error('Device code is missing. Re install the app and setup try again.')
     }
+
+    // Intentionally NOT pre-checking expiry here: a client-side throw bypasses the axios interceptor,
+    // and callers that catch+log would silently drop it. Instead let an expired/superseded device_code
+    // 401 so the centralized verificationSessionExpiredErrorPolicy routes to the restart modal; the
+    // startup system check covers the relaunch case. See issue #4050.
     return code
   }, [store.bcscSecure.deviceCode])
 
@@ -168,10 +226,11 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
             skipBearerAuth: true,
           }
         )
+        await reconcileVerificationDeadline(data)
         return data
       })
     },
-    [_getDeviceCode, apiClient]
+    [_getDeviceCode, apiClient, reconcileVerificationDeadline]
   )
 
   const getVerificationRequestPrompts = useCallback(
@@ -206,10 +265,11 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
             skipBearerAuth: true,
           }
         )
+        await reconcileVerificationDeadline(data)
         return data
       })
     },
-    [_getDeviceCode, apiClient]
+    [_getDeviceCode, apiClient, reconcileVerificationDeadline]
   )
 
   // This is only valid once sendVerificationRequest has been called
@@ -226,15 +286,15 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
+            // Note: Errors handled in `useEvidenceService`
+            skipOnErrorHandler: true,
           }
         )
-
-        updateVerificationRequest(null, null)
 
         return data
       })
     },
-    [_getDeviceCode, apiClient, updateVerificationRequest]
+    [_getDeviceCode, apiClient]
   )
 
   const createEmailVerification = useCallback(

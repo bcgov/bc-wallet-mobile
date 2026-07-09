@@ -4,14 +4,14 @@ import { createProgressHeader } from '@/bcsc-theme/components/VerifyProgressHead
 import { useVerificationResponseListener } from '@/bcsc-theme/features/verification-response/useVerificationResponseListener'
 import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
 import { BCSCModals, BCSCScreens, BCSCStacks, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE } from '@/constants'
+import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
 import { BCState } from '@/store'
 import { testIdWithKey, useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
-import { createVerifyHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
-import { createHeaderBackButton } from '../components/HeaderBackButton'
+import { createFloatingHelpMenuButton, createVerifyHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
+import { createHeaderBackButton, HeaderBackButton } from '../components/HeaderBackButton'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferInstructionsScreen from '../features/account-transfer/transferee/TransferInstructionsScreen'
 import TransferQRScannerScreen from '../features/account-transfer/transferee/TransferQRScannerScreen'
@@ -22,10 +22,12 @@ import { VerifyChangeSecurityScreen } from '../features/auth/VerifyChangeSecurit
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
+import { VerificationSessionExpired } from '../features/modal/VerificationSessionExpired'
 import AccountSetupScreen from '../features/onboarding/AccountSetupScreen'
 import { VerifyPromptScreen } from '../features/onboarding/VerifyPromptScreen'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
 import { ContactUsScreen } from '../features/settings/ContactUsScreen'
+import { NotificationSettingsScreen } from '../features/settings/NotificationSettingsScreen'
 import { VerifyPrivacyPolicyScreen } from '../features/settings/VerifyPrivacyPolicyScreen'
 import { VerifySettingsScreen } from '../features/settings/VerifySettingsScreen'
 import BirthdateLockoutScreen from '../features/verify/BirthdateLockoutScreen'
@@ -64,6 +66,7 @@ import VideoInstructionsScreen from '../features/verify/send-video/VideoInstruct
 import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
+import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { useVerificationStatus } from '../hooks/useVerificationStatus'
 import { getResumeStepRoute } from '../utils/resume-step-route'
 
@@ -86,6 +89,9 @@ const VerifyStack = () => {
 
   // Listen for verification approval push notifications and navigate to success screen
   useVerificationResponseListener()
+
+  // Detect an expired in-progress verification session (device_code) and route to the restart screen.
+  useSystemChecks(SystemCheckScope.VERIFY)
 
   return (
     <Stack.Navigator
@@ -317,21 +323,45 @@ const VerifyStack = () => {
       />
       <Stack.Screen name={BCSCScreens.VerifySettings} component={VerifySettingsScreen} />
       <Stack.Screen name={BCSCScreens.VerifyAutoLock} component={AutoLockScreen} />
+      <Stack.Screen
+        name={BCSCScreens.VerifyNotificationSettings}
+        component={NotificationSettingsScreen}
+        options={{ title: t('BCSC.Settings.Notifications') }}
+      />
       <Stack.Screen name={BCSCScreens.VerifyAppSecurity} component={VerifyChangeSecurityScreen} />
       <Stack.Screen name={BCSCScreens.VerifyChangePIN} component={VerifyChangePINScreen} />
 
       <Stack.Screen
         name={BCSCScreens.TransferAccountInstructions}
         component={TransferInstructionsScreen}
-        options={{
-          header: createProgressHeader(5, 30),
-          headerLeft: createVerifySettingsHeaderButton(),
-        }}
+        options={({ navigation }) => ({
+          // This screen can be the stack's initial route when the user resumes a transfer
+          // (accountSetupType persisted); with nothing beneath it, back returns to the setup
+          // question instead so the user can still choose a traditional setup.
+          headerLeft: (props) => (
+            <HeaderBackButton
+              {...props}
+              onPress={() =>
+                navigation.canGoBack() ? navigation.goBack() : navigation.replace(BCSCScreens.AccountSetup)
+              }
+            />
+          ),
+          headerRight: createFloatingHelpMenuButton({
+            webViewScreen: BCSCScreens.VerifyWebView,
+            learnMoreUrl: HelpCentreUrl.QUICK_SETUP_OF_ADDITIONAL_DEVICES,
+          }),
+        })}
       />
       <Stack.Screen
         name={BCSCScreens.TransferAccountQRScan}
         component={TransferQRScannerScreen}
-        options={{ header: createProgressHeader(5, 70) }}
+        options={{
+          title: t('BCSC.Screens.TransferAccountScan'),
+          headerRight: createFloatingHelpMenuButton({
+            webViewScreen: BCSCScreens.VerifyWebView,
+            learnMoreUrl: HelpCentreUrl.QUICK_SETUP_OF_ADDITIONAL_DEVICES,
+          }),
+        }}
       />
       <Stack.Screen
         name={BCSCScreens.VerifyRemoveAccountConfirmation}
@@ -351,6 +381,15 @@ const VerifyStack = () => {
       <Stack.Screen
         name={BCSCModals.MandatoryUpdate}
         component={MandatoryUpdate}
+        options={{
+          ...getDefaultModalOptions(t('BCSC.Title')),
+          gestureEnabled: false,
+        }}
+      />
+
+      <Stack.Screen
+        name={BCSCModals.VerificationSessionExpired}
+        component={VerificationSessionExpired}
         options={{
           ...getDefaultModalOptions(t('BCSC.Title')),
           gestureEnabled: false,

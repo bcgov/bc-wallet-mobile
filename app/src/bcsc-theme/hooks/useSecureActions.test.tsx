@@ -1,8 +1,15 @@
+import { AppEventCode } from '@/events/appEventCode'
+import {
+  cancelVerificationReminders,
+  scheduleVerificationReminders,
+} from '@/services/notifications/verificationReminders'
 import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import {
   AccountSecurityMethod,
+  deleteAuthorizationRequest,
+  deleteEvidence,
   EvidenceMetadata,
   getAccount,
   getAccountFlags,
@@ -16,6 +23,7 @@ import {
   setAccountFlags,
   setAuthorizationRequest,
   setEvidence,
+  setToken,
   TokenType,
 } from 'react-native-bcsc-core'
 import * as useBCSCApiClientModule from './useBCSCApiClient'
@@ -34,6 +42,8 @@ jest.mock('react-native-bcsc-core', () => ({
   setAccountFlags: jest.fn(),
   setAuthorizationRequest: jest.fn(),
   setToken: jest.fn(),
+  // Delegate to the central manual mock so the predicate can't drift from the real implementation.
+  isBcscNativeError: jest.requireActual('../../../__mocks__/react-native-bcsc-core').isBcscNativeError,
   getAccount: jest.fn(),
   getAccountFlags: jest.fn(),
   getAccountSecurityMethod: jest.fn(),
@@ -42,8 +52,26 @@ jest.mock('react-native-bcsc-core', () => ({
   getEvidence: jest.fn(),
   getSavedServices: jest.fn(),
   getToken: jest.fn(),
+  deleteAuthorizationRequest: jest.fn().mockResolvedValue(true),
+  deleteAccountFlags: jest.fn().mockResolvedValue(true),
+  deleteEvidence: jest.fn().mockResolvedValue(true),
+  deleteSavedServices: jest.fn().mockResolvedValue(true),
+  deleteCredential: jest.fn().mockResolvedValue(undefined),
+  deleteToken: jest.fn().mockResolvedValue(true),
 }))
 jest.mock('./useBCSCApiClient')
+jest.mock('@/services/notifications/verificationReminders', () => ({
+  scheduleVerificationReminders: jest.fn(),
+  cancelVerificationReminders: jest.fn(),
+}))
+
+// LocaleStringFormat must resolve to a real locale so Date.toLocaleString doesn't throw; other keys
+// pass through so we can assert on them directly.
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => (key === 'BCSC.LocaleStringFormat' ? 'en-CA' : key),
+  }),
+}))
 
 const mockDispatch = jest.fn()
 const mockLogger = {
@@ -76,6 +104,76 @@ describe('useSecureActions', () => {
       isClientReady: false,
       error: undefined,
     } as any)
+  })
+
+  // #3419: persistence failures surface the distinct native error code instead of a STORAGE_WRITE_ERROR catch-all.
+  describe('native error mapping', () => {
+    const nativeError = (code: string) => Object.assign(new Error(`native ${code}`), { code })
+
+    it('maps a native token-save rejection to TOKEN_SAVE_FAILED', async () => {
+      jest.mocked(setToken).mockRejectedValueOnce(nativeError('E_TOKEN_SAVE_ERROR'))
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.updateTokens({ refreshToken: 'abc' })).rejects.toMatchObject({
+        appEvent: AppEventCode.TOKEN_SAVE_FAILED,
+      })
+    })
+
+    it('groups an Android account-flags write rejection under NATIVE_STORAGE_WRITE_FAILED', async () => {
+      jest.mocked(getAccountFlags).mockResolvedValueOnce({} as any)
+      jest.mocked(setAccountFlags).mockRejectedValueOnce(nativeError('E_SET_ACCOUNT_FLAGS_ERROR'))
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.updateAccountFlags({ isEmailVerified: true })).rejects.toMatchObject({
+        appEvent: AppEventCode.NATIVE_STORAGE_WRITE_FAILED,
+      })
+    })
+
+    it('maps an authorization-request write rejection to NATIVE_STORAGE_WRITE_FAILED', async () => {
+      jest.mocked(getAuthorizationRequest).mockResolvedValueOnce(undefined as any)
+      jest.mocked(setAuthorizationRequest).mockRejectedValueOnce(nativeError('E_SET_AUTH_REQUEST_ERROR'))
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.updateVerificationOptions([])).rejects.toMatchObject({
+        appEvent: AppEventCode.NATIVE_STORAGE_WRITE_FAILED,
+      })
+    })
+
+    it('maps an evidence write rejection to NATIVE_STORAGE_WRITE_FAILED', async () => {
+      jest.mocked(setEvidence).mockRejectedValueOnce(nativeError('E_SET_EVIDENCE_ERROR'))
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.addEvidenceType({ evidence_type: 'drivers_licence' } as any)).rejects.toMatchObject({
+        appEvent: AppEventCode.NATIVE_STORAGE_WRITE_FAILED,
+      })
+    })
+
+    it('maps a native read rejection during hydration to NATIVE_STORAGE_READ_FAILED', async () => {
+      jest.mocked(getAccount).mockRejectedValueOnce(nativeError('E_GET_ACCOUNT_ERROR'))
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.hydrateSecureState()).rejects.toMatchObject({
+        appEvent: AppEventCode.NATIVE_STORAGE_READ_FAILED,
+      })
+    })
+
+    it('maps a delete rejection during deleteSecureData to NATIVE_STORAGE_DELETE_FAILED', async () => {
+      jest.mocked(deleteAuthorizationRequest).mockRejectedValueOnce(nativeError('E_DELETE_AUTH_REQUEST_ERROR'))
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.deleteSecureData()).rejects.toMatchObject({
+        appEvent: AppEventCode.NATIVE_STORAGE_DELETE_FAILED,
+      })
+    })
+
+    it('maps a delete rejection during deleteVerificationData to NATIVE_STORAGE_DELETE_FAILED', async () => {
+      jest.mocked(deleteEvidence).mockRejectedValueOnce(nativeError('E_DELETE_EVIDENCE_ERROR'))
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.deleteVerificationData()).rejects.toMatchObject({
+        appEvent: AppEventCode.NATIVE_STORAGE_DELETE_FAILED,
+      })
+    })
   })
 
   describe('removeIncompleteEvidence', () => {
@@ -671,6 +769,61 @@ describe('useSecureActions', () => {
       })
 
       expect(captureHydratedSecureData()?.emailAddress).toBe('legacy@example.com')
+    })
+  })
+
+  describe('updateDeviceCodes', () => {
+    it('persists the expiry and schedules reminders when an expiry is provided', async () => {
+      const expiresAt = new Date('2026-06-08T12:00:00Z')
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.updateDeviceCodes({ deviceCode: 'dc', userCode: 'uc', deviceCodeExpiresAt: expiresAt })
+      })
+
+      expect(setAuthorizationRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ expiry: Math.floor(expiresAt.getTime() / 1000), deviceCode: 'dc', userCode: 'uc' })
+      )
+      expect(scheduleVerificationReminders).toHaveBeenCalledWith(
+        expiresAt,
+        { title: 'BCSC.VerificationReminder.Title', body: 'BCSC.VerificationReminder.Body' },
+        mockLogger
+      )
+    })
+
+    it('does not schedule reminders when no expiry is provided', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.updateDeviceCodes({ deviceCode: 'dc' })
+      })
+
+      expect(scheduleVerificationReminders).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('deleteVerificationData', () => {
+    it('deletes the authorization request and cancels reminders', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.deleteVerificationData()
+      })
+
+      expect(deleteAuthorizationRequest).toHaveBeenCalled()
+      expect(cancelVerificationReminders).toHaveBeenCalledWith(mockLogger)
+    })
+  })
+
+  describe('deleteSecureData', () => {
+    it('cancels reminders when secure data is removed', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.deleteSecureData()
+      })
+
+      expect(cancelVerificationReminders).toHaveBeenCalledWith(mockLogger)
     })
   })
 })

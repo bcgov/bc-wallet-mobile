@@ -1,3 +1,4 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import {
@@ -138,8 +139,12 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
   )
 
   const onPressChangePIN = useCallback(async () => {
+    if (loading) {
+      return
+    }
+
     await validateAndChangePIN(currentPIN, newPIN, confirmPIN)
-  }, [currentPIN, newPIN, confirmPIN, validateAndChangePIN])
+  }, [loading, validateAndChangePIN, currentPIN, newPIN, confirmPIN])
 
   const handleCurrentPINChange = useCallback((pin: string) => {
     setCurrentPIN(pin)
@@ -163,14 +168,10 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
     setConfirmPIN(pin)
   }, [])
 
-  const handleConfirmPINComplete = useCallback(
-    (completedPIN: string) => {
-      setConfirmPINError(undefined)
-      Keyboard.dismiss()
-      validateAndChangePIN(currentPIN, newPIN, completedPIN)
-    },
-    [currentPIN, newPIN, validateAndChangePIN]
-  )
+  const handleConfirmPINComplete = useCallback(() => {
+    setConfirmPINError(undefined)
+    Keyboard.dismiss()
+  }, [])
 
   const styles = StyleSheet.create({
     pinEntryContent: {
@@ -195,40 +196,21 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
   })
 
   const controls = (
-    <>
-      <View style={styles.pinCheckboxRow}>
-        <CheckBoxRow
-          title={t('BCSC.ChangePIN.IUnderstand')}
-          accessibilityLabel={t('BCSC.ChangePIN.IUnderstand')}
-          testID={testIdWithKey('IUnderstand')}
-          checked={checked}
-          onPress={() => {
-            setCheckboxError(checked)
-            setChecked(!checked)
-          }}
-          titleStyle={styles.pinCheckboxTitle}
-        />
-        {checkboxError ? (
-          <ThemedText variant={'inlineErrorText'} style={styles.pinCheckboxError}>
-            {t('BCSC.ChangePIN.MustCheckBox')}
-          </ThemedText>
-        ) : null}
-      </View>
+    <ControlContainer>
       <Button
         buttonType={ButtonType.Primary}
         title={t('BCSC.ChangePIN.ButtonTitle')}
         accessibilityLabel={t('BCSC.ChangePIN.ButtonTitle')}
         testID={testIdWithKey('ChangePIN')}
-        disabled={loading || currentPIN.length < 6 || newPIN.length < 6 || confirmPIN.length < 6 || !checked}
         onPress={onPressChangePIN}
       >
         {loading && <ButtonLoading />}
       </Button>
-    </>
+    </ControlContainer>
   )
 
   return (
-    <ScreenWrapper padded keyboardActive controls={controls}>
+    <ScreenWrapper padded={false} keyboardActive controls={controls} scrollViewContainerStyle={{ padding: Spacing.lg }}>
       <View style={styles.pinEntryContent}>
         <View style={styles.pinFormRow}>
           <ThemedText variant={'bold'}>{t('BCSC.ChangePIN.EnterCurrentPIN')}</ThemedText>
@@ -265,6 +247,25 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
         <View style={styles.pinFormRow}>
           <ThemedText variant={'bold'}>{t('BCSC.ChangePIN.RememberPIN')}</ThemedText>
           <ThemedText>{t('BCSC.ChangePIN.RememberPINDescription')}</ThemedText>
+        </View>
+
+        <View style={styles.pinCheckboxRow}>
+          <CheckBoxRow
+            title={t('BCSC.ChangePIN.IUnderstand')}
+            accessibilityLabel={t('BCSC.ChangePIN.IUnderstand')}
+            testID={testIdWithKey('IUnderstand')}
+            checked={checked}
+            onPress={() => {
+              setCheckboxError(checked)
+              setChecked(!checked)
+            }}
+            titleStyle={styles.pinCheckboxTitle}
+          />
+          {checkboxError ? (
+            <ThemedText variant={'inlineErrorText'} style={styles.pinCheckboxError}>
+              {t('BCSC.ChangePIN.MustCheckBox')}
+            </ThemedText>
+          ) : null}
         </View>
       </View>
     </ScreenWrapper>

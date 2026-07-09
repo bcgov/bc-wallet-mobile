@@ -22,6 +22,8 @@ import { useCreateSystemChecks } from './useCreateSystemChecks'
 export enum SystemCheckScope {
   STARTUP = 'STARTUP',
   MAIN_STACK = 'MAIN_STACK',
+  VERIFY = 'VERIFY',
+  ACCOUNT = 'ACCOUNT',
 }
 
 /**
@@ -30,6 +32,7 @@ export enum SystemCheckScope {
  * Scopes:
  *   - STARTUP: Checks that need to run when the app starts, regardless of user authentication ie: server status, internet connectivity
  *   - MAIN_STACK: Checks that run when the user is authenticated and in the main part of the app ie: current device count
+ *   - VERIFY: Checks that run within the verification flow (VerifyStack) for an unverified, authenticated user ie: expired verification session
  *
  * @param {SystemCheckScope} scope - The scope of the system checks to run
  * @returns {*} {void}
@@ -168,7 +171,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
         const results = await runSystemChecks(systemCheckStrategies, logger)
 
         const systemCheckResults = systemCheckStrategies.reduce<Record<string, boolean>>((acc, check, index) => {
-          // Collect results for logging ie: { DeviceCountSystemCheck: true, AccountExpiryWarningBannerSystemCheck: false }
+          // Collect results for logging ie: { DeviceCountSystemCheck: true, AccountExpiryWarningSystemCheck: false }
           acc[check.constructor.name] = results[index]
           return acc
         }, {})

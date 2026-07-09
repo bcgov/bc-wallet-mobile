@@ -1,6 +1,23 @@
+import { isAxiosAppError } from '@/errors/appError'
 import { BifoldLogger } from '@bifold/core'
 import { deleteKey, getAllKeys, setActiveKeyAlias } from 'react-native-bcsc-core'
 import BCSCApiClient from '../api/client'
+
+/**
+ * Format a caught error for logging, surfacing the native error code (e.g. E_KEY_NOT_FOUND) when
+ * present. Handles plain-object rejections ({ code, message }) as well as Error instances, so the
+ * code is never lost to an "[object Object]" string.
+ */
+const describeError = (err: unknown): string => {
+  if (err && typeof err === 'object') {
+    const { code, message } = err as { code?: unknown; message?: unknown }
+    const parts = [code, message].filter((part): part is string => typeof part === 'string')
+    if (parts.length > 0) {
+      return parts.join(': ')
+    }
+  }
+  return String(err)
+}
 
 interface ServerJwk {
   kid: string
@@ -43,14 +60,9 @@ export async function performKeyRecovery(
   logger: BifoldLogger
 ): Promise<boolean> {
   try {
-    const { data } = await apiClient.get<ServerClientRegistrationView>(
-      `${apiClient.endpoints.registration}/${clientId}`,
-      {
-        skipBearerAuth: true,
-        headers: { Authorization: `Bearer ${registrationAccessToken}` },
-      }
-    )
-    const serverKids = (data?.jwks?.keys ?? [])
+    const serverRegistration = await _getServerRegistration(apiClient, clientId, registrationAccessToken, logger)
+
+    const serverKids = (serverRegistration?.jwks?.keys ?? [])
       .map((k) => k?.kid)
       .filter((k): k is string => typeof k === 'string' && k.length > 0)
     if (serverKids.length === 0) {
@@ -83,8 +95,7 @@ export async function performKeyRecovery(
         logger.info(`[performKeyRecovery] pruned local kid '${k.id}'`)
       } catch (err) {
         pruneFailures++
-        const m = err instanceof Error ? err.message : String(err)
-        logger.warn(`[performKeyRecovery] failed to prune '${k.id}': ${m}`)
+        logger.warn(`[performKeyRecovery] failed to prune '${k.id}': ${describeError(err)}`)
       }
     }
     // Post-prune invariant check. On iOS, setActiveKeyAlias is validate-only
@@ -104,16 +115,51 @@ export async function performKeyRecovery(
         )
       }
     } catch (verifyErr) {
-      const m = verifyErr instanceof Error ? verifyErr.message : String(verifyErr)
-      logger.warn(`[performKeyRecovery] post-prune verification failed: ${m}`)
+      logger.warn(`[performKeyRecovery] post-prune verification failed: ${describeError(verifyErr)}`)
     }
     logger.info(
       `[performKeyRecovery] event=succeeded active='${matched.id}' pruned=${prunedCount} prune_failures=${pruneFailures}`
     )
     return true
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    logger.error(`[performKeyRecovery] event=failed_probe recovery probe failed: ${message}`)
+    logger.error(`[performKeyRecovery] event=failed_probe recovery probe failed: ${describeError(error)}`)
     return false
+  }
+}
+
+/**
+ * Helper to GET /device/register/{client_id} with the registration_access_token and return the server's registration view.
+ *
+ * @param apiClient - The BCSCApiClient instance to use for the request
+ * @param clientId - The client ID to probe
+ * @param registrationAccessToken - The registration access token for authorization
+ * @param logger - The logger instance for logging
+ * @returns The server's registration view, or null if the server returns 403 (indicating key recovery is needed)
+ */
+async function _getServerRegistration(
+  apiClient: BCSCApiClient,
+  clientId: string,
+  registrationAccessToken: string,
+  logger: BifoldLogger
+) {
+  try {
+    const { data } = await apiClient.get<ServerClientRegistrationView>(
+      `${apiClient.endpoints.registration}/${clientId}`,
+      {
+        skipBearerAuth: true,
+        skipOnErrorHandler: true, // we want to handle 403 ourselves, not via the global error handler
+        headers: { Authorization: `Bearer ${registrationAccessToken}` },
+      }
+    )
+
+    return data
+  } catch (error) {
+    // 403 is expected if the server needs key recovery. In that case, we treat it as "no jwks" and skip recovery. Any other error is fatal.
+    if (isAxiosAppError(error, 403)) {
+      logger.info(`[performKeyRecovery] server returned 403 on registration probe; treating as no jwks`)
+      return null
+    }
+
+    throw error
   }
 }

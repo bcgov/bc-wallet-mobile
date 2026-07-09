@@ -97,6 +97,16 @@ const translation = {
       "ButtonTitle": "Start verification",
       "ContinueButtonTitle": "Continue verification"
     },
+    "AccountExpired": {
+      "Title": "Your BC Services card app has expired",
+      "Description": "Please reverify yourself to get access to your services",
+      "ButtonTitle": "Start renewal"
+    },
+    "AccountRenewal": {
+      "Title": "Time for renewal",
+      "Description": "Renew your BC Services card app before it expires on {{expiryDate}}",
+      "ButtonTitle": "Start renewal"
+    },
     "BasicMessage": {
       "Title": "New message",
       "ButtonTitle": "View message"
@@ -180,6 +190,8 @@ const translation = {
     "ErrorAlertTest": "Error & Alert Testing",
     "StaleTermsOfUse": "Stale Terms of Use Acceptance",
     "AcceptedTermsVersion": "Accepted version",
+    "ResetOnboardingIntro": "Reset Welcome Intro",
+    "OnboardingIntroSeen": "Intro seen",
     "ErrorModals": "Error Modals",
     "ErrorModalsDescription": "Trigger errors that display as modal dialogs with title, description, and technical details.",
     "ErrorAsNativeAlert": "Errors as Native Alerts",
@@ -198,7 +210,7 @@ const translation = {
     "Retry": "Retry",
     "Failed": "We couldn't load your wallet. Please try again.",
     "Starting": "Starting...",
-    "CheckingOCA": "Checking for OCA updates...",
+    "CheckingRemoteResources": "Checking for updates...",
     "InitializingAgent": "Initializing agent...",
     "Finishing": "Finishing..."
   },
@@ -225,7 +237,7 @@ const translation = {
       "SetupTypes": "BC Services Card",
       "VerificationMethodSelection": "Choose How to Verify",
       "TransferAccountInstructions": "Transfer Instructions",
-      "TransferAccountScan": "Scan QR Code",
+      "TransferAccountScan": "Scan QR code",
       "ContactUs": "Contact Us",
       "HelpCentre": "Help Centre",
       "PrivacyInformation": "Privacy Information",
@@ -282,7 +294,6 @@ const translation = {
         "PinContact": "Pin contact",
         "UnpinContact": "Unpin contact",
         "EditName": "Edit Contact Name",
-        "ViewHistory": "View history",
         "ViewJSON": "View JSON details",
         "RemoveContact": "Remove Contact",
       },
@@ -394,11 +405,13 @@ const translation = {
       "EditNickname": "Edit Nickname",
       "AutoLockTime": "Auto lock time",
       "Notifications": "Notifications",
+      "NotificationsStatusHeader": "Notifications are {{status}}",
+      "NotificationsStatusContent": "Notifications keep you informed about account updates, credential changes and service interruptions. To turn them on or off, open your device settings.",
+      "NotificationsStatusOn": "on",
+      "NotificationsStatusOff": "off",
       "ForgetPairings": "Forget pairings",
       "AddDevice": "Add another device",
       "MyDevices": "My devices",
-      "MyDevicesCount_one": "{{count}} Device",
-      "MyDevicesCount_other": "{{count}} Devices",
       "DeveloperOptions": "Developer options",
       "Privacy": "Privacy",
       "ContactUs": "Contact us",
@@ -494,6 +507,12 @@ const translation = {
         "ContentB": "Please update to the latest version from the {{platformStore}}.",
         "UpdateButton": "Go to {{platformStore}}",
       },
+      "VerificationSessionExpired": {
+        "Header": "Verification session expired",
+        "ContentA": "More than 7 days have passed since you started verifying your identity, so this session has expired.",
+        "ContentB": "To continue, you’ll need to set up the app and verify your identity again.",
+        "Button": "Start again",
+      },
       "DeviceInvalidated": {
         "Header": "Device invalidated",
         "CancelledByCardCancel": "Your account will be removed from this app.",
@@ -513,6 +532,10 @@ const translation = {
       "TermsOfUseUpdated": {
         "Header": "The Terms of Use have been updated. Before you continue to use the Service, you must read and accept the updated terms.",
       },
+    },
+    "VerificationReminder": {
+      "Title": "Finish verifying your identity",
+      "Body": "Verify your identity to finish setting up the app by {{date}}.",
     },
     "Home": {
       "WhereToUseTitle": "Where to use",
@@ -569,6 +592,18 @@ const translation = {
       "StaticBannerDescription": "Your account on this device expired on {{accountExpiration}}. You need to renew it before you can use it to log in.",
       "RenewButton": "Renew account",
       "RemoveButton": "Remove account",
+    },
+    "ReverifyAccount": {
+      "RenewalTitle": "Renew your account",
+      "ExpiredTitle": "Your BC Services card app has expired",
+      "Body": "Services require you to re-verify your account. You will need to complete this step in order to access your services online.",
+      "BulletHeader": "You will need to:",
+      "BulletOne": "Verify your email",
+      "BulletTwo": "Add a photo ID (not expired)",
+      "BulletThree": "Take a photo of your face",
+      "BulletFour": "Record a short video, have a video call or visit a Service BC office",
+      "PrimaryAction": "Continue",
+      "Loading": "Starting verification..."
     },
     "AccountRenewal": {
       "InformationHeader": "What you need to renew",
@@ -662,7 +697,9 @@ const translation = {
     "Onboarding": {
       "LearnMore": "Learn more",
       "IntroTitle": "Welcome to the\nBC Services Card app",
-      "IntroDescription": "A safe and simple way to access BC government services and BC Services Card app partners online.",
+      "IntroDescription": "A safe and simple way to access participating government services online.",
+      "IntroCalloutTitle": "We have improved the app!",
+      "IntroCalloutBody": "A refreshed design and better performance.",
       "AcceptAndContinueButton": "Accept terms of use",
       "TermsOfUseLoadError": "Terms of use failed to load, please retry",
       "TermsOfUseHeader": "Before you use the Service, you must read and accept the terms set out in this Agreement",
@@ -719,7 +756,7 @@ const translation = {
       "NoAttestationResponse": "No attestation response, check your connection and try again.",
       "NoDeviceCodeFound": "No device code found",
       "InvalidQrCode": "Invalid QR code",
-      "WillScanAutomatically": "A valid QR Code will scan automatically",
+      "WillScanAutomatically": "A valid QR code will scan automatically",
       "HoldSteadyHelp": "Can not see the card clearly? Try holding your phone steady.",
       "ScanYourCard": "Scan your card",
       "LineUpHelp": "Line up your ID inside the frame and hold still until the camera takes the picture automatically.",
@@ -775,8 +812,8 @@ const translation = {
       "ContinueAs": "Continue as:",
     },
     "VerifyPrompt": {
-      "Title": "Verify Your Account",
-      "Description": "Verify your account to access services that may need additional information.",
+      "Title": "Verify your account",
+      "Description": "Services may require a verified account. It gives you access to more services that need to know who you are.",
       "YouWillNeedTo": "You will need to:",
       "Bullet1": "Verify your email",
       "Bullet2": "Add a photo ID",
@@ -1055,7 +1092,7 @@ const translation = {
     },
     "TransferInstructions": {
       "Title": "Scan your QR code to add your device",
-      "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘≡’ icon in the top left corner.",
+      "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘☰’ icon in the top left corner.",
       "Step2": "Choose <b>‘Add another device’</b> to get your QR code.",
       "Step3": "<b>Scan the QR code</b> that appears on your other device.",
       "ScanQRCode": "Scan QR code",
@@ -1224,10 +1261,19 @@ const translation = {
       "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again.",
     },
     "Wallet": {
-      "EmptyMessage": "Your wallet is empty!",
+      "EmptyMessage": "Your wallet is empty",
+      "EmptyLearnMore": "Learn more about the wallet",
       "Reset": "Reset wallet",
-      "ResetTitle": "Reset wallet?",
-      "ResetDescription": "This will permanently delete all credentials, connections, and chat history stored in your wallet. Your PIN, biometrics, and BC Services Card identity will not be affected. You will not have to re-verify.",
+      "ResetTitle": "Reset your wallet?",
+      "ResetIntro": "Are you having issues with your wallet features?",
+      "ResetFeatureContacts": "Contacts",
+      "ResetFeatureCredentials": "Credentials",
+      "ResetFeatureProofRequests": "Proof Requests",
+      "ResetFeatureWalletTab": "Wallet tab",
+      "ResetExplanation": "You can reset these features without losing your verification status. You will lose:",
+      "ResetLossCredentials": "All your stored credentials",
+      "ResetLossContacts": "All contacts and interactions",
+      "ResetLossProofRequests": "Any created proof requests",
       "Resetting": "Resetting wallet...",
       "ResetSuccess": "Wallet reset successfully.",
       "ResetError": "Failed to reset wallet. Please try again.",

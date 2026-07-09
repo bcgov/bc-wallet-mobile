@@ -1,8 +1,12 @@
-import { ErrorRegistry } from '@/errors/errorRegistry'
+import {
+  cancelVerificationReminders,
+  scheduleVerificationReminders,
+} from '@/services/notifications/verificationReminders'
 import { BCDispatchAction, BCSCSecureState, BCState, NonBCSCUserMetadata, VerificationStatus } from '@/store'
-import { throwAppError } from '@bcsc-theme/utils/native-error-map'
+import { throwNativeBcscError } from '@bcsc-theme/utils/native-error-map'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   AccountFlags,
   BarcodePayload,
@@ -80,6 +84,7 @@ import { useBCSCApiClientState } from './useBCSCApiClient'
 export const useSecureActions = () => {
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { t } = useTranslation()
   const { client: apiClient, isClientReady } = useBCSCApiClientState()
 
   // ============================================================================
@@ -118,7 +123,7 @@ export const useSecureActions = () => {
         logger.info(`Tokens persisted to native storage successfully`)
       } catch (error) {
         logger.error('Failed to persist tokens:', error as Error)
-        throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
+        throwNativeBcscError(error)
       }
     },
     [logger]
@@ -138,7 +143,7 @@ export const useSecureActions = () => {
         logger.info('Authorization request persisted to native storage')
       } catch (error) {
         logger.error('Failed to persist authorization request:', error as Error)
-        throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
+        throwNativeBcscError(error)
       }
     },
     [logger]
@@ -158,7 +163,7 @@ export const useSecureActions = () => {
         logger.info('Account flags persisted to native storage')
       } catch (error) {
         logger.error('Failed to persist account flags:', error as Error)
-        throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
+        throwNativeBcscError(error)
       }
     },
     [logger]
@@ -175,7 +180,7 @@ export const useSecureActions = () => {
         logger.info('Evidence persisted to native storage')
       } catch (error) {
         logger.error('Failed to persist evidence metadata:', error as Error)
-        throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
+        throwNativeBcscError(error)
       }
     },
     [logger]
@@ -323,9 +328,61 @@ export const useSecureActions = () => {
       if (Object.keys(authRequestData).length > 0) {
         await persistAuthorizationRequest(authRequestData)
       }
+
+      // (Re)schedule the local "verify by ..." reminders off the latest expiry. This fires on the
+      // initial device-authorization and again whenever the server extends the deadline, so the
+      // reminders always track the current expiry. Cancellation happens at terminal states (completion,
+      // agent-cancel, reset) — not here and not on lock/logout, so reminders survive the user closing
+      // the app mid-verification.
+      if (codes.deviceCodeExpiresAt) {
+        const formattedDate = codes.deviceCodeExpiresAt.toLocaleString(t('BCSC.LocaleStringFormat'), {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+        })
+        // doesn't throw
+        scheduleVerificationReminders(
+          codes.deviceCodeExpiresAt,
+          {
+            title: t('BCSC.VerificationReminder.Title'),
+            body: t('BCSC.VerificationReminder.Body', { date: formattedDate }),
+          },
+          logger
+        )
+      }
     },
-    [dispatch, persistAuthorizationRequest]
+    [dispatch, persistAuthorizationRequest, t, logger]
   )
+
+  /**
+   * Clear device authorization codes from state and native storage.
+   *
+   * Used when the user abandons a flow that issued a device code (e.g. backing out of a
+   * device transfer) so a later verification flow doesn't silently reuse an authorization
+   * with no identity attached. Clearing codes that don't exist succeeds.
+   */
+  const clearDeviceCodes = useCallback(async () => {
+    dispatch({ type: BCDispatchAction.UPDATE_SECURE_DEVICE_CODE, payload: [] })
+    dispatch({ type: BCDispatchAction.UPDATE_SECURE_USER_CODE, payload: [] })
+    dispatch({ type: BCDispatchAction.UPDATE_SECURE_DEVICE_CODE_EXPIRES_AT, payload: [] })
+
+    try {
+      const existingData = await getAuthorizationRequest()
+      if (!existingData) {
+        return
+      }
+
+      const remainingData = { ...existingData }
+      delete remainingData.deviceCode
+      delete remainingData.userCode
+      delete remainingData.expiry
+      await setAuthorizationRequest(remainingData)
+      logger.info('Device authorization codes cleared from native storage')
+    } catch (error) {
+      logger.error('Failed to clear device authorization codes:', error as Error)
+      throwNativeBcscError(error)
+    }
+  }, [dispatch, logger])
 
   /**
    * Update the identification process type in state and persist to native storage.
@@ -949,7 +1006,9 @@ export const useSecureActions = () => {
       logger.info('Secure state hydrated successfully')
     } catch (error) {
       logger.error('Failed to hydrate secure state:', error as Error)
-      throwAppError(error, ErrorRegistry.STORAGE_READ_ERROR)
+      // Native read failures map to a distinct storage error (raw code preserved); an error already
+      // mapped downstream (e.g. token persistence) passes through the mapper unchanged.
+      throwNativeBcscError(error)
     }
   }, [logger, apiClient, isClientReady, updateTokens, removeIncompleteEvidence, dispatch])
 
@@ -998,10 +1057,12 @@ export const useSecureActions = () => {
         deleteToken(TokenType.Registration),
         deleteToken(TokenType.Access),
       ])
+      // doesn't throw
+      await cancelVerificationReminders(logger)
       logger.info('Secure data deleted from native storage')
     } catch (error) {
       logger.error('Failed to delete secure data:', error as Error)
-      throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
+      throwNativeBcscError(error)
     }
   }, [logger])
 
@@ -1012,10 +1073,12 @@ export const useSecureActions = () => {
   const deleteVerificationData = useCallback(async () => {
     try {
       await Promise.all([deleteAuthorizationRequest(), deleteAccountFlags(), deleteEvidence(), deleteCredential()])
+      // doesn't throw
+      await cancelVerificationReminders(logger)
       logger.info('Verification data deleted from native storage')
     } catch (error) {
       logger.error('Failed to delete verification data:', error as Error)
-      throwAppError(error, ErrorRegistry.STORAGE_WRITE_ERROR)
+      throwNativeBcscError(error)
     }
   }, [logger])
 
@@ -1038,6 +1101,7 @@ export const useSecureActions = () => {
     updateTokens,
     updateUserInfo,
     updateDeviceCodes,
+    clearDeviceCodes,
     updateCardProcess,
     updateUserMetadata,
     updateVerified,

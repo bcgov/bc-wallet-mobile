@@ -134,3 +134,27 @@ index 8e57710f2444ac76f1f790ef98db1b6e2987a3e7..95fa82270d42eef48488e9afda7a7be3
  
          // Create RecordingSession for the temp file
          let recordingSession = try RecordingSession(url: options.path,
+diff --git a/ios/Core/CameraSession+Audio.swift b/ios/Core/CameraSession+Audio.swift
+index 3d67c8c6bccf49bef9783b058fb55da7b807c879..4115681ad3702834ef647f29f26ca6b4f8871662 100644
+--- a/ios/Core/CameraSession+Audio.swift
++++ b/ios/Core/CameraSession+Audio.swift
+@@ -22,12 +22,15 @@ extension CameraSession {
+     do {
+       let audioSession = AVAudioSession.sharedInstance()
+ 
++      // PATCH: Keep recording audio I/O on the built-in low-latency route. Bluetooth A2DP
++      // (and AirPlay) output is heavily buffered, which inflates the session I/O latency and
++      // bakes an audio/video sync offset into the recorded file when a BT device (headphones,
++      // car) is connected. Dropping these routes keeps capture on the built-in path; .mixWithOthers
++      // is also dropped so background audio pauses during recording. Mirrors ias-ios behaviour.
++      // Remove if VisionCamera compensates input latency in its AVAssetWriter timestamps.
+       try audioSession.updateCategory(AVAudioSession.Category.playAndRecord,
+                                       mode: .videoRecording,
+-                                      options: [.mixWithOthers,
+-                                                .allowBluetoothA2DP,
+-                                                .defaultToSpeaker,
+-                                                .allowAirPlay])
++                                      options: [.defaultToSpeaker])
+ 
+       if #available(iOS 14.5, *) {
+         // prevents the audio session from being interrupted by a phone call
