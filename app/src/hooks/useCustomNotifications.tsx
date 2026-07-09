@@ -1,16 +1,19 @@
 import CancelledReviewNotification from '@/bcsc-theme/features/notifications/CancelledReviewNotification'
 import CardExpiryNotification from '@/bcsc-theme/features/notifications/CardExpiryNotification'
 import CardRenewalNotification from '@/bcsc-theme/features/notifications/CardRenewalNotification'
+import ContinueVerificationNotification from '@/bcsc-theme/features/notifications/ContinueVerificationNotification'
 import PendingReviewNotification from '@/bcsc-theme/features/notifications/PendingReviewNotification'
 import StartVerificationNotification from '@/bcsc-theme/features/notifications/StartVerificationNotification'
 import VerifiedNotification from '@/bcsc-theme/features/notifications/VerifiedNotification'
 import { useVerificationStatus } from '@/bcsc-theme/hooks/useVerificationStatus'
+import { computeSetupStepCompletion } from '@/bcsc-theme/utils/setup-step-completion'
 import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
-import { JSX, useCallback, useMemo, useState } from 'react'
+import { JSX, useMemo } from 'react'
 
 export enum CustomNotificationId {
   BCSCStartVerification = 'BCSCStartVerification',
+  BCSCContinueVerification = 'BCSCContinueVerification',
   BCSCPendingReview = 'BCSCPendingReview',
   BCSCCancelledReview = 'BCSCCancelledReview',
   BCSCVerified = 'BCSCVerified',
@@ -27,11 +30,6 @@ export const useCustomNotifications = () => {
   const { needsVerification } = useVerificationStatus()
   const [store] = useStore<BCState>()
   const { verificationRequestStatus, verificationRequestId } = store.bcscSecure
-  const [dismissedIds, setDismissedIds] = useState<Set<CustomNotificationId>>(new Set())
-
-  const dismissCustomNotification = useCallback((id: CustomNotificationId) => {
-    setDismissedIds((prev) => new Set(prev).add(id))
-  }, [])
 
   const customNotifications = useMemo((): JSX.Element[] => {
     if (verificationRequestStatus === 'verified') {
@@ -46,7 +44,11 @@ export const useCustomNotifications = () => {
       return [<PendingReviewNotification key={CustomNotificationId.BCSCPendingReview} />]
     }
 
-    if (needsVerification && !verificationRequestId && !dismissedIds.has(CustomNotificationId.BCSCStartVerification)) {
+    if (needsVerification && computeSetupStepCompletion(store).id.completed) {
+      return [<ContinueVerificationNotification key={CustomNotificationId.BCSCContinueVerification} />]
+    }
+
+    if (needsVerification && !verificationRequestId) {
       return [<StartVerificationNotification key={CustomNotificationId.BCSCStartVerification} />]
     }
 
@@ -59,20 +61,12 @@ export const useCustomNotifications = () => {
     }
 
     return []
-  }, [
-    verificationRequestStatus,
-    verificationRequestId,
-    needsVerification,
-    dismissedIds,
-    store.bcsc.showAccountExpiryNotification,
-    store.bcsc.showCardRenewalNotification,
-  ])
+  }, [verificationRequestStatus, verificationRequestId, needsVerification, store])
 
   return useMemo(
     () => ({
       customNotifications,
-      dismissCustomNotification,
     }),
-    [customNotifications, dismissCustomNotification]
+    [customNotifications]
   )
 }

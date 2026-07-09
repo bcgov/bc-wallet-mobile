@@ -5,7 +5,7 @@ import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BackHandler, StyleSheet, View } from 'react-native'
 
@@ -17,7 +17,7 @@ const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
   const { Spacing } = useTheme()
   const { t } = useTranslation()
   const [, dispatch] = useStore<BCState>()
-  const { isCheckingStatus, handleCheckStatus, handleCancelVerification } = useVerificationPendingActions(navigation)
+  const { handleCheckStatus, handleCancelVerification } = useVerificationPendingActions(navigation)
 
   useFocusEffect(
     useCallback(() => {
@@ -39,16 +39,13 @@ const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
     },
   })
 
+  // Check status when the screen mounts
+  useEffect(() => {
+    handleCheckStatus()
+  }, [handleCheckStatus])
+
   const controls = (
     <ControlContainer>
-      <Button
-        testID={testIdWithKey('CheckStatus')}
-        accessibilityLabel={t('BCSC.Steps.CheckStatus')}
-        title={t('BCSC.Steps.CheckStatus')}
-        buttonType={ButtonType.Primary}
-        disabled={isCheckingStatus}
-        onPress={handleCheckStatus}
-      />
       <Button
         testID={testIdWithKey('ChooseAnotherWayToVerify')}
         accessibilityLabel={t('BCSC.Steps.ChooseAnotherWayToVerify')}
