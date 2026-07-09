@@ -15,7 +15,6 @@ import { ReportProblemModal } from './ReportProblemModal'
 // whose menu also offers navigation actions ("Back to home", "Restart") and so reads better as a
 // vertical-ellipsis "more options" affordance.
 const DEFAULT_HELP_ICON = 'help-circle-outline'
-const VERIFY_HELP_ICON = 'dots-vertical'
 
 type FloatingHelpMenuButtonProps = {
   // ListButton rows; falsy children are filtered out by ListButtonGroup so rows can be conditional
@@ -218,7 +217,7 @@ export const createVerifyHelpMenuButton = ({ showRestartVerification = false }: 
 
     return (
       <>
-        <FloatingHelpMenuButton ref={floatingHelpMenuRef} icon={VERIFY_HELP_ICON}>
+        <FloatingHelpMenuButton ref={floatingHelpMenuRef} icon={DEFAULT_HELP_ICON}>
           <ReportProblemListButton onPress={reportProblem.open} />
           <BackToHomeListButton onClose={closeMenu} />
           {showRestartVerification && <RestartVerificationListButton onClose={closeMenu} />}
