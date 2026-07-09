@@ -71,7 +71,7 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
     }
 
     const formattedName = formatAccountName({
-      firstName: data.user.given_name, // ie: "Steve John"
+      firstName: data.user.given_names, // ie: "Steve John"
       lastName: data.user.family_name, // ie: "Brule"
     }) // => "Brule, Steve John"
 
