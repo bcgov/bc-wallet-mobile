@@ -49,20 +49,32 @@ given delivered PNG happens to already have -- one source of truth for
 padding, matching that doc's stated build philosophy ("scales the mark's
 longest side into the safe-zone box and centers it").
 
-    650px of 1024 (~63%)  -- adaptive foreground layer + all "mono" assets:
+    450px of 1024 (~44%)  -- adaptive foreground layer + all "mono" assets:
                              ic_launcher_foreground.png, ic_launcher_mono_foreground.webp,
                              ic_launcher_mono.webp, ic_launcher_mono_round.webp,
                              ic_launcher_mono-playstore.png.
                              Mono assets have no background layer to composite
                              against, so they share the foreground's convention
-                             for visual alignment with the colour icon.
+                             for visual alignment with the colour icon. Matches
+                             the pre-v4.1 icon's longest-side/circumscribed-circle
+                             proportions (~42%/~54% measured) so launchers that
+                             mask the adaptive foreground to a circle don't clip
+                             it. An earlier 650px/~63% value (circle ~78%) shipped
+                             briefly and was found on-device to overflow the
+                             adaptive-icon safe zone -- corners got cropped by
+                             circular launcher masks.
     580px of 1024 (~57%)  -- legacy launcher composite: ic_launcher.png / _round.png,
                              foreground composited over the variant's background.
+                             Unaffected by the circle-crop issue above -- these
+                             assets are already fully composited/full-bleed, so
+                             the OS masks the finished composite rather than a
+                             separate foreground layer.
 
-Both pixel targets are carried forward unchanged from the pre-existing
-(previously uncommitted) generation recipe -- see issue #4114 unresolved
-question #3 for a note that the padding may want a fresh visual pass in a
-follow-up PR.
+The legacy target is carried forward unchanged from the pre-existing
+(previously uncommitted) generation recipe. The foreground/mono target was
+corrected post-launch (see issue #4114) after the on-device safe-zone
+regression described above; unresolved question #3 on that issue still
+applies to any further optical-padding pass.
 
 ic_launcher-playstore.png and iTunesArtwork*.png are NOT re-composited here;
 they are produced directly from the pre-baked *_composite_* / *_light* source
@@ -116,7 +128,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SRC = REPO_ROOT.parent / "bc-wallet-mobile-icons"
 
 CANVAS = 1024
-FOREGROUND_TARGET_PX = 650  # ~63% of 1024 -- adaptive foreground + all mono assets
+FOREGROUND_TARGET_PX = 450  # ~44% of 1024 -- adaptive foreground + all mono assets
 LEGACY_TARGET_PX = 580  # ~57% of 1024 -- legacy launcher composite
 SUPERSAMPLE = 4  # circular-mask supersample factor before downscaling
 LANCZOS = getattr(Image, "Resampling", Image).LANCZOS  # Pillow >=9.1 enum, else legacy flat attr
