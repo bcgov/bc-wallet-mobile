@@ -30,7 +30,7 @@ export const EmptyNotification = () => {
 
   return (
     <View style={styles.container}>
-      <Icon name={'information'} size={ICON_SIZE} color={ColorPalette.grayscale.mediumGrey} />
+      <Icon name={'information'} size={ICON_SIZE} color={ColorPalette.grayscale.mediumGrey} accessible={false} />
       <ThemedText>{t('Notification.EmptyNotification.Title')}</ThemedText>
     </View>
   )
