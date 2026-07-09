@@ -51,20 +51,23 @@ const summarizeCause = (cause: unknown): unknown => {
   return summary
 }
 
+/** Cap on the server reason lifted by {@link extractServerReason}, so oversized bodies never bloat logs. */
+const MAX_SERVER_REASON_LENGTH = 500
+
 /**
  * Lift a human-readable reason from an HTTP error response body.
  * Handles plain-string bodies (e.g. "email_address is invalid", 5xx HTML pages)
  * and JSON bodies with a string `message` (e.g. {"message":"unexpected images count"}).
- * Capped at 500 chars so oversized bodies never bloat logs.
+ * Truncated to {@link MAX_SERVER_REASON_LENGTH} chars so oversized bodies never bloat logs.
  */
 const extractServerReason = (responseData: unknown): string | undefined => {
   if (typeof responseData === 'string' && responseData.length > 0) {
-    return responseData.slice(0, 500)
+    return responseData.slice(0, MAX_SERVER_REASON_LENGTH)
   }
   if (responseData && typeof responseData === 'object') {
     const message = (responseData as { message?: unknown }).message
     if (typeof message === 'string' && message.length > 0) {
-      return message.slice(0, 500)
+      return message.slice(0, MAX_SERVER_REASON_LENGTH)
     }
   }
   return undefined
@@ -129,7 +132,7 @@ export class AppError extends Error {
     // For non-Axios errors (e.g. native module errors), cause.code is a meaningful prefix like "E_KEY_NOT_FOUND"
     const code = !isAxiosError && typeof cause.code === 'string' ? cause.code : undefined
 
-    // Include the server's reason: a short string body, or the `message` field of a JSON body
+    // Include the server's reason: a string body (truncated to the cap), or the `message` field of a JSON body
     const serverReason = extractServerReason(isAxiosError ? cause.response?.data : undefined)
 
     return [code, cause.message, serverReason].filter(Boolean).join(': ')
