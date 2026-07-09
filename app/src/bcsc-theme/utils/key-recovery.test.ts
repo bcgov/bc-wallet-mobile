@@ -110,6 +110,8 @@ describe('performKeyRecovery', () => {
       `${apiClient.endpoints.registration}/${CLIENT_ID}`,
       expect.objectContaining({
         skipBearerAuth: true,
+        // silent background probe: a failure must not fire the client's global onError handler
+        skipOnErrorHandler: true,
         headers: { Authorization: `Bearer ${REG_TOKEN}` },
       })
     )
@@ -372,6 +374,8 @@ describe('reRegisterNewestKey', () => {
       }),
       expect.objectContaining({
         skipBearerAuth: true,
+        // silent background re-registration: a failure must not fire the global onError handler
+        skipOnErrorHandler: true,
         headers: { Authorization: `Bearer ${REG_TOKEN}` },
       })
     )

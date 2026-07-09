@@ -112,6 +112,10 @@ export async function performKeyRecovery(
       `${apiClient.endpoints.registration}/${clientId}`,
       {
         skipBearerAuth: true,
+        // Silent background self-heal: a probe failure (e.g. a dead/revoked reg token → 401/403)
+        // must NOT trigger the client's global onError handler (which surfaces user-facing errors).
+        // It falls through to our own catch → status 'failed', and the caller leaves tokens stale.
+        skipOnErrorHandler: true,
         headers: { Authorization: `Bearer ${registrationAccessToken}` },
       }
     )
@@ -281,6 +285,9 @@ export async function reRegisterNewestKey(
       payload,
       {
         skipBearerAuth: true,
+        // Same as the recovery GET: an unattended re-registration must fail silently (→ our catch
+        // → { success: false }), never surface a user-facing error via the global onError handler.
+        skipOnErrorHandler: true,
         headers: { Authorization: `Bearer ${registrationAccessToken}` },
       }
     )
