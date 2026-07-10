@@ -3,11 +3,58 @@ import { BCState } from '@/store'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { isUserVerified } from './bcsc-credential'
 import { isEvidenceAwaitingDocumentNumber, isEvidenceCaptureIncomplete } from './card-utils'
-import { computeSetupStepCompletion } from './setup-step-completion'
+import { computeSetupStepCompletion, StepCompletionResult } from './setup-step-completion'
 
 export type ResumeStepRoute = {
   name: keyof BCSCVerifyStackParams
   params?: BCSCVerifyStackParams[keyof BCSCVerifyStackParams]
+}
+
+/**
+ * Resolves the route within the ID step, ordered most- to least-specific so an in-progress capture
+ * is resumed before falling back to the start of the ID flow. Extracted from
+ * {@link getResumeStepRoute} to keep each function within cognitive-complexity limits.
+ */
+const getIdStepRoute = (store: BCState, idCompletion: StepCompletionResult['id']): ResumeStepRoute => {
+  // A half-finished evidence — all required photos captured but no document number
+  // entered yet — means the user left while on EvidenceIDCollection. Resume them
+  // straight back there so their photos aren't discarded by EvidenceTypeList's
+  // incomplete-evidence cleanup (which would otherwise send them to the flow's start).
+  const evidenceAwaitingDocumentNumber = store.bcscSecure.additionalEvidenceData.find(isEvidenceAwaitingDocumentNumber)
+  if (evidenceAwaitingDocumentNumber?.evidenceType) {
+    return {
+      name: BCSCScreens.EvidenceIDCollection,
+      params: { cardType: evidenceAwaitingDocumentNumber.evidenceType },
+    }
+  }
+  // An evidence that's been selected but whose photo capture isn't finished (e.g. the user left
+  // between the front and back) means capture was interrupted. Mid-capture photos are never
+  // committed, so they've been discarded; resume the user to IDPhotoInformation to restart
+  // capture for that ID from the first side rather than dropping them on the document-number
+  // screen or bouncing them to the start of the ID flow.
+  const evidenceCaptureIncomplete = store.bcscSecure.additionalEvidenceData.find(isEvidenceCaptureIncomplete)
+  if (evidenceCaptureIncomplete?.evidenceType) {
+    return {
+      name: BCSCScreens.IDPhotoInformation,
+      params: { cardType: evidenceCaptureIncomplete.evidenceType },
+    }
+  }
+  if (idCompletion.nonBcscNeedsAdditionalCard) {
+    return { name: BCSCScreens.EvidenceTypeList, params: { cardProcess: BCSCCardProcess.NonBCSC } }
+  }
+  if (idCompletion.nonPhotoBcscNeedsAdditionalCard) {
+    return { name: BCSCScreens.AdditionalIdentificationRequired }
+  }
+  // The user entered (or scanned) a BC Services Card serial and left before finishing the
+  // birthdate → device-authorization step. Their serial is still saved, so resume them on the
+  // birthdate screen rather than sending them back to the start of the ID step. A set
+  // cardProcess or deviceCode means the card is already authorized, or the user is in the
+  // Non-BCSC evidence flow — both handled above — so this only catches the pre-authorization
+  // serial state.
+  if (store.bcscSecure.serial && !store.bcscSecure.deviceCode && !store.bcscSecure.cardProcess) {
+    return { name: BCSCScreens.EnterBirthdate }
+  }
+  return { name: BCSCScreens.IdentitySelection }
 }
 
 /**
@@ -48,49 +95,8 @@ export const getResumeStepRoute = (store: BCState): ResumeStepRoute => {
   }
 
   switch (completion.currentStep) {
-    case 'id': {
-      // A half-finished evidence — all required photos captured but no document number
-      // entered yet — means the user left while on EvidenceIDCollection. Resume them
-      // straight back there so their photos aren't discarded by EvidenceTypeList's
-      // incomplete-evidence cleanup (which would otherwise send them to the flow's start).
-      const evidenceAwaitingDocumentNumber = store.bcscSecure.additionalEvidenceData.find(
-        isEvidenceAwaitingDocumentNumber
-      )
-      if (evidenceAwaitingDocumentNumber?.evidenceType) {
-        return {
-          name: BCSCScreens.EvidenceIDCollection,
-          params: { cardType: evidenceAwaitingDocumentNumber.evidenceType },
-        }
-      }
-      // An evidence that's been selected but whose photo capture isn't finished (e.g. the user left
-      // between the front and back) means capture was interrupted. Mid-capture photos are never
-      // committed, so they've been discarded; resume the user to IDPhotoInformation to restart
-      // capture for that ID from the first side rather than dropping them on the document-number
-      // screen or bouncing them to the start of the ID flow.
-      const evidenceCaptureIncomplete = store.bcscSecure.additionalEvidenceData.find(isEvidenceCaptureIncomplete)
-      if (evidenceCaptureIncomplete?.evidenceType) {
-        return {
-          name: BCSCScreens.IDPhotoInformation,
-          params: { cardType: evidenceCaptureIncomplete.evidenceType },
-        }
-      }
-      if (completion.id.nonBcscNeedsAdditionalCard) {
-        return { name: BCSCScreens.EvidenceTypeList, params: { cardProcess: BCSCCardProcess.NonBCSC } }
-      }
-      if (completion.id.nonPhotoBcscNeedsAdditionalCard) {
-        return { name: BCSCScreens.AdditionalIdentificationRequired }
-      }
-      // The user entered (or scanned) a BC Services Card serial and left before finishing the
-      // birthdate → device-authorization step. Their serial is still saved, so resume them on the
-      // birthdate screen rather than sending them back to the start of the ID step. A set
-      // cardProcess or deviceCode means the card is already authorized, or the user is in the
-      // Non-BCSC evidence flow — both handled above — so this only catches the pre-authorization
-      // serial state.
-      if (store.bcscSecure.serial && !store.bcscSecure.deviceCode && !store.bcscSecure.cardProcess) {
-        return { name: BCSCScreens.EnterBirthdate }
-      }
-      return { name: BCSCScreens.IdentitySelection }
-    }
+    case 'id':
+      return getIdStepRoute(store, completion.id)
     case 'address':
       return { name: BCSCScreens.ResidentialAddress }
     case 'email':

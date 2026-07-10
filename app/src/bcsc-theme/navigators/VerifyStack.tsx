@@ -164,7 +164,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         name={BCSCScreens.AccountSetup}
         component={AccountSetupScreen}
         options={{
-          headerLeft: (props) => <VerifyResumeHeaderBackButton {...props} />,
+          headerLeft: VerifyResumeHeaderBackButton,
           gestureEnabled: false,
         }}
       />
@@ -172,7 +172,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         name={BCSCScreens.IdentitySelection}
         component={IdentitySelectionScreen}
         options={{
-          headerLeft: (props) => <VerifyResumeHeaderBackButton {...props} />,
+          headerLeft: VerifyResumeHeaderBackButton,
           header: createProgressHeader(1, 10),
         }}
       />
@@ -207,7 +207,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
           // Can be the stack's initial route when the user resumes after entering a serial (see
           // getResumeStepRoute); with nothing beneath it, back leaves the flow home rather than
           // being a dead button.
-          headerLeft: (props) => <VerifyResumeHeaderBackButton {...props} />,
+          headerLeft: VerifyResumeHeaderBackButton,
         }}
       />
       <Stack.Screen
@@ -230,7 +230,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         }
         options={{
           header: createProgressHeader(4, 30),
-          headerLeft: (props) => <VerifyResumeHeaderBackButton {...props} />,
+          headerLeft: VerifyResumeHeaderBackButton,
         }}
       />
       <Stack.Screen
@@ -313,7 +313,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         component={AdditionalIdentificationRequiredScreen}
         options={{
           header: createProgressHeader(2, 30),
-          headerLeft: (props) => <VerifyResumeHeaderBackButton {...props} />,
+          headerLeft: VerifyResumeHeaderBackButton,
         }}
       />
       <Stack.Screen
@@ -334,7 +334,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
           // Can be the stack's initial route when the user resumes after leaving mid-capture (see
           // getResumeStepRoute); with nothing beneath it, back leaves the flow home rather than
           // being a dead button.
-          headerLeft: (props) => <VerifyResumeHeaderBackButton {...props} />,
+          headerLeft: VerifyResumeHeaderBackButton,
         }}
       />
       <Stack.Screen
@@ -347,7 +347,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         }
         options={{
           header: createProgressHeader(2, 60),
-          headerLeft: (props) => <VerifyResumeHeaderBackButton {...props} />,
+          headerLeft: VerifyResumeHeaderBackButton,
         }}
       />
       <Stack.Screen
@@ -365,7 +365,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         }
         options={{
           header: createProgressHeader(2, 75),
-          headerLeft: (props) => <VerifyResumeHeaderBackButton {...props} />,
+          headerLeft: VerifyResumeHeaderBackButton,
         }}
       />
       <Stack.Screen name={BCSCScreens.VerifyWebView} component={WebViewScreen} />
@@ -390,7 +390,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         component={ResidentialAddressScreen}
         options={{
           header: createProgressHeader(3, 50),
-          headerLeft: (props) => <VerifyResumeHeaderBackButton {...props} />,
+          headerLeft: VerifyResumeHeaderBackButton,
         }}
       />
       <Stack.Screen name={BCSCScreens.VerifySettings} component={VerifySettingsScreen} />
