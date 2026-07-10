@@ -254,7 +254,7 @@ describe('EvidenceCaptureScreen — retake/re-accept after final side (issue #41
     // Single-sided card: accept once (final accept, navigates away), then — mirroring a
     // back-nav from EvidenceIDCollection landing back on the still-mounted PhotoReview for
     // the last side — accept again with no retake in between.
-    const navigation = { navigate: jest.fn(), reset: jest.fn() }
+    const navigation = { navigate: jest.fn(), push: jest.fn(), reset: jest.fn() }
     const utils = renderScreen(navigation, mockCardType)
 
     await driveScanPhotoAccept(utils)
@@ -278,7 +278,7 @@ describe('EvidenceCaptureScreen — retake/re-accept after final side (issue #41
     // Two-sided card: front accept, back accept (final accept, navigates away), then —
     // mirroring a back-nav landing back on the still-mounted PhotoReview for the back
     // side — retake and re-accept the back side.
-    const navigation = { navigate: jest.fn(), reset: jest.fn() }
+    const navigation = { navigate: jest.fn(), push: jest.fn(), reset: jest.fn() }
     const utils = renderScreen(navigation, mockTwoSidedCardType)
 
     // Front side: scan, photo, accept.

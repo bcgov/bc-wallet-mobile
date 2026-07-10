@@ -207,7 +207,7 @@ describe('EvidenceIDCollection', () => {
   it('keeps the completed ID beneath the evidence list so back returns to it when another ID is needed', async () => {
     // Dual-ID flow: after completing this ID, the next step is picking another one (the evidence
     // list). The just-completed data-entry screen should sit beneath it so back returns here.
-    (getResumeStepRoute as jest.Mock).mockReturnValue({
+    ;(getResumeStepRoute as jest.Mock).mockReturnValue({
       name: BCSCScreens.EvidenceTypeList,
       params: { cardProcess: BCSCCardProcess.NonBCSC },
     })
