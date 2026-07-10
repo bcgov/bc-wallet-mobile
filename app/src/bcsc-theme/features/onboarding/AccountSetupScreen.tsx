@@ -16,7 +16,7 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
-import { useFocusEffect } from '@react-navigation/native'
+import { CommonActions, useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -80,6 +80,7 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
   const registerAccountWithBackend = useCallback(async () => {
     // 1. Check if account is already registered
     if (store.bcscSecure.registrationAccessToken) {
+      logger.info('[AccountSetupScreen] Account already registered with backend, skipping registration')
       return
     }
 
@@ -91,30 +92,39 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
       await registrationService.register(securityMethod)
     } catch (error) {
       logger.error('[AccountSetupScreen] Error creating registration with backend', error as Error)
+      // 3(optionalReset the navigation stack to the account setup screen to allow the user to retry
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: BCSCScreens.AccountSetup }],
+        })
+      )
     }
-  }, [logger, registrationService, store.bcscSecure.registrationAccessToken])
+  }, [logger, navigation, registrationService, store.bcscSecure.registrationAccessToken])
 
   // "No, continue setup" — verify a new account on this device via the identity steps.
-  const handleAddAccount = useCallback(async () => {
+  const handleAddAccount = useCallback(() => {
     dispatch({
       type: BCDispatchAction.ACCOUNT_SETUP_TYPE,
       payload: [AccountSetupType.AddAccount],
     })
 
-    await registerAccountWithBackend()
+    // Not awaiting to prevent blocking navigation
+    registerAccountWithBackend()
 
     navigation.navigate(BCSCScreens.IdentitySelection)
   }, [navigation, dispatch, registerAccountWithBackend])
 
   // "Yes, connect this device" — transfer an already-verified account by scanning the QR
   // shown on the other device, skipping the identity verification steps.
-  const handleTransferAccount = useCallback(async () => {
+  const handleTransferAccount = useCallback(() => {
     dispatch({
       type: BCDispatchAction.ACCOUNT_SETUP_TYPE,
       payload: [AccountSetupType.TransferAccount],
     })
 
-    await registerAccountWithBackend()
+    // Not awaiting to prevent blocking navigation
+    registerAccountWithBackend()
 
     navigation.navigate(BCSCScreens.TransferAccountInstructions)
   }, [dispatch, registerAccountWithBackend, navigation])
