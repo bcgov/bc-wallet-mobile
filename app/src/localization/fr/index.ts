@@ -1120,7 +1120,7 @@ const translation = {
       "Title": "QR code scan complete (FR)",
       "Description": "The app should be set up on your other mobile device. (FR)",
       "ExtraText": "If you no longer need to use the app on this device, you can remove your account. (FR)",
-      "ButtonText": "Ok"
+      "ButtonText": "Okay (FR)"
     },
     "Verification": {
       "Title": "You're all set (FR)",
