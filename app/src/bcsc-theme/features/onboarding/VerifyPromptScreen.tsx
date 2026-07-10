@@ -1,5 +1,4 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
-import useLeaveVerification from '@/bcsc-theme/hooks/useLeaveVerification'
 import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
 import AccountVerificationCta from '@assets/img/account-verification-cta.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
@@ -11,46 +10,49 @@ import { Edges } from 'react-native-safe-area-context'
 /**
  * One-time prompt shown after onboarding completes (PIN created) and before the
  * user enters the main app. Lets them choose to start identity verification now
- * or defer it until later. The choice is recorded via `SEEN_VERIFY_PROMPT` so
- * the screen is not shown again on subsequent launches.
+ * or defer it until later. Also reachable from the main app (without the skip
+ * button) for a user who deferred.
  */
 interface VerifyPromptScreenProps {
   showSkip?: boolean
   edges?: Edges
   /**
-   * Optional callback fired right after "Continue" records the choice. When the prompt is the
-   * entry screen of VerifyStack, this navigates (with a slide) to the next step within the same
-   * navigator instead of relying on a RootStack stack swap, which would jump.
+   * Fired when either button is pressed, marking the one-time prompt answered for this session.
+   * Set by VerifyStack; the main-app copy of this screen has nothing to dismiss.
+   */
+  onAnswered?: () => void
+  /**
+   * Optional callback fired right after "Continue". When the prompt is the entry screen of
+   * VerifyStack, this navigates (with a slide) to the next step within the same navigator
+   * instead of relying on a RootStack stack swap, which would jump.
    */
   onContinue?: () => void
 }
 
-export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({ showSkip = true, edges, onContinue }) => {
+export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
+  showSkip = true,
+  edges,
+  onAnswered,
+  onContinue,
+}) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [, dispatch] = useStore<BCState>()
 
-  const leaveVerification = useLeaveVerification()
-
-  const markPromptSeen = useCallback(() => {
-    dispatch({ type: BCDispatchAction.SEEN_VERIFY_PROMPT, payload: [true] })
-  }, [dispatch])
-
   const handleVerifyNow = useCallback(() => {
-    markPromptSeen()
+    onAnswered?.()
     dispatch({
       type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS,
       payload: [VerificationStatus.IN_PROGRESS],
     })
-    // These dispatches keep VerifyStack mounted (verification is now in progress), so onContinue
-    // can navigate within it for a normal slide transition.
+    // Verification is now in progress, which keeps VerifyStack mounted, so onContinue can navigate
+    // within it for a normal slide transition.
     onContinue?.()
-  }, [dispatch, markPromptSeen, onContinue])
+  }, [dispatch, onAnswered, onContinue])
 
   const handleLater = useCallback(() => {
-    markPromptSeen()
-    leaveVerification()
-  }, [markPromptSeen, leaveVerification])
+    onAnswered?.()
+  }, [onAnswered])
 
   const controls = (
     <ControlContainer>

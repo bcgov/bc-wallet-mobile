@@ -9,6 +9,7 @@ import { UserInfoResponseData } from '../api/hooks/useUserApi'
 import useDataLoader from '../hooks/useDataLoader'
 import { useRetryOnReconnect } from '../hooks/useRetryOnReconnect'
 import { useUserService } from '../services/hooks/useUserService'
+import { formatAccountName } from '../utils/account-utils'
 
 export interface BCSCAccount extends Omit<UserInfoResponseData, 'picture'> {
   picture: string | null // URI to the user's profile picture
@@ -69,20 +70,16 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
       }
     }
 
-    const givenName = data.user.given_name?.trim()
-    const familyName = data.user.family_name?.trim()
-    let fullname_formatted = ''
-    if (givenName && familyName) {
-      fullname_formatted = `${familyName}, ${givenName}`
-    } else {
-      fullname_formatted = familyName || givenName || ''
-    }
+    const formattedName = formatAccountName({
+      firstName: data.user.given_names, // ie: "Steve John"
+      lastName: data.user.family_name, // ie: "Brule"
+    }) // => "Brule, Steve John"
 
     return {
       account: {
         ...data.user,
         picture: data.picture ?? null,
-        fullname_formatted,
+        fullname_formatted: formattedName,
         account_expiration_date: moment(data.user.card_expiry, ACCOUNT_EXPIRATION_DATE_FORMAT).toDate(),
       },
       isLoadingAccount: false,

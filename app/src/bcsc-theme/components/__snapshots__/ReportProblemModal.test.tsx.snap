@@ -285,7 +285,7 @@ exports[`ReportProblemModal renders correctly 1`] = `
               </Text>
               BCSC.ReportProblem.NoteBody
               <Text
-                accessibilityLabel="BCSC.ReportProblem.ContactUsLink"
+                accessibilityLabel="BCSC.ReportProblem.SupportLink"
                 accessibilityRole="link"
                 accessible={true}
                 maxFontSizeMultiplier={2}
@@ -308,170 +308,11 @@ exports[`ReportProblemModal renders correctly 1`] = `
                     ],
                   ]
                 }
-                testID="com.ariesbifold:id/BCSC.ReportProblem.ContactUsLink"
+                testID="com.ariesbifold:id/BCSC.ReportProblem.SupportLink"
               >
-                BCSC.ReportProblem.ContactUsLink
+                BCSC.ReportProblem.SupportLink
               </Text>
             </Text>
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "normal",
-                  },
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 14,
-                    "fontWeight": "normal",
-                    "lineHeight": 36,
-                  },
-                ]
-              }
-            >
-              BCSC.ReportProblem.CollectionNotice
-               [
-              <Text
-                accessibilityLabel="BCSC.ReportProblem.PrivacyPolicyLink"
-                accessibilityRole="link"
-                accessible={true}
-                maxFontSizeMultiplier={2}
-                onPress={[Function]}
-                style={
-                  [
-                    {
-                      "color": "#313132",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "normal",
-                    },
-                    [
-                      {
-                        "alignSelf": "flex-start",
-                        "color": "#1A5A96",
-                        "textDecorationLine": "underline",
-                      },
-                      {
-                        "fontSize": 14,
-                        "lineHeight": 36,
-                      },
-                    ],
-                  ]
-                }
-                testID="com.ariesbifold:id/BCSC.ReportProblem.PrivacyPolicyLink"
-              >
-                BCSC.ReportProblem.PrivacyPolicyLink
-              </Text>
-              ]
-            </Text>
-            <View
-              style={
-                {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "margin": 10,
-                }
-              }
-            >
-              <View
-                accessibilityLabel="BCSC.ReportProblem.IncludeDeviceDetails"
-                accessibilityRole="checkbox"
-                accessibilityState={
-                  {
-                    "busy": undefined,
-                    "checked": false,
-                    "disabled": undefined,
-                    "expanded": undefined,
-                    "selected": undefined,
-                  }
-                }
-                accessibilityValue={
-                  {
-                    "max": undefined,
-                    "min": undefined,
-                    "now": undefined,
-                    "text": undefined,
-                  }
-                }
-                accessible={true}
-                collapsable={false}
-                focusable={true}
-                hitSlop={
-                  {
-                    "bottom": 44,
-                    "left": 44,
-                    "right": 44,
-                    "top": 44,
-                  }
-                }
-                onClick={[Function]}
-                onResponderGrant={[Function]}
-                onResponderMove={[Function]}
-                onResponderRelease={[Function]}
-                onResponderTerminate={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
-                style={
-                  {
-                    "opacity": 1,
-                  }
-                }
-                testID="com.ariesbifold:id/ReportProblemIncludeDeviceDetails"
-              >
-                <Text
-                  allowFontScaling={false}
-                  selectable={false}
-                  style={
-                    [
-                      {
-                        "color": "#003366",
-                        "fontSize": 36,
-                      },
-                      undefined,
-                      {
-                        "fontFamily": "Material Icons",
-                        "fontStyle": "normal",
-                        "fontWeight": "normal",
-                      },
-                      {},
-                    ]
-                  }
-                >
-                  
-                </Text>
-              </View>
-              <Text
-                maxFontSizeMultiplier={2}
-                style={
-                  [
-                    {
-                      "color": "#313132",
-                      "fontFamily": "BCSans-Regular",
-                      "fontSize": 18,
-                      "fontWeight": "normal",
-                    },
-                    [
-                      {
-                        "color": "#313132",
-                        "flexShrink": 1,
-                        "fontFamily": "BCSans-Regular",
-                        "fontSize": 18,
-                        "fontWeight": "normal",
-                        "marginLeft": 10,
-                        "marginRight": 0,
-                      },
-                      {},
-                    ],
-                  ]
-                }
-              >
-                BCSC.ReportProblem.IncludeDeviceDetails
-              </Text>
-            </View>
             <View
               accessibilityLabel="BCSC.ReportProblem.Submit"
               accessibilityRole="button"

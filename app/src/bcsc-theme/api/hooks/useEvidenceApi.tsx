@@ -33,8 +33,11 @@ export interface VerificationStatusResponseData {
   id: string
   status: 'pending' | 'verified' | 'cancelled'
   status_message?: string
-  expires_in?: string
   avg_turnaround_time_message?: string
+}
+
+export interface VerificationSubmitResponseData extends VerificationStatusResponseData {
+  expiry_extended_by?: number
 }
 
 export interface VerificationPhotoUploadPayload {
@@ -79,33 +82,40 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
   const { updateDeviceCodes } = useSecureActions()
 
   /**
-   * Reconciles local verification deadline state against a verification response.
+   * A terminal `status` means the session is over, so any pending "verify by ..." reminders are
+   * cleared. (Completion is also caught when the device_code is exchanged for tokens; this just
+   * clears them sooner, and covers an agent-cancelled video.)
    *
-   * The evidence-submit (PUT) and status (GET) responses share this shape. Two things ride on them:
-   *
-   *  - A terminal `status` (`verified`/`cancelled`) means the session is over, so any pending
-   *    "verify by ..." reminders are cleared. (Completion is also caught when the device_code is
-   *    exchanged for tokens; this just clears them sooner, and covers an agent-cancelled video.)
-   *  - A possibly-refreshed `expires_in` (seconds). It is how the server communicates the
-   *    video-submission and agent-approval extensions. Mirroring ias-ios (the source of truth where it
-   *    disagrees with the API docs), this value extends the EXISTING deadline: it is a delta added to the
-   *    current expiry, pinned to end-of-day local, and only ever pushes the deadline later — so a
-   *    stale/shorter value can never cut an in-progress session short. With no existing expiry there is
-   *    nothing to extend. See ias-ios PreBackcheckVideoChecks / `dateBeforeMidnightWithSeconds`.
+   * Returns whether the status was terminal.
    */
-  const reconcileVerificationDeadline = useCallback(
-    async (data: VerificationStatusResponseData) => {
-      if (data.status === 'verified' || data.status === 'cancelled') {
-        // doesn't throw
-        await cancelVerificationReminders(apiClient.logger)
-        return
+  const cancelRemindersOnTerminalStatus = useCallback(
+    async (data: VerificationStatusResponseData): Promise<boolean> => {
+      if (data.status !== 'verified' && data.status !== 'cancelled') {
+        return false
       }
+      // doesn't throw
+      await cancelVerificationReminders(apiClient.logger)
+      return true
+    },
+    [apiClient.logger]
+  )
 
-      if (data.expires_in === undefined) {
-        return
-      }
-      const seconds = Number(data.expires_in)
-      if (!Number.isFinite(seconds) || seconds <= 0) {
+  /**
+   * Applies the server's video-submission deadline extension.
+   *
+   * `expiry_extended_by` is a delta in seconds added to the EXISTING deadline, pinned to end-of-day
+   * local, and only ever pushed later — a stale/shorter value can never cut an in-progress session
+   * short. With no existing expiry there is nothing to extend. It rides only on the evidence-submit
+   * PUT, never on the status GET, so repeated status polls cannot compound the deadline.
+   *
+   * Mirrors ias-ios PreBackcheckVideoChecks / `dateBeforeMidnightWithSeconds` and ias-android
+   * DocumentUploadViewModel. Note both name their local variable `expiresIn`, but the wire field is
+   * `expiry_extended_by` — it is NOT the OAuth `expires_in` seconds-from-now convention.
+   */
+  const applyExpiryExtension = useCallback(
+    async (data: VerificationSubmitResponseData) => {
+      const seconds = data.expiry_extended_by
+      if (seconds === undefined || !Number.isFinite(seconds) || seconds <= 0) {
         return
       }
       const currentExpiry = store.bcscSecure.deviceCodeExpiresAt
@@ -122,7 +132,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
       try {
         await updateDeviceCodes({ deviceCodeExpiresAt: extendedExpiry })
       } catch (error) {
-        apiClient.logger.warn('[reconcileVerificationDeadline] Failed to persist extended expiry', {
+        apiClient.logger.warn('[applyExpiryExtension] Failed to persist extended expiry', {
           error,
         })
       }
@@ -213,10 +223,10 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
     async (
       verificationRequestId: string,
       payload: SendVerificationPayload
-    ): Promise<VerificationStatusResponseData> => {
+    ): Promise<VerificationSubmitResponseData> => {
       return withAccount(async (account) => {
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
-        const { data } = await apiClient.put<VerificationStatusResponseData>(
+        const { data } = await apiClient.put<VerificationSubmitResponseData>(
           `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
           payload,
           {
@@ -226,11 +236,14 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
             skipBearerAuth: true,
           }
         )
-        await reconcileVerificationDeadline(data)
+        const isTerminal = await cancelRemindersOnTerminalStatus(data)
+        if (!isTerminal) {
+          await applyExpiryExtension(data)
+        }
         return data
       })
     },
-    [_getDeviceCode, apiClient, reconcileVerificationDeadline]
+    [_getDeviceCode, apiClient, applyExpiryExtension, cancelRemindersOnTerminalStatus]
   )
 
   const getVerificationRequestPrompts = useCallback(
@@ -265,11 +278,11 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
             skipBearerAuth: true,
           }
         )
-        await reconcileVerificationDeadline(data)
+        await cancelRemindersOnTerminalStatus(data)
         return data
       })
     },
-    [_getDeviceCode, apiClient, reconcileVerificationDeadline]
+    [_getDeviceCode, apiClient, cancelRemindersOnTerminalStatus]
   )
 
   // This is only valid once sendVerificationRequest has been called

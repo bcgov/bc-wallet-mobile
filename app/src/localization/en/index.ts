@@ -47,10 +47,13 @@ const translation = {
     "ErrorCode": "Error Code",
     "ReportThisProblem": "Report this problem",
     "Reported": "Reported",
-    "ReferenceCode": "Reference code",
+    "ReportId": "Report ID",
     "CopyCode": "Copy",
     "CodeCopied": "Copied",
-    "ShareCodeWithSupport": "Share this code with support when you contact us.",
+    "ShareReportIdWithSupport": "If you contact support, share this report ID.",
+    "NotePrefix": "Note",
+    "NoteBody": " you won't receive a reply. If you need help, contact ",
+    "SupportLink": "Support.",
     "Unknown": "Unknown",
     "Problem": "Something went wrong",
     "ProblemDescription": "An unexpected error occurred. Please report this error and try again."
@@ -91,6 +94,9 @@ const translation = {
     }
   },
   "Notification": {
+    "EmptyNotification": {
+      "Title": "You have no new notifications",
+    },
     "StartVerification": {
       "Title": "You're not verified",
       "Description": "You can continue the verification process at any time.",
@@ -255,16 +261,16 @@ const translation = {
     },
     "ReportProblem": {
       "Title": "Report a problem",
-      "Intro": "Use this form to tell us about a problem with the app. We review reports to help fix issues and improve the app.",
+      "Intro": "Your feedback helps us fix issues and improve the app.",
       "DescriptionLabel": "Describe the issue",
       "DescriptionPlaceholder": "Tell us what you were trying to do and what happened.",
-      "NotePrefix": "Please note",
-      "NoteBody": " this form is for reporting issues only. You won't receive a reply. If you need help with a problem, please ",
-      "ContactUsLink": "contact us.",
-      "CollectionNotice": "When you send a report, you can include basic app and device details to help us understand the problem.",
-      "PrivacyPolicyLink": "Privacy Policy",
-      "IncludeDeviceDetails": "Include app and device details",
+      "NotePrefix": "Note",
+      "NoteBody": " this form is for reporting app issues only. You won't receive a reply. If you need help, contact ",
+      "SupportLink": "Support.",
       "Submit": "Send report",
+      "SuccessTitle": "Thanks for reporting this issue",
+      "ReportIdLabel": "Report ID",
+      "ReportIdHint": "If you contact support about this issue, provide this Report ID.",
     },
     "Contacts": {
       "Title": "Contacts",
@@ -633,10 +639,11 @@ const translation = {
       "Resetting": "Resetting…"
     },
     "ForgetAllPairings": {
-      "Title": "Forget all pairings?",
-      "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step.",
+      "Title": "Forget all paired devices?",
+      "Description1": "When you use this app to log in on another device, you are asked if you want to remember this device to skip the pairing step.",
       "Description2": "By forgetting all pairings this device will be removed as an option on any computer you previously paired with. You can use this app again to log in on another computer by pairing it again.",
       "ButtonTitle": "Forget all pairings",
+      "ScreenTitle": "Forget pairings"
     },
     "ContactUs": {
       "Title": "Service BC Help Desk",
@@ -994,7 +1001,6 @@ const translation = {
         "Description3": "You'll get an email after we review your request. You can also check the status in this app.",
         "ButtonText": "Go to home"
       },
-      
       "TakePhoto": {
         "CameraInstructions": "Position your face within the oval and press the button on the screen",
       },
@@ -1083,11 +1089,10 @@ const translation = {
       "RetakePhoto": "Retake photo",
     },
     "TransferQRInformation": {
-      "Title": "Open the BC Services Card app on your other mobile device",
+      "Title": "Open the BC Services Card app on your other device",
       "Instructions": "Scan the QR code using the BC Services Card app on your other mobile device.",
       "Warning": "Do not scan with the camera app.",
       "GetQRCode": "Get QR Code",
-      "LearnMore": "Learn more"
     },
     "TransferInformation": {
       "Title": "Have this app on another device?",
@@ -1298,7 +1303,8 @@ const translation = {
       "AccountDetailsDescription": "View your account activity, manage your email address and more.",
       "AccountInfo": {
         "ManageDevices": "Manage Devices",
-        "Description": "This cannot be used as photo ID, a driver's licence, or a health card.",
+        "InfoTitle": "This is an account page, not an ID",
+        "InfoDescription": "Your account details are shown below. This cannot be used as photo ID, a driver’s licence, or a health card.",
         "AppExpiryDate": "App expiry date",
         "AccountType": "Account type",
         "AccountTypeNonBCServicesCard": "Non BC Services Card",

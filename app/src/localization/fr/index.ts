@@ -47,10 +47,13 @@ const translation = {
     "ErrorCode": "Code d'erreur",
     "ReportThisProblem": "Signaler ce problème",
     "Reported": "Signalé",
-    "ReferenceCode": "Code de référence",
+    "ReportId": "Report ID (FR)",
     "CopyCode": "Copier",
     "CodeCopied": "Copié",
-    "ShareCodeWithSupport": "Communiquez ce code au soutien lorsque vous nous contactez.",
+    "ShareReportIdWithSupport": "If you contact support, share this report ID. (FR)",
+    "NotePrefix": "Note (FR)",
+    "NoteBody": " you won't receive a reply. If you need help, contact (FR) ",
+    "SupportLink": "Support. (FR)",
     "Unknown": "Inconnu",
     "Problem": "Un problème est survenu",
     "ProblemDescription": "An unexpected error occurred. Please report this error and try again. (FR)"
@@ -91,6 +94,9 @@ const translation = {
     }
   },
   "Notification": {
+    "EmptyNotification": {
+      "Title": "You have no new notifications (FR)",
+    },
     "StartVerification": {
       "Title": "You're not verified (FR)",
       "Description": "You can continue the verification process at any time. (FR)",
@@ -255,16 +261,16 @@ const translation = {
     },
     "ReportProblem": {
       "Title": "Report a problem (FR)",
-      "Intro": "Use this form to tell us about a problem with the app. We review reports to help fix issues and improve the app. (FR)",
+      "Intro": "Your feedback helps us fix issues and improve the app. (FR)",
       "DescriptionLabel": "Describe the issue (FR)",
       "DescriptionPlaceholder": "Tell us what you were trying to do and what happened. (FR)",
-      "NotePrefix": "Please note (FR)",
-      "NoteBody": " this form is for reporting issues only. You won't receive a reply. If you need help with a problem, please (FR) ",
-      "ContactUsLink": "contact us. (FR)",
-      "CollectionNotice": "When you send a report, you can include basic app and device details to help us understand the problem. (FR)",
-      "PrivacyPolicyLink": "Privacy Policy (FR)",
-      "IncludeDeviceDetails": "Include app and device details (FR)",
+      "NotePrefix": "Note (FR)",
+      "NoteBody": " this form is for reporting app issues only. You won't receive a reply. If you need help, contact (FR) ",
+      "SupportLink": "Support. (FR)",
       "Submit": "Send report (FR)",
+      "SuccessTitle": "Thanks for reporting this issue (FR)",
+      "ReportIdLabel": "Report ID (FR)",
+      "ReportIdHint": "If you contact support about this issue, provide this Report ID. (FR)",
     },
     "Contacts": {
       "Title": "Contacts (FR)",
@@ -633,10 +639,11 @@ const translation = {
       "Resetting": "Resetting… (FR)"
     },
     "ForgetAllPairings": {
-      "Title": "Forget all pairings? (FR)",
-      "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step. (FR)",
+      "Title": "Forget all paired devices? (FR)",
+      "Description1": "When you use this app to log in on another device, you are asked if you want to remember this device to skip the pairing step. (FR)",
       "Description2": "By forgetting all pairings this device will be removed as an option on any computer you previously paired with. You can use this app again to log in on another computer by pairing it again. (FR)",
       "ButtonTitle": "Forget all pairings (FR)",
+      "ScreenTitle": "Forget pairings (FR)"
     },
     "ContactUs": {
       "Title": "Service BC Help Desk (FR)",
@@ -1082,11 +1089,10 @@ const translation = {
       "RetakePhoto": "Retake photo (FR)",
     },
     "TransferQRInformation": {
-      "Title": "Open the BC Services Card app on your other mobile device (FR)",
+      "Title": "Open the BC Services Card app on your other device (FR)",
       "Instructions": "Scan the QR code with the BC Services Card app on your other mobile device. (FR)",
       "Warning" : "Do not scan with the camera app. (FR)",
       "GetQRCode": "Get QR Code (FR)",
-      "LearnMore": "Learn more (FR)"
     },
     "TransferInformation": {
       "Title": "Have this app on another device? (FR)",
@@ -1297,7 +1303,8 @@ const translation = {
       "AccountDetailsDescription": "View your account activity, manage your email address and more. (FR)",
       "AccountInfo" : {
         "ManageDevices": "Manage Devices (FR)",
-        "Description": "This cannot be used as photo ID, a driver's licence, or a health card. (FR)",
+        "InfoTitle": "This is an account page, not an ID (FR)",
+        "InfoDescription": "Your account details are shown below. This cannot be used as photo ID, a driver’s licence, or a health card. (FR)",
         "AppExpiryDate": "App expiry date (FR)",
         "AccountType": "Account type (FR)",
         "AccountTypeNonBCServicesCard": "Non BC Services Card (FR)",

@@ -175,7 +175,11 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     const getPhotoMetadataWithAlert = withAlert(getPhotoMetadata, failedToReadFromLocalStorageAlert)
     const photoMetadata = await getPhotoMetadataWithAlert(currentPhotoPath, logger)
     photoMetadata.label = currentSide.image_side_name
-    const newPhotos = [...capturedPhotos, photoMetadata]
+    // Key by side index: re-accepting or retaking an already-captured side
+    // (e.g. after navigating back from EvidenceIDCollection) replaces it
+    // instead of appending a duplicate — see issue #4159.
+    const newPhotos = [...capturedPhotos]
+    newPhotos[currentIndex] = photoMetadata
     setCapturedPhotos(newPhotos)
 
     if (isLastSide) {

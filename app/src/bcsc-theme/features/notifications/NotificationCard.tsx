@@ -5,8 +5,9 @@ import { useTranslation } from 'react-i18next'
 import { Image, ImageStyle, Pressable, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
-const ICON_CIRCLE_SIZE = 36
-const ICON_INNER_SIZE = 20
+const ICON_CIRCLE_SIZE = 32
+const ICON_CIRCLE_INNER_ICON_SIZE = 18
+const ICON_SIZE = 24
 const CLOSE_ICON_SIZE = 24
 
 interface NotificationIconProps {
@@ -42,12 +43,13 @@ const NotificationIcon: React.FC<NotificationIconProps> = ({
       />
     )
   }
+
   return (
     <View style={[{ marginRight: 12 }, hideIconCircle ? undefined : circleStyle]}>
       <Icon
         accessible={false}
         name={iconName}
-        size={hideIconCircle ? ICON_CIRCLE_SIZE : ICON_INNER_SIZE}
+        size={hideIconCircle ? ICON_SIZE : ICON_CIRCLE_INNER_ICON_SIZE}
         color={iconColor}
       />
     </View>

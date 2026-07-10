@@ -47,10 +47,13 @@ const translation = {
     "ErrorCode": "Código de erro",
     "ReportThisProblem": "Reportar este problema",
     "Reported": "Reportado",
-    "ReferenceCode": "Código de referência",
+    "ReportId": "Report ID (PT-BR)",
     "CopyCode": "Copiar",
     "CodeCopied": "Copiado",
-    "ShareCodeWithSupport": "Compartilhe este código com o suporte ao entrar em contato.",
+    "ShareReportIdWithSupport": "If you contact support, share this report ID. (PT-BR)",
+    "NotePrefix": "Note (PT-BR)",
+    "NoteBody": " you won't receive a reply. If you need help, contact (PT-BR) ",
+    "SupportLink": "Support. (PT-BR)",
     "Unknown": "Desconhecido",
     "Problem": "Algo deu errado",
     "ProblemDescription": "An unexpected error occurred. Please report this error and try again. (PT-BR)"
@@ -91,6 +94,9 @@ const translation = {
     }
   },
   "Notification": {
+    "EmptyNotification": {
+      "Title": "You have no new notifications (PT-BR)",
+    },
     "StartVerification": {
       "Title": "You're not verified (PT-BR)",
       "Description": "You can continue the verification process at any time. (PT-BR)",
@@ -255,16 +261,16 @@ const translation = {
     },
     "ReportProblem": {
       "Title": "Report a problem (PT-BR)",
-      "Intro": "Use this form to tell us about a problem with the app. We review reports to help fix issues and improve the app. (PT-BR)",
+      "Intro": "Your feedback helps us fix issues and improve the app. (PT-BR)",
       "DescriptionLabel": "Describe the issue (PT-BR)",
       "DescriptionPlaceholder": "Tell us what you were trying to do and what happened. (PT-BR)",
-      "NotePrefix": "Please note (PT-BR)",
-      "NoteBody": " this form is for reporting issues only. You won't receive a reply. If you need help with a problem, please (PT-BR) ",
-      "ContactUsLink": "contact us. (PT-BR)",
-      "CollectionNotice": "When you send a report, you can include basic app and device details to help us understand the problem. (PT-BR)",
-      "PrivacyPolicyLink": "Privacy Policy (PT-BR)",
-      "IncludeDeviceDetails": "Include app and device details (PT-BR)",
+      "NotePrefix": "Note (PT-BR)",
+      "NoteBody": " this form is for reporting app issues only. You won't receive a reply. If you need help, contact (PT-BR) ",
+      "SupportLink": "Support. (PT-BR)",
       "Submit": "Send report (PT-BR)",
+      "SuccessTitle": "Thanks for reporting this issue (PT-BR)",
+      "ReportIdLabel": "Report ID (PT-BR)",
+      "ReportIdHint": "If you contact support about this issue, provide this Report ID. (PT-BR)",
     },
     "Contacts": {
       "Title": "Contacts (PT-BR)",
@@ -633,10 +639,11 @@ const translation = {
       "Resetting": "Resetting… (PT-BR)"
     },
     "ForgetAllPairings": {
-      "Title": "Forget all pairings? (PT-BR)",
-      "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step. (PT-BR)",
+      "Title": "Forget all paired devices? (PT-BR)",
+      "Description1": "When you use this app to log in on another device, you are asked if you want to remember this device to skip the pairing step. (PT-BR)",
       "Description2": "By forgetting all pairings this device will be removed as an option on any computer you previously paired with. You can use this app again to log in on another computer by pairing it again. (PT-BR)",
       "ButtonTitle": "Forget all pairings (PT-BR)",
+      "ScreenTitle": "Forget pairings (PT-BR)",
     },
     "ContactUs": {
       "Title": "Service BC Help Desk (PT-BR)",
@@ -1082,11 +1089,10 @@ const translation = {
       "RetakePhoto": "Retake photo (PT-BR)",
     },
     "TransferQRInformation": {
-      "Title": "Open the BC Services Card app on your other mobile device (PT-BR)",
+      "Title": "Open the BC Services Card app on your other device (PT-BR)",
       "Instructions": "Scan the QR code with the BC Services Card app on your other mobile device. (PT-BR)",
       "Warning" : "Do not scan with the camera app. (PT-BR)",
       "GetQRCode": "Get QR Code (PT-BR)",
-      "LearnMore": "Learn more (PT-BR)"
     },
     "TransferInformation": {
       "Title": "Have this app on another device? (PT-BR)",
@@ -1297,7 +1303,8 @@ const translation = {
       "AccountDetailsDescription": "View your account activity, manage your email address and more. (PT-BR)",
       "AccountInfo" : {
         "ManageDevices": "Manage Devices (PT-BR)",
-        "Description": "This cannot be used as photo ID, a driver's licence, or a health card. (PT-BR)",
+        "InfoTitle": "This is an account page, not an ID (PT-BR)",
+        "InfoDescription": "Your account details are shown below. This cannot be used as photo ID, a driver’s licence, or a health card. (PT-BR)",
         "AppExpiryDate": "App expiry date (PT-BR)",
         "AccountType": "Account type (PT-BR)",
         "AccountTypeNonBCServicesCard": "Non BC Services Card (PT-BR)",

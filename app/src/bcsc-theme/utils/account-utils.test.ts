@@ -1,4 +1,4 @@
-import { getNicknameValidationErrorKey } from '@/bcsc-theme/utils/account-utils'
+import { formatAccountName, getNicknameValidationErrorKey } from '@/bcsc-theme/utils/account-utils'
 import { BCState } from '@/store'
 
 const createMockState = (nicknames: string[]): BCState =>
@@ -38,6 +38,123 @@ describe('account-utils', () => {
       const state = createMockState([])
 
       expect(getNicknameValidationErrorKey(state, 'A')).toBeNull()
+    })
+  })
+
+  describe('formatAccountName', () => {
+    it('should return the formatted account name string with all parts', () => {
+      const name = formatAccountName({
+        firstName: 'Steve',
+        middleNames: 'John',
+        lastName: 'Brule',
+      })
+
+      expect(name).toBe('Brule, Steve John')
+    })
+
+    it('should return the formatted account name with multiple middle names', () => {
+      const name = formatAccountName({
+        firstName: 'Steve',
+        middleNames: 'John Michael',
+        lastName: 'Brule',
+      })
+
+      expect(name).toBe('Brule, Steve John Michael')
+    })
+
+    it('should return the formatted account name with middle names included in the first name', () => {
+      const name = formatAccountName({
+        firstName: 'Steve John',
+        lastName: 'Brule',
+      })
+
+      expect(name).toBe('Brule, Steve John')
+
+      const name2 = formatAccountName({
+        firstName: 'Steve John Michael',
+        lastName: 'Brule',
+      })
+
+      expect(name2).toBe('Brule, Steve John Michael')
+    })
+
+    it('should return the formatted account name with no middle names', () => {
+      const name = formatAccountName({
+        firstName: 'Steve',
+        middleNames: '',
+        lastName: 'Brule',
+      })
+
+      expect(name).toBe('Brule, Steve')
+
+      const name2 = formatAccountName({
+        firstName: 'Steve',
+        lastName: 'Brule',
+      })
+
+      expect(name2).toBe('Brule, Steve')
+    })
+
+    it('should return the formatted account name with no first name', () => {
+      const name = formatAccountName({
+        middleNames: 'John',
+        lastName: 'Brule',
+      })
+
+      expect(name).toBe('Brule, John')
+    })
+
+    it('should return the formatted account name with no last name', () => {
+      const name = formatAccountName({
+        firstName: 'Steve',
+        middleNames: 'John',
+      })
+
+      expect(name).toBe('Steve John')
+    })
+
+    it('should return mononym when only one name is provided', () => {
+      const name = formatAccountName({
+        firstName: 'Steve',
+      })
+
+      expect(name).toBe('Steve')
+
+      const name2 = formatAccountName({
+        lastName: 'Brule',
+      })
+
+      expect(name2).toBe('Brule')
+
+      const name3 = formatAccountName({
+        middleNames: 'John',
+      })
+
+      expect(name3).toBe('John')
+    })
+
+    it('should return the formatted account name when only middle names are provided', () => {
+      const name = formatAccountName({
+        middleNames: 'John Michael',
+      })
+
+      expect(name).toBe('John Michael')
+    })
+
+    it('should return empty string when no names are provided', () => {
+      const name = formatAccountName({})
+
+      expect(name).toBe('')
+    })
+
+    it('should handle empty strings for first name, middle names, and last name', () => {
+      const name = formatAccountName({
+        firstName: '',
+        middleNames: '',
+        lastName: '',
+      })
+
+      expect(name).toBe('')
     })
   })
 })

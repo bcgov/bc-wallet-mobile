@@ -1,6 +1,15 @@
+const os = require('os')
+
+const cpus = os.availableParallelism?.() ?? os.cpus().length
+
 module.exports = {
   preset: 'react-native',
-  maxWorkers: '50%',
+  // Never resolve to 1: at maxWorkers <= 1 Jest runs in-band, holding all ~260 suites in a single
+  // process whose heap only grows (~2.2GB under --coverage). CI's 3-core macOS runners made '50%'
+  // resolve to exactly 1, so the run was one long-lived process. workerIdleMemoryLimit additionally
+  // forces worker mode and recycles a worker once its heap exceeds the limit.
+  maxWorkers: Math.max(2, Math.floor(cpus * 0.5)),
+  workerIdleMemoryLimit: '512MB',
   testTimeout: 10000,
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   setupFiles: ['<rootDir>/jestSetup.js'],

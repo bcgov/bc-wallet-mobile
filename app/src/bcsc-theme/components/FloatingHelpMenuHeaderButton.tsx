@@ -1,9 +1,12 @@
-import { HelpCentreUrl } from '@/constants'
-import { ButtonLocation, IconButton, testIdWithKey, useTheme } from '@bifold/core'
+import { FEEDBACK_URL, HelpCentreUrl } from '@/constants'
+import { a11yLabel } from '@/utils/accessibility'
+import { openLink } from '@/utils/links'
+import { ButtonLocation, IconButton, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { ReactNode, useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import Icon from 'react-native-vector-icons/MaterialIcons'
 import { useLeaveVerification } from '../hooks/useLeaveVerification'
 import { useRestartVerification } from '../hooks/useRestartVerification'
 import { BCSCScreens } from '../types/navigators'
@@ -99,6 +102,35 @@ const ReportProblemListButton = ({
 }
 
 /**
+ * "Give feedback" menu row. Opens the feedback form in the device browser rather than an in-app
+ * WebView, so the row carries the external-link affordance. Passing non-string children opts out of
+ * ListButton's automatic ThemedText wrapping and a11y label, hence both are supplied here.
+ */
+const GiveFeedbackListButton = ({ onClose, position }: MenuRowProps) => {
+  const { t } = useTranslation()
+  const { ColorPalette } = useTheme()
+
+  const handlePress = useCallback(() => {
+    openLink(FEEDBACK_URL)
+    onClose()
+  }, [onClose])
+
+  return (
+    <ListButton
+      position={position}
+      onPress={handlePress}
+      accessibilityLabel={a11yLabel(t('BCSC.HelpMenu.GiveFeedback'))}
+      accessibilityHint={t('Global.A11y.OpensInBrowser')}
+    >
+      <ThemedText style={{ flex: 1, color: ColorPalette.brand.headerText }}>
+        {t('BCSC.HelpMenu.GiveFeedback')}
+      </ThemedText>
+      <Icon name="open-in-new" size={20} color={ColorPalette.brand.headerText} />
+    </ListButton>
+  )
+}
+
+/**
  * "Back to home" menu row (verify flow only). Leaves the in-progress verification and returns to
  * the app home screen, keeping progress so the user can resume later (see {@link useLeaveVerification}).
  */
@@ -164,6 +196,7 @@ export const createFloatingHelpMenuButton = ({
     const { t } = useTranslation()
     const navigation = useNavigation<StackNavigationProp<WebViewParamList>>()
     const floatingHelpMenuRef = useRef<FloatingHelpMenuRef>(null)
+    const closeMenu = useCallback(() => floatingHelpMenuRef.current?.close(), [])
     const reportProblem = useReportProblem(floatingHelpMenuRef)
 
     const handleLearnMore = useCallback(() => {
@@ -175,14 +208,7 @@ export const createFloatingHelpMenuButton = ({
       <>
         <FloatingHelpMenuButton ref={floatingHelpMenuRef} icon={DEFAULT_HELP_ICON}>
           <ListButton onPress={handleLearnMore}>{t('BCSC.HelpMenu.LearnMore')}</ListButton>
-          <ListButton
-            onPress={() => {
-              // TODO (V4.1.x): Implement Give Feedback page and link here
-              floatingHelpMenuRef.current?.close()
-            }}
-          >
-            {t('BCSC.HelpMenu.GiveFeedback')}
-          </ListButton>
+          <GiveFeedbackListButton onClose={closeMenu} />
           <ReportProblemListButton onPress={reportProblem.open} />
         </FloatingHelpMenuButton>
         <ReportProblemModal visible={reportProblem.visible} onClose={reportProblem.hide} />
