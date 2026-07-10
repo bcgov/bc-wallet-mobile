@@ -1,5 +1,6 @@
 import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
+import { reportProblem } from '@/utils/logger'
 import { AbstractBifoldLogger } from '@bifold/core'
 import React, { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -59,7 +60,10 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
     return toBifoldError(this.props.t('Error.Problem'), this.props.t('Error.ProblemDescription'), error)
   }
 
-  handleReport = (): void => {
+  /**
+   * @returns the report ID the user can share with support, or undefined if there is no error
+   */
+  handleReport = (): string | undefined => {
     const { error } = this.state
     const { logger } = this.props
 
@@ -69,7 +73,10 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 
     const reportError = this.getReportError(error)
     logger.error('ErrorBoundary reported:', error)
-    logger.report(reportError)
+
+    // Use the shared pipeline rather than logger.report() so the report carries a report_id that
+    // ErrorInfoCard can surface — logger.report() sends to Loki but returns nothing to show the user.
+    return reportProblem(reportError)
   }
 
   render(): React.ReactNode {
