@@ -1,39 +1,43 @@
+import { Callout } from '@/bcsc-theme/components/Callout'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { DeveloperModeTrigger } from '@/bcsc-theme/components/DeveloperModeTrigger'
-import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { HELP_URL } from '@/constants'
+import { BCDispatchAction, BCState } from '@/store'
 import WelcomeIllustration from '@assets/img/welcome_phone.svg'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { StackNavigationProp } from '@react-navigation/stack'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
 interface OnboardingIntroScreenProps {
-  navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingIntro>
+  /**
+   * Fired after "Continue" records that the intro has been seen. In OnboardingStack this advances a
+   * new user to the privacy policy; in AuthStack it slides an already-onboarded user to the unlock
+   * screen (see the respective navigators).
+   */
+  onContinue?: () => void
+  /** Fired when the hidden developer-menu trigger activates (tap the illustration). */
+  onActivateDeveloper?: () => void
 }
 
 /**
- * First onboarding screen. Welcomes the user before the privacy/terms/PIN flow and hosts the
- * hidden developer-menu trigger (tap the illustration) so dev/QA can reach the developer (IAS
- * environment) menu before any registration happens.
+ * Welcome/intro screen shown before the privacy/terms/PIN flow. Hosts the hidden developer-menu
+ * trigger (tap the illustration) so dev/QA can reach the developer (IAS environment) menu.
+ *
+ * It appears in two navigators: as the first screen of OnboardingStack for new users, and once to
+ * every already-onboarded user on launch via AuthStack's AuthIntro route (announcing the app
+ * refresh). Continue records `SEEN_ONBOARDING_INTRO` so it is not shown again on later launches.
  *
  * @returns {*} {React.ReactElement} The OnboardingIntroScreen component.
  */
-export const OnboardingIntroScreen = ({ navigation }: OnboardingIntroScreenProps) => {
+export const OnboardingIntroScreen = ({ onContinue, onActivateDeveloper }: OnboardingIntroScreenProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
+  const [, dispatch] = useStore<BCState>()
 
   const handleContinue = useCallback(() => {
-    navigation.navigate(BCSCScreens.OnboardingPrivacyPolicy)
-  }, [navigation])
-
-  const handleLearnMore = useCallback(() => {
-    navigation.navigate(BCSCScreens.OnboardingWebView, {
-      title: t('BCSC.Screens.HelpCentre'),
-      url: HELP_URL,
-    })
-  }, [navigation, t])
+    dispatch({ type: BCDispatchAction.SEEN_ONBOARDING_INTRO, payload: [true] })
+    onContinue?.()
+  }, [dispatch, onContinue])
 
   const styles = StyleSheet.create({
     image: {
@@ -51,13 +55,6 @@ export const OnboardingIntroScreen = ({ navigation }: OnboardingIntroScreenProps
         accessibilityLabel={t('Global.Continue')}
         testID={testIdWithKey('Continue')}
       />
-      <Button
-        buttonType={ButtonType.Secondary}
-        title={t('BCSC.Onboarding.LearnMore')}
-        onPress={handleLearnMore}
-        accessibilityLabel={t('BCSC.Onboarding.LearnMore')}
-        testID={testIdWithKey('LearnMore')}
-      />
     </ControlContainer>
   )
 
@@ -71,7 +68,7 @@ export const OnboardingIntroScreen = ({ navigation }: OnboardingIntroScreenProps
         padding: Spacing.lg,
       }}
     >
-      <DeveloperModeTrigger onActivate={() => navigation.navigate(BCSCScreens.OnboardingDeveloper)}>
+      <DeveloperModeTrigger onActivate={() => onActivateDeveloper?.()}>
         <View style={styles.image}>
           <WelcomeIllustration width={200} height={187} />
         </View>
@@ -80,6 +77,12 @@ export const OnboardingIntroScreen = ({ navigation }: OnboardingIntroScreenProps
         {t('BCSC.Onboarding.IntroTitle')}
       </ThemedText>
       <ThemedText style={{ textAlign: 'center' }}>{t('BCSC.Onboarding.IntroDescription')}</ThemedText>
+      <Callout>
+        <ThemedText variant={'bold'} style={{ marginBottom: Spacing.sm }}>
+          {t('BCSC.Onboarding.IntroCalloutTitle')}
+        </ThemedText>
+        <ThemedText>{t('BCSC.Onboarding.IntroCalloutBody')}</ThemedText>
+      </Callout>
     </ScreenWrapper>
   )
 }

@@ -101,9 +101,12 @@ export enum BCSCScreens {
   EditNickname = 'Change Account Nickname',
   AccountDetails = 'Account Details',
   AccountSetup = 'Start Setup',
+  OnboardingSettings = `${BCSCStacks.Onboarding} In App Settings`,
   OnboardingSetupTypes = 'Setup Options',
   OnboardingIntro = 'Intro',
+  OnboardingContactUs = `${BCSCStacks.Onboarding} Contact Us`,
   OnboardingPrivacyPolicy = `${BCSCStacks.Onboarding} Privacy Information`,
+  OnboardingPrivacyInformation = `${BCSCStacks.Onboarding} Settings Privacy Information`,
   OnboardingTermsOfUse = 'Terms of Use Screen',
   OnboardingNotifications = 'Notification Prep',
   OnboardingSecureApp = 'App Security Options',
@@ -120,11 +123,13 @@ export enum BCSCScreens {
   MainPrivacyPolicy = `${BCSCStacks.Main} Privacy Information`,
   MainDeveloper = `${BCSCStacks.Main} Developer`,
   MainAutoLock = 'BCSCMainAutoLock',
+  MainNotificationSettings = 'BCSCMainNotificationSettings',
   MainAppSecurity = `${BCSCStacks.Main} App Security Setting`,
   MainChangePIN = `${BCSCStacks.Main} Change PIN`,
   VerifySettings = `${BCSCStacks.Verify} In App Settings`,
   VerifyWebView = `${BCSCStacks.Verify} Web view`,
   VerifyAutoLock = 'BCSCVerifyAutoLock',
+  VerifyNotificationSettings = 'BCSCVerifyNotificationSettings',
   VerifyAppSecurity = `${BCSCStacks.Verify} App Security Setting`,
   VerifyContactUs = `${BCSCStacks.Verify} Contact Us`,
   VerifyPrivacyPolicy = `${BCSCStacks.Verify} Privacy Information`,
@@ -136,6 +141,7 @@ export enum BCSCScreens {
   AccountRenewalFirstWarning = 'Renewal Instructions',
   AccountRenewalFinalWarning = 'Renewal Warning',
   SessionRecovery = 'Session Recovery',
+  AuthIntro = 'Auth Intro',
   AccountLanding = 'Account Landing',
   EnterPIN = 'Enter/Verify PIN',
   DeviceAuthInfo = 'Device Authentication Prep',
@@ -165,10 +171,13 @@ export type BCSCQRCoreTabParams = {
 }
 
 export type BCSCOnboardingStackParams = {
+  [BCSCScreens.OnboardingSettings]: undefined
   [BCSCScreens.OnboardingWebView]: { url: string; title: string }
   [BCSCScreens.OnboardingSetupTypes]: undefined
   [BCSCScreens.OnboardingIntro]: undefined
+  [BCSCScreens.OnboardingContactUs]: undefined
   [BCSCScreens.OnboardingPrivacyPolicy]: undefined
+  [BCSCScreens.OnboardingPrivacyInformation]: undefined
   [BCSCScreens.OnboardingTermsOfUse]: undefined
   [BCSCScreens.OnboardingNotifications]: undefined
   [BCSCScreens.OnboardingSecureApp]: undefined
@@ -215,7 +224,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.VideoReview]: { videoPath: string; videoThumbnailPath: string }
   [BCSCScreens.VideoTooLong]: { videoLengthSeconds: number }
   [BCSCScreens.EvidenceUploading]: undefined
-  [BCSCScreens.SuccessfullySent]: undefined
+  [BCSCScreens.SuccessfullySent]: { avgTurnaroundTimeMessage?: string } | undefined
   [BCSCScreens.PendingReview]: undefined
   [BCSCScreens.CancelledReview]: { agentReason?: string }
   [BCSCScreens.VerificationSuccess]: undefined
@@ -235,6 +244,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.VerifyContactUs]: undefined
   [BCSCScreens.VerifyDeveloper]: undefined
   [BCSCScreens.VerifyAutoLock]: undefined
+  [BCSCScreens.VerifyNotificationSettings]: undefined
   [BCSCScreens.VerifyAppSecurity]: undefined
   [BCSCScreens.VerifyChangePIN]: { isChangingExistingPIN?: boolean } | undefined
   [BCSCModals.InternetDisconnected]: undefined
@@ -276,6 +286,7 @@ export type BCSCMainStackParams = {
   [BCSCScreens.AccountDetails]: undefined
   [BCSCScreens.MainDeveloper]: undefined
   [BCSCScreens.MainAutoLock]: undefined
+  [BCSCScreens.MainNotificationSettings]: undefined
   [BCSCScreens.MainAppSecurity]: undefined
   [BCSCScreens.MainChangePIN]: { isChangingExistingPIN?: boolean } | undefined
   [BCSCScreens.TransferAgeRestriction]: undefined
@@ -309,6 +320,7 @@ export type BCSCMainStackParams = {
 export type BCSCAuthStackParams = {
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string; fromAppSwitch?: boolean }
   [BCSCScreens.EditNickname]: undefined
+  [BCSCScreens.AuthIntro]: undefined
   [BCSCScreens.AccountLanding]: undefined
   [BCSCScreens.EnterPIN]: undefined
   [BCSCScreens.DeviceAuthInfo]: undefined

@@ -1,5 +1,6 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { DeveloperModeTrigger } from '@/bcsc-theme/components/DeveloperModeTrigger'
+import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { AccountSetupType, BCDispatchAction, BCState } from '@/store'
@@ -15,8 +16,9 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
+import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback } from 'react'
+import React, { useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import { getAccountSecurityMethod } from 'react-native-bcsc-core'
@@ -31,6 +33,35 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
   const { Spacing, ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const registrationService = useRegistrationService()
+  const { clearDeviceCodes } = useSecureActions()
+
+  // Latest store snapshot for the focus effect below. Reading through a ref keeps the effect
+  // callback stable so it only runs on focus transitions — depending on the store directly
+  // would re-run it the moment a choice is dispatched and immediately clear it.
+  const storeRef = useRef(store)
+  storeRef.current = store
+
+  // Arriving (back) at the setup question abandons a previously chosen transfer. Clear the
+  // persisted choice — it forces the resume route into the transfer screens, which is what
+  // locked users out of returning to a traditional setup. Any device authorization issued for
+  // the transfer has no identity attached, so discard it too (unless the ID step has progress,
+  // in which case the authorization belongs to that flow).
+  useFocusEffect(
+    useCallback(() => {
+      const { bcsc, bcscSecure } = storeRef.current
+      if (bcsc.accountSetupType !== AccountSetupType.TransferAccount) {
+        return
+      }
+
+      dispatch({ type: BCDispatchAction.ACCOUNT_SETUP_TYPE, payload: [] })
+
+      if (bcscSecure.deviceCode && !bcscSecure.serial && !bcscSecure.additionalEvidenceData.length) {
+        clearDeviceCodes().catch((error) =>
+          logger.error('[AccountSetupScreen] Failed to clear transfer device authorization', error as Error)
+        )
+      }
+    }, [dispatch, clearDeviceCodes, logger])
+  )
 
   const styles = StyleSheet.create({
     contentContainer: {

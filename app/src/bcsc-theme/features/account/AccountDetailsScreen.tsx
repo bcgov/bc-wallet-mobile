@@ -7,6 +7,7 @@ import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useAlerts } from '@/hooks/useAlerts'
 
+import { InformationCard } from '@/bcsc-theme/components/InformationCard'
 import { isAccountExpired } from '@/bcsc-theme/utils/datetime-utils'
 import { BCState } from '@/store'
 import {
@@ -154,7 +155,11 @@ const AccountDetailsScreen: React.FC<AccountDetailsScreenProps> = ({ navigation 
         </ThemedText>
       </View>
 
-      <ThemedText style={styles.warning}>{t('BCSC.Account.AccountInfo.Description')}</ThemedText>
+      <InformationCard
+        title={t('BCSC.Account.AccountInfo.InfoTitle')}
+        subtext={t('BCSC.Account.AccountInfo.InfoDescription')}
+        startIcon="information-outline"
+      />
 
       <AccountField
         label={t('BCSC.AccountDetails.AccountNickname')}

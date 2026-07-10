@@ -1,10 +1,10 @@
 import { PressableOpacity } from '@/components/PressableOpacity'
-import { hitSlop } from '@/constants'
+import { CONTACT_US_GOVERNMENT_WEBSITE_URL, hitSlop } from '@/constants'
 import { testIdWithKey } from '@bifold/core'
 import Clipboard from '@react-native-clipboard/clipboard'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native'
+import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import CommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import Icon from 'react-native-vector-icons/MaterialIcons'
@@ -197,22 +197,37 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
             )}
           </View>
 
+          {enableReport && onReport && !reported && (
+            <Text style={styles.noteText} testID={testIdWithKey('ReportNote')}>
+              <Text style={styles.noteBold}>{t('Error.NotePrefix')}</Text>
+              {t('Error.NoteBody')}
+              <Text
+                style={styles.noteLink}
+                accessibilityRole="link"
+                testID={testIdWithKey('SupportLink')}
+                onPress={() => Linking.openURL(CONTACT_US_GOVERNMENT_WEBSITE_URL)}
+              >
+                {t('Error.SupportLink')}
+              </Text>
+            </Text>
+          )}
+
           {reported && referenceCode && (
-            <View style={styles.referenceContainer} testID={testIdWithKey('ReferenceCode')}>
-              <Text style={styles.referenceLabel}>{t('Error.ReferenceCode')}</Text>
+            <View style={styles.referenceContainer} testID={testIdWithKey('ReportId')}>
+              <Text style={styles.referenceLabel}>{t('Error.ReportId')}</Text>
               <View style={styles.referenceRow}>
                 <Text
                   style={styles.referenceCode}
                   selectable
-                  accessibilityLabel={`${t('Error.ReferenceCode')}: ${referenceCode}`}
-                  testID={testIdWithKey('ReferenceCodeValue')}
+                  accessibilityLabel={`${t('Error.ReportId')}: ${referenceCode}`}
+                  testID={testIdWithKey('ReportIdValue')}
                 >
                   {referenceCode}
                 </Text>
                 <TouchableOpacity
                   accessibilityLabel={copied ? t('Error.CodeCopied') : t('Error.CopyCode')}
                   accessibilityRole="button"
-                  testID={testIdWithKey('CopyReferenceCode')}
+                  testID={testIdWithKey('CopyReportId')}
                   style={styles.copyButton}
                   onPress={handleCopy}
                   activeOpacity={0.7}
@@ -225,7 +240,7 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
                   <Text style={styles.copyButtonText}>{copied ? t('Error.CodeCopied') : t('Error.CopyCode')}</Text>
                 </TouchableOpacity>
               </View>
-              <Text style={styles.referenceHint}>{t('Error.ShareCodeWithSupport')}</Text>
+              <Text style={styles.referenceHint}>{t('Error.ShareReportIdWithSupport')}</Text>
             </View>
           )}
 
@@ -359,6 +374,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.destructiveButtonText,
+  },
+  noteText: {
+    marginTop: 16,
+    marginHorizontal: 4,
+    fontSize: 16,
+    color: colors.text,
+    lineHeight: 24,
+  },
+  noteBold: {
+    fontWeight: '700',
+  },
+  noteLink: {
+    fontWeight: '700',
+    color: colors.link,
+    textDecorationLine: 'underline',
   },
   referenceContainer: {
     marginTop: 16,

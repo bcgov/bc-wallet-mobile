@@ -406,7 +406,6 @@ export class AppContainer implements Container {
       ])
 
       // Reset paths and prompts on load as they should not be persisted
-      bcsc.selectedNickname = undefined
       bcsc.photoPath = undefined
       bcsc.videoPath = undefined
       bcsc.videoThumbnailPath = undefined

@@ -20,6 +20,10 @@ const getRegistrationAlertMap = (alerts: AppAlerts): Partial<Record<AppEventCode
   [AppEventCode.ERR_120_KEYCHAIN_UNAVAILABLE_ERROR]: alerts.keychainUnavailableAlert,
   [AppEventCode.ERR_120_JWT_DEVICE_INFO_ERROR]: alerts.jwtDeviceInfoAlert,
   [AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE]: alerts.clientRegistrationFailureAlert,
+  // #3419: the unified native mapper replaced the old CLIENT_REGISTRATION_FAILURE fallback with
+  // these events for registration-body failures — same generic modal as before.
+  [AppEventCode.DCR_BODY_BUILD_FAILED]: alerts.clientRegistrationFailureAlert,
+  [AppEventCode.UNMAPPED_NATIVE_ERROR]: alerts.clientRegistrationFailureAlert,
   [AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL]: alerts.clientRegistrationNullAlert,
   [AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON]: alerts.failedToDeserializeJsonAlert,
   [AppEventCode.ERR_115_FAILED_TO_SERIALIZE_JSON]: alerts.failedToSerializeJsonAlert,

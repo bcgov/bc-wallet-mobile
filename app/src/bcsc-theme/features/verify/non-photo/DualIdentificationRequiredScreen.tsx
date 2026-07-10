@@ -1,5 +1,7 @@
 import { BulletedInstructionsScreen } from '@/bcsc-theme/components/BulletedInstructionsScreen'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { HelpCentreUrl } from '@/constants'
+import { testIdWithKey } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
@@ -30,6 +32,16 @@ const DualIdentificationRequiredScreen: React.FC<DualIdentificationRequiredScree
             'BCSC.DualNonBCSCEvidence.CheckYourIDBullet3',
             'BCSC.DualNonBCSCEvidence.CheckYourIDBullet4',
           ],
+          link: {
+            label: t('BCSC.DualNonBCSCEvidence.SeeAcceptedID'),
+            testID: testIdWithKey('SeeAcceptedID'),
+            onPress: () => {
+              navigation.navigate(BCSCScreens.VerifyWebView, {
+                title: t('BCSC.Screens.HelpCentre'),
+                url: HelpCentreUrl.ACCEPTED_IDENTITY_DOCUMENTS,
+              })
+            },
+          },
         },
         {
           heading: t('BCSC.AdditionalEvidence.LimitedAccess'),

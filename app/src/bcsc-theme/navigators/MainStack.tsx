@@ -60,6 +60,7 @@ import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsScreen'
 import { MainPrivacyPolicyScreen } from '../features/settings/MainPrivacyPolicyScreen'
 import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
+import { NotificationSettingsScreen } from '../features/settings/NotificationSettingsScreen'
 import { MainResetWalletConfirmationScreen } from '../features/settings/ResetWalletConfirmationScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { useBCSCApiClient } from '../hooks/useBCSCApiClient'
@@ -308,6 +309,14 @@ const MainStack: React.FC = () => {
             }}
           />
           <Stack.Screen
+            name={BCSCScreens.MainNotificationSettings}
+            component={NotificationSettingsScreen}
+            options={{
+              headerShown: true,
+              title: t('BCSC.Settings.Notifications'),
+            }}
+          />
+          <Stack.Screen
             name={BCSCScreens.MainAppSecurity}
             component={MainChangeSecurityScreen}
             options={{
@@ -415,6 +424,7 @@ const MainStack: React.FC = () => {
             component={ForgetAllPairingsScreen}
             options={() => ({
               headerShown: true,
+              title: t('BCSC.ForgetAllPairings.ScreenTitle'),
             })}
           />
           <Stack.Screen

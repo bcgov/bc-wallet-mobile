@@ -1,5 +1,7 @@
-import { useDefaultStackOptions, useTheme } from '@bifold/core'
-import { createStackNavigator } from '@react-navigation/stack'
+import { BCState } from '@/store'
+import { useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
+import { useNavigation } from '@react-navigation/native'
+import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
@@ -16,6 +18,7 @@ import { LockoutScreen } from '../features/auth/LockoutScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { ServiceOutage } from '../features/modal/ServiceOutage'
+import { OnboardingIntroScreen } from '../features/onboarding/OnboardingIntroScreen'
 import { AuthPrivacyPolicyScreen } from '../features/settings/AuthPrivacyPolicyScreen'
 import { AuthSettingsScreen } from '../features/settings/AuthSettingsScreen'
 import { ContactUsScreen } from '../features/settings/ContactUsScreen'
@@ -24,6 +27,24 @@ import { BCSCAuthStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../typ
 
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import { getDefaultModalOptions } from './stack-utils'
+
+/**
+ * Slide wrapper for the one-time welcome/intro — the first screen a returning (already-onboarded)
+ * user sees on launch. Continue records the intro as seen and replaces this route with the unlock
+ * screen, so the transition is a normal in-stack slide rather than a RootStack swap.
+ */
+const AuthIntroScreen = (): React.ReactElement => {
+  const navigation = useNavigation<StackNavigationProp<BCSCAuthStackParams>>()
+  return (
+    <OnboardingIntroScreen
+      onContinue={() => navigation.replace(BCSCScreens.AccountLanding)}
+      // Same hidden developer trigger the onboarding intro exposes. AuthStack already registers the
+      // Developer screen (AuthDeveloper), so returning users can reach it (e.g. the "Reset Welcome
+      // Intro" dev tool) from the intro before unlocking.
+      onActivateDeveloper={() => navigation.navigate(BCSCScreens.AuthDeveloper)}
+    />
+  )
+}
 
 /**
  * Renders the auth stack. These screens are shown when the user has an account but is not yet authenticated.
@@ -35,11 +56,15 @@ const AuthStack = (): React.ReactElement => {
   const theme = useTheme()
   const Stack = createStackNavigator<BCSCAuthStackParams>()
   const defaultStackOptions = useDefaultStackOptions(theme)
+  const [store] = useStore<BCState>()
+  // Returning users see the one-time welcome/intro before unlocking; once seen, AuthStack opens
+  // straight on the unlock (account landing) screen.
+  const showIntro = !store.bcsc.hasSeenOnboardingIntro
   useBCSCStack(BCSCStacks.Auth)
 
   return (
     <Stack.Navigator
-      initialRouteName={BCSCScreens.AccountLanding}
+      initialRouteName={showIntro ? BCSCScreens.AuthIntro : BCSCScreens.AccountLanding}
       screenOptions={{
         ...defaultStackOptions,
         headerShadowVisible: false,
@@ -48,6 +73,15 @@ const AuthStack = (): React.ReactElement => {
         headerRight: createFloatingHelpMenuButton({ webViewScreen: BCSCScreens.AuthWebView }),
       }}
     >
+      <Stack.Screen
+        name={BCSCScreens.AuthIntro}
+        component={AuthIntroScreen}
+        options={{
+          title: '',
+          // One-time gate shown before unlock — no back destination.
+          headerLeft: () => null,
+        }}
+      />
       <Stack.Screen
         name={BCSCScreens.AccountLanding}
         component={AccountLanding}

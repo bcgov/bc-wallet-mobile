@@ -4,14 +4,14 @@ import { createProgressHeader } from '@/bcsc-theme/components/VerifyProgressHead
 import { useVerificationResponseListener } from '@/bcsc-theme/features/verification-response/useVerificationResponseListener'
 import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
 import { BCSCModals, BCSCScreens, BCSCStacks, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE } from '@/constants'
+import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
 import { BCState } from '@/store'
 import { testIdWithKey, useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
-import { createVerifyHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
-import { createHeaderBackButton } from '../components/HeaderBackButton'
+import { createFloatingHelpMenuButton, createVerifyHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
+import { createHeaderBackButton, HeaderBackButton } from '../components/HeaderBackButton'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferInstructionsScreen from '../features/account-transfer/transferee/TransferInstructionsScreen'
 import TransferQRScannerScreen from '../features/account-transfer/transferee/TransferQRScannerScreen'
@@ -27,6 +27,7 @@ import AccountSetupScreen from '../features/onboarding/AccountSetupScreen'
 import { VerifyPromptScreen } from '../features/onboarding/VerifyPromptScreen'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
 import { ContactUsScreen } from '../features/settings/ContactUsScreen'
+import { NotificationSettingsScreen } from '../features/settings/NotificationSettingsScreen'
 import { VerifyPrivacyPolicyScreen } from '../features/settings/VerifyPrivacyPolicyScreen'
 import { VerifySettingsScreen } from '../features/settings/VerifySettingsScreen'
 import BirthdateLockoutScreen from '../features/verify/BirthdateLockoutScreen'
@@ -66,24 +67,27 @@ import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
-import { useVerificationStatus } from '../hooks/useVerificationStatus'
 import { getResumeStepRoute } from '../utils/resume-step-route'
 
-const VerifyStack = () => {
+interface VerifyStackProps {
+  /**
+   * Opens the stack on the one-time verify prompt rather than the user's resume step. Set by
+   * RootStack for the single mount of the prompt that follows onboarding
+   */
+  showVerifyPrompt?: boolean
+  onVerifyPromptAnswered?: () => void
+}
+
+const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: VerifyStackProps) => {
   const Stack = createStackNavigator<BCSCVerifyStackParams>()
   const theme = useTheme()
   const { t } = useTranslation()
   const defaultStackOptions = useDefaultStackOptions(theme)
   const [store] = useStore<BCState>()
-  const { needsVerification } = useVerificationStatus()
   const resumeRoute = getResumeStepRoute(store)
-  // Show the verify prompt as the first screen the first time the user enters the verify journey
-  // (post-PIN, not yet verified, prompt unseen) so that prompt → setup question animates as an
-  // in-stack slide rather than a RootStack swap. Session recovery always takes precedence.
-  const initialRouteName =
-    !store.bcscSecure.sessionRecoveryRequired && !store.bcsc.hasSeenVerifyPrompt && needsVerification
-      ? BCSCScreens.VerifyPrompt
-      : resumeRoute.name
+  // Opening on the prompt (rather than swapping stacks to reach it) lets prompt → setup question
+  // animate as an in-stack slide. Everyone else resumes at the step they left off on.
+  const initialRouteName = showVerifyPrompt ? BCSCScreens.VerifyPrompt : resumeRoute.name
   useBCSCStack(BCSCStacks.Verify)
 
   // Listen for verification approval push notifications and navigate to success screen
@@ -118,7 +122,12 @@ const VerifyStack = () => {
           headerRight: createVerifyHelpMenuButton(),
         }}
       >
-        {({ navigation }) => <VerifyPromptScreen onContinue={() => navigation.navigate(BCSCScreens.AccountSetup)} />}
+        {({ navigation }) => (
+          <VerifyPromptScreen
+            onAnswered={onVerifyPromptAnswered}
+            onContinue={() => navigation.navigate(BCSCScreens.AccountSetup)}
+          />
+        )}
       </Stack.Screen>
       <Stack.Screen
         name={BCSCScreens.AccountSetup}
@@ -220,20 +229,27 @@ const VerifyStack = () => {
         options={{ header: createProgressHeader(5, 30) }}
       />
       <Stack.Screen name={BCSCScreens.TakePhoto} component={TakePhotoScreen} options={{ headerShown: false }} />
-      <Stack.Screen name={BCSCScreens.PhotoReview} component={PhotoReviewScreen} options={{ headerShown: false }} />
+      <Stack.Screen
+        name={BCSCScreens.PhotoReview}
+        component={PhotoReviewScreen}
+        options={{ header: createProgressHeader(5, 30) }}
+      />
       <Stack.Screen
         name={BCSCScreens.VideoInstructions}
         component={VideoInstructionsScreen}
         options={{ header: createProgressHeader(5, 50) }}
       />
       <Stack.Screen name={BCSCScreens.TakeVideo} component={TakeVideoScreen} options={{ headerShown: false }} />
-      <Stack.Screen name={BCSCScreens.VideoReview} component={VideoReviewScreen} options={{ headerShown: false }} />
+      <Stack.Screen
+        name={BCSCScreens.VideoReview}
+        component={VideoReviewScreen}
+        options={{ header: createProgressHeader(5, 50) }}
+      />
       <Stack.Screen
         name={BCSCScreens.PendingReview}
         component={PendingReviewScreen}
         options={{
-          header: createProgressHeader(5, 80),
-          headerLeft: createVerifySettingsHeaderButton(),
+          title: t('BCSC.Steps.Status'),
         }}
       />
       <Stack.Screen
@@ -293,6 +309,11 @@ const VerifyStack = () => {
       <Stack.Screen
         name={BCSCScreens.EvidenceIDCollection}
         component={EvidenceIDCollectionScreen}
+        initialParams={
+          resumeRoute.name === BCSCScreens.EvidenceIDCollection
+            ? (resumeRoute.params as BCSCVerifyStackParams[typeof BCSCScreens.EvidenceIDCollection])
+            : undefined
+        }
         options={{ header: createProgressHeader(2, 75) }}
       />
       <Stack.Screen name={BCSCScreens.VerifyWebView} component={WebViewScreen} />
@@ -322,21 +343,45 @@ const VerifyStack = () => {
       />
       <Stack.Screen name={BCSCScreens.VerifySettings} component={VerifySettingsScreen} />
       <Stack.Screen name={BCSCScreens.VerifyAutoLock} component={AutoLockScreen} />
+      <Stack.Screen
+        name={BCSCScreens.VerifyNotificationSettings}
+        component={NotificationSettingsScreen}
+        options={{ title: t('BCSC.Settings.Notifications') }}
+      />
       <Stack.Screen name={BCSCScreens.VerifyAppSecurity} component={VerifyChangeSecurityScreen} />
       <Stack.Screen name={BCSCScreens.VerifyChangePIN} component={VerifyChangePINScreen} />
 
       <Stack.Screen
         name={BCSCScreens.TransferAccountInstructions}
         component={TransferInstructionsScreen}
-        options={{
-          header: createProgressHeader(5, 30),
-          headerLeft: createVerifySettingsHeaderButton(),
-        }}
+        options={({ navigation }) => ({
+          // This screen can be the stack's initial route when the user resumes a transfer
+          // (accountSetupType persisted); with nothing beneath it, back returns to the setup
+          // question instead so the user can still choose a traditional setup.
+          headerLeft: (props) => (
+            <HeaderBackButton
+              {...props}
+              onPress={() =>
+                navigation.canGoBack() ? navigation.goBack() : navigation.replace(BCSCScreens.AccountSetup)
+              }
+            />
+          ),
+          headerRight: createFloatingHelpMenuButton({
+            webViewScreen: BCSCScreens.VerifyWebView,
+            learnMoreUrl: HelpCentreUrl.QUICK_SETUP_OF_ADDITIONAL_DEVICES,
+          }),
+        })}
       />
       <Stack.Screen
         name={BCSCScreens.TransferAccountQRScan}
         component={TransferQRScannerScreen}
-        options={{ header: createProgressHeader(5, 70) }}
+        options={{
+          title: t('BCSC.Screens.TransferAccountScan'),
+          headerRight: createFloatingHelpMenuButton({
+            webViewScreen: BCSCScreens.VerifyWebView,
+            learnMoreUrl: HelpCentreUrl.QUICK_SETUP_OF_ADDITIONAL_DEVICES,
+          }),
+        }}
       />
       <Stack.Screen
         name={BCSCScreens.VerifyRemoveAccountConfirmation}

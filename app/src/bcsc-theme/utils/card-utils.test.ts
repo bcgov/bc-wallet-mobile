@@ -1,5 +1,11 @@
-import { getCardProcessForCardType, isCardEvidenceComplete } from '@/bcsc-theme/utils/card-utils'
-import { BCSCCardProcess, BCSCCardType } from 'react-native-bcsc-core'
+import {
+  clampEvidenceImagesToSides,
+  getCardProcessForCardType,
+  isCardEvidenceComplete,
+  isEvidenceAwaitingDocumentNumber,
+  normalizeEvidenceImageLabel,
+} from '@/bcsc-theme/utils/card-utils'
+import { BCSCCardProcess, BCSCCardType, EvidenceImageSide, PhotoMetadata } from 'react-native-bcsc-core'
 
 describe('Card Utils', () => {
   describe('getCardProcessForCardType', () => {
@@ -94,6 +100,159 @@ describe('Card Utils', () => {
 
     it('should return false when card is undefined', () => {
       expect(isCardEvidenceComplete(undefined)).toBe(false)
+    })
+  })
+
+  describe('normalizeEvidenceImageLabel', () => {
+    it('maps legacy lowercase "front" to FRONT_SIDE', () => {
+      expect(normalizeEvidenceImageLabel('front')).toBe('FRONT_SIDE')
+    })
+
+    it('maps legacy lowercase "back" to BACK_SIDE', () => {
+      expect(normalizeEvidenceImageLabel('back')).toBe('BACK_SIDE')
+    })
+
+    it('returns an already-normalized label unchanged', () => {
+      expect(normalizeEvidenceImageLabel('FRONT_SIDE')).toBe('FRONT_SIDE')
+    })
+
+    it('returns an unrelated label unchanged', () => {
+      expect(normalizeEvidenceImageLabel('PASSPORT')).toBe('PASSPORT')
+    })
+  })
+
+  describe('clampEvidenceImagesToSides', () => {
+    const photo = (label: string, tag: string): PhotoMetadata => ({
+      label,
+      content_type: 'image/jpeg',
+      content_length: 1,
+      date: 0,
+      sha256: tag,
+      file_path: `/tmp/${tag}.jpg`,
+    })
+    const sides = (count: number): EvidenceImageSide[] =>
+      Array.from({ length: count }, (_, i) => ({
+        image_side_name: i === 0 ? 'FRONT_SIDE' : 'BACK_SIDE',
+        image_side_label: `side-${i}`,
+        image_side_tip: `tip-${i}`,
+      }))
+
+    it('dedupes an over-count two-sided card, keeping the last occurrence of the duplicated label', () => {
+      // Mirrors the BCDL 2->3 dead end: retake on the back side leaves a stale
+      // duplicate appended after the original two.
+      const metadata = [photo('FRONT_SIDE', 'front'), photo('BACK_SIDE', 'back'), photo('BACK_SIDE', "back'")]
+
+      const result = clampEvidenceImagesToSides(metadata, sides(2))
+
+      expect(result).toEqual([photo('FRONT_SIDE', 'front'), photo('BACK_SIDE', "back'")])
+    })
+
+    it('dedupes an over-count single-sided card down to the last occurrence', () => {
+      // Mirrors the passport 1->2 dead end: re-accepting the only side appends
+      // a duplicate instead of replacing it.
+      const metadata = [photo('PASSPORT', 'p'), photo('PASSPORT', "p'")]
+
+      const result = clampEvidenceImagesToSides(metadata, sides(1))
+
+      expect(result).toEqual([photo('PASSPORT', "p'")])
+    })
+
+    it('returns exact-count metadata unchanged', () => {
+      const metadata = [photo('FRONT_SIDE', 'front'), photo('BACK_SIDE', 'back')]
+
+      expect(clampEvidenceImagesToSides(metadata, sides(2))).toBe(metadata)
+    })
+
+    it('dedupes mixed legacy and normalized labels referring to the same sides', () => {
+      const metadata = [photo('front', 'a'), photo('BACK_SIDE', 'b'), photo('back', 'c')]
+
+      const result = clampEvidenceImagesToSides(metadata, sides(2))
+
+      expect(result).toHaveLength(2)
+      expect(result.map((r) => normalizeEvidenceImageLabel(r.label))).toEqual(['FRONT_SIDE', 'BACK_SIDE'])
+    })
+
+    it('returns metadata unchanged when imageSides is undefined', () => {
+      const metadata = [photo('FRONT_SIDE', 'front'), photo('BACK_SIDE', 'back'), photo('BACK_SIDE', "back'")]
+
+      expect(clampEvidenceImagesToSides(metadata, undefined)).toBe(metadata)
+    })
+
+    it('returns metadata unchanged when imageSides is empty', () => {
+      const metadata = [photo('FRONT_SIDE', 'front'), photo('BACK_SIDE', 'back'), photo('BACK_SIDE', "back'")]
+
+      expect(clampEvidenceImagesToSides(metadata, [])).toBe(metadata)
+    })
+
+    it('slices an over-count card with all-distinct labels down to the expected count', () => {
+      const metadata = [photo('A', 'a'), photo('B', 'b'), photo('C', 'c')]
+
+      const result = clampEvidenceImagesToSides(metadata, sides(2))
+
+      expect(result).toEqual([photo('A', 'a'), photo('B', 'b')])
+    })
+  })
+
+  describe('isEvidenceAwaitingDocumentNumber', () => {
+    const twoSidedEvidenceType = { image_sides: [{}, {}] }
+    const oneSidedEvidenceType = { image_sides: [{}] }
+
+    it('should return true when all photos are captured but the document number is missing', () => {
+      const inProgressCard = {
+        evidenceType: twoSidedEvidenceType,
+        metadata: ['meta1', 'meta2'],
+      }
+
+      expect(isEvidenceAwaitingDocumentNumber(inProgressCard as any)).toBe(true)
+    })
+
+    it('should return true for a one-sided card with its photo captured and no document number', () => {
+      const inProgressCard = {
+        evidenceType: oneSidedEvidenceType,
+        metadata: ['meta1'],
+      }
+
+      expect(isEvidenceAwaitingDocumentNumber(inProgressCard as any)).toBe(true)
+    })
+
+    it('should return false once the document number has been entered (evidence complete)', () => {
+      const completeCard = {
+        evidenceType: twoSidedEvidenceType,
+        documentNumber: '123456789',
+        metadata: ['meta1', 'meta2'],
+      }
+
+      expect(isEvidenceAwaitingDocumentNumber(completeCard as any)).toBe(false)
+    })
+
+    it('should return false for an abandoned selection with no photos', () => {
+      const abandonedCard = {
+        evidenceType: twoSidedEvidenceType,
+        metadata: [],
+      }
+
+      expect(isEvidenceAwaitingDocumentNumber(abandonedCard as any)).toBe(false)
+    })
+
+    it('should return false when a two-sided card only has one photo captured', () => {
+      const partialCard = {
+        evidenceType: twoSidedEvidenceType,
+        metadata: ['meta1'],
+      }
+
+      expect(isEvidenceAwaitingDocumentNumber(partialCard as any)).toBe(false)
+    })
+
+    it('should return false when missing evidence type', () => {
+      const noTypeCard = {
+        metadata: ['meta1', 'meta2'],
+      }
+
+      expect(isEvidenceAwaitingDocumentNumber(noTypeCard as any)).toBe(false)
+    })
+
+    it('should return false when card is undefined', () => {
+      expect(isEvidenceAwaitingDocumentNumber(undefined)).toBe(false)
     })
   })
 })
