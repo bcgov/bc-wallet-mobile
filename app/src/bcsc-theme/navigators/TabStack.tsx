@@ -205,16 +205,15 @@ const BCSCTabStack: React.FC = () => {
           name={BCSCScreens.Home}
           component={Home}
           options={{
-            title: 'Home',
+            title: t('BCSC.Home.Title'),
             headerTitleAlign: 'center',
             tabBarIconStyle: styles.tabBarIcon,
             tabBarIcon: createTabBarIcon('Home', 'home-outline'),
             tabBarShowLabel: false,
-            tabBarAccessibilityLabel: 'Home',
+            tabBarAccessibilityLabel: t('BCSC.Home.Title'),
             tabBarTestID: testIdWithKey('Home'),
             tabBarBadge: homeNotificationsBadgeCount,
             headerLeft: createMainSettingsHeaderButton(),
-            title: 'Home',
           }}
         />
         <Tab.Screen
