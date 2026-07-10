@@ -159,6 +159,30 @@ describe('AppError', () => {
 
       expect(error.technicalMessage).toBe(`Request failed with status code 400: ${'y'.repeat(500)}`)
     })
+
+    it('carries the server reason through re-wrapping when the cause is itself an AppError', () => {
+      // Mirrors useEvidenceUploadModel: an inner 2107 BAD_REQUEST AppError (caused by an IAS
+      // 400 with a JSON `{message}` body, e.g. "invalid duration" for an out-of-range video) is
+      // caught and re-wrapped as an outer 2404 FILE_UPLOAD_ERROR AppError. The outer error's
+      // `cause` is the inner AppError (no `.response` of its own), so without preferring the
+      // inner error's technicalMessage, the server's reason would be lost behind the generic
+      // FILE_UPLOAD_ERROR message.
+      const axiosLike = Object.assign(new Error('Request failed with status code 400'), {
+        isAxiosError: true,
+        response: { data: { message: 'invalid duration' } },
+      })
+      const innerError = AppError.fromErrorDefinition(ErrorRegistry.BAD_REQUEST, { cause: axiosLike, track: false })
+      const outerError = AppError.fromErrorDefinition(ErrorRegistry.FILE_UPLOAD_ERROR, {
+        cause: innerError,
+        track: false,
+      })
+
+      expect(innerError.technicalMessage).toBe('Request failed with status code 400: invalid duration')
+      expect(outerError.technicalMessage).toContain('invalid duration')
+      expect(outerError.technicalMessage).toBe(
+        'network.err_209_bad_request.2107: Request failed with status code 400: invalid duration'
+      )
+    })
   })
 
   describe('fullMessage', () => {
@@ -206,6 +230,30 @@ describe('AppError', () => {
 
       expect(error.fullMessage).toBe(
         'Bad request\nDebug: [network.err_209_bad_request.2107] Request failed with status code 400: unexpected images count'
+      )
+    })
+
+    it('carries the server reason through re-wrapping into fullMessage for problem reports (evidence upload re-wrap)', () => {
+      // Mirrors useEvidenceUploadModel.tsx: uploadVideoEvidenceMetadata throws an inner 2107
+      // BAD_REQUEST AppError from an IAS 400 (`{"message":"invalid duration"}`), which the
+      // catch block re-wraps as an outer 2404 FILE_UPLOAD_ERROR AppError before showing
+      // fileUploadErrorAlert. fullMessage is what reaches Loki via "Report a problem" — the
+      // real server reason must survive this second layer of wrapping, not just the first.
+      const axiosLike = Object.assign(new Error('Request failed with status code 400'), {
+        isAxiosError: true,
+        response: { data: { message: 'invalid duration' } },
+      })
+      const innerError = AppError.fromErrorDefinition(ErrorRegistry.BAD_REQUEST, { cause: axiosLike, track: false })
+      const outerError = AppError.fromErrorDefinition(ErrorRegistry.FILE_UPLOAD_ERROR, {
+        cause: innerError,
+        track: false,
+      })
+
+      expect(outerError.fullMessage).toContain('invalid duration')
+      expect(outerError.fullMessage).toBe(
+        'File upload request failed — network error or server rejection\n' +
+          'Debug: [verification.file_upload_error.2404] network.err_209_bad_request.2107: ' +
+          'Request failed with status code 400: invalid duration'
       )
     })
 

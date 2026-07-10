@@ -135,7 +135,13 @@ export class AppError extends Error {
     // Include the server's reason: a string body (truncated to the cap), or the `message` field of a JSON body
     const serverReason = extractServerReason(isAxiosError ? cause.response?.data : undefined)
 
-    return [code, cause.message, serverReason].filter(Boolean).join(': ')
+    // When the cause is itself an AppError (e.g. a 2107 client error re-wrapped as a
+    // 2404 file-upload error), its `technicalMessage` already carries the server reason;
+    // the generic `message` does not. Prefer it so the reason survives re-wrapping.
+    const causeDetail =
+      this.cause instanceof AppError ? (this.cause.technicalMessage ?? this.cause.message) : cause.message
+
+    return [code, causeDetail, serverReason].filter(Boolean).join(': ')
   }
 
   /**
