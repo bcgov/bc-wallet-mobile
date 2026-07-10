@@ -73,7 +73,7 @@ exports[`NotificationCard renders correctly 1`] = `
             [
               {
                 "color": "#FFFFFF",
-                "fontSize": 18,
+                "fontSize": 20,
               },
               undefined,
               {
