@@ -5,7 +5,8 @@ import QRScanner from '@/bcsc-theme/features/qr-core/QRScanner'
 import { useCardStatus } from '@/bcsc-theme/hooks/useCardStatus'
 import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
-import { ButtonLocation, IconButton, testIdWithKey, TOKENS, useServices, useTheme } from '@bifold/core'
+import { BCState } from '@/store'
+import { ButtonLocation, IconButton, testIdWithKey, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -82,6 +83,7 @@ const QRCoreStack: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const { isActivelyVerified, isExpired } = useCardStatus()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [store] = useStore<BCState>()
 
   const styles = StyleSheet.create({
     tabBarIcon: {
@@ -145,18 +147,20 @@ const QRCoreStack: React.FC = () => {
             }),
           }}
         />
-        <Tab.Screen
-          name={BCSCQRCoreScreens.Display}
-          component={QRDisplay}
-          options={{
-            title: t('Scan.MyQRCode'),
-            tabBarIconStyle: styles.tabBarIcon,
-            tabBarIcon: createTabBarIcon(t('Scan.MyQRCode'), 'qrcode'),
-            tabBarShowLabel: false,
-            tabBarAccessibilityLabel: t('Scan.MyQRCode'),
-            tabBarTestID: testIdWithKey('MyQRCode'),
-          }}
-        />
+        {store.preferences.developerModeEnabled ? (
+          <Tab.Screen
+            name={BCSCQRCoreScreens.Display}
+            component={QRDisplay}
+            options={{
+              title: t('Scan.MyQRCode'),
+              tabBarIconStyle: styles.tabBarIcon,
+              tabBarIcon: createTabBarIcon(t('Scan.MyQRCode'), 'qrcode'),
+              tabBarShowLabel: false,
+              tabBarAccessibilityLabel: t('Scan.MyQRCode'),
+              tabBarTestID: testIdWithKey('MyQRCode'),
+            }}
+          />
+        ) : null}
         <Tab.Screen
           name={BCSCQRCoreScreens.PairingCode}
           component={ManualPairing}
