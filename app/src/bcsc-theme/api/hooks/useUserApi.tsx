@@ -10,8 +10,9 @@ export interface UserInfoResponseData {
   credential_reference: string
   sub: string
   transaction_identifier: string
-  given_name: string
-  family_name: string
+  given_name: string // ie: Steve
+  given_names: string // ie: Steve John
+  family_name: string // ie: Brule
   display_name: string
   birthdate: string
   gender: string

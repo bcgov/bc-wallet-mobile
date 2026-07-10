@@ -1296,7 +1296,8 @@ const translation = {
       "AccountDetailsDescription": "View your account activity, manage your email address and more. (FR)",
       "AccountInfo" : {
         "ManageDevices": "Manage Devices (FR)",
-        "Description": "This cannot be used as photo ID, a driver's licence, or a health card. (FR)",
+        "InfoTitle": "This is an account page, not an ID (FR)",
+        "InfoDescription": "Your account details are shown below. This cannot be used as photo ID, a driver’s licence, or a health card. (FR)",
         "AppExpiryDate": "App expiry date (FR)",
         "AccountType": "Account type (FR)",
         "AccountTypeNonBCServicesCard": "Non BC Services Card (FR)",

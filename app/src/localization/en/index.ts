@@ -997,7 +997,6 @@ const translation = {
         "Description3": "You'll get an email after we review your request. You can also check the status in this app.",
         "ButtonText": "Go to home"
       },
-      
       "TakePhoto": {
         "CameraInstructions": "Position your face within the oval and press the button on the screen",
       },
@@ -1299,7 +1298,8 @@ const translation = {
       "AccountDetailsDescription": "View your account activity, manage your email address and more.",
       "AccountInfo": {
         "ManageDevices": "Manage Devices",
-        "Description": "This cannot be used as photo ID, a driver's licence, or a health card.",
+        "InfoTitle": "This is an account page, not an ID",
+        "InfoDescription": "Your account details are shown below. This cannot be used as photo ID, a driver’s licence, or a health card.",
         "AppExpiryDate": "App expiry date",
         "AccountType": "Account type",
         "AccountTypeNonBCServicesCard": "Non BC Services Card",
