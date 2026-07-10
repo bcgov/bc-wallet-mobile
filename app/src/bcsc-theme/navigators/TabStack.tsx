@@ -64,7 +64,7 @@ const createTabBarIcon = (label: string, iconName: string) => {
             style={{
               ...TabTheme.tabBarTextStyle,
               color: focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor,
-              fontWeight: focused ? TextTheme.bold.fontWeight : TextTheme.normal.fontWeight,
+              fontFamily: focused ? TextTheme.bold.fontFamily : TextTheme.normal.fontFamily, // BCSans-Regular -> BCSans-Bold
             }}
           >
             {label}
