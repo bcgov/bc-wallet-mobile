@@ -34,7 +34,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const { width } = useWindowDimensions()
   const [store] = useStore<BCState>()
   const fcmService = useFcmService()
-  const { ColorPalette, Spacing, NavigationTheme } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
   const iconSize = useMemo(() => width / 6, [width])
   const [videoHidden, setVideoHidden] = useState(false)
