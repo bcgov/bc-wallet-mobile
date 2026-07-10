@@ -2,7 +2,7 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { BCState } from '@/store'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { isUserVerified } from './bcsc-credential'
-import { isEvidenceAwaitingDocumentNumber } from './card-utils'
+import { isEvidenceAwaitingDocumentNumber, isEvidenceCaptureIncomplete } from './card-utils'
 import { computeSetupStepCompletion } from './setup-step-completion'
 
 export type ResumeStepRoute = {
@@ -60,6 +60,18 @@ export const getResumeStepRoute = (store: BCState): ResumeStepRoute => {
         return {
           name: BCSCScreens.EvidenceIDCollection,
           params: { cardType: evidenceAwaitingDocumentNumber.evidenceType },
+        }
+      }
+      // An evidence that's been selected but whose photo capture isn't finished (e.g. the user left
+      // between the front and back) means capture was interrupted. Mid-capture photos are never
+      // committed, so they've been discarded; resume the user to IDPhotoInformation to restart
+      // capture for that ID from the first side rather than dropping them on the document-number
+      // screen or bouncing them to the start of the ID flow.
+      const evidenceCaptureIncomplete = store.bcscSecure.additionalEvidenceData.find(isEvidenceCaptureIncomplete)
+      if (evidenceCaptureIncomplete?.evidenceType) {
+        return {
+          name: BCSCScreens.IDPhotoInformation,
+          params: { cardType: evidenceCaptureIncomplete.evidenceType },
         }
       }
       if (completion.id.nonBcscNeedsAdditionalCard) {

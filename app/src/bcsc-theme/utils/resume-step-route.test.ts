@@ -76,4 +76,24 @@ describe('getResumeStepRoute', () => {
     expect(route.name).toBe(BCSCScreens.EvidenceIDCollection)
     expect((route.params as { cardType: { evidence_type: string } }).cardType.evidence_type).toBe('passport')
   })
+
+  it('resumes an interrupted capture to IDPhotoInformation to restart, not the document form', () => {
+    const store = structuredClone(initialState)
+    store.bcsc.accountSetupType = AccountSetupType.AddAccount
+    store.bcscSecure.cardProcess = BCSCCardProcess.NonBCSC
+    // A two-sided ID that was selected but whose capture wasn't finished (the user left between the
+    // front and back). Mid-capture photos aren't committed, so the entry has no photos; resume to
+    // IDPhotoInformation to restart capture from the first side rather than jumping to the
+    // document-number screen or bouncing to the start of the ID flow.
+    store.bcscSecure.additionalEvidenceData = [
+      {
+        evidenceType: { evidence_type: 'drivers_licence', image_sides: [{}, {}] },
+        metadata: [],
+      },
+    ] as any
+
+    const route = getResumeStepRoute(store)
+    expect(route.name).toBe(BCSCScreens.IDPhotoInformation)
+    expect((route.params as { cardType: { evidence_type: string } }).cardType.evidence_type).toBe('drivers_licence')
+  })
 })

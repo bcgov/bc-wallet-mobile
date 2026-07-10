@@ -303,7 +303,18 @@ const VerifyStack = () => {
       <Stack.Screen
         name={BCSCScreens.IDPhotoInformation}
         component={IDPhotoInformationScreen}
-        options={{ header: createProgressHeader(2, 50) }}
+        initialParams={
+          resumeRoute.name === BCSCScreens.IDPhotoInformation
+            ? (resumeRoute.params as BCSCVerifyStackParams[typeof BCSCScreens.IDPhotoInformation])
+            : undefined
+        }
+        options={{
+          header: createProgressHeader(2, 50),
+          // Can be the stack's initial route when the user resumes after leaving mid-capture (see
+          // getResumeStepRoute); with nothing beneath it, back leaves the flow home rather than
+          // being a dead button.
+          headerLeft: (props) => <VerifyResumeHeaderBackButton {...props} />,
+        }}
       />
       <Stack.Screen
         name={BCSCScreens.EvidenceTypeList}
@@ -313,7 +324,10 @@ const VerifyStack = () => {
             ? (resumeRoute.params as BCSCVerifyStackParams[typeof BCSCScreens.EvidenceTypeList])
             : undefined
         }
-        options={{ header: createProgressHeader(2, 60) }}
+        options={{
+          header: createProgressHeader(2, 60),
+          headerLeft: (props) => <VerifyResumeHeaderBackButton {...props} />,
+        }}
       />
       <Stack.Screen
         name={BCSCScreens.EvidenceCapture}
@@ -328,7 +342,10 @@ const VerifyStack = () => {
             ? (resumeRoute.params as BCSCVerifyStackParams[typeof BCSCScreens.EvidenceIDCollection])
             : undefined
         }
-        options={{ header: createProgressHeader(2, 75) }}
+        options={{
+          header: createProgressHeader(2, 75),
+          headerLeft: (props) => <VerifyResumeHeaderBackButton {...props} />,
+        }}
       />
       <Stack.Screen name={BCSCScreens.VerifyWebView} component={WebViewScreen} />
       <Stack.Screen

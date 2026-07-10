@@ -188,7 +188,24 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       ...store,
       bcscSecure: { ...store.bcscSecure, additionalEvidenceData: predictedAdditionalEvidence },
     }
-    navigation.dispatch(CommonActions.reset({ index: 0, routes: [getResumeStepRoute(predictedStore)] }))
+
+    const resumeRoute = getResumeStepRoute(predictedStore)
+
+    // In the dual-ID flow, completing one ID lands the user on the evidence list to pick the next
+    // one. Keep this just-completed ID's data-entry screen beneath the list so the back button
+    // returns here (to review/edit it) instead of collapsing the stack and exiting to home. The
+    // capture/instruction screens stay dropped from the stack — they aren't revisitable via back.
+    if (resumeRoute.name === BCSCScreens.EvidenceTypeList) {
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 1,
+          routes: [{ name: BCSCScreens.EvidenceIDCollection, params: { cardType } }, resumeRoute],
+        })
+      )
+      return
+    }
+
+    navigation.dispatch(CommonActions.reset({ index: 0, routes: [resumeRoute] }))
   }
 
   const handleOnCancel = async () => {

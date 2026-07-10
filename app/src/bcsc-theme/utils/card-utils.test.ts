@@ -2,6 +2,7 @@ import {
   getCardProcessForCardType,
   isCardEvidenceComplete,
   isEvidenceAwaitingDocumentNumber,
+  isEvidenceCaptureIncomplete,
 } from '@/bcsc-theme/utils/card-utils'
 import { BCSCCardProcess, BCSCCardType } from 'react-native-bcsc-core'
 
@@ -161,6 +162,69 @@ describe('Card Utils', () => {
 
     it('should return false when card is undefined', () => {
       expect(isEvidenceAwaitingDocumentNumber(undefined)).toBe(false)
+    })
+  })
+
+  describe('isEvidenceCaptureIncomplete', () => {
+    const twoSidedEvidenceType = { image_sides: [{}, {}] }
+    const oneSidedEvidenceType = { image_sides: [{}] }
+
+    it('should return true when a two-sided card has only its first photo captured', () => {
+      const partialCard = {
+        evidenceType: twoSidedEvidenceType,
+        metadata: ['meta1'],
+      }
+
+      expect(isEvidenceCaptureIncomplete(partialCard as any)).toBe(true)
+    })
+
+    it('should return true for a selected card with no photos captured yet', () => {
+      const selectedCard = {
+        evidenceType: twoSidedEvidenceType,
+        metadata: [],
+      }
+
+      expect(isEvidenceCaptureIncomplete(selectedCard as any)).toBe(true)
+    })
+
+    it('should return false when all required photos are captured (awaiting document number)', () => {
+      const allCaptured = {
+        evidenceType: twoSidedEvidenceType,
+        metadata: ['meta1', 'meta2'],
+      }
+
+      expect(isEvidenceCaptureIncomplete(allCaptured as any)).toBe(false)
+    })
+
+    it('should return false for a one-sided card with its only photo captured', () => {
+      const oneSidedCaptured = {
+        evidenceType: oneSidedEvidenceType,
+        metadata: ['meta1'],
+      }
+
+      expect(isEvidenceCaptureIncomplete(oneSidedCaptured as any)).toBe(false)
+    })
+
+    it('should return false once the document number has been entered', () => {
+      const withDocNumber = {
+        evidenceType: twoSidedEvidenceType,
+        documentNumber: '123456789',
+        metadata: ['meta1'],
+      }
+
+      expect(isEvidenceCaptureIncomplete(withDocNumber as any)).toBe(false)
+    })
+
+    it('should return false when missing evidence type', () => {
+      const noTypeCard = {
+        metadata: [],
+      }
+
+      expect(isEvidenceCaptureIncomplete(noTypeCard as any)).toBe(false)
+    })
+
+    it('should return false when card is undefined', () => {
+      expect(isEvidenceCaptureIncomplete(undefined)).toBe(false)
     })
   })
 })
