@@ -24,13 +24,26 @@ type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
  * Home screen for >= V4.1.x
  * @returns React element
  */
-const Home: React.FC<HomeProps> = () => {
+const Home: React.FC<HomeProps> = ({ navigation }) => {
   const { Spacing } = useTheme()
+  const { t } = useTranslation()
+  const [store] = useStore<BCState>()
+  const apiClient = useBCSCApiClient()
+
+  const handleManageDevices = useCallback(() => {
+    navigation.getParent()?.navigate(BCSCScreens.MainWebView, {
+      url: apiClient.endpoints.accountDevices,
+      title: t('BCSC.Screens.ManageDevices'),
+    })
+  }, [apiClient.endpoints.accountDevices, navigation, t])
 
   return (
-    <TabScreenWrapper scrollViewProps={{ contentContainerStyle: { padding: Spacing.lg, gap: Spacing.lg } }}>
-      <NotificationsList />
-    </TabScreenWrapper>
+    <>
+      <NotificationBannerContainer onManageDevices={handleManageDevices} bannerMessages={store.bcsc.bannerMessages} />
+      <TabScreenWrapper scrollViewProps={{ contentContainerStyle: { padding: Spacing.lg, gap: Spacing.lg } }}>
+        <NotificationsList />
+      </TabScreenWrapper>
+    </>
   )
 }
 
