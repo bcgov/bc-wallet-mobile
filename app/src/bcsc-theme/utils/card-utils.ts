@@ -121,3 +121,25 @@ export function isEvidenceAwaitingDocumentNumber(card?: EvidenceMetadata): boole
   const requiredPhotos = card.evidenceType.image_sides?.length || 1
   return card.metadata.length >= requiredPhotos
 }
+
+/**
+ * Check whether an evidence entry has been selected but its photo capture is not yet complete —
+ * i.e. the user picked this ID but hasn't captured every required side (they may have captured
+ * none, or left partway through a multi-side capture).
+ *
+ * Mid-capture photos are only committed once every side is captured, so an in-progress capture
+ * leaves `metadata.length < requiredPhotos` (typically 0). This is the resumable "restart capture"
+ * state: distinct from a fully-captured evidence awaiting a document number
+ * ({@link isEvidenceAwaitingDocumentNumber}) and from a completed one. The user is resumed to
+ * IDPhotoInformation to (re)start capture from the first side.
+ *
+ * @param card - The card evidence metadata to check.
+ * @returns True if the evidence is selected, has no document number, and is missing required photos.
+ */
+export function isEvidenceCaptureIncomplete(card?: EvidenceMetadata): boolean {
+  if (!card?.evidenceType || card.documentNumber) {
+    return false
+  }
+  const requiredPhotos = card.evidenceType.image_sides?.length || 1
+  return card.metadata.length < requiredPhotos
+}

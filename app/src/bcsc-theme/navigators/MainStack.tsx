@@ -20,7 +20,6 @@ import Developer from '../../screens/Developer'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithBanner } from '../components/HeaderWithBanner'
-import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferQRDisplayScreen from '../features/account-transfer/transferer/TransferQRDisplayScreen'
 import TransferQRInformationScreen from '../features/account-transfer/transferer/TransferQRInformationScreen'
@@ -344,7 +343,10 @@ const MainStack: React.FC = () => {
             component={ManualPairingCode}
             options={() => ({
               headerShown: true,
-              headerRight: createMainHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.COMPUTER_LOGIN }),
+              headerRight: createFloatingHelpMenuButton({
+                webViewScreen: BCSCScreens.MainWebView,
+                learnMoreUrl: HelpCentreUrl.COMPUTER_LOGIN,
+              }),
             })}
           />
           <Stack.Screen
