@@ -1,7 +1,7 @@
 import { BCState, VerificationStatus } from '@/store'
 import { useStore } from '@bifold/core'
-import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { useFocusEffect } from '@mocks/@react-navigation/native'
+import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, render } from '@testing-library/react-native'
 import moment from 'moment'
