@@ -213,7 +213,6 @@ const BCSCTabStack: React.FC = () => {
             tabBarAccessibilityLabel: t('BCSC.Home.Title'),
             tabBarTestID: testIdWithKey('Home'),
             tabBarBadge: homeNotificationsBadgeCount,
-            title: t('BCSC.Home.Title'),
             headerLeft: createMainSettingsHeaderButton(),
           }}
         />
