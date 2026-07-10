@@ -4,8 +4,8 @@ import { View } from 'react-native'
 import { HeaderDropShadow } from './HeaderWithBanner'
 
 const EMPTY_COLOR = '#D8D8D8'
-const SEGMENT_COLORS = ['#C1DDFC', '#91C4FA', '#5595D9', '#1E5189', '#01264C'] as const
-const SEGMENT_COUNT = SEGMENT_COLORS.length
+const FILL_COLOR = '#1E5189'
+const SEGMENT_COUNT = 5
 
 interface VerifyProgressBarProps {
   /** 1-indexed current step (1..5). */
@@ -16,8 +16,8 @@ interface VerifyProgressBarProps {
 
 /**
  * Five-segment progress bar shown in the VerifyStack header. Segments before
- * the current step render fully in their per-segment colour, the current
- * segment fills proportionally to `percent`, and later segments stay empty.
+ * the current step render fully filled, the current segment fills
+ * proportionally to `percent`, and later segments stay empty.
  */
 export const VerifyProgressBar = ({ step, percent }: VerifyProgressBarProps) => {
   const clampedStep = Math.max(1, Math.min(SEGMENT_COUNT, Math.round(step)))
@@ -25,7 +25,7 @@ export const VerifyProgressBar = ({ step, percent }: VerifyProgressBarProps) => 
 
   return (
     <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center' }}>
-      {SEGMENT_COLORS.map((color, i) => {
+      {Array.from({ length: SEGMENT_COUNT }, (_, i) => {
         const segmentNumber = i + 1
         let fillPercent: number
         if (segmentNumber < clampedStep) {
@@ -48,7 +48,7 @@ export const VerifyProgressBar = ({ step, percent }: VerifyProgressBarProps) => 
               marginHorizontal: 3,
             }}
           >
-            <View style={{ width: `${fillPercent}%`, height: '100%', backgroundColor: color }} />
+            <View style={{ width: `${fillPercent}%`, height: '100%', backgroundColor: FILL_COLOR }} />
           </View>
         )
       })}
