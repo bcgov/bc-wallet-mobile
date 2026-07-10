@@ -3,11 +3,9 @@ import {
   useVerificationResponseService,
   VerificationResponseNavigationEvent,
 } from '@/bcsc-theme/features/verification-response'
-import { BCState } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
-import { CommonActions, useNavigation } from '@react-navigation/native'
 import { useCallback, useEffect } from 'react'
-import { BCSCScreens } from '../../types/navigators'
 
 /**
  * Hook that listens for verification response push notifications and navigates accordingly.
@@ -28,24 +26,10 @@ import { BCSCScreens } from '../../types/navigators'
  * This follows the same pattern as the "Check Status" button on PendingReviewScreen.
  */
 export const useVerificationResponseListener = () => {
-  const navigation = useNavigation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [store] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const { evidence, token } = useApi()
   const verificationResponseService = useVerificationResponseService()
-
-  /**
-   * Navigate to the success screen using a reset to prevent back navigation.
-   */
-  const navigateToSuccess = useCallback(() => {
-    logger.info('[useVerificationResponseListener] Navigating to success screen')
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: BCSCScreens.VerificationSuccess }],
-      })
-    )
-  }, [logger, navigation])
 
   /**
    * Handle request reviewed (send-video verification or live call).
@@ -74,23 +58,24 @@ export const useVerificationResponseListener = () => {
       if (status === 'verified') {
         // Status is verified - fetch and update tokens
         await token.checkDeviceCodeStatus(deviceCode, userCode)
-        // Navigate to success screen - tokens have been fetched; it will handle final account setup and cleanup
-        navigateToSuccess()
+        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: ['verified'] })
+        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
         return
       }
 
       if (status === 'cancelled') {
+        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: ['cancelled'] })
+        dispatch({
+          type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE,
+          payload: [status_message],
+        })
         logger.info('[useVerificationResponseListener] Verification request cancelled, navigating to CancelledReview')
-        navigation.dispatch(
-          CommonActions.navigate({
-            name: BCSCScreens.CancelledReview,
-            params: { agentReason: status_message },
-          })
-        )
         return
       }
 
       if (status === 'pending') {
+        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: ['pending'] })
+        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
         // Status is pending - user should check manually via the UI
         logger.info(`[useVerificationResponseListener] Verification status is '${status}', not navigating`)
         return
@@ -99,7 +84,7 @@ export const useVerificationResponseListener = () => {
       const message = error instanceof Error ? error.message : String(error)
       logger.error(`[useVerificationResponseListener] Failed to handle request reviewed: ${message}`)
     }
-  }, [logger, store.bcscSecure, evidence, navigation, navigateToSuccess, token])
+  }, [logger, store.bcscSecure, evidence, token, dispatch])
 
   /**
    * Route the event to the appropriate handler based on event type.

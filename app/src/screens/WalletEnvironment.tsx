@@ -1,6 +1,7 @@
 import { useStore } from '@bifold/core'
+import { IASEnvironment } from '@utils/environment'
 import React, { useCallback } from 'react'
-import { BCDispatchAction, BCState, IASEnvironment } from '../store'
+import { BCDispatchAction, BCState } from '../store'
 import EnvironmentSelector from './EnvironmentSelector'
 
 interface WalletEnvironmentProps {

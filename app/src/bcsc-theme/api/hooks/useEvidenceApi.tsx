@@ -94,10 +94,10 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
         return false
       }
       // doesn't throw
-      await cancelVerificationReminders(apiClient.logger)
+      await cancelVerificationReminders(apiClient?.logger)
       return true
     },
-    [apiClient.logger]
+    [apiClient?.logger]
   )
 
   /**
@@ -137,7 +137,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
         })
       }
     },
-    [apiClient.logger, store.bcscSecure.deviceCodeExpiresAt, updateDeviceCodes]
+    [apiClient?.logger, store.bcscSecure.deviceCodeExpiresAt, updateDeviceCodes]
   )
 
   const _getDeviceCode = useCallback(() => {

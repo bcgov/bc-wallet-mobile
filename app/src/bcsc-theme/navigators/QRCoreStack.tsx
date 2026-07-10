@@ -2,7 +2,7 @@ import { AgentReadyGate } from '@/bcsc-theme/features/agent'
 import ManualPairing from '@/bcsc-theme/features/pairing/ManualPairing'
 import QRDisplay from '@/bcsc-theme/features/qr-core/QRDisplay'
 import QRScanner from '@/bcsc-theme/features/qr-core/QRScanner'
-import { useVerificationStatus } from '@/bcsc-theme/hooks/useVerificationStatus'
+import { useCardStatus } from '@/bcsc-theme/hooks/useCardStatus'
 import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
 import { BCState } from '@/store'
@@ -81,7 +81,7 @@ const QRCoreStack: React.FC = () => {
   const { TabTheme } = useTheme()
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
-  const { isVerified } = useVerificationStatus()
+  const { isActivelyVerified, isExpired } = useCardStatus()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store] = useStore<BCState>()
 
@@ -96,19 +96,27 @@ const QRCoreStack: React.FC = () => {
       <Tab.Navigator
         screenListeners={({ route }) => ({
           focus: () => {
-            // Hijack the focus event for the PairingCode tab if the user is not verified
-            if (route.name === BCSCQRCoreScreens.PairingCode && !isVerified) {
-              logger.debug('[QRCoreStack] User is not verified, redirecting to VerifyPrompt screen')
-              navigation.navigate(BCSCScreens.MainVerifyPrompt)
+            if (route.name === BCSCQRCoreScreens.PairingCode && !isActivelyVerified) {
+              if (isExpired) {
+                logger.debug('[QRCoreStack] User is not actively verified, redirecting to ReverifyAccount screen')
+                navigation.navigate(BCSCScreens.ReverifyAccount, { isExpired: true })
+              } else {
+                logger.debug('[QRCoreStack] User is not actively verified, redirecting to VerifyPrompt screen')
+                navigation.navigate(BCSCScreens.MainVerifyPrompt)
+              }
               return
             }
           },
           tabPress: (event) => {
-            // Hijack the tab press event for the PairingCode tab if the user is not verified
-            if (route.name === BCSCQRCoreScreens.PairingCode && !isVerified) {
-              logger.debug('[QRCoreStack] User is not verified, redirecting to VerifyPrompt screen')
-              event.preventDefault() // Prevents navigation to the PairingCode tab
-              navigation.navigate(BCSCScreens.MainVerifyPrompt)
+            if (route.name === BCSCQRCoreScreens.PairingCode && !isActivelyVerified) {
+              event.preventDefault()
+              if (isExpired) {
+                logger.debug('[QRCoreStack] User is not actively verified, redirecting to ReverifyAccount screen')
+                navigation.navigate(BCSCScreens.ReverifyAccount, { isExpired: true })
+              } else {
+                logger.debug('[QRCoreStack] User is not actively verified, redirecting to VerifyPrompt screen')
+                navigation.navigate(BCSCScreens.MainVerifyPrompt)
+              }
             }
           },
         })}

@@ -1,6 +1,7 @@
-import { Developer, IASEnvironment } from '@/store'
+import { Developer } from '@/store'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { render } from '@testing-library/react-native'
+import { IASEnvironment } from '@utils/environment'
 import React from 'react'
 import NonProdOverlay from './NonProdOverlay'
 
