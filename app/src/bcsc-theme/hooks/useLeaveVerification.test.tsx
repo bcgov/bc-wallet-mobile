@@ -13,14 +13,13 @@ describe('useLeaveVerification', () => {
     jest.mocked(Bifold.useStore).mockReturnValue([{} as any, mockDispatch])
   })
 
-  it('marks the verify prompt seen and moves status out of IN_PROGRESS so the RootStack shows home', () => {
+  it('moves status out of IN_PROGRESS so the RootStack shows home', () => {
     const { result } = renderHook(() => useLeaveVerification())
 
     act(() => {
       result.current()
     })
 
-    expect(mockDispatch).toHaveBeenCalledWith({ type: BCDispatchAction.SEEN_VERIFY_PROMPT, payload: [true] })
     expect(mockDispatch).toHaveBeenCalledWith({
       type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS,
       payload: [VerificationStatus.UNVERIFIED],
@@ -34,8 +33,8 @@ describe('useLeaveVerification', () => {
       result.current()
     })
 
-    // Only the two routing dispatches; nothing that clears evidence/credential/auth-request.
-    expect(mockDispatch).toHaveBeenCalledTimes(2)
+    // Only the routing dispatch; nothing that clears evidence/credential/auth-request.
+    expect(mockDispatch).toHaveBeenCalledTimes(1)
   })
 
   it('runs the optional onLeave callback before leaving (e.g. to close the menu)', () => {
