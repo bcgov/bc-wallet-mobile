@@ -188,8 +188,10 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
       const barcodes = buildBarcodePayload(bcscSerialRef.current, licenseRef.current)
       await updateEvidenceMetadata(cardType, newPhotos, barcodes.length > 0 ? barcodes : undefined)
 
-      // All photos captured, navigate to form screen
-      navigation.navigate(BCSCScreens.EvidenceIDCollection, {
+      // All photos captured → go to the form screen. push (not navigate) so a previously-completed
+      // ID's EvidenceIDCollection already in the stack isn't reused (which would show its data); the
+      // capture/instruction screens stay in the history so the user can step back through them.
+      navigation.push(BCSCScreens.EvidenceIDCollection, {
         cardType,
         documentNumber: licenseRef.current?.licenseNumber,
       })

@@ -46,7 +46,7 @@ const StatusDetails: React.FC<StatusScreenProps> = ({
       <Icon
         name={iconName}
         size={iconSize}
-        color={iconColor ?? ColorPalette.brand.primary}
+        color={iconColor ?? ColorPalette.brand.headerText}
         style={{ padding: Spacing.lg }}
       />
       <ThemedText variant={'headingThree'} style={{ marginVertical: Spacing.md, textAlign: 'center' }}>

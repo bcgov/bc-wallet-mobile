@@ -29,7 +29,6 @@ exports[`AccountLanding renders Unlock button 1`] = `
           {
             "alignItems": "center",
             "flexGrow": 1,
-            "gap": 24,
             "justifyContent": "center",
             "padding": 24,
           },
@@ -38,19 +37,10 @@ exports[`AccountLanding renders Unlock button 1`] = `
       showsVerticalScrollIndicator={false}
     >
       <View>
-        <View
-          style={
-            {
-              "alignItems": "center",
-              "marginTop": 40,
-            }
-          }
-        >
-          <
-            height={120}
-            width={120}
-          />
-        </View>
+        <
+          height={160}
+          width={160}
+        />
         <Text
           maxFontSizeMultiplier={2}
           style={
@@ -62,12 +52,31 @@ exports[`AccountLanding renders Unlock button 1`] = `
                 "fontWeight": "bold",
               },
               {
+                "color": "#003366",
+              },
+            ]
+          }
+        >
+          BCSC.AccountLanding.Title
+        </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              {
+                "paddingTop": 40,
                 "textAlign": "center",
               },
             ]
           }
         >
-          BCSC.Title
+          BCSC.AccountLanding.Description
         </Text>
       </View>
     </RCTScrollView>
