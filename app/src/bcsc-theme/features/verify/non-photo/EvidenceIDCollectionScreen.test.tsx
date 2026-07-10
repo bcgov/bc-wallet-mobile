@@ -57,7 +57,7 @@ describe('EvidenceIDCollection', () => {
     jest.useFakeTimers()
     jest.setSystemTime(new Date('2026-01-01T00:00:00.000Z'))
     // Default: completing this ID advances to a later step (not the evidence list).
-    ;(getResumeStepRoute as jest.Mock).mockReturnValue({ name: BCSCScreens.ResidentialAddress })
+    jest.mocked(getResumeStepRoute).mockReturnValue({ name: BCSCScreens.ResidentialAddress })
   })
 
   afterEach(() => {
@@ -207,7 +207,7 @@ describe('EvidenceIDCollection', () => {
   it('keeps the completed ID beneath the evidence list so back returns to it when another ID is needed', async () => {
     // Dual-ID flow: after completing this ID, the next step is picking another one (the evidence
     // list). The just-completed data-entry screen should sit beneath it so back returns here.
-    ;(getResumeStepRoute as jest.Mock).mockReturnValue({
+    jest.mocked(getResumeStepRoute).mockReturnValue({
       name: BCSCScreens.EvidenceTypeList,
       params: { cardProcess: BCSCCardProcess.NonBCSC },
     })
