@@ -42,6 +42,7 @@ jest.mock('react-i18next', () => ({
 jest.mock('@/constants', () => ({
   DEFAULT_HEADER_TITLE_CONTAINER_STYLE: {},
   HelpCentreUrl: { COMPUTER_LOGIN: 'https://example.com' },
+  Mode: { BCWallet: 'bcwallet', BCSC: 'bcsc' },
 }))
 jest.mock('../contexts/BCSCStackContext', () => ({
   useBCSCStack: jest.fn(),
