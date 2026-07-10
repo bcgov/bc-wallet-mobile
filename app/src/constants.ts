@@ -2,6 +2,11 @@ import { ViewStyle } from 'react-native'
 
 // TODO (MD): Normalize casing of constants (ie: SCREAMING_SNAKE_CASE vs camelCase) and group them in a more structured way (ie: AnalyticsConstants, BCSCConstants, etc.)
 
+export enum Mode {
+  BCWallet = 'bcwallet',
+  BCSC = 'bcsc',
+}
+
 export const autoDisableRemoteLoggingIntervalInMinutes = 60
 export const surveyMonkeyUrl = 'https://www.surveymonkey.com/r/7BMHJL8'
 export const surveyMonkeyExitUrl = 'https://www.surveymonkey.com/survey-thanks'

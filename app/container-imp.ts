@@ -40,6 +40,7 @@ import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import filePersistedLedgers from '@/configs/ledgers/indy/ledgers'
 import useBCAgentSetup from '@/hooks/useBCAgentSetup'
 import { activate, deactivate, setup, status } from '@utils/PushNotificationsHelper'
+import { IASEnvironment } from '@utils/environment'
 import { expirationOverrideInMinutes } from '@utils/expiration'
 import { createAppLogger } from '@utils/logger'
 import { TFunction } from 'i18next'
@@ -53,6 +54,7 @@ import PersonCredentialLoading from './src/bcwallet-theme/features/person-flow/s
 import { pages } from './src/components/OnboardingPages'
 import {
   AttestationRestrictions,
+  Mode,
   appHelpUrl,
   appleAppStoreUrl,
   autoDisableRemoteLoggingIntervalInMinutes,
@@ -74,8 +76,6 @@ import {
   BCSCState,
   BCState,
   DismissPersonCredentialOffer,
-  IASEnvironment,
-  Mode,
   RemoteDebuggingState,
   initialState,
 } from './src/store'
