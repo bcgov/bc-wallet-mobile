@@ -58,9 +58,7 @@ export const createMainSettingsHeaderButton = () => {
   const MainSettingsHeaderButton = () => {
     const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
 
-    return SettingsHeaderButton({
-      onPress: () => navigation.navigate(BCSCScreens.MainSettings),
-    })
+    return <SettingsHeaderButton onPress={() => navigation.navigate(BCSCScreens.MainSettings)} />
   }
   return MainSettingsHeaderButton
 }
@@ -72,9 +70,7 @@ export const createVerifySettingsHeaderButton = () => {
   const VerifySettingsHeaderButton = () => {
     const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
 
-    return SettingsHeaderButton({
-      onPress: () => navigation.navigate(BCSCScreens.VerifySettings),
-    })
+    return <SettingsHeaderButton onPress={() => navigation.navigate(BCSCScreens.VerifySettings)} />
   }
   return VerifySettingsHeaderButton
 }
@@ -86,9 +82,7 @@ export const createAuthSettingsHeaderButton = () => {
   const AuthSettingsHeaderButton = () => {
     const navigation = useNavigation<StackNavigationProp<BCSCAuthStackParams>>()
 
-    return SettingsHeaderButton({
-      onPress: () => navigation.navigate(BCSCScreens.AuthSettings),
-    })
+    return <SettingsHeaderButton onPress={() => navigation.navigate(BCSCScreens.AuthSettings)} />
   }
   return AuthSettingsHeaderButton
 }
@@ -102,9 +96,7 @@ export const createOnboardingSettingsHeaderButton = () => {
   const OnboardingSettingsHeaderButton = () => {
     const navigation = useNavigation<StackNavigationProp<BCSCOnboardingStackParams>>()
 
-    return SettingsHeaderButton({
-      onPress: () => navigation.navigate(BCSCScreens.OnboardingSettings),
-    })
+    return <SettingsHeaderButton onPress={() => navigation.navigate(BCSCScreens.OnboardingSettings)} />
   }
   return OnboardingSettingsHeaderButton
 }

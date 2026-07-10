@@ -59,8 +59,8 @@ describe('EvidenceTypeList', () => {
     mockUseStore.mockReturnValue([initialState, jest.fn()])
     mockUseServices.mockReturnValue([defaultLogger])
     mockUseSecureActions.mockReturnValue({
-      removeIncompleteEvidence: jest.fn(),
-      truncateEvidence: jest.fn(),
+      removeIncompleteEvidence: jest.fn().mockResolvedValue([]),
+      truncateEvidence: jest.fn().mockResolvedValue([]),
       addEvidenceType: jest.fn(),
     })
     mockUseDataLoader.mockReturnValue({
@@ -304,9 +304,10 @@ describe('EvidenceTypeList', () => {
         callback()
       })
 
-      const removeIncompleteEvidenceMock = jest.fn()
+      const removeIncompleteEvidenceMock = jest.fn().mockResolvedValue([])
       mockUseSecureActions.mockReturnValue({
         removeIncompleteEvidence: removeIncompleteEvidenceMock,
+        truncateEvidence: jest.fn().mockResolvedValue([]),
         addEvidenceType: jest.fn(),
       })
 
@@ -327,9 +328,10 @@ describe('EvidenceTypeList', () => {
         callback()
       })
 
-      const removeIncompleteEvidenceMock = jest.fn()
+      const removeIncompleteEvidenceMock = jest.fn().mockResolvedValue([])
       mockUseSecureActions.mockReturnValue({
         removeIncompleteEvidence: removeIncompleteEvidenceMock,
+        truncateEvidence: jest.fn().mockResolvedValue([]),
         addEvidenceType: jest.fn(),
       })
 

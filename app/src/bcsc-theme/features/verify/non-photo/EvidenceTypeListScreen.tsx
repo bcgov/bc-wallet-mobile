@@ -84,16 +84,22 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
     useCallback(() => {
       const evidence = storeRef.current.bcscSecure.additionalEvidenceData
       if (baselineCountRef.current === null) {
-        // First (forward) visit: remember how many IDs precede this list, and clean up any abandoned
-        // selection (a card picked but never captured).
-        baselineCountRef.current = evidence.length
-        removeIncompleteEvidence(evidence)
+        // First (forward) visit: the baseline is how many IDs are already fully collected before this
+        // list. Count only complete entries — the incomplete/abandoned ones (a card picked but never
+        // captured) are removed by the cleanup below, so they must not inflate the baseline (which
+        // would later leave a stale entry behind on back-navigation).
+        baselineCountRef.current = evidence.filter(isCardEvidenceComplete).length
+        removeIncompleteEvidence(evidence).catch((error) =>
+          logger.error(`Error removing incomplete evidence: ${error}`)
+        )
       } else if (evidence.length > baselineCountRef.current) {
         // Returned here via the back button: drop the ID(s) chosen from this list onward so they
         // become selectable again, keeping the ones collected before it.
-        truncateEvidence(evidence, baselineCountRef.current)
+        truncateEvidence(evidence, baselineCountRef.current).catch((error) =>
+          logger.error(`Error truncating evidence: ${error}`)
+        )
       }
-    }, [removeIncompleteEvidence, truncateEvidence])
+    }, [removeIncompleteEvidence, truncateEvidence, logger])
   )
 
   useEffect(() => {
