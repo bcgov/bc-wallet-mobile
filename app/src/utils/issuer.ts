@@ -1,5 +1,5 @@
-import { getInitialEnvironment } from '@/store'
 import { RemoteLogger } from '@bifold/remote-logs'
+import { getInitialEnvironment } from '@utils/environment'
 import { getIssuer, setIssuer } from 'react-native-bcsc-core'
 
 /**

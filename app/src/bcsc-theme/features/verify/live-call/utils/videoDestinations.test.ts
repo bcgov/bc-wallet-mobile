@@ -1,5 +1,5 @@
 import { VideoDestination } from '@/bcsc-theme/api/hooks/useVideoCallApi'
-import { IASEnvironment } from '@/store'
+import { IASEnvironment } from '@utils/environment'
 
 import { getLiveCallVideoQueue, VideoQueue } from './videoDestinations'
 

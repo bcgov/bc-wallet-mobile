@@ -1,5 +1,5 @@
-import * as storeModule from '@/store'
 import { MockLogger } from '@bifold/core'
+import * as environmentModule from '@utils/environment'
 import * as BcscCore from 'react-native-bcsc-core'
 import { initIssuer } from './issuer'
 
@@ -24,7 +24,7 @@ describe('initIssuer', () => {
   it('should set the issuer to the default value if it is not defined', async () => {
     const getIssuerSpy = jest.spyOn(BcscCore, 'getIssuer')
     const setIssuerSpy = jest.spyOn(BcscCore, 'setIssuer')
-    const getInitialEnvironmentSpy = jest.spyOn(storeModule, 'getInitialEnvironment')
+    const getInitialEnvironmentSpy = jest.spyOn(environmentModule, 'getInitialEnvironment')
     const mockLogger = new MockLogger()
 
     getInitialEnvironmentSpy.mockReturnValue({ iasApiBaseUrl: 'https://test-env.com/issuer' } as any)
