@@ -1239,6 +1239,7 @@ const translation = {
       "MiddleNamesLabel": "Middle names (FR)",
       "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed (FR)",
       "MiddleNamesError": "Please enter up to two middle names (FR)",
+      "TakeSecondIdPhoto": "Take photo of your second ID (FR)",
     },
     "Address": {
       "Heading": "Residential Address (FR)",

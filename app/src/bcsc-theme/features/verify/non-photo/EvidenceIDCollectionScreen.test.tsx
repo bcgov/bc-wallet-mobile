@@ -123,11 +123,15 @@ describe('EvidenceIDCollection', () => {
     expect(tree.getByTestId('com.ariesbifold:id/birthDate-input')).toBeTruthy()
   })
 
-  it('cancel removes evidence and navigates to evidence type list', async () => {
+  it('primary button prompts for the second ID while collecting the first of two (Non-BCSC)', () => {
     const tree = render(
       <BasicAppContext
         initialStateOverride={{
-          bcscSecure: { ...initialBCSCSecureState, cardProcess: BCSCCardProcess.BCSCNonPhoto },
+          bcscSecure: {
+            ...initialBCSCSecureState,
+            cardProcess: BCSCCardProcess.NonBCSC,
+            additionalEvidenceData: [{ evidenceType: mockEvidenceType, metadata: [] }],
+          },
         }}
       >
         <EvidenceIDCollectionScreen
@@ -137,11 +141,35 @@ describe('EvidenceIDCollection', () => {
       </BasicAppContext>
     )
 
-    const cancelButton = tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionCancel')
-    await fireEvent.press(cancelButton)
+    // i18n resolves to keys in tests, so assert on the translation keys.
+    expect(tree.getByText('BCSC.EvidenceIDCollection.TakeSecondIdPhoto')).toBeTruthy()
+    expect(tree.queryByText('Global.Continue')).toBeNull()
+  })
 
-    expect(mockRemoveEvidenceByType).toHaveBeenCalledWith(mockEvidenceType)
-    expect(mockNavigation.dispatch).toHaveBeenCalled()
+  it('primary button says Continue on the second ID (Non-BCSC)', () => {
+    const tree = render(
+      <BasicAppContext
+        initialStateOverride={{
+          bcscSecure: {
+            ...initialBCSCSecureState,
+            cardProcess: BCSCCardProcess.NonBCSC,
+            // Two evidence entries → this is the second ID, so no further ID is needed after it.
+            additionalEvidenceData: [
+              { evidenceType: { ...mockEvidenceType, evidence_type: 'first_id' }, metadata: [] },
+              { evidenceType: mockEvidenceType, metadata: [] },
+            ],
+          },
+        }}
+      >
+        <EvidenceIDCollectionScreen
+          navigation={mockNavigation as never}
+          route={{ params: { cardType: mockEvidenceType } } as never}
+        />
+      </BasicAppContext>
+    )
+
+    expect(tree.getByText('Global.Continue')).toBeTruthy()
+    expect(tree.queryByText('BCSC.EvidenceIDCollection.TakeSecondIdPhoto')).toBeNull()
   })
 
   it('scrolls to first invalid field after validation', async () => {
@@ -179,7 +207,7 @@ describe('EvidenceIDCollection', () => {
   it('keeps the completed ID beneath the evidence list so back returns to it when another ID is needed', async () => {
     // Dual-ID flow: after completing this ID, the next step is picking another one (the evidence
     // list). The just-completed data-entry screen should sit beneath it so back returns here.
-    ;(getResumeStepRoute as jest.Mock).mockReturnValue({
+    (getResumeStepRoute as jest.Mock).mockReturnValue({
       name: BCSCScreens.EvidenceTypeList,
       params: { cardProcess: BCSCCardProcess.NonBCSC },
     })

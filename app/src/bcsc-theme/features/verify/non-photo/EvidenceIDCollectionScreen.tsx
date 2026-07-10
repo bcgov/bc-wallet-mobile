@@ -56,7 +56,7 @@ type EvidenceIDCollectionScreenProps = {
  */
 const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionScreenProps) => {
   const [store] = useStore<BCState>()
-  const { updateUserInfo, updateUserMetadata, updateEvidenceDocumentNumber, removeEvidenceByType } = useSecureActions()
+  const { updateUserInfo, updateUserMetadata, updateEvidenceDocumentNumber } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
   const { Spacing } = useTheme()
@@ -93,6 +93,11 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   // The second ID only needs a document number since personal info was already captured.
   const isFirstAdditionalID = store.bcscSecure.additionalEvidenceData.length === 1
   const personalInfoRequired = store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC && isFirstAdditionalID
+  // The Non-BCSC flow collects two IDs. While completing the first, the next step is capturing the
+  // second ID, so the primary action says so; the second ID (and every other flow) uses a plain
+  // Continue. Kept separate from personalInfoRequired so the button copy doesn't silently change if
+  // the personal-info rule ever does, even though they coincide today on the first Non-BCSC ID.
+  const isCollectingFirstOfTwoIds = store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC && isFirstAdditionalID
 
   const [formState, setFormState] = useState<EvidenceCollectionFormState>({
     documentNumber: initialDocumentNumber,
@@ -208,38 +213,15 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     navigation.dispatch(CommonActions.reset({ index: 0, routes: [resumeRoute] }))
   }
 
-  const handleOnCancel = async () => {
-    try {
-      await removeEvidenceByType(cardType)
-    } catch (error) {
-      logger.error('Error removing evidence on cancel', error as Error)
-    }
-
-    const navParams: BCSCVerifyStackParams[BCSCScreens.EvidenceTypeList] = {
-      cardProcess: store.bcscSecure.cardProcess ?? BCSCCardProcess.BCSCNonPhoto,
-    }
-    if (store.bcscSecure.cardProcess === BCSCCardProcess.BCSCNonPhoto) {
-      navParams.photoFilter = 'photo'
-    }
-
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [
-          {
-            name: BCSCScreens.EvidenceTypeList,
-            params: navParams,
-          },
-        ],
-      })
-    )
-  }
+  const primaryActionLabel = isCollectingFirstOfTwoIds
+    ? t('BCSC.EvidenceIDCollection.TakeSecondIdPhoto')
+    : t('Global.Continue')
 
   const controls = (
     <ControlContainer>
       <Button
-        title="Continue"
-        accessibilityLabel={a11yLabel(t('Global.Continue'))}
+        title={primaryActionLabel}
+        accessibilityLabel={a11yLabel(primaryActionLabel)}
         testID={testIdWithKey('EvidenceIDCollectionContinue')}
         buttonType={ButtonType.Primary}
         onPress={handleOnContinue}
@@ -247,13 +229,6 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       >
         {isSubmitting && <ButtonLoading />}
       </Button>
-      <Button
-        title="Cancel"
-        accessibilityLabel={a11yLabel(t('Global.Cancel'))}
-        testID={testIdWithKey('EvidenceIDCollectionCancel')}
-        buttonType={ButtonType.Secondary}
-        onPress={handleOnCancel}
-      />
     </ControlContainer>
   )
 

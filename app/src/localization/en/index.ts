@@ -1240,6 +1240,7 @@ const translation = {
       "MiddleNamesLabel": "Middle names",
       "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed",
       "MiddleNamesError": "Please enter up to two middle names",
+      "TakeSecondIdPhoto": "Take photo of your second ID",
     },
     "Address": {
       "Heading": "Residential Address",
