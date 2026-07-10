@@ -4,17 +4,36 @@ exports[`NonProdOverlay Component renders correctly 1`] = `null`;
 
 exports[`NonProdOverlay Component renders correctly with SIT environment 1`] = `
 <View
-  pointerEvents="none"
-  style={
+  accessibilityState={
     {
-      "bottom": 0,
-      "height": 90,
-      "overflow": "hidden",
-      "position": "absolute",
-      "right": 0,
-      "width": 90,
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": undefined,
+      "expanded": undefined,
+      "selected": undefined,
     }
   }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={false}
+  collapsable={false}
+  focusable={true}
+  importantForAccessibility="no-hide-descendants"
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
 >
   <View
     style={
