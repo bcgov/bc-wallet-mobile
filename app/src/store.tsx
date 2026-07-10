@@ -153,6 +153,10 @@ export interface BCSCSecureState {
   verificationRequestId?: string
   /** SHA hash for verification request */
   verificationRequestSha?: string
+  /** Status of a submitted verification request, as last reported by the server */
+  verificationRequestStatus?: 'pending' | 'cancelled' | 'verified'
+  /** Optional message accompanying a cancelled verification request */
+  verificationRequestStatusMessage?: string
   /** Available verification options from authorization request */
   verificationOptions?: DeviceVerificationOption[]
 
@@ -169,6 +173,8 @@ export interface BCSCSecureState {
   temporaryEmailId?: string
   /** Whether user has submitted a verification video */
   userSubmittedVerificationVideo?: boolean
+  /** Timestamp of when the verification video upload process completed successfully */
+  verificationVideoSubmittedAt?: Date
 
   // === from Evidence Data ===
   /** Additional evidence data for non-BCSC verification */
@@ -268,11 +274,14 @@ enum BCSCDispatchAction {
   UPDATE_SECURE_EMAIL_ADDRESS = 'bcsc/updateSecureEmailAddress',
   UPDATE_SECURE_TEMPORARY_EMAIL_ID = 'bcsc/updateSecureTemporaryEmailId',
   UPDATE_SECURE_USER_SUBMITTED_VERIFICATION_VIDEO = 'bcsc/updateSecureUserSubmittedVerificationVideo',
+  UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT = 'bcsc/updateSecureVerificationVideoSubmittedAt',
   UPDATE_SECURE_VERIFICATION_REQUEST_ID = 'bcsc/updateSecureVerificationRequestId',
   UPDATE_SECURE_VERIFICATION_REQUEST_SHA = 'bcsc/updateSecureVerificationRequestSha',
+  UPDATE_SECURE_VERIFICATION_REQUEST_STATUS = 'bcsc/updateSecureVerificationRequestStatus',
+  UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE = 'bcsc/updateSecureVerificationRequestStatusMessage',
   UPDATE_SECURE_VERIFICATION_OPTIONS = 'bcsc/updateSecureVerificationOptions',
   UPDATE_SECURE_VERIFIED = 'bcsc/updateSecureVerified',
-  UPDATE_SECURE_VERIFIED_STATUS = 'bcsc/updateSecureVerifiedStatus',
+  UPDATE_SECURE_VERIFIED_STATUS = 'bcsc/updateSecureVerifiedStatus', //controls whether the VerifyStack or the MainStack are displayed
   UPDATE_SECURE_WALLET_KEY = 'bcsc/updateSecureWalletKey',
   UPDATE_SECURE_EVIDENCE_METADATA = 'bcsc/updateAdditionalEvidenceMetadata',
   ACCOUNT_SETUP_TYPE = 'bcsc/accountSetupType',
@@ -660,6 +669,11 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const bcscSecure = { ...state.bcscSecure, userSubmittedVerificationVideo }
       return { ...state, bcscSecure }
     }
+    case BCSCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT: {
+      const verificationVideoSubmittedAt = (action?.payload || []).pop() ?? undefined
+      const bcscSecure = { ...state.bcscSecure, verificationVideoSubmittedAt }
+      return { ...state, bcscSecure }
+    }
     case BCSCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID: {
       const verificationRequestId = (action?.payload || []).pop() ?? undefined
       const bcscSecure = { ...state.bcscSecure, verificationRequestId }
@@ -668,6 +682,16 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_SHA: {
       const verificationRequestSha = (action?.payload || []).pop() ?? undefined
       const bcscSecure = { ...state.bcscSecure, verificationRequestSha }
+      return { ...state, bcscSecure }
+    }
+    case BCSCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS: {
+      const verificationRequestStatus = (action?.payload || []).pop() ?? undefined
+      const bcscSecure = { ...state.bcscSecure, verificationRequestStatus }
+      return { ...state, bcscSecure }
+    }
+    case BCSCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE: {
+      const verificationRequestStatusMessage = (action?.payload || []).pop() ?? undefined
+      const bcscSecure = { ...state.bcscSecure, verificationRequestStatusMessage }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_VERIFICATION_OPTIONS: {

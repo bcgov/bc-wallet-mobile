@@ -1,13 +1,12 @@
-import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { CommonActions } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useEffect } from 'react'
+import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
+import { TOKENS, useServices } from '@bifold/core'
+import { useNavigation } from '@react-navigation/native'
+import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SystemModal } from '../../modal/components/SystemModal'
-import useCancelledReviewViewModel from './CancelledRerivewViewModel'
+import useCancelledReviewViewModel from './CancelledReviewViewModel'
 
 interface CancelledReviewProps {
-  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.CancelledReview>
   route: {
     params: {
       agentReason?: string
@@ -21,12 +20,17 @@ interface CancelledReviewProps {
  * @param agentReason - A reason provided by the reviewing agent on why the verification request was cancelled
  * @returns
  */
-const CancelledReview = ({ navigation, route }: CancelledReviewProps) => {
+const CancelledReview = ({ route }: CancelledReviewProps) => {
   const { agentReason } = route.params
+  const verificationReset = useVerificationReset()
   const { t } = useTranslation()
+  const navigation = useNavigation()
   const { cleanUpVerificationData } = useCancelledReviewViewModel()
+  const [isLoading, setIsLoading] = useState(false)
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   useEffect(() => {
+    // This clears up verification request artifacts (images, address data ect.)
     cleanUpVerificationData()
   }, [cleanUpVerificationData])
 
@@ -40,13 +44,20 @@ const CancelledReview = ({ navigation, route }: CancelledReviewProps) => {
         }),
       ]}
       buttonText={t('BCSC.CancelledVerification.Button')}
-      onButtonPress={() => {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: BCSCScreens.VerificationMethodSelection }],
-          })
-        )
+      buttonDisabled={isLoading}
+      onButtonPress={async () => {
+        try {
+          setIsLoading(true)
+          // Clear everything related to verification so it appears as if the user has never started the process before
+          const success = await verificationReset()
+          if (success) {
+            navigation.goBack()
+          }
+        } catch (error) {
+          logger.error('CancelledReview: Error during factory reset on account', error as Error)
+        } finally {
+          setIsLoading(false)
+        }
       }}
     />
   )

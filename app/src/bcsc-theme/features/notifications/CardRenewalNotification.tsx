@@ -3,7 +3,7 @@ import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useTheme } from '@bifold/core'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
-import NotificationCard, { NotificationCardStatus } from './NotificationCard'
+import NotificationActionCard from './NotificationActionCard'
 
 const CardRenewalNotification = () => {
   const { t } = useTranslation()
@@ -12,8 +12,7 @@ const CardRenewalNotification = () => {
   const { account } = useAccount()
   const cardExpiry = account?.card_expiry
   return (
-    <NotificationCard
-      status={NotificationCardStatus.Unread}
+    <NotificationActionCard
       icon="information"
       iconColor={ColorPalette.brand.primary}
       hideIconCircle={true}

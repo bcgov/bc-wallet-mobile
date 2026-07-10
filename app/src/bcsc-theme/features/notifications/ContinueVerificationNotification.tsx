@@ -4,20 +4,20 @@ import { useTranslation } from 'react-i18next'
 import NotificationActionCard from './NotificationActionCard'
 
 /**
- * StartVerificationNotification is a component that displays a notification card prompting the user to start the verification process for their BCSC account.
+ * ContinueVerificationNotification is a component that displays a notification card prompting the user to continue the verification process for their BCSC account.
  *
- * @returns React.Element - The rendered StartVerificationNotification component.
+ * @returns React.Element - The rendered ContinueVerificationNotification component.
  */
-const StartVerificationNotification = () => {
+const ContinueVerificationNotification = () => {
   const { t } = useTranslation()
   const { ColorPalette } = useTheme()
   const secureActions = useSecureActions()
 
   return (
     <NotificationActionCard
-      title={t('Notification.StartVerification.Title')}
-      description={t('Notification.StartVerification.Description')}
-      buttonTitle={t('Notification.StartVerification.ButtonTitle')}
+      title={t('Notification.ContinueVerification.Title')}
+      description={t('Notification.ContinueVerification.Description')}
+      buttonTitle={t('Notification.ContinueVerification.ButtonTitle')}
       icon="information"
       iconColor={ColorPalette.brand.primary}
       hideIconCircle={true}
@@ -28,4 +28,4 @@ const StartVerificationNotification = () => {
   )
 }
 
-export default StartVerificationNotification
+export default ContinueVerificationNotification

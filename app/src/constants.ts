@@ -142,6 +142,11 @@ export const enum DaysOfTheWeek {
   SATURDAY = 'SATURDAY',
   SUNDAY = 'SUNDAY',
 }
+export const ICON_CIRCLE_SIZE = 36
+export const ICON_INNER_SIZE = 20
+export const CLOSE_ICON_SIZE = 24
+export const ICON_CIRCLE_INNER_ICON_SIZE = 18
+export const ICON_SIZE = 24
 
 // BCSC Video constants
 export const VIDEO_RESOLUTION_480P = { width: 640, height: 480 } // standard definition video resolution

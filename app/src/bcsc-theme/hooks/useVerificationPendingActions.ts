@@ -75,6 +75,7 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
         updateVerificationRequest(null, null)
         dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
         dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
+        dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [undefined] })
         await updateAccountFlags({
           userSubmittedVerificationVideo: false,
         })

@@ -308,6 +308,8 @@ export type BCSCMainStackParams = {
 
   [BCSCScreens.QRCore]: NavigatorScreenParams<BCSCQRCoreTabParams> | undefined
   [BCSCScreens.ConnectionLoading]: { oobRecordId?: string; credentialId?: string; proofId?: string }
+  [BCSCScreens.VerificationSuccess]: undefined
+  [BCSCScreens.CancelledReview]: { agentReason?: string }
   [BCSCScreens.MainVerifyPrompt]: undefined
 
   [BCSCModals.InternetDisconnected]: undefined

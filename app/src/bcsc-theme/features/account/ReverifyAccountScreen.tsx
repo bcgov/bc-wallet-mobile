@@ -4,7 +4,7 @@ import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import AccountVerificationCta from '@assets/img/account-verification-cta.svg'
-import { ThemedText, TOKENS, useServices } from '@bifold/core'
+import { ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { RouteProp } from '@react-navigation/native'
 import React from 'react'
 
@@ -25,6 +25,7 @@ interface ReverifyAccountScreenProps {
 
 export const ReverifyAccountScreen = ({ route }: ReverifyAccountScreenProps): React.ReactElement => {
   const isExpired = route.params.isExpired
+  const { Spacing, ColorPalette } = useTheme()
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const loadingScreen = useLoadingScreen()
@@ -34,6 +35,8 @@ export const ReverifyAccountScreen = ({ route }: ReverifyAccountScreenProps): Re
   const styles = StyleSheet.create({
     iconContainer: {
       alignItems: 'center',
+      gap: Spacing.lg,
+      marginTop: Spacing.md,
     },
   })
 
@@ -57,7 +60,7 @@ export const ReverifyAccountScreen = ({ route }: ReverifyAccountScreenProps): Re
       onPressPrimaryAction={onPrimaryAction}
     >
       <View style={styles.iconContainer}>
-        <AccountVerificationCta width={150} height={200} />
+        <AccountVerificationCta width={120} height={110} />
         <ThemedText variant="headingThree" style={{ textAlign: 'center' }}>
           {title}
         </ThemedText>
@@ -66,8 +69,10 @@ export const ReverifyAccountScreen = ({ route }: ReverifyAccountScreenProps): Re
       <ThemedText>{t('BCSC.ReverifyAccount.Body')}</ThemedText>
 
       <View>
-        <ThemedText variant="headingFour">{t('BCSC.ReverifyAccount.BulletHeader')}</ThemedText>
-        <BulletPointList translationKeys={BULLET_KEYS} />
+        <ThemedText variant="headingFour" style={{ color: ColorPalette.grayscale.black }}>
+          {t('BCSC.ReverifyAccount.BulletHeader')}
+        </ThemedText>
+        <BulletPointList translationKeys={BULLET_KEYS} style={{ marginLeft: Spacing.sm }} />
       </View>
     </ActionScreenLayout>
   )

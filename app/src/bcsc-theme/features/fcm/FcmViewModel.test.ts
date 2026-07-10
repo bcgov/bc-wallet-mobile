@@ -394,6 +394,30 @@ describe('FcmViewModel', () => {
       })
     })
 
+    it('drops the challenge and surfaces an error when the card is expired', async () => {
+      const mockErrorHandler = jest.fn()
+      viewModel.setErrorHandler(mockErrorHandler)
+      viewModel.setCardExpired(true)
+
+      const message = {
+        type: 'challenge',
+        data: { jwt: 'valid-jwt' },
+      } as FcmMessage
+
+      await capturedMessageHandler?.(message)
+
+      expect(mockErrorHandler).toHaveBeenCalledTimes(1)
+      const error = mockErrorHandler.mock.calls[0][0]
+      expect(error).toBeInstanceOf(AppError)
+      expect(error.appEvent).toBe(AppEventCode.CARD_STATUS_EXPIRED)
+      expect(decodeLoginChallenge).not.toHaveBeenCalled()
+      expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Card is expired, dropping challenge'))
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Card is expired, cannot process login challenge')
+      )
+    })
+
     it('wraps decodeLoginChallenge errors as AppError with claims set fallback', async () => {
       const nativeError = Object.assign(new Error('Invalid JWS format'), { code: 'E_FAILED_TO_PARSE_JWS' })
       ;(decodeLoginChallenge as jest.Mock).mockRejectedValue(nativeError)
