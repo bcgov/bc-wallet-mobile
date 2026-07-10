@@ -156,7 +156,11 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         {({ navigation }) => (
           <VerifyPromptScreen
             onAnswered={onVerifyPromptAnswered}
-            onContinue={() => navigation.navigate(BCSCScreens.AccountSetup)}
+            // replace (not navigate) so this one-time prompt is dropped from the stack. Once
+            // "Continue" sets verification IN_PROGRESS, VerifyStack stays mounted, so returning to the
+            // prompt would leave "Skip" a no-op (it can no longer unmount the stack). With the prompt
+            // gone, AccountSetup's back button leaves verification (home) instead of re-showing it.
+            onContinue={() => navigation.replace(BCSCScreens.AccountSetup)}
           />
         )}
       </Stack.Screen>
