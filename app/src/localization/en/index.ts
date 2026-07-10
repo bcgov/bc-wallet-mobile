@@ -254,6 +254,7 @@ const translation = {
     "Components": {
       "CloseDropdown": "Close dropdown menu",
     },
+    "Title": "BC Services card",
     "LocaleStringFormat": "en-CA",
     "Screens": {
       "Settings": "Menu",
