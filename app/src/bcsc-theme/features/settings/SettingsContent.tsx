@@ -265,6 +265,8 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
   const { status: notificationStatus } = useNotificationPermissionStatus()
 
   const showChangePIN = accountSecurityMethod !== AccountSecurityMethod.DeviceAuth && onChangePIN
+  const { developerModeEnabled } = store.preferences
+  const showFeaturesSection = Boolean(onContacts) || developerModeEnabled
   const analyticsOptInText = store.bcsc.analyticsOptIn ? 'ON' : 'OFF'
   // No adornment while the async permission check is unresolved (or failed) — only
   // assert ON/OFF for explicitly known states.
@@ -287,25 +289,35 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
         onEditNickname={onEditNickname}
       />
 
-      <SectionHeader title={t('BCSC.Settings.Features.Header')} iconName="bullhorn-outline" styles={styles}>
-        <View style={styles.sectionContainer}>
-          <ListButtonGroup>
-            {[
-              onContacts ? (
-                <ListButton key="contacts" onPress={onContacts} testID={testIdWithKey('Contacts')}>
-                  {t('BCSC.Settings.Features.Contacts')}
-                </ListButton>
-              ) : null,
-              <ListButton key="scanqr" onPress={onScanMyQR ?? noop} testID={testIdWithKey('ScanQR')}>
-                {t('BCSC.Settings.Features.ScanQR')}
-              </ListButton>,
-              <ListButton key="proof" onPress={onSendProofRequest ?? noop} testID={testIdWithKey('SendProofRequest')}>
-                {t('BCSC.Settings.Features.SendProofRequest')}
-              </ListButton>,
-            ]}
-          </ListButtonGroup>
-        </View>
-      </SectionHeader>
+      {showFeaturesSection ? (
+        <SectionHeader title={t('BCSC.Settings.Features.Header')} iconName="bullhorn-outline" styles={styles}>
+          <View style={styles.sectionContainer}>
+            <ListButtonGroup>
+              {[
+                onContacts ? (
+                  <ListButton key="contacts" onPress={onContacts} testID={testIdWithKey('Contacts')}>
+                    {t('BCSC.Settings.Features.Contacts')}
+                  </ListButton>
+                ) : null,
+                developerModeEnabled ? (
+                  <ListButton key="scanqr" onPress={onScanMyQR ?? noop} testID={testIdWithKey('ScanQR')}>
+                    {t('BCSC.Settings.Features.ScanQR')}
+                  </ListButton>
+                ) : null,
+                developerModeEnabled ? (
+                  <ListButton
+                    key="proof"
+                    onPress={onSendProofRequest ?? noop}
+                    testID={testIdWithKey('SendProofRequest')}
+                  >
+                    {t('BCSC.Settings.Features.SendProofRequest')}
+                  </ListButton>
+                ) : null,
+              ]}
+            </ListButtonGroup>
+          </View>
+        </SectionHeader>
+      ) : null}
 
       <SectionHeader title={t('BCSC.Settings.HeaderA')} iconName="cog-outline" styles={styles}>
         <View style={styles.sectionContainer}>
