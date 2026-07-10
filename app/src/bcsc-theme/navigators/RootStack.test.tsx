@@ -56,6 +56,7 @@ jest.mock('../contexts/BCSCActivityContext', () => ({
 }))
 jest.mock('../contexts/BCSCAccountContext', () => ({
   BCSCAccountProvider: ({ children }: any) => children,
+  useAccount: () => ({ account: null }),
 }))
 jest.mock('../contexts/BCSCIdTokenContext', () => ({
   BCSCIdTokenProvider: ({ children }: any) => children,
@@ -86,7 +87,7 @@ describe('BCSCRootStack', () => {
     })
     jest.mocked(useFcmService).mockReturnValue({
       service: {},
-      viewModel: { processPendingChallenges: mockProcessPendingChallenges },
+      viewModel: { processPendingChallenges: mockProcessPendingChallenges, setCardExpired: jest.fn() },
     } as any)
   })
 

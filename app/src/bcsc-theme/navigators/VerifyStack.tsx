@@ -4,7 +4,7 @@ import { useVerificationResponseListener } from '@/bcsc-theme/features/verificat
 import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
 import { BCSCModals, BCSCScreens, BCSCStacks, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
-import { BCState } from '@/store'
+import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
 import { testIdWithKey, useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
 import { HeaderBackButtonProps } from '@react-navigation/elements'
 import { useNavigation } from '@react-navigation/native'
@@ -89,6 +89,17 @@ const VerifyResumeHeaderBackButton = (props: HeaderBackButtonProps) => {
   )
 }
 
+// When PendingReview is the initial route (entered from the home screen notification),
+// there is no navigation history — dispatch UNVERIFIED to swap back to MainStack instead.
+const PendingReviewBackButton = (props: HeaderBackButtonProps) => {
+  const [, dispatch] = useStore<BCState>()
+  const handlePress = () => {
+    dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS, payload: [VerificationStatus.UNVERIFIED] })
+  }
+
+  return <HeaderBackButton {...props} onPress={handlePress} />
+}
+
 interface VerifyStackProps {
   /**
    * Opens the stack on the one-time verify prompt rather than the user's resume step. Set by
@@ -110,7 +121,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
   const initialRouteName = showVerifyPrompt ? BCSCScreens.VerifyPrompt : resumeRoute.name
   useBCSCStack(BCSCStacks.Verify)
 
-  // Listen for verification approval push notifications and navigate to success screen
+  // Listen for verification status push notifications and add appropriate notification card
   useVerificationResponseListener()
 
   // Detect an expired in-progress verification session (device_code) and route to the restart screen.
@@ -271,6 +282,8 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         name={BCSCScreens.PendingReview}
         component={PendingReviewScreen}
         options={{
+          header: createProgressHeader(5, 80),
+          headerLeft: PendingReviewBackButton,
           title: t('BCSC.Steps.Status'),
         }}
       />

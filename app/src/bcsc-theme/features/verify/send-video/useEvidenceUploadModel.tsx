@@ -193,6 +193,9 @@ const useEvidenceUploadModel = (
         userSubmittedVerificationVideo: true,
       })
 
+      // Capture a timestamp when the user successfully submits their verification video. This is needed on the pending review screen
+      dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [new Date()] })
+
       navigation.dispatch(
         CommonActions.reset({
           index: 0,

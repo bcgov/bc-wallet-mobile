@@ -27,7 +27,8 @@ exports[`SuccessfullySent renders correctly 1`] = `
         {
           "alignItems": "center",
           "justifyContent": "center",
-          "padding": 24,
+          "paddingHorizontal": 16,
+          "paddingTop": 75,
         },
       ]
     }

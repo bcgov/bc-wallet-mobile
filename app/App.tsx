@@ -10,14 +10,14 @@ import {
   VerificationResponseService,
   VerificationResponseServiceProvider,
 } from '@/bcsc-theme/features/verification-response'
-import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
+import { BCThemeNames, Mode, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
 import { NavigationContainerProvider, navigationRef } from '@/contexts/NavigationContainerContext'
 import { isAppError } from '@/errors/appError'
 import { ErrorBoundaryWrapper } from '@/errors/components/ErrorBoundary'
 import { AppEventCode } from '@/events/appEventCode'
 import { localization } from '@/localization'
-import { initialState, Mode, reducer } from '@/store'
+import { initialState, reducer } from '@/store'
 import { themes } from '@/theme'
 import { initIssuer } from '@/utils/issuer'
 import { appLogger } from '@/utils/logger'

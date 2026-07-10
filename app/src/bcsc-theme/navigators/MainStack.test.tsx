@@ -42,6 +42,7 @@ jest.mock('react-i18next', () => ({
 jest.mock('@/constants', () => ({
   DEFAULT_HEADER_TITLE_CONTAINER_STYLE: {},
   HelpCentreUrl: { COMPUTER_LOGIN: 'https://example.com' },
+  Mode: { BCWallet: 'bcwallet', BCSC: 'bcsc' },
 }))
 jest.mock('../contexts/BCSCStackContext', () => ({
   useBCSCStack: jest.fn(),
@@ -56,6 +57,9 @@ jest.mock('../features/pairing', () => ({
 }))
 jest.mock('../features/connection-invitation', () => ({
   useConnectionInvitationDeepLink: jest.fn(),
+}))
+jest.mock('../features/verification-response/useVerificationResponseListener', () => ({
+  useVerificationResponseListener: jest.fn(),
 }))
 jest.mock('../features/agent', () => ({
   AgentReadyGate: ({ children }: any) => children,

@@ -61,6 +61,9 @@ import { MainPrivacyPolicyScreen } from '../features/settings/MainPrivacyPolicyS
 import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
 import { NotificationSettingsScreen } from '../features/settings/NotificationSettingsScreen'
 import { MainResetWalletConfirmationScreen } from '../features/settings/ResetWalletConfirmationScreen'
+import { useVerificationResponseListener } from '../features/verification-response/useVerificationResponseListener'
+import CancelledReview from '../features/verify/send-video/CancelledReview'
+import VerificationSuccessScreen from '../features/verify/VerificationSuccessScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { useBCSCApiClient } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
@@ -152,6 +155,8 @@ const MainStack: React.FC = () => {
 
     return unsubscribe
   }, [pairingService, navigation])
+
+  useVerificationResponseListener()
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
@@ -459,6 +464,13 @@ const MainStack: React.FC = () => {
             })}
           />
           <Stack.Screen
+            name={BCSCScreens.VerificationSuccess}
+            component={VerificationSuccessScreen}
+            options={() => ({
+              headerShown: true,
+            })}
+          />
+          <Stack.Screen
             name={BCSCScreens.ReverifyAccount}
             component={ReverifyAccountScreen}
             options={() => ({
@@ -472,6 +484,14 @@ const MainStack: React.FC = () => {
               headerShown: true,
             })}
           />
+          <Stack.Screen
+            name={BCSCScreens.CancelledReview}
+            component={CancelledReview}
+            options={() => ({
+              headerShown: true,
+            })}
+          />
+
           {/* React navigation docs suggest modals at bottom of stack */}
           <Stack.Screen
             name={BCSCModals.InternetDisconnected}

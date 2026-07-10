@@ -51,6 +51,28 @@ const summarizeCause = (cause: unknown): unknown => {
   return summary
 }
 
+/** Cap on the server reason lifted by {@link extractServerReason}, so oversized bodies never bloat logs. */
+const MAX_SERVER_REASON_LENGTH = 500
+
+/**
+ * Lift a human-readable reason from an HTTP error response body.
+ * Handles plain-string bodies (e.g. "email_address is invalid", 5xx HTML pages)
+ * and JSON bodies with a string `message` (e.g. {"message":"unexpected images count"}).
+ * Truncated to {@link MAX_SERVER_REASON_LENGTH} chars so oversized bodies never bloat logs.
+ */
+const extractServerReason = (responseData: unknown): string | undefined => {
+  if (typeof responseData === 'string' && responseData.length > 0) {
+    return responseData.slice(0, MAX_SERVER_REASON_LENGTH)
+  }
+  if (responseData && typeof responseData === 'object') {
+    const message = (responseData as { message?: unknown }).message
+    if (typeof message === 'string' && message.length > 0) {
+      return message.slice(0, MAX_SERVER_REASON_LENGTH)
+    }
+  }
+  return undefined
+}
+
 /**
  * Custom application error class with structured information.
  *
@@ -110,11 +132,16 @@ export class AppError extends Error {
     // For non-Axios errors (e.g. native module errors), cause.code is a meaningful prefix like "E_KEY_NOT_FOUND"
     const code = !isAxiosError && typeof cause.code === 'string' ? cause.code : undefined
 
-    // Include the server's response body when it's a short plain string (e.g. "email_address is invalid")
-    const responseData = isAxiosError ? cause.response?.data : undefined
-    const serverReason = typeof responseData === 'string' && responseData.length <= 500 ? responseData : undefined
+    // Include the server's reason: a string body (truncated to the cap), or the `message` field of a JSON body
+    const serverReason = extractServerReason(isAxiosError ? cause.response?.data : undefined)
 
-    return [code, cause.message, serverReason].filter(Boolean).join(': ')
+    // When the cause is itself an AppError (e.g. a 2107 client error re-wrapped as a
+    // 2404 file-upload error), its `technicalMessage` already carries the server reason;
+    // the generic `message` does not. Prefer it so the reason survives re-wrapping.
+    const causeDetail =
+      this.cause instanceof AppError ? (this.cause.technicalMessage ?? this.cause.message) : cause.message
+
+    return [code, causeDetail, serverReason].filter(Boolean).join(': ')
   }
 
   /**

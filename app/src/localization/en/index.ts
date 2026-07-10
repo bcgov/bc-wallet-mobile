@@ -99,18 +99,37 @@ const translation = {
     },
     "StartVerification": {
       "Title": "You're not verified",
-      "Description": "You can continue the verification process at any time.",
+      "Description": "You can continue the verification process at anytime.",
       "ButtonTitle": "Start verification",
-      "ContinueButtonTitle": "Continue verification"
+    },
+    "ContinueVerification": {
+      "Title": "You're not verified",
+      "Description": "Complete the verification process at anytime.",
+      "ButtonTitle": "Continue",
+    },
+    "PendingReview": {
+      "Title": "Your identity verification is pending",
+      "Description": "We've received your request to verify your identity.",
+      "ButtonTitle": "Check status"
+    },
+    "CancelledReview": {
+      "Title": "Your identity could not be verified",
+      "Description": "Verify your identity again to access services.",
+      "ButtonTitle": "Restart verification"
+    },
+    "Verified": {
+      "Title": "Your identity has been verified",
+      "Description": "Complete the verification process.",
+      "ButtonTitle": "Finish up"
     },
     "AccountExpired": {
-      "Title": "Your BC Services card app has expired",
+      "Title": "Your BC Services card account has expired",
       "Description": "Please reverify yourself to get access to your services",
       "ButtonTitle": "Start renewal"
     },
     "AccountRenewal": {
       "Title": "Time for renewal",
-      "Description": "Renew your BC Services card app before it expires on {{expiryDate}}",
+      "Description": "Renew your BC Services card account before it expires on {{expiryDate}}",
       "ButtonTitle": "Start renewal"
     },
     "BasicMessage": {
@@ -603,7 +622,7 @@ const translation = {
     },
     "ReverifyAccount": {
       "RenewalTitle": "Renew your account",
-      "ExpiredTitle": "Your BC Services card app has expired",
+      "ExpiredTitle": "Your BC Services card account has expired",
       "Body": "Services require you to re-verify your account. You will need to complete this step in order to access your services online.",
       "BulletHeader": "You will need to:",
       "BulletOne": "Verify your email",
@@ -982,14 +1001,14 @@ const translation = {
     },
     "SendVideo": {
       "PendingReview": {
-        "Heading": "Request pending review",
-        "Description1": "We review requests:",
+        "Heading": "Your identity verification is pending",
+        "Description1": "Verification request received",
+        "BulletHeader": "We review requests:",
         "Bullet1": "Monday to Friday, 9am to 5pm",
         "Bullet2": "In the order they're received",
-        "Description2": "Usually, we review requests within 2 business days. During busy periods, it may take longer.",
-        "Description3": "After it's reviewed, you will get an email if your provided your email.",
-        "Description4": "Do not resend your video. If you do, your request will go to the back of the queue.",
-        "ButtonText": "Ok",
+        "Description2": "Usually, we review requests within 2 business days.",
+        "Description3": "Requests sent in on the weekend will be reviewed after we open on Monday.",
+        "Description4": "It may take up to 10 business days.",
       },
       "SuccessfullySent": {
         "Heading": "We've received your request to verify your identity",
@@ -1123,14 +1142,14 @@ const translation = {
       "ButtonText": "Okay"
     },
     "Verification": {
-      "Title": "You're all set!",
-      "Description": "Use this app to access many different websites and services.",
-      "ExtraText": "Remember, the BC Services Card app is not a health card, vaccine card, driver's license or photo ID.",
+      "Title": "Your identity has been verified",
+      "Description": "You're now able to access services with your verified identity.",
+      "ExtraText": "Remember, it's not a health card, vaccine card, driver's license, or photo ID.",
       "ButtonText": "Continue"
     },
     "CancelledVerification": {
       "Title": "Your identity couldn't be verified",
-      "Label": "Details from Service BC agent: \n {{reason}}",
+      "Label": "Details from Service BC agent: \n{{reason}}",
       "Button": "Ok",
       "NoReason": "No reason provided"
     },

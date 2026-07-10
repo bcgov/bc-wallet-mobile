@@ -1,4 +1,5 @@
-import { BCState, Mode } from '@/store'
+import { Mode } from '@/constants'
+import { BCState } from '@/store'
 import BCSCRootStack from '@bcsc-theme/navigators/RootStack'
 import { RootStack as BCWalletRootStack, useStore } from '@bifold/core'
 import NonProdOverlay from './bcsc-theme/components/NonProdOverlay'
