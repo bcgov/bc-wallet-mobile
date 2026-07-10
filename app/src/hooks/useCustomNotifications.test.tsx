@@ -25,6 +25,8 @@ jest.mock(
   '@/bcsc-theme/features/notifications/ContinueVerificationNotification',
   () => 'ContinueVerificationNotification'
 )
+jest.mock('@/bcsc-theme/features/notifications/CardExpiryNotification', () => 'CardExpiryNotification')
+jest.mock('@/bcsc-theme/features/notifications/CardRenewalNotification', () => 'CardRenewalNotification')
 
 const buildStore = (bcscSecure: object, bcsc: object = {}) => [
   { bcscSecure, bcsc: { showAccountExpiryNotification: false, showCardRenewalNotification: false, ...bcsc } },
@@ -163,5 +165,78 @@ describe('useCustomNotifications', () => {
     const { result } = renderHook(() => useCustomNotifications())
 
     expect(result.current.customNotifications[0].key).toBe(CustomNotificationId.BCSCVerified)
+  })
+
+  describe('CardExpiryNotification', () => {
+    it('is shown when showAccountExpiryNotification is true', () => {
+      mockUseStore.mockReturnValue(
+        buildStore(
+          { verificationRequestStatus: null, verificationRequestId: null },
+          { showAccountExpiryNotification: true }
+        )
+      )
+
+      const { result } = renderHook(() => useCustomNotifications())
+
+      expect(result.current.customNotifications).toHaveLength(1)
+      expect(result.current.customNotifications[0].key).toBe(CustomNotificationId.AccountExpired)
+    })
+
+    it('takes priority over CardRenewalNotification when both are true', () => {
+      mockUseStore.mockReturnValue(
+        buildStore(
+          { verificationRequestStatus: null, verificationRequestId: null },
+          { showAccountExpiryNotification: true, showCardRenewalNotification: true }
+        )
+      )
+
+      const { result } = renderHook(() => useCustomNotifications())
+
+      expect(result.current.customNotifications).toHaveLength(1)
+      expect(result.current.customNotifications[0].key).toBe(CustomNotificationId.AccountExpired)
+    })
+
+    it('is not shown when verification status takes priority', () => {
+      mockUseStore.mockReturnValue(
+        buildStore(
+          { verificationRequestStatus: 'verified', verificationRequestId: null },
+          { showAccountExpiryNotification: true }
+        )
+      )
+
+      const { result } = renderHook(() => useCustomNotifications())
+
+      expect(result.current.customNotifications[0].key).toBe(CustomNotificationId.BCSCVerified)
+    })
+  })
+
+  describe('CardRenewalNotification', () => {
+    it('is shown when showCardRenewalNotification is true and showAccountExpiryNotification is false', () => {
+      mockUseStore.mockReturnValue(
+        buildStore(
+          { verificationRequestStatus: null, verificationRequestId: null },
+          { showCardRenewalNotification: true }
+        )
+      )
+
+      const { result } = renderHook(() => useCustomNotifications())
+
+      expect(result.current.customNotifications).toHaveLength(1)
+      expect(result.current.customNotifications[0].key).toBe(CustomNotificationId.AccountRenewalAvailable)
+    })
+
+    it('is not shown when needsVerification takes priority', () => {
+      mockUseVerificationStatus.mockReturnValue({ ...baseVerificationStatus, needsVerification: true })
+      mockUseStore.mockReturnValue(
+        buildStore(
+          { verificationRequestStatus: null, verificationRequestId: null },
+          { showCardRenewalNotification: true }
+        )
+      )
+
+      const { result } = renderHook(() => useCustomNotifications())
+
+      expect(result.current.customNotifications[0].key).toBe(CustomNotificationId.BCSCStartVerification)
+    })
   })
 })

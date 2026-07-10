@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SystemModal } from '../../modal/components/SystemModal'
-import useCancelledReviewViewModel from './CancelledRerivewViewModel'
+import useCancelledReviewViewModel from './CancelledReviewViewModel'
 
 interface CancelledReviewProps {
   route: {
