@@ -1,7 +1,6 @@
 import { ICON_CIRCLE_SIZE } from '@/constants'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
-import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import { DismissButton, NotificationIcon } from './NotificationCard'
 
@@ -17,7 +16,6 @@ interface NotificationActionCardProps {
 }
 
 const NotificationActionCard: React.FC<NotificationActionCardProps> = (props) => {
-  const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
   const iconColor = props.iconColor ?? ColorPalette.grayscale.white
   const iconName = props.icon ?? 'information'
@@ -67,7 +65,7 @@ const NotificationActionCard: React.FC<NotificationActionCardProps> = (props) =>
         <View style={styles.buttonContainer}>
           <Button
             title={props.buttonTitle}
-            accessibilityLabel={t(props.buttonTitle)}
+            accessibilityLabel={props.buttonTitle}
             testID={testIdWithKey('ViewNotification')}
             buttonType={ButtonType.Primary}
             onPress={props.onPress}
