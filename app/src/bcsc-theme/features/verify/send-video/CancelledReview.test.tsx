@@ -8,7 +8,7 @@ jest.mock('@/bcsc-theme/hooks/useVerificationReset', () => ({
   useVerificationReset: jest.fn(() => jest.fn().mockResolvedValue(true)),
 }))
 
-jest.mock('./CancelledRerivewViewModel', () => ({
+jest.mock('./CancelledReviewViewModel', () => ({
   __esModule: true,
   default: jest.fn(() => ({ cleanUpVerificationData: jest.fn() })),
 }))
