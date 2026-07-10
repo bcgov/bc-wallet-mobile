@@ -70,6 +70,7 @@ describe('QRCoreStack', () => {
       Spacing: { lg: 24 },
     } as any)
     jest.mocked(Bifold.useServices).mockReturnValue([mockLogger] as any)
+    jest.mocked(Bifold.useStore).mockReturnValue([{ preferences: { developerModeEnabled: false } }, jest.fn()] as any)
     jest.mocked(Bifold.testIdWithKey).mockImplementation((key: string) => key)
 
     jest.mocked(useCardStatus).mockReturnValue({ isActivelyVerified: true, isExpired: false } as any)
