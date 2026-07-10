@@ -285,7 +285,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       StyleSheet.create({
         container: {
           flex: 1,
-          backgroundColor: 'black',
+          backgroundColor: ColorPalette.brand.primary,
         },
         agentVideo: {
           position: 'absolute',
@@ -304,6 +304,9 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
           justifyContent: 'space-between',
           padding: Spacing.md,
           backgroundColor: ColorPalette.notification.popupOverlay,
+        },
+        timerText: {
+          color: ColorPalette.grayscale.white,
         },
         controlsContainer: {
           flexDirection: 'row',
@@ -334,7 +337,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
           left: 0,
           right: 0,
           bottom: '15%',
-          backgroundColor: 'black',
+          backgroundColor: ColorPalette.brand.primary,
           justifyContent: 'center',
           alignItems: 'center',
           paddingHorizontal: Spacing.xl,
@@ -376,12 +379,12 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         </View>
       )}
 
-      <SafeAreaView edges={['top']} style={{ flex: 0, backgroundColor: NavigationTheme.colors.primary }} />
+      <SafeAreaView edges={['top']} style={{ flex: 0, backgroundColor: ColorPalette.grayscale.white }} />
       <SafeAreaView edges={['left', 'right']} style={{ flex: 1, justifyContent: 'space-between' }}>
         <View style={styles.upperContainer}>
           <View style={styles.timeAndLabelContainer}>
-            <ThemedText>{t('BCSC.VideoCall.ServiceBC')}</ThemedText>
-            {callTimer ? <ThemedText>{callTimer}</ThemedText> : null}
+            <ThemedText style={{ color: ColorPalette.grayscale.white }}>{t('BCSC.VideoCall.ServiceBC')}</ThemedText>
+            {callTimer ? <ThemedText style={styles.timerText}>{callTimer}</ThemedText> : null}
           </View>
           {banner ? (
             <BannerSection
@@ -407,7 +410,9 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
               accessibilityRole="button"
               testID={testIdWithKey('HavingTrouble')}
             >
-              <ThemedText>{t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble')}</ThemedText>
+              <ThemedText style={{ color: ColorPalette.grayscale.white, padding: Spacing.sm }}>
+                {t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble')}
+              </ThemedText>
             </TouchableOpacity>
           </View>
 

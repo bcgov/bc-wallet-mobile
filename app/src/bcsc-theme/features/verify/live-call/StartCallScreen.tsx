@@ -18,8 +18,9 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
+import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Image, ImageErrorEvent, PermissionsAndroid, Platform, StyleSheet, View } from 'react-native'
 import { useMicrophonePermission } from 'react-native-vision-camera'
@@ -56,6 +57,15 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
       })
       .finally(() => setHoursLoading(false))
   }, [videoCallApi, logger])
+
+  // Reset the start button's loading state whenever the screen regains focus. Pressing "Start call"
+  // sets this flag and pushes LiveCall without unmounting this screen, so on returning here (e.g. via
+  // the live-call back button) the flag would otherwise stay true and leave the button disabled.
+  useFocusEffect(
+    useCallback(() => {
+      setIsWaitingForPermissions(false)
+    }, [])
+  )
 
   const styles = StyleSheet.create({
     // At smaller sizes the Image tag will ignore exif tags, which provide orientation
