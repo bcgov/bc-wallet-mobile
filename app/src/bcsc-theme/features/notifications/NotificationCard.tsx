@@ -1,5 +1,13 @@
 import { hitSlop } from '@/constants'
-import { Button, ButtonType, IColorPalette, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  IColorPalette,
+  testIdWithKey,
+  ThemedText,
+  usePreventDoublePress,
+  useTheme,
+} from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, ImageStyle, Pressable, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native'
@@ -101,6 +109,8 @@ const NotificationCard: React.FC<NotificationCardProps> = (props) => {
   const { ColorPalette, Spacing } = useTheme()
   const cardStyle = getCardStyle(props.status, ColorPalette)
   const iconColor = props.iconColor ?? ColorPalette.grayscale.white
+  const { preventDoublePress: preventDoublePressOnPress } = usePreventDoublePress()
+  const { preventDoublePress: preventDoublePressOnClose } = usePreventDoublePress()
 
   const isV1 = !!props.buttonTitle
 
@@ -188,7 +198,7 @@ const NotificationCard: React.FC<NotificationCardProps> = (props) => {
             accessibilityLabel={t('Global.Dismiss')}
             accessibilityRole="button"
             testID={testIdWithKey('DismissNotification')}
-            onPress={props.onClose}
+            onPress={preventDoublePressOnClose(props.onClose)}
             hitSlop={hitSlop}
           >
             <Icon name="close" size={CLOSE_ICON_SIZE} color={ColorPalette.grayscale.darkGrey} />
@@ -216,7 +226,7 @@ const NotificationCard: React.FC<NotificationCardProps> = (props) => {
               accessibilityLabel={t(props.buttonTitle)}
               testID={testIdWithKey('ViewNotification')}
               buttonType={ButtonType.Primary}
-              onPress={props.onPress}
+              onPress={props.onPress} // Double press prevented by default
             />
           </View>
         )}
@@ -229,7 +239,11 @@ const NotificationCard: React.FC<NotificationCardProps> = (props) => {
   }
 
   return (
-    <Pressable onPress={props.onPress} accessibilityRole="button" testID={testIdWithKey('NotificationCardPressable')}>
+    <Pressable
+      onPress={preventDoublePressOnPress(props.onPress)}
+      accessibilityRole="button"
+      testID={testIdWithKey('NotificationCardPressable')}
+    >
       {content}
     </Pressable>
   )

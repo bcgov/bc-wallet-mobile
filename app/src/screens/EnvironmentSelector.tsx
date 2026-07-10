@@ -1,4 +1,4 @@
-import { Button, ButtonType, testIdWithKey, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey, usePreventDoublePress, useStore, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { FlatList, StyleSheet, Text, View } from 'react-native'
@@ -20,6 +20,7 @@ const EnvironmentSelector: React.FC<EnvironmentSelectorProps> = ({ onEnvironment
   const { t } = useTranslation()
   const { ColorPalette, TextTheme, SettingsTheme } = useTheme()
   const [store] = useStore<BCState>()
+  const { preventDoublePress } = usePreventDoublePress()
 
   const styles = StyleSheet.create({
     container: {
@@ -65,9 +66,7 @@ const EnvironmentSelector: React.FC<EnvironmentSelectorProps> = ({ onEnvironment
                 size={36}
                 innerIconStyle={{ borderColor: ColorPalette.brand.primary, borderWidth: 2 }}
                 ImageComponent={() => <Icon name="circle" size={18} color={ColorPalette.brand.primary}></Icon>}
-                onPress={() => {
-                  handleEnvironmentPress(environment)
-                }}
+                onPress={preventDoublePress(async () => await handleEnvironmentPress(environment))}
                 isChecked={name === store.developer.environment.name}
                 disableBuiltInState
                 testID={testIdWithKey(name.toLocaleLowerCase())}

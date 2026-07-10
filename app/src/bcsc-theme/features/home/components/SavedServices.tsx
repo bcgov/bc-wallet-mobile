@@ -1,7 +1,7 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
-import { ThemedText, useStore, useTheme } from '@bifold/core'
+import { ThemedText, usePreventDoublePress, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
@@ -19,6 +19,7 @@ const SavedServices: React.FC = () => {
   const navigation = useNavigation<ServicesNavigationProp>()
   const { t } = useTranslation()
   const { updateSavedService } = useSecureActions()
+  const { preventDoublePress } = usePreventDoublePress()
 
   const { serviceClients } = useFilterServiceClients({
     serviceClientIdsFilter: store.bcscSecure.savedServices,
@@ -66,9 +67,9 @@ const SavedServices: React.FC = () => {
                 serviceClientId: serviceClient.client_ref_id,
               })
             }}
-            onRemove={() => {
-              updateSavedService(serviceClient.client_ref_id, false)
-            }}
+            onRemove={preventDoublePress(async () => {
+              await updateSavedService(serviceClient.client_ref_id, false)
+            })}
           />
         ))
       )}
