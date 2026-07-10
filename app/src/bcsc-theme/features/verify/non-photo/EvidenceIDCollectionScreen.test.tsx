@@ -207,7 +207,7 @@ describe('EvidenceIDCollection', () => {
   it('keeps the completed ID beneath the evidence list so back returns to it when another ID is needed', async () => {
     // Dual-ID flow: after completing this ID, the next step is picking another one (the evidence
     // list). The just-completed data-entry screen should sit beneath it so back returns here.
-    (getResumeStepRoute as jest.Mock).mockReturnValue({
+    ;(getResumeStepRoute as jest.Mock).mockReturnValue({
       name: BCSCScreens.EvidenceTypeList,
       params: { cardProcess: BCSCCardProcess.NonBCSC },
     })
@@ -230,16 +230,18 @@ describe('EvidenceIDCollection', () => {
     })
     await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
 
-    const resetAction = mockNavigation.dispatch.mock.calls.at(-1)?.[0]
-    expect(resetAction?.payload?.index).toBe(1)
-    expect(resetAction?.payload?.routes).toEqual([
-      expect.objectContaining({ name: BCSCScreens.EvidenceIDCollection, params: { cardType: mockEvidenceType } }),
-      expect.objectContaining({ name: BCSCScreens.EvidenceTypeList }),
-    ])
+    // Pushes the next step (keeping this ID's form in the history) rather than collapsing the stack.
+    const action = mockNavigation.dispatch.mock.calls.at(-1)?.[0]
+    expect(action).toEqual(
+      expect.objectContaining({
+        type: 'PUSH',
+        payload: expect.objectContaining({ name: BCSCScreens.EvidenceTypeList }),
+      })
+    )
   })
 
-  it('collapses the stack to a single route when completing the ID advances to a later step', async () => {
-    // Default resume route (ResidentialAddress) is not the evidence list, so no back-stack is seeded.
+  it('keeps the completed ID beneath the next step (e.g. address) so back returns to it', async () => {
+    // Default resume route is the address step; the completed ID sits beneath it so back returns here.
     const tree = render(
       <BasicAppContext
         initialStateOverride={{
@@ -258,8 +260,13 @@ describe('EvidenceIDCollection', () => {
     })
     await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
 
-    const resetAction = mockNavigation.dispatch.mock.calls.at(-1)?.[0]
-    expect(resetAction?.payload?.index).toBe(0)
-    expect(resetAction?.payload?.routes).toEqual([expect.objectContaining({ name: BCSCScreens.ResidentialAddress })])
+    // Pushes the address step, keeping this ID's form in the history so back returns here.
+    const action = mockNavigation.dispatch.mock.calls.at(-1)?.[0]
+    expect(action).toEqual(
+      expect.objectContaining({
+        type: 'PUSH',
+        payload: expect.objectContaining({ name: BCSCScreens.ResidentialAddress }),
+      })
+    )
   })
 })

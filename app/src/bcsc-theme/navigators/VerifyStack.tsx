@@ -1,5 +1,4 @@
 import { createHeaderWithoutBanner } from '@/bcsc-theme/components/HeaderWithBanner'
-import { createVerifySettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
 import { createProgressHeader } from '@/bcsc-theme/components/VerifyProgressHeader'
 import { useVerificationResponseListener } from '@/bcsc-theme/features/verification-response/useVerificationResponseListener'
 import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
@@ -14,6 +13,7 @@ import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
 import { createFloatingHelpMenuButton, createVerifyHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createHeaderBackButton, HeaderBackButton } from '../components/HeaderBackButton'
+import { createVerifySettingsHeaderButton } from '../components/SettingsHeaderButton'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferInstructionsScreen from '../features/account-transfer/transferee/TransferInstructionsScreen'
 import TransferQRScannerScreen from '../features/account-transfer/transferee/TransferQRScannerScreen'
@@ -211,7 +211,7 @@ const VerifyStack = () => {
         }
         options={{
           header: createProgressHeader(4, 30),
-          headerLeft: createVerifySettingsHeaderButton(),
+          headerLeft: (props) => <VerifyResumeHeaderBackButton {...props} />,
         }}
       />
       <Stack.Screen
@@ -369,7 +369,7 @@ const VerifyStack = () => {
         component={ResidentialAddressScreen}
         options={{
           header: createProgressHeader(3, 50),
-          headerLeft: createVerifySettingsHeaderButton(),
+          headerLeft: (props) => <VerifyResumeHeaderBackButton {...props} />,
         }}
       />
       <Stack.Screen name={BCSCScreens.VerifySettings} component={VerifySettingsScreen} />

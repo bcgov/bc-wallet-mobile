@@ -60,6 +60,7 @@ describe('EvidenceTypeList', () => {
     mockUseServices.mockReturnValue([defaultLogger])
     mockUseSecureActions.mockReturnValue({
       removeIncompleteEvidence: jest.fn(),
+      truncateEvidence: jest.fn(),
       addEvidenceType: jest.fn(),
     })
     mockUseDataLoader.mockReturnValue({

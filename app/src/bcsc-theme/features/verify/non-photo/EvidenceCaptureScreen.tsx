@@ -184,10 +184,9 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
       const barcodes = buildBarcodePayload(bcscSerialRef.current, licenseRef.current)
       await updateEvidenceMetadata(cardType, newPhotos, barcodes.length > 0 ? barcodes : undefined)
 
-      // All photos captured, go to the form screen. Use push (not navigate) so this always opens a
-      // FRESH EvidenceIDCollection instance: in the dual-ID flow a previously-completed ID's
-      // EvidenceIDCollection can already be in the stack, and navigate would pop back to it
-      // (animating backwards and showing the earlier ID's form data) instead of collecting this one.
+      // All photos captured → go to the form screen. push (not navigate) so a previously-completed
+      // ID's EvidenceIDCollection already in the stack isn't reused (which would show its data); the
+      // capture/instruction screens stay in the history so the user can step back through them.
       navigation.push(BCSCScreens.EvidenceIDCollection, {
         cardType,
         documentNumber: licenseRef.current?.licenseNumber,
