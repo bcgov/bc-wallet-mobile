@@ -40,6 +40,7 @@ const mockUserData = (overrides: Record<string, any> = {}) => ({
     sub: 'sub-123',
     transaction_identifier: 'txn-123',
     given_name: 'Steve',
+    given_names: 'Steve John',
     family_name: 'Brule',
     display_name: 'Steve Brule',
     birthdate: '1990-01-01',
@@ -80,11 +81,11 @@ describe('BCSCAccountContext', () => {
 
       const { result } = renderHook(() => useAccount(), { wrapper })
 
-      expect(result.current?.account?.fullname_formatted).toBe('Brule, Steve')
+      expect(result.current?.account?.fullname_formatted).toBe('Brule, Steve John')
     })
 
     it('formats as "FamilyName" when given_name is undefined (mononym)', () => {
-      mockDataLoaderReturn.data = mockUserData({ given_name: undefined })
+      mockDataLoaderReturn.data = mockUserData({ given_names: undefined })
 
       const wrapper = ({ children }: { children: React.ReactNode }) => (
         <BasicAppContext>
@@ -98,7 +99,7 @@ describe('BCSCAccountContext', () => {
     })
 
     it('formats as "FamilyName" when given_name is an empty string', () => {
-      mockDataLoaderReturn.data = mockUserData({ given_name: '' })
+      mockDataLoaderReturn.data = mockUserData({ given_names: '' })
 
       const wrapper = ({ children }: { children: React.ReactNode }) => (
         <BasicAppContext>
@@ -112,7 +113,7 @@ describe('BCSCAccountContext', () => {
     })
 
     it('formats as "FamilyName" when given_name is whitespace only', () => {
-      mockDataLoaderReturn.data = mockUserData({ given_name: '   ' })
+      mockDataLoaderReturn.data = mockUserData({ given_names: '   ' })
 
       const wrapper = ({ children }: { children: React.ReactNode }) => (
         <BasicAppContext>
@@ -136,7 +137,7 @@ describe('BCSCAccountContext', () => {
 
       const { result } = renderHook(() => useAccount(), { wrapper })
 
-      expect(result.current?.account?.fullname_formatted).toBe('Steve')
+      expect(result.current?.account?.fullname_formatted).toBe('Steve John')
     })
 
     it('formats as "GivenName" when family_name is an empty string', () => {
@@ -150,7 +151,7 @@ describe('BCSCAccountContext', () => {
 
       const { result } = renderHook(() => useAccount(), { wrapper })
 
-      expect(result.current?.account?.fullname_formatted).toBe('Steve')
+      expect(result.current?.account?.fullname_formatted).toBe('Steve John')
     })
   })
 })
