@@ -155,7 +155,6 @@ exports[`EnterEmailScreen Rendering should match snapshot 1`] = `
                   onChange={[Function]}
                   onChangeText={[Function]}
                   onFocus={[Function]}
-                  placeholder="BCSC.EnterEmail.EmailExample"
                   placeholderTextColor="#606060"
                   style={
                     [

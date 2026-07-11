@@ -125,6 +125,22 @@ describe('EnterEmailScreen', () => {
 
       expect(queryByTestId('SkipButton')).toBeNull()
     })
+
+    it('should render the email input with no placeholder text', () => {
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <ErrorAlertProvider>
+            <EnterEmailScreen
+              navigation={mockNavigation}
+              route={{ params: { cardProcess: BCSCCardProcess.NonBCSC } }}
+            />
+          </ErrorAlertProvider>
+        </BasicAppContext>
+      )
+
+      const emailInput = getByTestId('com.ariesbifold:id/email-input')
+      expect(emailInput.props.placeholder).toBeUndefined()
+    })
   })
 
   describe('Email validation', () => {
