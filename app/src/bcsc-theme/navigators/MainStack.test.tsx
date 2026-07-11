@@ -66,9 +66,6 @@ jest.mock('../features/agent', () => ({
   BifoldScope: ({ children }: any) => children,
   withAgentReadyGate: (Component: any) => Component,
 }))
-jest.mock('../hooks/useBCSCApiClient', () => ({
-  useBCSCApiClient: jest.fn(() => ({ endpoints: { accountDevices: 'https://example.com/devices' } })),
-}))
 jest.mock('../components/FloatingHelpMenuHeaderButton', () => ({
   createFloatingHelpMenuButton: jest.fn(() => () => null),
 }))
@@ -76,7 +73,6 @@ jest.mock('../components/HeaderBackButton', () => ({
   createHeaderBackButton: jest.fn(() => null),
 }))
 jest.mock('../components/HeaderWithBanner', () => ({
-  createHeaderWithBanner: jest.fn(() => () => null),
   createHeaderWithoutBanner: jest.fn(() => null),
 }))
 jest.mock('./stack-utils', () => ({

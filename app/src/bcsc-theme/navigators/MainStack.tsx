@@ -1,5 +1,4 @@
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
-import { BCState } from '@/store'
 import {
   CredentialDetails,
   Screens,
@@ -7,19 +6,18 @@ import {
   TOKENS,
   useDefaultStackOptions,
   useServices,
-  useStore,
   useTheme,
   useTour,
 } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import Developer from '../../screens/Developer'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
-import { createHeaderWithBanner } from '../components/HeaderWithBanner'
+import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferQRDisplayScreen from '../features/account-transfer/transferer/TransferQRDisplayScreen'
 import TransferQRInformationScreen from '../features/account-transfer/transferer/TransferQRInformationScreen'
@@ -65,7 +63,6 @@ import { useVerificationResponseListener } from '../features/verification-respon
 import CancelledReview from '../features/verify/send-video/CancelledReview'
 import VerificationSuccessScreen from '../features/verify/VerificationSuccessScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
-import { useBCSCApiClient } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
 import QRCoreStack from './QRCoreStack'
@@ -99,7 +96,6 @@ const MainStack: React.FC = () => {
   const defaultStackOptions = useDefaultStackOptions(theme)
   const pairingService = usePairingService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [store] = useStore<BCState>()
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   // Consume any cold-start pairing request once and use it to seed the initial route
   const [pendingPairing] = useState(() => pairingService.consumePendingPairing())
@@ -121,20 +117,6 @@ const MainStack: React.FC = () => {
 
     return pairingPayloadToServiceLoginParams(pendingPairing)
   }, [logger, pendingPairing])
-
-  const apiClient = useBCSCApiClient()
-
-  const handleManageDevices = useCallback(() => {
-    navigation.navigate(BCSCScreens.MainWebView, {
-      url: apiClient.endpoints.accountDevices,
-      title: t('BCSC.Screens.ManageDevices'),
-    })
-  }, [apiClient.endpoints.accountDevices, navigation, t])
-
-  const headerWithBanner = useMemo(
-    () => createHeaderWithBanner(handleManageDevices, store.bcsc.bannerMessages),
-    [handleManageDevices, store.bcsc.bannerMessages]
-  )
 
   const initialRouteName = pairingInitialParams ? BCSCScreens.ServiceLogin : BCSCStacks.Tab
 
@@ -172,7 +154,7 @@ const MainStack: React.FC = () => {
             headerBackTitleVisible: false,
             headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
             headerLeft: createHeaderBackButton,
-            header: headerWithBanner,
+            header: createHeaderWithoutBanner,
             headerRight: createFloatingHelpMenuButton({ webViewScreen: BCSCScreens.MainWebView }),
           }}
         >
