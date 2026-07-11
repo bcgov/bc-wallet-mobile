@@ -117,8 +117,9 @@ Output invariants asserted before every write, and re-checked from disk after
     - prod's ic_launcher_background.png is a solid #013366.
     - ic_notification.png is mode RGBA, has both fully-transparent and fully-
       opaque pixels (near-full-bleed padding, not edge-to-edge), and every
-      fully-opaque pixel is pure white (255,255,255) -- the OS supplies the
-      colour via notification theming, so any non-white opaque pixel would
+      non-transparent pixel (alpha != 0, including partially-transparent
+      antialiased edges) is pure white (255,255,255) -- the OS supplies the
+      colour via notification theming, so any non-white visible pixel would
       indicate a recolour/halo bug.
 
 This script only writes icon *bytes*. It does not touch the adaptive-icon
@@ -509,14 +510,19 @@ def verify_outputs(out_dir: Path) -> list[str]:
                 mode = im.mode
                 im = im.convert("RGBA")
                 lo, hi = im.getchannel("A").getextrema()
-                opaque_rgbs = {(r, g, b) for r, g, b, a in im.getdata() if a == 255}
+                # Every non-transparent pixel -- not just fully-opaque ones -- must be
+                # pure white. This is what actually proves recolor_white_preserve_alpha
+                # ran before the downscale: a grey halo would show up precisely in the
+                # partially-transparent (0 < a < 255) antialiased edge pixels, which a
+                # fully-opaque-only (a == 255) check would silently miss.
+                visible_rgbs = {(r, g, b) for r, g, b, a in im.getdata() if a != 0}
             if mode != "RGBA":
                 failures.append(f"{path}: mode {mode} != RGBA")
             if lo != 0 or hi != 255:
                 failures.append(f"{path}: alpha extrema {(lo, hi)}, expected (0, 255) (near-full-bleed with padding)")
-            non_white = sorted(opaque_rgbs - {(255, 255, 255)})
+            non_white = sorted(visible_rgbs - {(255, 255, 255)})
             if non_white:
-                failures.append(f"{path}: opaque pixels not pure white: {non_white[:5]}")
+                failures.append(f"{path}: non-transparent pixels not pure white: {non_white[:5]}")
 
     # Prod background solid-colour check (any pixel; it's a flat fill)
     prod_bg_path = out_dir / "bcsc-prod" / "overlay" / "app" / "android" / "app" / "src" / "main" / "res" / "mipmap-mdpi" / "ic_launcher_background.png"
