@@ -1,4 +1,4 @@
-import type { BifoldError } from '@bifold/core'
+import { AppError } from '@/errors'
 import { RemoteLogger, RemoteLoggerOptions, lokiTransport } from '@bifold/remote-logs'
 import { LogLevel } from '@credo-ts/core'
 import Config from 'react-native-config'
@@ -79,33 +79,52 @@ export const appLogger = createAppLogger()
  * Reporting is best-effort: any transport failure is swallowed so the user is
  * always given a code to share, even when the network/Loki is unavailable.
  *
- * @param error - the error being reported
+ * @param problem - the problem being reported
  * @param options.includeDeviceDetails - when false, the app `version` and OS `system` labels are
  *   omitted so a user can submit a report without sharing device details (defaults to true to
  *   preserve existing error-report behaviour)
  * @returns the reference code to surface to the user
  */
-export const reportProblem = (error: BifoldError, options?: { includeDeviceDetails?: boolean }): string => {
+export const reportProblem = (
+  problem: {
+    title: string // Usually the alert title
+    description: string // Usually the alert description
+    error?: AppError
+  },
+  options?: { includeDeviceDetails?: boolean }
+): string => {
   const referenceCode = generateReferenceCode()
-  const { title, description, code, message, stack } = error
+  const { title, description, error } = problem
+  // const { title, description, code, message, stack } = error
   const { includeDeviceDetails = true } = options ?? {}
 
   // Drop the app version / OS labels when the user opts out; keep the application name so support
   // still knows which app the report came from.
   const lokiLabels = includeDeviceDetails ? baseOptions.lokiLabels : { application: getApplicationName().toLowerCase() }
 
+  const lokiPayload = {
+    message: title,
+    data: {
+      description,
+      code: error?.statusCode, // Note: Backwards compatibility - included in error (statusCode)
+      message: error?.message, // Note: Backwards compatibility - included in error
+      error: error?.toJSON(),
+      report_id: referenceCode,
+      stack: error?.stack, // Note: Backwards compatibility - included in error
+    },
+  }
+
+  // Only attach `stack` when the error actually carries one — user-initiated reports have no real
+  // trace, so the field is omitted rather than logging meaningless construction frames.
+  if (!error?.stack) {
+    delete lokiPayload.data.stack
+  }
+
   try {
     if (baseOptions.lokiUrl) {
       lokiTransport({
         msg: title,
-        // Only attach `stack` when the error actually carries one — user-initiated reports have no real
-        // trace, so the field is omitted rather than logging meaningless construction frames.
-        rawMsg: [
-          {
-            message: title,
-            data: { description, code, message, ...(stack ? { stack } : {}), report_id: referenceCode },
-          },
-        ],
+        rawMsg: [lokiPayload],
         level: { severity: 3, text: 'error' },
         options: {
           lokiUrl: baseOptions.lokiUrl,

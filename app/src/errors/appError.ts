@@ -10,6 +10,10 @@ type AppErrorOptions = ErrorOptions & {
    * Whether to automatically track this error in analytics upon creation. Defaults to true.
    */
   track?: boolean
+  /**
+   * Optional context object to provide additional information about the error.
+   */
+  context?: Record<string, unknown>
 }
 
 export type ErrorIdentity = {
@@ -88,6 +92,7 @@ export class AppError extends Error {
   timestamp: string // ISO timestamp of when the error was created
   handled: boolean // Whether this error has been handled by a policy
   screen: string | undefined // Active screen name at the time the error was created
+  context: Record<string, unknown> | undefined // Optional context object providing additional information about the error
   url?: string // API endpoint URL that produced this error, if applicable
   method?: string // HTTP method of the request that produced this error, if applicable
 
@@ -101,9 +106,10 @@ export class AppError extends Error {
     this.timestamp = new Date().toISOString()
     this.handled = false
     this.tracked = false
+    this.context = options?.context
     this.screen = navigationRef.isReady() ? navigationRef.getCurrentRoute()?.name : undefined
-    this.url = undefined
-    this.method = undefined
+    this.url = undefined // TODO (MD): URL should be a `context` value - handled at call site, not here
+    this.method = undefined // TODO (MD): Method should be a `context` value - handled at call site, not here
 
     // Track the error in analytics unless explicitly disabled
     if (options?.track !== false) {
@@ -232,12 +238,14 @@ export class AppError extends Error {
       name: this.name,
       message: this.message,
       technicalMessage: this.technicalMessage,
+      appEvent: this.appEvent,
       code: this.code,
       timestamp: this.timestamp,
       handled: this.handled,
       screen: this.screen,
       url: this.url,
       method: this.method,
+      context: this.context,
       cause: summarizeCause(this.cause),
     }
   }

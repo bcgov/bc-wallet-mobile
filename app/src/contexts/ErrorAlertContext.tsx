@@ -53,7 +53,7 @@ interface ErrorAlertProviderProps extends PropsWithChildren {
  *
  */
 export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlertProviderProps) => {
-  const [error, setError] = useState<ErrorModalPayload | null>(null)
+  const [errorPayload, setErrorPayload] = useState<ErrorModalPayload | null>(null)
   const [errorKey, setErrorKey] = useState(0)
   const [errorModalOptions, setErrorModalOptions] = useState<ErrorModalOptions | null>(null)
   const [store] = useStore<BCState>() // Ensure store is initialized for error handling
@@ -80,17 +80,18 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
         ...error.toJSON(),
       })
 
-      setError({
+      setErrorPayload({
         title,
         description,
-        message: error.fullMessage,
-        code: error.statusCode,
-        appEvent: error.appEvent,
-        stack: error.stack,
-        cause: error.cause,
-        screen: error.screen,
-        url: error.url,
-        method: error.method,
+        appError: error,
+        // message: error.fullMessage,
+        // code: error.statusCode,
+        // appEvent: error.appEvent,
+        // stack: error.stack,
+        // cause: error.cause,
+        // screen: error.screen,
+        // url: error.url,
+        // method: error.method,
         reportUUID: store.bcsc.reportUUID,
       })
       setErrorKey((prev) => prev + 1)
@@ -109,7 +110,7 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
    * Dismiss the currently displayed error modal
    */
   const dismissErrorModal = useCallback((): void => {
-    setError(null)
+    setErrorPayload(null)
     setErrorModalOptions(null)
   }, [])
 
@@ -125,7 +126,7 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
     <ErrorAlertContext.Provider value={value}>
       {children}
       <BCSCErrorModal
-        error={error}
+        error={errorPayload}
         errorKey={errorKey}
         onDismiss={dismissErrorModal}
         enableReport={enableReport}

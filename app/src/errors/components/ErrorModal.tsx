@@ -1,9 +1,10 @@
 import { AppEventCode } from '@/events/appEventCode'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { reportProblem } from '@/utils/logger'
-import { BifoldError, useTheme } from '@bifold/core'
+import { useTheme } from '@bifold/core'
 import React, { useCallback, useMemo } from 'react'
 import { Modal, Pressable, StyleSheet } from 'react-native'
+import { AppError } from '../appError'
 import { ErrorInfoCard } from './ErrorInfoCard'
 
 const ANALYTICS_REPORT_THIS_PROBLEM_LABEL = 'Report this problem'
@@ -17,14 +18,15 @@ export interface ErrorModalAction {
 export interface ErrorModalPayload {
   title: string
   description: string
-  message: string
-  code: number
-  appEvent: string
-  cause?: unknown
-  stack?: string
-  screen?: string
-  url?: string
-  method?: string
+  appError: AppError
+  // message: string
+  // code: number
+  // appEvent: string
+  // cause?: unknown
+  // stack?: string
+  // screen?: string
+  // url?: string
+  // method?: string
   reportUUID?: string
 }
 
@@ -44,7 +46,7 @@ export interface BCSCErrorModalProps {
  * emitters or listeners involved.
  */
 export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
-  error,
+  error: payload,
   errorKey,
   onDismiss,
   action,
@@ -59,33 +61,35 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
    * @returns the reference code the user can share with support, or undefined if there is no error
    */
   const handleReport = useCallback((): string | undefined => {
-    if (!error) {
+    if (!payload) {
       return
     }
 
+    const error = payload.appError
+
     Analytics.trackAlertActionEvent(error.appEvent as AppEventCode, ANALYTICS_REPORT_THIS_PROBLEM_LABEL)
 
-    // error.message is AppError.fullMessage — the user-facing details string, which
-    // deliberately omits the screen name and request URL so we don't surface infra
-    // details to the user. Append them here so they still ride along in the Loki report.
-    let reportMessage = error.message
-    if (error.screen) {
-      reportMessage += `\nScreen: ${error.screen}`
-    }
-    if (error.url) {
-      const request = error.method ? `${error.method} ${error.url}` : error.url
-      reportMessage += `\nRequest: ${request}`
-    }
-    if (error.reportUUID) {
-      reportMessage += `\nReport ID: ${error.reportUUID}`
-    }
+    // // error.message is AppError.fullMessage — the user-facing details string, which
+    // // deliberately omits the screen name and request URL so we don't surface infra
+    // // details to the user. Append them here so they still ride along in the Loki report.
+    // let reportMessage = error.message
+    // if (error.screen) {
+    //   reportMessage += `\nScreen: ${error.screen}`
+    // }
+    // if (error.url) {
+    //   const request = error.method ? `${error.method} ${error.url}` : error.url
+    //   reportMessage += `\nRequest: ${request}`
+    // }
+    // if (payload.reportUUID) {
+    //   reportMessage += `\nReport ID: ${error.reportUUID}`
+    // }
+    //
+    // const reportError = new BifoldError(error.title, error.description, reportMessage, error.code)
+    // reportError.cause = error.cause
+    // reportError.stack = error.stack
 
-    const reportError = new BifoldError(error.title, error.description, reportMessage, error.code)
-    reportError.cause = error.cause
-    reportError.stack = error.stack
-
-    return reportProblem(reportError)
-  }, [error])
+    return reportProblem({ title: payload.title, description: payload.description, error: error })
+  }, [payload])
 
   const overlayStyle = useMemo(
     () =>
@@ -100,22 +104,22 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
     [ColorPalette]
   )
 
-  if (!error) {
+  if (!payload) {
     return null
   }
 
   return (
-    <Modal visible={Boolean(error)} transparent animationType="fade" onRequestClose={onDismiss}>
+    <Modal visible={Boolean(payload)} transparent animationType="fade" onRequestClose={onDismiss}>
       {/* Allow presses outside of the modal to dismiss it */}
       <Pressable onPress={onDismiss} style={overlayStyle.overlay} accessible={false} importantForAccessibility="no">
         {/* Prevent presses inside the modal from propagating to the overlay */}
         <Pressable onPress={(e) => e.stopPropagation()} accessible={false} importantForAccessibility="no">
           <ErrorInfoCard
             key={errorKey}
-            title={error.title}
-            description={error.description}
-            message={error.message}
-            code={error.code}
+            title={payload.title}
+            description={payload.description}
+            message={formatAppErrorDetails(payload.appError)}
+            code={payload.appError.statusCode}
             onDismiss={onDismiss}
             onReport={handleReport}
             action={action}
@@ -125,4 +129,10 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
       </Pressable>
     </Modal>
   )
+}
+
+function formatAppErrorDetails(error: AppError): string {
+  const errorDetails = Object.entries(error.toJSON())
+
+  return errorDetails.map(([key, value]) => `${key}: ${value}`).join('\n')
 }

@@ -1,7 +1,7 @@
 import { PressableOpacity } from '@/components/PressableOpacity'
 import { CONTACT_US_GOVERNMENT_WEBSITE_URL, hitSlop } from '@/constants'
 import { reportProblem } from '@/utils/logger'
-import { BifoldError, Button, ButtonType, Link, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { Button, ButtonType, Link, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import Clipboard from '@react-native-clipboard/clipboard'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -80,13 +80,13 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
     }
     submittedRef.current = true
     // Send the report through the shared pipeline. The description rides on a BifoldError.
-    const reportError = new BifoldError(t('BCSC.ReportProblem.Title'), description.trim(), '', USER_REPORT_ERROR_CODE)
-    // A user-initiated report isn't a thrown error, so the stack `new BifoldError` auto-captures is just
-    // this submit handler's frames — noise in the incident log. Drop it so the report carries only the
-    // user's description (real failures still keep their stack via the ErrorModal "Report" path).
-    reportError.stack = undefined
+    // const reportError = new BifoldError(t('BCSC.ReportProblem.Title'), description.trim(), '', USER_REPORT_ERROR_CODE)
+    // // A user-initiated report isn't a thrown error, so the stack `new BifoldError` auto-captures is just
+    // // this submit handler's frames — noise in the incident log. Drop it so the report carries only the
+    // // user's description (real failures still keep their stack via the ErrorModal "Report" path).
+    // reportError.stack = undefined
     // Showing the returned ID is what keeps the modal open on the confirmation view.
-    setReportId(reportProblem(reportError))
+    setReportId(reportProblem(t('BCSC.ReportProblem.Title'), description.trim()))
   }, [t, description])
 
   const handleCopy = useCallback(() => {
