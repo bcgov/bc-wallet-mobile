@@ -1319,7 +1319,7 @@ const translation = {
       "Title": "Choose how to verify (PT-BR)",
       "Subtitle": "We need to make sure you're a real person. How would you like to proceed? (PT-BR)",
       "SendVideoTitle": "Record a video for an agent to verify (PT-BR)",
-      "SendVideoDescription": "Turnaround time is 24 hours (PT-BR)",
+      "SendVideoDescription": "Turnaround time is 2 business days (PT-BR)",
       "VideoCallTitle": "Have a video call with an agent (PT-BR)",
       "VideoCallDescription": "Available during normal hours of operation (PT-BR)",
       "InPersonTitle": "In person with an agent (PT-BR)",
