@@ -99,6 +99,11 @@ export const BrandColors: IBrandColors = {
   inlineError: '',
   inlineWarning: '',
   loadingIcon: GrayscaleColors.white,
+  credentialCardPlaceholderBackground: '#1C1C1E',
+  credentialCardStatusBadgeErrorBackground: '#FDECEA',
+  credentialCardStatusBadgeErrorIcon: GrayscaleColors.black,
+  credentialCardStatusBadgeWarningBackground: '#FFF8E1',
+  credentialCardStatusBadgeWarningIcon: GrayscaleColors.black,
 }
 
 export const ColorPalette: IColorPalette = {
