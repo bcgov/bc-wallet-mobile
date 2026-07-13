@@ -69,12 +69,21 @@ longest side into the safe-zone box and centers it").
                              assets are already fully composited/full-bleed, so
                              the OS masks the finished composite rather than a
                              separate foreground layer.
+    853px of 1024 (~83%)  -- status-bar notification icon: ic_notification.png,
+                             near-full-bleed with only ~2dp padding per Android's
+                             small-icon guidance (a 24dp frame with a ~20dp glyph).
+                             Not a launcher icon -- the OS renders this glyph as a
+                             flat white silhouette (tinted by notification theming),
+                             so it is generated from android_foreground_tinted.png
+                             recoloured to pure white rather than composited/masked.
 
 The legacy target is carried forward unchanged from the pre-existing
 (previously uncommitted) generation recipe. The foreground/mono target was
 corrected post-launch (see issue #4114) after the on-device safe-zone
 regression described above; unresolved question #3 on that issue still
-applies to any further optical-padding pass.
+applies to any further optical-padding pass. The notification-icon target
+was added for issue #4221 (BCSC push notifications were showing the BC
+Wallet glyph in the status bar).
 
 ic_launcher-playstore.png and iTunesArtwork*.png are NOT re-composited here;
 they are produced directly from the pre-baked *_composite_* / *_light* source
@@ -91,6 +100,7 @@ Size table (Android density multiplier: mdpi=1x, hdpi=1.5x, xhdpi=2x, xxhdpi=3x,
     ic_launcher_mono_round.webp       48,72,96,144,192
     ic_launcher-playstore.png         512 (single)
     ic_launcher_mono-playstore.png    512 (single)
+    ic_notification.png               24,36,48,72,96        (mdpi base 24, drawable-* not mipmap-*)
     iTunesArtwork*.png                1024 (single)
 
 Output invariants asserted before every write, and re-checked from disk after
@@ -105,6 +115,12 @@ Output invariants asserted before every write, and re-checked from disk after
     - ic_launcher_round.png / ic_launcher_mono_round.webp have transparent
       corners (alpha == 0 at all 4 corners).
     - prod's ic_launcher_background.png is a solid #013366.
+    - ic_notification.png is mode RGBA, has both fully-transparent and fully-
+      opaque pixels (near-full-bleed padding, not edge-to-edge), and every
+      non-transparent pixel (alpha != 0, including partially-transparent
+      antialiased edges) is pure white (255,255,255) -- the OS supplies the
+      colour via notification theming, so any non-white visible pixel would
+      indicate a recolour/halo bug.
 
 This script only writes icon *bytes*. It does not touch the adaptive-icon
 XML wiring (<monochrome> element) or the variants/bcsc-prod delete.txt /
@@ -130,6 +146,7 @@ DEFAULT_SRC = REPO_ROOT.parent / "bc-wallet-mobile-icons"
 CANVAS = 1024
 FOREGROUND_TARGET_PX = 450  # ~44% of 1024 -- adaptive foreground + all mono assets
 LEGACY_TARGET_PX = 580  # ~57% of 1024 -- legacy launcher composite
+NOTIFICATION_TARGET_PX = round(CANVAS * 20 / 24)  # 853 (~83%) -- status-bar icon, ~2dp padding in a 24dp frame
 SUPERSAMPLE = 4  # circular-mask supersample factor before downscaling
 LANCZOS = getattr(Image, "Resampling", Image).LANCZOS  # Pillow >=9.1 enum, else legacy flat attr
 
@@ -142,6 +159,7 @@ DENSITIES = [
 ]
 FOREGROUND_BASE_PX = 108
 LAUNCHER_BASE_PX = 48
+NOTIFICATION_BASE_PX = 24
 PLAYSTORE_PX = 512
 
 PROD_BG_RGB = (0x01, 0x33, 0x66)  # #013366, confirmed with GCPE
@@ -179,7 +197,7 @@ SOURCE_FILES = [
     "ios_composite_tintable.png",
 ]
 
-EXPECTED_FILE_COUNT = 24 + 4 * 17  # 24 shared base files + 17 per variant x 4 variants
+EXPECTED_FILE_COUNT = 29 + 4 * 17  # 29 shared base files (24 + 5 ic_notification densities) + 17 per variant x 4 variants
 
 written_files: list[Path] = []
 
@@ -193,6 +211,10 @@ def foreground_size(mult: float) -> int:
 
 def launcher_size(mult: float) -> int:
     return round(LAUNCHER_BASE_PX * mult)
+
+
+def notification_size(mult: float) -> int:
+    return round(NOTIFICATION_BASE_PX * mult)
 
 
 def load_source(src_dir: Path, name: str) -> Image.Image:
@@ -240,6 +262,23 @@ def circular_mask(im: Image.Image, supersample: int = SUPERSAMPLE) -> Image.Imag
     return out
 
 
+def recolor_white_preserve_alpha(im: Image.Image) -> Image.Image:
+    """Replace RGB with pure white at every pixel -- including fully- and
+    partially-transparent ones -- while keeping the source alpha channel
+    untouched. Must run AFTER the image has been normalized/centred (so the
+    already-baked-in antialiased edge alpha is preserved) but BEFORE any
+    further LANCZOS downscaling: the source foreground's opaque RGB is dark
+    grey (~(37,36,35)), and resampling a not-yet-recoloured image would blend
+    that dark grey into partially-transparent edge pixels, producing a grey
+    "halo" once the icon is displayed over a dark status bar. Recolouring to
+    flat white first means every subsequent resize blends white with white,
+    so only the alpha channel (which resamples cleanly on its own) shapes the
+    edge."""
+    white = Image.new("RGBA", im.size, (255, 255, 255, 0))
+    white.putalpha(im.getchannel("A"))
+    return white
+
+
 def downscale(im: Image.Image, size: int) -> Image.Image:
     if im.size == (size, size):
         return im.copy()
@@ -282,10 +321,19 @@ def generate_base(src_dir: Path, out_dir: Path) -> None:
     fg_light_norm = normalize_on_canvas(fg_light_src, FOREGROUND_TARGET_PX)
     fg_tinted_norm = normalize_on_canvas(fg_tinted_src, FOREGROUND_TARGET_PX)
 
+    # Status-bar notification icon (issue #4221): its own normalization pass
+    # (different target size than the launcher/mono foregrounds above), then
+    # recoloured to flat white -- see recolor_white_preserve_alpha -- BEFORE
+    # the per-density downscale below so no grey halo bleeds into the edges.
+    fg_notification_norm = normalize_on_canvas(fg_tinted_src, NOTIFICATION_TARGET_PX)
+    fg_notification_white = recolor_white_preserve_alpha(fg_notification_norm)
+
     for density, mult in DENSITIES:
         fg_size = foreground_size(mult)
         launcher_sz = launcher_size(mult)
+        notif_size = notification_size(mult)
         mipmap_dir = android_res / f"mipmap-{density}"
+        drawable_dir = android_res / f"drawable-{density}"
 
         # Adaptive foreground (full colour)
         save(
@@ -320,6 +368,15 @@ def generate_base(src_dir: Path, out_dir: Path) -> None:
             (launcher_sz, launcher_sz),
             "RGBA",
             "WEBP",
+        )
+
+        # Status-bar notification icon -- drawable-*, not mipmap-* (issue #4221)
+        save(
+            downscale(fg_notification_white, notif_size),
+            drawable_dir / "ic_notification.png",
+            (notif_size, notif_size),
+            "RGBA",
+            "PNG",
         )
 
     # Mono play store icon (512, from tinted foreground, no background)
@@ -448,6 +505,24 @@ def verify_outputs(out_dir: Path) -> list[str]:
                 if c[3] != 0:
                     failures.append(f"{path}: corner alpha={c[3]}, expected 0 (transparent)")
                     break
+        elif name == "ic_notification.png":
+            with Image.open(path) as im:
+                mode = im.mode
+                im = im.convert("RGBA")
+                lo, hi = im.getchannel("A").getextrema()
+                # Every non-transparent pixel -- not just fully-opaque ones -- must be
+                # pure white. This is what actually proves recolor_white_preserve_alpha
+                # ran before the downscale: a grey halo would show up precisely in the
+                # partially-transparent (0 < a < 255) antialiased edge pixels, which a
+                # fully-opaque-only (a == 255) check would silently miss.
+                visible_rgbs = {(r, g, b) for r, g, b, a in im.getdata() if a != 0}
+            if mode != "RGBA":
+                failures.append(f"{path}: mode {mode} != RGBA")
+            if lo != 0 or hi != 255:
+                failures.append(f"{path}: alpha extrema {(lo, hi)}, expected (0, 255) (near-full-bleed with padding)")
+            non_white = sorted(visible_rgbs - {(255, 255, 255)})
+            if non_white:
+                failures.append(f"{path}: non-transparent pixels not pure white: {non_white[:5]}")
 
     # Prod background solid-colour check (any pixel; it's a flat fill)
     prod_bg_path = out_dir / "bcsc-prod" / "overlay" / "app" / "android" / "app" / "src" / "main" / "res" / "mipmap-mdpi" / "ic_launcher_background.png"
