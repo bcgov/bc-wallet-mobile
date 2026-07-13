@@ -389,7 +389,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       emptyResponseAlert: _createBasicErrorModal(AppEventCode.ERR_300_EMPTY_RESPONSE, 'SomethingWentWrong'),
       failedToRetrieveStringResourceAlert: _createBasicErrorModal(AppEventCode.ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE, 'SomethingWentWrong'),
       invalidUrlAlert: _createBasicErrorModal(AppEventCode.ERR_500_INVALID_URL, 'SomethingWentWrong'),
-      failedToRotateWalletKeyAlert: _createBasicErrorModal(AppEventCode.WALLET_KEY_ROTATION_FAILED, 'SomethingWentWrong'),
+      failedToRotateWalletKeyAlert: _createBasicErrorModal(AppEventCode.WALLET_KEY_ROTATION_ERROR, 'SomethingWentWrong'),
       invalidRegistrationRequestAlert: _createBasicErrorModal(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST, 'SomethingWentWrong'),
     }),
     [
