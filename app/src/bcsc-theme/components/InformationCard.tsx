@@ -70,9 +70,7 @@ export const InformationCard = (props: InformationCardProps) => {
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
-        {props.startIcon && (
-          <Icon name={props.startIcon} size={ICON_SIZE} color={ColorPalette.brand.headerText} style={styles.icon} />
-        )}
+        {props.startIcon && <Icon name={props.startIcon} size={ICON_SIZE} style={styles.icon} />}
         <ThemedText style={styles.title}>{props.title}</ThemedText>
       </View>
       <ThemedText style={styles.subtext}>{props.subtext}</ThemedText>
