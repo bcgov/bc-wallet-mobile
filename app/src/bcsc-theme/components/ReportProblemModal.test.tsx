@@ -50,12 +50,12 @@ describe('ReportProblemModal', () => {
     expect(onClose).not.toHaveBeenCalled()
   })
 
-  it('closes from the confirmation view when "Done" is pressed', () => {
+  it('closes from the confirmation view when "Done" is pressed', async () => {
     const onClose = jest.fn()
     const { getByTestId } = renderModal(onClose)
 
     enterDescription(getByTestId)
-    fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
+    await fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
     fireEvent.press(getByTestId(testIdWithKey('ReportProblemDone')))
 
     expect(onClose).toHaveBeenCalled()
