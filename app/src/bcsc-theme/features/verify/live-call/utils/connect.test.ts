@@ -41,20 +41,20 @@ describe('buildIceServers', () => {
   it('should fall back to Google STUN when no STUN or TURN servers provided', () => {
     const result = buildIceServers(baseTokenResult, mockLogger)
 
-    expect(result).toEqual([{ url: 'stun:stun.l.google.com:19302' }])
+    expect(result).toEqual([{ urls: 'stun:stun.l.google.com:19302' }])
     expect(mockLogger.warn).toHaveBeenCalledWith('No ICE servers from Pexip, falling back to Google public STUN')
   })
 
   it('should fall back to Google STUN when stun and turn are empty arrays', () => {
     const result = buildIceServers({ ...baseTokenResult, stun: [], turn: [] }, mockLogger)
 
-    expect(result).toEqual([{ url: 'stun:stun.l.google.com:19302' }])
+    expect(result).toEqual([{ urls: 'stun:stun.l.google.com:19302' }])
   })
 
   it('should use STUN servers from token response', () => {
     const result = buildIceServers({ ...baseTokenResult, stun: [{ url: 'stun:pexip.example.com:3478' }] }, mockLogger)
 
-    expect(result).toEqual([{ url: 'stun:pexip.example.com:3478' }])
+    expect(result).toEqual([{ urls: 'stun:pexip.example.com:3478' }])
     expect(mockLogger.warn).not.toHaveBeenCalled()
   })
 
@@ -67,7 +67,7 @@ describe('buildIceServers', () => {
       mockLogger
     )
 
-    expect(result).toEqual([{ url: 'stun:stun1.example.com:3478' }, { url: 'stun:stun2.example.com:3478' }])
+    expect(result).toEqual([{ urls: 'stun:stun1.example.com:3478' }, { urls: 'stun:stun2.example.com:3478' }])
   })
 
   it('should include STUN entries with empty url (passes through from Pexip)', () => {
@@ -76,7 +76,7 @@ describe('buildIceServers', () => {
       mockLogger
     )
 
-    expect(result).toEqual([{ url: '' }, { url: 'stun:valid.com:3478' }])
+    expect(result).toEqual([{ urls: '' }, { urls: 'stun:valid.com:3478' }])
   })
 
   it('should use TURN servers with credentials', () => {
@@ -114,7 +114,7 @@ describe('buildIceServers', () => {
     )
 
     expect(result).toEqual([
-      { url: 'stun:stun.example.com:3478' },
+      { urls: 'stun:stun.example.com:3478' },
       { urls: ['turn:turn.example.com:3478'], credential: 'pass', username: undefined },
     ])
   })
@@ -130,7 +130,7 @@ describe('buildIceServers', () => {
     )
 
     expect(result).toEqual([
-      { url: 'stun:stun.example.com:3478' },
+      { urls: 'stun:stun.example.com:3478' },
       { urls: ['turn:turn.example.com:3478'], username: 'user', credential: undefined },
     ])
   })
@@ -146,7 +146,7 @@ describe('buildIceServers', () => {
     )
 
     expect(result).toEqual([
-      { url: 'stun:stun.example.com:3478' },
+      { urls: 'stun:stun.example.com:3478' },
       { urls: ['turn:turn.example.com:3478'], username: '', credential: '' },
     ])
   })
@@ -161,7 +161,7 @@ describe('buildIceServers', () => {
       mockLogger
     )
 
-    expect(result).toEqual([{ url: 'stun:stun.example.com:3478' }, { urls: [], username: 'user', credential: 'pass' }])
+    expect(result).toEqual([{ urls: 'stun:stun.example.com:3478' }, { urls: [], username: 'user', credential: 'pass' }])
   })
 
   it('should combine STUN and TURN servers', () => {
@@ -175,7 +175,7 @@ describe('buildIceServers', () => {
     )
 
     expect(result).toEqual([
-      { url: 'stun:stun.example.com:3478' },
+      { urls: 'stun:stun.example.com:3478' },
       { urls: ['turn:turn.example.com:3478'], username: 'user', credential: 'pass' },
     ])
   })
@@ -234,6 +234,6 @@ describe('createPeerConnection', () => {
     )
 
     const config = (RTCPeerConnection as jest.Mock).mock.calls[0][0]
-    expect(config.iceServers).toEqual([{ url: 'stun:example.com:3478' }])
+    expect(config.iceServers).toEqual([{ urls: 'stun:example.com:3478' }])
   })
 })

@@ -254,8 +254,7 @@ const translation = {
     "Components": {
       "CloseDropdown": "Close dropdown menu",
     },
-    "Title": "BC Services Card",
-    "FullTitle": "BC Services Card App",
+    "Title": "BC Services card",
     "LocaleStringFormat": "en-CA",
     "Screens": {
       "Settings": "Menu",
@@ -363,6 +362,8 @@ const translation = {
       "AppStartup": "Getting your BCSC App ready..."
     },
     "AccountLanding": {
+      "Title": "BC Services card",
+      "Description": "A secure way to prove\nwho you are online",
       "Unlock": "Unlock",
     },
     "Security": {
@@ -460,7 +461,7 @@ const translation = {
       },
       "AppSecurity": {
         "ScreenTitle": "App Security",
-        "ChangeAppSecurity": "Change App Security",
+        "ChangeAppSecurity": "Change app security",
         "Title": "App Security",
         "Description": "Choose how you want to secure this app and access your credentials. You can switch between using your device's biometric authentication or a PIN.",
         "CurrentMethod": "Current security method",
@@ -817,9 +818,9 @@ const translation = {
       "CardSerialNumber": "Card serial number: {{ serial }}",
       "Heading": "Enter your birthdate",
       "Paragraph": "Your birthdate is only used to to set up this app. It will not be stored on this device.",
-      "Label": "Birthdate",
+      "Label": "Enter birthdate",
       "InvalidDate": "Entered birthdate is invalid. Please enter a valid date.",
-      "ExampleDate": "The birthdate format is: YYYY/MM/DD",
+      "ExampleDate": "Your birthdate in format YYYY/MM/DD",
     },
     "AdditionalEvidence": {
       "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't include a photo",
@@ -960,7 +961,6 @@ const translation = {
       "EmailSkipButton2": "Skip",
       "EnterEmailAddress": "Enter an email address",
       "EmailAddress": "Email address",
-      "EmailExample": "laurie.beaumont@gov.bc.ca",
       "EmailDescription1": "Adding an email to your account allows you to stay informed about account activity, and is recommended for security purposes.",
       "EmailDescription2": "You will receive notifications for:",
       "NotificationsBullet1": "Security alerts",
@@ -1139,7 +1139,7 @@ const translation = {
       "Title": "QR code scan complete",
       "Description": "The app should be set up on your other mobile device.",
       "ExtraText": "If you no longer need to use the app on this device, you can remove your account.",
-      "ButtonText": "Ok"
+      "ButtonText": "Okay"
     },
     "Verification": {
       "Title": "Your identity has been verified",
@@ -1264,6 +1264,7 @@ const translation = {
       "MiddleNamesLabel": "Middle names",
       "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed",
       "MiddleNamesError": "Please enter up to two middle names",
+      "TakeSecondIdPhoto": "Take photo of your second ID",
     },
     "Address": {
       "Heading": "Residential Address",
