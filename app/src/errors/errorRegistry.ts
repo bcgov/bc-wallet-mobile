@@ -1030,6 +1030,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.WALLET,
     message: 'Wallet secret not found in secure storage — wallet may need to be re-created',
   },
+  WALLET_KEY_ROTATION_ERROR: {
+    statusCode: 2903,
+    appEvent: AppEventCode.WALLET_KEY_ROTATION_ERROR,
+    severity: ErrorSeverity.CRITICAL,
+    category: ErrorCategory.WALLET,
+    message: 'Wallet key rotation error — check current key and new key validity',
+  },
 
   // ============================================
   // Connection/BCID Errors (3000-3099)

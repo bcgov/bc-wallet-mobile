@@ -1,6 +1,7 @@
 import { useBCSCAgentSafe } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useAlerts } from '@/hooks/useAlerts'
+import { AppVersion, isVersionAtLeast } from '@/utils/version'
 import { TOKENS, useServices } from '@bifold/core'
 import { AskarModuleConfig, AskarStoreManager } from '@credo-ts/askar'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
@@ -8,26 +9,34 @@ import { useCallback, useMemo } from 'react'
 
 /**
  * useWalletService is a custom hook that provides functionality to manage the underlying wallet.
+ *
+ * @returns Wallet Service
  */
 export const useWalletService = () => {
   const agentContext = useBCSCAgentSafe()
   const { updateWalletKey } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
-  const alerts = useAlerts(navigation)
+  const { failedToRotateWalletKeyAlert } = useAlerts(navigation)
+
   const agent = agentContext?.agent
 
   /**
    * Rotates the wallet key for the agent's underlying wallet.
    *
+   * @throws An error if the wallet key rotation fails.
    * @param walletKey - The new wallet key to be set for the agent's wallet.
-   * @returns A promise that resolves when the wallet key rotation is complete.
+   * @returns A promise that resolves to true if the wallet key rotation is successful, or false if it fails.
    */
   const rotateWalletKey = useCallback(
     async (walletKey: string) => {
       if (!agent) {
         logger.info('[useWalletService] No agent available to rotate wallet key')
         return
+      }
+
+      if (!walletKey) {
+        logger.info('[useWalletService] No wallet key provided for rotation')
       }
 
       try {
@@ -45,12 +54,18 @@ export const useWalletService = () => {
 
         // Update the wallet key in secure storage after successful rotation
         updateWalletKey(walletKey)
+        return true
       } catch (error) {
         logger.error('[useWalletService] Failed to rotate wallet key', error as Error)
-        alerts.failedToRotateWalletKeyAlert(error)
+
+        if (isVersionAtLeast(AppVersion.V4_2_x)) {
+          failedToRotateWalletKeyAlert(error)
+        }
+
+        return false
       }
     },
-    [agent, alerts, logger, updateWalletKey]
+    [agent, failedToRotateWalletKeyAlert, logger, updateWalletKey]
   )
 
   return useMemo(() => ({ rotateWalletKey }), [rotateWalletKey])

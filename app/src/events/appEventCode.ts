@@ -161,7 +161,7 @@ export enum AppEventCode {
   STATE_LOAD_ERROR = 'state_load_error', // Non-IAS error code
   AGENT_INITIALIZATION_ERROR = 'agent_initialization_error', // Non-IAS error code
   WALLET_SECRET_NOT_FOUND = 'wallet_secret_not_found', // Non-IAS error code
-  WALLET_KEY_ROTATION_FAILED = 'wallet_key_rotation_failed', // Non-IAS error code
+  WALLET_KEY_ROTATION_ERROR = 'wallet_key_rotation_error', // Non-IAS error code
   // BCID/Connection Errors
   PARSE_INVITATION_ERROR = 'parse_invitation_error', // Non-IAS error code
   RECEIVE_INVITATION_ERROR = 'receive_invitation_error', // Non-IAS error code
