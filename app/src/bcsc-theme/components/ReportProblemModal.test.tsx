@@ -55,6 +55,8 @@ describe('ReportProblemModal', () => {
     const { getByTestId } = renderModal(onClose)
 
     enterDescription(getByTestId)
+    // NOTE: This await prevents both presses from being triggered in the same tick.
+    // usePreventDoublePress.preventDoublePress() will trigger without the await, and the second press will be ignored.
     await fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
     fireEvent.press(getByTestId(testIdWithKey('ReportProblemDone')))
 
