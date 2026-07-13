@@ -15,6 +15,7 @@ const TransferSuccessScreen: React.FC = () => {
 
   const styles = StyleSheet.create({
     contentContainer: {
+      flexGrow: 1,
       justifyContent: 'center',
       alignItems: 'center',
       padding: Spacing.lg,

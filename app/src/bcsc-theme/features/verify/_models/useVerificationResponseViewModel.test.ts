@@ -105,6 +105,10 @@ describe('useVerificationResponseViewModel', () => {
       })
       expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'TestNickname')
       expect(mockUpdateVerified).toHaveBeenCalledWith(true)
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT,
+        payload: [undefined],
+      })
     })
 
     it('should set isSettingUpAccount to true during setup', async () => {

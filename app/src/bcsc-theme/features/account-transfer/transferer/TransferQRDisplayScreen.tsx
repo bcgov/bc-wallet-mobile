@@ -1,4 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
@@ -177,17 +178,19 @@ const TransferQRDisplayScreen: React.FC = () => {
   }
 
   const controls = (
-    <Button
-      buttonType={ButtonType.Secondary}
-      accessibilityLabel={t('BCSC.TransferQRDisplay.GetNewQRCode')}
-      title={t('BCSC.TransferQRDisplay.GetNewQRCode')}
-      testID={testIdWithKey('GetNewQRCode')}
-      onPress={refreshToken}
-    />
+    <ControlContainer>
+      <Button
+        buttonType={ButtonType.Secondary}
+        accessibilityLabel={t('BCSC.TransferQRDisplay.GetNewQRCode')}
+        title={t('BCSC.TransferQRDisplay.GetNewQRCode')}
+        testID={testIdWithKey('GetNewQRCode')}
+        onPress={refreshToken}
+      />
+    </ControlContainer>
   )
 
   return (
-    <ScreenWrapper controls={controls}>
+    <ScreenWrapper controls={controls} padded={false} scrollViewContainerStyle={{ padding: Spacing.lg }}>
       <ThemedText style={{ marginBottom: Spacing.xxl }} variant={'headingThree'}>
         {t('BCSC.TransferQRDisplay.Instructions')}
       </ThemedText>

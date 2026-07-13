@@ -484,6 +484,43 @@ exports[`ErrorInfoCard snapshots should match snapshot with details expanded 1`]
         <Text
           style={
             {
+              "color": "#313132",
+              "fontSize": 16,
+              "lineHeight": 24,
+              "marginHorizontal": 4,
+              "marginTop": 16,
+            }
+          }
+          testID="com.aries.bifold:id/ReportNote"
+        >
+          <Text
+            style={
+              {
+                "fontWeight": "700",
+              }
+            }
+          >
+            Error.NotePrefix
+          </Text>
+          Error.NoteBody
+          <Text
+            accessibilityRole="link"
+            onPress={[Function]}
+            style={
+              {
+                "color": "#003366",
+                "fontWeight": "700",
+                "textDecorationLine": "underline",
+              }
+            }
+            testID="com.aries.bifold:id/SupportLink"
+          >
+            Error.SupportLink
+          </Text>
+        </Text>
+        <Text
+          style={
+            {
               "alignSelf": "center",
               "color": "#606060",
               "fontSize": 12,

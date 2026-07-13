@@ -74,12 +74,13 @@ export const isAccountExpired = (dateToCheck: Date | string): boolean => {
  *   0 days remaining (expires today), 30 day warning period => false
  *   -1 days remaining (expired yesterday), 30 day warning period => false
  *
- * @param {Date} expiration - The expiration date of the account.
+ * @param {Date | string} dateToCheck - The expiration date of the account. Strings must be formatted as 'MMMM D, YYYY' (e.g. 'January 1, 1970').
  * @param {number} warningPeriod - The number of days before expiration to start warning.
  * @returns {boolean} True if the account expires within the warning period but has not yet expired.
  */
-export const isAccountWithinWarningPeriod = (expiration: Date, warningPeriod: number): boolean => {
+export const isAccountWithinWarningPeriod = (dateToCheck: Date | string, warningPeriod: number): boolean => {
+  const format = typeof dateToCheck === 'string' ? 'MMMM D, YYYY' : undefined
   // add startOf('day') to fix midnight calculation error
-  const daysRemaining = moment(expiration).startOf('day').diff(moment().startOf('day'), 'days')
+  const daysRemaining = moment(dateToCheck, format).startOf('day').diff(moment().startOf('day'), 'days')
   return 0 < daysRemaining && daysRemaining <= warningPeriod
 }

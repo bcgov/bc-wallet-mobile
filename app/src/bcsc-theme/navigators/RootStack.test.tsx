@@ -56,6 +56,7 @@ jest.mock('../contexts/BCSCActivityContext', () => ({
 }))
 jest.mock('../contexts/BCSCAccountContext', () => ({
   BCSCAccountProvider: ({ children }: any) => children,
+  useAccount: () => ({ account: null }),
 }))
 jest.mock('../contexts/BCSCIdTokenContext', () => ({
   BCSCIdTokenProvider: ({ children }: any) => children,
@@ -86,7 +87,7 @@ describe('BCSCRootStack', () => {
     })
     jest.mocked(useFcmService).mockReturnValue({
       service: {},
-      viewModel: { processPendingChallenges: mockProcessPendingChallenges },
+      viewModel: { processPendingChallenges: mockProcessPendingChallenges, setCardExpired: jest.fn() },
     } as any)
   })
 
@@ -225,7 +226,7 @@ describe('BCSCRootStack', () => {
     const mockDispatch = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([
       mockStore({
-        bcsc: { hasAccount: true, hasSeenVerifyPrompt: true },
+        bcsc: { hasAccount: true },
         authentication: { didAuthenticate: true },
         bcscSecure: { verified: undefined },
       }),
@@ -237,11 +238,41 @@ describe('BCSCRootStack', () => {
     expect(toJSON()).toBe('MainStack')
   })
 
-  it('renders VerifyStack (which opens on the verify prompt) when the user has not seen the prompt and is not verified', () => {
+  it('renders VerifyStack (which opens on the verify prompt) when onboarding completes', () => {
     const mockDispatch = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([
       mockStore({
-        bcsc: { hasAccount: true, hasSeenVerifyPrompt: false },
+        bcsc: { hasAccount: false },
+        authentication: { didAuthenticate: false },
+        bcscSecure: { verified: false },
+      }),
+      mockDispatch,
+    ] as any)
+
+    const { toJSON, rerender } = render(<BCSCRootStack />)
+    expect(toJSON()).toBe('OnboardingStack')
+
+    // Creating the PIN completes onboarding: SUCCESSFUL_AUTH sets both flags at once.
+    jest.mocked(Bifold.useStore).mockReturnValue([
+      mockStore({
+        bcsc: { hasAccount: true },
+        authentication: { didAuthenticate: true },
+        bcscSecure: { verified: false },
+      }),
+      mockDispatch,
+    ] as any)
+    rerender(<BCSCRootStack />)
+
+    expect(toJSON()).toBe('VerifyStack')
+  })
+
+  it('renders MainStack when an existing unverified account unlocks', () => {
+    const mockDispatch = jest.fn()
+    // No OnboardingStack render this session — the user is returning, so the one-time prompt has
+    // passed them by. They start verification from the MainStack instead.
+    jest.mocked(Bifold.useStore).mockReturnValue([
+      mockStore({
+        bcsc: { hasAccount: true },
         authentication: { didAuthenticate: true },
         bcscSecure: { verified: false },
       }),
@@ -250,7 +281,7 @@ describe('BCSCRootStack', () => {
 
     const { toJSON } = render(<BCSCRootStack />)
 
-    expect(toJSON()).toBe('VerifyStack')
+    expect(toJSON()).toBe('MainStack')
   })
 
   it('calls loadState when stateLoaded is false', () => {

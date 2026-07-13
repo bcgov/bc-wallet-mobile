@@ -7,7 +7,7 @@ exports[`VideoReview renders correctly 1`] = `
       "bottom": "additive",
       "left": "additive",
       "right": "additive",
-      "top": "additive",
+      "top": "off",
     }
   }
   style={
@@ -17,9 +17,7 @@ exports[`VideoReview renders correctly 1`] = `
         "flex": 1,
       },
       {
-        "backgroundColor": "#F2F2F2",
-        "flexGrow": 1,
-        "position": "relative",
+        "paddingTop": 24,
       },
     ]
   }
@@ -30,8 +28,6 @@ exports[`VideoReview renders correctly 1`] = `
         false,
         {
           "alignItems": "center",
-          "flexGrow": 1,
-          "padding": 24,
         },
       ]
     }
@@ -50,7 +46,7 @@ exports[`VideoReview renders correctly 1`] = `
             },
             {
               "color": "#000000",
-              "marginBottom": 16,
+              "marginBottom": 24,
               "textAlign": "center",
               "width": "100%",
             },
@@ -63,7 +59,7 @@ exports[`VideoReview renders correctly 1`] = `
         style={
           {
             "aspectRatio": 0.75,
-            "maxHeight": 667,
+            "maxHeight": 533.6,
             "width": 718,
           }
         }
@@ -146,12 +142,12 @@ exports[`VideoReview renders correctly 1`] = `
           {
             "alignItems": "center",
             "backgroundColor": "#003366",
-            "borderRadius": 30,
-            "height": 60,
+            "borderRadius": 20,
+            "height": 40,
             "justifyContent": "center",
             "marginTop": 24,
             "opacity": 1,
-            "width": 60,
+            "width": 40,
           }
         }
         testID="com.ariesbifold:id/TogglePlayPause"
@@ -163,7 +159,7 @@ exports[`VideoReview renders correctly 1`] = `
             [
               {
                 "color": "#F2F2F2",
-                "fontSize": 60,
+                "fontSize": 40,
               },
               undefined,
               {

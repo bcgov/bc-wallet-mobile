@@ -1,5 +1,5 @@
-import { BCThemeNames } from '@/constants'
-import { BCDispatchAction, BCState, Mode } from '@/store'
+import { BCThemeNames, Mode } from '@/constants'
+import { BCDispatchAction, BCState } from '@/store'
 import {
   DispatchAction,
   LockoutReason,

@@ -25,8 +25,11 @@ jest.mock('@bifold/core', () => {
   return { ...actual, useStore: jest.fn() }
 })
 
-describe('useEvidenceApi - reconcileVerificationDeadline', () => {
+describe('useEvidenceApi - verification deadline reconciliation', () => {
   const CURRENT_EXPIRY = new Date('2026-06-08T12:00:00Z')
+  const TWO_DAYS = 172800
+
+  const submitPayload = { upload_uris: ['u1'], sha256: 'sha' }
 
   const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() }
   const mockDispatch = jest.fn()
@@ -75,54 +78,57 @@ describe('useEvidenceApi - reconcileVerificationDeadline', () => {
     expect(mockUpdateDeviceCodes).not.toHaveBeenCalled()
   })
 
-  it('extends the deadline (existing expiry + expires_in, pinned to end of day) when it pushes later', async () => {
-    apiClient.get.mockResolvedValue({ data: { id: 'v1', status: 'pending', expires_in: '172800' } }) // 2 days
+  it('extends the deadline (existing expiry + expiry_extended_by, pinned to end of day) on the submit PUT', async () => {
+    apiClient.put.mockResolvedValue({ data: { id: 'v1', status: 'pending', expiry_extended_by: TWO_DAYS } })
     const result = renderApi()
 
     await act(async () => {
-      await result.current.getVerificationRequestStatus('v1')
+      await result.current.sendVerificationRequest('v1', submitPayload)
     })
 
-    const expected = new Date(CURRENT_EXPIRY.getTime() + 172800 * 1000)
+    const expected = new Date(CURRENT_EXPIRY.getTime() + TWO_DAYS * 1000)
     expected.setHours(23, 59, 59, 0)
     expect(mockUpdateDeviceCodes).toHaveBeenCalledWith({ deviceCodeExpiresAt: expected })
     expect(cancelVerificationReminders).not.toHaveBeenCalled()
   })
 
-  it('also applies the extension on the evidence-submit PUT response', async () => {
-    apiClient.put.mockResolvedValue({ data: { id: 'v1', status: 'pending', expires_in: '172800' } })
+  it('never extends the deadline from a status GET, even if the response carries an extension field', async () => {
+    // The status GET carries no expiry field on the wire; polling it must not compound the deadline.
+    apiClient.get.mockResolvedValue({ data: { id: 'v1', status: 'pending', expiry_extended_by: TWO_DAYS } })
     const result = renderApi()
 
     await act(async () => {
-      await result.current.sendVerificationRequest('v1', { upload_uris: ['u1'], sha256: 'sha' })
-    })
-
-    const expected = new Date(CURRENT_EXPIRY.getTime() + 172800 * 1000)
-    expected.setHours(23, 59, 59, 0)
-    expect(mockUpdateDeviceCodes).toHaveBeenCalledWith({ deviceCodeExpiresAt: expected })
-  })
-
-  it('does nothing when the response carries no expires_in', async () => {
-    apiClient.get.mockResolvedValue({ data: { id: 'v1', status: 'pending' } })
-    const result = renderApi()
-
-    await act(async () => {
+      await result.current.getVerificationRequestStatus('v1')
       await result.current.getVerificationRequestStatus('v1')
     })
 
     expect(mockUpdateDeviceCodes).not.toHaveBeenCalled()
   })
 
-  it('does nothing when expires_in is not a finite, positive number', async () => {
-    apiClient.get.mockResolvedValue({ data: { id: 'v1', status: 'pending', expires_in: 'not-a-number' } })
+  it('does nothing when the submit response carries no expiry_extended_by', async () => {
+    apiClient.put.mockResolvedValue({ data: { id: 'v1', status: 'pending' } })
     const result = renderApi()
 
     await act(async () => {
-      await result.current.getVerificationRequestStatus('v1')
+      await result.current.sendVerificationRequest('v1', submitPayload)
     })
 
     expect(mockUpdateDeviceCodes).not.toHaveBeenCalled()
   })
+
+  it.each([['not-a-number'], [Number.NaN], [Number.POSITIVE_INFINITY], [0], [-1]])(
+    'does nothing when expiry_extended_by is %p',
+    async (expiryExtendedBy) => {
+      apiClient.put.mockResolvedValue({ data: { id: 'v1', status: 'pending', expiry_extended_by: expiryExtendedBy } })
+      const result = renderApi()
+
+      await act(async () => {
+        await result.current.sendVerificationRequest('v1', submitPayload)
+      })
+
+      expect(mockUpdateDeviceCodes).not.toHaveBeenCalled()
+    }
+  )
 
   it('does not move the deadline earlier when the extension would not push it later', async () => {
     // Existing expiry already near end-of-day; a tiny extension pins back to the same day's 23:59:59,
@@ -134,11 +140,11 @@ describe('useEvidenceApi - reconcileVerificationDeadline', () => {
       } as Bifold.State,
       mockDispatch,
     ])
-    apiClient.get.mockResolvedValue({ data: { id: 'v1', status: 'pending', expires_in: '0.4' } })
+    apiClient.put.mockResolvedValue({ data: { id: 'v1', status: 'pending', expiry_extended_by: 0.4 } })
     const result = renderApi()
 
     await act(async () => {
-      await result.current.getVerificationRequestStatus('v1')
+      await result.current.sendVerificationRequest('v1', submitPayload)
     })
 
     expect(mockUpdateDeviceCodes).not.toHaveBeenCalled()
@@ -152,23 +158,37 @@ describe('useEvidenceApi - reconcileVerificationDeadline', () => {
       } as Bifold.State,
       mockDispatch,
     ])
-    apiClient.get.mockResolvedValue({ data: { id: 'v1', status: 'pending', expires_in: '172800' } })
+    apiClient.put.mockResolvedValue({ data: { id: 'v1', status: 'pending', expiry_extended_by: TWO_DAYS } })
     const result = renderApi()
 
     await act(async () => {
-      await result.current.getVerificationRequestStatus('v1')
+      await result.current.sendVerificationRequest('v1', submitPayload)
     })
 
     expect(mockUpdateDeviceCodes).not.toHaveBeenCalled()
   })
 
-  it('logs and does not throw when persisting the extended expiry fails', async () => {
-    mockUpdateDeviceCodes.mockRejectedValueOnce(new Error('storage boom'))
-    apiClient.get.mockResolvedValue({ data: { id: 'v1', status: 'pending', expires_in: '172800' } })
+  it('cancels reminders and skips the extension when the submit response is terminal', async () => {
+    apiClient.put.mockResolvedValue({ data: { id: 'v1', status: 'cancelled', expiry_extended_by: TWO_DAYS } })
     const result = renderApi()
 
     await act(async () => {
-      await expect(result.current.getVerificationRequestStatus('v1')).resolves.toMatchObject({ status: 'pending' })
+      await result.current.sendVerificationRequest('v1', submitPayload)
+    })
+
+    expect(cancelVerificationReminders).toHaveBeenCalledWith(mockLogger)
+    expect(mockUpdateDeviceCodes).not.toHaveBeenCalled()
+  })
+
+  it('logs and does not throw when persisting the extended expiry fails', async () => {
+    mockUpdateDeviceCodes.mockRejectedValueOnce(new Error('storage boom'))
+    apiClient.put.mockResolvedValue({ data: { id: 'v1', status: 'pending', expiry_extended_by: TWO_DAYS } })
+    const result = renderApi()
+
+    await act(async () => {
+      await expect(result.current.sendVerificationRequest('v1', submitPayload)).resolves.toMatchObject({
+        status: 'pending',
+      })
     })
 
     expect(mockLogger.warn).toHaveBeenCalledWith(

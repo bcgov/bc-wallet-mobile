@@ -1,3 +1,5 @@
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
 import { initialBCSCSecureState } from '@/store'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -6,6 +8,10 @@ import React from 'react'
 import { ScrollView, View } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import EvidenceIDCollectionScreen from './EvidenceIDCollectionScreen'
+
+jest.mock('@/bcsc-theme/utils/resume-step-route', () => ({
+  getResumeStepRoute: jest.fn(),
+}))
 
 const mockRemoveEvidenceByType = jest.fn().mockResolvedValue(undefined)
 const mockUpdateEvidenceDocumentNumber = jest.fn().mockResolvedValue(undefined)
@@ -50,6 +56,8 @@ describe('EvidenceIDCollection', () => {
     jest.clearAllMocks()
     jest.useFakeTimers()
     jest.setSystemTime(new Date('2026-01-01T00:00:00.000Z'))
+    // Default: completing this ID advances to a later step (not the evidence list).
+    jest.mocked(getResumeStepRoute).mockReturnValue({ name: BCSCScreens.ResidentialAddress })
   })
 
   afterEach(() => {
@@ -115,11 +123,15 @@ describe('EvidenceIDCollection', () => {
     expect(tree.getByTestId('com.ariesbifold:id/birthDate-input')).toBeTruthy()
   })
 
-  it('cancel removes evidence and navigates to evidence type list', async () => {
+  it('primary button prompts for the second ID while collecting the first of two (Non-BCSC)', () => {
     const tree = render(
       <BasicAppContext
         initialStateOverride={{
-          bcscSecure: { ...initialBCSCSecureState, cardProcess: BCSCCardProcess.BCSCNonPhoto },
+          bcscSecure: {
+            ...initialBCSCSecureState,
+            cardProcess: BCSCCardProcess.NonBCSC,
+            additionalEvidenceData: [{ evidenceType: mockEvidenceType, metadata: [] }],
+          },
         }}
       >
         <EvidenceIDCollectionScreen
@@ -129,11 +141,35 @@ describe('EvidenceIDCollection', () => {
       </BasicAppContext>
     )
 
-    const cancelButton = tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionCancel')
-    await fireEvent.press(cancelButton)
+    // i18n resolves to keys in tests, so assert on the translation keys.
+    expect(tree.getByText('BCSC.EvidenceIDCollection.TakeSecondIdPhoto')).toBeTruthy()
+    expect(tree.queryByText('Global.Continue')).toBeNull()
+  })
 
-    expect(mockRemoveEvidenceByType).toHaveBeenCalledWith(mockEvidenceType)
-    expect(mockNavigation.dispatch).toHaveBeenCalled()
+  it('primary button says Continue on the second ID (Non-BCSC)', () => {
+    const tree = render(
+      <BasicAppContext
+        initialStateOverride={{
+          bcscSecure: {
+            ...initialBCSCSecureState,
+            cardProcess: BCSCCardProcess.NonBCSC,
+            // Two evidence entries → this is the second ID, so no further ID is needed after it.
+            additionalEvidenceData: [
+              { evidenceType: { ...mockEvidenceType, evidence_type: 'first_id' }, metadata: [] },
+              { evidenceType: mockEvidenceType, metadata: [] },
+            ],
+          },
+        }}
+      >
+        <EvidenceIDCollectionScreen
+          navigation={mockNavigation as never}
+          route={{ params: { cardType: mockEvidenceType } } as never}
+        />
+      </BasicAppContext>
+    )
+
+    expect(tree.getByText('Global.Continue')).toBeTruthy()
+    expect(tree.queryByText('BCSC.EvidenceIDCollection.TakeSecondIdPhoto')).toBeNull()
   })
 
   it('scrolls to first invalid field after validation', async () => {
@@ -166,5 +202,71 @@ describe('EvidenceIDCollection', () => {
 
     expect(scrollToSpy).toHaveBeenCalledWith({ y: 125, animated: true })
     scrollToSpy.mockRestore()
+  })
+
+  it('keeps the completed ID beneath the evidence list so back returns to it when another ID is needed', async () => {
+    // Dual-ID flow: after completing this ID, the next step is picking another one (the evidence
+    // list). The just-completed data-entry screen should sit beneath it so back returns here.
+    jest.mocked(getResumeStepRoute).mockReturnValue({
+      name: BCSCScreens.EvidenceTypeList,
+      params: { cardProcess: BCSCCardProcess.NonBCSC },
+    })
+
+    const tree = render(
+      <BasicAppContext
+        initialStateOverride={{
+          bcscSecure: { ...initialBCSCSecureState, cardProcess: BCSCCardProcess.BCSCNonPhoto },
+        }}
+      >
+        <EvidenceIDCollectionScreen
+          navigation={mockNavigation as never}
+          route={{ params: { cardType: mockEvidenceType } } as never}
+        />
+      </BasicAppContext>
+    )
+
+    fireEvent(tree.getByTestId('com.ariesbifold:id/documentNumber-input'), 'change', {
+      nativeEvent: { text: '123456789' },
+    })
+    await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+
+    // Pushes the next step (keeping this ID's form in the history) rather than collapsing the stack.
+    const action = mockNavigation.dispatch.mock.calls.at(-1)?.[0]
+    expect(action).toEqual(
+      expect.objectContaining({
+        type: 'PUSH',
+        payload: expect.objectContaining({ name: BCSCScreens.EvidenceTypeList }),
+      })
+    )
+  })
+
+  it('keeps the completed ID beneath the next step (e.g. address) so back returns to it', async () => {
+    // Default resume route is the address step; the completed ID sits beneath it so back returns here.
+    const tree = render(
+      <BasicAppContext
+        initialStateOverride={{
+          bcscSecure: { ...initialBCSCSecureState, cardProcess: BCSCCardProcess.BCSCNonPhoto },
+        }}
+      >
+        <EvidenceIDCollectionScreen
+          navigation={mockNavigation as never}
+          route={{ params: { cardType: mockEvidenceType } } as never}
+        />
+      </BasicAppContext>
+    )
+
+    fireEvent(tree.getByTestId('com.ariesbifold:id/documentNumber-input'), 'change', {
+      nativeEvent: { text: '123456789' },
+    })
+    await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+
+    // Pushes the address step, keeping this ID's form in the history so back returns here.
+    const action = mockNavigation.dispatch.mock.calls.at(-1)?.[0]
+    expect(action).toEqual(
+      expect.objectContaining({
+        type: 'PUSH',
+        payload: expect.objectContaining({ name: BCSCScreens.ResidentialAddress }),
+      })
+    )
   })
 })

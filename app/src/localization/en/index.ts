@@ -47,10 +47,13 @@ const translation = {
     "ErrorCode": "Error Code",
     "ReportThisProblem": "Report this problem",
     "Reported": "Reported",
-    "ReferenceCode": "Reference code",
+    "ReportId": "Report ID",
     "CopyCode": "Copy",
     "CodeCopied": "Copied",
-    "ShareCodeWithSupport": "Share this code with support when you contact us.",
+    "ShareReportIdWithSupport": "If you contact support, share this report ID.",
+    "NotePrefix": "Note",
+    "NoteBody": " you won't receive a reply. If you need help, contact ",
+    "SupportLink": "Support.",
     "Unknown": "Unknown",
     "Problem": "Something went wrong",
     "ProblemDescription": "An unexpected error occurred. Please report this error and try again."
@@ -91,20 +94,42 @@ const translation = {
     }
   },
   "Notification": {
+    "EmptyNotification": {
+      "Title": "You have no new notifications",
+    },
     "StartVerification": {
       "Title": "You're not verified",
-      "Description": "You can continue the verification process at any time.",
+      "Description": "You can continue the verification process at anytime.",
       "ButtonTitle": "Start verification",
-      "ContinueButtonTitle": "Continue verification"
+    },
+    "ContinueVerification": {
+      "Title": "You're not verified",
+      "Description": "Complete the verification process at anytime.",
+      "ButtonTitle": "Continue",
+    },
+    "PendingReview": {
+      "Title": "Your identity verification is pending",
+      "Description": "We've received your request to verify your identity.",
+      "ButtonTitle": "Check status"
+    },
+    "CancelledReview": {
+      "Title": "Your identity could not be verified",
+      "Description": "Verify your identity again to access services.",
+      "ButtonTitle": "Restart verification"
+    },
+    "Verified": {
+      "Title": "Your identity has been verified",
+      "Description": "Complete the verification process.",
+      "ButtonTitle": "Finish up"
     },
     "AccountExpired": {
-      "Title": "Your BC Services card app has expired",
+      "Title": "Your BC Services card account has expired",
       "Description": "Please reverify yourself to get access to your services",
       "ButtonTitle": "Start renewal"
     },
     "AccountRenewal": {
       "Title": "Time for renewal",
-      "Description": "Renew your BC Services card app before it expires on {{expiryDate}}",
+      "Description": "Renew your BC Services card account before it expires on {{expiryDate}}",
       "ButtonTitle": "Start renewal"
     },
     "BasicMessage": {
@@ -229,8 +254,7 @@ const translation = {
     "Components": {
       "CloseDropdown": "Close dropdown menu",
     },
-    "Title": "BC Services Card",
-    "FullTitle": "BC Services Card App",
+    "Title": "BC Services card",
     "LocaleStringFormat": "en-CA",
     "Screens": {
       "Settings": "Menu",
@@ -257,16 +281,16 @@ const translation = {
     },
     "ReportProblem": {
       "Title": "Report a problem",
-      "Intro": "Use this form to tell us about a problem with the app. We review reports to help fix issues and improve the app.",
+      "Intro": "Your feedback helps us fix issues and improve the app.",
       "DescriptionLabel": "Describe the issue",
       "DescriptionPlaceholder": "Tell us what you were trying to do and what happened.",
-      "NotePrefix": "Please note",
-      "NoteBody": " this form is for reporting issues only. You won't receive a reply. If you need help with a problem, please ",
-      "ContactUsLink": "contact us.",
-      "CollectionNotice": "When you send a report, you can include basic app and device details to help us understand the problem.",
-      "PrivacyPolicyLink": "Privacy Policy",
-      "IncludeDeviceDetails": "Include app and device details",
+      "NotePrefix": "Note",
+      "NoteBody": " this form is for reporting app issues only. You won't receive a reply. If you need help, contact ",
+      "SupportLink": "Support.",
       "Submit": "Send report",
+      "SuccessTitle": "Thanks for reporting this issue",
+      "ReportIdLabel": "Report ID",
+      "ReportIdHint": "If you contact support about this issue, provide this Report ID.",
     },
     "Contacts": {
       "Title": "Contacts",
@@ -338,6 +362,8 @@ const translation = {
       "AppStartup": "Getting your BCSC App ready..."
     },
     "AccountLanding": {
+      "Title": "BC Services card",
+      "Description": "A secure way to prove\nwho you are online",
       "Unlock": "Unlock",
     },
     "Security": {
@@ -435,7 +461,7 @@ const translation = {
       },
       "AppSecurity": {
         "ScreenTitle": "App Security",
-        "ChangeAppSecurity": "Change App Security",
+        "ChangeAppSecurity": "Change app security",
         "Title": "App Security",
         "Description": "Choose how you want to secure this app and access your credentials. You can switch between using your device's biometric authentication or a PIN.",
         "CurrentMethod": "Current security method",
@@ -538,6 +564,7 @@ const translation = {
       "Body": "Verify your identity to finish setting up the app by {{date}}.",
     },
     "Home": {
+      "Title": "Home",
       "WhereToUseTitle": "Where to use",
       "WhereToUseAccessibilityLabel": "Find services",
       "WhereToUseDescription": "Find the websites you can log in to with this app.",
@@ -551,6 +578,7 @@ const translation = {
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification",
       "CheckStatus": "Check status",
       "ChooseAnotherWayToVerify": "Choose another way to verify",
+      "Status": "Status"
     },
     "SystemChecks": {
       "Devices": {
@@ -595,7 +623,7 @@ const translation = {
     },
     "ReverifyAccount": {
       "RenewalTitle": "Renew your account",
-      "ExpiredTitle": "Your BC Services card app has expired",
+      "ExpiredTitle": "Your BC Services card account has expired",
       "Body": "Services require you to re-verify your account. You will need to complete this step in order to access your services online.",
       "BulletHeader": "You will need to:",
       "BulletOne": "Verify your email",
@@ -631,10 +659,11 @@ const translation = {
       "Resetting": "Resetting…"
     },
     "ForgetAllPairings": {
-      "Title": "Forget all pairings?",
-      "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step.",
+      "Title": "Forget all paired devices?",
+      "Description1": "When you use this app to log in on another device, you are asked if you want to remember this device to skip the pairing step.",
       "Description2": "By forgetting all pairings this device will be removed as an option on any computer you previously paired with. You can use this app again to log in on another computer by pairing it again.",
       "ButtonTitle": "Forget all pairings",
+      "ScreenTitle": "Forget pairings"
     },
     "ContactUs": {
       "Title": "Service BC Help Desk",
@@ -789,9 +818,9 @@ const translation = {
       "CardSerialNumber": "Card serial number: {{ serial }}",
       "Heading": "Enter your birthdate",
       "Paragraph": "Your birthdate is only used to to set up this app. It will not be stored on this device.",
-      "Label": "Birthdate",
+      "Label": "Enter birthdate",
       "InvalidDate": "Entered birthdate is invalid. Please enter a valid date.",
-      "ExampleDate": "The birthdate format is: YYYY/MM/DD",
+      "ExampleDate": "Your birthdate in format YYYY/MM/DD",
     },
     "AdditionalEvidence": {
       "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't include a photo",
@@ -932,7 +961,6 @@ const translation = {
       "EmailSkipButton2": "Skip",
       "EnterEmailAddress": "Enter an email address",
       "EmailAddress": "Email address",
-      "EmailExample": "laurie.beaumont@gmail.com",
       "EmailDescription1": "Adding an email to your account allows you to stay informed about account activity, and is recommended for security purposes.",
       "EmailDescription2": "You will receive notifications for:",
       "NotificationsBullet1": "Security alerts",
@@ -952,42 +980,43 @@ const translation = {
       "EnterCodeWithin": "Please enter the code within 5 minutes.",
       "CantFindCode": "Can't find the code? ",
       "SendNewCode": "Send a new code",
+      "GoToMyEmail": "Go to my email",
     },
     "EmailVerified": {
       "Title": "Your email has been verified",
     },
     "VerifyIdentity": {
       "DeviceCodeError": "Device code or user code is missing in the store.",
-      "VerifyInPersonTitle": "Verify in person",
-      "WhereToGo": "Where to go",
-      "WhereToGoLink": "A Service BC Location",
+      "VerifyInPersonTitle": "Verify in person at any service BC location",
+      "WhereToGoLink": "List of Service BC locations",
       "WhatToBring": "What to bring",
       "ThisDevice": "This device",
-      "YourID": "Your ID, including",
-      "YourBCServicesCard": "Your BC Services Card - if it's a non-photo card, bring your additional ID too",
+      "PiecesOfID": "The pieces of ID you used as part of the verification process",
+      "YourBCServicesCard": "Your BC Services Card - if it's a non-photo card, bring your additional ID",
       "ShowThisConfirmationNumber": "Show this confirmation number",
-      "YouMustCompleteThisBy": "You must complete this by",
+      "YouMustCompleteThisBy": "You must complete this by:",
       "YouHaveNotBeenVerified": "You have not yet been verified",
       "Complete": "Complete",
       "CardSerialNumber": "Card serial number: {{ serial }}",
     },
     "SendVideo": {
       "PendingReview": {
-        "Heading": "Request pending review",
-        "Description1": "We review requests:",
+        "Heading": "Your identity verification is pending",
+        "Description1": "Verification request received",
+        "BulletHeader": "We review requests:",
         "Bullet1": "Monday to Friday, 9am to 5pm",
         "Bullet2": "In the order they're received",
-        "Description2": "Usually, we review requests within 2 business days. During busy periods, it may take longer.",
-        "Description3": "After it's reviewed, you will get an email if your provided your email.",
-        "Description4": "Do not resend your video. If you do, your request will go to the back of the queue.",
-        "ButtonText": "Ok",
+        "Description2": "Usually, we review requests within 2 business days.",
+        "Description3": "Requests sent in on the weekend will be reviewed after we open on Monday.",
+        "Description4": "It may take up to 10 business days.",
       },
       "SuccessfullySent": {
         "Heading": "We've received your request to verify your identity",
         "Bullet1": "Monday to Friday, 9am to 5pm",
         "Bullet2": "In the order they're received",
         "Description1": "We review requests:",
-        "Description2": "Requests are usually reviewed within 24 hours.",
+        "Description2": "Requests are usually reviewed {{turnaround}}.",
+        "DefaultTurnaround": "within 2 business days",
         "Description3": "You'll get an email after we review your request. You can also check the status in this app.",
         "ButtonText": "Go to home"
       },
@@ -1047,8 +1076,8 @@ const translation = {
     },
     "MismatchedSerial": {
       "Heading": "Card not found",
-      "Description1": "Check the card serial number and birthdate match what is on your card:",
-      "Description2": "Check your card is a BC Services Card by looking at the front of your card:",
+      "Description1": "Enter the letters and numbers by the barcode on the back of your card.",
+      "Description2": "Check the serial number and birthdate match what is on your card.",
       "SerialNumber": "Serial number: {{serial}}",
       "Birthdate": "Birthdate: {{birthdate}}",
       "TryAnotherCard": "Try another card",
@@ -1066,11 +1095,11 @@ const translation = {
     },
     "PhotoInstructions": {
       "Heading": "Take a photo of your face. The agent will use this photo when verifying your identity.",
-      "Bullet1": "Hold your phone in front of you",
+      "Bullet1": "Hold your phone in front of your face",
       "Bullet2": "Remove your glasses - if possible",
       "Bullet3": "Be the only person in the photo",
       "Bullet4": "Look like the photo on your BC Services Card or photo ID",
-      "TakePhoto": "Take Photo of Face",
+      "TakePhoto": "Take photo",
       "TakePhotoAccessibilityLabel": "Take photo",
     },
     "PhotoReview": {
@@ -1079,11 +1108,10 @@ const translation = {
       "RetakePhoto": "Retake photo",
     },
     "TransferQRInformation": {
-      "Title": "Open the BC Services Card app on your other mobile device",
+      "Title": "Open the BC Services Card app on your other device",
       "Instructions": "Scan the QR code using the BC Services Card app on your other mobile device.",
       "Warning": "Do not scan with the camera app.",
       "GetQRCode": "Get QR Code",
-      "LearnMore": "Learn more"
     },
     "TransferInformation": {
       "Title": "Have this app on another device?",
@@ -1111,17 +1139,17 @@ const translation = {
       "Title": "QR code scan complete",
       "Description": "The app should be set up on your other mobile device.",
       "ExtraText": "If you no longer need to use the app on this device, you can remove your account.",
-      "ButtonText": "Ok"
+      "ButtonText": "Okay"
     },
     "Verification": {
-      "Title": "You're all set!",
-      "Description": "Use this app to access many different websites and services.",
-      "ExtraText": "Remember, the BC Services Card app is not a health card, vaccine card, driver's license or photo ID.",
+      "Title": "Your identity has been verified",
+      "Description": "You're now able to access services with your verified identity.",
+      "ExtraText": "Remember, it's not a health card, vaccine card, driver's license, or photo ID.",
       "ButtonText": "Continue"
     },
     "CancelledVerification": {
       "Title": "Your identity couldn't be verified",
-      "Label": "Details from Service BC agent: \n {{reason}}",
+      "Label": "Details from Service BC agent: \n{{reason}}",
       "Button": "Ok",
       "NoReason": "No reason provided"
     },
@@ -1132,7 +1160,8 @@ const translation = {
       "CheckYourIDBullet1": "Both IDs should have the same name",
       "CheckYourIDBullet2": "At least one must be issued in Canada",
       "CheckYourIDBullet3": "One must have a recent photo",
-      "CheckYourIDBullet4": "Both must not be expired",
+      "CheckYourIDBullet4": "Both must be valid",
+      "SeeAcceptedID": "See accepted ID",
     },
     "IDPhotoInformation": {
       "Heading": "Take a photo of your ID. An agent will look at this photo when verifying your identity.",
@@ -1235,6 +1264,7 @@ const translation = {
       "MiddleNamesLabel": "Middle names",
       "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed",
       "MiddleNamesError": "Please enter up to two middle names",
+      "TakeSecondIdPhoto": "Take photo of your second ID",
     },
     "Address": {
       "Heading": "Residential Address",
@@ -1292,7 +1322,8 @@ const translation = {
       "AccountDetailsDescription": "View your account activity, manage your email address and more.",
       "AccountInfo": {
         "ManageDevices": "Manage Devices",
-        "Description": "This cannot be used as photo ID, a driver's licence, or a health card.",
+        "InfoTitle": "This is an account page, not an ID",
+        "InfoDescription": "Your account details are shown below. This cannot be used as photo ID, a driver’s licence, or a health card.",
         "AppExpiryDate": "App expiry date",
         "AccountType": "Account type",
         "AccountTypeNonBCServicesCard": "Non BC Services Card",
@@ -1307,7 +1338,7 @@ const translation = {
       "Title": "Choose how to verify",
       "Subtitle": "We need to make sure you're a real person. How would you like to proceed?",
       "SendVideoTitle": "Record a video for an agent to verify",
-      "SendVideoDescription": "Turnaround time is 24 hours",
+      "SendVideoDescription": "Turnaround time is 2 business days",
       "VideoCallTitle": "Have a video call with an agent",
       "VideoCallDescription": "Available during normal hours of operation",
       "InPersonTitle": "In person with an agent",

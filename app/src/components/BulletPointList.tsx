@@ -1,4 +1,3 @@
-import { useTheme } from '@bifold/core'
 import React from 'react'
 import { StyleProp, View, ViewStyle } from 'react-native'
 
@@ -19,9 +18,6 @@ const BulletPointList: React.FC<BulletPointListProps> = ({
   itemContainerStyle,
   style,
 }) => {
-  const { Spacing } = useTheme()
-  const defaultItemStyle: StyleProp<ViewStyle> = { marginVertical: Spacing.xs }
-
   return (
     <View style={style}>
       {translationKeys.map((key) => (
@@ -30,7 +26,7 @@ const BulletPointList: React.FC<BulletPointListProps> = ({
           translationKey={key}
           iconSize={iconSize}
           iconColor={iconColor}
-          containerStyle={itemContainerStyle ?? defaultItemStyle}
+          containerStyle={itemContainerStyle}
         />
       ))}
     </View>

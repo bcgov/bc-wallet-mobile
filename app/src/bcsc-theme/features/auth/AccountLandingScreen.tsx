@@ -9,7 +9,7 @@ import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore,
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { StyleSheet } from 'react-native'
 
 interface AccountLandingScreenProps {
   navigation: StackNavigationProp<BCSCAuthStackParams, BCSCScreens.AccountLanding>
@@ -18,7 +18,7 @@ interface AccountLandingScreenProps {
 const AccountLandingScreen = ({ navigation }: AccountLandingScreenProps) => {
   const [store] = useStore<BCState>()
   const { t } = useTranslation()
-  const { Spacing } = useTheme()
+  const { Spacing, ColorPalette } = useTheme()
   const authentication = useAuthentication(navigation)
 
   const styles = StyleSheet.create({
@@ -27,11 +27,6 @@ const AccountLandingScreen = ({ navigation }: AccountLandingScreenProps) => {
       alignItems: 'center',
       justifyContent: 'center',
       padding: Spacing.lg,
-      gap: Spacing.lg,
-    },
-    image: {
-      marginTop: Spacing.xxl,
-      alignItems: 'center',
     },
   })
 
@@ -59,11 +54,12 @@ const AccountLandingScreen = ({ navigation }: AccountLandingScreenProps) => {
         bannerMessages={store.bcsc.bannerMessages.filter((b) => b.id !== BCSCBanner.DEVICE_LIMIT_EXCEEDED)}
       />
       <ScreenWrapper padded={false} scrollable scrollViewContainerStyle={styles.contentContainer} controls={controls}>
-        <View style={styles.image}>
-          <BCSCLogo width={120} height={120} />
-        </View>
-        <ThemedText variant={'headingFour'} style={{ textAlign: 'center' }}>
-          {t('BCSC.Title')}
+        <BCSCLogo width={160} height={160} />
+        <ThemedText variant={'headingFour'} style={{ color: ColorPalette.brand.primary }}>
+          {t('BCSC.AccountLanding.Title')}
+        </ThemedText>
+        <ThemedText variant={'normal'} style={{ textAlign: 'center', paddingTop: Spacing.xxl }}>
+          {t('BCSC.AccountLanding.Description')}
         </ThemedText>
       </ScreenWrapper>
     </>

@@ -33,7 +33,7 @@ export const BCAnimatedLoadingIcon = (props: BCAnimatedLoadingIconProps) => {
   })
 
   useEffect(() => {
-    Animated.loop(
+    const animation = Animated.loop(
       Animated.sequence([
         // Move one wave left and change sky color to dark blue
         Animated.parallel([
@@ -62,7 +62,12 @@ export const BCAnimatedLoadingIcon = (props: BCAnimatedLoadingIconProps) => {
           }),
         ]),
       ])
-    ).start()
+    )
+
+    animation.start()
+
+    // Cleanup function to stop the animation when the component unmounts
+    return animation.stop
   }, [skyAnimation, waterAnimation])
 
   return (

@@ -1,3 +1,4 @@
+import { Mode } from '@/constants'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { toAppError } from '@bcsc-theme/utils/native-error-map'
@@ -6,7 +7,6 @@ import { getApp } from '@react-native-firebase/app'
 import { getMessaging, getToken } from '@react-native-firebase/messaging'
 import { Platform } from 'react-native'
 import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-bcsc-core'
-import { Mode } from '../../../store'
 import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
 import { isVerificationRequestReviewed } from '../../utils/id-token'
 import { PairingService } from '../pairing'
@@ -30,6 +30,7 @@ export class FcmViewModel {
   private initialized = false
   private onError?: (error: AppError) => void
   private pendingChallenges: ChallengeNotification[] = []
+  private isCardExpired = false
 
   /**
    * @param fcmService - Firebase Cloud Messaging service
@@ -52,6 +53,10 @@ export class FcmViewModel {
    */
   public setErrorHandler(handler: (error: AppError) => void) {
     this.onError = handler
+  }
+
+  public setCardExpired(isExpired: boolean) {
+    this.isCardExpired = isExpired
   }
 
   public initialize() {
@@ -115,6 +120,15 @@ export class FcmViewModel {
   private async handleChallengeRequest(data: ChallengeNotification) {
     const { jwt } = data
     this.logger.info(`[FcmViewModel] Processing challenge request`)
+
+    // If the mobile card is expired, we don't want to be handling any login challenges
+    if (this.isCardExpired) {
+      this.logger.info('[FcmViewModel] Card is expired, dropping challenge')
+      const appError = AppError.fromErrorDefinition(ErrorRegistry.CARD_STATUS_EXPIRED)
+      this.logger.warn(`[FcmViewModel] [${appError.appEvent}] Card is expired, cannot process login challenge`)
+      this.onError?.(appError)
+      return
+    }
 
     try {
       // Check if environment changed or JWK not yet available

@@ -1,11 +1,12 @@
 import { Button, ButtonType, testIdWithKey, useStore, useTheme } from '@bifold/core'
+import { IASEnvironment } from '@utils/environment'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { FlatList, StyleSheet, Text, View } from 'react-native'
 import BouncyCheckbox from 'react-native-bouncy-checkbox'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
-import { BCState, IASEnvironment } from '../store'
+import { BCState } from '../store'
 
 interface EnvironmentSelectorProps {
   onEnvironmentChange: (environment: IASEnvironment) => Promise<void>

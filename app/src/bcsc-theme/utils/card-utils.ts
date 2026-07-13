@@ -1,4 +1,10 @@
-import { BCSCCardProcess, BCSCCardType, EvidenceMetadata } from 'react-native-bcsc-core'
+import {
+  BCSCCardProcess,
+  BCSCCardType,
+  EvidenceImageSide,
+  EvidenceMetadata,
+  PhotoMetadata,
+} from 'react-native-bcsc-core'
 
 /**
  * Get the card process for a given card type.
@@ -41,4 +47,99 @@ export function isCardEvidenceComplete(card?: EvidenceMetadata): boolean {
   }
   const requiredPhotos = card.evidenceType.image_sides?.length || 1
   return card.metadata.length >= requiredPhotos
+}
+
+/**
+ * Legacy label map: the /v1/photos (selfie) endpoint uses lowercase "front"/"back",
+ * while /v1/documents expects "FRONT_SIDE"/"BACK_SIDE". Single source of truth for
+ * normalizing either form so callers can compare/dedupe labels consistently.
+ */
+const LEGACY_EVIDENCE_LABEL_MAP: Record<string, string> = { front: 'FRONT_SIDE', back: 'BACK_SIDE' }
+
+/**
+ * Normalizes an evidence image label to the /v1/documents form (`FRONT_SIDE`/`BACK_SIDE`),
+ * mapping the legacy lowercase `front`/`back` labels used by /v1/photos. Any other label is
+ * returned unchanged.
+ *
+ * @param label - The evidence image label to normalize.
+ * @returns The normalized label.
+ */
+export function normalizeEvidenceImageLabel(label: string): string {
+  return LEGACY_EVIDENCE_LABEL_MAP[label] ?? label
+}
+
+/**
+ * Heals evidence photo metadata that has more entries than the card's defined image sides.
+ *
+ * A stale local photo can be left behind when the user navigates back from Evidence ID
+ * Collection to retake/re-accept an already-captured side, producing an n+1 metadata array
+ * (e.g. `[FRONT, BACK, BACK]`) that gets persisted and uploaded 1:1, causing an unrecoverable
+ * "unexpected images count" 400 from the server (see issue #4159).
+ *
+ * This is a read-side heal only — it does not mutate or persist the underlying metadata.
+ * Dedupes by normalized label, keeping the LAST occurrence of each label (the most recent
+ * capture wins), with the result ordered by each label's first appearance. A final defensive
+ * slice guarantees the result never exceeds the expected count even if labels are all distinct.
+ *
+ * @param metadata - The captured photo metadata, potentially over-count.
+ * @param imageSides - The card's defined image sides; determines the expected count.
+ * @returns The metadata, healed to at most `imageSides.length` entries.
+ */
+export function clampEvidenceImagesToSides(
+  metadata: PhotoMetadata[],
+  imageSides?: EvidenceImageSide[]
+): PhotoMetadata[] {
+  if (!imageSides?.length || metadata.length <= imageSides.length) {
+    return metadata
+  }
+
+  const lastByLabel = new Map<string, PhotoMetadata>()
+  for (const item of metadata) {
+    lastByLabel.set(normalizeEvidenceImageLabel(item.label), item)
+  }
+
+  return Array.from(lastByLabel.values()).slice(0, imageSides.length)
+}
+
+/**
+ * Check whether an evidence entry has all its required photos captured but is still
+ * missing a document number — i.e. the user left partway through EvidenceIDCollection.
+ *
+ * This is the resumable "in-progress" state: distinct from a completed evidence (has a
+ * document number) and from an abandoned card selection (no photos, which should be
+ * cleaned up rather than resumed). Photos are only persisted to the store once every
+ * required side has been captured, so `metadata.length >= requiredPhotos` reliably means
+ * capture finished.
+ *
+ * @param card - The card evidence metadata to check.
+ * @returns True if all photos are captured but the document number has not been entered.
+ */
+export function isEvidenceAwaitingDocumentNumber(card?: EvidenceMetadata): boolean {
+  if (!card?.evidenceType || card.documentNumber) {
+    return false
+  }
+  const requiredPhotos = card.evidenceType.image_sides?.length || 1
+  return card.metadata.length >= requiredPhotos
+}
+
+/**
+ * Check whether an evidence entry has been selected but its photo capture is not yet complete —
+ * i.e. the user picked this ID but hasn't captured every required side (they may have captured
+ * none, or left partway through a multi-side capture).
+ *
+ * Mid-capture photos are only committed once every side is captured, so an in-progress capture
+ * leaves `metadata.length < requiredPhotos` (typically 0). This is the resumable "restart capture"
+ * state: distinct from a fully-captured evidence awaiting a document number
+ * ({@link isEvidenceAwaitingDocumentNumber}) and from a completed one. The user is resumed to
+ * IDPhotoInformation to (re)start capture from the first side.
+ *
+ * @param card - The card evidence metadata to check.
+ * @returns True if the evidence is selected, has no document number, and is missing required photos.
+ */
+export function isEvidenceCaptureIncomplete(card?: EvidenceMetadata): boolean {
+  if (!card?.evidenceType || card.documentNumber) {
+    return false
+  }
+  const requiredPhotos = card.evidenceType.image_sides?.length || 1
+  return card.metadata.length < requiredPhotos
 }
