@@ -35,8 +35,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
     verificationOptions,
     formattedHours,
   } = useVerificationMethodModel({ navigation })
-  const { preventDoublePress: preventDoublePressSendVideo } = usePreventDoublePress()
-  const { preventDoublePress: preventDoublePressLiveCall } = usePreventDoublePress()
+  const { preventDoublePress } = usePreventDoublePress()
 
   const [primaryOption, ...remainingOptions] = verificationOptions
 
@@ -48,7 +47,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
           title={t('BCSC.VerificationMethods.SendVideoTitle')}
           description={t('BCSC.VerificationMethods.SendVideoDescription')}
           icon={'video-outline'}
-          onPress={preventDoublePressSendVideo(handlePressSendVideo)}
+          onPress={preventDoublePress(handlePressSendVideo)}
           disabled={sendVideoLoading || liveCallLoading}
         />
       )
@@ -74,7 +73,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
           title={t('BCSC.VerificationMethods.VideoCallTitle')}
           description={t('BCSC.VerificationMethods.VideoCallDescription')}
           icon={'face-agent'}
-          onPress={preventDoublePressLiveCall(handlePressLiveCall)}
+          onPress={preventDoublePress(handlePressLiveCall)}
           disabled={liveCallLoading || sendVideoLoading}
         />
       )
