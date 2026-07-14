@@ -128,4 +128,25 @@ describe('ContactsScreen', () => {
     expect(screen.queryByText('Acme Corp')).toBeNull()
     expect(screen.getByText('Beta Inc')).toBeTruthy()
   })
+
+  it('shows a clear button while searching and resets the query when pressed', () => {
+    mockUseConnections.mockReturnValue({
+      records: [
+        completedConnection({ id: 'a', theirLabel: 'Acme Corp' }),
+        completedConnection({ id: 'b', theirLabel: 'Beta Inc' }),
+      ],
+    })
+    renderScreen()
+    // Clear button is hidden until there is a query.
+    expect(screen.queryByTestId('id/clearSearch')).toBeNull()
+
+    fireEvent.changeText(screen.getByTestId('id/SearchContacts'), 'beta')
+    expect(screen.queryByText('Acme Corp')).toBeNull()
+
+    // Clear button appears and, when pressed, restores the full list and hides itself.
+    fireEvent.press(screen.getByTestId('id/clearSearch'))
+    expect(screen.getByText('Acme Corp')).toBeTruthy()
+    expect(screen.getByText('Beta Inc')).toBeTruthy()
+    expect(screen.queryByTestId('id/clearSearch')).toBeNull()
+  })
 })

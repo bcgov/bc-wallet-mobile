@@ -1,5 +1,6 @@
 import { ListButton, ListButtonGroup, ListButtonProps } from '@/bcsc-theme/components/ListButton'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { a11yLabel } from '@/utils/accessibility'
 import {
   ScreenWrapper,
   ThemedText,
@@ -41,7 +42,7 @@ interface ActionButtonProps {
 const ActionButton: React.FC<ActionButtonProps> = ({ icon, label, onPress, testID, position }) => {
   const { ColorPalette } = useTheme()
   return (
-    <ListButton onPress={onPress} testID={testID} accessibilityLabel={label} position={position}>
+    <ListButton onPress={onPress} testID={testID} accessibilityLabel={a11yLabel(label)} position={position}>
       <CommunityIcon name={icon} size={22} color={ColorPalette.brand.primary} />
       <ThemedText style={{ color: ColorPalette.brand.primary }}>{label}</ThemedText>
     </ListButton>

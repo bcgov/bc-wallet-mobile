@@ -34,7 +34,13 @@ const createQRBackButton = () => {
   const QRBackButton = () => {
     const navigation = useNavigation()
 
-    return <HeaderBackButton onPress={() => navigation.getParent()?.goBack()} />
+    return (
+      <HeaderBackButton
+        accessibilityLabel="Back"
+        testID={testIdWithKey('Back')}
+        onPress={() => navigation.getParent()?.goBack()}
+      />
+    )
   }
   return QRBackButton
 }

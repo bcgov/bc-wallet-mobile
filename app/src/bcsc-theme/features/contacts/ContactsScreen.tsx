@@ -150,7 +150,7 @@ const ContactsScreen = ({ navigation }: ContactsScreenProps) => {
           onChangeText={setQuery}
           placeholder={t('BCSC.Contacts.SearchPlaceholder')}
           placeholderTextColor={ColorPalette.grayscale.mediumGrey}
-          accessibilityLabel={t('BCSC.Contacts.SearchPlaceholder')}
+          accessibilityLabel={a11yLabel(t('BCSC.Contacts.SearchPlaceholder'))}
           testID={testIdWithKey('SearchContacts')}
           returnKeyType="search"
           autoCorrect={false}
