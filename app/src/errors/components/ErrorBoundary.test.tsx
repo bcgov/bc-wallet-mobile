@@ -1,7 +1,13 @@
+import { reportProblem } from '@/utils/logger'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import { Text } from 'react-native'
 import { ErrorBoundaryWrapper } from './ErrorBoundary'
+
+jest.mock('@/utils/logger', () => {
+  const actual = jest.requireActual('@/utils/logger')
+  return { __esModule: true, ...actual, reportProblem: jest.fn(() => 'TEST-CODE') }
+})
 
 jest.mock('@/contexts/NavigationContainerContext', () => ({
   navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
@@ -13,6 +19,7 @@ jest.mock('react-native-device-info', () => ({
   getApplicationName: () => 'BCWallet',
   getSystemName: () => 'iOS',
   getSystemVersion: () => '17.0',
+  getDeviceId: () => 'iPhone15,2',
 }))
 
 jest.mock('react-native-safe-area-context', () => {
@@ -25,6 +32,7 @@ jest.mock('react-native-safe-area-context', () => {
 jest.mock('react-native-vector-icons/MaterialIcons', () => 'Icon')
 
 jest.mock('@bifold/core', () => ({
+  ...jest.requireActual('@bifold/core'),
   AbstractBifoldLogger: class {},
   BifoldError: jest.requireActual('@bifold/core').BifoldError,
   testIdWithKey: (key: string) => `com.aries.bifold:id/${key}`,
@@ -195,6 +203,23 @@ describe('ErrorBoundaryWrapper', () => {
       fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
 
       expect(mockLogger.error).toHaveBeenCalledWith('ErrorBoundary reported:', expect.any(Error))
+    })
+
+    // handleReport must return the code, not just fire-and-forget, or the card has nothing to show.
+    it('should surface the report ID returned by reportProblem when report is pressed', () => {
+      shouldThrow = true
+
+      const { getByTestId, getByText } = render(
+        <ErrorBoundaryWrapper logger={mockLogger as any}>
+          <ThrowingComponent />
+        </ErrorBoundaryWrapper>
+      )
+
+      fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
+
+      expect(reportProblem).toHaveBeenCalledTimes(1)
+      expect(getByTestId('com.aries.bifold:id/ReportId')).toBeTruthy()
+      expect(getByText('TEST-CODE')).toBeTruthy()
     })
   })
 

@@ -1,9 +1,9 @@
+import { Mode } from '@/constants'
 import { AppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
 import { DeviceEventEmitter } from 'react-native'
 import { decodeLoginChallenge, showLocalNotification } from 'react-native-bcsc-core'
 import { BCSCEventTypes } from '../../../events/eventTypes'
-import { Mode } from '../../../store'
 import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
 import { BCSCEvent, BCSCReason } from '../../utils/id-token'
 import { PairingService } from '../pairing'
@@ -392,6 +392,30 @@ describe('FcmViewModel', () => {
         pairingCode: 'code456',
         source: 'fcm',
       })
+    })
+
+    it('drops the challenge and surfaces an error when the card is expired', async () => {
+      const mockErrorHandler = jest.fn()
+      viewModel.setErrorHandler(mockErrorHandler)
+      viewModel.setCardExpired(true)
+
+      const message = {
+        type: 'challenge',
+        data: { jwt: 'valid-jwt' },
+      } as FcmMessage
+
+      await capturedMessageHandler?.(message)
+
+      expect(mockErrorHandler).toHaveBeenCalledTimes(1)
+      const error = mockErrorHandler.mock.calls[0][0]
+      expect(error).toBeInstanceOf(AppError)
+      expect(error.appEvent).toBe(AppEventCode.CARD_STATUS_EXPIRED)
+      expect(decodeLoginChallenge).not.toHaveBeenCalled()
+      expect(mockPairingService.handlePairing).not.toHaveBeenCalled()
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Card is expired, dropping challenge'))
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Card is expired, cannot process login challenge')
+      )
     })
 
     it('wraps decodeLoginChallenge errors as AppError with claims set fallback', async () => {

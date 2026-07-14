@@ -21,16 +21,37 @@ import SavedServices from './components/SavedServices'
 type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
 
 /**
+ * Shared "manage devices" navigation handler for the Home screens: opens the account-devices
+ * web view with the same route/params in both places, so the two can't drift apart.
+ */
+const useManageDevicesNavigation = (navigation: HomeProps['navigation']) => {
+  const { t } = useTranslation()
+  const apiClient = useBCSCApiClient()
+
+  return useCallback(() => {
+    navigation.getParent()?.navigate(BCSCScreens.MainWebView, {
+      url: apiClient.endpoints.accountDevices,
+      title: t('BCSC.Screens.ManageDevices'),
+    })
+  }, [apiClient.endpoints.accountDevices, navigation, t])
+}
+
+/**
  * Home screen for >= V4.1.x
  * @returns React element
  */
-const Home: React.FC<HomeProps> = () => {
+const Home: React.FC<HomeProps> = ({ navigation }) => {
   const { Spacing } = useTheme()
+  const [store] = useStore<BCState>()
+  const handleManageDevices = useManageDevicesNavigation(navigation)
 
   return (
-    <TabScreenWrapper scrollViewProps={{ contentContainerStyle: { padding: Spacing.lg, gap: Spacing.lg } }}>
-      <NotificationsList />
-    </TabScreenWrapper>
+    <>
+      <NotificationBannerContainer onManageDevices={handleManageDevices} bannerMessages={store.bcsc.bannerMessages} />
+      <TabScreenWrapper scrollViewProps={{ contentContainerStyle: { padding: Spacing.lg, gap: Spacing.lg } }}>
+        <NotificationsList />
+      </TabScreenWrapper>
+    </>
   )
 }
 
@@ -40,16 +61,9 @@ const Home: React.FC<HomeProps> = () => {
 export const HomeV4_0_x: React.FC<HomeProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
-  const apiClient = useBCSCApiClient()
   const { account } = useAccount()
   const [store] = useStore<BCState>()
-
-  const handleManageDevices = useCallback(() => {
-    navigation.getParent()?.navigate(BCSCScreens.MainWebView, {
-      url: apiClient.endpoints.accountDevices,
-      title: t('BCSC.Screens.ManageDevices'),
-    })
-  }, [apiClient.endpoints.accountDevices, navigation, t])
+  const handleManageDevices = useManageDevicesNavigation(navigation)
 
   const styles = StyleSheet.create({
     buttonsContainer: {

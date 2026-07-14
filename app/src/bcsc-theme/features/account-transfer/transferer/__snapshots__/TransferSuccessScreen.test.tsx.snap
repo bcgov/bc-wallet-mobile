@@ -26,6 +26,7 @@ exports[`TransferSuccess Render tests renders correctly 1`] = `
         false,
         {
           "alignItems": "center",
+          "flexGrow": 1,
           "justifyContent": "center",
           "padding": 24,
         },
@@ -40,7 +41,7 @@ exports[`TransferSuccess Render tests renders correctly 1`] = `
         style={
           [
             {
-              "color": "#003366",
+              "color": "#FFFFFF",
               "fontSize": 108,
             },
             {

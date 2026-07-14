@@ -17,9 +17,10 @@ const VerificationSuccessScreen = () => {
       // flexGrow lets the ScrollView content fill the viewport so justifyContent can actually
       // center it vertically (without it the content stays top-aligned and looks top-heavy).
       flexGrow: 1,
-      justifyContent: 'center',
       alignItems: 'center',
       padding: Spacing.lg,
+      paddingTop: Spacing.xxl,
+      gap: Spacing.lg,
     },
   })
 
@@ -53,6 +54,8 @@ const VerificationSuccessScreen = () => {
       scrollViewContainerStyle={styles.contentContainer}
     >
       <StatusDetails
+        iconColor="#7AB8F9"
+        iconSize={150}
         title={t('BCSC.Verification.Title')}
         description={t('BCSC.Verification.Description')}
         description2={t('BCSC.Verification.ExtraText')}

@@ -12,6 +12,7 @@ jest.mock('react-native-vector-icons/MaterialIcons', () => 'Icon')
 jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'CommunityIcon')
 
 jest.mock('@bifold/core', () => ({
+  ...jest.requireActual('@bifold/core'),
   testIdWithKey: (key: string) => `com.aries.bifold:id/${key}`,
 }))
 
@@ -205,16 +206,16 @@ describe('ErrorInfoCard', () => {
 
       fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
 
-      expect(getByTestId('com.aries.bifold:id/ReferenceCode')).toBeTruthy()
+      expect(getByTestId('com.aries.bifold:id/ReportId')).toBeTruthy()
       expect(getByText(referenceCode)).toBeTruthy()
-      expect(getByText('Error.ShareCodeWithSupport')).toBeTruthy()
+      expect(getByText('Error.ShareReportIdWithSupport')).toBeTruthy()
     })
 
     it('should not display a reference code before reporting', () => {
       const onReport = jest.fn(() => referenceCode)
       const { queryByTestId } = render(<ErrorInfoCard {...defaultProps} enableReport onReport={onReport} />)
 
-      expect(queryByTestId('com.aries.bifold:id/ReferenceCode')).toBeNull()
+      expect(queryByTestId('com.aries.bifold:id/ReportId')).toBeNull()
     })
 
     it('should not display a reference code when onReport returns nothing', () => {
@@ -224,7 +225,7 @@ describe('ErrorInfoCard', () => {
 
       fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
 
-      expect(queryByTestId('com.aries.bifold:id/ReferenceCode')).toBeNull()
+      expect(queryByTestId('com.aries.bifold:id/ReportId')).toBeNull()
     })
 
     it('should copy the reference code to the clipboard when copy is pressed', () => {
@@ -232,7 +233,7 @@ describe('ErrorInfoCard', () => {
       const { getByTestId } = render(<ErrorInfoCard {...defaultProps} enableReport onReport={onReport} />)
 
       fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
-      fireEvent.press(getByTestId('com.aries.bifold:id/CopyReferenceCode'))
+      fireEvent.press(getByTestId('com.aries.bifold:id/CopyReportId'))
 
       expect(Clipboard.setString).toHaveBeenCalledWith(referenceCode)
     })

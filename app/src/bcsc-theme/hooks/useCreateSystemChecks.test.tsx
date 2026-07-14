@@ -458,7 +458,7 @@ describe('useGetSystemChecks', () => {
     it('should return 2 AccountSystemChecks with accountExpirationDate set', async () => {
       jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
       mockHydratedStore()
-      jest.spyOn(React, 'useContext').mockReturnValue({ account: { account_expiration_date: new Date() } })
+      jest.spyOn(React, 'useContext').mockReturnValue({ account: { card_expiry: new Date() } })
 
       const { result } = renderHook(() => useCreateSystemChecks())
       const systemChecks = await result.current[SystemCheckScope.ACCOUNT].getSystemChecks()

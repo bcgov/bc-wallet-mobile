@@ -1,17 +1,20 @@
 import { createHeaderWithoutBanner } from '@/bcsc-theme/components/HeaderWithBanner'
-import { createVerifySettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
 import { createProgressHeader } from '@/bcsc-theme/components/VerifyProgressHeader'
 import { useVerificationResponseListener } from '@/bcsc-theme/features/verification-response/useVerificationResponseListener'
 import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
 import { BCSCModals, BCSCScreens, BCSCStacks, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
-import { BCState } from '@/store'
-import { testIdWithKey, useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
-import { createStackNavigator } from '@react-navigation/stack'
+import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
+import { testIdWithKey, TOKENS, useDefaultStackOptions, useServices, useStore, useTheme } from '@bifold/core'
+import { HeaderBackButtonProps } from '@react-navigation/elements'
+import { useNavigation } from '@react-navigation/native'
+import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
 import { createFloatingHelpMenuButton, createVerifyHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createHeaderBackButton, HeaderBackButton } from '../components/HeaderBackButton'
+import { createVerifySettingsHeaderButton } from '../components/SettingsHeaderButton'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferInstructionsScreen from '../features/account-transfer/transferee/TransferInstructionsScreen'
 import TransferQRScannerScreen from '../features/account-transfer/transferee/TransferQRScannerScreen'
@@ -66,32 +69,84 @@ import VideoInstructionsScreen from '../features/verify/send-video/VideoInstruct
 import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
+import useDataLoader from '../hooks/useDataLoader'
+import { useLeaveVerification } from '../hooks/useLeaveVerification'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
-import { useVerificationStatus } from '../hooks/useVerificationStatus'
+import { useRegistrationService } from '../services/hooks/useRegistrationService'
 import { getResumeStepRoute } from '../utils/resume-step-route'
 
-const VerifyStack = () => {
+/**
+ * Back button for a verify-stack screen that can be the stack's initial route when the user resumes
+ * verification (see {@link getResumeStepRoute}). Such a screen is reached two ways:
+ *  - Pushed on top of an earlier screen — a normal pop returns to it.
+ *  - As the stack's initial route on resume — nothing sits beneath it, so there is no destination to
+ *    pop to; instead leave the verification flow and return home, preserving progress (see
+ *    {@link useLeaveVerification}).
+ */
+const VerifyResumeHeaderBackButton = (props: HeaderBackButtonProps) => {
+  const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
+  const leaveVerification = useLeaveVerification()
+
+  return (
+    <HeaderBackButton {...props} onPress={() => (navigation.canGoBack() ? navigation.goBack() : leaveVerification())} />
+  )
+}
+
+// When PendingReview is the initial route (entered from the home screen notification),
+// there is no navigation history — dispatch UNVERIFIED to swap back to MainStack instead.
+const PendingReviewBackButton = (props: HeaderBackButtonProps) => {
+  const [, dispatch] = useStore<BCState>()
+  const handlePress = () => {
+    dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS, payload: [VerificationStatus.UNVERIFIED] })
+  }
+
+  return <HeaderBackButton {...props} onPress={handlePress} />
+}
+
+interface VerifyStackProps {
+  /**
+   * Opens the stack on the one-time verify prompt rather than the user's resume step. Set by
+   * RootStack for the single mount of the prompt that follows onboarding
+   */
+  showVerifyPrompt?: boolean
+  onVerifyPromptAnswered?: () => void
+}
+
+const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: VerifyStackProps) => {
   const Stack = createStackNavigator<BCSCVerifyStackParams>()
   const theme = useTheme()
   const { t } = useTranslation()
   const defaultStackOptions = useDefaultStackOptions(theme)
   const [store] = useStore<BCState>()
-  const { needsVerification } = useVerificationStatus()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const registrationService = useRegistrationService()
   const resumeRoute = getResumeStepRoute(store)
-  // Show the verify prompt as the first screen the first time the user enters the verify journey
-  // (post-PIN, not yet verified, prompt unseen) so that prompt → setup question animates as an
-  // in-stack slide rather than a RootStack swap. Session recovery always takes precedence.
-  const initialRouteName =
-    !store.bcscSecure.sessionRecoveryRequired && !store.bcsc.hasSeenVerifyPrompt && needsVerification
-      ? BCSCScreens.VerifyPrompt
-      : resumeRoute.name
+  // Opening on the prompt (rather than swapping stacks to reach it) lets prompt → setup question
+  // animate as an in-stack slide. Everyone else resumes at the step they left off on.
+  const initialRouteName = showVerifyPrompt ? BCSCScreens.VerifyPrompt : resumeRoute.name
   useBCSCStack(BCSCStacks.Verify)
 
-  // Listen for verification approval push notifications and navigate to success screen
+  // Listen for verification status push notifications and add appropriate notification card
   useVerificationResponseListener()
 
   // Detect an expired in-progress verification session (device_code) and route to the restart screen.
   useSystemChecks(SystemCheckScope.VERIFY)
+
+  // Ensure the user is registered with the BCSC backend
+  const { load: loadRegistration } = useDataLoader(registrationService.ensureRegistered, {
+    onError: (error) => {
+      logger.error('[VerifyStack] Failed to ensure registration', error as Error)
+    },
+  })
+
+  useEffect(() => {
+    if (store.bcscSecure.sessionRecoveryRequired) {
+      logger.info('[VerifyStack] Session recovery required, skipping registration load')
+      return
+    }
+
+    loadRegistration()
+  }, [loadRegistration, logger, store.bcscSecure.sessionRecoveryRequired])
 
   return (
     <Stack.Navigator
@@ -119,17 +174,22 @@ const VerifyStack = () => {
           headerRight: createVerifyHelpMenuButton(),
         }}
       >
-        {({ navigation }) => <VerifyPromptScreen onContinue={() => navigation.navigate(BCSCScreens.AccountSetup)} />}
+        {({ navigation }) => (
+          <VerifyPromptScreen
+            onAnswered={onVerifyPromptAnswered}
+            // replace (not navigate) so this one-time prompt is dropped from the stack. Once
+            // "Continue" sets verification IN_PROGRESS, VerifyStack stays mounted, so returning to the
+            // prompt would leave "Skip" a no-op (it can no longer unmount the stack). With the prompt
+            // gone, AccountSetup's back button leaves verification (home) instead of re-showing it.
+            onContinue={() => navigation.replace(BCSCScreens.AccountSetup)}
+          />
+        )}
       </Stack.Screen>
       <Stack.Screen
         name={BCSCScreens.AccountSetup}
         component={AccountSetupScreen}
         options={{
-          // Entry screen for verification (shown until the user picks new-setup vs. transfer);
-          // it has no back destination, so offer settings rather than a back arrow.
-          headerLeft: createVerifySettingsHeaderButton(),
-          // No back destination: stop an iOS edge-swipe from popping back to the one-time
-          // VerifyPrompt sitting beneath it in the stack.
+          headerLeft: VerifyResumeHeaderBackButton,
           gestureEnabled: false,
         }}
       />
@@ -137,8 +197,8 @@ const VerifyStack = () => {
         name={BCSCScreens.IdentitySelection}
         component={IdentitySelectionScreen}
         options={{
+          headerLeft: VerifyResumeHeaderBackButton,
           header: createProgressHeader(1, 10),
-          headerLeft: createVerifySettingsHeaderButton(),
         }}
       />
       <Stack.Screen
@@ -167,7 +227,13 @@ const VerifyStack = () => {
       <Stack.Screen
         name={BCSCScreens.EnterBirthdate}
         component={EnterBirthdateScreen}
-        options={{ header: createProgressHeader(1, 60) }}
+        options={{
+          header: createProgressHeader(1, 60),
+          // Can be the stack's initial route when the user resumes after entering a serial (see
+          // getResumeStepRoute); with nothing beneath it, back leaves the flow home rather than
+          // being a dead button.
+          headerLeft: VerifyResumeHeaderBackButton,
+        }}
       />
       <Stack.Screen
         name={BCSCScreens.VerificationCardError}
@@ -189,7 +255,7 @@ const VerifyStack = () => {
         }
         options={{
           header: createProgressHeader(4, 30),
-          headerLeft: createVerifySettingsHeaderButton(),
+          headerLeft: VerifyResumeHeaderBackButton,
         }}
       />
       <Stack.Screen
@@ -241,6 +307,8 @@ const VerifyStack = () => {
         name={BCSCScreens.PendingReview}
         component={PendingReviewScreen}
         options={{
+          header: createProgressHeader(5, 80),
+          headerLeft: PendingReviewBackButton,
           title: t('BCSC.Steps.Status'),
         }}
       />
@@ -270,7 +338,7 @@ const VerifyStack = () => {
         component={AdditionalIdentificationRequiredScreen}
         options={{
           header: createProgressHeader(2, 30),
-          headerLeft: createVerifySettingsHeaderButton(),
+          headerLeft: VerifyResumeHeaderBackButton,
         }}
       />
       <Stack.Screen
@@ -281,7 +349,18 @@ const VerifyStack = () => {
       <Stack.Screen
         name={BCSCScreens.IDPhotoInformation}
         component={IDPhotoInformationScreen}
-        options={{ header: createProgressHeader(2, 50) }}
+        initialParams={
+          resumeRoute.name === BCSCScreens.IDPhotoInformation
+            ? (resumeRoute.params as BCSCVerifyStackParams[typeof BCSCScreens.IDPhotoInformation])
+            : undefined
+        }
+        options={{
+          header: createProgressHeader(2, 50),
+          // Can be the stack's initial route when the user resumes after leaving mid-capture (see
+          // getResumeStepRoute); with nothing beneath it, back leaves the flow home rather than
+          // being a dead button.
+          headerLeft: VerifyResumeHeaderBackButton,
+        }}
       />
       <Stack.Screen
         name={BCSCScreens.EvidenceTypeList}
@@ -291,7 +370,10 @@ const VerifyStack = () => {
             ? (resumeRoute.params as BCSCVerifyStackParams[typeof BCSCScreens.EvidenceTypeList])
             : undefined
         }
-        options={{ header: createProgressHeader(2, 60) }}
+        options={{
+          header: createProgressHeader(2, 60),
+          headerLeft: VerifyResumeHeaderBackButton,
+        }}
       />
       <Stack.Screen
         name={BCSCScreens.EvidenceCapture}
@@ -306,7 +388,10 @@ const VerifyStack = () => {
             ? (resumeRoute.params as BCSCVerifyStackParams[typeof BCSCScreens.EvidenceIDCollection])
             : undefined
         }
-        options={{ header: createProgressHeader(2, 75) }}
+        options={{
+          header: createProgressHeader(2, 75),
+          headerLeft: VerifyResumeHeaderBackButton,
+        }}
       />
       <Stack.Screen name={BCSCScreens.VerifyWebView} component={WebViewScreen} />
       <Stack.Screen
@@ -330,7 +415,7 @@ const VerifyStack = () => {
         component={ResidentialAddressScreen}
         options={{
           header: createProgressHeader(3, 50),
-          headerLeft: createVerifySettingsHeaderButton(),
+          headerLeft: VerifyResumeHeaderBackButton,
         }}
       />
       <Stack.Screen name={BCSCScreens.VerifySettings} component={VerifySettingsScreen} />

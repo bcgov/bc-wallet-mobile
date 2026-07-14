@@ -733,6 +733,33 @@ export const useSecureActions = () => {
   )
 
   /**
+   * Keep only the first `count` evidence entries (dropping the rest) and persist. Used when the user
+   * navigates back to an evidence-type list to release the ID(s) selected from that list onward so
+   * they can be picked again, while keeping the ones collected before it.
+   *
+   * @param evidence Current evidence metadata array
+   * @param count Number of leading entries to keep
+   * @returns The kept evidence metadata array
+   */
+  const truncateEvidence = useCallback(
+    async (evidence: EvidenceMetadata[], count: number) => {
+      if (evidence.length <= count) {
+        return evidence
+      }
+
+      const kept = evidence.slice(0, count)
+      dispatch({
+        type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
+        payload: [kept],
+      })
+      await persistEvidenceData(kept)
+
+      return kept
+    },
+    [dispatch, persistEvidenceData]
+  )
+
+  /**
    * Remove abandoned evidence entries (a card was selected but no photos were ever
    * captured) and persist the result.
    *
@@ -1195,6 +1222,7 @@ export const useSecureActions = () => {
     updateEvidenceDocumentNumber,
     removeEvidenceByType,
     removeIncompleteEvidence,
+    truncateEvidence,
     removeAbandonedEvidence,
     clearAdditionalEvidence,
     updateSavedService,

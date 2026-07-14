@@ -29,7 +29,8 @@ const SuccessfullySentScreen = ({ route }: SuccessfullySentScreenProps) => {
     contentContainer: {
       justifyContent: 'center',
       alignItems: 'center',
-      padding: Spacing.lg,
+      paddingHorizontal: Spacing.md,
+      paddingTop: 75,
     },
   })
 

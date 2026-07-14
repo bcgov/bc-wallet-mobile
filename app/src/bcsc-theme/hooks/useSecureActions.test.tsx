@@ -317,6 +317,60 @@ describe('useSecureActions', () => {
     })
   })
 
+  describe('truncateEvidence', () => {
+    const first = makeEvidence({
+      evidenceType: { evidence_type: 'passport', image_sides: [{}] } as any,
+      metadata: [{ uri: 'p.jpg' } as any],
+      documentNumber: 'P1',
+    })
+    const second = makeEvidence({
+      evidenceType: { evidence_type: 'drivers_licence', image_sides: [{}, {}] } as any,
+      metadata: [{ uri: 'f.jpg' } as any, { uri: 'b.jpg' } as any],
+      documentNumber: 'DL1',
+    })
+
+    it('keeps the first N entries, drops the rest, and persists (release the 2nd ID, keep the 1st)', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      let kept: EvidenceMetadata[] = []
+      await act(async () => {
+        kept = await result.current.truncateEvidence([first, second], 1)
+      })
+
+      expect(kept).toEqual([first])
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
+        payload: [[first]],
+      })
+      expect(setEvidence).toHaveBeenCalledWith([first])
+    })
+
+    it('is a no-op when the count already covers every entry', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      let kept: EvidenceMetadata[] = []
+      await act(async () => {
+        kept = await result.current.truncateEvidence([first], 1)
+      })
+
+      expect(kept).toEqual([first])
+      expect(mockDispatch).not.toHaveBeenCalled()
+      expect(setEvidence).not.toHaveBeenCalled()
+    })
+
+    it('drops everything when truncating to 0 (back to the first list)', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      let kept: EvidenceMetadata[] = []
+      await act(async () => {
+        kept = await result.current.truncateEvidence([first, second], 0)
+      })
+
+      expect(kept).toEqual([])
+      expect(setEvidence).toHaveBeenCalledWith([])
+    })
+  })
+
   describe('removeAbandonedEvidence', () => {
     it('should return empty array when given empty evidence', async () => {
       const { result } = renderHook(() => useSecureActions())

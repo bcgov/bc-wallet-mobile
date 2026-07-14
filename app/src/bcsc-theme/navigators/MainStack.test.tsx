@@ -42,6 +42,7 @@ jest.mock('react-i18next', () => ({
 jest.mock('@/constants', () => ({
   DEFAULT_HEADER_TITLE_CONTAINER_STYLE: {},
   HelpCentreUrl: { COMPUTER_LOGIN: 'https://example.com' },
+  Mode: { BCWallet: 'bcwallet', BCSC: 'bcsc' },
 }))
 jest.mock('../contexts/BCSCStackContext', () => ({
   useBCSCStack: jest.fn(),
@@ -57,13 +58,13 @@ jest.mock('../features/pairing', () => ({
 jest.mock('../features/connection-invitation', () => ({
   useConnectionInvitationDeepLink: jest.fn(),
 }))
+jest.mock('../features/verification-response/useVerificationResponseListener', () => ({
+  useVerificationResponseListener: jest.fn(),
+}))
 jest.mock('../features/agent', () => ({
   AgentReadyGate: ({ children }: any) => children,
   BifoldScope: ({ children }: any) => children,
   withAgentReadyGate: (Component: any) => Component,
-}))
-jest.mock('../hooks/useBCSCApiClient', () => ({
-  useBCSCApiClient: jest.fn(() => ({ endpoints: { accountDevices: 'https://example.com/devices' } })),
 }))
 jest.mock('../components/FloatingHelpMenuHeaderButton', () => ({
   createFloatingHelpMenuButton: jest.fn(() => () => null),
@@ -72,11 +73,7 @@ jest.mock('../components/HeaderBackButton', () => ({
   createHeaderBackButton: jest.fn(() => null),
 }))
 jest.mock('../components/HeaderWithBanner', () => ({
-  createHeaderWithBanner: jest.fn(() => () => null),
   createHeaderWithoutBanner: jest.fn(() => null),
-}))
-jest.mock('../components/HelpHeaderButton', () => ({
-  createMainHelpHeaderButton: jest.fn(() => () => null),
 }))
 jest.mock('./stack-utils', () => ({
   getDefaultModalOptions: jest.fn(() => ({})),

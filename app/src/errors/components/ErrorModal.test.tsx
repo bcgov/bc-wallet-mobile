@@ -33,6 +33,7 @@ jest.mock('@/utils/logger', () => ({
 }))
 
 jest.mock('@bifold/core', () => ({
+  ...jest.requireActual('@bifold/core'),
   testIdWithKey: (key: string) => `com.aries.bifold:id/${key}`,
   BifoldError: jest.requireActual('@bifold/core').BifoldError,
   useTheme: () => ({
@@ -188,9 +189,9 @@ describe('BCSCErrorModal', () => {
 
       fireEvent.press(getByTestId('com.aries.bifold:id/ReportThisProblem'))
 
-      expect(getByTestId('com.aries.bifold:id/ReferenceCode')).toBeTruthy()
+      expect(getByTestId('com.aries.bifold:id/ReportId')).toBeTruthy()
       expect(getByText('TEST-CODE')).toBeTruthy()
-      expect(getByTestId('com.aries.bifold:id/CopyReferenceCode')).toBeTruthy()
+      expect(getByTestId('com.aries.bifold:id/CopyReportId')).toBeTruthy()
     })
 
     it('appends Screen/Request to the report — fullMessage keeps them out of the user-facing message', () => {

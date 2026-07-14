@@ -134,14 +134,10 @@ export const useCardScanner = () => {
         }
 
         logger.error('Device authorization failed during combo card scan', error as Error)
-        navigation.reset({
-          index: 0,
-          routes: [
-            {
-              name: BCSCScreens.VerificationCardError,
-              params: { errorType: VerificationCardError.MismatchedSerial },
-            },
-          ],
+        // navigate (not reset) so the scan screen stays beneath the error — the header back button
+        // returns there to re-scan instead of being a dead button on a collapsed stack.
+        navigation.navigate(BCSCScreens.VerificationCardError, {
+          errorType: VerificationCardError.MismatchedSerial,
         })
         return true
       }

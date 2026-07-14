@@ -1,6 +1,7 @@
 import { reportProblem } from '@/utils/logger'
 import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
+import Clipboard from '@react-native-clipboard/clipboard'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import { ReportProblemModal } from './ReportProblemModal'
@@ -35,15 +36,41 @@ describe('ReportProblemModal', () => {
     expect(tree.toJSON()).toMatchSnapshot()
   })
 
-  it('submits the report and closes when "Send report" is pressed', () => {
+  it('submits the report and shows the returned report ID when "Send report" is pressed', () => {
     const onClose = jest.fn()
-    const { getByTestId } = renderModal(onClose)
+    const { getByTestId, getByText } = renderModal(onClose)
 
     enterDescription(getByTestId)
     fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
 
     expect(mockReportProblem).toHaveBeenCalledTimes(1)
+    expect(getByTestId(testIdWithKey('ReportProblemReportId'))).toBeTruthy()
+    expect(getByText('TEST-CODE')).toBeTruthy()
+    // The confirmation view stays up until the user dismisses it.
+    expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it('closes from the confirmation view when "Done" is pressed', async () => {
+    const onClose = jest.fn()
+    const { getByTestId } = renderModal(onClose)
+
+    enterDescription(getByTestId)
+    // NOTE: This await prevents both presses from being triggered in the same tick.
+    // usePreventDoublePress.preventDoublePress() will trigger without the await, and the second press will be ignored.
+    await fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
+    fireEvent.press(getByTestId(testIdWithKey('ReportProblemDone')))
+
     expect(onClose).toHaveBeenCalled()
+  })
+
+  it('copies the report ID to the clipboard when copy is pressed', () => {
+    const { getByTestId } = renderModal()
+
+    enterDescription(getByTestId)
+    fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
+    fireEvent.press(getByTestId(testIdWithKey('ReportProblemCopyReportId')))
+
+    expect(Clipboard.setString).toHaveBeenCalledWith('TEST-CODE')
   })
 
   it('sends a report without an auto-captured stack trace', () => {
@@ -67,32 +94,25 @@ describe('ReportProblemModal', () => {
     expect(onClose).not.toHaveBeenCalled()
   })
 
-  it('sends only one report when "Send report" is double-tapped', () => {
-    const { getByTestId } = renderModal()
+  it('sends one report and retires the submit button on press', () => {
+    const { getByTestId, queryByTestId } = renderModal()
 
     enterDescription(getByTestId)
-    fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
     fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
 
     expect(mockReportProblem).toHaveBeenCalledTimes(1)
+    // Swapping in the confirmation view is what stops a second tap; submittedRef additionally covers a
+    // tap batched before that re-render, which can't be simulated by pressing the unmounted node here.
+    expect(queryByTestId(testIdWithKey('ReportProblemSubmit'))).toBeNull()
   })
 
-  it('omits device details by default', () => {
+  // reportProblem defaults includeDeviceDetails to true, so passing no options is what attaches them.
+  it('includes device details in the report', () => {
     const { getByTestId } = renderModal()
 
     enterDescription(getByTestId)
     fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
 
-    expect(mockReportProblem).toHaveBeenCalledWith(expect.anything(), { includeDeviceDetails: false })
-  })
-
-  it('includes device details once the toggle is checked', () => {
-    const { getByTestId } = renderModal()
-
-    enterDescription(getByTestId)
-    fireEvent.press(getByTestId(testIdWithKey('ReportProblemIncludeDeviceDetails')))
-    fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
-
-    expect(mockReportProblem).toHaveBeenCalledWith(expect.anything(), { includeDeviceDetails: true })
+    expect(mockReportProblem).toHaveBeenCalledWith(expect.anything())
   })
 })

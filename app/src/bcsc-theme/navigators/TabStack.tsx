@@ -25,7 +25,7 @@ import { AgentReadyGate, CredentialsReadyGate } from '../features/agent'
 import Home from '../features/home/Home'
 import { FloatingScanButton } from '../features/scan'
 import Services from '../features/services/Services'
-import { useVerificationStatus } from '../hooks/useVerificationStatus'
+import { useCardStatus } from '../hooks/useCardStatus'
 import { BCSCMainStackParams, BCSCScreens, BCSCTabStackParams } from '../types/navigators'
 
 const ScopedCredentialStack: React.FC = () => (
@@ -64,7 +64,7 @@ const createTabBarIcon = (label: string, iconName: string) => {
             style={{
               ...TabTheme.tabBarTextStyle,
               color: focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor,
-              fontWeight: focused ? TextTheme.bold.fontWeight : TextTheme.normal.fontWeight,
+              fontFamily: focused ? TextTheme.bold.fontFamily : TextTheme.normal.fontFamily, // BCSans-Regular -> BCSans-Bold
             }}
           >
             {label}
@@ -128,7 +128,7 @@ const BCSCTabStack: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const { bottom: safeAreaBottom } = useSafeAreaInsets()
   const { t } = useTranslation()
-  const { isVerified } = useVerificationStatus()
+  const { isActivelyVerified, isExpired } = useCardStatus()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const defaultStackOptions = useDefaultStackOptions(theme)
 
@@ -158,9 +158,14 @@ const BCSCTabStack: React.FC = () => {
         screenListeners={({ route }) => ({
           focus: () => {
             // Hijack the focus event for the Services tab if the user is not verified
-            if (route.name === BCSCScreens.Services && !isVerified) {
-              logger.debug('[BCSCTabStack] User is not verified, redirecting to VerifyPrompt screen')
-              navigation.navigate(BCSCScreens.MainVerifyPrompt)
+            if (route.name === BCSCScreens.Services && !isActivelyVerified) {
+              if (isExpired) {
+                logger.debug('[BCSCTabStack] User is expired, redirecting to Expired screen')
+                navigation.navigate(BCSCScreens.ReverifyAccount, { isExpired })
+              } else {
+                logger.debug('[BCSCTabStack] User is not verified, redirecting to VerifyPrompt screen')
+                navigation.navigate(BCSCScreens.MainVerifyPrompt)
+              }
               return
             }
 
@@ -168,10 +173,15 @@ const BCSCTabStack: React.FC = () => {
           },
           tabPress: (event) => {
             // Hijack the tab press event for the Services tab if the user is not verified
-            if (route.name === BCSCScreens.Services && !isVerified) {
-              logger.debug('[BCSCTabStack] User is not verified, redirecting to VerifyPrompt screen')
+            if (route.name === BCSCScreens.Services && !isActivelyVerified) {
               event.preventDefault() // Prevents navigation to the Services tab
-              navigation.navigate(BCSCScreens.MainVerifyPrompt)
+              if (isExpired) {
+                logger.debug('[BCSCTabStack] User is expired, redirecting to Expired screen')
+                navigation.navigate(BCSCScreens.ReverifyAccount, { isExpired })
+              } else {
+                logger.debug('[BCSCTabStack] User is not verified, redirecting to VerifyPrompt screen')
+                navigation.navigate(BCSCScreens.MainVerifyPrompt)
+              }
             }
           },
         })}
@@ -195,14 +205,15 @@ const BCSCTabStack: React.FC = () => {
           name={BCSCScreens.Home}
           component={Home}
           options={{
+            title: t('BCSC.Home.Title'),
+            headerTitleAlign: 'center',
             tabBarIconStyle: styles.tabBarIcon,
             tabBarIcon: createTabBarIcon('Home', 'home-outline'),
             tabBarShowLabel: false,
-            tabBarAccessibilityLabel: 'Home',
+            tabBarAccessibilityLabel: t('BCSC.Home.Title'),
             tabBarTestID: testIdWithKey('Home'),
             tabBarBadge: homeNotificationsBadgeCount,
             headerLeft: createMainSettingsHeaderButton(),
-            title: 'Home',
           }}
         />
         <Tab.Screen

@@ -150,7 +150,6 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
           autoCorrect: false,
           autoComplete: 'email',
           textContentType: 'emailAddress',
-          placeholder: t('BCSC.EnterEmail.EmailExample'),
         }}
       />
 

@@ -164,7 +164,7 @@ describe('SettingsContent', () => {
     expect(row).toBeTruthy()
   })
 
-  it('hides the section content when its chevron is pressed, and shows it again on a second press', () => {
+  it('hides the section content when its chevron is pressed, and shows it again on a second press', async () => {
     renderWithState()
 
     // Unauthenticated view renders exactly two collapsible sections: Help, then More Info.
@@ -175,7 +175,10 @@ describe('SettingsContent', () => {
     expect(screen.getByTestId(tid('ContactUs'))).toBeTruthy()
     expect(screen.getByTestId(tid('Feedback'))).toBeTruthy()
 
-    fireEvent.press(helpChevron)
+    // NOTE: The chevron uses `preventDoublePress` under the hood,
+    // this await triggers the next tick to ensure the second press
+    // is not ignored by the double-press prevention logic.
+    await fireEvent.press(helpChevron)
 
     expect(screen.queryByTestId(tid('Help'))).toBeNull()
     expect(screen.queryByTestId(tid('ContactUs'))).toBeNull()

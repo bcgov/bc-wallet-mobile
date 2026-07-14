@@ -376,6 +376,7 @@ describe('useCardScanner', () => {
         },
       }
       const mockNavigationReset = jest.fn()
+      const mockNavigationNavigate = jest.fn()
 
       useApiMock.mockReturnValue(mockAuthorization)
       useSecureActionsMock.mockReturnValue({
@@ -386,6 +387,7 @@ describe('useCardScanner', () => {
       } as any)
       bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
       navigationMock.useNavigation = jest.fn().mockReturnValue({
+        navigate: mockNavigationNavigate,
         reset: mockNavigationReset,
       })
       bifoldMock.useServices.mockReturnValue([{ debug: jest.fn(), error: jest.fn() } as any])
@@ -405,14 +407,9 @@ describe('useCardScanner', () => {
         serial: mockBCSCSerial,
         birthdate: mockLicenseData.birthDate,
       })
-      expect(mockNavigationReset).toHaveBeenCalledWith({
-        index: 0,
-        routes: [
-          {
-            name: BCSCScreens.VerificationCardError,
-            params: { errorType: VerificationCardError.MismatchedSerial },
-          },
-        ],
+      // navigate (not reset) so the scan screen stays beneath the error and its back button works.
+      expect(mockNavigationNavigate).toHaveBeenCalledWith(BCSCScreens.VerificationCardError, {
+        errorType: VerificationCardError.MismatchedSerial,
       })
     })
   })

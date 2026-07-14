@@ -29,12 +29,14 @@ exports[`ReverifyAccountScreen renders correctly for a renewal notification 1`] 
         style={
           {
             "alignItems": "center",
+            "gap": 24,
+            "marginTop": 16,
           }
         }
       >
         <
-          height={200}
-          width={150}
+          height={110}
+          width={120}
         />
         <Text
           maxFontSizeMultiplier={2}
@@ -82,13 +84,21 @@ exports[`ReverifyAccountScreen renders correctly for a renewal notification 1`] 
                 "fontSize": 21,
                 "fontWeight": "bold",
               },
-              undefined,
+              {
+                "color": "#000000",
+              },
             ]
           }
         >
           BCSC.ReverifyAccount.BulletHeader
         </Text>
-        <View>
+        <View
+          style={
+            {
+              "marginLeft": 8,
+            }
+          }
+        >
           <View
             style={
               [
@@ -467,12 +477,14 @@ exports[`ReverifyAccountScreen renders correctly for an expiry notification 1`] 
         style={
           {
             "alignItems": "center",
+            "gap": 24,
+            "marginTop": 16,
           }
         }
       >
         <
-          height={200}
-          width={150}
+          height={110}
+          width={120}
         />
         <Text
           maxFontSizeMultiplier={2}
@@ -520,13 +532,21 @@ exports[`ReverifyAccountScreen renders correctly for an expiry notification 1`] 
                 "fontSize": 21,
                 "fontWeight": "bold",
               },
-              undefined,
+              {
+                "color": "#000000",
+              },
             ]
           }
         >
           BCSC.ReverifyAccount.BulletHeader
         </Text>
-        <View>
+        <View
+          style={
+            {
+              "marginLeft": 8,
+            }
+          }
+        >
           <View
             style={
               [
