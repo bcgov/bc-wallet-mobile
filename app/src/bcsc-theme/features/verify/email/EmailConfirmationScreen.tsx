@@ -184,7 +184,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
         <ThemedText
           variant={'caption'}
           style={{ color: ColorPalette.brand.link }}
-          onPress={preventDoublePressHandleResendCode(handleResendCode)}
+          onPress={loading ? undefined : preventDoublePressHandleResendCode(handleResendCode)}
           accessibilityRole={'link'}
           accessibilityLabel={t('BCSC.EmailConfirmation.SendNewCode')}
           testID={'ResendCodeLink'}
