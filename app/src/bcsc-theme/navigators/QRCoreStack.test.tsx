@@ -22,9 +22,6 @@ jest.mock('@react-navigation/bottom-tabs', () => {
     createBottomTabNavigator: () => ({ Navigator, Screen }),
   }
 })
-jest.mock('../features/agent', () => ({
-  AgentReadyGate: ({ children }: any) => children,
-}))
 jest.mock('../features/pairing/ManualPairing', () => 'ManualPairing')
 jest.mock('../features/qr-core/QRDisplay', () => 'QRDisplay')
 jest.mock('../features/qr-core/QRScanner', () => 'QRScanner')
