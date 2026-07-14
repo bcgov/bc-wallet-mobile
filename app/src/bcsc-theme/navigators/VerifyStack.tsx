@@ -140,8 +140,13 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
   })
 
   useEffect(() => {
+    if (store.bcscSecure.sessionRecoveryRequired) {
+      logger.info('[VerifyStack] Session recovery required, skipping registration load')
+      return
+    }
+
     loadRegistration()
-  }, [loadRegistration])
+  }, [loadRegistration, logger, store.bcscSecure.sessionRecoveryRequired])
 
   return (
     <Stack.Navigator

@@ -1,7 +1,6 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { DeveloperModeTrigger } from '@/bcsc-theme/components/DeveloperModeTrigger'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { AccountSetupType, BCDispatchAction, BCState } from '@/store'
 import AddDeviceHands from '@assets/img/add-device-hands.svg'
@@ -31,7 +30,6 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const registrationService = useRegistrationService()
   const { clearDeviceCodes } = useSecureActions()
 
   // Latest store snapshot for the focus effect below. Reading through a ref keeps the effect
@@ -77,7 +75,7 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
   })
 
   // "No, continue setup" — verify a new account on this device via the identity steps.
-  const handleAddAccount = useCallback(async () => {
+  const handleAddAccount = useCallback(() => {
     dispatch({
       type: BCDispatchAction.ACCOUNT_SETUP_TYPE,
       payload: [AccountSetupType.AddAccount],
@@ -88,7 +86,7 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
 
   // "Yes, connect this device" — transfer an already-verified account by scanning the QR
   // shown on the other device, skipping the identity verification steps.
-  const handleTransferAccount = useCallback(async () => {
+  const handleTransferAccount = useCallback(() => {
     dispatch({
       type: BCDispatchAction.ACCOUNT_SETUP_TYPE,
       payload: [AccountSetupType.TransferAccount],
