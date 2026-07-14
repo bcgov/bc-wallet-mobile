@@ -37,6 +37,7 @@ export const ChangePINContent = ({
 
       const rotateSuccess = await walletService.rotateWalletKey(result.walletKey)
 
+      // In V4.2.x, if the wallet key rotation fails, we should not proceed to the success callback.
       if (!rotateSuccess && isVersionAtLeast(AppVersion.V4_2_x)) {
         return
       }
@@ -58,6 +59,7 @@ export const ChangePINContent = ({
 
       const rotateSuccess = await walletService.rotateWalletKey(result.walletKey)
 
+      // In V4.2.x, if the wallet key rotation fails, we should not proceed to the success callback.
       if (!rotateSuccess && isVersionAtLeast(AppVersion.V4_2_x)) {
         return
       }
