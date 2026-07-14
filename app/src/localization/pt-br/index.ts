@@ -417,7 +417,7 @@ const translation = {
       "NotificationsAreLabel": "Notifications are: (PT-BR)",
       "NotificationsStatusOn": "on",
       "NotificationsStatusOff": "off",
-      "ChangeNotificationsInstructions": "To change notifications settings: (PT-BR)",
+      "ChangeNotificationsInstructions": "To change notification settings: (PT-BR)",
       "NotificationsStep1": "Go to device settings (PT-BR)",
       "NotificationsStep2": "Tap Notifications (PT-BR)",
       "NotificationsStep3": "In app notifications, find the BC Services Card app (PT-BR)",

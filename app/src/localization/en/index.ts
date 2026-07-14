@@ -436,7 +436,7 @@ const translation = {
       "NotificationsAreLabel": "Notifications are:",
       "NotificationsStatusOn": "on",
       "NotificationsStatusOff": "off",
-      "ChangeNotificationsInstructions": "To change notifications settings:",
+      "ChangeNotificationsInstructions": "To change notification settings:",
       "NotificationsStep1": "Go to device settings",
       "NotificationsStep2": "Tap Notifications",
       "NotificationsStep3": "In app notifications, find the BC Services Card app",
