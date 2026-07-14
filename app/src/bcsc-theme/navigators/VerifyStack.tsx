@@ -5,10 +5,11 @@ import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
 import { BCSCModals, BCSCScreens, BCSCStacks, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
 import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
-import { testIdWithKey, useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
+import { testIdWithKey, TOKENS, useDefaultStackOptions, useServices, useStore, useTheme } from '@bifold/core'
 import { HeaderBackButtonProps } from '@react-navigation/elements'
 import { useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
 import { createFloatingHelpMenuButton, createVerifyHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
@@ -68,8 +69,10 @@ import VideoInstructionsScreen from '../features/verify/send-video/VideoInstruct
 import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
+import useDataLoader from '../hooks/useDataLoader'
 import { useLeaveVerification } from '../hooks/useLeaveVerification'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
+import { useRegistrationService } from '../services/hooks/useRegistrationService'
 import { getResumeStepRoute } from '../utils/resume-step-route'
 
 /**
@@ -115,6 +118,8 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
   const { t } = useTranslation()
   const defaultStackOptions = useDefaultStackOptions(theme)
   const [store] = useStore<BCState>()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const registrationService = useRegistrationService()
   const resumeRoute = getResumeStepRoute(store)
   // Opening on the prompt (rather than swapping stacks to reach it) lets prompt → setup question
   // animate as an in-stack slide. Everyone else resumes at the step they left off on.
@@ -126,6 +131,17 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
 
   // Detect an expired in-progress verification session (device_code) and route to the restart screen.
   useSystemChecks(SystemCheckScope.VERIFY)
+
+  // Ensure the user is registered with the BCSC backend
+  const { load: loadRegistration } = useDataLoader(registrationService.ensureRegistered, {
+    onError: (error) => {
+      logger.error('[VerifyStack] Failed to ensure registration', error as Error)
+    },
+  })
+
+  useEffect(() => {
+    loadRegistration()
+  }, [loadRegistration])
 
   return (
     <Stack.Navigator
