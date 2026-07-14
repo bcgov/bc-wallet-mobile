@@ -67,9 +67,7 @@ const SavedServices: React.FC = () => {
                 serviceClientId: serviceClient.client_ref_id,
               })
             }}
-            onRemove={preventDoublePress(async () => {
-              await updateSavedService(serviceClient.client_ref_id, false)
-            })}
+            onRemove={preventDoublePress(() => updateSavedService(serviceClient.client_ref_id, false))}
           />
         ))
       )}
