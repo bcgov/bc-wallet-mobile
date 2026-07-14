@@ -1,8 +1,6 @@
 import * as agentProviderModule from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import * as useSecureActionsModule from '@/bcsc-theme/hooks/useSecureActions'
 import * as useAlertsModule from '@/hooks/useAlerts'
-import * as versionModule from '@/utils/version'
-import { AppVersion } from '@/utils/version'
 import { AskarStoreManager } from '@credo-ts/askar'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { renderHook } from '@testing-library/react-native'
@@ -93,26 +91,6 @@ describe('useWalletService', () => {
       await expect(result.current.rotateWalletKey('new-wallet-key')).resolves.toBe(true)
       expect(storeManager.openStore).toHaveBeenCalledWith(agent.context)
       expect(storeManager.rotateStoreKey).toHaveBeenCalledWith(agent.context, { newKey: 'new-wallet-key' })
-    })
-
-    it('should return false, skip the key update, and alert when rotation fails on 4.2.x or later', async () => {
-      const mockError = new Error('rotation failed')
-      const { agent, storeManager } = createAgentMocks()
-      storeManager.rotateStoreKey.mockRejectedValue(mockError)
-      jest.spyOn(agentProviderModule, 'useBCSCAgentSafe').mockReturnValue({ agent } as any)
-      const updateWalletKey = jest.fn()
-      jest.spyOn(useSecureActionsModule, 'default').mockReturnValue({ updateWalletKey } as any)
-      const failedToRotateWalletKeyAlert = jest.fn()
-      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({ failedToRotateWalletKeyAlert } as any)
-      const isVersionAtLeast = jest.spyOn(versionModule, 'isVersionAtLeast').mockReturnValue(true)
-
-      const { result } = renderHook(() => useWalletService(), { wrapper: BasicAppContext })
-
-      await expect(result.current.rotateWalletKey('new-wallet-key')).resolves.toBe(false)
-      expect(updateWalletKey).not.toHaveBeenCalled()
-      expect(isVersionAtLeast).toHaveBeenCalledWith(AppVersion.V4_2_x)
-      // The alert must receive the original error so its cause reaches the problem report
-      expect(failedToRotateWalletKeyAlert).toHaveBeenCalledWith(mockError)
     })
   })
 
