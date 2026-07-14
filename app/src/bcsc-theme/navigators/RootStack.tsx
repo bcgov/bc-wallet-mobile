@@ -3,11 +3,11 @@ import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { ErrorRegistry } from '@/errors'
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useInitializeAccountStatus } from '../api/hooks/useInitializeAccountStatus'
 import useThirdPartyKeyboardWarning from '../api/hooks/useThirdPartyKeyboardWarning'
-import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
+import { BCSCAccountProvider, useAccount } from '../contexts/BCSCAccountContext'
 import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
 import { BCSCIdTokenProvider } from '../contexts/BCSCIdTokenContext'
 import { LoadingScreen } from '../contexts/BCSCLoadingContext'
@@ -16,11 +16,26 @@ import { useFcmService } from '../features/fcm'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { useVerificationStatus } from '../hooks/useVerificationStatus'
+import { isAccountExpired } from '../utils/datetime-utils'
 import { toAppError } from '../utils/native-error-map'
 import AuthStack from './AuthStack'
 import BCSCMainStack from './MainStack'
 import OnboardingStack from './OnboardingStack'
 import VerifyStack from './VerifyStack'
+
+// Keeps FcmViewModel in sync with card expiry so it can drop challenges for expired users.
+// Must live inside BCSCAccountProvider.
+const FcmCardExpirySync: React.FC = () => {
+  const { account } = useAccount()
+  const fcmService = useFcmService()
+
+  useEffect(() => {
+    const isExpired = account != null ? isAccountExpired(account.account_expiration_date) : false
+    fcmService.viewModel.setCardExpired(isExpired)
+  }, [account, fcmService.viewModel])
+
+  return null
+}
 
 const BCSCRootStack: React.FC = () => {
   const { t } = useTranslation()
@@ -32,6 +47,8 @@ const BCSCRootStack: React.FC = () => {
   const { isNavigationReady } = useNavigationContainer()
   const { initializingAccount } = useInitializeAccountStatus()
   const { needsVerification, isVerified, isVerificationInProgress } = useVerificationStatus()
+  const onboardedThisSession = useRef(false)
+  const [verifyPromptAnswered, setVerifyPromptAnswered] = useState(false)
   useSystemChecks(SystemCheckScope.STARTUP)
   useThirdPartyKeyboardWarning()
 
@@ -61,6 +78,7 @@ const BCSCRootStack: React.FC = () => {
   }
 
   if (store.bcsc.hasAccount === false) {
+    onboardedThisSession.current = true
     return <OnboardingStack />
   }
 
@@ -76,22 +94,30 @@ const BCSCRootStack: React.FC = () => {
     )
   }
 
-  // Render the verify journey (which now opens on the one-time verify prompt) when the user hasn't
-  // seen the prompt yet, OR whenever verification is actively in progress. Combining both into a
-  // single VerifyStack render keeps it mounted across the prompt → in-progress transition, so
-  // VerifyPrompt → AccountSetup animates as an in-stack slide instead of a RootStack swap.
-  const showVerifyStack =
-    (!store.bcsc.hasSeenVerifyPrompt && needsVerification) || (!isVerified && isVerificationInProgress)
+  // The prompt is a one-time hand-off from onboarding into verification: offer it only to a user who
+  // just finished onboarding, has yet to answer it, and has no verification to finish or resume.
+  // Everyone else reaches verification from the MainStack, which resumes them at their current step.
+  const showVerifyPrompt = onboardedThisSession.current && !verifyPromptAnswered && needsVerification
+
+  // Render the verify journey when the prompt is due, OR whenever verification is actively in
+  // progress. Combining both into a single VerifyStack render keeps it mounted across the prompt →
+  // in-progress transition, so VerifyPrompt → AccountSetup animates as an in-stack slide instead of
+  // a RootStack swap.
+  const showVerifyStack = showVerifyPrompt || (!isVerified && isVerificationInProgress)
 
   return (
     <BCSCAgentProvider>
       {showVerifyStack ? (
         <BCSCActivityProvider>
-          <VerifyStack />
+          <VerifyStack
+            showVerifyPrompt={showVerifyPrompt}
+            onVerifyPromptAnswered={() => setVerifyPromptAnswered(true)}
+          />
         </BCSCActivityProvider>
       ) : (
         <BCSCActivityProvider>
           <BCSCAccountProvider>
+            <FcmCardExpirySync />
             {isVerified ? (
               <BCSCIdTokenProvider>
                 <BCSCMainStack />

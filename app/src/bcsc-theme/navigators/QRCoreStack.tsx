@@ -2,10 +2,11 @@ import { AgentReadyGate } from '@/bcsc-theme/features/agent'
 import ManualPairing from '@/bcsc-theme/features/pairing/ManualPairing'
 import QRDisplay from '@/bcsc-theme/features/qr-core/QRDisplay'
 import QRScanner from '@/bcsc-theme/features/qr-core/QRScanner'
-import { useVerificationStatus } from '@/bcsc-theme/hooks/useVerificationStatus'
+import { useCardStatus } from '@/bcsc-theme/hooks/useCardStatus'
 import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
-import { ButtonLocation, IconButton, testIdWithKey, TOKENS, useServices, useTheme } from '@bifold/core'
+import { BCState } from '@/store'
+import { ButtonLocation, IconButton, testIdWithKey, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -80,8 +81,9 @@ const QRCoreStack: React.FC = () => {
   const { TabTheme } = useTheme()
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
-  const { isVerified } = useVerificationStatus()
+  const { isActivelyVerified, isExpired } = useCardStatus()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [store] = useStore<BCState>()
 
   const styles = StyleSheet.create({
     tabBarIcon: {
@@ -94,19 +96,27 @@ const QRCoreStack: React.FC = () => {
       <Tab.Navigator
         screenListeners={({ route }) => ({
           focus: () => {
-            // Hijack the focus event for the PairingCode tab if the user is not verified
-            if (route.name === BCSCQRCoreScreens.PairingCode && !isVerified) {
-              logger.debug('[QRCoreStack] User is not verified, redirecting to VerifyPrompt screen')
-              navigation.navigate(BCSCScreens.MainVerifyPrompt)
+            if (route.name === BCSCQRCoreScreens.PairingCode && !isActivelyVerified) {
+              if (isExpired) {
+                logger.debug('[QRCoreStack] User is not actively verified, redirecting to ReverifyAccount screen')
+                navigation.navigate(BCSCScreens.ReverifyAccount, { isExpired: true })
+              } else {
+                logger.debug('[QRCoreStack] User is not actively verified, redirecting to VerifyPrompt screen')
+                navigation.navigate(BCSCScreens.MainVerifyPrompt)
+              }
               return
             }
           },
           tabPress: (event) => {
-            // Hijack the tab press event for the PairingCode tab if the user is not verified
-            if (route.name === BCSCQRCoreScreens.PairingCode && !isVerified) {
-              logger.debug('[QRCoreStack] User is not verified, redirecting to VerifyPrompt screen')
-              event.preventDefault() // Prevents navigation to the PairingCode tab
-              navigation.navigate(BCSCScreens.MainVerifyPrompt)
+            if (route.name === BCSCQRCoreScreens.PairingCode && !isActivelyVerified) {
+              event.preventDefault()
+              if (isExpired) {
+                logger.debug('[QRCoreStack] User is not actively verified, redirecting to ReverifyAccount screen')
+                navigation.navigate(BCSCScreens.ReverifyAccount, { isExpired: true })
+              } else {
+                logger.debug('[QRCoreStack] User is not actively verified, redirecting to VerifyPrompt screen')
+                navigation.navigate(BCSCScreens.MainVerifyPrompt)
+              }
             }
           },
         })}
@@ -137,18 +147,20 @@ const QRCoreStack: React.FC = () => {
             }),
           }}
         />
-        <Tab.Screen
-          name={BCSCQRCoreScreens.Display}
-          component={QRDisplay}
-          options={{
-            title: t('Scan.MyQRCode'),
-            tabBarIconStyle: styles.tabBarIcon,
-            tabBarIcon: createTabBarIcon(t('Scan.MyQRCode'), 'qrcode'),
-            tabBarShowLabel: false,
-            tabBarAccessibilityLabel: t('Scan.MyQRCode'),
-            tabBarTestID: testIdWithKey('MyQRCode'),
-          }}
-        />
+        {store.preferences.developerModeEnabled ? (
+          <Tab.Screen
+            name={BCSCQRCoreScreens.Display}
+            component={QRDisplay}
+            options={{
+              title: t('Scan.MyQRCode'),
+              tabBarIconStyle: styles.tabBarIcon,
+              tabBarIcon: createTabBarIcon(t('Scan.MyQRCode'), 'qrcode'),
+              tabBarShowLabel: false,
+              tabBarAccessibilityLabel: t('Scan.MyQRCode'),
+              tabBarTestID: testIdWithKey('MyQRCode'),
+            }}
+          />
+        ) : null}
         <Tab.Screen
           name={BCSCQRCoreScreens.PairingCode}
           component={ManualPairing}

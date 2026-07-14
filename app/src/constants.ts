@@ -2,6 +2,11 @@ import { ViewStyle } from 'react-native'
 
 // TODO (MD): Normalize casing of constants (ie: SCREAMING_SNAKE_CASE vs camelCase) and group them in a more structured way (ie: AnalyticsConstants, BCSCConstants, etc.)
 
+export enum Mode {
+  BCWallet = 'bcwallet',
+  BCSC = 'bcsc',
+}
+
 export const autoDisableRemoteLoggingIntervalInMinutes = 60
 export const surveyMonkeyUrl = 'https://www.surveymonkey.com/r/7BMHJL8'
 export const surveyMonkeyExitUrl = 'https://www.surveymonkey.com/survey-thanks'
@@ -142,6 +147,11 @@ export const enum DaysOfTheWeek {
   SATURDAY = 'SATURDAY',
   SUNDAY = 'SUNDAY',
 }
+export const ICON_CIRCLE_SIZE = 36
+export const ICON_INNER_SIZE = 20
+export const CLOSE_ICON_SIZE = 24
+export const ICON_CIRCLE_INNER_ICON_SIZE = 18
+export const ICON_SIZE = 24
 
 // BCSC Video constants
 export const VIDEO_RESOLUTION_480P = { width: 640, height: 480 } // standard definition video resolution

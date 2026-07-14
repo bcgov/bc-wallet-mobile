@@ -1,6 +1,6 @@
 import { BCDispatchAction, BCState } from '@/store'
 import { openLink } from '@/utils/links'
-import { SafeAreaModal, TOKENS, useServices, useStore } from '@bifold/core'
+import { SafeAreaModal, useStore } from '@bifold/core'
 import { useCallback, useRef, useState } from 'react'
 import { View } from 'react-native'
 import { setMaxDevicesBannerLastDisplayedDate } from 'react-native-bcsc-core'
@@ -20,7 +20,6 @@ interface NotificationBannerContainerProps {
  */
 export const NotificationBannerContainer = ({ onManageDevices, bannerMessages }: NotificationBannerContainerProps) => {
   const [store, dispatch] = useStore<BCState>()
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [devicesModalVisible, setDevicesModalVisible] = useState(false)
   const devicesModalShouldAnimate = useRef(true)
 
@@ -36,11 +35,7 @@ export const NotificationBannerContainer = ({ onManageDevices, bannerMessages }:
       (banner.id === BCSCBanner.IAS_SERVER_NOTIFICATION || banner.id === BCSCBanner.IAS_SERVER_UNAVAILABLE) &&
       typeof banner.metadata?.contactLink === 'string'
     ) {
-      try {
-        await openLink(banner.metadata.contactLink)
-      } catch (error) {
-        logger.error('Failed to open URL from banner:', error as Error)
-      }
+      openLink(banner.metadata.contactLink)
     }
 
     const message = store.bcsc.bannerMessages.find((banner) => banner.id === bannerId)

@@ -9,7 +9,7 @@ import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useStore
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { a11yLabel, a11yShortLabel } from '@utils/accessibility'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native'
 import { BCSCCardProcess, EvidenceType } from 'react-native-bcsc-core'
@@ -32,7 +32,7 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { evidence } = useApi()
   const [store] = useStore<BCState>()
-  const { addEvidenceType, removeIncompleteEvidence } = useSecureActions()
+  const { addEvidenceType, removeIncompleteEvidence, truncateEvidence } = useSecureActions()
   const [evidenceSections, setEvidenceSections] = useState<SectionData[]>([])
   const { data, load, isLoading } = useDataLoader<EvidenceMetadataResponseData>(() => evidence.getEvidenceMetadata(), {
     onError: (error: unknown) => {
@@ -71,13 +71,35 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
     },
   })
 
-  // Clean up any incomplete evidence entries when the screen focuses.
-  // This handles the case where user selected a card but backed out before completing.
+  // Latest store for the focus effect, read through a ref so the callback stays stable and runs once
+  // per focus (rather than re-running every time the evidence list changes).
+  const storeRef = useRef(store)
+  storeRef.current = store
+  // How many IDs were already collected when THIS list instance was first shown. Each instance in the
+  // stack (the first-ID list and the second-ID list) keeps its own baseline, so backing to one only
+  // releases the ID chosen from it.
+  const baselineCountRef = useRef<number | null>(null)
+
   useFocusEffect(
     useCallback(() => {
-      removeIncompleteEvidence(store.bcscSecure.additionalEvidenceData)
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [store.bcscSecure.additionalEvidenceData])
+      const evidence = storeRef.current.bcscSecure.additionalEvidenceData
+      if (baselineCountRef.current === null) {
+        // First (forward) visit: the baseline is how many IDs are already fully collected before this
+        // list. Count only complete entries — the incomplete/abandoned ones (a card picked but never
+        // captured) are removed by the cleanup below, so they must not inflate the baseline (which
+        // would later leave a stale entry behind on back-navigation).
+        baselineCountRef.current = evidence.filter(isCardEvidenceComplete).length
+        removeIncompleteEvidence(evidence).catch((error) =>
+          logger.error(`Error removing incomplete evidence: ${error}`)
+        )
+      } else if (evidence.length > baselineCountRef.current) {
+        // Returned here via the back button: drop the ID(s) chosen from this list onward so they
+        // become selectable again, keeping the ones collected before it.
+        truncateEvidence(evidence, baselineCountRef.current).catch((error) =>
+          logger.error(`Error truncating evidence: ${error}`)
+        )
+      }
+    }, [removeIncompleteEvidence, truncateEvidence, logger])
   )
 
   useEffect(() => {
@@ -239,7 +261,9 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
                 key={item.evidence_type_label}
                 onPress={() => {
                   addEvidenceType(item)
-                  navigation.navigate(BCSCScreens.IDPhotoInformation, { cardType: item })
+                  // push (not navigate) so the second ID opens a fresh instructions screen instead of
+                  // popping back to the first ID's IDPhotoInformation already in the stack.
+                  navigation.push(BCSCScreens.IDPhotoInformation, { cardType: item })
                 }}
                 testID={testIdWithKey(`EvidenceTypeListItem ${item.evidence_type_label}`)}
                 accessibilityLabel={a11yShortLabel(item.evidence_type_label)}

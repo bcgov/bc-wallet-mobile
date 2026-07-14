@@ -312,6 +312,141 @@ describe('useSecureActions', () => {
     })
   })
 
+  describe('truncateEvidence', () => {
+    const first = makeEvidence({
+      evidenceType: { evidence_type: 'passport', image_sides: [{}] } as any,
+      metadata: [{ uri: 'p.jpg' } as any],
+      documentNumber: 'P1',
+    })
+    const second = makeEvidence({
+      evidenceType: { evidence_type: 'drivers_licence', image_sides: [{}, {}] } as any,
+      metadata: [{ uri: 'f.jpg' } as any, { uri: 'b.jpg' } as any],
+      documentNumber: 'DL1',
+    })
+
+    it('keeps the first N entries, drops the rest, and persists (release the 2nd ID, keep the 1st)', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      let kept: EvidenceMetadata[] = []
+      await act(async () => {
+        kept = await result.current.truncateEvidence([first, second], 1)
+      })
+
+      expect(kept).toEqual([first])
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
+        payload: [[first]],
+      })
+      expect(setEvidence).toHaveBeenCalledWith([first])
+    })
+
+    it('is a no-op when the count already covers every entry', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      let kept: EvidenceMetadata[] = []
+      await act(async () => {
+        kept = await result.current.truncateEvidence([first], 1)
+      })
+
+      expect(kept).toEqual([first])
+      expect(mockDispatch).not.toHaveBeenCalled()
+      expect(setEvidence).not.toHaveBeenCalled()
+    })
+
+    it('drops everything when truncating to 0 (back to the first list)', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      let kept: EvidenceMetadata[] = []
+      await act(async () => {
+        kept = await result.current.truncateEvidence([first, second], 0)
+      })
+
+      expect(kept).toEqual([])
+      expect(setEvidence).toHaveBeenCalledWith([])
+    })
+  })
+
+  describe('removeAbandonedEvidence', () => {
+    it('should return empty array when given empty evidence', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      let cleaned: EvidenceMetadata[] = []
+      await act(async () => {
+        cleaned = await result.current.removeAbandonedEvidence([])
+      })
+
+      expect(cleaned).toEqual([])
+      expect(mockDispatch).not.toHaveBeenCalled()
+      expect(setEvidence).not.toHaveBeenCalled()
+    })
+
+    it('should preserve in-progress evidence (all photos captured, document number pending)', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      // User captured all sides but hasn't entered the document number yet — they were on
+      // EvidenceIDCollection. This must survive hydration so they can resume there.
+      const inProgress = makeEvidence({
+        evidenceType: { evidence_type: 'drivers_licence', image_sides: [{}, {}] } as any,
+        metadata: [{ uri: 'front.jpg' } as any, { uri: 'back.jpg' } as any],
+        // no documentNumber
+      })
+
+      let cleaned: EvidenceMetadata[] = []
+      await act(async () => {
+        cleaned = await result.current.removeAbandonedEvidence([inProgress])
+      })
+
+      expect(cleaned).toEqual([inProgress])
+      // Nothing removed → no persist/dispatch
+      expect(setEvidence).not.toHaveBeenCalled()
+      expect(mockDispatch).not.toHaveBeenCalled()
+    })
+
+    it('should remove an abandoned selection with no photos captured', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      const abandoned = makeEvidence({
+        evidenceType: { evidence_type: 'passport', image_sides: [{}] } as any,
+        metadata: [],
+      })
+
+      let cleaned: EvidenceMetadata[] = []
+      await act(async () => {
+        cleaned = await result.current.removeAbandonedEvidence([abandoned])
+      })
+
+      expect(cleaned).toEqual([])
+      expect(setEvidence).toHaveBeenCalledWith([])
+    })
+
+    it('should keep complete and in-progress entries while removing abandoned ones', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      const complete = makeEvidence({
+        evidenceType: { evidence_type: 'drivers_licence', image_sides: [{}, {}] } as any,
+        metadata: [{ uri: 'front.jpg' } as any, { uri: 'back.jpg' } as any],
+        documentNumber: 'DL456',
+      })
+      const inProgress = makeEvidence({
+        evidenceType: { evidence_type: 'passport', image_sides: [{}] } as any,
+        metadata: [{ uri: 'page.jpg' } as any],
+        // no documentNumber — resumable
+      })
+      const abandoned = makeEvidence({
+        evidenceType: { evidence_type: 'other_two_sided', image_sides: [{}, {}] } as any,
+        metadata: [],
+      })
+
+      let cleaned: EvidenceMetadata[] = []
+      await act(async () => {
+        cleaned = await result.current.removeAbandonedEvidence([complete, inProgress, abandoned])
+      })
+
+      expect(cleaned).toEqual([complete, inProgress])
+      expect(setEvidence).toHaveBeenCalledWith([complete, inProgress])
+    })
+  })
+
   describe('hydrateSecureState account recovery', () => {
     const baseAccount = {
       id: 'account-1',

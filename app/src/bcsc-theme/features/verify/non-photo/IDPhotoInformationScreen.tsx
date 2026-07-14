@@ -24,7 +24,9 @@ const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScree
         accessibilityLabel={t('BCSC.IDPhotoInformation.TakePhoto')}
         testID={testIdWithKey('IDPhotoInformationTakePhoto')}
         onPress={() => {
-          navigation.navigate(BCSCScreens.EvidenceCapture, {
+          // push (not navigate) so the second ID opens a fresh capture screen instead of popping back
+          // to the first ID's EvidenceCapture already in the stack.
+          navigation.push(BCSCScreens.EvidenceCapture, {
             cardType: cardType,
           })
         }}

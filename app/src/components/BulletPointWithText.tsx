@@ -22,7 +22,6 @@ const BulletPointWithText: React.FC<BoldedBulletPointProps> = ({
 
   const styles = StyleSheet.create({
     container: {
-      marginVertical: Spacing.sm,
       flexDirection: 'row',
       alignItems: 'flex-start',
       alignContent: 'center',

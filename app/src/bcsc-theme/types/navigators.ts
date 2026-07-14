@@ -101,9 +101,12 @@ export enum BCSCScreens {
   EditNickname = 'Change Account Nickname',
   AccountDetails = 'Account Details',
   AccountSetup = 'Start Setup',
+  OnboardingSettings = `${BCSCStacks.Onboarding} In App Settings`,
   OnboardingSetupTypes = 'Setup Options',
   OnboardingIntro = 'Intro',
+  OnboardingContactUs = `${BCSCStacks.Onboarding} Contact Us`,
   OnboardingPrivacyPolicy = `${BCSCStacks.Onboarding} Privacy Information`,
+  OnboardingPrivacyInformation = `${BCSCStacks.Onboarding} Settings Privacy Information`,
   OnboardingTermsOfUse = 'Terms of Use Screen',
   OnboardingNotifications = 'Notification Prep',
   OnboardingSecureApp = 'App Security Options',
@@ -168,10 +171,13 @@ export type BCSCQRCoreTabParams = {
 }
 
 export type BCSCOnboardingStackParams = {
+  [BCSCScreens.OnboardingSettings]: undefined
   [BCSCScreens.OnboardingWebView]: { url: string; title: string }
   [BCSCScreens.OnboardingSetupTypes]: undefined
   [BCSCScreens.OnboardingIntro]: undefined
+  [BCSCScreens.OnboardingContactUs]: undefined
   [BCSCScreens.OnboardingPrivacyPolicy]: undefined
+  [BCSCScreens.OnboardingPrivacyInformation]: undefined
   [BCSCScreens.OnboardingTermsOfUse]: undefined
   [BCSCScreens.OnboardingNotifications]: undefined
   [BCSCScreens.OnboardingSecureApp]: undefined
@@ -218,7 +224,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.VideoReview]: { videoPath: string; videoThumbnailPath: string }
   [BCSCScreens.VideoTooLong]: { videoLengthSeconds: number }
   [BCSCScreens.EvidenceUploading]: undefined
-  [BCSCScreens.SuccessfullySent]: undefined
+  [BCSCScreens.SuccessfullySent]: { avgTurnaroundTimeMessage?: string } | undefined
   [BCSCScreens.PendingReview]: undefined
   [BCSCScreens.CancelledReview]: { agentReason?: string }
   [BCSCScreens.VerificationSuccess]: undefined
@@ -302,6 +308,8 @@ export type BCSCMainStackParams = {
 
   [BCSCScreens.QRCore]: NavigatorScreenParams<BCSCQRCoreTabParams> | undefined
   [BCSCScreens.ConnectionLoading]: { oobRecordId?: string; credentialId?: string; proofId?: string }
+  [BCSCScreens.VerificationSuccess]: undefined
+  [BCSCScreens.CancelledReview]: { agentReason?: string }
   [BCSCScreens.MainVerifyPrompt]: undefined
 
   [BCSCModals.InternetDisconnected]: undefined

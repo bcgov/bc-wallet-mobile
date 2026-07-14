@@ -1,5 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { EvidenceMetadataPayload, UploadEvidenceResponseData } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { clampEvidenceImagesToSides, normalizeEvidenceImageLabel } from '@/bcsc-theme/utils/card-utils'
 import { BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import { TOKENS, useServices, useStore } from '@bifold/core'
@@ -9,8 +10,6 @@ export interface EvidenceUploadItem {
   uploadUri: string
   imageBytes: Buffer
 }
-
-const LABEL_MAP: Record<string, string> = { front: 'FRONT_SIDE', back: 'BACK_SIDE' }
 
 const useEvidenceUpload = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -55,13 +54,25 @@ const useEvidenceUpload = () => {
     logger.info(`Processing ${additionalEvidence.length} additional evidence item(s)...`)
 
     for (const evidenceItem of additionalEvidence) {
+      // Heals over-count metadata (e.g. a stale duplicate side left behind by
+      // navigating back to retake/re-accept a photo — see issue #4159) before
+      // it's sent to the server, which rejects an unexpected image count.
+      const images = clampEvidenceImagesToSides(evidenceItem.metadata, evidenceItem.evidenceType?.image_sides)
+      if (images.length !== evidenceItem.metadata.length) {
+        logger.warn('Healed evidence metadata with more images than the card expects', {
+          evidenceType: evidenceItem?.evidenceType?.evidence_type,
+          before: evidenceItem.metadata.length,
+          after: images.length,
+        })
+      }
+
       const metadataPayload: EvidenceMetadataPayload = {
         type: evidenceItem?.evidenceType?.evidence_type,
         number: evidenceItem.documentNumber,
-        images: evidenceItem.metadata.map((data) => {
+        images: images.map((data) => {
           // Normalize labels: the /v1/documents API expects "FRONT_SIDE"/"BACK_SIDE",
           // not the lowercase "front"/"back" used by /v1/photos (selfie endpoint).
-          const label = LABEL_MAP[data.label] ?? data.label
+          const label = normalizeEvidenceImageLabel(data.label)
           return { ...data, label, file_path: undefined }
         }),
       }
@@ -74,8 +85,8 @@ const useEvidenceUpload = () => {
       const evidenceMetadataResponse = await evidence.sendEvidenceMetadata(metadataPayload)
       logger.debug(`Evidence metadata sent for ${metadataPayload.type}`)
 
-      for (const metadataItem of evidenceItem.metadata) {
-        const normalizedLabel = LABEL_MAP[metadataItem.label] ?? metadataItem.label
+      for (const metadataItem of images) {
+        const normalizedLabel = normalizeEvidenceImageLabel(metadataItem.label)
         const matchingResponse = evidenceMetadataResponse.find(
           (response: UploadEvidenceResponseData) => response.label === normalizedLabel
         )

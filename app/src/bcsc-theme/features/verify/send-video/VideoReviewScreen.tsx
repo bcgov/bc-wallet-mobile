@@ -27,7 +27,7 @@ import { Video, VideoRef } from 'react-native-video'
 
 export const VerificationVideoCache = new MediaCache()
 
-const pauseButtonSize = 60
+const pauseButtonSize = 40
 
 type VideoReviewScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VideoReview>
@@ -56,25 +56,21 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
 
   const styles = StyleSheet.create({
     pageContainer: {
-      position: 'relative',
-      flexGrow: 1,
-      backgroundColor: ColorPalette.brand.primaryBackground,
+      paddingTop: Spacing.lg,
     },
     videoContainer: {
-      flexGrow: 1,
       alignItems: 'center',
-      padding: Spacing.lg,
     },
     heading: {
       textAlign: 'center',
-      marginBottom: Spacing.md,
+      marginBottom: Spacing.lg,
       width: '100%',
       color: ColorPalette.grayscale.black,
     },
     video: {
       width: width - 2 * Spacing.md,
       aspectRatio: 3 / 4,
-      maxHeight: height * 0.5,
+      maxHeight: height * 0.4,
     },
     pauseButton: {
       backgroundColor: ColorPalette.brand.primary,
@@ -159,7 +155,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
 
   return (
     <ScreenWrapper
-      edges={['top', 'bottom', 'left', 'right']}
+      edges={['bottom', 'left', 'right']}
       style={styles.pageContainer}
       controls={controls}
       padded={false}

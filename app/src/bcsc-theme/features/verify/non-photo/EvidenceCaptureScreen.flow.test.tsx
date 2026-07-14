@@ -108,11 +108,20 @@ jest.mock('@/bcsc-theme/components/PhotoReview', () => {
   const { Pressable, Text } = require('react-native')
   return {
     __esModule: true,
-    default: ({ onAccept }: any) =>
+    default: ({ onAccept, onRetake }: any) =>
       ReactMock.createElement(
-        Pressable,
-        { testID: 'sim-accept', onPress: onAccept },
-        ReactMock.createElement(Text, null, 'accept')
+        ReactMock.Fragment,
+        null,
+        ReactMock.createElement(
+          Pressable,
+          { testID: 'sim-accept', onPress: onAccept },
+          ReactMock.createElement(Text, null, 'accept')
+        ),
+        ReactMock.createElement(
+          Pressable,
+          { testID: 'sim-retake', onPress: onRetake },
+          ReactMock.createElement(Text, null, 'retake')
+        )
       ),
   }
 })
@@ -160,7 +169,7 @@ describe('EvidenceCaptureScreen — Non-BCSC barcode flow', () => {
 
   it('reroutes into setup and clears evidence when the backend confirms a BC Services Card', async () => {
     mockHandleScanBarcodes.mockResolvedValue(true)
-    const navigation = { navigate: jest.fn(), reset: jest.fn() }
+    const navigation = { navigate: jest.fn(), push: jest.fn(), reset: jest.fn(), dispatch: jest.fn() }
 
     await driveScanPhotoAccept(renderScreen(navigation))
 
@@ -172,12 +181,12 @@ describe('EvidenceCaptureScreen — Non-BCSC barcode flow', () => {
     )
     expect(mockClearAdditionalEvidence).toHaveBeenCalled()
     // Switched to the BCSC flow — does not continue to evidence ID collection.
-    expect(navigation.navigate).not.toHaveBeenCalled()
+    expect(navigation.push).not.toHaveBeenCalled()
   })
 
   it('continues capturing as evidence (keeping the scanned barcode) when it is not a BC Services Card', async () => {
     mockHandleScanBarcodes.mockResolvedValue(false)
-    const navigation = { navigate: jest.fn(), reset: jest.fn() }
+    const navigation = { navigate: jest.fn(), push: jest.fn(), reset: jest.fn(), dispatch: jest.fn() }
 
     await driveScanPhotoAccept(renderScreen(navigation))
 
@@ -191,7 +200,8 @@ describe('EvidenceCaptureScreen — Non-BCSC barcode flow', () => {
     expect(barcodes).toEqual(
       expect.arrayContaining([expect.objectContaining({ type: 'CODE_128', value: 'S00023254' })])
     )
-    expect(navigation.navigate).toHaveBeenCalledWith(
+    // Pushes the form screen, keeping the capture/instruction screens in the history.
+    expect(navigation.push).toHaveBeenCalledWith(
       BCSCScreens.EvidenceIDCollection,
       expect.objectContaining({ documentNumber: '123' })
     )
@@ -199,7 +209,7 @@ describe('EvidenceCaptureScreen — Non-BCSC barcode flow', () => {
 
   it('asks /device/barcodes only once across a multi-sided card', async () => {
     mockHandleScanBarcodes.mockResolvedValue(false)
-    const navigation = { navigate: jest.fn(), reset: jest.fn() }
+    const navigation = { navigate: jest.fn(), push: jest.fn(), reset: jest.fn(), dispatch: jest.fn() }
     const utils = renderScreen(navigation, mockTwoSidedCardType)
 
     // Front side: scan, photo, accept.
@@ -224,9 +234,90 @@ describe('EvidenceCaptureScreen — Non-BCSC barcode flow', () => {
 
     // The backend is asked once for the card, not once per side.
     expect(mockHandleScanBarcodes).toHaveBeenCalledTimes(1)
-    expect(navigation.navigate).toHaveBeenCalledWith(
+    // Pushes the form screen, keeping the capture/instruction screens in the history.
+    expect(navigation.push).toHaveBeenCalledWith(
       BCSCScreens.EvidenceIDCollection,
       expect.objectContaining({ documentNumber: '123' })
     )
+  })
+})
+
+describe('EvidenceCaptureScreen — retake/re-accept after final side (issue #4159)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockHandleScanBarcodes.mockResolvedValue(false)
+  })
+
+  const lastMetadataCall = () => mockUpdateEvidenceMetadata.mock.calls[mockUpdateEvidenceMetadata.mock.calls.length - 1]
+
+  it('re-accepting the last side after final accept replaces the entry instead of appending (passport 1->2 dead end)', async () => {
+    // Single-sided card: accept once (final accept, navigates away), then — mirroring a
+    // back-nav from EvidenceIDCollection landing back on the still-mounted PhotoReview for
+    // the last side — accept again with no retake in between.
+    const navigation = { navigate: jest.fn(), push: jest.fn(), reset: jest.fn() }
+    const utils = renderScreen(navigation, mockCardType)
+
+    await driveScanPhotoAccept(utils)
+    expect(mockUpdateEvidenceMetadata).toHaveBeenCalledTimes(1)
+    expect(lastMetadataCall()[1]).toHaveLength(1)
+
+    // Re-accept: PhotoReview is still showing (screen never reset state/navigated away
+    // in this test double), so pressing accept again re-runs handleAcceptPhoto for the
+    // same (last) side.
+    await act(async () => {
+      fireEvent.press(await utils.findByTestId('sim-accept'))
+    })
+
+    expect(mockUpdateEvidenceMetadata).toHaveBeenCalledTimes(2)
+    const [, metadata] = lastMetadataCall()
+    expect(metadata).toHaveLength(1)
+    expect(metadata.map((m: any) => m.label)).toEqual(['FRONT_SIDE'])
+  })
+
+  it('retaking the last side after final accept replaces the entry instead of appending (BCDL 2->3 dead end)', async () => {
+    // Two-sided card: front accept, back accept (final accept, navigates away), then —
+    // mirroring a back-nav landing back on the still-mounted PhotoReview for the back
+    // side — retake and re-accept the back side.
+    const navigation = { navigate: jest.fn(), push: jest.fn(), reset: jest.fn() }
+    const utils = renderScreen(navigation, mockTwoSidedCardType)
+
+    // Front side: scan, photo, accept.
+    await waitFor(() => utils.getByTestId('sim-scan'))
+    await act(async () => {
+      fireEvent.press(utils.getByTestId('sim-scan'))
+    })
+    await act(async () => {
+      fireEvent.press(utils.getByTestId('sim-photo'))
+    })
+    await act(async () => {
+      fireEvent.press(await utils.findByTestId('sim-accept'))
+    })
+
+    // Back side: photo, accept — final accept, navigates to EvidenceIDCollection.
+    await act(async () => {
+      fireEvent.press(await utils.findByTestId('sim-photo'))
+    })
+    await act(async () => {
+      fireEvent.press(await utils.findByTestId('sim-accept'))
+    })
+
+    expect(mockUpdateEvidenceMetadata).toHaveBeenCalledTimes(1)
+    expect(lastMetadataCall()[1]).toHaveLength(2)
+
+    // Simulate landing back on the back side's PhotoReview and retaking it.
+    await act(async () => {
+      fireEvent.press(await utils.findByTestId('sim-retake'))
+    })
+    await act(async () => {
+      fireEvent.press(await utils.findByTestId('sim-photo'))
+    })
+    await act(async () => {
+      fireEvent.press(await utils.findByTestId('sim-accept'))
+    })
+
+    expect(mockUpdateEvidenceMetadata).toHaveBeenCalledTimes(2)
+    const [, metadata] = lastMetadataCall()
+    expect(metadata).toHaveLength(2)
+    expect(metadata.map((m: any) => m.label)).toEqual(['FRONT_SIDE', 'BACK_SIDE'])
   })
 })

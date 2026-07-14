@@ -19,13 +19,25 @@ jest.mock('@credo-ts/didcomm', () => ({
 jest.mock('@/utils/bc-agent-modules', () => ({ getBCAgentModules: jest.fn(() => ({})) }))
 jest.mock('react-native-fs', () => ({ CachesDirectoryPath: '/tmp' }))
 
-jest.mock('@credo-ts/core', () => ({
-  Agent: jest.fn().mockImplementation(() => ({
-    initialize: jest.fn(),
-    shutdown: jest.fn(),
-    modules: { askar: { deleteStore: jest.fn().mockResolvedValue(undefined) } },
-  })),
-}))
+jest.mock('@credo-ts/core', () => {
+  const actual = jest.requireActual('@credo-ts/core')
+  return Object.defineProperties(
+    {},
+    {
+      ...Object.getOwnPropertyDescriptors(actual),
+      Agent: {
+        value: jest.fn().mockImplementation(() => ({
+          initialize: jest.fn(),
+          shutdown: jest.fn(),
+          modules: { askar: { deleteStore: jest.fn().mockResolvedValue(undefined) } },
+        })),
+        writable: true,
+        configurable: true,
+        enumerable: true,
+      },
+    }
+  )
+})
 
 jest.mock('@bifold/core', () => ({
   PersistentStorage: {

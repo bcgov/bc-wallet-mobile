@@ -1,29 +1,15 @@
-import { hitSlop } from '@/constants'
-import {
-  Button,
-  ButtonType,
-  IColorPalette,
-  testIdWithKey,
-  ThemedText,
-  usePreventDoublePress,
-  useTheme,
-} from '@bifold/core'
+import { CLOSE_ICON_SIZE, hitSlop, ICON_CIRCLE_SIZE, ICON_INNER_SIZE, ICON_SIZE } from '@/constants'
+import { IColorPalette, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { Image, ImageStyle, Pressable, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native'
+import { Image, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
-const ICON_CIRCLE_SIZE = 36
-const ICON_INNER_SIZE = 20
-const CLOSE_ICON_SIZE = 24
-
-interface NotificationIconProps {
+export interface NotificationIconProps {
   logoUrl?: string
   iconName: string
   iconColor: string
   hideIconCircle?: boolean
-  circleStyle: ViewStyle
-  logoStyle: ImageStyle
 }
 
 /**
@@ -32,32 +18,41 @@ interface NotificationIconProps {
  * @param props
  * @returns
  */
-const NotificationIcon: React.FC<NotificationIconProps> = ({
-  logoUrl,
-  iconName,
-  iconColor,
-  hideIconCircle,
-  circleStyle,
-  logoStyle,
-}) => {
+export const NotificationIcon: React.FC<NotificationIconProps> = ({ logoUrl, iconName, iconColor, hideIconCircle }) => {
+  const { ColorPalette } = useTheme()
+  const styles = StyleSheet.create({
+    iconCircle: {
+      width: ICON_CIRCLE_SIZE,
+      height: ICON_CIRCLE_SIZE,
+      borderRadius: ICON_CIRCLE_SIZE / 2,
+      backgroundColor: ColorPalette.grayscale.mediumGrey,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+    },
+    logoImage: {
+      width: ICON_CIRCLE_SIZE,
+      height: ICON_CIRCLE_SIZE,
+      borderRadius: ICON_CIRCLE_SIZE / 2,
+      marginRight: 12,
+    },
+    icon: { marginRight: 12 },
+  })
+
   if (logoUrl) {
     return (
       <Image
         accessible={false}
         source={{ uri: logoUrl }}
-        style={logoStyle}
+        style={styles.logoImage}
         testID={testIdWithKey('NotificationLogo')}
       />
     )
   }
+
   return (
-    <View style={[{ marginRight: 12 }, hideIconCircle ? undefined : circleStyle]}>
-      <Icon
-        accessible={false}
-        name={iconName}
-        size={hideIconCircle ? ICON_CIRCLE_SIZE : ICON_INNER_SIZE}
-        color={iconColor}
-      />
+    <View style={hideIconCircle ? styles.icon : styles.iconCircle}>
+      <Icon accessible={false} name={iconName} size={hideIconCircle ? ICON_SIZE : ICON_INNER_SIZE} color={iconColor} />
     </View>
   )
 }
@@ -77,13 +72,28 @@ export enum NotificationCardStatus {
   Attention = 'Attention',
 }
 
-interface NotificationCardProps {
+export const DismissButton: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const { t } = useTranslation()
+  const { ColorPalette } = useTheme()
+  return (
+    <TouchableOpacity
+      accessibilityLabel={t('Global.Dismiss')}
+      accessibilityRole="button"
+      testID={testIdWithKey('DismissNotification')}
+      onPress={onClose}
+      hitSlop={hitSlop}
+    >
+      <Icon name="close" size={CLOSE_ICON_SIZE} color={ColorPalette.grayscale.darkGrey} />
+    </TouchableOpacity>
+  )
+}
+
+export interface NotificationCardProps {
   title: string
   description: string
   status: NotificationCardStatus
   onPress: () => void
   onClose?: () => void
-  buttonTitle?: string
   timestamp?: string
   badge?: string
   icon?: string
@@ -105,44 +115,19 @@ interface NotificationCardProps {
  * @return {*}
  */
 const NotificationCard: React.FC<NotificationCardProps> = (props) => {
-  const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
   const cardStyle = getCardStyle(props.status, ColorPalette)
   const iconColor = props.iconColor ?? ColorPalette.grayscale.white
-  const { preventDoublePress: preventDoublePressOnPress } = usePreventDoublePress()
-  const { preventDoublePress: preventDoublePressOnClose } = usePreventDoublePress()
-
-  const isV1 = !!props.buttonTitle
 
   const styles = StyleSheet.create({
     container: {
       paddingHorizontal: Spacing.lg,
       paddingVertical: Spacing.md,
-      backgroundColor: isV1 ? ColorPalette.brand.modalTertiaryBackground : cardStyle.backgroundColor,
-      ...(isV1 && {
-        borderWidth: 1,
-        borderColor: ColorPalette.notification.infoBorder,
-        borderRadius: 8,
-      }),
+      backgroundColor: cardStyle.backgroundColor,
     },
     headerContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-    },
-    iconCircle: {
-      width: ICON_CIRCLE_SIZE,
-      height: ICON_CIRCLE_SIZE,
-      borderRadius: ICON_CIRCLE_SIZE / 2,
-      backgroundColor: ColorPalette.grayscale.mediumGrey,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginRight: 12,
-    },
-    logoImage: {
-      width: ICON_CIRCLE_SIZE,
-      height: ICON_CIRCLE_SIZE,
-      borderRadius: ICON_CIRCLE_SIZE / 2,
-      marginRight: 12,
     },
     bodyContainer: {
       marginLeft: ICON_CIRCLE_SIZE + 12,
@@ -172,79 +157,41 @@ const NotificationCard: React.FC<NotificationCardProps> = (props) => {
       color: ColorPalette.grayscale.darkGrey,
       fontSize: 12,
     },
-    buttonContainer: {
-      marginTop: 12,
-    },
   })
 
   const iconName = props.icon ?? cardStyle.defaultIcon
 
-  const content = (
-    <View style={styles.container} testID={testIdWithKey('NotificationListItem')}>
-      <View style={styles.headerContainer}>
-        <NotificationIcon
-          logoUrl={props.logoUrl}
-          iconName={iconName}
-          iconColor={iconColor}
-          hideIconCircle={props.hideIconCircle}
-          circleStyle={styles.iconCircle}
-          logoStyle={styles.logoImage}
-        />
-        <ThemedText variant="bold" style={styles.headerText} testID={testIdWithKey('HeaderText')}>
-          {props.title}
-        </ThemedText>
-        {props.onClose && (
-          <TouchableOpacity
-            accessibilityLabel={t('Global.Dismiss')}
-            accessibilityRole="button"
-            testID={testIdWithKey('DismissNotification')}
-            onPress={preventDoublePressOnClose(props.onClose)}
-            hitSlop={hitSlop}
-          >
-            <Icon name="close" size={CLOSE_ICON_SIZE} color={ColorPalette.grayscale.darkGrey} />
-          </TouchableOpacity>
-        )}
-      </View>
-      <View style={styles.bodyContainer}>
-        {props.badge && (
-          <View style={styles.badge}>
-            <ThemedText style={styles.badgeText}>{props.badge}</ThemedText>
-          </View>
-        )}
-        <ThemedText style={styles.bodyText} testID={testIdWithKey('BodyText')}>
-          {props.description}
-        </ThemedText>
-        {props.timestamp && (
-          <ThemedText style={styles.timestampText} testID={testIdWithKey('TimestampText')}>
-            {props.timestamp}
-          </ThemedText>
-        )}
-        {props.buttonTitle && (
-          <View style={styles.buttonContainer}>
-            <Button
-              title={props.buttonTitle}
-              accessibilityLabel={t(props.buttonTitle)}
-              testID={testIdWithKey('ViewNotification')}
-              buttonType={ButtonType.Primary}
-              onPress={props.onPress} // Double press prevented by default
-            />
-          </View>
-        )}
-      </View>
-    </View>
-  )
-
-  if (props.buttonTitle) {
-    return content
-  }
-
   return (
-    <Pressable
-      onPress={preventDoublePressOnPress(props.onPress)}
-      accessibilityRole="button"
-      testID={testIdWithKey('NotificationCardPressable')}
-    >
-      {content}
+    <Pressable onPress={props.onPress} accessibilityRole="button" testID={testIdWithKey('NotificationCardPressable')}>
+      <View style={styles.container} testID={testIdWithKey('NotificationListItem')}>
+        <View style={styles.headerContainer}>
+          <NotificationIcon
+            logoUrl={props.logoUrl}
+            iconName={iconName}
+            iconColor={iconColor}
+            hideIconCircle={props.hideIconCircle}
+          />
+          <ThemedText variant="bold" style={styles.headerText} testID={testIdWithKey('HeaderText')}>
+            {props.title}
+          </ThemedText>
+          {props.onClose && <DismissButton onClose={props.onClose} />}
+        </View>
+        <View style={styles.bodyContainer}>
+          {props.badge && (
+            <View style={styles.badge}>
+              <ThemedText style={styles.badgeText}>{props.badge}</ThemedText>
+            </View>
+          )}
+          <ThemedText style={styles.bodyText} testID={testIdWithKey('BodyText')}>
+            {props.description}
+          </ThemedText>
+          {props.timestamp && (
+            <ThemedText style={styles.timestampText} testID={testIdWithKey('TimestampText')}>
+              {props.timestamp}
+            </ThemedText>
+          )}
+        </View>
+      </View>
     </Pressable>
   )
 }

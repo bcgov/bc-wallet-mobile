@@ -10,9 +10,10 @@ import {
   isLiveCallAvailable,
 } from '@/bcsc-theme/utils/service-hours-formatter'
 import { useAlerts } from '@/hooks/useAlerts'
-import { BCDispatchAction, IASEnvironment } from '@/store'
+import { BCDispatchAction } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
+import { IASEnvironment } from '@utils/environment'
 import { BCSCCardType } from 'react-native-bcsc-core'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')

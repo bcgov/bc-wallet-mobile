@@ -25,7 +25,7 @@ exports[`PhotoInstructions renders correctly 1`] = `
       [
         false,
         {
-          "gap": 16,
+          "gap": 24,
           "padding": 24,
         },
       ]
@@ -34,10 +34,10 @@ exports[`PhotoInstructions renders correctly 1`] = `
   >
     <View>
       <
-        height={200}
+        height={250}
         style={
           {
-            "height": 200,
+            "height": 250,
             "width": "100%",
           }
         }
@@ -50,7 +50,7 @@ exports[`PhotoInstructions renders correctly 1`] = `
             {
               "color": "#313132",
               "fontFamily": "BCSans-Regular",
-              "fontSize": 26,
+              "fontSize": 21,
               "fontWeight": "bold",
             },
             undefined,
@@ -59,173 +59,263 @@ exports[`PhotoInstructions renders correctly 1`] = `
       >
         BCSC.PhotoInstructions.Heading
       </Text>
-      <View
-        style={
-          {
-            "flexDirection": "row",
-          }
-        }
-      >
-        <Text
-          maxFontSizeMultiplier={2}
+      <View>
+        <View
           style={
             [
               {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              {
-                "marginRight": 4,
-              },
-            ]
-          }
-        >
-          •
-        </Text>
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
+                "alignContent": "center",
+                "alignItems": "flex-start",
+                "flexDirection": "row",
               },
               undefined,
             ]
           }
         >
-          BCSC.PhotoInstructions.Bullet1
-        </Text>
-      </View>
-      <View
-        style={
-          {
-            "flexDirection": "row",
-          }
-        }
-      >
-        <Text
-          maxFontSizeMultiplier={2}
+          <View
+            style={
+              {
+                "height": undefined,
+                "justifyContent": "center",
+                "marginHorizontal": 8,
+              }
+            }
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontSize": 8,
+                  },
+                  undefined,
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰝥
+            </Text>
+          </View>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "flexShrink": 1,
+                },
+              ]
+            }
+          >
+            <span>
+              BCSC.PhotoInstructions.Bullet1
+            </span>
+          </Text>
+        </View>
+        <View
           style={
             [
               {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              {
-                "marginRight": 4,
-              },
-            ]
-          }
-        >
-          •
-        </Text>
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
+                "alignContent": "center",
+                "alignItems": "flex-start",
+                "flexDirection": "row",
               },
               undefined,
             ]
           }
         >
-          BCSC.PhotoInstructions.Bullet2
-        </Text>
-      </View>
-      <View
-        style={
-          {
-            "flexDirection": "row",
-          }
-        }
-      >
-        <Text
-          maxFontSizeMultiplier={2}
+          <View
+            style={
+              {
+                "height": undefined,
+                "justifyContent": "center",
+                "marginHorizontal": 8,
+              }
+            }
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontSize": 8,
+                  },
+                  undefined,
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰝥
+            </Text>
+          </View>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "flexShrink": 1,
+                },
+              ]
+            }
+          >
+            <span>
+              BCSC.PhotoInstructions.Bullet2
+            </span>
+          </Text>
+        </View>
+        <View
           style={
             [
               {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              {
-                "marginRight": 4,
-              },
-            ]
-          }
-        >
-          •
-        </Text>
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
+                "alignContent": "center",
+                "alignItems": "flex-start",
+                "flexDirection": "row",
               },
               undefined,
             ]
           }
         >
-          BCSC.PhotoInstructions.Bullet3
-        </Text>
-      </View>
-      <View
-        style={
-          {
-            "flexDirection": "row",
-          }
-        }
-      >
-        <Text
-          maxFontSizeMultiplier={2}
+          <View
+            style={
+              {
+                "height": undefined,
+                "justifyContent": "center",
+                "marginHorizontal": 8,
+              }
+            }
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontSize": 8,
+                  },
+                  undefined,
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰝥
+            </Text>
+          </View>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "flexShrink": 1,
+                },
+              ]
+            }
+          >
+            <span>
+              BCSC.PhotoInstructions.Bullet3
+            </span>
+          </Text>
+        </View>
+        <View
           style={
             [
               {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              {
-                "marginRight": 4,
-              },
-            ]
-          }
-        >
-          •
-        </Text>
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
+                "alignContent": "center",
+                "alignItems": "flex-start",
+                "flexDirection": "row",
               },
               undefined,
             ]
           }
         >
-          BCSC.PhotoInstructions.Bullet4
-        </Text>
+          <View
+            style={
+              {
+                "height": undefined,
+                "justifyContent": "center",
+                "marginHorizontal": 8,
+              }
+            }
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontSize": 8,
+                  },
+                  undefined,
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰝥
+            </Text>
+          </View>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "flexShrink": 1,
+                },
+              ]
+            }
+          >
+            <span>
+              BCSC.PhotoInstructions.Bullet4
+            </span>
+          </Text>
+        </View>
       </View>
     </View>
   </RCTScrollView>

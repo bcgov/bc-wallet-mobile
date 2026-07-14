@@ -30,7 +30,6 @@ const StatusDetails: React.FC<StatusScreenProps> = ({
     bulletContainer: { width: '100%', marginBottom: Spacing.lg, marginLeft: Spacing.lg },
     bulletItemContainer: {
       flexDirection: 'row',
-      marginBottom: Spacing.md,
     },
     bullet: {
       marginRight: Spacing.xs,
@@ -47,7 +46,7 @@ const StatusDetails: React.FC<StatusScreenProps> = ({
       <Icon
         name={iconName}
         size={iconSize}
-        color={iconColor ?? ColorPalette.brand.primary}
+        color={iconColor ?? ColorPalette.brand.headerText}
         style={{ padding: Spacing.lg }}
       />
       <ThemedText variant={'headingThree'} style={{ marginVertical: Spacing.md, textAlign: 'center' }}>

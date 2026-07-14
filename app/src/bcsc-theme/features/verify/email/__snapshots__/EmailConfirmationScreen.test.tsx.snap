@@ -52,8 +52,8 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
               false,
               {
                 "flexGrow": 1,
-                "gap": 16,
-                "padding": 24,
+                "gap": 4,
+                "padding": 32,
               },
             ]
           }
@@ -65,11 +65,11 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                 {
                   "color": "#313132",
                   "fontFamily": "BCSans-Regular",
-                  "fontSize": 26,
+                  "fontSize": 32,
                   "fontWeight": "bold",
                 },
                 {
-                  "color": "black",
+                  "color": "#000000",
                   "textAlign": "center",
                 },
               ]
@@ -425,7 +425,9 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                   "backgroundColor": "#FCBA19",
                   "height": 2,
                 },
-                undefined,
+                {
+                  "marginVertical": 16,
+                },
               ]
             }
           />
@@ -461,7 +463,6 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                   },
                   {
                     "color": "#1A5A96",
-                    "fontWeight": "bold",
                   },
                 ]
               }
@@ -469,6 +470,30 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
             >
               BCSC.EmailConfirmation.SendNewCode
             </Text>
+          </Text>
+          <Text
+            accessibilityLabel="BCSC.EmailConfirmation.GoToMyEmail"
+            accessibilityRole="link"
+            maxFontSizeMultiplier={2}
+            onPress={[Function]}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 14,
+                  "fontWeight": "normal",
+                },
+                {
+                  "color": "#1A5A96",
+                  "marginTop": 16,
+                  "textAlign": "center",
+                },
+              ]
+            }
+            testID="GoToMyEmailLink"
+          >
+            BCSC.EmailConfirmation.GoToMyEmail
           </Text>
         </View>
         <View
