@@ -17,6 +17,17 @@ jest.mock('@bifold/core', () => {
   }
 })
 
+// PressableOpacity pulls in Animated + double-press-prevention internals that are
+// irrelevant to ListButton's own logic; stub it with a plain Pressable pass-through
+// so the style/testID/onPress/accessibilityLabel props still flow through unchanged.
+jest.mock('@/components/PressableOpacity', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+  const ReactInFactory = require('react')
+  return {
+    PressableOpacity: (props: any) => ReactInFactory.createElement('Pressable', props),
+  }
+})
+
 // Resolve the (possibly function) style prop on the element with the given testID
 // into a flat style object so border-radius assertions can be made.
 const flatStyleOf = (testID: string): any => {
