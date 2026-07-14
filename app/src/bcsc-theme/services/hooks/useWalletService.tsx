@@ -58,6 +58,7 @@ export const useWalletService = () => {
       } catch (error) {
         logger.error('[useWalletService] Failed to rotate wallet key', error as Error)
 
+        // In V4.2.x and later, show an alert to the user if the wallet key rotation fails
         if (isVersionAtLeast(AppVersion.V4_2_x)) {
           failedToRotateWalletKeyAlert(error)
         }
