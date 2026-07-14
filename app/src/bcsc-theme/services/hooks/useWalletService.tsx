@@ -1,10 +1,7 @@
 import { useBCSCAgentSafe } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { useAlerts } from '@/hooks/useAlerts'
-import { AppVersion, isVersionAtLeast } from '@/utils/version'
 import { TOKENS, useServices } from '@bifold/core'
 import { AskarModuleConfig, AskarStoreManager } from '@credo-ts/askar'
-import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback, useMemo } from 'react'
 
 /**
@@ -16,8 +13,6 @@ export const useWalletService = () => {
   const agentContext = useBCSCAgentSafe()
   const { updateWalletKey } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const navigation = useNavigation<NavigationProp<ParamListBase>>()
-  const { failedToRotateWalletKeyAlert } = useAlerts(navigation)
 
   const agent = agentContext?.agent
 
@@ -59,15 +54,10 @@ export const useWalletService = () => {
       } catch (error) {
         logger.error('[rotateWalletKey] Failed to rotate wallet key', error as Error)
 
-        // In V4.2.x and later, show an alert to the user if the wallet key rotation fails
-        if (isVersionAtLeast(AppVersion.V4_2_x)) {
-          failedToRotateWalletKeyAlert(error)
-        }
-
         return false
       }
     },
-    [agent, failedToRotateWalletKeyAlert, logger, updateWalletKey]
+    [agent, logger, updateWalletKey]
   )
 
   return useMemo(() => ({ rotateWalletKey }), [rotateWalletKey])

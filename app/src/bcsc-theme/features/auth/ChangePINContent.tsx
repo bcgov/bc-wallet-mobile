@@ -1,7 +1,6 @@
 import { ChangePINForm } from '@/bcsc-theme/features/auth/components/ChangePINForm'
 import { PINEntryForm, PINEntryResult } from '@/bcsc-theme/features/auth/components/PINEntryForm'
 import { useWalletService } from '@/bcsc-theme/services/hooks/useWalletService'
-import { AppVersion, isVersionAtLeast } from '@/utils/version'
 import { TOKENS, useServices } from '@bifold/core'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -35,12 +34,7 @@ export const ChangePINContent = ({
     async (result: PINEntryResult) => {
       logger.info('PIN changed successfully')
 
-      const rotateSuccess = await walletService.rotateWalletKey(result.walletKey)
-
-      // In V4.2.x, if the wallet key rotation fails, we should not proceed to the success callback.
-      if (!rotateSuccess && isVersionAtLeast(AppVersion.V4_2_x)) {
-        return
-      }
+      await walletService.rotateWalletKey(result.walletKey)
 
       onChangePINSuccess()
     },
@@ -57,12 +51,7 @@ export const ChangePINContent = ({
 
       logger.info('Switched to PIN security method')
 
-      const rotateSuccess = await walletService.rotateWalletKey(result.walletKey)
-
-      // In V4.2.x, if the wallet key rotation fails, we should not proceed to the success callback.
-      if (!rotateSuccess && isVersionAtLeast(AppVersion.V4_2_x)) {
-        return
-      }
+      await walletService.rotateWalletKey(result.walletKey)
 
       onCreatePINSuccess()
     },

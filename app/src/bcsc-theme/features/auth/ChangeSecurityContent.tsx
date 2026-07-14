@@ -3,7 +3,6 @@ import { useWalletService } from '@/bcsc-theme/services/hooks/useWalletService'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ErrorRegistry } from '@/errors/errorRegistry'
-import { AppVersion, isVersionAtLeast } from '@/utils/version'
 import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -65,12 +64,7 @@ export const ChangeSecurityContent = ({
       setCurrentMethod(AccountSecurityMethod.DeviceAuth)
       logger.info('Successfully switched to device authentication')
 
-      const rotateSuccess = await walletService.rotateWalletKey(walletKey)
-
-      // In V4.2.x, if the wallet key rotation fails, we should not proceed to the success callback.
-      if (!rotateSuccess && isVersionAtLeast(AppVersion.V4_2_x)) {
-        return
-      }
+      await walletService.rotateWalletKey(walletKey)
 
       onDeviceAuthSuccess()
     } catch (err) {
