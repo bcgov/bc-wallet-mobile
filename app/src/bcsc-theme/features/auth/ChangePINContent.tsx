@@ -35,7 +35,6 @@ export const ChangePINContent = ({
       logger.info('PIN changed successfully')
 
       await walletService.rotateWalletKey(result.walletKey)
-
       onChangePINSuccess()
     },
     [logger, walletService, onChangePINSuccess]
@@ -52,7 +51,6 @@ export const ChangePINContent = ({
       logger.info('Switched to PIN security method')
 
       await walletService.rotateWalletKey(result.walletKey)
-
       onCreatePINSuccess()
     },
     [logger, walletService, onCreatePINSuccess]

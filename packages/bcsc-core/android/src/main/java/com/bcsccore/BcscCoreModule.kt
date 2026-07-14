@@ -247,6 +247,67 @@ class BcscCoreModule(
     }
 
     /**
+     * Enumerate every local key pair together with its public RSA components (modulus/
+     * exponent), for the JS-side key-recovery flow (issue #4166) to match local keys against
+     * the server's jwks by modulus BYTES — never by kid, which can drift across migrations.
+     *
+     * Reuses [BcscKeyPairSource.convertBcscKeyPairToJWK] so the n/e encoding is identical to
+     * what registration actually sends: Nimbus's canonical unsigned base64url. JS-side
+     * comparison must still be decode-tolerant (the server may also hold legacy/iOS-shaped
+     * encodings from earlier registrations) — see jwk-modulus.ts.
+     *
+     * Skips (and logs) any alias whose key pair can't be read or isn't RSA, rather than
+     * failing the whole call — a single unreadable/foreign alias shouldn't block recovery
+     * from seeing every OTHER key.
+     */
+    @ReactMethod
+    fun getAllKeysWithPublicInfo(promise: Promise) {
+        try {
+            if (!keyPairSource.isAvailable()) {
+                promise.reject("E_KEYSTORE_UNAVAILABLE", "Android KeyStore is not available on this device")
+                return
+            }
+
+            val infos = keyPairSource.getAllBcscKeyPairInfos()
+            val result: WritableArray = Arguments.createArray()
+            for (info in infos) {
+                try {
+                    val bcscKeyPair = keyPairSource.getBcscKeyPair(info.getAlias())
+                    if (bcscKeyPair == null) {
+                        Log.w(
+                            NAME,
+                            "getAllKeysWithPublicInfo: alias '${info.getAlias()}' not found when reading key pair; skipping",
+                        )
+                        continue
+                    }
+                    val jwk = keyPairSource.convertBcscKeyPairToJWK(bcscKeyPair)
+                    if (jwk !is RSAKey) {
+                        Log.w(NAME, "getAllKeysWithPublicInfo: alias '${info.getAlias()}' is not an RSA key; skipping")
+                        continue
+                    }
+                    val entry: WritableMap = Arguments.createMap()
+                    entry.putString("id", info.getAlias())
+                    entry.putDouble("created", info.getCreatedAt().toDouble())
+                    entry.putString("n", jwk.modulus.toString())
+                    entry.putString("e", jwk.publicExponent.toString())
+                    result.pushMap(entry)
+                } catch (e: Exception) {
+                    Log.w(
+                        NAME,
+                        "getAllKeysWithPublicInfo: failed to read key pair for alias '${info.getAlias()}': ${e.message}",
+                    )
+                }
+            }
+
+            promise.resolve(result)
+        } catch (e: BcscException) {
+            promise.reject("E_KEYSTORE_ERROR", "Error accessing keystore: ${e.devMessage}", e)
+        } catch (e: Exception) {
+            promise.reject("E_KEYSTORE_ERROR", "Unexpected error accessing keystore: ${e.message}", e)
+        }
+    }
+
+    /**
      * Mark a keystore alias as the active (newest) key. Called by the recovery
      * flow after the server confirms which kid it accepts. Refuses if the alias
      * is not present in the keystore so the app never points at a missing key.

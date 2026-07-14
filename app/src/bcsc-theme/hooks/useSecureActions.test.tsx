@@ -26,10 +26,15 @@ import {
   setToken,
   TokenType,
 } from 'react-native-bcsc-core'
+import { performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
 import * as useBCSCApiClientModule from './useBCSCApiClient'
 import { useSecureActions } from './useSecureActions'
 
 jest.mock('@bifold/core')
+jest.mock('../utils/key-recovery', () => ({
+  performKeyRecovery: jest.fn(),
+  reRegisterNewestKey: jest.fn(),
+}))
 jest.mock('react-native-bcsc-core', () => ({
   AccountSecurityMethod: {
     PinNoDeviceAuth: 'app_pin_no_device_authn',
@@ -629,6 +634,106 @@ describe('useSecureActions', () => {
       })
 
       expect(captureSessionRecoveryRequired()).toBe(false)
+    })
+  })
+
+  describe('hydrateSecureState key recovery (#4166)', () => {
+    const account = {
+      id: 'account-1',
+      issuer: 'https://idsit.gov.bc.ca',
+      clientID: 'client-1',
+      displayName: 'Test User',
+    }
+    const mockGetTokensForRefreshToken = jest.fn()
+
+    beforeEach(() => {
+      jest.mocked(getAccountFlags).mockResolvedValue({} as any)
+      jest.mocked(getEvidence).mockResolvedValue([] as any)
+      jest.mocked(getCredential).mockResolvedValue(null as any)
+      jest.mocked(getSavedServices).mockResolvedValue([] as any)
+      jest.mocked(getAccountSecurityMethod).mockResolvedValue(AccountSecurityMethod.PinNoDeviceAuth)
+      jest.mocked(getAccount).mockResolvedValue(account as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
+      jest.mocked(getToken).mockImplementation(async (type: any) => {
+        if (type === TokenType.Refresh) {
+          return { id: 'r', type, token: 'stale-refresh-token', created: 0 } as any
+        }
+        if (type === TokenType.Registration) {
+          return { id: 'g', type, token: 'stored-reg-token', created: 0 } as any
+        }
+        return null
+      })
+
+      mockGetTokensForRefreshToken.mockReset()
+      jest.mocked(useBCSCApiClientModule.useBCSCApiClientState).mockReturnValue({
+        client: { getTokensForRefreshToken: mockGetTokensForRefreshToken } as any,
+        isClientReady: true,
+        error: undefined,
+      } as any)
+    })
+
+    it('retries the refresh once and persists a rotated reg token when recovery succeeds', async () => {
+      mockGetTokensForRefreshToken
+        .mockRejectedValueOnce(new Error('401'))
+        .mockResolvedValueOnce({ refresh_token: 'new-refresh', access_token: 'new-access' })
+      jest
+        .mocked(performKeyRecovery)
+        .mockResolvedValue({ status: 'recovered', newRegistrationAccessToken: 'rotated-token' })
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(performKeyRecovery).toHaveBeenCalledWith(
+        expect.anything(),
+        'client-1',
+        'stored-reg-token',
+        expect.anything()
+      )
+      expect(reRegisterNewestKey).not.toHaveBeenCalled()
+      expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(2)
+      expect(setToken).toHaveBeenCalledWith(TokenType.Refresh, 'new-refresh')
+      expect(setToken).toHaveBeenCalledWith(TokenType.Registration, 'rotated-token')
+    })
+
+    it('falls back to reRegisterNewestKey on no_match, persists its rotated token, and retries the refresh', async () => {
+      mockGetTokensForRefreshToken
+        .mockRejectedValueOnce(new Error('401'))
+        .mockResolvedValueOnce({ refresh_token: 'new-refresh-2', access_token: 'new-access-2' })
+      jest.mocked(performKeyRecovery).mockResolvedValue({ status: 'no_match' })
+      jest
+        .mocked(reRegisterNewestKey)
+        .mockResolvedValue({ success: true, newRegistrationAccessToken: 'put-rotated-token' })
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(reRegisterNewestKey).toHaveBeenCalledWith(
+        expect.anything(),
+        'client-1',
+        'stored-reg-token',
+        expect.anything()
+      )
+      expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(2)
+      expect(setToken).toHaveBeenCalledWith(TokenType.Registration, 'put-rotated-token')
+    })
+
+    it('leaves tokens stale (no retry) when recovery fails outright', async () => {
+      mockGetTokensForRefreshToken.mockRejectedValue(new Error('401'))
+      jest.mocked(performKeyRecovery).mockResolvedValue({ status: 'failed' })
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(reRegisterNewestKey).not.toHaveBeenCalled()
+      expect(mockGetTokensForRefreshToken).toHaveBeenCalledTimes(1)
+      expect(setToken).toHaveBeenCalledWith(TokenType.Refresh, 'stale-refresh-token')
+      expect(setToken).toHaveBeenCalledWith(TokenType.Registration, 'stored-reg-token')
     })
   })
 

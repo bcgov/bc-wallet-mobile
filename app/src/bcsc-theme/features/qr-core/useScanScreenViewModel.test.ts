@@ -7,7 +7,7 @@ jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k
 jest.mock('react-native-vision-camera', () => ({
   useCameraPermission: () => ({ hasPermission: true, requestPermission: jest.fn().mockResolvedValue(true) }),
 }))
-jest.mock('@bifold/react-hooks', () => ({ useAgent: () => ({ agent: { id: 'agent' } }) }))
+jest.mock('@/bcsc-theme/features/agent/BCSCAgentProvider', () => ({ useBCSCAgent: () => ({ agent: { id: 'agent' } }) }))
 jest.mock('@bifold/core', () => {
   // Mirrors @bifold/core's real QrCodeScanError shape (see packages/core/src/types/error.ts):
   // constructor(message?, data?, details?); `data` is the offending value, `details` is the

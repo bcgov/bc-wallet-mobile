@@ -391,6 +391,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       invalidUrlAlert: _createBasicErrorModal(AppEventCode.ERR_500_INVALID_URL, 'SomethingWentWrong'),
       failedToRotateWalletKeyAlert: _createBasicErrorModal(AppEventCode.WALLET_KEY_ROTATION_ERROR, 'SomethingWentWrong'),
       invalidRegistrationRequestAlert: _createBasicErrorModal(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST, 'SomethingWentWrong'),
+      registrationKeyNotConfirmedAlert: _createBasicErrorModal(AppEventCode.ERR_121_REGISTRATION_KEY_NOT_CONFIRMED, 'SomethingWentWrong'),
     }),
     [
       appUpdateRequiredAlert,

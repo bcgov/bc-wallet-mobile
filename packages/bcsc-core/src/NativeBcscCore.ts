@@ -38,7 +38,7 @@ export type PrivateKeyInfo = {
   id: string;
   keyType?: string;
   keySize?: number;
-  created?: number; // Timestamp
+  created?: number; // Timestamp — SECONDS since epoch on iOS, MILLISECONDS on Android (see KeyPublicInfo.created)
 };
 
 export type KeyPair = {
@@ -46,6 +46,29 @@ export type KeyPair = {
   public: string;
   private?: string;
   privateKeyAvailable: string;
+};
+
+/**
+ * Public RSA key material for a single local key, used by the key-recovery flow (#4166) to
+ * match local keys against the server's jwks by modulus bytes.
+ *
+ * `n`/`e` are platform-native encodings, NOT normalized: iOS emits standard base64 with the
+ * DER leading 0x00 sign byte retained, Android emits canonical unpadded base64url. Consumers
+ * MUST decode-tolerantly normalize before comparing — see
+ * app/src/bcsc-theme/utils/jwk-modulus.ts. Never raw-string-compare `n`.
+ */
+export type KeyPublicInfo = {
+  id: string;
+  n: string;
+  e: string;
+  /**
+   * Creation timestamp — platform units differ, same as `PrivateKeyInfo.created` /
+   * `getAllKeys()`: iOS reports SECONDS since epoch (`Date.timeIntervalSince1970`), Android
+   * reports MILLISECONDS since epoch (`System.currentTimeMillis()`-based). Never compare this
+   * value across platforms. Key-recovery's newest-wins ordering is safe regardless, because it
+   * only ever compares `created` values gathered from a single device's platform at runtime.
+   */
+  created?: number;
 };
 
 // Assuming TokenType enum is defined in index.ts and will be used by the JS side.
@@ -253,6 +276,11 @@ export type NativeSavedService = {
 
 export interface Spec extends TurboModule {
   getAllKeys(): Promise<PrivateKeyInfo[]>;
+  /**
+   * Enumerate every local private key together with its public RSA components (modulus/
+   * exponent). See {@link KeyPublicInfo} for the encoding caveats consumers must handle.
+   */
+  getAllKeysWithPublicInfo(): Promise<KeyPublicInfo[]>;
   /**
    * Mark a keystore alias as the active (newest) signing key. Rejects with
    * E_KEY_NOT_FOUND if the alias is not present in the keystore.
