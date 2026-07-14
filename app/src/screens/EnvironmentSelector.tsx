@@ -67,7 +67,7 @@ const EnvironmentSelector: React.FC<EnvironmentSelectorProps> = ({ onEnvironment
                 size={36}
                 innerIconStyle={{ borderColor: ColorPalette.brand.primary, borderWidth: 2 }}
                 ImageComponent={() => <Icon name="circle" size={18} color={ColorPalette.brand.primary}></Icon>}
-                onPress={preventDoublePress(async () => await handleEnvironmentPress(environment))}
+                onPress={preventDoublePress(() => handleEnvironmentPress(environment))}
                 isChecked={name === store.developer.environment.name}
                 disableBuiltInState
                 testID={testIdWithKey(name.toLocaleLowerCase())}
