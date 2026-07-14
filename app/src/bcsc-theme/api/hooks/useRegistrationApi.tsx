@@ -1,9 +1,10 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { getAttestationErrorLogContext } from '@/bcsc-theme/utils/attestation'
+import { modulusInSet, normalizeModulus } from '@/bcsc-theme/utils/jwk-modulus'
 import { throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 import { AppError, ErrorRegistry } from '@/errors'
-import { TOKENS, useServices } from '@bifold/core'
+import { BifoldLogger, TOKENS, useServices } from '@bifold/core'
 import { getAppStoreReceipt, googleAttestation } from '@bifold/react-native-attestation'
 import { useCallback, useMemo } from 'react'
 import { Platform } from 'react-native'
@@ -57,6 +58,59 @@ export interface NonceResponseData {
 }
 
 export type RegistrationApi = ReturnType<typeof useRegistrationApi>
+
+/**
+ * Confirms the signing key sent during INITIAL client registration actually landed in the
+ * server's echoed jwks, matched on modulus bytes (never kid — see jwk-modulus.ts).
+ *
+ * Scoped to createRegistration only — NOT called from updateRegistration. This isn't because
+ * only one key can ever exist at that point (a corrupted-key self-heal inside the native DCR
+ * body builder can mint a replacement even on an update call): it's a deliberate scope
+ * decision from issue #4166 ("We only need to check the new key is sent on initial
+ * registration and it matches ... AND the recovery (healing) mechanics for people who upgrade
+ * from previous versions"). Confirming updateRegistration's key too was explicitly out of
+ * scope; the separate key-recovery flow (key-recovery.ts) is what catches a desync from any
+ * cause, on the next hydration.
+ *
+ * Hard-fails (throws AppError ERR_121) only on a DEFINITE mismatch: the sent modulus decodes,
+ * the server returned at least one decodable modulus, and the sent modulus isn't among them.
+ * An unparseable/empty side (a server- or body-shape surprise, not a confirmed desync) is
+ * logged and treated as pass-through so setup is never bricked by a parsing edge case.
+ */
+function confirmRegisteredKey(body: string, data: RegistrationResponseData, logger: BifoldLogger): void {
+  let sentN: string | undefined
+  try {
+    const parsedBody = JSON.parse(body) as { jwks?: { keys?: Array<{ n?: string }> } }
+    sentN = parsedBody.jwks?.keys?.[0]?.n
+  } catch (error) {
+    logger.warn(
+      `[RegistrationApi] Could not parse sent registration body to confirm signing key, proceeding: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    )
+    return
+  }
+
+  const serverNs = (data.jwks?.keys ?? []).map((key) => key?.n)
+  const sentModulus = normalizeModulus(sentN)
+  const hasDecodableServerModulus = serverNs.some((n) => normalizeModulus(n) !== null)
+
+  if (!sentModulus || !hasDecodableServerModulus) {
+    logger.warn(
+      '[RegistrationApi] Could not confirm signing key registration — sent or server jwks unparseable/empty; proceeding'
+    )
+    return
+  }
+
+  if (!modulusInSet(sentN, serverNs)) {
+    logger.error(
+      '[RegistrationApi] Sent signing key modulus was not found in the server-confirmed jwks after initial registration'
+    )
+    throw AppError.fromErrorDefinition(ErrorRegistry.REGISTRATION_KEY_NOT_CONFIRMED)
+  }
+
+  logger.info('[RegistrationApi] Confirmed sent signing key modulus is present in server jwks')
+}
 
 // The registration API is a special case because it gets called during initialization,
 // so its params are adjusted to account for an api client that may not be ready yet
@@ -132,6 +186,8 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * @throws AppError with code `DCR_BODY_BUILD_FAILED` (or `UNMAPPED_NATIVE_ERROR` for unmapped native codes) if building the registration body fails
    * @throws AppError with code `ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL` if registration response is null
    * @throws AppError with code `ERR_115_FAILED_TO_SERIALIZE_JSON` if native JSON serialization fails
+   * @throws AppError with code `ERR_121_REGISTRATION_KEY_NOT_CONFIRMED` if the sent signing key's modulus is
+   *   definitively absent from the server's echoed jwks (see {@link confirmRegisteredKey})
    *
    * @returns Promise resolving to registration response data or void if account exists
    */
@@ -161,6 +217,8 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
       })
 
       logger.info('Completed registration request')
+
+      confirmRegisteredKey(body, data, logger)
 
       await setAccount({
         clientID: data.client_id,
@@ -262,7 +320,9 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         let updatePayload
         try {
           updatePayload = body ? JSON.parse(body) : body
-          // Add required fields for PUT request: client_id and scope
+          // Add required fields for PUT request: client_id and scope. Scope mirrors
+          // useAuthorizationApi.tsx's IAS_SCOPE and key-recovery.ts's reRegisterNewestKey —
+          // keep all three in sync if it ever changes.
           updatePayload.client_id = account.clientID
           updatePayload.scope = 'openid profile email address offline_access'
         } catch (error) {
