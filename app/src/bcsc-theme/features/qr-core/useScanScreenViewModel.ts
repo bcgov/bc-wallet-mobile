@@ -33,11 +33,13 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
   const strategies = useMemo(() => options.strategies ?? DEFAULT_STRATEGIES, [options.strategies])
   const { t } = useTranslation()
   // BCSC's own agent context, not Bifold's `useAgent` (which throws before the
-  // agent is ready). The scanner must mount regardless of agent health so the
-  // camera — and the agent-independent pairing-code QR path — keep working while
-  // the agent is still booting or has failed to initialize. Strategies tolerate a
-  // missing agent: PairingCodeStrategy ignores it; DidCommOobStrategy returns
-  // `{ kind: 'unsupported', reason: 'AgentNotReady' }`.
+  // agent is ready). `useBCSCAgent` returns `agent: null` while the agent is
+  // booting or has failed instead of throwing (it still requires the
+  // `BCSCAgentProvider`, which wraps this screen). The scanner must mount
+  // regardless of agent health so the camera — and the agent-independent
+  // pairing-code QR path — keep working while the agent is still booting or has
+  // failed to initialize. Strategies tolerate a missing agent: PairingCodeStrategy
+  // ignores it; DidCommOobStrategy returns `{ kind: 'unsupported', reason: 'AgentNotReady' }`.
   const agent = useBCSCAgent().agent ?? undefined
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store] = useStore<BCState>()

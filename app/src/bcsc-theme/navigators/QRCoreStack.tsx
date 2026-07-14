@@ -24,9 +24,11 @@ type TabBarIconProps = {
 // the pairing-code QR path must work even when the agent is still booting or has
 // failed to initialize, so core BCSC flows (pairing-code login / pairing-code QR
 // scan) never depend on agent health. The scanner reads the agent via
-// `useBCSCAgent` (non-throwing) and its URI strategies degrade gracefully: a
-// DIDComm scan without a ready agent surfaces an "AgentNotReady" message rather
-// than blocking the whole screen.
+// `useBCSCAgent`, which returns `agent: null` while the agent is booting or has
+// failed instead of throwing like Bifold's `useAgent` (it still requires the
+// `BCSCAgentProvider`, which wraps this stack). Its URI strategies then degrade
+// gracefully: a DIDComm scan without a ready agent surfaces an "AgentNotReady"
+// message rather than blocking the whole screen.
 const createQRBackButton = () => {
   const QRBackButton = () => {
     const navigation = useNavigation()
