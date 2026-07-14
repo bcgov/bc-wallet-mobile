@@ -1,7 +1,7 @@
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import { Spacing } from '@/bcwallet-theme/theme'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
-import { ScreenWrapper, testIdWithKey, ThemedText } from '@bifold/core'
+import { ScreenWrapper, testIdWithKey, ThemedText, usePreventDoublePress } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -35,6 +35,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
     verificationOptions,
     formattedHours,
   } = useVerificationMethodModel({ navigation })
+  const { preventDoublePress } = usePreventDoublePress()
 
   const [primaryOption, ...remainingOptions] = verificationOptions
 
@@ -46,7 +47,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
           title={t('BCSC.VerificationMethods.SendVideoTitle')}
           description={t('BCSC.VerificationMethods.SendVideoDescription')}
           icon={'video-outline'}
-          onPress={handlePressSendVideo}
+          onPress={preventDoublePress(handlePressSendVideo)}
           disabled={sendVideoLoading || liveCallLoading}
         />
       )
@@ -72,7 +73,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
           title={t('BCSC.VerificationMethods.VideoCallTitle')}
           description={t('BCSC.VerificationMethods.VideoCallDescription')}
           icon={'face-agent'}
-          onPress={handlePressLiveCall}
+          onPress={preventDoublePress(handlePressLiveCall)}
           disabled={liveCallLoading || sendVideoLoading}
         />
       )
