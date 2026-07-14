@@ -8,11 +8,15 @@ export enum AppVersion {
 }
 
 /**
- * Returns true if `version` is >= `minVersion`.
- * Supports wildcard segments in minVersion (e.g. "4.1.x" ignores patch).
- * ie: isVersionAtLeast('4.2.0', '4.1.x') === true
+ * Returns true if current app version is >= `minVersion`.
+ * Supports wildcard segments in minVersion (ie: "4.1.x" ignores patch).
  *
- * @param minVersion - The minimum version string to compare against (e.g. "4.1.x").
+ * @example
+ * ```ts
+ * isVersionAtLeast('4.1.x') // true if current version is 4.1.0 or higher
+ * ```
+ *
+ * @param minVersion - The minimum version string to compare against (ie: "4.1.x").
  * @returns True if `version` is greater than or equal to `minVersion`, false otherwise.
  */
 export const isVersionAtLeast = (minVersion: string): boolean => {
