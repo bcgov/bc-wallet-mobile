@@ -49,8 +49,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
   const [id, setId] = useState(emailAddressId)
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { preventDoublePress: preventDoublePressHandleSubmit } = usePreventDoublePress()
-  const { preventDoublePress: preventDoublePressHandleResendCode } = usePreventDoublePress()
+  const { preventDoublePress } = usePreventDoublePress()
 
   const handleSubmit = async () => {
     if (!code || code.length !== 6) {
@@ -134,7 +133,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
     <ControlContainer>
       <Button
         buttonType={ButtonType.Primary}
-        onPress={preventDoublePressHandleSubmit(handleSubmit)}
+        onPress={preventDoublePress(handleSubmit)}
         title={t('Global.Continue')}
         accessibilityLabel={t('Global.Continue')}
         testID={'ContinueButton'}
@@ -184,7 +183,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
         <ThemedText
           variant={'caption'}
           style={{ color: ColorPalette.brand.link }}
-          onPress={loading ? undefined : preventDoublePressHandleResendCode(handleResendCode)}
+          onPress={loading ? undefined : preventDoublePress(handleResendCode)}
           accessibilityRole={'link'}
           accessibilityLabel={t('BCSC.EmailConfirmation.SendNewCode')}
           testID={'ResendCodeLink'}
