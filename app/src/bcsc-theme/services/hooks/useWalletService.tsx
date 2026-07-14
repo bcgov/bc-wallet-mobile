@@ -31,12 +31,13 @@ export const useWalletService = () => {
   const rotateWalletKey = useCallback(
     async (walletKey: string) => {
       if (!agent) {
-        logger.info('[useWalletService] No agent available to rotate wallet key')
-        return
+        logger.info('[rotateWalletKey] No agent available to rotate wallet key')
+        return false
       }
 
       if (!walletKey) {
-        logger.info('[useWalletService] No wallet key provided for rotation')
+        logger.info('[rotateWalletKey] No wallet key provided for rotation')
+        return false
       }
 
       try {
@@ -44,11 +45,11 @@ export const useWalletService = () => {
         const askarModuleConfig = agent.dependencyManager.resolve(AskarModuleConfig)
 
         if (!storeManager.isStoreOpen(agent.context)) {
-          logger.info('[useWalletService] Opening store before rotating wallet key')
+          logger.info('[rotateWalletKey] Opening store before rotating wallet key')
           await storeManager.openStore(agent.context)
         }
 
-        logger.info('[useWalletService] Rotating wallet key for agent')
+        logger.info('[rotateWalletKey] Rotating wallet key for agent')
         await storeManager.rotateStoreKey(agent.context, { newKey: walletKey })
         askarModuleConfig.store.key = walletKey
 
@@ -56,7 +57,7 @@ export const useWalletService = () => {
         updateWalletKey(walletKey)
         return true
       } catch (error) {
-        logger.error('[useWalletService] Failed to rotate wallet key', error as Error)
+        logger.error('[rotateWalletKey] Failed to rotate wallet key', error as Error)
 
         // In V4.2.x and later, show an alert to the user if the wallet key rotation fails
         if (isVersionAtLeast(AppVersion.V4_2_x)) {
