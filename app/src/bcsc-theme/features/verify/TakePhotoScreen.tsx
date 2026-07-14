@@ -47,7 +47,8 @@ const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) =>
         maskType={MaskType.OVAL}
         maskLineColor={ColorPalette.brand.highlight}
         onPhotoTaken={handlePhotoTaken}
-        cameraFormatFilter={CameraFormat.MaskedWithBarcodeDetection}
+        cameraFormatFilter={CameraFormat.SelfiePhoto}
+        photoQualityBalance="quality"
         maskLineWidth={Spacing.xs}
         maskOverlayOpacity={0.6}
       />
