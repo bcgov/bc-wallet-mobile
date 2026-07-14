@@ -1,7 +1,7 @@
+import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
 import { QrCodeScanError, TOKENS, useServices, useStore } from '@bifold/core'
-import { useAgent } from '@bifold/react-hooks'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useCameraPermission } from 'react-native-vision-camera'
@@ -32,7 +32,13 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
   const { onConnectionFound, onPairingCodeFound } = options
   const strategies = useMemo(() => options.strategies ?? DEFAULT_STRATEGIES, [options.strategies])
   const { t } = useTranslation()
-  const { agent } = useAgent()
+  // BCSC's own agent context, not Bifold's `useAgent` (which throws before the
+  // agent is ready). The scanner must mount regardless of agent health so the
+  // camera — and the agent-independent pairing-code QR path — keep working while
+  // the agent is still booting or has failed to initialize. Strategies tolerate a
+  // missing agent: PairingCodeStrategy ignores it; DidCommOobStrategy returns
+  // `{ kind: 'unsupported', reason: 'AgentNotReady' }`.
+  const agent = useBCSCAgent().agent ?? undefined
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store] = useStore<BCState>()
   // Sent to the inviter as our label when we accept their invitation — they
