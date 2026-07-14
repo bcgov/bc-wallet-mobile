@@ -92,7 +92,7 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
       await registrationService.register(securityMethod)
     } catch (error) {
       logger.error('[AccountSetupScreen] Error creating registration with backend', error as Error)
-      // 3(optionalReset the navigation stack to the account setup screen to allow the user to retry
+      // 3. Reset the navigation stack to the account setup screen to allow the user to retry
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
