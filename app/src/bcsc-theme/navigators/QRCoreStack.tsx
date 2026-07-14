@@ -1,4 +1,3 @@
-import { AgentReadyGate } from '@/bcsc-theme/features/agent'
 import ManualPairing from '@/bcsc-theme/features/pairing/ManualPairing'
 import QRDisplay from '@/bcsc-theme/features/qr-core/QRDisplay'
 import QRScanner from '@/bcsc-theme/features/qr-core/QRScanner'
@@ -22,14 +21,15 @@ type TabBarIconProps = {
   focused: boolean
 }
 
-// QRScanner uses URI strategies that require the BCSC agent for OOB parsing,
-// so gate the Scanner tab behind agent init.
-const ScopedQRScanner: React.FC = () => (
-  <AgentReadyGate testID={testIdWithKey('Scan.Loading')}>
-    <QRScanner />
-  </AgentReadyGate>
-)
-
+// The Scanner tab is intentionally NOT gated behind agent init. The camera and
+// the pairing-code QR path must work even when the agent is still booting or has
+// failed to initialize, so core BCSC flows (pairing-code login / pairing-code QR
+// scan) never depend on agent health. The scanner reads the agent via
+// `useBCSCAgent`, which returns `agent: null` while the agent is booting or has
+// failed instead of throwing like Bifold's `useAgent` (it still requires the
+// `BCSCAgentProvider`, which wraps this stack). Its URI strategies then degrade
+// gracefully: a DIDComm scan without a ready agent surfaces an "AgentNotReady"
+// message rather than blocking the whole screen.
 const createQRBackButton = () => {
   const QRBackButton = () => {
     const navigation = useNavigation()
@@ -133,7 +133,7 @@ const QRCoreStack: React.FC = () => {
       >
         <Tab.Screen
           name={BCSCQRCoreScreens.Scanner}
-          component={ScopedQRScanner}
+          component={QRScanner}
           options={{
             title: t('Scan.ScanQRCode'),
             tabBarIconStyle: styles.tabBarIcon,

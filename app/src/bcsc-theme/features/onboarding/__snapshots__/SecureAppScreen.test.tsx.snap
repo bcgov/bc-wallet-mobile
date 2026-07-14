@@ -111,14 +111,12 @@ exports[`SecureApp renders correctly when device auth IS available 1`] = `
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              [
-                {
-                  "backgroundColor": "#003366",
-                  "borderRadius": 4,
-                  "padding": 16,
-                },
-                false,
-              ]
+              {
+                "backgroundColor": "#003366",
+                "borderRadius": 4,
+                "opacity": 1,
+                "padding": 16,
+              }
             }
             testID="com.ariesbifold:id/ChooseDeviceAuthButton"
           >
@@ -245,14 +243,12 @@ exports[`SecureApp renders correctly when device auth IS available 1`] = `
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              [
-                {
-                  "backgroundColor": "#003366",
-                  "borderRadius": 4,
-                  "padding": 16,
-                },
-                false,
-              ]
+              {
+                "backgroundColor": "#003366",
+                "borderRadius": 4,
+                "opacity": 1,
+                "padding": 16,
+              }
             }
             testID="com.ariesbifold:id/ChoosePINButton"
           >

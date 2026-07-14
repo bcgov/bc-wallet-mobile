@@ -32,6 +32,7 @@ jest.mock('react-native-safe-area-context', () => {
 jest.mock('react-native-vector-icons/MaterialIcons', () => 'Icon')
 
 jest.mock('@bifold/core', () => ({
+  ...jest.requireActual('@bifold/core'),
   AbstractBifoldLogger: class {},
   BifoldError: jest.requireActual('@bifold/core').BifoldError,
   testIdWithKey: (key: string) => `com.aries.bifold:id/${key}`,
