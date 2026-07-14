@@ -1,7 +1,18 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCState } from '@/store'
 import * as PushNotifications from '@/utils/PushNotificationsHelper'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  ScreenWrapper,
+  testIdWithKey,
+  ThemedText,
+  TOKENS,
+  useServices,
+  useStore,
+  useTheme,
+} from '@bifold/core'
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -31,7 +42,17 @@ export const NotificationSettingsScreen = (): React.ReactElement => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [store] = useStore<BCState>()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { status } = useNotificationPermissionStatus()
+
+  const openDeviceSettings = useCallback(async () => {
+    try {
+      await Linking.openSettings()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.error(`[NotificationSettingsScreen] Failed to open device settings: ${message}`)
+    }
+  }, [logger])
 
   const isGranted = status === PushNotifications.NotificationPermissionStatus.GRANTED
   const notificationsActive = isGranted && store.preferences.usePushNotifications
@@ -75,7 +96,7 @@ export const NotificationSettingsScreen = (): React.ReactElement => {
       <Button
         title={t('BCSC.Settings.OpenDeviceSettings')}
         buttonType={ButtonType.Primary}
-        onPress={() => Linking.openSettings()}
+        onPress={openDeviceSettings}
         testID={testIdWithKey('OpenNotificationSettings')}
         accessibilityLabel={t('BCSC.Settings.OpenDeviceSettings')}
       />

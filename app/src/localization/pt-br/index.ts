@@ -412,7 +412,7 @@ const translation = {
       "EditNickname": "Edit Nickname (PT-BR)",
       "AutoLockTime": "Auto lock time (PT-BR)",
       "Notifications": "Notifications (PT-BR)",
-      "ChangeNotificationsHeader": "Change notifications settings? (PT-BR)",
+      "ChangeNotificationsHeader": "Change notification settings? (PT-BR)",
       "NotificationsEnabledContent": "With notifications enabled, stay informed about account updates, credential changes and service interruptions. (PT-BR)",
       "NotificationsAreLabel": "Notifications are: (PT-BR)",
       "NotificationsStatusOn": "on",
