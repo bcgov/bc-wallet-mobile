@@ -123,8 +123,7 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
     })
 
     // Not awaiting to prevent blocking navigation
-    registerAccountWithBackend()
-
+    void registerAccountWithBackend()
     navigation.navigate(BCSCScreens.TransferAccountInstructions)
   }, [dispatch, registerAccountWithBackend, navigation])
 
