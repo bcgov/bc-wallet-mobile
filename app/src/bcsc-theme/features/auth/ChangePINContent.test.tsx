@@ -193,7 +193,7 @@ describe('ChangePINContent', () => {
       })
       mockCanPerformDeviceAuthentication.mockResolvedValue(true)
       mockSetAccountSecurityMethod.mockResolvedValue(true)
-      const mockRotateWalletKey = jest.fn().mockResolvedValue(undefined)
+      const mockRotateWalletKey = jest.fn().mockResolvedValue(true)
       jest.spyOn(walletServiceHooks, 'useWalletService').mockReturnValue({ rotateWalletKey: mockRotateWalletKey })
 
       const tree = render(
