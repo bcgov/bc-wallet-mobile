@@ -47,8 +47,11 @@ jest.mock('@bifold/core', () => {
   }
 })
 
+const mockIsPinned = jest.fn()
+const mockTogglePin = jest.fn()
+
 jest.mock('./services/usePinnedContacts', () => ({
-  usePinnedContacts: () => ({ pinnedIds: new Set(), isPinned: () => false, togglePin: jest.fn() }),
+  usePinnedContacts: () => ({ pinnedIds: new Set(), isPinned: mockIsPinned, togglePin: mockTogglePin }),
 }))
 
 jest.mock('react-native-vector-icons/MaterialIcons', () => 'Icon')
@@ -68,6 +71,8 @@ describe('ContactsScreen', () => {
   beforeEach(() => {
     mockUseConnections.mockReset()
     mockNavigate.mockReset()
+    mockIsPinned.mockReset().mockReturnValue(false)
+    mockTogglePin.mockReset()
   })
 
   const renderScreen = () => render(<ContactsScreen navigation={{ navigate: mockNavigate } as any} />)
@@ -148,5 +153,52 @@ describe('ContactsScreen', () => {
     expect(screen.getByText('Acme Corp')).toBeTruthy()
     expect(screen.getByText('Beta Inc')).toBeTruthy()
     expect(screen.queryByTestId('id/clearSearch')).toBeNull()
+  })
+
+  it('navigates to contact details when a row is pressed', () => {
+    mockUseConnections.mockReturnValue({
+      records: [completedConnection({ id: 'a', theirLabel: 'Acme Corp' })],
+    })
+    renderScreen()
+    fireEvent.press(screen.getByLabelText('Acme Corp'))
+    expect(mockNavigate).toHaveBeenCalledWith('Contact Details', { connectionId: 'a' })
+  })
+
+  it('toggles the pin when a row is long-pressed', () => {
+    mockUseConnections.mockReturnValue({
+      records: [completedConnection({ id: 'a', theirLabel: 'Acme Corp' })],
+    })
+    renderScreen()
+    fireEvent(screen.getByLabelText('Acme Corp'), 'longPress')
+    expect(mockTogglePin).toHaveBeenCalledWith('a')
+  })
+
+  it('sorts pinned contacts ahead of unpinned ones', () => {
+    mockIsPinned.mockImplementation((id: string) => id === 'b')
+    mockUseConnections.mockReturnValue({
+      records: [
+        // No updatedAt → recency falls back to createdAt.
+        completedConnection({ id: 'a', theirLabel: 'Acme Corp', updatedAt: undefined }),
+        completedConnection({ id: 'b', theirLabel: 'Beta Inc' }),
+        completedConnection({ id: 'c', theirLabel: 'Gamma Ltd' }),
+      ],
+    })
+    renderScreen()
+    const rows = screen.getAllByRole('button')
+    expect(rows[0].props.accessibilityLabel).toBe('Beta Inc')
+  })
+
+  it('matches contacts by alias and treats nameless contacts as empty', () => {
+    mockUseConnections.mockReturnValue({
+      records: [
+        completedConnection({ id: 'a', theirLabel: undefined, alias: 'Gamma Alias' }),
+        completedConnection({ id: 'b', theirLabel: undefined, alias: undefined }),
+      ],
+    })
+    renderScreen()
+    fireEvent.changeText(screen.getByTestId('id/SearchContacts'), 'gamma')
+    // The alias-only contact matches; the nameless one (empty derived name) is filtered out.
+    expect(screen.getByLabelText('Gamma Alias')).toBeTruthy()
+    expect(screen.queryByText('gamma')).toBeNull()
   })
 })
