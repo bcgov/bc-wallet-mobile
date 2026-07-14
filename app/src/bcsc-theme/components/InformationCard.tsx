@@ -63,14 +63,15 @@ export const InformationCard = (props: InformationCardProps) => {
     },
     icon: {
       marginRight: Spacing.sm,
-      color: ColorPalette.brand.headerText,
     },
   })
 
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
-        {props.startIcon && <Icon name={props.startIcon} size={ICON_SIZE} style={styles.icon} />}
+        {props.startIcon && (
+          <Icon name={props.startIcon} size={ICON_SIZE} style={styles.icon} color={ColorPalette.brand.headerText} />
+        )}
         <ThemedText style={styles.title}>{props.title}</ThemedText>
       </View>
       <ThemedText style={styles.subtext}>{props.subtext}</ThemedText>
