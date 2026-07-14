@@ -77,7 +77,7 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
   })
 
   // "No, continue setup" — verify a new account on this device via the identity steps.
-  const handleAddAccount = useCallback(async () => {
+  const handleAddAccount = useCallback(() => {
     dispatch({
       type: BCDispatchAction.ACCOUNT_SETUP_TYPE,
       payload: [AccountSetupType.AddAccount],
