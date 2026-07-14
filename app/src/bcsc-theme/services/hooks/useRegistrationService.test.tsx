@@ -808,10 +808,12 @@ describe('useRegistrationService', () => {
     const { result, rerender } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
     const firstRegister = result.current.register
     const firstUpdateRegistration = result.current.updateRegistration
+    const firstEnsureRegistered = result.current.ensureRegistered
 
     rerender(undefined)
 
     expect(result.current.register).toBe(firstRegister)
     expect(result.current.updateRegistration).toBe(firstUpdateRegistration)
+    expect(result.current.ensureRegistered).toBe(firstEnsureRegistered)
   })
 })
