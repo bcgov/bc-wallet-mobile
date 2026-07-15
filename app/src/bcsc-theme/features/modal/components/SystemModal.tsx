@@ -1,7 +1,7 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import usePreventGestureBack from '@/hooks/usePreventGestureBack'
-import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { ScrollView, StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 export interface SystemModalProps {
@@ -70,9 +70,6 @@ export const SystemModal = ({
     icon: {
       paddingVertical: Spacing.lg,
     },
-    buttonContainer: {
-      padding: Spacing.md,
-    },
     textContent: {
       lineHeight: 30,
     },
@@ -82,8 +79,21 @@ export const SystemModal = ({
     },
   })
 
+  const controls = (
+    <ControlContainer>
+      <Button
+        title={buttonText}
+        buttonType={ButtonType.Primary}
+        onPress={onButtonPress}
+        disabled={buttonDisabled}
+        accessibilityLabel={buttonText}
+        testID={testID ?? testIdWithKey('SystemModalButton')}
+      />
+    </ControlContainer>
+  )
+
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+    <ScreenWrapper padded={false} scrollViewContainerStyle={styles.scrollContainer} controls={controls}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {iconName ? <Icon name={iconName} size={iconSize} color={ColorPalette.brand.icon} style={styles.icon} /> : null}
         <View style={styles.textContainer}>
@@ -95,17 +105,6 @@ export const SystemModal = ({
           ))}
         </View>
       </ScrollView>
-
-      <View style={styles.buttonContainer}>
-        <Button
-          title={buttonText}
-          buttonType={ButtonType.Primary}
-          onPress={onButtonPress}
-          disabled={buttonDisabled}
-          accessibilityLabel={buttonText}
-          testID={testID ?? testIdWithKey('SystemModalButton')}
-        />
-      </View>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
