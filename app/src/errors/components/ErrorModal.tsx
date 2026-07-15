@@ -59,7 +59,12 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
 
     Analytics.trackAlertActionEvent(payload.error.appEvent as AppEventCode, ANALYTICS_REPORT_THIS_PROBLEM_LABEL)
 
-    return reportProblem({ title: payload.title, description: payload.description, error: payload.error })
+    return reportProblem({
+      title: payload.title,
+      description: payload.description,
+      error: payload.error,
+      installId: payload.reportUUID,
+    })
   }, [payload])
 
   const overlayStyle = useMemo(

@@ -90,6 +90,7 @@ export const reportProblem = (
     title: string // Usually the error modal title
     description: string // Usually the error modal description
     error?: AppError
+    installId?: string // Optional install ID to correlate reports from the same user/device/app
   },
   options?: { includeDeviceDetails?: boolean }
 ): string => {
@@ -107,16 +108,18 @@ export const reportProblem = (
         msg: title,
         rawMsg: [
           {
-            message: title, // Error modal title ie: "Something went wrong"
+            message: title, // error modal title
             data: {
-              description, // Error modal description ie: "We encountered an unexpected error. Please try again."
-              code: error?.statusCode, // Note: Dashboard backwards compatibility - included in error (statusCode) ie: 2800
-              message: error?.message, // Note: Dashboard backwards compatibility - included in error
+              description, // error modal description
+              code: error?.statusCode, // TODO (MD): Deprecate - included in `error`
+              message: error?.message, // TODO (MD): Deprecate - included in `error`
               error: error?.toJSON(),
-              report_id: referenceCode,
+              report_id: referenceCode, // this report - human readable reference code ie: "7K2P-9XQF"
+              install_id: problem.installId, // this install - correlates reports from the same user/device/app ie: `reportUUID` from store
+
               // Only attach `stack` when the error actually carries one — user-initiated reports have no real
               // trace, so the field is omitted rather than logging meaningless construction frames.
-              ...(error?.stack ? { stack: error.stack } : {}), // Note: Dashboard backwards compatibility - included in error
+              ...(error?.stack ? { stack: error.stack } : {}), // TODO (MD): Deprecate - included in `error`
             },
           },
         ],
