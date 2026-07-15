@@ -95,36 +95,31 @@ export const reportProblem = (
 ): string => {
   const referenceCode = generateReferenceCode()
   const { title, description, error } = problem
-  // const { title, description, code, message, stack } = error
   const { includeDeviceDetails = true } = options ?? {}
 
   // Drop the app version / OS labels when the user opts out; keep the application name so support
   // still knows which app the report came from.
   const lokiLabels = includeDeviceDetails ? baseOptions.lokiLabels : { application: getApplicationName().toLowerCase() }
 
-  const lokiPayload = {
-    message: title, // Error modal title ie: "Something went wrong"
-    data: {
-      description, // Error modal description ie: "We encountered an unexpected error. Please try again."
-      code: error?.statusCode, // Note: Dashboard ackwards compatibility - included in error (statusCode) ie: 2800
-      message: error?.message, // Note: Dashboard backwards compatibility - included in error
-      error: error?.toJSON(),
-      report_id: referenceCode,
-      stack: error?.stack, // Note: Dashboard backwards compatibility - included in error
-    },
-  }
-
-  // Only attach `stack` when the error actually carries one — user-initiated reports have no real
-  // trace, so the field is omitted rather than logging meaningless construction frames.
-  if (!error?.stack) {
-    delete lokiPayload.data.stack
-  }
-
   try {
     if (baseOptions.lokiUrl) {
       lokiTransport({
         msg: title,
-        rawMsg: [lokiPayload],
+        rawMsg: [
+          {
+            message: title, // Error modal title ie: "Something went wrong"
+            data: {
+              description, // Error modal description ie: "We encountered an unexpected error. Please try again."
+              code: error?.statusCode, // Note: Dashboard backwards compatibility - included in error (statusCode) ie: 2800
+              message: error?.message, // Note: Dashboard backwards compatibility - included in error
+              error: error?.toJSON(),
+              report_id: referenceCode,
+              // Only attach `stack` when the error actually carries one — user-initiated reports have no real
+              // trace, so the field is omitted rather than logging meaningless construction frames.
+              ...(error?.stack ? { stack: error.stack } : {}), // Note: Dashboard backwards compatibility - included in error
+            },
+          },
+        ],
         level: { severity: 3, text: 'error' },
         options: {
           lokiUrl: baseOptions.lokiUrl,

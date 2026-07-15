@@ -19,14 +19,6 @@ export interface ErrorModalPayload {
   title: string
   description: string
   error: AppError
-  // message: string
-  // code: number
-  // appEvent: string
-  // cause?: unknown
-  // stack?: string
-  // screen?: string
-  // url?: string
-  // method?: string
   reportUUID?: string
 }
 
@@ -65,30 +57,9 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
       return
     }
 
-    const error = payload.error
+    Analytics.trackAlertActionEvent(payload.error.appEvent as AppEventCode, ANALYTICS_REPORT_THIS_PROBLEM_LABEL)
 
-    Analytics.trackAlertActionEvent(error.appEvent as AppEventCode, ANALYTICS_REPORT_THIS_PROBLEM_LABEL)
-
-    // // error.message is AppError.fullMessage — the user-facing details string, which
-    // // deliberately omits the screen name and request URL so we don't surface infra
-    // // details to the user. Append them here so they still ride along in the Loki report.
-    // let reportMessage = error.message
-    // if (error.screen) {
-    //   reportMessage += `\nScreen: ${error.screen}`
-    // }
-    // if (error.url) {
-    //   const request = error.method ? `${error.method} ${error.url}` : error.url
-    //   reportMessage += `\nRequest: ${request}`
-    // }
-    // if (payload.reportUUID) {
-    //   reportMessage += `\nReport ID: ${error.reportUUID}`
-    // }
-    //
-    // const reportError = new BifoldError(error.title, error.description, reportMessage, error.code)
-    // reportError.cause = error.cause
-    // reportError.stack = error.stack
-
-    return reportProblem({ title: payload.title, description: payload.description, error: error })
+    return reportProblem({ title: payload.title, description: payload.description, error: payload.error })
   }, [payload])
 
   const overlayStyle = useMemo(

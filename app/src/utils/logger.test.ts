@@ -129,9 +129,6 @@ describe('reportProblem', () => {
     title: 'Boom',
     description: 'It exploded',
     error: appError,
-    // code: 2800,
-    // message: 'stack trace details',
-    // stack: 'Error: Boom\n    at somewhere (file.ts:1:1)',
   }
 
   beforeEach(() => {

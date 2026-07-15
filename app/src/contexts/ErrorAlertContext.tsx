@@ -84,14 +84,6 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
         title,
         description,
         error,
-        // message: error.fullMessage,
-        // code: error.statusCode,
-        // appEvent: error.appEvent,
-        // stack: error.stack,
-        // cause: error.cause,
-        // screen: error.screen,
-        // url: error.url,
-        // method: error.method,
         reportUUID: store.bcsc.reportUUID,
       })
       setErrorKey((prev) => prev + 1)

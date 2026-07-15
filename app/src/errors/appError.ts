@@ -92,9 +92,6 @@ export class AppError extends Error {
   statusCode: number // ie: 2100
   timestamp: string // ISO timestamp of when the error was created
   handled: boolean // Whether this error has been handled by a policy
-  screen: string | undefined // Active screen name at the time the error was created
-  // url?: string // API endpoint URL that produced this error, if applicable
-  // method?: string // HTTP method of the request that produced this error, if applicable
 
   constructor(message: string, identity: ErrorIdentity, options?: AppErrorOptions) {
     super(message, options)
@@ -107,9 +104,10 @@ export class AppError extends Error {
     this.handled = false
     this.tracked = false
     this.context = options?.context ?? {}
-    this.screen = navigationRef.isReady() ? navigationRef.getCurrentRoute()?.name : undefined
-    // this.url = undefined // TODO (MD): URL should be a `context` value - handled at call site, not here
-    // this.method = undefined // TODO (MD): Method should be a `context` value - handled at call site, not here
+
+    if (navigationRef.isReady()) {
+      this.context = { ...this.context, screen: navigationRef.getCurrentRoute()?.name }
+    }
 
     // Track the error in analytics unless explicitly disabled
     if (options?.track !== false) {
@@ -252,9 +250,6 @@ export class AppError extends Error {
       code: this.code,
       timestamp: this.timestamp,
       handled: this.handled,
-      screen: this.screen,
-      // url: this.url,
-      // method: this.method,
       context: this.context,
       cause: summarizeCause(this.cause),
     }
