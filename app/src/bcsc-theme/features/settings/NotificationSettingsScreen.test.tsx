@@ -42,48 +42,38 @@ describe('NotificationSettingsScreen', () => {
     mockHasPrompted.mockResolvedValue(false)
   })
 
-  it('reports "on" and opens device settings when permission is granted and the preference is on', async () => {
+  it('reports "on" and opens device settings once prompted and permission is granted', async () => {
     mockStatus.mockResolvedValue(NPStatus.GRANTED)
+    mockHasPrompted.mockResolvedValue(true)
     const spy = jest.spyOn(Linking, 'openSettings').mockResolvedValue(undefined as never)
 
-    renderScreen({ preferences: { usePushNotifications: true } })
+    renderScreen()
 
     expect(await screen.findByText('BCSC.Settings.NotificationsStatusOn')).toBeTruthy()
 
     fireEvent.press(await screen.findByTestId(tid('OpenNotificationSettings')))
     expect(spy).toHaveBeenCalled()
-    // The in-app enable flow is not offered in the ON/OFF states.
+    // The in-app enable flow is not offered once the user has been prompted.
     expect(screen.queryByTestId(tid('EnableNotifications'))).toBeNull()
     spy.mockRestore()
   })
 
-  it('reports "off" with the device-settings redirect when permission was previously declined', async () => {
+  it('reports "off" with the device-settings redirect once prompted and permission is denied', async () => {
     mockStatus.mockResolvedValue(NPStatus.DENIED)
     mockHasPrompted.mockResolvedValue(true)
 
-    renderScreen({ preferences: { usePushNotifications: true } })
+    renderScreen()
 
     expect(await screen.findByText('BCSC.Settings.NotificationsStatusOff')).toBeTruthy()
     expect(screen.getByTestId(tid('OpenNotificationSettings'))).toBeTruthy()
     expect(screen.queryByTestId(tid('EnableNotifications'))).toBeNull()
   })
 
-  it('offers the in-app enable flow when the user was never prompted (skipped onboarding)', async () => {
+  it('offers the in-app enable flow and registers with the mediator when never prompted', async () => {
     mockStatus.mockResolvedValue(NPStatus.UNKNOWN)
     mockHasPrompted.mockResolvedValue(false)
 
     renderScreen()
-
-    fireEvent.press(await screen.findByTestId(tid('EnableNotifications')))
-
-    await waitFor(() => expect(mockSetup).toHaveBeenCalled())
-    await waitFor(() => expect(mockActivate).toHaveBeenCalled())
-  })
-
-  it('offers the enable flow when permission is granted but the preference is off', async () => {
-    mockStatus.mockResolvedValue(NPStatus.GRANTED)
-
-    renderScreen({ preferences: { usePushNotifications: false } })
 
     fireEvent.press(await screen.findByTestId(tid('EnableNotifications')))
 

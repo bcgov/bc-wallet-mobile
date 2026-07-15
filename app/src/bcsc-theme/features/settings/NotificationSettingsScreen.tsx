@@ -49,7 +49,7 @@ const INSTRUCTION_STEPS = [
 export const NotificationSettingsScreen = (): React.ReactElement => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
+  const [, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const agent = useBCSCAgentSafe()?.agent ?? null
   const { status, refresh } = useNotificationPermissionStatus()
@@ -101,23 +101,22 @@ export const NotificationSettingsScreen = (): React.ReactElement => {
       })
   }, [])
 
+  // Keep the app preference in sync with the OS permission in both directions
+  useEffect(() => {
+    if (status === PushNotifications.NotificationPermissionStatus.GRANTED) {
+      dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [true] })
+    } else if (
+      status === PushNotifications.NotificationPermissionStatus.DENIED ||
+      status === PushNotifications.NotificationPermissionStatus.BLOCKED
+    ) {
+      dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [false] })
+    }
+  }, [status, dispatch])
+
   const isGranted = status === PushNotifications.NotificationPermissionStatus.GRANTED
-  // Fully enabled means the OS permission is granted AND the app preference is on (the flag that
-  // gates mediator registration). Granted-but-preference-off happens when the user enables the
-  // permission in OS settings after previously declining; offer the enable flow to finish setup.
-  const notificationsActive = isGranted && store.preferences.usePushNotifications
-  const isDeniedOrBlocked =
-    status === PushNotifications.NotificationPermissionStatus.DENIED ||
-    status === PushNotifications.NotificationPermissionStatus.BLOCKED
+  const notificationsActive = isGranted
 
-  // The OFF state: the user declined ("No" during onboarding) or later turned notifications off in
-  // the OS. Gate on hasPrompted so a fresh install — where React Native can report the wrong status
-  // before the first prompt — falls through to the UNSET enable flow instead of showing OFF.
-  const notificationsDisabled = hasPrompted && isDeniedOrBlocked
-
-  // ON and OFF are both OS-managed states: same layout, only the status word differs. UNSET (never
-  // prompted, or granted-but-preference-off) keeps the in-app enable flow.
-  const osManaged = notificationsActive || notificationsDisabled
+  const osManaged = hasPrompted
   const statusWord = notificationsActive
     ? t('BCSC.Settings.NotificationsStatusOn')
     : t('BCSC.Settings.NotificationsStatusOff')

@@ -82,12 +82,12 @@ describe('SettingsContent', () => {
     expect(await within(row).findByText('OFF')).toBeTruthy()
   })
 
-  it('shows no Notifications state while the permission status is unknown', async () => {
+  it('shows OFF Notifications state while the permission status is unknown', async () => {
     mockStatus.mockResolvedValue('unknown')
     renderWithState({ authentication: { didAuthenticate: true } })
     const row = await screen.findByTestId(tid('Notifications'))
     expect(within(row).queryByText('ON')).toBeNull()
-    expect(within(row).queryByText('OFF')).toBeNull()
+    expect(await within(row).findByText('OFF')).toBeTruthy()
   })
 
   it('renders the Analytics Opt-In row and accepts press without throwing', async () => {
