@@ -484,6 +484,41 @@ export const cardExpiredErrorPolicy: ErrorHandlingPolicy = {
 }
 
 /**
+ * Error policy for an expired identity document detected during the Non-BCSC barcode check.
+ *
+ * `POST /device/barcodes` (see `authorizeDeviceWithBarcodes`) is queried to check whether a
+ * scanned card is a real BC Services Card; a non-match normally 404s and the caller falls
+ * through to evidence capture. A 400 with an `error_description` mentioning "expired" is a
+ * different, legitimate case — the scanned document itself is expired — so route to the
+ * CardExpired screen instead of silently treating it as "not a BCSC".
+ *
+ * @returns ErrorHandlingPolicy
+ */
+export const cardExpiredOnBarcodesErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    const description = (error.cause.response?.data as { error_description?: unknown } | undefined)?.error_description
+    return (
+      context.statusCode === 400 &&
+      context.endpoint.includes(context.apiEndpoints.barcodes) &&
+      typeof description === 'string' &&
+      description.toLowerCase().includes('expired')
+    )
+  },
+  handle: (error, context) => {
+    const description = (error.cause.response?.data as { error_description?: string }).error_description
+    context.logger.info('[DocumentExpiredOnBarcodesErrorPolicy] Document expired per /device/barcodes response', {
+      description,
+    })
+    context.navigation.dispatch(
+      CommonActions.navigate({
+        name: BCSCScreens.VerificationCardError,
+        params: { errorType: VerificationCardError.CardExpired },
+      })
+    )
+  },
+}
+
+/**
  * Error policy for an expired/superseded verification session on the evidence endpoints.
  *
  * Evidence calls authenticate only with the short-lived `device_code`, so a 401 on the evidence base
@@ -543,6 +578,7 @@ export const invalidRegistrationRequestErrorPolicy: ErrorHandlingPolicy = {
 export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   alreadyRegisteredErrorPolicy,
   cardExpiredErrorPolicy,
+  cardExpiredOnBarcodesErrorPolicy,
   verificationSessionExpiredErrorPolicy,
   birthdateLockoutErrorPolicy,
   noTokensReturnedErrorPolicy,

@@ -168,6 +168,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
     },
     [apiClient]
   )
+  // TODO: The barcode authorization endpoint can return a number of errors that are currently not handled. See https://citz-cdt.atlassian.net/wiki/x/IKr5EQ for details
 
   return useMemo(
     () => ({
