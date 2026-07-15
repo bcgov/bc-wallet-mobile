@@ -1,4 +1,6 @@
+import { ListButton, ListButtonGroup, ListButtonProps } from '@/bcsc-theme/components/ListButton'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { a11yLabel } from '@/utils/accessibility'
 import {
   ScreenWrapper,
   ThemedText,
@@ -13,7 +15,7 @@ import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Pressable, StyleProp, StyleSheet, TextStyle, View, ViewStyle } from 'react-native'
+import { Pressable, StyleSheet, View } from 'react-native'
 import CommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import { usePinnedContacts } from './services/usePinnedContacts'
@@ -23,22 +25,29 @@ interface ContactDetailsScreenProps {
   route: RouteProp<BCSCMainStackParams, BCSCScreens.ContactDetails>
 }
 
-interface ActionCardProps {
+interface ActionButtonProps {
   icon: string
   label: string
   onPress: () => void
   testID: string
-  iconColor: string
-  cardStyle: StyleProp<ViewStyle>
-  labelStyle: StyleProp<TextStyle>
+  /** Injected by ListButtonGroup to control border radius */
+  position?: ListButtonProps['position']
 }
 
-const ActionCard: React.FC<ActionCardProps> = ({ icon, label, onPress, testID, iconColor, cardStyle, labelStyle }) => (
-  <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={label} testID={testID} style={cardStyle}>
-    <CommunityIcon name={icon} size={22} color={iconColor} />
-    <ThemedText style={labelStyle}>{label}</ThemedText>
-  </Pressable>
-)
+/**
+ * A single action row for the contact detail action group. Rendered through
+ * ListButton so ListButtonGroup can inject `position` and round only the outer
+ * corners of the group (first row curved on top, last row curved on bottom).
+ */
+const ActionButton: React.FC<ActionButtonProps> = ({ icon, label, onPress, testID, position }) => {
+  const { ColorPalette } = useTheme()
+  return (
+    <ListButton onPress={onPress} testID={testID} accessibilityLabel={a11yLabel(label)} position={position}>
+      <CommunityIcon name={icon} size={22} color={ColorPalette.brand.primary} />
+      <ThemedText style={{ color: ColorPalette.brand.primary }}>{label}</ThemedText>
+    </ListButton>
+  )
+}
 
 /**
  * Detail screen for a DIDComm connection. Shows the contact's name, creation
@@ -83,20 +92,7 @@ const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) 
       marginBottom: Spacing.lg,
     },
     actionGroup: {
-      gap: Spacing.sm,
       marginBottom: Spacing.lg,
-    },
-    actionCard: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: ColorPalette.brand.primaryLight,
-      borderRadius: 8,
-      padding: Spacing.md,
-      gap: Spacing.md,
-    },
-    actionLabel: {
-      color: ColorPalette.brand.primary,
-      flex: 1,
     },
     removeRow: {
       flexDirection: 'row',
@@ -146,44 +142,40 @@ const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) 
       ) : null}
 
       <View style={styles.actionGroup}>
-        <ActionCard
-          icon="message-text-outline"
-          label={t('BCSC.Contacts.Details.Message')}
-          onPress={onMessage}
-          testID={testIdWithKey('MessageContact')}
-          iconColor={ColorPalette.brand.primary}
-          cardStyle={styles.actionCard}
-          labelStyle={styles.actionLabel}
-        />
-        <ActionCard
-          icon="pin"
-          label={t(pinned ? 'BCSC.Contacts.Details.UnpinContact' : 'BCSC.Contacts.Details.PinContact')}
-          onPress={onTogglePin}
-          testID={testIdWithKey(pinned ? 'UnpinContact' : 'PinContact')}
-          iconColor={ColorPalette.brand.primary}
-          cardStyle={styles.actionCard}
-          labelStyle={styles.actionLabel}
-        />
-        <ActionCard
-          icon="pencil"
-          label={t('BCSC.Contacts.Details.EditName')}
-          onPress={onEditName}
-          testID={testIdWithKey('EditContactName')}
-          iconColor={ColorPalette.brand.primary}
-          cardStyle={styles.actionCard}
-          labelStyle={styles.actionLabel}
-        />
-        {store.preferences.developerModeEnabled ? (
-          <ActionCard
-            icon="code-braces"
-            label={t('BCSC.Contacts.Details.ViewJSON')}
-            onPress={onViewJSON}
-            testID={testIdWithKey('ViewJSON')}
-            iconColor={ColorPalette.brand.primary}
-            cardStyle={styles.actionCard}
-            labelStyle={styles.actionLabel}
-          />
-        ) : null}
+        <ListButtonGroup>
+          {[
+            <ActionButton
+              key="message"
+              icon="message-text-outline"
+              label={t('BCSC.Contacts.Details.Message')}
+              onPress={onMessage}
+              testID={testIdWithKey('MessageContact')}
+            />,
+            <ActionButton
+              key="pin"
+              icon="pin"
+              label={t(pinned ? 'BCSC.Contacts.Details.UnpinContact' : 'BCSC.Contacts.Details.PinContact')}
+              onPress={onTogglePin}
+              testID={testIdWithKey(pinned ? 'UnpinContact' : 'PinContact')}
+            />,
+            <ActionButton
+              key="editName"
+              icon="pencil"
+              label={t('BCSC.Contacts.Details.EditName')}
+              onPress={onEditName}
+              testID={testIdWithKey('EditContactName')}
+            />,
+            store.preferences.developerModeEnabled ? (
+              <ActionButton
+                key="viewJson"
+                icon="code-braces"
+                label={t('BCSC.Contacts.Details.ViewJSON')}
+                onPress={onViewJSON}
+                testID={testIdWithKey('ViewJSON')}
+              />
+            ) : null,
+          ]}
+        </ListButtonGroup>
       </View>
 
       <Pressable

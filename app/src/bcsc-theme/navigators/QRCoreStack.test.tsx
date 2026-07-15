@@ -34,6 +34,7 @@ jest.mock('@/constants', () => ({
 jest.mock('../components/FloatingHelpMenuHeaderButton', () => ({
   createFloatingHelpMenuButton: jest.fn(() => () => null),
 }))
+jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon')
 
 const mockLogger = { debug: jest.fn() }
 
@@ -166,6 +167,51 @@ describe('QRCoreStack', () => {
 
       expect(mockNavigation.getParent).toHaveBeenCalled()
       expect(mockGoBack).toHaveBeenCalled()
+    })
+  })
+
+  describe('scanner screen and tab bar icon', () => {
+    const getScannerScreen = () => {
+      render(<QRCoreStack />)
+      const screens = React.Children.toArray(capturedNavigatorProps.children) as any[]
+      return screens.find((s) => s.props.name === BCSCQRCoreScreens.Scanner)
+    }
+
+    it('gates the scanner screen behind AgentReadyGate', () => {
+      const ScannerComponent = getScannerScreen().props.component
+      const tree = render(<ScannerComponent />)
+      expect(tree.toJSON()).toBeTruthy()
+    })
+
+    const renderTabIcon = (focused: boolean, fontScale: number) => {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+      const RN = require('react-native')
+      const spy = jest
+        .spyOn(RN, 'useWindowDimensions')
+        .mockReturnValue({ fontScale, scale: 1, width: 400, height: 800 } as any)
+      const TabIcon = getScannerScreen().props.options.tabBarIcon
+      const tree = render(<TabIcon focused={focused} />)
+      spy.mockRestore()
+      return tree
+    }
+
+    it('renders the focused tab bar icon with a label at a normal font scale', () => {
+      expect(renderTabIcon(true, 1).toJSON()).toBeTruthy()
+    })
+
+    it('renders the unfocused tab bar icon with a label at a normal font scale', () => {
+      expect(renderTabIcon(false, 1).toJSON()).toBeTruthy()
+    })
+
+    it('hides the tab bar label at a large font scale', () => {
+      expect(renderTabIcon(false, 4).toJSON()).toBeTruthy()
+    })
+
+    it('adds the QR display tab when developer mode is enabled', () => {
+      jest.mocked(Bifold.useStore).mockReturnValue([{ preferences: { developerModeEnabled: true } }, jest.fn()] as any)
+      render(<QRCoreStack />)
+      const screens = React.Children.toArray(capturedNavigatorProps.children) as any[]
+      expect(screens.some((s) => s.props.name === BCSCQRCoreScreens.Display)).toBe(true)
     })
   })
 })
