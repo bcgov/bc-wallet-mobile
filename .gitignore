@@ -92,3 +92,10 @@ app/vendor/
 coverage/
 .settings/
 tmp/
+
+# fastlane
+app/fastlane/report.xml
+app/fastlane/Preview.html
+app/fastlane/screenshots
+app/fastlane/test_output
+app/fastlane/.env
