@@ -1,12 +1,15 @@
 import { VerificationPrompt } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
 import BrownHandHoldingPhone from '@assets/img/brown-hand-holding-phone.svg'
 import { Button, ButtonType, ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
+import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { Fragment } from 'react'
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 type VideoInstructionsScreenProps = {
@@ -17,6 +20,46 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
   const { Spacing, TextTheme, ColorPalette } = useTheme()
   const [store] = useStore<BCState>()
   const { t } = useTranslation()
+  const { refreshPrompts } = useVideoPrompts()
+  const { videoPromptsMissingAlert } = useAlerts(navigation)
+  const [promptsReady, setPromptsReady] = useState(false)
+
+  // Called from a focus effect that must fire exactly once per focus. Refreshing writes the new prompt
+  // set to the store, which re-renders this screen and would re-arm the effect if it depended on these
+  // callbacks directly — reading them through refs keeps the fetch off the render loop.
+  const refreshPromptsRef = useRef(refreshPrompts)
+  const videoPromptsMissingAlertRef = useRef(videoPromptsMissingAlert)
+  useEffect(() => {
+    refreshPromptsRef.current = refreshPrompts
+    videoPromptsMissingAlertRef.current = videoPromptsMissingAlert
+  }, [refreshPrompts, videoPromptsMissingAlert])
+
+  /**
+   * Issues the prompt set for the recording that is about to happen, on every arrival — including
+   * returning here after cancelling a recording. The list below is what the user is asked on camera, so
+   * it has to be the set that was just issued; recording against a set from an earlier attempt is the
+   * bug this guards against. Start stays disabled until a fresh set lands.
+   */
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false
+      setPromptsReady(false)
+
+      refreshPromptsRef.current().then((ready) => {
+        if (cancelled) {
+          return
+        }
+        setPromptsReady(ready)
+        if (!ready) {
+          videoPromptsMissingAlertRef.current()
+        }
+      })
+
+      return () => {
+        cancelled = true
+      }
+    }, [])
+  )
 
   const styles = StyleSheet.create({
     image: {
@@ -42,6 +85,7 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
         }}
         testID={'StartRecordingButton'}
         accessibilityLabel={t('BCSC.SendVideo.VideoInstructions.StartRecordingButton')}
+        disabled={!promptsReady}
       />
     </View>
   )
@@ -62,18 +106,23 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
       >
         {t('BCSC.SendVideo.VideoInstructions.Heading2')}
       </ThemedText>
-      {store.bcsc.prompts?.map(({ prompt, id }: VerificationPrompt, index) => (
-        <Fragment key={id}>
-          <ThemedText variant={'headingFour'} style={{ textAlign: 'center', color: ColorPalette.grayscale.black }}>
-            {index + 1}
-          </ThemedText>
-          <ThemedText
-            style={{ marginBottom: Spacing.xl, textAlign: 'center', fontSize: TextTheme.headingFour.fontSize }}
-          >
-            {prompt}
-          </ThemedText>
-        </Fragment>
-      ))}
+      {/* Held back until the refresh lands so the user is never shown a set from an earlier attempt. */}
+      {promptsReady ? (
+        store.bcsc.prompts?.map(({ prompt, id }: VerificationPrompt, index) => (
+          <Fragment key={id}>
+            <ThemedText variant={'headingFour'} style={{ textAlign: 'center', color: ColorPalette.grayscale.black }}>
+              {index + 1}
+            </ThemedText>
+            <ThemedText
+              style={{ marginBottom: Spacing.xl, textAlign: 'center', fontSize: TextTheme.headingFour.fontSize }}
+            >
+              {prompt}
+            </ThemedText>
+          </Fragment>
+        ))
+      ) : (
+        <ActivityIndicator style={{ marginBottom: Spacing.xl }} testID={'PromptsLoading'} />
+      )}
       <ThemedText variant={'headingFour'} style={{ marginVertical: Spacing.lg }}>
         {t('BCSC.SendVideo.VideoInstructions.Heading3')}
       </ThemedText>
