@@ -280,8 +280,8 @@ describe('AppError', () => {
 
     it('omits screen and request context — that is report-only, not shown in the user-facing message', () => {
       // Screen/Request are intentionally kept out of fullMessage (the "Show details" string)
-      // so infra context never alarms the user. They are appended only to the "Report this
-      // problem" payload in ErrorModal.handleReport.
+      // so infra context never alarms the user. They ride along in toJSON() (screen + context)
+      // when the full error is handed to reportProblem.
       const identity = {
         category: ErrorCategory.GENERAL,
         appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
@@ -289,8 +289,7 @@ describe('AppError', () => {
       }
       const error = new AppError('Something went wrong', identity)
       error.screen = 'HomeScreen'
-      error.url = 'https://example.com/device/token'
-      error.method = 'POST'
+      error.addContext({ url: 'https://example.com/device/token', method: 'POST' })
 
       expect(error.fullMessage).toBe('Something went wrong\nDebug: [general.unknown_server_error.1234]')
       expect(error.fullMessage).not.toContain('Screen:')
@@ -325,10 +324,9 @@ describe('AppError', () => {
         appEvent: AppEventCode.NOT_FOUND,
         statusCode: 2113,
       }
-      // track: false so the constructor's auto-track doesn't fire before url/method are set
+      // track: false so the constructor's auto-track doesn't fire before url/method are added
       const error = new AppError('Not found', identity, { cause: { response: { status: 404 } }, track: false })
-      error.url = '/device/userinfo'
-      error.method = 'GET'
+      error.addContext({ url: '/device/userinfo', method: 'GET' })
 
       error.track()
 
@@ -406,13 +404,13 @@ describe('AppError', () => {
         name: 'AppError',
         message: 'Something went wrong',
         technicalMessage: 'Technical message',
+        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
         code: 'general.unknown_server_error.1234',
         timestamp: '2024-01-01T00:00:00.000Z',
         // cause is summarized (not the raw Error) so large nested bodies never serialize
         cause: { name: 'Error', message: 'Technical message' },
         handled: false,
-        url: undefined,
-        method: undefined,
+        context: {},
       })
 
       jest.useRealTimers()
