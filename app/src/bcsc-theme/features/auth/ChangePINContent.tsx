@@ -1,10 +1,10 @@
 import { ChangePINForm } from '@/bcsc-theme/features/auth/components/ChangePINForm'
-import { PINEntryForm } from '@/bcsc-theme/features/auth/components/PINEntryForm'
+import { PINEntryForm, PINEntryResult } from '@/bcsc-theme/features/auth/components/PINEntryForm'
+import { useWalletService } from '@/bcsc-theme/services/hooks/useWalletService'
 import { TOKENS, useServices } from '@bifold/core'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AccountSecurityMethod, canPerformDeviceAuthentication, setAccountSecurityMethod } from 'react-native-bcsc-core'
-import Toast from 'react-native-toast-message'
 
 export interface ChangePINContentProps {
   isChangingExistingPIN: boolean
@@ -26,40 +26,35 @@ export const ChangePINContent = ({
   onCreatePINSuccess,
 }: ChangePINContentProps) => {
   const { t } = useTranslation()
+  const walletService = useWalletService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   // Handler for when user is changing their existing PIN
-  const handleChangePINSuccess = useCallback(async () => {
-    logger.info('PIN changed successfully')
+  const handleChangePINSuccess = useCallback(
+    async (result: PINEntryResult) => {
+      logger.info('PIN changed successfully')
 
-    Toast.show({
-      type: 'success',
-      text1: t('BCSC.Settings.ChangePIN.SuccessTitle'),
-      text2: t('BCSC.Settings.ChangePIN.PINChanged'),
-      position: 'bottom',
-    })
-
-    onChangePINSuccess()
-  }, [logger, t, onChangePINSuccess])
+      await walletService.rotateWalletKey(result.walletKey)
+      onChangePINSuccess()
+    },
+    [logger, walletService, onChangePINSuccess]
+  )
 
   // Handler for when user is switching from Device Auth to PIN
-  const handleCreatePINSuccess = useCallback(async () => {
-    const isDeviceAuthAvailable = await canPerformDeviceAuthentication()
-    await setAccountSecurityMethod(
-      isDeviceAuthAvailable ? AccountSecurityMethod.PinWithDeviceAuth : AccountSecurityMethod.PinNoDeviceAuth
-    )
+  const handleCreatePINSuccess = useCallback(
+    async (result: PINEntryResult) => {
+      const isDeviceAuthAvailable = await canPerformDeviceAuthentication()
+      await setAccountSecurityMethod(
+        isDeviceAuthAvailable ? AccountSecurityMethod.PinWithDeviceAuth : AccountSecurityMethod.PinNoDeviceAuth
+      )
 
-    logger.info('Switched to PIN security method')
+      logger.info('Switched to PIN security method')
 
-    Toast.show({
-      type: 'success',
-      text1: t('BCSC.Settings.AppSecurity.SuccessTitle'),
-      text2: t('BCSC.Settings.AppSecurity.SwitchedToPIN'),
-      position: 'bottom',
-    })
-
-    onCreatePINSuccess()
-  }, [logger, t, onCreatePINSuccess])
+      await walletService.rotateWalletKey(result.walletKey)
+      onCreatePINSuccess()
+    },
+    [logger, walletService, onCreatePINSuccess]
+  )
 
   // Render ChangePINForm when changing existing PIN, PINEntryForm when switching from Device Auth
   if (isChangingExistingPIN) {

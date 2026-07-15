@@ -98,6 +98,7 @@ export enum AppEventCode {
   ERR_120_KEYCHAIN_KEY_GENERATION_ERROR = 'err_120_keychain_key_generation_error',
   ERR_120_KEYCHAIN_UNAVAILABLE_ERROR = 'err_120_keychain_unavailable_error',
   ERR_120_JWT_DEVICE_INFO_ERROR = 'err_120_jwt_device_info_error',
+  ERR_121_REGISTRATION_KEY_NOT_CONFIRMED = 'err_121_registration_key_not_confirmed',
   ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE = 'err_206_missing_or_null_values_in_json_response', //being tracked
   ERR_207_UNABLE_TO_SIGN_CLAIMS_SET = 'err_207_unable_to_sign_claims_set',
   ERR_208_UNEXPECTED_NETWORK_CALL_EXCEPTION = 'err_208_unexpected_network_call_exception', //being tracked
@@ -160,6 +161,7 @@ export enum AppEventCode {
   STATE_LOAD_ERROR = 'state_load_error', // Non-IAS error code
   AGENT_INITIALIZATION_ERROR = 'agent_initialization_error', // Non-IAS error code
   WALLET_SECRET_NOT_FOUND = 'wallet_secret_not_found', // Non-IAS error code
+  WALLET_KEY_ROTATION_ERROR = 'wallet_key_rotation_error', // Non-IAS error code
   // BCID/Connection Errors
   PARSE_INVITATION_ERROR = 'parse_invitation_error', // Non-IAS error code
   RECEIVE_INVITATION_ERROR = 'receive_invitation_error', // Non-IAS error code

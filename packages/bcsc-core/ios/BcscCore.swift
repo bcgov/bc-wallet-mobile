@@ -323,6 +323,54 @@ class BcscCore: NSObject {
   }
 
   /**
+   * Enumerate every local private key together with its public RSA components (modulus/
+   * exponent), for the JS-side key-recovery flow (issue #4166) to match local keys against
+   * the server's jwks by modulus BYTES — never by kid, which can drift across migrations.
+   *
+   * Encoding matches the live DCR path exactly: `RSAUtil.secKeyRefToData` +
+   * `splitIntoComponents`, then `Data.base64EncodedString()` — standard base64 WITH the DER
+   * leading 0x00 sign byte retained when present. JS-side comparison must therefore be
+   * decode-tolerant (see jwk-modulus.ts) rather than a raw string compare.
+   *
+   * Skips (and logs) any alias whose key pair or RSA components can't be read, rather than
+   * rejecting the whole call — a single unreadable/foreign alias shouldn't block recovery
+   * from seeing every OTHER key.
+   */
+  func getAllKeysWithPublicInfo(
+    _ resolve: @escaping RCTPromiseResolveBlock, reject _: @escaping RCTPromiseRejectBlock
+  ) {
+    let keyPairManager = KeyPairManager()
+    let keys = keyPairManager.findAllPrivateKeys()
+
+    var result: [[String: Any]] = []
+    for keyInfo in keys {
+      do {
+        let keyPair = try keyPairManager.getKeyPair(with: keyInfo.tag)
+        guard let keyData = RSAUtil.secKeyRefToData(inputKey: keyPair.public),
+              let (modulus, exponent) = RSAUtil.splitIntoComponents(keyData: keyData)
+        else {
+          logger.warning(
+            "getAllKeysWithPublicInfo: could not extract RSA components for alias '\(keyInfo.tag)'; skipping"
+          )
+          continue
+        }
+        result.append([
+          "id": keyInfo.tag,
+          "created": keyInfo.created.timeIntervalSince1970,
+          "n": modulus.base64EncodedString(),
+          "e": exponent.base64EncodedString(),
+        ])
+      } catch {
+        logger.warning(
+          "getAllKeysWithPublicInfo: failed to read key pair for alias '\(keyInfo.tag)': \(error.localizedDescription); skipping"
+        )
+      }
+    }
+
+    resolve(result)
+  }
+
+  /**
    * Mark a keychain alias as the active (newest) signing key.
    *
    * iOS picks the active key by `kSecAttrCreationDate` (newest-first), which is

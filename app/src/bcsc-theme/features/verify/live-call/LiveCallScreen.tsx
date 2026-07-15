@@ -8,7 +8,7 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { CROP_DELAY_MS } from '@/constants'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
-import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, TOKENS, usePreventDoublePress, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
@@ -48,6 +48,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { liveCallHavingTroubleAlert, unknownErrorModal } = useAlerts(navigation)
   const { pauseActivityTracking, resumeActivityTracking } = useBCSCActivity()
+  const { preventDoublePress } = usePreventDoublePress()
 
   /**
    * Handles leaving the call by navigating to the appropriate screen based on the verification status.
@@ -436,7 +437,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
               testIDKey={'Video'}
             />
             <CallIconButton
-              onPress={handleEndCall}
+              onPress={preventDoublePress(handleEndCall)}
               primaryColor={ColorPalette.grayscale.white}
               secondaryColor={ColorPalette.semantic.error}
               size={iconSize}

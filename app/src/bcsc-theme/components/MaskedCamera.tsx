@@ -2,7 +2,16 @@ import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
-import { MaskType, SVGOverlay, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
+import {
+  MaskType,
+  SVGOverlay,
+  testIdWithKey,
+  ThemedText,
+  TOKENS,
+  usePreventDoublePress,
+  useServices,
+  useTheme,
+} from '@bifold/core'
 import { NavigationProp, ParamListBase, useIsFocused } from '@react-navigation/native'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -58,6 +67,7 @@ const MaskedCamera = ({
   const format = useCameraFormat(device, cameraFormatFilter)
   const { failedToWriteToLocalStorageAlert } = useAlerts(navigation)
   const { emitErrorModal } = useErrorAlert()
+  const { preventDoublePress } = usePreventDoublePress()
   const hasTorch = device?.hasTorch ?? false
 
   const styles = StyleSheet.create({
@@ -229,7 +239,7 @@ const MaskedCamera = ({
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.captureButton}
-          onPress={takePhoto}
+          onPress={preventDoublePress(takePhoto)}
           accessibilityLabel={t('BCSC.CameraDisclosure.TakePhoto')}
           accessibilityRole="button"
           testID={testIdWithKey('TakePhoto')}

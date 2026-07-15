@@ -1,4 +1,13 @@
-import { Pressable } from 'react-native'
+import { usePreventDoublePress } from '@bifold/core'
+import { useRef, useState } from 'react'
+import { Animated, Easing, Pressable } from 'react-native'
+
+const ANIMATE_PRESS_IN_MS = 100
+const ANIMATE_PRESS_OUT_MS = 150
+const OPACITY_MINIMUM_VALUE = 0.2
+const OPACITY_MAXIMUM_VALUE = 1
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
 /**
  * A wrapper around Pressable that mimics the opacity change of TouchableOpacity when pressed.
@@ -7,18 +16,37 @@ import { Pressable } from 'react-native'
  * @returns A Pressable component that changes opacity when pressed, similar to TouchableOpacity
  */
 export const PressableOpacity = (props: React.ComponentProps<typeof Pressable>) => {
+  const animatedOpacity = useRef(new Animated.Value(OPACITY_MAXIMUM_VALUE)).current
+  const { preventDoublePress } = usePreventDoublePress()
+  const [pressed, setPressed] = useState(false)
+
+  const setOpacityTo = (toValue: number, duration: number) => {
+    Animated.timing(animatedOpacity, {
+      toValue,
+      duration,
+      easing: Easing.inOut(Easing.quad),
+      useNativeDriver: true,
+    }).start()
+  }
+
+  // Animated components have a slightly different style type than normal components
+  const resolvedStyle = typeof props.style === 'function' ? props.style({ pressed }) : props.style
+
   return (
-    <Pressable
+    <AnimatedPressable
       {...props}
-      // Note: Writing the style like this prevents having to update all Pressable related snapshots
-      style={(state) => {
-        const style = typeof props.style === 'function' ? props.style(state) : props.style
-
-        if (!state.pressed) {
-          return style
-        }
-
-        return [style, { opacity: 0.2 }] // Mimics the default opacity from TouchableOpacity
+      // Note: This order allows props to override the opacity (ie: disabled button state)
+      style={[{ opacity: animatedOpacity }, resolvedStyle]}
+      onPress={preventDoublePress(props.onPress)}
+      onPressIn={(event) => {
+        setPressed(true)
+        setOpacityTo(OPACITY_MINIMUM_VALUE, ANIMATE_PRESS_IN_MS)
+        props.onPressIn?.(event)
+      }}
+      onPressOut={(event) => {
+        setPressed(false)
+        setOpacityTo(OPACITY_MAXIMUM_VALUE, ANIMATE_PRESS_OUT_MS)
+        props.onPressOut?.(event)
       }}
     />
   )

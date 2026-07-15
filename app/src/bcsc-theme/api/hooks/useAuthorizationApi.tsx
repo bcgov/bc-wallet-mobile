@@ -6,6 +6,8 @@ import { BCSCCardProcess, createDeviceSignedJWT } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
+// Also duplicated in useRegistrationApi.tsx's updateRegistration and key-recovery.ts's
+// reRegisterNewestKey (each builds its own request payload) — keep all three in sync.
 const IAS_SCOPE = 'openid profile email address offline_access'
 
 export enum DeviceVerificationOption {

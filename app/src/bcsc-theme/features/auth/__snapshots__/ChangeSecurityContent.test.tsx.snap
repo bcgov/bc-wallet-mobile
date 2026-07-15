@@ -206,16 +206,12 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              [
-                {
-                  "backgroundColor": "#003366",
-                  "borderRadius": 4,
-                  "padding": 16,
-                },
-                {
-                  "opacity": 0.6,
-                },
-              ]
+              {
+                "backgroundColor": "#003366",
+                "borderRadius": 4,
+                "opacity": 0.6,
+                "padding": 16,
+              }
             }
             testID="com.ariesbifold:id/ChooseDeviceAuthButton"
           >
@@ -319,14 +315,12 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              [
-                {
-                  "backgroundColor": "#003366",
-                  "borderRadius": 4,
-                  "padding": 16,
-                },
-                false,
-              ]
+              {
+                "backgroundColor": "#003366",
+                "borderRadius": 4,
+                "opacity": 1,
+                "padding": 16,
+              }
             }
             testID="com.ariesbifold:id/ChoosePINButton"
           >
@@ -430,14 +424,12 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              [
-                {
-                  "backgroundColor": "#003366",
-                  "borderRadius": 4,
-                  "padding": 16,
-                },
-                undefined,
-              ]
+              {
+                "backgroundColor": "#003366",
+                "borderRadius": 4,
+                "opacity": 1,
+                "padding": 16,
+              }
             }
             testID="com.ariesbifold:id/LearnMoreButton"
           >
@@ -1011,14 +1003,12 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              [
-                {
-                  "backgroundColor": "#003366",
-                  "borderRadius": 4,
-                  "padding": 16,
-                },
-                false,
-              ]
+              {
+                "backgroundColor": "#003366",
+                "borderRadius": 4,
+                "opacity": 1,
+                "padding": 16,
+              }
             }
             testID="com.ariesbifold:id/ChooseDeviceAuthButton"
           >
@@ -1122,16 +1112,12 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              [
-                {
-                  "backgroundColor": "#003366",
-                  "borderRadius": 4,
-                  "padding": 16,
-                },
-                {
-                  "opacity": 0.6,
-                },
-              ]
+              {
+                "backgroundColor": "#003366",
+                "borderRadius": 4,
+                "opacity": 0.6,
+                "padding": 16,
+              }
             }
             testID="com.ariesbifold:id/ChoosePINButton"
           >
@@ -1235,14 +1221,12 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
             onResponderTerminationRequest={[Function]}
             onStartShouldSetResponder={[Function]}
             style={
-              [
-                {
-                  "backgroundColor": "#003366",
-                  "borderRadius": 4,
-                  "padding": 16,
-                },
-                undefined,
-              ]
+              {
+                "backgroundColor": "#003366",
+                "borderRadius": 4,
+                "opacity": 1,
+                "padding": 16,
+              }
             }
             testID="com.ariesbifold:id/LearnMoreButton"
           >

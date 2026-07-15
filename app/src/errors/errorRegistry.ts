@@ -998,6 +998,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.GENERAL,
     message: 'A native PIN or security-method operation failed',
   },
+  REGISTRATION_KEY_NOT_CONFIRMED: {
+    statusCode: 2832,
+    appEvent: AppEventCode.ERR_121_REGISTRATION_KEY_NOT_CONFIRMED,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.GENERAL,
+    message: 'Signing key sent during initial registration was not found in the server-confirmed key set',
+  },
 
   // ============================================
   // Wallet/Agent Errors (2900-2999)
@@ -1022,6 +1029,13 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.CRITICAL,
     category: ErrorCategory.WALLET,
     message: 'Wallet secret not found in secure storage — wallet may need to be re-created',
+  },
+  WALLET_KEY_ROTATION_ERROR: {
+    statusCode: 2903,
+    appEvent: AppEventCode.WALLET_KEY_ROTATION_ERROR,
+    severity: ErrorSeverity.CRITICAL,
+    category: ErrorCategory.WALLET,
+    message: 'Wallet key rotation error — check current key and new key validity',
   },
 
   // ============================================

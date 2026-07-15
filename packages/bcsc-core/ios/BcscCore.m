@@ -4,6 +4,8 @@
 
 RCT_EXTERN_METHOD(getAllKeys : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(getAllKeysWithPublicInfo : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(setActiveKeyAlias : (NSString *)alias resolve : (RCTPromiseResolveBlock)
                       resolve reject : (RCTPromiseRejectBlock)reject)
 

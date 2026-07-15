@@ -46,7 +46,7 @@ import { TokenResponse } from '../api/hooks/useTokens'
 import { ProvinceCode } from '../utils/address-utils'
 import { createMinimalCredential, getCredentialVerificationStatus } from '../utils/bcsc-credential'
 import { isCardEvidenceComplete, isEvidenceAwaitingDocumentNumber } from '../utils/card-utils'
-import { performKeyRecovery } from '../utils/key-recovery'
+import { performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 
 /**
@@ -950,22 +950,58 @@ export const useSecureActions = () => {
       }
 
       let freshTokens: TokenResponse | null = null
+      // Populated when the recovery probe (or the no-match re-registration fallback) surfaces a
+      // rotated registration_access_token — always persisted below when present, regardless of
+      // which branch this ends up taking (RFC 7592: the reg token may rotate on GET or PUT).
+      let recoveredRegistrationAccessToken: string | undefined
       if (refreshToken && apiClient && isClientReady) {
         try {
           freshTokens = await apiClient.getTokensForRefreshToken(refreshToken)
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error)
           logger.error(`[hydrateSecureState] Failed to refresh tokens with stored refresh token: ${message}`)
+
+          // Retries the refresh once after a recovery strategy runs, logging success/failure
+          // under a consistent label. Shared by the 'recovered' and 'no_match' branches below
+          // so the retry-and-log pattern isn't duplicated per strategy.
+          const retryRefreshAfter = async (strategyLabel: string): Promise<TokenResponse | null> => {
+            try {
+              const tokens = await apiClient.getTokensForRefreshToken(refreshToken)
+              logger.info(`[hydrateSecureState] token refresh succeeded after ${strategyLabel}`)
+              return tokens
+            } catch (retryError) {
+              const retryMessage = retryError instanceof Error ? retryError.message : String(retryError)
+              logger.error(`[hydrateSecureState] token refresh still failed after ${strategyLabel}: ${retryMessage}`)
+              return null
+            }
+          }
+
           if (clientID && registrationAccessToken) {
             logger.info('[hydrateSecureState] Attempting key recovery in case of signing key mismatch...')
-            const recovered = await performKeyRecovery(apiClient, clientID, registrationAccessToken, logger)
-            if (recovered) {
-              try {
-                freshTokens = await apiClient.getTokensForRefreshToken(refreshToken)
-                logger.info('[hydrateSecureState] token refresh succeeded after key recovery')
-              } catch (retryError) {
-                const retryMessage = retryError instanceof Error ? retryError.message : String(retryError)
-                logger.error(`[hydrateSecureState] token refresh still failed after key recovery: ${retryMessage}`)
+            const recovery = await performKeyRecovery(apiClient, clientID, registrationAccessToken, logger)
+            recoveredRegistrationAccessToken = recovery.newRegistrationAccessToken
+
+            if (recovery.status === 'recovered') {
+              freshTokens = await retryRefreshAfter('key recovery')
+            } else if (recovery.status === 'no_match') {
+              logger.info(
+                '[hydrateSecureState] No local key matches server jwks; attempting to re-register the newest local key...'
+              )
+              const reRegisterResult = await reRegisterNewestKey(
+                apiClient,
+                clientID,
+                recoveredRegistrationAccessToken ?? registrationAccessToken,
+                logger
+              )
+              recoveredRegistrationAccessToken =
+                reRegisterResult.newRegistrationAccessToken ?? recoveredRegistrationAccessToken
+
+              if (reRegisterResult.success) {
+                freshTokens = await retryRefreshAfter('re-registration')
+              } else {
+                logger.warn(
+                  '[hydrateSecureState] Re-registration of newest local key did not succeed; tokens remain stale.'
+                )
               }
             } else {
               logger.warn('[hydrateSecureState] Key recovery did not occur or did not succeed; tokens remain stale.')
@@ -976,7 +1012,7 @@ export const useSecureActions = () => {
 
       await updateTokens({
         refreshToken: freshTokens?.refresh_token ?? refreshToken,
-        registrationAccessToken,
+        registrationAccessToken: recoveredRegistrationAccessToken ?? registrationAccessToken,
         accessToken: freshTokens?.access_token ?? accessToken,
       })
 

@@ -415,9 +415,18 @@ export class AppContainer implements Container {
       bcsc.showAccountExpiryNotification = undefined
       bcsc.showCardRenewalNotification = undefined
 
+      const preferencesState = { ...initialState.preferences, ...preferences }
+
+      if (Config.MEDIATOR_URL) {
+        preferencesState.selectedMediator = Config.MEDIATOR_URL
+        if (!preferencesState.availableMediators?.includes(Config.MEDIATOR_URL)) {
+          preferencesState.availableMediators = [Config.MEDIATOR_URL, ...(preferencesState.availableMediators ?? [])]
+        }
+      }
+
       const state = {
         loginAttempt: { ...initialState.loginAttempt, ...loginAttempt },
-        preferences: { ...initialState.preferences, ...preferences },
+        preferences: preferencesState,
         migration: { ...initialState.migration, ...migration },
         tours: { ...initialState.tours, ...tours },
         onboarding: { ...initialState.onboarding, ...onboarding },
