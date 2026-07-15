@@ -85,6 +85,7 @@ const extractServerReason = (responseData: unknown): string | undefined => {
  */
 export class AppError extends Error {
   private tracked: boolean // Whether this error has been tracked in analytics
+  private context: Record<string, unknown> // Context object providing additional information about the error
 
   code: string // ie: network.err_no_internet.2100
   appEvent: AppEventCode // ie: no_internet
@@ -92,9 +93,8 @@ export class AppError extends Error {
   timestamp: string // ISO timestamp of when the error was created
   handled: boolean // Whether this error has been handled by a policy
   screen: string | undefined // Active screen name at the time the error was created
-  context: Record<string, unknown> | undefined // Optional context object providing additional information about the error
-  url?: string // API endpoint URL that produced this error, if applicable
-  method?: string // HTTP method of the request that produced this error, if applicable
+  // url?: string // API endpoint URL that produced this error, if applicable
+  // method?: string // HTTP method of the request that produced this error, if applicable
 
   constructor(message: string, identity: ErrorIdentity, options?: AppErrorOptions) {
     super(message, options)
@@ -106,10 +106,10 @@ export class AppError extends Error {
     this.timestamp = new Date().toISOString()
     this.handled = false
     this.tracked = false
-    this.context = options?.context
+    this.context = options?.context ?? {}
     this.screen = navigationRef.isReady() ? navigationRef.getCurrentRoute()?.name : undefined
-    this.url = undefined // TODO (MD): URL should be a `context` value - handled at call site, not here
-    this.method = undefined // TODO (MD): Method should be a `context` value - handled at call site, not here
+    // this.url = undefined // TODO (MD): URL should be a `context` value - handled at call site, not here
+    // this.method = undefined // TODO (MD): Method should be a `context` value - handled at call site, not here
 
     // Track the error in analytics unless explicitly disabled
     if (options?.track !== false) {
@@ -190,7 +190,7 @@ export class AppError extends Error {
     // every 4xx into a single code, so without this the dashboard cannot tell 400/401/403/404 apart — nor
     // which endpoint produced the error.
     const httpStatus = (this.cause as { response?: { status?: number } } | undefined)?.response?.status
-    const request = [this.method, this.url].filter(Boolean).join(' ')
+    const request = [this.context?.method, this.context?.url].filter(Boolean).join(' ')
     const context = [httpStatus ? `HTTP ${httpStatus}` : undefined, request || undefined].filter(Boolean).join(' ')
 
     Analytics.trackErrorEvent({
@@ -229,6 +229,16 @@ export class AppError extends Error {
   }
 
   /**
+   * Add additional context to the AppError. This can be useful for providing more information about the error.
+   *
+   * @param context - An object containing additional context to add to the error.
+   * @returns void
+   */
+  addContext(context: Record<string, unknown>): void {
+    this.context = { ...this.context, ...context }
+  }
+
+  /**
    * Serialize the AppError to a JSON object. Useful for logging.
    *
    * @return An object containing the serialized error details.
@@ -243,8 +253,8 @@ export class AppError extends Error {
       timestamp: this.timestamp,
       handled: this.handled,
       screen: this.screen,
-      url: this.url,
-      method: this.method,
+      // url: this.url,
+      // method: this.method,
       context: this.context,
       cause: summarizeCause(this.cause),
     }

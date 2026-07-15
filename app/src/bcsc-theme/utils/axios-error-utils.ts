@@ -259,8 +259,13 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
     })
   }
   // http://x.com is a dummy domain so relative paths still parse correctly
-  appError.url = error.config?.url ? new URL(error.config.url, 'https://x.com').pathname : undefined
-  appError.method = error.config?.method?.toUpperCase()
+  // appError.url = error.config?.url ? new URL(error.config.url, 'https://x.com').pathname : undefined
+  // appError.method = error.config?.method?.toUpperCase()
+
+  appError.addContext({
+    url: error.config?.url ? new URL(error.config.url, 'https://x.com').pathname : undefined,
+    method: error.config?.method?.toUpperCase(),
+  })
 
   return appError
 }

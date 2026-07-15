@@ -11,8 +11,6 @@ import CommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 const DESCRIPTION_MAX_LENGTH = 500
-// A user-initiated report has no underlying error code; 0 marks it as user-originated in the report payload.
-const USER_REPORT_ERROR_CODE = 0
 const COPY_FEEDBACK_MS = 2000
 
 export interface ReportProblemModalProps {
@@ -86,7 +84,12 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
     // // user's description (real failures still keep their stack via the ErrorModal "Report" path).
     // reportError.stack = undefined
     // Showing the returned ID is what keeps the modal open on the confirmation view.
-    setReportId(reportProblem(t('BCSC.ReportProblem.Title'), description.trim()))
+    const reportId = reportProblem({
+      title: t('BCSC.ReportProblem.Title'),
+      description: description.trim(),
+    })
+
+    setReportId(reportId)
   }, [t, description])
 
   const handleCopy = useCallback(() => {

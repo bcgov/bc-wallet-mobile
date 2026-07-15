@@ -18,7 +18,7 @@ export interface ErrorModalAction {
 export interface ErrorModalPayload {
   title: string
   description: string
-  appError: AppError
+  error: AppError
   // message: string
   // code: number
   // appEvent: string
@@ -31,7 +31,7 @@ export interface ErrorModalPayload {
 }
 
 export interface BCSCErrorModalProps {
-  error: ErrorModalPayload | null
+  payload: ErrorModalPayload | null
   errorKey: number
   onDismiss: () => void
   action?: ErrorModalAction
@@ -46,7 +46,7 @@ export interface BCSCErrorModalProps {
  * emitters or listeners involved.
  */
 export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
-  error: payload,
+  payload,
   errorKey,
   onDismiss,
   action,
@@ -65,7 +65,7 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
       return
     }
 
-    const error = payload.appError
+    const error = payload.error
 
     Analytics.trackAlertActionEvent(error.appEvent as AppEventCode, ANALYTICS_REPORT_THIS_PROBLEM_LABEL)
 
@@ -118,8 +118,8 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
             key={errorKey}
             title={payload.title}
             description={payload.description}
-            message={formatAppErrorDetails(payload.appError)}
-            code={payload.appError.statusCode}
+            message={payload.error.fullMessage}
+            code={payload.error.statusCode}
             onDismiss={onDismiss}
             onReport={handleReport}
             action={action}
@@ -129,10 +129,4 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
       </Pressable>
     </Modal>
   )
-}
-
-function formatAppErrorDetails(error: AppError): string {
-  const errorDetails = Object.entries(error.toJSON())
-
-  return errorDetails.map(([key, value]) => `${key}: ${value}`).join('\n')
 }

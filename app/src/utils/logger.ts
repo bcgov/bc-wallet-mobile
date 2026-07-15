@@ -87,8 +87,8 @@ export const appLogger = createAppLogger()
  */
 export const reportProblem = (
   problem: {
-    title: string // Usually the alert title
-    description: string // Usually the alert description
+    title: string // Usually the error modal title
+    description: string // Usually the error modal description
     error?: AppError
   },
   options?: { includeDeviceDetails?: boolean }
@@ -103,14 +103,14 @@ export const reportProblem = (
   const lokiLabels = includeDeviceDetails ? baseOptions.lokiLabels : { application: getApplicationName().toLowerCase() }
 
   const lokiPayload = {
-    message: title,
+    message: title, // Error modal title ie: "Something went wrong"
     data: {
-      description,
-      code: error?.statusCode, // Note: Backwards compatibility - included in error (statusCode)
-      message: error?.message, // Note: Backwards compatibility - included in error
+      description, // Error modal description ie: "We encountered an unexpected error. Please try again."
+      code: error?.statusCode, // Note: Dashboard ackwards compatibility - included in error (statusCode) ie: 2800
+      message: error?.message, // Note: Dashboard backwards compatibility - included in error
       error: error?.toJSON(),
       report_id: referenceCode,
-      stack: error?.stack, // Note: Backwards compatibility - included in error
+      stack: error?.stack, // Note: Dashboard backwards compatibility - included in error
     },
   }
 
