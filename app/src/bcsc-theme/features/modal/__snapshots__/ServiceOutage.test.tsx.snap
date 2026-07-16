@@ -122,7 +122,9 @@ exports[`ServiceOutage should match snapshot 1`] = `
           style={
             {
               "backgroundColor": "#003366",
+              "borderColor": "transparent",
               "borderRadius": 4,
+              "borderWidth": 2,
               "opacity": 1,
               "padding": 16,
             }

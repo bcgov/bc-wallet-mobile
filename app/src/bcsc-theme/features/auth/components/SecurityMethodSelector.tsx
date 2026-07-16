@@ -15,7 +15,7 @@ import { TFunction } from 'i18next'
 import { upperFirst } from 'lodash'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, Platform, StyleSheet } from 'react-native'
 import {
   AccountSecurityMethod,
   BiometricType,
@@ -23,7 +23,6 @@ import {
   getAvailableBiometricType,
   performDeviceAuthentication,
 } from 'react-native-bcsc-core'
-import Icon from 'react-native-vector-icons/MaterialIcons'
 
 interface SecurityMethodSelectorProps {
   /**
@@ -38,13 +37,8 @@ interface SecurityMethodSelectorProps {
    */
   onPINPress: () => void
   /**
-   * Called when user presses Learn More.
-   * The parent should navigate to the appropriate WebView.
-   */
-  onLearnMorePress: () => void
-  /**
    * Current security method (for settings context).
-   * If provided, shows current method indicator and disables the current option.
+   * If provided, the matching option's card is shown as selected (the current method).
    * If undefined, assumes onboarding context (no current method).
    */
   currentMethod?: AccountSecurityMethod | null
@@ -59,6 +53,7 @@ interface SecurityCopy {
   content: string
   deviceAuthTitle: string
   deviceAuthSubtext: string
+  pinTitle: string
   pinSubtext: string
 }
 
@@ -71,8 +66,14 @@ const getSecurityCopy = (
   {
     isSettingsContext,
     isCurrentMethodDeviceAuth,
+    isCurrentMethodPin,
     deviceAuthMethodName,
-  }: { isSettingsContext: boolean; isCurrentMethodDeviceAuth: boolean; deviceAuthMethodName: string }
+  }: {
+    isSettingsContext: boolean
+    isCurrentMethodDeviceAuth: boolean
+    isCurrentMethodPin: boolean
+    deviceAuthMethodName: string
+  }
 ): SecurityCopy => {
   if (!isSettingsContext) {
     return {
@@ -80,20 +81,28 @@ const getSecurityCopy = (
       content: t('BCSC.Onboarding.SecureAppOnboardingContent'),
       deviceAuthTitle: t('BCSC.Onboarding.SecureAppOnboardingDeviceAuthTitle'),
       deviceAuthSubtext: t('BCSC.Onboarding.SecureAppOnboardingDeviceAuthSubtext'),
+      pinTitle: t('BCSC.Onboarding.SecureAppPINTitle'),
       pinSubtext: t('BCSC.Onboarding.SecureAppPINSubtext'),
     }
   }
 
+  // Settings uses the same intro copy as onboarding, but each option's card doubles as the current
+  // method indicator: whichever method is active shows the CurrentMethod label with the method name
+  // as its subtext, while the other keeps its actionable copy.
   const platformName = Platform.OS === 'ios' ? 'iPhone or iPad' : 'Android device'
-  const currentlySelected = t('BCSC.Settings.AppSecurity.CurrentlySelected')
+  const currentMethodLabel = t('BCSC.Settings.AppSecurity.CurrentMethod')
+  const deviceAuthName = deviceAuthMethodName || t('BCSC.Settings.AppSecurity.DeviceAuth')
   return {
-    header: t('BCSC.Onboarding.SecureAppHeader'),
-    content: t('BCSC.Onboarding.SecureAppContent'),
-    deviceAuthTitle: t('BCSC.Onboarding.SecureAppDeviceAuthTitle', { deviceAuthMethodName }),
+    header: t('BCSC.Onboarding.SecureAppOnboardingHeader'),
+    content: t('BCSC.Onboarding.SecureAppOnboardingContent'),
+    deviceAuthTitle: isCurrentMethodDeviceAuth
+      ? currentMethodLabel
+      : t('BCSC.Onboarding.SecureAppDeviceAuthTitle', { deviceAuthMethodName }),
     deviceAuthSubtext: isCurrentMethodDeviceAuth
-      ? currentlySelected
+      ? deviceAuthName
       : t('BCSC.Onboarding.SecureAppDeviceAuthSubtext', { platform: platformName }),
-    pinSubtext: isCurrentMethodDeviceAuth ? t('BCSC.Onboarding.SecureAppPINSubtext') : currentlySelected,
+    pinTitle: isCurrentMethodPin ? currentMethodLabel : t('BCSC.Onboarding.SecureAppPINTitle'),
+    pinSubtext: isCurrentMethodPin ? t('BCSC.Settings.AppSecurity.PIN') : t('BCSC.Onboarding.SecureAppPINSubtext'),
   }
 }
 
@@ -105,7 +114,6 @@ const getSecurityCopy = (
 export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
   onDeviceAuthPress,
   onPINPress,
-  onLearnMorePress,
   currentMethod,
   deviceAuthPrompt,
 }: SecurityMethodSelectorProps) => {
@@ -120,22 +128,13 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
 
   const isSettingsContext = currentMethod !== undefined
   const isCurrentMethodDeviceAuth = currentMethod === AccountSecurityMethod.DeviceAuth
+  const isCurrentMethodPin =
+    currentMethod === AccountSecurityMethod.PinNoDeviceAuth || currentMethod === AccountSecurityMethod.PinWithDeviceAuth
 
   const styles = StyleSheet.create({
     scrollContainer: {
       gap: Spacing.lg,
       padding: Spacing.lg,
-    },
-    currentMethodContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: ColorPalette.brand.secondaryBackground,
-      padding: Spacing.md,
-      borderRadius: Spacing.sm,
-      gap: Spacing.sm,
-    },
-    currentMethodText: {
-      flex: 1,
     },
   })
 
@@ -188,24 +187,17 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
     }
   }
 
-  // Pre-compute conditional values
-  const currentMethodIcon = isCurrentMethodDeviceAuth ? 'fingerprint' : 'lock'
-  const currentMethodLabel = isCurrentMethodDeviceAuth
-    ? deviceAuthMethodName || t('BCSC.Settings.AppSecurity.DeviceAuth')
-    : t('BCSC.Settings.AppSecurity.PIN')
-  const copy = getSecurityCopy(t, { isSettingsContext, isCurrentMethodDeviceAuth, deviceAuthMethodName })
+  const copy = getSecurityCopy(t, {
+    isSettingsContext,
+    isCurrentMethodDeviceAuth,
+    isCurrentMethodPin,
+    deviceAuthMethodName,
+  })
 
-  // Current method indicator (only shown in settings context)
-  const currentMethodIndicator = isSettingsContext ? (
-    <View style={styles.currentMethodContainer}>
-      <Icon name={currentMethodIcon} size={24} color={ColorPalette.brand.primary} />
-      <View style={styles.currentMethodText}>
-        <ThemedText variant="labelSubtitle">{t('BCSC.Settings.AppSecurity.CurrentMethod')}</ThemedText>
-        <ThemedText variant="bold">{currentMethodLabel}</ThemedText>
-      </View>
-      <Icon name="check-circle" size={24} color={ColorPalette.semantic.success} />
-    </View>
-  ) : null
+  // In settings, the active method's card is shown as selected (highlighted + check) rather than a
+  // separate indicator row. In onboarding there is no current method, so neither card is selected.
+  const deviceAuthSelected = isSettingsContext && isCurrentMethodDeviceAuth
+  const pinSelected = isSettingsContext && isCurrentMethodPin
 
   // Controls for when device auth is NOT available
   const controlsForNoDeviceAuth = (
@@ -232,43 +224,30 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
   if (isDeviceAuthAvailable) {
     return (
       <ScreenWrapper padded={false} scrollViewContainerStyle={styles.scrollContainer}>
-        <ThemedText variant="headingThree" style={{ textAlign: 'center' }}>
+        <ThemedText variant="headingThree" style={{ textAlign: isSettingsContext ? 'left' : 'center' }}>
           {copy.header}
         </ThemedText>
         <ThemedText>{copy.content}</ThemedText>
 
-        {/* Show current method indicator (settings only) */}
-        {currentMethodIndicator}
-
-        {/* Device Auth Option */}
+        {/* Device Auth Option (selected when it is the current method in settings) */}
         <CardButton
           title={copy.deviceAuthTitle}
           testID={testIdWithKey('ChooseDeviceAuthButton')}
           subtext={copy.deviceAuthSubtext}
-          startIcon={isSettingsContext ? undefined : 'fingerprint'}
+          startIcon="fingerprint"
           onPress={handleDeviceAuthentication}
-          disabled={isSettingsContext && isCurrentMethodDeviceAuth}
+          selected={deviceAuthSelected}
         />
 
-        {/* PIN Option */}
+        {/* PIN Option (selected when it is the current method in settings) */}
         <CardButton
-          title={t('BCSC.Onboarding.SecureAppPINTitle')}
+          title={copy.pinTitle}
           testID={testIdWithKey('ChoosePINButton')}
           subtext={copy.pinSubtext}
-          startIcon={isSettingsContext ? undefined : 'password'}
+          startIcon="password"
           onPress={onPINPress}
-          disabled={isSettingsContext && !isCurrentMethodDeviceAuth}
+          selected={pinSelected}
         />
-
-        {/* Learn More (settings only — onboarding wireframe omits it) */}
-        {isSettingsContext ? (
-          <CardButton
-            title={t('BCSC.Onboarding.LearnMore')}
-            testID={testIdWithKey('LearnMoreButton')}
-            endIcon="open-in-new"
-            onPress={onLearnMorePress}
-          />
-        ) : null}
       </ScreenWrapper>
     )
   }
@@ -276,12 +255,9 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
   // When device auth is NOT available
   return (
     <ScreenWrapper padded={false} scrollViewContainerStyle={styles.scrollContainer} controls={controlsForNoDeviceAuth}>
-      <ThemedText variant="headingThree" style={{ textAlign: 'center' }}>
+      <ThemedText variant="headingThree" style={{ textAlign: isSettingsContext ? 'left' : 'center' }}>
         {copy.header}
       </ThemedText>
-
-      {/* Show current method indicator (settings only) */}
-      {currentMethodIndicator}
 
       {isSettingsContext ? (
         <ThemedText>{t('BCSC.Settings.AppSecurity.DeviceAuthNotSetup')}</ThemedText>

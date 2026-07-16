@@ -16,7 +16,6 @@ import {
 export interface ChangeSecurityContentProps {
   onDeviceAuthSuccess: () => void
   onPINPress: () => void
-  onLearnMorePress: () => void
 }
 
 /**
@@ -24,11 +23,7 @@ export interface ChangeSecurityContentProps {
  * Allows users to toggle between PIN and biometric/device authentication.
  * Uses the shared SecurityMethodSelector component.
  */
-export const ChangeSecurityContent = ({
-  onDeviceAuthSuccess,
-  onPINPress,
-  onLearnMorePress,
-}: ChangeSecurityContentProps) => {
+export const ChangeSecurityContent = ({ onDeviceAuthSuccess, onPINPress }: ChangeSecurityContentProps) => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitAlert } = useErrorAlert()
@@ -78,7 +73,6 @@ export const ChangeSecurityContent = ({
     <SecurityMethodSelector
       onDeviceAuthPress={handleDeviceAuthPress}
       onPINPress={onPINPress}
-      onLearnMorePress={onLearnMorePress}
       currentMethod={currentMethod}
       deviceAuthPrompt={t('BCSC.Settings.AppSecurity.AuthenticateToSwitch')}
     />
