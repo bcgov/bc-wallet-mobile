@@ -95,8 +95,8 @@ export const SystemModal = ({
     >
       {iconName ? <Icon name={iconName} size={iconSize} color={ColorPalette.brand.icon} style={styles.icon} /> : null}
       <ThemedText variant="headingThree">{headerText}</ThemedText>
-      {contentText.filter(Boolean).map((text) => (
-        <ThemedText key={text}>{text}</ThemedText>
+      {contentText.filter(Boolean).map((text, index) => (
+        <ThemedText key={index}>{text}</ThemedText>
       ))}
     </ScreenWrapper>
   )
