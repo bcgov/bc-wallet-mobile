@@ -15,7 +15,12 @@ const ACCOUNT_FETCH_RETRY_DELAY_MS = 500
 export const useInitializeAccountStatus = () => {
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [hasCheckedAccount, setHasCheckedAccount] = useState(Boolean(store.bcsc.hasAccount))
+  // "Checked" means fully initialized: an account is known AND its nickname is present.
+  // Mirrors the useEffect's early-return condition below so a store that's already
+  // hydrated (hasAccount true) but missing its nickname still runs the self-heal.
+  const [hasCheckedAccount, setHasCheckedAccount] = useState(
+    Boolean(store.bcsc.hasAccount) && Boolean(store.bcsc.selectedNickname?.trim())
+  )
 
   const initializingAccount = store.stateLoaded && !hasCheckedAccount
 
@@ -30,26 +35,45 @@ export const useInitializeAccountStatus = () => {
       // TEMP (MD): Patch until BcscCore package correctly bubbles errors https://github.com/bcgov/bc-wallet-mobile/issues/3372
       const account = await retryAsync(getAccount, ACCOUNT_FETCH_MAX_RETRIES, ACCOUNT_FETCH_RETRY_DELAY_MS, true)
 
-      dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [Boolean(account)] })
+      // Preserve existing semantics: never downgrade a persisted hasAccount=true
+      // on a transient native read failure (see #3405 verification-loop fix)
+      if (!store.bcsc.hasAccount) {
+        dispatch({ type: BCDispatchAction.SET_HAS_ACCOUNT, payload: [Boolean(account)] })
+      }
+
+      // Self-heal: the AsyncStorage nickname can be lost on process death (e.g. Android
+      // killing the app after phone lock); the native account record is durable secure
+      // storage. displayName fallback covers v3 ias-ios migrated users. See #4258.
+      const nativeNickname = account?.nickname?.trim() || account?.displayName?.trim()
+      if (nativeNickname && !store.bcsc.selectedNickname?.trim()) {
+        logger.info('[useInitializeAccountStatus] Restoring nickname from native account record')
+        dispatch({ type: BCDispatchAction.UPDATE_NICKNAME, payload: [nativeNickname] })
+      }
     } catch (error) {
       logger.error('[useInitializeAccountStatus] Error checking for existing account:', error as Error)
     } finally {
       setHasCheckedAccount(true)
     }
-  }, [dispatch, logger])
+  }, [dispatch, logger, store.bcsc.hasAccount, store.bcsc.selectedNickname])
 
   useEffect(() => {
     if (!store.stateLoaded || hasCheckedAccount) {
       return
     }
 
-    if (store.bcsc.hasAccount) {
+    if (store.bcsc.hasAccount && store.bcsc.selectedNickname?.trim()) {
       setHasCheckedAccount(true)
       return
     }
 
     initializeAccountStatus()
-  }, [hasCheckedAccount, initializeAccountStatus, store.bcsc.hasAccount, store.stateLoaded])
+  }, [
+    hasCheckedAccount,
+    initializeAccountStatus,
+    store.bcsc.hasAccount,
+    store.bcsc.selectedNickname,
+    store.stateLoaded,
+  ])
 
   return {
     initializingAccount,
