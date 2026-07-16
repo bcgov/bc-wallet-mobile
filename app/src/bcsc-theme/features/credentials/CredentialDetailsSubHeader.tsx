@@ -1,9 +1,10 @@
 import { InformationCard } from '@/bcsc-theme/components/InformationCard'
-import { isBCServicesCardCredential } from '@/bcsc-theme/services/digitalServicesCardProvisioner'
+import { DIGITAL_SERVICES_CARD_CREDENTIAL_DEFINITION_IDS } from '@/constants'
 import { useTheme } from '@bifold/core'
 import { DidCommCredentialExchangeRecord } from '@credo-ts/didcomm'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
+import { hasCredentialDefinitionId } from './credential-utils'
 
 interface CredentialDetailsSubHeaderProps {
   credential?: DidCommCredentialExchangeRecord
@@ -18,19 +19,20 @@ interface CredentialDetailsSubHeaderProps {
  * @returns A React element representing the CredentialDetailsSubHeader component, or null if the credential does not match the specified criteria.
  */
 export const CredentialDetailsSubHeader = ({ credential }: CredentialDetailsSubHeaderProps) => {
-  const { Spacing } = useTheme()
+  const { Spacing, ListItems } = useTheme()
   const { t } = useTranslation()
 
   const styles = StyleSheet.create({
-    BCSCInfoContainer: {
+    infoContainer: {
       padding: Spacing.lg,
+      backgroundColor: ListItems.recordContainer.backgroundColor,
     },
   })
 
-  if (isBCServicesCardCredential(credential)) {
+  if (hasCredentialDefinitionId(credential, DIGITAL_SERVICES_CARD_CREDENTIAL_DEFINITION_IDS)) {
     // Show an information card for the Digital Services Card credential ie: "This does not replace your physical ID"
     return (
-      <View style={styles.BCSCInfoContainer}>
+      <View style={styles.infoContainer}>
         <InformationCard
           title={t('Credentials.NotAnIDInfoTitle')}
           subtext={t('Credentials.NotAnIDInfoDescription')}

@@ -1,7 +1,6 @@
 import { AutoFetchCredentialConfig } from '@/constants'
 import { AutoCredentialRule } from '@/services/auto-credential'
-import { getCredentialDefinitionIdForRecord } from '@bifold/core'
-import { DidCommCredentialExchangeRecord, DidCommProofExchangeRecord } from '@credo-ts/didcomm'
+import { DidCommProofExchangeRecord } from '@credo-ts/didcomm'
 import { BCAgent } from '@utils/bc-agent-modules'
 
 /**
@@ -60,23 +59,3 @@ export const buildDigitalServicesCardCredentialRule = (): AutoCredentialRule => 
   autoAcceptIssuerProofRequest: true,
   autoAcceptCredentialOffer: true,
 })
-
-/**
- * Checks if the provided credential is a BC Services Card credential.
- *
- * @param credential - The credential to check, which may be undefined.
- * @returns A boolean indicating whether the credential is a BC Services Card credential.
- */
-export const isBCServicesCardCredential = (credential?: DidCommCredentialExchangeRecord): boolean => {
-  if (!credential) {
-    return false
-  }
-
-  const credentialDefinitionId = getCredentialDefinitionIdForRecord(credential)
-
-  if (!credentialDefinitionId) {
-    return false
-  }
-
-  return allDigitalServicesCardCredDefIds().includes(credentialDefinitionId)
-}
