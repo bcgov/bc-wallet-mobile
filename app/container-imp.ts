@@ -36,6 +36,7 @@ import { DependencyContainer } from 'tsyringe'
 import EmptyWalletList from '@/bcsc-theme/components/EmptyWalletList'
 import { createFloatingHelpMenuButton } from '@/bcsc-theme/components/FloatingHelpMenuHeaderButton'
 import { createMainSettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
+import { CredentialDetailsSubHeader } from '@/bcsc-theme/features/credentials/CredentialDetailsSubHeader'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import filePersistedLedgers from '@/configs/ledgers/indy/ledgers'
 import useBCAgentSetup from '@/hooks/useBCAgentSetup'
@@ -273,6 +274,7 @@ export class AppContainer implements Container {
           headerLeft: createMainSettingsHeaderButton(),
         },
       })
+      this._container.registerInstance(TOKENS.COMPONENT_CRED_SUBHEADER, CredentialDetailsSubHeader)
     }
     this._container.registerInstance(TOKENS.COMPONENT_RECORD, Record)
     this._container.registerInstance(TOKENS.CACHE_CRED_DEFS, [

@@ -21,6 +21,8 @@ export interface CredentialRestrictionEnvironment {
  *
  * TODO: Replace placeholder cred def IDs and invitation URLs with real values
  * from the IAS team once they are available.
+ *
+ * QUESTION / TODO (MD): Should we be pulling these values from a remote config instead of hardcoding them in the app?
  */
 export const AutoFetchCredentialConfig: Record<string, CredentialRestrictionEnvironment> = {
   Development: {
