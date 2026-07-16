@@ -1,4 +1,5 @@
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { a11yLabel } from '@/utils/accessibility'
 import ContactsIllustration from '@assets/img/contacts.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useConnections } from '@bifold/react-hooks'
@@ -6,7 +7,7 @@ import { DidCommConnectionRecord, DidCommConnectionType, DidCommDidExchangeState
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ColorValue, FlatList, StyleSheet, TextInput, View } from 'react-native'
+import { ColorValue, FlatList, Keyboard, StyleSheet, TextInput, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import ContactRow from './ContactRow'
 import { usePinnedContacts } from './services/usePinnedContacts'
@@ -102,7 +103,7 @@ const ContactsScreen = ({ navigation }: ContactsScreenProps) => {
       flex: 1,
       paddingVertical: Spacing.md,
       marginLeft: Spacing.sm,
-      color: ColorPalette.brand.text,
+      color: ColorPalette.grayscale.black,
       fontSize: 16,
     },
     empty: {
@@ -149,11 +150,24 @@ const ContactsScreen = ({ navigation }: ContactsScreenProps) => {
           onChangeText={setQuery}
           placeholder={t('BCSC.Contacts.SearchPlaceholder')}
           placeholderTextColor={ColorPalette.grayscale.mediumGrey}
-          accessibilityLabel={t('BCSC.Contacts.SearchPlaceholder')}
+          accessibilityLabel={a11yLabel(t('BCSC.Contacts.SearchPlaceholder'))}
           testID={testIdWithKey('SearchContacts')}
           returnKeyType="search"
           autoCorrect={false}
         />
+        {query.length > 0 ? (
+          <Icon
+            name="clear"
+            size={24}
+            color={ColorPalette.brand.tertiary}
+            onPress={() => {
+              Keyboard.dismiss()
+              setQuery('')
+            }}
+            accessibilityLabel={a11yLabel(t('Global.Close'))}
+            testID={testIdWithKey('clearSearch')}
+          />
+        ) : null}
       </View>
       <FlatList
         data={filteredContacts}

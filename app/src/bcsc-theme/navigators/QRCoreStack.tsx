@@ -5,16 +5,17 @@ import { useCardStatus } from '@/bcsc-theme/hooks/useCardStatus'
 import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
 import { BCState } from '@/store'
-import { ButtonLocation, IconButton, testIdWithKey, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { testIdWithKey, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { Platform, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
+import { HeaderBackButton } from '../components/HeaderBackButton'
 
 type TabBarIconProps = {
   focused: boolean
@@ -32,10 +33,9 @@ type TabBarIconProps = {
 const createQRBackButton = () => {
   const QRBackButton = () => {
     const navigation = useNavigation()
+
     return (
-      <IconButton
-        buttonLocation={ButtonLocation.Left}
-        icon={Platform.select({ ios: 'arrow-back-ios', android: 'arrow-left', default: 'arrow-left' })}
+      <HeaderBackButton
         accessibilityLabel="Back"
         testID={testIdWithKey('Back')}
         onPress={() => navigation.getParent()?.goBack()}
