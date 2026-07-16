@@ -1,3 +1,4 @@
+import { getFullDisplayName } from '@/bcsc-theme/utils/account-utils'
 import { BCSCEventTypes } from '@/events/eventTypes'
 import { CredentialMetadata } from '@/store'
 import { TOKENS, useServices } from '@bifold/core'
@@ -21,7 +22,7 @@ export interface BCSCIdTokenContextType<T> {
  * @returns CredentialMetadata object derived from the token
  */
 export const tokenToCredentialMetadata = (token: IdToken): CredentialMetadata => {
-  const fullName = `${token.given_name} ${token.family_name}`
+  const fullName = getFullDisplayName(token)
 
   return {
     fullName,
@@ -34,8 +35,29 @@ export const tokenToCredentialMetadata = (token: IdToken): CredentialMetadata =>
 }
 
 /**
+ * Normalizes a fullName value that may have been produced by the legacy
+ * `${given_name} ${family_name}` template, which rendered a literal
+ * "undefined " prefix (and/or stray whitespace) for mononym users whose
+ * given_name was absent. This lets {@link compareCredentialMetadata} treat a
+ * legacy-stored mononym value as equivalent to the corrected
+ * {@link getFullDisplayName} output, avoiding a one-time false-positive
+ * "account updated" alert for existing mononym users. See #4258.
+ *
+ * @param fullName Stored or freshly-computed fullName value to normalize
+ * @returns The fullName with any legacy "undefined " prefix stripped and whitespace collapsed/trimmed
+ */
+const normalizeLegacyFullName = (fullName: string | undefined): string =>
+  (fullName ?? '')
+    .replace(/^undefined\s+/, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+/**
  * A helper function to compare 'new' credential metadata from the token endpoint with the existing credential metadata in the store.
  * If any of the values checked are different a false is returned to trigger the system to alert the user that something has happened.
+ *
+ * fullName is compared after normalizing away the legacy mononym artifact (see {@link normalizeLegacyFullName})
+ * so existing mononym users don't get a spurious "account updated" alert purely from the fullName bugfix.
  *
  * @param c1 Credential Metadata object to check
  * @param c2 Credential Metadata object to check
@@ -49,7 +71,7 @@ export const compareCredentialMetadata = (
     return false
   }
   return (
-    c1.fullName === c2.fullName &&
+    normalizeLegacyFullName(c1.fullName) === normalizeLegacyFullName(c2.fullName) &&
     c1.bcscReason === c2.bcscReason &&
     c1.deviceCount === c2.deviceCount &&
     c1.deviceLimit === c2.deviceLimit &&
