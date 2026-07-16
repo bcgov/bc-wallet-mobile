@@ -7,9 +7,9 @@ import BrownHandHoldingPhone from '@assets/img/brown-hand-holding-phone.svg'
 import { Button, ButtonType, ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { Fragment, useCallback, useState } from 'react'
+import { Fragment, useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 type VideoInstructionsScreenProps = {
@@ -26,6 +26,7 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
   const { refreshPrompts } = useVideoPrompts()
   const { videoPromptsMissingAlert } = useAlerts(navigation)
   const [promptsStatus, setPromptsStatus] = useState<PromptsStatus>('loading')
+  const scrollViewRef = useRef<ScrollView>(null)
 
   /**
    * Issues the prompt set for the recording that is about to happen. The list below is what the user is
@@ -51,6 +52,10 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
   // review screen. `refreshPrompts` and the alert are stable, so this fires once per focus.
   useFocusEffect(
     useCallback(() => {
+      // This screen stays mounted beneath TakeVideo, so backing out of a recording returns to it at
+      // whatever scroll offset the user left it at. Snap back to the top so the fresh set reads from
+      // the start rather than mid-list.
+      scrollViewRef.current?.scrollTo({ y: 0, animated: false })
       loadPrompts()
     }, [loadPrompts])
   )
@@ -89,6 +94,7 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
       padded={false}
       edges={['top', 'bottom', 'left', 'right']}
       scrollViewContainerStyle={{ padding: Spacing.lg }}
+      scrollViewRef={scrollViewRef}
     >
       <BrownHandHoldingPhone style={styles.image} height={styles.image.height} width={styles.image.width} />
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.lg, textAlign: 'center' }}>

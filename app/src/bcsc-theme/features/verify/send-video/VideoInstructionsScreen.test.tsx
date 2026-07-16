@@ -4,6 +4,7 @@ import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React, { useEffect } from 'react'
+import { ScrollView } from 'react-native'
 import VideoInstructionsScreen from './VideoInstructionsScreen'
 
 jest.mock('@/bcsc-theme/hooks/useVideoPrompts')
@@ -93,6 +94,21 @@ describe('VideoInstructions', () => {
     await refocus()
 
     expect(mockRefreshPrompts).toHaveBeenCalledTimes(2)
+  })
+
+  it('resets the scroll position to the top on refocus', async () => {
+    // The screen stays mounted beneath the camera, so backing out of a recording returns to it at the
+    // offset the user left — the fresh set should read from the start, not mid-list.
+    const scrollTo = jest.spyOn(ScrollView.prototype, 'scrollTo')
+
+    renderScreen()
+    await waitFor(() => expect(mockRefreshPrompts).toHaveBeenCalledTimes(1))
+    scrollTo.mockClear()
+
+    await refocus()
+
+    expect(scrollTo).toHaveBeenCalledWith(expect.objectContaining({ y: 0 }))
+    scrollTo.mockRestore()
   })
 
   it('withholds the prompt list and blocks recording until a fresh set lands', async () => {
