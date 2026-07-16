@@ -266,8 +266,8 @@ export class AppContainer implements Container {
           headerLeft: createMainSettingsHeaderButton(),
         },
       })
+      this._container.registerInstance(TOKENS.COMPONENT_CRED_SUBHEADER, CredentialDetailsSubHeader)
     }
-    this._container.registerInstance(TOKENS.COMPONENT_CRED_SUBHEADER, CredentialDetailsSubHeader)
     this._container.registerInstance(TOKENS.COMPONENT_RECORD, Record)
     this._container.registerInstance(TOKENS.CACHE_CRED_DEFS, [
       // { did: "4WW6792ksq62UroZyfd6nQ", id: "4WW6792ksq62UroZyfd6nQ:3:CL:1098:SellingItRight" },
