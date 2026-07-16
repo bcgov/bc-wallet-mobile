@@ -59,12 +59,13 @@ const QRDisplay: React.FC = () => {
       <IconButton
         buttonLocation={ButtonLocation.Right}
         icon="share-variant"
+        iconTintColor={ColorPalette.brand.primary}
         accessibilityLabel={t('Global.Share')}
         testID={testIdWithKey('Share')}
         onPress={vm.share}
       />
     )
-  }, [t, vm.share, vm.status])
+  }, [t, vm.share, vm.status, ColorPalette.brand.primary])
 
   useEffect(() => {
     navigation.setOptions({ headerRight })
