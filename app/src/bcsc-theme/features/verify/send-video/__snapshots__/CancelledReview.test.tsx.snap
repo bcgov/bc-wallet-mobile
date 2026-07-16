@@ -26,7 +26,7 @@ exports[`CancelledReview renders correctly with agent reason 1`] = `
         false,
         {
           "flexGrow": 1,
-          "gap": 16,
+          "gap": 24,
           "padding": 24,
         },
       ]
