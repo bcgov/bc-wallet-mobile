@@ -167,16 +167,15 @@ export const useCardScanner = () => {
 
       try {
         const deviceAuth = await authorization.authorizeDeviceWithBarcodes(buildBarcodePayload(bcscSerial, license))
-        logger.info('[CardScanner] Device Auth', { deviceAuth })
         await updateUserInfo({ serial: bcscSerial, birthdate: license.birthDate })
         await applyDeviceAuthorization(deviceAuth, { serial: bcscSerial, birthdate: license.birthDate })
         logger.info('[CardScanner] Scanned card matched a BC Services Card; switching to setup')
         return true
       } catch (error) {
-        // A handled app error (e.g. documentExpiredOnBarcodesErrorPolicy) has already
         // navigated the user to an error screen, so stop here instead of continuing.
+        // `card_expired` -> VerificationCardErrorScreen
         if (isHandledAppError(error)) {
-          return false
+          return true
         }
 
         // Any other failure means we could not confirm a BC Services Card, so stay in

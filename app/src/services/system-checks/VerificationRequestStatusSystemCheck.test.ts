@@ -160,11 +160,7 @@ describe('VerificationRequestStatusSystemCheck', () => {
   describe('onSuccess', () => {
     it('sets the verification request status to verified, same as the push notification path', async () => {
       const utils = makeUtils()
-      const check = new VerificationRequestStatusSystemCheck(
-        makeStatus('verified'),
-        makeCheckDeviceCodeStatus(),
-        utils
-      )
+      const check = new VerificationRequestStatusSystemCheck(makeStatus('verified'), makeCheckDeviceCodeStatus(), utils)
 
       await check.runCheck()
       check.onSuccess()
@@ -177,11 +173,7 @@ describe('VerificationRequestStatusSystemCheck', () => {
 
     it('clears the verification request status message', async () => {
       const utils = makeUtils()
-      const check = new VerificationRequestStatusSystemCheck(
-        makeStatus('verified'),
-        makeCheckDeviceCodeStatus(),
-        utils
-      )
+      const check = new VerificationRequestStatusSystemCheck(makeStatus('verified'), makeCheckDeviceCodeStatus(), utils)
 
       await check.runCheck()
       check.onSuccess()

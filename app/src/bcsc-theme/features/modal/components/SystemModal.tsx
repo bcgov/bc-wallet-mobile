@@ -1,7 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import usePreventGestureBack from '@/hooks/usePreventGestureBack'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { ScrollView, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 export interface SystemModalProps {
@@ -94,17 +94,15 @@ export const SystemModal = ({
 
   return (
     <ScreenWrapper padded={false} scrollViewContainerStyle={styles.scrollContainer} controls={controls}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {iconName ? <Icon name={iconName} size={iconSize} color={ColorPalette.brand.icon} style={styles.icon} /> : null}
-        <View style={styles.textContainer}>
-          <ThemedText variant="headingThree">{headerText}</ThemedText>
-          {contentText.filter(Boolean).map((text) => (
-            <ThemedText key={text} style={styles.textContent}>
-              {text}
-            </ThemedText>
-          ))}
-        </View>
-      </ScrollView>
+      {iconName ? <Icon name={iconName} size={iconSize} color={ColorPalette.brand.icon} style={styles.icon} /> : null}
+      <View style={styles.textContainer}>
+        <ThemedText variant="headingThree">{headerText}</ThemedText>
+        {contentText.filter(Boolean).map((text) => (
+          <ThemedText key={text} style={styles.textContent}>
+            {text}
+          </ThemedText>
+        ))}
+      </View>
     </ScreenWrapper>
   )
 }
