@@ -1,6 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { ServiceHours, VideoDestinations } from '@/bcsc-theme/api/hooks/useVideoCallApi'
-import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
 import { removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { formatServiceAndUnavailableHours, isLiveCallAvailable } from '@/bcsc-theme/utils/service-hours-formatter'
 import { useAlerts } from '@/hooks/useAlerts'
@@ -23,9 +23,9 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
   const [hoursLoading, setHoursLoading] = useState(true)
   const [serviceHours, setServiceHours] = useState<ServiceHours | undefined>()
   const [destinations, setDestinations] = useState<VideoDestinations | undefined>()
-  const { evidence, video: videoCallApi } = useApi()
+  const { video: videoCallApi } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { updateVerificationRequest } = useSecureActions()
+  const { ensureVerificationRequest } = useVideoPrompts()
   const { videoPromptsMissingAlert } = useAlerts(navigation)
 
   useEffect(() => {
@@ -46,39 +46,12 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
     try {
       setSendVideoLoading(true)
 
-      let verificationRequest
-      if (!store.bcscSecure.verificationRequestId) {
-        // NOTE: Making this request too many times will be rate limited by the server.
-        verificationRequest = await evidence.createVerificationRequest()
-      }
-
-      if (
-        store.bcscSecure.verificationRequestId &&
-        (!store.bcscSecure.verificationRequestSha || !store.bcsc.prompts?.length)
-      ) {
-        try {
-          verificationRequest = await evidence.getVerificationRequestPrompts(store.bcscSecure.verificationRequestId)
-        } catch (error) {
-          // IAS returns 500 for any call against a verification id that has been deleted
-          // server-side (TTL expired, agent cancelled, etc.). The local id is now useless —
-          // start a fresh request so the user isn't stuck on a stale id across cycles.
-          logger.warn(
-            `[useVerificationMethodModel] Failed to fetch prompts for stored verification id; creating a fresh request: ${error instanceof Error ? error.message : String(error)}`
-          )
-          verificationRequest = await evidence.createVerificationRequest()
-        }
-      }
-
-      if (verificationRequest) {
-        updateVerificationRequest(verificationRequest.id, verificationRequest.sha256)
-        dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [verificationRequest.prompts] })
-      }
-
-      // Never advance into the video flow without prompts. The server can return an empty prompt set,
-      // and TakeVideoScreen hard-stops when prompts are missing — surface a retryable alert here instead.
-      const resolvedPrompts = verificationRequest?.prompts ?? store.bcsc.prompts
-      if (!resolvedPrompts?.length) {
-        logger.error('[useVerificationMethodModel] No verification prompts available; aborting Send Video')
+      // Opens a request only if one isn't already in flight. The prompt set the user records against is
+      // issued by VideoInstructions immediately beforehand, so entering the flow must not burn one here.
+      // This still catches a backend that can't issue prompts at all before the user does the photo steps.
+      const canProceed = await ensureVerificationRequest()
+      if (!canProceed) {
+        logger.error('[useVerificationMethodModel] No verification request available; aborting Send Video')
         videoPromptsMissingAlert()
         return
       }
@@ -101,17 +74,13 @@ const useVerificationMethodModel = ({ navigation }: useVerificationMethodModelPr
       setSendVideoLoading(false)
     }
   }, [
-    store.bcscSecure.verificationRequestId,
-    store.bcscSecure.verificationRequestSha,
-    store.bcsc.prompts,
     store.bcsc.videoPath,
     store.bcsc.photoPath,
     store.bcsc.videoThumbnailPath,
     logger,
     dispatch,
     navigation,
-    evidence,
-    updateVerificationRequest,
+    ensureVerificationRequest,
     videoPromptsMissingAlert,
   ])
 
