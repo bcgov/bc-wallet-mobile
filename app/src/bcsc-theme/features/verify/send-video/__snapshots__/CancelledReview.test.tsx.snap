@@ -25,56 +25,47 @@ exports[`CancelledReview renders correctly with agent reason 1`] = `
       [
         false,
         {
-          "alignItems": "center",
+          "flexGrow": 1,
+          "gap": 24,
+          "padding": 24,
         },
       ]
     }
     showsVerticalScrollIndicator={false}
   >
     <View>
-      <View
+      <Text
+        maxFontSizeMultiplier={2}
         style={
-          {
-            "gap": 24,
-            "padding": 16,
-          }
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 26,
+              "fontWeight": "bold",
+            },
+            undefined,
+          ]
         }
       >
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 26,
-                "fontWeight": "bold",
-              },
-              undefined,
-            ]
-          }
-        >
-          BCSC.CancelledVerification.Title
-        </Text>
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              {
-                "lineHeight": 30,
-              },
-            ]
-          }
-        >
-          BCSC.CancelledVerification.Label
-        </Text>
-      </View>
+        BCSC.CancelledVerification.Title
+      </Text>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+            undefined,
+          ]
+        }
+      >
+        BCSC.CancelledVerification.Label
+      </Text>
     </View>
   </RCTScrollView>
   <View

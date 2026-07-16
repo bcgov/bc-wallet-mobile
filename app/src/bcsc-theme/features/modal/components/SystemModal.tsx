@@ -1,7 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import usePreventGestureBack from '@/hooks/usePreventGestureBack'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { StyleSheet, View } from 'react-native'
+import { StyleSheet } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 export interface SystemModalProps {
@@ -60,22 +60,16 @@ export const SystemModal = ({
   usePreventGestureBack()
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: ColorPalette.brand.modalPrimaryBackground,
-    },
-    scrollContainer: {
-      alignItems: 'center',
+    content: {
+      // flexGrow lets the content fill the viewport so the controls stay pinned to the bottom.
+      flexGrow: 1,
+      padding: Spacing.lg,
+      // Consistent vertical rhythm between the icon, heading and body lines.
+      gap: Spacing.lg,
     },
     icon: {
-      paddingVertical: Spacing.lg,
-    },
-    textContent: {
-      lineHeight: 30,
-    },
-    textContainer: {
-      padding: Spacing.md,
-      gap: Spacing.lg,
+      alignSelf: 'center',
+      marginBottom: Spacing.sm,
     },
   })
 
@@ -93,16 +87,17 @@ export const SystemModal = ({
   )
 
   return (
-    <ScreenWrapper padded={false} scrollViewContainerStyle={styles.scrollContainer} controls={controls}>
+    <ScreenWrapper
+      padded={false}
+      controls={controls}
+      edges={['bottom', 'left', 'right']}
+      scrollViewContainerStyle={styles.content}
+    >
       {iconName ? <Icon name={iconName} size={iconSize} color={ColorPalette.brand.icon} style={styles.icon} /> : null}
-      <View style={styles.textContainer}>
-        <ThemedText variant="headingThree">{headerText}</ThemedText>
-        {contentText.filter(Boolean).map((text) => (
-          <ThemedText key={text} style={styles.textContent}>
-            {text}
-          </ThemedText>
-        ))}
-      </View>
+      <ThemedText variant="headingThree">{headerText}</ThemedText>
+      {contentText.filter(Boolean).map((text) => (
+        <ThemedText key={text}>{text}</ThemedText>
+      ))}
     </ScreenWrapper>
   )
 }
