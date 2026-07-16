@@ -268,14 +268,8 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
   const { developerModeEnabled } = store.preferences
   const showFeaturesSection = Boolean(onContacts) || developerModeEnabled
   const analyticsOptInText = store.bcsc.analyticsOptIn ? 'ON' : 'OFF'
-  // No adornment while the async permission check is unresolved (or failed) — only
-  // assert ON/OFF for explicitly known states.
   const notificationsOnText =
-    notificationStatus === PushNotifications.NotificationPermissionStatus.UNKNOWN
-      ? undefined
-      : notificationStatus === PushNotifications.NotificationPermissionStatus.GRANTED
-        ? 'ON'
-        : 'OFF'
+    notificationStatus === PushNotifications.NotificationPermissionStatus.GRANTED ? 'ON' : 'OFF'
   const autoLockTimeText = `${store.preferences.autoLockTime ?? DEFAULT_AUTO_LOCK_TIME_MIN} min`
   const profileName = store.bcsc.selectedNickname?.trim() || t('BCSC.Title')
 

@@ -39,6 +39,7 @@ type MaskedCameraProps = {
   maskOverlayOpacity?: number
   customPath?: string
   codeScanner?: CodeScanner
+  photoQualityBalance?: 'speed' | 'balanced' | 'quality'
   onPhotoTaken: (path: string) => void
 }
 
@@ -52,6 +53,7 @@ const MaskedCamera = ({
   maskType,
   customPath,
   codeScanner,
+  photoQualityBalance = 'speed',
   cameraFace = 'back',
   cameraFormatFilter = [],
   onPhotoTaken,
@@ -191,7 +193,7 @@ const MaskedCamera = ({
         isActive={isFocused}
         photo={true}
         video={true}
-        photoQualityBalance="speed"
+        photoQualityBalance={photoQualityBalance}
         isMirrored={false}
         onInitialized={() => logger.debug('MaskedCamera initialized')}
         onError={onError}
