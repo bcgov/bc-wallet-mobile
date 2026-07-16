@@ -77,6 +77,15 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
     },
   })
 
+  useFocusEffect(
+    useCallback(() => {
+      // set loading state to false on unmount
+      return () => {
+        setIsAddingAccount(false)
+      }
+    }, [])
+  )
+
   // "No, continue setup" — verify a new account on this device via the identity steps.
   const handleAddAccount = useCallback(async () => {
     setIsAddingAccount(true)
