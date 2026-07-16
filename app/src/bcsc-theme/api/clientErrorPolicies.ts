@@ -7,6 +7,7 @@ import { CommonActions, NavigationProp, ParamListBase } from '@react-navigation/
 import { AxiosError } from 'axios'
 import { TFunction } from 'i18next'
 import { Linking } from 'react-native'
+import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { VerificationCardError } from '../features/verify/verificationCardError'
 import { BCSCModals, BCSCScreens } from '../types/navigators'
 import { ResumeStepRoute } from '../utils/resume-step-route'
@@ -509,12 +510,18 @@ export const cardExpiredOnBarcodesErrorPolicy: ErrorHandlingPolicy = {
     context.logger.info('[DocumentExpiredOnBarcodesErrorPolicy] Document expired per /device/barcodes response', {
       description,
     })
+    // Scanned card was a BCSC card and expired
+    // display error and navigate back to evidence list so the user isn't stuck
     context.navigation.dispatch(
-      CommonActions.navigate({
-        name: BCSCScreens.VerificationCardError,
-        params: { errorType: VerificationCardError.CardExpired },
+      CommonActions.reset({
+        index: 1,
+        routes: [
+          { name: BCSCScreens.IdentitySelection },
+          { name: BCSCScreens.EvidenceTypeList, params: { cardProcess: BCSCCardProcess.NonBCSC } },
+        ],
       })
     )
+    context.alerts.documentExpiredAlert(error)
   },
 }
 

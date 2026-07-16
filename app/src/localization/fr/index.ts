@@ -1490,6 +1490,10 @@ const translation = {
       "Title": "Problem Starting Video (FR)",
       "Description": "We couldn't load your verification steps. Please try again. (FR)"
     },
+    "DocumentExpired": {
+      "Title": "This document has expired. (FR)",
+      "Description": "Please choose a different form of ID to continue. (FR)"
+    },
     "FactoryReset": {
       "Title": "Problem with App (FR)",
       "Description": "The app needs to be reset to factory settings to continue. This will delete all information in the app and you will have to set it up again. (FR)",
