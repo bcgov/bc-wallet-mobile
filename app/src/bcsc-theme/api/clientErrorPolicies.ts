@@ -521,7 +521,7 @@ export const cardExpiredOnBarcodesErrorPolicy: ErrorHandlingPolicy = {
         ],
       })
     )
-    context.alerts.documentExpiredAlert(error)
+    context.alerts.documentExpiredAlert()
   },
 }
 
