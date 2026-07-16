@@ -80,6 +80,7 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
   useFocusEffect(
     useCallback(() => {
       // set loading state to false on unmount
+      // so the user isn't stuck if they come back to this screen
       return () => {
         setIsAddingAccount(false)
       }
