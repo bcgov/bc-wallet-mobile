@@ -373,4 +373,40 @@ describe('useVerificationResponseViewModel', () => {
       expect(mockUpdateVerified).toHaveBeenCalledWith(true)
     })
   })
+
+  describe('mononym support (#4258)', () => {
+    it('falls back to family_name for mononym users (no given_name)', async () => {
+      mockGetCachedIdTokenMetadata.mockResolvedValue({ given_name: undefined, family_name: 'RC0000080' })
+      mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
+
+      const { result } = renderHook(() => useVerificationResponseViewModel())
+
+      await act(async () => {
+        await result.current.handleAccountSetup()
+      })
+
+      expect(mockDispatch).toHaveBeenNthCalledWith(1, {
+        type: BCDispatchAction.UPDATE_NICKNAME,
+        payload: ['RC0000080'],
+      })
+      expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'RC0000080')
+    })
+
+    it('prefers given_name over family_name when both are present', async () => {
+      mockGetCachedIdTokenMetadata.mockResolvedValue({ given_name: 'Mac', family_name: 'Deluca' })
+      mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
+
+      const { result } = renderHook(() => useVerificationResponseViewModel())
+
+      await act(async () => {
+        await result.current.handleAccountSetup()
+      })
+
+      expect(mockDispatch).toHaveBeenNthCalledWith(1, {
+        type: BCDispatchAction.UPDATE_NICKNAME,
+        payload: ['Mac'],
+      })
+      expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'Mac')
+    })
+  })
 })
