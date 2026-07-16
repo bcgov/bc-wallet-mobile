@@ -146,6 +146,28 @@ export const CameraFormat = {
   ] satisfies FormatFilter[],
 
   /**
+   * Format optimized for capturing a still selfie (front camera, no barcode detection).
+   * Prioritizes photo resolution and quality over preview frame rate, since the output
+   * is a single still image that gets displayed full-screen and uploaded — unlike the
+   * barcode formats, there is no live scanning that needs high FPS.
+   */
+  SelfiePhoto: [
+    // Tier 1: Ideal — 1080p photo + non-HDR + 30 FPS preview.
+    // 1080p is plenty sharp for a face selfie without bloating the upload the way
+    // a 'max'-resolution capture would.
+    {
+      videoHdr: false,
+      photoResolution: PHOTO_RESOLUTION_1080P,
+      fps: 30,
+    },
+    // Tier 2: any non-HDR format (absolute fallback)
+    // Prevents "device/pixel-format-not-supported" errors on devices with limited support.
+    {
+      videoHdr: false,
+    },
+  ] satisfies FormatFilter[],
+
+  /**
    * Format optimized for scanning small barcodes (code-39, code-128, PDF417)
    * Prioritizes high resolution and frame rate for accurate detection of small codes
    *
