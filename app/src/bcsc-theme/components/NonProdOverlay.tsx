@@ -1,7 +1,8 @@
 import { BCState } from '@/store'
 import { ThemedText, useStore, useTheme } from '@bifold/core'
-import React from 'react'
-import { StyleSheet, View } from 'react-native'
+import React, { useState } from 'react'
+import { Pressable, StyleSheet, View } from 'react-native'
+import { DebugStateModal } from './DebugStateModal'
 
 const TRIANGLE_SIZE = 90
 const DIAGONAL = 1.414 // sqrt(2)
@@ -10,19 +11,12 @@ const HALF_DIAGONAL = DIAGONAL / 2
 const NonProdOverlay: React.FC = () => {
   const [store] = useStore<BCState>()
   const { Spacing } = useTheme()
+  const [openDevModal, setOpenDevModal] = useState(false)
   const envName = store.developer.environment.name.split(' ')[0].toUpperCase()
 
   const isProd = envName.includes('PROD') && !envName.includes('PREPROD')
 
   const styles = StyleSheet.create({
-    container: {
-      position: 'absolute',
-      bottom: 0,
-      right: 0,
-      width: TRIANGLE_SIZE,
-      height: TRIANGLE_SIZE,
-      overflow: 'hidden',
-    },
     triangle: {
       position: 'absolute',
       width: TRIANGLE_SIZE * DIAGONAL,
@@ -49,13 +43,22 @@ const NonProdOverlay: React.FC = () => {
   }
 
   return (
-    <View style={styles.container} pointerEvents="none">
-      <View style={styles.triangle}>
-        <ThemedText style={styles.text} maxFontSizeMultiplier={1}>
-          {envName}
-        </ThemedText>
-      </View>
-    </View>
+    <>
+      <Pressable
+        onLongPress={() => setOpenDevModal(true)}
+        delayLongPress={500}
+        accessible={false}
+        importantForAccessibility="no-hide-descendants"
+      >
+        <View style={styles.triangle}>
+          <ThemedText style={styles.text} maxFontSizeMultiplier={1}>
+            {envName}
+          </ThemedText>
+        </View>
+      </Pressable>
+
+      <DebugStateModal state={store} open={openDevModal} onClose={() => setOpenDevModal(false)} />
+    </>
   )
 }
 
