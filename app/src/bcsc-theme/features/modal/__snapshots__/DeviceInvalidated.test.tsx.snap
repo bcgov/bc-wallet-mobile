@@ -25,7 +25,9 @@ exports[`DeviceInvalidated should match snapshot 1`] = `
       [
         false,
         {
-          "alignItems": "center",
+          "flexGrow": 1,
+          "gap": 24,
+          "padding": 24,
         },
       ]
     }
