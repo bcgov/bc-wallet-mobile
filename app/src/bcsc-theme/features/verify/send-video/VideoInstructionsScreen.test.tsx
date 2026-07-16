@@ -2,7 +2,7 @@ import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
 import { useFocusEffect } from '@mocks/@react-navigation/native'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { render, waitFor } from '@testing-library/react-native'
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React, { useEffect } from 'react'
 import VideoInstructionsScreen from './VideoInstructionsScreen'
 
@@ -19,6 +19,8 @@ describe('VideoInstructions', () => {
   let mockNavigation: any
   const focusEffectMock = useFocusEffect as jest.Mock
   const mockRefreshPrompts = jest.fn()
+  // Callbacks currently registered through useFocusEffect, so a test can refocus a mounted screen.
+  const focusCallbacks = new Set<() => void | (() => void)>()
 
   const renderScreen = () =>
     render(
@@ -27,13 +29,35 @@ describe('VideoInstructions', () => {
       </BasicAppContext>
     )
 
+  /**
+   * Refocuses the mounted screen, as returning from TakeVideo or VideoReview does.
+   *
+   * The screen is never unmounted on those paths, so a stub that only fires on mount cannot tell a
+   * `useFocusEffect` apart from a plain mount effect — and refresh-on-return is the whole point here.
+   */
+  const refocus = async () => {
+    await act(async () => {
+      focusCallbacks.forEach((callback) => callback())
+    })
+  }
+
   beforeEach(() => {
     mockNavigation = useNavigation()
     jest.clearAllMocks()
-    // Run the focus callback as an effect, emulating the screen gaining focus after render
-    focusEffectMock.mockImplementation((callback: () => void) => {
+    focusCallbacks.clear()
+    // Emulate React Navigation's focus lifecycle: run on mount, and stay registered so `refocus` can
+    // fire the callback again on a screen that never unmounted.
+    focusEffectMock.mockImplementation((callback: () => void | (() => void)) => {
       // eslint-disable-next-line react-hooks/rules-of-hooks
-      useEffect(callback, [callback])
+      useEffect(() => {
+        const cleanup = callback()
+        focusCallbacks.add(callback)
+
+        return () => {
+          focusCallbacks.delete(callback)
+          cleanup?.()
+        }
+      }, [callback])
     })
     mockRefreshPrompts.mockResolvedValue(true)
     jest.mocked(useVideoPrompts).mockReturnValue({
@@ -51,22 +75,24 @@ describe('VideoInstructions', () => {
     expect(tree).toMatchSnapshot()
   })
 
-  it('issues a fresh prompt set every time the screen is focused', async () => {
-    // Arriving here always precedes a recording — including after cancelling one — so the set the user
-    // is about to be asked has to be issued now rather than replayed from an earlier attempt.
+  it('issues a fresh prompt set when the screen is focused', async () => {
+    // Arriving here always precedes a recording, so the set the user is about to be asked has to be
+    // issued now rather than replayed from an earlier attempt.
     renderScreen()
 
     await waitFor(() => expect(mockRefreshPrompts).toHaveBeenCalledTimes(1))
   })
 
-  it('does not re-fetch when the refresh re-renders the screen', async () => {
-    // Refreshing writes the new prompts to the store, which re-renders this screen. If the focus effect
-    // depended on the refresh callback the write would re-arm it, looping the fetch.
+  it('issues another set when the screen is refocused', async () => {
+    // Returning here after cancelling a recording, or backing out of VideoReview, leaves this screen
+    // mounted. Reusing the set from the abandoned attempt is exactly the replay this flow guards
+    // against, so a refocus has to re-issue.
     renderScreen()
-
     await waitFor(() => expect(mockRefreshPrompts).toHaveBeenCalledTimes(1))
 
-    expect(mockRefreshPrompts).toHaveBeenCalledTimes(1)
+    await refocus()
+
+    expect(mockRefreshPrompts).toHaveBeenCalledTimes(2)
   })
 
   it('withholds the prompt list and blocks recording until a fresh set lands', async () => {
@@ -103,5 +129,31 @@ describe('VideoInstructions', () => {
 
     expect(tree.getByTestId('StartRecordingButton')).toBeDisabled()
     expect(tree.queryByText('Say your name')).toBeNull()
+  })
+
+  it('offers a retry instead of an endless spinner when the fetch fails', async () => {
+    // The alert is dismiss-only and this screen sits after every photo step, so without a retry the
+    // user's only escape is backing out and redoing the photos.
+    mockRefreshPrompts.mockResolvedValue(false)
+
+    const tree = renderScreen()
+
+    await waitFor(() => expect(tree.queryByTestId('RetryLoadPrompts')).not.toBeNull())
+    expect(tree.queryByTestId('PromptsLoading')).toBeNull()
+  })
+
+  it('recovers when the retry succeeds', async () => {
+    mockRefreshPrompts.mockResolvedValue(false)
+
+    const tree = renderScreen()
+    await waitFor(() => expect(tree.queryByTestId('RetryLoadPrompts')).not.toBeNull())
+
+    mockRefreshPrompts.mockResolvedValue(true)
+    fireEvent.press(tree.getByTestId('RetryLoadPrompts'))
+
+    await waitFor(() => expect(tree.getByTestId('StartRecordingButton')).toBeEnabled())
+    expect(mockRefreshPrompts).toHaveBeenCalledTimes(2)
+    expect(tree.queryByText('Say your name')).not.toBeNull()
+    expect(tree.queryByTestId('RetryLoadPrompts')).toBeNull()
   })
 })

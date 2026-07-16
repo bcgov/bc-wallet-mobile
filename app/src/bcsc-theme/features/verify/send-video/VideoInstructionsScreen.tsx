@@ -7,7 +7,7 @@ import BrownHandHoldingPhone from '@assets/img/brown-hand-holding-phone.svg'
 import { Button, ButtonType, ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
+import { Fragment, useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -16,49 +16,43 @@ type VideoInstructionsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VideoInstructions>
 }
 
+/** `failed` is distinct from `loading` so a failed fetch offers a retry instead of an endless spinner. */
+type PromptsStatus = 'loading' | 'ready' | 'failed'
+
 const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) => {
   const { Spacing, TextTheme, ColorPalette } = useTheme()
   const [store] = useStore<BCState>()
   const { t } = useTranslation()
   const { refreshPrompts } = useVideoPrompts()
   const { videoPromptsMissingAlert } = useAlerts(navigation)
-  const [promptsReady, setPromptsReady] = useState(false)
-
-  // Called from a focus effect that must fire exactly once per focus. Refreshing writes the new prompt
-  // set to the store, which re-renders this screen and would re-arm the effect if it depended on these
-  // callbacks directly — reading them through refs keeps the fetch off the render loop.
-  const refreshPromptsRef = useRef(refreshPrompts)
-  const videoPromptsMissingAlertRef = useRef(videoPromptsMissingAlert)
-  useEffect(() => {
-    refreshPromptsRef.current = refreshPrompts
-    videoPromptsMissingAlertRef.current = videoPromptsMissingAlert
-  }, [refreshPrompts, videoPromptsMissingAlert])
+  const [promptsStatus, setPromptsStatus] = useState<PromptsStatus>('loading')
 
   /**
-   * Issues the prompt set for the recording that is about to happen, on every arrival — including
-   * returning here after cancelling a recording. The list below is what the user is asked on camera, so
-   * it has to be the set that was just issued; recording against a set from an earlier attempt is the
-   * bug this guards against. Start stays disabled until a fresh set lands.
+   * Issues the prompt set for the recording that is about to happen. The list below is what the user is
+   * asked on camera, so it has to be the set that was just issued; recording against a set from an
+   * earlier attempt is the bug this guards against. Start stays disabled until a fresh set lands.
+   *
+   * A failure is a distinct state, not a stuck 'loading': the alert it raises is dismiss-only, and this
+   * screen sits after every photo step, so leaving a spinner up would strand the user somewhere they can
+   * only escape by redoing the photos. `failed` puts a retry in front of them instead.
    */
+  const loadPrompts = useCallback(async (): Promise<void> => {
+    setPromptsStatus('loading')
+
+    const ready = await refreshPrompts()
+
+    setPromptsStatus(ready ? 'ready' : 'failed')
+    if (!ready) {
+      videoPromptsMissingAlert()
+    }
+  }, [refreshPrompts, videoPromptsMissingAlert])
+
+  // Runs on every arrival, including returning here after cancelling a recording or backing out of the
+  // review screen. `refreshPrompts` and the alert are stable, so this fires once per focus.
   useFocusEffect(
     useCallback(() => {
-      let cancelled = false
-      setPromptsReady(false)
-
-      refreshPromptsRef.current().then((ready) => {
-        if (cancelled) {
-          return
-        }
-        setPromptsReady(ready)
-        if (!ready) {
-          videoPromptsMissingAlertRef.current()
-        }
-      })
-
-      return () => {
-        cancelled = true
-      }
-    }, [])
+      loadPrompts()
+    }, [loadPrompts])
   )
 
   const styles = StyleSheet.create({
@@ -85,7 +79,7 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
         }}
         testID={'StartRecordingButton'}
         accessibilityLabel={t('BCSC.SendVideo.VideoInstructions.StartRecordingButton')}
-        disabled={!promptsReady}
+        disabled={promptsStatus !== 'ready'}
       />
     </View>
   )
@@ -107,7 +101,7 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
         {t('BCSC.SendVideo.VideoInstructions.Heading2')}
       </ThemedText>
       {/* Held back until the refresh lands so the user is never shown a set from an earlier attempt. */}
-      {promptsReady ? (
+      {promptsStatus === 'ready' &&
         store.bcsc.prompts?.map(({ prompt, id }: VerificationPrompt, index) => (
           <Fragment key={id}>
             <ThemedText variant={'headingFour'} style={{ textAlign: 'center', color: ColorPalette.grayscale.black }}>
@@ -119,9 +113,18 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
               {prompt}
             </ThemedText>
           </Fragment>
-        ))
-      ) : (
+        ))}
+      {promptsStatus === 'loading' && (
         <ActivityIndicator style={{ marginBottom: Spacing.xl }} testID={'PromptsLoading'} />
+      )}
+      {promptsStatus === 'failed' && (
+        <Button
+          buttonType={ButtonType.Secondary}
+          title={t('Global.Retry')}
+          onPress={loadPrompts}
+          testID={'RetryLoadPrompts'}
+          accessibilityLabel={t('Global.Retry')}
+        />
       )}
       <ThemedText variant={'headingFour'} style={{ marginVertical: Spacing.lg }}>
         {t('BCSC.SendVideo.VideoInstructions.Heading3')}

@@ -2,7 +2,7 @@ import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { useFocusEffect } from '@react-navigation/native'
+import { useNavigation as useContextNavigation, useFocusEffect } from '@react-navigation/native'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import VideoReviewScreen from './VideoReviewScreen'
@@ -21,6 +21,8 @@ jest.mock('@/hooks/useAlerts', () => ({
 describe('VideoReview', () => {
   let mockNavigation: any
   const mockRefreshPrompts = jest.fn()
+  // usePreventGestureBack subscribes through useNavigation() (context), not the screen's prop.
+  const mockAddListener = jest.fn()
   const route = { params: { videoPath: 'file://test.mp4', videoThumbnailPath: 'file://thumbnail.jpg' } }
 
   const renderScreen = () =>
@@ -34,6 +36,7 @@ describe('VideoReview', () => {
     mockNavigation = useNavigation()
     jest.clearAllMocks()
     jest.useFakeTimers()
+    ;(useContextNavigation() as any).addListener = mockAddListener
     mockRefreshPrompts.mockResolvedValue(true)
     jest.mocked(useVideoPrompts).mockReturnValue({
       refreshPrompts: mockRefreshPrompts,
@@ -107,13 +110,15 @@ describe('VideoReview', () => {
     const captureBeforeRemove = () => {
       renderScreen()
 
-      return mockNavigation.addListener.mock.calls.find(([event]: [string]) => event === 'beforeRemove')?.[1]
+      return mockAddListener.mock.calls.find(([event]: [string]) => event === 'beforeRemove')?.[1]
     }
+
+    // Android's hardware back reaches the container ref, which stamps neither source nor target.
+    const hardwareBackEvent = () => ({ data: { action: { type: 'GO_BACK' } }, preventDefault: jest.fn() })
 
     it('redirects the Android hardware back button to the instructions screen', () => {
       const handler = captureBeforeRemove()
-      // The hardware back button reaches the container ref, so its action carries no source.
-      const event = { data: { action: { type: 'GO_BACK' } }, preventDefault: jest.fn() }
+      const event = hardwareBackEvent()
 
       handler(event)
 
@@ -121,19 +126,36 @@ describe('VideoReview', () => {
       expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.VideoInstructions)
     })
 
-    it.each([
-      ['Retake', { type: 'GO_BACK', source: 'video-review-key' }],
-      ['the header back button', { type: 'NAVIGATE', source: 'video-review-key' }],
-      ['Use Video', { type: 'RESET', source: 'video-review-key' }],
-    ])('lets %s through untouched', (_label, action) => {
-      // These all dispatch through this screen's own navigation object, which stamps a source. Redirecting
-      // them would send Retake to the instructions screen and loop the header button on itself.
+    it('lets this screen’s own dispatches through untouched', () => {
+      // Retake, Use Video and the header back button all dispatch through this route's navigation
+      // object, which stamps a source. Redirecting them would send Retake to the instructions screen
+      // instead of the camera. The source is the only thing separating them from a hardware back, so the
+      // action type is held identical here — varying it would let this pass on a type check alone.
       const handler = captureBeforeRemove()
-      const event = { data: { action }, preventDefault: jest.fn() }
+      const event = { data: { action: { type: 'GO_BACK', source: 'video-review-key' } }, preventDefault: jest.fn() }
 
       handler(event)
 
       expect(event.preventDefault).not.toHaveBeenCalled()
+      expect(mockNavigation.navigate).not.toHaveBeenCalled()
+    })
+
+    it('holds the user here while a retake refresh is in flight', () => {
+      // The buttons are disabled for this window but the hardware back is not. Leaving now would strand
+      // onPressRetake's goBack() on an unmounted screen: it carries a source but no target, so the router
+      // pops whatever replaced this route instead, dumping the user two screens back.
+      jest.mocked(useVideoPrompts).mockReturnValue({
+        refreshPrompts: mockRefreshPrompts,
+        ensureVerificationRequest: jest.fn(),
+        isRefreshingPrompts: true,
+      })
+
+      const handler = captureBeforeRemove()
+      const event = hardwareBackEvent()
+
+      handler(event)
+
+      expect(event.preventDefault).toHaveBeenCalled()
       expect(mockNavigation.navigate).not.toHaveBeenCalled()
     })
   })

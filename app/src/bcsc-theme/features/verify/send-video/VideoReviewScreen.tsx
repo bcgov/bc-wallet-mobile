@@ -3,6 +3,7 @@ import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { MediaCache } from '@/bcsc-theme/utils/media-cache'
 import { useAlerts } from '@/hooks/useAlerts'
+import usePreventGestureBack from '@/hooks/usePreventGestureBack'
 import { BCDispatchAction, BCState } from '@/store'
 import { withAlert } from '@/utils/alert'
 import readFileInChunks from '@/utils/read-file'
@@ -17,7 +18,7 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
-import { CommonActions, useFocusEffect } from '@react-navigation/native'
+import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -122,31 +123,24 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
    * re-arms recording on focus against the set this video already answered — the replay `onPressRetake`
    * refreshes to avoid, reachable without ever pressing Retake. VideoInstructions sits below TakeVideo, so
    * navigating there pops the camera off the stack, and its own focus effect issues the next set and shows
-   * it to the user before recording can start. That keeps the fetch out of this listener: refreshing here
-   * would mean holding the screen through a network call with no way to signal it, and every repeat press
-   * would burn another set against the rate limit.
+   * it to the user before recording can start. That keeps the fetch out of here: refreshing on the way out
+   * would mean holding the screen through a network call with no way to signal it.
    *
-   * Only a GO_BACK/POP without a source is redirected. The hardware back button reaches the container ref
-   * without a source, while this screen's own dispatches — Retake, Use Video, and the header back button
-   * in VerifyStack — all carry one and must pass through untouched. The iOS swipe is disabled there rather
-   * than redirected: it reveals the camera underneath as you drag, so landing elsewhere would contradict
-   * the gesture.
+   * The iOS swipe is disabled in VerifyStack rather than redirected: it reveals the camera underneath as
+   * you drag, so landing elsewhere would contradict the gesture.
    */
-  useFocusEffect(
+  usePreventGestureBack(
     useCallback(() => {
-      const unsubscribe = navigation.addListener('beforeRemove', (event) => {
-        const { action } = event.data
-        if ((action.type !== 'GO_BACK' && action.type !== 'POP') || action.source) {
-          return
-        }
+      if (isRefreshingPrompts) {
+        // `onPressRetake` is mid-refresh and will goBack() once it lands. Leaving now would fire that
+        // goBack() from an unmounted screen: it carries a source but no target, so the router falls back
+        // to popping whatever is on top rather than this route, dumping the user two screens back. The
+        // buttons below are disabled for the same window.
+        return
+      }
 
-        event.preventDefault()
-        dispatch({ type: BCDispatchAction.SAVE_VIDEO_THUMBNAIL, payload: [''] })
-        navigation.navigate(BCSCScreens.VideoInstructions)
-      })
-
-      return unsubscribe
-    }, [dispatch, navigation])
+      navigation.navigate(BCSCScreens.VideoInstructions)
+    }, [isRefreshingPrompts, navigation])
   )
 
   /**
