@@ -127,11 +127,9 @@ const useVideoPrompts = () => {
    * must not start a recording — the previous prompts are still cached and would replay a stale challenge.
    */
   const refreshPrompts = useCallback(async (): Promise<boolean> => {
-    if (!inFlightRefresh) {
-      inFlightRefresh = _refresh().finally(() => {
-        inFlightRefresh = null
-      })
-    }
+    inFlightRefresh ??= _refresh().finally(() => {
+      inFlightRefresh = null
+    })
 
     const refresh = inFlightRefresh
     setIsRefreshingPrompts(true)
