@@ -1,9 +1,11 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { EvidenceMetadataResponseData } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { ListButton, ListButtonGroup } from '@/bcsc-theme/components/ListButton'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { isCardEvidenceComplete } from '@/bcsc-theme/utils/card-utils'
+import { ICON_SIZE } from '@/constants'
 import { BCState } from '@/store'
 import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
@@ -11,9 +13,9 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { a11yLabel, a11yShortLabel } from '@utils/accessibility'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { BCSCCardProcess, EvidenceType } from 'react-native-bcsc-core'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import Icon from 'react-native-vector-icons/MaterialIcons'
 
 type EvidenceTypeListScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceTypeList>
@@ -25,9 +27,32 @@ interface SectionData {
   data: EvidenceType[]
 }
 
+/**
+ * Screen that lists the identity documents (evidence types) a user can choose from
+ * while verifying their identity.
+ *
+ * The same screen serves both steps of ID collection: it is pushed once for the
+ * first ID and again for the second, and filters the available cards based on the
+ * selected card process, each card's `collection_order` (FIRST / SECOND / BOTH),
+ * and any IDs already chosen — so a document can never be picked twice.
+ *
+ * When `photoFilter` is set (non-photo BCSC flow), the list is further restricted
+ * to photo-only or non-photo-only IDs, and an "Other Options" escape hatch lets
+ * users without a photo ID switch to the non-photo list.
+ *
+ * On focus, the screen also reconciles the evidence store with the navigation
+ * state: incomplete (abandoned) selections are removed on the first visit, and
+ * navigating back to this screen releases the ID(s) chosen from it so they become
+ * selectable again.
+ *
+ * @param props - Navigation and route props.
+ * @param props.navigation - Stack navigator used to push the ID photo instructions screen or swap photo filters.
+ * @param props.route - Route params: `cardProcess` (the selected card process) and optional `photoFilter` ('photo' | 'nonPhoto').
+ * @returns The evidence type selection screen.
+ */
 const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenProps) => {
   const { cardProcess, photoFilter } = route.params
-  const { ColorPalette, Spacing } = useTheme()
+  const { ColorPalette, Spacing, TextTheme } = useTheme()
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { evidence } = useApi()
@@ -42,32 +67,21 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
 
   const styles = StyleSheet.create({
     section: {
-      gap: Spacing.lg,
+      gap: Spacing.md,
     },
-    cardGroup: {
-      backgroundColor: ColorPalette.brand.secondaryBackground,
-      borderRadius: Spacing.sm,
-      borderWidth: 1,
-      borderColor: ColorPalette.notification.infoBorder,
-      overflow: 'hidden',
+    sectionTitle: {
+      ...TextTheme.bold,
+      color: ColorPalette.brand.headerText,
     },
-    cardItem: {
+    listButtonContainer: {
+      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingVertical: Spacing.md,
-      paddingHorizontal: Spacing.md,
+      gap: Spacing.sm,
     },
-    cardItemDivider: {
-      borderTopWidth: 1,
-      borderTopColor: ColorPalette.notification.infoBorder,
-    },
-    cardItemPressed: {
-      backgroundColor: ColorPalette.brand.primaryLight,
-    },
-    cardItemLabel: {
-      flexShrink: 1,
-      marginRight: Spacing.sm,
+    listButtonTitle: {
+      flex: 1,
+      color: ColorPalette.brand.headerText,
     },
   })
 
@@ -254,10 +268,10 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
 
       {evidenceSections.map((section) => (
         <View key={section.title} style={styles.section}>
-          <ThemedText variant={'headingFour'}>{section.title}</ThemedText>
-          <View style={styles.cardGroup}>
-            {section.data.map((item, index) => (
-              <Pressable
+          <ThemedText style={styles.sectionTitle}>{section.title}</ThemedText>
+          <ListButtonGroup>
+            {section.data.map((item) => (
+              <ListButton
                 key={item.evidence_type_label}
                 onPress={() => {
                   addEvidenceType(item)
@@ -267,28 +281,22 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
                 }}
                 testID={testIdWithKey(`EvidenceTypeListItem ${item.evidence_type_label}`)}
                 accessibilityLabel={a11yShortLabel(item.evidence_type_label)}
-                accessibilityRole={'button'}
-                style={({ pressed }) => [
-                  styles.cardItem,
-                  index > 0 && styles.cardItemDivider,
-                  pressed && styles.cardItemPressed,
-                ]}
               >
-                <ThemedText variant={'bold'} style={styles.cardItemLabel}>
-                  {item.evidence_type_label}
-                </ThemedText>
-                <Icon name={'chevron-right'} size={24} color={ColorPalette.brand.primary} />
-              </Pressable>
+                <View style={styles.listButtonContainer}>
+                  <ThemedText style={styles.listButtonTitle}>{item.evidence_type_label}</ThemedText>
+                  <Icon name={'arrow-forward-ios'} size={ICON_SIZE} color={styles.listButtonTitle.color} />
+                </View>
+              </ListButton>
             ))}
-          </View>
+          </ListButtonGroup>
         </View>
       ))}
 
       {showOtherOptions ? (
         <View style={styles.section}>
-          <ThemedText variant={'headingFour'}>{t('BCSC.EvidenceTypeList.OtherOptions')}</ThemedText>
-          <View style={styles.cardGroup}>
-            <Pressable
+          <ThemedText style={styles.sectionTitle}>{t('BCSC.EvidenceTypeList.OtherOptions')}</ThemedText>
+          <ListButtonGroup>
+            <ListButton
               onPress={() => {
                 navigation.replace(BCSCScreens.EvidenceTypeList, {
                   cardProcess,
@@ -297,15 +305,13 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
               }}
               testID={testIdWithKey('EvidenceTypeListOtherOptions')}
               accessibilityLabel={a11yLabel(t('BCSC.EvidenceTypeList.ShowMoreOptions'))}
-              accessibilityRole={'button'}
-              style={({ pressed }) => [styles.cardItem, pressed && styles.cardItemPressed]}
             >
-              <ThemedText variant={'bold'} style={styles.cardItemLabel}>
-                {t('BCSC.EvidenceTypeList.ShowMoreOptions')}
-              </ThemedText>
-              <Icon name={'chevron-right'} size={24} color={ColorPalette.brand.primary} />
-            </Pressable>
-          </View>
+              <View style={styles.listButtonContainer}>
+                <ThemedText style={styles.listButtonTitle}>{t('BCSC.EvidenceTypeList.ShowMoreOptions')}</ThemedText>
+                <Icon name={'arrow-forward-ios'} size={ICON_SIZE} color={styles.listButtonTitle.color} />
+              </View>
+            </ListButton>
+          </ListButtonGroup>
         </View>
       ) : null}
     </ScreenWrapper>
