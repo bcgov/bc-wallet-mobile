@@ -288,7 +288,6 @@ describe('AppError', () => {
         statusCode: 1234,
       }
       const error = new AppError('Something went wrong', identity)
-      error.screen = 'HomeScreen'
       error.addContext({ url: 'https://example.com/device/token', method: 'POST' })
 
       expect(error.fullMessage).toBe('Something went wrong\nDebug: [general.unknown_server_error.1234]')

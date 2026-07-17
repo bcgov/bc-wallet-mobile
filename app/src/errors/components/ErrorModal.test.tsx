@@ -241,7 +241,7 @@ describe('BCSCErrorModal', () => {
 
       const reported = (reportProblem as jest.Mock).mock.calls[0][0] as { error: AppError }
       expect(reported.error).toBe(contextError)
-      expect(reported.error.toJSON().context).toEqual({ url: 'https://example.com/userinfo', method: 'GET' })
+      expect(reported.error.context).toEqual({ url: 'https://example.com/userinfo', method: 'GET' })
     })
 
     it('should disable the Report button after being pressed', async () => {
