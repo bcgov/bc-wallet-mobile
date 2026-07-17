@@ -2,6 +2,9 @@ import { AbstractBifoldLogger, CredentialProvisioningEventTypes, CredentialProvi
 import { AnonCredsRequestedAttribute, AnonCredsRequestedPredicate } from '@credo-ts/anoncreds'
 import { Agent } from '@credo-ts/core'
 import {
+  DidCommCredentialEventTypes,
+  DidCommCredentialState,
+  DidCommCredentialStateChangedEvent,
   DidCommProofEventTypes,
   DidCommProofExchangeRecord,
   DidCommProofState,
@@ -17,6 +20,12 @@ type AgentSubscription = ReturnType<ReturnType<Agent['events']['observable']>['s
 interface ProofRequestFormat {
   requested_attributes?: Record<string, AnonCredsRequestedAttribute>
   requested_predicates?: Record<string, AnonCredsRequestedPredicate>
+}
+
+/** Minimal shape of the always-on AttestationMonitor we need to pause. */
+interface PausableAttestationMonitor {
+  start: (agent: Agent) => void
+  stop: () => void
 }
 
 /**
@@ -50,6 +59,12 @@ export interface AutoCredentialRule {
 
 export interface AutoCredentialMonitorOptions {
   rules: AutoCredentialRule[]
+  /**
+   * Always-on AttestationMonitor. Paused for the duration of an auto-workflow
+   * so it can't race our filtered subscription trying to satisfy the (now
+   * optional) attestation proof the issuer sends during issuance.
+   */
+  attestationMonitor?: PausableAttestationMonitor
 }
 
 /**
@@ -63,24 +78,26 @@ export interface AutoCredentialMonitorOptions {
  * refresh and allow the user to approve the original request.
  *
  * Register an instance at TOKENS.UTIL_CREDENTIAL_PROVISIONING_MONITOR
- *
- * TODO: (al) This currently logs any results of a rule triggering, implement full workflow when target credential is ready
  */
 export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
   private proofSubscription?: AgentSubscription
   private agent?: BCAgent
   private readonly log?: AbstractBifoldLogger
   private readonly rules: AutoCredentialRule[]
+  private readonly attestationMonitor?: PausableAttestationMonitor
 
   // State for the active workflow (one at a time)
   private _workflowInProgress = false
   private _pendingProofRequest?: DidCommProofExchangeRecord
   private _pendingConnectionId?: string
   private _activeRule?: AutoCredentialRule
+  private _workflowProofSubscription?: AgentSubscription
+  private _workflowOfferSubscription?: AgentSubscription
 
   public constructor(logger: AbstractBifoldLogger, options: AutoCredentialMonitorOptions) {
     this.log = logger
     this.rules = options.rules
+    this.attestationMonitor = options.attestationMonitor
   }
 
   public get workflowInProgress(): boolean {
@@ -97,6 +114,7 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
 
   public stop(): void {
     this.proofSubscription?.unsubscribe()
+    this.teardownWorkflowSubscriptions()
     this._workflowInProgress = false
     this._pendingProofRequest = undefined
     this._pendingConnectionId = undefined
@@ -116,6 +134,8 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
   }
 
   private completeWorkflow(): void {
+    this.teardownWorkflowSubscriptions()
+    this.resumeAttestationMonitor()
     this._workflowInProgress = false
     this._pendingProofRequest = undefined
     this._pendingConnectionId = undefined
@@ -131,12 +151,31 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
       | typeof CredentialProvisioningEventTypes.FailedRequestCredential,
     error: Error
   ): void {
+    this.teardownWorkflowSubscriptions()
+    this.resumeAttestationMonitor()
     this._workflowInProgress = false
     this._pendingProofRequest = undefined
     this._pendingConnectionId = undefined
     this._activeRule = undefined
     DeviceEventEmitter.emit(eventType, error)
     this.log?.error('[AutoCredentialMonitor] Workflow failed', error)
+  }
+
+  private teardownWorkflowSubscriptions(): void {
+    this._workflowProofSubscription?.unsubscribe()
+    this._workflowProofSubscription = undefined
+    this._workflowOfferSubscription?.unsubscribe()
+    this._workflowOfferSubscription = undefined
+  }
+
+  private resumeAttestationMonitor(): void {
+    if (this.attestationMonitor && this.agent) {
+      try {
+        this.attestationMonitor.start(this.agent)
+      } catch (err) {
+        this.log?.warn('[AutoCredentialMonitor] Could not restart AttestationMonitor', { error: err as Error })
+      }
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -216,6 +255,92 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
   }
 
   // ---------------------------------------------------------------------------
+  // Private — workflow driver
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Fetch the missing credential:
+   *   1. Pause the always-on AttestationMonitor.
+   *   2. Get the issuer invitation URL from the rule (BCSC-initiated: POST
+   *      /credentials/v1/person; static: literal from config).
+   *   3. Receive the invitation. The didexchange connection completes async.
+   *   4. On any proof request the issuer sends over the new connection,
+   *      decline it (attestation is optional server-side).
+   *   5. On credential offer, auto-accept; on credential done, complete.
+   *
+   * The original triggering proof request is left in `RequestReceived` state
+   * so the user can approve it manually once the missing cred lands.
+   */
+  private async runWorkflow(rule: AutoCredentialRule, proof: DidCommProofExchangeRecord): Promise<void> {
+    if (!this.agent) {
+      return
+    }
+
+    this.startWorkflow(proof, rule)
+    this.attestationMonitor?.stop()
+
+    try {
+      const invitationUrl = await rule.getInvitationUrl(proof, this.agent)
+      const invite = await this.agent.didcomm.oob.parseInvitation(invitationUrl)
+      if (!invite) {
+        throw new Error('Could not parse issuer invitation')
+      }
+      const { connectionRecord } = await this.agent.didcomm.oob.receiveInvitation(invite, {
+        label: 'Person Credential Issuer',
+      })
+      if (!connectionRecord) {
+        throw new Error('No connection record returned from receiveInvitation')
+      }
+      const connectionId = connectionRecord.id
+      this._pendingConnectionId = connectionId
+
+      // Decline any proof the issuer sends on this connection. In the BCSC flow
+      // the issuer sends an (optional) attestation proof request that we can't
+      // satisfy from the wallet; declining lets the issuance proceed to the
+      // credential offer.
+      this._workflowProofSubscription = this.agent.events
+        .observable<DidCommProofStateChangedEvent>(DidCommProofEventTypes.ProofStateChanged)
+        .subscribe(async ({ payload: { proofRecord } }) => {
+          if (!this.agent) return
+          if (proofRecord.connectionId !== connectionId) return
+          if (proofRecord.state !== DidCommProofState.RequestReceived) return
+          try {
+            await this.agent.didcomm.proofs.declineRequest({
+              proofExchangeRecordId: proofRecord.id,
+              sendProblemReport: true,
+            })
+          } catch (err) {
+            this.failWorkflow(CredentialProvisioningEventTypes.FailedHandleProof, err as Error)
+          }
+        })
+
+      // Auto-accept the Person Credential offer and complete when it lands.
+      this._workflowOfferSubscription = this.agent.events
+        .observable<DidCommCredentialStateChangedEvent>(DidCommCredentialEventTypes.DidCommCredentialStateChanged)
+        .subscribe(async ({ payload: { credentialExchangeRecord } }) => {
+          if (!this.agent) return
+          if (credentialExchangeRecord.connectionId !== connectionId) return
+          try {
+            if (
+              credentialExchangeRecord.state === DidCommCredentialState.OfferReceived &&
+              rule.autoAcceptCredentialOffer !== false
+            ) {
+              await this.agent.didcomm.credentials.acceptOffer({
+                credentialExchangeRecordId: credentialExchangeRecord.id,
+              })
+            } else if (credentialExchangeRecord.state === DidCommCredentialState.Done) {
+              this.completeWorkflow()
+            }
+          } catch (err) {
+            this.failWorkflow(CredentialProvisioningEventTypes.FailedHandleOffer, err as Error)
+          }
+        })
+    } catch (err) {
+      this.failWorkflow(CredentialProvisioningEventTypes.FailedRequestCredential, err as Error)
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // Private — event handler
   // ---------------------------------------------------------------------------
 
@@ -225,6 +350,11 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     }
     const proof = event.payload.proofRecord
     if (proof.state !== DidCommProofState.RequestReceived) {
+      return
+    }
+    // A workflow already claimed a proof; the workflow-scoped subscription
+    // handles proofs on its own connection. Ignore everything else.
+    if (this._workflowInProgress) {
       return
     }
 
@@ -266,10 +396,16 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
 
       try {
         const isMissing = await this.isCredentialMissingForRule(proof.id, requestFormat, rule)
-        // TODO: if isMissing == true, trigger workflow to fetch missing credential and respond to proof request
         this.log?.info(
           `[AutoCredentialMonitor] Credential (${rule.triggerCredDefIds.join(', ')}) is ${isMissing ? 'NOT ' : ''}in the wallet`
         )
+        if (isMissing) {
+          // Fire and forget — inside runWorkflow drives its own subscriptions
+          // and error handling. Return so we don't try further rules against the
+          // same proof.
+          this.runWorkflow(rule, proof)
+          return
+        }
       } catch (err) {
         this.log?.warn(`[AutoCredentialMonitor] Could not check credential availability`, { error: err as Error })
       }
