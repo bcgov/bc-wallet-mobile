@@ -67,7 +67,9 @@ const translation = {
   },
   "Credentials": {
     "AddCredential": "Add Credential (PT-BR)",
-    "AddFirstCredential": "Add your first credential (PT-BR)"
+    "AddFirstCredential": "Add your first credential (PT-BR)",
+    "NotAnIDInfoTitle": "This does not replace your physical ID (PT-BR)",
+    "NotAnIDInfoDescription": "Do not share this screen as ID. This credential is used for digital interactions via the BC Services Card app only. (PT-BR)",
   },
   "Onboarding": {
     "DifferentWalletHeading": "A different smart wallet (PT-BR)",
@@ -1515,6 +1517,10 @@ const translation = {
     "VideoPromptsMissing": {
       "Title": "Problem Starting Video (PT-BR)",
       "Description": "We couldn't load your verification steps. Please try again. (PT-BR)"
+    },
+    "DocumentExpired": {
+      "Title": "This document has expired. (PT-BR)",
+      "Description": "Please choose a different form of ID to continue. (PT-BR)"
     },
     "FactoryReset": {
       "Title": "Problem with App (PT-BR)",

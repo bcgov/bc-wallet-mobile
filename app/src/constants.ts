@@ -24,7 +24,7 @@ export interface CredentialRestrictionEnvironment {
  */
 export const AutoFetchCredentialConfig: Record<string, CredentialRestrictionEnvironment> = {
   Development: {
-    credDefIDs: ['GLMSn8ABPSvGnk42xUU7Fo:3:CL:3190179:DigitalServicesCard'],
+    credDefIDs: ['PLACEHOLDER_DEV_ACCOUNT_ID_CRED_DEF_ID'],
     invitationUrl: 'PLACEHOLDER_DEV_ACCOUNT_ID_INVITATION_URL',
   },
   Test: {
@@ -210,3 +210,18 @@ export const SHADOW_OFFSET_UP = { width: 0, height: -SHADOW_SIZE }
 
 // Account constants
 export const TEMPORARY_ACCOUNT_CLIENT_ID = ''
+
+// Credential constants
+// TODO (MD): Pull these values from well-known urls or remote config (ie: Firebase Remote Config)
+export const DIGITAL_SERVICES_CARD_CREDENTIAL_DEFINITION_IDS = [
+  'RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person',
+  'KCxVC8GkKywjhWJnUfCmkW:3:CL:20:PersonQA',
+  '7xjfawcnyTUcduWVysLww5:3:CL:28075:PersonSIT',
+  'XpgeQa93eZvGSZBZef3PHn:3:CL:28075:PersonDEV',
+]
+export const DIGITAL_SERVICES_CARD_SCHEMA_IDS = [
+  'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0',
+  'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0',
+  '7xjfawcnyTUcduWVysLww5:2:Person:1.0',
+  'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0',
+]

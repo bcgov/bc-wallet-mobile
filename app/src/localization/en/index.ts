@@ -67,7 +67,9 @@ const translation = {
   },
   "Credentials": {
     "AddCredential": "Add Credential",
-    "AddFirstCredential": "Add your first credential"
+    "AddFirstCredential": "Add your first credential",
+    "NotAnIDInfoTitle": "This does not replace your physical ID",
+    "NotAnIDInfoDescription": "Do not share this screen as ID. This credential is used for digital interactions via the BC Services Card app only.",
   },
   "Onboarding": {
     "DifferentWalletHeading": "A different smart wallet",
@@ -1515,6 +1517,10 @@ const translation = {
     "VideoPromptsMissing": {
       "Title": "Problem Starting Video",
       "Description": "We couldn't load your verification steps. Please try again."
+    },
+    "DocumentExpired": {
+      "Title": "This document has expired.",
+      "Description": "Please choose a different form of ID to continue."
     },
     "FactoryReset": {
       "Title": "Problem with App",
