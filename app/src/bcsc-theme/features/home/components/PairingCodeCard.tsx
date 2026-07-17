@@ -1,7 +1,8 @@
+import { PressableOpacity } from '@/components/PressableOpacity'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { a11yLabel } from '@utils/accessibility'
 import React from 'react'
-import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 interface PairingCodeCardProps {
@@ -63,7 +64,7 @@ const PairingCodeCard: React.FC<PairingCodeCardProps> = ({
   })
 
   return (
-    <TouchableOpacity
+    <PressableOpacity
       style={styles.container}
       onPress={onPress}
       accessibilityRole="button"
@@ -78,7 +79,7 @@ const PairingCodeCard: React.FC<PairingCodeCardProps> = ({
         </ThemedText>
         <ThemedText style={styles.description}>{description}</ThemedText>
       </View>
-    </TouchableOpacity>
+    </PressableOpacity>
   )
 }
 
