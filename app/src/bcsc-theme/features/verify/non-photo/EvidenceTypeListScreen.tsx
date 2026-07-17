@@ -284,7 +284,7 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
               >
                 <View style={styles.listButtonContainer}>
                   <ThemedText style={styles.listButtonTitle}>{item.evidence_type_label}</ThemedText>
-                  <Icon name={'arrow-forward-ios'} size={ICON_SIZE} color={styles.listButtonTitle.color} />
+                  <Icon name={'arrow-forward-ios'} size={ICON_SIZE} color={ColorPalette.brand.headerText} />
                 </View>
               </ListButton>
             ))}
