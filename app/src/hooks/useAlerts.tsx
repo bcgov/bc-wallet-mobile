@@ -335,6 +335,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       alreadyVerifiedAlert: _createBasicErrorModal(AppEventCode.ALREADY_VERIFIED, 'AlreadyVerified'),
       fileUploadErrorAlert: _createBasicErrorModal(AppEventCode.FILE_UPLOAD_ERROR, 'FileUploadError'),
       videoPromptsMissingAlert: _createBasicErrorModal(AppEventCode.VIDEO_PROMPTS_MISSING, 'VideoPromptsMissing'),
+      documentExpiredAlert: _createBasicAlert(AppEventCode.ERR_209_BAD_REQUEST, 'DocumentExpired'),
       loginSameDeviceInvalidPairingCodeAlert: _createBasicErrorModal(AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE, 'InvalidPairingCodeSameDevice'),
       failedToWriteToLocalStorageAlert,
       failedToReadFromLocalStorageAlert: _createBasicErrorModal(AppEventCode.ERR_101_FAILED_TO_READ_LOCAL_STORAGE, 'SomethingWentWrong'),
