@@ -36,7 +36,6 @@ const mockPerformDeviceAuthentication = jest.mocked(performDeviceAuthentication)
 describe('SecurityMethodSelector', () => {
   const mockOnDeviceAuthPress = jest.fn()
   const mockOnPINPress = jest.fn()
-  const mockOnLearnMorePress = jest.fn()
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -57,11 +56,7 @@ describe('SecurityMethodSelector', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <SecurityMethodSelector
-              onDeviceAuthPress={mockOnDeviceAuthPress}
-              onPINPress={mockOnPINPress}
-              onLearnMorePress={mockOnLearnMorePress}
-            />
+            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -80,11 +75,7 @@ describe('SecurityMethodSelector', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <SecurityMethodSelector
-              onDeviceAuthPress={mockOnDeviceAuthPress}
-              onPINPress={mockOnPINPress}
-              onLearnMorePress={mockOnLearnMorePress}
-            />
+            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -98,11 +89,7 @@ describe('SecurityMethodSelector', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <SecurityMethodSelector
-              onDeviceAuthPress={mockOnDeviceAuthPress}
-              onPINPress={mockOnPINPress}
-              onLearnMorePress={mockOnLearnMorePress}
-            />
+            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -123,11 +110,7 @@ describe('SecurityMethodSelector', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <SecurityMethodSelector
-              onDeviceAuthPress={mockOnDeviceAuthPress}
-              onPINPress={mockOnPINPress}
-              onLearnMorePress={mockOnLearnMorePress}
-            />
+            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -150,11 +133,7 @@ describe('SecurityMethodSelector', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <SecurityMethodSelector
-              onDeviceAuthPress={mockOnDeviceAuthPress}
-              onPINPress={mockOnPINPress}
-              onLearnMorePress={mockOnLearnMorePress}
-            />
+            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -170,31 +149,6 @@ describe('SecurityMethodSelector', () => {
         expect(mockOnDeviceAuthPress).toHaveBeenCalled()
       })
     })
-
-    it('calls onLearnMorePress when learn more option is pressed', async () => {
-      // Learn More is only shown in the settings context (with currentMethod) when device auth is available
-      const tree = render(
-        <BasicAppContext>
-          <BCSCLoadingProvider>
-            <SecurityMethodSelector
-              onDeviceAuthPress={mockOnDeviceAuthPress}
-              onPINPress={mockOnPINPress}
-              onLearnMorePress={mockOnLearnMorePress}
-              currentMethod={AccountSecurityMethod.PinWithDeviceAuth}
-            />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
-
-      await waitFor(() => {
-        expect(tree.getByTestId(testIdWithKey('LearnMoreButton'))).toBeTruthy()
-      })
-
-      const learnMoreButton = tree.getByTestId(testIdWithKey('LearnMoreButton'))
-      fireEvent.press(learnMoreButton)
-
-      expect(mockOnLearnMorePress).toHaveBeenCalled()
-    })
   })
 
   describe('when device auth is NOT available', () => {
@@ -207,11 +161,7 @@ describe('SecurityMethodSelector', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <SecurityMethodSelector
-              onDeviceAuthPress={mockOnDeviceAuthPress}
-              onPINPress={mockOnPINPress}
-              onLearnMorePress={mockOnLearnMorePress}
-            />
+            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -230,11 +180,7 @@ describe('SecurityMethodSelector', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <SecurityMethodSelector
-              onDeviceAuthPress={mockOnDeviceAuthPress}
-              onPINPress={mockOnPINPress}
-              onLearnMorePress={mockOnLearnMorePress}
-            />
+            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -250,11 +196,7 @@ describe('SecurityMethodSelector', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <SecurityMethodSelector
-              onDeviceAuthPress={mockOnDeviceAuthPress}
-              onPINPress={mockOnPINPress}
-              onLearnMorePress={mockOnLearnMorePress}
-            />
+            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -283,7 +225,6 @@ describe('SecurityMethodSelector', () => {
             <SecurityMethodSelector
               onDeviceAuthPress={mockOnDeviceAuthPress}
               onPINPress={mockOnPINPress}
-              onLearnMorePress={mockOnLearnMorePress}
               currentMethod={AccountSecurityMethod.PinWithDeviceAuth}
             />
           </BCSCLoadingProvider>
@@ -295,14 +236,13 @@ describe('SecurityMethodSelector', () => {
       })
     })
 
-    it('disables current method option (PIN)', async () => {
+    it('marks the PIN card as the current method', async () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
             <SecurityMethodSelector
               onDeviceAuthPress={mockOnDeviceAuthPress}
               onPINPress={mockOnPINPress}
-              onLearnMorePress={mockOnLearnMorePress}
               currentMethod={AccountSecurityMethod.PinWithDeviceAuth}
             />
           </BCSCLoadingProvider>
@@ -310,18 +250,31 @@ describe('SecurityMethodSelector', () => {
       )
 
       await waitFor(() => {
-        expect(tree.getByText('BCSC.Settings.AppSecurity.CurrentlySelected')).toBeTruthy()
+        expect(tree.getByText('BCSC.Settings.AppSecurity.CurrentMethod')).toBeTruthy()
       })
+
+      // The PIN card shows the current-method label with the PIN name as its subtext, while device
+      // auth becomes the actionable option.
+      expect(tree.getByText('BCSC.Settings.AppSecurity.PIN')).toBeTruthy()
+      expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
+
+      // Accessibility: the current-method card must announce the method name (its subtext), be
+      // marked selected (not disabled), and be a non-interactive status indicator.
+      const pinCard = tree.getByTestId(testIdWithKey('ChoosePINButton'))
+      expect(pinCard.props.accessibilityLabel).toContain('BCSC.Settings.AppSecurity.PIN')
+      expect(pinCard.props.accessibilityState).toMatchObject({ selected: true })
+      expect(pinCard.props.accessibilityState.disabled).toBeFalsy()
+      expect(pinCard.props.accessibilityRole).toBeUndefined()
+      expect(pinCard.props.onPress).toBeUndefined()
     })
 
-    it('disables current method option (Device Auth)', async () => {
+    it('marks the device auth card as the current method', async () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
             <SecurityMethodSelector
               onDeviceAuthPress={mockOnDeviceAuthPress}
               onPINPress={mockOnPINPress}
-              onLearnMorePress={mockOnLearnMorePress}
               currentMethod={AccountSecurityMethod.DeviceAuth}
             />
           </BCSCLoadingProvider>
@@ -329,8 +282,18 @@ describe('SecurityMethodSelector', () => {
       )
 
       await waitFor(() => {
-        expect(tree.getByText('BCSC.Settings.AppSecurity.CurrentlySelected')).toBeTruthy()
+        expect(tree.getByText('BCSC.Settings.AppSecurity.CurrentMethod')).toBeTruthy()
       })
+
+      // Device auth shows the current-method label; creating a PIN becomes the actionable option.
+      expect(tree.getByText('BCSC.Onboarding.SecureAppPINTitle')).toBeTruthy()
+
+      // Accessibility: the biometric name (subtext) is part of the current-method card's label and
+      // the card is marked selected rather than disabled.
+      const deviceAuthCard = tree.getByTestId(testIdWithKey('ChooseDeviceAuthButton'))
+      expect(deviceAuthCard.props.accessibilityLabel).toMatch(/Face/)
+      expect(deviceAuthCard.props.accessibilityState).toMatchObject({ selected: true })
+      expect(deviceAuthCard.props.accessibilityState.disabled).toBeFalsy()
 
       expect(tree).toMatchSnapshot()
     })
@@ -345,7 +308,6 @@ describe('SecurityMethodSelector', () => {
             <SecurityMethodSelector
               onDeviceAuthPress={mockOnDeviceAuthPress}
               onPINPress={mockOnPINPress}
-              onLearnMorePress={mockOnLearnMorePress}
               currentMethod={AccountSecurityMethod.PinWithDeviceAuth}
               deviceAuthPrompt={customPrompt}
             />
@@ -379,7 +341,6 @@ describe('SecurityMethodSelector', () => {
             <SecurityMethodSelector
               onDeviceAuthPress={mockOnDeviceAuthPress}
               onPINPress={mockOnPINPress}
-              onLearnMorePress={mockOnLearnMorePress}
               currentMethod={AccountSecurityMethod.PinNoDeviceAuth}
             />
           </BCSCLoadingProvider>
@@ -400,11 +361,7 @@ describe('SecurityMethodSelector', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <SecurityMethodSelector
-              onDeviceAuthPress={mockOnDeviceAuthPress}
-              onPINPress={mockOnPINPress}
-              onLearnMorePress={mockOnLearnMorePress}
-            />
+            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -423,11 +380,7 @@ describe('SecurityMethodSelector', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <SecurityMethodSelector
-              onDeviceAuthPress={mockOnDeviceAuthPress}
-              onPINPress={mockOnPINPress}
-              onLearnMorePress={mockOnLearnMorePress}
-            />
+            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -455,11 +408,7 @@ describe('SecurityMethodSelector', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <SecurityMethodSelector
-              onDeviceAuthPress={mockOnDeviceAuthPress}
-              onPINPress={mockOnPINPress}
-              onLearnMorePress={mockOnLearnMorePress}
-            />
+            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -488,11 +437,7 @@ describe('SecurityMethodSelector', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <SecurityMethodSelector
-              onDeviceAuthPress={mockOnDeviceAuthPress}
-              onPINPress={mockOnPINPress}
-              onLearnMorePress={mockOnLearnMorePress}
-            />
+            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -518,11 +463,7 @@ describe('SecurityMethodSelector', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <SecurityMethodSelector
-              onDeviceAuthPress={mockOnDeviceAuthPress}
-              onPINPress={mockOnPINPress}
-              onLearnMorePress={mockOnLearnMorePress}
-            />
+            <SecurityMethodSelector onDeviceAuthPress={mockOnDeviceAuthPress} onPINPress={mockOnPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )

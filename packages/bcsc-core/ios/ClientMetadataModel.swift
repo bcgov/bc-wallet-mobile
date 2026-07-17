@@ -132,21 +132,39 @@ class MetadataClients: NSObject, NSSecureCoding {
       "clientRefId": clientId ?? "",
       "bookmarked": bookmarked ?? false,
     ]
-    if let clientName = clientName { dict["clientName"] = clientName }
-    if let dateAdded = dateAdded { dict["dateAdded"] = dateAdded.timeIntervalSince1970 }
-    if let lastUsed = lastUsed { dict["lastUsed"] = lastUsed.timeIntervalSince1970 }
-    if let clientUri = clientUri { dict["clientUri"] = clientUri }
-    if let initiateLoginUri = initiateLoginUri { dict["initiateLoginUri"] = initiateLoginUri }
-    if let clientDescription = clientDescription { dict["clientDescription"] = clientDescription }
-    if let policyUri = policyUri { dict["policyUri"] = policyUri }
+    if let clientName = clientName {
+      dict["clientName"] = clientName
+    }
+    if let dateAdded = dateAdded {
+      dict["dateAdded"] = dateAdded.timeIntervalSince1970
+    }
+    if let lastUsed = lastUsed {
+      dict["lastUsed"] = lastUsed.timeIntervalSince1970
+    }
+    if let clientUri = clientUri {
+      dict["clientUri"] = clientUri
+    }
+    if let initiateLoginUri = initiateLoginUri {
+      dict["initiateLoginUri"] = initiateLoginUri
+    }
+    if let clientDescription = clientDescription {
+      dict["clientDescription"] = clientDescription
+    }
+    if let policyUri = policyUri {
+      dict["policyUri"] = policyUri
+    }
     if let serviceListingSortOrder = serviceListingSortOrder {
       dict["serviceListingSortOrder"] = serviceListingSortOrder
     }
-    if let claimsDescription = claimsDescription { dict["claimsDescription"] = claimsDescription }
+    if let claimsDescription = claimsDescription {
+      dict["claimsDescription"] = claimsDescription
+    }
     if let suppressConfirmationInfo = suppressConfirmationInfo {
       dict["suppressConfirmationInfo"] = suppressConfirmationInfo
     }
-    if let suppressBookmarkPrompt = suppressBookmarkPrompt { dict["suppressBookmarkPrompt"] = suppressBookmarkPrompt }
+    if let suppressBookmarkPrompt = suppressBookmarkPrompt {
+      dict["suppressBookmarkPrompt"] = suppressBookmarkPrompt
+    }
     return dict
   }
 

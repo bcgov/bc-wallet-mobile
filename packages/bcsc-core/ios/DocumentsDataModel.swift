@@ -229,20 +229,36 @@ class EvidenceType: NSObject, NSSecureCoding {
   /// Convert to dictionary for JS
   func toDictionary() -> [String: Any] {
     var dict = [String: Any]()
-    if let evidenceType = evidenceType { dict["evidence_type"] = evidenceType }
-    if let hasPhoto = hasPhoto { dict["has_photo"] = hasPhoto }
-    if let group = group { dict["group"] = group }
-    if let sortOrder = sortOrder { dict["sort_order"] = sortOrder }
-    if let groupSortOrder = groupSortOrder { dict["group_sort_order"] = groupSortOrder }
-    if let collectionOrder = collectionOrder { dict["collection_order"] = collectionOrder }
+    if let evidenceType = evidenceType {
+      dict["evidence_type"] = evidenceType
+    }
+    if let hasPhoto = hasPhoto {
+      dict["has_photo"] = hasPhoto
+    }
+    if let group = group {
+      dict["group"] = group
+    }
+    if let sortOrder = sortOrder {
+      dict["sort_order"] = sortOrder
+    }
+    if let groupSortOrder = groupSortOrder {
+      dict["group_sort_order"] = groupSortOrder
+    }
+    if let collectionOrder = collectionOrder {
+      dict["collection_order"] = collectionOrder
+    }
     if let documentReferenceInputMask = documentReferenceInputMask {
       dict["document_reference_input_mask"] = documentReferenceInputMask
     }
-    if let documentReferenceLabel = documentReferenceLabel { dict["document_reference_label"] = documentReferenceLabel }
+    if let documentReferenceLabel = documentReferenceLabel {
+      dict["document_reference_label"] = documentReferenceLabel
+    }
     if let documentReferenceSample = documentReferenceSample {
       dict["document_reference_sample"] = documentReferenceSample
     }
-    if let evidenceTypeLabel = evidenceTypeLabel { dict["evidence_type_label"] = evidenceTypeLabel }
+    if let evidenceTypeLabel = evidenceTypeLabel {
+      dict["evidence_type_label"] = evidenceTypeLabel
+    }
     dict["image_sides"] = imageSides.map { side -> [String: String] in
       [
         "image_side_name": side.imageSideName,

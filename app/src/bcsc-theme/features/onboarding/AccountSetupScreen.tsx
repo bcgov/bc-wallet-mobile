@@ -11,13 +11,14 @@ import {
   testIdWithKey,
   ThemedText,
   TOKENS,
+  useAnimatedComponents,
   useServices,
   useStore,
   useTheme,
 } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useRef } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
@@ -29,8 +30,10 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
   const [store, dispatch] = useStore<BCState>()
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
+  const { ButtonLoading } = useAnimatedComponents()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { clearDeviceCodes } = useSecureActions()
+  const [isAddingAccount, setIsAddingAccount] = useState(false)
 
   // Latest store snapshot for the focus effect below. Reading through a ref keeps the effect
   // callback stable so it only runs on focus transitions — depending on the store directly
@@ -74,8 +77,20 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
     },
   })
 
+  useFocusEffect(
+    useCallback(() => {
+      // set loading state to false on unmount
+      // so the user isn't stuck if they come back to this screen
+      return () => {
+        setIsAddingAccount(false)
+      }
+    }, [])
+  )
+
   // "No, continue setup" — verify a new account on this device via the identity steps.
-  const handleAddAccount = useCallback(() => {
+  const handleAddAccount = useCallback(async () => {
+    setIsAddingAccount(true)
+
     dispatch({
       type: BCDispatchAction.ACCOUNT_SETUP_TYPE,
       payload: [AccountSetupType.AddAccount],
@@ -103,7 +118,10 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
         onPress={handleAddAccount}
         accessibilityLabel={t('BCSC.AccountSetup.AddAccount')}
         testID={testIdWithKey('AddAccount')}
-      />
+        disabled={isAddingAccount}
+      >
+        {isAddingAccount && <ButtonLoading />}
+      </Button>
       <Button
         buttonType={ButtonType.Secondary}
         title={t('BCSC.AccountSetup.TransferAccount')}

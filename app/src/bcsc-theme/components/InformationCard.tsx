@@ -48,6 +48,7 @@ export const InformationCard = (props: InformationCardProps) => {
       display: 'flex',
       flexDirection: 'row',
       alignItems: 'center',
+      paddingBottom: Spacing.xs,
     },
     title: {
       flex: 1,

@@ -1,7 +1,7 @@
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import usePreventGestureBack from '@/hooks/usePreventGestureBack'
-import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { ScrollView, StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { StyleSheet } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 export interface SystemModalProps {
@@ -60,52 +60,44 @@ export const SystemModal = ({
   usePreventGestureBack()
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: ColorPalette.brand.modalPrimaryBackground,
-    },
-    scrollContainer: {
-      alignItems: 'center',
+    content: {
+      // flexGrow lets the content fill the viewport so the controls stay pinned to the bottom.
+      flexGrow: 1,
+      padding: Spacing.lg,
+      // Consistent vertical rhythm between the icon, heading and body lines.
+      gap: Spacing.lg,
     },
     icon: {
-      paddingVertical: Spacing.lg,
-    },
-    buttonContainer: {
-      padding: Spacing.md,
-    },
-    textContent: {
-      lineHeight: 30,
-    },
-    textContainer: {
-      padding: Spacing.md,
-      gap: Spacing.lg,
+      alignSelf: 'center',
+      marginBottom: Spacing.sm,
     },
   })
 
-  return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {iconName ? <Icon name={iconName} size={iconSize} color={ColorPalette.brand.icon} style={styles.icon} /> : null}
-        <View style={styles.textContainer}>
-          <ThemedText variant="headingThree">{headerText}</ThemedText>
-          {contentText.filter(Boolean).map((text) => (
-            <ThemedText key={text} style={styles.textContent}>
-              {text}
-            </ThemedText>
-          ))}
-        </View>
-      </ScrollView>
+  const controls = (
+    <ControlContainer>
+      <Button
+        title={buttonText}
+        buttonType={ButtonType.Primary}
+        onPress={onButtonPress}
+        disabled={buttonDisabled}
+        accessibilityLabel={buttonText}
+        testID={testID ?? testIdWithKey('SystemModalButton')}
+      />
+    </ControlContainer>
+  )
 
-      <View style={styles.buttonContainer}>
-        <Button
-          title={buttonText}
-          buttonType={ButtonType.Primary}
-          onPress={onButtonPress}
-          disabled={buttonDisabled}
-          accessibilityLabel={buttonText}
-          testID={testID ?? testIdWithKey('SystemModalButton')}
-        />
-      </View>
-    </SafeAreaView>
+  return (
+    <ScreenWrapper
+      padded={false}
+      controls={controls}
+      edges={['bottom', 'left', 'right']}
+      scrollViewContainerStyle={styles.content}
+    >
+      {iconName ? <Icon name={iconName} size={iconSize} color={ColorPalette.brand.icon} style={styles.icon} /> : null}
+      <ThemedText variant="headingThree">{headerText}</ThemedText>
+      {contentText.filter(Boolean).map((text) => (
+        <ThemedText key={text}>{text}</ThemedText>
+      ))}
+    </ScreenWrapper>
   )
 }

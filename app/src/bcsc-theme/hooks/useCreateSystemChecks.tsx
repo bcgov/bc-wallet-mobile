@@ -30,6 +30,7 @@ import { getBundleId } from 'react-native-device-info'
 import { SystemCheckStrategy } from '../../services/system-checks/system-checks'
 import useConfigApi from '../api/hooks/useConfigApi'
 import useEvidenceApi from '../api/hooks/useEvidenceApi'
+import useTokenApi from '../api/hooks/useTokens'
 import { BCSCAccountContext } from '../contexts/BCSCAccountContext'
 import { useRegistrationService } from '../services/hooks/useRegistrationService'
 import { useTokenService } from '../services/hooks/useTokenService'
@@ -65,6 +66,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const { client, isClientReady } = useBCSCApiClientState()
   const configApi = useConfigApi(client as BCSCApiClient)
   const evidenceApi = useEvidenceApi(client as BCSCApiClient)
+  const tokenApi = useTokenApi(client as BCSCApiClient)
   const tokenService = useTokenService()
   const registrationService = useRegistrationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -167,9 +169,16 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
 
     // Only meaningful when a verification request has been submitted and is awaiting review
     if (!isVerified && verificationRequestId) {
+      const { deviceCode, userCode } = store.bcscSecure
       systemChecks.push(
         new VerificationRequestStatusSystemCheck(
           () => evidenceApi.getVerificationRequestStatus(verificationRequestId),
+          () => {
+            if (!deviceCode || !userCode) {
+              return Promise.reject(new Error('Missing deviceCode or userCode for verification token exchange'))
+            }
+            return tokenApi.checkDeviceCodeStatus(deviceCode, userCode)
+          },
           utils
         )
       )
@@ -204,6 +213,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     isVerified,
     verificationRequestId,
     evidenceApi,
+    tokenApi,
     utils,
     emitAlert,
     navigation,
@@ -211,7 +221,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     tokenService,
     registrationService,
     configApi,
-    store.bcscSecure.registrationAccessToken,
+    store.bcscSecure,
     store.bcsc.selectedNickname,
     store.bcsc.appVersion,
     store.bcsc.appBuildNumber,

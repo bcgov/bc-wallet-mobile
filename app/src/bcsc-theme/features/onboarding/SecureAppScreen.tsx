@@ -3,7 +3,7 @@ import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
-import { SECURE_APP_LEARN_MORE_URL, TEMPORARY_ACCOUNT_CLIENT_ID } from '@/constants'
+import { TEMPORARY_ACCOUNT_CLIENT_ID } from '@/constants'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { TOKENS, useServices } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -54,18 +54,10 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): React.Rea
     navigation.navigate(BCSCScreens.OnboardingCreatePIN)
   }, [navigation])
 
-  const handleLearnMorePress = useCallback(() => {
-    navigation.navigate(BCSCScreens.OnboardingWebView, {
-      title: t('BCSC.Onboarding.PrivacyPolicyHeaderSecuringApp'),
-      url: SECURE_APP_LEARN_MORE_URL,
-    })
-  }, [navigation, t])
-
   return (
     <SecurityMethodSelector
       onDeviceAuthPress={handleDeviceAuthPress}
       onPINPress={handlePINPress}
-      onLearnMorePress={handleLearnMorePress}
       deviceAuthPrompt={t('BCSC.Security.AuthenticateToSecure')}
     />
   )
