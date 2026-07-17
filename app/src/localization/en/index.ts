@@ -574,12 +574,14 @@ const translation = {
     },
     "Home": {
       "Title": "Home",
+      "Welcome": "Welcome",
+      "Scan": "Scan",
       "WhereToUseTitle": "Where to use",
       "WhereToUseAccessibilityLabel": "Find services",
       "WhereToUseDescription": "Find the websites you can log in to with this app.",
-      "LogInFromComputerTitle": "Log in from a computer",
-      "LogInFromComputerAccessibilityLabel": "Computer login",
-      "LogInFromComputerDescription": "Enter pairing code to log in from a different device - like a computer, laptop, or tablet.",
+      "LogInFromComputerTitle": "Log in from another device",
+      "LogInFromComputerAccessibilityLabel": "Log in from another device",
+      "LogInFromComputerDescription": "Log in to a service on a computer, laptop, or tablet using a pairing code",
       "ViewMessages": "View new messages",
     },
     "Steps": {

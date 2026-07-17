@@ -5,6 +5,7 @@ import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { useCardStatus } from '@/bcsc-theme/hooks/useCardStatus'
 import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
 import { testIdWithKey, useStore, useTheme } from '@bifold/core'
@@ -16,7 +17,9 @@ import { StyleSheet, View } from 'react-native'
 import SectionButton from '../../components/SectionButton'
 import HomeHeader from './components/HomeHeader'
 import { NotificationsList } from './components/NotificationsList'
+import PairingCodeCard from './components/PairingCodeCard'
 import SavedServices from './components/SavedServices'
+import WelcomeHeader from './components/WelcomeHeader'
 
 type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
 
@@ -41,14 +44,33 @@ const useManageDevicesNavigation = (navigation: HomeProps['navigation']) => {
  * @returns React element
  */
 const Home: React.FC<HomeProps> = ({ navigation }) => {
+  const { t } = useTranslation()
   const { Spacing } = useTheme()
   const [store] = useStore<BCState>()
+  const { account } = useAccount()
+  const { isActivelyVerified } = useCardStatus()
   const handleManageDevices = useManageDevicesNavigation(navigation)
+
+  const handlePairingCodePress = () => {
+    navigation.getParent()?.navigate(BCSCScreens.ManualPairingCode)
+  }
 
   return (
     <>
       <NotificationBannerContainer onManageDevices={handleManageDevices} bannerMessages={store.bcsc.bannerMessages} />
       <TabScreenWrapper scrollViewProps={{ contentContainerStyle: { padding: Spacing.lg, gap: Spacing.lg } }}>
+        {/* Header and pairing shortcut are only shown to actively-verified users, since the pairing
+            code screen itself is gated on verification (see QRCoreStack) and unusable otherwise. */}
+        {isActivelyVerified && account ? <WelcomeHeader name={account.fullname_formatted} /> : null}
+        {isActivelyVerified ? (
+          <PairingCodeCard
+            title={t('BCSC.Home.LogInFromComputerTitle')}
+            description={t('BCSC.Home.LogInFromComputerDescription')}
+            onPress={handlePairingCodePress}
+            accessibilityHint={a11yLabel(t('BCSC.Home.LogInFromComputerDescription'))}
+            testID={testIdWithKey('LogInFromComputer')}
+          />
+        ) : null}
         <NotificationsList />
       </TabScreenWrapper>
     </>

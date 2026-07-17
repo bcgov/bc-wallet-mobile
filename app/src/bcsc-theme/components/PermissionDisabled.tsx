@@ -105,7 +105,7 @@ export const PermissionDisabled = ({
   navigateToNextScreen,
 }: PermissionDisabledProps) => {
   const { t } = useTranslation()
-  const { ColorPalette, Spacing } = useTheme()
+  const { TextTheme, Spacing } = useTheme()
 
   const handleOpenSettings = async () => {
     await Linking.openSettings()
@@ -122,7 +122,7 @@ export const PermissionDisabled = ({
       marginBottom: Spacing.sm,
     },
     stepText: {
-      color: ColorPalette.grayscale.white,
+      color: TextTheme.normal.color,
     },
   })
 

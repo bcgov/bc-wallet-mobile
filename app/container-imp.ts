@@ -57,6 +57,7 @@ import {
   AttestationRestrictions,
   DIGITAL_SERVICES_CARD_CREDENTIAL_DEFINITION_IDS,
   DIGITAL_SERVICES_CARD_SCHEMA_IDS,
+  HEADER_SHADOW,
   Mode,
   appHelpUrl,
   appleAppStoreUrl,
@@ -264,6 +265,8 @@ export class AppContainer implements Container {
           ...DefaultScreenOptionsDictionary[Screens.Credentials],
           title: 'Wallet',
           headerLeft: createMainSettingsHeaderButton(),
+          // Match the BCSC tab header shadow — Bifold's default here is a heavier/wider shadow.
+          headerStyle: HEADER_SHADOW,
         },
       })
     }

@@ -574,12 +574,14 @@ const translation = {
     },
     "Home": {
       "Title": "Home (PT-BR)",
+      "Welcome": "Welcome (PT-BR)",
+      "Scan": "Scan (PT-BR)",
       "WhereToUseTitle": "Where to use (PT-BR)",
       "WhereToUseAccessibilityLabel": "Find services (PT-BR)",
       "WhereToUseDescription": "Find the websites you can log in to with this app. (PT-BR)",
-      "LogInFromComputerTitle": "Log in from a computer (PT-BR)",
-      "LogInFromComputerAccessibilityLabel": "Computer login (PT-BR)",
-      "LogInFromComputerDescription": "Enter pairing code to log in from a different device - like a computer, laptop, or tablet. (PT-BR)",
+      "LogInFromComputerTitle": "Log in from another device (PT-BR)",
+      "LogInFromComputerAccessibilityLabel": "Log in from another device (PT-BR)",
+      "LogInFromComputerDescription": "Log in to a service on a computer, laptop, or tablet using a pairing code (PT-BR)",
       "ViewMessages": "View new messages (PT-BR)",
     },
     "Steps": {
