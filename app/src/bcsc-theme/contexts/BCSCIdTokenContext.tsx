@@ -38,19 +38,34 @@ export const tokenToCredentialMetadata = (token: IdToken): CredentialMetadata =>
  * Normalizes a fullName value that may have been produced by the legacy
  * `${given_name} ${family_name}` template, which rendered a literal
  * "undefined " prefix (and/or stray whitespace) for mononym users whose
- * given_name was absent. This lets {@link compareCredentialMetadata} treat a
- * legacy-stored mononym value as equivalent to the corrected
+ * given_name was absent -- or, when BOTH parts were absent, the entire value
+ * as the literal "undefined undefined". This lets {@link compareCredentialMetadata}
+ * treat a legacy-stored value as equivalent to the corrected
  * {@link getFullDisplayName} output, avoiding a one-time false-positive
  * "account updated" alert for existing mononym users. See #4258.
  *
+ * Narrowly scoped to leading "undefined" artifacts by design (matches the
+ * literal lowercase string JS produces when interpolating `undefined`); a
+ * genuine name that happens to start with capitalized "Undefined" is safe,
+ * since the match is case-sensitive. See BCSCIdTokenContext.test.ts for the
+ * documented tradeoff around a literal lowercase "undefined" name part.
+ *
  * @param fullName Stored or freshly-computed fullName value to normalize
- * @returns The fullName with any legacy "undefined " prefix stripped and whitespace collapsed/trimmed
+ * @returns The fullName with legacy "undefined" artifacts stripped and whitespace collapsed/trimmed
  */
-const normalizeLegacyFullName = (fullName: string | undefined): string =>
-  (fullName ?? '')
-    .replace(/^undefined\s+/, '')
-    .replace(/\s+/g, ' ')
-    .trim()
+const normalizeLegacyFullName = (fullName: string | undefined): string => {
+  const collapsed = (fullName ?? '').replace(/\s+/g, ' ').trim()
+
+  // Both given_name and family_name were absent: the legacy template rendered this
+  // as "undefined undefined" (repeated once per absent part), which carries no real
+  // name text. Normalize it the same as getFullDisplayName({})'s '' output.
+  if (/^(undefined\s*)+$/.test(collapsed)) {
+    return ''
+  }
+
+  // Only one part (given_name) was absent, e.g. "undefined Smith" -> "Smith".
+  return collapsed.replace(/^undefined\s+/, '')
+}
 
 /**
  * A helper function to compare 'new' credential metadata from the token endpoint with the existing credential metadata in the store.

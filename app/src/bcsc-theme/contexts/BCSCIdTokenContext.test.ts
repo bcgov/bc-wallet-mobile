@@ -104,6 +104,30 @@ describe('BCSCIdTokenContext', () => {
       expect(compareCredentialMetadata(corrected, legacyStored)).toBe(true)
     })
 
+    // Regression: when BOTH given_name and family_name were absent, the legacy template
+    // rendered the literal "undefined undefined" (one "undefined" per absent part), which
+    // must normalize the same as getFullDisplayName({})'s '' -- otherwise every account with
+    // no name on file at all would get a spurious one-time "account updated" alert.
+    it('treats a legacy "undefined undefined" stored fullName as equal to a fresh empty fullName', () => {
+      const legacyStored = createMockMetadata({ fullName: 'undefined undefined' })
+      const corrected = createMockMetadata({ fullName: '' })
+
+      expect(compareCredentialMetadata(corrected, legacyStored)).toBe(true)
+    })
+
+    // Documents the accepted tradeoff: the normalization matches the literal lowercase
+    // "undefined" string JS produces when interpolating a real `undefined` value, so it's
+    // scoped to that exact case. A genuine name is safe as long as it isn't literally the
+    // lowercase word "undefined" -- e.g. capitalized "Undefined" (a real name) is untouched,
+    // since the match is case-sensitive.
+    it('does not touch a genuine name that starts with capitalized "Undefined"', () => {
+      const c1 = createMockMetadata({ fullName: 'Undefined Smith' })
+      const c2 = createMockMetadata({ fullName: 'Undefined Smith' })
+
+      expect(compareCredentialMetadata(c1, c2)).toBe(true)
+      expect(compareCredentialMetadata(c1, createMockMetadata({ fullName: 'Smith' }))).toBe(false)
+    })
+
     it('still returns false for genuinely different names', () => {
       const c1 = createMockMetadata({ fullName: 'John Smith' })
       const c2 = createMockMetadata({ fullName: 'Jane Smith' })
