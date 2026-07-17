@@ -1,9 +1,18 @@
-import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import {
+  Button,
+  ButtonType,
+  ScreenWrapper,
+  testIdWithKey,
+  ThemedText,
+  TOKENS,
+  useServices,
+  useTheme,
+} from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { StyleSheet } from 'react-native'
 
 interface DeleteConfirmationScreenProps {
   title: string
@@ -25,18 +34,11 @@ const DeleteConfirmationScreen: React.FC<DeleteConfirmationScreenProps> = ({
   const [disabled, setDisabled] = useState(false)
 
   const styles = StyleSheet.create({
-    container: {
-      padding: Spacing.md,
-      flex: 1,
-      justifyContent: 'space-between',
-    },
-    scrollView: {
+    content: {
+      // flexGrow lets the content fill the viewport so the controls stay pinned to the bottom.
       flexGrow: 1,
+      padding: Spacing.lg,
       gap: Spacing.md,
-    },
-    buttonsContainer: {
-      gap: Spacing.md,
-      marginTop: Spacing.lg,
     },
   })
 
@@ -54,30 +56,36 @@ const DeleteConfirmationScreen: React.FC<DeleteConfirmationScreenProps> = ({
     }
   }
 
+  const controls = (
+    <ControlContainer>
+      <Button
+        accessibilityLabel={confirmLabel}
+        buttonType={ButtonType.Critical}
+        title={confirmLabel}
+        testID={testIdWithKey('ConfirmDestructiveAction')}
+        onPress={onPress}
+        disabled={disabled}
+      />
+      <Button
+        accessibilityLabel={t('Global.Cancel')}
+        testID={testIdWithKey('Cancel')}
+        buttonType={ButtonType.Secondary}
+        title={t('Global.Cancel')}
+        onPress={() => navigation.goBack()}
+      />
+    </ControlContainer>
+  )
+
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scrollView}>
-        <ThemedText variant={'headingThree'}>{title}</ThemedText>
-        <ThemedText>{description}</ThemedText>
-      </ScrollView>
-      <View style={styles.buttonsContainer}>
-        <Button
-          accessibilityLabel={confirmLabel}
-          buttonType={ButtonType.Critical}
-          title={confirmLabel}
-          testID={testIdWithKey('ConfirmDestructiveAction')}
-          onPress={onPress}
-          disabled={disabled}
-        />
-        <Button
-          accessibilityLabel={t('Global.Cancel')}
-          testID={testIdWithKey('Cancel')}
-          buttonType={ButtonType.Secondary}
-          title={t('Global.Cancel')}
-          onPress={() => navigation.goBack()}
-        />
-      </View>
-    </SafeAreaView>
+    <ScreenWrapper
+      padded={false}
+      controls={controls}
+      edges={['bottom', 'left', 'right']}
+      scrollViewContainerStyle={styles.content}
+    >
+      <ThemedText variant={'headingThree'}>{title}</ThemedText>
+      <ThemedText>{description}</ThemedText>
+    </ScreenWrapper>
   )
 }
 

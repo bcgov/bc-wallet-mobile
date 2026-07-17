@@ -117,7 +117,7 @@ const translation = {
     "CancelledReview": {
       "Title": "Your identity could not be verified",
       "Description": "Verify your identity again to access services.",
-      "ButtonTitle": "Restart verification"
+      "ButtonTitle": "See details"
     },
     "Verified": {
       "Title": "Your identity has been verified",
@@ -433,10 +433,17 @@ const translation = {
       "EditNickname": "Edit Nickname",
       "AutoLockTime": "Auto lock time",
       "Notifications": "Notifications",
-      "NotificationsStatusHeader": "Notifications are {{status}}",
-      "NotificationsStatusContent": "Notifications keep you informed about account updates, credential changes and service interruptions. To turn them on or off, open your device settings.",
+      "ChangeNotificationsHeader": "Change notification settings?",
+      "NotificationsEnabledContent": "With notifications enabled, stay informed about account updates, credential changes and service interruptions.",
+      "NotificationsAreLabel": "Notifications are:",
       "NotificationsStatusOn": "on",
       "NotificationsStatusOff": "off",
+      "ChangeNotificationsInstructions": "To change notification settings:",
+      "NotificationsStep1": "Go to device settings",
+      "NotificationsStep2": "Tap Notifications",
+      "NotificationsStep3": "In app notifications, find the BC Services Card app",
+      "NotificationsStep4": "Turn on or off notifications",
+      "OpenDeviceSettings": "Go to device settings",
       "ForgetPairings": "Forget pairings",
       "AddDevice": "Add another device",
       "MyDevices": "My devices",
@@ -514,7 +521,7 @@ const translation = {
       "GotoUrl": "Go to: {{- url}}",
       "NotListed": "Services not listed?",
       "NotListedDescription": "Services that are only available to specific people or people in specific professions are not listed above.",
-      "NotListedDescriptionContact": "Contact the service to the link to their website.",
+      "NotListedDescriptionContact": "Contact the service if you wish to see them listed here.",
       "PrivacyPolicy": "Privacy Policy",
       "LoginErrorTitle": "Problem with Login",
       "SavedServices": "Saved Services",
@@ -525,7 +532,7 @@ const translation = {
     "Modals": {
       "InternetDisconnected": {
         "Header": "No internet connection",
-        "ContentA": "It looks like you aren’t connected to the internet. A connection is required for this app to function.",
+        "ContentA": "It looks like you aren't connected to the internet. A connection is required for this app to function.",
         "ContentB": "Check that your device is connected to the internet or try again.",
         "RetryButton": "Retry",
       },
@@ -538,7 +545,7 @@ const translation = {
       "VerificationSessionExpired": {
         "Header": "Verification session expired",
         "ContentA": "More than 7 days have passed since you started verifying your identity, so this session has expired.",
-        "ContentB": "To continue, you’ll need to set up the app and verify your identity again.",
+        "ContentB": "To continue, you'll need to set up the app and verify your identity again.",
         "Button": "Start again",
       },
       "DeviceInvalidated": {
@@ -572,7 +579,7 @@ const translation = {
       "WhereToUseDescription": "Find the websites you can log in to with this app.",
       "LogInFromComputerTitle": "Log in from a computer",
       "LogInFromComputerAccessibilityLabel": "Computer login",
-      "LogInFromComputerDescription": "Enter pairing code to log in from a different device – like a computer, laptop, or tablet.",
+      "LogInFromComputerDescription": "Enter pairing code to log in from a different device - like a computer, laptop, or tablet.",
       "ViewMessages": "View new messages",
     },
     "Steps": {
@@ -645,7 +652,7 @@ const translation = {
       "InformationPhotoIdContent": "Only if your BC Services Card does not have a photo on it. You will be asked to provide one or two government-issued IDs.",
       "InformationTypesOfAcceptedId": "Types of accepted ID",
       "RenewalTimeHeader": "Time to renew",
-      "RenewalTimeContentA": "You’ll need to verify your identity again and provide your ID.",
+      "RenewalTimeContentA": "You'll need to verify your identity again and provide your ID.",
       "RenewalTimeContentB": "It may take about 1-2 business days.",
       "RenewalTimeContentC": "The time to complete depends on how you choose to verify your identity - in person, with a video call, or by sending in a video.",
       "WarningHeader": "Warning",
@@ -742,8 +749,8 @@ const translation = {
       "PrivacyPolicyHeaderSecuringApp": "Securing the App",
       "PrivacyPolicyContentA": "Your personal information is collected for the purpose of setting up the app on your mobile device and using it to authenticate your identity for accessing government services online under sections 26(c), 26(e) and 26(h) of the Freedom of Information and Protection of Privacy Act.",
       "PrivacyPolicyBCLoginLink": "BC Login Service Privacy",
-      "PrivacyPolicyContentB": "To set up this app you need to verify your identity by providing your information and ID. It’s temporarily stored on this device until the app is set up.",
-      "PrivacyPolicyContentC": "This app can be secured with a PIN or using your device’s security. Keep your account safe. Keep your device passcode or app PIN confidential",
+      "PrivacyPolicyContentB": "To set up this app you need to verify your identity by providing your information and ID. It's temporarily stored on this device until the app is set up.",
+      "PrivacyPolicyContentC": "This app can be secured with a PIN or using your device's security. Keep your account safe. Keep your device passcode or app PIN confidential",
       "TermsOfUseTitle": "Terms of Use",
       "NotificationsTitle": "Notifications",
       "NotificationsHeader": "Enable Notifications?",
@@ -756,8 +763,8 @@ const translation = {
       "SecureAppOnboardingContent": "Your privacy is important. Securing the app helps to prevent others from accessing it.",
       "SecureAppDeviceAuthTitle": "Use {{deviceAuthMethodName}}",
       "SecureAppOnboardingDeviceAuthTitle": "Use device authentication",
-      "SecureAppDeviceAuthSubtext": "It’s already set up on this {{platform}}. It never leaves this device or is shared with us.",
-      "SecureAppOnboardingDeviceAuthSubtext": "It’s already set up on this phone or tablet. It never leaves this device or is shared with us.",
+      "SecureAppDeviceAuthSubtext": "It's already set up on this {{platform}}. It never leaves this device or is shared with us.",
+      "SecureAppOnboardingDeviceAuthSubtext": "It's already set up on this phone or tablet. It never leaves this device or is shared with us.",
       "SecureAppPINTitle": "Create a PIN",
       "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us.",
       "SecureAppNoDeviceAuthContent1": "You need to choose a PIN. It keeps your information private.",
@@ -1122,8 +1129,8 @@ const translation = {
     },
     "TransferInstructions": {
       "Title": "Scan your QR code to add your device",
-      "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘☰’ icon in the top left corner.",
-      "Step2": "Choose <b>‘Add another device’</b> to get your QR code.",
+      "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘☰' icon in the top left corner.",
+      "Step2": "Choose <b>‘Add another device'</b> to get your QR code.",
       "Step3": "<b>Scan the QR code</b> that appears on your other device.",
       "ScanQRCode": "Scan QR code",
     },
@@ -1152,7 +1159,7 @@ const translation = {
     "CancelledVerification": {
       "Title": "Your identity couldn't be verified",
       "Label": "Details from Service BC agent: \n{{reason}}",
-      "Button": "Ok",
+      "Button": "Retry verification",
       "NoReason": "No reason provided"
     },
     "DualNonBCSCEvidence": {
@@ -1325,7 +1332,7 @@ const translation = {
       "AccountInfo": {
         "ManageDevices": "Manage Devices",
         "InfoTitle": "This is an account page, not an ID",
-        "InfoDescription": "Your account details are shown below. This cannot be used as photo ID, a driver’s licence, or a health card.",
+        "InfoDescription": "Your account details are shown below. This cannot be used as photo ID, a driver's licence, or a health card.",
         "AppExpiryDate": "App expiry date",
         "AccountType": "Account type",
         "AccountTypeNonBCServicesCard": "Non BC Services Card",
@@ -1476,7 +1483,7 @@ const translation = {
     },
     "DataUseWarning": {
       "Title": "Data Use",
-      "Description": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network.",
+      "Description": "The app detected that you're on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network.",
       "Action1": "Use Data",
     },
     "ThirdPartyKeyboard": {

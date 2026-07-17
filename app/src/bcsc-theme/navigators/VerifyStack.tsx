@@ -92,6 +92,20 @@ const VerifyResumeHeaderBackButton = (props: HeaderBackButtonProps) => {
   )
 }
 
+/**
+ * Back button for VideoReview. A plain pop lands on TakeVideo, which re-arms recording on focus against
+ * the prompt set the reviewed video already answered — a video is only accepted against the challenge set
+ * the server issued for it, so every route into a recording has to ask for a fresh one. VideoInstructions
+ * sits below TakeVideo, so navigating there pops the camera off the stack and lets that screen's focus
+ * effect issue and display the next set before recording starts. Retake still goes straight to the camera;
+ * it refreshes on its own.
+ */
+const VideoReviewBackButton = (props: HeaderBackButtonProps) => {
+  const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
+
+  return <HeaderBackButton {...props} onPress={() => navigation.navigate(BCSCScreens.VideoInstructions)} />
+}
+
 // When PendingReview is the initial route (entered from the home screen notification),
 // there is no navigation history — dispatch UNVERIFIED to swap back to MainStack instead.
 const PendingReviewBackButton = (props: HeaderBackButtonProps) => {
@@ -301,7 +315,13 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
       <Stack.Screen
         name={BCSCScreens.VideoReview}
         component={VideoReviewScreen}
-        options={{ header: createProgressHeader(5, 50) }}
+        options={{
+          header: createProgressHeader(5, 50),
+          headerLeft: VideoReviewBackButton,
+          // The swipe drags TakeVideo into view as it goes, so it can't be redirected to
+          // VideoInstructions without contradicting what the user is looking at. Back is the button.
+          gestureEnabled: false,
+        }}
       />
       <Stack.Screen
         name={BCSCScreens.PendingReview}
@@ -317,7 +337,13 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         component={CancelledReview}
         options={{ header: createProgressHeader(5, 80) }}
       />
-      <Stack.Screen name={BCSCScreens.VideoTooLong} component={VideoTooLongScreen} options={{ headerShown: false }} />
+      <Stack.Screen
+        name={BCSCScreens.VideoTooLong}
+        component={VideoTooLongScreen}
+        // Retake and Cancel are the only ways out; back would pop to TakeVideo and re-record against the
+        // prompt set the over-long recording already answered. Pairs with usePreventGestureBack for Android.
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
       <Stack.Screen
         name={BCSCScreens.EvidenceUploading}
         component={UploadingScreen}

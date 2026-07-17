@@ -345,6 +345,7 @@ const MainStack: React.FC = () => {
             component={MainRemoveAccountConfirmationScreen}
             options={() => ({
               headerShown: true,
+              title: t('BCSC.Account.RemoveAccount'),
             })}
           />
           <Stack.Screen
@@ -352,6 +353,7 @@ const MainStack: React.FC = () => {
             component={MainResetWalletConfirmationScreen}
             options={() => ({
               headerShown: true,
+              title: t('BCSC.Wallet.Reset'),
             })}
           />
           <Stack.Screen
