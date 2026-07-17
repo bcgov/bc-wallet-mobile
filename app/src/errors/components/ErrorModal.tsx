@@ -62,6 +62,7 @@ export const BCSCErrorModal: React.FC<BCSCErrorModalProps> = ({
     return reportProblem({
       title: payload.title,
       description: payload.description,
+      code: payload.error.statusCode,
       error: payload.error,
       installId: payload.reportUUID,
     })

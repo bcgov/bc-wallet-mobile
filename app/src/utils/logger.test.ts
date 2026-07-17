@@ -128,6 +128,7 @@ describe('reportProblem', () => {
   const fakeError = {
     title: 'Boom',
     description: 'It exploded',
+    code: 2800,
     error: appError,
   }
 

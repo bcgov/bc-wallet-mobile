@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { AppError } from '../appError'
-import { toBifoldError } from '../errorHandler'
+import { ensureAppError } from '../errorHandler'
 import { ErrorInfoCard } from './ErrorInfoCard'
 
 interface ErrorBoundaryProps {
@@ -57,7 +57,14 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   getReportError = (error: Error) => {
-    return toBifoldError(this.props.t('Error.Problem'), this.props.t('Error.ProblemDescription'), error)
+    const appError = ensureAppError(error, AppEventCode.UNKNOWN_ERROR_BOUNDARY_ERROR)
+
+    return {
+      title: this.props.t('Error.Problem'),
+      description: this.props.t('Error.ProblemDescription'),
+      code: appError.statusCode,
+      error: appError,
+    }
   }
 
   /**
@@ -89,7 +96,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
           <ErrorInfoCard
             title={reportError.title}
             description={reportError.description}
-            message={reportError.message}
+            message={reportError.error.message}
             code={reportError.code}
             onDismiss={this.handleDismiss}
             onReport={this.handleReport}

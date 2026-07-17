@@ -203,7 +203,9 @@ describe('BCSCErrorModal', () => {
       expect(reportProblem).toHaveBeenCalledWith({
         title: validPayload.title,
         description: validPayload.description,
+        code: validPayload.error.statusCode,
         error: validPayload.error,
+        installId: validPayload.reportUUID,
       })
     })
 

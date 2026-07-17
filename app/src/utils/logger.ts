@@ -13,6 +13,36 @@ import {
 import { autoDisableRemoteLoggingIntervalInMinutes } from '../constants'
 import { generateReferenceCode } from './reference-code'
 
+interface ReportProblem {
+  /**
+   * The title of the problem being reported.
+   * Usually the title of the error modal, but can be any string that describes the problem.
+   */
+  title: string
+  /**
+   * The description of the problem being reported.
+   * Usually the description of the error modal, but can be any string that provides more context about the problem.
+   */
+  description: string
+  /**
+   * The error code associated with the problem being reported.
+   *
+   * @see USER_REPORT_ERROR_CODE for the default value when there is no error object available.
+   * @see AppError.statusCode for the error code when there is an error object available.
+   */
+  code: number
+  /**
+   * The error object associated with the problem being reported.
+   * This is optional and can be omitted if there is no error object available.
+   */
+  error?: AppError
+  /**
+   * The install ID represents the unique identifier for the app installation on the user's device.
+   * @see store.bcsc.reportUUID for the source of this value.
+   */
+  installId?: string
+}
+
 const baseOptions: RemoteLoggerOptions = {
   lokiUrl: Config.REMOTE_LOGGING_URL,
   lokiLabels: {
@@ -85,17 +115,9 @@ export const appLogger = createAppLogger()
  *   preserve existing error-report behaviour)
  * @returns the reference code to surface to the user
  */
-export const reportProblem = (
-  problem: {
-    title: string // Usually the error modal title
-    description: string // Usually the error modal description
-    error?: AppError
-    installId?: string // Optional install ID to correlate reports from the same user/device/app
-  },
-  options?: { includeDeviceDetails?: boolean }
-): string => {
+export const reportProblem = (problem: ReportProblem, options?: { includeDeviceDetails?: boolean }): string => {
   const referenceCode = generateReferenceCode()
-  const { title, description, error } = problem
+  const { title, description, error, code } = problem
   const { includeDeviceDetails = true } = options ?? {}
 
   // Drop the app version / OS labels when the user opts out; keep the application name so support
@@ -108,14 +130,14 @@ export const reportProblem = (
         msg: title,
         rawMsg: [
           {
-            message: title, // error modal title
+            message: title,
             data: {
-              description, // error modal description
-              code: error?.statusCode, // TODO (MD): Deprecate - included in `error`
+              code,
+              description,
               message: error?.message, // TODO (MD): Deprecate - included in `error`
               error: error?.toJSON(),
-              report_id: referenceCode, // this report - human readable reference code ie: "7K2P-9XQF"
-              install_id: problem.installId, // this install - correlates reports from the same user/device/app ie: `reportUUID` from store
+              report_id: referenceCode, // this report problem - ie: "7K2P-9XQF"
+              install_id: problem.installId, // this app installation - ie: "f3e2c1d4-5b6a-7c8d-9e0f-1a2b3c4d5e6f"
 
               // Only attach `stack` when the error actually carries one — user-initiated reports have no real
               // trace, so the field is omitted rather than logging meaningless construction frames.

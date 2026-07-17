@@ -184,6 +184,7 @@ export const VERIFY_DEVICE_ASSERTION_PATH = 'v3/mobile/assertion'
 // Error constants
 export const UNKNOWN_APP_ERROR_STATUS_CODE = 9999
 export const FATAL_UNRECOVERABLE_ERROR_STATUS_CODE = 9998
+export const USER_REPORT_ERROR_CODE = 0
 
 // Validation constants
 export const MINIMUM_VERIFICATION_AGE = 12
