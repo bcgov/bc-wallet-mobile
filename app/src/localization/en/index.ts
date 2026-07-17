@@ -1518,6 +1518,10 @@ const translation = {
       "Title": "Problem Starting Video",
       "Description": "We couldn't load your verification steps. Please try again."
     },
+    "DocumentExpired": {
+      "Title": "This document has expired.",
+      "Description": "Please choose a different form of ID to continue."
+    },
     "FactoryReset": {
       "Title": "Problem with App",
       "Description": "The app needs to be reset to factory settings to continue. This will delete all information in the app and you will have to set it up again.",

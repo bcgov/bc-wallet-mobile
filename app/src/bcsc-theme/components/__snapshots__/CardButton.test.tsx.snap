@@ -36,7 +36,9 @@ exports[`CardButton Component renders correctly when disabled 1`] = `
   style={
     {
       "backgroundColor": "#003366",
+      "borderColor": "transparent",
       "borderRadius": 4,
+      "borderWidth": 2,
       "opacity": 0.6,
       "padding": 16,
     }
@@ -148,7 +150,9 @@ exports[`CardButton Component renders correctly with subtext and end icon 1`] = 
   style={
     {
       "backgroundColor": "#003366",
+      "borderColor": "transparent",
       "borderRadius": 4,
+      "borderWidth": 2,
       "opacity": 1,
       "padding": 16,
     }
@@ -283,7 +287,9 @@ exports[`CardButton Component renders correctly with title only 1`] = `
   style={
     {
       "backgroundColor": "#003366",
+      "borderColor": "transparent",
       "borderRadius": 4,
+      "borderWidth": 2,
       "opacity": 1,
       "padding": 16,
     }
