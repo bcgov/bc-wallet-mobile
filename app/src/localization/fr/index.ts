@@ -67,7 +67,9 @@ const translation = {
   },
   "Credentials": {
     "AddCredential": "Ajouter des identifiants",
-    "AddFirstCredential": "Ajouter votre premier identifiant"
+    "AddFirstCredential": "Ajouter votre premier identifiant",
+    "NotAnIDInfoTitle": "This does not replace your physical ID (FR)",
+    "NotAnIDInfoDescription": "Do not share this screen as ID. This credential is used for digital interactions via the BC Services Card app only. (FR)",
   },
   "Onboarding": {
     "DifferentWalletHeading": "Un portefeuille intelligent unique",
@@ -1517,6 +1519,10 @@ const translation = {
     "VideoPromptsMissing": {
       "Title": "Problem Starting Video (FR)",
       "Description": "We couldn't load your verification steps. Please try again. (FR)"
+    },
+    "DocumentExpired": {
+      "Title": "This document has expired. (FR)",
+      "Description": "Please choose a different form of ID to continue. (FR)"
     },
     "FactoryReset": {
       "Title": "Problem with App (FR)",

@@ -1,11 +1,12 @@
 import { Mode } from '@/constants'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import { BCSCEventTypes } from '@/events/eventTypes'
 import { toAppError } from '@bcsc-theme/utils/native-error-map'
 import { AbstractBifoldLogger } from '@bifold/core'
 import { getApp } from '@react-native-firebase/app'
 import { getMessaging, getToken } from '@react-native-firebase/messaging'
-import { Platform } from 'react-native'
+import { DeviceEventEmitter, Platform } from 'react-native'
 import { decodeLoginChallenge, JWK, showLocalNotification } from 'react-native-bcsc-core'
 import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
 import { isVerificationRequestReviewed } from '../../utils/id-token'
@@ -98,7 +99,9 @@ export class FcmViewModel {
   }
 
   private async handleMessage(message: FcmMessage, delivery?: FcmDeliveryContext) {
-    this.logger.info(`[FcmViewModel] Received FCM message: type=${message.type}`)
+    this.logger.info(
+      `[FcmViewModel] Received FCM message: type=${message.type}, delivery=${delivery?.source ?? 'unknown'}`
+    )
 
     switch (message.type) {
       case 'challenge':
@@ -207,6 +210,34 @@ export class FcmViewModel {
     if (isVerificationRequestReviewed(data)) {
       this.logger.info('[FcmViewModel] Verification request reviewed, delegating to VerificationResponseService')
       this.verificationResponseService.handleRequestReviewed()
+      return
+    }
+
+    // Refresh tokens run here to handle scenarios of the account being deactivated from another service
+    // Refresh token and dispatch an event so system checks re run with new claims and can handle the new state
+    await this.refreshTokens()
+  }
+
+  /**
+   * Refreshes OAuth tokens using the current refresh token.
+   * Emits a TOKENS_REFRESHED event so React components can update their state.
+   */
+  private async refreshTokens(): Promise<void> {
+    try {
+      const apiClient = getBCSCApiClient()
+
+      if (!apiClient?.tokens?.refresh_token) {
+        this.logger.warn('[FcmViewModel] Cannot refresh tokens - no API client or refresh token available')
+        return
+      }
+
+      await apiClient.getTokensForRefreshToken(apiClient.tokens.refresh_token)
+      this.logger.info('[FcmViewModel] Tokens refreshed successfully after status notification')
+
+      // Emit event so useSystemChecks can react to the new tokens
+      DeviceEventEmitter.emit(BCSCEventTypes.TOKENS_REFRESHED)
+    } catch (error) {
+      this.logger.error(`[FcmViewModel] Failed to refresh tokens: ${error}`)
     }
   }
 
