@@ -308,7 +308,7 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
             >
               <View style={styles.listButtonContainer}>
                 <ThemedText style={styles.listButtonTitle}>{t('BCSC.EvidenceTypeList.ShowMoreOptions')}</ThemedText>
-                <Icon name={'arrow-forward-ios'} size={ICON_SIZE} color={styles.listButtonTitle.color} />
+                <Icon name={'arrow-forward-ios'} size={ICON_SIZE} color={ColorPalette.brand.headerText} />
               </View>
             </ListButton>
           </ListButtonGroup>
