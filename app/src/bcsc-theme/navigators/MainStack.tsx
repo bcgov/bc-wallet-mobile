@@ -18,6 +18,8 @@ import Developer from '../../screens/Developer'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
+import { useAccount } from '../contexts/BCSCAccountContext'
+import { LoadingScreen } from '../contexts/BCSCLoadingContext'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferQRDisplayScreen from '../features/account-transfer/transferer/TransferQRDisplayScreen'
 import TransferQRInformationScreen from '../features/account-transfer/transferer/TransferQRInformationScreen'
@@ -89,6 +91,7 @@ const ScopedRemoveContact = withAgentReadyGate(RemoveContactScreen, testIdWithKe
 
 const MainStack: React.FC = () => {
   const { currentStep } = useTour()
+  const { isLoadingAccount } = useAccount()
   const theme = useTheme()
   const { t } = useTranslation()
   const Stack = createStackNavigator<BCSCMainStackParams>()
@@ -139,6 +142,10 @@ const MainStack: React.FC = () => {
   }, [pairingService, navigation])
 
   useVerificationResponseListener()
+
+  if (isLoadingAccount) {
+    return <LoadingScreen message={t('BCSC.Loading.AppStartup')} />
+  }
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
