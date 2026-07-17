@@ -190,7 +190,7 @@ const BCSCTabStack: React.FC = () => {
         screenOptions={{
           ...defaultStackOptions,
           // Show the header's own (native) shadow. TabHeaderWithoutBanner draws no drop-shadow caster,
-          // so this native shadow — tuned via TAB_HEADER_SHADOW — is the single header shadow.
+          // so this native shadow — tuned via HEADER_SHADOW — is the single header shadow.
           headerShadowVisible: true,
           unmountOnBlur: false,
           lazy: true,

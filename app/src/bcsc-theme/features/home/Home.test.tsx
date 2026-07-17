@@ -2,7 +2,6 @@ import { BCSCBanner, BCSCBannerMessage } from '@/bcsc-theme/components/AppBanner
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { initialState } from '@/store'
-import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render } from '@testing-library/react-native'
@@ -253,16 +252,5 @@ describe('Home (default export, v4.1) — verification gating', () => {
     expect(tree.queryByText('BCSC.Home.LogInFromComputerTitle')).toBeNull()
     // Notifications remain visible regardless of verification state.
     expect(tree.getByText('Notification.EmptyNotification.Title')).toBeTruthy()
-  })
-
-  it('shows the loading screen while a verified account is still loading', () => {
-    mockedUseAccount.mockReturnValue({ account: null, isLoadingAccount: true } as any)
-
-    const tree = renderHome(true)
-
-    expect(tree.getByTestId(testIdWithKey('LoadingScreenContent'))).toBeTruthy()
-    // No partial home content renders underneath the loading screen.
-    expect(tree.queryByText('BCSC.Home.LogInFromComputerTitle')).toBeNull()
-    expect(tree.queryByText('Notification.EmptyNotification.Title')).toBeNull()
   })
 })

@@ -2,6 +2,7 @@ import * as Bifold from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { render } from '@testing-library/react-native'
 import React from 'react'
+import { useAccount } from '../contexts/BCSCAccountContext'
 import * as PairingModule from '../features/pairing'
 import { PairingNavigationListener, PairingPayload } from '../features/pairing/types'
 import { BCSCScreens } from '../types/navigators'
@@ -46,6 +47,9 @@ jest.mock('@/constants', () => ({
 }))
 jest.mock('../contexts/BCSCStackContext', () => ({
   useBCSCStack: jest.fn(),
+}))
+jest.mock('../contexts/BCSCLoadingContext', () => ({
+  LoadingScreen: 'LoadingScreen',
 }))
 jest.mock('../hooks/useSystemChecks', () => ({
   SystemCheckScope: { MAIN_STACK: 'MAIN_STACK' },
@@ -197,5 +201,13 @@ describe('MainStack', () => {
     render(<MainStack />)
 
     expect(PairingModule.pairingPayloadToServiceLoginParams).not.toHaveBeenCalled()
+  })
+
+  it('shows the loading screen while the account is still loading', () => {
+    jest.mocked(useAccount).mockReturnValueOnce({ isLoadingAccount: true } as any)
+
+    const { toJSON } = render(<MainStack />)
+
+    expect(toJSON()).toMatchObject({ type: 'LoadingScreen' })
   })
 })
