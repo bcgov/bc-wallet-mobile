@@ -19,13 +19,12 @@ interface CredentialDetailsSubHeaderProps {
  * @returns A React element representing the CredentialDetailsSubHeader component, or null if the credential does not match the specified criteria.
  */
 export const CredentialDetailsSubHeader = ({ credential }: CredentialDetailsSubHeaderProps) => {
-  const { Spacing, ListItems } = useTheme()
+  const { Spacing } = useTheme()
   const { t } = useTranslation()
 
   const styles = StyleSheet.create({
     infoContainer: {
       padding: Spacing.lg,
-      backgroundColor: ListItems.recordContainer.backgroundColor,
     },
   })
 
