@@ -18,28 +18,38 @@ import {
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, StyleSheet, View } from 'react-native'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useNotificationPermissionStatus } from './useNotificationPermissionStatus'
+
+const BELL_ICON_SIZE = 24
+
+const INSTRUCTION_STEPS = [
+  'BCSC.Settings.NotificationsStep1',
+  'BCSC.Settings.NotificationsStep2',
+  'BCSC.Settings.NotificationsStep3',
+  'BCSC.Settings.NotificationsStep4',
+]
 
 /**
  * Settings sub-screen for managing push notifications.
  *
- * Mirrors Bifold core's `TogglePushNotifications`, built from BCSC components. There are three
- * states, keyed on the OS permission status:
- * - ON (permission granted and the app preference enabled) -> "Notifications are on" + "Open
- *   Settings" to turn them off in the OS (OS-level permissions can't be revoked from within the app).
- * - OFF (permission previously declined/blocked, i.e. the user chose "No" during onboarding or later
- *   turned notifications off in the OS) -> "Notifications are off" + "Open Settings" to turn them
- *   back on. The symmetric opposite of the ON screen.
+ * There are three states, keyed on the OS permission status:
+ * - ON (permission granted and the app preference enabled) and OFF (previously declined/blocked)
+ *   are both OS-managed: notifications can't be toggled from within the app, so these show the
+ *   current status ("on"/"off") plus instructions and a "Go to device settings" button. Only the
+ *   status word differs. The status refreshes on focus/foreground, so returning from device settings
+ *   reflects any change immediately.
  * - UNSET (never prompted, e.g. the user tapped "Skip" during onboarding, or permission granted but
- *   the app preference is still off) -> enable notifications in-app (request OS permission if needed,
- *   register the device with the mediator) so setup can be completed end-to-end.
+ *   the app preference is still off) keeps the in-app enable flow: request the OS permission if
+ *   needed and register the device with the mediator, so setup can be completed end-to-end. Device
+ *   settings alone can't produce the first OS prompt, so this path can't collapse into the others.
  *
  * @returns {React.ReactElement} The NotificationSettingsScreen component.
  */
 export const NotificationSettingsScreen = (): React.ReactElement => {
   const { t } = useTranslation()
-  const { Spacing } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
+  const { Spacing, ColorPalette } = useTheme()
+  const [, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const agent = useBCSCAgentSafe()?.agent ?? null
   const { status, refresh } = useNotificationPermissionStatus()
@@ -53,6 +63,34 @@ export const NotificationSettingsScreen = (): React.ReactElement => {
       alignItems: 'center',
       marginBottom: Spacing.md,
     },
+    heading: {
+      color: ColorPalette.brand.primary,
+    },
+    statusRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+      marginVertical: Spacing.sm,
+    },
+    statusValue: {
+      color: ColorPalette.brand.primary,
+      textTransform: 'uppercase',
+    },
+    instructionsBox: {
+      backgroundColor: ColorPalette.brand.tertiaryBackground,
+      borderRadius: Spacing.xs,
+      padding: Spacing.md,
+      gap: Spacing.sm,
+    },
+    bulletRow: {
+      flexDirection: 'row',
+    },
+    bullet: {
+      paddingHorizontal: Spacing.sm,
+    },
+    bulletText: {
+      flex: 1,
+    },
   })
 
   useEffect(() => {
@@ -63,19 +101,25 @@ export const NotificationSettingsScreen = (): React.ReactElement => {
       })
   }, [])
 
-  const isGranted = status === PushNotifications.NotificationPermissionStatus.GRANTED
-  // Fully enabled means the OS permission is granted AND the app preference is on (the flag that
-  // gates mediator registration). Granted-but-preference-off happens when the user enables the
-  // permission in OS settings after previously declining; offer the enable flow to finish setup.
-  const notificationsActive = isGranted && store.preferences.usePushNotifications
-  const isDeniedOrBlocked =
-    status === PushNotifications.NotificationPermissionStatus.DENIED ||
-    status === PushNotifications.NotificationPermissionStatus.BLOCKED
+  // Keep the app preference in sync with the OS permission in both directions
+  useEffect(() => {
+    if (status === PushNotifications.NotificationPermissionStatus.GRANTED) {
+      dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [true] })
+    } else if (
+      status === PushNotifications.NotificationPermissionStatus.DENIED ||
+      status === PushNotifications.NotificationPermissionStatus.BLOCKED
+    ) {
+      dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [false] })
+    }
+  }, [status, dispatch])
 
-  // The OFF state: the user declined ("No" during onboarding) or later turned notifications off in
-  // the OS. Gate on hasPrompted so a fresh install — where React Native can report the wrong status
-  // before the first prompt — falls through to the UNSET enable flow instead of showing OFF.
-  const notificationsDisabled = hasPrompted && isDeniedOrBlocked
+  const isGranted = status === PushNotifications.NotificationPermissionStatus.GRANTED
+  const notificationsActive = isGranted
+
+  const osManaged = hasPrompted
+  const statusWord = notificationsActive
+    ? t('BCSC.Settings.NotificationsStatusOn')
+    : t('BCSC.Settings.NotificationsStatusOff')
 
   const enableNotifications = useCallback(async () => {
     logger.debug('[NotificationSettingsScreen] Requesting push notification permission')
@@ -99,30 +143,24 @@ export const NotificationSettingsScreen = (): React.ReactElement => {
     }
   }, [agent, dispatch, logger, refresh])
 
-  // ON and OFF are both OS-managed states: same layout, shared body, and an "Open Settings" button —
-  // only the header's on/off word differs. UNSET (never prompted, or granted-but-preference-off)
-  // keeps the in-app enable flow.
-  const osManaged = notificationsActive || notificationsDisabled
-
-  const header = osManaged
-    ? t('BCSC.Settings.NotificationsStatusHeader', {
-        status: notificationsActive
-          ? t('BCSC.Settings.NotificationsStatusOn')
-          : t('BCSC.Settings.NotificationsStatusOff'),
-      })
-    : t('BCSC.Onboarding.NotificationsHeader')
-
-  const content = osManaged ? t('BCSC.Settings.NotificationsStatusContent') : t('BCSC.Onboarding.NotificationsContent')
+  const openDeviceSettings = useCallback(async () => {
+    try {
+      await Linking.openSettings()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.error(`[NotificationSettingsScreen] Failed to open device settings: ${message}`)
+    }
+  }, [logger])
 
   const controls = (
     <ControlContainer>
       {osManaged ? (
         <Button
-          title={t('BCSC.PermissionDisabled.OpenSettings')}
+          title={t('BCSC.Settings.OpenDeviceSettings')}
           buttonType={ButtonType.Primary}
-          onPress={() => Linking.openSettings()}
+          onPress={openDeviceSettings}
           testID={testIdWithKey('OpenNotificationSettings')}
-          accessibilityLabel={t('BCSC.PermissionDisabled.OpenSettings')}
+          accessibilityLabel={t('BCSC.Settings.OpenDeviceSettings')}
         />
       ) : (
         <Button
@@ -136,19 +174,58 @@ export const NotificationSettingsScreen = (): React.ReactElement => {
     </ControlContainer>
   )
 
+  // UNSET: keep the onboarding-style enable screen (image + centered copy + in-app enable button).
+  if (!osManaged) {
+    return (
+      <ScreenWrapper
+        padded={false}
+        controls={controls}
+        scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
+      >
+        <View style={styles.imageContainer}>
+          <PushNotificationImage />
+        </View>
+        <ThemedText variant="headingThree" style={{ textAlign: 'center' }}>
+          {t('BCSC.Onboarding.NotificationsHeader')}
+        </ThemedText>
+        <ThemedText style={{ textAlign: 'center' }}>{t('BCSC.Onboarding.NotificationsContent')}</ThemedText>
+      </ScreenWrapper>
+    )
+  }
+
+  // ON / OFF: OS-managed status + instructions to change it in device settings.
   return (
     <ScreenWrapper
       padded={false}
       controls={controls}
       scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
     >
-      <View style={styles.imageContainer}>
-        <PushNotificationImage />
-      </View>
-      <ThemedText variant="headingThree" style={{ textAlign: 'center' }}>
-        {header}
+      <ThemedText variant="headingThree" style={styles.heading}>
+        {t('BCSC.Settings.ChangeNotificationsHeader')}
       </ThemedText>
-      <ThemedText style={{ textAlign: 'center' }}>{content}</ThemedText>
+      <ThemedText>{t('BCSC.Settings.NotificationsEnabledContent')}</ThemedText>
+
+      <View
+        style={styles.statusRow}
+        accessible
+        accessibilityLabel={`${t('BCSC.Settings.NotificationsAreLabel')} ${statusWord}`}
+      >
+        <Icon name="bell-outline" size={BELL_ICON_SIZE} color={ColorPalette.grayscale.darkGrey} />
+        <ThemedText>{t('BCSC.Settings.NotificationsAreLabel')}</ThemedText>
+        <ThemedText variant="bold" style={styles.statusValue}>
+          {statusWord}
+        </ThemedText>
+      </View>
+
+      <View style={styles.instructionsBox}>
+        <ThemedText variant="bold">{t('BCSC.Settings.ChangeNotificationsInstructions')}</ThemedText>
+        {INSTRUCTION_STEPS.map((key) => (
+          <View key={key} style={styles.bulletRow}>
+            <ThemedText style={styles.bullet}>{'•'}</ThemedText>
+            <ThemedText style={styles.bulletText}>{t(key)}</ThemedText>
+          </View>
+        ))}
+      </View>
     </ScreenWrapper>
   )
 }

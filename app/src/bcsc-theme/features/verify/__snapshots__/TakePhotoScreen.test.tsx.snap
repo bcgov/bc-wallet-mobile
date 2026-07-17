@@ -46,7 +46,7 @@ exports[`TakePhoto renders correctly 1`] = `
       onError={[Function]}
       onInitialized={[Function]}
       photo={true}
-      photoQualityBalance="speed"
+      photoQualityBalance="quality"
       ref={
         {
           "current": null,
