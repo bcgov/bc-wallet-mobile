@@ -1,4 +1,11 @@
-import { HEADER_SHADOW, SHADOW_CASTER_HEIGHT, SHADOW_COLOR, SHADOW_OFFSET_DOWN, SHADOW_OPACITY, SHADOW_RADIUS } from '@/constants'
+import {
+  HEADER_SHADOW,
+  SHADOW_CASTER_HEIGHT,
+  SHADOW_COLOR,
+  SHADOW_OFFSET_DOWN,
+  SHADOW_OPACITY,
+  SHADOW_RADIUS,
+} from '@/constants'
 import { useTheme } from '@bifold/core'
 import { BottomTabHeaderProps } from '@react-navigation/bottom-tabs'
 import { Header as ElementsHeader, getHeaderTitle } from '@react-navigation/elements'
