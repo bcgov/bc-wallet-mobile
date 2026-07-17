@@ -189,9 +189,9 @@ const BCSCTabStack: React.FC = () => {
         tabBar={(props) => <AnimatedTabBar {...props} />}
         screenOptions={{
           ...defaultStackOptions,
-          // Suppress the header's built-in shadow so it doesn't stack with the custom drop shadow
-          // rendered by createTabHeaderWithoutBanner (matches how the stack navigators disable it).
-          headerShadowVisible: false,
+          // Show the header's own (native) shadow. TabHeaderWithoutBanner draws no drop-shadow caster,
+          // so this native shadow — tuned via TAB_HEADER_SHADOW — is the single header shadow.
+          headerShadowVisible: true,
           unmountOnBlur: false,
           lazy: true,
           tabBarStyle: TabTheme.tabBarStyle,

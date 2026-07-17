@@ -203,10 +203,23 @@ export const CACHED_LEDGERS_TTL_DAYS = 1
 export const SHADOW_CASTER_HEIGHT = 1
 export const SHADOW_SIZE = 3
 export const SHADOW_COLOR = '#000'
-export const SHADOW_OPACITY = 0.9
+export const SHADOW_OPACITY = 0.8
 export const SHADOW_RADIUS = SHADOW_SIZE
 export const SHADOW_OFFSET_DOWN = { width: 0, height: SHADOW_SIZE }
 export const SHADOW_OFFSET_UP = { width: 0, height: -SHADOW_SIZE }
+
+// Native header shadow: cast by the opaque header container itself (not a drop-shadow caster strip), so
+// it renders cleanly below the header. Kept subtle so it reads as a light divider. Shared by the BCSC
+// tab header and the (Bifold-rendered) wallet header so the two stay matched. `elevation` drives the
+// Android equivalent, since the theme's default header elevation is 0.
+export const HEADER_SHADOW: ViewStyle = {
+  shadowColor: SHADOW_COLOR,
+  shadowOffset: SHADOW_OFFSET_DOWN,
+  shadowOpacity: 0.2,
+  shadowRadius: SHADOW_RADIUS,
+  elevation: 4,
+  borderBottomWidth: 0,
+}
 
 // Account constants
 export const TEMPORARY_ACCOUNT_CLIENT_ID = ''
