@@ -50,7 +50,10 @@ const createMockAgent = () => {
     // and await each handler so async work settles before assertions.
     async emit(eventType: string, payload: any) {
       const bucket = handlers[eventType]
-      if (!bucket) return
+      if (!bucket) {
+        return
+      }
+
       for (const h of Array.from(bucket)) {
         await h({ payload })
       }

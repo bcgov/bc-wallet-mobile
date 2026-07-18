@@ -301,9 +301,18 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
       this._workflowProofSubscription = this.agent.events
         .observable<DidCommProofStateChangedEvent>(DidCommProofEventTypes.ProofStateChanged)
         .subscribe(async ({ payload: { proofRecord } }) => {
-          if (!this.agent) return
-          if (proofRecord.connectionId !== connectionId) return
-          if (proofRecord.state !== DidCommProofState.RequestReceived) return
+          if (!this.agent) {
+            return
+          }
+
+          if (proofRecord.connectionId !== connectionId) {
+            return
+          }
+
+          if (proofRecord.state !== DidCommProofState.RequestReceived) {
+            return
+          }
+
           try {
             await this.agent.didcomm.proofs.declineRequest({
               proofExchangeRecordId: proofRecord.id,
@@ -318,8 +327,14 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
       this._workflowOfferSubscription = this.agent.events
         .observable<DidCommCredentialStateChangedEvent>(DidCommCredentialEventTypes.DidCommCredentialStateChanged)
         .subscribe(async ({ payload: { credentialExchangeRecord } }) => {
-          if (!this.agent) return
-          if (credentialExchangeRecord.connectionId !== connectionId) return
+          if (!this.agent) {
+            return
+          }
+
+          if (credentialExchangeRecord.connectionId !== connectionId) {
+            return
+          }
+
           try {
             if (
               credentialExchangeRecord.state === DidCommCredentialState.OfferReceived &&
