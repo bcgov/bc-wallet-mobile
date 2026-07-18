@@ -1,22 +1,38 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
-import DeleteConfirmationScreen from '@/bcsc-theme/components/DeleteConfirmationScreen'
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCDispatchAction, BCState } from '@/store'
-import { TOKENS, useServices, useStore } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  ScreenWrapper,
+  testIdWithKey,
+  ThemedText,
+  TOKENS,
+  useServices,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
-import React from 'react'
+import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 const RemoveAccountConfirmationScreen: React.FC = () => {
   const { t } = useTranslation()
+  const { Spacing } = useTheme()
   const navigation = useNavigation()
   const factoryReset = useFactoryReset()
   const loadingScreen = useLoadingScreen()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [, dispatch] = useStore<BCState>()
+  const [disabled, setDisabled] = useState(false)
 
   const onConfirm = async () => {
+    if (disabled) {
+      return
+    }
+    setDisabled(true)
     const stopLoading = loadingScreen.startLoading(t('BCSC.Account.RemoveAccountLoading'))
     navigation.setOptions({ animationEnabled: false })
     navigation.goBack()
@@ -63,13 +79,29 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
     }
   }
 
+  const controls = (
+    <ControlContainer>
+      <Button
+        accessibilityLabel={t('BCSC.Account.RemoveAccount')}
+        buttonType={ButtonType.Critical}
+        title={t('BCSC.Account.RemoveAccount')}
+        testID={testIdWithKey('ConfirmDestructiveAction')}
+        onPress={onConfirm}
+        disabled={disabled}
+      />
+    </ControlContainer>
+  )
+
   return (
-    <DeleteConfirmationScreen
-      title={t('BCSC.Account.RemoveAccountTitle')}
-      description={t('BCSC.Account.RemoveAccountParagraph')}
-      confirmLabel={t('BCSC.Account.RemoveAccount')}
-      onConfirm={onConfirm}
-    />
+    <ScreenWrapper
+      controls={controls}
+      scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
+      edges={['bottom', 'left', 'right']}
+      padded={false}
+    >
+      <ThemedText variant={'headingThree'}>{t('BCSC.Account.RemoveAccountTitle')}</ThemedText>
+      <ThemedText>{t('BCSC.Account.RemoveAccountParagraph')}</ThemedText>
+    </ScreenWrapper>
   )
 }
 
