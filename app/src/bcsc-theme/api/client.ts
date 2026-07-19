@@ -32,6 +32,15 @@ const TOKEN_EXPIRY_BUFFER_MS = 30 * 1000
 const JWK_FETCH_MAX_ATTEMPTS = 3
 const JWK_FETCH_RETRY_BASE_DELAY_MS = 500
 
+// The retryable JWKS failure shapes (see isRetryableJwkFetchError): 0 for a network error (no HTTP
+// response — see the response interceptor's `error.response?.status ?? 0`), and the full 5xx range.
+// Passed as suppressStatusCodeLogs on the JWKS request so the interceptor's own log line + analytics
+// tracking (see getAppErrorFromAxiosError) don't fire on every retry attempt — fetchJwk already logs
+// a warn per retry and a single error on total exhaustion, so a transient outage isn't amplified 3x
+// across dashboards. A deterministic 4xx is a single, non-retried attempt and is left to log/track
+// normally, since it may indicate a real configuration problem worth surfacing distinctly.
+const JWK_FETCH_RETRYABLE_STATUS_CODES = [0, ...Array.from({ length: 100 }, (_, index) => 500 + index)]
+
 // Extend AxiosRequestConfig to include skipBearerAuth
 declare module 'axios' {
   export interface AxiosRequestConfig {
@@ -440,13 +449,19 @@ class BCSCApiClient {
    * genuinely has no key to offer, so retrying won't help); throws on a request failure so the
    * caller can decide whether that failure is retryable.
    *
-   * `skipOnErrorHandler` keeps the global alert policies from firing on every retry attempt —
-   * fetchJwk owns this error path end-to-end and only ever returns null on total failure.
+   * `skipOnErrorHandler` keeps the global alert policy from firing on every retry attempt.
+   * `suppressStatusCodeLogs` additionally silences the interceptor's own log line + analytics
+   * tracking for the retryable failure shapes (network / 5xx, see JWK_FETCH_RETRYABLE_STATUS_CODES)
+   * so a transient outage isn't amplified across the retry loop — fetchJwk's own logging (a warn per
+   * retry, one error on total exhaustion, one warn if a fallback is used) is the sole signal for
+   * those. A deterministic 4xx is a single, non-retried attempt and still logs/tracks normally via
+   * the interceptor, same as any other endpoint.
    */
   private async fetchJwkFromNetwork(): Promise<JWK | null> {
     const response = await this.get<JWKResponseData>(this.endpoints.jwksURI, {
       skipBearerAuth: true,
       skipOnErrorHandler: true,
+      suppressStatusCodeLogs: JWK_FETCH_RETRYABLE_STATUS_CODES,
     })
 
     if (response.data.keys && response.data.keys.length > 0) {

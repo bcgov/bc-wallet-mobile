@@ -5,6 +5,7 @@ import { ErrorCategory } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
 import { BCSCEventTypes } from '@/events/eventTypes'
 import { localization } from '@/localization'
+import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { initLanguages } from '@bifold/core'
 import { AxiosError } from 'axios'
 import { jwtDecode } from 'jwt-decode'
@@ -839,8 +840,17 @@ describe('BCSC Client', () => {
       it('retries a transient network error up to the max attempts, then returns the persisted key', async () => {
         const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
         const client = new BCSCApiClient('https://example.com', mockLogger as any)
-        const networkError = new AxiosError('Network Error', 'ERR_NETWORK')
-        const getSpy = jest.spyOn(client, 'get').mockRejectedValue(networkError)
+        const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
+
+        // Real adapter (not a `client.get` spy) so the failure flows through the response
+        // interceptor exactly as it does in production: getAppErrorFromAxiosError converts it into
+        // an AppError with appEvent NO_INTERNET, which is the actual shape isRetryableJwkFetchError's
+        // isNetworkError check receives at runtime (a hand-rolled AxiosError bypasses the interceptor
+        // and never exercises that branch).
+        client.client.defaults.adapter = (config: any) => {
+          return Promise.reject(new AxiosError('Network Error', 'ERR_NETWORK', config))
+        }
+        const axiosGetSpy = jest.spyOn(client.client, 'get')
         jest.mocked(loadPersistedJwk).mockResolvedValueOnce(mockJwk as any)
 
         const resultPromise = client.fetchJwk()
@@ -849,8 +859,15 @@ describe('BCSC Client', () => {
         await jest.advanceTimersByTimeAsync(1000)
         const result = await resultPromise
 
-        expect(getSpy).toHaveBeenCalledTimes(3)
+        expect(axiosGetSpy).toHaveBeenCalledTimes(3)
         expect(result).toEqual(mockJwk)
+        // Exactly one error log total — fetchJwk's own final-exhaustion log (it still logs this even
+        // though a persisted fallback is subsequently found). Zero of the 3 attempts came from the
+        // interceptor: suppressStatusCodeLogs (status 0 for a network error) keeps its log line and
+        // analytics tracking silent, so a transient outage isn't amplified 3x on dashboards.
+        expect(mockLogger.error).toHaveBeenCalledTimes(1)
+        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to fetch JWK'))
+        expect(trackErrorEventSpy).not.toHaveBeenCalled()
       })
 
       it('succeeds on a retry, caching and persisting the fresh key', async () => {
@@ -899,16 +916,36 @@ describe('BCSC Client', () => {
       it('returns null when all retry attempts fail and nothing is persisted', async () => {
         const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
         const client = new BCSCApiClient('https://example.com', mockLogger as any)
-        const serverError = { cause: { response: { status: 503 } } } as any
-        const getSpy = jest.spyOn(client, 'get').mockRejectedValue(serverError)
+        const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
+
+        // Real adapter so a 503 flows through the response interceptor and is subject to the same
+        // suppressStatusCodeLogs gate production traffic hits.
+        client.client.defaults.adapter = (config: any) => {
+          return Promise.reject(
+            new AxiosError('Service Unavailable', 'ERR_BAD_RESPONSE', config, null, {
+              status: 503,
+              data: {},
+              statusText: 'Service Unavailable',
+              headers: {} as any,
+              config,
+            })
+          )
+        }
+        const axiosGetSpy = jest.spyOn(client.client, 'get')
 
         const resultPromise = client.fetchJwk()
         await jest.advanceTimersByTimeAsync(500)
         await jest.advanceTimersByTimeAsync(1000)
         const result = await resultPromise
 
-        expect(getSpy).toHaveBeenCalledTimes(3)
+        expect(axiosGetSpy).toHaveBeenCalledTimes(3)
         expect(result).toBeNull()
+        // Exactly one error log total — fetchJwk's own final-exhaustion log. Zero of the 3 attempts
+        // came from the interceptor (suppressed for the retryable 503), and no analytics event was
+        // tracked per attempt.
+        expect(mockLogger.error).toHaveBeenCalledTimes(1)
+        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to fetch JWK'))
+        expect(trackErrorEventSpy).not.toHaveBeenCalled()
       })
 
       it('does not hydrate the in-memory cache from a persisted fallback', async () => {
