@@ -565,7 +565,8 @@ class BCSCApiClient {
           break
         }
 
-        this.logger.warn(`[BCSCApiClient] JWK fetch attempt ${attempt} failed, retrying: ${error}`)
+        const message = error instanceof Error ? error.message : String(error)
+        this.logger.warn(`[BCSCApiClient] JWK fetch attempt ${attempt} failed, retrying: ${message}`)
         await new Promise((resolve) => setTimeout(resolve, JWK_FETCH_RETRY_BASE_DELAY_MS * attempt))
       }
     }
@@ -578,7 +579,8 @@ class BCSCApiClient {
     }
 
     if (lastError) {
-      this.logger.error(`Failed to fetch JWK: ${lastError}`)
+      const lastErrorMessage = lastError instanceof Error ? lastError.message : String(lastError)
+      this.logger.error(`Failed to fetch JWK: ${lastErrorMessage}`)
     } else {
       this.logger.warn('[BCSCApiClient] JWKS endpoint returned no keys')
     }

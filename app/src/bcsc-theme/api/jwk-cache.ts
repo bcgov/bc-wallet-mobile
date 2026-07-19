@@ -31,7 +31,8 @@ export const persistJwk = async (baseURL: string, jwk: JWK, logger: RemoteLogger
   try {
     await PersistentStorage.storeValueForKey<PersistedJwkRecord>(BCLocalStorageKeys.CachedJWK, record, logger)
   } catch (error) {
-    logger.error(`[jwk-cache] Failed to persist JWK for ${baseURL}: ${error}`)
+    const message = error instanceof Error ? error.message : String(error)
+    logger.error(`[jwk-cache] Failed to persist JWK for ${baseURL}: ${message}`)
   }
 }
 
@@ -49,13 +50,14 @@ export const loadPersistedJwk = async (baseURL: string, logger: RemoteLogger): P
   try {
     const record = await PersistentStorage.fetchValueForKey<PersistedJwkRecord>(BCLocalStorageKeys.CachedJWK, logger)
 
-    if (!record || record.baseURL !== baseURL) {
+    if (record?.baseURL !== baseURL) {
       return null
     }
 
     return record.jwk
   } catch (error) {
-    logger.error(`[jwk-cache] Failed to load persisted JWK for ${baseURL}: ${error}`)
+    const message = error instanceof Error ? error.message : String(error)
+    logger.error(`[jwk-cache] Failed to load persisted JWK for ${baseURL}: ${message}`)
     return null
   }
 }
