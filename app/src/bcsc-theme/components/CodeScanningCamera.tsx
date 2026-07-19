@@ -222,7 +222,10 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const lockedScanRef = useRef<{ codes: EnhancedCode[]; frame: CodeScannerFrame } | null>(null)
 
   // --- Configurable highlight thresholds ---
-  // Consecutive identical readings required per code for "locked" state (green with border)
+  // Reading count required per code to reach "locked" state (green with border).
+  // The count accumulates on each frame the code is detected and decays by
+  // READING_DECAY_PER_MISSED_FRAME (not reset to 0) on a missed frame — see
+  // decayStaleReadings — so it isn't strictly "consecutive" readings.
   const LOCK_READING_THRESHOLD = 5
   // Reading count decrement applied per frame a previously-seen code goes missing,
   // instead of resetting it to 0 — a single blank/missed frame (common on Android,
@@ -442,11 +445,14 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     let readingCount = 1
     let isValidated = false
 
-    // Track consecutive readings for any code with a value — this drives both the
-    // visual lock state and "validated" status (readingCount >= VALIDATION_THRESHOLD).
-    // Position is not a gate: a successfully decoded barcode counts regardless of
-    // where it sits on screen. Card identity is validated downstream by decoding
-    // content (useCardScanner), which rejects non-BCSC scans and resets the scanner.
+    // Track readings for any code with a value — the same readingCount feeds two
+    // independent thresholds: the visual "locked" state (readingCount >=
+    // LOCK_READING_THRESHOLD, checked in determineScanState) and this code's
+    // "validated" status for the scan callback below (readingCount >=
+    // VALIDATION_THRESHOLD, which differs by platform). Position is not a gate: a
+    // successfully decoded barcode counts regardless of where it sits on screen.
+    // Card identity is validated downstream by decoding content (useCardScanner),
+    // which rejects non-BCSC scans and resets the scanner.
     if (code.value) {
       const existing = barcodeReadings.current.get(key)
       if (existing && existing.value === code.value && existing.type === code.type) {
