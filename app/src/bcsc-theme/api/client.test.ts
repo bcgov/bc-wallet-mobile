@@ -964,6 +964,70 @@ describe('BCSC Client', () => {
         expect(getSpy).toHaveBeenCalledTimes(2)
       })
     })
+
+    describe('single-flight dedupe', () => {
+      beforeEach(() => {
+        jest.useFakeTimers()
+      })
+
+      afterEach(() => {
+        jest.useRealTimers()
+      })
+
+      it('joins a single in-flight fetch: two concurrent calls make exactly one request and resolve to the same key', async () => {
+        const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+        const client = new BCSCApiClient('https://example.com', mockLogger as any)
+        const getSpy = jest.spyOn(client, 'get').mockResolvedValue({ data: { keys: [mockJwk] } } as any)
+
+        // Calling fetchJwk() twice without awaiting in between: both calls run synchronously up to
+        // their first await, so the second call's in-flight check sees the promise the first call
+        // already set and joins it instead of starting its own retry loop.
+        const [first, second] = await Promise.all([client.fetchJwk(), client.fetchJwk()])
+
+        expect(getSpy).toHaveBeenCalledTimes(1)
+        expect(first).toEqual(mockJwk)
+        expect(second).toEqual(mockJwk)
+      })
+
+      it('joins a single in-flight retry loop: concurrent calls during a failing fetch share one set of attempts', async () => {
+        const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+        const client = new BCSCApiClient('https://example.com', mockLogger as any)
+        const networkError = new AxiosError('Network Error', 'ERR_NETWORK')
+        const getSpy = jest.spyOn(client, 'get').mockRejectedValue(networkError)
+        jest.mocked(loadPersistedJwk).mockResolvedValueOnce(mockJwk as any)
+
+        const firstPromise = client.fetchJwk()
+        const secondPromise = client.fetchJwk()
+
+        await jest.advanceTimersByTimeAsync(500)
+        await jest.advanceTimersByTimeAsync(1000)
+
+        const [first, second] = await Promise.all([firstPromise, secondPromise])
+
+        // One shared retry loop (3 attempts), not two independent ones (6 attempts).
+        expect(getSpy).toHaveBeenCalledTimes(3)
+        expect(first).toEqual(mockJwk)
+        expect(second).toEqual(mockJwk)
+      })
+
+      it('does not join an in-flight fetch started for a different baseURL', async () => {
+        const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+        const client = new BCSCApiClient('https://example.com', mockLogger as any)
+        const getSpy = jest.spyOn(client, 'get').mockResolvedValue({ data: { keys: [mockJwk] } } as any)
+
+        const firstPromise = client.fetchJwk()
+
+        const mutableClient = client as unknown as { baseURL: string }
+        mutableClient.baseURL = 'https://example.com/other'
+
+        const secondPromise = client.fetchJwk()
+
+        await Promise.all([firstPromise, secondPromise])
+
+        // The second call didn't join the first's in-flight promise — it started its own fetch.
+        expect(getSpy).toHaveBeenCalledTimes(2)
+      })
+    })
   })
 
   describe('tokens race condition smoke test', () => {

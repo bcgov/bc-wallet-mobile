@@ -96,6 +96,8 @@ class BCSCApiClient {
   onError?: BCSCClientOnErrorCallback
   private cachedJwk: JWK | null = null // in-memory JWK cache, invalidated when baseURL changes
   private cachedJwkBaseUrl: string | null = null
+  private jwkFetchPromise: Promise<JWK | null> | null = null // single-flight in-progress JWK fetch
+  private jwkFetchPromiseBaseUrl: string | null = null // baseURL the in-flight fetch was started for
 
   constructor(baseURL: string, logger: RemoteLogger) {
     this.baseURL = baseURL
@@ -491,13 +493,21 @@ class BCSCApiClient {
    *
    * Resolution order:
    * 1. In-memory cache hit (reused while the environment / baseURL is unchanged).
-   * 2. Network fetch, retried up to JWK_FETCH_MAX_ATTEMPTS times with linear backoff — but only for
+   * 2. An in-flight fetch for the same baseURL (single-flight — see jwkFetchPromise below).
+   *    Concurrent callers — e.g. BCSCApiClientContext's fire-and-forget warm-up landing alongside
+   *    an early verification call at startup — join the same retry loop instead of each racing
+   *    their own, which would otherwise multiply network requests (up to JWK_FETCH_MAX_ATTEMPTS per
+   *    caller) during an outage.
+   * 3. Network fetch, retried up to JWK_FETCH_MAX_ATTEMPTS times with linear backoff — but only for
    *    transient errors (see isRetryableJwkFetchError); a deterministic failure or an empty key set
-   *    goes straight to step 3.
-   * 3. On network exhaustion/empty, the last-known-good persisted key (survives cold starts) — this
+   *    goes straight to step 4.
+   * 4. On network exhaustion/empty, the last-known-good persisted key (survives cold starts) — this
    *    is network-first: the fallback never hydrates the in-memory cache, so the next call retries
-   *    the network rather than trusting a potentially-rotated key indefinitely.
-   * 4. `null` — the caller fails closed (ERR_111).
+   *    the network rather than trusting a potentially-rotated key indefinitely. The in-flight
+   *    promise is cleared as soon as it settles regardless of outcome, so a fallback result is only
+   *    ever shared by callers that joined it while it was in flight — the next call always starts a
+   *    fresh attempt.
+   * 5. `null` — the caller fails closed (ERR_111).
    *
    * A successful network fetch is cached in-memory and persisted for future fallback use.
    *
@@ -508,6 +518,38 @@ class BCSCApiClient {
       return this.cachedJwk
     }
 
+    // Join an in-flight fetch for the same baseURL rather than starting a parallel retry loop. A
+    // fetch in flight for a since-changed baseURL is never joined — mirrors the baseURL check the
+    // in-memory cache above already uses.
+    if (this.jwkFetchPromise && this.jwkFetchPromiseBaseUrl === this.baseURL) {
+      return this.jwkFetchPromise
+    }
+
+    const requestBaseUrl = this.baseURL
+    this.jwkFetchPromiseBaseUrl = requestBaseUrl
+    this.jwkFetchPromise = this.fetchJwkWithRetry(requestBaseUrl).finally(() => {
+      // Only clear if this settled fetch is still the one being tracked for requestBaseUrl — guards
+      // against a late-settling fetch for an old baseURL clobbering a newer in-flight fetch that
+      // replaced it after a baseURL change.
+      if (this.jwkFetchPromiseBaseUrl === requestBaseUrl) {
+        this.jwkFetchPromise = null
+        this.jwkFetchPromiseBaseUrl = null
+      }
+    })
+
+    return this.jwkFetchPromise
+  }
+
+  /**
+   * The retry loop + persisted fallback behind fetchJwk's cache/single-flight gate above. Always
+   * resolves, never rejects — fetchJwkFromNetwork's thrown errors are caught here, and
+   * persistJwk/loadPersistedJwk never throw — so fetchJwk's shared promise is always safe to await
+   * or fire-and-forget.
+   *
+   * @param baseURL - The baseURL this fetch was started for (captured by fetchJwk at call time, not
+   *   re-read from `this.baseURL`, so a baseURL change mid-flight can't misattribute the result).
+   */
+  private async fetchJwkWithRetry(baseURL: string): Promise<JWK | null> {
     let jwk: JWK | null = null
     let lastError: unknown
 
@@ -530,8 +572,8 @@ class BCSCApiClient {
 
     if (jwk) {
       this.cachedJwk = jwk
-      this.cachedJwkBaseUrl = this.baseURL
-      await persistJwk(this.baseURL, jwk, this.logger)
+      this.cachedJwkBaseUrl = baseURL
+      await persistJwk(baseURL, jwk, this.logger)
       return jwk
     }
 
@@ -541,7 +583,7 @@ class BCSCApiClient {
       this.logger.warn('[BCSCApiClient] JWKS endpoint returned no keys')
     }
 
-    const persistedJwk = await loadPersistedJwk(this.baseURL, this.logger)
+    const persistedJwk = await loadPersistedJwk(baseURL, this.logger)
     if (persistedJwk) {
       this.logger.warn('[BCSCApiClient] last-known-good JWK used; JWKS unreachable')
       return persistedJwk
