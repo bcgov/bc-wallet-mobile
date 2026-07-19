@@ -336,6 +336,7 @@ export enum BCLocalStorageKeys {
   DeviceToken = 'deviceToken',
   BCSC = 'BCSC',
   Mode = 'Mode',
+  CachedJWK = 'CachedJWK',
 }
 
 export const initialState: BCState = {
