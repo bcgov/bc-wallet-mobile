@@ -585,7 +585,7 @@ class BCSCApiClient {
 
     const persistedJwk = await loadPersistedJwk(baseURL, this.logger)
     if (persistedJwk) {
-      this.logger.warn('[BCSCApiClient] last-known-good JWK used; JWKS unreachable')
+      this.logger.warn('[BCSCApiClient] Live JWKS fetch failed; using persisted last-known-good JWK')
       return persistedJwk
     }
 
