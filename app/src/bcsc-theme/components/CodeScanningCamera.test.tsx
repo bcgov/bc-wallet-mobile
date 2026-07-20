@@ -144,6 +144,15 @@ describe('CodeScanningCamera', () => {
     mockHasPermission = true
     mockCodeScannerCallback = null
     mockEmitErrorModal.mockClear()
+    // Reset to the default 'active' state in case a previous test overrode it —
+    // jest.clearAllMocks() clears call history but not a mockReturnValue implementation.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { useBCSCActivity } = require('../contexts/BCSCActivityContext')
+    useBCSCActivity.mockReturnValue({
+      appStateStatus: 'active',
+      pauseActivityTracking: mockPauseActivityTracking,
+      resumeActivityTracking: mockResumeActivityTracking,
+    })
   })
 
   it('renders correctly with default props', () => {
@@ -1512,6 +1521,34 @@ describe('CodeScanningCamera', () => {
         'BCSC.CameraDisclosure.ErrorMessage',
         expectedAppError
       )
+    })
+
+    it('ignores camera errors and does not show an error modal while the app is backgrounded', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { useBCSCActivity } = require('../contexts/BCSCActivityContext')
+      useBCSCActivity.mockReturnValue({
+        appStateStatus: 'background',
+        pauseActivityTracking: mockPauseActivityTracking,
+        resumeActivityTracking: mockResumeActivityTracking,
+      })
+
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} />
+        </BasicAppContext>
+      )
+
+      const camera = getByTestId('mock-camera')
+      const runtimeError = new Error('Runtime camera failure while backgrounded')
+
+      await act(async () => {
+        camera.props.onError(runtimeError)
+      })
+
+      // Backgrounded camera errors are expected (the session is being torn down) and not
+      // actionable — no error should be normalized or surfaced to the user.
+      expect(mockEnsureAppError).not.toHaveBeenCalled()
+      expect(mockEmitErrorModal).not.toHaveBeenCalled()
     })
   })
 })
