@@ -1,5 +1,4 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
-import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import DestructiveConfirmationScreen from '@/bcsc-theme/components/DestructiveConfirmationScreen'
 import { ThemedText } from '@bifold/core'
 import React from 'react'
@@ -22,8 +21,6 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
       confirmLabel={t('BCSC.Account.RemoveAccount')}
       loadingLabel={t('BCSC.Account.RemoveAccountLoading')}
       logScope={'RemoveAccount'}
-      successBanner={{ id: BCSCBanner.REMOVE_ACCOUNT_SUCCESS, title: t('BCSC.Account.RemoveAccountSuccess') }}
-      errorBanner={{ id: BCSCBanner.REMOVE_ACCOUNT_ERROR, title: t('BCSC.Account.RemoveAccountError') }}
       action={action}
     >
       <ThemedText>{t('BCSC.Account.RemoveAccountParagraph')}</ThemedText>

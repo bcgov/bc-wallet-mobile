@@ -1,4 +1,3 @@
-import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import BulletPoint from '@/bcsc-theme/components/BulletPoint'
 import DestructiveConfirmationScreen from '@/bcsc-theme/components/DestructiveConfirmationScreen'
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
@@ -17,8 +16,6 @@ const ResetWalletConfirmationScreen: React.FC = () => {
       confirmLabel={t('BCSC.Wallet.Reset')}
       loadingLabel={t('BCSC.Wallet.Resetting')}
       logScope={'ResetWallet'}
-      successBanner={{ id: BCSCBanner.RESET_WALLET_SUCCESS, title: t('BCSC.Wallet.ResetSuccess') }}
-      errorBanner={{ id: BCSCBanner.RESET_WALLET_ERROR, title: t('BCSC.Wallet.ResetError') }}
       action={resetWallet}
     >
       <ThemedText>{t('BCSC.Wallet.ResetIntro')}</ThemedText>
