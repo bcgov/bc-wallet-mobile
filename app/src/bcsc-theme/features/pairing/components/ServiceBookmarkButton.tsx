@@ -1,5 +1,4 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { hitSlop } from '@/constants'
 import { BCState } from '@/store'
 import { testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
@@ -43,7 +42,6 @@ const ServiceBookmarkButton = ({ serviceName, serviceId }: ServiceBookmarkButton
   return (
     <TouchableOpacity
       style={styles.button}
-      hitSlop={hitSlop}
       onPress={handleBookmarkPress}
       accessibilityRole="button"
       accessibilityState={{ selected: bookmarked }}
