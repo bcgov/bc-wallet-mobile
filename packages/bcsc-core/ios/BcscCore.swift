@@ -247,7 +247,13 @@ class BcscCore: NSObject {
 
   private func signJWT(payload: JWTClaimsSet, reject: @escaping RCTPromiseRejectBlock) -> String? {
     let keyPairManager = KeyPairManager()
-    let keys = keyPairManager.findAllPrivateKeys()
+    let keys: [PrivateKeyInfo]
+    do {
+      keys = try keyPairManager.findAllPrivateKeys()
+    } catch {
+      reject("E_KEYSTORE_ERROR", "Failed to enumerate signing keys: \(error.localizedDescription)", error)
+      return nil
+    }
     let signer: RSASigner
 
     guard let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first else {
@@ -305,21 +311,25 @@ class BcscCore: NSObject {
   // MARK: - Public Methods
 
   func getAllKeys(
-    _ resolve: @escaping RCTPromiseResolveBlock, reject _: @escaping RCTPromiseRejectBlock
+    _ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) {
     let keyPairManager = KeyPairManager()
-    let keys = keyPairManager.findAllPrivateKeys()
+    do {
+      let keys = try keyPairManager.findAllPrivateKeys()
 
-    let result = keys.map { keyInfo -> [String: Any] in
-      return [
-        "keyType": keyInfo.keyType.name,
-        "keySize": keyInfo.keySize,
-        "id": keyInfo.tag,
-        "created": keyInfo.created.timeIntervalSince1970,
-      ]
+      let result = keys.map { keyInfo -> [String: Any] in
+        return [
+          "keyType": keyInfo.keyType.name,
+          "keySize": keyInfo.keySize,
+          "id": keyInfo.tag,
+          "created": keyInfo.created.timeIntervalSince1970,
+        ]
+      }
+
+      resolve(result)
+    } catch {
+      reject("E_KEYSTORE_ERROR", "Error accessing keychain: \(error.localizedDescription)", error)
     }
-
-    resolve(result)
   }
 
   /**
@@ -337,37 +347,41 @@ class BcscCore: NSObject {
    * from seeing every OTHER key.
    */
   func getAllKeysWithPublicInfo(
-    _ resolve: @escaping RCTPromiseResolveBlock, reject _: @escaping RCTPromiseRejectBlock
+    _ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) {
     let keyPairManager = KeyPairManager()
-    let keys = keyPairManager.findAllPrivateKeys()
+    do {
+      let keys = try keyPairManager.findAllPrivateKeys()
 
-    var result: [[String: Any]] = []
-    for keyInfo in keys {
-      do {
-        let keyPair = try keyPairManager.getKeyPair(with: keyInfo.tag)
-        guard let keyData = RSAUtil.secKeyRefToData(inputKey: keyPair.public),
-              let (modulus, exponent) = RSAUtil.splitIntoComponents(keyData: keyData)
-        else {
+      var result: [[String: Any]] = []
+      for keyInfo in keys {
+        do {
+          let keyPair = try keyPairManager.getKeyPair(with: keyInfo.tag)
+          guard let keyData = RSAUtil.secKeyRefToData(inputKey: keyPair.public),
+                let (modulus, exponent) = RSAUtil.splitIntoComponents(keyData: keyData)
+          else {
+            logger.warning(
+              "getAllKeysWithPublicInfo: could not extract RSA components for alias '\(keyInfo.tag)'; skipping"
+            )
+            continue
+          }
+          result.append([
+            "id": keyInfo.tag,
+            "created": keyInfo.created.timeIntervalSince1970,
+            "n": modulus.base64EncodedString(),
+            "e": exponent.base64EncodedString(),
+          ])
+        } catch {
           logger.warning(
-            "getAllKeysWithPublicInfo: could not extract RSA components for alias '\(keyInfo.tag)'; skipping"
+            "getAllKeysWithPublicInfo: failed to read key pair for alias '\(keyInfo.tag)': \(error.localizedDescription); skipping"
           )
-          continue
         }
-        result.append([
-          "id": keyInfo.tag,
-          "created": keyInfo.created.timeIntervalSince1970,
-          "n": modulus.base64EncodedString(),
-          "e": exponent.base64EncodedString(),
-        ])
-      } catch {
-        logger.warning(
-          "getAllKeysWithPublicInfo: failed to read key pair for alias '\(keyInfo.tag)': \(error.localizedDescription); skipping"
-        )
       }
-    }
 
-    resolve(result)
+      resolve(result)
+    } catch {
+      reject("E_KEYSTORE_ERROR", "Error accessing keychain: \(error.localizedDescription)", error)
+    }
   }
 
   /**
@@ -387,12 +401,16 @@ class BcscCore: NSObject {
     reject: @escaping RCTPromiseRejectBlock
   ) {
     let keyPairManager = KeyPairManager()
-    let keys = keyPairManager.findAllPrivateKeys()
-    guard keys.contains(where: { $0.tag == alias }) else {
-      reject("E_KEY_NOT_FOUND", "Alias '\(alias)' is not present in the keychain", nil)
-      return
+    do {
+      let keys = try keyPairManager.findAllPrivateKeys()
+      guard keys.contains(where: { $0.tag == alias }) else {
+        reject("E_KEY_NOT_FOUND", "Alias '\(alias)' is not present in the keychain", nil)
+        return
+      }
+      resolve(nil)
+    } catch {
+      reject("E_KEYSTORE_ERROR", "Error marking active alias: \(error.localizedDescription)", error)
     }
-    resolve(nil)
   }
 
   /**
@@ -414,9 +432,11 @@ class BcscCore: NSObject {
     reject: @escaping RCTPromiseRejectBlock
   ) {
     let keyPairManager = KeyPairManager()
-    let keys = keyPairManager.findAllPrivateKeys()
-    let remaining = keys.filter { $0.tag != alias }
-    if remaining.isEmpty {
+    // Best-effort: an enumeration failure must not block deletion (idempotency) — treat it as
+    // "unknown remaining count" (-1) rather than tripping the last-key guard on a false [].
+    // Mirrors Android's getAllBcscKeyPairInfos() sentinel in BcscCoreModule.kt's deleteKey.
+    let remainingCount = (try? keyPairManager.findAllPrivateKeys().filter { $0.tag != alias }.count) ?? -1
+    if remainingCount == 0 {
       reject(
         "E_KEY_DELETE_REFUSED_LAST",
         "Refusing to delete '\(alias)': would leave the keychain with no private keys",
@@ -479,7 +499,7 @@ class BcscCore: NSObject {
 
   private func generateKeyPair() throws -> String {
     let keyPairManager = KeyPairManager()
-    let keys = keyPairManager.findAllPrivateKeys()
+    let keys = try keyPairManager.findAllPrivateKeys()
     let initialKeyId = "\(BcscCore.provider)\(UUID().uuidString)/1"
 
     if let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first {
@@ -1076,7 +1096,23 @@ class BcscCore: NSObject {
     reject: @escaping RCTPromiseRejectBlock
   ) {
     let keyPairManager = KeyPairManager()
-    let keys = keyPairManager.findAllPrivateKeys()
+    let keys: [PrivateKeyInfo]
+    do {
+      keys = try keyPairManager.findAllPrivateKeys()
+    } catch let KeychainError.keychainUnavailable(status) {
+      // Deliberate retryable-vs-fatal split (pre-existing behavior for this function): the
+      // keychain likely holds keys but can't be read right now (e.g. device locked) — surface a
+      // distinct, retryable error rather than the generic keystore failure below.
+      reject(
+        "E_120_KEYCHAIN_UNAVAILABLE_ERROR",
+        "Keychain temporarily unavailable while enumerating keys (OSStatus \(status))",
+        KeychainError.keychainUnavailable(status)
+      )
+      return
+    } catch {
+      reject("E_KEYSTORE_ERROR", "Error accessing keychain: \(error.localizedDescription)", error)
+      return
+    }
     let hasOtherAccounts = false
     let accountSecurityMethod: AccountSecurityMethod? = nil
     let keyPair: (public: SecKey, private: SecKey)
@@ -1129,7 +1165,9 @@ class BcscCore: NSObject {
         } catch KeychainError.keyNotExists {
           // Re-enumerate so the report shows whether the replacement key is now
           // visible in discovery — the state that matters for diagnosing this.
-          let postGenerationKeys = keyPairManager.findAllPrivateKeys()
+          // Best-effort: this runs inside a catch already rejecting the real error, so an
+          // enumeration failure here must never mask it — fall back to an empty inventory.
+          let postGenerationKeys = (try? keyPairManager.findAllPrivateKeys()) ?? []
           reject(
             "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
             "Replacement key was generated but could not be retrieved \(keyInventorySummary(postGenerationKeys))",
@@ -1141,7 +1179,8 @@ class BcscCore: NSObject {
         } catch {
           // Generation failures (keyGenError, keyAlreadyExists, unexpectedStatus, …)
           // are key-generation errors, not "key doesn't exist".
-          let postGenerationKeys = keyPairManager.findAllPrivateKeys()
+          // Best-effort re-enumeration (see comment above) — never mask the real rejection.
+          let postGenerationKeys = (try? keyPairManager.findAllPrivateKeys()) ?? []
           reject(
             "E_120_KEYCHAIN_KEY_GENERATION_ERROR",
             "Failed to generate a replacement key: \(error.localizedDescription) \(keyInventorySummary(postGenerationKeys))",
@@ -1196,7 +1235,9 @@ class BcscCore: NSObject {
         keyPair = try keyPairManager.getKeyPair(with: newKeyId)
         keyId = newKeyId
       } catch let KeychainError.keychainUnavailable(status) {
-        let postGenerationKeys = keyPairManager.findAllPrivateKeys()
+        // Best-effort: this runs inside a catch already rejecting the real error, so an
+        // enumeration failure here must never mask it — fall back to an empty inventory.
+        let postGenerationKeys = (try? keyPairManager.findAllPrivateKeys()) ?? []
         reject(
           "E_120_KEYCHAIN_UNAVAILABLE_ERROR",
           "Keychain temporarily unavailable while retrieving newly generated key (OSStatus \(status)) \(keyInventorySummary(postGenerationKeys))",
@@ -1209,7 +1250,8 @@ class BcscCore: NSObject {
       } catch {
         // Re-enumerate so the diagnostics show the post-generation keychain state,
         // i.e. whether the key we just generated is even visible to discovery.
-        let postGenerationKeys = keyPairManager.findAllPrivateKeys()
+        // Best-effort (see comment above) — never mask the real rejection.
+        let postGenerationKeys = (try? keyPairManager.findAllPrivateKeys()) ?? []
         reject(
           "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
           "Failed to retrieve newly generated key pair: \(error.localizedDescription) \(keyInventorySummary(postGenerationKeys))",
@@ -1365,7 +1407,15 @@ class BcscCore: NSObject {
     reject: @escaping RCTPromiseRejectBlock
   ) {
     let keyPairManager = KeyPairManager()
-    let keys = keyPairManager.findAllPrivateKeys()
+    let keys: [PrivateKeyInfo]
+    do {
+      keys = try keyPairManager.findAllPrivateKeys()
+    } catch {
+      // A genuine enumeration failure is a keystore problem, not "no keys exist" — replaces
+      // the previous false E_NO_KEYS_FOUND that a swallowed enumeration failure used to cause.
+      reject("E_KEYSTORE_ERROR", "Failed to enumerate decrypt keys: \(error.localizedDescription)", error)
+      return
+    }
     // Built once up front so every failure path reports the same picture: key
     // inventory + the incoming JWE's alg/enc/kid + whether that kid matches a local
     // key. This is what makes 2507 reports self-classifying in the field.
