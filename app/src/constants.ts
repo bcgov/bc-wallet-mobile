@@ -16,24 +16,28 @@ export interface CredentialRestrictionEnvironment {
   invitationUrl: string
 }
 
+export interface AutoFetchCredentialConfigEntry {
+  credDefIDs: readonly string[]
+}
+
 /**
- * Per-environment Auto fetch credential configuration.
- *
- * TODO: Replace placeholder cred def IDs and invitation URLs with real values
- * from the IAS team once they are available.
+ * Per-environment Person Credential cred def IDs. AutoCredentialMonitor
+ * flattens these into its trigger set; a proof requesting any of them tells
+ * the wallet a Person Credential is missing and the BCSC-initiated flow
+ * (POST /credentials/v1/person) is used to mint an issuer invitation.
  */
-export const AutoFetchCredentialConfig: Record<string, CredentialRestrictionEnvironment> = {
+export const AutoFetchCredentialConfig: Record<string, AutoFetchCredentialConfigEntry> = {
   Development: {
-    credDefIDs: ['PLACEHOLDER_DEV_ACCOUNT_ID_CRED_DEF_ID'],
-    invitationUrl: 'PLACEHOLDER_DEV_ACCOUNT_ID_INVITATION_URL',
+    credDefIDs: ['XpgeQa93eZvGSZBZef3PHn:3:CL:28075:PersonDEV'],
   },
-  Test: {
-    credDefIDs: ['PLACEHOLDER_TEST_ACCOUNT_ID_CRED_DEF_ID'],
-    invitationUrl: 'PLACEHOLDER_TEST_ACCOUNT_ID_INVITATION_URL',
+  SIT: {
+    credDefIDs: ['7xjfawcnyTUcduWVysLww5:3:CL:28075:PersonSIT'],
+  },
+  QA: {
+    credDefIDs: ['KCxVC8GkKywjhWJnUfCmkW:3:CL:20:PersonQA'],
   },
   Production: {
-    credDefIDs: ['PLACEHOLDER_PROD_ACCOUNT_ID_CRED_DEF_ID'],
-    invitationUrl: 'PLACEHOLDER_PROD_ACCOUNT_ID_INVITATION_URL',
+    credDefIDs: ['RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person'],
   },
 } as const
 
