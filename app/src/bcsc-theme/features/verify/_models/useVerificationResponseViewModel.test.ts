@@ -393,7 +393,7 @@ describe('useVerificationResponseViewModel', () => {
     })
 
     it('prefers given_name over family_name when both are present', async () => {
-      mockGetCachedIdTokenMetadata.mockResolvedValue({ given_name: 'Mac', family_name: 'Deluca' })
+      mockGetCachedIdTokenMetadata.mockResolvedValue({ given_name: 'Jamie', family_name: 'Doe' })
       mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useVerificationResponseViewModel())
@@ -404,9 +404,9 @@ describe('useVerificationResponseViewModel', () => {
 
       expect(mockDispatch).toHaveBeenNthCalledWith(1, {
         type: BCDispatchAction.UPDATE_NICKNAME,
-        payload: ['Mac'],
+        payload: ['Jamie'],
       })
-      expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'Mac')
+      expect(mockRegistrationService.updateRegistration).toHaveBeenCalledWith('test-registration-token', 'Jamie')
     })
   })
 })

@@ -77,8 +77,8 @@ export const getShortDisplayName = (name: TokenNameParts): string =>
  * would produce when given_name is absent (mononym accounts).
  *
  * @example
- *  getFullDisplayName({ given_name: 'Mac', family_name: 'Deluca' }) // 'Mac Deluca'
- *  getFullDisplayName({ family_name: 'Deluca' }) // 'Deluca' (mononym)
+ *  getFullDisplayName({ given_name: 'Jamie', family_name: 'Doe' }) // 'Jamie Doe'
+ *  getFullDisplayName({ family_name: 'Doe' }) // 'Doe' (mononym)
  */
 export const getFullDisplayName = (name: TokenNameParts): string =>
   [name.given_name?.trim(), name.family_name?.trim()].filter(Boolean).join(' ')

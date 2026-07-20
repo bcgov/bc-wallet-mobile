@@ -9,8 +9,8 @@ const createMockIdToken = (overrides?: Partial<IdToken>): IdToken => ({
   exp: 1234567890,
   iat: '1234567890',
   jti: 'test-jti',
-  family_name: 'Deluca',
-  given_name: 'Mac',
+  family_name: 'Doe',
+  given_name: 'Jamie',
   bcsc_card_type: 'Combined' as any,
   bcsc_event: BCSCEvent.Authorization,
   bcsc_reason: BCSCReason.ApprovedByAgent,
@@ -24,7 +24,7 @@ const createMockIdToken = (overrides?: Partial<IdToken>): IdToken => ({
 })
 
 const createMockMetadata = (overrides?: Partial<CredentialMetadata>): CredentialMetadata => ({
-  fullName: 'Mac Deluca',
+  fullName: 'Jamie Doe',
   bcscReason: BCSCReason.ApprovedByAgent,
   deviceCount: 1,
   deviceLimit: 5,
@@ -36,15 +36,15 @@ const createMockMetadata = (overrides?: Partial<CredentialMetadata>): Credential
 describe('BCSCIdTokenContext', () => {
   describe('tokenToCredentialMetadata', () => {
     it('returns the joined full name for a two-name token', () => {
-      const token = createMockIdToken({ given_name: 'Mac', family_name: 'Deluca' })
+      const token = createMockIdToken({ given_name: 'Jamie', family_name: 'Doe' })
 
-      expect(tokenToCredentialMetadata(token).fullName).toBe('Mac Deluca')
+      expect(tokenToCredentialMetadata(token).fullName).toBe('Jamie Doe')
     })
 
     it('returns just the family name for a mononym token (no "undefined" artifact)', () => {
-      const token = createMockIdToken({ given_name: undefined, family_name: 'Deluca' })
+      const token = createMockIdToken({ given_name: undefined, family_name: 'Doe' })
 
-      expect(tokenToCredentialMetadata(token).fullName).toBe('Deluca')
+      expect(tokenToCredentialMetadata(token).fullName).toBe('Doe')
     })
 
     it('maps the remaining token fields', () => {

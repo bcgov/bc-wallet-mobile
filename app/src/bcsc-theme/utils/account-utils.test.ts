@@ -189,15 +189,15 @@ describe('account-utils', () => {
 
   describe('getFullDisplayName', () => {
     it('should join given_name and family_name', () => {
-      expect(getFullDisplayName({ given_name: 'Mac', family_name: 'Deluca' })).toBe('Mac Deluca')
+      expect(getFullDisplayName({ given_name: 'Jamie', family_name: 'Doe' })).toBe('Jamie Doe')
     })
 
     it('should return just family_name when given_name is missing (mononym)', () => {
-      expect(getFullDisplayName({ family_name: 'Deluca' })).toBe('Deluca')
+      expect(getFullDisplayName({ family_name: 'Doe' })).toBe('Doe')
     })
 
     it('should return just given_name when family_name is missing', () => {
-      expect(getFullDisplayName({ given_name: 'Mac' })).toBe('Mac')
+      expect(getFullDisplayName({ given_name: 'Jamie' })).toBe('Jamie')
     })
 
     it('should return an empty string when both are empty or undefined', () => {
@@ -206,9 +206,9 @@ describe('account-utils', () => {
     })
 
     it('should not produce leading, trailing, or double spaces', () => {
-      expect(getFullDisplayName({ given_name: '  Mac  ', family_name: '  Deluca  ' })).toBe('Mac Deluca')
-      expect(getFullDisplayName({ given_name: '', family_name: 'Deluca' })).toBe('Deluca')
-      expect(getFullDisplayName({ given_name: 'Mac', family_name: '' })).toBe('Mac')
+      expect(getFullDisplayName({ given_name: '  Jamie  ', family_name: '  Doe  ' })).toBe('Jamie Doe')
+      expect(getFullDisplayName({ given_name: '', family_name: 'Doe' })).toBe('Doe')
+      expect(getFullDisplayName({ given_name: 'Jamie', family_name: '' })).toBe('Jamie')
     })
   })
 })
