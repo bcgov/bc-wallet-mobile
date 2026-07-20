@@ -30,6 +30,7 @@ import {
   Camera,
   CameraCaptureError,
   CameraProps,
+  CameraRuntimeError,
   Code,
   CodeScannerFrame,
   CodeType,
@@ -186,7 +187,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const { ColorPalette, Spacing } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitErrorModal } = useErrorAlert()
-  const { pauseActivityTracking, resumeActivityTracking } = useBCSCActivity()
+  const { appStateStatus, pauseActivityTracking, resumeActivityTracking } = useBCSCActivity()
   const camera = useRef<Camera>(null)
   const [torchEnabled, setTorchEnabled] = useState(false)
   // When `torchActive`/`onToggleTorch` are provided, the parent owns torch state.
@@ -900,7 +901,13 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   }, [initialZoom, getEffectiveZoom, logger, device, format, zoom, cameraIsReady])
 
   const handleCameraError = useCallback(
-    (error: unknown) => {
+    (error: CameraRuntimeError) => {
+      if (appStateStatus === 'background') {
+        // Ignore camera errors when the app is in the background — they are expected and not actionable.
+        logger.info('[CodeScanningCamera] Camera error ignored while app is in background')
+        return
+      }
+
       logger.error('CodeScanningCamera runtime error', error as Error)
       emitErrorModal(
         t('BCSC.CameraDisclosure.Error'),
@@ -908,7 +915,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
         ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
       )
     },
-    [logger, emitErrorModal, t]
+    [appStateStatus, logger, emitErrorModal, t]
   )
 
   const handleSaveScanZones = useCallback(() => {
@@ -1172,7 +1179,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
           logger.debug('Camera container size', { width, height })
         }}
       >
-        {/* 
+        {/*
             resizeMode="cover" fills the container without black bars by cropping the camera feed.
             The coordinate transformation logic accounts for the cropped portion to ensure
             highlight boxes align correctly with visible barcodes.

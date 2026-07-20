@@ -26,6 +26,7 @@ import {
   useCameraDevice,
   useCameraFormat,
 } from 'react-native-vision-camera'
+import { useBCSCActivity } from '../contexts/BCSCActivityContext'
 
 type MaskedCameraProps = {
   navigation: NavigationProp<ParamListBase>
@@ -70,6 +71,7 @@ const MaskedCamera = ({
   const { failedToWriteToLocalStorageAlert } = useAlerts(navigation)
   const { emitErrorModal } = useErrorAlert()
   const { preventDoublePress } = usePreventDoublePress()
+  const { appStateStatus } = useBCSCActivity()
   const hasTorch = device?.hasTorch ?? false
 
   const styles = StyleSheet.create({
@@ -132,6 +134,12 @@ const MaskedCamera = ({
 
   const onError = useCallback(
     (error: unknown) => {
+      if (appStateStatus === 'background') {
+        // Ignore camera errors when the app is in the background — they are expected and not actionable.
+        logger.info('[MaskedCamera] Camera error ignored while app is in background')
+        return
+      }
+
       logger.error('MaskedCamera runtime error', error as Error)
       emitErrorModal(
         t('BCSC.CameraDisclosure.Error'),
@@ -139,7 +147,7 @@ const MaskedCamera = ({
         ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
       )
     },
-    [logger, emitErrorModal, t]
+    [appStateStatus, logger, emitErrorModal, t]
   )
   if (!device) {
     return (

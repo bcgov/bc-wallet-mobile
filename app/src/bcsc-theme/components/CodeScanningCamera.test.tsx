@@ -1,9 +1,11 @@
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Platform } from 'react-native'
+import { useCameraDevice, useCameraPermission, useCodeScanner } from 'react-native-vision-camera'
 
 import { AppEventCode } from '@/events/appEventCode'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { useBCSCActivity } from '../contexts/BCSCActivityContext'
 import CodeScanningCamera, { ScanZone } from './CodeScanningCamera'
 import { BCSC_SN_SCAN_ZONES } from './utils/camera'
 
@@ -25,10 +27,8 @@ jest.mock('@/errors/errorHandler', () => ({
 
 // Mock react-native-vision-camera
 jest.mock('react-native-vision-camera', () => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const React = require('react')
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { View } = require('react-native')
+  const React = jest.requireActual('react')
+  const { View } = jest.requireActual('react-native')
 
   // Forward ref Camera component mock
   // eslint-disable-next-line react/display-name
@@ -132,6 +132,12 @@ jest.mock('react-native-gesture-handler', () => ({
   GestureDetector: ({ children }: any) => children,
 }))
 
+// Typed handles to the mocked hooks above, for use in test bodies
+const mockedUseBCSCActivity = useBCSCActivity as jest.Mock
+const mockedUseCameraDevice = useCameraDevice as jest.Mock
+const mockedUseCameraPermission = useCameraPermission as jest.Mock
+const mockedUseCodeScanner = useCodeScanner as jest.Mock
+
 describe('CodeScanningCamera', () => {
   const mockOnCodeScanned = jest.fn()
   const defaultProps = {
@@ -144,6 +150,13 @@ describe('CodeScanningCamera', () => {
     mockHasPermission = true
     mockCodeScannerCallback = null
     mockEmitErrorModal.mockClear()
+    // Reset to the default 'active' state in case a previous test overrode it —
+    // jest.clearAllMocks() clears call history but not a mockReturnValue implementation.
+    mockedUseBCSCActivity.mockReturnValue({
+      appStateStatus: 'active',
+      pauseActivityTracking: mockPauseActivityTracking,
+      resumeActivityTracking: mockResumeActivityTracking,
+    })
   })
 
   it('renders correctly with default props', () => {
@@ -187,9 +200,7 @@ describe('CodeScanningCamera', () => {
       </BasicAppContext>
     )
 
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { useCodeScanner } = require('react-native-vision-camera')
-    expect(useCodeScanner).toHaveBeenCalledWith(
+    expect(mockedUseCodeScanner).toHaveBeenCalledWith(
       expect.objectContaining({
         codeTypes: expect.arrayContaining(['code-128', 'pdf-417']),
       })
@@ -221,13 +232,11 @@ describe('CodeScanningCamera', () => {
   describe('Camera Permission', () => {
     it('renders permission required message when no permission', () => {
       // Mock no permission
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const visionCamera = require('react-native-vision-camera')
-      visionCamera.useCameraPermission.mockReturnValueOnce({
+      mockedUseCameraPermission.mockReturnValueOnce({
         hasPermission: false,
         requestPermission: mockRequestPermission,
       })
-      visionCamera.useCameraDevice.mockReturnValueOnce(null)
+      mockedUseCameraDevice.mockReturnValueOnce(null)
 
       const { getByText } = render(
         <BasicAppContext>
@@ -239,9 +248,7 @@ describe('CodeScanningCamera', () => {
     })
 
     it('requests permission when not granted', () => {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const visionCamera = require('react-native-vision-camera')
-      visionCamera.useCameraPermission.mockReturnValueOnce({
+      mockedUseCameraPermission.mockReturnValueOnce({
         hasPermission: false,
         requestPermission: mockRequestPermission,
       })
@@ -347,9 +354,7 @@ describe('CodeScanningCamera', () => {
         </BasicAppContext>
       )
 
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { useCodeScanner } = require('react-native-vision-camera')
-      expect(useCodeScanner).toHaveBeenCalledWith(
+      expect(mockedUseCodeScanner).toHaveBeenCalledWith(
         expect.objectContaining({
           codeTypes: ['code-39', 'code-128', 'pdf-417'],
           onCodeScanned: expect.any(Function),
@@ -1000,9 +1005,7 @@ describe('CodeScanningCamera', () => {
 
   describe('Device without focus support', () => {
     it('renders correctly when device does not support focus', () => {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const visionCamera = require('react-native-vision-camera')
-      visionCamera.useCameraDevice.mockReturnValueOnce({
+      mockedUseCameraDevice.mockReturnValueOnce({
         id: 'back',
         supportsFocus: false,
         minZoom: 1,
@@ -1512,6 +1515,32 @@ describe('CodeScanningCamera', () => {
         'BCSC.CameraDisclosure.ErrorMessage',
         expectedAppError
       )
+    })
+
+    it('ignores camera errors and does not show an error modal while the app is backgrounded', async () => {
+      mockedUseBCSCActivity.mockReturnValue({
+        appStateStatus: 'background',
+        pauseActivityTracking: mockPauseActivityTracking,
+        resumeActivityTracking: mockResumeActivityTracking,
+      })
+
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} />
+        </BasicAppContext>
+      )
+
+      const camera = getByTestId('mock-camera')
+      const runtimeError = new Error('Runtime camera failure while backgrounded')
+
+      await act(async () => {
+        camera.props.onError(runtimeError)
+      })
+
+      // Backgrounded camera errors are expected (the session is being torn down) and not
+      // actionable — no error should be normalized or surfaced to the user.
+      expect(mockEnsureAppError).not.toHaveBeenCalled()
+      expect(mockEmitErrorModal).not.toHaveBeenCalled()
     })
   })
 })
