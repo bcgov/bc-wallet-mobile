@@ -69,7 +69,7 @@ describe('Error Utils', () => {
 
       const appError = getAppErrorFromAxiosError(axiosError)
 
-      expect(appError.toJSON().context).toEqual({ url: '/device/token', method: 'POST' })
+      expect(appError.context).toEqual({ url: '/device/token', method: 'POST' })
     })
 
     it('should leave the context url undefined when config.url is absent', () => {
@@ -81,7 +81,7 @@ describe('Error Utils', () => {
 
       const appError = getAppErrorFromAxiosError(axiosError)
 
-      expect(appError.toJSON().context).toEqual({ url: undefined, method: undefined })
+      expect(appError.context).toEqual({ url: undefined, method: undefined })
     })
   })
 
