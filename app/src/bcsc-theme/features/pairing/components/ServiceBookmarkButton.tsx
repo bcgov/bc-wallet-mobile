@@ -4,7 +4,7 @@ import { BCState } from '@/store'
 import { testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, TouchableOpacity } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 type ServiceBookmarkButtonProps = {
@@ -19,14 +19,16 @@ const ServiceBookmarkButton = ({ serviceName, serviceId }: ServiceBookmarkButton
   const { updateSavedService } = useSecureActions()
 
   const styles = StyleSheet.create({
-    container: {
+    button: {
       marginTop: Spacing.lg,
-      gap: Spacing.md,
-    },
-    row: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
+      gap: Spacing.md,
+      padding: Spacing.md,
+      borderWidth: 2,
+      borderColor: ColorPalette.brand.primary,
+      borderRadius: Spacing.xs,
     },
   })
 
@@ -39,28 +41,20 @@ const ServiceBookmarkButton = ({ serviceName, serviceId }: ServiceBookmarkButton
   }, [serviceId, bookmarked, serviceName, updateSavedService])
 
   return (
-    <View style={styles.container}>
-      <View style={styles.row}>
-        <View>
-          <ThemedText variant={'bold'} style={{ color: TextTheme.headingFour.color }}>
-            {t('BCSC.ManualPairing.BookmarkService')}
-          </ThemedText>
-          <ThemedText variant={'bold'} style={{ color: TextTheme.headingFour.color }}>
-            {serviceName}
-          </ThemedText>
-        </View>
-        <TouchableOpacity
-          hitSlop={hitSlop}
-          onPress={handleBookmarkPress}
-          accessibilityLabel={t('BCSC.ManualPairing.ToggleBookmark')}
-          accessibilityRole="button"
-          testID={testIdWithKey('ToggleBookmark')}
-        >
-          <Icon size={32} color={ColorPalette.brand.icon} name={bookmarked ? 'bookmark' : 'bookmark-outline'} />
-        </TouchableOpacity>
-      </View>
-      <ThemedText variant={'caption'}>{t('BCSC.ManualPairing.BookmarkDescription')}</ThemedText>
-    </View>
+    <TouchableOpacity
+      style={styles.button}
+      hitSlop={hitSlop}
+      onPress={handleBookmarkPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected: bookmarked }}
+      accessibilityLabel={t('BCSC.ManualPairing.BookmarkServiceButton')}
+      testID={testIdWithKey('BookmarkService')}
+    >
+      <ThemedText variant={'bold'} style={{ color: TextTheme.headingFour.color }}>
+        {t('BCSC.ManualPairing.BookmarkServiceButton')}
+      </ThemedText>
+      <Icon size={32} color={TextTheme.headingFour.color} name={bookmarked ? 'bookmark' : 'bookmark-outline'} />
+    </TouchableOpacity>
   )
 }
 
