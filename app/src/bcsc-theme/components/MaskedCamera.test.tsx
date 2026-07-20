@@ -28,10 +28,8 @@ jest.mock('@/hooks/useAlerts', () => ({
 // Mock react-native-vision-camera — overrides the silent default mock from jestSetup.js so the
 // Camera renders into the tree (with its onError prop reachable) and reports a real device.
 jest.mock('react-native-vision-camera', () => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const React = require('react')
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { View } = require('react-native')
+  const React = jest.requireActual('react')
+  const { View } = jest.requireActual('react-native')
 
   // Forward ref Camera component mock
   // eslint-disable-next-line react/display-name
