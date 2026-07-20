@@ -30,6 +30,7 @@ export const persistJwk = async (baseURL: string, jwk: JWK, logger: RemoteLogger
 
   try {
     await PersistentStorage.storeValueForKey<PersistedJwkRecord>(BCLocalStorageKeys.CachedJWK, record, logger)
+    logger.info(`[jwk-cache] JWK persisted to disk (kid: ${jwk.kid}, baseURL: ${baseURL})`)
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     logger.error(`[jwk-cache] Failed to persist JWK for ${baseURL}: ${message}`)
@@ -50,10 +51,20 @@ export const loadPersistedJwk = async (baseURL: string, logger: RemoteLogger): P
   try {
     const record = await PersistentStorage.fetchValueForKey<PersistedJwkRecord>(BCLocalStorageKeys.CachedJWK, logger)
 
-    if (record?.baseURL !== baseURL) {
+    if (!record) {
       return null
     }
 
+    if (record.baseURL !== baseURL) {
+      // Distinct from "nothing stored" (above): a record exists, just not for this environment — worth
+      // calling out so an env switch (dev/test/prod) doesn't read as an unexplained cache miss.
+      logger.info(
+        `[jwk-cache] Persisted JWK ignored — different environment (persisted baseURL: ${record.baseURL}, current baseURL: ${baseURL})`
+      )
+      return null
+    }
+
+    logger.info(`[jwk-cache] JWK loaded from persisted disk cache (kid: ${record.jwk.kid}, baseURL: ${baseURL})`)
     return record.jwk
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)

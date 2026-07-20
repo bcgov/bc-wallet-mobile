@@ -515,6 +515,9 @@ class BCSCApiClient {
    */
   async fetchJwk(): Promise<JWK | null> {
     if (this.cachedJwk && this.cachedJwkBaseUrl === this.baseURL) {
+      this.logger.info(
+        `[BCSCApiClient] JWK served from in-memory cache (kid: ${this.cachedJwk.kid}, baseURL: ${this.baseURL})`
+      )
       return this.cachedJwk
     }
 
@@ -522,6 +525,9 @@ class BCSCApiClient {
     // fetch in flight for a since-changed baseURL is never joined — mirrors the baseURL check the
     // in-memory cache above already uses.
     if (this.jwkFetchPromise && this.jwkFetchPromiseBaseUrl === this.baseURL) {
+      // Distinct from the in-memory cache-hit log above — this caller isn't getting a cached key, it's
+      // sharing an active network attempt that hasn't resolved yet.
+      this.logger.info(`[BCSCApiClient] Joining in-flight JWK fetch (baseURL: ${this.baseURL})`)
       return this.jwkFetchPromise
     }
 
@@ -574,6 +580,8 @@ class BCSCApiClient {
     if (jwk) {
       this.cachedJwk = jwk
       this.cachedJwkBaseUrl = baseURL
+      this.logger.info(`[BCSCApiClient] JWK fetched from network (kid: ${jwk.kid}, baseURL: ${baseURL})`)
+      // Logs its own success/failure — see persistJwk in jwk-cache.ts.
       await persistJwk(baseURL, jwk, this.logger)
       return jwk
     }
