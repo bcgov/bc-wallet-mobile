@@ -395,4 +395,54 @@ describe('TransferQRDisplayScreen', () => {
       expect(mockNavigation.navigate).toHaveBeenCalledTimes(1)
     })
   })
+
+  // Copilot-flagged follow-up for issue #4273: createToken() can *throw* (rather than
+  // resolve null) when the native module is asked about an account mid-removal. Both call
+  // sites (refreshToken's await, and the QR-refresh interval's fire-and-forget call) must
+  // contain that rejection instead of leaking it as an unhandled promise rejection.
+  describe('createToken rejection handling (issue #4273 follow-up)', () => {
+    it('contains a createToken rejection during refresh: no unhandled rejection and the QR-refresh interval is not started', async () => {
+      const unhandledRejections: unknown[] = []
+      const onUnhandledRejection = (reason: unknown) => {
+        unhandledRejections.push(reason)
+      }
+      process.on('unhandledRejection', onUnhandledRejection)
+
+      try {
+        const rejectionError = new Error('native storage error')
+        jest.mocked(getAccount).mockRejectedValueOnce(rejectionError)
+
+        render(
+          <BasicAppContext>
+            <TransferQRDisplayScreen />
+          </BasicAppContext>
+        )
+
+        await waitFor(() => {
+          expect(getAccount).toHaveBeenCalledTimes(1)
+        })
+
+        // Give the rejection's microtask chain a chance to surface as an unhandled rejection,
+        // as it would if refreshToken's try/catch didn't contain it (refreshToken is invoked
+        // un-awaited from both the mount effect and the "Get New QR Code" button).
+        await act(async () => {
+          await Promise.resolve()
+          await Promise.resolve()
+        })
+
+        expect(unhandledRejections).toHaveLength(0)
+
+        // A failed refresh must not start the QR-refresh interval — advancing well past the
+        // 50s mark should produce no further getAccount() calls.
+        await act(async () => {
+          jest.advanceTimersByTime(150000)
+        })
+
+        expect(getAccount).toHaveBeenCalledTimes(1)
+        expect(mockAccountNotFoundAlert).not.toHaveBeenCalled()
+      } finally {
+        process.off('unhandledRejection', onUnhandledRejection)
+      }
+    })
+  })
 })

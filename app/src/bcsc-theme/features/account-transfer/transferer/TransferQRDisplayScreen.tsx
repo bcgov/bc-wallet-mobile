@@ -133,9 +133,11 @@ const TransferQRDisplayScreen: React.FC = () => {
       if (completedRef.current || !isMountedRef.current) {
         return
       }
-      createToken()
+      createToken().catch((error) => {
+        logger.error('[TransferQRDisplayScreen] Failed to refresh QR token on interval', error as Error)
+      })
     }, qrCodeRefreshInterval)
-  }, [createToken])
+  }, [createToken, logger])
 
   const refreshToken = useCallback(async () => {
     if (completedRef.current) {
@@ -145,11 +147,18 @@ const TransferQRDisplayScreen: React.FC = () => {
       clearInterval(intervalRef.current)
     }
 
-    const success = await createToken()
+    let success = false
+    try {
+      success = await createToken()
+    } catch (error) {
+      logger.error('[TransferQRDisplayScreen] Failed to refresh QR token', error as Error)
+      return
+    }
+
     if (success && !completedRef.current && isMountedRef.current) {
       startInterval()
     }
-  }, [createToken, startInterval])
+  }, [createToken, startInterval, logger])
 
   useEffect(() => {
     return () => {
