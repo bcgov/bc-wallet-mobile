@@ -338,7 +338,7 @@ export const getKeyPair = (label: string): Promise<KeyPair> => {
 };
 
 /**
- * NativeTokenResponse with custom dianostic field to surface OSStatus or other errors to JS
+ * NativeTokenResponse with custom diagnostic field to surface OSStatus or other errors to JS
  */
 interface NativeTokenResponse {
   id?: string;
