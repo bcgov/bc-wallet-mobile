@@ -45,6 +45,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         <VerifyMethodActionButton
           key="send_video"
           title={t('BCSC.VerificationMethods.SendVideoTitle')}
+          testIDKey="SendVideo"
           description={t('BCSC.VerificationMethods.SendVideoDescription')}
           icon={'video-outline'}
           onPress={preventDoublePress(handlePressSendVideo)}
@@ -58,6 +59,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         <VerifyMethodActionButton
           key="in_person"
           title={t('BCSC.VerificationMethods.InPersonTitle')}
+          testIDKey="InPerson"
           description={t('BCSC.VerificationMethods.InPersonDescription')}
           icon={'account-outline'}
           onPress={() => navigation.navigate(BCSCScreens.VerifyInPerson)}
@@ -71,6 +73,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         <VerifyMethodActionButton
           key="video_call"
           title={t('BCSC.VerificationMethods.VideoCallTitle')}
+          testIDKey="VideoCall"
           description={t('BCSC.VerificationMethods.VideoCallDescription')}
           icon={'face-agent'}
           onPress={preventDoublePress(handlePressLiveCall)}

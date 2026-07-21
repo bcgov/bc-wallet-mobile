@@ -595,7 +595,7 @@ exports[`EmailConfirmation Rendering renders correctly 1`] = `
                     "padding": 16,
                   }
                 }
-                testID="ContinueButton"
+                testID="com.ariesbifold:id/Continue"
               >
                 <View
                   style={
