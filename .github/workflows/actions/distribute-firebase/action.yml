@@ -62,6 +62,11 @@ runs:
         echo "${SERVICE_ACCOUNT_BASE64}" | base64 --decode > "${SA_FILE}"
         echo "service_credentials_file=${SA_FILE}" >> "$GITHUB_OUTPUT"
 
+        if [ -z "${GOOGLE_SERVICES_BASE64}" ]; then
+          echo "::error::No google-services secret provided for this variant."
+          exit 1
+        fi
+
         GS_FILE="${RUNNER_TEMP}/google-services-source"
         echo "${GOOGLE_SERVICES_BASE64}" | base64 --decode > "${GS_FILE}"
 
