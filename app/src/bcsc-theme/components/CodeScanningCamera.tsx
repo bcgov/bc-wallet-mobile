@@ -41,6 +41,7 @@ import {
 } from 'react-native-vision-camera'
 
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
+import { isBackgroundedAppState } from '../utils/app-state'
 import {
   CameraFormat,
   EnhancedCode,
@@ -967,12 +968,9 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
   const handleCameraError = useCallback(
     (error: CameraRuntimeError) => {
-      if (appStateStatus === 'background' || appStateStatus === 'inactive') {
+      if (isBackgroundedAppState(appStateStatus)) {
         // Ignore camera errors while backgrounded or transitioning (app switcher, notification
-        // shade, incoming call on iOS) — they are expected and not actionable. Deliberately not
-        // `!== 'active'`: that would also swallow errors when appStateStatus is 'unknown', which
-        // AppState.currentState can report at Android startup — exactly when a genuine camera
-        // failure should still surface to the user.
+        // shade, incoming call on iOS) — they are expected and not actionable.
         logger.info('[CodeScanningCamera] Camera error ignored while app is backgrounded or inactive', {
           appStateStatus,
         })
@@ -1261,7 +1259,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
           style={styles.camera}
           device={device}
           format={format}
-          isActive={isFocused && appStateStatus === 'active' && !frozenFrameUri}
+          isActive={isFocused && !isBackgroundedAppState(appStateStatus) && !frozenFrameUri}
           video={true}
           codeScanner={codeScanner}
           torch={isTorchOn ? 'on' : 'off'}

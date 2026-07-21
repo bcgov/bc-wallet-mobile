@@ -27,6 +27,7 @@ import {
   useCameraFormat,
 } from 'react-native-vision-camera'
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
+import { isBackgroundedAppState } from '../utils/app-state'
 
 type MaskedCameraProps = {
   navigation: NavigationProp<ParamListBase>
@@ -134,12 +135,9 @@ const MaskedCamera = ({
 
   const onError = useCallback(
     (error: unknown) => {
-      if (appStateStatus === 'background' || appStateStatus === 'inactive') {
+      if (isBackgroundedAppState(appStateStatus)) {
         // Ignore camera errors while backgrounded or transitioning (app switcher, notification
-        // shade, incoming call on iOS) — they are expected and not actionable. Deliberately not
-        // `!== 'active'`: that would also swallow errors when appStateStatus is 'unknown', which
-        // AppState.currentState can report at Android startup — exactly when a genuine camera
-        // failure should still surface to the user.
+        // shade, incoming call on iOS) — they are expected and not actionable.
         logger.info('[MaskedCamera] Camera error ignored while app is backgrounded or inactive', { appStateStatus })
         return
       }
@@ -202,7 +200,7 @@ const MaskedCamera = ({
         style={styles.camera}
         device={device}
         format={format}
-        isActive={isFocused && appStateStatus === 'active'}
+        isActive={isFocused && !isBackgroundedAppState(appStateStatus)}
         photo={true}
         video={true}
         photoQualityBalance={photoQualityBalance}

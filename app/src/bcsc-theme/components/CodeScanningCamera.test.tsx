@@ -1791,6 +1791,24 @@ describe('CodeScanningCamera', () => {
 
       expect(getByTestId('mock-camera').props.isActive).toBe(true)
     })
+
+    it('stays active when appStateStatus is an unexpected value like unknown (fail-safe default)', () => {
+      mockedUseBCSCActivity.mockReturnValue({
+        appStateStatus: 'unknown',
+        pauseActivityTracking: mockPauseActivityTracking,
+        resumeActivityTracking: mockResumeActivityTracking,
+      })
+
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} />
+        </BasicAppContext>
+      )
+
+      // The gate deactivates on KNOWN background states rather than activating only on a
+      // known-active one, so an unexpected value can't strand the camera off permanently.
+      expect(getByTestId('mock-camera').props.isActive).toBe(true)
+    })
   })
 
   describe('Camera runtime error handling', () => {
