@@ -1,6 +1,6 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
+import { BC_LOGIN_PRIVACY_URL } from '@/constants'
 import { Button, ButtonType, testIdWithKey } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -24,8 +24,8 @@ export const OnboardingPrivacyPolicyScreen = ({ navigation }: OnboardingPrivacyP
 
   const handleLearnMore = () => {
     navigation.navigate(BCSCScreens.OnboardingWebView, {
-      title: t('BCSC.Onboarding.PrivacyPolicyHeaderSecuringApp'),
-      url: SECURE_APP_LEARN_MORE_URL,
+      title: t('BCSC.Screens.PrivacyInformation'),
+      url: BC_LOGIN_PRIVACY_URL,
     })
   }
 

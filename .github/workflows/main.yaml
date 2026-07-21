@@ -58,6 +58,9 @@ jobs:
             "GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA"
             "GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST"
             "GOOGLE_SERVICES_CREDENTIALS_IOS_SAPROD"
+            "FIREBASE_SERVICE_ACCOUNT_BCWALLET"
+            "FIREBASE_SERVICE_ACCOUNT_BCSC_IOS"
+            "FIREBASE_SERVICE_ACCOUNT_BCSC_ANDROID"
           )
           for var in "${required_env_vars[@]}"; do
             if [ -z "${!var}" ]; then
@@ -98,6 +101,9 @@ jobs:
           GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA_BASE64 }}
           GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST_BASE64 }}
           GOOGLE_SERVICES_CREDENTIALS_IOS_SAPROD: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SAPROD_BASE64 }}
+          FIREBASE_SERVICE_ACCOUNT_BCWALLET: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BCWALLET_BASE64 }}
+          FIREBASE_SERVICE_ACCOUNT_BCSC_IOS: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BCSC_IOS_BASE64 }}
+          FIREBASE_SERVICE_ACCOUNT_BCSC_ANDROID: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BCSC_ANDROID_BASE64 }}
   check-vars:
     runs-on: ubuntu-22.04
     permissions: {}
@@ -1144,6 +1150,91 @@ jobs:
           version_code: ${{ github.run_number }}
           version_name: ${{ env.APP_VERSION }}
           beta_groups: ${{ env.TESTFLIGHT_BETA_GROUPS }}
+
+  # ─── Firebase App Distribution ──────────────────────────────────────
+  distribute-firebase-ios:
+    name: 'Distribute Firebase iOS - ${{ matrix.variant }}'
+    if: ${{ always() && !cancelled() && github.ref_name == 'main' }}
+    needs: [build-ios, compute-variants]
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(needs.compute-variants.outputs.variants) }}
+    steps:
+      - name: Check iOS build artifact exists
+        id: probe
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: ios-${{ matrix.variant }}.ipa
+          path: ${{ runner.temp }}/firebase-artifact
+
+      - uses: actions/checkout@v7
+        if: steps.probe.outcome == 'success'
+
+      - name: Load variant config
+        if: steps.probe.outcome == 'success'
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      - name: Distribute to Firebase App Distribution
+        if: steps.probe.outcome == 'success'
+        uses: ./.github/workflows/actions/distribute-firebase
+        with:
+          platform: ios
+          app_identifier: ${{ env.IOS_BUNDLE_ID }}
+          google_services_base64: ${{ secrets[env.IOS_GOOGLE_SERVICES_SECRET] }}
+          service_account_base64: ${{ secrets[env.FIREBASE_IOS_SERVICE_ACCOUNT_SECRET] }}
+          artifact_path: ${{ runner.temp }}/firebase-artifact/BCWallet.ipa
+          groups: ${{ env.FIREBASE_IOS_TESTER_GROUPS }}
+          version_name: ${{ env.APP_VERSION }}
+          version_code: ${{ github.run_number }}
+
+  distribute-firebase-android:
+    name: 'Distribute Firebase Android - ${{ matrix.variant }}'
+    if: ${{ always() && !cancelled() && github.ref_name == 'main' }}
+    needs: [build-android, compute-variants]
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(needs.compute-variants.outputs.variants) }}
+    steps:
+      - name: Check Android build artifact exists
+        id: probe
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: android-${{ matrix.variant }}.apk
+          path: ${{ runner.temp }}/firebase-artifact
+
+      - uses: actions/checkout@v7
+        if: steps.probe.outcome == 'success'
+
+      - name: Load variant config
+        if: steps.probe.outcome == 'success'
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      - name: Distribute to Firebase App Distribution
+        if: steps.probe.outcome == 'success'
+        uses: ./.github/workflows/actions/distribute-firebase
+        with:
+          platform: android
+          app_identifier: ${{ env.ANDROID_PACKAGE_NAME }}
+          google_services_base64: ${{ secrets[env.ANDROID_GOOGLE_SERVICES_SECRET] }}
+          service_account_base64: ${{ secrets[env.FIREBASE_ANDROID_SERVICE_ACCOUNT_SECRET] }}
+          artifact_path: ${{ runner.temp }}/firebase-artifact/app-release.apk
+          groups: ${{ env.FIREBASE_ANDROID_TESTER_GROUPS }}
+          version_name: ${{ env.APP_VERSION }}
+          version_code: ${{ github.run_number }}
 
   ship-to-saucelabs:
     name: 'Ship to SauceLabs - ${{ matrix.variant }} - ${{ matrix.platform }}'

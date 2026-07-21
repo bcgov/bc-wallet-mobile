@@ -1,0 +1,42 @@
+# Fastlane configuration for Firebase App Distribution.
+#
+# Distribution only: the IPA / APK are built by the existing GitHub Actions
+# build jobs. These lanes just upload an already-signed artifact to Firebase
+# App Distribution. All inputs are passed via environment variables so the
+# workflow (not this file) owns per-variant configuration.
+#
+# Required env vars (set by the distribute-firebase composite action):
+#   FIREBASE_APP_ID                  Firebase App ID (1:...:ios:... / :android:)
+#   FIREBASE_SERVICE_CREDENTIALS_FILE  Path to the GCP service-account JSON
+#   FIREBASE_ARTIFACT_PATH           Path to the .ipa (ios) or .apk (android)
+#   FIREBASE_GROUPS                  Comma-separated tester group aliases
+#   FIREBASE_RELEASE_NOTES           Release notes shown to testers
+
+skip_docs
+
+platform :ios do
+  desc "Upload the iOS IPA to Firebase App Distribution"
+  lane :firebase_ios do
+    firebase_app_distribution(
+      app: ENV.fetch("FIREBASE_APP_ID"),
+      ipa_path: ENV.fetch("FIREBASE_ARTIFACT_PATH"),
+      service_credentials_file: ENV.fetch("FIREBASE_SERVICE_CREDENTIALS_FILE"),
+      groups: ENV["FIREBASE_GROUPS"],
+      release_notes: ENV["FIREBASE_RELEASE_NOTES"]
+    )
+  end
+end
+
+platform :android do
+  desc "Upload the Android APK to Firebase App Distribution"
+  lane :firebase_android do
+    firebase_app_distribution(
+      app: ENV.fetch("FIREBASE_APP_ID"),
+      android_artifact_type: "APK",
+      android_artifact_path: ENV.fetch("FIREBASE_ARTIFACT_PATH"),
+      service_credentials_file: ENV.fetch("FIREBASE_SERVICE_CREDENTIALS_FILE"),
+      groups: ENV["FIREBASE_GROUPS"],
+      release_notes: ENV["FIREBASE_RELEASE_NOTES"]
+    )
+  end
+end

@@ -1,5 +1,5 @@
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
+import { BC_LOGIN_PRIVACY_URL } from '@/constants'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { PrivacyPolicyContent } from '../onboarding/components/PrivacyPolicyContent'
@@ -17,7 +17,7 @@ export const AuthPrivacyPolicyScreen = ({ navigation }: AuthPrivacyPolicyScreenP
   const handleLearnMore = () => {
     navigation.navigate(BCSCScreens.AuthWebView, {
       title: t('BCSC.Screens.PrivacyInformation'),
-      url: SECURE_APP_LEARN_MORE_URL,
+      url: BC_LOGIN_PRIVACY_URL,
     })
   }
 
