@@ -26,6 +26,8 @@ import {
   useCameraDevice,
   useCameraFormat,
 } from 'react-native-vision-camera'
+import { useBCSCActivity } from '../contexts/BCSCActivityContext'
+import { isBackgroundedAppState } from '../utils/app-state'
 
 type MaskedCameraProps = {
   navigation: NavigationProp<ParamListBase>
@@ -70,6 +72,7 @@ const MaskedCamera = ({
   const { failedToWriteToLocalStorageAlert } = useAlerts(navigation)
   const { emitErrorModal } = useErrorAlert()
   const { preventDoublePress } = usePreventDoublePress()
+  const { appStateStatus } = useBCSCActivity()
   const hasTorch = device?.hasTorch ?? false
 
   const styles = StyleSheet.create({
@@ -132,6 +135,13 @@ const MaskedCamera = ({
 
   const onError = useCallback(
     (error: unknown) => {
+      if (isBackgroundedAppState(appStateStatus)) {
+        // Ignore camera errors while backgrounded or transitioning (app switcher, notification
+        // shade, incoming call on iOS) — they are expected and not actionable.
+        logger.info('[MaskedCamera] Camera error ignored while app is backgrounded or inactive', { appStateStatus })
+        return
+      }
+
       logger.error('MaskedCamera runtime error', error as Error)
       emitErrorModal(
         t('BCSC.CameraDisclosure.Error'),
@@ -139,7 +149,7 @@ const MaskedCamera = ({
         ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
       )
     },
-    [logger, emitErrorModal, t]
+    [appStateStatus, logger, emitErrorModal, t]
   )
   if (!device) {
     return (
@@ -190,7 +200,7 @@ const MaskedCamera = ({
         style={styles.camera}
         device={device}
         format={format}
-        isActive={isFocused}
+        isActive={isFocused && !isBackgroundedAppState(appStateStatus)}
         photo={true}
         video={true}
         photoQualityBalance={photoQualityBalance}

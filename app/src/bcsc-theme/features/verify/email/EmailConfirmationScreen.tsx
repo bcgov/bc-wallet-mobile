@@ -136,7 +136,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
         onPress={preventDoublePress(handleSubmit)}
         title={t('Global.Continue')}
         accessibilityLabel={t('Global.Continue')}
-        testID={'ContinueButton'}
+        testID={testIdWithKey('Continue')}
       >
         {loading && <ButtonLoading />}
       </Button>

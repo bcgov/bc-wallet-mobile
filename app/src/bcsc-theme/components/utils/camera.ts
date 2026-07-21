@@ -432,27 +432,30 @@ export const isCodeAlignedWithZones = (
  * - `'aligned'`   — enough qualifying codes, but not yet consistently read
  * - `'locked'`    — all qualifying codes have been read ≥ `lockReadingThreshold` times
  *
+ * All identified (non-empty value) codes qualify for these transitions — position
+ * on screen is not a gate. Card identity is validated downstream by decoding
+ * content (`useCardScanner` → `decodeScannedCode`); a scan that decodes to a
+ * DL-only card with no BCSC serial is rejected there via the `onCodeScanned`
+ * `false` return, which resets the scanner. `isAligned` is still computed per
+ * code (see `enhanceSingleCode`) but only drives focus-cycle prioritisation and
+ * the (purely visual) scan zone outline colour — never whether a scan counts.
+ *
  * @param codes Enhanced codes from the current scan frame
- * @param options Thresholds and mode flags controlling state transitions
+ * @param options Thresholds controlling state transitions
  * @returns The new scan state and the qualifying codes that drove the transition
  */
 export const determineScanState = (
   codes: EnhancedCode[],
   options: {
-    enableScanZones: boolean
     minCodesForAligned: number
     lockReadingThreshold: number
   }
 ): { newScanState: ScanState; qualifyingCodes: EnhancedCode[] } => {
-  const { enableScanZones, minCodesForAligned, lockReadingThreshold } = options
+  const { minCodesForAligned, lockReadingThreshold } = options
   const identifiedCodes = codes.filter((c) => c.value && c.value.length > 0)
 
-  // In production mode (enableScanZones OFF), only codes aligned with scan zones
-  // (and matching barcode types) drive state transitions. This ensures highlights
-  // only turn green / lock when barcodes are in the expected positions.
-  // In dev/calibration mode (enableScanZones ON), all identified codes count —
-  // this allows capturing scan zones from any position.
-  const qualifyingCodes = enableScanZones ? identifiedCodes : identifiedCodes.filter((c) => c.isAligned)
+  // Every identified code qualifies — no alignment/position filter.
+  const qualifyingCodes = identifiedCodes
 
   const qualifyingCount = qualifyingCodes.length
   const allLocked =

@@ -146,10 +146,10 @@ describe('Home (default export, v4.1)', () => {
     dismissible: false,
   }
 
-  const accountRemovedBanner: BCSCBannerMessage = {
-    id: BCSCBanner.REMOVE_ACCOUNT_SUCCESS,
-    title: 'Account removed successfully.',
-    type: 'success',
+  const appUpdateBanner: BCSCBannerMessage = {
+    id: BCSCBanner.APP_UPDATE_AVAILABLE,
+    title: 'Update available',
+    type: 'info',
     dismissible: true,
   }
 
@@ -172,11 +172,11 @@ describe('Home (default export, v4.1)', () => {
     jest.clearAllMocks()
   })
 
-  it('renders the device-limit and account-removed banners on Home', () => {
-    const tree = renderHome([deviceLimitBanner, accountRemovedBanner])
+  it('renders the device-limit and app-update banners on Home', () => {
+    const tree = renderHome([deviceLimitBanner, appUpdateBanner])
 
     expect(tree.getByText('Device limit reached')).toBeTruthy()
-    expect(tree.getByText('Account removed successfully.')).toBeTruthy()
+    expect(tree.getByText('Update available')).toBeTruthy()
   })
 
   it('renders a server notification banner on Home', () => {
@@ -189,7 +189,7 @@ describe('Home (default export, v4.1)', () => {
     const tree = renderHome([])
 
     expect(tree.queryByText('Device limit reached')).toBeNull()
-    expect(tree.queryByText('Account removed successfully.')).toBeNull()
+    expect(tree.queryByText('Update available')).toBeNull()
     expect(tree.queryByText('Server notification')).toBeNull()
     expect(tree.getByText('Notification.EmptyNotification.Title')).toBeTruthy()
   })
@@ -209,5 +209,48 @@ describe('Home (default export, v4.1)', () => {
       url: 'https://example.com/devices',
       title: 'BCSC.Screens.ManageDevices',
     })
+  })
+})
+
+describe('Home (default export, v4.1) — verification gating', () => {
+  let mockNavigation: any
+
+  const activelyVerifiedAccount = {
+    given_name: 'John',
+    family_name: 'Doe',
+    fullname_formatted: 'Doe, John',
+    // Far-future expiry so the account is verified AND not expired (isActivelyVerified === true).
+    account_expiration_date: new Date('2999-12-31'),
+  }
+
+  const renderHome = (verified: boolean) =>
+    render(
+      <BasicAppContext initialStateOverride={{ bcscSecure: { ...initialState.bcscSecure, verified } }}>
+        <DefaultHome navigation={mockNavigation} route={{ key: 'home', name: 'Home' } as any} />
+      </BasicAppContext>
+    )
+
+  beforeEach(() => {
+    mockNavigation = useNavigation()
+    jest.clearAllMocks()
+    mockedUseAccount.mockReturnValue({ account: activelyVerifiedAccount } as any)
+  })
+
+  it('shows the welcome header and pairing shortcut when actively verified', () => {
+    const tree = renderHome(true)
+
+    expect(tree.getByText('BCSC.Home.Welcome')).toBeTruthy()
+    expect(tree.getByText('Doe, John')).toBeTruthy()
+    expect(tree.getByText('BCSC.Home.LogInFromComputerTitle')).toBeTruthy()
+  })
+
+  it('hides the welcome header and pairing shortcut when the user is not verified', () => {
+    const tree = renderHome(false)
+
+    expect(tree.queryByText('BCSC.Home.Welcome')).toBeNull()
+    expect(tree.queryByText('Doe, John')).toBeNull()
+    expect(tree.queryByText('BCSC.Home.LogInFromComputerTitle')).toBeNull()
+    // Notifications remain visible regardless of verification state.
+    expect(tree.getByText('Notification.EmptyNotification.Title')).toBeTruthy()
   })
 })

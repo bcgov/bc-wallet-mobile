@@ -16,24 +16,28 @@ export interface CredentialRestrictionEnvironment {
   invitationUrl: string
 }
 
+export interface AutoFetchCredentialConfigEntry {
+  credDefIDs: readonly string[]
+}
+
 /**
- * Per-environment Auto fetch credential configuration.
- *
- * TODO: Replace placeholder cred def IDs and invitation URLs with real values
- * from the IAS team once they are available.
+ * Per-environment Person Credential cred def IDs. AutoCredentialMonitor
+ * flattens these into its trigger set; a proof requesting any of them tells
+ * the wallet a Person Credential is missing and the BCSC-initiated flow
+ * (POST /credentials/v1/person) is used to mint an issuer invitation.
  */
-export const AutoFetchCredentialConfig: Record<string, CredentialRestrictionEnvironment> = {
+export const AutoFetchCredentialConfig: Record<string, AutoFetchCredentialConfigEntry> = {
   Development: {
-    credDefIDs: ['PLACEHOLDER_DEV_ACCOUNT_ID_CRED_DEF_ID'],
-    invitationUrl: 'PLACEHOLDER_DEV_ACCOUNT_ID_INVITATION_URL',
+    credDefIDs: ['XpgeQa93eZvGSZBZef3PHn:3:CL:28075:PersonDEV'],
   },
-  Test: {
-    credDefIDs: ['PLACEHOLDER_TEST_ACCOUNT_ID_CRED_DEF_ID'],
-    invitationUrl: 'PLACEHOLDER_TEST_ACCOUNT_ID_INVITATION_URL',
+  SIT: {
+    credDefIDs: ['7xjfawcnyTUcduWVysLww5:3:CL:28075:PersonSIT'],
+  },
+  QA: {
+    credDefIDs: ['KCxVC8GkKywjhWJnUfCmkW:3:CL:20:PersonQA'],
   },
   Production: {
-    credDefIDs: ['PLACEHOLDER_PROD_ACCOUNT_ID_CRED_DEF_ID'],
-    invitationUrl: 'PLACEHOLDER_PROD_ACCOUNT_ID_INVITATION_URL',
+    credDefIDs: ['RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person'],
   },
 } as const
 
@@ -207,6 +211,19 @@ export const SHADOW_OPACITY = 0.9
 export const SHADOW_RADIUS = SHADOW_SIZE
 export const SHADOW_OFFSET_DOWN = { width: 0, height: SHADOW_SIZE }
 export const SHADOW_OFFSET_UP = { width: 0, height: -SHADOW_SIZE }
+
+// Native header shadow: cast by the opaque header container itself (not a drop-shadow caster strip), so
+// it renders cleanly below the header. Kept subtle so it reads as a light divider. Shared by the BCSC
+// tab header and the (Bifold-rendered) wallet header so the two stay matched. `elevation` drives the
+// Android equivalent, since the theme's default header elevation is 0.
+export const HEADER_SHADOW: ViewStyle = {
+  shadowColor: SHADOW_COLOR,
+  shadowOffset: SHADOW_OFFSET_DOWN,
+  shadowOpacity: 0.2,
+  shadowRadius: SHADOW_RADIUS,
+  elevation: 4,
+  borderBottomWidth: 0,
+}
 
 // Account constants
 export const TEMPORARY_ACCOUNT_CLIENT_ID = ''

@@ -14,12 +14,13 @@ jest.mock('./useFloatingScanButtonViewModel', () => ({
 }))
 jest.mock('@bifold/core', () => ({
   testIdWithKey: (k: string) => `com.ariesbifold:id/${k}`,
+  ThemedText: 'ThemedText',
   useTheme: () => ({
     ColorPalette: {
       brand: { primary: '#FCBA19', primaryBackground: '#013366' },
       grayscale: { black: '#000' },
     },
-    Spacing: { md: 16, lg: 24 },
+    Spacing: { sm: 8, md: 16, lg: 24 },
   }),
 }))
 jest.mock('react-native-vector-icons/MaterialIcons', () => 'Icon')

@@ -1,9 +1,11 @@
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { Platform } from 'react-native'
+import { useCameraDevice, useCameraPermission, useCodeScanner } from 'react-native-vision-camera'
 
 import { AppEventCode } from '@/events/appEventCode'
 import { BasicAppContext } from '@mocks/helpers/app'
+import { useBCSCActivity } from '../contexts/BCSCActivityContext'
 import CodeScanningCamera, { ScanZone } from './CodeScanningCamera'
 import { BCSC_SN_SCAN_ZONES } from './utils/camera'
 
@@ -25,10 +27,8 @@ jest.mock('@/errors/errorHandler', () => ({
 
 // Mock react-native-vision-camera
 jest.mock('react-native-vision-camera', () => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const React = require('react')
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { View } = require('react-native')
+  const React = jest.requireActual('react')
+  const { View } = jest.requireActual('react-native')
 
   // Forward ref Camera component mock
   // eslint-disable-next-line react/display-name
@@ -91,7 +91,12 @@ jest.mock('react-native-vision-camera', () => {
   }
 })
 
-// Mock BCSCActivityContext — not provided by BasicAppContext
+// Mock BCSCActivityContext — not provided by BasicAppContext. Tests that need a
+// non-default appStateStatus call `mockedUseBCSCActivity.mockReturnValue(...)`
+// directly (see the typed handle below) rather than a module-level variable —
+// once `mockReturnValue` is called, it permanently overrides this factory's
+// return value for all subsequent calls, so a single mechanism is used
+// consistently throughout this file.
 const mockPauseActivityTracking = jest.fn()
 const mockResumeActivityTracking = jest.fn()
 jest.mock('../contexts/BCSCActivityContext', () => ({
@@ -132,6 +137,12 @@ jest.mock('react-native-gesture-handler', () => ({
   GestureDetector: ({ children }: any) => children,
 }))
 
+// Typed handles to the mocked hooks above, for use in test bodies
+const mockedUseBCSCActivity = useBCSCActivity as jest.Mock
+const mockedUseCameraDevice = useCameraDevice as jest.Mock
+const mockedUseCameraPermission = useCameraPermission as jest.Mock
+const mockedUseCodeScanner = useCodeScanner as jest.Mock
+
 describe('CodeScanningCamera', () => {
   const mockOnCodeScanned = jest.fn()
   const defaultProps = {
@@ -144,6 +155,13 @@ describe('CodeScanningCamera', () => {
     mockHasPermission = true
     mockCodeScannerCallback = null
     mockEmitErrorModal.mockClear()
+    // Reset to the default 'active' state in case a previous test overrode it —
+    // jest.clearAllMocks() clears call history but not a mockReturnValue implementation.
+    mockedUseBCSCActivity.mockReturnValue({
+      appStateStatus: 'active',
+      pauseActivityTracking: mockPauseActivityTracking,
+      resumeActivityTracking: mockResumeActivityTracking,
+    })
   })
 
   it('renders correctly with default props', () => {
@@ -187,9 +205,7 @@ describe('CodeScanningCamera', () => {
       </BasicAppContext>
     )
 
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { useCodeScanner } = require('react-native-vision-camera')
-    expect(useCodeScanner).toHaveBeenCalledWith(
+    expect(mockedUseCodeScanner).toHaveBeenCalledWith(
       expect.objectContaining({
         codeTypes: expect.arrayContaining(['code-128', 'pdf-417']),
       })
@@ -221,13 +237,11 @@ describe('CodeScanningCamera', () => {
   describe('Camera Permission', () => {
     it('renders permission required message when no permission', () => {
       // Mock no permission
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const visionCamera = require('react-native-vision-camera')
-      visionCamera.useCameraPermission.mockReturnValueOnce({
+      mockedUseCameraPermission.mockReturnValueOnce({
         hasPermission: false,
         requestPermission: mockRequestPermission,
       })
-      visionCamera.useCameraDevice.mockReturnValueOnce(null)
+      mockedUseCameraDevice.mockReturnValueOnce(null)
 
       const { getByText } = render(
         <BasicAppContext>
@@ -239,9 +253,7 @@ describe('CodeScanningCamera', () => {
     })
 
     it('requests permission when not granted', () => {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const visionCamera = require('react-native-vision-camera')
-      visionCamera.useCameraPermission.mockReturnValueOnce({
+      mockedUseCameraPermission.mockReturnValueOnce({
         hasPermission: false,
         requestPermission: mockRequestPermission,
       })
@@ -347,9 +359,7 @@ describe('CodeScanningCamera', () => {
         </BasicAppContext>
       )
 
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { useCodeScanner } = require('react-native-vision-camera')
-      expect(useCodeScanner).toHaveBeenCalledWith(
+      expect(mockedUseCodeScanner).toHaveBeenCalledWith(
         expect.objectContaining({
           codeTypes: ['code-39', 'code-128', 'pdf-417'],
           onCodeScanned: expect.any(Function),
@@ -649,6 +659,105 @@ describe('CodeScanningCamera', () => {
         })
       }
     })
+
+    describe('position gate removed (regression for #4256)', () => {
+      // Force Android + a portrait-shaped (width <= height) mock frame so
+      // transformBarcodeCoordinates takes the no-swap branch (see the Android
+      // block in transformBarcodeCoordinates: the dimension swap only applies
+      // when the source frame is landscape). That makes the resulting container
+      // position pure cover-mode scaling, fully deterministic to hand-compute.
+      beforeEach(() => {
+        Platform.OS = 'android'
+      })
+
+      afterEach(() => {
+        Platform.OS = 'ios'
+      })
+
+      const containerLayout = { x: 0, y: 0, width: 400, height: 800 }
+      // Frame 480×640 vs container 400×800 → scale = max(400/480, 800/640) = 1.25,
+      // offsetX = (400 - 480*1.25)/2 = -100, offsetY = (800 - 640*1.25)/2 = 0.
+      const mockFrame = { width: 480, height: 640 }
+      // BCSC_SN_SCAN_ZONES box {x:0.18,y:0.2,w:0.64,h:0.52} of a 400×800 container
+      // → absolute zone x:[72,328], y:[160,576] (± ~5% alignment margin).
+      const insideZoneCode = {
+        type: 'code-39',
+        value: 'INSIDE_ZONE',
+        // (150,150)×(100,80) → container (150*1.25-100, 150*1.25)=(87.5,187.5),
+        // sized 125×100 — comfortably inside the zone.
+        frame: { x: 150, y: 150, width: 100, height: 80 },
+        corners: [],
+      }
+      const outsideZoneCode = {
+        type: 'code-39',
+        value: 'OUTSIDE_ZONE',
+        // (0,0)×(40,20) → container (0*1.25-100, 0)=(-100,0) — off-screen to the
+        // left, well outside the zone's x:[72,328].
+        frame: { x: 0, y: 0, width: 40, height: 20 },
+        corners: [],
+      }
+
+      it('auto-confirms when the code sits inside the scan zone (baseline)', async () => {
+        const { getByTestId } = render(
+          <BasicAppContext>
+            <CodeScanningCamera {...defaultProps} />
+          </BasicAppContext>
+        )
+
+        const cameraContainer = getByTestId('camera-preview-container')
+        await act(async () => {
+          fireEvent(cameraContainer, 'layout', { nativeEvent: { layout: containerLayout } })
+        })
+
+        if (mockCodeScannerCallback) {
+          // LOCK_READING_THRESHOLD (5) consecutive frames of the same code.
+          for (let i = 0; i < 5; i++) {
+            await act(async () => {
+              mockCodeScannerCallback!([insideZoneCode], mockFrame)
+            })
+          }
+        }
+
+        await waitFor(() => {
+          expect(mockOnCodeScanned).toHaveBeenCalledWith(
+            expect.arrayContaining([expect.objectContaining({ value: 'INSIDE_ZONE', isAligned: true })]),
+            mockFrame
+          )
+        })
+      })
+
+      it('auto-confirms even when the code never falls inside any scan zone', async () => {
+        const { getByTestId } = render(
+          <BasicAppContext>
+            <CodeScanningCamera {...defaultProps} />
+          </BasicAppContext>
+        )
+
+        const cameraContainer = getByTestId('camera-preview-container')
+        await act(async () => {
+          fireEvent(cameraContainer, 'layout', { nativeEvent: { layout: containerLayout } })
+        })
+
+        if (mockCodeScannerCallback) {
+          // LOCK_READING_THRESHOLD (5) consecutive frames of the same code.
+          for (let i = 0; i < 5; i++) {
+            await act(async () => {
+              mockCodeScannerCallback!([outsideZoneCode], mockFrame)
+            })
+          }
+        }
+
+        // Before this fix, an unaligned code was filtered out of `qualifyingCodes`
+        // in determineScanState and the scan would never reach 'locked' — the
+        // camera would read the barcode correctly forever without confirming.
+        await waitFor(() => {
+          expect(mockOnCodeScanned).toHaveBeenCalledWith(
+            expect.arrayContaining([expect.objectContaining({ value: 'OUTSIDE_ZONE', isAligned: false })]),
+            mockFrame
+          )
+        })
+      })
+    })
   })
 
   describe('Consecutive scan validation', () => {
@@ -717,6 +826,102 @@ describe('CodeScanningCamera', () => {
           )
         })
       }
+    })
+  })
+
+  describe('Reading decay (regression for #4256)', () => {
+    it('decays the reading count across a single blank frame instead of resetting it', async () => {
+      render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} />
+        </BasicAppContext>
+      )
+
+      const mockCode = {
+        type: 'pdf-417',
+        value: 'DECAY_TEST',
+        frame: { x: 100, y: 200, width: 200, height: 50 },
+        corners: [],
+      }
+      const mockFrame = { width: 1920, height: 1080 }
+
+      if (mockCodeScannerCallback) {
+        // 4 consecutive frames with the code — readingCount: 1, 2, 3, 4
+        for (let i = 0; i < 4; i++) {
+          await act(async () => {
+            mockCodeScannerCallback!([mockCode], mockFrame)
+          })
+        }
+
+        // 1 blank frame (codes.length === 0) — decays 4 → 3 instead of clearing to 0
+        await act(async () => {
+          mockCodeScannerCallback!([], mockFrame)
+        })
+
+        expect(mockOnCodeScanned).not.toHaveBeenCalled()
+
+        // 2 more frames with the code — 3 → 4 → 5, reaching LOCK_READING_THRESHOLD.
+        // If the old clear()-on-blank-frame behavior were still in place, this
+        // would need 5 more frames (readingCount would have reset to 0).
+        for (let i = 0; i < 2; i++) {
+          await act(async () => {
+            mockCodeScannerCallback!([mockCode], mockFrame)
+          })
+        }
+      }
+
+      await waitFor(() => {
+        expect(mockOnCodeScanned).toHaveBeenCalled()
+      })
+    })
+
+    it('decays only the code missing from a still-nonempty frame (stale-key path)', async () => {
+      // Two scan zones so both codes must qualify simultaneously to lock —
+      // isolates the stale-key decay path from single-code auto-lock.
+      const twoZones: ScanZone[] = [
+        { types: ['pdf-417'], box: { x: 0.1, y: 0.2, width: 0.8, height: 0.15 } },
+        { types: ['code-39'], box: { x: 0.1, y: 0.7, width: 0.8, height: 0.08 } },
+      ]
+
+      render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} scanZones={twoZones} showBarcodeHighlight={true} />
+        </BasicAppContext>
+      )
+
+      const codeA = { type: 'pdf-417', value: 'CODE_A', frame: { x: 100, y: 100, width: 200, height: 50 }, corners: [] }
+      const codeB = { type: 'code-39', value: 'CODE_B', frame: { x: 100, y: 400, width: 200, height: 30 }, corners: [] }
+      const mockFrame = { width: 1920, height: 1080 }
+
+      if (mockCodeScannerCallback) {
+        // Both codes for 4 frames — each readingCount: 1, 2, 3, 4
+        for (let i = 0; i < 4; i++) {
+          await act(async () => {
+            mockCodeScannerCallback!([codeA, codeB], mockFrame)
+          })
+        }
+
+        // codeB drops out for one (still nonempty) frame — its count decays
+        // 4 → 3 via the stale-key path in decayStaleReadings; codeA keeps
+        // incrementing normally (4 → 5) since it's present every frame.
+        await act(async () => {
+          mockCodeScannerCallback!([codeA], mockFrame)
+        })
+
+        expect(mockOnCodeScanned).not.toHaveBeenCalled()
+
+        // codeB returns — 3 → 4, then one more frame → 5. Both codes must reach
+        // the threshold together (minCodesForAligned = 2) to lock and confirm.
+        for (let i = 0; i < 2; i++) {
+          await act(async () => {
+            mockCodeScannerCallback!([codeA, codeB], mockFrame)
+          })
+        }
+      }
+
+      await waitFor(() => {
+        expect(mockOnCodeScanned).toHaveBeenCalled()
+      })
     })
   })
 
@@ -998,11 +1203,77 @@ describe('CodeScanningCamera', () => {
     })
   })
 
+  describe('Focus suppression while actively decoding (regression for #4256)', () => {
+    beforeEach(() => {
+      jest.useFakeTimers()
+    })
+
+    afterEach(() => {
+      jest.useRealTimers()
+    })
+
+    it('suppresses auto-refocus cycling while codes are actively detected, then resumes once detection stops', async () => {
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} />
+        </BasicAppContext>
+      )
+
+      // Container layout starts focus cycling, which fires one immediate,
+      // unsuppressed doFocus (lastDetectionAtRef starts at 0, so nothing looks
+      // "recent" yet).
+      const cameraContainer = getByTestId('camera-preview-container')
+      await act(async () => {
+        fireEvent(cameraContainer, 'layout', {
+          nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 800 } },
+        })
+      })
+
+      const callsBeforeDetection = mockFocus.mock.calls.length
+      expect(callsBeforeDetection).toBeGreaterThan(0)
+
+      if (mockCodeScannerCallback) {
+        const mockFrame = { width: 1920, height: 1080 }
+        const detect = async (value: string) => {
+          await act(async () => {
+            mockCodeScannerCallback!(
+              [{ type: 'pdf-417', value, frame: { x: 100, y: 200, width: 200, height: 50 }, corners: [] }],
+              mockFrame
+            )
+          })
+        }
+
+        // Simulate continuous scanning: a fresh detection every 500ms (well
+        // under the 2s FOCUS_SUPPRESS_AFTER_DETECTION_MS window) for 2.5s
+        // straight — long enough to span a full FOCUS_CYCLE_INTERVAL_MS (2.5s)
+        // tick. A different value each time keeps readingCount from reaching
+        // the lock threshold, so scanState (and the cycling effect it drives)
+        // settles after the first detection and doesn't restart mid-loop.
+        for (let i = 0; i < 5; i++) {
+          await detect(`ACTIVE_${i}`)
+          await act(async () => {
+            jest.advanceTimersByTime(500)
+          })
+        }
+
+        // No new (unsuppressed) focus calls should have landed while detections
+        // kept refreshing the suppression window.
+        expect(mockFocus.mock.calls).toHaveLength(callsBeforeDetection)
+
+        // Detection stops here. Advance past the suppression window plus a full
+        // cycle interval (2000 + 2500ms) — cycling should resume automatically.
+        await act(async () => {
+          jest.advanceTimersByTime(2000 + 2500)
+        })
+
+        expect(mockFocus.mock.calls.length).toBeGreaterThan(callsBeforeDetection)
+      }
+    })
+  })
+
   describe('Device without focus support', () => {
     it('renders correctly when device does not support focus', () => {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const visionCamera = require('react-native-vision-camera')
-      visionCamera.useCameraDevice.mockReturnValueOnce({
+      mockedUseCameraDevice.mockReturnValueOnce({
         id: 'back',
         supportsFocus: false,
         minZoom: 1,
@@ -1488,6 +1759,58 @@ describe('CodeScanningCamera', () => {
     })
   })
 
+  describe('Background / foreground camera lifecycle (regression for #4256)', () => {
+    it('deactivates the camera when the app goes to the background', () => {
+      mockedUseBCSCActivity.mockReturnValue({
+        appStateStatus: 'background',
+        pauseActivityTracking: mockPauseActivityTracking,
+        resumeActivityTracking: mockResumeActivityTracking,
+      })
+
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} />
+        </BasicAppContext>
+      )
+
+      expect(getByTestId('mock-camera').props.isActive).toBe(false)
+    })
+
+    it('activates the camera when the app is in the foreground', () => {
+      mockedUseBCSCActivity.mockReturnValue({
+        appStateStatus: 'active',
+        pauseActivityTracking: mockPauseActivityTracking,
+        resumeActivityTracking: mockResumeActivityTracking,
+      })
+
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} />
+        </BasicAppContext>
+      )
+
+      expect(getByTestId('mock-camera').props.isActive).toBe(true)
+    })
+
+    it('stays active when appStateStatus is an unexpected value like unknown (fail-safe default)', () => {
+      mockedUseBCSCActivity.mockReturnValue({
+        appStateStatus: 'unknown',
+        pauseActivityTracking: mockPauseActivityTracking,
+        resumeActivityTracking: mockResumeActivityTracking,
+      })
+
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} />
+        </BasicAppContext>
+      )
+
+      // The gate deactivates on KNOWN background states rather than activating only on a
+      // known-active one, so an unexpected value can't strand the camera off permanently.
+      expect(getByTestId('mock-camera').props.isActive).toBe(true)
+    })
+  })
+
   describe('Camera runtime error handling', () => {
     it('shows error modal when camera onError fires', async () => {
       const { getByTestId } = render(
@@ -1507,6 +1830,90 @@ describe('CodeScanningCamera', () => {
 
       expect(mockEnsureAppError).toHaveBeenCalledWith(runtimeError, AppEventCode.ADD_CARD_CAMERA_BROKEN)
 
+      expect(mockEmitErrorModal).toHaveBeenCalledWith(
+        'BCSC.CameraDisclosure.Error',
+        'BCSC.CameraDisclosure.ErrorMessage',
+        expectedAppError
+      )
+    })
+
+    it('ignores camera errors and does not show an error modal while the app is backgrounded', async () => {
+      mockedUseBCSCActivity.mockReturnValue({
+        appStateStatus: 'background',
+        pauseActivityTracking: mockPauseActivityTracking,
+        resumeActivityTracking: mockResumeActivityTracking,
+      })
+
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} />
+        </BasicAppContext>
+      )
+
+      const camera = getByTestId('mock-camera')
+      const runtimeError = new Error('Runtime camera failure while backgrounded')
+
+      await act(async () => {
+        camera.props.onError(runtimeError)
+      })
+
+      // Backgrounded camera errors are expected (the session is being torn down) and not
+      // actionable — no error should be normalized or surfaced to the user.
+      expect(mockEnsureAppError).not.toHaveBeenCalled()
+      expect(mockEmitErrorModal).not.toHaveBeenCalled()
+    })
+
+    it('ignores camera errors and does not show an error modal while the app is inactive', async () => {
+      mockedUseBCSCActivity.mockReturnValue({
+        appStateStatus: 'inactive',
+        pauseActivityTracking: mockPauseActivityTracking,
+        resumeActivityTracking: mockResumeActivityTracking,
+      })
+
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} />
+        </BasicAppContext>
+      )
+
+      const camera = getByTestId('mock-camera')
+      const runtimeError = new Error('Runtime camera failure while inactive')
+
+      await act(async () => {
+        camera.props.onError(runtimeError)
+      })
+
+      // 'inactive' covers iOS transitional states (app switcher, notification shade,
+      // incoming call) — errors there are equally expected and non-actionable as 'background'.
+      expect(mockEnsureAppError).not.toHaveBeenCalled()
+      expect(mockEmitErrorModal).not.toHaveBeenCalled()
+    })
+
+    it('still shows an error modal when appStateStatus is unknown', async () => {
+      mockedUseBCSCActivity.mockReturnValue({
+        appStateStatus: 'unknown',
+        pauseActivityTracking: mockPauseActivityTracking,
+        resumeActivityTracking: mockResumeActivityTracking,
+      })
+
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} />
+        </BasicAppContext>
+      )
+
+      const camera = getByTestId('mock-camera')
+      const runtimeError = new Error('Runtime camera failure with unknown app state')
+      const expectedAppError = { name: 'NormalizedAppError', message: 'normalized' }
+      mockEnsureAppError.mockReturnValueOnce(expectedAppError)
+
+      await act(async () => {
+        camera.props.onError(runtimeError)
+      })
+
+      // 'unknown' is what AppState.currentState can report at Android startup — a genuine
+      // camera failure there must still surface, so the guard must not be `!== 'active'`.
+      expect(mockEnsureAppError).toHaveBeenCalledWith(runtimeError, AppEventCode.ADD_CARD_CAMERA_BROKEN)
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
         'BCSC.CameraDisclosure.Error',
         'BCSC.CameraDisclosure.ErrorMessage',
