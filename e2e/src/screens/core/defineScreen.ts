@@ -228,6 +228,11 @@ export class Screen<S extends ScreenSpec> {
     return this.engine.getTextByTestId(resolveTestId(this.namedId('elements', name)), timeout)
   }
 
+  /** Wait until a named target (element, link, or input) is displayed (scrolls into view on miss). */
+  async waitFor(name: NamedKeys<S>, timeout?: number): Promise<void> {
+    await this.engine.waitForDisplayed(resolveTestId(this.anyNamedId(name)), timeout)
+  }
+
   /** True if a named target (element, link, or input) is currently displayed; never throws. */
   async isVisible(name: NamedKeys<S>): Promise<boolean> {
     return new RawElement(this.engine, this.anyNamedId(name)).isVisible()

@@ -135,5 +135,28 @@ export const TestIds = {
     scan: {
       fab: 'FloatingScanButton',
     },
+    /** No-skip verify prompt (`MainVerifyPrompt`) — the redirect target for unverified Services/
+     *  PairingCode taps. Continue is its only testID; disambiguate by its title copy. */
+    verifyPrompt: {
+      continue: 'Continue',
+    },
+    /** Wallet tab (Bifold credential stack behind the agent gates). The BCSC empty state. */
+    wallet: {
+      loading: 'Wallet.Loading',
+      empty: 'Wallet.Empty',
+      emptyLearnMore: 'Wallet.EmptyLearnMore',
+    },
+    /** QRCore bottom-tab navigator (opened by the scan FAB). Display tab only exists in dev mode. */
+    qrCore: {
+      scannerTab: 'ScanQRCode',
+      displayTab: 'MyQRCode',
+      pairingCodeTab: 'PairingCode',
+      torchToggle: 'TorchToggle',
+    },
+    /** Main settings (minimal — MAIN-2 models the full screen). `profile` is verified-gated. */
+    settings: {
+      appSecurity: 'AppSecurity',
+      profile: 'Profile',
+    },
   },
 } as const
