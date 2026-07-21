@@ -212,7 +212,7 @@ export class AppContainer implements Container {
           ],
         },
       ],
-      enableTours: true,
+      enableTours: false,
       enableChat: true,
       enableReuseConnections: true,
       enableHiddenDevModeTrigger: true,
