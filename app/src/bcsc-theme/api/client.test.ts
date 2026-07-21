@@ -1,9 +1,11 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
+import { loadPersistedJwk, persistJwk } from '@/bcsc-theme/api/jwk-cache'
 import { AppError } from '@/errors/appError'
 import { ErrorCategory } from '@/errors/errorRegistry'
 import { AppEventCode } from '@/events/appEventCode'
 import { BCSCEventTypes } from '@/events/eventTypes'
 import { localization } from '@/localization'
+import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { initLanguages } from '@bifold/core'
 import { AxiosError } from 'axios'
 import { jwtDecode } from 'jwt-decode'
@@ -13,6 +15,8 @@ import { getAccount, getRefreshTokenRequestBody, getToken, TokenType } from 'rea
 jest.mock('jwt-decode', () => ({
   jwtDecode: jest.fn(),
 }))
+
+jest.mock('@/bcsc-theme/api/jwk-cache')
 
 describe('BCSC Client', () => {
   beforeAll(() => {
@@ -713,11 +717,18 @@ describe('BCSC Client', () => {
   })
 
   describe('fetchJwk', () => {
+    const mockJwk = { kty: 'RSA', kid: 'key-1' }
+
+    beforeEach(() => {
+      // Default: nothing persisted, persistence always "succeeds" — individual tests override.
+      jest.mocked(persistJwk).mockReset().mockResolvedValue(undefined)
+      jest.mocked(loadPersistedJwk).mockReset().mockResolvedValue(null)
+    })
+
     it('should return the first JWK from the JWKS endpoint', async () => {
       const mockLogger = { info: jest.fn(), error: jest.fn() }
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
-      const mockJwk = { kty: 'RSA', kid: 'key-1' }
       jest.spyOn(client, 'get').mockResolvedValue({
         data: { keys: [mockJwk, { kty: 'RSA', kid: 'key-2' }] },
       } as any)
@@ -728,7 +739,7 @@ describe('BCSC Client', () => {
     })
 
     it('should return null when JWKS endpoint returns empty keys array', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
       jest.spyOn(client, 'get').mockResolvedValue({
@@ -744,6 +755,8 @@ describe('BCSC Client', () => {
       const mockLogger = { info: jest.fn(), error: jest.fn() }
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
+      // A plain Error (not AxiosError/AppError) is not retryable, so this exercises the
+      // single-attempt-then-fail path without needing fake timers.
       jest.spyOn(client, 'get').mockRejectedValue(new Error('Network error'))
 
       const result = await client.fetchJwk()
@@ -753,7 +766,7 @@ describe('BCSC Client', () => {
     })
 
     it('should return null when keys property is undefined', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
       jest.spyOn(client, 'get').mockResolvedValue({
@@ -769,7 +782,6 @@ describe('BCSC Client', () => {
       const mockLogger = { info: jest.fn(), error: jest.fn() }
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
-      const mockJwk = { kty: 'RSA', kid: 'key-1' }
       const getSpy = jest.spyOn(client, 'get').mockResolvedValue({
         data: { keys: [mockJwk] },
       } as any)
@@ -798,6 +810,223 @@ describe('BCSC Client', () => {
       await client.fetchJwk()
 
       expect(getSpy).toHaveBeenCalledTimes(2)
+    })
+
+    it('should request the JWKS endpoint with skipOnErrorHandler set', async () => {
+      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const client = new BCSCApiClient('https://example.com', mockLogger as any)
+
+      const getSpy = jest.spyOn(client, 'get').mockResolvedValue({
+        data: { keys: [mockJwk] },
+      } as any)
+
+      await client.fetchJwk()
+
+      expect(getSpy).toHaveBeenCalledWith(
+        client.endpoints.jwksURI,
+        expect.objectContaining({ skipBearerAuth: true, skipOnErrorHandler: true })
+      )
+    })
+
+    describe('retry and persisted fallback', () => {
+      beforeEach(() => {
+        jest.useFakeTimers()
+      })
+
+      afterEach(() => {
+        jest.useRealTimers()
+      })
+
+      it('retries a transient network error up to the max attempts, then returns the persisted key', async () => {
+        const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+        const client = new BCSCApiClient('https://example.com', mockLogger as any)
+        const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
+
+        // Real adapter (not a `client.get` spy) so the failure flows through the response
+        // interceptor exactly as it does in production: getAppErrorFromAxiosError converts it into
+        // an AppError with appEvent NO_INTERNET, which is the actual shape isRetryableJwkFetchError's
+        // isNetworkError check receives at runtime (a hand-rolled AxiosError bypasses the interceptor
+        // and never exercises that branch).
+        client.client.defaults.adapter = (config: any) => {
+          return Promise.reject(new AxiosError('Network Error', 'ERR_NETWORK', config))
+        }
+        const axiosGetSpy = jest.spyOn(client.client, 'get')
+        jest.mocked(loadPersistedJwk).mockResolvedValueOnce(mockJwk as any)
+
+        const resultPromise = client.fetchJwk()
+        // Two backoff delays between three attempts: 500ms, then 1000ms
+        await jest.advanceTimersByTimeAsync(500)
+        await jest.advanceTimersByTimeAsync(1000)
+        const result = await resultPromise
+
+        expect(axiosGetSpy).toHaveBeenCalledTimes(3)
+        expect(result).toEqual(mockJwk)
+        // Exactly one error log total — fetchJwk's own final-exhaustion log (it still logs this even
+        // though a persisted fallback is subsequently found). Zero of the 3 attempts came from the
+        // interceptor: suppressStatusCodeLogs (status 0 for a network error) keeps its log line and
+        // analytics tracking silent, so a transient outage isn't amplified 3x on dashboards.
+        expect(mockLogger.error).toHaveBeenCalledTimes(1)
+        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to fetch JWK'))
+        expect(trackErrorEventSpy).not.toHaveBeenCalled()
+      })
+
+      it('succeeds on a retry, caching and persisting the fresh key', async () => {
+        const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+        const client = new BCSCApiClient('https://example.com', mockLogger as any)
+        const networkError = new AxiosError('Network Error', 'ERR_NETWORK')
+        const getSpy = jest
+          .spyOn(client, 'get')
+          .mockRejectedValueOnce(networkError)
+          .mockResolvedValueOnce({ data: { keys: [mockJwk] } } as any)
+
+        const resultPromise = client.fetchJwk()
+        await jest.advanceTimersByTimeAsync(500)
+        const result = await resultPromise
+
+        expect(result).toEqual(mockJwk)
+        expect(getSpy).toHaveBeenCalledTimes(2)
+        expect(persistJwk).toHaveBeenCalledWith('https://example.com', mockJwk, mockLogger)
+      })
+
+      it('does not retry a non-retryable 4xx error and falls back to the persisted key', async () => {
+        const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+        const client = new BCSCApiClient('https://example.com', mockLogger as any)
+        const clientError = { cause: { response: { status: 400 } } } as any
+        const getSpy = jest.spyOn(client, 'get').mockRejectedValue(clientError)
+        jest.mocked(loadPersistedJwk).mockResolvedValueOnce(mockJwk as any)
+
+        const result = await client.fetchJwk()
+
+        expect(getSpy).toHaveBeenCalledTimes(1)
+        expect(result).toEqual(mockJwk)
+      })
+
+      it('does not retry a well-formed empty keys response and falls back to the persisted key', async () => {
+        const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+        const client = new BCSCApiClient('https://example.com', mockLogger as any)
+        const getSpy = jest.spyOn(client, 'get').mockResolvedValue({ data: { keys: [] } } as any)
+        jest.mocked(loadPersistedJwk).mockResolvedValueOnce(mockJwk as any)
+
+        const result = await client.fetchJwk()
+
+        expect(getSpy).toHaveBeenCalledTimes(1)
+        expect(result).toEqual(mockJwk)
+      })
+
+      it('returns null when all retry attempts fail and nothing is persisted', async () => {
+        const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+        const client = new BCSCApiClient('https://example.com', mockLogger as any)
+        const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
+
+        // Real adapter so a 503 flows through the response interceptor and is subject to the same
+        // suppressStatusCodeLogs gate production traffic hits.
+        client.client.defaults.adapter = (config: any) => {
+          return Promise.reject(
+            new AxiosError('Service Unavailable', 'ERR_BAD_RESPONSE', config, null, {
+              status: 503,
+              data: {},
+              statusText: 'Service Unavailable',
+              headers: {} as any,
+              config,
+            })
+          )
+        }
+        const axiosGetSpy = jest.spyOn(client.client, 'get')
+
+        const resultPromise = client.fetchJwk()
+        await jest.advanceTimersByTimeAsync(500)
+        await jest.advanceTimersByTimeAsync(1000)
+        const result = await resultPromise
+
+        expect(axiosGetSpy).toHaveBeenCalledTimes(3)
+        expect(result).toBeNull()
+        // Exactly one error log total — fetchJwk's own final-exhaustion log. Zero of the 3 attempts
+        // came from the interceptor (suppressed for the retryable 503), and no analytics event was
+        // tracked per attempt.
+        expect(mockLogger.error).toHaveBeenCalledTimes(1)
+        expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to fetch JWK'))
+        expect(trackErrorEventSpy).not.toHaveBeenCalled()
+      })
+
+      it('does not hydrate the in-memory cache from a persisted fallback', async () => {
+        const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+        const client = new BCSCApiClient('https://example.com', mockLogger as any)
+        const clientError = { cause: { response: { status: 400 } } } as any
+        const getSpy = jest.spyOn(client, 'get').mockRejectedValue(clientError)
+        jest.mocked(loadPersistedJwk).mockResolvedValue(mockJwk as any)
+
+        const first = await client.fetchJwk()
+        const second = await client.fetchJwk()
+
+        expect(first).toEqual(mockJwk)
+        expect(second).toEqual(mockJwk)
+        // The network is retried on the second call too — the fallback never populated the in-memory cache.
+        expect(getSpy).toHaveBeenCalledTimes(2)
+      })
+    })
+
+    describe('single-flight dedupe', () => {
+      beforeEach(() => {
+        jest.useFakeTimers()
+      })
+
+      afterEach(() => {
+        jest.useRealTimers()
+      })
+
+      it('joins a single in-flight fetch: two concurrent calls make exactly one request and resolve to the same key', async () => {
+        const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+        const client = new BCSCApiClient('https://example.com', mockLogger as any)
+        const getSpy = jest.spyOn(client, 'get').mockResolvedValue({ data: { keys: [mockJwk] } } as any)
+
+        // Calling fetchJwk() twice without awaiting in between: both calls run synchronously up to
+        // their first await, so the second call's in-flight check sees the promise the first call
+        // already set and joins it instead of starting its own retry loop.
+        const [first, second] = await Promise.all([client.fetchJwk(), client.fetchJwk()])
+
+        expect(getSpy).toHaveBeenCalledTimes(1)
+        expect(first).toEqual(mockJwk)
+        expect(second).toEqual(mockJwk)
+      })
+
+      it('joins a single in-flight retry loop: concurrent calls during a failing fetch share one set of attempts', async () => {
+        const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+        const client = new BCSCApiClient('https://example.com', mockLogger as any)
+        const networkError = new AxiosError('Network Error', 'ERR_NETWORK')
+        const getSpy = jest.spyOn(client, 'get').mockRejectedValue(networkError)
+        jest.mocked(loadPersistedJwk).mockResolvedValueOnce(mockJwk as any)
+
+        const firstPromise = client.fetchJwk()
+        const secondPromise = client.fetchJwk()
+
+        await jest.advanceTimersByTimeAsync(500)
+        await jest.advanceTimersByTimeAsync(1000)
+
+        const [first, second] = await Promise.all([firstPromise, secondPromise])
+
+        // One shared retry loop (3 attempts), not two independent ones (6 attempts).
+        expect(getSpy).toHaveBeenCalledTimes(3)
+        expect(first).toEqual(mockJwk)
+        expect(second).toEqual(mockJwk)
+      })
+
+      it('does not join an in-flight fetch started for a different baseURL', async () => {
+        const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+        const client = new BCSCApiClient('https://example.com', mockLogger as any)
+        const getSpy = jest.spyOn(client, 'get').mockResolvedValue({ data: { keys: [mockJwk] } } as any)
+
+        const firstPromise = client.fetchJwk()
+
+        const mutableClient = client as unknown as { baseURL: string }
+        mutableClient.baseURL = 'https://example.com/other'
+
+        const secondPromise = client.fetchJwk()
+
+        await Promise.all([firstPromise, secondPromise])
+
+        // The second call didn't join the first's in-flight promise — it started its own fetch.
+        expect(getSpy).toHaveBeenCalledTimes(2)
+      })
     })
   })
 
