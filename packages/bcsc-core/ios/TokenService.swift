@@ -30,7 +30,8 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
 
   /// A helper function that waits for protected data (key chain data) to become available OR
   /// a timeout to occur.
-  /// used in conjunction with a retry for "item not available" errors when keychain is being accessed during app startup
+  /// used in conjunction with a retry for "item not available" errors
+  /// when keychain is being accessed during app startup
   private func waitForProtectedDataAvailable(timeout: TimeInterval) {
     guard !UIApplication.shared.isProtectedDataAvailable else { return }
     let semaphore = DispatchSemaphore(value: 0)
