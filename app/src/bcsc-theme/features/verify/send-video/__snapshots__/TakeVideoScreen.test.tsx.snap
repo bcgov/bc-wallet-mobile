@@ -27,7 +27,7 @@ exports[`TakeVideoScreen renders correctly 1`] = `
       }
     }
   >
-    <Camera
+    <View
       audio={true}
       device={
         {
@@ -47,16 +47,12 @@ exports[`TakeVideoScreen renders correctly 1`] = `
       onInitialized={[Function]}
       photo={true}
       photoQualityBalance="speed"
-      ref={
-        {
-          "current": null,
-        }
-      }
       style={
         {
           "flex": 1,
         }
       }
+      testID="mock-camera"
       video={true}
     />
     <View

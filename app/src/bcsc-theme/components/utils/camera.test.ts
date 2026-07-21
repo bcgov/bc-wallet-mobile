@@ -383,7 +383,7 @@ const makeCode = (value: string, isAligned: boolean, readingCount: number): Enha
     readingCount,
   }) as unknown as EnhancedCode
 
-const OPTIONS = { enableScanZones: false, minCodesForAligned: 2, lockReadingThreshold: 5 }
+const OPTIONS = { minCodesForAligned: 2, lockReadingThreshold: 5 }
 
 describe('determineScanState', () => {
   it('returns scanning when no codes are provided', () => {
@@ -398,10 +398,27 @@ describe('determineScanState', () => {
     expect(newScanState).toBe('scanning')
   })
 
-  it('returns scanning when codes have values but none are aligned (enableScanZones=false)', () => {
-    const codes = [makeCode('ABC', false, 10), makeCode('DEF', false, 10)]
-    const { newScanState } = determineScanState(codes, OPTIONS)
-    expect(newScanState).toBe('scanning')
+  it('counts unaligned identified codes as qualifying and reaches aligned — position is not a gate', () => {
+    // A successfully-read card is accepted regardless of on-screen position; only
+    // content decoding downstream (useCardScanner) validates card identity.
+    const codes = [makeCode('ABC', false, 1), makeCode('DEF', false, 1)]
+    const { newScanState, qualifyingCodes } = determineScanState(codes, OPTIONS)
+    expect(newScanState).toBe('aligned')
+    expect(qualifyingCodes).toHaveLength(2)
+  })
+
+  it('reaches locked from unaligned codes once all meet the reading threshold', () => {
+    const codes = [makeCode('ABC', false, 5), makeCode('DEF', false, 5)]
+    const { newScanState, qualifyingCodes } = determineScanState(codes, OPTIONS)
+    expect(newScanState).toBe('locked')
+    expect(qualifyingCodes).toHaveLength(2)
+  })
+
+  it('treats aligned and unaligned codes identically in the qualifying set', () => {
+    const codes = [makeCode('ABC', false, 1), makeCode('DEF', true, 1)]
+    const { newScanState, qualifyingCodes } = determineScanState(codes, OPTIONS)
+    expect(newScanState).toBe('aligned')
+    expect(qualifyingCodes).toHaveLength(2)
   })
 
   it('returns aligned when enough qualifying codes are detected but readingCount is low', () => {
@@ -431,23 +448,6 @@ describe('determineScanState', () => {
     ]
     const { newScanState } = determineScanState(codes, OPTIONS)
     expect(newScanState).toBe('scanning') // only 1 qualifying
-  })
-
-  describe('enableScanZones=true', () => {
-    const devOptions = { ...OPTIONS, enableScanZones: true }
-
-    it('counts unaligned codes as qualifying', () => {
-      const codes = [makeCode('ABC', false, 5), makeCode('DEF', false, 5)]
-      const { newScanState } = determineScanState(codes, devOptions)
-      expect(newScanState).toBe('locked')
-    })
-
-    it('includes both aligned and unaligned codes in qualifying set', () => {
-      const codes = [makeCode('ABC', false, 1), makeCode('DEF', true, 1)]
-      const { newScanState, qualifyingCodes } = determineScanState(codes, devOptions)
-      expect(newScanState).toBe('aligned')
-      expect(qualifyingCodes).toHaveLength(2)
-    })
   })
 
   it('respects a custom lockReadingThreshold', () => {

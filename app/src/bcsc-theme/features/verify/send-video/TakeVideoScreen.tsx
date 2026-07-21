@@ -1,6 +1,8 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
+import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { isBackgroundedAppState } from '@/bcsc-theme/utils/app-state'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import {
   hitSlop,
@@ -55,6 +57,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } = useCameraPermission()
   const { hasPermission: hasMicrophonePermission, requestPermission: requestMicrophonePermission } =
     useMicrophonePermission()
+  const { appStateStatus } = useBCSCActivity()
 
   // Video format for 480p at 24fps to reduce file size
   const format = useCameraFormat(device, [
@@ -360,7 +363,14 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           style={styles.camera}
           device={device}
           format={format}
-          isActive={isActive}
+          // Also deactivate while the app is backgrounded/inactive, same as CodeScanningCamera and
+          // MaskedCamera — this only changes what gets passed to the native camera prop; `isActive`
+          // the state variable (and the useFocusEffect below that gates startRecording() on it) is
+          // untouched, so this can't re-trigger a recording. If a recording is in progress when this
+          // flips false, vision-camera pauses it (rather than aborting/erroring) and resumes writing
+          // to the same file once reactivated — the resulting video will have a gap for however long
+          // the app was backgrounded, but nothing is discarded, corrupted, or surfaced as an error.
+          isActive={isActive && !isBackgroundedAppState(appStateStatus)}
           video
           photo
           photoQualityBalance="speed"
