@@ -14,7 +14,6 @@ interface PairingCodeCardProps {
 }
 
 const ICON_SIZE = 28
-const BORDER_RADIUS = 12
 
 /**
  * Home screen "Log in from another device" card: a compact, light-blue action card that deep-links to
@@ -38,7 +37,7 @@ const PairingCodeCard: React.FC<PairingCodeCardProps> = ({
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.lg,
       backgroundColor: ColorPalette.brand.tertiaryBackground,
-      borderRadius: BORDER_RADIUS,
+      borderRadius: Spacing.sm,
       // Drop shadow biased downward: bottom + slightly on the sides, not the top.
       // The top stays clean because the vertical offset is >= the blur radius.
       shadowColor: ColorPalette.grayscale.black,

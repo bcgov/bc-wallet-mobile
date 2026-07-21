@@ -8,7 +8,7 @@ import {
 } from '@/constants'
 import { useTheme } from '@bifold/core'
 import { BottomTabHeaderProps } from '@react-navigation/bottom-tabs'
-import { Header as ElementsHeader, getHeaderTitle } from '@react-navigation/elements'
+import { Header as ElementsHeader, getHeaderTitle, HeaderOptions, Layout } from '@react-navigation/elements'
 import { Header, StackHeaderProps } from '@react-navigation/stack'
 import React from 'react'
 import { View } from 'react-native'
@@ -48,14 +48,20 @@ export const createHeaderWithoutBanner = (props: StackHeaderProps) => (
 )
 
 export const createTabHeaderWithoutBanner = ({ route, options, layout }: BottomTabHeaderProps) => (
-  <TabHeaderWithoutBanner route={route} options={options} layout={layout} />
+  <HeaderWithoutBanner route={route} options={options} layout={layout} />
 )
 
-const TabHeaderWithoutBanner = ({
-  route,
-  options,
-  layout,
-}: Pick<BottomTabHeaderProps, 'route' | 'options' | 'layout'>) => (
+export const createStackHeaderWithoutBanner = ({ route, options, layout }: StackHeaderProps) => (
+  <HeaderWithoutBanner route={route} options={options} layout={layout} />
+)
+
+type HeaderWithoutBannerProps = {
+  route: { name: string }
+  options: HeaderOptions
+  layout: Layout
+}
+
+const HeaderWithoutBanner = ({ route, options, layout }: HeaderWithoutBannerProps) => (
   <ElementsHeader
     {...options}
     layout={layout}

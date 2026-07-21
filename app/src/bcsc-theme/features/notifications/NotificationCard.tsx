@@ -124,6 +124,7 @@ const NotificationCard: React.FC<NotificationCardProps> = (props) => {
       paddingHorizontal: Spacing.lg,
       paddingVertical: Spacing.md,
       backgroundColor: cardStyle.backgroundColor,
+      borderRadius: Spacing.sm,
     },
     headerContainer: {
       flexDirection: 'row',

@@ -38,6 +38,7 @@ exports[`NotificationCard renders correctly 1`] = `
     style={
       {
         "backgroundColor": "#D9EAF7",
+        "borderRadius": 8,
         "paddingHorizontal": 24,
         "paddingVertical": 16,
       }
