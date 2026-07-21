@@ -625,7 +625,8 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       return
     }
     // Freeze scanning — user must tap "Confirm" or "Try Again"
-    // newScanState === 'locked' already guarantees ≥2 qualifying codes with ≥5 consecutive readings each
+    // newScanState === 'locked' already guarantees ≥minCodesForAligned qualifying codes this frame,
+    // each with ≥LOCK_READING_THRESHOLD accumulated readings
     isLockedRef.current = true
     lockedScanRef.current = { codes: qualifyingCodes, frame }
     // Cancel any clear timeout so highlights persist
