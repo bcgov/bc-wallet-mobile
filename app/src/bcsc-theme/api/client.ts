@@ -293,15 +293,8 @@ class BCSCApiClient {
       }
 
       if (!this.tokens) {
-        const { diagnostic } = await getTokenWithDiagnostics(TokenType.Refresh).catch((error) =>
-          throwNativeBcscError(error)
-        )
-        this.logger.error(
-          `[BCSCApiClient] Cannot refresh after 401 - no tokens present (nativeDiagnostic=${diagnostic ?? 'none'})`
-        )
-        throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL, {
-          cause: new Error(`Cannot refresh after 401 - no tokens present (nativeDiagnostic=${diagnostic ?? 'none'})`),
-        })
+        this.logger.error('[BCSCApiClient] Cannot refresh after 401 - no tokens present')
+        throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL)
       }
 
       if (this.isTokenExpired(this.tokens.refresh_token)) {

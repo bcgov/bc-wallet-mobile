@@ -34,9 +34,11 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
   private func waitForProtectedDataAvailable(timeout: TimeInterval) {
     guard !UIApplication.shared.isProtectedDataAvailable else { return }
     let semaphore = DispatchSemaphore(value: 0)
+    // Start on a background queue to avoid blocking .main thread
+    let observerQueue = OperationQueue()
     let observer = NotificationCenter.default.addObserver(
       forName: UIApplication.protectedDataDidBecomeAvailableNotification,
-      object: nil, queue: .main
+      object: nil, queue: observerQueue
     ) { _ in semaphore.signal() }
     _ = semaphore.wait(timeout: .now() + timeout)
     NotificationCenter.default.removeObserver(observer)
@@ -131,6 +133,7 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
     // errSecInteractionNotAllowed means the item exists but the keychain
     // isn't accessible right now (e.g. device OS is still unlocking keychain access).
     // Add a wait and retry once to avoid returning nil when an item is present.
+    if status == errSecInteractionNotAllowed {
       logger.warning("get: keychain locked (interaction not allowed) id=\(id) — waiting for unlock, then retrying once")
       waitForProtectedDataAvailable(timeout: 1.0)
       status = SecItemCopyMatching(query, &result)

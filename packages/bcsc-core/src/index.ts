@@ -384,8 +384,11 @@ export const getTokenWithDiagnostics = async (
 
   return {
     token: {
-      ...nativeToken,
-      type: nativeToken.type as TokenType,
+      id: nativeToken.id,
+      token: nativeToken.token ?? '',
+      created: nativeToken.created ?? 0,
+      expiry: nativeToken.expiry ?? null,
+      type: nativeToken.type as TokenType, // Ensure this aligns with what native returns
     } as TokenInfo,
   };
 };
