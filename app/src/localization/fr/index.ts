@@ -219,6 +219,8 @@ const translation = {
     "AcceptedTermsVersion": "Accepted version (FR)",
     "ResetOnboardingIntro": "Reset Welcome Intro (FR)",
     "OnboardingIntroSeen": "Intro seen (FR)",
+    "DeleteTokens": "Delete Tokens (FR)",
+    "DeletedTokens": "Deleted tokens (FR)",
     "ErrorModals": "Error Modals (FR)",
     "ErrorModalsDescription": "Trigger errors that display as modal dialogs with title, description, and technical details. (FR)",
     "ErrorAsNativeAlert": "Errors as Native Alerts (FR)",

@@ -293,8 +293,15 @@ class BCSCApiClient {
       }
 
       if (!this.tokens) {
-        this.logger.error('[BCSCApiClient] Cannot refresh after 401 - no tokens present')
-        throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL)
+        const { diagnostic } = await getTokenWithDiagnostics(TokenType.Refresh).catch((error) =>
+          throwNativeBcscError(error)
+        )
+        this.logger.error(
+          `[BCSCApiClient] Cannot refresh after 401 - no tokens present (nativeDiagnostic=${diagnostic ?? 'none'})`
+        )
+        throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL, {
+          cause: new Error(`Cannot refresh after 401 - no tokens present (nativeDiagnostic=${diagnostic ?? 'none'})`),
+        })
       }
 
       if (this.isTokenExpired(this.tokens.refresh_token)) {
@@ -388,13 +395,6 @@ class BCSCApiClient {
     if (this.tokens) {
       return this.tokens
     }
-
-    // AppState is logged alongside the native lookup so a keychain read that fails
-    // because the device is locked (rather than because no token was ever saved)
-    // can be correlated with the app-lifecycle transition that triggered this call.
-    this.logger.warn(
-      `[BCSCApiClient] Token cache empty; reading refresh token from secure storage (appState=${AppState.currentState})`
-    )
 
     const { token: refreshToken, diagnostic } = await getTokenWithDiagnostics(TokenType.Refresh).catch((error) =>
       throwNativeBcscError(error)
