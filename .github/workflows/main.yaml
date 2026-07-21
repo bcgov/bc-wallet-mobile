@@ -529,7 +529,7 @@ jobs:
         with:
           variant: ${{ matrix.variant }}
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
@@ -866,7 +866,7 @@ jobs:
           sudo docker image prune --all --force 2>/dev/null || true
           sudo apt-get clean 2>/dev/null || true
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
