@@ -35,6 +35,18 @@ const mockAccount = {
   clientID: 'mock-client-id',
 }
 
+// Resolves manually so a test can hold a getAccount() call "in flight" and control exactly
+// when (and with what value) it settles relative to unmount/completion.
+type GetAccountResult = Awaited<ReturnType<typeof getAccount>>
+
+const createDeferredGetAccount = () => {
+  let resolve!: (value: GetAccountResult) => void
+  const promise = new Promise<GetAccountResult>((res) => {
+    resolve = res
+  })
+  return { promise, resolve }
+}
+
 describe('TransferQRDisplayScreen', () => {
   let mockNavigation: any
 
@@ -281,6 +293,106 @@ describe('TransferQRDisplayScreen', () => {
       expect(calledWithJti).toBeDefined()
       expect(typeof calledWithJti).toBe('string')
       expect(calledWithJti.length).toBeGreaterThan(0)
+    })
+  })
+
+  // Regression coverage for issue #4273: on the source device, an in-flight createToken()
+  // call could resolve *after* the screen unmounted (or after the transfer completed),
+  // reinstalling an orphaned QR-refresh interval or firing the account-not-found (2822)
+  // alert from a screen that no longer legitimately owns the check.
+  describe('unmount and completion races (issue #4273)', () => {
+    it('does not leave an orphaned QR-refresh interval running when unmounted while createToken is in flight', async () => {
+      const deferred = createDeferredGetAccount()
+      jest.mocked(getAccount).mockReturnValueOnce(deferred.promise)
+
+      const { unmount } = render(
+        <BasicAppContext>
+          <TransferQRDisplayScreen />
+        </BasicAppContext>
+      )
+
+      expect(getAccount).toHaveBeenCalledTimes(1)
+
+      unmount()
+
+      // The in-flight call resolves after teardown, as it would if the native module answered
+      // late. Without the isMountedRef guard, refreshToken would still call startInterval()
+      // here, installing a new 50s interval that nothing would ever clear.
+      await act(async () => {
+        deferred.resolve(mockAccount)
+      })
+
+      await act(async () => {
+        jest.advanceTimersByTime(150000)
+      })
+
+      // No orphaned interval means no further getAccount()/alert activity, ever.
+      expect(getAccount).toHaveBeenCalledTimes(1)
+      expect(mockAccountNotFoundAlert).not.toHaveBeenCalled()
+    })
+
+    it('does not show the account not found alert when an in-flight createToken resolves null after unmount', async () => {
+      const deferred = createDeferredGetAccount()
+      jest.mocked(getAccount).mockReturnValueOnce(deferred.promise)
+
+      const { unmount } = render(
+        <BasicAppContext>
+          <TransferQRDisplayScreen />
+        </BasicAppContext>
+      )
+
+      unmount()
+
+      await act(async () => {
+        deferred.resolve(null)
+      })
+
+      expect(mockAccountNotFoundAlert).not.toHaveBeenCalled()
+    })
+
+    it('does not show the account not found alert when an in-flight createToken resolves null after the transfer has completed', async () => {
+      jest.mocked(getAccount).mockResolvedValueOnce(mockAccount)
+      mockCheckAttestationStatus.mockResolvedValue(false)
+
+      render(
+        <BasicAppContext>
+          <TransferQRDisplayScreen />
+        </BasicAppContext>
+      )
+
+      await waitFor(() => {
+        expect(createDeviceSignedJWT).toHaveBeenCalledTimes(1)
+      })
+
+      const deferred = createDeferredGetAccount()
+      jest.mocked(getAccount).mockReturnValueOnce(deferred.promise)
+
+      // The QR-refresh interval ticks, kicking off a second createToken() call that suspends
+      // on the still-pending getAccount().
+      await act(async () => {
+        jest.advanceTimersByTime(50000)
+      })
+
+      expect(getAccount).toHaveBeenCalledTimes(2)
+
+      // The transfer completes: the next attestation poll resolves true, latching
+      // completedRef and navigating away while the second createToken() call is still pending.
+      mockCheckAttestationStatus.mockResolvedValue(true)
+      await act(async () => {
+        jest.advanceTimersByTime(3000)
+      })
+
+      await waitFor(() => {
+        expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.TransferAccountSuccess)
+      })
+
+      // The stale createToken() call finally resolves with null, well after completion latched.
+      await act(async () => {
+        deferred.resolve(null)
+      })
+
+      expect(mockAccountNotFoundAlert).not.toHaveBeenCalled()
+      expect(mockNavigation.navigate).toHaveBeenCalledTimes(1)
     })
   })
 })
