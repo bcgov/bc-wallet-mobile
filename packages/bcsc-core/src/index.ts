@@ -338,14 +338,29 @@ export const getKeyPair = (label: string): Promise<KeyPair> => {
 };
 
 /**
+ * Shape returned by the native getToken bridge. On success this carries the full
+ * token fields; when no token is found it carries only `diagnostic` (a human-readable
+ * description of why, e.g. the underlying keychain OSStatus) so callers that want to
+ * log more than "not found" can opt into it via getTokenWithDiagnostics().
+ */
+interface NativeTokenResponse {
+  id?: string;
+  type?: number;
+  token?: string;
+  created?: number;
+  expiry?: number | null;
+  diagnostic?: string;
+}
+
+/**
  * Retrieves a token of a specified type.
  * @param tokenType The type of token to retrieve (e.g., Access, Refresh, Registration).
  * @returns A promise that resolves to a TokenInfo object if found, otherwise null.
  */
 export const getToken = async (tokenType: TokenType): Promise<TokenInfo | null> => {
   // Pass the raw numeric value of the enum to the native side
-  const nativeToken = await BcscCore.getToken(tokenType as number);
-  if (!nativeToken) {
+  const nativeToken = (await BcscCore.getToken(tokenType as number)) as NativeTokenResponse | null;
+  if (!nativeToken?.id) {
     return null;
   }
 
@@ -354,6 +369,29 @@ export const getToken = async (tokenType: TokenType): Promise<TokenInfo | null> 
   return {
     ...nativeToken,
     type: nativeToken.type as TokenType, // Ensure this aligns with what native returns
+  } as TokenInfo;
+};
+
+/**
+ * Same lookup as getToken(), but when no token is found this also surfaces a
+ * human-readable diagnostic describing why (e.g. the native keychain OSStatus),
+ * for callers that want to log more than a bare "not found" — see the token-cache
+ * empty / err_119 investigation for why this matters.
+ * @param tokenType The type of token to retrieve (e.g., Access, Refresh, Registration).
+ */
+export const getTokenWithDiagnostics = async (
+  tokenType: TokenType
+): Promise<{ token: TokenInfo | null; diagnostic?: string }> => {
+  const nativeToken = (await BcscCore.getToken(tokenType as number)) as NativeTokenResponse | null;
+  if (!nativeToken?.id) {
+    return { token: null, diagnostic: nativeToken?.diagnostic };
+  }
+
+  return {
+    token: {
+      ...nativeToken,
+      type: nativeToken.type as TokenType,
+    } as TokenInfo,
   };
 };
 

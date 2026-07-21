@@ -11,7 +11,7 @@ import UIKit
 
 protocol TokenStorageServiceProtocol {
   func save(token: Token, attrAccessible: CFString) -> Bool
-  func get(id: String) -> Token?
+  func get(id: String, diagnostic: inout String?) -> Token?
   func delete(id: String) -> Bool
 }
 
@@ -21,7 +21,8 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
     category: "TokenService"
   )
 
-  /// A helper function to convert OSStatus to a human-readable string, e.g. "-25300 (The specified item could not be found in the keychain.)"
+  /// A helper function to convert OSStatus to a human-readable string, e.g. "-25300 (The specified item could not be
+  /// found in the keychain.)"
   private func describe(_ status: OSStatus) -> String {
     let message = SecCopyErrorMessageString(status, nil) as String? ?? "no message available"
     return "\(status) (\(message))"
@@ -77,7 +78,8 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
       kSecValueData: data,
     ]
     var status = errSecSuccess
-    if get(id: token.id) != nil {
+    var existsDiagnostic: String?
+    if get(id: token.id, diagnostic: &existsDiagnostic) != nil {
       // log.debug("token already exists so call update")
 
       let query: NSDictionary = [
@@ -101,10 +103,12 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
    Find and return the Token identified by the given id if it exists.
 
    - Parameter id: The token identifier
+   - Parameter diagnostic: set to a human-readable OSStatus description whenever the
+     read doesn't cleanly succeed (not-found included)
 
    - Returns: the token instance if found, nil otherwise
    */
-  func get(id: String) -> Token? {
+  func get(id: String, diagnostic: inout String?) -> Token? {
     // Migrate before fetching
     migrateLegacyItem(id)
 
@@ -139,8 +143,10 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
     }
 
     if status != errSecSuccess {
+      let description = describe(status)
+      diagnostic = description
       logger.error(
-        "get: SecItemCopyMatching failed id=\(id) status=\(describe(status)) isProtectedDataAvailable=\(UIApplication.shared.isProtectedDataAvailable)"
+        "get: SecItemCopyMatching failed id=\(id) status=\(description) isProtectedDataAvailable=\(UIApplication.shared.isProtectedDataAvailable)"
       )
     }
     guard result != nil,
@@ -148,6 +154,7 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
           let token = NSKeyedUnarchiver.unarchiveObject(with: data) as? Token
     else {
       if status == errSecSuccess {
+        diagnostic = "SecItemCopyMatching succeeded but returned no usable data"
         logger.error("get: SecItemCopyMatching succeeded but returned no usable data")
       }
       return nil
@@ -164,7 +171,8 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
    - Returns: the token instance if found, nil otherwise
    */
   func delete(id: String) -> Bool {
-    guard let token = get(id: id) else {
+    var diagnostic: String?
+    guard let token = get(id: id, diagnostic: &diagnostic) else {
       logger.warning("delete: no existing token found for id")
       return false
     }
@@ -202,7 +210,7 @@ extension KeychainTokenStorageService {
     ]
 
     let status = SecItemUpdate(query, updateAttributes)
-    if status != errSecSuccess && status != errSecItemNotFound {
+    if status != errSecSuccess, status != errSecItemNotFound {
       logger.error("migrateLegacyItem: SecItemUpdate failed status=\(describe(status))")
     }
   }
@@ -230,7 +238,7 @@ extension KeychainTokenStorageService {
           let data = result as? Data,
           let v3Token = NSKeyedUnarchiver.unarchiveObject(with: data) as? Token
     else {
-      if readStatus != errSecSuccess && readStatus != errSecItemNotFound {
+      if readStatus != errSecSuccess, readStatus != errSecItemNotFound {
         logger.error(
           "migrateV3TokenIfNeeded: SecItemCopyMatching failed v3Id=\(v3Id) status=\(describe(readStatus)) isProtectedDataAvailable=\(UIApplication.shared.isProtectedDataAvailable)"
         )

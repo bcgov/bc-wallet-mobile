@@ -556,7 +556,8 @@ class BcscCore: NSObject {
     let id = "\(currentAccount.clientID)/tokens/\(tokenType.rawValue)/1"
     logger.log("getToken: querying type=\(tokenType.rawValue) id=\(id)")
 
-    if let token = tokenStorageService.get(id: id) {
+    var diagnostic: String?
+    if let token = tokenStorageService.get(id: id, diagnostic: &diagnostic) {
       logger.log("getToken: found type=\(tokenType.rawValue) expiry=\(token.expiry?.description ?? "none")")
       var tokenDict: [String: Any?] = [
         "id": token.id,
@@ -573,8 +574,12 @@ class BcscCore: NSObject {
 
       resolve(tokenDict)
     } else {
-      logger.log("getToken: NOT found type=\(tokenType.rawValue) id=\(id)")
-      resolve(nil)
+      logger.log("getToken: NOT found type=\(tokenType.rawValue) id=\(id) diagnostic=\(diagnostic ?? "none")")
+      // Resolving a small object (instead of a bare nil) lets JS distinguish "not
+      // found" from the underlying keychain reason without changing the shape for
+      // the success case above. See getToken()/getTokenWithDiagnostics() in
+      // react-native-bcsc-core's index.ts for how each side of the bridge treats this.
+      resolve(["diagnostic": diagnostic as Any])
     }
   }
 
