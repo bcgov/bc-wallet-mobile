@@ -128,13 +128,9 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
     var result: CFTypeRef?
     var status = SecItemCopyMatching(query, &result)
 
-    // errSecItemNotFound (-25300) is expected for a token that was never saved — no
-    // retry, falls through to the normal "not found" handling below.
-    // errSecInteractionNotAllowed (-25308) means the item exists but the keychain
-    // isn't accessible right now (e.g. device locked and the item is
-    // kSecAttrAccessibleWhenUnlockedThisDeviceOnly). That's transient by nature, so
-    // wait for the OS's own signal that it's changed and retry exactly once —
-    // whatever that retry returns (success or failure) is final.
+    // errSecInteractionNotAllowed means the item exists but the keychain
+    // isn't accessible right now (e.g. device OS is still unlocking keychain access). 
+    // Add a wait in combination with a refetch to avoid retuning nil when an item is present
     if status == errSecInteractionNotAllowed {
       logger.warning("get: keychain locked (interaction not allowed) id=\(id) — waiting for unlock, then retrying once")
       waitForProtectedDataAvailable(timeout: 1.0)

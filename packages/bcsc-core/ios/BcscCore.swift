@@ -575,10 +575,7 @@ class BcscCore: NSObject {
       resolve(tokenDict)
     } else {
       logger.log("getToken: NOT found type=\(tokenType.rawValue) id=\(id) diagnostic=\(diagnostic ?? "none")")
-      // Resolving a small object (instead of a bare nil) lets JS distinguish "not
-      // found" from the underlying keychain reason without changing the shape for
-      // the success case above. See getToken()/getTokenWithDiagnostics() in
-      // react-native-bcsc-core's index.ts for how each side of the bridge treats this.
+      // Resolving a small object so we can capture more error data from token calls
       resolve(["diagnostic": diagnostic as Any])
     }
   }

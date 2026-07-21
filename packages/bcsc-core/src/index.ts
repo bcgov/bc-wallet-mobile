@@ -338,10 +338,7 @@ export const getKeyPair = (label: string): Promise<KeyPair> => {
 };
 
 /**
- * Shape returned by the native getToken bridge. On success this carries the full
- * token fields; when no token is found it carries only `diagnostic` (a human-readable
- * description of why, e.g. the underlying keychain OSStatus) so callers that want to
- * log more than "not found" can opt into it via getTokenWithDiagnostics().
+ * NativeTokenResponse with custom dianostic field to surface OSStatus or other errors to JS
  */
 interface NativeTokenResponse {
   id?: string;
@@ -373,10 +370,8 @@ export const getToken = async (tokenType: TokenType): Promise<TokenInfo | null> 
 };
 
 /**
- * Same lookup as getToken(), but when no token is found this also surfaces a
- * human-readable diagnostic describing why (e.g. the native keychain OSStatus),
- * for callers that want to log more than a bare "not found" — see the token-cache
- * empty / err_119 investigation for why this matters.
+ * Wraps getToken() to return both token and optional diagnostic information
+ *
  * @param tokenType The type of token to retrieve (e.g., Access, Refresh, Registration).
  */
 export const getTokenWithDiagnostics = async (

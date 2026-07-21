@@ -877,6 +877,8 @@ export const useSecureActions = () => {
    */
   const hydrateSecureState = useCallback(async () => {
     try {
+      logger.info('Hydrating secure state from native storage...')
+
       // Load all data from native storage in parallel
       const [
         account,
