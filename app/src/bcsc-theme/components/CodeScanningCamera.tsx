@@ -638,9 +638,9 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
   /**
    * Handle a frame where no codes are detected — decay (don't reset) validation
-   * readings, and only clear highlights / drop back to 'scanning' once readings
-   * have fully decayed to empty. This keeps a single blank frame from resetting
-   * lock progress or flickering the outline back to its unread colour.
+   * readings, and clear highlights / drop back to 'scanning' once readings have
+   * fully decayed to empty. This keeps a single blank frame from resetting lock
+   * progress or flickering the outline back to its unread colour.
    */
   const handleNoCodesDetected = () => {
     if (isLockedRef.current) {
