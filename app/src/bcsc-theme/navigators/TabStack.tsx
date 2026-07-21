@@ -168,8 +168,6 @@ const BCSCTabStack: React.FC = () => {
               }
               return
             }
-
-            setActiveTab(route.name)
           },
           tabPress: (event) => {
             // Hijack the tab press event for the Services tab if the user is not verified
@@ -183,6 +181,8 @@ const BCSCTabStack: React.FC = () => {
                 navigation.navigate(BCSCScreens.MainVerifyPrompt)
               }
             }
+
+            setActiveTab(route.name)
           },
         })}
         initialRouteName={BCSCScreens.Home}
