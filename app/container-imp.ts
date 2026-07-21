@@ -71,7 +71,7 @@ import PINExplainer from './src/screens/PINExplainer'
 import Preface from './src/screens/Preface'
 import Splash from './src/screens/Splash'
 import Terms, { TermsVersion } from './src/screens/Terms'
-import { AttestationMonitor, allCredDefIds } from './src/services/attestation'
+import { AttestationMonitor, allCredDefIds, noOpAttestationMonitor } from './src/services/attestation'
 import { AutoCredentialMonitor } from './src/services/auto-credential'
 import { VersionCheckService } from './src/services/version'
 import {
@@ -120,10 +120,18 @@ export class AppContainer implements Container {
       shouldHandleProofRequestAutomatically: true,
     }
 
-    this._container.registerInstance(TOKENS.UTIL_ATTESTATION_MONITOR, new AttestationMonitor(this.logger, options))
+    // Device attestation only runs on the BCWallet build target. BCSC builds
+    // can't produce an attestation blob our controller accepts, and their
+    // Person Credential flow bypasses attestation anyway.
+    const attestationMonitor =
+      Config.BUILD_TARGET === Mode.BCWallet ? new AttestationMonitor(this.logger, options) : noOpAttestationMonitor()
+    this._container.registerInstance(TOKENS.UTIL_ATTESTATION_MONITOR, attestationMonitor)
     this._container.registerInstance(
       TOKENS.UTIL_CREDENTIAL_PROVISIONING_MONITOR,
-      new AutoCredentialMonitor(this.logger, { rules: [buildDigitalServicesCardCredentialRule()] })
+      new AutoCredentialMonitor(this.logger, {
+        rules: [buildDigitalServicesCardCredentialRule()],
+        attestationMonitor,
+      })
     )
     this._container.registerInstance(TOKENS.UTIL_APP_VERSION_MONITOR, new VersionCheckService(this.logger))
     // Here you can register any component to override components in core package

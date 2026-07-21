@@ -1,46 +1,32 @@
 import { AutoFetchCredentialConfig } from '@/constants'
 import { AutoCredentialRule } from '@/services/auto-credential'
-import { DidCommProofExchangeRecord } from '@credo-ts/didcomm'
-import { BCAgent } from '@utils/bc-agent-modules'
+import { Platform } from 'react-native'
+import { getBundleId } from 'react-native-device-info'
+import { getBCSCApiClient } from '../contexts/BCSCApiClientContext'
+
+interface CreatePersonCredentialResponse {
+  invitation_url: string
+  has_active_credential?: boolean
+}
 
 /**
- * Finds which DigitalServicesCard environment config matches the cred def IDs present in
- * the incoming proof's restrictions, and returns its invitation URL.
- *
- * This mirrors the `invitationUrlFromRestrictions` pattern used by the
- * AttestationMonitor — the issuer URL is derived from the proof itself so the
- * correct environment is always selected automatically.
+ * Mint a Person Credential issuer invitation via the BCSC-initiated flow.
+ * The invitation is single-use and issued fresh per request, so this hits
+ * `POST /credentials/v1/person` every time AutoCredentialMonitor decides a
+ * Person Credential is missing. Environment selection is implicit — the
+ * request goes to whichever IAS the currently-configured BCSC client points at,
+ * and IAS mints an invitation whose cred def matches that env.
  */
-const getDigitalServicesCardInvitationUrl = async (
-  proof: DidCommProofExchangeRecord,
-  agent: BCAgent
-): Promise<string> => {
-  const format = await agent.didcomm.proofs.getFormatData(proof.id)
-  const requestFormat = (format.request?.anoncreds ?? format.request?.indy) as
-    | {
-        requested_attributes?: Record<string, { restrictions?: { cred_def_id?: string }[] }>
-        requested_predicates?: Record<string, { restrictions?: { cred_def_id?: string }[] }>
-      }
-    | undefined
-
-  if (!requestFormat) {
-    throw new Error('Could not read proof request format to determine DigitalServicesCard issuer URL')
+const getDigitalServicesCardInvitationUrl = async (): Promise<string> => {
+  const apiClient = getBCSCApiClient()
+  if (!apiClient) {
+    throw new Error('BCSC client not ready — cannot request Person Credential invitation')
   }
-
-  const allRestrictions = [
-    ...Object.values(requestFormat.requested_attributes ?? {}).flatMap((a) => a.restrictions ?? []),
-    ...Object.values(requestFormat.requested_predicates ?? {}).flatMap((p) => p.restrictions ?? []),
-  ]
-
-  for (const env of Object.values(AutoFetchCredentialConfig)) {
-    for (const restriction of allRestrictions) {
-      if (restriction.cred_def_id && env.credDefIDs.includes(restriction.cred_def_id)) {
-        return env.invitationUrl
-      }
-    }
-  }
-
-  throw new Error('No matching DigitalServicesCard issuer found for the proof request restrictions')
+  const response = await apiClient.post<CreatePersonCredentialResponse>(apiClient.endpoints.credential, {
+    source_os: Platform.OS,
+    source_application: getBundleId(),
+  })
+  return response.data.invitation_url
 }
 
 /**

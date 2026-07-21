@@ -146,10 +146,10 @@ describe('Home (default export, v4.1)', () => {
     dismissible: false,
   }
 
-  const accountRemovedBanner: BCSCBannerMessage = {
-    id: BCSCBanner.REMOVE_ACCOUNT_SUCCESS,
-    title: 'Account removed successfully.',
-    type: 'success',
+  const appUpdateBanner: BCSCBannerMessage = {
+    id: BCSCBanner.APP_UPDATE_AVAILABLE,
+    title: 'Update available',
+    type: 'info',
     dismissible: true,
   }
 
@@ -172,11 +172,11 @@ describe('Home (default export, v4.1)', () => {
     jest.clearAllMocks()
   })
 
-  it('renders the device-limit and account-removed banners on Home', () => {
-    const tree = renderHome([deviceLimitBanner, accountRemovedBanner])
+  it('renders the device-limit and app-update banners on Home', () => {
+    const tree = renderHome([deviceLimitBanner, appUpdateBanner])
 
     expect(tree.getByText('Device limit reached')).toBeTruthy()
-    expect(tree.getByText('Account removed successfully.')).toBeTruthy()
+    expect(tree.getByText('Update available')).toBeTruthy()
   })
 
   it('renders a server notification banner on Home', () => {
@@ -189,7 +189,7 @@ describe('Home (default export, v4.1)', () => {
     const tree = renderHome([])
 
     expect(tree.queryByText('Device limit reached')).toBeNull()
-    expect(tree.queryByText('Account removed successfully.')).toBeNull()
+    expect(tree.queryByText('Update available')).toBeNull()
     expect(tree.queryByText('Server notification')).toBeNull()
     expect(tree.getByText('Notification.EmptyNotification.Title')).toBeTruthy()
   })

@@ -489,6 +489,10 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
       <Stack.Screen
         name={BCSCScreens.VerifyRemoveAccountConfirmation}
         component={VerifyRemoveAccountConfirmationScreen}
+        options={() => ({
+          headerShown: true,
+          title: t('BCSC.Account.RemoveAccount'),
+        })}
       />
 
       {/* React navigation docs suggest modals at bottom of stack */}

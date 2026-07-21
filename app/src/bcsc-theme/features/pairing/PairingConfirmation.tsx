@@ -81,27 +81,11 @@ const PairingConfirmation: React.FC<PairingConfirmationProps> = ({ navigation, r
           style={{ marginTop: -Spacing.md, marginBottom: Spacing.md }}
         />
       )}
-      {fromAppSwitch ? (
-        <ThemedText style={{ marginTop: showIOSAppSwitchGuide ? undefined : Spacing.md }} variant={'headingThree'}>
-          {t('BCSC.ManualPairing.FromAppSwitchCompletionTitle', { serviceName })}
-        </ThemedText>
-      ) : (
-        <ThemedText variant={'headingThree'}>{t('BCSC.ManualPairing.CompletionTitle')}</ThemedText>
-      )}
-      {showIOSAppSwitchGuide && (
-        <ThemedText style={{ color: ColorPalette.brand.primary }}>
-          {t('BCSC.ManualPairing.FromAppSwitchCompletionSubtitle')}
-        </ThemedText>
-      )}
-      {fromAppSwitch ? (
-        Platform.OS === 'ios' ? (
-          <ThemedText>{t('BCSC.ManualPairing.FromAppSwitchCompletionDescriptionIOS')}</ThemedText>
-        ) : (
-          <ThemedText>{t('BCSC.ManualPairing.FromAppSwitchCompletionDescriptionAndroid')}</ThemedText>
-        )
-      ) : (
-        <ThemedText>{t('BCSC.ManualPairing.CompletionDescription', { serviceName })}</ThemedText>
-      )}
+
+      <ThemedText variant={'headingThree'}>{t('BCSC.ManualPairing.CompletionTitle')}</ThemedText>
+
+      <ThemedText>{t('BCSC.ManualPairing.CompletionDescription', { serviceName })}</ThemedText>
+
       <ServiceBookmarkButton serviceId={serviceId} serviceName={serviceName} />
     </ScreenWrapper>
   )

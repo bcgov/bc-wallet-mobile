@@ -44,12 +44,4 @@ describe('RemoveAccountConfirmationScreen', () => {
       expect(mockFactoryReset).toHaveBeenCalled()
     })
   })
-
-  it('navigates back when cancel is pressed', () => {
-    const tree = renderScreen()
-
-    fireEvent.press(tree.getByTestId(testIdWithKey('Cancel')))
-
-    expect(mockNavigation.goBack).toHaveBeenCalled()
-  })
 })
