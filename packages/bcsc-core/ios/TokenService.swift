@@ -129,9 +129,8 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
     var status = SecItemCopyMatching(query, &result)
 
     // errSecInteractionNotAllowed means the item exists but the keychain
-    // isn't accessible right now (e.g. device OS is still unlocking keychain access). 
-    // Add a wait in combination with a refetch to avoid retuning nil when an item is present
-    if status == errSecInteractionNotAllowed {
+    // isn't accessible right now (e.g. device OS is still unlocking keychain access).
+    // Add a wait and retry once to avoid returning nil when an item is present.
       logger.warning("get: keychain locked (interaction not allowed) id=\(id) — waiting for unlock, then retrying once")
       waitForProtectedDataAvailable(timeout: 1.0)
       status = SecItemCopyMatching(query, &result)
