@@ -138,4 +138,22 @@ describe('MaskedCamera', () => {
       expect(mockEmitErrorModal).not.toHaveBeenCalled()
     })
   })
+
+  describe('Background / foreground camera lifecycle (regression for #4256)', () => {
+    it('deactivates the camera when the app goes to the background', () => {
+      mockUseBCSCActivity.mockReturnValue({ appStateStatus: 'background' })
+
+      const { getByTestId } = renderCamera()
+
+      expect(getByTestId('mock-camera').props.isActive).toBe(false)
+    })
+
+    it('activates the camera when the app is in the foreground', () => {
+      mockUseBCSCActivity.mockReturnValue({ appStateStatus: 'active' })
+
+      const { getByTestId } = renderCamera()
+
+      expect(getByTestId('mock-camera').props.isActive).toBe(true)
+    })
+  })
 })

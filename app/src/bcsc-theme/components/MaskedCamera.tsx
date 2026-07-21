@@ -198,7 +198,7 @@ const MaskedCamera = ({
         style={styles.camera}
         device={device}
         format={format}
-        isActive={isFocused}
+        isActive={isFocused && appStateStatus === 'active'}
         photo={true}
         video={true}
         photoQualityBalance={photoQualityBalance}
