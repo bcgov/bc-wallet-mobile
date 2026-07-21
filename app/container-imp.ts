@@ -212,7 +212,7 @@ export class AppContainer implements Container {
           ],
         },
       ],
-      enableTours: true,
+      enableTours: Config.BUILD_TARGET === Mode.BCWallet,
       enableChat: true,
       enableReuseConnections: true,
       enableHiddenDevModeTrigger: true,
