@@ -10,7 +10,7 @@ import { initLanguages } from '@bifold/core'
 import { AxiosError } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import { DeviceEventEmitter } from 'react-native'
-import { getAccount, getRefreshTokenRequestBody, getToken, TokenType } from 'react-native-bcsc-core'
+import { getAccount, getRefreshTokenRequestBody, getTokenWithDiagnostics, TokenType } from 'react-native-bcsc-core'
 
 jest.mock('jwt-decode', () => ({
   jwtDecode: jest.fn(),
@@ -155,19 +155,21 @@ describe('BCSC Client', () => {
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       const tokens = { access_token: 'a', refresh_token: 'r' }
       client.tokens = tokens as any
-      ;(getToken as jest.Mock).mockClear()
+      ;(getTokenWithDiagnostics as jest.Mock).mockClear()
 
       const result = await client.recoverTokens()
 
       expect(result).toBe(tokens)
-      expect(getToken).not.toHaveBeenCalled()
+      expect(getTokenWithDiagnostics).not.toHaveBeenCalled()
     })
 
     it('should rebuild the cache from the stored refresh token when empty', async () => {
       const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = undefined
-      ;(getToken as jest.Mock).mockResolvedValue({ token: 'stored-refresh', type: TokenType.Refresh })
+      ;(getTokenWithDiagnostics as jest.Mock).mockResolvedValue({
+        token: { token: 'stored-refresh', type: TokenType.Refresh },
+      })
 
       const recoveredTokens = { access_token: 'recovered-access', refresh_token: 'recovered-refresh' }
       const privateFetchTokens = jest
@@ -176,7 +178,7 @@ describe('BCSC Client', () => {
 
       const result = await client.recoverTokens()
 
-      expect(getToken).toHaveBeenCalledWith(TokenType.Refresh)
+      expect(getTokenWithDiagnostics).toHaveBeenCalledWith(TokenType.Refresh)
       expect(privateFetchTokens).toHaveBeenCalledWith('stored-refresh')
       expect(result).toEqual(recoveredTokens)
       expect(client.tokens).toEqual(recoveredTokens)
@@ -186,7 +188,9 @@ describe('BCSC Client', () => {
       const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = undefined
-      ;(getToken as jest.Mock).mockResolvedValue({ token: 'stored-refresh', type: TokenType.Refresh })
+      ;(getTokenWithDiagnostics as jest.Mock).mockResolvedValue({
+        token: { token: 'stored-refresh', type: TokenType.Refresh },
+      })
 
       const recoveredTokens = { access_token: 'recovered-access', refresh_token: 'recovered-refresh' }
       jest.spyOn(BCSCApiClient.prototype as any, 'fetchTokens').mockResolvedValue(recoveredTokens)
@@ -212,7 +216,9 @@ describe('BCSC Client', () => {
       const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = undefined
-      ;(getToken as jest.Mock).mockResolvedValue({ token: 'stored-refresh', type: TokenType.Refresh })
+      ;(getTokenWithDiagnostics as jest.Mock).mockResolvedValue({
+        token: { token: 'stored-refresh', type: TokenType.Refresh },
+      })
 
       jest.spyOn(BCSCApiClient.prototype as any, 'fetchTokens').mockRejectedValue(new Error('Network Error'))
       const emitSpy = jest.spyOn(DeviceEventEmitter, 'emit').mockClear()
@@ -226,12 +232,16 @@ describe('BCSC Client', () => {
       const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = undefined
-      ;(getToken as jest.Mock).mockResolvedValue(null)
+      ;(getTokenWithDiagnostics as jest.Mock).mockResolvedValue({
+        token: null,
+        diagnostic: '-25300 (The specified item could not be found in the keychain.)',
+      })
 
       await expect(client.recoverTokens()).rejects.toMatchObject({
         appEvent: AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL,
       })
       expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('no refresh token in secure storage'))
+      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('nativeDiagnostic=-25300'))
     })
   })
 
@@ -262,7 +272,7 @@ describe('BCSC Client', () => {
       const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = undefined
-      ;(getToken as jest.Mock).mockRejectedValueOnce(nativeError('E_KEYSTORE_UNAVAILABLE'))
+      ;(getTokenWithDiagnostics as jest.Mock).mockRejectedValueOnce(nativeError('E_KEYSTORE_UNAVAILABLE'))
 
       await expect(client.recoverTokens()).rejects.toMatchObject({
         appEvent: AppEventCode.ERR_120_KEYCHAIN_UNAVAILABLE_ERROR,
@@ -560,7 +570,7 @@ describe('BCSC Client', () => {
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = undefined
       ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
-      ;(getToken as jest.Mock).mockResolvedValue(null)
+      ;(getTokenWithDiagnostics as jest.Mock).mockResolvedValue({ token: null })
 
       await expect((client as any).ensureValidTokens()).rejects.toMatchObject({
         appEvent: AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL,
@@ -572,7 +582,9 @@ describe('BCSC Client', () => {
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = undefined
       ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
-      ;(getToken as jest.Mock).mockResolvedValue({ token: 'stored-refresh', type: TokenType.Refresh })
+      ;(getTokenWithDiagnostics as jest.Mock).mockResolvedValue({
+        token: { token: 'stored-refresh', type: TokenType.Refresh },
+      })
 
       const recoveredTokens = { access_token: 'recovered-access', refresh_token: 'recovered-refresh' }
       jest.spyOn(BCSCApiClient.prototype as any, 'fetchTokens').mockResolvedValue(recoveredTokens)
@@ -581,7 +593,7 @@ describe('BCSC Client', () => {
 
       const result = await (client as any).ensureValidTokens()
 
-      expect(getToken).toHaveBeenCalledWith(TokenType.Refresh)
+      expect(getTokenWithDiagnostics).toHaveBeenCalledWith(TokenType.Refresh)
       expect(result).toEqual(recoveredTokens)
       expect(client.tokens).toEqual(recoveredTokens)
     })

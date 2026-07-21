@@ -338,14 +338,26 @@ export const getKeyPair = (label: string): Promise<KeyPair> => {
 };
 
 /**
+ * NativeTokenResponse with custom diagnostic field to surface OSStatus or other errors to JS
+ */
+interface NativeTokenResponse {
+  id?: string;
+  type?: number;
+  token?: string;
+  created?: number;
+  expiry?: number | null;
+  diagnostic?: string;
+}
+
+/**
  * Retrieves a token of a specified type.
  * @param tokenType The type of token to retrieve (e.g., Access, Refresh, Registration).
  * @returns A promise that resolves to a TokenInfo object if found, otherwise null.
  */
 export const getToken = async (tokenType: TokenType): Promise<TokenInfo | null> => {
   // Pass the raw numeric value of the enum to the native side
-  const nativeToken = await BcscCore.getToken(tokenType as number);
-  if (!nativeToken) {
+  const nativeToken = (await BcscCore.getToken(tokenType as number)) as NativeTokenResponse | null;
+  if (!nativeToken?.id) {
     return null;
   }
 
@@ -354,6 +366,28 @@ export const getToken = async (tokenType: TokenType): Promise<TokenInfo | null> 
   return {
     ...nativeToken,
     type: nativeToken.type as TokenType, // Ensure this aligns with what native returns
+  } as TokenInfo;
+};
+
+/**
+ * Wraps getToken() to return both token and optional diagnostic information
+ *
+ * @param tokenType The type of token to retrieve (e.g., Access, Refresh, Registration).
+ */
+export const getTokenWithDiagnostics = async (
+  tokenType: TokenType
+): Promise<{ token: TokenInfo | null; diagnostic?: string }> => {
+  const nativeToken = (await BcscCore.getToken(tokenType as number)) as NativeTokenResponse | null;
+  if (!nativeToken?.id) {
+    return { token: null, diagnostic: nativeToken?.diagnostic ?? undefined };
+  }
+  const { ...token } = nativeToken;
+
+  return {
+    token: {
+      ...token,
+      type: nativeToken.type as TokenType, // Ensure this aligns with what native returns
+    } as TokenInfo,
   };
 };
 

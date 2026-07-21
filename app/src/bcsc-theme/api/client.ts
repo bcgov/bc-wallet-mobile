@@ -7,8 +7,8 @@ import { getUserAgentString } from '@utils/user-agent'
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import merge from 'lodash.merge'
-import { DeviceEventEmitter } from 'react-native'
-import { getRefreshTokenRequestBody, getToken, TokenType } from 'react-native-bcsc-core'
+import { AppState, DeviceEventEmitter } from 'react-native'
+import { getRefreshTokenRequestBody, getTokenWithDiagnostics, TokenType } from 'react-native-bcsc-core'
 import {
   formatAxiosErrorForLogger as formatIASAxiosErrorForLogger,
   formatIasAxiosResponseError,
@@ -409,11 +409,18 @@ class BCSCApiClient {
       return this.tokens
     }
 
-    const storedRefreshToken = (await getToken(TokenType.Refresh).catch((error) => throwNativeBcscError(error)))?.token
+    const { token: refreshToken, diagnostic } = await getTokenWithDiagnostics(TokenType.Refresh).catch((error) =>
+      throwNativeBcscError(error)
+    )
+    const storedRefreshToken = refreshToken?.token
     if (!storedRefreshToken) {
-      this.logger.error('[BCSCApiClient] Token cache empty and no refresh token in secure storage')
+      this.logger.error(
+        `[BCSCApiClient] Token cache empty and no refresh token in secure storage (appState=${AppState.currentState} nativeDiagnostic=${diagnostic ?? 'none'})`
+      )
       throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL, {
-        cause: new Error('Token cache empty and no stored refresh token to recover from'),
+        cause: new Error(
+          `Token cache empty and no stored refresh token to recover from (nativeDiagnostic=${diagnostic ?? 'none'})`
+        ),
       })
     }
 

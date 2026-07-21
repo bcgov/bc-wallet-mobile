@@ -41,6 +41,57 @@ describe('useTokenService', () => {
       expect(mockAlerts.unableToDecryptIdTokenAlert).toHaveBeenCalled()
     })
 
+    it('should show alert on JSON deserialization error and rethrow error', async () => {
+      const mockError = mockAppError(AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON)
+      const tokenApi = {
+        getCachedIdTokenMetadata: jest.fn().mockRejectedValue(mockError),
+      } as any
+      const mockAlerts = { failedToDeserializeJsonAlert: jest.fn() }
+
+      jest.spyOn(useTokenApiModule, 'default').mockReturnValue(tokenApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+      const { result } = renderHook(() => useTokenService())
+
+      await expect(result.current.getCachedIdTokenMetadata({ refreshCache: false })).rejects.toThrow(mockError)
+      expect(tokenApi.getCachedIdTokenMetadata).toHaveBeenCalledWith({ refreshCache: false })
+      expect(mockAlerts.failedToDeserializeJsonAlert).toHaveBeenCalled()
+    })
+
+    it('should show alert on missing JWK error and rethrow error', async () => {
+      const mockError = mockAppError(AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK)
+      const tokenApi = {
+        getCachedIdTokenMetadata: jest.fn().mockRejectedValue(mockError),
+      } as any
+      const mockAlerts = { missingJwkAlert: jest.fn() }
+
+      jest.spyOn(useTokenApiModule, 'default').mockReturnValue(tokenApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+      const { result } = renderHook(() => useTokenService())
+
+      await expect(result.current.getCachedIdTokenMetadata({ refreshCache: false })).rejects.toThrow(mockError)
+      expect(tokenApi.getCachedIdTokenMetadata).toHaveBeenCalledWith({ refreshCache: false })
+      expect(mockAlerts.missingJwkAlert).toHaveBeenCalled()
+    })
+
+    it('should show alert on JWS verification error and rethrow error', async () => {
+      const mockError = mockAppError(AppEventCode.ERR_112_JWS_VERIFICATION_FAILED)
+      const tokenApi = {
+        getCachedIdTokenMetadata: jest.fn().mockRejectedValue(mockError),
+      } as any
+      const mockAlerts = { jwsVerificationFailedAlert: jest.fn() }
+
+      jest.spyOn(useTokenApiModule, 'default').mockReturnValue(tokenApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
+
+      const { result } = renderHook(() => useTokenService())
+
+      await expect(result.current.getCachedIdTokenMetadata({ refreshCache: false })).rejects.toThrow(mockError)
+      expect(tokenApi.getCachedIdTokenMetadata).toHaveBeenCalledWith({ refreshCache: false })
+      expect(mockAlerts.jwsVerificationFailedAlert).toHaveBeenCalled()
+    })
+
     it('should show alert on claims set error and rethrow error', async () => {
       const mockError = mockAppError(AppEventCode.ERR_114_FAILED_TO_GET_CLAIMS_SET_AFTER_DECRYPT_AND_VERIFY)
       const tokenApi = {
