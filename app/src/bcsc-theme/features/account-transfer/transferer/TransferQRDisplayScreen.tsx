@@ -38,6 +38,7 @@ const TransferQRDisplayScreen: React.FC = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const attestationIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const completedRef = useRef(false)
+  const isMountedRef = useRef(true)
   const [isLoading, setIsLoading] = useState(true)
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -66,8 +67,15 @@ const TransferQRDisplayScreen: React.FC = () => {
   })
 
   const createToken = useCallback(async (): Promise<boolean> => {
+    if (completedRef.current || !isMountedRef.current) {
+      return false
+    }
     const timeInSeconds = Math.floor(Date.now() / 1000)
     const account = await getAccount()
+    if (completedRef.current || !isMountedRef.current) {
+      logger.info('[TransferQRDisplayScreen] Skipping QR token creation: transfer completed or screen unmounted')
+      return false
+    }
     if (!account) {
       logger.error('[TransferQRDisplayScreen] Account not found in native storage')
       accountNotFoundAlert()
@@ -122,7 +130,7 @@ const TransferQRDisplayScreen: React.FC = () => {
       clearInterval(intervalRef.current)
     }
     intervalRef.current = setInterval(() => {
-      if (completedRef.current) {
+      if (completedRef.current || !isMountedRef.current) {
         return
       }
       createToken()
@@ -138,10 +146,16 @@ const TransferQRDisplayScreen: React.FC = () => {
     }
 
     const success = await createToken()
-    if (success && !completedRef.current) {
+    if (success && !completedRef.current && isMountedRef.current) {
       startInterval()
     }
   }, [createToken, startInterval])
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
 
   useEffect(() => {
     refreshToken()
