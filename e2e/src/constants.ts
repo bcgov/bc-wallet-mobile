@@ -12,6 +12,9 @@ export enum Timeouts {
   SCREEN_TRANSITION = 20_000,
   /** Initial app launch — generous for cold starts on real devices */
   APP_LAUNCH = 30_000,
+  /** First checkpoint of a journey file: the run's FIRST session may also pay simulator/device
+   *  boot + WebDriverAgent install + first-ever app launch, all competing for CPU. */
+  COLD_START = 60_000,
   /** Per-test timeout (Mocha) */
   TEST_TIMEOUT = 300_000,
   /** Browser handoff pause (ms) */

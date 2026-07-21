@@ -21,7 +21,7 @@ import {
  * The app skips the Notifications screen when push permission is already granted (jumps straight
  * to SecureApp), so wait for whichever of the two appears and skip notifications when offered.
  */
-async function skipNotificationsIfShown(): Promise<void> {
+export async function skipNotificationsIfShown(): Promise<void> {
   const deadline = Date.now() + Timeouts.SCREEN_TRANSITION
   for (;;) {
     if (await OnboardingNotificationsScreen.isPresent(1_000)) {
@@ -47,7 +47,7 @@ async function skipNotificationsIfShown(): Promise<void> {
  * AccountLanding → EnterPIN → Home, never back here (its gate is in-memory in the app).
  */
 export async function completeOnboarding(pin: string = TEST_PIN): Promise<void> {
-  await OnboardingIntroScreen.expectVisible(Timeouts.APP_LAUNCH)
+  await OnboardingIntroScreen.expectVisible(Timeouts.COLD_START)
   await OnboardingIntroScreen.tap('primary')
 
   await OnboardingPrivacyPolicyScreen.expectVisible(Timeouts.SCREEN_TRANSITION)

@@ -16,24 +16,27 @@ const ob = TestIds.onboarding
 
 /**
  * First screen shown at app launch on a fresh install (`OnboardingIntro`, the stack's initial route).
- * No back button — it is the root of the stack.
- * `primary` (Continue) → PrivacyPolicy · `secondary` (LearnMore) → Help Centre webview.
+ * No back button — it is the root of the stack. `primary` (Continue) → PrivacyPolicy.
+ * (No Learn-More button here — that detour lives on the Privacy Policy screen.)
  */
 export const OnboardingIntroScreen = defineScreen({
   self: bcsc(ob.intro.continue),
   primary: bcsc(ob.intro.continue),
-  secondary: bcsc(ob.intro.learnMore),
   help: bcsc(common.help),
 })
 
 /**
- * Privacy policy (`OnboardingPrivacyPolicy`). `primary` (Continue) → TermsOfUse.
+ * Privacy policy (`OnboardingPrivacyPolicy`). `primary` (Continue) → TermsOfUse ·
+ * `learnMore` → in-app `OnboardingWebView` (pop it via the pushed screen's header Back).
  */
 export const OnboardingPrivacyPolicyScreen = defineScreen({
   self: bcsc(ob.privacyPolicy.continue),
   primary: bcsc(ob.privacyPolicy.continue),
   back: bcsc(common.back),
   help: bcsc(common.help),
+  links: {
+    learnMore: bcsc(ob.privacyPolicy.learnMore),
+  },
 })
 
 /**
@@ -109,17 +112,34 @@ export const OnboardingCreatePINScreen = defineScreen({
   },
   links: {
     understand: bcsc(ob.createPin.understand),
+    pin1Visibility: bcsc(ob.createPin.pin1Visibility),
+    pin2Visibility: bcsc(ob.createPin.pin2Visibility),
   },
 })
 
 /**
  * One-time verify prompt shown after onboarding completes, before the main app (entry screen of
- * `VerifyStack`). This is the seam that makes stacks independently testable: `secondary`
- * (SkipVerification) records `hasSeenVerifyPrompt` and lands on Home unverified.
- * `primary` (Continue) → begins verification (AccountSetup) · `secondary` → Home.
+ * `VerifyStack`). Its gate is in-memory in `RootStack`: the prompt exists ONLY in the session that
+ * completed onboarding, and skipping persists nothing — a later cold start goes AccountLanding →
+ * EnterPIN → Home, never back here.
+ * `primary` (Continue) → begins verification (AccountSetup) · `secondary` (SkipVerification) → Home.
  */
 export const VerifyPromptScreen = defineScreen({
   self: bcsc(ob.verifyPrompt.continue),
   primary: bcsc(ob.verifyPrompt.continue),
   secondary: bcsc(ob.verifyPrompt.skipVerification),
+  elements: {
+    skipVerification: bcsc(ob.verifyPrompt.skipVerification),
+  },
+})
+
+/**
+ * The in-app webview (`OnboardingWebView`, also registered per-stack as Auth/Verify/MainWebView).
+ * The screen renders no testIDs of its own — the only stable handle is the stack header's Back
+ * button, which every pushed onboarding screen shares. Use it only when the webview is known to be
+ * on top (i.e. immediately after tapping a link that opened it).
+ */
+export const OnboardingWebViewScreen = defineScreen({
+  self: bcsc(common.back),
+  back: bcsc(common.back),
 })

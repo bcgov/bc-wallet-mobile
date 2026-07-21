@@ -7,63 +7,9 @@ export const BCSC_TestIDs = {
     TransferAccount: 'com.ariesbifold:id/TransferAccount',
     DeveloperMode: 'com.ariesbifold:id/DeveloperMode',
   },
-  TransferInformation: {
-    TransferAccountButton: 'com.ariesbifold:id/TransferAccountButton',
-    Back: 'com.ariesbifold:id/Back',
-  },
-  SetupTypes: {
-    Continue: 'com.ariesbifold:id/Continue',
-    Cancel: 'com.ariesbifold:id/Cancel',
-    MyOwnIdRadioGroup: 'com.ariesbifold:id/MyOwnIdRadioGroup-option-MyOwnID',
-    SomeoneElseIdRadioGroup: "com.ariesbifold:id/MyOwnIdRadioGroup-option-SomeoneElse'sID",
-    OtherPersonPresentRadioGroupYesOption: 'com.ariesbifold:id/OtherPersonPresentRadioGroup-option-Yes',
-    OtherPersonPresentRadioGroupNoOption: 'com.ariesbifold:id/OtherPersonPresentRadioGroup-option-No',
-    Back: 'com.ariesbifold:id/Back',
-  },
-  IntroCarousel: {
-    CarouselNext: 'com.ariesbifold:id/CarouselNext',
-    CarouselBack: 'com.ariesbifold:id/CarouselBack',
-    WhereToUseButton: 'com.ariesbifold:id/CardButton-Where to use',
-  },
-  PrivacyPolicy: {
-    Continue: 'com.ariesbifold:id/Continue',
-    Link: 'com.ariesbifold:id/PrivacyPolicyBCLoginLink',
-    LearnMore: 'com.ariesbifold:id/LearnMore',
-    Back: 'com.ariesbifold:id/Back',
-  },
-  OptInAnalytics: {
-    Accept: 'com.ariesbifold:id/Accept',
-    Decline: 'com.ariesbifold:id/Decline',
-    Back: 'com.ariesbifold:id/Back',
-    LearnMore: 'com.ariesbifold:id/LearnMore',
-  },
-  Notifications: {
-    Continue: 'com.ariesbifold:id/Continue',
-    OpenSettings: 'com.ariesbifold:id/OpenSettings',
-    ContinueWithoutNotifications: 'com.ariesbifold:id/ContinueWithoutNotifications',
-    Back: 'com.ariesbifold:id/Back',
-    Help: 'com.ariesbifold:id/Help',
-  },
-  TermsOfUse: {
-    AcceptAndContinue: 'com.ariesbifold:id/AcceptAndContinue',
-    RetryTermsOfUse: 'com.ariesbifold:id/RetryTermsOfUse',
-    Back: 'com.ariesbifold:id/Back',
-  },
-  SecureApp: {
-    BiometricAuth: 'com.ariesbifold:id/ChooseDeviceAuthButton',
-    PinAuth: 'com.ariesbifold:id/ChoosePINButton',
-    LearnMore: 'com.ariesbifold:id/LearnMoreButton',
-    Back: 'com.ariesbifold:id/Back',
-  },
-  CreatePIN: {
-    Continue: 'com.ariesbifold:id/Continue',
-    IUnderstand: 'com.ariesbifold:id/IUnderstand',
-    PINInput1: 'com.ariesbifold:id/PINInput1',
-    PINInput2: 'com.ariesbifold:id/PINInput2',
-    PINInput1VisibilityButton: 'com.ariesbifold:id/PINInput1VisibilityButton',
-    PINInput2VisibilityButton: 'com.ariesbifold:id/PINInput2VisibilityButton',
-    Back: 'com.ariesbifold:id/Back',
-  },
+  // NOTE(ONB-1): the legacy onboarding sections (IntroCarousel, SetupTypes, TransferInformation,
+  // PrivacyPolicy, OptInAnalytics, TermsOfUse, Notifications, SecureApp, CreatePIN) were deleted —
+  // onboarding IDs now live in `src/test-ids/registry.ts` and are consumed via `screens/onboarding.ts`.
   Nickname: {
     AccountNicknamePressable: 'com.ariesbifold:id/accountNickname-pressable',
     /** TextInput inside `InputWithValidation` — use for `type()`; the pressable is not editable on Android. */

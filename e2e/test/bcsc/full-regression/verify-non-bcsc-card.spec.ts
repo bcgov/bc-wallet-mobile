@@ -4,10 +4,10 @@
  * Other ID verification, then residential address and email collection.
  *
  * Run with: yarn wdio ... --spec test/bcsc/full-regression/verify-non-bcsc-card.spec.ts
+ *
+ * NOTE(ONB-1): the onboarding preamble was removed — superseded by `journeys/onboarding/`.
+ * This legacy spec is red vs `main` and is pending replacement by the verified card journeys.
  */
-// Onboarding
-import '../onboarding/onboarding-basic.spec.js'
-
 // Verify: Import `verify/card-type/config-*.js` before any `./verify/*.spec.js` imports.
 import '../verify/card-type/config-non-bcsc-card.js'
 

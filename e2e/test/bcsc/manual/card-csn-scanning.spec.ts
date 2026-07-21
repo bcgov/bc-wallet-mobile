@@ -4,8 +4,10 @@
  * in-person method, then main tab/settings navigation.
  *
  * Run with: yarn wdio ... --suite card-csn-scanning
+ *
+ * NOTE(ONB-1): the onboarding preamble was removed — superseded by `journeys/onboarding/`.
+ * This legacy spec is red vs `main` pending its replacement (`journeys/manual/card-scan`).
  */
-import '../onboarding/onboarding-basic.spec.js'
 // Verify: Import `verify/card-type/config-*.js` before any `../verify/*.spec.js` imports.
 import '../verify/card-type/config-combined-card.js'
 import '../verify/components/nickname.spec.js'

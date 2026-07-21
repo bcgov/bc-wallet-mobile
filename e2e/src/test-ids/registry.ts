@@ -34,10 +34,11 @@ export const TestIds = {
   onboarding: {
     intro: {
       continue: 'Continue',
-      learnMore: 'LearnMore',
     },
     privacyPolicy: {
       continue: 'Continue',
+      // In-screen "Learn More" card → in-app OnboardingWebView (return via the header Back button).
+      learnMore: 'LearnMore',
     },
     termsOfUse: {
       acceptAndContinue: 'AcceptAndContinue',
@@ -60,6 +61,8 @@ export const TestIds = {
       // is `CreatePIN`, not the generic `Continue`.
       pin: 'PINInput1',
       confirmPin: 'PINInput2',
+      pin1Visibility: 'PINInput1VisibilityButton',
+      pin2Visibility: 'PINInput2VisibilityButton',
       understand: 'IUnderstand',
       createPin: 'CreatePIN',
     },

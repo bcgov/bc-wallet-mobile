@@ -4,8 +4,10 @@
  * photo card verification, in-person method, then main tab/settings navigation.
  *
  * Run with: yarn wdio ... --spec test/bcsc/full-regression/verify-photo-card.spec.ts
+ *
+ * NOTE(ONB-1): the onboarding preamble was removed — superseded by `journeys/onboarding/`.
+ * This legacy spec is red vs `main` and is pending replacement by the verified card journeys.
  */
-import '../onboarding/onboarding-basic.spec.js'
 // Verify: Import `verify/card-type/config-*.js` before any `./verify/*.spec.js` imports.
 import '../verify/card-type/config-photo-card.js'
 import '../verify/components/nickname.spec.js'
