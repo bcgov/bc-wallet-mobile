@@ -381,13 +381,11 @@ export const getTokenWithDiagnostics = async (
   if (!nativeToken?.id) {
     return { token: null, diagnostic: nativeToken?.diagnostic ?? undefined };
   }
+  const { diagnostic: _diagnostic, ...token } = nativeToken;
 
   return {
     token: {
-      id: nativeToken.id,
-      token: nativeToken.token ?? '',
-      created: nativeToken.created ?? 0,
-      expiry: nativeToken.expiry ?? null,
+      ...token,
       type: nativeToken.type as TokenType, // Ensure this aligns with what native returns
     } as TokenInfo,
   };
