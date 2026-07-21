@@ -6,7 +6,7 @@ import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useCardStatus } from '@/bcsc-theme/hooks/useCardStatus'
-import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCQRCoreScreens, BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
 import { testIdWithKey, useStore, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
@@ -52,7 +52,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   const handleManageDevices = useManageDevicesNavigation(navigation)
 
   const handlePairingCodePress = () => {
-    navigation.getParent()?.navigate(BCSCScreens.ManualPairingCode)
+    navigation.getParent()?.navigate(BCSCScreens.QRCore, { screen: BCSCQRCoreScreens.PairingCode })
   }
 
   return (
