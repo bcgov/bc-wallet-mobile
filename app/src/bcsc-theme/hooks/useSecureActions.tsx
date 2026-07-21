@@ -7,6 +7,7 @@ import { throwNativeBcscError } from '@bcsc-theme/utils/native-error-map'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
+import { AppState } from 'react-native'
 import {
   AccountFlags,
   BarcodePayload,
@@ -877,7 +878,11 @@ export const useSecureActions = () => {
    */
   const hydrateSecureState = useCallback(async () => {
     try {
-      logger.info('Hydrating secure state from native storage...')
+      // appState is logged here because this read runs unconditionally on every
+      // successful re-authentication (post auto-lock, post device unlock) — unlike
+      // BCSCApiClient.recoverTokens(), there's no in-memory cache to short-circuit
+      // it, so this is the read most likely to race the OS unlock transition.
+      logger.info(`Hydrating secure state from native storage... (appState=${AppState.currentState})`)
 
       // Load all data from native storage in parallel
       const [

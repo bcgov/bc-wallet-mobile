@@ -7,7 +7,7 @@ import { getUserAgentString } from '@utils/user-agent'
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import merge from 'lodash.merge'
-import { DeviceEventEmitter } from 'react-native'
+import { AppState, DeviceEventEmitter } from 'react-native'
 import { getRefreshTokenRequestBody, getToken, TokenType } from 'react-native-bcsc-core'
 import {
   formatAxiosErrorForLogger as formatIASAxiosErrorForLogger,
@@ -389,9 +389,18 @@ class BCSCApiClient {
       return this.tokens
     }
 
+    // AppState is logged alongside the native lookup so a keychain read that fails
+    // because the device is locked (rather than because no token was ever saved)
+    // can be correlated with the app-lifecycle transition that triggered this call.
+    this.logger.warn(
+      `[BCSCApiClient] Token cache empty; reading refresh token from secure storage (appState=${AppState.currentState})`
+    )
+
     const storedRefreshToken = (await getToken(TokenType.Refresh).catch((error) => throwNativeBcscError(error)))?.token
     if (!storedRefreshToken) {
-      this.logger.error('[BCSCApiClient] Token cache empty and no refresh token in secure storage')
+      this.logger.error(
+        `[BCSCApiClient] Token cache empty and no refresh token in secure storage (appState=${AppState.currentState})`
+      )
       throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL, {
         cause: new Error('Token cache empty and no stored refresh token to recover from'),
       })
