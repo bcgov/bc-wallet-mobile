@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 import type { Options } from '@wdio/types'
 import dotenv from 'dotenv'
 import { jobNameFromSpec } from '../../src/helpers/sauce.js'
-import { config as baseConfig } from '../wdio.shared.conf.js'
+import { captureFailureScreenshot, config as baseConfig } from '../wdio.shared.conf.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: resolve(__dirname, '../../.env.saucelabs') })
@@ -44,8 +44,9 @@ const sauceRdcOptions = {
   imageInjection: true,
 }
 
-config.afterTest = async function (test, _context, { passed }) {
-  await browser.execute(`sauce:job-result=${passed ? 'passed' : 'failed'}`)
+config.afterTest = async function (test, _context, result) {
+  await captureFailureScreenshot(test, result)
+  await browser.execute(`sauce:job-result=${result.passed ? 'passed' : 'failed'}`)
 }
 
 export { config, sauceRdcOptions }

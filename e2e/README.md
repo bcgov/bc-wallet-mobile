@@ -2,6 +2,16 @@
 
 _End-to-end tests for BC Wallet and BC Services Card apps using **WebDriverIO (WDIO) + Appium**. The same test suite runs locally (emulator/simulator) and on SauceLabs (real devices), with variant-aware test flows._
 
+## Rework in progress: per-area journeys + screen-object DSL
+
+The suite is being rebuilt (epic + tickets live in the local `.notes/` directory). Conventions for new code:
+
+- **testID keys** live in `src/test-ids/registry.ts` — the exact keys the app passes to `testIdWithKey`. Never write `com.ariesbifold:id/...` literals; wrap registry keys with `bcsc(key)`.
+- **Screen descriptors** (`src/screens/<stack>.ts`) map semantic roles (`self`/`primary`/`secondary`/`back`/`help`/`menu` + named `links`/`inputs`/`elements`) to testIDs via `defineScreen`. Specs call `tap('primary')`, `fill('pin', …)` — never raw selectors. `src/screens/onboarding.ts` is the reference style.
+- **Arrange flows** (`src/flows/`) are how journeys earn preconditions — there is no app-side seeding: `completeOnboarding()`, `skipToHome()`, `unlockWithPin()`. The VerifyPrompt exists **only in the session that completed onboarding**; never relaunch between onboarding and verify entry.
+- **Journeys** (`test/bcsc/journeys/**/*.journey.ts`, landing per area): one file = one app session = one ordered journey of checkpoints. wdio `bail: 0` keeps files independent; `mochaOpts.bail: true` aborts the rest of a file on its first failure.
+- Failure screenshots + JUnit/Allure output land in `e2e/reports/` (gitignored).
+
 ## _Prerequisites_
 
 - **_Node.js 20+_** _and_ **_Yarn_**

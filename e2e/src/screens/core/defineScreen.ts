@@ -1,3 +1,4 @@
+import { Timeouts } from '../../constants.js'
 import { BaseScreen, EnterTextOptions } from './BaseScreen.js'
 
 /**
@@ -176,6 +177,25 @@ export class Screen<S extends ScreenSpec> {
       throw new Error('Screen declares neither "self" nor "primary"; cannot expectVisible()')
     }
     await this.engine.waitForDisplayed(resolveTestId(target), timeout)
+  }
+
+  /**
+   * True if the screen's `self` (or `primary`) becomes displayed within `timeout`; never throws
+   * and never scrolls — safe for branching on conditional screens mid-transition (unlike
+   * {@link expectVisible}, whose engine scroll-retries on a miss).
+   */
+  async isPresent(timeout: number = Timeouts.ELEMENT_VISIBLE): Promise<boolean> {
+    const target = this.spec.self ?? this.spec.primary
+    if (!target) {
+      throw new Error('Screen declares neither "self" nor "primary"; cannot isPresent()')
+    }
+    const el = await this.engine.findByTestId(resolveTestId(target))
+    try {
+      await el.waitForDisplayed({ timeout })
+      return true
+    } catch {
+      return false
+    }
   }
 
   /** Tap a declared role. Only roles the descriptor declares type-check. */

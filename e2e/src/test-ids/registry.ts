@@ -68,4 +68,35 @@ export const TestIds = {
       skipVerification: 'SkipVerification',
     },
   },
+
+  auth: {
+    /** Returning-user landing — the unlock entry every cold start of an onboarded user hits. */
+    accountLanding: {
+      unlock: 'Unlock',
+    },
+    /** Existing-PIN entry (`EnterPIN`). The PIN auto-submits on the 6th digit; Continue is the manual fallback. */
+    enterPin: {
+      pin: 'PINInput',
+      pinVisibility: 'PINInputVisibilityButton',
+      continue: 'Continue',
+      getHelp: 'GetHelp',
+    },
+  },
+
+  main: {
+    /** Bottom tab bar (`tabBarTestID`s in `TabStack`). */
+    tabBar: {
+      home: 'Home',
+      services: 'Services',
+      wallet: 'Wallet',
+    },
+    /** Header settings (menu) button on the Home/Services tab headers. */
+    header: {
+      settings: 'SettingsMenuButton',
+    },
+    /** Floating scan FAB (rendered on the Home + Wallet tabs, not verification-gated) → QRCore. */
+    scan: {
+      fab: 'FloatingScanButton',
+    },
+  },
 } as const

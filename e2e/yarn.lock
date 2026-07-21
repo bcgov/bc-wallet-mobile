@@ -1881,6 +1881,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@wdio/allure-reporter@npm:^9.27.0":
+  version: 9.29.1
+  resolution: "@wdio/allure-reporter@npm:9.29.1"
+  dependencies:
+    "@types/node": "npm:^20.1.0"
+    "@wdio/reporter": "npm:9.29.1"
+    "@wdio/types": "npm:9.29.1"
+    allure-js-commons: "npm:^3.3.2"
+    csv-stringify: "npm:^6.0.4"
+    html-entities: "npm:^2.6.0"
+    strip-ansi: "npm:^7.1.0"
+  checksum: 10c0/89cf632bd0208de8e8aaa52bc02a9410afdc30ec2af00f2f84545519d80b2d9f4a77dfaa88f9a3ba8e0b50a88910bb6f6f0ba683ae0cb063d181465ccd595ca7
+  languageName: node
+  linkType: hard
+
 "@wdio/appium-service@npm:^9.27.0":
   version: 9.27.0
   resolution: "@wdio/appium-service@npm:9.27.0"
@@ -2005,6 +2020,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@wdio/junit-reporter@npm:^9.27.0":
+  version: 9.29.1
+  resolution: "@wdio/junit-reporter@npm:9.29.1"
+  dependencies:
+    "@wdio/reporter": "npm:9.29.1"
+    "@wdio/types": "npm:9.29.1"
+    json-stringify-safe: "npm:^5.0.1"
+    junit-report-builder: "npm:^5.1.1"
+  checksum: 10c0/0c1dc1376adcc56e1fc1ee238f9550a2d78a6e6b5824dfb03c1b5caac38488b10562eeb2882751b911c5c85d543bb8bd3f14ce9d131100d969678b955a649d49
+  languageName: node
+  linkType: hard
+
 "@wdio/local-runner@npm:^9.27.0":
   version: 9.27.0
   resolution: "@wdio/local-runner@npm:9.27.0"
@@ -2033,6 +2060,19 @@ __metadata:
     safe-regex2: "npm:^5.0.0"
     strip-ansi: "npm:^7.1.0"
   checksum: 10c0/c11cc06ea9f6696a0077f29d0360c10828317e5980815408d04cad99db1a64a6bc1491583ffef681e46e18476f061f37a2e18706f06488715291f3bfc8b32615
+  languageName: node
+  linkType: hard
+
+"@wdio/logger@npm:9.29.1":
+  version: 9.29.1
+  resolution: "@wdio/logger@npm:9.29.1"
+  dependencies:
+    chalk: "npm:^5.1.2"
+    loglevel: "npm:^1.6.0"
+    loglevel-plugin-prefix: "npm:^0.8.4"
+    safe-regex2: "npm:^5.0.0"
+    strip-ansi: "npm:^7.1.0"
+  checksum: 10c0/7262d1028f2212b8244705a39574b3b3ee3f1007c90fe80837776bf2cdcefd71e32187b69bcdfdd350e07228917936973fef2ec61732b082da69932669a71008
   languageName: node
   linkType: hard
 
@@ -2076,6 +2116,19 @@ __metadata:
     diff: "npm:^8.0.2"
     object-inspect: "npm:^1.12.0"
   checksum: 10c0/3abc9f417ae816e41ae66a3b3312a5683550da876ce4f411a0f05e56f9f2d55dbb354a425068c38bec114b38b9e41f81e0f92e3366bdda68e6ccc40e92a137fd
+  languageName: node
+  linkType: hard
+
+"@wdio/reporter@npm:9.29.1":
+  version: 9.29.1
+  resolution: "@wdio/reporter@npm:9.29.1"
+  dependencies:
+    "@types/node": "npm:^20.1.0"
+    "@wdio/logger": "npm:9.29.1"
+    "@wdio/types": "npm:9.29.1"
+    diff: "npm:^8.0.2"
+    object-inspect: "npm:^1.12.0"
+  checksum: 10c0/8ad399a654c1e6a471e4705dc6434851a6f1c9a3a9173a2fdd3ca4bfab443b720cc3b6744a1529365eabea4e2e9299626783bad6b4cd5af2dd2d92751b5ee268
   languageName: node
   linkType: hard
 
@@ -2149,6 +2202,15 @@ __metadata:
   dependencies:
     "@types/node": "npm:^20.1.0"
   checksum: 10c0/95c2ddc7434b0dd9d480ba9b9563aabb00ff576818e4191f2505ce8bf9e017876ac88aa6bc9c878a2029edb4f9c5c833bd0ca5587f7191e3a05249840eaaf623
+  languageName: node
+  linkType: hard
+
+"@wdio/types@npm:9.29.1":
+  version: 9.29.1
+  resolution: "@wdio/types@npm:9.29.1"
+  dependencies:
+    "@types/node": "npm:^20.1.0"
+  checksum: 10c0/445832ed43d53b08ad3a9bc59fa0f8f3a3398a51a14db674e8757c429ab9d09691cef0a43091f9f6b4d341ef35eb99663300e14d70a0fb1feac10415a211db50
   languageName: node
   linkType: hard
 
@@ -2281,6 +2343,20 @@ __metadata:
     json-schema-traverse: "npm:^1.0.0"
     require-from-string: "npm:^2.0.2"
   checksum: 10c0/e7517c426173513a07391be951879932bdf3348feaebd2199f5b901c20f99d60db8cd1591502d4d551dc82f594e82a05c4fe1c70139b15b8937f7afeaed9532f
+  languageName: node
+  linkType: hard
+
+"allure-js-commons@npm:^3.3.2":
+  version: 3.10.2
+  resolution: "allure-js-commons@npm:3.10.2"
+  dependencies:
+    md5: "npm:^2.3.0"
+  peerDependencies:
+    allure-playwright: 3.10.2
+  peerDependenciesMeta:
+    allure-playwright:
+      optional: true
+  checksum: 10c0/1f497edb6ae29fc2fff2fe924f61a27d342d20136d856d460cfcb0fb1ff6b3a748b3d797a5f8f40d966caf0ca60680c56a1d8779a49cd1de8124f326789194f5
   languageName: node
   linkType: hard
 
@@ -3257,6 +3333,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"charenc@npm:0.0.2":
+  version: 0.0.2
+  resolution: "charenc@npm:0.0.2"
+  checksum: 10c0/a45ec39363a16799d0f9365c8dd0c78e711415113c6f14787a22462ef451f5013efae8a28f1c058f81fc01f2a6a16955f7a5fd0cd56247ce94a45349c89877d8
+  languageName: node
+  linkType: hard
+
 "cheerio-select@npm:^2.1.0":
   version: 2.1.0
   resolution: "cheerio-select@npm:2.1.0"
@@ -3667,6 +3750,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"crypt@npm:0.0.2":
+  version: 0.0.2
+  resolution: "crypt@npm:0.0.2"
+  checksum: 10c0/adbf263441dd801665d5425f044647533f39f4612544071b1471962209d235042fb703c27eea2795c7c53e1dfc242405173003f83cf4f4761a633d11f9653f18
+  languageName: node
+  linkType: hard
+
 "css-select@npm:^5.1.0":
   version: 5.2.2
   resolution: "css-select@npm:5.2.2"
@@ -3705,6 +3795,13 @@ __metadata:
   version: 6.2.2
   resolution: "css-what@npm:6.2.2"
   checksum: 10c0/91e24c26fb977b4ccef30d7007d2668c1c10ac0154cc3f42f7304410e9594fb772aea4f30c832d2993b132ca8d99338050866476210316345ec2e7d47b248a56
+  languageName: node
+  linkType: hard
+
+"csv-stringify@npm:^6.0.4":
+  version: 6.8.1
+  resolution: "csv-stringify@npm:6.8.1"
+  checksum: 10c0/46f26d45e68e4b31657bd936c6fbd07d2e4da8742efde66c46cb920aaec262d58b0b7a1719f7f46a0a92912026178f48c6cbbfbf37fc69fca4d842986c95b4af
   languageName: node
   linkType: hard
 
@@ -3992,10 +4089,12 @@ __metadata:
   dependencies:
     "@typescript-eslint/eslint-plugin": "npm:^8.0.0"
     "@typescript-eslint/parser": "npm:^8.0.0"
+    "@wdio/allure-reporter": "npm:^9.27.0"
     "@wdio/appium-service": "npm:^9.27.0"
     "@wdio/browserstack-service": "npm:^9.27.0"
     "@wdio/cli": "npm:^9.27.0"
     "@wdio/globals": "npm:^9.27.0"
+    "@wdio/junit-reporter": "npm:^9.27.0"
     "@wdio/local-runner": "npm:^9.27.0"
     "@wdio/mocha-framework": "npm:^9.27.0"
     "@wdio/sauce-service": "npm:^9.27.0"
@@ -5263,6 +5362,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"html-entities@npm:^2.6.0":
+  version: 2.6.0
+  resolution: "html-entities@npm:2.6.0"
+  checksum: 10c0/7c8b15d9ea0cd00dc9279f61bab002ba6ca8a7a0f3c36ed2db3530a67a9621c017830d1d2c1c65beb9b8e3436ea663e9cf8b230472e0e413359399413b27c8b7
+  languageName: node
+  linkType: hard
+
 "htmlfy@npm:^0.8.1":
   version: 0.8.1
   resolution: "htmlfy@npm:0.8.1"
@@ -5534,6 +5640,13 @@ __metadata:
   dependencies:
     binary-extensions: "npm:^2.0.0"
   checksum: 10c0/a16eaee59ae2b315ba36fad5c5dcaf8e49c3e27318f8ab8fa3cdb8772bf559c8d1ba750a589c2ccb096113bb64497084361a25960899cb6172a6925ab6123d38
+  languageName: node
+  linkType: hard
+
+"is-buffer@npm:~1.1.6":
+  version: 1.1.6
+  resolution: "is-buffer@npm:1.1.6"
+  checksum: 10c0/ae18aa0b6e113d6c490ad1db5e8df9bdb57758382b313f5a22c9c61084875c6396d50bbf49315f5b1926d142d74dfb8d31b40d993a383e0a158b15fea7a82234
   languageName: node
   linkType: hard
 
@@ -5890,6 +6003,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"json-stringify-safe@npm:^5.0.1":
+  version: 5.0.1
+  resolution: "json-stringify-safe@npm:5.0.1"
+  checksum: 10c0/7dbf35cd0411d1d648dceb6d59ce5857ec939e52e4afc37601aa3da611f0987d5cee5b38d58329ceddf3ed48bd7215229c8d52059ab01f2444a338bf24ed0f37
+  languageName: node
+  linkType: hard
+
 "json5@npm:2.2.3":
   version: 2.2.3
   resolution: "json5@npm:2.2.3"
@@ -5908,6 +6028,17 @@ __metadata:
     readable-stream: "npm:~2.3.6"
     setimmediate: "npm:^1.0.5"
   checksum: 10c0/58e01ec9c4960383fb8b38dd5f67b83ccc1ec215bf74c8a5b32f42b6e5fb79fada5176842a11409c4051b5b94275044851814a31076bf49e1be218d3ef57c863
+  languageName: node
+  linkType: hard
+
+"junit-report-builder@npm:^5.1.1":
+  version: 5.1.2
+  resolution: "junit-report-builder@npm:5.1.2"
+  dependencies:
+    lodash: "npm:^4.18.1"
+    make-dir: "npm:^3.1.0"
+    xmlbuilder: "npm:^15.1.1"
+  checksum: 10c0/013c9e6d73e46792d27b24316b2bc0e2f0314e03e867604ccbc29746771874be433803870b3ab98213d2dd4a64e1e69a5295d000ba497aded4e621bcbb99557f
   languageName: node
   linkType: hard
 
@@ -6088,6 +6219,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lodash@npm:^4.18.1":
+  version: 4.18.1
+  resolution: "lodash@npm:4.18.1"
+  checksum: 10c0/757228fc68805c59789e82185135cf85f05d0b2d3d54631d680ca79ec21944ec8314d4533639a14b8bcfbd97a517e78960933041a5af17ecb693ec6eecb99a27
+  languageName: node
+  linkType: hard
+
 "log-symbols@npm:4.1.0, log-symbols@npm:^4.1.0":
   version: 4.1.0
   resolution: "log-symbols@npm:4.1.0"
@@ -6179,6 +6317,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"make-dir@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "make-dir@npm:3.1.0"
+  dependencies:
+    semver: "npm:^6.0.0"
+  checksum: 10c0/56aaafefc49c2dfef02c5c95f9b196c4eb6988040cf2c712185c7fe5c99b4091591a7fc4d4eafaaefa70ff763a26f6ab8c3ff60b9e75ea19876f49b18667ecaa
+  languageName: node
+  linkType: hard
+
 "make-error@npm:^1, make-error@npm:^1.1.1":
   version: 1.3.6
   resolution: "make-error@npm:1.3.6"
@@ -6209,6 +6356,17 @@ __metadata:
   version: 1.1.0
   resolution: "math-intrinsics@npm:1.1.0"
   checksum: 10c0/7579ff94e899e2f76ab64491d76cf606274c874d8f2af4a442c016bd85688927fcfca157ba6bf74b08e9439dc010b248ce05b96cc7c126a354c3bae7fcb48b7f
+  languageName: node
+  linkType: hard
+
+"md5@npm:^2.3.0":
+  version: 2.3.0
+  resolution: "md5@npm:2.3.0"
+  dependencies:
+    charenc: "npm:0.0.2"
+    crypt: "npm:0.0.2"
+    is-buffer: "npm:~1.1.6"
+  checksum: 10c0/14a21d597d92e5b738255fbe7fe379905b8cb97e0a49d44a20b58526a646ec5518c337b817ce0094ca94d3e81a3313879c4c7b510d250c282d53afbbdede9110
   languageName: node
   linkType: hard
 
@@ -7738,6 +7896,15 @@ __metadata:
   bin:
     semver: bin/semver.js
   checksum: 10c0/aca305edfbf2383c22571cb7714f48cadc7ac95371b4b52362fb8eeffdfbc0de0669368b82b2b15978f8848f01d7114da65697e56cd8c37b0dab8c58e543f9ea
+  languageName: node
+  linkType: hard
+
+"semver@npm:^6.0.0":
+  version: 6.3.1
+  resolution: "semver@npm:6.3.1"
+  bin:
+    semver: bin/semver.js
+  checksum: 10c0/e3d79b609071caa78bcb6ce2ad81c7966a46a7431d9d58b8800cfa9cb6a63699b3899a0e4bcce36167a284578212d9ae6942b6929ba4aa5015c079a67751d42d
   languageName: node
   linkType: hard
 
