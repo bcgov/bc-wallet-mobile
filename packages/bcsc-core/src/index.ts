@@ -379,7 +379,7 @@ export const getTokenWithDiagnostics = async (
 ): Promise<{ token: TokenInfo | null; diagnostic?: string }> => {
   const nativeToken = (await BcscCore.getToken(tokenType as number)) as NativeTokenResponse | null;
   if (!nativeToken?.id) {
-    return { token: null, diagnostic: nativeToken?.diagnostic };
+    return { token: null, diagnostic: nativeToken?.diagnostic ?? undefined };
   }
 
   return {
