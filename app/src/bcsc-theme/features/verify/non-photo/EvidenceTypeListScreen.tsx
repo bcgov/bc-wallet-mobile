@@ -279,7 +279,7 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
                   // popping back to the first ID's IDPhotoInformation already in the stack.
                   navigation.push(BCSCScreens.IDPhotoInformation, { cardType: item })
                 }}
-                testID={testIdWithKey(`EvidenceTypeListItem ${item.evidence_type_label}`)}
+                testID={testIdWithKey(`EvidenceTypeListItem-${item.evidence_type}`)}
                 accessibilityLabel={a11yShortLabel(item.evidence_type_label)}
               >
                 <View style={styles.listButtonContainer}>

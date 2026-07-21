@@ -1,4 +1,5 @@
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
+import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
@@ -108,7 +109,7 @@ describe('EnterEmailScreen', () => {
         </BasicAppContext>
       )
 
-      expect(getByTestId('SkipButton')).toBeTruthy()
+      expect(getByTestId(testIdWithKey('SkipEmail'))).toBeTruthy()
     })
 
     it('should not display Skip button for Other card type', () => {
@@ -123,7 +124,7 @@ describe('EnterEmailScreen', () => {
         </BasicAppContext>
       )
 
-      expect(queryByTestId('SkipButton')).toBeNull()
+      expect(queryByTestId(testIdWithKey('SkipEmail'))).toBeNull()
     })
 
     it('should render the email input with no placeholder text', () => {
@@ -156,7 +157,7 @@ describe('EnterEmailScreen', () => {
         </BasicAppContext>
       )
 
-      const continueButton = getByTestId('ContinueButton')
+      const continueButton = getByTestId(testIdWithKey('Continue'))
       act(() => {
         fireEvent.press(continueButton)
       })
@@ -183,7 +184,7 @@ describe('EnterEmailScreen', () => {
         fireEvent.changeText(emailInput, 'invalidemail')
       })
 
-      const continueButton = getByTestId('ContinueButton')
+      const continueButton = getByTestId(testIdWithKey('Continue'))
       act(() => {
         fireEvent.press(continueButton)
       })
@@ -210,7 +211,7 @@ describe('EnterEmailScreen', () => {
         fireEvent.changeText(emailInput, 'user@host.com1')
       })
 
-      const continueButton = getByTestId('ContinueButton')
+      const continueButton = getByTestId(testIdWithKey('Continue'))
       act(() => {
         fireEvent.press(continueButton)
       })
@@ -235,7 +236,7 @@ describe('EnterEmailScreen', () => {
       )
 
       // First submit with empty email to trigger error
-      const continueButton = getByTestId('ContinueButton')
+      const continueButton = getByTestId(testIdWithKey('Continue'))
       act(() => {
         fireEvent.press(continueButton)
       })
@@ -281,7 +282,7 @@ describe('EnterEmailScreen', () => {
         fireEvent.changeText(emailInput, 'test@example.com')
       })
 
-      const continueButton = getByTestId('ContinueButton')
+      const continueButton = getByTestId(testIdWithKey('Continue'))
       act(() => {
         fireEvent.press(continueButton)
       })
@@ -313,7 +314,7 @@ describe('EnterEmailScreen', () => {
         fireEvent.changeText(emailInput, 'user@test.com')
       })
 
-      const continueButton = getByTestId('ContinueButton')
+      const continueButton = getByTestId(testIdWithKey('Continue'))
       act(() => {
         fireEvent.press(continueButton)
       })
@@ -349,7 +350,7 @@ describe('EnterEmailScreen', () => {
         fireEvent.changeText(emailInput, 'test@example.com')
       })
 
-      const continueButton = getByTestId('ContinueButton')
+      const continueButton = getByTestId(testIdWithKey('Continue'))
       act(() => {
         fireEvent.press(continueButton)
       })
@@ -378,7 +379,7 @@ describe('EnterEmailScreen', () => {
         fireEvent.changeText(emailInput, 'test@example.com')
       })
 
-      const continueButton = getByTestId('ContinueButton')
+      const continueButton = getByTestId(testIdWithKey('Continue'))
       act(() => {
         fireEvent.press(continueButton)
       })
@@ -404,7 +405,7 @@ describe('EnterEmailScreen', () => {
         </BasicAppContext>
       )
 
-      const skipButton = getByTestId('SkipButton')
+      const skipButton = getByTestId(testIdWithKey('SkipEmail'))
       act(() => {
         fireEvent.press(skipButton)
       })
@@ -431,7 +432,7 @@ describe('EnterEmailScreen', () => {
         </BasicAppContext>
       )
 
-      const skipButton = getByTestId('SkipButton')
+      const skipButton = getByTestId(testIdWithKey('SkipEmail'))
       act(() => {
         fireEvent.press(skipButton)
       })
@@ -457,7 +458,7 @@ describe('EnterEmailScreen', () => {
         </BasicAppContext>
       )
 
-      const skipButton = getByTestId('SkipButton')
+      const skipButton = getByTestId(testIdWithKey('SkipEmail'))
       act(() => {
         fireEvent.press(skipButton)
       })

@@ -469,7 +469,7 @@ exports[`VideoInstructions renders correctly 1`] = `
               "padding": 16,
             }
           }
-          testID="StartRecordingButton"
+          testID="com.ariesbifold:id/StartRecording"
         >
           <View
             style={

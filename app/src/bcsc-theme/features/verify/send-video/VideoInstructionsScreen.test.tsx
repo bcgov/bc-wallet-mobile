@@ -1,4 +1,5 @@
 import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
+import { testIdWithKey } from '@bifold/core'
 import { useFocusEffect } from '@mocks/@react-navigation/native'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -124,13 +125,13 @@ describe('VideoInstructions', () => {
     // Showing the cached set here would tell the user to expect prompts they won't be asked.
     expect(tree.queryByTestId('PromptsLoading')).not.toBeNull()
     expect(tree.queryByText('Say your name')).toBeNull()
-    expect(tree.getByTestId('StartRecordingButton')).toBeDisabled()
+    expect(tree.getByTestId(testIdWithKey('StartRecording'))).toBeDisabled()
 
     await waitFor(async () => {
       resolveRefresh!(true)
     })
 
-    await waitFor(() => expect(tree.getByTestId('StartRecordingButton')).toBeEnabled())
+    await waitFor(() => expect(tree.getByTestId(testIdWithKey('StartRecording'))).toBeEnabled())
     expect(tree.queryByText('Say your name')).not.toBeNull()
   })
 
@@ -143,7 +144,7 @@ describe('VideoInstructions', () => {
 
     await waitFor(() => expect(mockVideoPromptsMissingAlert).toHaveBeenCalledTimes(1))
 
-    expect(tree.getByTestId('StartRecordingButton')).toBeDisabled()
+    expect(tree.getByTestId(testIdWithKey('StartRecording'))).toBeDisabled()
     expect(tree.queryByText('Say your name')).toBeNull()
   })
 
@@ -167,7 +168,7 @@ describe('VideoInstructions', () => {
     mockRefreshPrompts.mockResolvedValue(true)
     fireEvent.press(tree.getByTestId('RetryLoadPrompts'))
 
-    await waitFor(() => expect(tree.getByTestId('StartRecordingButton')).toBeEnabled())
+    await waitFor(() => expect(tree.getByTestId(testIdWithKey('StartRecording'))).toBeEnabled())
     expect(mockRefreshPrompts).toHaveBeenCalledTimes(2)
     expect(tree.queryByText('Say your name')).not.toBeNull()
     expect(tree.queryByTestId('RetryLoadPrompts')).toBeNull()

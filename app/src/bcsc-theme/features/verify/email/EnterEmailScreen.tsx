@@ -11,6 +11,7 @@ import {
   Button,
   ButtonType,
   ScreenWrapper,
+  testIdWithKey,
   ThemedText,
   TOKENS,
   useAnimatedComponents,
@@ -107,7 +108,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
         onPress={handleSubmit}
         title={t('Global.Continue')}
         accessibilityLabel={t('Global.Continue')}
-        testID={'ContinueButton'}
+        testID={testIdWithKey('Continue')}
       >
         {loading && <ButtonLoading />}
       </Button>
@@ -117,7 +118,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
           onPress={handleSkip}
           title={t('BCSC.EnterEmail.EmailSkipButton2')}
           accessibilityLabel={t('BCSC.EnterEmail.EmailSkipButton2')}
-          testID={'SkipButton'}
+          testID={testIdWithKey('SkipEmail')}
         />
       ) : null}
     </ControlContainer>

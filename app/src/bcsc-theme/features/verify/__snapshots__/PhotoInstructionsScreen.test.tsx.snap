@@ -413,7 +413,7 @@ exports[`PhotoInstructions renders correctly 1`] = `
               "padding": 16,
             }
           }
-          testID="TakePhotoButton"
+          testID="com.ariesbifold:id/TakePhoto"
         >
           <View
             style={
