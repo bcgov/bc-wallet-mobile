@@ -137,6 +137,48 @@ describe('MaskedCamera', () => {
       expect(mockEnsureAppError).not.toHaveBeenCalled()
       expect(mockEmitErrorModal).not.toHaveBeenCalled()
     })
+
+    it('ignores camera errors and does not show an error modal while the app is inactive', async () => {
+      mockUseBCSCActivity.mockReturnValue({ appStateStatus: 'inactive' })
+
+      const { getByTestId } = renderCamera()
+
+      const camera = getByTestId('mock-camera')
+      const runtimeError = new Error('Runtime camera failure while inactive')
+
+      await act(async () => {
+        camera.props.onError(runtimeError)
+      })
+
+      // 'inactive' covers iOS transitional states (app switcher, notification shade,
+      // incoming call) — errors there are equally expected and non-actionable as 'background'.
+      expect(mockEnsureAppError).not.toHaveBeenCalled()
+      expect(mockEmitErrorModal).not.toHaveBeenCalled()
+    })
+
+    it('still shows an error modal when appStateStatus is unknown', async () => {
+      mockUseBCSCActivity.mockReturnValue({ appStateStatus: 'unknown' })
+
+      const { getByTestId } = renderCamera()
+
+      const camera = getByTestId('mock-camera')
+      const runtimeError = new Error('Runtime camera failure with unknown app state')
+      const expectedAppError = { name: 'NormalizedAppError', message: 'normalized' }
+      mockEnsureAppError.mockReturnValueOnce(expectedAppError)
+
+      await act(async () => {
+        camera.props.onError(runtimeError)
+      })
+
+      // 'unknown' is what AppState.currentState can report at Android startup — a genuine
+      // camera failure there must still surface, so the guard must not be `!== 'active'`.
+      expect(mockEnsureAppError).toHaveBeenCalledWith(runtimeError, AppEventCode.ADD_CARD_CAMERA_BROKEN)
+      expect(mockEmitErrorModal).toHaveBeenCalledWith(
+        'BCSC.CameraDisclosure.Error',
+        'BCSC.CameraDisclosure.ErrorMessage',
+        expectedAppError
+      )
+    })
   })
 
   describe('Background / foreground camera lifecycle (regression for #4256)', () => {
