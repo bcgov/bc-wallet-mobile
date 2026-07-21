@@ -1,7 +1,7 @@
 import { acceptSystemAlert } from '../../../../src/helpers/alerts.js'
 import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
+import { getTestUser } from '../../../../src/support/context.js'
 import { BCSC_TestIDs } from '../../../../src/testIDs.js'
-import { getVerifyContext } from '../card-type/card-context.js'
 
 const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 const AdditionalIdentificationRequired = new BaseScreen(BCSC_TestIDs.AdditionalIdentificationRequired)
@@ -44,7 +44,7 @@ describe('Additional Identification', () => {
   })
 
   it('should navigate through the Evidence ID Collection screen and fill in the Document Number', async () => {
-    const { testUser } = getVerifyContext()
+    const testUser = getTestUser()
     if (driver.isAndroid) {
       await EvidenceIDCollection.tap('DocumentNumberInput')
       await EvidenceIDCollection.type('DocumentNumberInput', testUser.documentNumber)

@@ -1,8 +1,8 @@
 import { acceptSystemAlert } from '../../../../src/helpers/alerts.js'
 import { injectPhoto } from '../../../../src/helpers/camera.js'
 import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
+import { getTestUser } from '../../../../src/support/context.js'
 import { BCSC_TestIDs } from '../../../../src/testIDs.js'
-import { getVerifyContext } from '../card-type/card-context.js'
 
 const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 const VerificationMethodSelection = new BaseScreen(BCSC_TestIDs.VerificationMethodSelection)
@@ -32,7 +32,7 @@ describe('Send Video Verification', () => {
   })
 
   it('should navigate through the Photo Instructions screen and tap Take Photo', async () => {
-    const { testUser } = getVerifyContext()
+    const testUser = getTestUser()
     await PhotoInstructions.waitFor('TakePhotoButton')
     await injectPhoto(testUser.selfieImage, { top: 0, right: 0, bottom: 0, left: 0 })
     await PhotoInstructions.tap('TakePhotoButton')
@@ -55,7 +55,7 @@ describe('Send Video Verification', () => {
   })
 
   it('should navigate through the Video Instructions screen and tap Record Video', async () => {
-    const { testUser } = getVerifyContext()
+    const testUser = getTestUser()
     await VideoInstructions.waitFor('StartRecordingButton')
     await injectPhoto(testUser.selfieImage, { top: 0, right: 0, bottom: 0, left: 0 })
     await VideoInstructions.tap('StartRecordingButton')

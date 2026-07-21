@@ -1,14 +1,10 @@
-// organize-imports-ignore — import order defines test run order
 /**
  * Biometric authentication flow: onboarding with biometric auth method selection.
- * This test is run before the full-regression test to ensure that the biometric authentication works.
  *
  * Run with: yarn wdio ... --suite biometrics
  *
- * NOTE(ONB-1): the onboarding preamble (incl. biometric-auth) was removed with the legacy
- * onboarding specs. This spec is red vs `main` pending its replacement
- * (`journeys/manual/biometrics.journey.ts`).
+ * NOTE(ONB-1/VFY-1): the legacy onboarding preamble (incl. biometric-auth) and the card-type
+ * config + nickname fragments were removed with the legacy onboarding/verify entry specs. This
+ * spec is currently EMPTY and pending its replacement (`journeys/manual/biometrics.journey.ts`,
+ * Sauce-only — biometric interception needs `allowTouchIdEnroll`).
  */
-
-import '../verify/card-type/config-combined-card.js'
-import '../verify/components/nickname.spec.js'

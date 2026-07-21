@@ -1,6 +1,6 @@
 import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
+import { getTestUser } from '../../../../src/support/context.js'
 import { BCSC_TestIDs } from '../../../../src/testIDs.js'
-import { getVerifyContext } from '../card-type/card-context.js'
 
 const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 const EvidenceIDCollection = new BaseScreen(BCSC_TestIDs.EvidenceIDCollection)
@@ -27,7 +27,7 @@ describe(`Non-BCSC Card (2) - Passport`, () => {
   })
 
   it('should enter in the correct form data', async () => {
-    const { testUser } = getVerifyContext()
+    const testUser = getTestUser()
     await EvidenceFormData.type('DocumentNumberInput', testUser.documentNumber)
     await EvidenceFormData.tap('Continue')
   })

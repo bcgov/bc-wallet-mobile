@@ -1,7 +1,7 @@
 import { ApproveInPersonInput, approveInPersonRequest } from '../../../../src/helpers/approval.js'
 import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
+import { getTestUser } from '../../../../src/support/context.js'
 import { BCSC_TestIDs } from '../../../../src/testIDs.js'
-import { getVerifyContext } from '../card-type/card-context.js'
 
 const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 const VerificationMethodSelection = new BaseScreen(BCSC_TestIDs.VerificationMethodSelection)
@@ -20,7 +20,7 @@ describe('In-Person Verification', () => {
   })
 
   it('should navigate through the Verify In Person screen and tap Complete', async () => {
-    const { testUser } = getVerifyContext()
+    const testUser = getTestUser()
 
     await VerifyInPerson.waitFor('ConfirmationCode')
 

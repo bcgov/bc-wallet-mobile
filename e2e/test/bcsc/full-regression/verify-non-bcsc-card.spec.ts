@@ -6,23 +6,17 @@
  * Run with: yarn wdio ... --spec test/bcsc/full-regression/verify-non-bcsc-card.spec.ts
  *
  * NOTE(ONB-1): the onboarding preamble was removed — superseded by `journeys/onboarding/`.
+ * NOTE(VFY-1): the card-type config + nickname fragments were removed — card type is
+ * serial-derived on main, and the entry spine lives in `journeys/verify/verify-entry.journey.ts`.
  * This legacy spec is red vs `main` and is pending replacement by the verified card journeys.
  */
-// Verify: Import `verify/card-type/config-*.js` before any `./verify/*.spec.js` imports.
-import '../verify/card-type/config-non-bcsc-card.js'
-
-// Setup Steps 1: Nickname
-import '../verify/components/nickname.spec.js'
-
-// Setup Steps 2: Driver's License & Passport
+import { TestUsers } from '../../../src/constants.js'
+import { setTestUser } from '../../../src/support/context.js'
 import '../verify/non-bcsc/non-bcsc-first-id.spec.js'
 import '../verify/non-bcsc/non-bcsc-second-id.spec.js'
-
-// Setup Steps 3: Residential Address Form
 import '../verify/non-bcsc/residential-address.spec.js'
-
-// Setup Steps 4: Email Address
 import '../verify/non-bcsc/email-address.spec.js'
-
 import '../verify/components/in-person-verification.spec.js'
 import '../main/main.spec.js'
+
+setTestUser(TestUsers.na)

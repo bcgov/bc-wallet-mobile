@@ -10,13 +10,7 @@ export const BCSC_TestIDs = {
   // NOTE(ONB-1): the legacy onboarding sections (IntroCarousel, SetupTypes, TransferInformation,
   // PrivacyPolicy, OptInAnalytics, TermsOfUse, Notifications, SecureApp, CreatePIN) were deleted —
   // onboarding IDs now live in `src/test-ids/registry.ts` and are consumed via `screens/onboarding.ts`.
-  Nickname: {
-    AccountNicknamePressable: 'com.ariesbifold:id/accountNickname-pressable',
-    /** TextInput inside `InputWithValidation` — use for `type()`; the pressable is not editable on Android. */
-    AccountNicknameInput: 'com.ariesbifold:id/accountNickname-input',
-    SaveAndContinue: 'com.ariesbifold:id/SaveAndContinue',
-    Back: 'com.ariesbifold:id/Back',
-  },
+  // NOTE(VFY-1): Nickname deleted too — no nickname screen exists in the verify entry on main.
   TransferInstructions: {
     ScanQRCode: 'com.ariesbifold:id/ScanQRCode',
     Back: 'com.ariesbifold:id/Back',

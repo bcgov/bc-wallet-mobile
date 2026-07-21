@@ -1,14 +1,16 @@
 // organize-imports-ignore — import order defines test run order
 /**
- * Card scanning BCSC E2E flow: onboarding with PIN auth, combined-card verification,
- * in-person method, then main tab/settings navigation.
+ * Card scanning BCSC E2E flow: Sauce camera image injection against the live scan screen.
  *
  * Run with: yarn wdio ... --suite card-csn-scanning
  *
  * NOTE(ONB-1): the onboarding preamble was removed — superseded by `journeys/onboarding/`.
- * This legacy spec is red vs `main` pending its replacement (`journeys/manual/card-scan`).
+ * NOTE(VFY-1): the card-type config + nickname fragments were removed — card type is
+ * serial-derived on main. This legacy spec is red vs `main` (the card-scan fragment still anchors
+ * on the removed SetupSteps hub) and is pending replacement (`journeys/manual/card-scan`).
  */
-// Verify: Import `verify/card-type/config-*.js` before any `../verify/*.spec.js` imports.
-import '../verify/card-type/config-combined-card.js'
-import '../verify/components/nickname.spec.js'
+import { TestUsers } from '../../../src/constants.js'
+import { setTestUser } from '../../../src/support/context.js'
 import '../verify/components/card-scan.spec.js'
+
+setTestUser(TestUsers.combined)

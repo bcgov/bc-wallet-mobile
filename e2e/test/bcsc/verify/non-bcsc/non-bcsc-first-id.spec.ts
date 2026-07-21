@@ -1,7 +1,7 @@
 import { acceptSystemAlert } from '../../../../src/helpers/alerts.js'
 import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
+import { getTestUser } from '../../../../src/support/context.js'
 import { BCSC_TestIDs } from '../../../../src/testIDs.js'
-import { getVerifyContext } from '../card-type/card-context.js'
 
 const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 const IdentitySelection = new BaseScreen(BCSC_TestIDs.IdentitySelection)
@@ -16,9 +16,8 @@ describe(`Non-BCSC Card (1) - Drivers License`, () => {
     await SetupSteps.tap('Step2')
   })
 
-  it('should navigate through the Identity screen and select card type', async () => {
-    const { cardTypeButton } = getVerifyContext()
-    await IdentitySelection.tap(cardTypeButton)
+  it('should choose Other ID on the Identity screen', async () => {
+    await IdentitySelection.tap('OtherID')
   })
 
   it('should navigate to the evidence ID collection screen', async () => {
@@ -45,7 +44,7 @@ describe(`Non-BCSC Card (1) - Drivers License`, () => {
   })
 
   it('should enter in the correct form data', async () => {
-    const { testUser } = getVerifyContext()
+    const testUser = getTestUser()
     await EvidenceFormData.type('DocumentNumberInput', '12345678')
     await EvidenceFormData.type('LastNameInput', testUser.lastName)
     await EvidenceFormData.type('FirstNameInput', testUser.firstName)

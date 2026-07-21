@@ -9,6 +9,13 @@ import { OnboardingIntroScreen } from '../screens/onboarding.js'
  * onboarded user passes through AccountLanding → EnterPIN before reaching Home.
  */
 
+/** Terminate and reactivate the app under test — the standard way to reach the unlock flow mid-session. */
+export async function relaunchApp(): Promise<void> {
+  const appId = await getCurrentAppId()
+  await driver.terminateApp(appId)
+  await driver.activateApp(appId)
+}
+
 /**
  * Wait for AccountLanding, advancing past the returning-user intro (AuthIntro — the same component
  * as the onboarding intro, shown only when `hasSeenOnboardingIntro` was never recorded) if it
@@ -38,9 +45,7 @@ export async function selectAccountLandingIfPresent(): Promise<void> {
  */
 export async function unlockWithPin(pin: string = TEST_PIN, options: { relaunch?: boolean } = {}): Promise<void> {
   if (options.relaunch) {
-    const appId = await getCurrentAppId()
-    await driver.terminateApp(appId)
-    await driver.activateApp(appId)
+    await relaunchApp()
   }
 
   await selectAccountLandingIfPresent()

@@ -3,8 +3,10 @@ import { acceptSystemAlert } from '../../../../src/helpers/alerts.js'
 import { injectPhoto } from '../../../../src/helpers/camera.js'
 import { tapAtWindowPercent } from '../../../../src/helpers/gestures.js'
 import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
+import { bcsc } from '../../../../src/screens/core/index.js'
+import { getTestUser } from '../../../../src/support/context.js'
+import { TestIds } from '../../../../src/test-ids/registry.js'
 import { BCSC_TestIDs } from '../../../../src/testIDs.js'
-import { getVerifyContext } from '../card-type/card-context.js'
 
 const SetupSteps = new BaseScreen(BCSC_TestIDs.SetupSteps)
 const IdentitySelection = new BaseScreen(BCSC_TestIDs.IdentitySelection)
@@ -19,14 +21,12 @@ describe('BCSC Card Scan', () => {
     await SetupSteps.tap('Step2')
   })
 
-  it('should navigate through the Identity screen and select card type', async () => {
-    const { cardTypeButton } = getVerifyContext()
-    await IdentitySelection.waitFor(cardTypeButton)
-    await IdentitySelection.tap(cardTypeButton)
+  it('should choose Scan on the Identity screen (card type is serial-derived)', async () => {
+    await IdentitySelection.tapByTestId(bcsc(TestIds.verify.identitySelection.scan))
   })
 
   it('should navigate to the scan screen and inject the card image', async () => {
-    const { testUser } = getVerifyContext()
+    const testUser = getTestUser()
     await SerialInstructions.waitFor('ScanBarcode', 10_000)
     // Queue the image before the camera feed starts — Sauce Labs replaces the
     // placeholder on the first frame.
@@ -69,7 +69,7 @@ describe('BCSC Card Scan', () => {
       return
     }
 
-    const { testUser } = getVerifyContext()
+    const testUser = getTestUser()
     if (driver.isAndroid) {
       await ManualSerial.tap('SerialInput')
       await ManualSerial.type('SerialInput', testUser.cardSerial, { tapFirst: true })
@@ -88,7 +88,7 @@ describe('BCSC Card Scan', () => {
       return
     }
 
-    const { testUser } = getVerifyContext()
+    const testUser = getTestUser()
     if (driver.isAndroid) {
       await EnterBirthdate.tap('BirthdateInput')
       await EnterBirthdate.type('BirthdateInput', testUser.dob, { tapFirst: true })

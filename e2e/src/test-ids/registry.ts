@@ -84,6 +84,40 @@ export const TestIds = {
       continue: 'Continue',
       getHelp: 'GetHelp',
     },
+    /** Timed lockout screen after 5 consecutive wrong PINs (native counter, persisted across relaunches). */
+    lockout: {
+      removeAccount: 'RemoveAccount',
+    },
+  },
+
+  verify: {
+    /** Add-or-transfer choice (`AccountSetup`) — the first screen after VerifyPrompt Continue. */
+    accountSetup: {
+      addAccount: 'AddAccount',
+      transferAccount: 'TransferAccount',
+    },
+    /** `IdentitySelection` — Scan (BCSC path) or use another ID (non-BCSC path). */
+    identitySelection: {
+      scan: 'Scan',
+      otherId: 'OtherID',
+    },
+    /** Camera scan screen; `EnterManually` is the CI path around the live camera. */
+    scanSerial: {
+      enterManually: 'EnterManually',
+    },
+    /** Manual serial form (`InputWithValidation id='serial'` → derived input/pressable ids). */
+    manualSerial: {
+      serialPressable: 'serial-pressable',
+      serialInput: 'serial-input',
+      continue: 'Continue',
+    },
+    /** Birthdate form (`DateInput id='birthDate'`, digits progressive-format to YYYY/MM/DD).
+     *  Submit fires the backend `authorizeDevice(serial, dob)` that derives the card type. */
+    enterBirthdate: {
+      birthdatePressable: 'birthDate-pressable',
+      birthdateInput: 'birthDate-input',
+      continue: 'Continue',
+    },
   },
 
   main: {

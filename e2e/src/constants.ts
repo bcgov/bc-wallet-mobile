@@ -5,6 +5,9 @@ export const TEST_PIN = '222222'
  *  enter a PIN after the settings suite should use this value. */
 export const UPDATED_TEST_PIN = '555555'
 
+/** A PIN that is always wrong (never used as TEST_PIN/UPDATED_TEST_PIN) — for error/lockout paths. */
+export const WRONG_TEST_PIN = '111111'
+
 export enum Timeouts {
   /** Default wait for an element to appear on screen */
   ELEMENT_VISIBLE = 5_000,
