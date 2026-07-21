@@ -91,13 +91,17 @@ jest.mock('react-native-vision-camera', () => {
   }
 })
 
-// Mock BCSCActivityContext — not provided by BasicAppContext
+// Mock BCSCActivityContext — not provided by BasicAppContext. Tests that need a
+// non-default appStateStatus call `mockedUseBCSCActivity.mockReturnValue(...)`
+// directly (see the typed handle below) rather than a module-level variable —
+// once `mockReturnValue` is called, it permanently overrides this factory's
+// return value for all subsequent calls, so a single mechanism is used
+// consistently throughout this file.
 const mockPauseActivityTracking = jest.fn()
 const mockResumeActivityTracking = jest.fn()
-let mockAppStateStatus: 'active' | 'background' | 'inactive' | 'unknown' | 'extension' = 'active'
 jest.mock('../contexts/BCSCActivityContext', () => ({
   useBCSCActivity: jest.fn(() => ({
-    appStateStatus: mockAppStateStatus,
+    appStateStatus: 'active',
     pauseActivityTracking: mockPauseActivityTracking,
     resumeActivityTracking: mockResumeActivityTracking,
   })),
@@ -149,7 +153,6 @@ describe('CodeScanningCamera', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockHasPermission = true
-    mockAppStateStatus = 'active'
     mockCodeScannerCallback = null
     mockEmitErrorModal.mockClear()
     // Reset to the default 'active' state in case a previous test overrode it —
@@ -1758,7 +1761,11 @@ describe('CodeScanningCamera', () => {
 
   describe('Background / foreground camera lifecycle (regression for #4256)', () => {
     it('deactivates the camera when the app goes to the background', () => {
-      mockAppStateStatus = 'background'
+      mockedUseBCSCActivity.mockReturnValue({
+        appStateStatus: 'background',
+        pauseActivityTracking: mockPauseActivityTracking,
+        resumeActivityTracking: mockResumeActivityTracking,
+      })
 
       const { getByTestId } = render(
         <BasicAppContext>
@@ -1770,7 +1777,11 @@ describe('CodeScanningCamera', () => {
     })
 
     it('activates the camera when the app is in the foreground', () => {
-      mockAppStateStatus = 'active'
+      mockedUseBCSCActivity.mockReturnValue({
+        appStateStatus: 'active',
+        pauseActivityTracking: mockPauseActivityTracking,
+        resumeActivityTracking: mockResumeActivityTracking,
+      })
 
       const { getByTestId } = render(
         <BasicAppContext>
