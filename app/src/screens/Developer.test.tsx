@@ -7,6 +7,7 @@ import React from 'react'
 import { deleteToken, TokenType } from 'react-native-bcsc-core'
 import Developer from './Developer'
 
+jest.mock('react-native-bcsc-core')
 jest.mock('@bifold/core', () => ({
   ...jest.requireActual('@bifold/core'),
   useServices: jest.fn(),
