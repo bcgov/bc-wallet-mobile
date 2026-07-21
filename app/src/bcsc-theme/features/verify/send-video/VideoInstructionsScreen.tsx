@@ -4,7 +4,7 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
 import BrownHandHoldingPhone from '@assets/img/brown-hand-holding-phone.svg'
-import { Button, ButtonType, ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { Fragment, useCallback, useRef, useState } from 'react'
@@ -82,7 +82,7 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
         onPress={() => {
           navigation.navigate(BCSCScreens.TakeVideo)
         }}
-        testID={'StartRecordingButton'}
+        testID={testIdWithKey('StartRecording')}
         accessibilityLabel={t('BCSC.SendVideo.VideoInstructions.StartRecordingButton')}
         disabled={promptsStatus !== 'ready'}
       />

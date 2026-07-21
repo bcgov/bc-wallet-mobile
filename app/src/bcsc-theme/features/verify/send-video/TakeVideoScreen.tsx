@@ -13,7 +13,17 @@ import { ErrorRegistry } from '@/errors/errorRegistry'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
-import { Button, ButtonType, ScreenWrapper, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  ScreenWrapper,
+  testIdWithKey,
+  ThemedText,
+  TOKENS,
+  useServices,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -423,7 +433,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
                 buttonType={ButtonType.Primary}
                 title={isLastPrompt ? t('BCSC.SendVideo.TakeVideo.Done') : t('BCSC.SendVideo.TakeVideo.ShowNextPrompt')}
                 onPress={onPressNextPrompt}
-                testID={'StartRecordingButton'}
+                testID={testIdWithKey('NextPrompt')}
                 accessibilityLabel={t('BCSC.SendVideo.TakeVideo.StartRecordingButton')}
                 disabled={elapsedTime - promptTimestamp < MIN_PROMPT_DURATION_SECONDS}
               />
