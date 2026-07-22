@@ -2,6 +2,7 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { useTokenService } from '@/bcsc-theme/services/hooks/useTokenService'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
+import { getShortDisplayName } from '@/bcsc-theme/utils/account-utils'
 import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
@@ -43,8 +44,8 @@ const useVerificationResponseViewModel = () => {
       await updateUserMetadata(null)
       // force a token exchange so the backend activates the device registration before navigation
       const token = await getCachedIdTokenMetadata({ refreshCache: true })
-      // fallback to family_name to support mononymns
-      const nickname = token?.given_name || token?.family_name
+      // fallback to family_name to support mononyms
+      const nickname = getShortDisplayName(token ?? {})
       // update local store with nickname
       updateNicknameInLocalStorage(nickname)
       // this updates their registration status with their nickname and new access tokens

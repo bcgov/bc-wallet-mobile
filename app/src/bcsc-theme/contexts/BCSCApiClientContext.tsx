@@ -115,6 +115,11 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
         newClient = new BCSCApiClient(store.developer.environment.iasApiBaseUrl, logger as RemoteLogger)
         await newClient.fetchEndpointsAndConfig()
 
+        // Non-blocking warm-up: primes the in-memory/persisted JWK cache so the first inner-JWS
+        // verification (user info, ID token decode) doesn't pay for a cold-start fetch. fetchJwk
+        // never throws, so fire-and-forget is safe and doesn't delay client readiness.
+        void newClient.fetchJwk()
+
         setClientAndSingleton(newClient)
       } catch (err) {
         /**

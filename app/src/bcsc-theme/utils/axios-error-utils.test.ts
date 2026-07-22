@@ -1,4 +1,5 @@
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import { Analytics } from '@/utils/analytics/analytics-singleton'
 import {
   formatAxiosErrorForLogger,
   formatIasAxiosResponseError,
@@ -83,6 +84,71 @@ describe('Error Utils', () => {
       const appError = getAppErrorFromAxiosError(axiosError)
 
       expect(appError.url).toBeUndefined()
+    })
+
+    // A status pre-declared via suppressStatusCodeLogs is treated as "expected"/already-owned-
+    // elsewhere (e.g. a caller that retries internally and reports its own summary, like
+    // BCSCApiClient.fetchJwk) — analytics tracking is skipped for it too, not just the response
+    // interceptor's own log line, so retries don't inflate dashboards once per attempt.
+    describe('analytics tracking suppression via suppressStatusCodeLogs', () => {
+      beforeEach(() => {
+        jest.restoreAllMocks()
+      })
+
+      it('should skip analytics tracking when the response status is pre-declared', () => {
+        const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
+        const axiosError = {
+          code: 'ERR_BAD_RESPONSE',
+          message: 'Service Unavailable',
+          config: { suppressStatusCodeLogs: [503] },
+          response: { data: {}, status: 503 },
+        } as any
+
+        getAppErrorFromAxiosError(axiosError)
+
+        expect(trackErrorEventSpy).not.toHaveBeenCalled()
+      })
+
+      it('should skip analytics tracking for a network error (status 0) when 0 is pre-declared', () => {
+        const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
+        const axiosError = {
+          code: 'ERR_NETWORK',
+          message: 'Network Error',
+          config: { suppressStatusCodeLogs: [0] },
+        } as any
+
+        getAppErrorFromAxiosError(axiosError)
+
+        expect(trackErrorEventSpy).not.toHaveBeenCalled()
+      })
+
+      it('should track analytics normally when the status is not pre-declared', () => {
+        const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
+        const axiosError = {
+          code: 'ERR_BAD_RESPONSE',
+          message: 'Service Unavailable',
+          config: { suppressStatusCodeLogs: [404] },
+          response: { data: {}, status: 503 },
+        } as any
+
+        getAppErrorFromAxiosError(axiosError)
+
+        expect(trackErrorEventSpy).toHaveBeenCalled()
+      })
+
+      it('should track analytics normally when suppressStatusCodeLogs is not set', () => {
+        const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
+        const axiosError = {
+          code: 'ERR_BAD_RESPONSE',
+          message: 'Service Unavailable',
+          config: {},
+          response: { data: {}, status: 503 },
+        } as any
+
+        getAppErrorFromAxiosError(axiosError)
+
+        expect(trackErrorEventSpy).toHaveBeenCalled()
+      })
     })
   })
 

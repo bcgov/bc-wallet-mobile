@@ -576,7 +576,8 @@ class BcscCore: NSObject {
     let id = "\(currentAccount.clientID)/tokens/\(tokenType.rawValue)/1"
     logger.log("getToken: querying type=\(tokenType.rawValue) id=\(id)")
 
-    if let token = tokenStorageService.get(id: id) {
+    var diagnostic: String?
+    if let token = tokenStorageService.get(id: id, diagnostic: &diagnostic) {
       logger.log("getToken: found type=\(tokenType.rawValue) expiry=\(token.expiry?.description ?? "none")")
       var tokenDict: [String: Any?] = [
         "id": token.id,
@@ -593,8 +594,9 @@ class BcscCore: NSObject {
 
       resolve(tokenDict)
     } else {
-      logger.log("getToken: NOT found type=\(tokenType.rawValue) id=\(id)")
-      resolve(nil)
+      logger.log("getToken: NOT found type=\(tokenType.rawValue) id=\(id) diagnostic=\(diagnostic ?? "none")")
+      // Resolving a small object so we can capture more error data from token calls
+      resolve(["diagnostic": diagnostic as Any])
     }
   }
 

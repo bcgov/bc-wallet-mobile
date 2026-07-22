@@ -7,21 +7,39 @@ import { getUserAgentString } from '@utils/user-agent'
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import merge from 'lodash.merge'
-import { DeviceEventEmitter } from 'react-native'
-import { getRefreshTokenRequestBody, getToken, TokenType } from 'react-native-bcsc-core'
+import { AppState, DeviceEventEmitter } from 'react-native'
+import { getRefreshTokenRequestBody, getTokenWithDiagnostics, TokenType } from 'react-native-bcsc-core'
 import {
   formatAxiosErrorForLogger as formatIASAxiosErrorForLogger,
   formatIasAxiosResponseError,
   getAppErrorFromAxiosError,
+  isNetworkError,
 } from '../utils/axios-error-utils'
 import { AxiosAppError, ErrorMatcherContext } from './clientErrorPolicies'
 import { JWK, JWKResponseData } from './hooks/useJwksApi'
 import { TokenResponse } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
+import { loadPersistedJwk, persistJwk } from './jwk-cache'
 
 // Refresh tokens 30 seconds before they actually expire to avoid
 // expiry-on-the-wire races when multiple requests fire near the boundary.
 const TOKEN_EXPIRY_BUFFER_MS = 30 * 1000
+
+// Bounded retry for the JWKS fetch: 3 attempts total, with linear backoff delays of
+// 500ms then 1000ms between attempts. Only transient errors (network / 5xx) are retried —
+// see isRetryableJwkFetchError. Deliberately small and bounded: this is a background warm-up
+// and an inline verification-path call, not a user-facing loading state.
+const JWK_FETCH_MAX_ATTEMPTS = 3
+const JWK_FETCH_RETRY_BASE_DELAY_MS = 500
+
+// The retryable JWKS failure shapes (see isRetryableJwkFetchError): 0 for a network error (no HTTP
+// response — see the response interceptor's `error.response?.status ?? 0`), and the full 5xx range.
+// Passed as suppressStatusCodeLogs on the JWKS request so the interceptor's own log line + analytics
+// tracking (see getAppErrorFromAxiosError) don't fire on every retry attempt — fetchJwk already logs
+// a warn per retry and a single error on total exhaustion, so a transient outage isn't amplified 3x
+// across dashboards. A deterministic 4xx is a single, non-retried attempt and is left to log/track
+// normally, since it may indicate a real configuration problem worth surfacing distinctly.
+const JWK_FETCH_RETRYABLE_STATUS_CODES = [0, ...Array.from({ length: 100 }, (_, index) => 500 + index)]
 
 // Extend AxiosRequestConfig to include skipBearerAuth
 declare module 'axios' {
@@ -78,6 +96,8 @@ class BCSCApiClient {
   onError?: BCSCClientOnErrorCallback
   private cachedJwk: JWK | null = null // in-memory JWK cache, invalidated when baseURL changes
   private cachedJwkBaseUrl: string | null = null
+  private jwkFetchPromise: Promise<JWK | null> | null = null // single-flight in-progress JWK fetch
+  private jwkFetchPromiseBaseUrl: string | null = null // baseURL the in-flight fetch was started for
 
   constructor(baseURL: string, logger: RemoteLogger) {
     this.baseURL = baseURL
@@ -389,11 +409,18 @@ class BCSCApiClient {
       return this.tokens
     }
 
-    const storedRefreshToken = (await getToken(TokenType.Refresh).catch((error) => throwNativeBcscError(error)))?.token
+    const { token: refreshToken, diagnostic } = await getTokenWithDiagnostics(TokenType.Refresh).catch((error) =>
+      throwNativeBcscError(error)
+    )
+    const storedRefreshToken = refreshToken?.token
     if (!storedRefreshToken) {
-      this.logger.error('[BCSCApiClient] Token cache empty and no refresh token in secure storage')
+      this.logger.error(
+        `[BCSCApiClient] Token cache empty and no refresh token in secure storage (appState=${AppState.currentState} nativeDiagnostic=${diagnostic ?? 'none'})`
+      )
       throw AppError.fromErrorDefinition(ErrorRegistry.TOKEN_NULL, {
-        cause: new Error('Token cache empty and no stored refresh token to recover from'),
+        cause: new Error(
+          `Token cache empty and no stored refresh token to recover from (nativeDiagnostic=${diagnostic ?? 'none'})`
+        ),
       })
     }
 
@@ -425,36 +452,161 @@ class BCSCApiClient {
   }
 
   /**
-   * Fetches the first JWK from the server's JWKS endpoint.
-   * Used for JWT signature verification.
+   * Single network attempt to fetch the first JWK from the server's JWKS endpoint.
    *
-   * The key is cached in-memory and reused while the environment (baseURL) is unchanged; the cache
-   * is invalidated automatically when baseURL changes. This keeps hot verification paths (user info,
-   * ID token decode) from issuing a network request on every call.
+   * Returns `null` on a well-formed but empty/absent `keys` response (not an error — the server
+   * genuinely has no key to offer, so retrying won't help); throws on a request failure so the
+   * caller can decide whether that failure is retryable.
+   *
+   * `skipOnErrorHandler` keeps the global alert policy from firing on every retry attempt.
+   * `suppressStatusCodeLogs` additionally silences the interceptor's own log line + analytics
+   * tracking for the retryable failure shapes (network / 5xx, see JWK_FETCH_RETRYABLE_STATUS_CODES)
+   * so a transient outage isn't amplified across the retry loop — fetchJwk's own logging (a warn per
+   * retry, one error on total exhaustion, one warn if a fallback is used) is the sole signal for
+   * those. A deterministic 4xx is a single, non-retried attempt and still logs/tracks normally via
+   * the interceptor, same as any other endpoint.
+   */
+  private async fetchJwkFromNetwork(): Promise<JWK | null> {
+    const response = await this.get<JWKResponseData>(this.endpoints.jwksURI, {
+      skipBearerAuth: true,
+      skipOnErrorHandler: true,
+      suppressStatusCodeLogs: JWK_FETCH_RETRYABLE_STATUS_CODES,
+    })
+
+    if (response.data.keys && response.data.keys.length > 0) {
+      return response.data.keys[0]
+    }
+
+    return null
+  }
+
+  /**
+   * Gates the JWK fetch retry loop to transient failures only: a network error, or an HTTP >= 500
+   * read from the AxiosError the response interceptor attaches as `AppError.cause`. A deterministic
+   * 4xx (or any other error shape) is not retryable — retrying it would just waste the attempt budget
+   * on a request that will fail the same way every time.
+   */
+  private isRetryableJwkFetchError(error: unknown): boolean {
+    if (isNetworkError(error)) {
+      return true
+    }
+
+    const status = (error as Partial<AxiosAppError>)?.cause?.response?.status
+    return typeof status === 'number' && status >= 500
+  }
+
+  /**
+   * Fetches the first JWK from the server's JWKS endpoint. Used for JWT signature verification.
+   *
+   * Resolution order:
+   * 1. In-memory cache hit (reused while the environment / baseURL is unchanged).
+   * 2. An in-flight fetch for the same baseURL (single-flight — see jwkFetchPromise below).
+   *    Concurrent callers — e.g. BCSCApiClientContext's fire-and-forget warm-up landing alongside
+   *    an early verification call at startup — join the same retry loop instead of each racing
+   *    their own, which would otherwise multiply network requests (up to JWK_FETCH_MAX_ATTEMPTS per
+   *    caller) during an outage.
+   * 3. Network fetch, retried up to JWK_FETCH_MAX_ATTEMPTS times with linear backoff — but only for
+   *    transient errors (see isRetryableJwkFetchError); a deterministic failure or an empty key set
+   *    goes straight to step 4.
+   * 4. On network exhaustion/empty, the last-known-good persisted key (survives cold starts) — this
+   *    is network-first: the fallback never hydrates the in-memory cache, so the next call retries
+   *    the network rather than trusting a potentially-rotated key indefinitely. The in-flight
+   *    promise is cleared as soon as it settles regardless of outcome, so a fallback result is only
+   *    ever shared by callers that joined it while it was in flight — the next call always starts a
+   *    fresh attempt.
+   * 5. `null` — the caller fails closed (ERR_111).
+   *
+   * A successful network fetch is cached in-memory and persisted for future fallback use.
    *
    * TODO: This should probably not be in the client, move logic elsewhere.
    */
   async fetchJwk(): Promise<JWK | null> {
     if (this.cachedJwk && this.cachedJwkBaseUrl === this.baseURL) {
+      this.logger.info(
+        `[BCSCApiClient] JWK served from in-memory cache (kid: ${this.cachedJwk.kid}, baseURL: ${this.baseURL})`
+      )
       return this.cachedJwk
     }
 
-    try {
-      const response = await this.get<JWKResponseData>(this.endpoints.jwksURI, {
-        skipBearerAuth: true,
-      })
-
-      if (response.data.keys && response.data.keys.length > 0) {
-        this.cachedJwk = response.data.keys[0]
-        this.cachedJwkBaseUrl = this.baseURL
-        return this.cachedJwk
-      }
-
-      return null
-    } catch (error) {
-      this.logger.error(`Failed to fetch JWK: ${error}`)
-      return null
+    // Join an in-flight fetch for the same baseURL rather than starting a parallel retry loop. A
+    // fetch in flight for a since-changed baseURL is never joined — mirrors the baseURL check the
+    // in-memory cache above already uses.
+    if (this.jwkFetchPromise && this.jwkFetchPromiseBaseUrl === this.baseURL) {
+      // Distinct from the in-memory cache-hit log above — this caller isn't getting a cached key, it's
+      // sharing an active network attempt that hasn't resolved yet.
+      this.logger.info(`[BCSCApiClient] Joining in-flight JWK fetch (baseURL: ${this.baseURL})`)
+      return this.jwkFetchPromise
     }
+
+    const requestBaseUrl = this.baseURL
+    this.jwkFetchPromiseBaseUrl = requestBaseUrl
+    this.jwkFetchPromise = this.fetchJwkWithRetry(requestBaseUrl).finally(() => {
+      // Only clear if this settled fetch is still the one being tracked for requestBaseUrl — guards
+      // against a late-settling fetch for an old baseURL clobbering a newer in-flight fetch that
+      // replaced it after a baseURL change.
+      if (this.jwkFetchPromiseBaseUrl === requestBaseUrl) {
+        this.jwkFetchPromise = null
+        this.jwkFetchPromiseBaseUrl = null
+      }
+    })
+
+    return this.jwkFetchPromise
+  }
+
+  /**
+   * The retry loop + persisted fallback behind fetchJwk's cache/single-flight gate above. Always
+   * resolves, never rejects — fetchJwkFromNetwork's thrown errors are caught here, and
+   * persistJwk/loadPersistedJwk never throw — so fetchJwk's shared promise is always safe to await
+   * or fire-and-forget.
+   *
+   * @param baseURL - The baseURL this fetch was started for (captured by fetchJwk at call time, not
+   *   re-read from `this.baseURL`, so a baseURL change mid-flight can't misattribute the result).
+   */
+  private async fetchJwkWithRetry(baseURL: string): Promise<JWK | null> {
+    let jwk: JWK | null = null
+    let lastError: unknown
+
+    for (let attempt = 1; attempt <= JWK_FETCH_MAX_ATTEMPTS; attempt++) {
+      try {
+        jwk = await this.fetchJwkFromNetwork()
+        lastError = undefined
+        break
+      } catch (error) {
+        lastError = error
+
+        if (attempt >= JWK_FETCH_MAX_ATTEMPTS || !this.isRetryableJwkFetchError(error)) {
+          break
+        }
+
+        const message = error instanceof Error ? error.message : String(error)
+        this.logger.warn(`[BCSCApiClient] JWK fetch attempt ${attempt} failed, retrying: ${message}`)
+        await new Promise((resolve) => setTimeout(resolve, JWK_FETCH_RETRY_BASE_DELAY_MS * attempt))
+      }
+    }
+
+    if (jwk) {
+      this.cachedJwk = jwk
+      this.cachedJwkBaseUrl = baseURL
+      this.logger.info(`[BCSCApiClient] JWK fetched from network (kid: ${jwk.kid}, baseURL: ${baseURL})`)
+      // Logs its own success/failure — see persistJwk in jwk-cache.ts.
+      await persistJwk(baseURL, jwk, this.logger)
+      return jwk
+    }
+
+    if (lastError) {
+      const lastErrorMessage = lastError instanceof Error ? lastError.message : String(lastError)
+      this.logger.error(`Failed to fetch JWK: ${lastErrorMessage}`)
+    } else {
+      this.logger.warn('[BCSCApiClient] JWKS endpoint returned no keys')
+    }
+
+    const persistedJwk = await loadPersistedJwk(baseURL, this.logger)
+    if (persistedJwk) {
+      this.logger.warn('[BCSCApiClient] Live JWKS fetch failed; using persisted last-known-good JWK')
+      return persistedJwk
+    }
+
+    return null
   }
 }
 
