@@ -1,3 +1,4 @@
+import { getFullDisplayName } from '@/bcsc-theme/utils/account-utils'
 import { BCSCEventTypes } from '@/events/eventTypes'
 import { CredentialMetadata } from '@/store'
 import { TOKENS, useServices } from '@bifold/core'
@@ -21,7 +22,7 @@ export interface BCSCIdTokenContextType<T> {
  * @returns CredentialMetadata object derived from the token
  */
 export const tokenToCredentialMetadata = (token: IdToken): CredentialMetadata => {
-  const fullName = `${token.given_name} ${token.family_name}`
+  const fullName = getFullDisplayName(token)
 
   return {
     fullName,
@@ -34,8 +35,46 @@ export const tokenToCredentialMetadata = (token: IdToken): CredentialMetadata =>
 }
 
 /**
+ * Normalizes a fullName value that may have been produced by the legacy
+ * `${given_name} ${family_name}` template, which rendered a literal
+ * "undefined " prefix (and/or stray whitespace) for mononym users whose
+ * given_name was absent -- or, when BOTH parts were absent, the entire value
+ * as the literal "undefined undefined". This lets {@link compareCredentialMetadata}
+ * treat a legacy-stored value as equivalent to the corrected
+ * {@link getFullDisplayName} output, avoiding a one-time false-positive
+ * "account updated" alert for existing mononym users. See #4258.
+ *
+ * Narrowly scoped to leading/trailing "undefined" artifacts by design (matches
+ * the literal lowercase string JS produces when interpolating `undefined`); a
+ * genuine name that happens to start with capitalized "Undefined" is safe,
+ * since the match is case-sensitive. See BCSCIdTokenContext.test.ts for the
+ * documented tradeoff around a literal lowercase "undefined" name part.
+ *
+ * @param fullName Stored or freshly-computed fullName value to normalize
+ * @returns The fullName with legacy "undefined" artifacts stripped and whitespace collapsed/trimmed
+ */
+const normalizeLegacyFullName = (fullName: string | undefined): string => {
+  const collapsed = (fullName ?? '').replace(/\s+/g, ' ').trim()
+
+  // Both given_name and family_name were absent: the legacy template rendered this
+  // as "undefined undefined" (repeated once per absent part), which carries no real
+  // name text. Normalize it the same as getFullDisplayName({})'s '' output.
+  if (/^(undefined\s*)+$/.test(collapsed)) {
+    return ''
+  }
+
+  // Only one part was absent: given_name ("undefined Smith" -> "Smith") or
+  // family_name ("Jamie undefined" -> "Jamie") — the legacy template had
+  // exactly two slots, so leading + trailing strips cover the remaining artifacts.
+  return collapsed.replace(/^undefined\s+/, '').replace(/\s+undefined$/, '')
+}
+
+/**
  * A helper function to compare 'new' credential metadata from the token endpoint with the existing credential metadata in the store.
  * If any of the values checked are different a false is returned to trigger the system to alert the user that something has happened.
+ *
+ * fullName is compared after normalizing away the legacy mononym artifact (see {@link normalizeLegacyFullName})
+ * so existing mononym users don't get a spurious "account updated" alert purely from the fullName bugfix.
  *
  * @param c1 Credential Metadata object to check
  * @param c2 Credential Metadata object to check
@@ -49,7 +88,7 @@ export const compareCredentialMetadata = (
     return false
   }
   return (
-    c1.fullName === c2.fullName &&
+    normalizeLegacyFullName(c1.fullName) === normalizeLegacyFullName(c2.fullName) &&
     c1.bcscReason === c2.bcscReason &&
     c1.deviceCount === c2.deviceCount &&
     c1.deviceLimit === c2.deviceLimit &&

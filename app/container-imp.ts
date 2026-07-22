@@ -35,6 +35,7 @@ import { DependencyContainer } from 'tsyringe'
 
 import EmptyWalletList from '@/bcsc-theme/components/EmptyWalletList'
 import { createFloatingHelpMenuButton } from '@/bcsc-theme/components/FloatingHelpMenuHeaderButton'
+import { createStackHeaderWithoutBanner } from '@/bcsc-theme/components/HeaderWithBanner'
 import { createMainSettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
 import { CredentialDetailsSubHeader } from '@/bcsc-theme/features/credentials/CredentialDetailsSubHeader'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
@@ -57,7 +58,6 @@ import {
   AttestationRestrictions,
   DIGITAL_SERVICES_CARD_CREDENTIAL_DEFINITION_IDS,
   DIGITAL_SERVICES_CARD_SCHEMA_IDS,
-  HEADER_SHADOW,
   Mode,
   appHelpUrl,
   appleAppStoreUrl,
@@ -273,8 +273,7 @@ export class AppContainer implements Container {
           ...DefaultScreenOptionsDictionary[Screens.Credentials],
           title: 'Wallet',
           headerLeft: createMainSettingsHeaderButton(),
-          // Match the BCSC tab header shadow — Bifold's default here is a heavier/wider shadow.
-          headerStyle: HEADER_SHADOW,
+          header: createStackHeaderWithoutBanner,
         },
       })
     }

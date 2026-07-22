@@ -42,11 +42,14 @@ describe('useInitializeAccountStatus', () => {
     expect(result.current.initializingAccount).toBe(false)
   })
 
-  it('returns initializingAccount as false when hasAccount is already true', () => {
+  it('returns initializingAccount as false when hasAccount is already true and nickname is present', () => {
     const mockDispatch = jest.fn()
     jest
       .mocked(Bifold.useStore)
-      .mockReturnValue([{ stateLoaded: true, bcsc: { hasAccount: true } } as any, mockDispatch])
+      .mockReturnValue([
+        { stateLoaded: true, bcsc: { hasAccount: true, selectedNickname: 'Combo' } } as any,
+        mockDispatch,
+      ])
     jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
 
     const { result } = renderHook(() => useInitializeAccountStatus())
@@ -54,11 +57,14 @@ describe('useInitializeAccountStatus', () => {
     expect(result.current.initializingAccount).toBe(false)
   })
 
-  it('skips native call when store.bcsc.hasAccount is true', async () => {
+  it('skips native call when store.bcsc.hasAccount is true and nickname is present', async () => {
     const mockDispatch = jest.fn()
     jest
       .mocked(Bifold.useStore)
-      .mockReturnValue([{ stateLoaded: true, bcsc: { hasAccount: true } } as any, mockDispatch])
+      .mockReturnValue([
+        { stateLoaded: true, bcsc: { hasAccount: true, selectedNickname: 'Combo' } } as any,
+        mockDispatch,
+      ])
     jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
 
     const { result } = renderHook(() => useInitializeAccountStatus())
@@ -86,7 +92,7 @@ describe('useInitializeAccountStatus', () => {
     expect(mockDispatch).not.toHaveBeenCalled()
   })
 
-  it('dispatches SET_HAS_ACCOUNT with true when account is found', async () => {
+  it('dispatches SET_HAS_ACCOUNT with true and UPDATE_NICKNAME when account is found with a nickname', async () => {
     const mockDispatch = jest.fn()
     const mockAccount = { nickname: 'My Wallet' }
     jest
@@ -103,6 +109,10 @@ describe('useInitializeAccountStatus', () => {
     expect(mockDispatch).toHaveBeenCalledWith({
       type: BCDispatchAction.SET_HAS_ACCOUNT,
       payload: [true],
+    })
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: BCDispatchAction.UPDATE_NICKNAME,
+      payload: ['My Wallet'],
     })
     expect(result.current.initializingAccount).toBe(false)
   })
@@ -138,6 +148,11 @@ describe('useInitializeAccountStatus', () => {
     renderHook(() => useInitializeAccountStatus())
 
     await act(async () => {})
+
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: BCDispatchAction.UPDATE_NICKNAME,
+      payload: ['Jane'],
+    })
   })
 
   it('prefers nickname over displayName when both are present', async () => {
@@ -152,6 +167,84 @@ describe('useInitializeAccountStatus', () => {
     renderHook(() => useInitializeAccountStatus())
 
     await act(async () => {})
+
+    expect(mockDispatch).toHaveBeenCalledWith({
+      type: BCDispatchAction.UPDATE_NICKNAME,
+      payload: ['My Wallet'],
+    })
+  })
+
+  describe('nickname restoration (#4258)', () => {
+    it('restores the nickname from the native account record when hasAccount is true but the nickname is missing, without dispatching SET_HAS_ACCOUNT', async () => {
+      const mockDispatch = jest.fn()
+      const mockAccount = { nickname: 'Combo' }
+      jest
+        .mocked(Bifold.useStore)
+        .mockReturnValue([
+          { stateLoaded: true, bcsc: { hasAccount: true, selectedNickname: undefined } } as any,
+          mockDispatch,
+        ])
+      jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
+      jest.mocked(retryModule.retryAsync).mockResolvedValue(mockAccount)
+
+      const { result } = renderHook(() => useInitializeAccountStatus())
+
+      await act(async () => {})
+
+      expect(jest.mocked(retryModule.retryAsync)).toHaveBeenCalledWith(getAccount, 3, 500, true)
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_NICKNAME,
+        payload: ['Combo'],
+      })
+      expect(mockDispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: BCDispatchAction.SET_HAS_ACCOUNT }))
+      expect(result.current.initializingAccount).toBe(false)
+    })
+
+    it('does not dispatch UPDATE_NICKNAME or downgrade hasAccount when the native account record is not found', async () => {
+      const mockDispatch = jest.fn()
+      jest
+        .mocked(Bifold.useStore)
+        .mockReturnValue([
+          { stateLoaded: true, bcsc: { hasAccount: true, selectedNickname: undefined } } as any,
+          mockDispatch,
+        ])
+      jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
+      jest.mocked(retryModule.retryAsync).mockResolvedValue(null)
+
+      const { result } = renderHook(() => useInitializeAccountStatus())
+
+      await act(async () => {})
+
+      expect(mockDispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: BCDispatchAction.UPDATE_NICKNAME }))
+      expect(mockDispatch).not.toHaveBeenCalledWith({
+        type: BCDispatchAction.SET_HAS_ACCOUNT,
+        payload: [false],
+      })
+      expect(result.current.initializingAccount).toBe(false)
+    })
+
+    it('never clobbers an existing nickname with a different native value', async () => {
+      const mockDispatch = jest.fn()
+      const mockAccount = { nickname: 'Combo' }
+      jest
+        .mocked(Bifold.useStore)
+        .mockReturnValue([
+          { stateLoaded: true, bcsc: { hasAccount: false, selectedNickname: 'MyNickname' } } as any,
+          mockDispatch,
+        ])
+      jest.mocked(Bifold.useServices).mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
+      jest.mocked(retryModule.retryAsync).mockResolvedValue(mockAccount)
+
+      renderHook(() => useInitializeAccountStatus())
+
+      await act(async () => {})
+
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.SET_HAS_ACCOUNT,
+        payload: [true],
+      })
+      expect(mockDispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: BCDispatchAction.UPDATE_NICKNAME }))
+    })
   })
 
   it('logs error when getAccount throws', async () => {

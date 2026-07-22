@@ -230,6 +230,12 @@ export const getAxiosErrorDefinition = (errorCode?: string, status?: number): Er
 /**
  * Converts an AxiosError into a structured AppError based on the error code and app event mappings.
  *
+ * A status pre-declared in `error.config.suppressStatusCodeLogs` (e.g. a routine polling 404, or a
+ * retryable failure a caller already reports on its own — see BCSCApiClient.fetchJwk) is treated as
+ * "expected"/already-owned-elsewhere: analytics tracking is skipped for it too, not just the response
+ * interceptor's own log line, so a caller that retries internally doesn't inflate dashboards once per
+ * attempt.
+ *
  * @param error - The AxiosError to convert
  * @returns The resulting AppError with structured information and cause
  */
@@ -238,11 +244,14 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
   const errorDefinition =
     getAxiosErrorDefinition(errorCode, error.response?.status) ?? getErrorDefinitionFromAppEventCode(errorCode)
 
+  const statusCode = error.response?.status ?? 0
+  const track = !(error.config?.suppressStatusCodeLogs ?? []).includes(statusCode)
+
   let appError: AppError
 
   // If we have a predefined error definition for this app event code, use it to create the AppError
   if (errorDefinition) {
-    appError = AppError.fromErrorDefinition(errorDefinition, { cause: error })
+    appError = AppError.fromErrorDefinition(errorDefinition, { cause: error, track })
   } else if (isAppEventCode(errorCode)) {
     // Create a generic AppError for known event codes that don't have a predefined error definition
     appError = new AppError(
@@ -251,11 +260,12 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
         ...ErrorRegistry.UNKNOWN_SERVER_ERROR,
         appEvent: errorCode,
       },
-      { cause: error }
+      { cause: error, track }
     )
   } else {
     appError = new AppError(`Server Error: Unknown error code (${errorCode})`, ErrorRegistry.UNKNOWN_SERVER_ERROR, {
       cause: error,
+      track,
     })
   }
   // http://x.com is a dummy domain so relative paths still parse correctly

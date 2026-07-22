@@ -76,6 +76,59 @@ describe('BCSCApiClientProvider', () => {
     })
   })
 
+  it('should warm up the JWK cache once, after fetchEndpointsAndConfig resolves', async () => {
+    const bifoldMock = jest.mocked(Bifold)
+    const bcscApiClientMock = jest.mocked(BCSCApiClient)
+    const factoryResetMock = jest.mocked(FactoryReset)
+
+    const mockStore: any = {
+      stateLoaded: true,
+      developer: {
+        environment: {
+          iasApiBaseUrl: 'https://example.com',
+        },
+      },
+      bcscSecure: {
+        refreshToken: 'mockRefreshToken',
+        additionalEvidenceData: [],
+      },
+      bcsc: {},
+    }
+
+    const mockLogger = new MockLogger()
+    const dispatchMock = jest.fn()
+    const callOrder: string[] = []
+
+    factoryResetMock.useFactoryReset.mockReturnValue(jest.fn())
+    bifoldMock.useServices.mockReturnValue([mockLogger])
+    bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
+
+    bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest.fn().mockImplementation(async () => {
+      callOrder.push('fetchEndpointsAndConfig')
+    })
+    bcscApiClientMock.prototype.fetchJwk = jest.fn().mockImplementation(async () => {
+      callOrder.push('fetchJwk')
+      return null
+    })
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <ErrorAlertProvider>
+        <BCSCStackProvider>
+          <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+        </BCSCStackProvider>
+      </ErrorAlertProvider>
+    )
+
+    const { result } = renderHook(() => useContext(BCSCApiClientContext), { wrapper })
+
+    await waitFor(() => {
+      expect(result.current?.isClientReady).toBe(true)
+      expect(bcscApiClientMock.prototype.fetchJwk).toHaveBeenCalledTimes(1)
+    })
+
+    expect(callOrder).toEqual(['fetchEndpointsAndConfig', 'fetchJwk'])
+  })
+
   it('should not initialize if store.stateLoaded is false', async () => {
     const bifoldMock = jest.mocked(Bifold)
     const bcscApiClientMock = jest.mocked(BCSCApiClient)
@@ -316,6 +369,7 @@ describe('BCSCApiClientProvider', () => {
       () =>
         ({
           fetchEndpointsAndConfig: fetchMock,
+          fetchJwk: jest.fn().mockResolvedValue(null),
           setErrorHandler: jest.fn(),
           baseURL: store.developer.environment.iasApiBaseUrl,
         }) as any

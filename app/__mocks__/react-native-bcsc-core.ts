@@ -98,6 +98,7 @@ export const warmUpKeyPair = jest.fn().mockResolvedValue(undefined)
 
 // Token Management
 export const getToken = jest.fn().mockResolvedValue(null)
+export const getTokenWithDiagnostics = jest.fn().mockResolvedValue({ token: null })
 export const setToken = jest.fn().mockResolvedValue(true)
 export const deleteToken = jest.fn().mockResolvedValue(true)
 export const getRegistrationToken = jest.fn().mockResolvedValue(null)

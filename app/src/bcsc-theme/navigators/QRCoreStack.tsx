@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { HeaderBackButton } from '../components/HeaderBackButton'
+import { createTabHeaderWithoutBanner } from '../components/HeaderWithBanner'
 
 type TabBarIconProps = {
   focused: boolean
@@ -126,7 +127,10 @@ const QRCoreStack: React.FC = () => {
           tabBarStyle: TabTheme.tabBarStyle,
           tabBarActiveTintColor: TabTheme.tabBarActiveTintColor,
           tabBarInactiveTintColor: TabTheme.tabBarInactiveTintColor,
-          headerShadowVisible: false,
+          // Show the header's own (native) shadow. TabHeaderWithoutBanner draws no drop-shadow caster,
+          // so this native shadow — tuned via HEADER_SHADOW — is the single header shadow.
+          headerShadowVisible: true,
+          header: createTabHeaderWithoutBanner,
           headerTitleAlign: 'center',
           headerLeft: createQRBackButton(),
         }}
