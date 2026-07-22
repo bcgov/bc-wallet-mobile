@@ -76,3 +76,83 @@ export const EnterBirthdateScreen = defineScreen({
     birthdate: { ios: bcsc(v.enterBirthdate.birthdatePressable), android: bcsc(v.enterBirthdate.birthdateInput) },
   },
 })
+
+/**
+ * Verification method selection (`'Verify Options'`) — reached after the id/email steps once the
+ * device is authorized. Which of the three method buttons render is backend-driven and the title has
+ * no testID, so `self` is the always-present HoursOfService heading. `primary` is In-Person (the CI
+ * completion path); the header-left is a settings `menu`, not a back button.
+ */
+export const VerificationMethodSelectionScreen = defineScreen({
+  self: bcsc(v.methodSelection.hoursOfService),
+  primary: bcsc(v.methodSelection.inPerson),
+  menu: bcsc(v.methodSelection.settingsMenu),
+  links: {
+    inPerson: bcsc(v.methodSelection.inPerson),
+    sendVideo: bcsc(v.methodSelection.sendVideo),
+    videoCall: bcsc(v.methodSelection.videoCall),
+  },
+})
+
+/**
+ * In-person verification (`'Verify In Person Instruction'`). `self`/`confirmationCode` is the
+ * XXXX-XXXX code the approval helper reads off-screen; `primary` (Complete) → VerificationSuccess.
+ * `secondary` (ServiceBCLink) opens an external URL (no in-stack nav).
+ */
+export const VerifyInPersonScreen = defineScreen({
+  self: bcsc(v.verifyInPerson.confirmationCode),
+  primary: bcsc(v.verifyInPerson.complete),
+  secondary: bcsc(v.verifyInPerson.serviceBcLink),
+  back: bcsc(common.back),
+  elements: {
+    confirmationCode: bcsc(v.verifyInPerson.confirmationCode),
+  },
+})
+
+/**
+ * Verification success (`'Setup Complete'`, no header). `primary` (Continue) exits the verify stack
+ * to Home as a verified user; there is no back (header hidden, hardware-back disabled).
+ */
+export const VerificationSuccessScreen = defineScreen({
+  self: bcsc(v.verificationSuccess.continue),
+  primary: bcsc(v.verificationSuccess.continue),
+})
+
+/**
+ * `EnterEmail` — appears after the authorize step ONLY when the card provided no verified email; a
+ * photo card that already carries one resumes straight to method selection. `self`/`secondary`
+ * (SkipEmail) is unique to this screen, so journeys can detect and skip it.
+ */
+export const EnterEmailScreen = defineScreen({
+  self: bcsc(v.enterEmail.skip),
+  primary: bcsc(v.enterEmail.continue),
+  secondary: bcsc(v.enterEmail.skip),
+  back: bcsc(common.back),
+})
+
+/**
+ * Selfie-photo instructions (`'Selfie Photo Tips'`) — the first screen of BOTH the send-video and the
+ * live-call (open-hours) branches. `primary` (TakePhoto) enters the camera, which is out of CI, so
+ * journeys browse in and `back` out.
+ */
+export const PhotoInstructionsScreen = defineScreen({
+  self: bcsc(v.photoInstructions.takePhoto),
+  primary: bcsc(v.photoInstructions.takePhoto),
+  back: bcsc(common.back),
+})
+
+/**
+ * Live-call busy/closed (`'Video Verify Closed'`) — the live-call branch when no agent queue is free
+ * or it is outside service hours. `self` is the status title; `primary` (SendVideo) resets to method
+ * selection, and `back` returns there too.
+ */
+export const CallBusyOrClosedScreen = defineScreen({
+  self: bcsc(v.callBusyOrClosed.callStatusTitle),
+  primary: bcsc(v.callBusyOrClosed.sendVideo),
+  back: bcsc(common.back),
+  elements: {
+    callStatusTitle: bcsc(v.callBusyOrClosed.callStatusTitle),
+    hoursOfServiceTitle: bcsc(v.callBusyOrClosed.hoursOfServiceTitle),
+    reminderTitle: bcsc(v.callBusyOrClosed.reminderTitle),
+  },
+})

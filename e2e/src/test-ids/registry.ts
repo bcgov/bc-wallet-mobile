@@ -118,6 +118,51 @@ export const TestIds = {
       birthdateInput: 'birthDate-input',
       continue: 'Continue',
     },
+    /** `EnterEmail` — appears after birthdate only when the card provides no verified email (a photo
+     *  card that already carries one resumes straight to method selection). `skip` (`SkipEmail`) is
+     *  the normalized key (formerly a bare `SkipButton`). */
+    enterEmail: {
+      continue: 'Continue',
+      skip: 'SkipEmail',
+    },
+    /** Verification method selection (`'Verify Options'`). Which of the three method buttons render is
+     *  backend-driven (`verificationOptions`) and the title has no testID, so `hoursOfService`
+     *  (always rendered) is the screen marker. In-person is the CI completion path; the header-left is
+     *  a settings menu, not a back button. */
+    methodSelection: {
+      hoursOfService: 'HoursOfServiceTitle',
+      inPerson: 'InPerson',
+      sendVideo: 'SendVideo',
+      videoCall: 'VideoCall',
+      settingsMenu: 'SettingsMenuButton',
+    },
+    /** In-person verification (`'Verify In Person Instruction'`) — shows the XXXX-XXXX confirmation
+     *  code the SM approval reads; `complete` advances to VerificationSuccess. */
+    verifyInPerson: {
+      confirmationCode: 'ConfirmationCode',
+      complete: 'Complete',
+      serviceBcLink: 'ServiceBCLink',
+    },
+    /** Verification success (`'Setup Complete'`, no header). NOTE: the continue button's key is the
+     *  translation-resolved `Continue` (i18n-derived — a candidate for a future stable key); tapping
+     *  it exits the verify stack to Home. */
+    verificationSuccess: {
+      continue: 'Continue',
+    },
+    /** Selfie-photo instructions (`'Selfie Photo Tips'`) — the first screen of BOTH the send-video and
+     *  live-call (open-hours) branches; `takePhoto` enters the camera (out of CI). */
+    photoInstructions: {
+      takePhoto: 'TakePhoto',
+    },
+    /** Live-call busy/closed (`'Video Verify Closed'`) — the live-call branch when no agent queue is
+     *  free or outside service hours. `callStatusTitle` is the marker; `sendVideo` resets to method
+     *  selection. */
+    callBusyOrClosed: {
+      callStatusTitle: 'CallStatusTitle',
+      hoursOfServiceTitle: 'HoursOfServiceTitle',
+      reminderTitle: 'ReminderTitle',
+      sendVideo: 'SendVideo',
+    },
   },
 
   main: {
