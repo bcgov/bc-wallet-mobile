@@ -221,6 +221,8 @@ const translation = {
     "OnboardingIntroSeen": "Intro seen (FR)",
     "DeleteTokens": "Delete Tokens (FR)",
     "DeletedTokens": "Deleted tokens (FR)",
+    "FetchPersonCredentialTest": "Fetch Person Credential (FR)",
+    "FetchPersonCredentialStatus": "Status (FR)",
     "ErrorModals": "Error Modals (FR)",
     "ErrorModalsDescription": "Trigger errors that display as modal dialogs with title, description, and technical details. (FR)",
     "ErrorAsNativeAlert": "Errors as Native Alerts (FR)",

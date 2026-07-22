@@ -121,6 +121,36 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     this._activeRule = undefined
   }
 
+  /**
+   * Manually starts the first configured rule's workflow, bypassing the normal
+   * "proof request references a missing cred def" trigger. Intended for the
+   * Developer settings test button so the JIT credential fetch can be exercised
+   * without waiting for a real proof request.
+   *
+   * Passes a stub proof record — safe only because no configured rule's
+   * `getInvitationUrl` reads its `proof` argument today (the DigitalServicesCard
+   * rule ignores it entirely). If a future rule derives its invitation from proof
+   * restrictions, this method will need a real proof to test that rule.
+   */
+  public triggerTestWorkflow(): boolean {
+    if (this._workflowInProgress) {
+      this.log?.warn('[AutoCredentialMonitor] triggerTestWorkflow: workflow already in progress')
+      return false
+    }
+    if (!this.agent) {
+      this.log?.warn('[AutoCredentialMonitor] triggerTestWorkflow: agent not ready')
+      return false
+    }
+    const rule = this.rules[0]
+    if (!rule) {
+      this.log?.warn('[AutoCredentialMonitor] triggerTestWorkflow: no rules configured')
+      return false
+    }
+    this.log?.info('[AutoCredentialMonitor] triggerTestWorkflow: manually starting workflow')
+    this.runWorkflow(rule, {} as DidCommProofExchangeRecord)
+    return true
+  }
+
   // ---------------------------------------------------------------------------
   // Private — state machine helpers
   // ---------------------------------------------------------------------------
