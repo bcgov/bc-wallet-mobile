@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { browser } from '@wdio/globals'
 import dotenv from 'dotenv'
 import { getE2EConfig } from '../src/e2eConfig.js'
+import { acceptSystemAlert } from '../src/helpers/alerts.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -80,6 +81,21 @@ export const config: WebdriverIO.Config = {
     ui: 'bdd',
     timeout: 600_000, // 10 min per test — generous for real devices
     bail: true, // Checkpoints within a file are order-dependent — abort the rest of the file on first failure
+  },
+
+  /**
+   * Real iOS devices show a "Find and Connect to Devices on Your Local Network" permission prompt at
+   * first launch, layered over the initial screen — accept it so the first interaction isn't
+   * swallowed. No-op on Android; simulators/emulators don't show it (the short wait just elapses).
+   * Best-effort: a stuck prompt must never fail the whole session.
+   */
+  before: async () => {
+    if (!browser.isIOS) return
+    try {
+      await acceptSystemAlert(6_000)
+    } catch (err) {
+      console.warn('[before] iOS launch prompt handling failed (continuing):', err)
+    }
   },
 
   afterTest: async (test, _context, result) => {

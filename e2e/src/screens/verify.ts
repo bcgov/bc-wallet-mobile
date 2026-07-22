@@ -184,3 +184,66 @@ export const EmailVerifiedScreen = defineScreen({
   self: bcsc(v.emailVerified.continue),
   primary: bcsc(v.emailVerified.continue),
 })
+
+/**
+ * `AdditionalIdentificationRequired` ('Photo ID Required') — a non-photo BCSC card must add one extra
+ * photo ID. Its only testID is the label-derived `Continue` CTA (so `self` defaults to `primary`);
+ * confirm the screen by heading copy when arrival matters.
+ */
+export const AdditionalIdentificationRequiredScreen = defineScreen({
+  primary: bcsc(v.additionalIdRequired.continue),
+})
+
+/**
+ * `IDPhotoInformation` — the primer shown before the document camera; `primary` proceeds to
+ * EvidenceCapture.
+ */
+export const IDPhotoInformationScreen = defineScreen({
+  self: bcsc(v.idPhotoInformation.takePhoto),
+  primary: bcsc(v.idPhotoInformation.takePhoto),
+})
+
+/**
+ * `EvidenceCapture` — the MaskedCamera document capture (camera-only; on Sauce the image is injected,
+ * else the physical camera is used). `self` is the camera container; `primary` is the shutter,
+ * `secondary` the cancel/close.
+ */
+export const EvidenceCaptureScreen = defineScreen({
+  self: bcsc(v.evidenceCapture.takePhoto),
+  primary: bcsc(v.evidenceCapture.takePhoto),
+  secondary: bcsc(v.evidenceCapture.cancel),
+})
+
+/**
+ * `PhotoReview` — accept or retake the captured document photo. `primary` (UsePhoto) proceeds to the
+ * next side or the typed form; `secondary` (RetakePhoto) re-opens the camera.
+ */
+export const PhotoReviewScreen = defineScreen({
+  self: bcsc(v.photoReview.usePhoto),
+  primary: bcsc(v.photoReview.usePhoto),
+  secondary: bcsc(v.photoReview.retake),
+})
+
+/**
+ * `EvidenceIDCollection` — the TYPED document form after capture. `self`/`documentNumber` is the number
+ * field (iOS types the pressable wrapper); `primary` (Continue) saves and resumes the flow. The
+ * name/birthdate inputs render only for the first of two non-BCSC documents.
+ */
+export const EvidenceIDCollectionScreen = defineScreen({
+  self: {
+    ios: bcsc(v.evidenceIdCollection.documentNumberPressable),
+    android: bcsc(v.evidenceIdCollection.documentNumberInput),
+  },
+  primary: bcsc(v.evidenceIdCollection.continue),
+  back: bcsc(common.back),
+  inputs: {
+    documentNumber: {
+      ios: bcsc(v.evidenceIdCollection.documentNumberPressable),
+      android: bcsc(v.evidenceIdCollection.documentNumberInput),
+    },
+    lastName: bcsc(v.evidenceIdCollection.lastName),
+    firstName: bcsc(v.evidenceIdCollection.firstName),
+    middleNames: bcsc(v.evidenceIdCollection.middleNames),
+    birthdate: bcsc(v.evidenceIdCollection.birthdate),
+  },
+})

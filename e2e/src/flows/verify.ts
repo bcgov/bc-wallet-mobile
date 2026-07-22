@@ -2,18 +2,25 @@ import type { TestUser } from '../constants.js'
 import { Timeouts } from '../constants.js'
 import { acceptSystemAlert } from '../helpers/alerts.js'
 import { ApproveInPersonInput, approveInPersonRequest } from '../helpers/approval.js'
+import { injectPhoto } from '../helpers/camera.js'
 import { getEmailConfirmationCode, getTempEmailAddress } from '../helpers/email.js'
+import { isSauceLabs } from '../helpers/sauce.js'
 import { BaseScreen } from '../screens/core/BaseScreen.js'
 import { HomeScreen } from '../screens/main.js'
 import { VerifyPromptScreen } from '../screens/onboarding.js'
 import {
   AccountSetupScreen,
+  AdditionalIdentificationRequiredScreen,
   EmailConfirmationScreen,
   EmailVerifiedScreen,
   EnterBirthdateScreen,
   EnterEmailScreen,
+  EvidenceCaptureScreen,
+  EvidenceIDCollectionScreen,
   IdentitySelectionScreen,
+  IDPhotoInformationScreen,
   ManualSerialScreen,
+  PhotoReviewScreen,
   ScanSerialScreen,
   VerificationMethodSelectionScreen,
   VerificationSuccessScreen,
@@ -104,24 +111,52 @@ function approvalInputForUser(user: TestUser): ApproveInPersonInput {
 }
 
 /**
+ * Dump the first several visible text strings on the current screen — makes "unexpected screen"
+ * failures self-diagnosing by revealing which screen we actually landed on.
+ */
+async function describeCurrentScreen(): Promise<string> {
+  const selector = driver.isIOS
+    ? '-ios predicate string:type == "XCUIElementTypeStaticText"'
+    : 'android=new UiSelector().className("android.widget.TextView")'
+  const els = await $$(selector)
+  const texts: string[] = []
+  for (const el of els) {
+    const t = driver.isIOS ? await el.getAttribute('label').catch(() => null) : await el.getText().catch(() => null)
+    if (t) {
+      texts.push(t)
+    }
+    if (texts.length >= 8) {
+      break
+    }
+  }
+  return texts.length ? texts.join(' | ') : '(no visible text found)'
+}
+
+/**
  * From the post-authorize state (birthdate submitted), reach VerificationMethodSelection. For a
- * card-tap flow the address step is auto-satisfied once the device is authorized; the email step
- * only appears when the card supplied no verified email. Poll for whichever screen resumes and skip
- * the optional email so the arrange lands deterministically on method selection.
+ * card-tap flow the address step is auto-satisfied once the device is authorized; the email step only
+ * appears when the card supplied no verified email — detect it by its HEADING (the input's marker is
+ * less reliable) and skip it (BCSC cards allow skipping). On an unexpected screen the error reports
+ * what is actually on screen.
  */
 export async function reachVerificationMethod(): Promise<void> {
-  const deadline = Date.now() + Timeouts.SCREEN_TRANSITION
+  const emailHeadingSelector = driver.isIOS
+    ? '-ios predicate string:label CONTAINS "email address"'
+    : 'android=new UiSelector().textContains("email address")'
+  const deadline = Date.now() + Timeouts.APP_LAUNCH
   for (;;) {
     if (await VerificationMethodSelectionScreen.isPresent(1_000)) {
       return
     }
-    if (await EnterEmailScreen.isPresent(1_000)) {
-      await EnterEmailScreen.tap('secondary') // SkipEmail
+    if (await $(emailHeadingSelector).isDisplayed().catch(() => false)) {
+      await EnterEmailScreen.tap('secondary') // SkipEmail (BCSC flow)
       await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
       return
     }
     if (Date.now() > deadline) {
-      throw new Error('After authorizeDevice, neither VerificationMethodSelection nor EnterEmail appeared')
+      throw new Error(
+        `reachVerificationMethod: neither VerificationMethodSelection nor EnterEmail appeared. On screen: ${await describeCurrentScreen()}`
+      )
     }
   }
 }
@@ -185,4 +220,95 @@ export async function verifyEmailWithTempInbox(): Promise<void> {
   await EmailVerifiedScreen.tap('primary')
 
   await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+}
+
+/**
+ * Tap an EvidenceTypeList row. Rows carry testID `EvidenceTypeListItem-<evidence_type>` where the
+ * evidence_type suffix is SERVER-PROVIDED — so match it as a case-insensitive substring of the row's
+ * testID (`match`, e.g. `'Passport'`) rather than a guessed exact label. Requires exactly one match;
+ * on zero or multiple it throws WITH the list of row testIDs found, so a mismatch is self-diagnosing
+ * (the next run's error reveals the real evidence_type values to pin).
+ */
+async function selectEvidenceType(match: string): Promise<void> {
+  const rowsSelector = driver.isIOS
+    ? '-ios predicate string:name CONTAINS "EvidenceTypeListItem"'
+    : 'android=new UiSelector().resourceIdMatches(".*EvidenceTypeListItem.*")'
+  await $(rowsSelector).waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+
+  const attr = driver.isIOS ? 'name' : 'resource-id'
+  const rows = await $$(rowsSelector)
+  const needle = match.toLowerCase()
+  const ids: string[] = []
+  let target: WebdriverIO.Element | null = null
+  let count = 0
+  for (const el of rows) {
+    const id = (await el.getAttribute(attr).catch(() => null)) ?? ''
+    ids.push(id)
+    if (id.toLowerCase().includes(needle)) {
+      count += 1
+      target = el
+    }
+  }
+
+  if (count === 1 && target) {
+    await target.click()
+    return
+  }
+  throw new Error(
+    count === 0
+      ? `EvidenceTypeList: no row testID contains "${match}". Rows found: ${JSON.stringify(ids)}`
+      : `EvidenceTypeList: "${match}" matched ${count} rows (ambiguous). Rows: ${JSON.stringify(ids)}`
+  )
+}
+
+/**
+ * Capture a document's photo(s). CAMERA-ONLY: on Sauce the supplied image is injected before the
+ * shutter (RN camera feeds are unreliable — see `helpers/camera`); on a local real device the physical
+ * camera captures whatever it sees (`injectPhoto` throws off-Sauce). Shutter → accept in PhotoReview,
+ * repeating per side (1 for a passport, 2 for a licence — backend-driven) until the typed
+ * EvidenceIDCollection form appears.
+ */
+async function capturePhotoIdDocument(image: string): Promise<void> {
+  await IDPhotoInformationScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await IDPhotoInformationScreen.tap('primary') // → EvidenceCapture (camera)
+  // The document camera requests camera permission on first entry — accept it, otherwise
+  // EvidenceCapture renders the PermissionDisabled fallback and the MaskedCamera never mounts.
+  await acceptSystemAlert()
+
+  for (let side = 0; side < 2; side++) {
+    await EvidenceCaptureScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    if (isSauceLabs()) {
+      await injectPhoto(image, {}) // padding may need tuning to the document mask
+    }
+    await EvidenceCaptureScreen.tap('primary') // MaskedCamera shutter
+    await PhotoReviewScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await PhotoReviewScreen.tap('primary') // UsePhoto
+    if (await EvidenceIDCollectionScreen.isPresent(Timeouts.SCREEN_TRANSITION)) {
+      return
+    }
+  }
+  await EvidenceIDCollectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+}
+
+/**
+ * Non-photo BCSC "additional ID": from AdditionalIdentificationRequired, add one extra photo ID — pick
+ * its type, capture its photo, and type its document number — landing on the post-document resume
+ * (EnterEmail, skippable for a BCSC card). `evidenceMatch` is a case-insensitive substring of the
+ * target EvidenceTypeList row testID (server-provided; e.g. `'Passport'`). Camera-only via
+ * {@link capturePhotoIdDocument}.
+ */
+export async function addAdditionalPhotoId(user: TestUser, evidenceMatch: string): Promise<void> {
+  // AdditionalIdentificationRequired's only testID is the generic `Continue` (shared by ~10 screens),
+  // so wait for its UNIQUE heading to settle before tapping — otherwise a lingering `Continue` from the
+  // previous screen can be tapped mid-transition and the flow never advances.
+  const headingSelector = driver.isIOS
+    ? '-ios predicate string:label CONTAINS "provide additional ID"'
+    : 'android=new UiSelector().textContains("provide additional ID")'
+  await $(headingSelector).waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+  await AdditionalIdentificationRequiredScreen.tap('primary') // Continue → EvidenceTypeList
+  await selectEvidenceType(evidenceMatch)
+  await capturePhotoIdDocument(user.cardScanImage)
+  await EvidenceIDCollectionScreen.fill('documentNumber', user.documentNumber, { tapFirst: true })
+  await engine.dismissKeyboard()
+  await EvidenceIDCollectionScreen.tapWhenEnabled('primary') // EvidenceIDCollectionContinue
 }

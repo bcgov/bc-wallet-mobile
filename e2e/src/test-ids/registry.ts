@@ -179,6 +179,55 @@ export const TestIds = {
     emailVerified: {
       continue: 'Continue',
     },
+    /** `AdditionalIdentificationRequired` ('Photo ID Required') — a non-photo BCSC card must add one
+     *  extra photo ID. Only the primary CTA has a testID and it is label-derived (`Continue`); confirm
+     *  the screen by heading copy when it matters. */
+    additionalIdRequired: {
+      continue: 'Continue',
+    },
+    /** `DualIdentificationRequired` — non-BCSC needs two IDs. CTA is label-derived `Continue`;
+     *  `seeAcceptedId` opens the accepted-documents webview. */
+    dualIdRequired: {
+      continue: 'Continue',
+      seeAcceptedId: 'SeeAcceptedID',
+    },
+    /** `EvidenceTypeList` — the document-type picker. Rows are `EvidenceTypeListItem-<evidence_type>`
+     *  where evidence_type is SERVER-PROVIDED (unknown/variable, may contain spaces), so specs select a
+     *  row by its visible LABEL via `findByText`, not by testID. `otherOptions` reveals non-photo
+     *  document types. */
+    evidenceTypeList: {
+      otherOptions: 'EvidenceTypeListOtherOptions',
+    },
+    /** `IDPhotoInformation` ('ID Photo Instructions') — the primer before the document camera. */
+    idPhotoInformation: {
+      takePhoto: 'IDPhotoInformationTakePhoto',
+    },
+    /** `EvidenceCapture` — the MaskedCamera document capture. CAMERA-ONLY (needs Sauce image injection;
+     *  `injectPhoto` throws off-Sauce). `maskedCamera` is the container marker; `takePhoto` is the
+     *  shutter and `cancel` the close — both shared bifold `MaskedCamera` testIDs. */
+    evidenceCapture: {
+      maskedCamera: 'EvidenceCaptureScreenMaskedCamera',
+      takePhoto: 'TakePhoto',
+      cancel: 'CancelCamera',
+    },
+    /** `PhotoReview` — accept/retake a captured document photo (shared bifold component). */
+    photoReview: {
+      usePhoto: 'UsePhoto',
+      retake: 'RetakePhoto',
+    },
+    /** `EvidenceIDCollection` ('Secondary ID Document Data Entry') — the TYPED document form reached
+     *  AFTER the photo capture. `documentNumber` is the number field (InputWithValidation → iOS types
+     *  the pressable wrapper). The name/birthdate inputs render only for the first of two non-BCSC
+     *  IDs. */
+    evidenceIdCollection: {
+      documentNumberPressable: 'documentNumber-pressable',
+      documentNumberInput: 'documentNumber-input',
+      continue: 'EvidenceIDCollectionContinue',
+      lastName: 'lastName-input',
+      firstName: 'firstName-input',
+      middleNames: 'middleNames-input',
+      birthdate: 'birthDate-input',
+    },
   },
 
   main: {
