@@ -115,6 +115,16 @@ describe('BCSCIdTokenContext', () => {
       expect(compareCredentialMetadata(corrected, legacyStored)).toBe(true)
     })
 
+    // The legacy template's OTHER slot: family_name absent with given_name present
+    // rendered "Jamie undefined", which must normalize the same as the corrected
+    // given-name-only output "Jamie". (PR feedback: trailing artifact was unhandled.)
+    it('treats a legacy trailing-"undefined" stored fullName as equal to the corrected given-name-only fullName', () => {
+      const legacyStored = createMockMetadata({ fullName: 'Jamie undefined' })
+      const corrected = createMockMetadata({ fullName: 'Jamie' })
+
+      expect(compareCredentialMetadata(corrected, legacyStored)).toBe(true)
+    })
+
     // Documents the accepted tradeoff: the normalization matches the literal lowercase
     // "undefined" string JS produces when interpolating a real `undefined` value, so it's
     // scoped to that exact case. A genuine name is safe as long as it isn't literally the

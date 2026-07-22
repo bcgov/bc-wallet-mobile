@@ -44,8 +44,8 @@ export const tokenToCredentialMetadata = (token: IdToken): CredentialMetadata =>
  * {@link getFullDisplayName} output, avoiding a one-time false-positive
  * "account updated" alert for existing mononym users. See #4258.
  *
- * Narrowly scoped to leading "undefined" artifacts by design (matches the
- * literal lowercase string JS produces when interpolating `undefined`); a
+ * Narrowly scoped to leading/trailing "undefined" artifacts by design (matches
+ * the literal lowercase string JS produces when interpolating `undefined`); a
  * genuine name that happens to start with capitalized "Undefined" is safe,
  * since the match is case-sensitive. See BCSCIdTokenContext.test.ts for the
  * documented tradeoff around a literal lowercase "undefined" name part.
@@ -63,8 +63,10 @@ const normalizeLegacyFullName = (fullName: string | undefined): string => {
     return ''
   }
 
-  // Only one part (given_name) was absent, e.g. "undefined Smith" -> "Smith".
-  return collapsed.replace(/^undefined\s+/, '')
+  // Only one part was absent: given_name ("undefined Smith" -> "Smith") or
+  // family_name ("Jamie undefined" -> "Jamie") — the legacy template had
+  // exactly two slots, so leading + trailing strips cover the remaining artifacts.
+  return collapsed.replace(/^undefined\s+/, '').replace(/\s+undefined$/, '')
 }
 
 /**
