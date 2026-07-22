@@ -14,7 +14,7 @@ import {
  * AccountSetup screen (which moved into `VerifyStack`). The previous smoke waited for `AddAccount`
  * on launch and so failed on every PR. This spec targets the real v4.1 entry flow.
  *
- * It also seeds the new action-based screen-object DSL (FND-1): specs drive screens by semantic
+ * It also seeds the new action-based screen-object DSL: specs drive screens by semantic
  * role (`expectVisible()`, `tap('primary')`) via per-stack descriptors in `src/screens/onboarding.ts`,
  * so a renamed testID is a one-line descriptor edit rather than spec churn.
  */

@@ -5,10 +5,10 @@
  * detour, evidence-flow camera variants, video review variants, video-call
  * detour) before completing via in-person verification.
  *
- * NOTE(ONB-1): the onboarding preamble was removed — superseded by `journeys/onboarding/`.
- * NOTE(VFY-1): the card-type config + nickname/card-csn fragments were removed — card type is
- * serial-derived on main. This legacy sweep is red vs `main` (it anchors on the removed
- * SetupSteps hub) and is pending replacement by `journeys/verify/` (VFY-2/3/4).
+ * The onboarding preamble was removed — superseded by `journeys/onboarding/`. The card-type config
+ * + nickname/card-csn fragments were removed too — card type is serial-derived on main. This legacy
+ * sweep is red vs `main` (it anchors on the removed SetupSteps hub) and is pending replacement by
+ * `journeys/verify/`.
  */
 import { TestUsers } from '../../../src/constants.js'
 import { setTestUser } from '../../../src/support/context.js'

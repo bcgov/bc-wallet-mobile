@@ -3,9 +3,9 @@
  * Full-regression Interaction Sweep — composes the stack-level sweeps
  * (verify, main) plus the transferer flow.
  *
- * NOTE(ONB-1): the onboarding + transferee sweeps were removed — superseded by
- * `journeys/onboarding/` (the transferee entry detour returns with the verify-entry-detours
- * journey, VFY-4). This legacy spec is red vs `main` pending its replacement journeys.
+ * The onboarding + transferee sweeps were removed — superseded by `journeys/onboarding/` (the
+ * transferee entry detour returns with the verify-entry-detours journey). This legacy spec is red
+ * vs `main` pending its replacement journeys.
  */
 import '../verify/verify-interaction-sweep.spec.js'
 

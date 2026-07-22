@@ -5,10 +5,10 @@
  *
  * Run with: yarn wdio ... --spec test/bcsc/full-regression/verify-non-bcsc-card.spec.ts
  *
- * NOTE(ONB-1): the onboarding preamble was removed — superseded by `journeys/onboarding/`.
- * NOTE(VFY-1): the card-type config + nickname fragments were removed — card type is
- * serial-derived on main, and the entry spine lives in `journeys/verify/verify-entry.journey.ts`.
- * This legacy spec is red vs `main` and is pending replacement by the verified card journeys.
+ * The onboarding preamble was removed — superseded by `journeys/onboarding/`. The card-type config
+ * + nickname fragments were removed too — card type is serial-derived on main, and the entry spine
+ * lives in `journeys/verify/verify-entry.journey.ts`. This legacy spec is red vs `main` and is
+ * pending replacement by the verified card journeys.
  */
 import { TestUsers } from '../../../src/constants.js'
 import { setTestUser } from '../../../src/support/context.js'

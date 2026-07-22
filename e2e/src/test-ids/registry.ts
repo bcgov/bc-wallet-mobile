@@ -153,7 +153,7 @@ export const TestIds = {
       pairingCodeTab: 'PairingCode',
       torchToggle: 'TorchToggle',
     },
-    /** Main settings (minimal — MAIN-2 models the full screen). `profile` is verified-gated. */
+    /** Main settings (minimal — the full screen is modeled later). `profile` is verified-gated. */
     settings: {
       appSecurity: 'AppSecurity',
       profile: 'Profile',

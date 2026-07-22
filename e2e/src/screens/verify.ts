@@ -2,13 +2,13 @@ import { TestIds } from '../test-ids/registry.js'
 import { bcsc, defineScreen } from './core/index.js'
 
 /**
- * Verify stack screen objects — the entry spine (VFY-1). VerifyPrompt itself lives in
+ * Verify stack screen objects — the entry spine. VerifyPrompt itself lives in
  * `./onboarding.ts`: it is the onboarding → verify seam and exists only in that session.
  *
  * Card type is serial-derived on main — the backend `authorizeDevice(serial, dob)` call at the
- * EnterBirthdate submit decides the path; there are no card-type buttons. VFY-2/3/4 extend this
- * module (method/evidence/email screens); if it grows unwieldy, split into a `verify/` folder and
- * keep a barrel at this path.
+ * EnterBirthdate submit decides the path; there are no card-type buttons. Later verify work extends
+ * this module (method/evidence/email screens); if it grows unwieldy, split into a `verify/` folder
+ * and keep a barrel at this path.
  */
 
 const v = TestIds.verify

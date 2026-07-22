@@ -12,7 +12,7 @@ import {
 } from '../screens/onboarding.js'
 
 /**
- * UI-driven onboarding arranges (FND-5). There is no app-side state seeding — these walks are how
+ * UI-driven onboarding arranges. There is no app-side state seeding — these walks are how
  * journeys earn their preconditions. Fresh install → VerifyPrompt is ~8–10 taps; the only network
  * dependency is the Terms-of-Use fetch (its accept button stays disabled until the terms load).
  */

@@ -14,7 +14,7 @@ import {
 } from '../../../../src/screens/onboarding.js'
 
 /**
- * ONB-1 — Onboarding detours journey.
+ * Onboarding detours journey.
  *
  * Same fresh-install session as the happy path, but takes every recoverable detour on the way:
  * header back-navigation, the privacy Learn-More webview, the floating help menu, the analytics

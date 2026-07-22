@@ -4,10 +4,10 @@
  *
  * Run with: yarn wdio ... --suite card-csn-scanning
  *
- * NOTE(ONB-1): the onboarding preamble was removed — superseded by `journeys/onboarding/`.
- * NOTE(VFY-1): the card-type config + nickname fragments were removed — card type is
- * serial-derived on main. This legacy spec is red vs `main` (the card-scan fragment still anchors
- * on the removed SetupSteps hub) and is pending replacement (`journeys/manual/card-scan`).
+ * The onboarding preamble was removed — superseded by `journeys/onboarding/`. The card-type config
+ * + nickname fragments were removed too — card type is serial-derived on main. This legacy spec is
+ * red vs `main` (the card-scan fragment still anchors on the removed SetupSteps hub) and is pending
+ * replacement (`journeys/manual/card-scan`).
  */
 import { TestUsers } from '../../../src/constants.js'
 import { setTestUser } from '../../../src/support/context.js'

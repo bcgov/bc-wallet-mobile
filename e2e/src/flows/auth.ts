@@ -5,7 +5,7 @@ import { HomeScreen } from '../screens/main.js'
 import { OnboardingIntroScreen } from '../screens/onboarding.js'
 
 /**
- * UI-driven auth/unlock arranges (FND-5). `didAuthenticate` is in-memory, so every launch of an
+ * UI-driven auth/unlock arranges. `didAuthenticate` is in-memory, so every launch of an
  * onboarded user passes through AccountLanding → EnterPIN before reaching Home.
  */
 

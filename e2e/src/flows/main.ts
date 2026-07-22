@@ -1,11 +1,11 @@
 import { Timeouts } from '../constants.js'
 import { HomeScreen } from '../screens/main.js'
 
-/** Main-stack navigation arranges (FND-5). Expanded by MAIN-1/2 as their descriptors land. */
+/** Main-stack navigation arranges. Expanded as more main/settings descriptors land. */
 
 /**
- * Open Settings from the Home tab header. Arrival assertion lands with MAIN-2's settings
- * descriptors — until then callers assert their own target screen.
+ * Open Settings from the Home tab header. Arrival assertion lands with the settings descriptors —
+ * until then callers assert their own target screen.
  */
 export async function openSettings(): Promise<void> {
   await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)

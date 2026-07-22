@@ -13,14 +13,14 @@ import {
 } from '../../../../src/screens/main.js'
 
 /**
- * MAIN-1 — Main journey: unverified gating.
+ * Main journey: unverified gating.
  *
  * Arrange: `skipToHome()` (~1–2 min). The verification-gating redirects ARE the checkpoints here:
  * unverified taps on the Services tab and QRCore's PairingCode tab must land on the no-skip
  * MainVerifyPrompt, while Home, the empty Wallet, the QR scanner, and Settings stay reachable.
  * AccountDetails is deliberately absent: its Settings row (`Profile`) and its account data are both
- * verified-gated — this journey asserts the row's absence; MAIN-4 covers the screen verified.
- * Verified tab/Services content rides the verified card journeys (MAIN-1b, with VFY-2/3).
+ * verified-gated — this journey asserts the row's absence; the verified screen is covered separately.
+ * Verified tab/Services content rides the verified card journeys.
  */
 
 /** Engine handle for the MainVerifyPrompt title — the screen's only distinguishing marker is copy. */

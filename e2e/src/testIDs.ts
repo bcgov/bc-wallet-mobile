@@ -7,10 +7,10 @@ export const BCSC_TestIDs = {
     TransferAccount: 'com.ariesbifold:id/TransferAccount',
     DeveloperMode: 'com.ariesbifold:id/DeveloperMode',
   },
-  // NOTE(ONB-1): the legacy onboarding sections (IntroCarousel, SetupTypes, TransferInformation,
-  // PrivacyPolicy, OptInAnalytics, TermsOfUse, Notifications, SecureApp, CreatePIN) were deleted —
-  // onboarding IDs now live in `src/test-ids/registry.ts` and are consumed via `screens/onboarding.ts`.
-  // NOTE(VFY-1): Nickname deleted too — no nickname screen exists in the verify entry on main.
+  // The legacy onboarding sections (IntroCarousel, SetupTypes, TransferInformation, PrivacyPolicy,
+  // OptInAnalytics, TermsOfUse, Notifications, SecureApp, CreatePIN) were deleted — onboarding IDs
+  // now live in `src/test-ids/registry.ts` and are consumed via `screens/onboarding.ts`.
+  // Nickname was deleted too — no nickname screen exists in the verify entry on main.
   TransferInstructions: {
     ScanQRCode: 'com.ariesbifold:id/ScanQRCode',
     Back: 'com.ariesbifold:id/Back',

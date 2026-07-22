@@ -5,16 +5,16 @@ import { EnterBirthdateScreen } from '../../../../src/screens/verify.js'
 import { getTestUser, setTestUser } from '../../../../src/support/context.js'
 
 /**
- * VFY-1 — Verify journey: entry spine.
+ * Verify journey: entry spine.
  *
  * Proves the reworked entry end-to-end with no card-type buttons: onboard (same session — the
  * VerifyPrompt only exists here) → Continue → AccountSetup → IdentitySelection `Scan` → past the
  * camera gate via `EnterManually` → serial typed → birthdate filled. It stops SHORT of the
  * birthdate submit: that fires the backend `authorizeDevice` (network, creates SIT device state),
- * which belongs to the verified card journeys (VFY-2/3). Everything here is deterministic and
+ * which belongs to the verified card journeys. Everything here is deterministic and
  * backend-free except the terms-of-use fetch.
  *
- * VFY-4 extends this area with the entry-detours journey.
+ * A separate entry-detours journey extends this area.
  */
 describe('Verify journey: entry spine', () => {
   before(() => {

@@ -5,7 +5,7 @@ import { AccountLandingScreen, EnterPINScreen, LockoutScreen } from '../../../..
 import { HomeScreen } from '../../../../src/screens/main.js'
 
 /**
- * AUTH-1 — Auth/unlock journey.
+ * Auth/unlock journey.
  *
  * Arrange is UI-driven: onboard + skip to unverified Home, then every relaunch lands on
  * AccountLanding → EnterPIN (`didAuthenticate` is in-memory). Ordered checkpoints, destructive

@@ -2,8 +2,8 @@ import { TestIds } from '../test-ids/registry.js'
 import { bcsc, defineScreen } from './core/index.js'
 
 /**
- * Main stack screen objects (MAIN-1). Services content and the full Settings/Contacts surfaces
- * land with their tickets (MAIN-1b rides the verified journeys, MAIN-2/4).
+ * Main stack screen objects. Services content and the full Settings/Contacts surfaces land later
+ * with the verified journeys.
  */
 
 const main = TestIds.main
@@ -11,7 +11,7 @@ const { common } = TestIds
 
 /**
  * The bottom tab bar (visible on every tab). Note the Services tab redirects unverified users to
- * `MainVerifyPrompt` instead of opening Services — that redirect is itself a MAIN-1 checkpoint.
+ * `MainVerifyPrompt` instead of opening Services — that redirect is itself a gating checkpoint.
  */
 export const TabBar = defineScreen({
   self: bcsc(main.tabBar.home),
@@ -51,7 +51,7 @@ export const MainVerifyPromptScreen = defineScreen({
  * Wallet tab — currently modeling the EMPTY credential wallet (the unverified/fresh state).
  * `self` is the BCSC empty-state container; `loading` is the shared agent/credentials gate spinner
  * (the Credo agent boots for any authenticated user, verified or not — allow a generous wait).
- * VFY-2/MAIN-1b extend this for the populated state.
+ * The verified journeys extend this for the populated state.
  */
 export const WalletScreen = defineScreen({
   self: bcsc(main.wallet.empty),
@@ -82,7 +82,7 @@ export const QRCoreScreen = defineScreen({
 })
 
 /**
- * Main settings — minimal descriptor for reachability asserts (MAIN-2 models the full screen).
+ * Main settings — minimal descriptor for reachability asserts (the full screen is modeled later).
  * `self` is the always-present AppSecurity row; `profile` (→ AccountDetails) renders only for
  * VERIFIED users — its absence is the unverified-gating assert.
  */

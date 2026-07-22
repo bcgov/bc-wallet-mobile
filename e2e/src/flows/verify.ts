@@ -12,8 +12,8 @@ import {
 } from '../screens/verify.js'
 
 /**
- * Verify-stack arranges (FND-5 slice b, landed with VFY-1's descriptors). The entry spine only —
- * `reachVerifyStep` and `completeVerification(user, {method: 'in-person'})` land with VFY-2/3,
+ * Verify-stack arranges — the entry spine only. `reachVerifyStep` and
+ * `completeVerification(user, {method: 'in-person'})` land later with the verified card journeys,
  * which own the post-authorize screens.
  *
  * Reminder: the VerifyPrompt exists only in the session that completed onboarding — run

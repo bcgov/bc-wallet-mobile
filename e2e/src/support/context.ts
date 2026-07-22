@@ -1,7 +1,7 @@
 import type { TestUser } from '../constants.js'
 
 /**
- * Per-journey test context (FND-5). Replaces the old `verify/card-type` `verifyContext` singleton:
+ * Per-journey test context. Replaces the old `verify/card-type` `verifyContext` singleton:
  * card type is serial-derived on main (`authorizeDevice` at EnterBirthdate), so the context carries
  * only WHICH `TestUser` the journey drives — there is no card-type button to remember.
  */

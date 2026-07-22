@@ -12,7 +12,7 @@ import {
 } from '../../../../src/screens/onboarding.js'
 
 /**
- * ONB-1 — Onboarding happy path journey.
+ * Onboarding happy path journey.
  *
  * One session, ordered checkpoints: fresh install → full onboarding walk → CreatePIN → VerifyPrompt
  * offering both Continue and SkipVerification. This is the straight-through walk (it accepts
