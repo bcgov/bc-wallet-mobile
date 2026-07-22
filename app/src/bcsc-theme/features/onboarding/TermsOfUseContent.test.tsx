@@ -79,7 +79,7 @@ describe('TermsOfUseContent', () => {
     )
 
     await waitFor(() => {
-      expect(tree.getByTestId('com.ariesbifold:id/RetryTermsOfUse')).toBeTruthy()
+      expect(tree.getByTestId(testIdWithKey('RetryTermsOfUse'))).toBeTruthy()
     })
   })
 
@@ -128,7 +128,7 @@ describe('TermsOfUseContent', () => {
     fireEvent.press(tree.getByTestId(testIdWithKey('CloseButton')))
 
     expect(tree.queryByTestId(testIdWithKey('HeaderText'))).toBeNull()
-    expect(tree.getByTestId('com.ariesbifold:id/RetryTermsOfUse')).toBeTruthy()
+    expect(tree.getByTestId(testIdWithKey('RetryTermsOfUse'))).toBeTruthy()
   })
 
   it('re-fetches terms and hides the error modal when Retry succeeds', async () => {
@@ -157,7 +157,7 @@ describe('TermsOfUseContent', () => {
     // The error modal overlays the whole screen, so the user must dismiss it
     // before the Retry button underneath is reachable.
     fireEvent.press(tree.getByTestId(testIdWithKey('CloseButton')))
-    fireEvent.press(tree.getByTestId('com.ariesbifold:id/RetryTermsOfUse'))
+    fireEvent.press(tree.getByTestId(testIdWithKey('RetryTermsOfUse')))
 
     await waitFor(() => {
       expect(tree.queryByTestId('mocked-webview')).toBeTruthy()
@@ -182,7 +182,7 @@ describe('TermsOfUseContent', () => {
 
     // Simulate the webview finishing loading to enable the accept button
     fireEvent(tree.getByTestId('mocked-webview'), 'load')
-    fireEvent.press(tree.getByTestId('com.ariesbifold:id/AcceptAndContinue'))
+    fireEvent.press(tree.getByTestId(testIdWithKey('AcceptAndContinue')))
 
     await waitFor(() => {
       expect(onAccept).toHaveBeenCalledWith(mockTermsOfUseResponse)
