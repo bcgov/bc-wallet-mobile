@@ -1,4 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
@@ -80,6 +81,90 @@ describe('TermsOfUseContent', () => {
     await waitFor(() => {
       expect(tree.getByTestId('com.ariesbifold:id/RetryTermsOfUse')).toBeTruthy()
     })
+  })
+
+  it('shows the error modal with the correct title and description on load failure', async () => {
+    const useApiMock = jest.mocked(useApi)
+    useApiMock.mockReturnValue({
+      config: {
+        getTermsOfUse: jest.fn().mockRejectedValue(new Error('Network error')),
+        getServerStatus: jest.fn(),
+      },
+    } as any)
+
+    const tree = render(
+      <BasicAppContext>
+        <TermsOfUseContent onAccept={jest.fn()} />
+      </BasicAppContext>
+    )
+
+    await waitFor(() => {
+      expect(tree.getByTestId(testIdWithKey('HeaderText'))).toBeTruthy()
+    })
+
+    expect(tree.getByText('Alerts.TermsOfUseLoadFailed.Title')).toBeTruthy()
+    expect(tree.getByText('Alerts.TermsOfUseLoadFailed.Description')).toBeTruthy()
+  })
+
+  it('dismisses the error modal without clearing the retry button', async () => {
+    const useApiMock = jest.mocked(useApi)
+    useApiMock.mockReturnValue({
+      config: {
+        getTermsOfUse: jest.fn().mockRejectedValue(new Error('Network error')),
+        getServerStatus: jest.fn(),
+      },
+    } as any)
+
+    const tree = render(
+      <BasicAppContext>
+        <TermsOfUseContent onAccept={jest.fn()} />
+      </BasicAppContext>
+    )
+
+    await waitFor(() => {
+      expect(tree.getByTestId(testIdWithKey('HeaderText'))).toBeTruthy()
+    })
+
+    fireEvent.press(tree.getByTestId(testIdWithKey('CloseButton')))
+
+    expect(tree.queryByTestId(testIdWithKey('HeaderText'))).toBeNull()
+    expect(tree.getByTestId('com.ariesbifold:id/RetryTermsOfUse')).toBeTruthy()
+  })
+
+  it('re-fetches terms and hides the error modal when Retry succeeds', async () => {
+    const getTermsOfUse = jest
+      .fn()
+      .mockRejectedValueOnce(new Error('Network error'))
+      .mockResolvedValueOnce(mockTermsOfUseResponse)
+    const useApiMock = jest.mocked(useApi)
+    useApiMock.mockReturnValue({
+      config: {
+        getTermsOfUse,
+        getServerStatus: jest.fn(),
+      },
+    } as any)
+
+    const tree = render(
+      <BasicAppContext>
+        <TermsOfUseContent onAccept={jest.fn()} />
+      </BasicAppContext>
+    )
+
+    await waitFor(() => {
+      expect(tree.getByTestId(testIdWithKey('HeaderText'))).toBeTruthy()
+    })
+
+    // The error modal overlays the whole screen, so the user must dismiss it
+    // before the Retry button underneath is reachable.
+    fireEvent.press(tree.getByTestId(testIdWithKey('CloseButton')))
+    fireEvent.press(tree.getByTestId('com.ariesbifold:id/RetryTermsOfUse'))
+
+    await waitFor(() => {
+      expect(tree.queryByTestId('mocked-webview')).toBeTruthy()
+    })
+
+    expect(getTermsOfUse).toHaveBeenCalledTimes(2)
+    expect(tree.queryByTestId(testIdWithKey('HeaderText'))).toBeNull()
   })
 
   it('calls onAccept with the loaded terms when accept is pressed', async () => {
