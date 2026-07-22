@@ -130,6 +130,90 @@ describe('TermsOfUseContent', () => {
     expect(tree.queryByTestId('mocked-webview')).toBeNull()
   })
 
+  it('shows the error modal and retry button when the terms response has no content once outer document tags are stripped', async () => {
+    const useApiMock = jest.mocked(useApi)
+    useApiMock.mockReturnValue({
+      config: {
+        getTermsOfUse: jest.fn().mockResolvedValue({
+          ...mockTermsOfUseResponse,
+          html: '<!DOCTYPE html><html><head></head><body></body></html>',
+        }),
+        getServerStatus: jest.fn(),
+      },
+    } as any)
+
+    const tree = render(
+      <BasicAppContext>
+        <TermsOfUseContent onAccept={jest.fn()} />
+      </BasicAppContext>
+    )
+
+    await waitFor(() => {
+      expect(tree.getByTestId(testIdWithKey('RetryTermsOfUse'))).toBeTruthy()
+    })
+
+    expect(tree.getByText('Alerts.TermsOfUseLoadFailed.Title')).toBeTruthy()
+    expect(tree.getByText('Alerts.TermsOfUseLoadFailed.Description')).toBeTruthy()
+    expect(tree.queryByTestId('mocked-webview')).toBeNull()
+  })
+
+  it('does not show an error while the initial fetch is still in flight', () => {
+    const useApiMock = jest.mocked(useApi)
+    useApiMock.mockReturnValue({
+      config: {
+        getTermsOfUse: jest.fn().mockReturnValue(new Promise(() => {})), // never resolves
+        getServerStatus: jest.fn(),
+      },
+    } as any)
+
+    const tree = render(
+      <BasicAppContext>
+        <TermsOfUseContent onAccept={jest.fn()} />
+      </BasicAppContext>
+    )
+
+    // Regression check: termsOfUse is still null at this point because the fetch hasn't
+    // resolved yet, which must not be mistaken for a "loaded but empty" error.
+    expect(tree.queryByTestId(testIdWithKey('RetryTermsOfUse'))).toBeNull()
+    expect(tree.queryByText('Alerts.TermsOfUseLoadFailed.Title')).toBeNull()
+  })
+
+  it('re-fetches terms and hides the error modal when Retry succeeds after empty HTML', async () => {
+    const getTermsOfUse = jest
+      .fn()
+      .mockResolvedValueOnce({ ...mockTermsOfUseResponse, html: '   ' })
+      .mockResolvedValueOnce(mockTermsOfUseResponse)
+    const useApiMock = jest.mocked(useApi)
+    useApiMock.mockReturnValue({
+      config: {
+        getTermsOfUse,
+        getServerStatus: jest.fn(),
+      },
+    } as any)
+
+    const tree = render(
+      <BasicAppContext>
+        <TermsOfUseContent onAccept={jest.fn()} />
+      </BasicAppContext>
+    )
+
+    await waitFor(() => {
+      expect(tree.getByTestId(testIdWithKey('HeaderText'))).toBeTruthy()
+    })
+
+    // The error modal overlays the whole screen, so the user must dismiss it
+    // before the Retry button underneath is reachable.
+    fireEvent.press(tree.getByTestId(testIdWithKey('CloseButton')))
+    fireEvent.press(tree.getByTestId(testIdWithKey('RetryTermsOfUse')))
+
+    await waitFor(() => {
+      expect(tree.queryByTestId('mocked-webview')).toBeTruthy()
+    })
+
+    expect(getTermsOfUse).toHaveBeenCalledTimes(2)
+    expect(tree.queryByTestId(testIdWithKey('HeaderText'))).toBeNull()
+  })
+
   it('dismisses the error modal without clearing the retry button', async () => {
     const useApiMock = jest.mocked(useApi)
     useApiMock.mockReturnValue({

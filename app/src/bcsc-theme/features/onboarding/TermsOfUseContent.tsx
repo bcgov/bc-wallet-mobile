@@ -63,11 +63,16 @@ export const TermsOfUseContent = ({ onAccept, headerText }: TermsOfUseContentPro
       setError(false)
       setTermsOfUse(data)
     } catch (err) {
-      logger.error('Failed to fetch Terms of Use', err instanceof Error ? err : new Error(String(err)))
+      const normalizedError = err instanceof Error ? err : new Error(String(err))
+      logger.error('Failed to fetch Terms of Use', normalizedError)
       setError(true)
       // using translation tools directly causes an infinite re render loop
       // pass in the translated strings to avoid this
-      emitErrorModal(loadFailedTitle, loadFailedDescription, ensureAppError(err, AppEventCode.TERMS_OF_USE_LOAD_FAILED))
+      emitErrorModal(
+        loadFailedTitle,
+        loadFailedDescription,
+        ensureAppError(normalizedError, AppEventCode.TERMS_OF_USE_LOAD_FAILED)
+      )
     } finally {
       setIsLoading(false)
     }
