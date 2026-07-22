@@ -1409,6 +1409,10 @@ const translation = {
       "Title": "Something went wrong",
       "Description": "We're having trouble with the app. Please try again later.\n\nIf the issue persists, close and re-open the app, then try again."
     },
+    "TermsOfUseLoadFailed": {
+      "Title": "Terms of Use unavailable",
+      "Description": "We couldn't load the Terms of Use. Please check your connection and try again."
+    },
     "KeychainUnavailable": {
       "Title": "Secure Storage Unavailable",
       "Description": "Your device's secure storage is temporarily unavailable. Please wait a moment and try again.\n\nIf the issue persists, restart your device and try again."

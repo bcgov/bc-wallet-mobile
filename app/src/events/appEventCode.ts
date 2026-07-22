@@ -23,6 +23,7 @@ export enum AppEventCode {
   ADD_CARD_SERVER_CONFIGURATION = 'add_card_server_configuration',
   ADD_CARD_SERVER_ERROR = 'add_card_server_error',
   ADD_CARD_TERMS_OF_USE = 'add_card_terms_of_use',
+  TERMS_OF_USE_LOAD_FAILED = 'terms_of_use_load_failed', // Non-IAS error code — GET /v3/terms fetch failure
   ADD_CARD_DYNAMIC_REGISTRATION_APPVERSION_NOT_SUPPORTED = 'add_card_dynamic_registration_appversion_not_supported',
   ANDROID_APP_UPDATE_REQUIRED = 'android_app_update_required',
   ANDROID_DEVICE_PROTECTION_REQUIRED = 'android_device_protection_required',

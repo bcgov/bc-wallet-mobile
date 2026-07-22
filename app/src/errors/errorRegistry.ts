@@ -1005,6 +1005,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.GENERAL,
     message: 'Signing key sent during initial registration was not found in the server-confirmed key set',
   },
+  TERMS_OF_USE_LOAD_FAILED: {
+    statusCode: 2833,
+    appEvent: AppEventCode.TERMS_OF_USE_LOAD_FAILED,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.GENERAL,
+    message: 'Failed to fetch Terms of Use — user cannot view or accept the Terms of Use',
+  },
 
   // ============================================
   // Wallet/Agent Errors (2900-2999)

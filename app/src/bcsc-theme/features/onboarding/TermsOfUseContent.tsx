@@ -3,6 +3,9 @@ import { TermsOfUseResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
 import { ContentShadow } from '@/bcsc-theme/components/ContentShadow'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { createTermsOfUseHtml } from '@/bcsc-theme/utils/webview-utils'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { ensureAppError } from '@/errors/errorHandler'
+import { AppEventCode } from '@/events/appEventCode'
 import {
   Button,
   ButtonType,
@@ -42,11 +45,14 @@ export const TermsOfUseContent = ({ onAccept, headerText }: TermsOfUseContentPro
   const { Spacing, ColorPalette, TextTheme } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { config } = useApi()
+  const { emitErrorModal } = useErrorAlert()
   const [termsOfUse, setTermsOfUse] = useState<TermsOfUseResponseData | null>(null)
   const [webViewIsLoaded, setWebViewIsLoaded] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(false)
   const { fontScale } = useWindowDimensions()
+  const loadFailedTitle = t('Alerts.TermsOfUseLoadFailed.Title')
+  const loadFailedDescription = t('Alerts.TermsOfUseLoadFailed.Description')
 
   const fetchTermsOfUse = useCallback(async () => {
     try {
@@ -57,10 +63,11 @@ export const TermsOfUseContent = ({ onAccept, headerText }: TermsOfUseContentPro
     } catch (err) {
       logger.error('Failed to fetch Terms of Use', err instanceof Error ? err : new Error(String(err)))
       setError(true)
+      emitErrorModal(loadFailedTitle, loadFailedDescription, ensureAppError(err, AppEventCode.TERMS_OF_USE_LOAD_FAILED))
     } finally {
       setIsLoading(false)
     }
-  }, [config, logger])
+  }, [config, logger, emitErrorModal, loadFailedTitle, loadFailedDescription])
 
   useEffect(() => {
     fetchTermsOfUse()
@@ -116,8 +123,8 @@ export const TermsOfUseContent = ({ onAccept, headerText }: TermsOfUseContentPro
       <ScreenWrapper padded={false} controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
         <View style={styles.loadingContainer}>
           {error && !isLoading ? (
-            <View style={{ flexDirection: 'row' }}>
-              <ThemedText style={{ flexWrap: 'wrap', flexShrink: 1, textAlign: 'center' }}>
+            <View style={{ width: '100%' }}>
+              <ThemedText style={{ textAlign: 'center', flexShrink: 1, flexWrap: 'wrap' }}>
                 {t('BCSC.Onboarding.TermsOfUseLoadError')}
               </ThemedText>
             </View>
