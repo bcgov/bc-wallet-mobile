@@ -120,7 +120,7 @@ export const TermsOfUseContent = ({ onAccept, headerText }: TermsOfUseContentPro
     }
 
     const err = new Error('Terms of Use response contained empty HTML content')
-    logger.error('Failed to fetch Terms of Use', err)
+    logger.error(err.message, err)
     setError(true)
     // using translation tools directly causes an infinite re render loop
     // pass in the translated strings to avoid this
