@@ -247,3 +247,41 @@ export const EvidenceIDCollectionScreen = defineScreen({
     birthdate: bcsc(v.evidenceIdCollection.birthdate),
   },
 })
+
+/**
+ * `DualIdentificationRequired` — the non-BCSC entry ("You must provide two government-issued IDs").
+ * Its only CTA testID is the generic `Continue` (shared across screens), so callers confirm arrival by
+ * heading before tapping `primary`. `seeAcceptedId` opens the accepted-documents webview.
+ */
+export const DualIdentificationRequiredScreen = defineScreen({
+  primary: bcsc(v.dualIdRequired.continue),
+  links: {
+    seeAcceptedId: bcsc(v.dualIdRequired.seeAcceptedId),
+  },
+})
+
+/**
+ * `ResidentialAddress` ('Address Entry') — non-BCSC only, after both documents. Text inputs type into
+ * the iOS pressable wrapper; `self`/`primary` is the submit button. `province` is a dropdown: tap
+ * `province` (link) to open the modal, then `provinceBC`. No country field (hard-coded 'CA').
+ */
+export const ResidentialAddressScreen = defineScreen({
+  self: bcsc(v.residentialAddress.continue),
+  primary: bcsc(v.residentialAddress.continue),
+  back: bcsc(common.back),
+  inputs: {
+    streetAddress1: {
+      ios: bcsc(v.residentialAddress.streetAddress1Pressable),
+      android: bcsc(v.residentialAddress.streetAddress1Input),
+    },
+    city: { ios: bcsc(v.residentialAddress.cityPressable), android: bcsc(v.residentialAddress.cityInput) },
+    postalCode: {
+      ios: bcsc(v.residentialAddress.postalCodePressable),
+      android: bcsc(v.residentialAddress.postalCodeInput),
+    },
+  },
+  links: {
+    province: bcsc(v.residentialAddress.provinceInput),
+    provinceBC: bcsc(v.residentialAddress.provinceOptionBC),
+  },
+})

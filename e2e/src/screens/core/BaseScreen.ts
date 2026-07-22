@@ -168,7 +168,13 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    */
   public async waitForEnabledAndTap(testId: string, timeout: number = Timeouts.SCREEN_TRANSITION) {
     const el = await this.findByTestId(testId)
-    await el.waitForDisplayed({ timeout })
+    try {
+      await el.waitForDisplayed({ timeout })
+    } catch {
+      console.warn(`Element "${testId}" not visible after ${timeout}ms; scrolling then retrying`)
+      await this.scrollToTestId(testId, 4, 'both')
+      await el.waitForDisplayed({ timeout })
+    }
     await el.waitForEnabled({ timeout })
     await el.click()
   }

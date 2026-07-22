@@ -11,6 +11,7 @@ import { VerifyPromptScreen } from '../screens/onboarding.js'
 import {
   AccountSetupScreen,
   AdditionalIdentificationRequiredScreen,
+  DualIdentificationRequiredScreen,
   EmailConfirmationScreen,
   EmailVerifiedScreen,
   EnterBirthdateScreen,
@@ -21,6 +22,7 @@ import {
   IDPhotoInformationScreen,
   ManualSerialScreen,
   PhotoReviewScreen,
+  ResidentialAddressScreen,
   ScanSerialScreen,
   VerificationMethodSelectionScreen,
   VerificationSuccessScreen,
@@ -311,4 +313,81 @@ export async function addAdditionalPhotoId(user: TestUser, evidenceMatch: string
   await EvidenceIDCollectionScreen.fill('documentNumber', user.documentNumber, { tapFirst: true })
   await engine.dismissKeyboard()
   await EvidenceIDCollectionScreen.tapWhenEnabled('primary') // EvidenceIDCollectionContinue
+}
+
+/**
+ * Fill an EvidenceIDCollection form — the typed document number, plus (first non-BCSC ID only) the
+ * name + birthdate personal-info fields — then Continue.
+ */
+async function fillEvidenceIdCollection(
+  documentNumber: string,
+  personalInfo?: { lastName: string; firstName: string; dob: string }
+): Promise<void> {
+  await EvidenceIDCollectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await EvidenceIDCollectionScreen.fill('documentNumber', documentNumber, { tapFirst: true })
+  if (personalInfo) {
+    await EvidenceIDCollectionScreen.fill('lastName', personalInfo.lastName, { tapFirst: true })
+    await EvidenceIDCollectionScreen.fill('firstName', personalInfo.firstName, { tapFirst: true })
+    await EvidenceIDCollectionScreen.fill('birthdate', personalInfo.dob, { tapFirst: true })
+  }
+  await engine.dismissKeyboard()
+  await EvidenceIDCollectionScreen.tapWhenEnabled('primary') // EvidenceIDCollectionContinue
+}
+
+/**
+ * Non-BCSC path: from IdentitySelection, choose OtherID and provide TWO government IDs (each captured
+ * then typed), landing on ResidentialAddress. `firstDocMatch`/`secondDocMatch` are case-insensitive
+ * substrings of the two EvidenceTypeList row testIDs; the first document also collects name +
+ * birthdate. Camera-only via {@link capturePhotoIdDocument}.
+ */
+export async function collectNonBcscEvidence(
+  user: TestUser,
+  firstDocMatch: string,
+  secondDocMatch: string
+): Promise<void> {
+  if (user.flow !== 'non-bcsc') {
+    throw new Error(`collectNonBcscEvidence requires a non-bcsc TestUser (got '${user.flow}')`)
+  }
+  await IdentitySelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await IdentitySelectionScreen.tap('secondary') // OtherID → DualIdentificationRequired
+
+  // DualIdentificationRequired's only CTA is the generic `Continue`; confirm by heading before tapping.
+  const dualHeadingSelector = driver.isIOS
+    ? '-ios predicate string:label CONTAINS "two government"'
+    : 'android=new UiSelector().textContains("two government")'
+  await $(dualHeadingSelector).waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+  await DualIdentificationRequiredScreen.tap('primary') // Continue → EvidenceTypeList (first ID)
+
+  // First ID — captured + typed WITH name/birthdate.
+  await selectEvidenceType(firstDocMatch)
+  await capturePhotoIdDocument(user.cardScanImage)
+  await fillEvidenceIdCollection(user.primaryDocumentNumber, {
+    lastName: user.lastName,
+    firstName: user.firstName,
+    dob: user.dob,
+  })
+
+  // Second ID — captured + typed (number only); its save resumes to ResidentialAddress.
+  await selectEvidenceType(secondDocMatch)
+  await capturePhotoIdDocument(user.selfieImage)
+  await fillEvidenceIdCollection(user.documentNumber)
+}
+
+/**
+ * Fill the ResidentialAddress form (non-BCSC only) and continue → the mandatory email step. Province
+ * is a dropdown: tap it to open the modal, then pick British Columbia.
+ */
+export async function fillResidentialAddress(): Promise<void> {
+  await ResidentialAddressScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await ResidentialAddressScreen.fill('streetAddress1', '123 Main St', { tapFirst: true })
+  await ResidentialAddressScreen.fill('city', 'Victoria', { tapFirst: true })
+  await engine.dismissKeyboard()
+
+  await ResidentialAddressScreen.link('province')
+  await ResidentialAddressScreen.waitFor('provinceBC', Timeouts.SCREEN_TRANSITION)
+  await ResidentialAddressScreen.link('provinceBC')
+
+  await ResidentialAddressScreen.fill('postalCode', 'V8W 2Y2', { tapFirst: true })
+  await engine.dismissKeyboard()
+  await ResidentialAddressScreen.tapWhenEnabled('primary') // ResidentialAddressContinue
 }

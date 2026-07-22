@@ -228,6 +228,20 @@ export const TestIds = {
       middleNames: 'middleNames-input',
       birthdate: 'birthDate-input',
     },
+    /** `ResidentialAddress` ('Address Entry') — non-BCSC only, after both documents. Text fields are
+     *  InputWithValidation (iOS types the pressable wrapper); `province` is a DropdownWithValidation —
+     *  tap `provinceInput` to open the modal, then `provinceOptionBC`. There is no country field. */
+    residentialAddress: {
+      streetAddress1Pressable: 'streetAddress1-pressable',
+      streetAddress1Input: 'streetAddress1-input',
+      cityPressable: 'city-pressable',
+      cityInput: 'city-input',
+      postalCodePressable: 'postalCode-pressable',
+      postalCodeInput: 'postalCode-input',
+      provinceInput: 'province-input',
+      provinceOptionBC: 'province-option-BC',
+      continue: 'ResidentialAddressContinue',
+    },
   },
 
   main: {
