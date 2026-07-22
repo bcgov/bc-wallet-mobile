@@ -24,6 +24,8 @@ export enum AppEventCode {
   ADD_CARD_SERVER_ERROR = 'add_card_server_error',
   ADD_CARD_TERMS_OF_USE = 'add_card_terms_of_use',
   TERMS_OF_USE_LOAD_FAILED = 'terms_of_use_load_failed', // Non-IAS error code — GET /v3/terms fetch failure
+  WEBVIEW_LOAD_FAILED = 'webview_load_failed', // Non-IAS error code — WebView onError (native load failure)
+  WEBVIEW_HTTP_ERROR = 'webview_http_error', // Non-IAS error code — WebView onHttpError (non-2xx response)
   ADD_CARD_DYNAMIC_REGISTRATION_APPVERSION_NOT_SUPPORTED = 'add_card_dynamic_registration_appversion_not_supported',
   ANDROID_APP_UPDATE_REQUIRED = 'android_app_update_required',
   ANDROID_DEVICE_PROTECTION_REQUIRED = 'android_device_protection_required',

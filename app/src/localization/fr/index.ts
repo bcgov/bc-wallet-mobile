@@ -1415,6 +1415,14 @@ const translation = {
       "Title": "Terms of Use unavailable (FR)",
       "Description": "We couldn't load the Terms of Use. Please check your connection and try again. (FR)"
     },
+    "WebViewLoadFailed": {
+      "Title": "Page unavailable (FR)",
+      "Description": "We couldn't load this page. Please check your connection and try again. (FR)"
+    },
+    "WebViewHttpError": {
+      "Title": "Page unavailable (FR)",
+      "Description": "We couldn't load this page right now. Please try again later. (FR)"
+    },
     "KeychainUnavailable": {
       "Title": "Secure Storage Unavailable (FR)",
       "Description": "Your device's secure storage is temporarily unavailable. Please wait a moment and try again.\n\nIf the issue persists, restart your device and try again. (FR)"

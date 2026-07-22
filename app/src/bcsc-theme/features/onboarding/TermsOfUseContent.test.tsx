@@ -106,6 +106,30 @@ describe('TermsOfUseContent', () => {
     expect(tree.getByText('Alerts.TermsOfUseLoadFailed.Description')).toBeTruthy()
   })
 
+  it('shows the error modal and retry button when the terms response has empty HTML', async () => {
+    const useApiMock = jest.mocked(useApi)
+    useApiMock.mockReturnValue({
+      config: {
+        getTermsOfUse: jest.fn().mockResolvedValue({ ...mockTermsOfUseResponse, html: '   ' }),
+        getServerStatus: jest.fn(),
+      },
+    } as any)
+
+    const tree = render(
+      <BasicAppContext>
+        <TermsOfUseContent onAccept={jest.fn()} />
+      </BasicAppContext>
+    )
+
+    await waitFor(() => {
+      expect(tree.getByTestId(testIdWithKey('RetryTermsOfUse'))).toBeTruthy()
+    })
+
+    expect(tree.getByText('Alerts.TermsOfUseLoadFailed.Title')).toBeTruthy()
+    expect(tree.getByText('Alerts.TermsOfUseLoadFailed.Description')).toBeTruthy()
+    expect(tree.queryByTestId('mocked-webview')).toBeNull()
+  })
+
   it('dismisses the error modal without clearing the retry button', async () => {
     const useApiMock = jest.mocked(useApi)
     useApiMock.mockReturnValue({
