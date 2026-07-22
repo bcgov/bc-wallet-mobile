@@ -16,6 +16,7 @@ import { useFcmService } from '../features/fcm'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { useVerificationStatus } from '../hooks/useVerificationStatus'
+import { useWarmUpDeviceKeys } from '../hooks/useWarmupDeviceKeys'
 import { isAccountExpired } from '../utils/datetime-utils'
 import { toAppError } from '../utils/native-error-map'
 import AuthStack from './AuthStack'
@@ -49,6 +50,7 @@ const BCSCRootStack: React.FC = () => {
   const { needsVerification, isVerified, isVerificationInProgress } = useVerificationStatus()
   const onboardedThisSession = useRef(false)
   const [verifyPromptAnswered, setVerifyPromptAnswered] = useState(false)
+  const { warmingUpKeys } = useWarmUpDeviceKeys()
   useSystemChecks(SystemCheckScope.STARTUP)
   useThirdPartyKeyboardWarning()
 
@@ -73,7 +75,7 @@ const BCSCRootStack: React.FC = () => {
   }, [dispatch, loadState, store.stateLoaded, emitErrorModal, t])
 
   // Show loading screen if state, API client or navigation is not ready
-  if (!store.stateLoaded || !isClientReady || initializingAccount || !isNavigationReady) {
+  if (!store.stateLoaded || !isClientReady || initializingAccount || !isNavigationReady || warmingUpKeys) {
     return <LoadingScreen message={t('BCSC.Loading.AppStartup')} />
   }
 

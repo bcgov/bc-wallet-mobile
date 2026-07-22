@@ -1,52 +1,46 @@
-import { TOKENS, useServices } from '@bifold/core'
-import { useEffect, useRef, useState } from 'react'
-import { createPreVerificationJWT, getAllKeys } from 'react-native-bcsc-core'
+import { PersistentStorage, TOKENS, useServices } from '@bifold/core'
+import { useEffect, useMemo, useState } from 'react'
+import { warmUpKeyPair } from 'react-native-bcsc-core'
+
+const DEVICE_KEYPAIR_GENERATED_KEY = '@bcsc/device-keys-warmed-up'
 
 /**
  * A custom hook that warms up device keys for BCSC authentication.
  *
- * Why? BCSCCore.generateKeyPair() is a slow operation on Android.
- * It blocks the UI thread and can cause a noticeable delay.
- * Calling this early in the app's lifecycle can help mitigate this delay.
+ * @returns An object containing a boolean indicating whether the device keys are currently being warmed up.
  */
 export const useWarmUpDeviceKeys = () => {
-  const [loadingDeviceKeys, setLoadingDeviceKeys] = useState(false)
+  const [warmingUpKeys, setWarminUpKeys] = useState(false)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const warmedUp = useRef(false)
 
   useEffect(() => {
     const warmupKeys = async () => {
-      if (warmedUp.current) {
-        // Keys already warmed up, no need to warm up again
-        return
-      }
-
-      setLoadingDeviceKeys(true)
       try {
-        const keys = await getAllKeys()
+        const warmedUp = await PersistentStorage.fetchValueForKey(DEVICE_KEYPAIR_GENERATED_KEY)
 
-        if (keys.length) {
-          // Keys already exist, no need to warm up
-          warmedUp.current = true
+        if (warmedUp) {
+          logger.info('[useWarmupDeviceKeys] Device keys already warmed up')
           return
         }
 
+        setWarminUpKeys(true)
         logger.info('[useWarmupDeviceKeys] Warming up device keys')
-
-        // TODO (MD): Add explicit function to BCSCCore to warm up device keys.
-        // Internally, this will call generateKeyPair() if keys do not exist.
-        await createPreVerificationJWT('', '')
-        warmedUp.current = true
+        await warmUpKeyPair()
+        await PersistentStorage.storeValueForKey(DEVICE_KEYPAIR_GENERATED_KEY, 'true')
       } catch (error) {
         logger.error('[useWarmupDeviceKeys] Error warming up device keys', error as Error)
-        warmedUp.current = false
       } finally {
-        setLoadingDeviceKeys(false)
+        setWarminUpKeys(false)
       }
     }
 
     warmupKeys()
   }, [logger])
 
-  return { loadingDeviceKeys }
+  return useMemo(
+    () => ({
+      warmingUpKeys,
+    }),
+    [warmingUpKeys]
+  )
 }

@@ -94,6 +94,7 @@ export const getKeyPair = jest.fn().mockResolvedValue({
   public: 'mock-public-key',
   privateKeyAvailable: 'true',
 })
+export const warmUpKeyPair = jest.fn().mockResolvedValue(undefined)
 
 // Token Management
 export const getToken = jest.fn().mockResolvedValue(null)
