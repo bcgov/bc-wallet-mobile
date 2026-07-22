@@ -58,7 +58,7 @@ export const TermsOfUseContent = ({ onAccept, headerText }: TermsOfUseContentPro
     try {
       setIsLoading(true)
       const data = await config.getTermsOfUse()
-      // data.html = ''
+
       if (!data.html?.trim()) {
         throw new Error('Terms of Use response contained empty HTML content')
       }
