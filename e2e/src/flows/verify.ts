@@ -2,11 +2,14 @@ import type { TestUser } from '../constants.js'
 import { Timeouts } from '../constants.js'
 import { acceptSystemAlert } from '../helpers/alerts.js'
 import { ApproveInPersonInput, approveInPersonRequest } from '../helpers/approval.js'
+import { getEmailConfirmationCode, getTempEmailAddress } from '../helpers/email.js'
 import { BaseScreen } from '../screens/core/BaseScreen.js'
 import { HomeScreen } from '../screens/main.js'
 import { VerifyPromptScreen } from '../screens/onboarding.js'
 import {
   AccountSetupScreen,
+  EmailConfirmationScreen,
+  EmailVerifiedScreen,
   EnterBirthdateScreen,
   EnterEmailScreen,
   IdentitySelectionScreen,
@@ -152,4 +155,34 @@ export async function completeVerification(
   await VerificationSuccessScreen.tap('primary') // Continue → exits verify stack to Home
 
   await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+}
+
+/**
+ * Drive the full email-verification step with a throwaway inbox: enter a temp address, read the
+ * emailed 6-digit code, confirm it, and continue past EmailVerified to VerificationMethodSelection.
+ * The email step is MANDATORY in the non-BCSC flow (Skip is hidden there and a non-BCSC user has no
+ * card-provided email), so this belongs to the non-bcsc journey. BCSC photo/combined cards carry a
+ * verified email and skip the step — those use `reachVerificationMethod` instead.
+ */
+export async function verifyEmailWithTempInbox(): Promise<void> {
+  const { email, token } = await getTempEmailAddress()
+
+  await EnterEmailScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await EnterEmailScreen.fill('email', email, { tapFirst: true })
+  await engine.dismissKeyboard()
+  await EnterEmailScreen.tapWhenEnabled('primary') // Continue → createEmailVerification → EmailConfirmation
+
+  await EmailConfirmationScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  const code = await getEmailConfirmationCode(token)
+  await EmailConfirmationScreen.fill('code', code, { tapFirst: true })
+  await engine.dismissKeyboard()
+  await EmailConfirmationScreen.tapWhenEnabled('primary') // Continue → sendCode → RESET to EmailVerified
+
+  // EmailVerified's only testID is the shared Continue, so confirm arrival by its title copy before
+  // tapping through — its Continue RESETS to VerificationMethodSelection.
+  const verifiedTitle = await engine.findByText('Your email has been verified')
+  await verifiedTitle.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+  await EmailVerifiedScreen.tap('primary')
+
+  await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
 }

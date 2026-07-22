@@ -122,6 +122,8 @@ export const TestIds = {
      *  card that already carries one resumes straight to method selection). `skip` (`SkipEmail`) is
      *  the normalized key (formerly a bare `SkipButton`). */
     enterEmail: {
+      inputPressable: 'email-pressable',
+      input: 'email-input',
       continue: 'Continue',
       skip: 'SkipEmail',
     },
@@ -162,6 +164,20 @@ export const TestIds = {
       hoursOfServiceTitle: 'HoursOfServiceTitle',
       reminderTitle: 'ReminderTitle',
       sendVideo: 'SendVideo',
+    },
+    /** Email confirmation (`'Email Verification'`) — the 6-digit code emailed to the entered address.
+     *  A correct `continue` RESETS the stack to EmailVerified. (`ResendCodeLink` / `GoToMyEmailLink`
+     *  are BARE testIDs — add them as raw strings, not `bcsc()`-wrapped, if a resend detour needs
+     *  them.) */
+    emailConfirmation: {
+      codeInput: 'EmailConfirmationCodeInput',
+      continue: 'Continue',
+    },
+    /** Email verified (`'Email Verified'`, no header) — success interstitial. Its only testID is the
+     *  shared `continue`, so the screen is identified by its title copy ("Your email has been
+     *  verified"); `continue` RESETS to VerificationMethodSelection. */
+    emailVerified: {
+      continue: 'Continue',
     },
   },
 

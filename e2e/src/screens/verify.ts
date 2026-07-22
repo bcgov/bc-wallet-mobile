@@ -119,15 +119,19 @@ export const VerificationSuccessScreen = defineScreen({
 })
 
 /**
- * `EnterEmail` — appears after the authorize step ONLY when the card provided no verified email; a
- * photo card that already carries one resumes straight to method selection. `self`/`secondary`
- * (SkipEmail) is unique to this screen, so journeys can detect and skip it.
+ * `EnterEmail` — appears after the authorize step ONLY when the card's authorize response carried no
+ * verified email. `self`/`email` is the input (always present, iOS types the pressable wrapper);
+ * `secondary` (SkipEmail) is offered on BCSC card flows only (hidden for non-BCSC). The photo journey
+ * skips it; the combined journey fills a temp-inbox address here.
  */
 export const EnterEmailScreen = defineScreen({
-  self: bcsc(v.enterEmail.skip),
+  self: { ios: bcsc(v.enterEmail.inputPressable), android: bcsc(v.enterEmail.input) },
   primary: bcsc(v.enterEmail.continue),
   secondary: bcsc(v.enterEmail.skip),
   back: bcsc(common.back),
+  inputs: {
+    email: { ios: bcsc(v.enterEmail.inputPressable), android: bcsc(v.enterEmail.input) },
+  },
 })
 
 /**
@@ -155,4 +159,28 @@ export const CallBusyOrClosedScreen = defineScreen({
     hoursOfServiceTitle: bcsc(v.callBusyOrClosed.hoursOfServiceTitle),
     reminderTitle: bcsc(v.callBusyOrClosed.reminderTitle),
   },
+})
+
+/**
+ * Email confirmation (`'Email Verification'`) — enter the 6-digit code emailed to the address from
+ * EnterEmail. `self`/`code` is the OTP field; `primary` (Continue) validates the code and RESETS the
+ * stack to EmailVerified (a wrong code keeps the screen with an inline error).
+ */
+export const EmailConfirmationScreen = defineScreen({
+  self: bcsc(v.emailConfirmation.codeInput),
+  primary: bcsc(v.emailConfirmation.continue),
+  back: bcsc(common.back),
+  inputs: {
+    code: bcsc(v.emailConfirmation.codeInput),
+  },
+})
+
+/**
+ * Email verified (`'Email Verified'`, no header) — the success interstitial after a correct code. Its
+ * ONLY testID is the shared `Continue`, so callers confirm arrival by the title copy ("Your email has
+ * been verified") before tapping `primary`, which RESETS to VerificationMethodSelection.
+ */
+export const EmailVerifiedScreen = defineScreen({
+  self: bcsc(v.emailVerified.continue),
+  primary: bcsc(v.emailVerified.continue),
 })
