@@ -158,7 +158,8 @@ describe('reportProblem', () => {
   })
 
   it('omits stack from the payload when the error has no stack', () => {
-    fakeError.error.stack = undefined
+    const newFakeError = { ...fakeError }
+    newFakeError.error.stack = undefined
 
     reportProblem(fakeError)
 

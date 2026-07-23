@@ -240,9 +240,17 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
 
   let appError: AppError
 
+  const errorOptions = {
+    cause: error,
+    context: {
+      url: error.config?.url ? new URL(error.config.url, 'https://x.com').pathname : undefined,
+      method: error.config?.method?.toUpperCase(),
+    },
+  }
+
   // If we have a predefined error definition for this app event code, use it to create the AppError
   if (errorDefinition) {
-    appError = AppError.fromErrorDefinition(errorDefinition, { cause: error })
+    appError = AppError.fromErrorDefinition(errorDefinition, errorOptions)
   } else if (isAppEventCode(errorCode)) {
     // Create a generic AppError for known event codes that don't have a predefined error definition
     appError = new AppError(
@@ -251,18 +259,20 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
         ...ErrorRegistry.UNKNOWN_SERVER_ERROR,
         appEvent: errorCode,
       },
-      { cause: error }
+      errorOptions
     )
   } else {
-    appError = new AppError(`Server Error: Unknown error code (${errorCode})`, ErrorRegistry.UNKNOWN_SERVER_ERROR, {
-      cause: error,
-    })
+    appError = new AppError(
+      `Server Error: Unknown error code (${errorCode})`,
+      ErrorRegistry.UNKNOWN_SERVER_ERROR,
+      errorOptions
+    )
   }
 
-  appError.addContext({
-    url: error.config?.url ? new URL(error.config.url, 'https://x.com').pathname : undefined,
-    method: error.config?.method?.toUpperCase(),
-  })
+  // appError.addContext({
+  //   url: error.config?.url ? new URL(error.config.url, 'https://x.com').pathname : undefined,
+  //   method: error.config?.method?.toUpperCase(),
+  // })
 
   return appError
 }
