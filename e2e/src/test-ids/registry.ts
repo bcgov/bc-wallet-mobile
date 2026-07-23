@@ -96,6 +96,12 @@ export const TestIds = {
       addAccount: 'AddAccount',
       transferAccount: 'TransferAccount',
     },
+    /** `TransferInstructions` — the transferee QR instructions reached from AccountSetup's transfer
+     *  option. `scanQrCode` (the always-present primary button) is the stable anchor; the visible
+     *  "Transfer Instructions" is only the nav-bar title (a `Screens:` key, not findByText-matchable). */
+    transferInstructions: {
+      scanQrCode: 'ScanQRCode',
+    },
     /** `IdentitySelection` — Scan (BCSC path) or use another ID (non-BCSC path). */
     identitySelection: {
       scan: 'Scan',

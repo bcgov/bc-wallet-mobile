@@ -47,6 +47,7 @@ export const IdentitySelectionScreen = defineScreen({
 export const ScanSerialScreen = defineScreen({
   self: bcsc(v.scanSerial.enterManually),
   primary: bcsc(v.scanSerial.enterManually),
+  back: bcsc(common.back),
 })
 
 /**
@@ -284,4 +285,24 @@ export const ResidentialAddressScreen = defineScreen({
     province: bcsc(v.residentialAddress.provinceInput),
     provinceBC: bcsc(v.residentialAddress.provinceOptionBC),
   },
+})
+
+/**
+ * `TransferAccountInstructions` ('Transfer Instructions') — reached from AccountSetup `secondary`
+ * (TransferAccount). Its visible title is only the nav-bar heading (a `Screens:` key, not
+ * findByText-matchable), so anchor on the always-present `scanQrCode` primary button; return via `back`.
+ */
+export const TransferAccountInstructionsScreen = defineScreen({
+  self: bcsc(v.transferInstructions.scanQrCode),
+  back: bcsc(common.back),
+})
+
+/**
+ * The in-app verify WebView (`VerifyWebView`, the shared `WebViewScreen`) — reached from the header
+ * help menu's Learn More or `DualIdentificationRequired` `seeAcceptedId`. It renders no content
+ * testIDs; pop it via the pushed screen's header `back` (mirrors `OnboardingWebViewScreen`).
+ */
+export const VerifyWebViewScreen = defineScreen({
+  self: bcsc(common.back),
+  back: bcsc(common.back),
 })
