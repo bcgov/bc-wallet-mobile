@@ -205,6 +205,59 @@ describe('useCardScanner', () => {
         })
       )
     })
+
+    it('should process a combo card scan with the serial ordered before the licence code (regression #4256/#4302)', async () => {
+      // mergeLockedCodesWithAccumulated returns accumulated extras first, current-frame
+      // codes last — so a lock driven by the serial alone can hand scanCard the codes in
+      // [serial, licence] order (the reverse of the "multiple barcodes" case above).
+      // scanCard's decode loop is order-independent: it just needs both kinds present.
+      const useApiMock = jest.mocked(useApi)
+      const bifoldMock = jest.mocked(Bifold)
+      const useSecureActionsMock = jest.mocked(useSecureActions)
+
+      const mockState: any = {
+        bcsc: { accountSetupType: AccountSetupType.AddAccount },
+        bcscSecure: { additionalEvidenceData: [] },
+      }
+      const mockAuthorization: any = {
+        authorization: {
+          authorizeDevice: jest.fn(),
+        },
+      }
+      const code39Serial: ScanableCode = {
+        type: 'code-39',
+        value: 'S00023254',
+      }
+      const pdf417DL: ScanableCode = {
+        type: 'pdf-417',
+        value: BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A,
+      }
+      const mockHandleCardData = jest.fn()
+
+      useApiMock.mockReturnValue(mockAuthorization)
+      useSecureActionsMock.mockReturnValue({
+        updateUserInfo: jest.fn(),
+        updateDeviceCodes: jest.fn(),
+        updateCardProcess: jest.fn(),
+        updateVerificationOptions: jest.fn(),
+      } as any)
+      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
+
+      const hook = renderHook(() => useCardScanner())
+
+      const scanCard = hook.result.current.scanCard
+
+      await scanCard([code39Serial, pdf417DL], mockHandleCardData)
+
+      expect(mockHandleCardData).toHaveBeenNthCalledWith(
+        1,
+        'S00023254',
+        expect.objectContaining({
+          licenseNumber: '2222222',
+        })
+      )
+    })
   })
 
   describe('handleScanComboCard', () => {
