@@ -63,6 +63,22 @@ export const WalletScreen = defineScreen({
 })
 
 /**
+ * Services catalogue tab — opens only for VERIFIED users (unverified taps redirect to
+ * MainVerifyPrompt, covered in the unverified journey). `self`/`search` is the sticky-header catalogue
+ * search field (always present once loaded), so it is the "Services opened, not gated" marker. Deeper
+ * service-login coverage is modeled separately.
+ */
+export const ServicesScreen = defineScreen({
+  self: bcsc(main.services.search),
+  inputs: {
+    search: bcsc(main.services.search),
+  },
+  elements: {
+    loading: bcsc(main.services.loading),
+  },
+})
+
+/**
  * QRCore — the bottom-tab navigator the scan FAB opens (Scanner / [Display, dev-mode only] /
  * PairingCode). `self` is the Scanner tab button; `torch` only renders once camera permission is
  * granted, making it the scanner-ready marker. `back` (header) pops the whole QRCore screen back
@@ -82,14 +98,25 @@ export const QRCoreScreen = defineScreen({
 })
 
 /**
- * Main settings — minimal descriptor for reachability asserts (the full screen is modeled later).
- * `self` is the always-present AppSecurity row; `profile` (→ AccountDetails) renders only for
- * VERIFIED users — its absence is the unverified-gating assert.
+ * Main settings menu (`SettingsContent.tsx`). `self` is the always-present AppSecurity row. The
+ * unverified-safe rows are exposed as `links`; the `isVerified`-gated `profile` (→ AccountDetails) and
+ * `forgetPairings` render only when VERIFIED, so their absence is the unverified-gating assert.
  */
 export const SettingsScreen = defineScreen({
   self: bcsc(main.settings.appSecurity),
   back: bcsc(common.back),
+  links: {
+    appSecurity: bcsc(main.settings.appSecurity),
+    changePin: bcsc(main.settings.changePin),
+    autoLock: bcsc(main.settings.autoLock),
+    analytics: bcsc(main.settings.analyticsOptIn),
+    removeAccount: bcsc(main.settings.removeAccount),
+    help: bcsc(main.settings.help),
+    contactUs: bcsc(main.settings.contactUs),
+    privacy: bcsc(main.settings.privacy),
+  },
   elements: {
-    profile: bcsc(main.settings.profile),
+    profile: bcsc(main.settings.profile), // verified-only
+    forgetPairings: bcsc(main.settings.forgetPairings), // verified-only
   },
 })

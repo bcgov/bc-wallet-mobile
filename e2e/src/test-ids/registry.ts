@@ -257,6 +257,12 @@ export const TestIds = {
       services: 'Services',
       wallet: 'Wallet',
     },
+    /** Services catalogue (verified-only; unverified taps redirect to MainVerifyPrompt). `search` is
+     *  the always-present sticky-header catalogue search field — the "Services opened, not gated" marker. */
+    services: {
+      search: 'search',
+      loading: 'ServicesLoading',
+    },
     /** Header settings (menu) button on the Home/Services tab headers. */
     header: {
       settings: 'SettingsMenuButton',
@@ -284,9 +290,29 @@ export const TestIds = {
       torchToggle: 'TorchToggle',
     },
     /** Main settings (minimal — the full screen is modeled later). `profile` is verified-gated. */
+    /** Main settings menu (`SettingsContent.tsx`). The `AuthenticatedSection` rows render once
+     *  `didAuthenticate`; the `isVerified`-gated rows (profile/editProfile/contacts/addDevice/
+     *  myDevices/forgetPairings) are ABSENT unverified. The Help + MoreInfo section rows always render. */
     settings: {
       appSecurity: 'AppSecurity',
+      changePin: 'ChangePIN',
+      autoLock: 'AutoLock',
+      notifications: 'Notifications',
+      analyticsOptIn: 'AnalyticsOptIn',
+      removeAccount: 'RemoveAccount',
+      help: 'Help',
+      contactUs: 'ContactUs',
+      feedback: 'Feedback',
+      accessibility: 'Accessibility',
+      termsOfUse: 'TermsOfUse',
+      privacy: 'Privacy',
+      // verified-only (isVerified-gated): absence-assert unverified, presence when verified
       profile: 'Profile',
+      editProfile: 'EditProfile',
+      contacts: 'Contacts',
+      addDevice: 'AddDevice',
+      myDevices: 'MyDevices',
+      forgetPairings: 'ForgetPairings',
     },
   },
 } as const

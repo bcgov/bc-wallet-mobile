@@ -19,8 +19,8 @@ const engine = new BaseScreen()
 
 /**
  * Verify journey: entry detours — the cheap, no-verification-completed browse of the verify entry
- * stack, split out of the old SetupSteps-anchored `verify-interaction-sweep.spec.ts` (VFY-4). One `it`
- * per detour so a failure isolates to that detour (mocha bail skips the rest of THIS file; other
+ * stack (the detours formerly bundled into the monolithic SetupSteps-anchored interaction-sweep spec).
+ * One `it` per detour so a failure isolates to that detour (mocha bail skips the rest of THIS file; other
  * journeys still run). It NEVER submits the birthdate (no `authorizeDevice`), so it stays backend-free
  * except the terms fetch and the accepted-documents webview.
  *
@@ -36,7 +36,8 @@ const engine = new BaseScreen()
  * deliberately left out because they don't exist on this path: the help-menu 'Learn more' webview (its
  * ListButton has no testID and a non-breaking-space a11y label — the seeAcceptedId round-trip already
  * covers an in-app webview) and EvidenceTypeList 'Show more options' (renders only for the non-photo
- * BCSC path, `photoFilter==='photo'`, not the non-BCSC first-ID list — that belongs to VFY-2).
+ * BCSC path, `photoFilter==='photo'`, not the non-BCSC first-ID list — it belongs to the non-photo
+ * card journey).
  */
 describe('Verify journey: entry detours', () => {
   before(() => {

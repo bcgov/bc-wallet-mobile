@@ -9,7 +9,7 @@ import {
   reachVerificationMethod,
   startVerification,
 } from '../../../../src/flows/verify.js'
-import { HomeScreen, SettingsScreen } from '../../../../src/screens/main.js'
+import { HomeScreen, ServicesScreen, SettingsScreen, TabBar, WalletScreen } from '../../../../src/screens/main.js'
 import { VerificationMethodSelectionScreen } from '../../../../src/screens/verify.js'
 import { getTestUser, setTestUser } from '../../../../src/support/context.js'
 
@@ -21,10 +21,10 @@ import { getTestUser, setTestUser } from '../../../../src/support/context.js'
  *
  * One ordered session: onboard (same session — VerifyPrompt exists only here) → Continue → manual
  * serial → birthdate (authorizeDevice) → method selection → in-person approval → VerificationSuccess
- * → verified Home.
+ * → verified Home → verified tab nav + Services catalogue.
  *
- * Its distinct coverage — Contacts + verified AccountDetails — is appended here when MAIN-4 lands.
- * mocha bail isolates any failure to this file; the other journeys still run.
+ * Its distinct verified-account coverage (Contacts + AccountDetails) is appended here later. mocha bail
+ * isolates any failure to this file; the other journeys still run.
  */
 describe('Verified journey: combined card', () => {
   before(() => {
@@ -62,6 +62,22 @@ describe('Verified journey: combined card', () => {
       'the Settings Profile row is verified-gated and should be visible after verification'
     )
     await SettingsScreen.back.tap()
+    await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  })
+
+  // Verified tab navigation + Services content. Unverified users are bounced to MainVerifyPrompt on the
+  // Services tap (see unverified-main.journey.ts); once verified, the Services tab opens the real catalogue.
+  it('verified: the Services tab opens the catalogue instead of the verify prompt', async () => {
+    await TabBar.link('services')
+    await ServicesScreen.expectVisible(Timeouts.SCREEN_TRANSITION) // catalogue search field = loaded, not gated
+  })
+
+  it('verified: tab nav sweeps Services → Wallet → Home', async () => {
+    await TabBar.link('wallet')
+    // Identity verification issues no wallet credential, so the wallet is still the empty state; the
+    // Credo agent boots for any authenticated user, so allow the cold-start budget.
+    await WalletScreen.expectVisible(Timeouts.COLD_START)
+    await TabBar.link('home')
     await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 })
