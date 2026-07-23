@@ -1,0 +1,116 @@
+name: Distribute to Firebase App Distribution
+description: |
+  Upload an already-built, signed IPA (iOS) or APK (Android) to Firebase App
+  Distribution via Fastlane. Distribution only — the artifact is produced by
+  the build jobs. The Firebase App ID is derived from the variant's
+  google-services credentials, so no per-variant App ID secret is needed.
+
+inputs:
+  platform:
+    description: 'Target platform: ios or android'
+    required: true
+  app_identifier:
+    description: 'Bundle ID (iOS) or package name (Android) — used to locate the matching Firebase App ID in the google-services file.'
+    required: true
+  google_services_base64:
+    description: "Base64 GoogleService-Info.plist (iOS) or google-services.json (Android) for this variant."
+    required: true
+  service_account_base64:
+    description: 'Base64 GCP service-account JSON with the Firebase App Distribution Admin role.'
+    required: true
+  artifact_path:
+    description: 'Path to the .ipa (iOS) or .apk (Android) to distribute.'
+    required: true
+  groups:
+    description: 'Comma-separated Firebase tester group aliases.'
+    required: false
+    default: ''
+  version_name:
+    description: 'Marketing version, used in release notes (e.g. 4.1.0).'
+    required: true
+  version_code:
+    description: 'Build number, used in release notes.'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Ruby and install Fastlane
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.3'
+        bundler-cache: true
+        working-directory: app/fastlane
+
+    - name: Decode credentials and derive Firebase App ID
+      id: prep
+      shell: bash
+      env:
+        PLATFORM: ${{ inputs.platform }}
+        APP_IDENTIFIER: ${{ inputs.app_identifier }}
+        GOOGLE_SERVICES_BASE64: ${{ inputs.google_services_base64 }}
+        SERVICE_ACCOUNT_BASE64: ${{ inputs.service_account_base64 }}
+      run: |
+        set -euo pipefail
+
+        if [ -z "${SERVICE_ACCOUNT_BASE64}" ]; then
+          echo "::error::No Firebase service-account secret provided for this variant."
+          exit 1
+        fi
+
+        SA_FILE="${RUNNER_TEMP}/firebase-service-account.json"
+        echo "${SERVICE_ACCOUNT_BASE64}" | base64 --decode > "${SA_FILE}"
+        echo "service_credentials_file=${SA_FILE}" >> "$GITHUB_OUTPUT"
+
+        if [ -z "${GOOGLE_SERVICES_BASE64}" ]; then
+          echo "::error::No google-services secret provided for this variant."
+          exit 1
+        fi
+
+        GS_FILE="${RUNNER_TEMP}/google-services-source"
+        echo "${GOOGLE_SERVICES_BASE64}" | base64 --decode > "${GS_FILE}"
+
+        if [ "${PLATFORM}" = "ios" ]; then
+          APP_ID=$(python3 - "$GS_FILE" <<'PY'
+        import plistlib, sys
+        with open(sys.argv[1], "rb") as f:
+            print(plistlib.load(f)["GOOGLE_APP_ID"])
+        PY
+        )
+        elif [ "${PLATFORM}" = "android" ]; then
+          APP_ID=$(python3 - "$GS_FILE" "$APP_IDENTIFIER" <<'PY'
+        import json, sys
+        data = json.load(open(sys.argv[1]))
+        pkg = sys.argv[2]
+        for c in data.get("client", []):
+            if c["client_info"]["android_client_info"]["package_name"] == pkg:
+                print(c["client_info"]["mobilesdk_app_id"])
+                break
+        else:
+            sys.exit(f"No client matching package '{pkg}' in google-services.json")
+        PY
+        )
+        else
+          echo "::error::Unknown platform '${PLATFORM}' (expected ios or android)"
+          exit 1
+        fi
+
+        if [ -z "${APP_ID}" ]; then
+          echo "::error::Could not derive Firebase App ID for ${APP_IDENTIFIER}"
+          exit 1
+        fi
+        echo "Derived Firebase App ID: ${APP_ID}"
+        echo "app_id=${APP_ID}" >> "$GITHUB_OUTPUT"
+
+    - name: Distribute via Fastlane
+      shell: bash
+      working-directory: app
+      env:
+        BUNDLE_GEMFILE: ${{ github.workspace }}/app/fastlane/Gemfile
+        FIREBASE_APP_ID: ${{ steps.prep.outputs.app_id }}
+        FIREBASE_SERVICE_CREDENTIALS_FILE: ${{ steps.prep.outputs.service_credentials_file }}
+        FIREBASE_ARTIFACT_PATH: ${{ inputs.artifact_path }}
+        FIREBASE_GROUPS: ${{ inputs.groups }}
+        FIREBASE_RELEASE_NOTES: "Release ${{ inputs.version_name }} (${{ inputs.version_code }})"
+      run: |
+        bundle exec fastlane ${{ inputs.platform }} firebase_${{ inputs.platform }}

@@ -1,6 +1,5 @@
-import { ButtonLocation, IconButton } from '@bifold/core'
+import { ButtonLocation, IconButton, useTheme } from '@bifold/core'
 import { HeaderBackButtonProps } from '@react-navigation/elements'
-import { Platform } from 'react-native'
 
 /**
  * Shared Header Back Button component that navigates back on press.
@@ -8,10 +7,13 @@ import { Platform } from 'react-native'
  * @returns {*} {React.ReactElement}
  */
 export const HeaderBackButton = (props: HeaderBackButtonProps) => {
+  const { ColorPalette } = useTheme()
+
   return (
     <IconButton
       buttonLocation={ButtonLocation.Left}
-      icon={Platform.select({ ios: 'arrow-back-ios', android: 'arrow-left', default: 'arrow-left' })}
+      icon={'arrow-left'}
+      iconTintColor={ColorPalette.brand.primary}
       accessibilityLabel={String(props.accessibilityLabel)}
       testID={String(props.testID)}
       onPress={() => props.onPress?.()}

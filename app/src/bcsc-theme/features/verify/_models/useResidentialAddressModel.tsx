@@ -9,7 +9,7 @@ import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { BCState, NonBCSCUserMetadata } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
-import { CommonActions } from '@react-navigation/native'
+import { StackActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import moment from 'moment'
 import { useCallback, useState } from 'react'
@@ -147,7 +147,10 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
         ...store,
         bcscSecure: { ...store.bcscSecure, userMetadata: updatedUserMetadata },
       }
-      navigation.dispatch(CommonActions.reset({ index: 0, routes: [getResumeStepRoute(predictedStore)] }))
+      // Advance to the next step while keeping the history so the user can step back through the
+      // flow (this address screen, then the ID forms). push preserves the back stack.
+      const nextStep = getResumeStepRoute(predictedStore)
+      navigation.dispatch(StackActions.push(nextStep.name, nextStep.params))
       return
     }
 
@@ -210,7 +213,10 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
           cardProcess: deviceAuth.process,
         },
       }
-      navigation.dispatch(CommonActions.reset({ index: 0, routes: [getResumeStepRoute(predictedStore)] }))
+      // Advance to the next step while keeping the history so the user can step back through the
+      // flow (this address screen, then the ID forms). push preserves the back stack.
+      const nextStep = getResumeStepRoute(predictedStore)
+      navigation.dispatch(StackActions.push(nextStep.name, nextStep.params))
     } catch (error) {
       logger.error('ResidentialAddressScreen.handleSubmit -> device authorization failed', { error })
       emitErrorModal(

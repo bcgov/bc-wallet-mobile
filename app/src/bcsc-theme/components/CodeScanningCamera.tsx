@@ -30,6 +30,7 @@ import {
   Camera,
   CameraCaptureError,
   CameraProps,
+  CameraRuntimeError,
   Code,
   CodeScannerFrame,
   CodeType,
@@ -40,6 +41,7 @@ import {
 } from 'react-native-vision-camera'
 
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
+import { isBackgroundedAppState } from '../utils/app-state'
 import {
   CameraFormat,
   EnhancedCode,
@@ -158,6 +160,12 @@ export interface CodeScanningCameraProps {
    * framing overlay reflect alignment (e.g. recolour the outline).
    */
   onScanStateChange?: (state: ScanState) => void
+
+  /**
+   * Called when the camera hits a runtime error that isn't just the app being
+   * backgrounded. Lets the parent fall back to a non-camera path.
+   */
+  onError?: (error: CameraRuntimeError) => void
 }
 
 /** Feature flag: when true, shows Confirm/Try Again buttons on lock.
@@ -178,6 +186,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   torchActive,
   onToggleTorch,
   onScanStateChange,
+  onError,
 }) => {
   // Derive scanner code types from the declared scan zones (deduped)
   const codeTypes = [...new Set(scanZones.flatMap((z) => z.types))] as CodeType[]
@@ -186,7 +195,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const { ColorPalette, Spacing } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitErrorModal } = useErrorAlert()
-  const { pauseActivityTracking, resumeActivityTracking } = useBCSCActivity()
+  const { appStateStatus, pauseActivityTracking, resumeActivityTracking } = useBCSCActivity()
   const camera = useRef<Camera>(null)
   const [torchEnabled, setTorchEnabled] = useState(false)
   // When `torchActive`/`onToggleTorch` are provided, the parent owns torch state.
@@ -222,8 +231,15 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const lockedScanRef = useRef<{ codes: EnhancedCode[]; frame: CodeScannerFrame } | null>(null)
 
   // --- Configurable highlight thresholds ---
-  // Consecutive identical readings required per code for "locked" state (green with border)
+  // Reading count required per code to reach "locked" state (green with border).
+  // The count accumulates on each frame the code is detected and decays by
+  // READING_DECAY_PER_MISSED_FRAME (not reset to 0) on a missed frame — see
+  // decayStaleReadings — so it isn't strictly "consecutive" readings.
   const LOCK_READING_THRESHOLD = 5
+  // Reading count decrement applied per frame a previously-seen code goes missing,
+  // instead of resetting it to 0 — a single blank/missed frame (common on Android,
+  // where ML Kit detection is intermittent) no longer wipes lock progress.
+  const READING_DECAY_PER_MISSED_FRAME = 1
   // Alignment tolerance for scan zone matching (proportional to zone size)
   const ALIGNMENT_MARGIN_FACTOR = 0.05
 
@@ -426,17 +442,26 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     const corners = code.corners
     const orientation = calculateBarcodeOrientation(corners)
 
-    // Check if code is aligned with scan zone (pass type for custom zone matching)
+    // Check if code is aligned with scan zone (pass type for custom zone matching).
+    // Alignment is metadata only now — it no longer gates validation/lock state (see
+    // determineScanState); it still feeds focus-cycle prioritisation
+    // (updateZoneDetectionTracking) and the EnhancedCode metadata consumed for the
+    // purely-visual scan zone outline.
     const isAligned = position ? isCodeAlignedWithScanZone(position, code.type, ALIGNMENT_MARGIN_FACTOR) : false
 
-    // Validate through consecutive readings (only if aligned)
+    // Validate through consecutive readings
     const key = `${code.type}-${code.value}`
     let readingCount = 1
     let isValidated = false
 
-    // Always track consecutive readings for any code with a value —
-    // this drives the visual lock state (readingCount >= LOCK_READING_THRESHOLD).
-    // But only mark as "validated" (for triggering the scan callback) when also aligned.
+    // Track readings for any code with a value — the same readingCount feeds two
+    // independent thresholds: the visual "locked" state (readingCount >=
+    // LOCK_READING_THRESHOLD, checked in determineScanState) and this code's
+    // "validated" status for the scan callback below (readingCount >=
+    // VALIDATION_THRESHOLD, which differs by platform). Position is not a gate: a
+    // successfully decoded barcode counts regardless of where it sits on screen.
+    // Card identity is validated downstream by decoding content (useCardScanner),
+    // which rejects non-BCSC scans and resets the scanner.
     if (code.value) {
       const existing = barcodeReadings.current.get(key)
       if (existing && existing.value === code.value && existing.type === code.type) {
@@ -447,8 +472,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
         // New code or changed value - reset count
         barcodeReadings.current.set(key, { value: code.value, type: code.type, count: 1 })
       }
-      // Only validated (for callback) if ALSO aligned with scan zone
-      isValidated = isAligned && readingCount >= VALIDATION_THRESHOLD
+      isValidated = readingCount >= VALIDATION_THRESHOLD
     }
 
     return {
@@ -461,12 +485,25 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     }
   }
 
-  /** Remove readings for barcodes no longer detected in the current scan frame */
-  const cleanupStaleReadings = (currentScanKeys: Set<string>) => {
+  /**
+   * Decay (rather than immediately drop) readings for barcodes missing from the
+   * current scan frame. Each missed frame reduces the reading count by
+   * `READING_DECAY_PER_MISSED_FRAME`; the entry is only removed once it decays to
+   * zero. This absorbs the ordinary single-frame misses that come from ML Kit
+   * intermittency, screen glare, or momentary hand drift, instead of throwing away
+   * all lock progress on the first blank frame.
+   */
+  const decayStaleReadings = (currentScanKeys: Set<string>) => {
     const keysToDelete: string[] = []
-    barcodeReadings.current.forEach((_, key) => {
-      if (!currentScanKeys.has(key)) {
+    barcodeReadings.current.forEach((reading, key) => {
+      if (currentScanKeys.has(key)) {
+        return
+      }
+      const decayedCount = reading.count - READING_DECAY_PER_MISSED_FRAME
+      if (decayedCount <= 0) {
         keysToDelete.push(key)
+      } else {
+        barcodeReadings.current.set(key, { ...reading, count: decayedCount })
       }
     })
     keysToDelete.forEach((key) => barcodeReadings.current.delete(key))
@@ -508,12 +545,11 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     detectedZoneIndices.current = newDetected
   }
 
-  /** Determine the collective scan state based on qualifying aligned codes */
+  /** Determine the collective scan state based on qualifying codes */
   const computeScanState = (
     enhancedCodes: EnhancedCode[]
   ): { newScanState: ScanState; qualifyingCodes: EnhancedCode[] } =>
     determineScanState(enhancedCodes, {
-      enableScanZones,
       minCodesForAligned: scanZones.length,
       lockReadingThreshold: LOCK_READING_THRESHOLD,
     })
@@ -572,10 +608,10 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     }
   }
 
-  /** Accumulate validated+aligned codes across frames within a time window */
+  /** Accumulate validated codes across frames within a time window */
   const accumulateValidatedResults = (enhancedCodes: EnhancedCode[]) => {
     const now = Date.now()
-    const newlyValidated = enhancedCodes.filter((code) => code.isAligned && code.isValidated)
+    const newlyValidated = enhancedCodes.filter((code) => code.isValidated)
 
     // Add/update validated codes in the accumulator
     newlyValidated.forEach((code) => {
@@ -597,7 +633,8 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       return
     }
     // Freeze scanning — user must tap "Confirm" or "Try Again"
-    // newScanState === 'locked' already guarantees ≥2 qualifying codes with ≥5 consecutive readings each
+    // newScanState === 'locked' already guarantees ≥minCodesForAligned qualifying codes this frame,
+    // each with ≥LOCK_READING_THRESHOLD accumulated readings
     isLockedRef.current = true
     lockedScanRef.current = { codes: qualifyingCodes, frame }
     // Cancel any clear timeout so highlights persist
@@ -607,12 +644,25 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     }
   }
 
-  /** Handle when no codes are detected — clear highlights and reset readings */
+  /**
+   * Handle a frame where no codes are detected — decay (don't reset) validation
+   * readings, and clear highlights / drop back to 'scanning' once readings have
+   * fully decayed to empty. This keeps a single blank frame from resetting lock
+   * progress or flickering the outline back to its unread colour.
+   */
   const handleNoCodesDetected = () => {
     if (isLockedRef.current) {
       return
     }
-    // Clear highlights and validation readings when no codes are detected
+    // No codes present this frame — decay every tracked reading by one frame's worth.
+    decayStaleReadings(new Set())
+
+    if (barcodeReadings.current.size > 0) {
+      // Still have partially-decayed readings — hold the current scan state/highlights.
+      return
+    }
+
+    // Fully decayed — clear highlights and validation state
     // (but never reset if locked — highlights are frozen)
     detectedZoneIndices.current = new Set()
     setScanState('scanning')
@@ -625,10 +675,14 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
         useNativeDriver: true,
       }).start()
     }
-    // Clear validation readings when no codes detected (but keep accumulated codes —
-    // they expire via the time window, allowing brief gaps in detection)
-    barcodeReadings.current.clear()
   }
+
+  // Suppress auto-refocus cycling while codes are actively being detected —
+  // refocusing mid-read blurs the frame and resets validation progress (see
+  // doFocus inside startFocusCycling below). Cycling resumes automatically once
+  // detections stop for this long.
+  const FOCUS_SUPPRESS_AFTER_DETECTION_MS = 2000
+  const lastDetectionAtRef = useRef(0)
 
   /**
    * Enhanced code scanner with position and orientation metadata
@@ -653,10 +707,13 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
         return
       }
 
+      // Codes are actively being detected — hold off auto-refocus cycling
+      lastDetectionAtRef.current = Date.now()
+
       // Enhance codes with position and orientation metadata
       const enhancedCodes = codes.map(enhanceSingleCode)
       const currentScanKeys = new Set(enhancedCodes.map((c) => `${c.type}-${c.value}`))
-      cleanupStaleReadings(currentScanKeys)
+      decayStaleReadings(currentScanKeys)
       updateZoneDetectionTracking(enhancedCodes)
       const { newScanState, qualifyingCodes } = computeScanState(enhancedCodes)
       setScanState(newScanState)
@@ -758,6 +815,13 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
         return
       }
 
+      // Skip this cycle while a code is actively being read — refocusing mid-read
+      // blurs the frame and resets validation progress. Cycling resumes
+      // automatically once detections stop for FOCUS_SUPPRESS_AFTER_DETECTION_MS.
+      if (Date.now() - lastDetectionAtRef.current < FOCUS_SUPPRESS_AFTER_DETECTION_MS) {
+        return
+      }
+
       // Prefer zones that have NOT yet detected a barcode
       const undetectedIndices = scanZones.map((_, i) => i).filter((i) => !detectedZoneIndices.current.has(i))
 
@@ -832,6 +896,16 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     }, [pauseActivityTracking, stopFocusCycling, resumeActivityTracking])
   )
 
+  // Diagnostic: log whenever screen focus or app foreground/background state
+  // changes, since both drive the camera's `isActive` prop below. VisionCamera
+  // tears down the session on deactivate and re-initializes cleanly on
+  // reactivate, so backgrounding the app (or switching camera apps) while
+  // scanning no longer leaves a dead camera. Fuller camera-setup diagnostic
+  // logging is a follow-up.
+  useEffect(() => {
+    logger.info('CodeScanningCamera active state', { isFocused, appStateStatus })
+  }, [isFocused, appStateStatus, logger])
+
   /**
    * Component unmount cleanup - ensure all resources are released.
    * This cleanup fires when the component fully unmounts (not just loses focus).
@@ -900,15 +974,25 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   }, [initialZoom, getEffectiveZoom, logger, device, format, zoom, cameraIsReady])
 
   const handleCameraError = useCallback(
-    (error: unknown) => {
+    (error: CameraRuntimeError) => {
+      if (isBackgroundedAppState(appStateStatus)) {
+        // Ignore camera errors while backgrounded or transitioning (app switcher, notification
+        // shade, incoming call on iOS) — they are expected and not actionable.
+        logger.info('[CodeScanningCamera] Camera error ignored while app is backgrounded or inactive', {
+          appStateStatus,
+        })
+        return
+      }
+
       logger.error('CodeScanningCamera runtime error', error as Error)
       emitErrorModal(
         t('BCSC.CameraDisclosure.Error'),
         t('BCSC.CameraDisclosure.ErrorMessage'),
         ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
       )
+      onError?.(error)
     },
-    [logger, emitErrorModal, t]
+    [appStateStatus, logger, emitErrorModal, t, onError]
   )
 
   const handleSaveScanZones = useCallback(() => {
@@ -1166,13 +1250,14 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     <View style={[styles.container, style]}>
       <View
         style={styles.cameraContainer}
+        testID="camera-preview-container"
         onLayout={(event) => {
           const { width, height } = event.nativeEvent.layout
           setContainerSize({ width, height })
           logger.debug('Camera container size', { width, height })
         }}
       >
-        {/* 
+        {/*
             resizeMode="cover" fills the container without black bars by cropping the camera feed.
             The coordinate transformation logic accounts for the cropped portion to ensure
             highlight boxes align correctly with visible barcodes.
@@ -1182,7 +1267,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
           style={styles.camera}
           device={device}
           format={format}
-          isActive={isFocused && !frozenFrameUri}
+          isActive={isFocused && !isBackgroundedAppState(appStateStatus) && !frozenFrameUri}
           video={true}
           codeScanner={codeScanner}
           torch={isTorchOn ? 'on' : 'off'}

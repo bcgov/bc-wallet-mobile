@@ -66,128 +66,51 @@ exports[`PairingConfirmation should match snapshot 1`] = `
         BCSC.ManualPairing.CompletionDescription
       </Text>
       <View
-        style={
+        accessibilityLabel="BCSC.ManualPairing.BookmarkServiceButton"
+        accessibilityRole="button"
+        accessibilityState={
           {
-            "gap": 16,
-            "marginTop": 24,
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": false,
           }
         }
-      >
-        <View
-          style={
-            {
-              "alignItems": "center",
-              "flexDirection": "row",
-              "justifyContent": "space-between",
-            }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
           }
-        >
-          <View>
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "bold",
-                  },
-                  {
-                    "color": "#313132",
-                  },
-                ]
-              }
-            >
-              BCSC.ManualPairing.BookmarkService
-            </Text>
-            <Text
-              maxFontSizeMultiplier={2}
-              style={
-                [
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "bold",
-                  },
-                  {
-                    "color": "#313132",
-                  },
-                ]
-              }
-            >
-              Test Service
-            </Text>
-          </View>
-          <View
-            accessibilityLabel="BCSC.ManualPairing.ToggleBookmark"
-            accessibilityRole="button"
-            accessibilityState={
-              {
-                "busy": undefined,
-                "checked": undefined,
-                "disabled": undefined,
-                "expanded": undefined,
-                "selected": undefined,
-              }
-            }
-            accessibilityValue={
-              {
-                "max": undefined,
-                "min": undefined,
-                "now": undefined,
-                "text": undefined,
-              }
-            }
-            accessible={true}
-            collapsable={false}
-            focusable={true}
-            hitSlop={
-              {
-                "bottom": 44,
-                "left": 44,
-                "right": 44,
-                "top": 44,
-              }
-            }
-            onClick={[Function]}
-            onResponderGrant={[Function]}
-            onResponderMove={[Function]}
-            onResponderRelease={[Function]}
-            onResponderTerminate={[Function]}
-            onResponderTerminationRequest={[Function]}
-            onStartShouldSetResponder={[Function]}
-            style={
-              {
-                "opacity": 1,
-              }
-            }
-            testID="com.ariesbifold:id/ToggleBookmark"
-          >
-            <Text
-              allowFontScaling={false}
-              selectable={false}
-              style={
-                [
-                  {
-                    "color": "#FFFFFF",
-                    "fontSize": 32,
-                  },
-                  undefined,
-                  {
-                    "fontFamily": "Material Design Icons",
-                    "fontStyle": "normal",
-                    "fontWeight": "normal",
-                  },
-                  {},
-                ]
-              }
-            >
-              󰃃
-            </Text>
-          </View>
-        </View>
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "borderColor": "#003366",
+            "borderRadius": 4,
+            "borderWidth": 2,
+            "flexDirection": "row",
+            "gap": 16,
+            "justifyContent": "space-between",
+            "marginTop": 24,
+            "opacity": 1,
+            "padding": 16,
+          }
+        }
+        testID="com.ariesbifold:id/BookmarkService"
+      >
         <Text
           maxFontSizeMultiplier={2}
           style={
@@ -195,14 +118,37 @@ exports[`PairingConfirmation should match snapshot 1`] = `
               {
                 "color": "#313132",
                 "fontFamily": "BCSans-Regular",
-                "fontSize": 14,
-                "fontWeight": "normal",
+                "fontSize": 18,
+                "fontWeight": "bold",
               },
-              undefined,
+              {
+                "color": "#313132",
+              },
             ]
           }
         >
-          BCSC.ManualPairing.BookmarkDescription
+          BCSC.ManualPairing.BookmarkServiceButton
+        </Text>
+        <Text
+          allowFontScaling={false}
+          selectable={false}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontSize": 32,
+              },
+              undefined,
+              {
+                "fontFamily": "Material Design Icons",
+                "fontStyle": "normal",
+                "fontWeight": "normal",
+              },
+              {},
+            ]
+          }
+        >
+          󰃃
         </Text>
       </View>
     </View>

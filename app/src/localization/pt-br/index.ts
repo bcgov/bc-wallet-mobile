@@ -42,8 +42,8 @@ const translation = {
     "Message2032": "There was a problem while opening the app-to-app URL. (PT-BR)",
     "Title2033": "Failed to load services (PT-BR)",
     "Message2033": "There was a problem while loading the services. Please try again later. (PT-BR)",
-    "NoMessage": "No Message (PT-BR)",
     "OK": "OK (PT-BR)",
+    "NoMessage": "No Message (PT-BR)",
     "ErrorCode": "Código de erro",
     "ReportThisProblem": "Reportar este problema",
     "Reported": "Reportado",
@@ -67,13 +67,15 @@ const translation = {
   },
   "Credentials": {
     "AddCredential": "Add Credential (PT-BR)",
-    "AddFirstCredential": "Add your first credential (PT-BR)"
+    "AddFirstCredential": "Add your first credential (PT-BR)",
+    "NotAnIDInfoTitle": "This does not replace your physical ID (PT-BR)",
+    "NotAnIDInfoDescription": "Do not share this screen as ID. This credential is used for digital interactions via the BC Services Card app only. (PT-BR)",
   },
   "Onboarding": {
     "DifferentWalletHeading": "A different smart wallet (PT-BR)",
-    "DifferentWalletParagraph": "Unlike other digital wallets, BC Wallet helps you prove who you are in-person or online by storing and using digital credentials issued by participating services.\n\nInteract with confidence with individuals and organisations you trust. (PT-BR)",
+    "DifferentWalletParagraph": "Unlike other digital wallets, BC Wallet helps you prove who you are in-person or online by storing and using digital credentials issued by participating services.\n\nInteract with confidence with individuals and organizations you trust. (PT-BR)",
     "DigitalCredentialsHeading": "Digital credentials (PT-BR)",
-    "DigitalCredentialsParagraph": "Digital credentials are the electronic equivalent of physical credentials such as certifications and permits offered by participating services.\n\nServices are simplified and expedited as organisations and individuals can confirm who you are with trusted information from digital credentials. (PT-BR)",
+    "DigitalCredentialsParagraph": "Digital credentials are the electronic equivalent of physical credentials such as certifications and permits offered by participating services.\n\nServices are simplified and expedited as organizations and individuals can confirm who you are with trusted information from digital credentials. (PT-BR)",
     "PrivateConfidentialHeading": "Private and confidential (PT-BR)",
     "PrivateConfidentialParagraph": "Your privacy is important.\n\nThe B.C. government doesn't know when you use digital credentials, unless you're interacting with them. No analytics are recorded.\n\nYou approve every use of your digital credentials, and only provide the information that's needed. (PT-BR)",
     "GetStarted": "Get Started (PT-BR)",
@@ -99,18 +101,37 @@ const translation = {
     },
     "StartVerification": {
       "Title": "You're not verified (PT-BR)",
-      "Description": "You can continue the verification process at any time. (PT-BR)",
+      "Description": "You can continue the verification process at anytime. (PT-BR)",
       "ButtonTitle": "Start verification (PT-BR)",
-      "ContinueButtonTitle": "Continue verification (PT-BR)"
+    },
+    "ContinueVerification": {
+      "Title": "You're not verified (PT-BR)",
+      "Description": "Complete the verification process at anytime. (PT-BR)",
+      "ButtonTitle": "Continue (PT-BR)",
+    },
+    "PendingReview": {
+      "Title": "Your identity verification is pending (PT-BR)",
+      "Description": "We've received your request to verify your identity. (PT-BR)",
+      "ButtonTitle": "Check status (PT-BR)"
+    },
+    "CancelledReview": {
+      "Title": "Your identity could not be verified (PT-BR)",
+      "Description": "Verify your identity again to access services. (PT-BR)",
+      "ButtonTitle": "See details (PT-BR)"
+    },
+    "Verified": {
+      "Title": "Your identity has been verified (PT-BR)",
+      "Description": "Complete the verification process. (PT-BR)",
+      "ButtonTitle": "Finish up (PT-BR)"
     },
     "AccountExpired": {
-      "Title": "Your BC Services card app has expired (PT-BR)",
+      "Title": "Your BC Services card account has expired (PT-BR)",
       "Description": "Please reverify yourself to get access to your services (PT-BR)",
       "ButtonTitle": "Start renewal (PT-BR)"
     },
     "AccountRenewal": {
       "Title": "Time for renewal (PT-BR)",
-      "Description": "Renew your BC Services card app before it expires on {{expiryDate}} (PT-BR)",
+      "Description": "Renew your BC Services card account before it expires on {{expiryDate}} (PT-BR)",
       "ButtonTitle": "Start renewal (PT-BR)"
     },
     "BasicMessage": {
@@ -132,6 +153,12 @@ const translation = {
     }
   },
   "PersonCredential": {
+    "Notification": {
+      "PageTitle": "Person Credential (PT-BR)",
+      "Title": "Get your Person credential (PT-BR)",
+      "Description": "Add your Person credential to your wallet and use it to get access to services online (PT-BR)",
+      "ButtonTitle": "Start (PT-BR)"
+    },
     "ServicesCardInstalled": "Step 1: BC Services Card app installed (PT-BR)",
     "InstallServicesCard": "Step 1: Install the BC Services Card app (PT-BR)",
     "InstallApp": "Install the app (PT-BR)",
@@ -192,6 +219,8 @@ const translation = {
     "AcceptedTermsVersion": "Accepted version (PT-BR)",
     "ResetOnboardingIntro": "Reset Welcome Intro (PT-BR)",
     "OnboardingIntroSeen": "Intro seen (PT-BR)",
+    "DeleteTokens": "Delete Tokens (PT-BR)",
+    "DeletedTokens": "Deleted tokens (PT-BR)",
     "ErrorModals": "Error Modals (PT-BR)",
     "ErrorModalsDescription": "Trigger errors that display as modal dialogs with title, description, and technical details. (PT-BR)",
     "ErrorAsNativeAlert": "Errors as Native Alerts (PT-BR)",
@@ -222,11 +251,14 @@ const translation = {
     "ScanQRCode": "Scan a QR code (PT-BR)",
   },
   "BCSC": {
+    "AgeRestrictedTransfer": {
+      "Title": "Not available (PT-BR)",
+      "Description": "You must be 12 years or older to transfer your account to another device (PT-BR)",
+    },
     "Components": {
       "CloseDropdown": "Close dropdown menu (PT-BR)",
     },
-    "Title": "BC Services Card (PT-BR)",
-    "FullTitle": "BC Services Card App (PT-BR)",
+    "Title": "BC Services card (PT-BR)",
     "LocaleStringFormat": "pt-BR",
     "Screens": {
       "Settings": "Menu (PT-BR)",
@@ -245,7 +277,7 @@ const translation = {
       "Title": "Need help? (PT-BR)",
       "AccessibilityLabel": "Help menu (PT-BR)",
       "Version": "BCSC version: {{ version }} (PT-BR)",
-      "LearnMore": "Learn about BCSC app (PT-BR)",
+      "LearnMore": "Learn more (PT-BR)",
       "GiveFeedback": "Give feedback (PT-BR)",
       "ReportProblem": "Report a problem (PT-BR)",
       "BackToHome": "Back to home (PT-BR)",
@@ -279,7 +311,7 @@ const translation = {
         "Bullet2": "Get offered new credentials (PT-BR)",
         "Bullet3": "Get notified of updates to your credentials issued by them (PT-BR)",
         "Bullet4": "Request for information from your contact or they request information from you (PT-BR)",
-        "FooterPrefix": "You can always remove Contacts at anytime from your  (PT-BR)",
+        "FooterPrefix": "You can always remove Contacts at anytime from your (PT-BR) ",
         "FooterLink": "Contacts list (PT-BR)",
         "FooterSuffix": ". (PT-BR)",
       },
@@ -332,6 +364,11 @@ const translation = {
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online (PT-BR)",
       "AppStartup": "Getting your BCSC App ready... (PT-BR)"
+    },
+    "AccountLanding": {
+      "Title": "BC Services card (PT-BR)",
+      "Description": "A secure way to prove\nwho you are online (PT-BR)",
+      "Unlock": "Unlock (PT-BR)",
     },
     "Security": {
       "AuthenticatePrompt": "Authenticate to secure your app (PT-BR)",
@@ -398,10 +435,17 @@ const translation = {
       "EditNickname": "Edit Nickname (PT-BR)",
       "AutoLockTime": "Auto lock time (PT-BR)",
       "Notifications": "Notifications (PT-BR)",
-      "NotificationsStatusHeader": "Notifications are {{status}} (PT-BR)",
-      "NotificationsStatusContent": "Notifications keep you informed about account updates, credential changes and service interruptions. To turn them on or off, open your device settings. (PT-BR)",
+      "ChangeNotificationsHeader": "Change notification settings? (PT-BR)",
+      "NotificationsEnabledContent": "With notifications enabled, stay informed about account updates, credential changes and service interruptions. (PT-BR)",
+      "NotificationsAreLabel": "Notifications are: (PT-BR)",
       "NotificationsStatusOn": "on",
       "NotificationsStatusOff": "off",
+      "ChangeNotificationsInstructions": "To change notification settings: (PT-BR)",
+      "NotificationsStep1": "Go to device settings (PT-BR)",
+      "NotificationsStep2": "Tap Notifications (PT-BR)",
+      "NotificationsStep3": "In app notifications, find the BC Services Card app (PT-BR)",
+      "NotificationsStep4": "Turn on or off notifications (PT-BR)",
+      "OpenDeviceSettings": "Go to device settings (PT-BR)",
       "ForgetPairings": "Forget pairings (PT-BR)",
       "AddDevice": "Add another device (PT-BR)",
       "MyDevices": "My devices (PT-BR)",
@@ -428,7 +472,7 @@ const translation = {
       },
       "AppSecurity": {
         "ScreenTitle": "App Security (PT-BR)",
-        "ChangeAppSecurity": "Change App Security (PT-BR)",
+        "ChangeAppSecurity": "Change app security (PT-BR)",
         "Title": "App Security (PT-BR)",
         "Description": "Choose how you want to secure this app and access your credentials. You can switch between using your device's biometric authentication or a PIN. (PT-BR)",
         "CurrentMethod": "Current security method (PT-BR)",
@@ -479,7 +523,7 @@ const translation = {
       "GotoUrl": "Go to: {{- url}} (PT-BR)",
       "NotListed": "Services not listed? (PT-BR)",
       "NotListedDescription": "Services that are only available to specific people or people in specific professions are not listed above. (PT-BR)",
-      "NotListedDescriptionContact": "Contact the service to the link to their website. (PT-BR)",
+      "NotListedDescriptionContact": "Contact the service if you wish to see them listed here. (PT-BR)",
       "PrivacyPolicy": "Privacy Policy (PT-BR)",
       "LoginErrorTitle": "Problem with Login (PT-BR)",
       "SavedServices": "Saved Services (PT-BR)",
@@ -503,14 +547,14 @@ const translation = {
       "VerificationSessionExpired": {
         "Header": "Verification session expired (PT-BR)",
         "ContentA": "More than 7 days have passed since you started verifying your identity, so this session has expired. (PT-BR)",
-        "ContentB": "To continue, you’ll need to set up the app and verify your identity again. (PT-BR)",
+        "ContentB": "To continue, you'll need to set up the app and verify your identity again. (PT-BR)",
         "Button": "Start again (PT-BR)",
       },
       "DeviceInvalidated": {
         "Header": "Device invalidated (PT-BR)",
-        "CancelledByCardCancel": "This device has been invalidated by an agent. You must contact BC Services to continue. (PT-BR)",
-        "CancelledByAgent": "This device has been invalidated. You must re-authorize the device to continue. (PT-BR)",
-        "CancelledByUser": "This device has been removed from your account by a user action. (PT-BR)",
+        "CancelledByCardCancel": "Your account will be removed from this app. (PT-BR)",
+        "CancelledByAgent": "Your account was removed from the app on this device at a Service BC location or by the service. (PT-BR)",
+        "CancelledByUser": "You made a change on id.gov.bc.ca to remove your account from the app on this device. (PT-BR)",
         "CanceledByAdditionalCard": "You can't use this app if you have more than one BC Services Card. (PT-BR)",
         "CanceledByCardTypeChange": "Your card type was changed. Your account will be removed from this app. (PT-BR)",
         "CanceledDueToInactivity": "Your account was canceled due to inactivity and will be removed from this app. (PT-BR)",
@@ -526,13 +570,20 @@ const translation = {
         "Header": "The Terms of Use have been updated. Before you continue to use the Service, you must read and accept the updated terms. (PT-BR)",
       },
     },
+    "VerificationReminder": {
+      "Title": "Finish verifying your identity (PT-BR)",
+      "Body": "Verify your identity to finish setting up the app by {{date}}. (PT-BR)",
+    },
     "Home": {
+      "Title": "Home (PT-BR)",
+      "Welcome": "Welcome (PT-BR)",
+      "Scan": "Scan (PT-BR)",
       "WhereToUseTitle": "Where to use (PT-BR)",
       "WhereToUseAccessibilityLabel": "Find services (PT-BR)",
       "WhereToUseDescription": "Find the websites you can log in to with this app. (PT-BR)",
-      "LogInFromComputerTitle": "Log in from a computer (PT-BR)",
-      "LogInFromComputerAccessibilityLabel": "Computer login (PT-BR)",
-      "LogInFromComputerDescription": "Enter pairing code to log in from a different device – like a computer, laptop, or tablet. (PT-BR)",
+      "LogInFromComputerTitle": "Log in from another device (PT-BR)",
+      "LogInFromComputerAccessibilityLabel": "Log in from another device (PT-BR)",
+      "LogInFromComputerDescription": "Log in to a service on a computer, laptop, or tablet using a pairing code (PT-BR)",
       "ViewMessages": "View new messages (PT-BR)",
     },
     "Steps": {
@@ -540,7 +591,7 @@ const translation = {
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification (PT-BR)",
       "CheckStatus": "Check status (PT-BR)",
       "ChooseAnotherWayToVerify": "Choose another way to verify (PT-BR)",
-      "Status": "Status (PT-BR)",
+      "Status": "Status (PT-BR)"
     },
     "SystemChecks": {
       "Devices": {
@@ -585,7 +636,7 @@ const translation = {
     },
     "ReverifyAccount": {
       "RenewalTitle": "Renew your account (PT-BR)",
-      "ExpiredTitle": "Your BC Services card app has expired (PT-BR)",
+      "ExpiredTitle": "Your BC Services card account has expired (PT-BR)",
       "Body": "Services require you to re-verify your account. You will need to complete this step in order to access your services online. (PT-BR)",
       "BulletHeader": "You will need to: (PT-BR)",
       "BulletOne": "Verify your email (PT-BR)",
@@ -605,7 +656,7 @@ const translation = {
       "InformationPhotoIdContent": "Only if your BC Services Card does not have a photo on it. You will be asked to provide one or two government-issued IDs. (PT-BR)",
       "InformationTypesOfAcceptedId": "Types of accepted ID (PT-BR)",
       "RenewalTimeHeader": "Time to renew (PT-BR)",
-      "RenewalTimeContentA": "You’ll need to verify your identity again and provide your ID. (PT-BR)",
+      "RenewalTimeContentA": "You'll need to verify your identity again and provide your ID. (PT-BR)",
       "RenewalTimeContentB": "It may take about 1-2 business days. (PT-BR)",
       "RenewalTimeContentC": "The time to complete depends on how you choose to verify your identity - in person, with a video call, or by sending in a video. (PT-BR)",
       "WarningHeader": "Warning (PT-BR)",
@@ -625,7 +676,7 @@ const translation = {
       "Description1": "When you use this app to log in on another device, you are asked if you want to remember this device to skip the pairing step. (PT-BR)",
       "Description2": "By forgetting all pairings this device will be removed as an option on any computer you previously paired with. You can use this app again to log in on another computer by pairing it again. (PT-BR)",
       "ButtonTitle": "Forget all pairings (PT-BR)",
-      "ScreenTitle": "Forget pairings (PT-BR)",
+      "ScreenTitle": "Forget pairings (PT-BR)"
     },
     "ContactUs": {
       "Title": "Service BC Help Desk (PT-BR)",
@@ -665,22 +716,17 @@ const translation = {
       "RenameSuccessToastMessage": "Account nickname updated successfully (PT-BR)",
     },
     "ManualPairing": {
-      "EnterPairingCodeTitle": "Enter pairing code (PT-BR)",
+      "EnterPairingCodeTitle": "Enter your pairing code (PT-BR)",
       "PairingCodeLabel": "Pairing code (PT-BR)",
-      "EnterPairingCodeMessage": "A pairing code will be provided when you log in to a website on another device. (PT-BR)",
+      "EnterPairingCodeMessage": "Enter the 6 digit pairing code on your other device. Please enter the code within 5 minutes. (PT-BR)",
       "InvalidPairingCodeMessage": "Pairing code must be six characters long (PT-BR)",
       "EmptyPairingCodeMessage": "Pairing code cannot be empty (PT-BR)",
       "FailedToSubmitPairingCodeMessage": "Failed to submit pairing code (PT-BR)",
       "CompletionTitle": "You're done in this app (PT-BR)",
-      "FromAppSwitchCompletionTitle": "You're done in this app, go back to {{ serviceName }} (PT-BR)",
-      "FromAppSwitchCompletionSubtitle": "The quickest way is the shortcut in the top left corner. It takes you back to Safari, Chrome, etc. (PT-BR)",
       "CompletionDescription": "Go back to the device you started on to continue logging in to {{serviceName}}. (PT-BR)",
-      "FromAppSwitchCompletionDescriptionIOS": "Or, leave this app and open the browser or other app. (PT-BR)",
-      "FromAppSwitchCompletionDescriptionAndroid": "Close this app and go to the browser or other app. (PT-BR)",
       "AppSwitchArrowLabel": "Arrow pointing to browser navigation (PT-BR)",
-      "BookmarkService": "Save link to: (PT-BR)",
-      "ToggleBookmark": "Toggle bookmark (PT-BR)",
-      "BookmarkDescription": "This adds a link to the menu in this app for easier access next time. (PT-BR)",
+      "BookmarkServiceButton": "Bookmark this service? (PT-BR)",
+      "TabTitle": "Pairing code (PT-BR)",
       "CouldNotVerifyPairingCodeTitle": "Could not verify pairing code (PT-BR)",
       "CodeDoesNotMatchMessage": "The code you entered does not match. Try again. (PT-BR)",
     },
@@ -723,30 +769,17 @@ const translation = {
       "SecureAppNoDeviceAuthContent2": "It prevents others from using this app to access services as you. For example, if your phone is lost or stolen. (PT-BR)",
       "AnalyticsTitle": "Enable Analytics? (PT-BR)",
       "AnalyticsHeader": "Help us improve your BC Services Card experience (PT-BR)",
-      "AnalyticsContent": "With your permission, we'll collect additional app usage and device details to help us improve this app. (PT-BR)",
-      "AnalyticsAnonymousInfo": "All information is collected anonymously (PT-BR)",
+      "AnalyticsContent": "With your permission, we'll collect additional usage and device details to help us improve this app. (PT-BR)",
+      "AnalyticsAnonymousInfo": "All information is collected anonymously. (PT-BR)",
       "AcceptAnalytics": "Enable analytics (PT-BR)",
-      "DenyAnalytics":  "Skip analytics (PT-BR)",
+      "DenyAnalytics": "Skip analytics (PT-BR)",
     },
-    "ChooseYourID": {
-      "WhatCardDoYou": "What BC Services Card do you have? (PT-BR)",
-      "SomePeopleStillCallIt": "Some people still call it a CareCard or a Health Card. It has your personal health number (PHN) on the back. (PT-BR)",
-      "CombinedCard": "Combined card (PT-BR)",
-      "CombinedCardActionText": "It's combined with my driver's licence (PT-BR)",
-      "CombinedCardDescription": "Use this card for a faster way to set up the app. (PT-BR)",
-      "PhotoCard": "Photo card (PT-BR)",
-      "PhotoCardActionText": "A card with my photo (PT-BR)",
-      "PhotoCardDescription": "Use this card for a faster way to set up the app. (PT-BR)",
-      "NoPhotoCard": "Non photo card (PT-BR)",
-      "NoPhotoCardActionText": "A card without a photo (PT-BR)",
-      "NoPhotoCardDescription": "Use this card + photo ID to set up the app. (PT-BR)",
-      "DontHaveOne": "Don't have one? (PT-BR)",
-      "CheckBefore": "Check before you continue. It's faster to set up with one of the above. (PT-BR)",
-      "CheckForServicesCard": "Check for BC Services Card (PT-BR)",
-      "CheckIfIHave": "Check if I have a BC Services Card (PT-BR)",
-      "OtherID": "Other ID (PT-BR)",
-      "OtherIDActionText": "Set up with other ID (PT-BR)",
-      "OtherIDDescription": "This option takes the longest to set up. You'll need 2 IDs to set up the app and have limited access to services. (PT-BR)",
+    "IdentitySelection": {
+      "HaveABCSC": "Have a BC Services Card? (PT-BR)",
+      "ScanTheBack": "Scan the back of your ID (PT-BR)",
+      "LineUpParagraph": "Line up your ID inside the frames and hold still until the camera takes the picture automatically. (PT-BR)",
+      "Scan": "Scan (PT-BR)",
+      "UseOtherID": "Use another ID (PT-BR)"
     },
     "Instructions": {
       "Heading": "Provide the card serial number on the back right side of your card. (PT-BR)",
@@ -760,6 +793,9 @@ const translation = {
       "NoDeviceCodeFound": "No device code found (PT-BR)",
       "InvalidQrCode": "Invalid QR code (PT-BR)",
       "WillScanAutomatically": "A valid QR code will scan automatically (PT-BR)",
+      "HoldSteadyHelp": "Can not see the card clearly? Try holding your phone steady. (PT-BR)",
+      "ScanYourCard": "Scan your card (PT-BR)",
+      "LineUpHelp": "Line up your ID inside the frame and hold still until the camera takes the picture automatically. (PT-BR)",
       "TorchOn": "Turn flashlight on (PT-BR)",
       "TorchOff": "Turn flashlight off (PT-BR)",
       "ErrorDetails": "Error details (PT-BR)",
@@ -788,11 +824,13 @@ const translation = {
     "Birthdate": {
       "CardSerialNumber": "Card serial number: {{ serial }} (PT-BR)",
       "Heading": "Enter your birthdate (PT-BR)",
-      "Paragraph": "Your birthdate is only used to to set up this app. It is not shared. (PT-BR)",
-      "Label": "Birthdate (PT-BR)",
+      "Paragraph": "Your birthdate is only used to to set up this app. It will not be stored on this device. (PT-BR)",
+      "Label": "Enter birthdate (PT-BR)",
+      "InvalidDate": "Entered birthdate is invalid. Please enter a valid date. (PT-BR)",
+      "ExampleDate": "Your birthdate in format YYYY/MM/DD (PT-BR)",
     },
     "AdditionalEvidence": {
-     "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't include a photo (PT-BR)",
+      "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't include a photo (PT-BR)",
       "PhotoRequiredDescription": "A photo is needed to verify your identity. You'll be asked to provide one or two government-issued IDs. (PT-BR)",
       "CheckYourID": "Check your ID (PT-BR)",
       "CheckYourIDBullet1": "Has the same name as on your BC Services Card (PT-BR)",
@@ -810,8 +848,8 @@ const translation = {
       "ContinueAs": "Continue as: (PT-BR)",
     },
     "VerifyPrompt": {
-      "Title": "Verify Your Account (PT-BR)",
-      "Description": "Verify your account to access services that may need additional information. (PT-BR)",
+      "Title": "Verify your account (PT-BR)",
+      "Description": "Services may require a verified account. It gives you access to more services that need to know who you are. (PT-BR)",
       "YouWillNeedTo": "You will need to: (PT-BR)",
       "Bullet1": "Verify your email (PT-BR)",
       "Bullet2": "Add a photo ID (PT-BR)",
@@ -930,7 +968,6 @@ const translation = {
       "EmailSkipButton2": "Skip (PT-BR)",
       "EnterEmailAddress": "Enter an email address (PT-BR)",
       "EmailAddress": "Email address (PT-BR)",
-      "EmailExample": "laurie.beaumont@gov.bc.ca",
       "EmailDescription1": "Adding an email to your account allows you to stay informed about account activity, and is recommended for security purposes. (PT-BR)",
       "EmailDescription2": "You will receive notifications for: (PT-BR)",
       "NotificationsBullet1": "Security alerts (PT-BR)",
@@ -970,21 +1007,21 @@ const translation = {
       "CardSerialNumber": "Card serial number: {{ serial }} (PT-BR)",
     },
     "SendVideo": {
-      "PendingReview":{
-        "Heading": "Request pending review (PT-BR)",
-        "Description1": "We review requests: (PT-BR)",
+      "PendingReview": {
+        "Heading": "Your identity verification is pending (PT-BR)",
+        "Description1": "Verification request received (PT-BR)",
+        "BulletHeader": "We review requests: (PT-BR)",
         "Bullet1": "Monday to Friday, 9am to 5pm (PT-BR)",
         "Bullet2": "In the order they're received (PT-BR)",
-        "Description2": "Usually, we review requests within 2 business days. During busy periods, it may take longer. (PT-BR)",
-        "Description3": "After it's reviewed, you will get an email if your provided your email. (PT-BR)",
-        "Description4": "Do not resend your video. If you do, your request will go to the back of the queue. (PT-BR)",
-        "ButtonText": "Ok (PT-BR)",
+        "Description2": "Usually, we review requests within 2 business days. (PT-BR)",
+        "Description3": "Requests sent in on the weekend will be reviewed after we open on Monday. (PT-BR)",
+        "Description4": "It may take up to 10 business days. (PT-BR)",
       },
       "SuccessfullySent": {
         "Heading": "We've received your request to verify your identity (PT-BR)",
-        "Description1": "We review requests: (PT-BR)",
         "Bullet1": "Monday to Friday, 9am to 5pm (PT-BR)",
         "Bullet2": "In the order they're received (PT-BR)",
+        "Description1": "We review requests: (PT-BR)",
         "Description2": "Requests are usually reviewed {{turnaround}}. (PT-BR)",
         "DefaultTurnaround": "within 2 business days (PT-BR)",
         "Description3": "You'll get an email after we review your request. You can also check the status in this app. (PT-BR)",
@@ -1010,8 +1047,8 @@ const translation = {
         "StartRecordingButton": "Start Recording Video (PT-BR)",
       },
       "VideoInstructions": {
-        "Heading1": "Record a short video. (PT-BR)",
-        "Heading2": "You'll be asked to (PT-BR)",
+        "Heading1": "Record a short video (PT-BR)",
+        "Heading2": "You'll be asked to: (PT-BR)",
         "Heading3": "A person at Service BC will watch the video. They need to hear and see you clearly. (PT-BR)",
         "Bullet1": "Keep the video under 30 seconds in length (PT-BR)",
         "Bullet2": "Be the only person in the video (PT-BR)",
@@ -1024,7 +1061,7 @@ const translation = {
         "StartRecordingButton": "Start Recording Video (PT-BR)",
       },
       "VideoReview": {
-        "VideoErrorPath":"Video path and thumbnail path are required (PT-BR)",
+        "VideoErrorPath": "Video path and thumbnail path are required (PT-BR)",
         "Heading": "Can you see and hear yourself clearly in the video? (PT-BR)",
         "UseVideo": "Use this video (PT-BR)",
         "RetakeVideo": "Retake video (PT-BR)",
@@ -1050,6 +1087,7 @@ const translation = {
       "Description2": "Check the serial number and birthdate match what is on your card. (PT-BR)",
       "SerialNumber": "Serial number: {{serial}} (PT-BR)",
       "Birthdate": "Birthdate: {{birthdate}} (PT-BR)",
+      "TryAnotherCard": "Try another card (PT-BR)",
     },
     "VerificationCardError": {
       "CardExpired": {
@@ -1065,7 +1103,7 @@ const translation = {
     "PhotoInstructions": {
       "Heading": "Take a photo of your face. The agent will use this photo when verifying your identity. (PT-BR)",
       "Bullet1": "Hold your phone in front of your face (PT-BR)",
-      "Bullet2": "Remove your glasses for the photo only (PT-BR)",
+      "Bullet2": "Remove your glasses - if possible (PT-BR)",
       "Bullet3": "Be the only person in the photo (PT-BR)",
       "Bullet4": "Look like the photo on your BC Services Card or photo ID (PT-BR)",
       "TakePhoto": "Take photo (PT-BR)",
@@ -1078,8 +1116,8 @@ const translation = {
     },
     "TransferQRInformation": {
       "Title": "Open the BC Services Card app on your other device (PT-BR)",
-      "Instructions": "Scan the QR code with the BC Services Card app on your other mobile device. (PT-BR)",
-      "Warning" : "Do not scan with the camera app. (PT-BR)",
+      "Instructions": "Scan the QR code using the BC Services Card app on your other mobile device. (PT-BR)",
+      "Warning": "Do not scan with the camera app. (PT-BR)",
       "GetQRCode": "Get QR Code (PT-BR)",
     },
     "TransferInformation": {
@@ -1089,8 +1127,8 @@ const translation = {
     },
     "TransferInstructions": {
       "Title": "Scan your QR code to add your device (PT-BR)",
-      "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘☰’ icon in the top left corner. (PT-BR)",
-      "Step2": "Choose <b>‘Add another device’</b> to get your QR code. (PT-BR)",
+      "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘☰' icon in the top left corner. (PT-BR)",
+      "Step2": "Choose <b>‘Add another device'</b> to get your QR code. (PT-BR)",
       "Step3": "<b>Scan the QR code</b> that appears on your other device. (PT-BR)",
       "ScanQRCode": "Scan QR code (PT-BR)",
     },
@@ -1108,18 +1146,18 @@ const translation = {
       "Title": "QR code scan complete (PT-BR)",
       "Description": "The app should be set up on your other mobile device. (PT-BR)",
       "ExtraText": "If you no longer need to use the app on this device, you can remove your account. (PT-BR)",
-      "ButtonText": "Ok"
+      "ButtonText": "Okay (PT-BR)"
     },
     "Verification": {
-      "Title": "You're all set (PT-BR)",
-      "Description": "Use this app to securely log in to many different websites. (PT-BR)",
-      "ExtraText": "Remember, it is not a health card, vaccine card, driver's license, or photo ID. (PT-BR)",
-      "ButtonText": "Ok (PT-BR)"
+      "Title": "Your identity has been verified (PT-BR)",
+      "Description": "You're now able to access services with your verified identity. (PT-BR)",
+      "ExtraText": "Remember, it's not a health card, vaccine card, driver's license, or photo ID. (PT-BR)",
+      "ButtonText": "Continue (PT-BR)"
     },
     "CancelledVerification": {
       "Title": "Your identity couldn't be verified (PT-BR)",
-      "Label": "Details from Service BC agent: \n {{reason}} (PT-BR)",
-      "Button": "Ok (PT-BR)",
+      "Label": "Details from Service BC agent: \n{{reason}} (PT-BR)",
+      "Button": "Retry verification (PT-BR)",
       "NoReason": "No reason provided (PT-BR)"
     },
     "DualNonBCSCEvidence": {
@@ -1151,18 +1189,9 @@ const translation = {
       "DeviceCodeError": "Missing device or user code (PT-BR)",
       "ServiceBC": "Service BC (PT-BR)",
       "CallingAgent": "Calling agent to verify your identity... (PT-BR)",
-      "BeforeYouCallTitle": "Before you call (PT-BR)",
-      "WiFiRecommended": "Wi-Fi Recommended (PT-BR)",
-      "StandardDataCharges": "Standard data charges may apply for calls over a cellular network. (PT-BR)",
-      "CellularNetworkWarning": "The app detected you're on a cellular network.  (PT-BR)",
-      "FindPrivatePlace": "Find a Private Place to Talk (PT-BR)",
-      "MakeSureOnlyYou": "Make sure you'll be the only person in the video. (PT-BR)",
       "DefaultHours": "Monday to Friday\n7:30am - 5:00pm Pacific Time (PT-BR)",
-      "ContactCentrePrivacy": "Contact Centre Privacy (PT-BR)",
-      "PrivacyNotice": "During a video call, Service BC will ask for and collect personal information. The personal information you will provide is collected for the purpose of verification of your BC Services Card. This information is collected under the authority of Section 26(c) and 26(e) of the Freedom of Information and Protection of Privacy Act (FIPPA). (PT-BR)",
-      "PrivacyContactInfo": "If you have further questions about privacy, please contact Chief Privacy Officer, 100 - 722 Johnson Street, Victoria, BC, V8W 1N1, or by phone\n250-405-3726 (PT-BR)",
-      "Assistance": "Need assistance? (PT-BR)",
-      "StartVideoCallDescription": "Start a video call with a Service BC agent. They will verify your identity to finish setting up this app. (PT-BR)",
+      "StartVideoCallTitle": "Start a video call to talk with a Service BC agent. (PT-BR)",
+      "StartVideoCallDescription": "The agent will verify your identity to finish setting up this app. (PT-BR)",
       "YouShould": "You should: (PT-BR)",
       "StartCall": "Start call (PT-BR)",
       "StartVideoCall": "Start video call (PT-BR)",
@@ -1216,7 +1245,7 @@ const translation = {
       "NonBCSCDescription": "Use an ID that has the same name as your first ID. (PT-BR)",
       "FirstID": "Choose your first ID (PT-BR)",
       "SecondID": "Choose your second ID (PT-BR)",
-      "OtherOptions": "Other options (PT-BR)",
+      "OtherOptions": "Other Options (PT-BR)",
       "ShowMoreOptions": "Show more options (PT-BR)",
       "OtherIDOptionsHeading": "Other ID options (PT-BR)",
       "OtherIDOptionsDescription": "You can use one of the following IDs, but will also need to provide photo ID. (PT-BR)"
@@ -1235,13 +1264,14 @@ const translation = {
       "LastNameSubtext": "Also known as surname or family name (PT-BR)",
       "BirthDateLabel": "Birth date (PT-BR)",
       "BirthDateSubtext": "Enter your birth date (PT-BR)",
-      "BirthDateError": "Please enter a valid birth date (YYYY-MM-DD) (PT-BR)",
+      "BirthDateError": "Please enter a valid birth date (YYYY/MM/DD) (PT-BR)",
       "BirthDateAgeError": "You must be {{ minimumAge }} years or older to set up a mobile card (PT-BR)",
       "BirthDatePickerLabel": "Select birth date (PT-BR)",
       "BirthDatePickerAccessibilityLabel": "Birth date picker (PT-BR)",
       "MiddleNamesLabel": "Middle names (PT-BR)",
       "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed (PT-BR)",
       "MiddleNamesError": "Please enter up to two middle names (PT-BR)",
+      "TakeSecondIdPhoto": "Take photo of your second ID (PT-BR)",
     },
     "Address": {
       "Heading": "Residential Address (PT-BR)",
@@ -1282,25 +1312,21 @@ const translation = {
       "ResetLossContacts": "All contacts and interactions (PT-BR)",
       "ResetLossProofRequests": "Any created proof requests (PT-BR)",
       "Resetting": "Resetting wallet... (PT-BR)",
-      "ResetSuccess": "Wallet reset successfully. (PT-BR)",
-      "ResetError": "Failed to reset wallet. Please try again. (PT-BR)",
     },
     "Account": {
       "RemoveAccount": "Remove account (PT-BR)",
       "RemoveAccountTitle": "Remove account from this app? (PT-BR)",
       "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (PT-BR)",
       "RemoveAccountLoading": "Removing account... (PT-BR)",
-      "RemoveAccountSuccess": "Account removed successfully. (PT-BR)",
-      "RemoveAccountError": "Failed to remove account. Please try again. (PT-BR)",
       "TransferAccount": "Transfer account to another device (PT-BR)",
       "TransferAccountAccessibilityLabel": "Transfer (PT-BR)",
       "AccountDetails": "All account details (PT-BR)",
       "AccountDetailsAccessibilityLabel": "Details (PT-BR)",
       "AccountDetailsDescription": "View your account activity, manage your email address and more. (PT-BR)",
-      "AccountInfo" : {
+      "AccountInfo": {
         "ManageDevices": "Manage Devices (PT-BR)",
         "InfoTitle": "This is an account page, not an ID (PT-BR)",
-        "InfoDescription": "Your account details are shown below. This cannot be used as photo ID, a driver’s licence, or a health card. (PT-BR)",
+        "InfoDescription": "Your account details are shown below. This cannot be used as photo ID, a driver's licence, or a health card. (PT-BR)",
         "AppExpiryDate": "App expiry date (PT-BR)",
         "AccountType": "Account type (PT-BR)",
         "AccountTypeNonBCServicesCard": "Non BC Services Card (PT-BR)",
@@ -1315,11 +1341,11 @@ const translation = {
       "Title": "Choose how to verify (PT-BR)",
       "Subtitle": "We need to make sure you're a real person. How would you like to proceed? (PT-BR)",
       "SendVideoTitle": "Record a video for an agent to verify (PT-BR)",
-      "SendVideoDescription": "Turnaround time is 24 hours (PT-BR)",
+      "SendVideoDescription": "Turnaround time is 2 business days (PT-BR)",
       "VideoCallTitle": "Have a video call with an agent (PT-BR)",
       "VideoCallDescription": "Available during normal hours of operation (PT-BR)",
       "InPersonTitle": "In person with an agent (PT-BR)",
-      "InPersonDescription": "Find out where to go and what to bring. (PT-BR)",
+      "InPersonDescription": "Find out where to go and what to bring (PT-BR)",
       "CannotSendVideo": "Cannot send a video? (PT-BR)",
       "CannotMakeItToServiceBC": "Cannot make it to a Service BC Office? (PT-BR)",
       "CannotVideoCall": "Cannot video call? (PT-BR)"
@@ -1342,11 +1368,11 @@ const translation = {
   "HelpCentre": {
     "Title": "Help Centre (PT-BR)"
   },
-	"Alerts": {
-		"Actions": {
-			"DefaultOK": "OK (PT-BR)",
+  "Alerts": {
+    "Actions": {
+      "DefaultOK": "OK (PT-BR)",
       "Close": "Close (PT-BR)",
-		},
+    },
     "UnsecuredNetwork": {
       "Title": "Unsecured Network (PT-BR)",
       "Description": "A secure internet connection is required. Please check your network or try another network. (PT-BR)"
@@ -1385,6 +1411,18 @@ const translation = {
       "Title": "Something went wrong (PT-BR)",
       "Description": "We're having trouble with the app. Please try again later.\n\nIf the issue persists, close and re-open the app, then try again. (PT-BR)"
     },
+    "TermsOfUseLoadFailed": {
+      "Title": "Terms of Use unavailable (PT-BR)",
+      "Description": "We couldn't load the Terms of Use. Please check your connection and try again. (PT-BR)"
+    },
+    "WebViewLoadFailed": {
+      "Title": "Page unavailable (PT-BR)",
+      "Description": "We couldn't load this page. Please check your connection and try again. (PT-BR)"
+    },
+    "WebViewHttpError": {
+      "Title": "Page unavailable (PT-BR)",
+      "Description": "We couldn't load this page right now. Please try again later. (PT-BR)"
+    },
     "KeychainUnavailable": {
       "Title": "Secure Storage Unavailable (PT-BR)",
       "Description": "Your device's secure storage is temporarily unavailable. Please wait a moment and try again.\n\nIf the issue persists, restart your device and try again. (PT-BR)"
@@ -1395,7 +1433,7 @@ const translation = {
     },
     "DynamicRegistrationError": {
       "Title": "Problem with Service (PT-BR)",
-      "Description": "The OS on this device is not supported. Please update your device and make sure it's not a beta version. (error 202) (PT-BR)"
+      "Description": "The OS on this device is not supported. Please update your device and make sure it's not a beta version. (error {{ errorCode }}) (PT-BR)"
     },
     "AddCardNotAvailable": {
       "Title": "Add Card Not Available (PT-BR)",
@@ -1451,7 +1489,7 @@ const translation = {
     },
     "DataUseWarning": {
       "Title": "Data Use (PT-BR)",
-      "Description": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network. (PT-BR)",
+      "Description": "The app detected that you're on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network. (PT-BR)",
       "Action1": "Use Data (PT-BR)",
     },
     "ThirdPartyKeyboard": {
@@ -1486,6 +1524,10 @@ const translation = {
       "Title": "Problem Starting Video (PT-BR)",
       "Description": "We couldn't load your verification steps. Please try again. (PT-BR)"
     },
+    "DocumentExpired": {
+      "Title": "This document has expired. (PT-BR)",
+      "Description": "Please choose a different form of ID to continue. (PT-BR)"
+    },
     "FactoryReset": {
       "Title": "Problem with App (PT-BR)",
       "Description": "The app needs to be reset to factory settings to continue. This will delete all information in the app and you will have to set it up again. (PT-BR)",
@@ -1495,7 +1537,7 @@ const translation = {
       "Title": "Device Authentication Failed (PT-BR)",
       "Description": "Unable to authenticate using the device's built-in authentication. (PT-BR)"
     }
-	},
+  },
 }
 
 export default translation

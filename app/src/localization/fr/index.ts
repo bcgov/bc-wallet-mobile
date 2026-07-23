@@ -67,7 +67,9 @@ const translation = {
   },
   "Credentials": {
     "AddCredential": "Ajouter des identifiants",
-    "AddFirstCredential": "Ajouter votre premier identifiant"
+    "AddFirstCredential": "Ajouter votre premier identifiant",
+    "NotAnIDInfoTitle": "This does not replace your physical ID (FR)",
+    "NotAnIDInfoDescription": "Do not share this screen as ID. This credential is used for digital interactions via the BC Services Card app only. (FR)",
   },
   "Onboarding": {
     "DifferentWalletHeading": "Un portefeuille intelligent unique",
@@ -99,18 +101,37 @@ const translation = {
     },
     "StartVerification": {
       "Title": "You're not verified (FR)",
-      "Description": "You can continue the verification process at any time. (FR)",
+      "Description": "You can continue the verification process at anytime. (FR)",
       "ButtonTitle": "Start verification (FR)",
-      "ContinueButtonTitle": "Continue verification (FR)"
+    },
+    "ContinueVerification": {
+      "Title": "You're not verified (FR)",
+      "Description": "Complete the verification process at anytime. (FR)",
+      "ButtonTitle": "Continue (FR)",
+    },
+    "PendingReview": {
+      "Title": "Your identity verification is pending (FR)",
+      "Description": "We've received your request to verify your identity. (FR)",
+      "ButtonTitle": "Check status (FR)"
+    },
+    "CancelledReview": {
+      "Title": "Your identity could not be verified (FR)",
+      "Description": "Verify your identity again to access services. (FR)",
+      "ButtonTitle": "See details (FR)"
+    },
+    "Verified": {
+      "Title": "Your identity has been verified (FR)",
+      "Description": "Complete the verification process. (FR)",
+      "ButtonTitle": "Finish up (FR)"
     },
     "AccountExpired": {
-      "Title": "Your BC Services card app has expired (FR)",
+      "Title": "Your BC Services card account has expired (FR)",
       "Description": "Please reverify yourself to get access to your services (FR)",
       "ButtonTitle": "Start renewal (FR)"
     },
     "AccountRenewal": {
       "Title": "Time for renewal (FR)",
-      "Description": "Renew your BC Services card app before it expires on {{expiryDate}} (FR)",
+      "Description": "Renew your BC Services card account before it expires on {{expiryDate}} (FR)",
       "ButtonTitle": "Start renewal (FR)"
     },
     "BasicMessage": {
@@ -132,6 +153,12 @@ const translation = {
     }
   },
   "PersonCredential": {
+    "Notification": {
+      "PageTitle": "Person Credential (FR)",
+      "Title": "Get your Person credential (FR)",
+      "Description": "Add your Person credential to your wallet and use it to get access to services online (FR)",
+      "ButtonTitle": "Start (FR)"
+    },
     "ServicesCardInstalled": "Étape 1: BC Services Card est déjà installé",
     "InstallServicesCard": "Étape 1: Installation de l'application BC Services Card",
     "InstallApp": "Installer l'application",
@@ -192,6 +219,8 @@ const translation = {
     "AcceptedTermsVersion": "Accepted version (FR)",
     "ResetOnboardingIntro": "Reset Welcome Intro (FR)",
     "OnboardingIntroSeen": "Intro seen (FR)",
+    "DeleteTokens": "Delete Tokens (FR)",
+    "DeletedTokens": "Deleted tokens (FR)",
     "ErrorModals": "Error Modals (FR)",
     "ErrorModalsDescription": "Trigger errors that display as modal dialogs with title, description, and technical details. (FR)",
     "ErrorAsNativeAlert": "Errors as Native Alerts (FR)",
@@ -222,11 +251,14 @@ const translation = {
     "ScanQRCode": "Scanner un code QR",
   },
   "BCSC": {
+    "AgeRestrictedTransfer": {
+      "Title": "Not available (FR)",
+      "Description": "You must be 12 years or older to transfer your account to another device (FR)",
+    },
     "Components": {
       "CloseDropdown": "Close dropdown menu (FR)",
     },
-    "Title": "BC Services Card (FR)",
-    "FullTitle": "BC Services Card App (FR)",
+    "Title": "BC Services card (FR)",
     "LocaleStringFormat": "fr-CA",
     "Screens": {
       "Settings": "Menu (FR)",
@@ -245,7 +277,7 @@ const translation = {
       "Title": "Need help? (FR)",
       "AccessibilityLabel": "Help menu (FR)",
       "Version": "BCSC version: {{ version }} (FR)",
-      "LearnMore": "Learn about BCSC app (FR)",
+      "LearnMore": "Learn more (FR)",
       "GiveFeedback": "Give feedback (FR)",
       "ReportProblem": "Report a problem (FR)",
       "BackToHome": "Back to home (FR)",
@@ -279,7 +311,7 @@ const translation = {
         "Bullet2": "Get offered new credentials (FR)",
         "Bullet3": "Get notified of updates to your credentials issued by them (FR)",
         "Bullet4": "Request for information from your contact or they request information from you (FR)",
-        "FooterPrefix": "You can always remove Contacts at anytime from your  (FR)",
+        "FooterPrefix": "You can always remove Contacts at anytime from your (FR) ",
         "FooterLink": "Contacts list (FR)",
         "FooterSuffix": ". (FR)",
       },
@@ -332,6 +364,11 @@ const translation = {
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online (FR)",
       "AppStartup": "Getting your BCSC App ready... (FR)"
+    },
+    "AccountLanding": {
+      "Title": "BC Services card (FR)",
+      "Description": "A secure way to prove\nwho you are online (FR)",
+      "Unlock": "Unlock (FR)",
     },
     "Security": {
       "AuthenticatePrompt": "Authenticate to secure your app (FR)",
@@ -398,10 +435,17 @@ const translation = {
       "EditNickname": "Edit Nickname (FR)",
       "AutoLockTime": "Auto lock time (FR)",
       "Notifications": "Notifications (FR)",
-      "NotificationsStatusHeader": "Notifications are {{status}} (FR)",
-      "NotificationsStatusContent": "Notifications keep you informed about account updates, credential changes and service interruptions. To turn them on or off, open your device settings. (FR)",
+      "ChangeNotificationsHeader": "Change notification settings? (FR)",
+      "NotificationsEnabledContent": "With notifications enabled, stay informed about account updates, credential changes and service interruptions. (FR)",
+      "NotificationsAreLabel": "Notifications are: (FR)",
       "NotificationsStatusOn": "on",
       "NotificationsStatusOff": "off",
+      "ChangeNotificationsInstructions": "To change notification settings: (FR)",
+      "NotificationsStep1": "Go to device settings (FR)",
+      "NotificationsStep2": "Tap Notifications (FR)",
+      "NotificationsStep3": "In app notifications, find the BC Services Card app (FR)",
+      "NotificationsStep4": "Turn on or off notifications (FR)",
+      "OpenDeviceSettings": "Go to device settings (FR)",
       "ForgetPairings": "Forget pairings (FR)",
       "AddDevice": "Add another device (FR)",
       "MyDevices": "My devices (FR)",
@@ -428,7 +472,7 @@ const translation = {
       },
       "AppSecurity": {
         "ScreenTitle": "App Security (FR)",
-        "ChangeAppSecurity": "Change App Security (FR)",
+        "ChangeAppSecurity": "Change app security (FR)",
         "Title": "App Security (FR)",
         "Description": "Choose how you want to secure this app and access your credentials. You can switch between using your device's biometric authentication or a PIN. (FR)",
         "CurrentMethod": "Current security method (FR)",
@@ -479,7 +523,7 @@ const translation = {
       "GotoUrl": "Go to: {{- url}} (FR)",
       "NotListed": "Services not listed? (FR)",
       "NotListedDescription": "Services that are only available to specific people or people in specific professions are not listed above. (FR)",
-      "NotListedDescriptionContact": "Contact the service to the link to their website. (FR)",
+      "NotListedDescriptionContact": "Contact the service if you wish to see them listed here. (FR)",
       "PrivacyPolicy": "Privacy Policy (FR)",
       "LoginErrorTitle": "Problem with Login (FR)",
       "SavedServices": "Saved Services (FR)",
@@ -499,18 +543,18 @@ const translation = {
         "ContentA": "You must update this app to continue. (FR)",
         "ContentB": "Please update to the latest version from the {{platformStore}}. (FR)",
         "UpdateButton": "Go to {{platformStore}} (FR)",
-      } ,
+      },
       "VerificationSessionExpired": {
         "Header": "Verification session expired (FR)",
         "ContentA": "More than 7 days have passed since you started verifying your identity, so this session has expired. (FR)",
-        "ContentB": "To continue, you’ll need to set up the app and verify your identity again. (FR)",
+        "ContentB": "To continue, you'll need to set up the app and verify your identity again. (FR)",
         "Button": "Start again (FR)",
       },
       "DeviceInvalidated": {
         "Header": "Device invalidated (FR)",
-        "CancelledByCardCancel": "This device has been invalidated by an agent. You must contact BC Services to continue. (FR)",
-        "CancelledByAgent": "This device has been invalidated. You must re-authorize the device to continue. (FR)",
-        "CancelledByUser": "This device has been removed from your account by a user action. (FR)",
+        "CancelledByCardCancel": "Your account will be removed from this app. (FR)",
+        "CancelledByAgent": "Your account was removed from the app on this device at a Service BC location or by the service. (FR)",
+        "CancelledByUser": "You made a change on id.gov.bc.ca to remove your account from the app on this device. (FR)",
         "CanceledByAdditionalCard": "You can't use this app if you have more than one BC Services Card. (FR)",
         "CanceledByCardTypeChange": "Your card type was changed. Your account will be removed from this app. (FR)",
         "CanceledDueToInactivity": "Your account was canceled due to inactivity and will be removed from this app. (FR)",
@@ -526,13 +570,20 @@ const translation = {
         "Header": "The Terms of Use have been updated. Before you continue to use the Service, you must read and accept the updated terms. (FR)",
       },
     },
+    "VerificationReminder": {
+      "Title": "Finish verifying your identity (FR)",
+      "Body": "Verify your identity to finish setting up the app by {{date}}. (FR)",
+    },
     "Home": {
+      "Title": "Home (FR)",
+      "Welcome": "Welcome (FR)",
+      "Scan": "Scan (FR)",
       "WhereToUseTitle": "Where to use (FR)",
       "WhereToUseAccessibilityLabel": "Find services (FR)",
       "WhereToUseDescription": "Find the websites you can log in to with this app. (FR)",
-      "LogInFromComputerTitle": "Log in from a computer (FR)",
-      "LogInFromComputerAccessibilityLabel": "Computer login (FR)",
-      "LogInFromComputerDescription": "Enter pairing code to log in from a different device – like a computer, laptop, or tablet. (FR)",
+      "LogInFromComputerTitle": "Log in from another device (FR)",
+      "LogInFromComputerAccessibilityLabel": "Log in from another device (FR)",
+      "LogInFromComputerDescription": "Log in to a service on a computer, laptop, or tablet using a pairing code (FR)",
       "ViewMessages": "View new messages (FR)",
     },
     "Steps": {
@@ -540,7 +591,7 @@ const translation = {
       "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification (FR)",
       "CheckStatus": "Check status (FR)",
       "ChooseAnotherWayToVerify": "Choose another way to verify (FR)",
-      "Status": "Status (FR)",
+      "Status": "Status (FR)"
     },
     "SystemChecks": {
       "Devices": {
@@ -585,7 +636,7 @@ const translation = {
     },
     "ReverifyAccount": {
       "RenewalTitle": "Renew your account (FR)",
-      "ExpiredTitle": "Your BC Services card app has expired (FR)",
+      "ExpiredTitle": "Your BC Services card account has expired (FR)",
       "Body": "Services require you to re-verify your account. You will need to complete this step in order to access your services online. (FR)",
       "BulletHeader": "You will need to: (FR)",
       "BulletOne": "Verify your email (FR)",
@@ -605,7 +656,7 @@ const translation = {
       "InformationPhotoIdContent": "Only if your BC Services Card does not have a photo on it. You will be asked to provide one or two government-issued IDs. (FR)",
       "InformationTypesOfAcceptedId": "Types of accepted ID (FR)",
       "RenewalTimeHeader": "Time to renew (FR)",
-      "RenewalTimeContentA": "You’ll need to verify your identity again and provide your ID. (FR)",
+      "RenewalTimeContentA": "You'll need to verify your identity again and provide your ID. (FR)",
       "RenewalTimeContentB": "It may take about 1-2 business days. (FR)",
       "RenewalTimeContentC": "The time to complete depends on how you choose to verify your identity - in person, with a video call, or by sending in a video. (FR)",
       "WarningHeader": "Warning (FR)",
@@ -665,22 +716,17 @@ const translation = {
       "RenameSuccessToastMessage": "Account nickname updated successfully (FR)",
     },
     "ManualPairing": {
-      "EnterPairingCodeTitle": "Enter pairing code (FR)",
+      "EnterPairingCodeTitle": "Enter your pairing code (FR)",
       "PairingCodeLabel": "Pairing code (FR)",
-      "EnterPairingCodeMessage": "A pairing code will be provided when you log in to a website on another device. (FR)",
+      "EnterPairingCodeMessage": "Enter the 6 digit pairing code on your other device. Please enter the code within 5 minutes. (FR)",
       "InvalidPairingCodeMessage": "Pairing code must be six characters long (FR)",
       "EmptyPairingCodeMessage": "Pairing code cannot be empty (FR)",
       "FailedToSubmitPairingCodeMessage": "Failed to submit pairing code (FR)",
       "CompletionTitle": "You're done in this app (FR)",
-      "FromAppSwitchCompletionTitle": "You're done in this app, go back to {{ serviceName }} (FR)",
-      "FromAppSwitchCompletionSubtitle": "The quickest way is the shortcut in the top left corner. It takes you back to Safari, Chrome, etc. (FR)",
       "CompletionDescription": "Go back to the device you started on to continue logging in to {{serviceName}}. (FR)",
-      "FromAppSwitchCompletionDescriptionIOS": "Or, leave this app and open the browser or other app. (FR)",
-      "FromAppSwitchCompletionDescriptionAndroid": "Close this app and go to the browser or other app. (FR)",
       "AppSwitchArrowLabel": "Arrow pointing to browser navigation (FR)",
-      "BookmarkService": "Save link to: (FR)",
-      "ToggleBookmark": "Toggle bookmark (FR)",
-      "BookmarkDescription": "This adds a link to the menu in this app for easier access next time. (FR)",
+      "BookmarkServiceButton": "Bookmark this service? (FR)",
+      "TabTitle": "Pairing code (FR)",
       "CouldNotVerifyPairingCodeTitle": "Could not verify pairing code (FR)",
       "CodeDoesNotMatchMessage": "The code you entered does not match. Try again. (FR)",
     },
@@ -723,30 +769,17 @@ const translation = {
       "SecureAppNoDeviceAuthContent2": "It prevents others from using this app to access services as you. For example, if your phone is lost or stolen. (FR)",
       "AnalyticsTitle": "Enable Analytics? (FR)",
       "AnalyticsHeader": "Help us improve your BC Services Card experience (FR)",
-      "AnalyticsContent": "With your permission, we'll collect additional app usage and device details to help us improve this app. (FR)",
-      "AnalyticsAnonymousInfo": "All information is collected anonymously (FR)",
+      "AnalyticsContent": "With your permission, we'll collect additional usage and device details to help us improve this app. (FR)",
+      "AnalyticsAnonymousInfo": "All information is collected anonymously. (FR)",
       "AcceptAnalytics": "Enable analytics (FR)",
-      "DenyAnalytics":  "Skip analytics (FR)",
+      "DenyAnalytics": "Skip analytics (FR)",
     },
-    "ChooseYourID": {
-      "WhatCardDoYou": "What BC Services Card do you have? (FR)",
-      "SomePeopleStillCallIt": "Some people still call it a CareCard or a Health Card. It has your personal health number (PHN) on the back. (FR)",
-      "CombinedCard": "Combined card (FR)",
-      "CombinedCardActionText": "It's combined with my driver's licence (FR)",
-      "CombinedCardDescription": "Use this card for a faster way to set up the app. (FR)",
-      "PhotoCard": "Photo card (FR)",
-      "PhotoCardActionText": "A card with my photo (FR)",
-      "PhotoCardDescription": "Use this card for a faster way to set up the app. (FR)",
-      "NoPhotoCard": "Non photo card (FR)",
-      "NoPhotoCardActionText": "A card without a photo (FR)",
-      "NoPhotoCardDescription": "Use this card + photo ID to set up the app. (FR)",
-      "DontHaveOne": "Don't have one? (FR)",
-      "CheckBefore": "Check before you continue. It's faster to set up with one of the above. (FR)",
-      "CheckForServicesCard": "Check for BC Services Card (FR)",
-      "CheckIfIHave": "Check if I have a BC Services Card (FR)",
-      "OtherID": "Other ID (FR)",
-      "OtherIDActionText": "Set up with other ID (FR)",
-      "OtherIDDescription": "This option takes the longest to set up. You'll need 2 IDs to set up the app and have limited access to services. (FR)",
+    "IdentitySelection": {
+      "HaveABCSC": "Have a BC Services Card? (FR)",
+      "ScanTheBack": "Scan the back of your ID (FR)",
+      "LineUpParagraph": "Line up your ID inside the frames and hold still until the camera takes the picture automatically. (FR)",
+      "Scan": "Scan (FR)",
+      "UseOtherID": "Use another ID (FR)"
     },
     "Instructions": {
       "Heading": "Provide the card serial number on the back right side of your card. (FR)",
@@ -760,6 +793,9 @@ const translation = {
       "NoDeviceCodeFound": "No device code found (FR)",
       "InvalidQrCode": "Invalid QR code (FR)",
       "WillScanAutomatically": "A valid QR code will scan automatically (FR)",
+      "HoldSteadyHelp": "Can not see the card clearly? Try holding your phone steady. (FR)",
+      "ScanYourCard": "Scan your card (FR)",
+      "LineUpHelp": "Line up your ID inside the frame and hold still until the camera takes the picture automatically. (FR)",
       "TorchOn": "Turn flashlight on (FR)",
       "TorchOff": "Turn flashlight off (FR)",
       "ErrorDetails": "Error details (FR)",
@@ -788,8 +824,10 @@ const translation = {
     "Birthdate": {
       "CardSerialNumber": "Card serial number: {{ serial }} (FR)",
       "Heading": "Enter your birthdate (FR)",
-      "Paragraph": "Your birthdate is only used to to set up this app. It is not shared. (FR)",
-      "Label": "Birthdate (FR)",
+      "Paragraph": "Your birthdate is only used to to set up this app. It will not be stored on this device. (FR)",
+      "Label": "Enter birthdate (FR)",
+      "InvalidDate": "Entered birthdate is invalid. Please enter a valid date. (FR)",
+      "ExampleDate": "Your birthdate in format YYYY/MM/DD (FR)",
     },
     "AdditionalEvidence": {
       "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't include a photo (FR)",
@@ -810,8 +848,8 @@ const translation = {
       "ContinueAs": "Continue as: (FR)",
     },
     "VerifyPrompt": {
-      "Title": "Verify Your Account (FR)",
-      "Description": "Verify your account to access services that may need additional information. (FR)",
+      "Title": "Verify your account (FR)",
+      "Description": "Services may require a verified account. It gives you access to more services that need to know who you are. (FR)",
       "YouWillNeedTo": "You will need to: (FR)",
       "Bullet1": "Verify your email (FR)",
       "Bullet2": "Add a photo ID (FR)",
@@ -930,7 +968,6 @@ const translation = {
       "EmailSkipButton2": "Skip (FR)",
       "EnterEmailAddress": "Enter an email address (FR)",
       "EmailAddress": "Email address (FR)",
-      "EmailExample": "laurie.beaumont@gov.bc.ca",
       "EmailDescription1": "Adding an email to your account allows you to stay informed about account activity, and is recommended for security purposes. (FR)",
       "EmailDescription2": "You will receive notifications for: (FR)",
       "NotificationsBullet1": "Security alerts (FR)",
@@ -970,21 +1007,21 @@ const translation = {
       "CardSerialNumber": "Card serial number: {{ serial }} (FR)",
     },
     "SendVideo": {
-      "PendingReview":{
-        "Heading": "Request pending review (FR)",
-        "Description1": "We review requests: (FR)",
+      "PendingReview": {
+        "Heading": "Your identity verification is pending (FR)",
+        "Description1": "Verification request received (FR)",
+        "BulletHeader": "We review requests: (FR)",
         "Bullet1": "Monday to Friday, 9am to 5pm (FR)",
         "Bullet2": "In the order they're received (FR)",
-        "Description2": "Usually, we review requests within 2 business days. During busy periods, it may take longer. (FR)",
-        "Description3": "After it's reviewed, you will get an email if your provided your email. (FR)",
-        "Description4": "Do not resend your video. If you do, your request will go to the back of the queue. (FR)",
-        "ButtonText": "Ok (FR)",
+        "Description2": "Usually, we review requests within 2 business days. (FR)",
+        "Description3": "Requests sent in on the weekend will be reviewed after we open on Monday. (FR)",
+        "Description4": "It may take up to 10 business days. (FR)",
       },
       "SuccessfullySent": {
         "Heading": "We've received your request to verify your identity (FR)",
-        "Description1": "We review requests: (FR)",
         "Bullet1": "Monday to Friday, 9am to 5pm (FR)",
         "Bullet2": "In the order they're received (FR)",
+        "Description1": "We review requests: (FR)",
         "Description2": "Requests are usually reviewed {{turnaround}}. (FR)",
         "DefaultTurnaround": "within 2 business days (FR)",
         "Description3": "You'll get an email after we review your request. You can also check the status in this app. (FR)",
@@ -1010,8 +1047,8 @@ const translation = {
         "StartRecordingButton": "Start Recording Video (FR)",
       },
       "VideoInstructions": {
-        "Heading1": "Record a short video. (FR)",
-        "Heading2": "You'll be asked to (FR)",
+        "Heading1": "Record a short video (FR)",
+        "Heading2": "You'll be asked to: (FR)",
         "Heading3": "A person at Service BC will watch the video. They need to hear and see you clearly. (FR)",
         "Bullet1": "Keep the video under 30 seconds in length (FR)",
         "Bullet2": "Be the only person in the video (FR)",
@@ -1024,7 +1061,7 @@ const translation = {
         "StartRecordingButton": "Start Recording Video (FR)",
       },
       "VideoReview": {
-        "VideoErrorPath":"Video path and thumbnail path are required (FR)",
+        "VideoErrorPath": "Video path and thumbnail path are required (FR)",
         "Heading": "Can you see and hear yourself clearly in the video? (FR)",
         "UseVideo": "Use this video (FR)",
         "RetakeVideo": "Retake video (FR)",
@@ -1050,6 +1087,7 @@ const translation = {
       "Description2": "Check the serial number and birthdate match what is on your card. (FR)",
       "SerialNumber": "Serial number: {{serial}} (FR)",
       "Birthdate": "Birthdate: {{birthdate}} (FR)",
+      "TryAnotherCard": "Try another card (FR)",
     },
     "VerificationCardError": {
       "CardExpired": {
@@ -1065,7 +1103,7 @@ const translation = {
     "PhotoInstructions": {
       "Heading": "Take a photo of your face. The agent will use this photo when verifying your identity. (FR)",
       "Bullet1": "Hold your phone in front of your face (FR)",
-      "Bullet2": "Remove your glasses for the photo only (FR)",
+      "Bullet2": "Remove your glasses - if possible (FR)",
       "Bullet3": "Be the only person in the photo (FR)",
       "Bullet4": "Look like the photo on your BC Services Card or photo ID (FR)",
       "TakePhoto": "Take photo (FR)",
@@ -1078,8 +1116,8 @@ const translation = {
     },
     "TransferQRInformation": {
       "Title": "Open the BC Services Card app on your other device (FR)",
-      "Instructions": "Scan the QR code with the BC Services Card app on your other mobile device. (FR)",
-      "Warning" : "Do not scan with the camera app. (FR)",
+      "Instructions": "Scan the QR code using the BC Services Card app on your other mobile device. (FR)",
+      "Warning": "Do not scan with the camera app. (FR)",
       "GetQRCode": "Get QR Code (FR)",
     },
     "TransferInformation": {
@@ -1089,8 +1127,8 @@ const translation = {
     },
     "TransferInstructions": {
       "Title": "Scan your QR code to add your device (FR)",
-      "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘☰’ icon in the top left corner. (FR)",
-      "Step2": "Choose <b>‘Add another device’</b> to get your QR code. (FR)",
+      "Step1": "<b>On your other device</b>, open the BC Services Card app and tap on the ‘☰' icon in the top left corner. (FR)",
+      "Step2": "Choose <b>‘Add another device'</b> to get your QR code. (FR)",
       "Step3": "<b>Scan the QR code</b> that appears on your other device. (FR)",
       "ScanQRCode": "Scan QR code (FR)",
     },
@@ -1108,18 +1146,18 @@ const translation = {
       "Title": "QR code scan complete (FR)",
       "Description": "The app should be set up on your other mobile device. (FR)",
       "ExtraText": "If you no longer need to use the app on this device, you can remove your account. (FR)",
-      "ButtonText": "Ok"
+      "ButtonText": "Okay (FR)"
     },
     "Verification": {
-      "Title": "You're all set (FR)",
-      "Description": "Use this app to securely log in to many different websites. (FR)",
-      "ExtraText": "Remember, it is not a health card, vaccine card, driver's license, or photo ID. (FR)",
-      "ButtonText": "Ok (FR)"
+      "Title": "Your identity has been verified (FR)",
+      "Description": "You're now able to access services with your verified identity. (FR)",
+      "ExtraText": "Remember, it's not a health card, vaccine card, driver's license, or photo ID. (FR)",
+      "ButtonText": "Continue (FR)"
     },
     "CancelledVerification": {
       "Title": "Your identity couldn't be verified (FR)",
-      "Label": "Details from Service BC agent: \n {{reason}} (FR)",
-      "Button": "Ok (FR)",
+      "Label": "Details from Service BC agent: \n{{reason}} (FR)",
+      "Button": "Retry verification (FR)",
       "NoReason": "No reason provided (FR)"
     },
     "DualNonBCSCEvidence": {
@@ -1151,18 +1189,9 @@ const translation = {
       "DeviceCodeError": "Missing device or user code (FR)",
       "ServiceBC": "Service BC (FR)",
       "CallingAgent": "Calling agent to verify your identity... (FR)",
-      "BeforeYouCallTitle": "Before you call (FR)",
-      "WiFiRecommended": "Wi-Fi Recommended (FR)",
-      "StandardDataCharges": "Standard data charges may apply for calls over a cellular network. (FR)",
-      "CellularNetworkWarning": "The app detected you're on a cellular network.  (FR)",
-      "FindPrivatePlace": "Find a Private Place to Talk (FR)",
-      "MakeSureOnlyYou": "Make sure you'll be the only person in the video. (FR)",
       "DefaultHours": "Monday to Friday\n7:30am - 5:00pm Pacific Time (FR)",
-      "ContactCentrePrivacy": "Contact Centre Privacy (FR)",
-      "PrivacyNotice": "During a video call, Service BC will ask for and collect personal information. The personal information you will provide is collected for the purpose of verification of your BC Services Card. This information is collected under the authority of Section 26(c) and 26(e) of the Freedom of Information and Protection of Privacy Act (FIPPA). (FR)",
-      "PrivacyContactInfo": "If you have further questions about privacy, please contact Chief Privacy Officer, 100 - 722 Johnson Street, Victoria, BC, V8W 1N1, or by phone\n250-405-3726 (FR)",
-      "Assistance": "Need assistance? (FR)",
-      "StartVideoCallDescription": "Start a video call with a Service BC agent. They will verify your identity to finish setting up this app. (FR)",
+      "StartVideoCallTitle": "Start a video call to talk with a Service BC agent. (FR)",
+      "StartVideoCallDescription": "The agent will verify your identity to finish setting up this app. (FR)",
       "YouShould": "You should: (FR)",
       "StartCall": "Start call (FR)",
       "StartVideoCall": "Start video call (FR)",
@@ -1216,7 +1245,7 @@ const translation = {
       "NonBCSCDescription": "Use an ID that has the same name as your first ID. (FR)",
       "FirstID": "Choose your first ID (FR)",
       "SecondID": "Choose your second ID (FR)",
-      "OtherOptions": "Other options (FR)",
+      "OtherOptions": "Other Options (FR)",
       "ShowMoreOptions": "Show more options (FR)",
       "OtherIDOptionsHeading": "Other ID options (FR)",
       "OtherIDOptionsDescription": "You can use one of the following IDs, but will also need to provide photo ID. (FR)"
@@ -1235,13 +1264,14 @@ const translation = {
       "LastNameSubtext": "Also known as surname or family name (FR)",
       "BirthDateLabel": "Birth date (FR)",
       "BirthDateSubtext": "Enter your birth date (FR)",
-      "BirthDateError": "Please enter a valid birth date (YYYY-MM-DD) (FR)",
+      "BirthDateError": "Please enter a valid birth date (YYYY/MM/DD) (FR)",
       "BirthDateAgeError": "You must be {{ minimumAge }} years or older to set up a mobile card (FR)",
       "BirthDatePickerLabel": "Select birth date (FR)",
       "BirthDatePickerAccessibilityLabel": "Birth date picker (FR)",
       "MiddleNamesLabel": "Middle names (FR)",
       "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed (FR)",
       "MiddleNamesError": "Please enter up to two middle names (FR)",
+      "TakeSecondIdPhoto": "Take photo of your second ID (FR)",
     },
     "Address": {
       "Heading": "Residential Address (FR)",
@@ -1282,25 +1312,21 @@ const translation = {
       "ResetLossContacts": "All contacts and interactions (FR)",
       "ResetLossProofRequests": "Any created proof requests (FR)",
       "Resetting": "Resetting wallet... (FR)",
-      "ResetSuccess": "Wallet reset successfully. (FR)",
-      "ResetError": "Failed to reset wallet. Please try again. (FR)",
     },
     "Account": {
       "RemoveAccount": "Remove account (FR)",
       "RemoveAccountTitle": "Remove account from this app? (FR)",
       "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (FR)",
       "RemoveAccountLoading": "Removing account... (FR)",
-      "RemoveAccountSuccess": "Account removed successfully. (FR)",
-      "RemoveAccountError": "Failed to remove account. Please try again. (FR)",
       "TransferAccount": "Transfer account to another device (FR)",
       "TransferAccountAccessibilityLabel": "Transfer (FR)",
       "AccountDetails": "All account details (FR)",
       "AccountDetailsAccessibilityLabel": "Details (FR)",
       "AccountDetailsDescription": "View your account activity, manage your email address and more. (FR)",
-      "AccountInfo" : {
+      "AccountInfo": {
         "ManageDevices": "Manage Devices (FR)",
         "InfoTitle": "This is an account page, not an ID (FR)",
-        "InfoDescription": "Your account details are shown below. This cannot be used as photo ID, a driver’s licence, or a health card. (FR)",
+        "InfoDescription": "Your account details are shown below. This cannot be used as photo ID, a driver's licence, or a health card. (FR)",
         "AppExpiryDate": "App expiry date (FR)",
         "AccountType": "Account type (FR)",
         "AccountTypeNonBCServicesCard": "Non BC Services Card (FR)",
@@ -1315,11 +1341,11 @@ const translation = {
       "Title": "Choose how to verify (FR)",
       "Subtitle": "We need to make sure you're a real person. How would you like to proceed? (FR)",
       "SendVideoTitle": "Record a video for an agent to verify (FR)",
-      "SendVideoDescription": "Turnaround time is 24 hours (FR)",
+      "SendVideoDescription": "Turnaround time is 2 business days (FR)",
       "VideoCallTitle": "Have a video call with an agent (FR)",
       "VideoCallDescription": "Available during normal hours of operation (FR)",
       "InPersonTitle": "In person with an agent (FR)",
-      "InPersonDescription": "Find out where to go and what to bring. (FR)",
+      "InPersonDescription": "Find out where to go and what to bring (FR)",
       "CannotSendVideo": "Cannot send a video? (FR)",
       "CannotMakeItToServiceBC": "Cannot make it to a Service BC Office? (FR)",
       "CannotVideoCall": "Cannot video call? (FR)"
@@ -1342,11 +1368,11 @@ const translation = {
   "HelpCentre": {
     "Title": "Centre d'aide"
   },
-	"Alerts": {
-		"Actions": {
-			"DefaultOK": "OK (FR)",
+  "Alerts": {
+    "Actions": {
+      "DefaultOK": "OK (FR)",
       "Close": "Close (FR)",
-		},
+    },
     "UnsecuredNetwork": {
       "Title": "Unsecured Network (FR)",
       "Description": "A secure internet connection is required. Please check your network or try another network. (FR)"
@@ -1383,7 +1409,19 @@ const translation = {
     },
     "SomethingWentWrong": {
       "Title": "Something went wrong (FR)",
-    "Description": "We're having trouble with the app. Please try again later.\n\nIf the issue persists, close and re-open the app, then try again.(FR)"
+      "Description": "We're having trouble with the app. Please try again later.\n\nIf the issue persists, close and re-open the app, then try again. (FR)"
+    },
+    "TermsOfUseLoadFailed": {
+      "Title": "Terms of Use unavailable (FR)",
+      "Description": "We couldn't load the Terms of Use. Please check your connection and try again. (FR)"
+    },
+    "WebViewLoadFailed": {
+      "Title": "Page unavailable (FR)",
+      "Description": "We couldn't load this page. Please check your connection and try again. (FR)"
+    },
+    "WebViewHttpError": {
+      "Title": "Page unavailable (FR)",
+      "Description": "We couldn't load this page right now. Please try again later. (FR)"
     },
     "KeychainUnavailable": {
       "Title": "Secure Storage Unavailable (FR)",
@@ -1395,7 +1433,7 @@ const translation = {
     },
     "DynamicRegistrationError": {
       "Title": "Problem with Service (FR)",
-      "Description": "The OS on this device is not supported. Please update your device and make sure it's not a beta version. (error 202) (FR)"
+      "Description": "The OS on this device is not supported. Please update your device and make sure it's not a beta version. (error {{ errorCode }}) (FR)"
     },
     "AddCardNotAvailable": {
       "Title": "Add Card Not Available (FR)",
@@ -1451,7 +1489,7 @@ const translation = {
     },
     "DataUseWarning": {
       "Title": "Data Use (FR)",
-      "Description": "The app detected that you’re on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network. (FR)",
+      "Description": "The app detected that you're on a cellular network. Calls are free over Wi-Fi. Standard data charges apply for calls over a cellular network. (FR)",
       "Action1": "Use Data (FR)",
     },
     "ThirdPartyKeyboard": {
@@ -1486,6 +1524,10 @@ const translation = {
       "Title": "Problem Starting Video (FR)",
       "Description": "We couldn't load your verification steps. Please try again. (FR)"
     },
+    "DocumentExpired": {
+      "Title": "This document has expired. (FR)",
+      "Description": "Please choose a different form of ID to continue. (FR)"
+    },
     "FactoryReset": {
       "Title": "Problem with App (FR)",
       "Description": "The app needs to be reset to factory settings to continue. This will delete all information in the app and you will have to set it up again. (FR)",
@@ -1495,7 +1537,7 @@ const translation = {
       "Title": "Device Authentication Failed (FR)",
       "Description": "Unable to authenticate using the device's built-in authentication. (FR)"
     }
-	},
+  },
 }
 
 export default translation

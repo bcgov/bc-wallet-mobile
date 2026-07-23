@@ -9,14 +9,18 @@ import {
   withPin,
   withToken,
 } from '@pexip/infinity-api'
-import type { Result as PexipTokenResult, Stun, Turn } from '@pexip/infinity-api/dist/token/types'
+import type { Result as PexipTokenResult } from '@pexip/infinity-api/dist/token/types'
 import { Platform } from 'react-native'
 import EventSource from 'react-native-sse'
 import { mediaDevices, MediaStream, RTCIceCandidate, RTCPeerConnection } from 'react-native-webrtc'
 import { RTCOfferOptions } from 'react-native-webrtc/lib/typescript/RTCUtil'
 import type { ConnectionRequest, ConnectResult } from '../types/live-call'
 
-type IceServer = Stun | Turn
+type IceServer = {
+  urls: string | string[]
+  username?: string
+  credential?: string
+}
 
 // WebRTC Events need handlers even if we don't do anything with some of them
 const noop = () => {}
@@ -325,7 +329,7 @@ export const buildIceServers = (tokenResult: PexipTokenResult, logger: BifoldLog
   // Use STUN servers from Pexip token response
   if (tokenResult.stun?.length) {
     for (const entry of tokenResult.stun) {
-      iceServers.push({ url: entry.url })
+      iceServers.push({ urls: entry.url })
     }
   }
 
@@ -343,7 +347,7 @@ export const buildIceServers = (tokenResult: PexipTokenResult, logger: BifoldLog
   // Fallback to Google public STUN if Pexip provided nothing
   if (iceServers.length === 0) {
     logger.warn('No ICE servers from Pexip, falling back to Google public STUN')
-    iceServers.push({ url: 'stun:stun.l.google.com:19302' })
+    iceServers.push({ urls: 'stun:stun.l.google.com:19302' })
   }
 
   logger.info('ICE servers configured:', { count: iceServers.length })

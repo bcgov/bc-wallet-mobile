@@ -1,4 +1,9 @@
-import { formatAccountName, getNicknameValidationErrorKey } from '@/bcsc-theme/utils/account-utils'
+import {
+  formatAccountName,
+  getFullDisplayName,
+  getNicknameValidationErrorKey,
+  getShortDisplayName,
+} from '@/bcsc-theme/utils/account-utils'
 import { BCState } from '@/store'
 
 const createMockState = (nicknames: string[]): BCState =>
@@ -155,6 +160,55 @@ describe('account-utils', () => {
       })
 
       expect(name).toBe('')
+    })
+  })
+
+  describe('getShortDisplayName', () => {
+    it('should return given_name when both given_name and family_name are present', () => {
+      expect(getShortDisplayName({ given_name: 'Combo', family_name: 'RC0000080' })).toBe('Combo')
+    })
+
+    it('should fall back to family_name when given_name is missing (mononym)', () => {
+      expect(getShortDisplayName({ family_name: 'RC0000080' })).toBe('RC0000080')
+    })
+
+    it('should fall back to family_name when given_name is empty/whitespace', () => {
+      expect(getShortDisplayName({ given_name: '', family_name: 'RC0000080' })).toBe('RC0000080')
+      expect(getShortDisplayName({ given_name: '   ', family_name: 'RC0000080' })).toBe('RC0000080')
+    })
+
+    it('should return an empty string when both are empty or undefined', () => {
+      expect(getShortDisplayName({})).toBe('')
+      expect(getShortDisplayName({ given_name: '', family_name: '' })).toBe('')
+    })
+
+    it('should trim whitespace', () => {
+      expect(getShortDisplayName({ given_name: '  Combo  ' })).toBe('Combo')
+    })
+  })
+
+  describe('getFullDisplayName', () => {
+    it('should join given_name and family_name', () => {
+      expect(getFullDisplayName({ given_name: 'Jamie', family_name: 'Doe' })).toBe('Jamie Doe')
+    })
+
+    it('should return just family_name when given_name is missing (mononym)', () => {
+      expect(getFullDisplayName({ family_name: 'Doe' })).toBe('Doe')
+    })
+
+    it('should return just given_name when family_name is missing', () => {
+      expect(getFullDisplayName({ given_name: 'Jamie' })).toBe('Jamie')
+    })
+
+    it('should return an empty string when both are empty or undefined', () => {
+      expect(getFullDisplayName({})).toBe('')
+      expect(getFullDisplayName({ given_name: '', family_name: '' })).toBe('')
+    })
+
+    it('should not produce leading, trailing, or double spaces', () => {
+      expect(getFullDisplayName({ given_name: '  Jamie  ', family_name: '  Doe  ' })).toBe('Jamie Doe')
+      expect(getFullDisplayName({ given_name: '', family_name: 'Doe' })).toBe('Doe')
+      expect(getFullDisplayName({ given_name: 'Jamie', family_name: '' })).toBe('Jamie')
     })
   })
 })

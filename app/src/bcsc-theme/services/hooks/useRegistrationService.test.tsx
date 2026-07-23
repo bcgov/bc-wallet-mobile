@@ -1,8 +1,12 @@
 import * as useRegistrationApiModule from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { AppEventCode } from '@/events/appEventCode'
 import * as useAlertsModule from '@/hooks/useAlerts'
+import { initialState } from '@/store'
+import { BasicAppContext } from '@mocks/helpers/app'
 import { mockAppError } from '@mocks/helpers/error'
 import { renderHook } from '@testing-library/react-native'
+import React from 'react'
+import { getAccountSecurityMethod } from 'react-native-bcsc-core'
 import { useRegistrationService } from './useRegistrationService'
 
 jest.mock('react-native-bcsc-core')
@@ -22,7 +26,7 @@ describe('useRegistrationService', () => {
       jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
 
-      const { result } = renderHook(() => useRegistrationService())
+      const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
       const data = await result.current.register('deviceAuth' as any)
 
@@ -42,7 +46,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
         expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
@@ -60,7 +64,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
         expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
@@ -80,7 +84,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
         expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
@@ -100,7 +104,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
         expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
@@ -120,7 +124,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
         expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
@@ -140,7 +144,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
         expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
@@ -162,7 +166,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
         expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
@@ -182,7 +186,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
         expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
@@ -206,7 +210,7 @@ describe('useRegistrationService', () => {
           jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
           jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-          const { result } = renderHook(() => useRegistrationService())
+          const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
           await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
           expect(clientRegistrationFailureAlert).toHaveBeenCalledWith(mockError)
@@ -226,7 +230,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
         expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
@@ -244,7 +248,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
         expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
@@ -264,7 +268,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
         expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
@@ -282,7 +286,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
         expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
@@ -302,7 +306,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
         expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
@@ -322,7 +326,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
         expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
@@ -342,7 +346,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
         expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
@@ -386,7 +390,7 @@ describe('useRegistrationService', () => {
       jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-      const { result } = renderHook(() => useRegistrationService())
+      const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
       await expect(result.current.register('deviceAuth' as any)).rejects.toThrow(mockError)
       expect(registrationApi.register).toHaveBeenCalledWith('deviceAuth')
@@ -415,7 +419,7 @@ describe('useRegistrationService', () => {
       jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
 
-      const { result } = renderHook(() => useRegistrationService())
+      const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
       const data = await result.current.updateRegistration('someToken', 'someNickname')
 
@@ -435,7 +439,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
         expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
@@ -455,7 +459,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
         expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
@@ -475,7 +479,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
         expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
@@ -495,7 +499,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
         expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
@@ -515,7 +519,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
         expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
@@ -544,7 +548,7 @@ describe('useRegistrationService', () => {
         const mockError = mockAppError(AppEventCode.ERR_120_KEYCHAIN_UNAVAILABLE_ERROR)
         const { keychainUnavailableAlert } = setup(mockError)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
         expect(keychainUnavailableAlert).toHaveBeenCalledWith(mockError)
@@ -554,7 +558,7 @@ describe('useRegistrationService', () => {
         const mockError = mockAppError(AppEventCode.ERR_120_KEYCHAIN_UNAVAILABLE_ERROR)
         const { keychainUnavailableAlert } = setup(mockError)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(
           result.current.updateRegistration('someToken', 'someNickname', { suppressTransientAlerts: true })
@@ -566,7 +570,7 @@ describe('useRegistrationService', () => {
         const mockError = mockAppError(AppEventCode.ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR)
         const { keychainKeyDoesntExistAlert } = setup(mockError)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(
           result.current.updateRegistration('someToken', 'someNickname', { suppressTransientAlerts: true })
@@ -587,7 +591,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
         expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
@@ -607,7 +611,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
         expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
@@ -627,7 +631,7 @@ describe('useRegistrationService', () => {
         jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
         jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-        const { result } = renderHook(() => useRegistrationService())
+        const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
         await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
         expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
@@ -668,7 +672,7 @@ describe('useRegistrationService', () => {
       jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-      const { result } = renderHook(() => useRegistrationService())
+      const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
       await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
       expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
@@ -698,7 +702,7 @@ describe('useRegistrationService', () => {
       jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-      const { result } = renderHook(() => useRegistrationService())
+      const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
       await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
       expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
@@ -718,11 +722,77 @@ describe('useRegistrationService', () => {
       jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
       jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue(mockAlerts as any)
 
-      const { result } = renderHook(() => useRegistrationService())
+      const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
 
       await expect(result.current.updateRegistration('someToken', 'someNickname')).rejects.toThrow(mockError)
       expect(registrationApi.updateRegistration).toHaveBeenCalledWith('someToken', 'someNickname')
       expect(failedToDeserializeJsonAlert).toHaveBeenCalled()
+    })
+  })
+
+  describe('ensureRegistered', () => {
+    it('should skip registration when a registration access token already exists', async () => {
+      const registrationApi = {
+        register: jest.fn(),
+      } as any
+
+      jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
+
+      const wrapper = ({ children }: React.PropsWithChildren) => (
+        <BasicAppContext
+          initialStateOverride={{
+            bcscSecure: { ...initialState.bcscSecure, registrationAccessToken: 'existing-token' },
+          }}
+        >
+          {children}
+        </BasicAppContext>
+      )
+
+      const { result } = renderHook(() => useRegistrationService(), { wrapper })
+
+      await result.current.ensureRegistered()
+
+      expect(getAccountSecurityMethod).not.toHaveBeenCalled()
+      expect(registrationApi.register).not.toHaveBeenCalled()
+    })
+
+    it('should register with the current security method when no token exists', async () => {
+      const mockSecurityMethod = 'app_pin_no_device_authn'
+      jest.mocked(getAccountSecurityMethod).mockResolvedValue(mockSecurityMethod as any)
+
+      const registrationApi = {
+        register: jest.fn().mockResolvedValue({ client_id: 'new-client-id' }),
+      } as any
+
+      jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
+
+      const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
+
+      await result.current.ensureRegistered()
+
+      expect(getAccountSecurityMethod).toHaveBeenCalled()
+      expect(registrationApi.register).toHaveBeenCalledWith(mockSecurityMethod)
+    })
+
+    it('should propagate registration failures and emit the mapped alert', async () => {
+      const mockError = mockAppError(AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE)
+      jest.mocked(getAccountSecurityMethod).mockResolvedValue('app_pin_no_device_authn' as any)
+
+      const registrationApi = {
+        register: jest.fn().mockRejectedValue(mockError),
+      } as any
+      const clientRegistrationFailureAlert = jest.fn()
+
+      jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
+      jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({ clientRegistrationFailureAlert } as any)
+
+      const { result } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
+
+      // Rejection must propagate so callers (e.g. useDataLoader) can route it to onError
+      await expect(result.current.ensureRegistered()).rejects.toThrow(mockError)
+      expect(clientRegistrationFailureAlert).toHaveBeenCalledWith(mockError)
     })
   })
 
@@ -735,13 +805,15 @@ describe('useRegistrationService', () => {
     jest.spyOn(useRegistrationApiModule, 'default').mockReturnValue(registrationApi)
     jest.spyOn(useAlertsModule, 'useAlerts').mockReturnValue({} as any)
 
-    const { result, rerender } = renderHook(() => useRegistrationService())
+    const { result, rerender } = renderHook(() => useRegistrationService(), { wrapper: BasicAppContext })
     const firstRegister = result.current.register
     const firstUpdateRegistration = result.current.updateRegistration
+    const firstEnsureRegistered = result.current.ensureRegistered
 
     rerender(undefined)
 
     expect(result.current.register).toBe(firstRegister)
     expect(result.current.updateRegistration).toBe(firstUpdateRegistration)
+    expect(result.current.ensureRegistered).toBe(firstEnsureRegistered)
   })
 })

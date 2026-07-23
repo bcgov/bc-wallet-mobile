@@ -23,7 +23,7 @@ export const EmptyNotification = () => {
       alignItems: 'center',
       borderWidth: 2,
       borderColor: ColorPalette.grayscale.lightGrey,
-      borderRadius: 8,
+      borderRadius: Spacing.sm,
       gap: Spacing.md,
     },
   })

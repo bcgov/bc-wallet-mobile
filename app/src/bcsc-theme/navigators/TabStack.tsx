@@ -64,7 +64,7 @@ const createTabBarIcon = (label: string, iconName: string) => {
             style={{
               ...TabTheme.tabBarTextStyle,
               color: focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor,
-              fontWeight: focused ? TextTheme.bold.fontWeight : TextTheme.normal.fontWeight,
+              fontFamily: focused ? TextTheme.bold.fontFamily : TextTheme.normal.fontFamily, // BCSans-Regular -> BCSans-Bold
             }}
           >
             {label}
@@ -168,8 +168,6 @@ const BCSCTabStack: React.FC = () => {
               }
               return
             }
-
-            setActiveTab(route.name)
           },
           tabPress: (event) => {
             // Hijack the tab press event for the Services tab if the user is not verified
@@ -183,12 +181,17 @@ const BCSCTabStack: React.FC = () => {
                 navigation.navigate(BCSCScreens.MainVerifyPrompt)
               }
             }
+
+            setActiveTab(route.name)
           },
         })}
         initialRouteName={BCSCScreens.Home}
         tabBar={(props) => <AnimatedTabBar {...props} />}
         screenOptions={{
           ...defaultStackOptions,
+          // Show the header's own (native) shadow. TabHeaderWithoutBanner draws no drop-shadow caster,
+          // so this native shadow — tuned via HEADER_SHADOW — is the single header shadow.
+          headerShadowVisible: true,
           unmountOnBlur: false,
           lazy: true,
           tabBarStyle: TabTheme.tabBarStyle,

@@ -127,7 +127,30 @@ export interface PrivateKeyInfo {
   id: string; // 'id' for platform neutrality
   keyType?: string;
   keySize?: number;
-  created?: number; // Timestamp
+  created?: number; // Timestamp — SECONDS since epoch on iOS, MILLISECONDS on Android (see KeyPublicInfo.created)
+}
+
+/**
+ * Public RSA key material for a single local key, used by the key-recovery flow (#4166) to
+ * match local keys against the server's jwks by modulus bytes.
+ *
+ * `n`/`e` are platform-native encodings, NOT normalized: iOS emits standard base64 with the
+ * DER leading 0x00 sign byte retained, Android emits canonical unpadded base64url. Consumers
+ * MUST decode-tolerantly normalize before comparing — see
+ * app/src/bcsc-theme/utils/jwk-modulus.ts. Never raw-string-compare `n`.
+ */
+export interface KeyPublicInfo {
+  id: string;
+  n: string;
+  e: string;
+  /**
+   * Creation timestamp — platform units differ, same as {@link PrivateKeyInfo.created} /
+   * `getAllKeys()`: iOS reports SECONDS since epoch (`Date.timeIntervalSince1970`), Android
+   * reports MILLISECONDS since epoch (`System.currentTimeMillis()`-based). Never compare this
+   * value across platforms. Key-recovery's newest-wins ordering is safe regardless, because it
+   * only ever compares `created` values gathered from a single device's platform at runtime.
+   */
+  created?: number;
 }
 
 // This enum must match the native equivalent. See Token.swift for iOS
@@ -278,6 +301,15 @@ export const getAllKeys = (): Promise<PrivateKeyInfo[]> => {
 };
 
 /**
+ * Retrieves every local private key together with its public RSA components (modulus/
+ * exponent). Used by the key-recovery flow to match local keys against the server's jwks by
+ * modulus bytes — see {@link KeyPublicInfo} for encoding caveats.
+ */
+export const getAllKeysWithPublicInfo = (): Promise<KeyPublicInfo[]> => {
+  return BcscCore.getAllKeysWithPublicInfo();
+};
+
+/**
  * Marks a keystore alias as the active (newest) signing key. Used by the 401
  * key-recovery flow to point the wallet at the kid the server confirms it
  * accepts. Rejects with `E_KEY_NOT_FOUND` if the alias is not in the keystore.
@@ -306,14 +338,26 @@ export const getKeyPair = (label: string): Promise<KeyPair> => {
 };
 
 /**
+ * NativeTokenResponse with custom diagnostic field to surface OSStatus or other errors to JS
+ */
+interface NativeTokenResponse {
+  id?: string;
+  type?: number;
+  token?: string;
+  created?: number;
+  expiry?: number | null;
+  diagnostic?: string;
+}
+
+/**
  * Retrieves a token of a specified type.
  * @param tokenType The type of token to retrieve (e.g., Access, Refresh, Registration).
  * @returns A promise that resolves to a TokenInfo object if found, otherwise null.
  */
 export const getToken = async (tokenType: TokenType): Promise<TokenInfo | null> => {
   // Pass the raw numeric value of the enum to the native side
-  const nativeToken = await BcscCore.getToken(tokenType as number);
-  if (!nativeToken) {
+  const nativeToken = (await BcscCore.getToken(tokenType as number)) as NativeTokenResponse | null;
+  if (!nativeToken?.id) {
     return null;
   }
 
@@ -322,6 +366,28 @@ export const getToken = async (tokenType: TokenType): Promise<TokenInfo | null> 
   return {
     ...nativeToken,
     type: nativeToken.type as TokenType, // Ensure this aligns with what native returns
+  } as TokenInfo;
+};
+
+/**
+ * Wraps getToken() to return both token and optional diagnostic information
+ *
+ * @param tokenType The type of token to retrieve (e.g., Access, Refresh, Registration).
+ */
+export const getTokenWithDiagnostics = async (
+  tokenType: TokenType
+): Promise<{ token: TokenInfo | null; diagnostic?: string }> => {
+  const nativeToken = (await BcscCore.getToken(tokenType as number)) as NativeTokenResponse | null;
+  if (!nativeToken?.id) {
+    return { token: null, diagnostic: nativeToken?.diagnostic ?? undefined };
+  }
+  const { ...token } = nativeToken;
+
+  return {
+    token: {
+      ...token,
+      type: nativeToken.type as TokenType, // Ensure this aligns with what native returns
+    } as TokenInfo,
   };
 };
 

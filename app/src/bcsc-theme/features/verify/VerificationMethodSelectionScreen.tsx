@@ -1,7 +1,7 @@
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import { Spacing } from '@/bcwallet-theme/theme'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
-import { ScreenWrapper, testIdWithKey, ThemedText } from '@bifold/core'
+import { ScreenWrapper, testIdWithKey, ThemedText, usePreventDoublePress } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -35,6 +35,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
     verificationOptions,
     formattedHours,
   } = useVerificationMethodModel({ navigation })
+  const { preventDoublePress } = usePreventDoublePress()
 
   const [primaryOption, ...remainingOptions] = verificationOptions
 
@@ -44,9 +45,10 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         <VerifyMethodActionButton
           key="send_video"
           title={t('BCSC.VerificationMethods.SendVideoTitle')}
+          testIDKey="SendVideo"
           description={t('BCSC.VerificationMethods.SendVideoDescription')}
           icon={'video-outline'}
-          onPress={handlePressSendVideo}
+          onPress={preventDoublePress(handlePressSendVideo)}
           disabled={sendVideoLoading || liveCallLoading}
         />
       )
@@ -57,6 +59,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         <VerifyMethodActionButton
           key="in_person"
           title={t('BCSC.VerificationMethods.InPersonTitle')}
+          testIDKey="InPerson"
           description={t('BCSC.VerificationMethods.InPersonDescription')}
           icon={'account-outline'}
           onPress={() => navigation.navigate(BCSCScreens.VerifyInPerson)}
@@ -70,9 +73,10 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         <VerifyMethodActionButton
           key="video_call"
           title={t('BCSC.VerificationMethods.VideoCallTitle')}
+          testIDKey="VideoCall"
           description={t('BCSC.VerificationMethods.VideoCallDescription')}
           icon={'face-agent'}
-          onPress={handlePressLiveCall}
+          onPress={preventDoublePress(handlePressLiveCall)}
           disabled={liveCallLoading || sendVideoLoading}
         />
       )

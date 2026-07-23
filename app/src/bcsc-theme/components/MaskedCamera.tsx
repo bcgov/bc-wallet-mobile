@@ -2,7 +2,16 @@ import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
-import { MaskType, SVGOverlay, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
+import {
+  MaskType,
+  SVGOverlay,
+  testIdWithKey,
+  ThemedText,
+  TOKENS,
+  usePreventDoublePress,
+  useServices,
+  useTheme,
+} from '@bifold/core'
 import { NavigationProp, ParamListBase, useIsFocused } from '@react-navigation/native'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -17,6 +26,8 @@ import {
   useCameraDevice,
   useCameraFormat,
 } from 'react-native-vision-camera'
+import { useBCSCActivity } from '../contexts/BCSCActivityContext'
+import { isBackgroundedAppState } from '../utils/app-state'
 
 type MaskedCameraProps = {
   navigation: NavigationProp<ParamListBase>
@@ -30,6 +41,7 @@ type MaskedCameraProps = {
   maskOverlayOpacity?: number
   customPath?: string
   codeScanner?: CodeScanner
+  photoQualityBalance?: 'speed' | 'balanced' | 'quality'
   onPhotoTaken: (path: string) => void
 }
 
@@ -43,6 +55,7 @@ const MaskedCamera = ({
   maskType,
   customPath,
   codeScanner,
+  photoQualityBalance = 'speed',
   cameraFace = 'back',
   cameraFormatFilter = [],
   onPhotoTaken,
@@ -58,6 +71,8 @@ const MaskedCamera = ({
   const format = useCameraFormat(device, cameraFormatFilter)
   const { failedToWriteToLocalStorageAlert } = useAlerts(navigation)
   const { emitErrorModal } = useErrorAlert()
+  const { preventDoublePress } = usePreventDoublePress()
+  const { appStateStatus } = useBCSCActivity()
   const hasTorch = device?.hasTorch ?? false
 
   const styles = StyleSheet.create({
@@ -120,6 +135,13 @@ const MaskedCamera = ({
 
   const onError = useCallback(
     (error: unknown) => {
+      if (isBackgroundedAppState(appStateStatus)) {
+        // Ignore camera errors while backgrounded or transitioning (app switcher, notification
+        // shade, incoming call on iOS) — they are expected and not actionable.
+        logger.info('[MaskedCamera] Camera error ignored while app is backgrounded or inactive', { appStateStatus })
+        return
+      }
+
       logger.error('MaskedCamera runtime error', error as Error)
       emitErrorModal(
         t('BCSC.CameraDisclosure.Error'),
@@ -127,7 +149,7 @@ const MaskedCamera = ({
         ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
       )
     },
-    [logger, emitErrorModal, t]
+    [appStateStatus, logger, emitErrorModal, t]
   )
   if (!device) {
     return (
@@ -178,10 +200,10 @@ const MaskedCamera = ({
         style={styles.camera}
         device={device}
         format={format}
-        isActive={isFocused}
+        isActive={isFocused && !isBackgroundedAppState(appStateStatus)}
         photo={true}
         video={true}
-        photoQualityBalance="speed"
+        photoQualityBalance={photoQualityBalance}
         isMirrored={false}
         onInitialized={() => logger.debug('MaskedCamera initialized')}
         onError={onError}
@@ -229,7 +251,7 @@ const MaskedCamera = ({
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.captureButton}
-          onPress={takePhoto}
+          onPress={preventDoublePress(takePhoto)}
           accessibilityLabel={t('BCSC.CameraDisclosure.TakePhoto')}
           accessibilityRole="button"
           testID={testIdWithKey('TakePhoto')}

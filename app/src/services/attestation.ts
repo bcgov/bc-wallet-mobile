@@ -150,6 +150,17 @@ export const isOfferingAttestation = (credDefId: string, restrictions: Attestati
   return allCredDefIds(restrictions).includes(credDefId)
 }
 
+/**
+ * No-op AttestationMonitor for builds where device attestation is not required
+ */
+export const noOpAttestationMonitor = (): AttestationMonitorI => ({
+  attestationWorkflowInProgress: false,
+  shouldHandleProofRequestAutomatically: false,
+  start: () => {},
+  stop: () => {},
+  requestAttestationCredential: async () => {},
+})
+
 export class AttestationMonitor implements AttestationMonitorI {
   private proofSubscription?: AgentSubscription
   private offerSubscription?: AgentSubscription

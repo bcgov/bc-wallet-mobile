@@ -3,9 +3,11 @@ import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { isAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
 import { AppAlerts, useAlerts } from '@/hooks/useAlerts'
+import { BCState } from '@/store'
+import { useStore } from '@bifold/core'
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback, useMemo } from 'react'
-import { AccountSecurityMethod } from 'react-native-bcsc-core'
+import { AccountSecurityMethod, getAccountSecurityMethod } from 'react-native-bcsc-core'
 
 /**
  * Maps AppEventCodes that can be thrown during registration to their
@@ -20,6 +22,7 @@ const getRegistrationAlertMap = (alerts: AppAlerts): Partial<Record<AppEventCode
   [AppEventCode.ERR_120_KEYCHAIN_UNAVAILABLE_ERROR]: alerts.keychainUnavailableAlert,
   [AppEventCode.ERR_120_JWT_DEVICE_INFO_ERROR]: alerts.jwtDeviceInfoAlert,
   [AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE]: alerts.clientRegistrationFailureAlert,
+  [AppEventCode.ERR_121_REGISTRATION_KEY_NOT_CONFIRMED]: alerts.registrationKeyNotConfirmedAlert,
   // #3419: the unified native mapper replaced the old CLIENT_REGISTRATION_FAILURE fallback with
   // these events for registration-body failures — same generic modal as before.
   [AppEventCode.DCR_BODY_BUILD_FAILED]: alerts.clientRegistrationFailureAlert,
@@ -42,6 +45,7 @@ export const useRegistrationService = () => {
   const { client, isClientReady } = useBCSCApiClientState()
   const registrationApi = useRegistrationApi(client, isClientReady)
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
+  const [store] = useStore<BCState>()
   const alerts = useAlerts(navigation)
 
   const emitRegistrationAlert = useCallback(
@@ -104,12 +108,33 @@ export const useRegistrationService = () => {
     [registrationApi, emitRegistrationAlert]
   )
 
+  /**
+   * Ensures that the account is registered with the backend.
+   * If the account is already registered, it does nothing.
+   * If the account is not registered, it registers the account with the backend.
+   *
+   * @returns Promise resolving when the account is ensured to be registered
+   * */
+  const ensureRegistered = useCallback(async () => {
+    // 1. Check if account is already registered
+    if (store.bcscSecure.registrationAccessToken) {
+      return
+    }
+
+    // 2. Register the account with the backend
+    const securityMethod = await getAccountSecurityMethod()
+
+    // Note: Fetches registration access token and updates the account's `clientID`
+    await register(securityMethod)
+  }, [register, store.bcscSecure.registrationAccessToken])
+
   return useMemo(
     () => ({
       ...registrationApi, // Spread the base API to include all its methods
       updateRegistration,
       register,
+      ensureRegistered,
     }),
-    [register, registrationApi, updateRegistration]
+    [ensureRegistered, register, registrationApi, updateRegistration]
   )
 }

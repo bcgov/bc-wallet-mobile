@@ -2,7 +2,7 @@ import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import BulletPointList from '@/components/BulletPointList'
 import WhiteHandHoldingPhone from '@assets/img/white-hand-holding-phone.svg'
-import { Button, ButtonType, ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
@@ -39,7 +39,7 @@ const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenP
             forLiveCall,
           })
         }}
-        testID={'TakePhotoButton'}
+        testID={testIdWithKey('TakePhoto')}
         accessibilityLabel={a11yLabel(t('BCSC.PhotoInstructions.TakePhotoAccessibilityLabel'))}
       />
     </ControlContainer>

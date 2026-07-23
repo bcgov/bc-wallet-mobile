@@ -12,6 +12,15 @@ jest.mock('react-native-vision-camera', () => ({
   CameraRuntimeError: class extends Error {},
 }))
 
+// MaskedCamera reads appStateStatus from BCSCActivityContext, which BasicAppContext doesn't provide.
+jest.mock('@/bcsc-theme/contexts/BCSCActivityContext', () => ({
+  useBCSCActivity: jest.fn().mockReturnValue({
+    appStateStatus: 'active',
+    pauseActivityTracking: jest.fn(),
+    resumeActivityTracking: jest.fn(),
+  }),
+}))
+
 describe('TakePhoto', () => {
   let mockNavigation: any
 

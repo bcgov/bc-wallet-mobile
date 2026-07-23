@@ -8,6 +8,8 @@ type VerifyMethodActionButtonProps = {
   icon: string
   title: string
   description: string
+  /** Stable key for testIdWithKey — never derived from display copy. */
+  testIDKey: string
   onPress: () => void
   disabled?: boolean
 }
@@ -18,6 +20,7 @@ const VerifyMethodActionButton = ({
   style = {},
   title,
   description,
+  testIDKey,
   icon,
   onPress,
   disabled = false,
@@ -65,7 +68,7 @@ const VerifyMethodActionButton = ({
           onPress()
         }
       }}
-      testID={testIdWithKey(title)}
+      testID={testIdWithKey(testIDKey)}
       accessibilityRole="button"
       accessibilityLabel={a11yLabel(title)}
     >

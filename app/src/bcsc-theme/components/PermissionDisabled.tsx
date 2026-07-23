@@ -9,6 +9,11 @@ type PermissionDisabledProps = {
   permissionType: PermissionType
   headerPadding?: boolean
   navigateToNextScreen?: () => void
+  secondaryAction?: {
+    title: string
+    onPress: () => void
+    testID?: string
+  }
 }
 
 type PlatformSteps = {
@@ -103,9 +108,10 @@ export const PermissionDisabled = ({
   permissionType,
   headerPadding = false,
   navigateToNextScreen,
+  secondaryAction,
 }: PermissionDisabledProps) => {
   const { t } = useTranslation()
-  const { ColorPalette, Spacing } = useTheme()
+  const { TextTheme, Spacing } = useTheme()
 
   const handleOpenSettings = async () => {
     await Linking.openSettings()
@@ -122,7 +128,7 @@ export const PermissionDisabled = ({
       marginBottom: Spacing.sm,
     },
     stepText: {
-      color: ColorPalette.grayscale.white,
+      color: TextTheme.normal.color,
     },
   })
 
@@ -139,6 +145,15 @@ export const PermissionDisabled = ({
         testID={testIdWithKey('OpenSettings')}
         accessibilityLabel={t('BCSC.PermissionDisabled.OpenSettings')}
       />
+      {secondaryAction ? (
+        <Button
+          title={secondaryAction.title}
+          buttonType={ButtonType.Secondary}
+          onPress={secondaryAction.onPress}
+          testID={secondaryAction.testID}
+          accessibilityLabel={secondaryAction.title}
+        />
+      ) : null}
       {permissionType === 'notifications' && navigateToNextScreen ? (
         <Button
           title={t('BCSC.PermissionDisabled.ContinueWithoutNotifications')}

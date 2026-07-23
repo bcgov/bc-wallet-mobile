@@ -27,7 +27,7 @@ const NotificationActionCard: React.FC<NotificationActionCardProps> = (props) =>
       backgroundColor: ColorPalette.brand.modalTertiaryBackground,
       borderWidth: 2,
       borderColor: ColorPalette.notification.infoBorder,
-      borderRadius: 8,
+      borderRadius: Spacing.sm,
     },
     headerContainer: {
       flexDirection: 'row',

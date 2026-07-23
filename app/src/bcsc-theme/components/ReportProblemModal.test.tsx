@@ -50,12 +50,14 @@ describe('ReportProblemModal', () => {
     expect(onClose).not.toHaveBeenCalled()
   })
 
-  it('closes from the confirmation view when "Done" is pressed', () => {
+  it('closes from the confirmation view when "Done" is pressed', async () => {
     const onClose = jest.fn()
     const { getByTestId } = renderModal(onClose)
 
     enterDescription(getByTestId)
-    fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
+    // NOTE: This await prevents both presses from being triggered in the same tick.
+    // usePreventDoublePress.preventDoublePress() will trigger without the await, and the second press will be ignored.
+    await fireEvent.press(getByTestId(testIdWithKey('ReportProblemSubmit')))
     fireEvent.press(getByTestId(testIdWithKey('ReportProblemDone')))
 
     expect(onClose).toHaveBeenCalled()
