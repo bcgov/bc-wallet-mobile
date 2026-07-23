@@ -995,10 +995,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     [appStateStatus, logger, emitErrorModal, t, onError]
   )
 
-  useEffect(() => {
-    handleCameraError(new CameraRuntimeError('unknown/unknown', 'Bahumbug'))
-  }, [handleCameraError])
-
   const handleSaveScanZones = useCallback(() => {
     if (!containerSize || !frameSize) {
       Alert.alert('Not Ready', 'Camera dimensions not available yet.')
