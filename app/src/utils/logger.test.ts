@@ -158,14 +158,16 @@ describe('reportProblem', () => {
   })
 
   it('omits stack from the payload when the error has no stack', () => {
-    const newFakeError = { ...fakeError }
-    newFakeError.error.stack = undefined
+    const oldStack = fakeError.error.stack
+    fakeError.error.stack = undefined
 
     reportProblem(fakeError)
 
     const data = lokiTransportMock.mock.calls[0][0].rawMsg[0].data
     expect(data).not.toHaveProperty('stack')
     expect(data).toMatchObject({ description: 'It exploded', code: 2800, message: 'stack trace details' })
+
+    fakeError.error.stack = oldStack
   })
 
   it('includes app version and OS system labels by default (includeDeviceDetails defaults to true)', () => {
