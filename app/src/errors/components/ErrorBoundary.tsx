@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { AppError } from '../appError'
-import { ensureAppError } from '../errorHandler'
+import { ErrorRegistry } from '../errorRegistry'
 import { ErrorInfoCard } from './ErrorInfoCard'
 
 interface ErrorBoundaryProps {
@@ -57,7 +57,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   getReportError = (error: Error) => {
-    const appError = ensureAppError(error, AppEventCode.UNKNOWN_ERROR_BOUNDARY_ERROR)
+    const appError = AppError.fromErrorDefinition(ErrorRegistry.UNKNOWN_ERROR_BOUNDARY_ERROR, error)
 
     return {
       title: this.props.t('Error.Problem'),
