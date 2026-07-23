@@ -53,6 +53,7 @@ import {
   determineScanState,
   getPaddedHighlightPosition,
   isCodeAlignedWithZones,
+  mergeLockedCodesWithAccumulated,
   transformBarcodeCoordinates,
 } from './utils/camera'
 
@@ -261,6 +262,11 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   // This allows PDF-417 and Code-39 to be detected in separate frames rather than
   // requiring both in the same frame — a huge improvement on Android where the lower
   // resolution and ML Kit processing make simultaneous detection unreliable.
+  // Read by handleLockTransition (via mergeLockedCodesWithAccumulated) so that a lock
+  // triggered by a single barcode (e.g. the code-39 serial alone satisfying the
+  // single-zone BCSC_SN_SCAN_ZONES threshold) still carries along a different,
+  // recently-validated barcode — e.g. the birthdate-bearing PDF-417 — instead of
+  // silently dropping it (#4256/#4302).
   const accumulatedCodes = useRef<Map<string, { code: EnhancedCode; timestamp: number }>>(new Map())
   const ACCUMULATION_WINDOW_MS = Platform.OS === 'ios' ? 2000 : 3000
 
@@ -634,9 +640,19 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     }
     // Freeze scanning — user must tap "Confirm" or "Try Again"
     // newScanState === 'locked' already guarantees ≥minCodesForAligned qualifying codes this frame,
-    // each with ≥LOCK_READING_THRESHOLD accumulated readings
+    // each with ≥LOCK_READING_THRESHOLD accumulated readings.
+    // Merge in anything the accumulator is still holding (e.g. a PDF-417 validated a
+    // moment ago but not present in this exact frame) so a lock driven by a single
+    // barcode — e.g. the code-39 serial alone satisfying the single-zone threshold —
+    // doesn't drop a different, already-read barcode (#4256/#4302). This frame's own
+    // validated codes were just added to the accumulator by accumulateValidatedResults
+    // above, so mergeLockedCodesWithAccumulated dedupes them back out and only the
+    // genuinely-missing extras get merged in.
     isLockedRef.current = true
-    lockedScanRef.current = { codes: qualifyingCodes, frame }
+    lockedScanRef.current = {
+      codes: mergeLockedCodesWithAccumulated(qualifyingCodes, accumulatedCodes.current, ACCUMULATION_WINDOW_MS),
+      frame,
+    }
     // Cancel any clear timeout so highlights persist
     if (clearHighlightTimeoutRef.current) {
       clearTimeout(clearHighlightTimeoutRef.current)
@@ -677,10 +693,12 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     }
   }
 
-  // Suppress auto-refocus cycling while codes are actively being detected —
-  // refocusing mid-read blurs the frame and resets validation progress (see
-  // doFocus inside startFocusCycling below). Cycling resumes automatically once
-  // detections stop for this long.
+  // Event-driven gate for the idle-nudge tick below: doFocus() only actually calls
+  // camera.focus() once this many ms have passed with nothing decoded, so the
+  // fixed-interval timer never refocuses mid-read and resets validation progress
+  // (see doFocus inside startFocusCycling below). The tick resumes issuing real
+  // focus() calls automatically once detections stop for this long. Cross-platform —
+  // not gated to one OS.
   const FOCUS_SUPPRESS_AFTER_DETECTION_MS = 2000
   const lastDetectionAtRef = useRef(0)
 
@@ -795,10 +813,16 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   // Updated every scan frame so focus cycling can prioritise empty zones.
   const detectedZoneIndices = useRef<Set<number>>(new Set())
 
-  // Auto-focus cycling: periodically focus on scan zone centers
+  // Auto-focus cycling: an idle-nudge tick, not a blind periodic refocus. It runs on
+  // a fixed interval, but each tick is a no-op unless FOCUS_SUPPRESS_AFTER_DETECTION_MS
+  // has elapsed since the last decode (see doFocus below) — so in practice it only
+  // fires when nothing has been read for a while, e.g. after a tilt or hand movement
+  // knocks focus off a scan zone. Runs continuously (start/stop is keyed off screen
+  // focus and mount, not scanState) rather than being restarted on every scan-state
+  // flip — see the effect below.
   const focusCycleIndex = useRef(0)
   const focusCycleTimerRef = useRef<NodeJS.Timeout | null>(null)
-  const FOCUS_CYCLE_INTERVAL_MS = 2500 // Cycle focus every 2.5 seconds
+  const FOCUS_CYCLE_INTERVAL_MS = 2500 // Idle-nudge tick interval
 
   const startFocusCycling = useCallback(() => {
     if (scanZones.length === 0 || !containerSize || !device?.supportsFocus) {
@@ -866,15 +890,14 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     }
   }, [])
 
-  // Start/stop focus cycling based on scan state
+  // scanState is deliberately NOT a dependency: restarting the cycle on every
+  // scanning↔aligned flip fired startFocusCycling's immediate doFocus() each
+  // time (#4300 focus storm). doFocus self-guards on isLockedRef and the
+  // post-detection suppression window, so the timer can run continuously.
   useEffect(() => {
-    if (scanState === 'locked') {
-      stopFocusCycling()
-    } else if (containerSize && device?.supportsFocus) {
-      startFocusCycling()
-    }
+    startFocusCycling()
     return stopFocusCycling
-  }, [scanState, containerSize, startFocusCycling, stopFocusCycling, device])
+  }, [startFocusCycling, stopFocusCycling])
 
   /**
    * LIFECYCLE MANAGEMENT per react-native-vision-camera best practices:
@@ -886,6 +909,11 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     useCallback(() => {
       // Screen gained focus - pause inactivity timeout while camera is active
       pauseActivityTracking()
+      // Restart cycling explicitly on refocus. Previously this happened incidentally
+      // via scanState-driven effect restarts; now that the cycling effect no longer
+      // depends on scanState (see the effect above), the restart must be explicit here.
+      // startFocusCycling() clears any existing timer first, so this is idempotent.
+      startFocusCycling()
 
       return () => {
         // Screen lost focus - reset camera state and resume inactivity tracking
@@ -893,7 +921,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
         stopFocusCycling()
         resumeActivityTracking()
       }
-    }, [pauseActivityTracking, stopFocusCycling, resumeActivityTracking])
+    }, [pauseActivityTracking, startFocusCycling, stopFocusCycling, resumeActivityTracking])
   )
 
   // Diagnostic: log whenever screen focus or app foreground/background state
