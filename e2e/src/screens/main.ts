@@ -120,3 +120,70 @@ export const SettingsScreen = defineScreen({
     forgetPairings: bcsc(main.settings.forgetPairings), // verified-only
   },
 })
+
+/** App Security (`MainChangeSecurity` → SecurityMethodSelector). `self` is the always-present
+ *  `ChoosePINButton`; return via header `back`. */
+export const AppSecurityScreen = defineScreen({
+  self: bcsc(main.appSecurity.choosePin),
+  back: bcsc(common.back),
+})
+
+/**
+ * Change-PIN form (`isChangingExistingPIN`). `self` is `current` (EnterCurrentPIN) — NOT `submit`,
+ * whose testID collides with the Settings ChangePIN row. `understand` is the "I understand" gate.
+ * Mismatch / unchecked-box errors have no testID, so a blocked submit is asserted by staying on-screen.
+ */
+export const ChangePinScreen = defineScreen({
+  self: bcsc(main.changePin.current),
+  primary: bcsc(main.changePin.submit),
+  back: bcsc(common.back),
+  inputs: {
+    current: bcsc(main.changePin.current),
+    newPin: bcsc(main.changePin.newPin),
+    confirm: bcsc(main.changePin.confirm),
+  },
+  links: {
+    understand: bcsc(main.changePin.understand),
+  },
+})
+
+/** AutoLock (`MainAutoLock`). Each time-option row saves immediately on tap (no confirm button);
+ *  `self`/`time5` is the default-selected row. */
+export const AutoLockScreen = defineScreen({
+  self: bcsc(main.autoLock.time5),
+  back: bcsc(common.back),
+  links: {
+    time5: bcsc(main.autoLock.time5),
+    time3: bcsc(main.autoLock.time3),
+    time1: bcsc(main.autoLock.time1),
+  },
+})
+
+/** Main privacy screen. `self`/`learnMore` is the Learn More CardButton — assert it, then `back`
+ *  (tapping it would navigate onward to a webview). */
+export const MainPrivacyPolicyScreen = defineScreen({
+  self: bcsc(main.privacyPolicy.learnMore),
+  back: bcsc(common.back),
+})
+
+/** Contact Us. `self` is the toll-free-number link (its testID is derived from the visible number);
+ *  return via `back`. */
+export const MainContactUsScreen = defineScreen({
+  self: bcsc(main.contactUs.tollFree),
+  back: bcsc(common.back),
+})
+
+/** Remove-account confirmation (shared DestructiveConfirmationScreen). `primary`
+ *  (`ConfirmDestructiveAction`) runs the factory reset; header `back` is the cancel affordance. */
+export const RemoveAccountConfirmScreen = defineScreen({
+  self: bcsc(main.removeAccount.confirm),
+  primary: bcsc(main.removeAccount.confirm),
+  back: bcsc(common.back),
+})
+
+/** The Main-stack in-app WebView (`MainWebView`, opened by the Settings Help row). No content testID;
+ *  pop via the header `back` (mirrors the other stacks' webview descriptors). */
+export const MainWebViewScreen = defineScreen({
+  self: bcsc(common.back),
+  back: bcsc(common.back),
+})

@@ -314,5 +314,41 @@ export const TestIds = {
       myDevices: 'MyDevices',
       forgetPairings: 'ForgetPairings',
     },
+    /** App Security sub-screen (SecurityMethodSelector). `ChoosePINButton` renders in both post-load
+     *  branches, so it is the arrival marker (during the async load the screen is a bare spinner). */
+    appSecurity: {
+      choosePin: 'ChoosePINButton',
+    },
+    /** Change-PIN form (reached with `isChangingExistingPIN`). NB `submit` ('ChangePIN') COLLIDES with
+     *  the settings row key of the same name — anchor arrival on `current`, never on submit. The
+     *  mismatch + unchecked-box errors are untestID'd inline text. */
+    changePin: {
+      current: 'EnterCurrentPIN',
+      newPin: 'EnterNewPIN',
+      confirm: 'ReenterNewPIN',
+      understand: 'IUnderstand',
+      submit: 'ChangePIN',
+    },
+    /** AutoLock options — `auto-lock-time-<minutes>`; tapping a row saves immediately (no confirm). */
+    autoLock: {
+      time5: 'auto-lock-time-5',
+      time3: 'auto-lock-time-3',
+      time1: 'auto-lock-time-1',
+    },
+    /** Main privacy screen — `LearnMore` (a CardButton; tapping it navigates ONWARD to a webview, so
+     *  a back-out detour just asserts it and hits Back). */
+    privacyPolicy: {
+      learnMore: 'LearnMore',
+    },
+    /** Contact Us — its `Link`s auto-derive testIDs from their visible text; the toll-free number is
+     *  the arrival marker (the running app uses the resolved i18n value). */
+    contactUs: {
+      tollFree: '1-888-356-2741',
+    },
+    /** Remove-account confirmation (shared DestructiveConfirmationScreen; header Back = cancel).
+     *  `ConfirmDestructiveAction` is also used by Reset Wallet, but is only reached via RemoveAccount here. */
+    removeAccount: {
+      confirm: 'ConfirmDestructiveAction',
+    },
   },
 } as const
