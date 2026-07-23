@@ -132,8 +132,8 @@ export const reportProblem = (problem: ReportProblem, options?: { includeDeviceD
           {
             message: title,
             data: {
-              code,
               description,
+              code,
               message: error?.message, // TODO (MD): Deprecate - included in `error`
               error: error?.toJSON(),
               report_id: referenceCode, // this report problem - ie: "7K2P-9XQF"
@@ -141,7 +141,7 @@ export const reportProblem = (problem: ReportProblem, options?: { includeDeviceD
 
               // Only attach `stack` when the error actually carries one — user-initiated reports have no real
               // trace, so the field is omitted rather than logging meaningless construction frames.
-              ...(error?.stack ? { stack: error.stack } : {}), // TODO (MD): Deprecate - included in `error`
+              ...(error?.stack ? { stack: error.stack } : {}),
             },
           },
         ],
