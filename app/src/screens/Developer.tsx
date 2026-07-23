@@ -1,3 +1,4 @@
+import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { BCThemeNames, Mode } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import {
@@ -18,6 +19,7 @@ import { useNavigation } from '@react-navigation/native'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native'
+import { deleteToken, TokenType } from 'react-native-bcsc-core'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import ErrorAlertTest from './ErrorAlertTest'
@@ -29,6 +31,7 @@ const Developer: React.FC = () => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const { lockOutUser } = useAuth()
+  const { client: apiClient } = useBCSCApiClientState()
   const { SettingsTheme, TextTheme, ColorPalette, setTheme, themeName } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER]) as [RemoteLogger]
   const [environmentModalVisible, setEnvironmentModalVisible] = useState<boolean>(false)
@@ -47,6 +50,7 @@ const Developer: React.FC = () => {
   const [enableShareableLink, setEnableShareableLink] = useState(!!store.preferences.enableShareableLink)
   const [enableProxy, setEnableProxy] = useState(!!store.developer.enableProxy)
   const [enableAppToAppPersonFlow, setEnableAppToAppPersonFlow] = useState(!!store.developer.enableAppToAppPersonFlow)
+  const [tokensDeleted, setTokensDeleted] = useState<boolean>(false)
   const navigation = useNavigation()
 
   const BCSCMode = store.mode === Mode.BCSC
@@ -312,6 +316,23 @@ const Developer: React.FC = () => {
       type: BCDispatchAction.SEEN_ONBOARDING_INTRO,
       payload: [false],
     })
+  }
+
+  const deleteTokens = async () => {
+    // Deletes tokens from native keychain storage and clears the in-memory cache
+    // Testing getTokenWithDiagnostics() will show correct error message
+    try {
+      await Promise.all([
+        deleteToken(TokenType.Refresh),
+        deleteToken(TokenType.Registration),
+        deleteToken(TokenType.Access),
+      ])
+      apiClient?.clearTokens()
+      logger.info('Developer: Deleted all tokens from native storage and cleared in-memory cache')
+      setTokensDeleted(true)
+    } catch (error) {
+      logger.error('Developer: Failed to delete tokens', error as Error)
+    }
   }
 
   const toggleMode = () => {
@@ -634,6 +655,20 @@ const Developer: React.FC = () => {
               }
             >
               <Icon name="restore" size={24} color={ColorPalette.brand.link} />
+            </SectionRow>
+            <SectionRow
+              title={t('Developer.DeleteTokens')}
+              accessibilityLabel={t('Developer.DeleteTokens')}
+              testID={testIdWithKey('DeleteTokens')}
+              onPress={deleteTokens}
+              subContent={
+                <Text style={[styles.rowTitle, { marginTop: 10 }]}>
+                  {`${t('Developer.DeletedTokens')}: `}
+                  <Text style={[styles.rowTitle, { fontWeight: 'bold' }]}>{String(tokensDeleted)}</Text>
+                </Text>
+              }
+            >
+              <Icon name="delete" size={24} color={ColorPalette.brand.link} />
             </SectionRow>
           </>
         ) : null}

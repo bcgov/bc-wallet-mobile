@@ -1,4 +1,5 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import * as walletServiceHooks from '@/bcsc-theme/services/hooks/useWalletService'
 import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -14,7 +15,6 @@ import {
   setAccountSecurityMethod,
   setupDeviceSecurity,
 } from 'react-native-bcsc-core'
-import Toast from 'react-native-toast-message'
 import { ChangeSecurityContent } from './ChangeSecurityContent'
 
 jest.mock('react-native-bcsc-core', () => ({
@@ -37,10 +37,6 @@ jest.mock('react-native-bcsc-core', () => ({
   },
 }))
 
-jest.mock('react-native-toast-message', () => ({
-  show: jest.fn(),
-}))
-
 const mockAlert = jest.fn()
 
 jest.mock('@/contexts/ErrorAlertContext', () => {
@@ -60,18 +56,15 @@ const mockGetAccountSecurityMethod = jest.mocked(getAccountSecurityMethod)
 const mockPerformDeviceAuthentication = jest.mocked(performDeviceAuthentication)
 const mockSetupDeviceSecurity = jest.mocked(setupDeviceSecurity)
 const mockSetAccountSecurityMethod = jest.mocked(setAccountSecurityMethod)
-const mockToastShow = jest.mocked(Toast.show)
 
 describe('ChangeSecurityContent', () => {
   let mockNavigation = useNavigation()
   let onDeviceAuthSuccess = mockNavigation['goBack']
-  let onLearnMorePressed = mockNavigation['navigate']
   let onPINPress = mockNavigation['navigate']
 
   beforeEach(() => {
     mockNavigation = useNavigation()
     onDeviceAuthSuccess = mockNavigation.goBack
-    onLearnMorePressed = mockNavigation.navigate
     onPINPress = mockNavigation.navigate
     jest.clearAllMocks()
     jest.useFakeTimers()
@@ -79,6 +72,7 @@ describe('ChangeSecurityContent', () => {
 
   afterEach(() => {
     jest.useRealTimers()
+    jest.restoreAllMocks()
   })
 
   describe('when current method is PIN and device auth is available', () => {
@@ -92,17 +86,13 @@ describe('ChangeSecurityContent', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangeSecurityContent
-              onDeviceAuthSuccess={onDeviceAuthSuccess}
-              onLearnMorePress={onLearnMorePressed}
-              onPINPress={onPINPress}
-            />
+            <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
 
       await waitFor(() => {
-        expect(tree.getByText('BCSC.Onboarding.SecureAppHeader')).toBeTruthy()
+        expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingHeader')).toBeTruthy()
       })
 
       // Should show current method indicator
@@ -114,43 +104,36 @@ describe('ChangeSecurityContent', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangeSecurityContent
-              onDeviceAuthSuccess={onDeviceAuthSuccess}
-              onLearnMorePress={onLearnMorePressed}
-              onPINPress={onPINPress}
-            />
+            <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
 
       await waitFor(() => {
-        expect(tree.getByText('BCSC.Onboarding.SecureAppHeader')).toBeTruthy()
+        expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingHeader')).toBeTruthy()
       })
 
-      // Should show both options
+      // Device auth is the actionable option; PIN is shown as the current method.
       expect(tree.getByText('BCSC.Onboarding.SecureAppDeviceAuthTitle')).toBeTruthy()
-      expect(tree.getByText('BCSC.Onboarding.SecureAppPINTitle')).toBeTruthy()
+      expect(tree.getByTestId(testIdWithKey('ChoosePINButton'))).toBeTruthy()
     })
 
-    it('disables PIN option when current method is PIN', async () => {
+    it('marks PIN as the current method when current method is PIN', async () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangeSecurityContent
-              onDeviceAuthSuccess={onDeviceAuthSuccess}
-              onLearnMorePress={onLearnMorePressed}
-              onPINPress={onPINPress}
-            />
+            <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
 
       await waitFor(() => {
-        expect(tree.getByText('BCSC.Onboarding.SecureAppHeader')).toBeTruthy()
+        expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingHeader')).toBeTruthy()
       })
 
-      // The PIN option should show "Currently active"
-      expect(tree.getByText('BCSC.Settings.AppSecurity.CurrentlySelected')).toBeTruthy()
+      // The PIN card shows the current-method label with the PIN name as its subtext.
+      expect(tree.getByText('BCSC.Settings.AppSecurity.CurrentMethod')).toBeTruthy()
+      expect(tree.getByText('BCSC.Settings.AppSecurity.PIN')).toBeTruthy()
     })
   })
 
@@ -165,17 +148,13 @@ describe('ChangeSecurityContent', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangeSecurityContent
-              onDeviceAuthSuccess={onDeviceAuthSuccess}
-              onLearnMorePress={onLearnMorePressed}
-              onPINPress={onPINPress}
-            />
+            <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
 
       await waitFor(() => {
-        expect(tree.getByText('BCSC.Onboarding.SecureAppHeader')).toBeTruthy()
+        expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingHeader')).toBeTruthy()
       })
 
       expect(tree.getByText('BCSC.Settings.AppSecurity.CurrentMethod')).toBeTruthy()
@@ -186,11 +165,7 @@ describe('ChangeSecurityContent', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangeSecurityContent
-              onDeviceAuthSuccess={onDeviceAuthSuccess}
-              onLearnMorePress={onLearnMorePressed}
-              onPINPress={onPINPress}
-            />
+            <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -217,17 +192,13 @@ describe('ChangeSecurityContent', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangeSecurityContent
-              onDeviceAuthSuccess={onDeviceAuthSuccess}
-              onLearnMorePress={onLearnMorePressed}
-              onPINPress={onPINPress}
-            />
+            <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
 
       await waitFor(() => {
-        expect(tree.getByText('BCSC.Onboarding.SecureAppHeader')).toBeTruthy()
+        expect(tree.getByText('BCSC.Onboarding.SecureAppOnboardingHeader')).toBeTruthy()
       })
 
       expect(tree.getByText('BCSC.Settings.AppSecurity.DeviceAuthNotSetup')).toBeTruthy()
@@ -244,11 +215,7 @@ describe('ChangeSecurityContent', () => {
       render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangeSecurityContent
-              onDeviceAuthSuccess={onDeviceAuthSuccess}
-              onLearnMorePress={onLearnMorePressed}
-              onPINPress={onPINPress}
-            />
+            <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -270,18 +237,16 @@ describe('ChangeSecurityContent', () => {
       mockPerformDeviceAuthentication.mockResolvedValue(true)
     })
 
-    it('successfully switches to device auth and shows toast', async () => {
+    it('successfully switches to device auth and rotates the wallet key', async () => {
       mockSetupDeviceSecurity.mockResolvedValue({ success: true, walletKey: 'key', isAutoGenerated: true })
       mockSetAccountSecurityMethod.mockResolvedValue(true)
+      const mockRotateWalletKey = jest.fn().mockResolvedValue(true)
+      jest.spyOn(walletServiceHooks, 'useWalletService').mockReturnValue({ rotateWalletKey: mockRotateWalletKey })
 
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangeSecurityContent
-              onDeviceAuthSuccess={onDeviceAuthSuccess}
-              onLearnMorePress={onLearnMorePressed}
-              onPINPress={onPINPress}
-            />
+            <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -302,16 +267,11 @@ describe('ChangeSecurityContent', () => {
       })
 
       await waitFor(() => {
-        expect(onDeviceAuthSuccess).toHaveBeenCalled()
+        expect(mockRotateWalletKey).toHaveBeenCalledWith('key')
       })
 
       await waitFor(() => {
-        expect(mockToastShow).toHaveBeenCalledWith(
-          expect.objectContaining({
-            type: 'success',
-            text1: 'BCSC.Settings.AppSecurity.SuccessTitle',
-          })
-        )
+        expect(onDeviceAuthSuccess).toHaveBeenCalled()
       })
     })
 
@@ -321,11 +281,7 @@ describe('ChangeSecurityContent', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangeSecurityContent
-              onDeviceAuthSuccess={onDeviceAuthSuccess}
-              onLearnMorePress={onLearnMorePressed}
-              onPINPress={onPINPress}
-            />
+            <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -355,11 +311,7 @@ describe('ChangeSecurityContent', () => {
       const tree = render(
         <BasicAppContext>
           <BCSCLoadingProvider>
-            <ChangeSecurityContent
-              onDeviceAuthSuccess={onDeviceAuthSuccess}
-              onLearnMorePress={onLearnMorePressed}
-              onPINPress={onPINPress}
-            />
+            <ChangeSecurityContent onDeviceAuthSuccess={onDeviceAuthSuccess} onPINPress={onPINPress} />
           </BCSCLoadingProvider>
         </BasicAppContext>
       )
@@ -377,37 +329,6 @@ describe('ChangeSecurityContent', () => {
           'BCSC.Settings.AppSecurity.SetupFailedMessage'
         )
       })
-    })
-  })
-
-  describe('Learn More', () => {
-    beforeEach(() => {
-      mockCanPerformDeviceAuthentication.mockResolvedValue(true)
-      mockGetAvailableBiometricType.mockResolvedValue(BiometricType.FaceID)
-      mockGetAccountSecurityMethod.mockResolvedValue(AccountSecurityMethod.PinWithDeviceAuth)
-    })
-
-    it('navigates to WebView when Learn More is pressed', async () => {
-      const tree = render(
-        <BasicAppContext>
-          <BCSCLoadingProvider>
-            <ChangeSecurityContent
-              onDeviceAuthSuccess={onDeviceAuthSuccess}
-              onLearnMorePress={onLearnMorePressed}
-              onPINPress={onPINPress}
-            />
-          </BCSCLoadingProvider>
-        </BasicAppContext>
-      )
-
-      await waitFor(() => {
-        expect(tree.getByText('BCSC.Onboarding.LearnMore')).toBeTruthy()
-      })
-
-      const learnMoreButton = tree.getByTestId(testIdWithKey('LearnMoreButton'))
-      fireEvent.press(learnMoreButton)
-
-      expect(onLearnMorePressed).toHaveBeenCalled()
     })
   })
 })

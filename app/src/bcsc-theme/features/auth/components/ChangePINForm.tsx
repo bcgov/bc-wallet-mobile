@@ -17,12 +17,13 @@ import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Keyboard, StyleSheet, TextInput, View } from 'react-native'
 import { setPIN as setNativePIN, verifyPIN } from 'react-native-bcsc-core'
+import { PINEntryResult } from './PINEntryForm'
 
 interface ChangePINFormProps {
   /**
    * Called when PIN is successfully changed.
    */
-  onSuccess: () => Promise<void>
+  onSuccess: (result: PINEntryResult) => Promise<void>
   /**
    * Optional loading message to show during PIN change
    */
@@ -119,11 +120,11 @@ export const ChangePINForm: React.FC<ChangePINFormProps> = ({ onSuccess, loading
         }
 
         // Current PIN verified, now set the new PIN
-        const { success } = await setNativePIN(newPin)
+        const { success, walletKey } = await setNativePIN(newPin)
 
         if (success) {
           logger.info('PIN changed successfully')
-          await onSuccess()
+          await onSuccess({ success: true, walletKey })
         } else {
           setNewPINError(t('BCSC.ChangePIN.FailedToSetPIN'))
         }

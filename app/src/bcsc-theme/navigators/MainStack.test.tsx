@@ -2,6 +2,7 @@ import * as Bifold from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { render } from '@testing-library/react-native'
 import React from 'react'
+import { useAccount } from '../contexts/BCSCAccountContext'
 import * as PairingModule from '../features/pairing'
 import { PairingNavigationListener, PairingPayload } from '../features/pairing/types'
 import { BCSCScreens } from '../types/navigators'
@@ -47,6 +48,9 @@ jest.mock('@/constants', () => ({
 jest.mock('../contexts/BCSCStackContext', () => ({
   useBCSCStack: jest.fn(),
 }))
+jest.mock('../contexts/BCSCLoadingContext', () => ({
+  LoadingScreen: 'LoadingScreen',
+}))
 jest.mock('../hooks/useSystemChecks', () => ({
   SystemCheckScope: { MAIN_STACK: 'MAIN_STACK' },
   useSystemChecks: jest.fn(),
@@ -66,9 +70,6 @@ jest.mock('../features/agent', () => ({
   BifoldScope: ({ children }: any) => children,
   withAgentReadyGate: (Component: any) => Component,
 }))
-jest.mock('../hooks/useBCSCApiClient', () => ({
-  useBCSCApiClient: jest.fn(() => ({ endpoints: { accountDevices: 'https://example.com/devices' } })),
-}))
 jest.mock('../components/FloatingHelpMenuHeaderButton', () => ({
   createFloatingHelpMenuButton: jest.fn(() => () => null),
 }))
@@ -76,11 +77,7 @@ jest.mock('../components/HeaderBackButton', () => ({
   createHeaderBackButton: jest.fn(() => null),
 }))
 jest.mock('../components/HeaderWithBanner', () => ({
-  createHeaderWithBanner: jest.fn(() => () => null),
   createHeaderWithoutBanner: jest.fn(() => null),
-}))
-jest.mock('../components/HelpHeaderButton', () => ({
-  createMainHelpHeaderButton: jest.fn(() => () => null),
 }))
 jest.mock('./stack-utils', () => ({
   getDefaultModalOptions: jest.fn(() => ({})),
@@ -204,5 +201,13 @@ describe('MainStack', () => {
     render(<MainStack />)
 
     expect(PairingModule.pairingPayloadToServiceLoginParams).not.toHaveBeenCalled()
+  })
+
+  it('shows the loading screen while the account is still loading', () => {
+    jest.mocked(useAccount).mockReturnValueOnce({ isLoadingAccount: true } as any)
+
+    const { toJSON } = render(<MainStack />)
+
+    expect(toJSON()).toMatchObject({ type: 'LoadingScreen' })
   })
 })

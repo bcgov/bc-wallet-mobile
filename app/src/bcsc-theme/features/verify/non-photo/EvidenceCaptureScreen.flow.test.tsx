@@ -169,7 +169,7 @@ describe('EvidenceCaptureScreen — Non-BCSC barcode flow', () => {
 
   it('reroutes into setup and clears evidence when the backend confirms a BC Services Card', async () => {
     mockHandleScanBarcodes.mockResolvedValue(true)
-    const navigation = { navigate: jest.fn(), reset: jest.fn() }
+    const navigation = { navigate: jest.fn(), push: jest.fn(), reset: jest.fn(), dispatch: jest.fn() }
 
     await driveScanPhotoAccept(renderScreen(navigation))
 
@@ -181,12 +181,12 @@ describe('EvidenceCaptureScreen — Non-BCSC barcode flow', () => {
     )
     expect(mockClearAdditionalEvidence).toHaveBeenCalled()
     // Switched to the BCSC flow — does not continue to evidence ID collection.
-    expect(navigation.navigate).not.toHaveBeenCalled()
+    expect(navigation.push).not.toHaveBeenCalled()
   })
 
   it('continues capturing as evidence (keeping the scanned barcode) when it is not a BC Services Card', async () => {
     mockHandleScanBarcodes.mockResolvedValue(false)
-    const navigation = { navigate: jest.fn(), reset: jest.fn() }
+    const navigation = { navigate: jest.fn(), push: jest.fn(), reset: jest.fn(), dispatch: jest.fn() }
 
     await driveScanPhotoAccept(renderScreen(navigation))
 
@@ -200,7 +200,8 @@ describe('EvidenceCaptureScreen — Non-BCSC barcode flow', () => {
     expect(barcodes).toEqual(
       expect.arrayContaining([expect.objectContaining({ type: 'CODE_128', value: 'S00023254' })])
     )
-    expect(navigation.navigate).toHaveBeenCalledWith(
+    // Pushes the form screen, keeping the capture/instruction screens in the history.
+    expect(navigation.push).toHaveBeenCalledWith(
       BCSCScreens.EvidenceIDCollection,
       expect.objectContaining({ documentNumber: '123' })
     )
@@ -208,7 +209,7 @@ describe('EvidenceCaptureScreen — Non-BCSC barcode flow', () => {
 
   it('asks /device/barcodes only once across a multi-sided card', async () => {
     mockHandleScanBarcodes.mockResolvedValue(false)
-    const navigation = { navigate: jest.fn(), reset: jest.fn() }
+    const navigation = { navigate: jest.fn(), push: jest.fn(), reset: jest.fn(), dispatch: jest.fn() }
     const utils = renderScreen(navigation, mockTwoSidedCardType)
 
     // Front side: scan, photo, accept.
@@ -233,7 +234,8 @@ describe('EvidenceCaptureScreen — Non-BCSC barcode flow', () => {
 
     // The backend is asked once for the card, not once per side.
     expect(mockHandleScanBarcodes).toHaveBeenCalledTimes(1)
-    expect(navigation.navigate).toHaveBeenCalledWith(
+    // Pushes the form screen, keeping the capture/instruction screens in the history.
+    expect(navigation.push).toHaveBeenCalledWith(
       BCSCScreens.EvidenceIDCollection,
       expect.objectContaining({ documentNumber: '123' })
     )
@@ -252,7 +254,7 @@ describe('EvidenceCaptureScreen — retake/re-accept after final side (issue #41
     // Single-sided card: accept once (final accept, navigates away), then — mirroring a
     // back-nav from EvidenceIDCollection landing back on the still-mounted PhotoReview for
     // the last side — accept again with no retake in between.
-    const navigation = { navigate: jest.fn(), reset: jest.fn() }
+    const navigation = { navigate: jest.fn(), push: jest.fn(), reset: jest.fn() }
     const utils = renderScreen(navigation, mockCardType)
 
     await driveScanPhotoAccept(utils)
@@ -276,7 +278,7 @@ describe('EvidenceCaptureScreen — retake/re-accept after final side (issue #41
     // Two-sided card: front accept, back accept (final accept, navigates away), then —
     // mirroring a back-nav landing back on the still-mounted PhotoReview for the back
     // side — retake and re-accept the back side.
-    const navigation = { navigate: jest.fn(), reset: jest.fn() }
+    const navigation = { navigate: jest.fn(), push: jest.fn(), reset: jest.fn() }
     const utils = renderScreen(navigation, mockTwoSidedCardType)
 
     // Front side: scan, photo, accept.

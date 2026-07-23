@@ -5,7 +5,8 @@ import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
+import { useCardStatus } from '@/bcsc-theme/hooks/useCardStatus'
+import { BCSCQRCoreScreens, BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
 import { testIdWithKey, useStore, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
@@ -16,21 +17,63 @@ import { StyleSheet, View } from 'react-native'
 import SectionButton from '../../components/SectionButton'
 import HomeHeader from './components/HomeHeader'
 import { NotificationsList } from './components/NotificationsList'
+import PairingCodeCard from './components/PairingCodeCard'
 import SavedServices from './components/SavedServices'
+import WelcomeHeader from './components/WelcomeHeader'
 
 type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
+
+/**
+ * Shared "manage devices" navigation handler for the Home screens: opens the account-devices
+ * web view with the same route/params in both places, so the two can't drift apart.
+ */
+const useManageDevicesNavigation = (navigation: HomeProps['navigation']) => {
+  const { t } = useTranslation()
+  const apiClient = useBCSCApiClient()
+
+  return useCallback(() => {
+    navigation.getParent()?.navigate(BCSCScreens.MainWebView, {
+      url: apiClient.endpoints.accountDevices,
+      title: t('BCSC.Screens.ManageDevices'),
+    })
+  }, [apiClient.endpoints.accountDevices, navigation, t])
+}
 
 /**
  * Home screen for >= V4.1.x
  * @returns React element
  */
-const Home: React.FC<HomeProps> = () => {
+const Home: React.FC<HomeProps> = ({ navigation }) => {
+  const { t } = useTranslation()
   const { Spacing } = useTheme()
+  const [store] = useStore<BCState>()
+  const { account } = useAccount()
+  const { isActivelyVerified } = useCardStatus()
+  const handleManageDevices = useManageDevicesNavigation(navigation)
+
+  const handlePairingCodePress = () => {
+    navigation.getParent()?.navigate(BCSCScreens.QRCore, { screen: BCSCQRCoreScreens.PairingCode })
+  }
 
   return (
-    <TabScreenWrapper scrollViewProps={{ contentContainerStyle: { padding: Spacing.lg, gap: Spacing.lg } }}>
-      <NotificationsList />
-    </TabScreenWrapper>
+    <>
+      <NotificationBannerContainer onManageDevices={handleManageDevices} bannerMessages={store.bcsc.bannerMessages} />
+      <TabScreenWrapper scrollViewProps={{ contentContainerStyle: { padding: Spacing.lg, gap: Spacing.lg } }}>
+        {/* Header and pairing shortcut are only shown to actively-verified users, since the pairing
+            code screen itself is gated on verification (see QRCoreStack) and unusable otherwise. */}
+        {isActivelyVerified && account ? <WelcomeHeader name={account.fullname_formatted} /> : null}
+        {isActivelyVerified ? (
+          <PairingCodeCard
+            title={t('BCSC.Home.LogInFromComputerTitle')}
+            description={t('BCSC.Home.LogInFromComputerDescription')}
+            onPress={handlePairingCodePress}
+            accessibilityHint={a11yLabel(t('BCSC.Home.LogInFromComputerDescription'))}
+            testID={testIdWithKey('LogInFromComputer')}
+          />
+        ) : null}
+        <NotificationsList />
+      </TabScreenWrapper>
+    </>
   )
 }
 
@@ -40,16 +83,9 @@ const Home: React.FC<HomeProps> = () => {
 export const HomeV4_0_x: React.FC<HomeProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
-  const apiClient = useBCSCApiClient()
   const { account } = useAccount()
   const [store] = useStore<BCState>()
-
-  const handleManageDevices = useCallback(() => {
-    navigation.getParent()?.navigate(BCSCScreens.MainWebView, {
-      url: apiClient.endpoints.accountDevices,
-      title: t('BCSC.Screens.ManageDevices'),
-    })
-  }, [apiClient.endpoints.accountDevices, navigation, t])
+  const handleManageDevices = useManageDevicesNavigation(navigation)
 
   const styles = StyleSheet.create({
     buttonsContainer: {

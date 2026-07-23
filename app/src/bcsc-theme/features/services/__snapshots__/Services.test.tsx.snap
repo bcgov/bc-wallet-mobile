@@ -262,15 +262,12 @@ exports[`Services renders service list when loading is complete 1`] = `
               onResponderTerminationRequest={[Function]}
               onStartShouldSetResponder={[Function]}
               style={
-                [
-                  {
-                    "backgroundColor": "#003366",
-                    "padding": 16,
-                  },
-                  {
-                    "borderRadius": 8,
-                  },
-                ]
+                {
+                  "backgroundColor": "#003366",
+                  "borderRadius": 8,
+                  "opacity": 1,
+                  "padding": 16,
+                }
               }
             >
               <View

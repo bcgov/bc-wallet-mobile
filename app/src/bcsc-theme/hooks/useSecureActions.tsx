@@ -46,7 +46,7 @@ import { TokenResponse } from '../api/hooks/useTokens'
 import { ProvinceCode } from '../utils/address-utils'
 import { createMinimalCredential, getCredentialVerificationStatus } from '../utils/bcsc-credential'
 import { isCardEvidenceComplete, isEvidenceAwaitingDocumentNumber } from '../utils/card-utils'
-import { performKeyRecovery } from '../utils/key-recovery'
+import { performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 
 /**
@@ -733,6 +733,33 @@ export const useSecureActions = () => {
   )
 
   /**
+   * Keep only the first `count` evidence entries (dropping the rest) and persist. Used when the user
+   * navigates back to an evidence-type list to release the ID(s) selected from that list onward so
+   * they can be picked again, while keeping the ones collected before it.
+   *
+   * @param evidence Current evidence metadata array
+   * @param count Number of leading entries to keep
+   * @returns The kept evidence metadata array
+   */
+  const truncateEvidence = useCallback(
+    async (evidence: EvidenceMetadata[], count: number) => {
+      if (evidence.length <= count) {
+        return evidence
+      }
+
+      const kept = evidence.slice(0, count)
+      dispatch({
+        type: BCDispatchAction.UPDATE_SECURE_EVIDENCE_METADATA,
+        payload: [kept],
+      })
+      await persistEvidenceData(kept)
+
+      return kept
+    },
+    [dispatch, persistEvidenceData]
+  )
+
+  /**
    * Remove abandoned evidence entries (a card was selected but no photos were ever
    * captured) and persist the result.
    *
@@ -923,22 +950,58 @@ export const useSecureActions = () => {
       }
 
       let freshTokens: TokenResponse | null = null
+      // Populated when the recovery probe (or the no-match re-registration fallback) surfaces a
+      // rotated registration_access_token — always persisted below when present, regardless of
+      // which branch this ends up taking (RFC 7592: the reg token may rotate on GET or PUT).
+      let recoveredRegistrationAccessToken: string | undefined
       if (refreshToken && apiClient && isClientReady) {
         try {
           freshTokens = await apiClient.getTokensForRefreshToken(refreshToken)
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error)
           logger.error(`[hydrateSecureState] Failed to refresh tokens with stored refresh token: ${message}`)
+
+          // Retries the refresh once after a recovery strategy runs, logging success/failure
+          // under a consistent label. Shared by the 'recovered' and 'no_match' branches below
+          // so the retry-and-log pattern isn't duplicated per strategy.
+          const retryRefreshAfter = async (strategyLabel: string): Promise<TokenResponse | null> => {
+            try {
+              const tokens = await apiClient.getTokensForRefreshToken(refreshToken)
+              logger.info(`[hydrateSecureState] token refresh succeeded after ${strategyLabel}`)
+              return tokens
+            } catch (retryError) {
+              const retryMessage = retryError instanceof Error ? retryError.message : String(retryError)
+              logger.error(`[hydrateSecureState] token refresh still failed after ${strategyLabel}: ${retryMessage}`)
+              return null
+            }
+          }
+
           if (clientID && registrationAccessToken) {
             logger.info('[hydrateSecureState] Attempting key recovery in case of signing key mismatch...')
-            const recovered = await performKeyRecovery(apiClient, clientID, registrationAccessToken, logger)
-            if (recovered) {
-              try {
-                freshTokens = await apiClient.getTokensForRefreshToken(refreshToken)
-                logger.info('[hydrateSecureState] token refresh succeeded after key recovery')
-              } catch (retryError) {
-                const retryMessage = retryError instanceof Error ? retryError.message : String(retryError)
-                logger.error(`[hydrateSecureState] token refresh still failed after key recovery: ${retryMessage}`)
+            const recovery = await performKeyRecovery(apiClient, clientID, registrationAccessToken, logger)
+            recoveredRegistrationAccessToken = recovery.newRegistrationAccessToken
+
+            if (recovery.status === 'recovered') {
+              freshTokens = await retryRefreshAfter('key recovery')
+            } else if (recovery.status === 'no_match') {
+              logger.info(
+                '[hydrateSecureState] No local key matches server jwks; attempting to re-register the newest local key...'
+              )
+              const reRegisterResult = await reRegisterNewestKey(
+                apiClient,
+                clientID,
+                recoveredRegistrationAccessToken ?? registrationAccessToken,
+                logger
+              )
+              recoveredRegistrationAccessToken =
+                reRegisterResult.newRegistrationAccessToken ?? recoveredRegistrationAccessToken
+
+              if (reRegisterResult.success) {
+                freshTokens = await retryRefreshAfter('re-registration')
+              } else {
+                logger.warn(
+                  '[hydrateSecureState] Re-registration of newest local key did not succeed; tokens remain stale.'
+                )
               }
             } else {
               logger.warn('[hydrateSecureState] Key recovery did not occur or did not succeed; tokens remain stale.')
@@ -949,7 +1012,7 @@ export const useSecureActions = () => {
 
       await updateTokens({
         refreshToken: freshTokens?.refresh_token ?? refreshToken,
-        registrationAccessToken,
+        registrationAccessToken: recoveredRegistrationAccessToken ?? registrationAccessToken,
         accessToken: freshTokens?.access_token ?? accessToken,
       })
 
@@ -1159,6 +1222,7 @@ export const useSecureActions = () => {
     updateEvidenceDocumentNumber,
     removeEvidenceByType,
     removeIncompleteEvidence,
+    truncateEvidence,
     removeAbandonedEvidence,
     clearAdditionalEvidence,
     updateSavedService,

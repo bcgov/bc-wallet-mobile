@@ -1,25 +1,21 @@
 import { SecurityMethodSelector } from '@/bcsc-theme/features/auth/components/SecurityMethodSelector'
+import { useWalletService } from '@/bcsc-theme/services/hooks/useWalletService'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { TOKENS, useServices } from '@bifold/core'
-import { upperFirst } from 'lodash'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   AccountSecurityMethod,
-  BiometricType,
   getAccountSecurityMethod,
-  getAvailableBiometricType,
   setAccountSecurityMethod,
   setupDeviceSecurity,
 } from 'react-native-bcsc-core'
-import Toast from 'react-native-toast-message'
 
 export interface ChangeSecurityContentProps {
   onDeviceAuthSuccess: () => void
   onPINPress: () => void
-  onLearnMorePress: () => void
 }
 
 /**
@@ -27,31 +23,12 @@ export interface ChangeSecurityContentProps {
  * Allows users to toggle between PIN and biometric/device authentication.
  * Uses the shared SecurityMethodSelector component.
  */
-export const ChangeSecurityContent = ({
-  onDeviceAuthSuccess,
-  onPINPress,
-  onLearnMorePress,
-}: ChangeSecurityContentProps) => {
+export const ChangeSecurityContent = ({ onDeviceAuthSuccess, onPINPress }: ChangeSecurityContentProps) => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { emitAlert } = useErrorAlert()
   const [currentMethod, setCurrentMethod] = useState<AccountSecurityMethod | null>(null)
-  const [deviceAuthMethodName, setDeviceAuthMethodName] = useState('')
-
-  useEffect(() => {
-    const loadDeviceAuthInfo = async () => {
-      try {
-        const biometricType = await getAvailableBiometricType()
-        setDeviceAuthMethodName(biometricType === BiometricType.None ? 'Device Passcode' : upperFirst(biometricType))
-      } catch (err) {
-        const appError = toAppError(err, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
-        logger.error(`Error loading biometric type: ${appError.technicalMessage ?? appError.message}`)
-        setDeviceAuthMethodName('Device Passcode')
-      }
-    }
-
-    loadDeviceAuthInfo()
-  }, [logger])
+  const walletService = useWalletService()
 
   useEffect(() => {
     const loadCurrentMethod = async () => {
@@ -71,7 +48,7 @@ export const ChangeSecurityContent = ({
   const handleDeviceAuthPress = useCallback(async () => {
     try {
       // In settings context, account already exists, so setupDeviceSecurity should work
-      const { success } = await setupDeviceSecurity()
+      const { success, walletKey } = await setupDeviceSecurity()
       if (!success) {
         logger.error('Device security setup failed')
         emitAlert(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
@@ -82,12 +59,7 @@ export const ChangeSecurityContent = ({
       setCurrentMethod(AccountSecurityMethod.DeviceAuth)
       logger.info('Successfully switched to device authentication')
 
-      Toast.show({
-        type: 'success',
-        text1: t('BCSC.Settings.AppSecurity.SuccessTitle'),
-        text2: t('BCSC.Settings.AppSecurity.SwitchedToDeviceAuth', { method: deviceAuthMethodName }),
-        position: 'bottom',
-      })
+      await walletService.rotateWalletKey(walletKey)
 
       onDeviceAuthSuccess()
     } catch (err) {
@@ -95,13 +67,12 @@ export const ChangeSecurityContent = ({
       logger.error(`Error setting account security method: ${appError.technicalMessage ?? appError.message}`)
       emitAlert(t('BCSC.Settings.AppSecurity.ErrorTitle'), t('BCSC.Settings.AppSecurity.SetupFailedMessage'))
     }
-  }, [logger, t, deviceAuthMethodName, onDeviceAuthSuccess, emitAlert])
+  }, [logger, walletService, onDeviceAuthSuccess, emitAlert, t])
 
   return (
     <SecurityMethodSelector
       onDeviceAuthPress={handleDeviceAuthPress}
       onPINPress={onPINPress}
-      onLearnMorePress={onLearnMorePress}
       currentMethod={currentMethod}
       deviceAuthPrompt={t('BCSC.Settings.AppSecurity.AuthenticateToSwitch')}
     />

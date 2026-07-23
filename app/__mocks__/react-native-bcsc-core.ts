@@ -88,6 +88,7 @@ export const getIssuer = jest.fn().mockResolvedValue(null)
 
 // Key Management
 export const getAllKeys = jest.fn().mockResolvedValue([])
+export const getAllKeysWithPublicInfo = jest.fn().mockResolvedValue([])
 export const getKeyPair = jest.fn().mockResolvedValue({
   id: 'test-key',
   public: 'mock-public-key',
@@ -96,6 +97,7 @@ export const getKeyPair = jest.fn().mockResolvedValue({
 
 // Token Management
 export const getToken = jest.fn().mockResolvedValue(null)
+export const getTokenWithDiagnostics = jest.fn().mockResolvedValue({ token: null })
 export const setToken = jest.fn().mockResolvedValue(true)
 export const deleteToken = jest.fn().mockResolvedValue(true)
 export const getRegistrationToken = jest.fn().mockResolvedValue(null)

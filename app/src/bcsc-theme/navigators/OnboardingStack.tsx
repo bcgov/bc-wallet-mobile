@@ -164,6 +164,7 @@ const OnboardingStack = (): React.ReactElement => {
         component={OnboardingRemoveAccountConfirmationScreen}
         options={() => ({
           headerShown: true,
+          title: t('BCSC.Account.RemoveAccount'),
         })}
       />
 

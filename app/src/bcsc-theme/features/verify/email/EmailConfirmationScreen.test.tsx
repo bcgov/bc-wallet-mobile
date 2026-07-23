@@ -66,7 +66,7 @@ describe('EmailConfirmation', () => {
   describe('Submission', () => {
     test('shows error when submitting empty code', () => {
       renderScreen()
-      fireEvent.press(screen.getByTestId('ContinueButton'))
+      fireEvent.press(screen.getByTestId(testIdWithKey('Continue')))
       expect(screen.getByText('BCSC.EmailConfirmation.CodeError')).toBeTruthy()
     })
 
@@ -74,7 +74,7 @@ describe('EmailConfirmation', () => {
       renderScreen()
       const codeInput = screen.getByTestId(testIdWithKey('EmailConfirmationCodeInput'))
       fireEvent.changeText(codeInput, '123')
-      fireEvent.press(screen.getByTestId('ContinueButton'))
+      fireEvent.press(screen.getByTestId(testIdWithKey('Continue')))
       expect(screen.getByText('BCSC.EmailConfirmation.CodeError')).toBeTruthy()
     })
 
@@ -84,7 +84,7 @@ describe('EmailConfirmation', () => {
 
       const codeInput = screen.getByTestId(testIdWithKey('EmailConfirmationCodeInput'))
       fireEvent.changeText(codeInput, '123456')
-      fireEvent.press(screen.getByTestId('ContinueButton'))
+      fireEvent.press(screen.getByTestId(testIdWithKey('Continue')))
 
       await waitFor(() => {
         expect(mockSendEmailVerificationCode).toHaveBeenCalledWith('123456', 'test-email-id')
@@ -99,7 +99,7 @@ describe('EmailConfirmation', () => {
 
       const codeInput = screen.getByTestId(testIdWithKey('EmailConfirmationCodeInput'))
       fireEvent.changeText(codeInput, '123456')
-      fireEvent.press(screen.getByTestId('ContinueButton'))
+      fireEvent.press(screen.getByTestId(testIdWithKey('Continue')))
 
       await waitFor(() => {
         expect(mockUpdateUserInfo).toHaveBeenCalledWith({
@@ -115,7 +115,7 @@ describe('EmailConfirmation', () => {
 
       const codeInput = screen.getByTestId(testIdWithKey('EmailConfirmationCodeInput'))
       fireEvent.changeText(codeInput, '123456')
-      fireEvent.press(screen.getByTestId('ContinueButton'))
+      fireEvent.press(screen.getByTestId(testIdWithKey('Continue')))
 
       await waitFor(() => {
         expect(mockNavigation.dispatch).toHaveBeenCalled()
@@ -133,7 +133,7 @@ describe('EmailConfirmation', () => {
 
       const codeInput = screen.getByTestId(testIdWithKey('EmailConfirmationCodeInput'))
       fireEvent.changeText(codeInput, '123456')
-      fireEvent.press(screen.getByTestId('ContinueButton'))
+      fireEvent.press(screen.getByTestId(testIdWithKey('Continue')))
 
       await waitFor(() => {
         expect(screen.getByText('BCSC.EmailConfirmation.CodeDoesNotMatch')).toBeTruthy()
@@ -195,7 +195,7 @@ describe('EmailConfirmation', () => {
 
       const codeInput = screen.getByTestId(testIdWithKey('EmailConfirmationCodeInput'))
       fireEvent.changeText(codeInput, '654321')
-      fireEvent.press(screen.getByTestId('ContinueButton'))
+      fireEvent.press(screen.getByTestId(testIdWithKey('Continue')))
 
       await waitFor(() => {
         expect(mockSendEmailVerificationCode).toHaveBeenCalledWith('654321', 'new-email-id')

@@ -31,31 +31,31 @@ export const useTokenService = () => {
         return await tokenApi.getCachedIdTokenMetadata(config)
       } catch (error) {
         if (isAppError(error, AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN)) {
-          alerts.unableToDecryptIdTokenAlert()
+          alerts.unableToDecryptIdTokenAlert(error)
         }
 
         if (isAppError(error, AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON)) {
-          alerts.failedToDeserializeJsonAlert()
+          alerts.failedToDeserializeJsonAlert(error)
         }
 
         if (isAppError(error, AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK)) {
-          alerts.missingJwkAlert()
+          alerts.missingJwkAlert(error)
         }
 
         if (isAppError(error, AppEventCode.ERR_112_JWS_VERIFICATION_FAILED)) {
-          alerts.jwsVerificationFailedAlert()
+          alerts.jwsVerificationFailedAlert(error)
         }
 
         if (isAppError(error, AppEventCode.ERR_114_FAILED_TO_GET_CLAIMS_SET_AFTER_DECRYPT_AND_VERIFY)) {
-          alerts.failedToGetClaimsSetAlert()
+          alerts.failedToGetClaimsSetAlert(error)
         }
 
         if (isAppError(error, AppEventCode.ERR_117_FAILED_TO_PARSE_JWS)) {
-          alerts.failedToParseJwsAlert()
+          alerts.failedToParseJwsAlert(error)
         }
 
         if (isAppError(error, AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL)) {
-          alerts.tokenUnexpectedlyNullAlert()
+          alerts.tokenUnexpectedlyNullAlert(error)
         }
 
         throw error

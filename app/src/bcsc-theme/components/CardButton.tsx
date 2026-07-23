@@ -47,6 +47,15 @@ interface CardProps {
    */
   disabled?: boolean
   /**
+   * Whether the card is shown in a selected/highlighted state (e.g. the current selection).
+   * A selected card is a non-interactive status indicator: it renders an accent border with a
+   * trailing check icon (not dimmed like a disabled card), announces its title and subtext together
+   * with a "selected" state to screen readers, and does not respond to presses.
+   *
+   * @type {boolean}
+   */
+  selected?: boolean
+  /**
    * Test ID for the button
    *
    * @type {string}
@@ -74,6 +83,11 @@ export const CardButton = (props: CardProps): React.ReactElement => {
       padding: Spacing.md,
       backgroundColor: ColorPalette.brand.tertiaryBackground,
       borderRadius: Spacing.xs,
+      borderWidth: 2,
+      borderColor: 'transparent',
+    },
+    cardContainerSelected: {
+      borderColor: ColorPalette.brand.primary,
     },
     cardOuterRow: {
       flexDirection: 'row',
@@ -104,6 +118,43 @@ export const CardButton = (props: CardProps): React.ReactElement => {
     },
   })
 
+  const cardContent = (
+    <View style={styles.cardOuterRow}>
+      {props.startIcon ? <Icon name={props.startIcon} style={styles.cardIcon} size={Spacing.xxl} /> : null}
+      <View style={styles.cardContentContainer}>
+        <View style={styles.cardTitleContainer}>
+          <ThemedText variant={props.startIcon ? 'bold' : 'headingFour'} style={styles.cardTitle}>
+            {props.title}
+          </ThemedText>
+          {!props.selected && props.endIcon ? (
+            <Icon name={props.endIcon} style={styles.cardIcon} size={Spacing.xl} />
+          ) : null}
+        </View>
+        {props.subtext ? <ThemedText style={styles.cardSubtext}>{props.subtext}</ThemedText> : null}
+      </View>
+      {/* Rendered as a sibling of the content so it stays vertically centered across title + subtext */}
+      {props.selected ? <Icon name="check-circle" color={ColorPalette.brand.primary} size={Spacing.xl} /> : null}
+    </View>
+  )
+
+  // A selected card represents the already-active choice: it is a non-interactive status indicator,
+  // not a button. Render it as a plain accessible container so screen readers announce the full
+  // label (title + the method name carried in the subtext) with a "selected" state — not "disabled"
+  // — and so it produces no press feedback.
+  if (props.selected) {
+    return (
+      <View
+        accessible={true}
+        accessibilityLabel={a11yLabel(props.subtext ? `${props.title}. ${props.subtext}` : props.title)}
+        accessibilityState={{ selected: true }}
+        style={[styles.cardContainer, styles.cardContainerSelected]}
+        testID={props.testID ?? testIdWithKey(`CardButton-${props.title}`)}
+      >
+        {cardContent}
+      </View>
+    )
+  }
+
   return (
     <PressableOpacity
       accessible={true}
@@ -116,18 +167,7 @@ export const CardButton = (props: CardProps): React.ReactElement => {
       disabled={props.disabled}
       testID={props.testID ?? testIdWithKey(`CardButton-${props.title}`)}
     >
-      <View style={styles.cardOuterRow}>
-        {props.startIcon ? <Icon name={props.startIcon} style={styles.cardIcon} size={Spacing.xxl} /> : null}
-        <View style={styles.cardContentContainer}>
-          <View style={styles.cardTitleContainer}>
-            <ThemedText variant={props.startIcon ? 'bold' : 'headingFour'} style={styles.cardTitle}>
-              {props.title}
-            </ThemedText>
-            {props.endIcon ? <Icon name={props.endIcon} style={styles.cardIcon} size={Spacing.xl} /> : null}
-          </View>
-          {props.subtext ? <ThemedText style={styles.cardSubtext}>{props.subtext}</ThemedText> : null}
-        </View>
-      </View>
+      {cardContent}
     </PressableOpacity>
   )
 }

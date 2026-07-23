@@ -155,7 +155,6 @@ exports[`EnterEmailScreen Rendering should match snapshot 1`] = `
                   onChange={[Function]}
                   onChangeText={[Function]}
                   onFocus={[Function]}
-                  placeholder="BCSC.EnterEmail.EmailExample"
                   placeholderTextColor="#606060"
                   style={
                     [
@@ -540,7 +539,7 @@ exports[`EnterEmailScreen Rendering should match snapshot 1`] = `
                     "padding": 16,
                   }
                 }
-                testID="ContinueButton"
+                testID="com.ariesbifold:id/Continue"
               >
                 <View
                   style={
@@ -618,7 +617,7 @@ exports[`EnterEmailScreen Rendering should match snapshot 1`] = `
                     "padding": 16,
                   }
                 }
-                testID="SkipButton"
+                testID="com.ariesbifold:id/SkipEmail"
               >
                 <View
                   style={

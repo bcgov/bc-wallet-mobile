@@ -1,0 +1,12 @@
+# Dedicated, lightweight Gemfile for the Firebase App Distribution lanes.
+#
+# Kept separate from app/Gemfile (which pulls CocoaPods and other native gems
+# needed only for iOS builds) so the Ubuntu distribution jobs install just
+# fastlane + the Firebase plugin. Point bundler at it with
+# BUNDLE_GEMFILE=app/fastlane/Gemfile.
+source "https://rubygems.org"
+
+gem "fastlane"
+
+plugins_path = File.join(File.dirname(__FILE__), "Pluginfile")
+eval_gemfile(plugins_path) if File.exist?(plugins_path)

@@ -35,7 +35,9 @@ import { DependencyContainer } from 'tsyringe'
 
 import EmptyWalletList from '@/bcsc-theme/components/EmptyWalletList'
 import { createFloatingHelpMenuButton } from '@/bcsc-theme/components/FloatingHelpMenuHeaderButton'
+import { createStackHeaderWithoutBanner } from '@/bcsc-theme/components/HeaderWithBanner'
 import { createMainSettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
+import { CredentialDetailsSubHeader } from '@/bcsc-theme/features/credentials/CredentialDetailsSubHeader'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import filePersistedLedgers from '@/configs/ledgers/indy/ledgers'
 import useBCAgentSetup from '@/hooks/useBCAgentSetup'
@@ -54,6 +56,8 @@ import PersonCredentialLoading from './src/bcwallet-theme/features/person-flow/s
 import { pages } from './src/components/OnboardingPages'
 import {
   AttestationRestrictions,
+  DIGITAL_SERVICES_CARD_CREDENTIAL_DEFINITION_IDS,
+  DIGITAL_SERVICES_CARD_SCHEMA_IDS,
   Mode,
   appHelpUrl,
   appleAppStoreUrl,
@@ -67,7 +71,7 @@ import PINExplainer from './src/screens/PINExplainer'
 import Preface from './src/screens/Preface'
 import Splash from './src/screens/Splash'
 import Terms, { TermsVersion } from './src/screens/Terms'
-import { AttestationMonitor, allCredDefIds } from './src/services/attestation'
+import { AttestationMonitor, allCredDefIds, noOpAttestationMonitor } from './src/services/attestation'
 import { AutoCredentialMonitor } from './src/services/auto-credential'
 import { VersionCheckService } from './src/services/version'
 import {
@@ -116,10 +120,18 @@ export class AppContainer implements Container {
       shouldHandleProofRequestAutomatically: true,
     }
 
-    this._container.registerInstance(TOKENS.UTIL_ATTESTATION_MONITOR, new AttestationMonitor(this.logger, options))
+    // Device attestation only runs on the BCWallet build target. BCSC builds
+    // can't produce an attestation blob our controller accepts, and their
+    // Person Credential flow bypasses attestation anyway.
+    const attestationMonitor =
+      Config.BUILD_TARGET === Mode.BCWallet ? new AttestationMonitor(this.logger, options) : noOpAttestationMonitor()
+    this._container.registerInstance(TOKENS.UTIL_ATTESTATION_MONITOR, attestationMonitor)
     this._container.registerInstance(
       TOKENS.UTIL_CREDENTIAL_PROVISIONING_MONITOR,
-      new AutoCredentialMonitor(this.logger, { rules: [buildDigitalServicesCardCredentialRule()] })
+      new AutoCredentialMonitor(this.logger, {
+        rules: [buildDigitalServicesCardCredentialRule()],
+        attestationMonitor,
+      })
     )
     this._container.registerInstance(TOKENS.UTIL_APP_VERSION_MONITOR, new VersionCheckService(this.logger))
     // Here you can register any component to override components in core package
@@ -134,18 +146,8 @@ export class AppContainer implements Container {
 
     this._container.registerInstance(TOKENS.CRED_HELP_ACTION_OVERRIDES, [
       {
-        credDefIds: [
-          'RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person',
-          'KCxVC8GkKywjhWJnUfCmkW:3:CL:20:PersonQA',
-          '7xjfawcnyTUcduWVysLww5:3:CL:28075:PersonSIT',
-          'XpgeQa93eZvGSZBZef3PHn:3:CL:28075:PersonDEV',
-        ],
-        schemaIds: [
-          'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0',
-          'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0',
-          '7xjfawcnyTUcduWVysLww5:2:Person:1.0',
-          'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0',
-        ],
+        credDefIds: DIGITAL_SERVICES_CARD_CREDENTIAL_DEFINITION_IDS,
+        schemaIds: DIGITAL_SERVICES_CARD_SCHEMA_IDS,
         action: (navigation: NavigationProp<ReactNavigation.RootParamList>) => {
           navigation.getParent()?.navigate(Stacks.NotificationStack, {
             screen: Screens.CustomNotification,
@@ -210,7 +212,7 @@ export class AppContainer implements Container {
           ],
         },
       ],
-      enableTours: true,
+      enableTours: Config.BUILD_TARGET === Mode.BCWallet,
       enableChat: true,
       enableReuseConnections: true,
       enableHiddenDevModeTrigger: true,
@@ -271,9 +273,11 @@ export class AppContainer implements Container {
           ...DefaultScreenOptionsDictionary[Screens.Credentials],
           title: 'Wallet',
           headerLeft: createMainSettingsHeaderButton(),
+          header: createStackHeaderWithoutBanner,
         },
       })
     }
+    this._container.registerInstance(TOKENS.COMPONENT_CRED_SUBHEADER, CredentialDetailsSubHeader)
     this._container.registerInstance(TOKENS.COMPONENT_RECORD, Record)
     this._container.registerInstance(TOKENS.CACHE_CRED_DEFS, [
       // { did: "4WW6792ksq62UroZyfd6nQ", id: "4WW6792ksq62UroZyfd6nQ:3:CL:1098:SellingItRight" },
@@ -415,9 +419,18 @@ export class AppContainer implements Container {
       bcsc.showAccountExpiryNotification = undefined
       bcsc.showCardRenewalNotification = undefined
 
+      const preferencesState = { ...initialState.preferences, ...preferences }
+
+      if (Config.MEDIATOR_URL) {
+        preferencesState.selectedMediator = Config.MEDIATOR_URL
+        if (!preferencesState.availableMediators?.includes(Config.MEDIATOR_URL)) {
+          preferencesState.availableMediators = [Config.MEDIATOR_URL, ...(preferencesState.availableMediators ?? [])]
+        }
+      }
+
       const state = {
         loginAttempt: { ...initialState.loginAttempt, ...loginAttempt },
-        preferences: { ...initialState.preferences, ...preferences },
+        preferences: preferencesState,
         migration: { ...initialState.migration, ...migration },
         tours: { ...initialState.tours, ...tours },
         onboarding: { ...initialState.onboarding, ...onboarding },

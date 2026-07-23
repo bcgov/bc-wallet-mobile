@@ -38,16 +38,16 @@ describe('PairingConfirmation', () => {
       Platform.OS = 'ios'
     })
 
-    it('shows the arrow and subtitle', () => {
+    it('shows the arrow', () => {
       const route = { params: { ...defaultRoute.params, fromAppSwitch: true } }
 
-      const { queryByText } = render(
+      const { queryByLabelText } = render(
         <BasicAppContext>
           <PairingConfirmation navigation={mockNavigation as never} route={route as never} />
         </BasicAppContext>
       )
 
-      expect(queryByText('BCSC.ManualPairing.FromAppSwitchCompletionSubtitle')).toBeTruthy()
+      expect(queryByLabelText('BCSC.ManualPairing.AppSwitchArrowLabel')).toBeTruthy()
     })
 
     it('does not show the Close button', () => {
@@ -116,14 +116,14 @@ describe('PairingConfirmation', () => {
       Platform.OS = 'ios'
     })
 
-    it('does not show the subtitle', () => {
-      const { queryByText } = render(
+    it('does not show the arrow', () => {
+      const { queryByLabelText } = render(
         <BasicAppContext>
           <PairingConfirmation navigation={mockNavigation as never} route={defaultRoute as never} />
         </BasicAppContext>
       )
 
-      expect(queryByText('BCSC.ManualPairing.FromAppSwitchCompletionSubtitle')).toBeNull()
+      expect(queryByLabelText('BCSC.ManualPairing.AppSwitchArrowLabel')).toBeNull()
     })
 
     it('shows the Close button', () => {
@@ -142,16 +142,16 @@ describe('PairingConfirmation', () => {
       Platform.OS = 'android'
     })
 
-    it('does not show the subtitle', () => {
+    it('does not show the arrow', () => {
       const route = { params: { ...defaultRoute.params, fromAppSwitch: true } }
 
-      const { queryByText } = render(
+      const { queryByLabelText } = render(
         <BasicAppContext>
           <PairingConfirmation navigation={mockNavigation as never} route={route as never} />
         </BasicAppContext>
       )
 
-      expect(queryByText('BCSC.ManualPairing.FromAppSwitchCompletionSubtitle')).toBeNull()
+      expect(queryByLabelText('BCSC.ManualPairing.AppSwitchArrowLabel')).toBeNull()
     })
 
     it('shows the Close button', () => {

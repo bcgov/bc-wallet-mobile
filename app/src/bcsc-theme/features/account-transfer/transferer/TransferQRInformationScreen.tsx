@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { StyleSheet } from 'react-native'
 
 const TransferQRInformationScreen: React.FC = () => {
   const { Spacing } = useTheme()
@@ -14,6 +14,7 @@ const TransferQRInformationScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const styles = StyleSheet.create({
     contentContainer: {
+      padding: Spacing.lg,
       gap: Spacing.md,
     },
   })
@@ -31,20 +32,10 @@ const TransferQRInformationScreen: React.FC = () => {
     </ControlContainer>
   )
   return (
-    <ScreenWrapper
-      controls={controls}
-      padded={false}
-      scrollViewContainerStyle={{
-        flexGrow: 1,
-        gap: Spacing.md,
-        padding: Spacing.lg,
-      }}
-    >
-      <View style={styles.contentContainer}>
-        <ThemedText variant={'headingThree'}>{t('BCSC.TransferQRInformation.Title')}</ThemedText>
-        <ThemedText>{t('BCSC.TransferQRInformation.Instructions')}</ThemedText>
-        <ThemedText>{t('BCSC.TransferQRInformation.Warning')}</ThemedText>
-      </View>
+    <ScreenWrapper controls={controls} padded={false} scrollViewContainerStyle={styles.contentContainer}>
+      <ThemedText variant={'headingThree'}>{t('BCSC.TransferQRInformation.Title')}</ThemedText>
+      <ThemedText>{t('BCSC.TransferQRInformation.Instructions')}</ThemedText>
+      <ThemedText>{t('BCSC.TransferQRInformation.Warning')}</ThemedText>
     </ScreenWrapper>
   )
 }

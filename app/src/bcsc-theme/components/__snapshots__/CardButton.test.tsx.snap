@@ -34,16 +34,14 @@ exports[`CardButton Component renders correctly when disabled 1`] = `
   onResponderTerminationRequest={[Function]}
   onStartShouldSetResponder={[Function]}
   style={
-    [
-      {
-        "backgroundColor": "#003366",
-        "borderRadius": 4,
-        "padding": 16,
-      },
-      {
-        "opacity": 0.6,
-      },
-    ]
+    {
+      "backgroundColor": "#003366",
+      "borderColor": "transparent",
+      "borderRadius": 4,
+      "borderWidth": 2,
+      "opacity": 0.6,
+      "padding": 16,
+    }
   }
   testID="com.ariesbifold:id/CardButton-Card Title"
 >
@@ -150,14 +148,14 @@ exports[`CardButton Component renders correctly with subtext and end icon 1`] = 
   onResponderTerminationRequest={[Function]}
   onStartShouldSetResponder={[Function]}
   style={
-    [
-      {
-        "backgroundColor": "#003366",
-        "borderRadius": 4,
-        "padding": 16,
-      },
-      undefined,
-    ]
+    {
+      "backgroundColor": "#003366",
+      "borderColor": "transparent",
+      "borderRadius": 4,
+      "borderWidth": 2,
+      "opacity": 1,
+      "padding": 16,
+    }
   }
   testID="com.ariesbifold:id/CardButton-Card Title"
 >
@@ -287,14 +285,14 @@ exports[`CardButton Component renders correctly with title only 1`] = `
   onResponderTerminationRequest={[Function]}
   onStartShouldSetResponder={[Function]}
   style={
-    [
-      {
-        "backgroundColor": "#003366",
-        "borderRadius": 4,
-        "padding": 16,
-      },
-      undefined,
-    ]
+    {
+      "backgroundColor": "#003366",
+      "borderColor": "transparent",
+      "borderRadius": 4,
+      "borderWidth": 2,
+      "opacity": 1,
+      "padding": 16,
+    }
   }
   testID="com.ariesbifold:id/CardButton-Card Title"
 >

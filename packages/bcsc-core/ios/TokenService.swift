@@ -7,14 +7,44 @@
 //
 
 import Foundation
+import UIKit
 
 protocol TokenStorageServiceProtocol {
   func save(token: Token, attrAccessible: CFString) -> Bool
-  func get(id: String) -> Token?
+  func get(id: String, diagnostic: inout String?) -> Token?
   func delete(id: String) -> Bool
 }
 
 class KeychainTokenStorageService: TokenStorageServiceProtocol {
+  private let logger = AppLogger(
+    subsystem: Bundle.main.bundleIdentifier ?? "ca.bc.gov.id.servicescard",
+    category: "TokenService"
+  )
+
+  /// A helper function to convert OSStatus to a human-readable string, e.g. "-25300 (The specified item could not be
+  /// found in the keychain.)"
+  private func describe(_ status: OSStatus) -> String {
+    let message = SecCopyErrorMessageString(status, nil) as String? ?? "no message available"
+    return "\(status) (\(message))"
+  }
+
+  /// A helper function that waits for protected data (key chain data) to become available OR
+  /// a timeout to occur.
+  /// used in conjunction with a retry for "item not available" errors
+  /// when keychain is being accessed during app startup
+  private func waitForProtectedDataAvailable(timeout: TimeInterval) {
+    guard !UIApplication.shared.isProtectedDataAvailable else { return }
+    let semaphore = DispatchSemaphore(value: 0)
+    // Start on a background queue to avoid blocking .main thread
+    let observerQueue = OperationQueue()
+    let observer = NotificationCenter.default.addObserver(
+      forName: UIApplication.protectedDataDidBecomeAvailableNotification,
+      object: nil, queue: observerQueue
+    ) { _ in semaphore.signal() }
+    _ = semaphore.wait(timeout: .now() + timeout)
+    NotificationCenter.default.removeObserver(observer)
+  }
+
   /// Returns the module name for NSKeyedArchiver class mapping
   /// This must match the module name used by the native ias-ios app
   private var nativeModuleName: String {
@@ -37,7 +67,7 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
     - Returns: true if the token was saved, false otherwise
    */
   func save(token: Token, attrAccessible: CFString = kSecAttrAccessibleWhenUnlockedThisDeviceOnly) -> Bool {
-    // log.debug("save token id:\(token.id) type: \(token.type)")
+    logger.log("save: id=\(token.id) type=\(token.type)")
 
     // Set the class name to match native ias-ios for compatibility
     NSKeyedArchiver.setClassName("\(nativeModuleName).Token", for: Token.self)
@@ -51,7 +81,8 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
       kSecValueData: data,
     ]
     var status = errSecSuccess
-    if get(id: token.id) != nil {
+    var existsDiagnostic: String?
+    if get(id: token.id, diagnostic: &existsDiagnostic) != nil {
       // log.debug("token already exists so call update")
 
       let query: NSDictionary = [
@@ -65,7 +96,7 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
       status = SecItemAdd(attributes, nil)
     }
     if status != errSecSuccess {
-      // log.error("error saving token id:\(token.id) type: \(token.type)")
+      // log.error("save: failed id=\(token.id) type=\(token.type) status=\(describe(status)) isProtectedDataAvailable=\(UIApplication.shared.isProtectedDataAvailable)")
       return false
     }
     return true
@@ -75,10 +106,12 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
    Find and return the Token identified by the given id if it exists.
 
    - Parameter id: The token identifier
+   - Parameter diagnostic: set to a human-readable OSStatus description whenever the
+     read doesn't cleanly succeed (not-found included)
 
    - Returns: the token instance if found, nil otherwise
    */
-  func get(id: String) -> Token? {
+  func get(id: String, diagnostic: inout String?) -> Token? {
     // Migrate before fetching
     migrateLegacyItem(id)
 
@@ -96,11 +129,35 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
       kSecReturnData: kCFBooleanTrue,
     ]
     var result: CFTypeRef?
-    _ = SecItemCopyMatching(query, &result)
+    var status = SecItemCopyMatching(query, &result)
+
+    // errSecInteractionNotAllowed means the item exists but the keychain
+    // isn't accessible right now (e.g. device OS is still unlocking keychain access).
+    // Add a wait and retry once to avoid returning nil when an item is present.
+    if status == errSecInteractionNotAllowed {
+      logger.warning("get: keychain locked (interaction not allowed) id=\(id) — waiting for unlock, then retrying once")
+      waitForProtectedDataAvailable(timeout: 1.0)
+      status = SecItemCopyMatching(query, &result)
+      logger.log("get: retry after unlock wait id=\(id) status=\(describe(status))")
+    }
+
+    if status != errSecSuccess {
+      let description = describe(status)
+      diagnostic = description
+      logger.error(
+        "get: SecItemCopyMatching failed id=\(id) status=\(description) isProtectedDataAvailable=\(UIApplication.shared.isProtectedDataAvailable)"
+      )
+    }
     guard result != nil,
           let data = result as? Data,
           let token = NSKeyedUnarchiver.unarchiveObject(with: data) as? Token
-    else { return nil }
+    else {
+      if status == errSecSuccess {
+        diagnostic = "SecItemCopyMatching succeeded but returned no usable data"
+        logger.error("get: SecItemCopyMatching succeeded but returned no usable data")
+      }
+      return nil
+    }
 
     return token
   }
@@ -113,8 +170,9 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
    - Returns: the token instance if found, nil otherwise
    */
   func delete(id: String) -> Bool {
-    guard let token = get(id: id) else {
-      // log.error("delete called for token that doesn't exist with id:\(id)")
+    var diagnostic: String?
+    guard let token = get(id: id, diagnostic: &diagnostic) else {
+      logger.warning("delete: no existing token found for id")
       return false
     }
     let data = NSKeyedArchiver.archivedData(withRootObject: token)
@@ -127,7 +185,7 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
     var result: CFTypeRef?
     let status = SecItemDelete(query)
     if status != errSecSuccess {
-      // log.error("error deleting token id:\(id), osstatus=\(status)")
+      logger.error("delete: failed status=\(describe(status))")
       return false
     }
 
@@ -150,7 +208,10 @@ extension KeychainTokenStorageService {
       kSecAttrAccessible: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
     ]
 
-    _ = SecItemUpdate(query, updateAttributes)
+    let status = SecItemUpdate(query, updateAttributes)
+    if status != errSecSuccess, status != errSecItemNotFound {
+      logger.error("migrateLegacyItem: SecItemUpdate failed status=\(describe(status))")
+    }
   }
 
   /// Migrates a token stored at the V3 keychain key format ({clientID}/{type}/1)
@@ -171,10 +232,16 @@ extension KeychainTokenStorageService {
       kSecReturnData: kCFBooleanTrue,
     ]
     var result: CFTypeRef?
-    guard SecItemCopyMatching(readQuery, &result) == errSecSuccess,
+    let readStatus = SecItemCopyMatching(readQuery, &result)
+    guard readStatus == errSecSuccess,
           let data = result as? Data,
           let v3Token = NSKeyedUnarchiver.unarchiveObject(with: data) as? Token
     else {
+      if readStatus != errSecSuccess, readStatus != errSecItemNotFound {
+        logger.error(
+          "migrateV3TokenIfNeeded: SecItemCopyMatching failed v3Id=\(v3Id) status=\(describe(readStatus)) isProtectedDataAvailable=\(UIApplication.shared.isProtectedDataAvailable)"
+        )
+      }
       return
     }
 

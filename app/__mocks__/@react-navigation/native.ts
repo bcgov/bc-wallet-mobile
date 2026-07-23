@@ -41,6 +41,12 @@ const CommonActions = {
   goBack: jest.fn(() => ({ type: 'GO_BACK' })),
 }
 
+const StackActions = {
+  push: jest.fn((name, params) => ({ type: 'PUSH', payload: { name, params } })),
+  replace: jest.fn((name, params) => ({ type: 'REPLACE', payload: { name, params } })),
+  pop: jest.fn((count) => ({ type: 'POP', payload: { count } })),
+}
+
 const useFocusEffect = jest.fn()
 const createNavigatorFactory = jest.fn()
 const createNavigationContainerRef = jest.fn(() => ({
@@ -52,6 +58,7 @@ const createNavigationContainerRef = jest.fn(() => ({
 
 export {
   CommonActions,
+  StackActions,
   createNavigationContainerRef,
   createNavigatorFactory,
   useFocusEffect,

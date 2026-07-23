@@ -115,7 +115,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
             "padding": 16,
           }
         }
-        testID="com.ariesbifold:id/BCSC.VerificationMethods.InPersonTitle"
+        testID="com.ariesbifold:id/InPerson"
       >
         <View
           style={
@@ -248,7 +248,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
             "padding": 16,
           }
         }
-        testID="com.ariesbifold:id/BCSC.VerificationMethods.SendVideoTitle"
+        testID="com.ariesbifold:id/SendVideo"
       >
         <View
           style={
@@ -381,7 +381,7 @@ exports[`VerificationMethodSelection renders correctly with in_person as primary
             "padding": 16,
           }
         }
-        testID="com.ariesbifold:id/BCSC.VerificationMethods.VideoCallTitle"
+        testID="com.ariesbifold:id/VideoCall"
       >
         <View
           style={
@@ -628,7 +628,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
             "padding": 16,
           }
         }
-        testID="com.ariesbifold:id/BCSC.VerificationMethods.SendVideoTitle"
+        testID="com.ariesbifold:id/SendVideo"
       >
         <View
           style={
@@ -761,7 +761,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
             "padding": 16,
           }
         }
-        testID="com.ariesbifold:id/BCSC.VerificationMethods.VideoCallTitle"
+        testID="com.ariesbifold:id/VideoCall"
       >
         <View
           style={
@@ -894,7 +894,7 @@ exports[`VerificationMethodSelection renders correctly with send_video as primar
             "padding": 16,
           }
         }
-        testID="com.ariesbifold:id/BCSC.VerificationMethods.InPersonTitle"
+        testID="com.ariesbifold:id/InPerson"
       >
         <View
           style={
@@ -1141,7 +1141,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
             "padding": 16,
           }
         }
-        testID="com.ariesbifold:id/BCSC.VerificationMethods.VideoCallTitle"
+        testID="com.ariesbifold:id/VideoCall"
       >
         <View
           style={
@@ -1274,7 +1274,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
             "padding": 16,
           }
         }
-        testID="com.ariesbifold:id/BCSC.VerificationMethods.SendVideoTitle"
+        testID="com.ariesbifold:id/SendVideo"
       >
         <View
           style={
@@ -1407,7 +1407,7 @@ exports[`VerificationMethodSelection renders correctly with video_call as primar
             "padding": 16,
           }
         }
-        testID="com.ariesbifold:id/BCSC.VerificationMethods.InPersonTitle"
+        testID="com.ariesbifold:id/InPerson"
       >
         <View
           style={

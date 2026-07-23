@@ -335,6 +335,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       alreadyVerifiedAlert: _createBasicErrorModal(AppEventCode.ALREADY_VERIFIED, 'AlreadyVerified'),
       fileUploadErrorAlert: _createBasicErrorModal(AppEventCode.FILE_UPLOAD_ERROR, 'FileUploadError'),
       videoPromptsMissingAlert: _createBasicErrorModal(AppEventCode.VIDEO_PROMPTS_MISSING, 'VideoPromptsMissing'),
+      documentExpiredAlert: _createBasicAlert(AppEventCode.ERR_209_BAD_REQUEST, 'DocumentExpired'),
       loginSameDeviceInvalidPairingCodeAlert: _createBasicErrorModal(AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE, 'InvalidPairingCodeSameDevice'),
       failedToWriteToLocalStorageAlert,
       failedToReadFromLocalStorageAlert: _createBasicErrorModal(AppEventCode.ERR_101_FAILED_TO_READ_LOCAL_STORAGE, 'SomethingWentWrong'),
@@ -389,7 +390,9 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       emptyResponseAlert: _createBasicErrorModal(AppEventCode.ERR_300_EMPTY_RESPONSE, 'SomethingWentWrong'),
       failedToRetrieveStringResourceAlert: _createBasicErrorModal(AppEventCode.ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE, 'SomethingWentWrong'),
       invalidUrlAlert: _createBasicErrorModal(AppEventCode.ERR_500_INVALID_URL, 'SomethingWentWrong'),
+      failedToRotateWalletKeyAlert: _createBasicErrorModal(AppEventCode.WALLET_KEY_ROTATION_ERROR, 'SomethingWentWrong'),
       invalidRegistrationRequestAlert: _createBasicErrorModal(AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST, 'SomethingWentWrong'),
+      registrationKeyNotConfirmedAlert: _createBasicErrorModal(AppEventCode.ERR_121_REGISTRATION_KEY_NOT_CONFIRMED, 'SomethingWentWrong'),
     }),
     [
       appUpdateRequiredAlert,

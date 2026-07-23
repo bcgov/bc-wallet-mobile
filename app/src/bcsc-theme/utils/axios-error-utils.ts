@@ -230,6 +230,12 @@ export const getAxiosErrorDefinition = (errorCode?: string, status?: number): Er
 /**
  * Converts an AxiosError into a structured AppError based on the error code and app event mappings.
  *
+ * A status pre-declared in `error.config.suppressStatusCodeLogs` (e.g. a routine polling 404, or a
+ * retryable failure a caller already reports on its own — see BCSCApiClient.fetchJwk) is treated as
+ * "expected"/already-owned-elsewhere: analytics tracking is skipped for it too, not just the response
+ * interceptor's own log line, so a caller that retries internally doesn't inflate dashboards once per
+ * attempt.
+ *
  * @param error - The AxiosError to convert
  * @returns The resulting AppError with structured information and cause
  */
@@ -238,10 +244,14 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
   const errorDefinition =
     getAxiosErrorDefinition(errorCode, error.response?.status) ?? getErrorDefinitionFromAppEventCode(errorCode)
 
+  const statusCode = error.response?.status ?? 0
+  const track = !(error.config?.suppressStatusCodeLogs ?? []).includes(statusCode)
+
   let appError: AppError
 
   const errorOptions = {
     cause: error,
+    track,
     context: {
       url: error.config?.url ? new URL(error.config.url, 'https://x.com').pathname : undefined,
       method: error.config?.method?.toUpperCase(),
@@ -268,11 +278,6 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
       errorOptions
     )
   }
-
-  // appError.addContext({
-  //   url: error.config?.url ? new URL(error.config.url, 'https://x.com').pathname : undefined,
-  //   method: error.config?.method?.toUpperCase(),
-  // })
 
   return appError
 }

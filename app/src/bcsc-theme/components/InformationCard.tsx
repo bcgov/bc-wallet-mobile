@@ -48,24 +48,31 @@ export const InformationCard = (props: InformationCardProps) => {
       display: 'flex',
       flexDirection: 'row',
       alignItems: 'center',
-      gap: Spacing.sm,
+      paddingBottom: Spacing.xs,
     },
     title: {
+      flex: 1,
       fontSize: 14,
       fontWeight: 'bold',
       color: ColorPalette.brand.headerText,
+      lineHeight: 21,
     },
     subtext: {
       fontSize: 12,
       marginLeft: props.startIcon ? ICON_SIZE + Spacing.sm : undefined, // Add left margin to align with title when icon is present
       lineHeight: 18,
     },
+    icon: {
+      marginRight: Spacing.sm,
+    },
   })
 
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
-        {props.startIcon && <Icon name={props.startIcon} size={ICON_SIZE} color={ColorPalette.brand.headerText} />}
+        {props.startIcon && (
+          <Icon name={props.startIcon} size={ICON_SIZE} style={styles.icon} color={ColorPalette.brand.headerText} />
+        )}
         <ThemedText style={styles.title}>{props.title}</ThemedText>
       </View>
       <ThemedText style={styles.subtext}>{props.subtext}</ThemedText>
