@@ -493,6 +493,18 @@ export type AccumulatedCode = { code: EnhancedCode; timestamp: number }
  * the accumulator; anything else (including a stale same-type/different-value
  * entry) is passed through and left for the ordering to resolve downstream.
  *
+ * Scoping: eligibility is time-based only (`windowMs`), not card-identity-based —
+ * this is what makes the normal combo-card case work. Known limitation (accepted,
+ * minor): if the user swaps to a *different* physical BCSC card mid-scan within the
+ * window and the new card's serial locks before the prior card's PDF-417 expires,
+ * the merge can pair a serial from card B with a birthdate from card A. This is
+ * self-correcting — the backend rejects the mismatched serial+birthdate
+ * (`VerificationCardError.MismatchedSerial` → retry), so it never produces an
+ * incorrect authorization or corrupts data. Clearing on barcode-reading decay was
+ * considered and rejected: that would defeat the feature, since carrying a
+ * no-longer-visible barcode into the lock is precisely the point. A correct
+ * card-identity-aware invalidation is deferred as out of scope.
+ *
  * @param currentFrameCodes Qualifying codes from the frame that triggered the lock
  * @param accumulated Map of recently-validated codes, keyed by `${type}-${value}`
  * @param windowMs Max age (ms) for an accumulated entry to still be eligible

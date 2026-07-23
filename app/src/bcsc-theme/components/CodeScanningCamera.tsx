@@ -643,7 +643,9 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     // doesn't drop a different, already-read barcode (#4256/#4302). This frame's own
     // validated codes were just added to the accumulator by accumulateValidatedResults
     // above, so mergeLockedCodesWithAccumulated dedupes them back out and only the
-    // genuinely-missing extras get merged in.
+    // genuinely-missing extras get merged in. Eligibility there is time-scoped, not
+    // card-identity-scoped — see mergeLockedCodesWithAccumulated's JSDoc for the
+    // accepted, self-correcting mid-scan card-swap edge case.
     isLockedRef.current = true
     lockedScanRef.current = {
       codes: mergeLockedCodesWithAccumulated(qualifyingCodes, accumulatedCodes.current, ACCUMULATION_WINDOW_MS),
