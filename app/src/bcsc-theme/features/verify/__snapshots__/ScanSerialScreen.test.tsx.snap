@@ -269,6 +269,7 @@ exports[`ScanSerial renders correctly 1`] = `
           [
             {
               "backgroundColor": "rgba(0, 0, 0, 0.5)",
+              "gap": 16,
               "padding": 24,
             },
             {
