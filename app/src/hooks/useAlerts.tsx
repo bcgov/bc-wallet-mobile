@@ -111,6 +111,45 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
     [emitErrorModal, logger, navigation, stack, t]
   )
 
+  // _createPersonCredentialAccountProblemErrorModal generates the #3389 "Cannot create Person
+  // credential" modal shown when Person Credential creation is rejected because the BCSC account is
+  // suspended or deactivated. Same Remove Account navigation as _createProblemWithAccountErrorModal,
+  // but with Person-credential-specific copy; the two callers pass distinct events (suspended vs
+  // deactivated) so analytics can tell them apart while the UI stays identical.
+  const _createPersonCredentialAccountProblemErrorModal = useCallback(
+    (event: AppEventCode) => {
+      return (error?: AppError | unknown) => {
+        emitErrorModal(
+          t('Alerts.PersonCredentialAccountProblem.Title'),
+          t('Alerts.PersonCredentialAccountProblem.Description'),
+          ensureAppError(error, event),
+          {
+            action: {
+              text: t('Alerts.PersonCredentialAccountProblem.Action1'),
+              style: 'destructive',
+              onPress: () => {
+                switch (stack) {
+                  case BCSCStacks.Main:
+                    return navigation.navigate(BCSCScreens.MainRemoveAccountConfirmation)
+                  case BCSCStacks.Onboarding:
+                    return navigation.navigate(BCSCScreens.OnboardingRemoveAccountConfirmation)
+                  case BCSCStacks.Verify:
+                    return navigation.navigate(BCSCScreens.VerifyRemoveAccountConfirmation)
+                }
+
+                logger.warn(
+                  '[PersonCredentialAccountProblemAlert] triggered but no matching stack found for navigation',
+                  { stack }
+                )
+              },
+            },
+          }
+        )
+      }
+    },
+    [emitErrorModal, logger, navigation, stack, t]
+  )
+
   /**
    * ERR_100 (storage write failure) normally shows the generic "Something went wrong" copy, but
    * when the underlying cause is the device being out of disk space (e.g. the camera failing
@@ -359,6 +398,8 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       tokenUnexpectedlyNullAlert: _createBasicErrorModal(AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL, 'SomethingWentWrong'),
       loginServerErrorAlert: _createBasicErrorModal(AppEventCode.LOGIN_SERVER_ERROR, 'ProblemWithLogin', { errorCode: '303' }),
       problemWithLoginAlert: _createBasicErrorModal(AppEventCode.LOGIN_PARSE_URI, 'ProblemWithLogin', { errorCode: '304' }),
+      personCredentialSuspendedAlert: _createPersonCredentialAccountProblemErrorModal(AppEventCode.AUTO_CRED_ACCOUNT_SUSPENDED),
+      personCredentialDeactivatedAlert: _createPersonCredentialAccountProblemErrorModal(AppEventCode.AUTO_CRED_ACCOUNT_DEACTIVATED),
       loginRejected401Alert: _createProblemWithAccountErrorModal(AppEventCode.LOGIN_REJECTED_401, '401'),
       loginRejected403Alert: _createProblemWithAccountErrorModal(AppEventCode.LOGIN_REJECTED_403, '403'),
       loginRejected400Alert: _createProblemWithAccountErrorModal(AppEventCode.LOGIN_REJECTED_400, '400-1'),
@@ -407,6 +448,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       failedToWriteToLocalStorageAlert,
       _createBasicErrorModal,
       _createProblemWithAccountErrorModal,
+      _createPersonCredentialAccountProblemErrorModal,
     ]
   )
 }

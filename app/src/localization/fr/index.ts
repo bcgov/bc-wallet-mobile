@@ -1397,6 +1397,11 @@ const translation = {
       "Description": "There may be a problem with the account on this device. Please try again. If the problem continues, remove your account and set it up again. (error {{ errorCode }}) (FR)",
       "Action1": "Remove Account (FR)",
     },
+    "PersonCredentialAccountProblem": {
+      "Title": "Cannot create Person credential (FR)",
+      "Description": "There is a problem with your account.\n\nYou need to remove your account from the app and set it up again. Then you can create your Person credential. (FR)",
+      "Action1": "Remove Account (FR)",
+    },
     "ProblemWithApp": {
       "Title": "Problem with App (FR)",
       "Description": "The app does not appear to be installed correctly. Please remove the app from your device and add it again. (error {{ errorCode }}) (FR)"
