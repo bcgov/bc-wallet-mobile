@@ -350,5 +350,19 @@ export const TestIds = {
     removeAccount: {
       confirm: 'ConfirmDestructiveAction',
     },
+    /** Forget-all-pairings confirmation (verified-only). NB the confirm button `ForgetAllPairings`
+     *  differs from the settings ROW key `settings.forgetPairings` ('ForgetPairings'); on success a
+     *  native "Success"/OK alert fires, then it returns to Settings. */
+    forgetPairingsScreen: {
+      confirm: 'ForgetAllPairings',
+    },
+    /** Edit-nickname form (verified-only; `InputWithValidation` id 'accountNickname'). Validation is
+     *  length-only — there is no duplicate-nickname check. Saving updates the Profile-card name. */
+    editNickname: {
+      input: 'accountNickname-input',
+      pressable: 'accountNickname-pressable', // iOS types into the pressable wrapper (InputWithValidation)
+      save: 'SaveAndContinue',
+      error: 'accountNickname-subtext',
+    },
   },
 } as const

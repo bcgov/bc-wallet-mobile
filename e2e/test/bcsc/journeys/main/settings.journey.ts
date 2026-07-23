@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { TEST_PIN, Timeouts, UPDATED_TEST_PIN, WRONG_TEST_PIN } from '../../../../src/constants.js'
+import { unlockWithPin } from '../../../../src/flows/auth.js'
 import { skipToHome } from '../../../../src/flows/onboarding.js'
 import {
   AppSecurityScreen,
@@ -31,8 +32,9 @@ import { OnboardingIntroScreen } from '../../../../src/screens/onboarding.js'
  *     mismatch assumes `fill` replaces (PIN inputs may auto-submit at 6 digits — tune if it appends).
  *   - Contact Us anchors on the toll-free-number testID (i18n-derived); confirm it resolves on device.
  *   - Remove-account confirm factory-resets to the onboarding Intro — confirm the post-reset landing.
- *   - Auto-lock INACTIVITY EXPIRY (set 1 min → idle → re-unlock) is deferred: it needs a real ~60s
- *     idle wait + `unlockWithPin(UPDATED_TEST_PIN)` and is added once the rest is green.
+ *   - Auto-lock inactivity expiry sits idle ~66s (1-min timeout + margin; newCommandTimeout is 180s),
+ *     then re-unlocks with `UPDATED_TEST_PIN` — the slowest checkpoint. It assumes the inactivity
+ *     logout lands on the same AccountLanding→EnterPIN auth flow as a cold start (`unlockWithPin`).
  */
 describe('Main journey: settings', () => {
   it('onboards and skips to unverified Home', async () => {
@@ -103,7 +105,22 @@ describe('Main journey: settings', () => {
     await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 
+  it('auto-locks after the inactivity timeout and re-unlocks with the changed PIN', async () => {
+    await SettingsScreen.link('autoLock')
+    await AutoLockScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await AutoLockScreen.link('time1') // 1-minute timeout — the autoLockTime effect resets the timer live
+    await AutoLockScreen.back.tap()
+    await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    // Sit idle past the 1-min timeout; the activity context logs the user out to the auth flow. A wdio
+    // query is not a device touch, so it won't reset the app timer; newCommandTimeout is 180s so a
+    // single 66s pause keeps the Appium session alive.
+    await driver.pause(66_000)
+    await unlockWithPin(UPDATED_TEST_PIN) // PIN was changed above; re-unlock lands on Home
+  })
+
   it('shows the Remove Account confirmation and cancels', async () => {
+    await HomeScreen.tap('menu') // re-open Settings (the re-unlock landed on Home)
+    await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     await SettingsScreen.link('removeAccount')
     await RemoveAccountConfirmScreen.expectVisible(Timeouts.SCREEN_TRANSITION) // ConfirmDestructiveAction
     await RemoveAccountConfirmScreen.back.tap() // header Back = cancel

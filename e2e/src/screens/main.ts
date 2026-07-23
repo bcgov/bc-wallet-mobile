@@ -114,10 +114,11 @@ export const SettingsScreen = defineScreen({
     help: bcsc(main.settings.help),
     contactUs: bcsc(main.settings.contactUs),
     privacy: bcsc(main.settings.privacy),
+    editProfile: bcsc(main.settings.editProfile), // verified-only (nickname pencil in the ProfileCard)
+    forgetPairings: bcsc(main.settings.forgetPairings), // verified-only (isVisible spans links → absence assert still works)
   },
   elements: {
-    profile: bcsc(main.settings.profile), // verified-only
-    forgetPairings: bcsc(main.settings.forgetPairings), // verified-only
+    profile: bcsc(main.settings.profile), // verified-only (absence assert unverified)
   },
 })
 
@@ -185,5 +186,29 @@ export const RemoveAccountConfirmScreen = defineScreen({
  *  pop via the header `back` (mirrors the other stacks' webview descriptors). */
 export const MainWebViewScreen = defineScreen({
   self: bcsc(common.back),
+  back: bcsc(common.back),
+})
+
+/** Edit-nickname form (`EditNickname`, verified-only; reached from the ProfileCard pencil). iOS types
+ *  into the pressable wrapper (InputWithValidation). `primary` saves and returns; validation is
+ *  length-only, surfacing on `error`. Saving updates the Settings ProfileCard name. */
+export const EditNicknameScreen = defineScreen({
+  self: { ios: bcsc(main.editNickname.pressable), android: bcsc(main.editNickname.input) },
+  primary: bcsc(main.editNickname.save),
+  back: bcsc(common.back),
+  inputs: {
+    nickname: { ios: bcsc(main.editNickname.pressable), android: bcsc(main.editNickname.input) },
+  },
+  elements: {
+    error: bcsc(main.editNickname.error),
+  },
+})
+
+/** Forget-all-pairings confirmation (`ForgetAllPairings`, verified-only). Its single Critical button is
+ *  both the arrival marker and the confirm (`primary`); on confirm a native "Success"/OK alert fires
+ *  (dismiss with `acceptSystemAlert`) and the app returns to Settings. Header `back` cancels. */
+export const ForgetPairingsScreen = defineScreen({
+  self: bcsc(main.forgetPairingsScreen.confirm),
+  primary: bcsc(main.forgetPairingsScreen.confirm),
   back: bcsc(common.back),
 })
