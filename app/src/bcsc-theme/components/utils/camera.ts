@@ -1,7 +1,7 @@
 import { Platform } from 'react-native'
 import { Code, FormatFilter } from 'react-native-vision-camera'
 
-import { PHOTO_RESOLUTION_1080P, PHOTO_RESOLUTION_720P } from '@/constants'
+import { PHOTO_RESOLUTION_1080P } from '@/constants'
 
 // ─── Shared Types ─────────────────────────────────────────────────────────────
 
@@ -54,41 +54,53 @@ const __CauseRuntimErrorFormat = [
  */
 export const CameraFormat = {
   CodeScanningFormat: [
-    // Tier 1: Ideal — 1080p + 30 FPS + non-HDR + stabilization
-    // Primary target for Android and modern iOS devices
     {
       videoHdr: false,
+    },
+    {
       videoResolution: PHOTO_RESOLUTION_1080P,
+    },
+    {
       fps: 30,
+    },
+    {
       videoStabilizationMode: 'auto',
     },
-    // Tier 2: 1080p + 30 FPS + non-HDR (drop stabilization if needed)
-    // Maintains critical 30 FPS for barcode scanning while dropping optional stabilization
-    {
-      videoHdr: false,
-      videoResolution: PHOTO_RESOLUTION_1080P,
-      fps: 30,
-    },
-    // Tier 3: 720p + 30 FPS + non-HDR (lower resolution but preserve FPS)
-    // 720p is sufficient for barcode detection; preserves 30 FPS for catching both barcodes
-    {
-      videoHdr: false,
-      videoResolution: PHOTO_RESOLUTION_720P,
-      fps: 30,
-    },
-    // Tier 4: 720p + 24 FPS + non-HDR (minimum viable FPS for scanning)
-    // If 30 FPS unavailable, 24 FPS still gives 2.4x more attempts than 10 FPS
-    {
-      videoHdr: false,
-      videoResolution: PHOTO_RESOLUTION_720P,
-      fps: 24,
-    },
-    // Tier 5: Any resolution + non-HDR (absolute fallback)
-    // Prevents "device/pixel-format-not-supported" errors on iOS devices with limited format support.
-    // Quality degraded but camera will work.
-    {
-      videoHdr: false,
-    },
+    // // Tier 1: Ideal — 1080p + 30 FPS + non-HDR + stabilization
+    // // Primary target for Android and modern iOS devices
+    // {
+    //   videoHdr: false,
+    //   // videoResolution: PHOTO_RESOLUTION_1080P,
+    //   // fps: 30,
+    //   // videoStabilizationMode: 'auto',
+    // },
+    // // Tier 2: 1080p + 30 FPS + non-HDR (drop stabilization if needed)
+    // // Maintains critical 30 FPS for barcode scanning while dropping optional stabilization
+    // {
+    //   videoHdr: false,
+    //   videoResolution: PHOTO_RESOLUTION_1080P,
+    //   // fps: 30,
+    // },
+    // // Tier 3: 720p + 30 FPS + non-HDR (lower resolution but preserve FPS)
+    // // 720p is sufficient for barcode detection; preserves 30 FPS for catching both barcodes
+    // {
+    //   // videoHdr: false,
+    //   // videoResolution: PHOTO_RESOLUTION_720P,
+    //   fps: 30,
+    // },
+    // // Tier 4: 720p + 24 FPS + non-HDR (minimum viable FPS for scanning)
+    // // If 30 FPS unavailable, 24 FPS still gives 2.4x more attempts than 10 FPS
+    // {
+    //   videoHdr: false,
+    //   videoResolution: PHOTO_RESOLUTION_720P,
+    //   fps: 24,
+    // },
+    // // Tier 5: Any resolution + non-HDR (absolute fallback)
+    // // Prevents "device/pixel-format-not-supported" errors on iOS devices with limited format support.
+    // // Quality degraded but camera will work.
+    // {
+    //   videoHdr: false,
+    // },
   ] satisfies FormatFilter[],
   /**
    * Format optimized for masked camera with barcode detection.
@@ -97,52 +109,64 @@ export const CameraFormat = {
    * still works on devices that can't sustain 60 FPS or max resolution.
    */
   MaskedWithBarcodeDetection: [
-    // Tier 1: Ideal — 60 FPS + max video resolution + non-HDR + 720p photo
-    // Best for preview quality and barcode detection on capable devices.
     {
       videoHdr: false,
-      fps: 60,
-      videoResolution: 'max',
-      photoResolution: PHOTO_RESOLUTION_720P,
     },
-    // Tier 2: 60 FPS + non-HDR (drop resolution requirement)
-    // Keeps high frame rate when max resolution is unavailable.
     {
-      videoHdr: false,
-      fps: 60,
-    },
-    // Tier 3: 1080p + 30 FPS + non-HDR + stabilization
-    // Primary fallback — sufficient for barcode scanning on most devices.
-    {
-      videoHdr: false,
       videoResolution: PHOTO_RESOLUTION_1080P,
-      fps: 30,
+    },
+    {
+      fps: 60,
+    },
+    {
       videoStabilizationMode: 'auto',
     },
-    // Tier 4: 1080p + 30 FPS + non-HDR (drop stabilization if needed)
-    {
-      videoHdr: false,
-      videoResolution: PHOTO_RESOLUTION_1080P,
-      fps: 30,
-    },
-    // Tier 5: 720p + 30 FPS + non-HDR
-    // 720p is still sufficient for barcode detection.
-    {
-      videoHdr: false,
-      videoResolution: PHOTO_RESOLUTION_720P,
-      fps: 30,
-    },
-    // Tier 6: 720p + 24 FPS + non-HDR (minimum viable FPS)
-    {
-      videoHdr: false,
-      videoResolution: PHOTO_RESOLUTION_720P,
-      fps: 24,
-    },
-    // Tier 7: Any resolution + non-HDR (absolute fallback)
-    // Prevents "device/pixel-format-not-supported" errors on iOS devices with limited format support.
-    {
-      videoHdr: false,
-    },
+    // // Tier 1: Ideal — 60 FPS + max video resolution + non-HDR + 720p photo
+    // // Best for preview quality and barcode detection on capable devices.
+    // {
+    //   videoHdr: false,
+    //   fps: 60,
+    //   videoResolution: 'max',
+    //   photoResolution: PHOTO_RESOLUTION_720P,
+    // },
+    // // Tier 2: 60 FPS + non-HDR (drop resolution requirement)
+    // // Keeps high frame rate when max resolution is unavailable.
+    // {
+    //   videoHdr: false,
+    //   fps: 60,
+    // },
+    // // Tier 3: 1080p + 30 FPS + non-HDR + stabilization
+    // // Primary fallback — sufficient for barcode scanning on most devices.
+    // {
+    //   videoHdr: false,
+    //   videoResolution: PHOTO_RESOLUTION_1080P,
+    //   fps: 30,
+    //   videoStabilizationMode: 'auto',
+    // },
+    // // Tier 4: 1080p + 30 FPS + non-HDR (drop stabilization if needed)
+    // {
+    //   videoHdr: false,
+    //   videoResolution: PHOTO_RESOLUTION_1080P,
+    //   fps: 30,
+    // },
+    // // Tier 5: 720p + 30 FPS + non-HDR
+    // // 720p is still sufficient for barcode detection.
+    // {
+    //   videoHdr: false,
+    //   videoResolution: PHOTO_RESOLUTION_720P,
+    //   fps: 30,
+    // },
+    // // Tier 6: 720p + 24 FPS + non-HDR (minimum viable FPS)
+    // {
+    //   videoHdr: false,
+    //   videoResolution: PHOTO_RESOLUTION_720P,
+    //   fps: 24,
+    // },
+    // // Tier 7: Any resolution + non-HDR (absolute fallback)
+    // // Prevents "device/pixel-format-not-supported" errors on iOS devices with limited format support.
+    // {
+    //   videoHdr: false,
+    // },
   ] satisfies FormatFilter[],
 
   /**
@@ -152,19 +176,28 @@ export const CameraFormat = {
    * barcode formats, there is no live scanning that needs high FPS.
    */
   SelfiePhoto: [
-    // Tier 1: Ideal — 1080p photo + non-HDR + 30 FPS preview.
-    // 1080p is plenty sharp for a face selfie without bloating the upload the way
-    // a 'max'-resolution capture would.
     {
       videoHdr: false,
+    },
+    {
       photoResolution: PHOTO_RESOLUTION_1080P,
+    },
+    {
       fps: 30,
     },
-    // Tier 2: any non-HDR format (absolute fallback)
-    // Prevents "device/pixel-format-not-supported" errors on devices with limited support.
-    {
-      videoHdr: false,
-    },
+    // // Tier 1: Ideal — 1080p photo + non-HDR + 30 FPS preview.
+    // // 1080p is plenty sharp for a face selfie without bloating the upload the way
+    // // a 'max'-resolution capture would.
+    // {
+    //   videoHdr: false,
+    //   photoResolution: PHOTO_RESOLUTION_1080P,
+    //   fps: 30,
+    // },
+    // // Tier 2: any non-HDR format (absolute fallback)
+    // // Prevents "device/pixel-format-not-supported" errors on devices with limited support.
+    // {
+    //   videoHdr: false,
+    // },
   ] satisfies FormatFilter[],
 
   /**
@@ -187,7 +220,7 @@ export const CameraFormat = {
     },
     // High resolution for detecting small barcode details
     {
-      photoResolution: { width: 1920, height: 1080 },
+      photoResolution: PHOTO_RESOLUTION_1080P,
     },
     // Maximum video resolution for better preview quality
     {
