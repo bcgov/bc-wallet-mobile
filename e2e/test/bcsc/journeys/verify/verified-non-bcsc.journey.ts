@@ -19,10 +19,10 @@ import { getTestUser, setTestUser } from '../../../../src/support/context.js'
  * by camera, then typed; the first also collects name + birthdate), then a residential address, then
  * the MANDATORY email step (no Skip on non-BCSC), and finally complete in person.
  *
- * ⚠️ CAMERA-DEPENDENT + UNVALIDATED — document capture needs Sauce image injection (or a physical
- * camera). First Sauce run must confirm: the two EvidenceTypeList row substrings ('Driver'/'Passport'
- * are guesses — selectEvidenceType lists the real ones on a miss), that the ResidentialAddress
- * province dropdown targets `province-option-BC`, and that the mandatory email step is reached.
+ * CAMERA-DEPENDENT — document capture uses Sauce image injection (or a physical camera). Validated on
+ * Sauce: the per-slot EvidenceTypeList row substrings ('BC Drivers Licence' / 'Canadian Passport';
+ * selectEvidenceType lists the real ones on a miss), the ResidentialAddress province dropdown
+ * (`province-option-BC`), and the mandatory email step all resolve.
  *
  * Ordered session: onboard → OtherID → two documents → residential address → email (temp inbox) →
  * method selection → in-person → verified Home.

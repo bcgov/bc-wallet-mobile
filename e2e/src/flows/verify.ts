@@ -30,9 +30,12 @@ import {
 } from '../screens/verify.js'
 
 /**
- * Verify-stack arranges — the entry spine only. `reachVerifyStep` and
- * `completeVerification(user, {method: 'in-person'})` land later with the verified card journeys,
- * which own the post-authorize screens.
+ * Verify-stack arranges: the entry spine plus the post-authorize step arranges that mirror the app's
+ * `getResumeStepRoute` (id → address → email → verify). Reaching a given step is composed from
+ * `reachVerificationMethod()` + the explicit per-step arranges (`collectNonBcscEvidence`,
+ * `fillResidentialAddress`, `verifyEmailWithTempInbox`, `addAdditionalPhotoId`) rather than a single
+ * parameterized `reachVerifyStep`. `completeVerification(user, {method: 'in-person'})` then drives the
+ * in-person approval to VerificationSuccess.
  *
  * Reminder: the VerifyPrompt exists only in the session that completed onboarding — run
  * `completeOnboarding()` first and never relaunch in between.
