@@ -207,10 +207,10 @@ describe('useCardScanner', () => {
     })
 
     it('should process a combo card scan with the serial ordered before the licence code (regression #4256/#4302)', async () => {
-      // mergeLockedCodesWithAccumulated returns accumulated extras first, current-frame
-      // codes last — so a lock driven by the serial alone can hand scanCard the codes in
-      // [serial, licence] order (the reverse of the "multiple barcodes" case above).
-      // scanCard's decode loop is order-independent: it just needs both kinds present.
+      // scanCard/handleCardScan is order-independent: it decodes each code by kind into
+      // separate bcscSerial/license fields regardless of array position. This deliberately
+      // passes [serial, licence] — the REVERSE of mergeLockedCodesWithAccumulated's actual
+      // output order (accumulated extras like the licence come first: [licence, serial]).
       const useApiMock = jest.mocked(useApi)
       const bifoldMock = jest.mocked(Bifold)
       const useSecureActionsMock = jest.mocked(useSecureActions)

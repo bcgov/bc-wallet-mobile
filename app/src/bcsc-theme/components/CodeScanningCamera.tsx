@@ -43,6 +43,7 @@ import {
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
 import { isBackgroundedAppState } from '../utils/app-state'
 import {
+  AccumulatedCode,
   CameraFormat,
   EnhancedCode,
   Rect,
@@ -263,7 +264,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   // single-zone BCSC_SN_SCAN_ZONES threshold) still carries along a different,
   // recently-validated barcode — e.g. the birthdate-bearing PDF-417 — instead of
   // silently dropping it (#4256/#4302).
-  const accumulatedCodes = useRef<Map<string, { code: EnhancedCode; timestamp: number }>>(new Map())
+  const accumulatedCodes = useRef<Map<string, AccumulatedCode>>(new Map())
   const ACCUMULATION_WINDOW_MS = Platform.OS === 'ios' ? 2000 : 3000
 
   // Track camera container and preview dimensions for coordinate transformation
