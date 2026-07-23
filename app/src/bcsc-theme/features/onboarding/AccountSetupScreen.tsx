@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { DeveloperModeTrigger } from '@/bcsc-theme/components/DeveloperModeTrigger'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { AccountSetupType, BCDispatchAction, BCState } from '@/store'
 import AddDeviceHands from '@assets/img/add-device-hands.svg'
@@ -34,6 +35,7 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { clearDeviceCodes } = useSecureActions()
   const [isAddingAccount, setIsAddingAccount] = useState(false)
+  const registrationService = useRegistrationService()
 
   // Latest store snapshot for the focus effect below. Reading through a ref keeps the effect
   // callback stable so it only runs on focus transitions — depending on the store directly
@@ -91,13 +93,15 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
   const handleAddAccount = useCallback(async () => {
     setIsAddingAccount(true)
 
+    void registrationService.ensureRegistered()
+
     dispatch({
       type: BCDispatchAction.ACCOUNT_SETUP_TYPE,
       payload: [AccountSetupType.AddAccount],
     })
 
     navigation.navigate(BCSCScreens.IdentitySelection)
-  }, [dispatch, navigation])
+  }, [dispatch, navigation, registrationService])
 
   // "Yes, connect this device" — transfer an already-verified account by scanning the QR
   // shown on the other device, skipping the identity verification steps.
@@ -107,8 +111,10 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
       payload: [AccountSetupType.TransferAccount],
     })
 
+    void registrationService.ensureRegistered()
+
     navigation.navigate(BCSCScreens.TransferAccountInstructions)
-  }, [dispatch, navigation])
+  }, [dispatch, navigation, registrationService])
 
   const controls = (
     <ControlContainer>
