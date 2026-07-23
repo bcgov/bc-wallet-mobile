@@ -76,22 +76,12 @@ const mockStore = (overrides: Record<string, any> = {}) => ({
 
 const mockProcessPendingChallenges = jest.fn()
 
-// RootStack requests TOKENS.LOAD_STATE directly, and (via useWarmUpDeviceKeys) TOKENS.UTIL_LOGGER —
-// useServices needs to distinguish which token it's being called with, or the logger ends up being
-// the loadState mock (no .error/.info methods).
-const mockLoadState = jest.fn()
-const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(), fatal: jest.fn() }
-
 describe('BCSCRootStack', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockLoadState.mockReset()
 
-    jest
-      .mocked(Bifold.useServices)
-      .mockImplementation(
-        (tokens: any) => (tokens[0] === Bifold.TOKENS.UTIL_LOGGER ? [mockLogger] : [mockLoadState]) as any
-      )
+    const mockLoadState = jest.fn()
+    jest.mocked(Bifold.useServices).mockReturnValue([mockLoadState] as any)
     jest.mocked(useInitializeAccountStatusModule.useInitializeAccountStatus).mockReturnValue({
       initializingAccount: false,
     })
@@ -296,7 +286,9 @@ describe('BCSCRootStack', () => {
 
   it('calls loadState when stateLoaded is false', () => {
     const mockDispatch = jest.fn()
+    const mockLoadState = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([mockStore({ stateLoaded: false }), mockDispatch] as any)
+    jest.mocked(Bifold.useServices).mockReturnValue([mockLoadState] as any)
 
     render(<BCSCRootStack />)
 
@@ -305,7 +297,9 @@ describe('BCSCRootStack', () => {
 
   it('does not call loadState when stateLoaded is true', () => {
     const mockDispatch = jest.fn()
+    const mockLoadState = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([mockStore({ stateLoaded: true }), mockDispatch] as any)
+    jest.mocked(Bifold.useServices).mockReturnValue([mockLoadState] as any)
 
     render(<BCSCRootStack />)
 
@@ -315,12 +309,13 @@ describe('BCSCRootStack', () => {
   it('calls emitErrorModal when loadState throws', () => {
     const mockDispatch = jest.fn()
     const mockError = new Error('load failed')
-    const mockEmitErrorModal = jest.fn()
-    mockLoadState.mockImplementation(() => {
+    const mockLoadState = jest.fn().mockImplementation(() => {
       throw mockError
     })
+    const mockEmitErrorModal = jest.fn()
 
     jest.mocked(Bifold.useStore).mockReturnValue([mockStore({ stateLoaded: false }), mockDispatch] as any)
+    jest.mocked(Bifold.useServices).mockReturnValue([mockLoadState] as any)
 
     jest.requireMock('@/contexts/ErrorAlertContext').useErrorAlert = () => ({
       emitErrorModal: mockEmitErrorModal,

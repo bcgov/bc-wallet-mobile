@@ -213,23 +213,6 @@ class BcscCoreModule(
         }
     }
 
-    /**
-     * Ensures a device signing key pair exists, generating one if none is present yet.
-     * Speculative warm-up — see warmUpKeyPair in NativeBcscCore.ts for why callers fire this
-     * early rather than letting registration pay the first-generation cost.
-     */
-    @ReactMethod
-    fun warmUpKeyPair(promise: Promise) {
-        try {
-            keyPairSource.getCurrentBcscKeyPair()
-            promise.resolve(null)
-        } catch (e: BcscException) {
-            promise.reject("E_KEY_WARMUP_FAILED", "Failed to warm up key pair: ${e.devMessage}", e)
-        } catch (e: Exception) {
-            promise.reject("E_KEY_WARMUP_FAILED", "Unexpected error warming up key pair: ${e.message}", e)
-        }
-    }
-
     @ReactMethod
     override fun getAllKeys(promise: Promise) {
         try {

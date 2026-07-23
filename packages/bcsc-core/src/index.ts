@@ -338,14 +338,6 @@ export const getKeyPair = (label: string): Promise<KeyPair> => {
 };
 
 /**
- * Ensures a device signing key pair exists in native secure storage, generating a new one
- * if none is present yet. Idempotent — a no-op if a key pair already exists.
- */
-export const warmUpKeyPair = (): Promise<void> => {
-  return BcscCore.warmUpKeyPair();
-};
-
-/**
  * NativeTokenResponse with custom diagnostic field to surface OSStatus or other errors to JS
  */
 interface NativeTokenResponse {

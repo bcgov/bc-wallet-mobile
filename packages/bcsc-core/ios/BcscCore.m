@@ -15,8 +15,6 @@ RCT_EXTERN_METHOD(deleteKey : (NSString *)alias resolve : (RCTPromiseResolveBloc
 RCT_EXTERN_METHOD(getKeyPair : (NSString *)label resolve : (RCTPromiseResolveBlock)
                       resolve reject : (RCTPromiseRejectBlock)reject)
 
-RCT_EXTERN_METHOD(warmUpKeyPair : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
-
 RCT_EXTERN_METHOD(getToken : (nonnull NSNumber *)tokenTypeNumber resolve : (RCTPromiseResolveBlock)
                       resolve reject : (RCTPromiseRejectBlock)reject)
 

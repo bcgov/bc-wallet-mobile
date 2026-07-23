@@ -292,13 +292,6 @@ export interface Spec extends TurboModule {
    */
   deleteKey(alias: string): Promise<void>;
   getKeyPair(label: string): Promise<KeyPair>;
-  /**
-   * Ensures a device signing key pair exists, generating one if none is present yet.
-   * Idempotent — a no-op if a key pair already exists. See {@link warmUpKeyPair} in
-   * index.ts for why callers fire this speculatively rather than waiting for registration
-   * to need it.
-   */
-  warmUpKeyPair(): Promise<void>;
   getToken(tokenType: number): Promise<NativeToken | null>;
 
   /**

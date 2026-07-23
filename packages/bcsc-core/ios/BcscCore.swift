@@ -497,25 +497,6 @@ class BcscCore: NSObject {
     }
   }
 
-  /// Ensures a device signing key pair exists in the keychain, generating one if none exists
-  /// yet. Speculative warm-up — see warmUpKeyPair in NativeBcscCore.ts for why callers fire
-  /// this early rather than letting registration pay the first-generation cost.
-  func warmUpKeyPair(
-    _ resolve: @escaping RCTPromiseResolveBlock,
-    reject: @escaping RCTPromiseRejectBlock
-  ) {
-    let keyPairManager = KeyPairManager()
-    do {
-      let keys = try keyPairManager.findAllPrivateKeys()
-      if keys.isEmpty {
-        _ = try generateKeyPair()
-      }
-      resolve(nil)
-    } catch {
-      reject("E_KEY_WARMUP_FAILED", "Failed to warm up key pair: \(error.localizedDescription)", error)
-    }
-  }
-
   private func generateKeyPair() throws -> String {
     let keyPairManager = KeyPairManager()
     let keys = try keyPairManager.findAllPrivateKeys()
