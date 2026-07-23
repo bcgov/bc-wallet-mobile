@@ -160,6 +160,12 @@ export interface CodeScanningCameraProps {
    * framing overlay reflect alignment (e.g. recolour the outline).
    */
   onScanStateChange?: (state: ScanState) => void
+
+  /**
+   * Called when the camera hits a runtime error that isn't just the app being
+   * backgrounded. Lets the parent fall back to a non-camera path.
+   */
+  onError?: (error: CameraRuntimeError) => void
 }
 
 /** Feature flag: when true, shows Confirm/Try Again buttons on lock.
@@ -180,6 +186,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   torchActive,
   onToggleTorch,
   onScanStateChange,
+  onError,
 }) => {
   // Derive scanner code types from the declared scan zones (deduped)
   const codeTypes = [...new Set(scanZones.flatMap((z) => z.types))] as CodeType[]
@@ -983,8 +990,9 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
         t('BCSC.CameraDisclosure.ErrorMessage'),
         ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
       )
+      onError?.(error)
     },
-    [appStateStatus, logger, emitErrorModal, t]
+    [appStateStatus, logger, emitErrorModal, t, onError]
   )
 
   const handleSaveScanZones = useCallback(() => {

@@ -58,7 +58,7 @@ exports[`ScanSerial renders correctly 1`] = `
         }
         testID="camera-preview-container"
       >
-        <Camera
+        <VisionCamera
           animatedProps={{}}
           codeScanner={
             {
@@ -95,6 +95,7 @@ exports[`ScanSerial renders correctly 1`] = `
               "flex": 1,
             }
           }
+          testID="vision-camera"
           torch="off"
           video={true}
         />
@@ -269,6 +270,7 @@ exports[`ScanSerial renders correctly 1`] = `
           [
             {
               "backgroundColor": "rgba(0, 0, 0, 0.5)",
+              "gap": 16,
               "padding": 24,
             },
             {
