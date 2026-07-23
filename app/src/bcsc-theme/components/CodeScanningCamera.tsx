@@ -217,10 +217,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const [detectedCodes, setDetectedCodes] = useState<EnhancedCode[]>([])
   const highlightFadeAnim = useRef(new Animated.Value(0)).current
 
-  // Track if we're currently processing a scan to prevent multiple callbacks
-  const isProcessingScan = useRef(false)
-
-  const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const clearHighlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Prevents initialZoom from being reapplied on every screen re-focus or camera re-init
@@ -748,10 +744,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
     // Cleanup timeout on unmount
     return () => {
-      if (highlightTimeoutRef.current) {
-        clearTimeout(highlightTimeoutRef.current)
-        highlightTimeoutRef.current = null
-      }
       if (clearHighlightTimeoutRef.current) {
         clearTimeout(clearHighlightTimeoutRef.current)
         clearHighlightTimeoutRef.current = null
@@ -947,16 +939,11 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       // Reset all refs to clean state when component unmounts to avoid stale state
       isLockedRef.current = false
       lockedScanRef.current = null
-      isProcessingScan.current = false
       barcodeReadingsRef.clear()
       accumulatedCodesRef.clear()
       detectedZoneIndices.current = new Set()
 
       // Clear any pending animation timeouts to prevent memory leaks
-      if (highlightTimeoutRef.current) {
-        clearTimeout(highlightTimeoutRef.current)
-        highlightTimeoutRef.current = null
-      }
       if (clearHighlightTimeoutRef.current) {
         clearTimeout(clearHighlightTimeoutRef.current)
         clearHighlightTimeoutRef.current = null
@@ -1072,7 +1059,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const resetScanningState = useCallback(() => {
     isLockedRef.current = false
     lockedScanRef.current = null
-    isProcessingScan.current = false
     setFrozenFrameUri(null)
     setScanState('scanning')
     barcodeReadings.current.clear()
@@ -1080,10 +1066,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     setDetectedCodes([])
 
     // Clean up any pending timeouts
-    if (highlightTimeoutRef.current) {
-      clearTimeout(highlightTimeoutRef.current)
-      highlightTimeoutRef.current = null
-    }
     if (clearHighlightTimeoutRef.current) {
       clearTimeout(clearHighlightTimeoutRef.current)
       clearHighlightTimeoutRef.current = null
