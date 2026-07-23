@@ -253,7 +253,8 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
     cause: error,
     track,
     context: {
-      url: error.config?.url ? new URL(error.config.url, 'https://x.com').pathname : undefined,
+      // Use a dummy base so relative paths parse correctly
+      url: error.config?.url ? new URL(error.config.url, 'https://example.com').pathname : undefined,
       method: error.config?.method?.toUpperCase(),
     },
   }
