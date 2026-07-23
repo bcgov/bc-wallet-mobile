@@ -2008,7 +2008,7 @@ describe('CodeScanningCamera', () => {
         mockCodeScannerCallback!([], mockFrame)
       })
 
-      expect(mockFocus.mock.calls.length).toBe(callsAfterLayout)
+      expect(mockFocus.mock.calls).toHaveLength(callsAfterLayout)
 
       // t=2600: advance past the next natural tick of the untouched interval (anchored at
       // t=0, so its next tick is at t=2500) — the periodic idle-nudge must still be alive.
@@ -2016,7 +2016,7 @@ describe('CodeScanningCamera', () => {
         jest.advanceTimersByTime(400)
       })
 
-      expect(mockFocus.mock.calls.length).toBe(callsAfterLayout + 1)
+      expect(mockFocus.mock.calls).toHaveLength(callsAfterLayout + 1)
     })
 
     it('preserves the idle-nudge cadence when nothing is ever detected (tilt workaround)', async () => {
@@ -2040,7 +2040,7 @@ describe('CodeScanningCamera', () => {
         jest.advanceTimersByTime(2 * 2500)
       })
 
-      expect(mockFocus.mock.calls.length).toBe(callsAfterLayout + 2)
+      expect(mockFocus.mock.calls).toHaveLength(callsAfterLayout + 2)
     })
 
     it('keeps the idle-nudge alive across a lock -> auto-confirm-rejected -> reset cycle (guards against stop-on-lock without a matching restart)', async () => {
@@ -2081,7 +2081,7 @@ describe('CodeScanningCamera', () => {
 
       // Neither the lock nor the reject-driven reset should have touched the cycling
       // timer — scanState was never a dependency of the effect that starts it.
-      expect(mockFocus.mock.calls.length).toBe(callsAfterLayout)
+      expect(mockFocus.mock.calls).toHaveLength(callsAfterLayout)
 
       // Advance past the suppression window plus a full cycle interval — if a
       // stop-on-lock (without a matching restart) regression crept back in, the timer
