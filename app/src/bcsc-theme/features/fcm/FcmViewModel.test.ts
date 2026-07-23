@@ -504,7 +504,8 @@ describe('FcmViewModel', () => {
     })
 
     it('logs an error when the display fails', async () => {
-      ;(notifee.displayNotification as jest.Mock).mockRejectedValueOnce(new Error('Notification failed'))
+      const mockDisplayNotification = notifee.displayNotification as jest.Mock
+      mockDisplayNotification.mockRejectedValueOnce(new Error('Notification failed'))
 
       await capturedMessageHandler?.(message, { source: 'foreground' })
 
