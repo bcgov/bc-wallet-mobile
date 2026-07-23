@@ -185,6 +185,8 @@ export enum AppEventCode {
   AUTO_CRED_PROOF_ERROR = 'auto_cred_proof_error',
   AUTO_CRED_OFFER_ERROR = 'auto_cred_offer_error',
   AUTO_CRED_GENERAL_ERROR = 'auto_cred_general_error',
+  AUTO_CRED_ACCOUNT_SUSPENDED = 'auto_cred_account_suspended',
+  AUTO_CRED_ACCOUNT_DEACTIVATED = 'auto_cred_account_deactivated',
   // Account Errors
   ACCOUNT_NOT_FOUND = 'account_not_found', // Non-IAS error code
   // Native module errors (#3419) — distinct codes for bcsc-core native rejections

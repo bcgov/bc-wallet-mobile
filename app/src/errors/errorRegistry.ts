@@ -1186,6 +1186,20 @@ export const ErrorRegistry = {
     category: ErrorCategory.CREDENTIAL,
     message: 'An unexpected error occurred during credential provisioning',
   },
+  AUTO_CRED_ACCOUNT_SUSPENDED: {
+    statusCode: 3205,
+    appEvent: AppEventCode.AUTO_CRED_ACCOUNT_SUSPENDED,
+    severity: ErrorSeverity.WARNING,
+    category: ErrorCategory.CREDENTIAL,
+    message: 'Person Credential creation rejected — account is suspended',
+  },
+  AUTO_CRED_ACCOUNT_DEACTIVATED: {
+    statusCode: 3206,
+    appEvent: AppEventCode.AUTO_CRED_ACCOUNT_DEACTIVATED,
+    severity: ErrorSeverity.WARNING,
+    category: ErrorCategory.CREDENTIAL,
+    message: 'Person Credential creation rejected — account is deactivated',
+  },
 } as const satisfies Record<string, ErrorDefinition>
 
 export const ErrorRegistryAppEventMap = new Map<AppEventCode, ErrorDefinition>(
