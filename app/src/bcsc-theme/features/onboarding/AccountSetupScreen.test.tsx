@@ -1,3 +1,4 @@
+import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { AccountSetupType, BCState, initialState } from '@/store'
 import { useStore } from '@bifold/core'
 import { useNavigation as getMockNavigation, useFocusEffect } from '@mocks/@react-navigation/native'
@@ -19,8 +20,10 @@ const mockNavigation = getMockNavigation() as never
 const renderScreen = (stateOverride?: Partial<BCState>) => {
   return render(
     <BasicAppContext initialStateOverride={stateOverride}>
-      <AccountSetupScreen navigation={mockNavigation} />
-      <SetupTypeProbe />
+      <BCSCLoadingProvider>
+        <AccountSetupScreen navigation={mockNavigation} />
+        <SetupTypeProbe />
+      </BCSCLoadingProvider>
     </BasicAppContext>
   )
 }
@@ -45,7 +48,9 @@ describe('AccountSetup', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <AccountSetupScreen navigation={mockNavigation} />
+        <BCSCLoadingProvider>
+          <AccountSetupScreen navigation={mockNavigation} />
+        </BCSCLoadingProvider>
       </BasicAppContext>
     )
 

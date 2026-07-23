@@ -1,5 +1,4 @@
 import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
-import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { isAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
@@ -48,7 +47,6 @@ export const useRegistrationService = () => {
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const [store] = useStore<BCState>()
   const alerts = useAlerts(navigation)
-  const loadingScreen = useLoadingScreen()
 
   const emitRegistrationAlert = useCallback(
     (error: unknown) => {
@@ -123,14 +121,12 @@ export const useRegistrationService = () => {
       return
     }
 
-    const stopLoading = loadingScreen.startLoading()
     // 2. Register the account with the backend
     const securityMethod = await getAccountSecurityMethod()
 
     // Note: Fetches registration access token and updates the account's `clientID`
     await register(securityMethod)
-    stopLoading()
-  }, [loadingScreen, register, store.bcscSecure.registrationAccessToken])
+  }, [register, store.bcscSecure.registrationAccessToken])
 
   return useMemo(
     () => ({
