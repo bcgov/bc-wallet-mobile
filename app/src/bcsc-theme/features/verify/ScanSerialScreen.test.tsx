@@ -6,24 +6,37 @@ import React from 'react'
 import { useCameraPermission } from 'react-native-vision-camera'
 import ScanSerialScreen from './ScanSerialScreen'
 
-// Mock react-native-vision-camera
-jest.mock('react-native-vision-camera', () => ({
-  Camera: 'Camera',
-  useCameraDevice: jest.fn(() => ({
-    id: 'back',
-    supportsFocus: true,
-    minZoom: 1,
-    maxZoom: 8,
-    neutralZoom: 1,
-    hasTorch: true,
-  })),
-  useCameraFormat: jest.fn(() => ({})),
-  useCameraPermission: jest.fn(() => ({
-    hasPermission: true,
-    requestPermission: jest.fn(),
-  })),
-  useCodeScanner: jest.fn((config) => config),
-}))
+/** testID on the mocked Camera host element, so tests can drive its props directly. */
+const VISION_CAMERA_TEST_ID = 'vision-camera'
+
+// Mock react-native-vision-camera. Camera renders a host element carrying the props
+// CodeScanningCamera passes it (notably onError), so tests can exercise the real
+// Camera -> handleCameraError -> onError path.
+jest.mock('react-native-vision-camera', () => {
+  const ReactActual = jest.requireActual<typeof React>('react')
+
+  return {
+    Camera: ReactActual.forwardRef((props: Record<string, unknown>, ref: React.Ref<unknown>) =>
+      ReactActual.createElement('VisionCamera', { ...props, ref, testID: 'vision-camera' })
+    ),
+    useCameraDevice: jest.fn(() => ({
+      id: 'back',
+      supportsFocus: true,
+      minZoom: 1,
+      maxZoom: 8,
+      neutralZoom: 1,
+      hasTorch: true,
+    })),
+    useCameraFormat: jest.fn(() => ({})),
+    useCameraPermission: jest.fn(() => ({
+      hasPermission: true,
+      requestPermission: jest.fn(),
+    })),
+    useCodeScanner: jest.fn((config: unknown) => config),
+  }
+})
+
+const mockUseCameraPermission = useCameraPermission as jest.Mock
 
 // Mock BCSCActivityContext — not provided by BasicAppContext
 jest.mock('../../contexts/BCSCActivityContext', () => ({
@@ -66,7 +79,7 @@ describe('ScanSerial', () => {
     mockNavigation = useNavigation()
     jest.clearAllMocks()
     jest.useFakeTimers()
-    ;(useCameraPermission as jest.Mock).mockReturnValue({
+    mockUseCameraPermission.mockReturnValue({
       hasPermission: true,
       requestPermission: jest.fn().mockResolvedValue(true),
     })
@@ -87,7 +100,7 @@ describe('ScanSerial', () => {
   })
 
   it('offers manual entry when camera permission is denied', async () => {
-    ;(useCameraPermission as jest.Mock).mockReturnValue({
+    mockUseCameraPermission.mockReturnValue({
       hasPermission: false,
       requestPermission: jest.fn().mockResolvedValue(false),
     })
@@ -102,17 +115,21 @@ describe('ScanSerial', () => {
     expect(getByTestId(testIdWithKey('OpenSettings'))).toBeTruthy()
   })
 
-  it('offers manual entry when the camera errors out', async () => {
-    const { UNSAFE_root, getByTestId } = render(
+  it('offers manual entry when the camera errors out', () => {
+    const { getByTestId } = render(
       <BasicAppContext>
         <ScanSerialScreen navigation={mockNavigation as never} />
       </BasicAppContext>
     )
 
-    const cameraNode = UNSAFE_root.findAll((node) => typeof node.props.onError === 'function')[0]
-
+    // Fire the error off the Camera itself so the whole
+    // Camera -> handleCameraError -> onError chain runs.
     act(() => {
-      cameraNode.props.onError(new Error('camera/unknown'))
+      getByTestId(VISION_CAMERA_TEST_ID).props.onError(
+        Object.assign(new Error('The camera has been disconnected'), {
+          code: 'system/camera-has-been-disconnected',
+        })
+      )
     })
 
     expect(getByTestId(testIdWithKey('EnterManually'))).toBeTruthy()
