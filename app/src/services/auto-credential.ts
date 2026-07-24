@@ -1,3 +1,4 @@
+import { getPersonCredentialAccountProblem } from '@/bcsc-theme/utils/personCredentialAccountProblem'
 import { AbstractBifoldLogger, CredentialProvisioningEventTypes, CredentialProvisioningMonitor } from '@bifold/core'
 import { AnonCredsRequestedAttribute, AnonCredsRequestedPredicate } from '@credo-ts/anoncreds'
 import { Agent } from '@credo-ts/core'
@@ -381,6 +382,24 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
           }
         })
     } catch (err) {
+      const accountProblem = getPersonCredentialAccountProblem(err)
+      if (accountProblem) {
+        // User cannot satisfy the proof request because their BCSC card is suspended or deactivated
+        // auto decline the proof
+        try {
+          await this.agent.didcomm.proofs.declineRequest({
+            proofExchangeRecordId: proof.id,
+            sendProblemReport: true,
+          })
+          this.log?.info(
+            `[AutoCredentialMonitor] Declined proof request — account ${accountProblem}, cannot be satisfied`
+          )
+        } catch (declineErr) {
+          this.log?.warn('[AutoCredentialMonitor] Failed to decline proof request after account-unavailable error', {
+            error: declineErr as Error,
+          })
+        }
+      }
       this.failWorkflow(CredentialProvisioningEventTypes.FailedRequestCredential, err as Error)
     }
   }
