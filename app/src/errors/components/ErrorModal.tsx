@@ -4,7 +4,7 @@ import { reportProblem } from '@/utils/logger'
 import { useTheme } from '@bifold/core'
 import React, { useCallback, useMemo } from 'react'
 import { Modal, Pressable, StyleSheet } from 'react-native'
-import { AppError } from '../appError'
+import type { AppError } from '../appError'
 import { ErrorInfoCard } from './ErrorInfoCard'
 
 const ANALYTICS_REPORT_THIS_PROBLEM_LABEL = 'Report this problem'
