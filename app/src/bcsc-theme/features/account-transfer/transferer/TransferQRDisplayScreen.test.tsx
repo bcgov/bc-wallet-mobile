@@ -47,6 +47,16 @@ const createDeferredGetAccount = () => {
   return { promise, resolve }
 }
 
+// Same pattern as createDeferredGetAccount, for holding the createDeviceSignedJWT() await
+// "in flight" so a test can control exactly when the signed JWT comes back.
+const createDeferredJwt = () => {
+  let resolve!: (value: string) => void
+  const promise = new Promise<string>((res) => {
+    resolve = res
+  })
+  return { promise, resolve }
+}
+
 describe('TransferQRDisplayScreen', () => {
   let mockNavigation: any
 
@@ -443,6 +453,43 @@ describe('TransferQRDisplayScreen', () => {
       } finally {
         process.off('unhandledRejection', onUnhandledRejection)
       }
+    })
+  })
+
+  // Copilot-flagged follow-up for issue #4273: createToken() guarded after `await
+  // getAccount()` but not after the subsequent `await createDeviceSignedJWT(...)`. Add the
+  // symmetric guard so a screen unmounted (or a transfer completed) while the JWT signing
+  // await was in flight doesn't apply a stale QR update on the way back out.
+  describe('post-JWT-signing guard (issue #4273 follow-up)', () => {
+    it('does not apply a pending QR update after unmount when createDeviceSignedJWT resolves late', async () => {
+      jest.mocked(getAccount).mockResolvedValueOnce(mockAccount)
+
+      const deferredJwt = createDeferredJwt()
+      jest.mocked(createDeviceSignedJWT).mockReturnValueOnce(deferredJwt.promise)
+
+      const { unmount } = render(
+        <BasicAppContext>
+          <TransferQRDisplayScreen />
+        </BasicAppContext>
+      )
+
+      await waitFor(() => {
+        expect(createDeviceSignedJWT).toHaveBeenCalledTimes(1)
+      })
+
+      unmount()
+
+      // The in-flight JWT signing resolves after teardown, as it would if the native signer
+      // answered late. Without the post-JWT guard, the continuation would still run
+      // jwtDecode/setQRValue/setIsLoading against an unmounted screen.
+      await act(async () => {
+        deferredJwt.resolve('late-signed-jwt')
+      })
+
+      // The guard must short-circuit before any of the post-JWT work — jwtDecode is the
+      // first thing that work does, so it not being called proves setQRValue/setIsLoading
+      // (and the QR value/render they'd produce) never ran either.
+      expect(jwtDecode).not.toHaveBeenCalled()
     })
   })
 })

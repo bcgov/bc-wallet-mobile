@@ -94,6 +94,11 @@ const TransferQRDisplayScreen: React.FC = () => {
       jti: newJti,
     })
 
+    if (completedRef.current || !isMountedRef.current) {
+      logger.info('[TransferQRDisplayScreen] Skipping QR token creation: transfer completed or screen unmounted')
+      return false
+    }
+
     // Ensure we are using the correct JTI in case the createDeviceSignedJWT method
     // uses a fallback JTI instead of our provided one or mutates it in-place
     const decoded = jwtDecode<{ jti?: string }>(jwt)
