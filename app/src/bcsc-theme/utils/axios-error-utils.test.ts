@@ -60,7 +60,7 @@ describe('Error Utils', () => {
       expect(appError.code).toContain(String(ErrorRegistry.UNKNOWN_SERVER_ERROR.statusCode))
     })
 
-    it('should set url path and method from error config', () => {
+    it('should add url path and method to the error context from error config', () => {
       const axiosError = {
         code: 'err_209_bad_request',
         message: 'Bad request',
@@ -70,11 +70,10 @@ describe('Error Utils', () => {
 
       const appError = getAppErrorFromAxiosError(axiosError)
 
-      expect(appError.url).toBe('/device/token')
-      expect(appError.method).toBe('POST')
+      expect(appError.context).toEqual({ url: '/device/token', method: 'POST' })
     })
 
-    it('should set url path to undefined when config.url is absent', () => {
+    it('should leave the context url undefined when config.url is absent', () => {
       const axiosError = {
         code: 'unknown_ias_code',
         message: 'Unknown',
@@ -83,7 +82,7 @@ describe('Error Utils', () => {
 
       const appError = getAppErrorFromAxiosError(axiosError)
 
-      expect(appError.url).toBeUndefined()
+      expect(appError.context).toEqual({ url: undefined, method: undefined })
     })
 
     // A status pre-declared via suppressStatusCodeLogs is treated as "expected"/already-owned-

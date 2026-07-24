@@ -1,4 +1,5 @@
-import type { BifoldError } from '@bifold/core'
+import { AppError, ErrorCategory } from '@/errors'
+import { AppEventCode } from '@/events/appEventCode'
 import { RemoteLogger, lokiTransport } from '@bifold/remote-logs'
 import { LogLevel } from '@credo-ts/core'
 import Config from 'react-native-config'
@@ -116,13 +117,20 @@ describe('createAppLogger', () => {
 })
 
 describe('reportProblem', () => {
+  const appError = new AppError('stack trace details', {
+    appEvent: 'test-event' as AppEventCode,
+    statusCode: 2800,
+    category: ErrorCategory.GENERAL,
+  })
+
+  appError.stack = 'Error: Boom\n    at somewhere (file.ts:1:1)'
+
   const fakeError = {
     title: 'Boom',
     description: 'It exploded',
     code: 2800,
-    message: 'stack trace details',
-    stack: 'Error: Boom\n    at somewhere (file.ts:1:1)',
-  } as unknown as BifoldError
+    error: appError,
+  }
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -150,13 +158,16 @@ describe('reportProblem', () => {
   })
 
   it('omits stack from the payload when the error has no stack', () => {
-    const errorWithoutStack = { ...fakeError, stack: undefined } as unknown as BifoldError
+    const oldStack = fakeError.error.stack
+    fakeError.error.stack = undefined
 
-    reportProblem(errorWithoutStack)
+    reportProblem(fakeError)
 
     const data = lokiTransportMock.mock.calls[0][0].rawMsg[0].data
     expect(data).not.toHaveProperty('stack')
     expect(data).toMatchObject({ description: 'It exploded', code: 2800, message: 'stack trace details' })
+
+    fakeError.error.stack = oldStack
   })
 
   it('includes app version and OS system labels by default (includeDeviceDetails defaults to true)', () => {

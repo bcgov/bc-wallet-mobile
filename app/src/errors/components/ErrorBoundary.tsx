@@ -1,5 +1,3 @@
-import { AppEventCode } from '@/events/appEventCode'
-import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { reportProblem } from '@/utils/logger'
 import { AbstractBifoldLogger } from '@bifold/core'
 import React, { ReactNode } from 'react'
@@ -7,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { AppError } from '../appError'
-import { toBifoldError } from '../errorHandler'
+import { ErrorRegistry } from '../errorRegistry'
 import { ErrorInfoCard } from './ErrorInfoCard'
 
 interface ErrorBoundaryProps {
@@ -18,7 +16,7 @@ interface ErrorBoundaryProps {
 
 interface ErrorBoundaryState {
   hasError: boolean
-  error: Error | null
+  error: AppError | null
 }
 
 /**
@@ -33,32 +31,31 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   state: ErrorBoundaryState = { hasError: false, error: null }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
-    return { hasError: true, error }
+    const appError = AppError.fromErrorDefinition(ErrorRegistry.UNKNOWN_ERROR_BOUNDARY_ERROR, {
+      cause: error,
+      track: false,
+    })
+
+    return { hasError: true, error: appError }
   }
 
   componentDidCatch(error: Error): void {
     const { logger } = this.props
 
     logger.error('ErrorBoundary caught an error:', error)
-
-    if (error instanceof AppError) {
-      error.track()
-      return
-    }
-
-    Analytics.trackErrorEvent({
-      code: AppEventCode.UNKNOWN_ERROR_BOUNDARY_ERROR,
-      message: error.message,
-    })
+    this.state.error?.track()
   }
 
   handleDismiss = (): void => {
     this.setState({ hasError: false, error: null })
   }
 
-  getReportError = (error: Error) => {
-    return toBifoldError(this.props.t('Error.Problem'), this.props.t('Error.ProblemDescription'), error)
-  }
+  getReportError = (error: AppError) => ({
+    title: this.props.t('Error.Problem'),
+    description: this.props.t('Error.ProblemDescription'),
+    code: error.statusCode,
+    error,
+  })
 
   /**
    * @returns the report ID the user can share with support, or undefined if there is no error
@@ -71,12 +68,11 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
       return
     }
 
-    const reportError = this.getReportError(error)
     logger.error('ErrorBoundary reported:', error)
 
     // Use the shared pipeline rather than logger.report() so the report carries a report_id that
     // ErrorInfoCard can surface — logger.report() sends to Loki but returns nothing to show the user.
-    return reportProblem(reportError)
+    return reportProblem(this.getReportError(error))
   }
 
   render(): React.ReactNode {
@@ -89,7 +85,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
           <ErrorInfoCard
             title={reportError.title}
             description={reportError.description}
-            message={reportError.message}
+            message={reportError.error.message}
             code={reportError.code}
             onDismiss={this.handleDismiss}
             onReport={this.handleReport}

@@ -91,7 +91,7 @@ export interface BCSCState {
   showAccountExpiryNotification?: boolean
   showCardRenewalNotification?: boolean
   acceptedTermsOfUseVersion?: string
-  reportUUID?: string
+  reportUUID?: string // TODO (MD): Rename to installId or installUUID
 }
 
 export enum VerificationStatus {

@@ -205,13 +205,11 @@ describe('ErrorAlertContext', () => {
 
       expect(mockBCSCErrorModal).toHaveBeenLastCalledWith(
         expect.objectContaining({
-          error: expect.objectContaining({
+          payload: expect.objectContaining({
             title: 'No Internet',
             description: 'Check your connection',
-            message: appError.fullMessage,
-            code: 2100,
-            appEvent: AppEventCode.NO_INTERNET,
-            cause,
+            // The whole AppError rides along so the modal can derive message/code itself
+            error: appError,
           }),
           errorKey: 1,
         })
