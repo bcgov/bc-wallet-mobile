@@ -133,6 +133,25 @@ const MaskedCamera = ({
     }
   }, [isFocused])
 
+  const getCameraError = useCallback(
+    (error: unknown) => {
+      logger.error('[MaskedCamera] runtime error', error as Error)
+
+      const appError = ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
+
+      // Add camera device and format info to the error context for better debugging
+      appError.addContext({
+        camera: {
+          device,
+          format,
+        },
+      })
+
+      return appError
+    },
+    [device, format, logger]
+  )
+
   const onError = useCallback(
     (error: unknown) => {
       if (isBackgroundedAppState(appStateStatus)) {
@@ -142,14 +161,9 @@ const MaskedCamera = ({
         return
       }
 
-      logger.error('MaskedCamera runtime error', error as Error)
-      emitErrorModal(
-        t('BCSC.CameraDisclosure.Error'),
-        t('BCSC.CameraDisclosure.ErrorMessage'),
-        ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
-      )
+      emitErrorModal(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorMessage'), getCameraError(error))
     },
-    [appStateStatus, logger, emitErrorModal, t]
+    [appStateStatus, getCameraError, emitErrorModal, t, logger]
   )
   if (!device) {
     return (
@@ -185,11 +199,9 @@ const MaskedCamera = ({
         return
       }
 
-      emitErrorModal(
-        t('BCSC.CameraDisclosure.Error'),
-        t('BCSC.CameraDisclosure.ErrorTakingPhoto'),
-        ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
-      )
+      const appError = getCameraError(error)
+
+      emitErrorModal(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorTakingPhoto'), appError)
     }
   }
 
@@ -205,7 +217,7 @@ const MaskedCamera = ({
         video={true}
         photoQualityBalance={photoQualityBalance}
         isMirrored={false}
-        onInitialized={() => logger.debug('MaskedCamera initialized')}
+        onInitialized={() => logger.debug('MaskedCamera initialized', { device, format })}
         onError={onError}
         codeScanner={codeScanner}
         torch={torchOn ? 'on' : 'off'}

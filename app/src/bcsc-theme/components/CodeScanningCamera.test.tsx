@@ -1821,7 +1821,7 @@ describe('CodeScanningCamera', () => {
 
       const camera = getByTestId('mock-camera')
       const runtimeError = new Error('Runtime camera failure')
-      const expectedAppError = { name: 'NormalizedAppError', message: 'normalized' }
+      const expectedAppError = { name: 'NormalizedAppError', message: 'normalized', addContext: jest.fn() }
       mockEnsureAppError.mockReturnValueOnce(expectedAppError)
 
       await act(async () => {
@@ -1829,6 +1829,7 @@ describe('CodeScanningCamera', () => {
       })
 
       expect(mockEnsureAppError).toHaveBeenCalledWith(runtimeError, AppEventCode.ADD_CARD_CAMERA_BROKEN)
+      expect(expectedAppError.addContext).toHaveBeenCalled()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
         'BCSC.CameraDisclosure.Error',
@@ -1904,7 +1905,7 @@ describe('CodeScanningCamera', () => {
 
       const camera = getByTestId('mock-camera')
       const runtimeError = new Error('Runtime camera failure with unknown app state')
-      const expectedAppError = { name: 'NormalizedAppError', message: 'normalized' }
+      const expectedAppError = { name: 'NormalizedAppError', message: 'normalized', addContext: jest.fn() }
       mockEnsureAppError.mockReturnValueOnce(expectedAppError)
 
       await act(async () => {
@@ -1914,6 +1915,7 @@ describe('CodeScanningCamera', () => {
       // 'unknown' is what AppState.currentState can report at Android startup — a genuine
       // camera failure there must still surface, so the guard must not be `!== 'active'`.
       expect(mockEnsureAppError).toHaveBeenCalledWith(runtimeError, AppEventCode.ADD_CARD_CAMERA_BROKEN)
+      expect(expectedAppError.addContext).toHaveBeenCalled()
       expect(mockEmitErrorModal).toHaveBeenCalledWith(
         'BCSC.CameraDisclosure.Error',
         'BCSC.CameraDisclosure.ErrorMessage',
