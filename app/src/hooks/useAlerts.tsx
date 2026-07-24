@@ -122,12 +122,25 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
     (event: AppEventCode) => {
       return (error?: AppError | unknown) => {
         const appError = ensureAppError(error, event)
+
+        let title = ''
+        let description = ''
+        if (appError.technicalMessage === 'suspended') {
+          title = t('Alerts.PersonCredentialAccountSuspended.Title')
+          description = t('Alerts.PersonCredentialAccountSuspended.Description')
+        } else if (appError.technicalMessage === 'deactivated') {
+          title = t('Alerts.PersonCredentialAccountDeactivated.Title')
+          description = t('Alerts.PersonCredentialAccountDeactivated.Description')
+        }
         Analytics.trackAlertDisplayEvent(appError.appEvent)
         appError.track()
-        navigation.navigate(BCSCScreens.MainPersonCredentialAccountProblem)
+        navigation.navigate(BCSCScreens.AccountProblem, {
+          title,
+          description,
+        })
       }
     },
-    [navigation]
+    [navigation, t]
   )
 
   /**

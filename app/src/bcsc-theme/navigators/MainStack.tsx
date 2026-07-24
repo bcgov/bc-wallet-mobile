@@ -357,11 +357,11 @@ const MainStack: React.FC = () => {
             })}
           />
           <Stack.Screen
-            name={BCSCScreens.MainPersonCredentialAccountProblem}
+            name={BCSCScreens.AccountProblem}
             component={AccountProblemScreen}
             options={() => ({
               headerShown: true,
-              title: t('Alerts.PersonCredentialAccountProblem.Title'),
+              title: t('BCSC.Settings.AccountProblem'),
             })}
           />
           <Stack.Screen

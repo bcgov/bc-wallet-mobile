@@ -47,7 +47,7 @@ exports[`AccountProblemScreen renders correctly 1`] = `
           ]
         }
       >
-        Alerts.PersonCredentialAccountProblem.Title
+        Title
       </Text>
       <Text
         maxFontSizeMultiplier={2}
@@ -63,7 +63,7 @@ exports[`AccountProblemScreen renders correctly 1`] = `
           ]
         }
       >
-        Alerts.PersonCredentialAccountProblem.Description
+        Description
       </Text>
     </View>
   </RCTScrollView>
@@ -124,7 +124,7 @@ exports[`AccountProblemScreen renders correctly 1`] = `
         }
       >
         <View
-          accessibilityLabel="Alerts.PersonCredentialAccountProblem.Action1"
+          accessibilityLabel="BCSC.Settings.RemoveAccount"
           accessibilityRole="button"
           accessibilityState={
             {
@@ -196,7 +196,7 @@ exports[`AccountProblemScreen renders correctly 1`] = `
                 ]
               }
             >
-              Alerts.PersonCredentialAccountProblem.Action1
+              BCSC.Settings.RemoveAccount
             </Text>
           </View>
         </View>

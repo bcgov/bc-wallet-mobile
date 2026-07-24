@@ -9,7 +9,10 @@ describe('AccountProblemScreen', () => {
   const renderScreen = (navigation: { navigate: jest.Mock; goBack: jest.Mock }) =>
     render(
       <BasicAppContext>
-        <AccountProblemScreen navigation={navigation as any} />
+        <AccountProblemScreen
+          navigation={navigation as any}
+          route={{ params: { title: 'Title', description: 'Description' } } as any}
+        />
       </BasicAppContext>
     )
 

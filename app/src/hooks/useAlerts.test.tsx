@@ -428,7 +428,10 @@ describe('useAlerts', () => {
 
       result.current.personCredentialSuspendedAlert()
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainPersonCredentialAccountProblem)
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.AccountProblem, {
+        title: 'Alerts.PersonCredentialAccountProblem.Title',
+        description: 'Alerts.PersonCredentialAccountProblem.Description',
+      })
       expect(mockTrackAlertDisplayEvent).toHaveBeenCalledWith(AppEventCode.AUTO_CRED_ACCOUNT_SUSPENDED)
       expect(mockTrackErrorEvent).toHaveBeenCalledWith(
         expect.objectContaining({ code: AppEventCode.AUTO_CRED_ACCOUNT_SUSPENDED })
@@ -452,7 +455,10 @@ describe('useAlerts', () => {
 
       result.current.personCredentialDeactivatedAlert()
 
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainPersonCredentialAccountProblem)
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.AccountProblem, {
+        title: 'Alerts.PersonCredentialAccountProblem.Title',
+        description: 'Alerts.PersonCredentialAccountProblem.Description',
+      })
       expect(mockTrackAlertDisplayEvent).toHaveBeenCalledWith(AppEventCode.AUTO_CRED_ACCOUNT_DEACTIVATED)
       expect(mockTrackErrorEvent).toHaveBeenCalledWith(
         expect.objectContaining({ code: AppEventCode.AUTO_CRED_ACCOUNT_DEACTIVATED })

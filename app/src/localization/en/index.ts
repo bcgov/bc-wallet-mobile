@@ -464,6 +464,7 @@ const translation = {
       "TermsOfUse": "Terms of use",
       "Analytics": "Analytics",
       "RemoveAccount": "Remove account",
+      "AccountProblem": "Problem with account",
       "ResetWallet": "Reset wallet features",
       "Features": {
         "Header": "Features",
@@ -1397,9 +1398,14 @@ const translation = {
       "Description": "There may be a problem with the account on this device. Please try again. If the problem continues, remove your account and set it up again. (error {{ errorCode }})",
       "Action1": "Remove Account",
     },
-    "PersonCredentialAccountProblem": {
-      "Title": "Cannot create Person credential",
-      "Description": "There is a problem with your account.\n\nYou need to remove your account from the app and set it up again. Then you can create your Person credential.",
+    "PersonCredentialAccountDeactivated": {
+      "Title": "Digital Services Card unavailable",
+      "Description": "Your BC Services Card account may be suspended or deactivated. It must be active before a Digital Services Card can be issued.",
+      "Action1": "Remove Account",
+    },
+    "PersonCredentialAccountSuspended": {
+      "Title": "Digital Services Card unavailable",
+      "Description": "There is a problem with your account.",
       "Action1": "Remove Account",
     },
     "ProblemWithApp": {

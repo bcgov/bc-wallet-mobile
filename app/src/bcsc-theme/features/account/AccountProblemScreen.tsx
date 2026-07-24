@@ -1,29 +1,30 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
-import { BCSCScreens, BCSCMainStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 
 interface AccountProblemScreenProps {
-  navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.MainPersonCredentialAccountProblem>
+  navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.AccountProblem>
+  route: RouteProp<BCSCMainStackParams, BCSCScreens.AccountProblem>
 }
 
 /**
- * Shown when Person Credential creation is rejected because the BCSC account is suspended or
- * deactivated (#3389). Suspend/deactivate has no push notification or ID token signal — this is
- * the only place the state surfaces, so the user needs an explicit path to recover (remove and
- * re-add the account).
+ * Shown when Digital Services card creation is rejected because the BCSC account is suspended or
+ * deactivated
  */
-const AccountProblemScreen = ({ navigation }: AccountProblemScreenProps) => {
+const AccountProblemScreen = ({ navigation, route }: AccountProblemScreenProps) => {
+  const { title, description } = route.params
   const { Spacing } = useTheme()
   const { t } = useTranslation()
 
   const controls = (
     <ControlContainer>
       <Button
-        title={t('Alerts.PersonCredentialAccountProblem.Action1')}
-        accessibilityLabel={t('Alerts.PersonCredentialAccountProblem.Action1')}
+        title={t('BCSC.Settings.RemoveAccount')}
+        accessibilityLabel={t('BCSC.Settings.RemoveAccount')}
         testID={testIdWithKey('RemoveAccount')}
         buttonType={ButtonType.Critical}
         onPress={() => navigation.navigate(BCSCScreens.MainRemoveAccountConfirmation)}
@@ -39,9 +40,13 @@ const AccountProblemScreen = ({ navigation }: AccountProblemScreenProps) => {
   )
 
   return (
-    <ScreenWrapper controls={controls} padded={false} scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}>
-      <ThemedText variant={'headingThree'}>{t('Alerts.PersonCredentialAccountProblem.Title')}</ThemedText>
-      <ThemedText>{t('Alerts.PersonCredentialAccountProblem.Description')}</ThemedText>
+    <ScreenWrapper
+      controls={controls}
+      padded={false}
+      scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
+    >
+      <ThemedText variant={'headingThree'}>{title}</ThemedText>
+      <ThemedText>{description}</ThemedText>
     </ScreenWrapper>
   )
 }
