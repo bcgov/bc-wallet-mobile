@@ -1,12 +1,13 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { AccountSetupType, BCState, initialState } from '@/store'
-import { useStore } from '@bifold/core'
+import { testIdWithKey, useStore } from '@bifold/core'
 import { useNavigation as getMockNavigation, useFocusEffect } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { render, waitFor } from '@testing-library/react-native'
+import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React, { useEffect } from 'react'
 import { Text } from 'react-native'
-import { getAuthorizationRequest, setAuthorizationRequest } from 'react-native-bcsc-core'
+import { getAccountSecurityMethod, getAuthorizationRequest, setAuthorizationRequest } from 'react-native-bcsc-core'
 import AccountSetupScreen from './AccountSetupScreen'
 
 /** Exposes the current account setup type in the tree so tests can observe store updates. */
@@ -16,6 +17,7 @@ const SetupTypeProbe = () => {
 }
 
 const mockNavigation = getMockNavigation() as never
+const mockNavigate = (mockNavigation as unknown as { navigate: jest.Mock }).navigate
 
 const renderScreen = (stateOverride?: Partial<BCState>) => {
   return render(
@@ -105,5 +107,63 @@ describe('AccountSetup', () => {
     })
 
     expect(setAuthorizationRequest).not.toHaveBeenCalled()
+  })
+
+  it('dispatches AddAccount and navigates to IdentitySelection when "Add Account" is pressed', async () => {
+    const { getByTestId } = renderScreen({
+      bcscSecure: { ...initialState.bcscSecure, registrationAccessToken: 'existing-token' },
+    })
+
+    fireEvent.press(getByTestId(testIdWithKey('AddAccount')))
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith(BCSCScreens.IdentitySelection)
+    })
+
+    expect(getByTestId('SetupTypeProbe').props.children).toBe(AccountSetupType.AddAccount)
+  })
+
+  it('dispatches TransferAccount and navigates to TransferAccountInstructions when "Transfer Account" is pressed', async () => {
+    const { getByTestId } = renderScreen({
+      bcscSecure: { ...initialState.bcscSecure, registrationAccessToken: 'existing-token' },
+    })
+
+    fireEvent.press(getByTestId(testIdWithKey('TransferAccount')))
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith(BCSCScreens.TransferAccountInstructions)
+    })
+
+    expect(getByTestId('SetupTypeProbe').props.children).toBe(AccountSetupType.TransferAccount)
+  })
+
+  it('does not navigate to IdentitySelection when ensureRegistered fails for Add Account', async () => {
+    const getAccountSecurityMethodMock = getAccountSecurityMethod as jest.Mock
+    getAccountSecurityMethodMock.mockRejectedValueOnce(new Error('registration boom'))
+
+    const { getByTestId } = renderScreen()
+
+    fireEvent.press(getByTestId(testIdWithKey('AddAccount')))
+
+    await waitFor(() => {
+      expect(getAccountSecurityMethodMock).toHaveBeenCalled()
+    })
+
+    expect(mockNavigate).not.toHaveBeenCalledWith(BCSCScreens.IdentitySelection)
+  })
+
+  it('does not navigate to TransferAccountInstructions when ensureRegistered fails for Transfer Account', async () => {
+    const getAccountSecurityMethodMock = getAccountSecurityMethod as jest.Mock
+    getAccountSecurityMethodMock.mockRejectedValueOnce(new Error('registration boom'))
+
+    const { getByTestId } = renderScreen()
+
+    fireEvent.press(getByTestId(testIdWithKey('TransferAccount')))
+
+    await waitFor(() => {
+      expect(getAccountSecurityMethodMock).toHaveBeenCalled()
+    })
+
+    expect(mockNavigate).not.toHaveBeenCalledWith(BCSCScreens.TransferAccountInstructions)
   })
 })

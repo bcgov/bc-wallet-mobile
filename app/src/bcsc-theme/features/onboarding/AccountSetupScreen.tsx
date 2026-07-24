@@ -95,21 +95,22 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
   const handleAddAccount = useCallback(async () => {
     setIsAddingAccount(true)
 
-    const stopLoading = loadingScreen.startLoading()
-    try {
-      await registrationService.ensureRegistered()
-    } catch (error) {
-      logger.error('[AccountSetupScreen] Failed to ensure registration for add account', error as Error)
-    } finally {
-      stopLoading()
-    }
-
     dispatch({
       type: BCDispatchAction.ACCOUNT_SETUP_TYPE,
       payload: [AccountSetupType.AddAccount],
     })
 
-    navigation.navigate(BCSCScreens.IdentitySelection)
+    const stopLoading = loadingScreen.startLoading()
+
+    try {
+      await registrationService.ensureRegistered()
+
+      navigation.navigate(BCSCScreens.IdentitySelection)
+    } catch (error) {
+      logger.error('[AccountSetupScreen] Failed to ensure registration for add account', error as Error)
+    } finally {
+      stopLoading()
+    }
   }, [dispatch, loadingScreen, logger, navigation, registrationService])
 
   // "Yes, connect this device" — transfer an already-verified account by scanning the QR
@@ -121,15 +122,16 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
     })
 
     const stopLoading = loadingScreen.startLoading()
+
     try {
       await registrationService.ensureRegistered()
+
+      navigation.navigate(BCSCScreens.TransferAccountInstructions)
     } catch (error) {
       logger.error('[AccountSetupScreen] Failed to ensure registration for transfer', error as Error)
     } finally {
       stopLoading()
     }
-
-    navigation.navigate(BCSCScreens.TransferAccountInstructions)
   }, [dispatch, loadingScreen, logger, navigation, registrationService])
 
   const controls = (
