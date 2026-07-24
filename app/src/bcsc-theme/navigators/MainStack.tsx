@@ -25,6 +25,7 @@ import TransferQRDisplayScreen from '../features/account-transfer/transferer/Tra
 import TransferQRInformationScreen from '../features/account-transfer/transferer/TransferQRInformationScreen'
 import TransferSuccessScreen from '../features/account-transfer/transferer/TransferSuccessScreen'
 import AccountDetailsScreen from '../features/account/AccountDetailsScreen'
+import AccountProblemScreen from '../features/account/AccountProblemScreen'
 import { AccountRenewalFinalWarningScreen } from '../features/account/AccountRenewalFinalWarningScreen'
 import { AccountRenewalFirstWarningScreen } from '../features/account/AccountRenewalFirstWarningScreen'
 import { AccountRenewalInformationScreen } from '../features/account/AccountRenewalInformationScreen'
@@ -353,6 +354,14 @@ const MainStack: React.FC = () => {
             options={() => ({
               headerShown: true,
               title: t('BCSC.Account.RemoveAccount'),
+            })}
+          />
+          <Stack.Screen
+            name={BCSCScreens.MainPersonCredentialAccountProblem}
+            component={AccountProblemScreen}
+            options={() => ({
+              headerShown: true,
+              title: t('Alerts.PersonCredentialAccountProblem.Title'),
             })}
           />
           <Stack.Screen

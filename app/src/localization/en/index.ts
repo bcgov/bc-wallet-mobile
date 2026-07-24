@@ -221,6 +221,8 @@ const translation = {
     "OnboardingIntroSeen": "Intro seen",
     "DeleteTokens": "Delete Tokens",
     "DeletedTokens": "Deleted tokens",
+    "FetchPersonCredentialTest": "Fetch Person Credential",
+    "FetchPersonCredentialStatus": "Status",
     "ErrorModals": "Error Modals",
     "ErrorModalsDescription": "Trigger errors that display as modal dialogs with title, description, and technical details.",
     "ErrorAsNativeAlert": "Errors as Native Alerts",
@@ -1393,6 +1395,11 @@ const translation = {
     "ProblemWithAccount": {
       "Title": "Problem with Account",
       "Description": "There may be a problem with the account on this device. Please try again. If the problem continues, remove your account and set it up again. (error {{ errorCode }})",
+      "Action1": "Remove Account",
+    },
+    "PersonCredentialAccountProblem": {
+      "Title": "Cannot create Person credential",
+      "Description": "There is a problem with your account.\n\nYou need to remove your account from the app and set it up again. Then you can create your Person credential.",
       "Action1": "Remove Account",
     },
     "ProblemWithApp": {

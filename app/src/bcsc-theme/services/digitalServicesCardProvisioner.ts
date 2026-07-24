@@ -16,6 +16,11 @@ interface CreatePersonCredentialResponse {
  * Person Credential is missing. Environment selection is implicit — the
  * request goes to whichever IAS the currently-configured BCSC client points at,
  * and IAS mints an invitation whose cred def matches that env.
+ *
+ * A 400 `{error: "unauthorized_client", error_description: "suspended"|"deactivated"}`
+ * (suspended/deactivated account, #3389) is handled by the api client's
+ * onError policy (personCredentialAccountUnavailableErrorPolicy), which shows the
+ * account-problem modal synchronously before this call's promise rejects.
  */
 const getDigitalServicesCardInvitationUrl = async (): Promise<string> => {
   const apiClient = getBCSCApiClient()

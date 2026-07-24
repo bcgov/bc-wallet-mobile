@@ -526,6 +526,48 @@ export const cardExpiredOnBarcodesErrorPolicy: ErrorHandlingPolicy = {
 }
 
 /**
+ * Person Credential creation (`POST /credentials/v1/person`) is rejected with HTTP 400
+ * `{error: "unauthorized_client", error_description: "suspended"|"deactivated"}` when the BCSC
+ * account is suspended or deactivated. Suspend/deactivate is not delivered via push notification
+ * or ID token — this API error is the only place it surfaces (#3389). Show the account-problem
+ * modal (Remove Account + Close) instead of failing silently. Suspended and deactivated share the
+ * same UI but track as distinct analytics events.
+ *
+ * @returns ErrorHandlingPolicy
+ */
+export const personCredentialAccountUnavailableErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    if (context.statusCode !== 400 || !context.endpoint.includes(context.apiEndpoints.credential)) {
+      return false
+    }
+    const description = (error.cause.response?.data as { error_description?: unknown } | undefined)?.error_description
+    if (typeof description !== 'string') {
+      return false
+    }
+    const reason = description.toLowerCase()
+    return reason.includes('suspended') || reason.includes('deactivated')
+  },
+  handle: (error, context) => {
+    const description = (
+      (error.cause.response?.data as { error_description?: string } | undefined)?.error_description ?? ''
+    ).toLowerCase()
+    const isSuspended = description.includes('suspended')
+    context.logger.info(
+      `[PersonCredentialAccountUnavailableErrorPolicy] account ${
+        isSuspended ? 'suspended' : 'deactivated'
+      } on Person Credential creation`
+    )
+    // Pass the raw AxiosError cause (not the AppError) so ensureAppError builds a fresh AppError with
+    // the suspended/deactivated app event — the interceptor's AppError is UNKNOWN_SERVER_ERROR
+    // (unauthorized_client is unregistered), which would mislabel analytics.
+    const alert = isSuspended
+      ? context.alerts.personCredentialSuspendedAlert
+      : context.alerts.personCredentialDeactivatedAlert
+    alert(error.cause)
+  },
+}
+
+/**
  * Error policy for an expired/superseded verification session on the evidence endpoints.
  *
  * Evidence calls authenticate only with the short-lived `device_code`, so a 401 on the evidence base
@@ -586,6 +628,7 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   alreadyRegisteredErrorPolicy,
   cardExpiredErrorPolicy,
   cardExpiredOnBarcodesErrorPolicy,
+  personCredentialAccountUnavailableErrorPolicy,
   verificationSessionExpiredErrorPolicy,
   birthdateLockoutErrorPolicy,
   noTokensReturnedErrorPolicy,

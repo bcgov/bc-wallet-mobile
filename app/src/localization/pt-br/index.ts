@@ -221,6 +221,8 @@ const translation = {
     "OnboardingIntroSeen": "Intro seen (PT-BR)",
     "DeleteTokens": "Delete Tokens (PT-BR)",
     "DeletedTokens": "Deleted tokens (PT-BR)",
+    "FetchPersonCredentialTest": "Fetch Person Credential (PT-BR)",
+    "FetchPersonCredentialStatus": "Status (PT-BR)",
     "ErrorModals": "Error Modals (PT-BR)",
     "ErrorModalsDescription": "Trigger errors that display as modal dialogs with title, description, and technical details. (PT-BR)",
     "ErrorAsNativeAlert": "Errors as Native Alerts (PT-BR)",
@@ -1393,6 +1395,11 @@ const translation = {
     "ProblemWithAccount": {
       "Title": "Problem with Account (PT-BR)",
       "Description": "There may be a problem with the account on this device. Please try again. If the problem continues, remove your account and set it up again. (error {{ errorCode }}) (PT-BR)",
+      "Action1": "Remove Account (PT-BR)",
+    },
+    "PersonCredentialAccountProblem": {
+      "Title": "Cannot create Person credential (PT-BR)",
+      "Description": "There is a problem with your account.\n\nYou need to remove your account from the app and set it up again. Then you can create your Person credential. (PT-BR)",
       "Action1": "Remove Account (PT-BR)",
     },
     "ProblemWithApp": {
