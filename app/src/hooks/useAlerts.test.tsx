@@ -20,6 +20,15 @@ jest.mock('@/bcsc-theme/contexts/BCSCStackContext', () => ({
   useBCSCStack: () => ({ stack: 'BCSCMainStack' }),
 }))
 
+const mockTrackAlertDisplayEvent = jest.fn()
+const mockTrackErrorEvent = jest.fn()
+jest.mock('@/utils/analytics/analytics-singleton', () => ({
+  Analytics: {
+    trackAlertDisplayEvent: (...args: unknown[]) => mockTrackAlertDisplayEvent(...args),
+    trackErrorEvent: (...args: unknown[]) => mockTrackErrorEvent(...args),
+  },
+}))
+
 describe('useAlerts', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -404,90 +413,50 @@ describe('useAlerts', () => {
   })
 
   describe('personCredentialSuspendedAlert', () => {
-    it('should show an error modal with the Person Credential account-problem copy', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.personCredentialSuspendedAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.PersonCredentialAccountProblem.Title',
-        'Alerts.PersonCredentialAccountProblem.Description',
-        expect.objectContaining({ appEvent: AppEventCode.AUTO_CRED_ACCOUNT_SUSPENDED }),
-        {
-          action: {
-            text: 'Alerts.PersonCredentialAccountProblem.Action1',
-            style: 'destructive',
-            onPress: expect.any(Function),
-          },
-        }
-      )
+    beforeEach(() => {
+      mockTrackAlertDisplayEvent.mockClear()
+      mockTrackErrorEvent.mockClear()
     })
 
-    it('should navigate to the RemoveAccountConfirmation screen when the action is pressed', () => {
+    it('navigates to the PersonCredentialAccountProblem screen and tracks analytics under AUTO_CRED_ACCOUNT_SUSPENDED', () => {
       const mockNavigation = { navigate: jest.fn() }
-      const mockEmitErrorModal = jest.fn()
       jest
         .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: jest.fn() } as any)
 
       const { result } = renderHook(() => useAlerts(mockNavigation as any))
 
       result.current.personCredentialSuspendedAlert()
 
-      const options = mockEmitErrorModal.mock.calls[0][3]
-      options.action.onPress()
-
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainRemoveAccountConfirmation)
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainPersonCredentialAccountProblem)
+      expect(mockTrackAlertDisplayEvent).toHaveBeenCalledWith(AppEventCode.AUTO_CRED_ACCOUNT_SUSPENDED)
+      expect(mockTrackErrorEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ code: AppEventCode.AUTO_CRED_ACCOUNT_SUSPENDED })
+      )
     })
   })
 
   describe('personCredentialDeactivatedAlert', () => {
-    it('should show an error modal with the Person Credential account-problem copy', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.personCredentialDeactivatedAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.PersonCredentialAccountProblem.Title',
-        'Alerts.PersonCredentialAccountProblem.Description',
-        expect.objectContaining({ appEvent: AppEventCode.AUTO_CRED_ACCOUNT_DEACTIVATED }),
-        {
-          action: {
-            text: 'Alerts.PersonCredentialAccountProblem.Action1',
-            style: 'destructive',
-            onPress: expect.any(Function),
-          },
-        }
-      )
+    beforeEach(() => {
+      mockTrackAlertDisplayEvent.mockClear()
+      mockTrackErrorEvent.mockClear()
     })
 
-    it('should navigate to the RemoveAccountConfirmation screen when the action is pressed', () => {
+    it('navigates to the PersonCredentialAccountProblem screen and tracks analytics under AUTO_CRED_ACCOUNT_DEACTIVATED', () => {
       const mockNavigation = { navigate: jest.fn() }
-      const mockEmitErrorModal = jest.fn()
       jest
         .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: jest.fn() } as any)
 
       const { result } = renderHook(() => useAlerts(mockNavigation as any))
 
       result.current.personCredentialDeactivatedAlert()
 
-      const options = mockEmitErrorModal.mock.calls[0][3]
-      options.action.onPress()
-
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainRemoveAccountConfirmation)
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainPersonCredentialAccountProblem)
+      expect(mockTrackAlertDisplayEvent).toHaveBeenCalledWith(AppEventCode.AUTO_CRED_ACCOUNT_DEACTIVATED)
+      expect(mockTrackErrorEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ code: AppEventCode.AUTO_CRED_ACCOUNT_DEACTIVATED })
+      )
     })
   })
 

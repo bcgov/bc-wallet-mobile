@@ -6,6 +6,7 @@ import { AppError } from '@/errors'
 import { isAppError } from '@/errors/appError'
 import { ensureAppError, getRegistryAppError, isDeviceStorageFullError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
+import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { getBCSCAppStoreUrl } from '@/utils/links'
 import { TOKENS, useServices } from '@bifold/core'
 import { CommonActions, NavigationProp } from '@react-navigation/native'
@@ -111,43 +112,22 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
     [emitErrorModal, logger, navigation, stack, t]
   )
 
-  // _createPersonCredentialAccountProblemErrorModal generates the #3389 "Cannot create Person
-  // credential" modal shown when Person Credential creation is rejected because the BCSC account is
-  // suspended or deactivated. Same Remove Account navigation as _createProblemWithAccountErrorModal,
-  // but with Person-credential-specific copy; the two callers pass distinct events (suspended vs
-  // deactivated) so analytics can tell them apart while the UI stays identical.
-  const _createPersonCredentialAccountProblemErrorModal = useCallback(
+  // _createPersonCredentialAccountProblemNavigation navigates to the #3389 "Cannot create Person
+  // credential" screen when Person Credential creation is rejected because the BCSC account is
+  // suspended or deactivated. Unlike _createProblemWithAccountErrorModal this is a dedicated screen,
+  // not a modal, since this only ever fires post-verification (ordinary app use under
+  // BCSCStacks.Main); the two callers pass distinct events (suspended vs deactivated) so analytics
+  // can tell them apart even though the destination screen is the same.
+  const _createPersonCredentialAccountProblemNavigation = useCallback(
     (event: AppEventCode) => {
       return (error?: AppError | unknown) => {
-        emitErrorModal(
-          t('Alerts.PersonCredentialAccountProblem.Title'),
-          t('Alerts.PersonCredentialAccountProblem.Description'),
-          ensureAppError(error, event),
-          {
-            action: {
-              text: t('Alerts.PersonCredentialAccountProblem.Action1'),
-              style: 'destructive',
-              onPress: () => {
-                switch (stack) {
-                  case BCSCStacks.Main:
-                    return navigation.navigate(BCSCScreens.MainRemoveAccountConfirmation)
-                  case BCSCStacks.Onboarding:
-                    return navigation.navigate(BCSCScreens.OnboardingRemoveAccountConfirmation)
-                  case BCSCStacks.Verify:
-                    return navigation.navigate(BCSCScreens.VerifyRemoveAccountConfirmation)
-                }
-
-                logger.warn(
-                  '[PersonCredentialAccountProblemAlert] triggered but no matching stack found for navigation',
-                  { stack }
-                )
-              },
-            },
-          }
-        )
+        const appError = ensureAppError(error, event)
+        Analytics.trackAlertDisplayEvent(appError.appEvent)
+        appError.track()
+        navigation.navigate(BCSCScreens.MainPersonCredentialAccountProblem)
       }
     },
-    [emitErrorModal, logger, navigation, stack, t]
+    [navigation]
   )
 
   /**
@@ -398,8 +378,8 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       tokenUnexpectedlyNullAlert: _createBasicErrorModal(AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL, 'SomethingWentWrong'),
       loginServerErrorAlert: _createBasicErrorModal(AppEventCode.LOGIN_SERVER_ERROR, 'ProblemWithLogin', { errorCode: '303' }),
       problemWithLoginAlert: _createBasicErrorModal(AppEventCode.LOGIN_PARSE_URI, 'ProblemWithLogin', { errorCode: '304' }),
-      personCredentialSuspendedAlert: _createPersonCredentialAccountProblemErrorModal(AppEventCode.AUTO_CRED_ACCOUNT_SUSPENDED),
-      personCredentialDeactivatedAlert: _createPersonCredentialAccountProblemErrorModal(AppEventCode.AUTO_CRED_ACCOUNT_DEACTIVATED),
+      personCredentialSuspendedAlert: _createPersonCredentialAccountProblemNavigation(AppEventCode.AUTO_CRED_ACCOUNT_SUSPENDED),
+      personCredentialDeactivatedAlert: _createPersonCredentialAccountProblemNavigation(AppEventCode.AUTO_CRED_ACCOUNT_DEACTIVATED),
       loginRejected401Alert: _createProblemWithAccountErrorModal(AppEventCode.LOGIN_REJECTED_401, '401'),
       loginRejected403Alert: _createProblemWithAccountErrorModal(AppEventCode.LOGIN_REJECTED_403, '403'),
       loginRejected400Alert: _createProblemWithAccountErrorModal(AppEventCode.LOGIN_REJECTED_400, '400-1'),
@@ -448,7 +428,7 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       failedToWriteToLocalStorageAlert,
       _createBasicErrorModal,
       _createProblemWithAccountErrorModal,
-      _createPersonCredentialAccountProblemErrorModal,
+      _createPersonCredentialAccountProblemNavigation,
     ]
   )
 }
