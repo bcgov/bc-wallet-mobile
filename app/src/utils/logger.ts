@@ -26,9 +26,7 @@ interface ReportProblem {
   description: string
   /**
    * The error code associated with the problem being reported.
-   *
-   * @see USER_REPORT_ERROR_CODE for the default value when there is no error object available.
-   * @see AppError.statusCode for the error code when there is an error object available.
+   * Usually the status code of the error, but can be any number that identifies the problem. ie: USER_REPORT_ERROR_CODE
    */
   code: number
   /**

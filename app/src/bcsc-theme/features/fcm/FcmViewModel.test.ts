@@ -1,7 +1,8 @@
 import { Mode } from '@/constants'
 import { AppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
-import { DeviceEventEmitter } from 'react-native'
+import notifee from '@notifee/react-native'
+import { DeviceEventEmitter, Platform } from 'react-native'
 import { decodeLoginChallenge, showLocalNotification } from 'react-native-bcsc-core'
 import { BCSCEventTypes } from '../../../events/eventTypes'
 import { getBCSCApiClient } from '../../contexts/BCSCApiClientContext'
@@ -9,7 +10,9 @@ import { BCSCEvent, BCSCReason } from '../../utils/id-token'
 import { PairingService } from '../pairing'
 import { VerificationResponseService } from '../verification-response'
 import { FcmViewModel } from './FcmViewModel'
-import { FcmMessage, FcmService } from './services/fcm-service'
+import { FcmDeliveryContext, FcmMessage, FcmService } from './services/fcm-service'
+
+jest.mock('@notifee/react-native')
 
 jest.mock('@/utils/analytics/analytics-singleton', () => ({
   Analytics: {
@@ -51,7 +54,7 @@ describe('FcmViewModel', () => {
   let mockLogger: { info: jest.Mock; warn: jest.Mock; error: jest.Mock; debug: jest.Mock }
   let mockPairingService: jest.Mocked<PairingService>
   let mockVerificationResponseService: jest.Mocked<VerificationResponseService>
-  let capturedMessageHandler: ((message: FcmMessage) => void) | null = null
+  let capturedMessageHandler: ((message: FcmMessage, delivery?: FcmDeliveryContext) => void) | null = null
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -177,7 +180,7 @@ describe('FcmViewModel', () => {
       expect(showLocalNotification).not.toHaveBeenCalled()
     })
 
-    it('does not show local notification for status when FCM payload has notification block', async () => {
+    it('does not re-show a status notification the OS already presented', async () => {
       const message = {
         type: 'status',
         data: {
@@ -205,7 +208,7 @@ describe('FcmViewModel', () => {
 
       await capturedMessageHandler?.(message)
 
-      expect(showLocalNotification).toHaveBeenCalledWith('Test Title', 'Test Body')
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Handling generic notification'))
     })
 
     it('logs warning for unknown message types', async () => {
@@ -442,27 +445,69 @@ describe('FcmViewModel', () => {
       viewModel.initialize()
     })
 
-    it('shows notification when title and body are present', async () => {
+    // Notifications without a `bcsc_*` data key belong to the mediator, not IAS - the OS presents them
+    // while backgrounded and we never re-present them in the foreground.
+    it.each(['foreground', 'background'] as const)('never displays a notification (%s delivery)', async (source) => {
       const message = {
         type: 'notification',
         data: { title: 'Hello', body: 'World' },
       } as FcmMessage
 
-      await capturedMessageHandler?.(message)
+      await capturedMessageHandler?.(message, { source })
 
-      expect(showLocalNotification).toHaveBeenCalledWith('Hello', 'World')
+      expect(showLocalNotification).not.toHaveBeenCalled()
+      expect(notifee.displayNotification).not.toHaveBeenCalled()
+      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Notification not owned by BCSC'))
+    })
+  })
+
+  describe('foreground display of status notifications', () => {
+    const message = {
+      type: 'status',
+      data: { bcsc_status_notification: 'approved', title: 'Status Update', message: 'Approved!' },
+      rawMessage: { data: {}, notification: undefined },
+    } as FcmMessage
+
+    beforeEach(() => {
+      viewModel.initialize()
     })
 
-    it('logs error when showLocalNotification throws', async () => {
-      const mockShowNotification = showLocalNotification as jest.Mock
-      mockShowNotification.mockRejectedValue(new Error('Notification failed'))
+    afterEach(() => {
+      Platform.OS = 'ios'
+    })
 
-      const message = {
-        type: 'notification',
-        data: { title: 'Hello', body: 'World' },
-      } as FcmMessage
+    it('displays via notifee on iOS, which is unaffected by the empty foreground presentation options', async () => {
+      Platform.OS = 'ios'
 
-      await capturedMessageHandler?.(message)
+      await capturedMessageHandler?.(message, { source: 'foreground' })
+
+      expect(notifee.displayNotification).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Status Update', body: 'Approved!' })
+      )
+      expect(showLocalNotification).not.toHaveBeenCalled()
+    })
+
+    it('displays via the native local notification on Android', async () => {
+      Platform.OS = 'android'
+
+      await capturedMessageHandler?.(message, { source: 'foreground' })
+
+      expect(showLocalNotification).toHaveBeenCalledWith('Status Update', 'Approved!')
+      expect(notifee.displayNotification).not.toHaveBeenCalled()
+    })
+
+    it('leaves background delivery to the OS', async () => {
+      await capturedMessageHandler?.(message, { source: 'background' })
+
+      expect(showLocalNotification).not.toHaveBeenCalled()
+      expect(notifee.displayNotification).not.toHaveBeenCalled()
+    })
+
+    it('logs an error when the display fails', async () => {
+      const mockDisplayNotification = notifee.displayNotification as jest.Mock
+      mockDisplayNotification.mockRejectedValueOnce(new Error('Notification failed'))
+
+      await capturedMessageHandler?.(message, { source: 'foreground' })
 
       expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Failed to show local notification'))
     })
