@@ -35,6 +35,28 @@ const mockAccount = {
   clientID: 'mock-client-id',
 }
 
+// Resolves manually so a test can hold a getAccount() call "in flight" and control exactly
+// when (and with what value) it settles relative to unmount/completion.
+type GetAccountResult = Awaited<ReturnType<typeof getAccount>>
+
+const createDeferredGetAccount = () => {
+  let resolve!: (value: GetAccountResult) => void
+  const promise = new Promise<GetAccountResult>((res) => {
+    resolve = res
+  })
+  return { promise, resolve }
+}
+
+// Same pattern as createDeferredGetAccount, for holding the createDeviceSignedJWT() await
+// "in flight" so a test can control exactly when the signed JWT comes back.
+const createDeferredJwt = () => {
+  let resolve!: (value: string) => void
+  const promise = new Promise<string>((res) => {
+    resolve = res
+  })
+  return { promise, resolve }
+}
+
 describe('TransferQRDisplayScreen', () => {
   let mockNavigation: any
 
@@ -281,6 +303,193 @@ describe('TransferQRDisplayScreen', () => {
       expect(calledWithJti).toBeDefined()
       expect(typeof calledWithJti).toBe('string')
       expect(calledWithJti.length).toBeGreaterThan(0)
+    })
+  })
+
+  // Regression coverage for issue #4273: on the source device, an in-flight createToken()
+  // call could resolve *after* the screen unmounted (or after the transfer completed),
+  // reinstalling an orphaned QR-refresh interval or firing the account-not-found (2822)
+  // alert from a screen that no longer legitimately owns the check.
+  describe('unmount and completion races (issue #4273)', () => {
+    it('does not leave an orphaned QR-refresh interval running when unmounted while createToken is in flight', async () => {
+      const deferred = createDeferredGetAccount()
+      jest.mocked(getAccount).mockReturnValueOnce(deferred.promise)
+
+      const { unmount } = render(
+        <BasicAppContext>
+          <TransferQRDisplayScreen />
+        </BasicAppContext>
+      )
+
+      expect(getAccount).toHaveBeenCalledTimes(1)
+
+      unmount()
+
+      // The in-flight call resolves after teardown, as it would if the native module answered
+      // late. Without the isMountedRef guard, refreshToken would still call startInterval()
+      // here, installing a new 50s interval that nothing would ever clear.
+      await act(async () => {
+        deferred.resolve(mockAccount)
+      })
+
+      await act(async () => {
+        jest.advanceTimersByTime(150000)
+      })
+
+      // No orphaned interval means no further getAccount()/alert activity, ever.
+      expect(getAccount).toHaveBeenCalledTimes(1)
+      expect(mockAccountNotFoundAlert).not.toHaveBeenCalled()
+    })
+
+    it('does not show the account not found alert when an in-flight createToken resolves null after unmount', async () => {
+      const deferred = createDeferredGetAccount()
+      jest.mocked(getAccount).mockReturnValueOnce(deferred.promise)
+
+      const { unmount } = render(
+        <BasicAppContext>
+          <TransferQRDisplayScreen />
+        </BasicAppContext>
+      )
+
+      unmount()
+
+      await act(async () => {
+        deferred.resolve(null)
+      })
+
+      expect(mockAccountNotFoundAlert).not.toHaveBeenCalled()
+    })
+
+    it('does not show the account not found alert when an in-flight createToken resolves null after the transfer has completed', async () => {
+      jest.mocked(getAccount).mockResolvedValueOnce(mockAccount)
+      mockCheckAttestationStatus.mockResolvedValue(false)
+
+      render(
+        <BasicAppContext>
+          <TransferQRDisplayScreen />
+        </BasicAppContext>
+      )
+
+      await waitFor(() => {
+        expect(createDeviceSignedJWT).toHaveBeenCalledTimes(1)
+      })
+
+      const deferred = createDeferredGetAccount()
+      jest.mocked(getAccount).mockReturnValueOnce(deferred.promise)
+
+      // The QR-refresh interval ticks, kicking off a second createToken() call that suspends
+      // on the still-pending getAccount().
+      await act(async () => {
+        jest.advanceTimersByTime(50000)
+      })
+
+      expect(getAccount).toHaveBeenCalledTimes(2)
+
+      // The transfer completes: the next attestation poll resolves true, latching
+      // completedRef and navigating away while the second createToken() call is still pending.
+      mockCheckAttestationStatus.mockResolvedValue(true)
+      await act(async () => {
+        jest.advanceTimersByTime(3000)
+      })
+
+      await waitFor(() => {
+        expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.TransferAccountSuccess)
+      })
+
+      // The stale createToken() call finally resolves with null, well after completion latched.
+      await act(async () => {
+        deferred.resolve(null)
+      })
+
+      expect(mockAccountNotFoundAlert).not.toHaveBeenCalled()
+      expect(mockNavigation.navigate).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  // Copilot-flagged follow-up for issue #4273: createToken() can *throw* (rather than
+  // resolve null) when the native module is asked about an account mid-removal. Both call
+  // sites (refreshToken's await, and the QR-refresh interval's fire-and-forget call) must
+  // contain that rejection instead of leaking it as an unhandled promise rejection.
+  describe('createToken rejection handling (issue #4273 follow-up)', () => {
+    it('contains a createToken rejection during refresh: no unhandled rejection and the QR-refresh interval is not started', async () => {
+      const unhandledRejections: unknown[] = []
+      const onUnhandledRejection = (reason: unknown) => {
+        unhandledRejections.push(reason)
+      }
+      process.on('unhandledRejection', onUnhandledRejection)
+
+      try {
+        const rejectionError = new Error('native storage error')
+        jest.mocked(getAccount).mockRejectedValueOnce(rejectionError)
+
+        render(
+          <BasicAppContext>
+            <TransferQRDisplayScreen />
+          </BasicAppContext>
+        )
+
+        await waitFor(() => {
+          expect(getAccount).toHaveBeenCalledTimes(1)
+        })
+
+        // Give the rejection's microtask chain a chance to surface as an unhandled rejection,
+        // as it would if refreshToken's try/catch didn't contain it (refreshToken is invoked
+        // un-awaited from both the mount effect and the "Get New QR Code" button).
+        await act(async () => {
+          await Promise.resolve()
+          await Promise.resolve()
+        })
+
+        expect(unhandledRejections).toHaveLength(0)
+
+        // A failed refresh must not start the QR-refresh interval — advancing well past the
+        // 50s mark should produce no further getAccount() calls.
+        await act(async () => {
+          jest.advanceTimersByTime(150000)
+        })
+
+        expect(getAccount).toHaveBeenCalledTimes(1)
+        expect(mockAccountNotFoundAlert).not.toHaveBeenCalled()
+      } finally {
+        process.off('unhandledRejection', onUnhandledRejection)
+      }
+    })
+  })
+
+  // Copilot-flagged follow-up for issue #4273: createToken() guarded after `await
+  // getAccount()` but not after the subsequent `await createDeviceSignedJWT(...)`. Add the
+  // symmetric guard so a screen unmounted (or a transfer completed) while the JWT signing
+  // await was in flight doesn't apply a stale QR update on the way back out.
+  describe('post-JWT-signing guard (issue #4273 follow-up)', () => {
+    it('does not apply a pending QR update after unmount when createDeviceSignedJWT resolves late', async () => {
+      jest.mocked(getAccount).mockResolvedValueOnce(mockAccount)
+
+      const deferredJwt = createDeferredJwt()
+      jest.mocked(createDeviceSignedJWT).mockReturnValueOnce(deferredJwt.promise)
+
+      const { unmount } = render(
+        <BasicAppContext>
+          <TransferQRDisplayScreen />
+        </BasicAppContext>
+      )
+
+      await waitFor(() => {
+        expect(createDeviceSignedJWT).toHaveBeenCalledTimes(1)
+      })
+
+      unmount()
+
+      // The in-flight JWT signing resolves after teardown, as it would if the native signer
+      // answered late. Without the post-JWT guard, the continuation would still run
+      // jwtDecode/setQRValue/setIsLoading against an unmounted screen.
+      await act(async () => {
+        deferredJwt.resolve('late-signed-jwt')
+      })
+
+      // The guard must short-circuit before any of the post-JWT work — jwtDecode is the
+      // first thing that work does, so it not being called proves setQRValue/setIsLoading
+      // (and the QR value/render they'd produce) never ran either.
+      expect(jwtDecode).not.toHaveBeenCalled()
     })
   })
 })

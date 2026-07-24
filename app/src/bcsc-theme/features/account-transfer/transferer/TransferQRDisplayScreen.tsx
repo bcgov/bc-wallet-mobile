@@ -38,6 +38,7 @@ const TransferQRDisplayScreen: React.FC = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const attestationIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const completedRef = useRef(false)
+  const isMountedRef = useRef(true)
   const [isLoading, setIsLoading] = useState(true)
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -66,8 +67,15 @@ const TransferQRDisplayScreen: React.FC = () => {
   })
 
   const createToken = useCallback(async (): Promise<boolean> => {
+    if (completedRef.current || !isMountedRef.current) {
+      return false
+    }
     const timeInSeconds = Math.floor(Date.now() / 1000)
     const account = await getAccount()
+    if (completedRef.current || !isMountedRef.current) {
+      logger.info('[TransferQRDisplayScreen] Skipping QR token creation: transfer completed or screen unmounted')
+      return false
+    }
     if (!account) {
       logger.error('[TransferQRDisplayScreen] Account not found in native storage')
       accountNotFoundAlert()
@@ -85,6 +93,11 @@ const TransferQRDisplayScreen: React.FC = () => {
       exp: timeInSeconds + jwtTimeToLive,
       jti: newJti,
     })
+
+    if (completedRef.current || !isMountedRef.current) {
+      logger.info('[TransferQRDisplayScreen] Skipping QR token creation: transfer completed or screen unmounted')
+      return false
+    }
 
     // Ensure we are using the correct JTI in case the createDeviceSignedJWT method
     // uses a fallback JTI instead of our provided one or mutates it in-place
@@ -122,12 +135,14 @@ const TransferQRDisplayScreen: React.FC = () => {
       clearInterval(intervalRef.current)
     }
     intervalRef.current = setInterval(() => {
-      if (completedRef.current) {
+      if (completedRef.current || !isMountedRef.current) {
         return
       }
-      createToken()
+      createToken().catch((error) => {
+        logger.error('[TransferQRDisplayScreen] Failed to refresh QR token on interval', error as Error)
+      })
     }, qrCodeRefreshInterval)
-  }, [createToken])
+  }, [createToken, logger])
 
   const refreshToken = useCallback(async () => {
     if (completedRef.current) {
@@ -137,11 +152,24 @@ const TransferQRDisplayScreen: React.FC = () => {
       clearInterval(intervalRef.current)
     }
 
-    const success = await createToken()
-    if (success && !completedRef.current) {
+    let success = false
+    try {
+      success = await createToken()
+    } catch (error) {
+      logger.error('[TransferQRDisplayScreen] Failed to refresh QR token', error as Error)
+      return
+    }
+
+    if (success && !completedRef.current && isMountedRef.current) {
       startInterval()
     }
-  }, [createToken, startInterval])
+  }, [createToken, startInterval, logger])
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
 
   useEffect(() => {
     refreshToken()
