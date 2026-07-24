@@ -23,6 +23,7 @@ export const OnboardingIntroScreen = defineScreen({
   self: bcsc(ob.intro.continue),
   primary: bcsc(ob.intro.continue),
   help: bcsc(common.help),
+  menu: bcsc(ob.intro.settings), // header-left Settings button → OnboardingSettings
 })
 
 /**
@@ -141,5 +142,16 @@ export const VerifyPromptScreen = defineScreen({
  */
 export const OnboardingWebViewScreen = defineScreen({
   self: bcsc(common.back),
+  back: bcsc(common.back),
+})
+
+/**
+ * OnboardingSettings — the settings surface reachable from the Intro header (it wraps the same
+ * `SettingsContent` as Main). Reached PRE-authentication, so the `AuthenticatedSection` rows
+ * (AppSecurity/ChangePIN/…) are ABSENT; the always-rendered Help-section `ContactUs` row (wired here)
+ * is the reliable arrival marker. Header `back` returns to the Intro.
+ */
+export const OnboardingSettingsScreen = defineScreen({
+  self: bcsc(TestIds.main.settings.contactUs),
   back: bcsc(common.back),
 })

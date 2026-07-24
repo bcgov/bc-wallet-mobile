@@ -34,6 +34,7 @@ export const TestIds = {
   onboarding: {
     intro: {
       continue: 'Continue',
+      settings: 'SettingsMenuButton', // intro header-left → OnboardingSettings (reuses SettingsContent)
     },
     privacyPolicy: {
       continue: 'Continue',
@@ -300,6 +301,7 @@ export const TestIds = {
       notifications: 'Notifications',
       analyticsOptIn: 'AnalyticsOptIn',
       removeAccount: 'RemoveAccount',
+      resetWallet: 'ResetWallet', // distinct destructive row; shared DestructiveConfirmationScreen (confirm = ConfirmDestructiveAction)
       help: 'Help',
       contactUs: 'ContactUs',
       feedback: 'Feedback',

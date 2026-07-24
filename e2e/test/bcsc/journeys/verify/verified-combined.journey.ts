@@ -21,6 +21,7 @@ import {
   EditNicknameScreen,
   ForgetPairingsScreen,
   HomeScreen,
+  MainWebViewScreen,
   ManualPairingScreen,
   PairingConfirmationScreen,
   ServiceLoginScreen,
@@ -238,5 +239,19 @@ describe('Verified journey: combined card', () => {
     await ForgetPairingsScreen.tap('primary') // the Critical button confirms → native "Success" alert
     await acceptSystemAlert() // dismiss "OK"
     await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION) // goBack after the alert
+  })
+
+  // Manage Devices is verified-only and opens an in-app WebView (server-rendered device list, no content
+  // testID). forget-pairings left us on Settings; assert we leave it, then pop back. Runs LAST so the
+  // webview check can't block the proven verified checkpoints above.
+  it('verified: opens Manage Devices (in-app webview) from Settings', async () => {
+    await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await SettingsScreen.link('myDevices') // verified-only row → MainWebView (account/devices)
+    assert.ok(
+      !(await SettingsScreen.isPresent(Timeouts.ELEMENT_VISIBLE)),
+      'Manage Devices should open the webview off the Settings screen'
+    )
+    await MainWebViewScreen.back.tap() // → Settings
+    await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 })

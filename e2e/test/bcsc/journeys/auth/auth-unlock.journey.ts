@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict'
 import { TEST_PIN, Timeouts, WRONG_TEST_PIN } from '../../../../src/constants.js'
 import { relaunchApp, selectAccountLandingIfPresent, unlockWithPin } from '../../../../src/flows/auth.js'
 import { skipToHome } from '../../../../src/flows/onboarding.js'
@@ -24,6 +25,21 @@ describe('Auth journey: unlock', () => {
 
   it('relaunches to AccountLanding and unlocks with the PIN', async () => {
     await unlockWithPin(TEST_PIN, { relaunch: true })
+  })
+
+  it('opens Get Help (Forgot PIN) from the PIN screen', async () => {
+    await relaunchApp()
+    await selectAccountLandingIfPresent()
+    await AccountLandingScreen.tap('primary')
+    await EnterPINScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    // GetHelp pushes the Forgot-PIN AuthWebView. The valuable assertion is that it navigates OFF the PIN
+    // screen (its input is gone). We do NOT tap the webview back — AuthStack sets no headerBackTestID, so
+    // that button is not addressable — the next checkpoint's relaunchApp() recovers to AccountLanding.
+    await EnterPINScreen.link('getHelp')
+    assert.ok(
+      !(await EnterPINScreen.isPresent(Timeouts.ELEMENT_VISIBLE)),
+      'Get Help should navigate off the PIN screen to the help webview'
+    )
   })
 
   it('rejects a wrong PIN inline and unlocks on retry', async () => {

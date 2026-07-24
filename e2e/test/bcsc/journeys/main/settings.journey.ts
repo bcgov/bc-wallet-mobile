@@ -11,6 +11,7 @@ import {
   MainPrivacyPolicyScreen,
   MainWebViewScreen,
   RemoveAccountConfirmScreen,
+  ResetWalletConfirmScreen,
   SettingsScreen,
 } from '../../../../src/screens/main.js'
 import { OnboardingIntroScreen } from '../../../../src/screens/onboarding.js'
@@ -124,6 +125,13 @@ describe('Main journey: settings', () => {
     await SettingsScreen.link('removeAccount')
     await RemoveAccountConfirmScreen.expectVisible(Timeouts.SCREEN_TRANSITION) // ConfirmDestructiveAction
     await RemoveAccountConfirmScreen.back.tap() // header Back = cancel
+    await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  })
+
+  it('shows the Reset Wallet confirmation and cancels', async () => {
+    await SettingsScreen.link('resetWallet') // distinct destructive row; shared DestructiveConfirmationScreen
+    await ResetWalletConfirmScreen.expectVisible(Timeouts.SCREEN_TRANSITION) // ConfirmDestructiveAction
+    await ResetWalletConfirmScreen.back.tap() // header Back = cancel
     await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 

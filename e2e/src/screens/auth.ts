@@ -44,3 +44,8 @@ export const EnterPINScreen = defineScreen({
 export const LockoutScreen = defineScreen({
   self: bcsc(auth.lockout.removeAccount),
 })
+
+// NB: there is deliberately no AuthWebView descriptor. Unlike MainStack/OnboardingStack, AuthStack sets
+// no `headerBackTestID`, so its custom `createHeaderBackButton` renders testID `String(undefined)` —
+// the AuthStack back button is not addressable as `Back`. Tests that open an AuthWebView (e.g. EnterPIN
+// → Get Help) assert the navigation and recover by relaunching, rather than tapping that back button.

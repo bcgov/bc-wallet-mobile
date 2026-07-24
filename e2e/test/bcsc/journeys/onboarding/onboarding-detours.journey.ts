@@ -8,6 +8,7 @@ import {
   OnboardingOptInAnalyticsScreen,
   OnboardingPrivacyPolicyScreen,
   OnboardingSecureAppScreen,
+  OnboardingSettingsScreen,
   OnboardingTermsOfUseScreen,
   OnboardingWebViewScreen,
   VerifyPromptScreen,
@@ -26,6 +27,15 @@ import {
 const engine = new BaseScreen()
 
 describe('Onboarding journey: detours', () => {
+  it('opens onboarding Settings from the intro header and backs out', async () => {
+    await OnboardingIntroScreen.expectVisible(Timeouts.COLD_START) // fresh install lands on the Intro
+    await OnboardingIntroScreen.tap('menu') // Intro header Settings button → OnboardingSettings (SettingsContent)
+    // Pre-auth, the AuthenticatedSection rows are absent; the always-rendered ContactUs row is the marker.
+    await OnboardingSettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await OnboardingSettingsScreen.back.tap() // → Intro
+    await OnboardingIntroScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  })
+
   it('cold-starts and advances to the privacy policy', async () => {
     await OnboardingIntroScreen.expectVisible(Timeouts.COLD_START)
     await OnboardingIntroScreen.tap('primary')

@@ -120,6 +120,8 @@ export const SettingsScreen = defineScreen({
     addDevice: bcsc(main.settings.addDevice), // verified-only (transferer QR entry — Main-stack settings only)
     contacts: bcsc(main.settings.contacts), // verified-only (Features row → Contacts list)
     profile: bcsc(main.settings.profile), // verified-only → AccountDetails; isVisible spans links, so the unverified absence-assert still holds
+    myDevices: bcsc(main.settings.myDevices), // verified-only → in-app WebView (server-rendered device list)
+    resetWallet: bcsc(main.settings.resetWallet), // always present → shared DestructiveConfirmationScreen
   },
 })
 
@@ -178,6 +180,15 @@ export const MainContactUsScreen = defineScreen({
 /** Remove-account confirmation (shared DestructiveConfirmationScreen). `primary`
  *  (`ConfirmDestructiveAction`) runs the factory reset; header `back` is the cancel affordance. */
 export const RemoveAccountConfirmScreen = defineScreen({
+  self: bcsc(main.removeAccount.confirm),
+  primary: bcsc(main.removeAccount.confirm),
+  back: bcsc(common.back),
+})
+
+/** Reset-wallet confirmation (Settings → Reset Wallet). The SAME shared `DestructiveConfirmationScreen`
+ *  as remove-account — identical `ConfirmDestructiveAction` testID — modeled separately only for
+ *  call-site clarity. `primary` resets the wallet; header `back` cancels. */
+export const ResetWalletConfirmScreen = defineScreen({
   self: bcsc(main.removeAccount.confirm),
   primary: bcsc(main.removeAccount.confirm),
   back: bcsc(common.back),
