@@ -1,6 +1,4 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { ensureAppError } from '@/errors/errorHandler'
-import { AppEventCode } from '@/events/appEventCode'
 import { QRScannerTorch, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useFocusEffect, useIsFocused } from '@react-navigation/native'
 import { a11yLabel } from '@utils/accessibility'
@@ -40,6 +38,8 @@ import {
   useCodeScanner,
 } from 'react-native-vision-camera'
 
+import { ensureAppError } from '@/errors/errorHandler'
+import { AppEventCode } from '@/events/appEventCode'
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
 import { isBackgroundedAppState } from '../utils/app-state'
 import {
@@ -968,18 +968,32 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     setTorchEnabled((prev) => !prev)
   }
 
+  const getCameraError = useCallback(
+    (error: unknown) => {
+      logger.error('[CodeScanningCamera] runtime error', error as Error)
+
+      const appError = ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
+
+      // Add camera device and format info to the error context for better debugging
+      appError.addContext({
+        camera: {
+          device,
+          format,
+        },
+      })
+
+      return appError
+    },
+    [device, format, logger]
+  )
+
   /**
    * Handler for camera initialization
    * Sets the zoom level once the camera is fully initialized and ready
    */
   const handleCameraInitialized = useCallback(() => {
-    logger.debug('Camera initialized', {
-      minZoom: device?.minZoom,
-      maxZoom: device?.maxZoom,
-      requestedZoom: initialZoom,
-      formatVideo: format ? `${format.videoWidth}×${format.videoHeight}` : 'none',
-      formatPhoto: format ? `${format.photoWidth}×${format.photoHeight}` : 'none',
-    })
+    logger.debug('Camera initialized', { device, format })
+
     if (!hasInitializedRef.current) {
       hasInitializedRef.current = true
       const targetZoom = getEffectiveZoom(initialZoom ?? 1)
@@ -989,7 +1003,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       cameraIsReady.value = true
       logger.debug('Zoom applied after initialization', { zoom: targetZoom })
     }
-  }, [initialZoom, getEffectiveZoom, logger, device, format, zoom, cameraIsReady])
+  }, [logger, device, format, getEffectiveZoom, initialZoom, zoom, cameraIsReady])
 
   const handleCameraError = useCallback(
     (error: CameraRuntimeError) => {
@@ -1002,15 +1016,10 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
         return
       }
 
-      logger.error('CodeScanningCamera runtime error', error as Error)
-      emitErrorModal(
-        t('BCSC.CameraDisclosure.Error'),
-        t('BCSC.CameraDisclosure.ErrorMessage'),
-        ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
-      )
+      emitErrorModal(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorMessage'), getCameraError(error))
       onError?.(error)
     },
-    [appStateStatus, logger, emitErrorModal, t, onError]
+    [appStateStatus, emitErrorModal, t, getCameraError, onError, logger]
   )
 
   const handleSaveScanZones = useCallback(() => {
