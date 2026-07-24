@@ -1921,4 +1921,275 @@ describe('CodeScanningCamera', () => {
       )
     })
   })
+
+  describe('Focus cycling restart storm (regression #4256/#4300)', () => {
+    beforeEach(() => {
+      jest.useFakeTimers()
+      // The module-level device mock factory returns a brand-new object on every call,
+      // so without pinning it, startFocusCycling's useCallback (deps include `device`)
+      // would get a new identity on every re-render regardless of cause — masking the
+      // exact thing under test here. Pin it to a single stable reference, matching how
+      // the real hook behaves when the underlying camera device hasn't changed.
+      mockedUseCameraDevice.mockReturnValue({
+        id: 'back',
+        supportsFocus: true,
+        minZoom: 1,
+        maxZoom: 8,
+        neutralZoom: 1,
+        hasTorch: true,
+      })
+    })
+
+    afterEach(() => {
+      jest.useRealTimers()
+      // Restore the default per-render factory for any tests outside this describe.
+      mockedUseCameraDevice.mockImplementation(() => ({
+        id: 'back',
+        supportsFocus: true,
+        minZoom: 1,
+        maxZoom: 8,
+        neutralZoom: 1,
+        hasTorch: true,
+      }))
+    })
+
+    const mockFrame = { width: 1920, height: 1080 }
+
+    it('does not restart on a scanning<->aligned flip, but the periodic idle-nudge still ticks (discriminating case)', async () => {
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} />
+        </BasicAppContext>
+      )
+
+      // t=0: layout starts cycling — one immediate, unsuppressed doFocus (lastDetectionAtRef
+      // starts at 0, so nothing looks "recent" yet).
+      const cameraContainer = getByTestId('camera-preview-container')
+      await act(async () => {
+        fireEvent(cameraContainer, 'layout', {
+          nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 800 } },
+        })
+      })
+      const callsAfterLayout = mockFocus.mock.calls.length
+      expect(callsAfterLayout).toBeGreaterThan(0)
+
+      // t=100: a single detection is enough to flip scanning -> aligned (minCodesForAligned
+      // === 1 for the single-zone BCSC_SN_SCAN_ZONES).
+      await act(async () => {
+        jest.advanceTimersByTime(100)
+      })
+      await act(async () => {
+        mockCodeScannerCallback!(
+          [
+            {
+              type: 'pdf-417',
+              value: 'FLIP_TO_ALIGNED',
+              frame: { x: 100, y: 200, width: 200, height: 50 },
+              corners: [],
+            },
+          ],
+          mockFrame
+        )
+      })
+
+      // t=2200: advance 2100ms past that detection — the suppression window (2000ms) has
+      // now lapsed — then send a blank frame. The single tracked reading (count 1) decays
+      // straight to 0 and drops the state back to 'scanning'.
+      //
+      // OLD code: scanState was a dependency of the cycling effect, so this flip tore the
+      // cycle down and restarted it, firing an extra doFocus() right here — and since the
+      // suppression window had already lapsed, that restart's call was NOT suppressed.
+      // NEW code: scanState is not a dependency, so nothing restarts and the call count
+      // must be unchanged.
+      await act(async () => {
+        jest.advanceTimersByTime(2100)
+      })
+      await act(async () => {
+        mockCodeScannerCallback!([], mockFrame)
+      })
+
+      expect(mockFocus.mock.calls).toHaveLength(callsAfterLayout)
+
+      // t=2600: advance past the next natural tick of the untouched interval (anchored at
+      // t=0, so its next tick is at t=2500) — the periodic idle-nudge must still be alive.
+      await act(async () => {
+        jest.advanceTimersByTime(400)
+      })
+
+      expect(mockFocus.mock.calls).toHaveLength(callsAfterLayout + 1)
+    })
+
+    it('preserves the idle-nudge cadence when nothing is ever detected (tilt workaround)', async () => {
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} />
+        </BasicAppContext>
+      )
+
+      const cameraContainer = getByTestId('camera-preview-container')
+      await act(async () => {
+        fireEvent(cameraContainer, 'layout', {
+          nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 800 } },
+        })
+      })
+      const callsAfterLayout = mockFocus.mock.calls.length
+      expect(callsAfterLayout).toBeGreaterThan(0)
+
+      // Two full FOCUS_CYCLE_INTERVAL_MS (2.5s) ticks, no detections in between.
+      await act(async () => {
+        jest.advanceTimersByTime(2 * 2500)
+      })
+
+      expect(mockFocus.mock.calls).toHaveLength(callsAfterLayout + 2)
+    })
+
+    it('keeps the idle-nudge alive across a lock -> auto-confirm-rejected -> reset cycle (guards against stop-on-lock without a matching restart)', async () => {
+      mockOnCodeScanned.mockResolvedValueOnce(false)
+
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} />
+        </BasicAppContext>
+      )
+
+      const cameraContainer = getByTestId('camera-preview-container')
+      await act(async () => {
+        fireEvent(cameraContainer, 'layout', {
+          nativeEvent: { layout: { x: 0, y: 0, width: 400, height: 800 } },
+        })
+      })
+      const callsAfterLayout = mockFocus.mock.calls.length
+      expect(callsAfterLayout).toBeGreaterThan(0)
+
+      const lockCode = {
+        type: 'pdf-417',
+        value: 'LOCK_THEN_REJECT',
+        frame: { x: 100, y: 200, width: 200, height: 50 },
+        corners: [],
+      }
+      // LOCK_READING_THRESHOLD (5) identical frames locks and auto-confirms; the mocked
+      // `false` resolution rejects the scan, which resets back to 'scanning'.
+      for (let i = 0; i < 5; i++) {
+        await act(async () => {
+          mockCodeScannerCallback!([lockCode], mockFrame)
+        })
+      }
+
+      await waitFor(() => {
+        expect(mockOnCodeScanned).toHaveBeenCalled()
+      })
+
+      // Neither the lock nor the reject-driven reset should have touched the cycling
+      // timer — scanState was never a dependency of the effect that starts it.
+      expect(mockFocus.mock.calls).toHaveLength(callsAfterLayout)
+
+      // Advance past the suppression window plus a full cycle interval — if a
+      // stop-on-lock (without a matching restart) regression crept back in, the timer
+      // would be dead here and this would never fire.
+      await act(async () => {
+        jest.advanceTimersByTime(2000 + 2500)
+      })
+
+      expect(mockFocus.mock.calls.length).toBeGreaterThan(callsAfterLayout)
+    })
+  })
+
+  describe('Lock keeps accumulated licence barcode (regression #4256/#4302)', () => {
+    // VALIDATION_THRESHOLD (3) < LOCK_READING_THRESHOLD (5) on Android, so a code can
+    // validate (and get accumulated) well before it could ever lock on its own.
+    beforeEach(() => {
+      jest.useFakeTimers()
+      Platform.OS = 'android'
+    })
+
+    afterEach(() => {
+      jest.useRealTimers()
+      Platform.OS = 'ios'
+    })
+
+    const mockFrame = { width: 640, height: 480 }
+    const pdf417Code = {
+      type: 'pdf-417',
+      value: 'DL_DATA',
+      frame: { x: 100, y: 100, width: 200, height: 60 },
+      corners: [],
+    }
+    const serialCode = {
+      type: 'code-39',
+      value: 'SERIAL',
+      frame: { x: 100, y: 300, width: 200, height: 30 },
+      corners: [],
+    }
+
+    it('carries a recently-accumulated pdf-417 into a lock triggered by the code-39 serial alone', async () => {
+      render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} />
+        </BasicAppContext>
+      )
+
+      // pdf-417 validates (VALIDATION_THRESHOLD=3) and gets accumulated, but never reaches
+      // LOCK_READING_THRESHOLD (5) on its own.
+      for (let i = 0; i < 3; i++) {
+        await act(async () => {
+          mockCodeScannerCallback!([pdf417Code], mockFrame)
+        })
+      }
+      expect(mockOnCodeScanned).not.toHaveBeenCalled()
+
+      // The pdf-417 drops out of frame; only the code-39 serial is read from here on. 5
+      // frames locks on the serial alone (minCodesForAligned === 1 for the single-zone
+      // BCSC_SN_SCAN_ZONES).
+      for (let i = 0; i < 5; i++) {
+        await act(async () => {
+          mockCodeScannerCallback!([serialCode], mockFrame)
+        })
+      }
+
+      await waitFor(() => {
+        expect(mockOnCodeScanned).toHaveBeenCalledWith(
+          expect.arrayContaining([
+            expect.objectContaining({ type: 'pdf-417', value: 'DL_DATA' }),
+            expect.objectContaining({ type: 'code-39', value: 'SERIAL' }),
+          ]),
+          mockFrame
+        )
+      })
+    })
+
+    it('drops the accumulated pdf-417 once ACCUMULATION_WINDOW_MS has elapsed before the lock', async () => {
+      render(
+        <BasicAppContext>
+          <CodeScanningCamera {...defaultProps} />
+        </BasicAppContext>
+      )
+
+      for (let i = 0; i < 3; i++) {
+        await act(async () => {
+          mockCodeScannerCallback!([pdf417Code], mockFrame)
+        })
+      }
+
+      // ACCUMULATION_WINDOW_MS is 3000 on Android — advance past it before the serial locks.
+      await act(async () => {
+        jest.advanceTimersByTime(3100)
+      })
+
+      for (let i = 0; i < 5; i++) {
+        await act(async () => {
+          mockCodeScannerCallback!([serialCode], mockFrame)
+        })
+      }
+
+      await waitFor(() => {
+        expect(mockOnCodeScanned).toHaveBeenCalled()
+      })
+
+      const [codes] = mockOnCodeScanned.mock.calls[0]
+      expect(codes).toEqual(expect.arrayContaining([expect.objectContaining({ type: 'code-39', value: 'SERIAL' })]))
+      expect(codes).not.toEqual(
+        expect.arrayContaining([expect.objectContaining({ type: 'pdf-417', value: 'DL_DATA' })])
+      )
+    })
+  })
 })

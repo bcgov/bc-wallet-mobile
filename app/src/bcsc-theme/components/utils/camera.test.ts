@@ -1,6 +1,7 @@
 import { Platform } from 'react-native'
 
 import {
+  AccumulatedCode,
   EnhancedCode,
   Rect,
   ScanZone,
@@ -9,6 +10,7 @@ import {
   determineScanState,
   getPaddedHighlightPosition,
   isCodeAlignedWithZones,
+  mergeLockedCodesWithAccumulated,
   transformBarcodeCoordinates,
 } from './camera'
 
@@ -460,5 +462,81 @@ describe('determineScanState', () => {
     const codes = [makeCode('ABC', true, 10)]
     const { newScanState } = determineScanState(codes, { ...OPTIONS, minCodesForAligned: 1 })
     expect(newScanState).toBe('locked')
+  })
+})
+
+// ─── mergeLockedCodesWithAccumulated ───────────────────────────────────────────
+
+const makeEnhancedCode = (type: string, value: string): EnhancedCode => ({ type, value }) as unknown as EnhancedCode
+
+describe('mergeLockedCodesWithAccumulated', () => {
+  const NOW = 1_000_000
+  const WINDOW_MS = 3000
+
+  it('merges an accumulated pdf-417 with a current-frame code-39', () => {
+    const pdf417 = makeEnhancedCode('pdf-417', 'DL_DATA')
+    const serial = makeEnhancedCode('code-39', 'SERIAL')
+    const accumulated: Map<string, AccumulatedCode> = new Map([['pdf-417-DL_DATA', { code: pdf417, timestamp: NOW }]])
+
+    const result = mergeLockedCodesWithAccumulated([serial], accumulated, WINDOW_MS, NOW)
+
+    expect(result).toEqual([pdf417, serial])
+  })
+
+  it('dedupes an accumulated entry whose type-value key matches a current-frame code', () => {
+    const serial = makeEnhancedCode('code-39', 'SERIAL')
+    // Same key as the current-frame code — accumulateValidatedResults would have just
+    // written this in the same scanner-callback pass that produced qualifyingCodes.
+    const accumulated: Map<string, AccumulatedCode> = new Map([['code-39-SERIAL', { code: serial, timestamp: NOW }]])
+
+    const result = mergeLockedCodesWithAccumulated([serial], accumulated, WINDOW_MS, NOW)
+
+    expect(result).toEqual([serial])
+  })
+
+  it('drops accumulated entries older than windowMs', () => {
+    const pdf417 = makeEnhancedCode('pdf-417', 'DL_DATA')
+    const serial = makeEnhancedCode('code-39', 'SERIAL')
+    const accumulated: Map<string, AccumulatedCode> = new Map([
+      ['pdf-417-DL_DATA', { code: pdf417, timestamp: NOW - (WINDOW_MS + 1) }],
+    ])
+
+    const result = mergeLockedCodesWithAccumulated([serial], accumulated, WINDOW_MS, NOW)
+
+    expect(result).toEqual([serial])
+  })
+
+  it('keeps an accumulated entry exactly at the window boundary (not strictly older)', () => {
+    const pdf417 = makeEnhancedCode('pdf-417', 'DL_DATA')
+    const serial = makeEnhancedCode('code-39', 'SERIAL')
+    const accumulated: Map<string, AccumulatedCode> = new Map([
+      ['pdf-417-DL_DATA', { code: pdf417, timestamp: NOW - WINDOW_MS }],
+    ])
+
+    const result = mergeLockedCodesWithAccumulated([serial], accumulated, WINDOW_MS, NOW)
+
+    expect(result).toEqual([pdf417, serial])
+  })
+
+  it('orders accumulated extras before current-frame codes', () => {
+    const pdf417 = makeEnhancedCode('pdf-417', 'DL_DATA')
+    const otherExtra = makeEnhancedCode('code-128', 'OTHER_EXTRA')
+    const serial = makeEnhancedCode('code-39', 'SERIAL')
+    const accumulated: Map<string, AccumulatedCode> = new Map([
+      ['pdf-417-DL_DATA', { code: pdf417, timestamp: NOW }],
+      ['code-128-OTHER_EXTRA', { code: otherExtra, timestamp: NOW }],
+    ])
+
+    const result = mergeLockedCodesWithAccumulated([serial], accumulated, WINDOW_MS, NOW)
+
+    expect(result).toEqual([pdf417, otherExtra, serial])
+  })
+
+  it('returns the current frame unchanged when the accumulator is empty', () => {
+    const serial = makeEnhancedCode('code-39', 'SERIAL')
+
+    const result = mergeLockedCodesWithAccumulated([serial], new Map(), WINDOW_MS, NOW)
+
+    expect(result).toEqual([serial])
   })
 })
