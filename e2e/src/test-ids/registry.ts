@@ -364,5 +364,26 @@ export const TestIds = {
       save: 'SaveAndContinue',
       error: 'accountNickname-subtext',
     },
+    /** Login-from-computer (verified-only). `logInFromComputer` is the Home PairingCodeCard; the manual
+     *  screen's `manualCodeInput` AUTO-SUBMITS at 6 chars (there is NO submit button); PairingConfirmation
+     *  exits via `confirmationClose` (it has no header/back) and can bookmark via `bookmark`. */
+    pairing: {
+      logInFromComputer: 'LogInFromComputer',
+      manualCodeInput: 'ManualPairingCodeInput',
+      confirmationClose: 'Close',
+      bookmark: 'BookmarkService',
+    },
+    /** Service-login screen (reached when a login deep link opens the app). */
+    serviceLogin: {
+      continue: 'ServiceLoginContinue',
+      cancel: 'ServiceLoginCancel',
+    },
+    /** Transferer "show a QR to add a device" flow — reached via Settings → `settings.addDevice`
+     *  (verified-only, wired only in the Main stack). QR-info (`getQrCode`) → QR-display (`newQrCode`
+     *  regenerate). No learn-more webview on main. */
+    transfer: {
+      getQrCode: 'GetQRCodeButton',
+      newQrCode: 'GetNewQRCode',
+    },
   },
 } as const

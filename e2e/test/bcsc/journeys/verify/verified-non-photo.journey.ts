@@ -20,11 +20,8 @@ import { getTestUser, setTestUser } from '../../../../src/support/context.js'
  * PHOTOGRAPHED via the camera, then its number typed in EvidenceIDCollection. After that the email step
  * is skippable (BCSC flow) and completion is in-person.
  *
- * ⚠️ CAMERA-DEPENDENT — this journey cannot run camera-free. The document capture needs Sauce image
- * injection (`injectPhoto` throws off-Sauce; RN camera feeds are unreliable) or a physical camera on a
- * local real device. It is UNVALIDATED — first Sauce run must confirm: (1) injection actually feeds
- * EvidenceCapture, (2) the passport row's exact label 'Canadian Passport' (server-provided), (3) a
- * usable passport image (only dl_/id_ assets exist today).
+ * CAMERA-DEPENDENT — the document capture uses Sauce image injection (`injectPhoto` throws off-Sauce)
+ * or a physical camera; validated on Sauce.
  *
  * One ordered session: onboard → Continue → Scan serial → birthdate (authorizeDevice, non-photo) →
  * additional photo ID (pick → capture → typed number) → method selection → in-person → verified Home.

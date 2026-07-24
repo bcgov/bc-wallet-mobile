@@ -32,6 +32,7 @@ export const HomeScreen = defineScreen({
   menu: bcsc(main.header.settings),
   links: {
     scanFab: bcsc(main.scan.fab),
+    logInFromComputer: bcsc(main.pairing.logInFromComputer), // verified-only PairingCodeCard
   },
 })
 
@@ -116,6 +117,7 @@ export const SettingsScreen = defineScreen({
     privacy: bcsc(main.settings.privacy),
     editProfile: bcsc(main.settings.editProfile), // verified-only (nickname pencil in the ProfileCard)
     forgetPairings: bcsc(main.settings.forgetPairings), // verified-only (isVisible spans links → absence assert still works)
+    addDevice: bcsc(main.settings.addDevice), // verified-only (transferer QR entry — Main-stack settings only)
   },
   elements: {
     profile: bcsc(main.settings.profile), // verified-only (absence assert unverified)
@@ -210,5 +212,56 @@ export const EditNicknameScreen = defineScreen({
 export const ForgetPairingsScreen = defineScreen({
   self: bcsc(main.forgetPairingsScreen.confirm),
   primary: bcsc(main.forgetPairingsScreen.confirm),
+  back: bcsc(common.back),
+})
+
+/** Manual pairing-code entry (`ManualPairingCode`, verified-only, reached from Home's LogInFromComputer
+ *  card). `self`/input is the code field — there is NO submit button; entering 6 chars AUTO-SUBMITS and
+ *  navigates to PairingConfirmation. */
+export const ManualPairingScreen = defineScreen({
+  self: bcsc(main.pairing.manualCodeInput),
+  back: bcsc(common.back),
+  inputs: {
+    code: bcsc(main.pairing.manualCodeInput),
+  },
+})
+
+/** Pairing confirmation (`PairingConfirmation`) — the shared success screen for the manual-code and
+ *  deep-link logins (no header/back). `self`/`bookmark` (`BookmarkService`) renders in BOTH cases.
+ *  `primary` (`Close`) resets to the tabs, but it is NOT rendered on the iOS app-switch (deep-link)
+ *  confirmation — there an up-arrow guides the user back to the browser, and sending the app to the
+ *  background fires the reset to Home. So use `Close` only for the manual-code flow; background out of
+ *  the deep-link one. */
+export const PairingConfirmationScreen = defineScreen({
+  self: bcsc(main.pairing.bookmark),
+  primary: bcsc(main.pairing.confirmationClose),
+  links: {
+    bookmark: bcsc(main.pairing.bookmark),
+  },
+})
+
+/** Service-login screen (`ServiceLogin`) — where a login deep link lands. `primary` (Continue) →
+ *  PairingConfirmation; `secondary` (Cancel) returns to Home (the reliable exit on a cold-start deep
+ *  link, which has no back stack). */
+export const ServiceLoginScreen = defineScreen({
+  self: bcsc(main.serviceLogin.continue),
+  primary: bcsc(main.serviceLogin.continue),
+  secondary: bcsc(main.serviceLogin.cancel),
+  back: bcsc(common.back),
+})
+
+/** Transfer QR information (`TransferAccountQRInformation`, verified-only, reached via Settings →
+ *  AddDevice). `self`/`primary` is the GetQRCode button → the QR display. */
+export const TransferQRInformationScreen = defineScreen({
+  self: bcsc(main.transfer.getQrCode),
+  primary: bcsc(main.transfer.getQrCode),
+  back: bcsc(common.back),
+})
+
+/** Transfer QR display (`TransferAccountQRDisplay`) — shows the QR (no testID) with a `self`/`primary`
+ *  regenerate button (`GetNewQRCode`). Header `back` returns to the QR information screen. */
+export const TransferQRDisplayScreen = defineScreen({
+  self: bcsc(main.transfer.newQrCode),
+  primary: bcsc(main.transfer.newQrCode),
   back: bcsc(common.back),
 })

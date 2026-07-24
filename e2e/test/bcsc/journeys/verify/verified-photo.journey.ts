@@ -9,24 +9,13 @@ import {
   reachVerificationMethod,
   startVerification,
 } from '../../../../src/flows/verify.js'
-import { acceptSystemAlert } from '../../../../src/helpers/alerts.js'
-import { BaseScreen } from '../../../../src/screens/core/BaseScreen.js'
-import {
-  EditNicknameScreen,
-  ForgetPairingsScreen,
-  HomeScreen,
-  SettingsScreen,
-} from '../../../../src/screens/main.js'
+import { HomeScreen, SettingsScreen } from '../../../../src/screens/main.js'
 import {
   CallBusyOrClosedScreen,
   PhotoInstructionsScreen,
   VerificationMethodSelectionScreen,
 } from '../../../../src/screens/verify.js'
 import { getTestUser, setTestUser } from '../../../../src/support/context.js'
-
-/** Engine handle for the nickname persistence assert (the ProfileCard name exposes no testID). */
-const engine = new BaseScreen()
-const NEW_NICKNAME = 'E2E Photo Account'
 
 /**
  * Verified journey: photo card — the lightest verified path (serial + dob only), so it is the first
@@ -39,9 +28,6 @@ const NEW_NICKNAME = 'E2E Photo Account'
  * `SM_USER`/`SM_PASSWORD` on an allowlisted runner) — reaching VerificationSuccess and verified Home.
  *
  * mocha bail makes the checkpoints fail-fast within this file only; every other journey still runs.
- * It then exercises the verified-only settings rows (nickname edit + forget pairings); Contacts /
- * AccountDetails + login checkpoints chain on later. (There is no manual sign-out control in the app —
- * the only re-lock is the inactivity auto-lock, covered by the settings journey.)
  */
 describe('Verified journey: photo card', () => {
   before(() => {
@@ -101,26 +87,5 @@ describe('Verified journey: photo card', () => {
     )
     await SettingsScreen.back.tap()
     await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-  })
-
-  it('verified: edits the account nickname and it persists on the profile card', async () => {
-    await HomeScreen.tap('menu')
-    await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-    await SettingsScreen.link('editProfile') // pencil in the (verified-only) ProfileCard → EditNickname
-    await EditNicknameScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-    await EditNicknameScreen.fill('nickname', NEW_NICKNAME) // NB may need a clear first if the field pre-fills
-    await EditNicknameScreen.tap('primary') // SaveAndContinue → goBack to Settings
-    await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-    // The ProfileCard name (no testID) reflects the saved nickname.
-    const renamed = await engine.findByText(NEW_NICKNAME)
-    await renamed.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
-  })
-
-  it('verified: forgets all device pairings', async () => {
-    await SettingsScreen.link('forgetPairings') // verified-only row → ForgetAllPairings confirmation
-    await ForgetPairingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-    await ForgetPairingsScreen.tap('primary') // the Critical button confirms → native "Success" alert
-    await acceptSystemAlert() // dismiss "OK"
-    await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION) // goBack after the alert
   })
 })

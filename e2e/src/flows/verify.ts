@@ -4,6 +4,7 @@ import { acceptSystemAlert } from '../helpers/alerts.js'
 import { ApproveInPersonInput, approveInPersonRequest } from '../helpers/approval.js'
 import { injectPhoto } from '../helpers/camera.js'
 import { getEmailConfirmationCode, getTempEmailAddress } from '../helpers/email.js'
+import { swipeUpBy } from '../helpers/gestures.js'
 import { isSauceLabs } from '../helpers/sauce.js'
 import { BaseScreen } from '../screens/core/BaseScreen.js'
 import { HomeScreen } from '../screens/main.js'
@@ -163,6 +164,12 @@ export async function reachVerificationMethod(): Promise<void> {
         `reachVerificationMethod: neither VerificationMethodSelection nor EnterEmail appeared. On screen: ${await describeCurrentScreen()}`
       )
     }
+    // VerificationMethodSelection anchors on the Hours-of-Service heading, which sits at the BOTTOM of
+    // the screen and can be below the fold on a short viewport — where isPresent() (which never scrolls)
+    // reads a genuine arrival as a miss. Nudge the content up to reveal the anchor before the next
+    // probe. Safe on the email screen (its heading is caught above, before we ever swipe) and a no-op
+    // while the post-authorize transition is still settling.
+    await swipeUpBy()
   }
 }
 

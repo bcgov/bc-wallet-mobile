@@ -25,7 +25,7 @@ import { getTestUser, setTestUser } from '../../../../src/support/context.js'
  * (`province-option-BC`), and the mandatory email step all resolve.
  *
  * Ordered session: onboard → OtherID → two documents → residential address → email (temp inbox) →
- * method selection → in-person → verified Home.
+ * method selection → in-person → verified Home
  */
 describe('Verified journey: non-bcsc card', () => {
   before(() => {

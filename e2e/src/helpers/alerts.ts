@@ -4,7 +4,8 @@ const POLL_INTERVAL_MS = 500
 const DEFAULT_APPEAR_TIMEOUT_MS = 5_000
 const DEFAULT_DISMISS_TIMEOUT_MS = 3_000
 
-const IOS_APPROVE_ALERT_BUTTON_LABELS = ['Allow', 'Allow While Using App', 'Allow Once', 'OK', 'Trust', 'Continue']
+// 'Open' accepts the iOS "Open in <app>?" confirmation raised when a deep link resolves to the app.
+const IOS_APPROVE_ALERT_BUTTON_LABELS = ['Allow', 'Allow While Using App', 'Allow Once', 'OK', 'Trust', 'Continue', 'Open']
 const IOS_DECLINE_ALERT_BUTTON_LABELS = ["Don't Allow", 'Deny', 'Cancel', 'Not Now']
 
 const ANDROID_PERM_ALLOW_REGEX = '.*:id/permission_allow.*'
