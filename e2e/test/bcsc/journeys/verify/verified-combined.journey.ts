@@ -16,6 +16,8 @@ import { fetchPairingCode, fetchPairingDeepLink } from '../../../../src/helpers/
 import { AccountLandingScreen, EnterPINScreen } from '../../../../src/screens/auth.js'
 import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
 import {
+  AccountDetailsScreen,
+  ContactsScreen,
   EditNicknameScreen,
   ForgetPairingsScreen,
   HomeScreen,
@@ -28,13 +30,18 @@ import {
   TransferQRDisplayScreen,
   TransferQRInformationScreen,
   WalletScreen,
+  WhatAreContactsScreen,
 } from '../../../../src/screens/main.js'
 import { VerificationMethodSelectionScreen } from '../../../../src/screens/verify.js'
 import { getTestUser, setTestUser } from '../../../../src/support/context.js'
 
-/** Engine handle for the nickname persistence assert (the ProfileCard name exposes no testID). */
+/** Engine handle for text-based asserts on screens/elements that expose no testID (the ProfileCard name;
+ *  the WhatAreContacts heading). */
 const engine = new BaseScreen()
 const NEW_NICKNAME = 'E2E Photo Account'
+/** The WhatAreContacts info screen has no usable testID (its only one is an inline text Link that RN
+ *  flattens), so arrival is asserted by its heading copy — `BCSC.Contacts.WhatAre.Title` (en). */
+const WHAT_ARE_CONTACTS_TITLE = 'What are Contacts?'
 
 /**
  * Verified journey: combined card. A combined card uses the same BCSC-photo authorize process as the
@@ -44,17 +51,16 @@ const NEW_NICKNAME = 'E2E Photo Account'
  *
  * This is also the consolidation point for verified-state DETOURS — features that only need a verified
  * account, chained after verification so a SINGLE in-person approval validates them all: verified tab
- * nav + Services catalogue, login-from-computer (minted pairing code), and login via deep link (warm,
- * then a cold start). The cold deep-link checkpoint is LAST because it terminates the app.
+ * nav + Services catalogue, the Contacts + Account Details surfaces, login-from-computer (minted pairing
+ * code), login via deep link (warm then cold), the transferer "add another device" QR, and the
+ * verified-only settings rows (nickname edit + forget pairings). The cold deep-link checkpoint
+ * terminates + relaunches the app, so it re-authenticates before continuing.
  *
- * One ordered session: onboard → Continue → manual serial → birthdate (authorizeDevice) → method
- * selection → in-person → verified Home → tab nav + Services → login-from-computer → deep-link login
- * (warm, then cold). Contacts + AccountDetails append here later. mocha bail isolates any failure here
- * → transferer QR (the verified "add another device" flow).
- *
- *  It then exercises the verified-only settings rows (nickname edit + forget pairings); Contacts /
- * AccountDetails + login checkpoints chain on later. (There is no manual sign-out control in the app —
- * the only re-lock is the inactivity auto-lock, covered by the settings journey.)
+ * One ordered session: onboard → manual serial → birthdate (authorizeDevice) → method selection →
+ * in-person → verified Home → tab nav + Services → Contacts (empty) + Account Details →
+ * login-from-computer → deep-link login (warm, then cold) → transferer QR → nickname edit → forget
+ * pairings. mocha bail isolates any failure to this file. (There is no manual sign-out control in the
+ * app — the only re-lock is the inactivity auto-lock, covered by the settings journey.)
  */
 describe('Verified journey: combined card', () => {
   before(() => {
@@ -108,6 +114,47 @@ describe('Verified journey: combined card', () => {
     // Credo agent boots for any authenticated user, so allow the cold-start budget.
     await WalletScreen.expectVisible(Timeouts.COLD_START)
     await TabBar.link('home')
+    await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  })
+
+  // Contacts is EMPTY for a verification-only account: the list shows only DIDComm connections
+  // (non-mediator, Completed), and neither identity verification nor the BCSC service-login create one —
+  // so it resolves to the empty state, whose sole control opens the WhatAreContacts info screen.
+  // Reaching that button (ContactsScreen.self) IS the empty-state proof; it does not render once the
+  // list is populated. (Seeding a real contact needs an out-of-band credential connection, which is out
+  // of CI — the same camera/second-device constraint as QR scanning.)
+  it('verified: opens Contacts (empty) and the What-Are-Contacts info screen', async () => {
+    await HomeScreen.tap('menu')
+    await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await SettingsScreen.link('contacts') // verified-only Features row → Contacts (agent-ready gated)
+    await ContactsScreen.expectVisible(Timeouts.COLD_START) // empty state (WhatAreContacts button) ⇒ agent-ready + empty list
+    await ContactsScreen.link('whatAreContacts') // the empty state's only route to the info screen
+    // The info screen has NO usable testID (its only one is an inline <Link> nested in a <ThemedText>,
+    // which RN flattens into the paragraph). Assert arrival by the heading copy, then return via the
+    // header back — the inline "Contacts list" link is not separately addressable.
+    const heading = await engine.findByText(WHAT_ARE_CONTACTS_TITLE)
+    await heading.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+    await WhatAreContactsScreen.back.tap() // → Contacts
+    await ContactsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await ContactsScreen.back.tap() // → Settings
+    await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await SettingsScreen.back.tap() // → Home
+    await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  })
+
+  // AccountDetails is verified-only (the Settings ProfileCard row that opens it is isVerified-gated —
+  // the unverified journey asserts the row absent). Assert the screen renders its read-only field set;
+  // the values are fixture-specific so we check presence, scrolling to the last field.
+  it('verified: opens Account Details and shows the account fields', async () => {
+    await HomeScreen.tap('menu')
+    await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await SettingsScreen.link('profile') // verified-only ProfileCard row → AccountDetails
+    await AccountDetailsScreen.expectVisible(Timeouts.SCREEN_TRANSITION) // the nickname field renders once the account loads
+    await AccountDetailsScreen.waitFor('seeFullDetails', Timeouts.SCREEN_TRANSITION) // the account-webview CTA
+    await AccountDetailsScreen.waitFor('email', Timeouts.SCREEN_TRANSITION) // scroll to the last field → the full read-only set rendered
+    await AccountDetailsScreen.back.tap() // → Settings
+    await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await SettingsScreen.back.tap() // → Home
     await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 

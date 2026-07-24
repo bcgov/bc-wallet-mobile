@@ -118,9 +118,8 @@ export const SettingsScreen = defineScreen({
     editProfile: bcsc(main.settings.editProfile), // verified-only (nickname pencil in the ProfileCard)
     forgetPairings: bcsc(main.settings.forgetPairings), // verified-only (isVisible spans links → absence assert still works)
     addDevice: bcsc(main.settings.addDevice), // verified-only (transferer QR entry — Main-stack settings only)
-  },
-  elements: {
-    profile: bcsc(main.settings.profile), // verified-only (absence assert unverified)
+    contacts: bcsc(main.settings.contacts), // verified-only (Features row → Contacts list)
+    profile: bcsc(main.settings.profile), // verified-only → AccountDetails; isVisible spans links, so the unverified absence-assert still holds
   },
 })
 
@@ -264,4 +263,53 @@ export const TransferQRDisplayScreen = defineScreen({
   self: bcsc(main.transfer.newQrCode),
   primary: bcsc(main.transfer.newQrCode),
   back: bcsc(common.back),
+})
+
+/** Contacts list (`ContactsScreen`, verified-only, reached from Settings → Contacts). Wrapped in
+ *  `withAgentReadyGate`, so a `loading` spinner shows until the Credo agent is ready. For a
+ *  verification-only account the list is EMPTY — its only control is the `whatAreContacts` button, so
+ *  that button is `self`: reaching it IS the empty-state proof (it does not render once the list is
+ *  populated). `search` is modeled for a future populated-state test (it renders only when non-empty).
+ *  Header `back` returns to Settings. */
+export const ContactsScreen = defineScreen({
+  self: bcsc(main.contacts.whatAreContacts),
+  back: bcsc(common.back),
+  links: {
+    whatAreContacts: bcsc(main.contacts.whatAreContacts),
+  },
+  elements: {
+    loading: bcsc(main.contacts.loading),
+    search: bcsc(main.contacts.search),
+  },
+})
+
+/** WhatAreContacts info screen — reached from the Contacts empty state. It carries NO usable testID:
+ *  its only one is an inline <Link> nested inside a <ThemedText>, which RN flattens into the paragraph
+ *  so it is not separately addressable. The journey therefore asserts arrival by the heading copy
+ *  (`findByText`) and returns via the header `back` (a real element), not the inline "Contacts list" link. */
+export const WhatAreContactsScreen = defineScreen({
+  back: bcsc(common.back),
+})
+
+/** Account Details (`AccountDetailsScreen`, verified-only; reached from Settings → `profile`). Renders a
+ *  LoadingScreen until the account loads, so `self`/the `nickname` field is the arrival marker. The
+ *  fields are read-only asserts (values are fixture-specific); `seeFullDetails` opens the BCSC account
+ *  webview and the nickname/address `*Edit` links route to their editors (asserted, not driven, here).
+ *  Header `back` returns to Settings. */
+export const AccountDetailsScreen = defineScreen({
+  self: bcsc(main.accountDetails.nicknameField),
+  back: bcsc(common.back),
+  links: {
+    seeFullDetails: bcsc(main.accountDetails.seeFullDetails),
+    nicknameEdit: bcsc(main.accountDetails.nicknameFieldEdit),
+    addressEdit: bcsc(main.accountDetails.addressFieldEdit),
+  },
+  elements: {
+    nickname: bcsc(main.accountDetails.nicknameField),
+    appExpiry: bcsc(main.accountDetails.appExpiryField),
+    accountType: bcsc(main.accountDetails.accountTypeField),
+    address: bcsc(main.accountDetails.addressField),
+    dateOfBirth: bcsc(main.accountDetails.dateOfBirthField),
+    email: bcsc(main.accountDetails.emailField),
+  },
 })

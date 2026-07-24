@@ -385,5 +385,38 @@ export const TestIds = {
       getQrCode: 'GetQRCodeButton',
       newQrCode: 'GetNewQRCode',
     },
+    /** Contacts feature (`features/contacts/*`, verified-only via Settings → `settings.contacts`). The
+     *  list (`ContactsScreen`) is `withAgentReadyGate`-wrapped — a `loading` spinner shows until the
+     *  Credo agent is ready — and resolves to its EMPTY state for a verification-only account: the list
+     *  shows only filtered DIDComm connections (non-mediator, Completed) and neither identity
+     *  verification nor BCSC service-login create one. So CI covers the empty state → WhatAreContacts
+     *  info → back. `whatAreContacts` (the empty-state button) is that info screen's ONLY entry point;
+     *  `search` renders only in the POPULATED list (its absence ⇒ empty). Seeding a real contact needs
+     *  an out-of-band credential connection — out of CI, same constraint as QR scanning. */
+    contacts: {
+      loading: 'Contacts.Loading',
+      whatAreContacts: 'WhatAreContacts',
+      search: 'SearchContacts',
+    },
+    // NB: the WhatAreContacts info screen has NO usable testID — its only one (`ContactsList`) is on an
+    // inline <Link> nested in a <ThemedText>, which RN flattens into the paragraph so it is not a
+    // separately addressable element on iOS/Android. The journey anchors that screen on its heading copy
+    // (findByText) and returns via the header Back, so there is no key here.
+    /** AccountDetails (`features/account/AccountDetailsScreen`) — verified-only, reached via Settings →
+     *  `settings.profile` (the ProfileCard row is `isVerified`-gated, so absent unverified). Renders a
+     *  LoadingScreen until the account loads, then read-only fields + `seeFullDetails` (opens the BCSC
+     *  account webview; disabled until the service client loads). `AccountField` edit links are
+     *  `<field>-edit`. */
+    accountDetails: {
+      seeFullDetails: 'SeeFullAccountDetails',
+      nicknameField: 'NicknameField',
+      nicknameFieldEdit: 'NicknameField-edit',
+      appExpiryField: 'AppExpiryDateField',
+      accountTypeField: 'AccountTypeField',
+      addressField: 'AddressField',
+      addressFieldEdit: 'AddressField-edit',
+      dateOfBirthField: 'DateOfBirthField',
+      emailField: 'EmailAddressField',
+    },
   },
 } as const
