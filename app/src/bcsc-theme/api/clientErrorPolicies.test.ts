@@ -779,7 +779,8 @@ describe('clientErrorPolicies', () => {
     const errorWithDescription = (description?: unknown): AxiosAppError => {
       const error = newError('unknown_server_error')
       error.cause = {
-        response: { data: description === undefined ? {} : { error_description: description } },
+        isAxiosError: true,
+        response: { status: 400, data: description === undefined ? {} : { error_description: description } },
       } as AxiosError
       return error
     }

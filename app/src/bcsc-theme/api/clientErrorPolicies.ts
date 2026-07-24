@@ -10,6 +10,7 @@ import { Linking } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { VerificationCardError } from '../features/verify/verificationCardError'
 import { BCSCModals, BCSCScreens } from '../types/navigators'
+import { getPersonCredentialAccountProblem } from '../utils/personCredentialAccountProblem'
 import { ResumeStepRoute } from '../utils/resume-step-route'
 import { BCSCEndpoints } from './client'
 
@@ -540,29 +541,20 @@ export const personCredentialAccountUnavailableErrorPolicy: ErrorHandlingPolicy 
     if (context.statusCode !== 400 || !context.endpoint.includes(context.apiEndpoints.credential)) {
       return false
     }
-    const description = (error.cause.response?.data as { error_description?: unknown } | undefined)?.error_description
-    if (typeof description !== 'string') {
-      return false
-    }
-    const reason = description.toLowerCase()
-    return reason.includes('suspended') || reason.includes('deactivated')
+    return getPersonCredentialAccountProblem(error) !== undefined
   },
   handle: (error, context) => {
-    const description = (
-      (error.cause.response?.data as { error_description?: string } | undefined)?.error_description ?? ''
-    ).toLowerCase()
-    const isSuspended = description.includes('suspended')
+    const accountProblem = getPersonCredentialAccountProblem(error)
     context.logger.info(
-      `[PersonCredentialAccountUnavailableErrorPolicy] account ${
-        isSuspended ? 'suspended' : 'deactivated'
-      } on Person Credential creation`
+      `[PersonCredentialAccountUnavailableErrorPolicy] account ${accountProblem} on Person Credential creation`
     )
     // Pass the raw AxiosError cause (not the AppError) so ensureAppError builds a fresh AppError with
     // the suspended/deactivated app event — the interceptor's AppError is UNKNOWN_SERVER_ERROR
     // (unauthorized_client is unregistered), which would mislabel analytics.
-    const alert = isSuspended
-      ? context.alerts.personCredentialSuspendedAlert
-      : context.alerts.personCredentialDeactivatedAlert
+    const alert =
+      accountProblem === 'suspended'
+        ? context.alerts.personCredentialSuspendedAlert
+        : context.alerts.personCredentialDeactivatedAlert
     alert(error.cause)
   },
 }
