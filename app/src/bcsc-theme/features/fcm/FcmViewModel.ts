@@ -4,6 +4,7 @@ import { ErrorRegistry } from '@/errors/errorRegistry'
 import { BCSCEventTypes } from '@/events/eventTypes'
 import { toAppError } from '@bcsc-theme/utils/native-error-map'
 import { AbstractBifoldLogger } from '@bifold/core'
+import notifee from '@notifee/react-native'
 import { getApp } from '@react-native-firebase/app'
 import { getMessaging, getToken } from '@react-native-firebase/messaging'
 import { DeviceEventEmitter, Platform } from 'react-native'
@@ -113,7 +114,7 @@ export class FcmViewModel {
         break
       case 'notification':
         this.logger.info(`[FcmViewModel] Handling generic notification`)
-        await this.handleGenericNotification(message.data)
+        this.handleGenericNotification(message.data)
         break
       default:
         this.logger.warn(`[FcmViewModel] Unknown message type`)
@@ -198,12 +199,8 @@ export class FcmViewModel {
   private async handleStatusNotification(data: StatusNotification, delivery?: FcmDeliveryContext) {
     this.logger.info(`[FcmViewModel] Status notification received: ${JSON.stringify(data)}`)
 
-    if (Platform.OS === 'android' && delivery?.source === 'foreground' && data.title && data.message) {
-      try {
-        await showLocalNotification(data.title, data.message)
-      } catch (error) {
-        this.logger.error(`[FcmViewModel] Failed to show local notification: ${error}`)
-      }
+    if (delivery?.source === 'foreground' && data.title && data.message) {
+      await this.showForegroundNotification(data.title, data.message)
     }
 
     // Check if this is a verification request reviewed notification (send-video)
@@ -241,12 +238,40 @@ export class FcmViewModel {
     }
   }
 
-  private async handleGenericNotification(data: BasicNotification) {
-    const { title, body } = data
+  /**
+   * A push with a notification payload but no `bcsc_*` data key isn't ours - in practice it's the
+   * DIDComm mediator telling us a message is waiting. The OS already shows those while the app is
+   * backgrounded, and while it's in the foreground the mediator's message is picked up by the agent
+   * anyway, so we never re-present them.
+   */
+  private handleGenericNotification(data: BasicNotification) {
+    this.logger.info(
+      `[FcmViewModel] Notification not owned by BCSC backend (likely mediator), not displaying: "${data.title}"`
+    )
+  }
 
+  /**
+   * Displays an IAS notification that arrived while the app was in the foreground, where neither
+   * platform presents it for us: Android never shows a foreground FCM payload, and iOS no longer
+   * does either since `messaging_ios_foreground_presentation_options` is empty (that config is
+   * all-or-nothing, so leaving it on would also surface mediator notifications).
+   *
+   * iOS goes through notifee because it carries its own per-notification presentation options and so
+   * is unaffected by the empty messaging config; a plain UNNotificationRequest would be suppressed
+   * by it.
+   */
+  private async showForegroundNotification(title: string, body: string): Promise<void> {
     this.logger.info(`[FcmViewModel] Showing local notification: title="${title}", body="${body}"`)
     try {
-      await showLocalNotification(title, body)
+      if (Platform.OS === 'ios') {
+        await notifee.displayNotification({
+          title,
+          body,
+          ios: { sound: 'default', foregroundPresentationOptions: { banner: true, list: true, sound: true } },
+        })
+      } else {
+        await showLocalNotification(title, body)
+      }
       this.logger.info(`[FcmViewModel] Local notification shown successfully`)
     } catch (error) {
       this.logger.error(`[FcmViewModel] Failed to show local notification: ${error}`)

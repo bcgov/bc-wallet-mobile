@@ -1,6 +1,8 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { DeveloperModeTrigger } from '@/bcsc-theme/components/DeveloperModeTrigger'
+import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { AccountSetupType, BCDispatchAction, BCState } from '@/store'
 import AddDeviceHands from '@assets/img/add-device-hands.svg'
@@ -34,6 +36,8 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { clearDeviceCodes } = useSecureActions()
   const [isAddingAccount, setIsAddingAccount] = useState(false)
+  const registrationService = useRegistrationService()
+  const loadingScreen = useLoadingScreen()
 
   // Latest store snapshot for the focus effect below. Reading through a ref keeps the effect
   // callback stable so it only runs on focus transitions — depending on the store directly
@@ -96,19 +100,39 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
       payload: [AccountSetupType.AddAccount],
     })
 
-    navigation.navigate(BCSCScreens.IdentitySelection)
-  }, [dispatch, navigation])
+    const stopLoading = loadingScreen.startLoading()
+
+    try {
+      await registrationService.ensureRegistered()
+
+      navigation.navigate(BCSCScreens.IdentitySelection)
+    } catch (error) {
+      logger.error('[AccountSetupScreen] Failed to ensure registration for add account', error as Error)
+    } finally {
+      stopLoading()
+    }
+  }, [dispatch, loadingScreen, logger, navigation, registrationService])
 
   // "Yes, connect this device" — transfer an already-verified account by scanning the QR
   // shown on the other device, skipping the identity verification steps.
-  const handleTransferAccount = useCallback(() => {
+  const handleTransferAccount = useCallback(async () => {
     dispatch({
       type: BCDispatchAction.ACCOUNT_SETUP_TYPE,
       payload: [AccountSetupType.TransferAccount],
     })
 
-    navigation.navigate(BCSCScreens.TransferAccountInstructions)
-  }, [dispatch, navigation])
+    const stopLoading = loadingScreen.startLoading()
+
+    try {
+      await registrationService.ensureRegistered()
+
+      navigation.navigate(BCSCScreens.TransferAccountInstructions)
+    } catch (error) {
+      logger.error('[AccountSetupScreen] Failed to ensure registration for transfer', error as Error)
+    } finally {
+      stopLoading()
+    }
+  }, [dispatch, loadingScreen, logger, navigation, registrationService])
 
   const controls = (
     <ControlContainer>

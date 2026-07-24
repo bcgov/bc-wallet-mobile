@@ -1,7 +1,8 @@
 import { PressableOpacity } from '@/components/PressableOpacity'
-import { CONTACT_US_GOVERNMENT_WEBSITE_URL, hitSlop } from '@/constants'
+import { CONTACT_US_GOVERNMENT_WEBSITE_URL, hitSlop, USER_REPORT_ERROR_CODE } from '@/constants'
+import { BCState } from '@/store'
 import { reportProblem } from '@/utils/logger'
-import { BifoldError, Button, ButtonType, Link, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { Button, ButtonType, Link, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import Clipboard from '@react-native-clipboard/clipboard'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -11,8 +12,6 @@ import CommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 const DESCRIPTION_MAX_LENGTH = 500
-// A user-initiated report has no underlying error code; 0 marks it as user-originated in the report payload.
-const USER_REPORT_ERROR_CODE = 0
 const COPY_FEEDBACK_MS = 2000
 
 export interface ReportProblemModalProps {
@@ -32,6 +31,7 @@ export interface ReportProblemModalProps {
  */
 export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps) => {
   const { t } = useTranslation()
+  const [store] = useStore<BCState>()
   const { Spacing, ColorPalette, TextTheme } = useTheme()
   // Inset works inside this RN Modal because the app's root SafeAreaProvider context crosses the
   // modal boundary; applied as scroll padding so the action button clears the home indicator.
@@ -79,15 +79,18 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
       return
     }
     submittedRef.current = true
-    // Send the report through the shared pipeline. The description rides on a BifoldError.
-    const reportError = new BifoldError(t('BCSC.ReportProblem.Title'), description.trim(), '', USER_REPORT_ERROR_CODE)
-    // A user-initiated report isn't a thrown error, so the stack `new BifoldError` auto-captures is just
-    // this submit handler's frames — noise in the incident log. Drop it so the report carries only the
-    // user's description (real failures still keep their stack via the ErrorModal "Report" path).
-    reportError.stack = undefined
+
+    // Send the report through the shared pipeline.
     // Showing the returned ID is what keeps the modal open on the confirmation view.
-    setReportId(reportProblem(reportError))
-  }, [t, description])
+    const reportId = reportProblem({
+      title: t('BCSC.ReportProblem.Title'),
+      description: description.trim(),
+      code: USER_REPORT_ERROR_CODE,
+      installId: store.bcsc.reportUUID,
+    })
+
+    setReportId(reportId)
+  }, [description, t, store.bcsc.reportUUID])
 
   const handleCopy = useCallback(() => {
     if (!reportId) {

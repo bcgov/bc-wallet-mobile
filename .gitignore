@@ -29,6 +29,7 @@ lib
 local.properties
 .jest
 .npmrc
+.kotlin/
 
 # Swift Package Manager
 .build/

@@ -6,7 +6,7 @@ import { ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrateg
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -198,6 +198,8 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   // Starts on mount; after the timeout we swap the initial guidance for the
   // steady-hold help text.
   const [showHelp, setShowHelp] = useState(false)
+  const [cameraFailed, setCameraFailed] = useState(false)
+  const [cameraKey, setCameraKey] = useState(0)
 
   useEffect(() => {
     const timer = setTimeout(() => setShowHelp(true), SCAN_HELP_TIMEOUT_MS)
@@ -210,6 +212,19 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   }
 
   const toggleTorch = () => setTorchOn((prev) => !prev)
+
+  const goToManualEntry = useCallback(() => navigation.navigate(BCSCScreens.ManualSerial), [navigation])
+
+  const onCameraError = useCallback(() => {
+    setTorchOn(false)
+    setCameraFailed(true)
+  }, [])
+
+  const retryCamera = useCallback(() => {
+    setCameraFailed(false)
+    setScanState('scanning')
+    setCameraKey((prev) => prev + 1)
+  }, [])
 
   const onCodeScanned = async (barcodes: ScanableCode[]): Promise<boolean | void> => {
     let accepted = true
@@ -276,6 +291,12 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     buttonBlock: {
       padding: Spacing.lg,
       backgroundColor: ColorPalette.notification.popupOverlay,
+      gap: Spacing.md,
+    },
+    cameraErrorBlock: {
+      flex: 1,
+      justifyContent: 'center',
+      paddingHorizontal: Spacing.lg,
     },
   })
 
@@ -288,55 +309,86 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   }
 
   if (!hasPermission) {
-    return <PermissionDisabled permissionType="camera" />
+    return (
+      <PermissionDisabled
+        permissionType="camera"
+        secondaryAction={{
+          title: t('BCSC.Instructions.EnterManually'),
+          onPress: goToManualEntry,
+          testID: testIdWithKey('EnterManually'),
+        }}
+      />
+    )
   }
 
   return (
     <ScreenWrapper padded={false} scrollable={false} edges={[]}>
       <View style={styles.container} onLayout={onContainerLayout}>
-        {/* Camera fills the entire screen */}
-        <CodeScanningCamera
-          onCodeScanned={onCodeScanned}
-          cameraType={'back'}
-          initialZoom={2}
-          scanZones={BCSC_SN_SCAN_ZONES}
-          showScanZoneOverlay={false}
-          showZoomIndicator={false}
-          hideTorchButton
-          torchActive={torchOn}
-          onToggleTorch={toggleTorch}
-          onScanStateChange={setScanState}
-          style={StyleSheet.absoluteFillObject}
-        />
+        {cameraFailed ? (
+          <View style={styles.cameraErrorBlock}>
+            <Text style={styles.instructionText}>{t('BCSC.CameraDisclosure.Error')}</Text>
+            <Text style={styles.instructionSubText}>{t('BCSC.CameraDisclosure.ErrorMessage')}</Text>
+          </View>
+        ) : (
+          <>
+            {/* Camera fills the entire screen */}
+            <CodeScanningCamera
+              key={cameraKey}
+              onCodeScanned={onCodeScanned}
+              cameraType={'back'}
+              initialZoom={2}
+              scanZones={BCSC_SN_SCAN_ZONES}
+              showScanZoneOverlay={false}
+              showZoomIndicator={false}
+              hideTorchButton
+              torchActive={torchOn}
+              onToggleTorch={toggleTorch}
+              onScanStateChange={setScanState}
+              onError={onCameraError}
+              style={StyleSheet.absoluteFillObject}
+            />
 
-        {/* Vertical ID-card framing guide (appearance of MaskType.ID_CARD) */}
-        {size ? <IdCardMaskOverlay width={size.width} height={size.height} strokeColor={frameStrokeColor} /> : null}
+            {/* Vertical ID-card framing guide (appearance of MaskType.ID_CARD) */}
+            {size ? <IdCardMaskOverlay width={size.width} height={size.height} strokeColor={frameStrokeColor} /> : null}
 
-        {/* Instruction text — initial guidance until the timeout, then steady-hold help */}
-        <View style={styles.topBanner} pointerEvents="none">
-          {showHelp ? (
-            <Text style={styles.instructionText}>{t('BCSC.Scan.HoldSteadyHelp')}</Text>
-          ) : (
-            <>
-              <Text style={styles.instructionText}>{t('BCSC.Scan.ScanYourCard')}</Text>
-              <Text style={styles.instructionSubText}>{t('BCSC.Scan.LineUpHelp')}</Text>
-            </>
-          )}
-        </View>
+            {/* Instruction text — initial guidance until the timeout, then steady-hold help */}
+            <View style={styles.topBanner} pointerEvents="none">
+              {showHelp ? (
+                <Text style={styles.instructionText}>{t('BCSC.Scan.HoldSteadyHelp')}</Text>
+              ) : (
+                <>
+                  <Text style={styles.instructionText}>{t('BCSC.Scan.ScanYourCard')}</Text>
+                  <Text style={styles.instructionSubText}>{t('BCSC.Scan.LineUpHelp')}</Text>
+                </>
+              )}
+            </View>
+          </>
+        )}
 
         {/* Torch + manual entry */}
         <View style={styles.bottomBar} pointerEvents="box-none">
-          <View style={styles.torchRow} pointerEvents="box-none">
-            <TorchButton active={torchOn} onPress={toggleTorch} />
-          </View>
+          {cameraFailed ? null : (
+            <View style={styles.torchRow} pointerEvents="box-none">
+              <TorchButton active={torchOn} onPress={toggleTorch} />
+            </View>
+          )}
           <View style={[styles.buttonBlock, { paddingBottom: insets.bottom + Spacing.lg }]}>
             <Button
               title={t('BCSC.Instructions.EnterManually')}
               accessibilityLabel={t('BCSC.Instructions.EnterManually')}
               testID={testIdWithKey('EnterManually')}
-              onPress={() => navigation.navigate(BCSCScreens.ManualSerial)}
+              onPress={goToManualEntry}
               buttonType={ButtonType.Primary}
             />
+            {cameraFailed ? (
+              <Button
+                title={t('BCSC.Scan.TryAgain')}
+                accessibilityLabel={t('BCSC.Scan.TryAgain')}
+                testID={testIdWithKey('RetryCamera')}
+                onPress={retryCamera}
+                buttonType={ButtonType.Secondary}
+              />
+            ) : null}
           </View>
         </View>
       </View>

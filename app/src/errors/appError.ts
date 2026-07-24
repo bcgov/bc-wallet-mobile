@@ -10,6 +10,10 @@ type AppErrorOptions = ErrorOptions & {
    * Whether to automatically track this error in analytics upon creation. Defaults to true.
    */
   track?: boolean
+  /**
+   * Optional context object to provide additional information about the error.
+   */
+  context?: Record<string, unknown>
 }
 
 export type ErrorIdentity = {
@@ -87,9 +91,8 @@ export class AppError extends Error {
   statusCode: number // ie: 2100
   timestamp: string // ISO timestamp of when the error was created
   handled: boolean // Whether this error has been handled by a policy
-  screen: string | undefined // Active screen name at the time the error was created
-  url?: string // API endpoint URL that produced this error, if applicable
-  method?: string // HTTP method of the request that produced this error, if applicable
+
+  context: Record<string, unknown> // Context object providing additional information about the error
 
   constructor(message: string, identity: ErrorIdentity, options?: AppErrorOptions) {
     super(message, options)
@@ -101,9 +104,11 @@ export class AppError extends Error {
     this.timestamp = new Date().toISOString()
     this.handled = false
     this.tracked = false
-    this.screen = navigationRef.isReady() ? navigationRef.getCurrentRoute()?.name : undefined
-    this.url = undefined
-    this.method = undefined
+    this.context = options?.context ?? {}
+
+    if (navigationRef.isReady()) {
+      this.context = { ...this.context, screen: navigationRef.getCurrentRoute()?.name }
+    }
 
     // Track the error in analytics unless explicitly disabled
     if (options?.track !== false) {
@@ -184,7 +189,7 @@ export class AppError extends Error {
     // every 4xx into a single code, so without this the dashboard cannot tell 400/401/403/404 apart — nor
     // which endpoint produced the error.
     const httpStatus = (this.cause as { response?: { status?: number } } | undefined)?.response?.status
-    const request = [this.method, this.url].filter(Boolean).join(' ')
+    const request = [this.context?.method, this.context?.url].filter(Boolean).join(' ')
     const context = [httpStatus ? `HTTP ${httpStatus}` : undefined, request || undefined].filter(Boolean).join(' ')
 
     Analytics.trackErrorEvent({
@@ -223,6 +228,16 @@ export class AppError extends Error {
   }
 
   /**
+   * Add additional context to the AppError. This can be useful for providing more information about the error.
+   *
+   * @param context - An object containing additional context to add to the error.
+   * @returns void
+   */
+  addContext(context: Record<string, unknown>): void {
+    this.context = { ...this.context, ...context }
+  }
+
+  /**
    * Serialize the AppError to a JSON object. Useful for logging.
    *
    * @return An object containing the serialized error details.
@@ -232,12 +247,11 @@ export class AppError extends Error {
       name: this.name,
       message: this.message,
       technicalMessage: this.technicalMessage,
+      appEvent: this.appEvent,
       code: this.code,
       timestamp: this.timestamp,
       handled: this.handled,
-      screen: this.screen,
-      url: this.url,
-      method: this.method,
+      context: this.context,
       cause: summarizeCause(this.cause),
     }
   }

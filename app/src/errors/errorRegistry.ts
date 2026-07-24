@@ -87,6 +87,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.UNKNOWN,
     message: 'A fatal error occurred — app functionality may be compromised',
   },
+  UNKNOWN_ERROR_BOUNDARY_ERROR: {
+    statusCode: 9997,
+    appEvent: AppEventCode.UNKNOWN_ERROR_BOUNDARY_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.UNKNOWN,
+    message: 'An unknown error occurred in the React component tree — see technical details for the raw error',
+  },
   // Fallback for native bcsc-core rejections whose code is not explicitly mapped. The raw native
   // code is preserved via the error `cause` (surfaced by AppError.technicalMessage), so the failure
   // is never hidden — distinct from a true UNKNOWN_ERROR.
