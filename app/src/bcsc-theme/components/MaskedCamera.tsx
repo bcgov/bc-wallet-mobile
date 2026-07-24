@@ -135,8 +135,6 @@ const MaskedCamera = ({
 
   const getCameraError = useCallback(
     (error: unknown) => {
-      logger.error('[MaskedCamera] runtime error', error as Error)
-
       const appError = ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
 
       // Add camera device and format info to the error context for better debugging
@@ -146,6 +144,8 @@ const MaskedCamera = ({
           format,
         },
       })
+
+      logger.error('[MaskedCamera] runtime error', appError)
 
       return appError
     },

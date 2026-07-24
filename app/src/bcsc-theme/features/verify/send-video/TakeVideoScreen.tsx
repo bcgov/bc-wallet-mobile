@@ -154,8 +154,6 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
 
   const getCameraError = useCallback(
     (error: unknown) => {
-      logger.error('[TakeVideoScreen] camera runtime error', error as Error)
-
       const appError = ensureAppError(error, AppEventCode.CAMERA_ERROR)
 
       // Add camera device and format info to the error context for better debugging
@@ -165,6 +163,8 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           format,
         },
       })
+
+      logger.error('[TakeVideoScreen] camera runtime error', appError)
 
       return appError
     },

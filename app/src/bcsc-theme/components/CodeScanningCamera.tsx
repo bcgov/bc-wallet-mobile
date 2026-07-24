@@ -970,8 +970,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
   const getCameraError = useCallback(
     (error: unknown) => {
-      logger.error('[CodeScanningCamera] runtime error', error as Error)
-
       const appError = ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
 
       // Add camera device and format info to the error context for better debugging
@@ -981,6 +979,8 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
           format,
         },
       })
+
+      logger.error('[CodeScanningCamera] runtime error', appError)
 
       return appError
     },
