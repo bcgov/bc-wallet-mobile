@@ -79,6 +79,17 @@ export const EnterBirthdateScreen = defineScreen({
 })
 
 /**
+ * `VerificationCardError` — the authorize-failure screen reached when `authorizeDevice` rejects the CSN/
+ * birthdate at the EnterBirthdate submit (the unhandled-error path; a handled AppError would instead stay
+ * on EnterBirthdate). This models the `MismatchedSerial` variant: `self`/`primary` (TryAnother) returns to
+ * IdentitySelection. (The `CardExpired` variant shows `GetBCSC`, which opens an external browser.)
+ */
+export const VerificationCardErrorScreen = defineScreen({
+  self: bcsc(v.verificationCardError.tryAnother),
+  primary: bcsc(v.verificationCardError.tryAnother),
+})
+
+/**
  * Verification method selection (`'Verify Options'`) — reached after the id/email steps once the
  * device is authorized. Which of the three method buttons render is backend-driven and the title has
  * no testID, so `self` is the always-present HoursOfService heading. `primary` is In-Person (the CI

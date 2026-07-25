@@ -125,6 +125,13 @@ export const TestIds = {
       birthdateInput: 'birthDate-input',
       continue: 'Continue',
     },
+    /** `VerificationCardError` — the authorize-failure screen at the EnterBirthdate submit. The
+     *  `MismatchedSerial` variant (CSN/birthdate mismatch or card-not-found — the unhandled-error path)
+     *  shows `tryAnother` → IdentitySelection; the `CardExpired` variant shows `getBcsc` (opens a browser). */
+    verificationCardError: {
+      tryAnother: 'TryAnother',
+      getBcsc: 'GetBCSC',
+    },
     /** `EnterEmail` — appears after birthdate only when the card provides no verified email (a photo
      *  card that already carries one resumes straight to method selection). `skip` (`SkipEmail`) is
      *  the normalized key (formerly a bare `SkipButton`). */
