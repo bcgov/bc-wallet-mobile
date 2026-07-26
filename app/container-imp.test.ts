@@ -38,15 +38,13 @@ const buildContainer = () => {
   const registrations = new Map<unknown, unknown>()
   const fakeChildContainer = {
     registerInstance: jest.fn((token: unknown, value: unknown) => registrations.set(token, value)),
-    resolve: jest.fn((token: unknown) => registrations.get(token)),
   }
   const fakeBifoldContainer = { container: { createChildContainer: () => fakeChildContainer } } as never
 
   const logger = new RemoteLogger({} as RemoteLoggerOptions) // class is mocked globally in jestSetup.js
-  const appContainer = new AppContainer(fakeBifoldContainer, ((k: string) => k) as never, jest.fn(), jest.fn(), logger)
-  appContainer.init()
+  new AppContainer(fakeBifoldContainer, ((k: string) => k) as never, jest.fn(), jest.fn(), logger).init()
 
-  return { registrations, appContainer }
+  return { registrations }
 }
 
 describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiring)', () => {
