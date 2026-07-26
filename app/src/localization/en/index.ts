@@ -282,6 +282,7 @@ const translation = {
       "ReportProblem": "Report a problem",
       "BackToHome": "Back to home",
       "RestartVerification": "Restart verification process",
+      "RemoveAccount": "Remove account",
     },
     "ReportProblem": {
       "Title": "Report a problem",

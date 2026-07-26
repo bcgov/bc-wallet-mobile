@@ -282,6 +282,7 @@ const translation = {
       "ReportProblem": "Report a problem (FR)",
       "BackToHome": "Back to home (FR)",
       "RestartVerification": "Restart verification process (FR)",
+      "RemoveAccount": "Remove account (FR)",
     },
     "ReportProblem": {
       "Title": "Report a problem (FR)",
