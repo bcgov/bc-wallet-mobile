@@ -3,7 +3,7 @@ import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { useNavigation } from '@react-navigation/native'
-import { fireEvent, render } from '@testing-library/react-native'
+import { fireEvent, render, waitFor } from '@testing-library/react-native'
 
 // RestartVerificationListButton (rendered when showRestartVerification is true) pulls in
 // useLoadingScreen/useVerificationReset/useSecureActions, which BasicAppContext doesn't provide.
@@ -48,11 +48,11 @@ describe('createVerifyHelpMenuButton', () => {
     expect(queryByText('BCSC.HelpMenu.RestartVerification')).toBeNull()
   })
 
-  it('navigates to the remove account confirmation screen when pressed', () => {
+  it('navigates to the remove account confirmation screen and closes the menu when pressed', async () => {
     const VerifyHelpMenuButton = createVerifyHelpMenuButton()
     const navigation = useNavigation()
 
-    const { getByTestId } = render(
+    const { getByTestId, queryByTestId } = render(
       <BasicAppContext>
         <VerifyHelpMenuButton />
       </BasicAppContext>
@@ -62,5 +62,11 @@ describe('createVerifyHelpMenuButton', () => {
     fireEvent.press(getByTestId(testIdWithKey('RemoveAccount')))
 
     expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerifyRemoveAccountConfirmation)
+
+    // The row must also close the menu (not just navigate) — otherwise the full-screen menu Modal
+    // stays presented on top of the confirmation screen it just pushed. The close animation finishes
+    // asynchronously (Animated.timing callback), so assert post-animation via waitFor rather than
+    // synchronously; the RN jest Modal mock unmounts its children once `visible` goes false.
+    await waitFor(() => expect(queryByTestId(testIdWithKey('RemoveAccount'))).toBeNull())
   })
 })

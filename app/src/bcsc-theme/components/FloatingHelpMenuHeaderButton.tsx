@@ -250,10 +250,10 @@ export type VerifyHelpMenuButtonOptions = {
 }
 
 /**
- * Factory for the verification flow's help menu button. Uses the vertical-ellipsis trigger icon and
- * offers "Report a problem", "Back to home" (leave the flow, keeping progress), "Restart verification
- * process" (once verification is underway), and "Remove account" (reset the app and start over,
- * available at every step so the user is never stuck in the verification stream).
+ * Factory for the verification flow's help menu button. Offers "Report a problem", "Back to home"
+ * (leave the flow, keeping progress), "Restart verification process" (once verification is underway),
+ * and "Remove account" (reset the app and start over, available at every step so the user is never
+ * stuck in the verification stream).
  *
  * @param options - Whether to show the "Restart verification process" row.
  * @returns A React component that renders the verification help menu button.
