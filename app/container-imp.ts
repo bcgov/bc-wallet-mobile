@@ -82,6 +82,7 @@ import {
   DismissPersonCredentialOffer,
   RemoteDebuggingState,
   initialState,
+  migrateBCSCState,
 } from './src/store'
 
 const attestationCredDefIds = allCredDefIds(AttestationRestrictions)
@@ -408,6 +409,19 @@ export class AppContainer implements Container {
         loadState<BCSCState>(BCLocalStorageKeys.BCSC, (val) => (bcsc = val)),
         loadState<Mode>(BCLocalStorageKeys.Mode, (val) => (mode = val)),
       ])
+
+      // One-time (best-effort, idempotent) read-side migration: older installs persisted this
+      // value under the legacy key `reportUUID`. Map it forward to `installId` so an existing
+      // install keeps its identity instead of the STARTUP system check minting a new one.
+      const bcscMigration = migrateBCSCState(bcsc)
+      bcsc = bcscMigration.bcsc as BCSCState
+      if (bcscMigration.migrated) {
+        // Write back under the new field name so subsequent launches skip this mapping. Failure
+        // is non-fatal and never thrown - the same mapping simply re-runs next launch.
+        PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, { ...bcsc }).catch((error) => {
+          this.logger.error('Failed to write back migrated BCSC state (reportUUID -> installId)', error)
+        })
+      }
 
       // Reset paths and prompts on load as they should not be persisted
       bcsc.photoPath = undefined

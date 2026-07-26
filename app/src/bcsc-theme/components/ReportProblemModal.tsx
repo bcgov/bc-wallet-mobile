@@ -86,11 +86,11 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
       title: t('BCSC.ReportProblem.Title'),
       description: description.trim(),
       code: USER_REPORT_ERROR_CODE,
-      installId: store.bcsc.reportUUID,
+      installId: store.bcsc.installId,
     })
 
     setReportId(reportId)
-  }, [description, t, store.bcsc.reportUUID])
+  }, [description, t, store.bcsc.installId])
 
   const handleCopy = useCallback(() => {
     if (!reportId) {

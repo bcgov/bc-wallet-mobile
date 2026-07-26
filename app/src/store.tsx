@@ -91,7 +91,7 @@ export interface BCSCState {
   showAccountExpiryNotification?: boolean
   showCardRenewalNotification?: boolean
   acceptedTermsOfUseVersion?: string
-  reportUUID?: string // TODO (MD): Rename to installId or installUUID
+  installId?: string // Unique identifier for this app install (not a per-report id); preserved across CLEAR_BCSC
 }
 
 export enum VerificationStatus {
@@ -278,7 +278,7 @@ enum BCSCDispatchAction {
   SEEN_ONBOARDING_INTRO = 'bcsc/seenOnboardingIntro',
   SET_ACCOUNT_EXPIRY_NOTIFICATION = 'bcsc/setAccountExpiryNotification',
   SET_CARD_RENEWAL_NOTIFICATION = 'bcsc/setCardRenewalNotification',
-  SET_REPORT_UUID = 'bcsc/setReportUUID',
+  SET_INSTALL_ID = 'bcsc/setInstallId',
 }
 
 enum ModeDispatchAction {
@@ -323,6 +323,27 @@ export const initialBCSCState: BCSCState = {
   selectedNickname: undefined,
   bannerMessages: [],
   analyticsOptIn: false,
+}
+
+/**
+ * Migrates a persisted BCSC state blob that may still carry the legacy `reportUUID` field
+ * (pre-rename to `installId`) forward to the current shape.
+ *
+ * Pure and idempotent: safe to call on every launch. When `installId` is already present it
+ * wins over any legacy `reportUUID`; the legacy field is always stripped from the result so it
+ * never round-trips back into storage under its old name.
+ *
+ * @param persisted - the raw BCSC state as loaded from storage, which may still contain `reportUUID`
+ * @returns the migrated state (without `reportUUID`) and whether a migration actually occurred
+ */
+export const migrateBCSCState = (
+  persisted: Partial<BCSCState> & { reportUUID?: string }
+): { bcsc: Partial<BCSCState>; migrated: boolean } => {
+  const { reportUUID, ...rest } = persisted
+  if (reportUUID === undefined) {
+    return { bcsc: rest, migrated: false }
+  }
+  return { bcsc: { ...rest, installId: rest.installId ?? reportUUID }, migrated: true }
 }
 
 export enum BCLocalStorageKeys {
@@ -640,7 +661,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.CLEAR_BCSC: {
       // Optionally accept a partial BCSC state to merge with the initial state
       const partialBcscState = (action?.payload || []).pop() ?? {}
-      const bcsc = { ...initialBCSCState, reportUUID: state.bcsc.reportUUID, ...partialBcscState }
+      const bcsc = { ...initialBCSCState, installId: state.bcsc.installId, ...partialBcscState }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
@@ -752,9 +773,9 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return newState
     }
 
-    case BCSCDispatchAction.SET_REPORT_UUID: {
-      const reportUUID = (action?.payload || []).pop()
-      const bcsc = { ...state.bcsc, reportUUID }
+    case BCSCDispatchAction.SET_INSTALL_ID: {
+      const installId = (action?.payload || []).pop()
+      const bcsc = { ...state.bcsc, installId }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

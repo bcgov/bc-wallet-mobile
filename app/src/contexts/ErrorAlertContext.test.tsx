@@ -39,7 +39,7 @@ jest.mock('../errors/errorHandler', () => {
 
 jest.mock('@bifold/core', () => ({
   testIdWithKey: (key: string) => `com.aries.bifold:id/${key}`,
-  useStore: jest.fn().mockReturnValue([{ bcsc: { reportUUID: undefined } }, jest.fn()]),
+  useStore: jest.fn().mockReturnValue([{ bcsc: { installId: undefined } }, jest.fn()]),
   useTheme: () => ({
     ColorPalette: {
       grayscale: {
