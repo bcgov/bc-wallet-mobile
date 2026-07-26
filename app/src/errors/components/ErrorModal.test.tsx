@@ -85,6 +85,7 @@ const validPayload: ErrorModalPayload = {
   title: 'Test Error Title',
   description: 'Something went wrong.',
   error: validError,
+  installId: 'default-install-id',
 }
 
 const defaultProps: BCSCErrorModalProps = {

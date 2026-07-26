@@ -32,11 +32,6 @@ describe('InstallIdSystemCheck', () => {
   })
 
   describe('onFail', () => {
-    it('should call setInstallId with a generated uuid', () => {
-      const check = new InstallIdSystemCheck(undefined, mockDispatch)
-      check.onFail()
-    })
-
     it('should dispatch SET_INSTALL_ID with the generated uuid', () => {
       const check = new InstallIdSystemCheck(undefined, mockDispatch)
       check.onFail()

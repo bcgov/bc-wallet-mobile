@@ -39,7 +39,7 @@ jest.mock('../errors/errorHandler', () => {
 
 jest.mock('@bifold/core', () => ({
   testIdWithKey: (key: string) => `com.aries.bifold:id/${key}`,
-  useStore: jest.fn().mockReturnValue([{ bcsc: { installId: undefined } }, jest.fn()]),
+  useStore: jest.fn().mockReturnValue([{ bcsc: { installId: 'test-install-id' } }, jest.fn()]),
   useTheme: () => ({
     ColorPalette: {
       grayscale: {
@@ -210,6 +210,9 @@ describe('ErrorAlertContext', () => {
             description: 'Check your connection',
             // The whole AppError rides along so the modal can derive message/code itself
             error: appError,
+            // Pins the store -> payload hop: emitErrorModal must read the install id off the
+            // store rather than dropping it (see useCreateSystemChecks/InstallIdSystemCheck).
+            installId: 'test-install-id',
           }),
           errorKey: 1,
         })
