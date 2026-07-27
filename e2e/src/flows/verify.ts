@@ -141,20 +141,17 @@ async function describeCurrentScreen(): Promise<string> {
 /**
  * From the post-authorize state (birthdate submitted), reach VerificationMethodSelection. For a
  * card-tap flow the address step is auto-satisfied once the device is authorized; the email step only
- * appears when the card supplied no verified email — detect it by its HEADING (the input's marker is
- * less reliable) and skip it (BCSC cards allow skipping). On an unexpected screen the error reports
- * what is actually on screen.
+ * appears when the card supplied no verified email — detect it by its SkipEmail button (a stable
+ * testID via the EnterEmail descriptor; the input marker is less reliable) and skip it (BCSC cards
+ * allow skipping). On an unexpected screen the error reports what is actually on screen.
  */
 export async function reachVerificationMethod(): Promise<void> {
-  const emailHeadingSelector = driver.isIOS
-    ? '-ios predicate string:label CONTAINS "email address"'
-    : 'android=new UiSelector().textContains("email address")'
   const deadline = Date.now() + Timeouts.APP_LAUNCH
   for (;;) {
     if (await VerificationMethodSelectionScreen.isPresent(1_000)) {
       return
     }
-    if (await $(emailHeadingSelector).isDisplayed().catch(() => false)) {
+    if (await EnterEmailScreen.isVisible('skip')) {
       await EnterEmailScreen.tap('secondary') // SkipEmail (BCSC flow)
       await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
       return
@@ -167,8 +164,8 @@ export async function reachVerificationMethod(): Promise<void> {
     // VerificationMethodSelection anchors on the Hours-of-Service heading, which sits at the BOTTOM of
     // the screen and can be below the fold on a short viewport — where isPresent() (which never scrolls)
     // reads a genuine arrival as a miss. Nudge the content up to reveal the anchor before the next
-    // probe. Safe on the email screen (its heading is caught above, before we ever swipe) and a no-op
-    // while the post-authorize transition is still settling.
+    // probe. Safe on the email screen (its Skip button is caught above, before we ever swipe) and a
+    // no-op while the post-authorize transition is still settling.
     await swipeUpBy()
   }
 }

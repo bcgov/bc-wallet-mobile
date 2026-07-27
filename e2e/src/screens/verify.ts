@@ -144,6 +144,12 @@ export const EnterEmailScreen = defineScreen({
   inputs: {
     email: { ios: bcsc(v.enterEmail.inputPressable), android: bcsc(v.enterEmail.input) },
   },
+  elements: {
+    // Presence marker for the conditional email step (see `reachVerificationMethod`): SkipEmail is the
+    // stable, always-rendered control on this screen in the skippable BCSC flow — the input can lag.
+    // Same testID as `secondary`; declared here so the flow can probe it via the descriptor.
+    skip: bcsc(v.enterEmail.skip),
+  },
 })
 
 /**
