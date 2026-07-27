@@ -162,4 +162,114 @@ describe('CameraFormat', () => {
       })
     })
   })
+
+  describe('Filter priority invariants', () => {
+    // getCameraFormat assigns priority by array index (filters.length - index), so the first
+    // entry in each list carries the most weight. Pinning videoHdr to index 0 across every
+    // profile locks in the fix this branch made: previously videoHdr was duplicated across
+    // "tiers" and only the LAST occurrence counted, silently giving it the LOWEST priority
+    // instead of the highest.
+    it.each([
+      ['CodeScanningFormat', CameraFormat.CodeScanningFormat],
+      ['MaskedWithBarcodeDetection', CameraFormat.MaskedWithBarcodeDetection],
+      ['SelfiePhoto', CameraFormat.SelfiePhoto],
+    ])('ranks videoHdr:false as the highest-priority filter in %s', (_name, filters) => {
+      expect(filters[0]).toEqual({ videoHdr: false })
+    })
+  })
+
+  describe('HDR exclusion', () => {
+    // Identical in every other property so only the videoHdr filter can influence the outcome —
+    // isolates the HDR-exclusion behaviour from the weighted scoring of the other criteria.
+    const HdrComparisonDevice = {
+      id: 'hdr-comparison-device',
+      formats: [
+        {
+          _id: 'hdr-format',
+          supportsVideoHdr: true,
+          maxFps: 30,
+          photoHeight: 1080,
+          photoWidth: 1920,
+          videoHeight: 1080,
+          videoWidth: 1920,
+          videoStabilizationModes: ['auto'],
+        },
+        {
+          _id: 'non-hdr-format',
+          supportsVideoHdr: false,
+          maxFps: 30,
+          photoHeight: 1080,
+          photoWidth: 1920,
+          videoHeight: 1080,
+          videoWidth: 1920,
+          videoStabilizationModes: ['auto'],
+        },
+      ] satisfies TestCameraDeviceFormat[],
+    }
+
+    it('CodeScanningFormat: prefers a non-HDR format over an otherwise-identical HDR format', () => {
+      const format: any = getCameraFormat(HdrComparisonDevice as any, CameraFormat.CodeScanningFormat)
+
+      expect(format?._id).toBe('non-hdr-format')
+    })
+
+    it('MaskedWithBarcodeDetection: prefers a non-HDR format over an otherwise-identical HDR format', () => {
+      const format: any = getCameraFormat(HdrComparisonDevice as any, CameraFormat.MaskedWithBarcodeDetection)
+
+      expect(format?._id).toBe('non-hdr-format')
+    })
+
+    it('SelfiePhoto: prefers a non-HDR format over an otherwise-identical HDR format', () => {
+      const format: any = getCameraFormat(HdrComparisonDevice as any, CameraFormat.SelfiePhoto)
+
+      expect(format?._id).toBe('non-hdr-format')
+    })
+
+    // Every format on the device supports HDR, so the videoHdr filter can't award points to
+    // either side. Confirms the resolver degrades gracefully to the next-priority criterion
+    // (videoResolution) instead of erroring or picking arbitrarily.
+    const AllHdrDevice = {
+      id: 'all-hdr-device',
+      formats: [
+        {
+          _id: 'all-hdr-format-1080p',
+          supportsVideoHdr: true,
+          maxFps: 30,
+          photoHeight: 1080,
+          photoWidth: 1920,
+          videoHeight: 1080,
+          videoWidth: 1920,
+          videoStabilizationModes: ['auto'],
+        },
+        {
+          _id: 'all-hdr-format-4k',
+          supportsVideoHdr: true,
+          maxFps: 60,
+          photoHeight: 2160,
+          photoWidth: 3840,
+          videoHeight: 2160,
+          videoWidth: 3840,
+          videoStabilizationModes: ['auto'],
+        },
+      ] satisfies TestCameraDeviceFormat[],
+    }
+
+    it('CodeScanningFormat: falls back to the next-priority criterion when every format is HDR', () => {
+      const format: any = getCameraFormat(AllHdrDevice as any, CameraFormat.CodeScanningFormat)
+
+      expect(format?._id).toBe('all-hdr-format-1080p')
+    })
+
+    it('MaskedWithBarcodeDetection: falls back to the next-priority criterion when every format is HDR', () => {
+      const format: any = getCameraFormat(AllHdrDevice as any, CameraFormat.MaskedWithBarcodeDetection)
+
+      expect(format?._id).toBe('all-hdr-format-1080p')
+    })
+
+    it('SelfiePhoto: falls back to the next-priority criterion when every format is HDR', () => {
+      const format: any = getCameraFormat(AllHdrDevice as any, CameraFormat.SelfiePhoto)
+
+      expect(format?._id).toBe('all-hdr-format-1080p')
+    })
+  })
 })
