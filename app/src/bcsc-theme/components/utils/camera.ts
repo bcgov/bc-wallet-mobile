@@ -47,15 +47,6 @@ export type ScanState = 'scanning' | 'aligned' | 'locked'
 
 // ─── Camera Format Configurations ─────────────────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const __CauseRuntimErrorFormat = [
-  {
-    fps: 120,
-    videoResolution: { width: 3840, height: 2160 }, //stupid format to trigger the "device/pixel-format-not-supported" error for testing error handling
-    videoHdr: true,
-  },
-] satisfies FormatFilter[]
-
 /**
  * Optimized camera format configurations for various use cases
  */
@@ -609,7 +600,7 @@ const _removeDuplicateCameraFormats = (device?: CameraDevice): CameraDevice | un
   for (const format of device?.formats ?? []) {
     // Ensures that formats with the same properties but in different orders are considered duplicates
     const sortedFormat = Object.keys(format)
-      .sort()
+      .sort((a, b) => a.localeCompare(b))
       .map((key) => [key, format[key as keyof CameraDeviceFormat]])
 
     const formatKey = JSON.stringify(sortedFormat)
