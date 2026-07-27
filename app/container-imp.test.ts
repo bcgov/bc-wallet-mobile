@@ -50,13 +50,28 @@ const buildContainer = () => {
 describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiring)', () => {
   let getValueForKeySpy: jest.SpyInstance
   let storeValueForKeySpy: jest.SpyInstance
+  // The real PersistentStorage.storeValueForKey does `JSON.stringify(value)` synchronously at
+  // call time (see @bifold/core's storage.js), so a caller that later mutates the same object
+  // reference cannot retroactively change what was actually persisted. A bare
+  // `mockResolvedValue(undefined)` doesn't replicate that - jest's `.mock.calls` records the
+  // *live reference*, so any later mutation to the object (e.g. a scrub running after a
+  // mis-ordered write) would silently "fix" the recorded call, and this test would pass even
+  // when the write-after-scrub ordering it exists to pin was broken. Snapshotting synchronously
+  // here, exactly like the real implementation, closes that hole.
+  let storeCalls: { key: unknown; value: unknown }[]
 
   beforeEach(() => {
     mockStoredValues = {}
+    storeCalls = []
     getValueForKeySpy = jest
       .spyOn(PersistentStorage.prototype, 'getValueForKey')
       .mockImplementation((key: string) => Promise.resolve(mockStoredValues[key] as never))
-    storeValueForKeySpy = jest.spyOn(PersistentStorage, 'storeValueForKey').mockResolvedValue(undefined)
+    storeValueForKeySpy = jest
+      .spyOn(PersistentStorage, 'storeValueForKey')
+      .mockImplementation((key: unknown, value: unknown) => {
+        storeCalls.push({ key, value: JSON.parse(JSON.stringify(value)) })
+        return Promise.resolve(undefined)
+      })
   })
 
   afterEach(() => {
@@ -64,8 +79,15 @@ describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiri
     storeValueForKeySpy.mockRestore()
   })
 
-  it('migrates a legacy-persisted reportUUID into installId on the STATE_DISPATCH payload', async () => {
-    mockStoredValues[BCLocalStorageKeys.BCSC] = { appVersion: '1.0.0', reportUUID: 'x' }
+  it('migrates a legacy-persisted reportUUID into installId on the STATE_DISPATCH payload, persisting the scrubbed blob', async () => {
+    // photoPath seeds a transient field the LOAD_STATE closure always nulls out. Its presence
+    // here is what makes the write-back assertion below actually pin the write-after-scrub
+    // ordering rather than just the migration itself.
+    mockStoredValues[BCLocalStorageKeys.BCSC] = {
+      appVersion: '1.0.0',
+      reportUUID: 'x',
+      photoPath: 'file://leftover.jpg',
+    }
 
     const { registrations } = buildContainer()
     const loadState = registrations.get(TOKENS.LOAD_STATE) as (dispatch: jest.Mock) => Promise<void>
@@ -81,11 +103,18 @@ describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiri
     expect(state.bcsc.installId).toBe('x')
     expect(state.bcsc).not.toHaveProperty('reportUUID')
 
-    // Best-effort write-back under the new field name.
-    expect(storeValueForKeySpy).toHaveBeenCalledWith(
-      BCLocalStorageKeys.BCSC,
-      expect.objectContaining({ installId: 'x' })
-    )
+    // Write-back happens AFTER the transient-field scrub (see container-imp.ts), so the persisted
+    // blob must be the migrated *and* scrubbed shape - not a stale snapshot of what was just read
+    // from storage (which still had a leftover photoPath). BCLocalStorageKeys.BCSC is only ever
+    // read back through this same scrub, so persisting a pre-scrub blob would just be dead data.
+    expect(storeCalls).toHaveLength(1)
+    const [{ key: writtenKey, value: writtenBlob }] = storeCalls as [{ key: string; value: Record<string, unknown> }]
+    expect(writtenKey).toBe(BCLocalStorageKeys.BCSC)
+    expect(writtenBlob.installId).toBe('x')
+    expect(writtenBlob).not.toHaveProperty('reportUUID')
+    // photoPath is entirely absent (not merely undefined) because JSON.stringify - which the real
+    // storeValueForKey uses, and which storeCalls replicates above - drops undefined-valued keys.
+    expect(writtenBlob).not.toHaveProperty('photoPath')
   })
 
   it('leaves installId undefined for a fresh install with nothing persisted', async () => {

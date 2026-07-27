@@ -336,9 +336,13 @@ export const initialBCSCState: BCSCState = {
  * @param persisted - the raw BCSC state as loaded from storage, which may still contain `reportUUID`
  * @returns the migrated state (without `reportUUID`) and whether a migration actually occurred
  */
-export const migrateBCSCState = (
-  persisted: Partial<BCSCState> & { reportUUID?: string }
-): { bcsc: Partial<BCSCState>; migrated: boolean } => {
+export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: string }>(
+  persisted: T
+  // `& { installId?: string }` guarantees installId is always part of the return type even when T
+  // is inferred from a narrow literal that never mentions it (e.g. `{ reportUUID: 'x' }` in tests) -
+  // without it, Omit<T, 'reportUUID'> alone only carries whatever keys that specific T happened to
+  // declare, which drops installId for exactly those narrow callers.
+): { bcsc: Omit<T, 'reportUUID'> & { installId?: string }; migrated: boolean } => {
   const { reportUUID, ...rest } = persisted
   if (reportUUID === undefined) {
     return { bcsc: rest, migrated: false }
@@ -660,8 +664,15 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
     case BCSCDispatchAction.CLEAR_BCSC: {
       // Optionally accept a partial BCSC state to merge with the initial state
-      const partialBcscState = (action?.payload || []).pop() ?? {}
-      const bcsc = { ...initialBCSCState, installId: state.bcsc.installId, ...partialBcscState }
+      const partialBcscState: Partial<BCSCState> = (action?.payload || []).pop() ?? {}
+      // installId is applied last so state's existing id always wins over anything the payload
+      // carries (including an explicit undefined) - a caller-supplied id is only used as a
+      // fallback when state has none. This is the install-identity guarantee CLEAR_BCSC promises.
+      const bcsc = {
+        ...initialBCSCState,
+        ...partialBcscState,
+        installId: state.bcsc.installId ?? partialBcscState.installId,
+      }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

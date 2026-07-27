@@ -40,6 +40,32 @@ describe('reducer', () => {
     expect(result.bcsc.selectedNickname).toBeUndefined()
   })
 
+  it('CLEAR_BCSC keeps state.installId even when the payload carries a conflicting installId', () => {
+    const state = {
+      ...initialState,
+      bcsc: { ...initialState.bcsc, installId: 'existing-install-id' },
+    }
+    const result = reducer(state, {
+      type: BCDispatchAction.CLEAR_BCSC,
+      payload: [{ installId: 'payload-supplied-id' }],
+    })
+
+    expect(result.bcsc.installId).toBe('existing-install-id')
+  })
+
+  it('CLEAR_BCSC falls back to a payload-supplied installId when state has none', () => {
+    const state = {
+      ...initialState,
+      bcsc: { ...initialState.bcsc, installId: undefined },
+    }
+    const result = reducer(state, {
+      type: BCDispatchAction.CLEAR_BCSC,
+      payload: [{ installId: 'payload-supplied-id' }],
+    })
+
+    expect(result.bcsc.installId).toBe('payload-supplied-id')
+  })
+
   it('SET_INSTALL_ID stores the dispatched payload value', () => {
     const state = { ...initialState, bcsc: { ...initialState.bcsc, installId: undefined } }
     const result = reducer(state, { type: BCDispatchAction.SET_INSTALL_ID, payload: ['new-install-id'] })

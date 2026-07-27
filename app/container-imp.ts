@@ -414,14 +414,7 @@ export class AppContainer implements Container {
       // value under the legacy key `reportUUID`. Map it forward to `installId` so an existing
       // install keeps its identity instead of the STARTUP system check minting a new one.
       const bcscMigration = migrateBCSCState(bcsc)
-      bcsc = bcscMigration.bcsc as BCSCState
-      if (bcscMigration.migrated) {
-        // Write back under the new field name so subsequent launches skip this mapping. Failure
-        // is non-fatal and never thrown - the same mapping simply re-runs next launch.
-        PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, { ...bcsc }).catch((error) => {
-          this.logger.error('Failed to write back migrated BCSC state (reportUUID -> installId)', error)
-        })
-      }
+      bcsc = bcscMigration.bcsc
 
       // Reset paths and prompts on load as they should not be persisted
       bcsc.photoPath = undefined
@@ -432,6 +425,18 @@ export class AppContainer implements Container {
       bcsc.videoDuration = undefined
       bcsc.showAccountExpiryNotification = undefined
       bcsc.showCardRenewalNotification = undefined
+
+      if (bcscMigration.migrated) {
+        // Write back under the new field name so subsequent launches skip this mapping. Deferred
+        // until after the transient-field scrub above so this one-shot upgrade write persists the
+        // scrubbed blob, not the transient photo/video/prompt fields that were just nulled out
+        // (BCLocalStorageKeys.BCSC is only ever read back through this same scrub, so persisting
+        // them would just be dead data). Failure is non-fatal and never thrown - the same mapping
+        // simply re-runs next launch.
+        PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc).catch((error) => {
+          this.logger.error('Failed to write back migrated BCSC state (reportUUID -> installId)', error)
+        })
+      }
 
       const preferencesState = { ...initialState.preferences, ...preferences }
 
