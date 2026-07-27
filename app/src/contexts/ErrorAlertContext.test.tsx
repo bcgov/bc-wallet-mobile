@@ -210,8 +210,7 @@ describe('ErrorAlertContext', () => {
             description: 'Check your connection',
             // The whole AppError rides along so the modal can derive message/code itself
             error: appError,
-            // Pins the store -> payload hop: emitErrorModal must read the install id off the
-            // store rather than dropping it (see useCreateSystemChecks/InstallIdSystemCheck).
+            // Pins the store -> payload hop: emitErrorModal must read the install id off the store, not drop it.
             installId: 'test-install-id',
           }),
           errorKey: 1,

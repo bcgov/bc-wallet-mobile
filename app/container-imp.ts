@@ -410,9 +410,8 @@ export class AppContainer implements Container {
         loadState<Mode>(BCLocalStorageKeys.Mode, (val) => (mode = val)),
       ])
 
-      // One-time (best-effort, idempotent) read-side migration: older installs persisted this
-      // value under the legacy key `reportUUID`. Map it forward to `installId` so an existing
-      // install keeps its identity instead of the STARTUP system check minting a new one.
+      // One-time, idempotent read-side migration: maps a legacy `reportUUID` forward to `installId`
+      // so an existing install keeps its identity instead of the STARTUP check minting a new one.
       const bcscMigration = migrateBCSCState(bcsc)
       bcsc = bcscMigration.bcsc
 
@@ -427,12 +426,9 @@ export class AppContainer implements Container {
       bcsc.showCardRenewalNotification = undefined
 
       if (bcscMigration.migrated) {
-        // Write back under the new field name so subsequent launches skip this mapping. Deferred
-        // until after the transient-field scrub above so this one-shot upgrade write persists the
-        // scrubbed blob, not the transient photo/video/prompt fields that were just nulled out
-        // (BCLocalStorageKeys.BCSC is only ever read back through this same scrub, so persisting
-        // them would just be dead data). Failure is non-fatal and never thrown - the same mapping
-        // simply re-runs next launch.
+        // Write back under the new field name so subsequent launches skip this mapping. Deferred until
+        // after the scrub above so this one-shot write persists the scrubbed blob, not the transient
+        // fields that were just nulled out. Failure is non-fatal - the same mapping re-runs next launch.
         PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc).catch((error) => {
           this.logger.error('Failed to write back migrated BCSC state (reportUUID -> installId)', error)
         })

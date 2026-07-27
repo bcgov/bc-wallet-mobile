@@ -3,19 +3,10 @@ import { RemoteLogger, RemoteLoggerOptions } from '@bifold/remote-logs'
 import { AppContainer } from './container-imp'
 import { BCLocalStorageKeys } from './src/store'
 
-// LOAD_STATE-level regression test for the reportUUID -> installId migration (issue #4325).
-//
-// This exercises the actual TOKENS.LOAD_STATE closure registered by AppContainer.init() rather
-// than the extracted migrateBCSCState()/InstallIdSystemCheck units in isolation, because neither
-// of those unit tests can observe a break in the *wiring* between them (e.g. the migrated blob
-// never being assigned back to the local `bcsc` variable before it's folded into STATE_DISPATCH).
-//
-// Everything AppContainer.init() registers other than TOKENS.LOAD_STATE is irrelevant here; the
-// child container is a minimal spy (not a real tsyringe container) purely so `.init()` can run
-// through its ~30 registerInstance calls without throwing and hand back the one closure we need.
-//
-// PersistentStorage is spied on (not module-mocked) so both container-imp.ts's own reference and
-// this file's reference are guaranteed to be the exact same class object.
+// LOAD_STATE-level regression test for the reportUUID -> installId migration (issue #4325):
+// pins the real TOKENS.LOAD_STATE wiring, which migrateBCSCState()/InstallIdSystemCheck's own
+// unit tests structurally cannot observe.
+// PersistentStorage is spied on (not module-mocked) so this file and container-imp.ts resolve to the same class object.
 
 jest.mock('react-native-config', () => ({
   Config: { BUILD_TARGET: 'bcsc', OCA_URL: '' },
@@ -23,10 +14,7 @@ jest.mock('react-native-config', () => ({
   OCA_URL: '',
 }))
 
-// TOKENS.LOAD_STATE also awaits bifold-core's loadLoginAttempt(), which reaches into
-// react-native-keychain (a native module unavailable in the test environment). This is
-// unrelated to the migration under test; getGenericPassword resolving falsy is the library's
-// documented "no stored credentials found" case, so loadLoginAttempt resolves to undefined.
+// loadLoginAttempt() (awaited by LOAD_STATE) needs react-native-keychain; a falsy getGenericPassword means "no stored credentials".
 jest.mock('react-native-keychain', () => ({
   default: { getGenericPassword: jest.fn().mockResolvedValue(false) },
   getGenericPassword: jest.fn().mockResolvedValue(false),
@@ -50,14 +38,9 @@ const buildContainer = () => {
 describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiring)', () => {
   let getValueForKeySpy: jest.SpyInstance
   let storeValueForKeySpy: jest.SpyInstance
-  // The real PersistentStorage.storeValueForKey does `JSON.stringify(value)` synchronously at
-  // call time (see @bifold/core's storage.js), so a caller that later mutates the same object
-  // reference cannot retroactively change what was actually persisted. A bare
-  // `mockResolvedValue(undefined)` doesn't replicate that - jest's `.mock.calls` records the
-  // *live reference*, so any later mutation to the object (e.g. a scrub running after a
-  // mis-ordered write) would silently "fix" the recorded call, and this test would pass even
-  // when the write-after-scrub ordering it exists to pin was broken. Snapshotting synchronously
-  // here, exactly like the real implementation, closes that hole.
+  // Snapshots synchronously here (like the real storeValueForKey's JSON.stringify) rather than
+  // recording the live object reference - otherwise a later mutation (e.g. the scrub) would
+  // silently rewrite what this test sees, regardless of the actual write ordering.
   let storeCalls: { key: unknown; value: unknown }[]
 
   beforeEach(() => {
@@ -80,9 +63,7 @@ describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiri
   })
 
   it('migrates a legacy-persisted reportUUID into installId on the STATE_DISPATCH payload, persisting the scrubbed blob', async () => {
-    // photoPath seeds a transient field the LOAD_STATE closure always nulls out. Its presence
-    // here is what makes the write-back assertion below actually pin the write-after-scrub
-    // ordering rather than just the migration itself.
+    // photoPath seeds a transient field the scrub nulls out, so the assertion below actually pins write-after-scrub ordering.
     mockStoredValues[BCLocalStorageKeys.BCSC] = {
       appVersion: '1.0.0',
       reportUUID: 'x',
@@ -103,17 +84,13 @@ describe('AppContainer TOKENS.LOAD_STATE (reportUUID -> installId migration wiri
     expect(state.bcsc.installId).toBe('x')
     expect(state.bcsc).not.toHaveProperty('reportUUID')
 
-    // Write-back happens AFTER the transient-field scrub (see container-imp.ts), so the persisted
-    // blob must be the migrated *and* scrubbed shape - not a stale snapshot of what was just read
-    // from storage (which still had a leftover photoPath). BCLocalStorageKeys.BCSC is only ever
-    // read back through this same scrub, so persisting a pre-scrub blob would just be dead data.
+    // Write-back happens after the transient-field scrub (see container-imp.ts), so the persisted blob must be migrated *and* scrubbed.
     expect(storeCalls).toHaveLength(1)
     const [{ key: writtenKey, value: writtenBlob }] = storeCalls as [{ key: string; value: Record<string, unknown> }]
     expect(writtenKey).toBe(BCLocalStorageKeys.BCSC)
     expect(writtenBlob.installId).toBe('x')
     expect(writtenBlob).not.toHaveProperty('reportUUID')
-    // photoPath is entirely absent (not merely undefined) because JSON.stringify - which the real
-    // storeValueForKey uses, and which storeCalls replicates above - drops undefined-valued keys.
+    // photoPath is absent, not merely undefined, because JSON.stringify (replicated in storeCalls above) drops undefined-valued keys.
     expect(writtenBlob).not.toHaveProperty('photoPath')
   })
 

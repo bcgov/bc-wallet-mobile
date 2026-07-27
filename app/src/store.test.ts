@@ -102,12 +102,8 @@ describe('migrateBCSCState', () => {
   })
 
   it('composes with InstallIdSystemCheck so a migrated legacy id passes runCheck', () => {
-    // Unit-level composition only: proves migrateBCSCState()'s output, fed directly into
-    // InstallIdSystemCheck, satisfies the check. This does NOT exercise the actual launch path —
-    // the migration is also wired into container-imp.ts's TOKENS.LOAD_STATE closure, which reads
-    // persisted storage and dispatches STATE_DISPATCH; that wiring (including the assignment that
-    // adopts the migrated blob) is covered separately by app/container-imp.test.ts, which is what
-    // actually proves "an existing install does not get re-identified on next launch."
+    // Unit-level composition only - does not exercise the actual launch path. See
+    // app/container-imp.test.ts for the real "existing install keeps its id" proof.
     const { bcsc } = migrateBCSCState({ reportUUID: 'x' })
     const check = new InstallIdSystemCheck(bcsc.installId, jest.fn())
 

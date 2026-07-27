@@ -326,22 +326,14 @@ export const initialBCSCState: BCSCState = {
 }
 
 /**
- * Migrates a persisted BCSC state blob that may still carry the legacy `reportUUID` field
- * (pre-rename to `installId`) forward to the current shape.
- *
- * Pure and idempotent: safe to call on every launch. When `installId` is already present it
- * wins over any legacy `reportUUID`; the legacy field is always stripped from the result so it
- * never round-trips back into storage under its old name.
- *
- * @param persisted - the raw BCSC state as loaded from storage, which may still contain `reportUUID`
- * @returns the migrated state (without `reportUUID`) and whether a migration actually occurred
+ * Migrates a persisted BCSC state blob that may still carry the legacy `reportUUID` field.
+ * Pure and idempotent: `installId` wins over any legacy `reportUUID`, and the legacy field is
+ * always stripped so it can't round-trip back into storage under its old name.
  */
 export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: string }>(
   persisted: T
-  // `& { installId?: string }` guarantees installId is always part of the return type even when T
-  // is inferred from a narrow literal that never mentions it (e.g. `{ reportUUID: 'x' }` in tests) -
-  // without it, Omit<T, 'reportUUID'> alone only carries whatever keys that specific T happened to
-  // declare, which drops installId for exactly those narrow callers.
+  // `& { installId?: string }` keeps installId in the return type even when T is inferred from a
+  // narrow literal that never mentions it (e.g. `{ reportUUID: 'x' }` in tests).
 ): { bcsc: Omit<T, 'reportUUID'> & { installId?: string }; migrated: boolean } => {
   const { reportUUID, ...rest } = persisted
   if (reportUUID === undefined) {
@@ -665,9 +657,8 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.CLEAR_BCSC: {
       // Optionally accept a partial BCSC state to merge with the initial state
       const partialBcscState: Partial<BCSCState> = (action?.payload || []).pop() ?? {}
-      // installId is applied last so state's existing id always wins over anything the payload
-      // carries (including an explicit undefined) - a caller-supplied id is only used as a
-      // fallback when state has none. This is the install-identity guarantee CLEAR_BCSC promises.
+      // installId is applied last so state's existing id always wins over the payload (including an
+      // explicit undefined); a caller-supplied id is only used as a fallback when state has none.
       const bcsc = {
         ...initialBCSCState,
         ...partialBcscState,
