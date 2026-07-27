@@ -473,6 +473,66 @@ export const determineScanState = (
   return { newScanState, qualifyingCodes }
 }
 
+/** A validated code carried over from a recent frame, with the time it was recorded. */
+export type AccumulatedCode = { code: EnhancedCode; timestamp: number }
+
+/**
+ * Merge a locked frame's qualifying codes with any recently-validated codes carried
+ * over from the accumulator, so a lock that only required a single barcode (e.g.
+ * `minCodesForAligned === 1` for the single-zone `BCSC_SN_SCAN_ZONES`) still hands
+ * along a different barcode that was read moments earlier but dropped out of frame
+ * before the lock — e.g. the birthdate-bearing PDF-417 on a combo card when the
+ * easier code-39 serial alone satisfies the lock threshold first.
+ *
+ * Ordering: accumulated extras are returned FIRST, current-frame codes LAST. Callers
+ * (`useCardScanner`'s decode loop) apply "later code wins" when the same kind of
+ * data shows up twice, so putting the current frame last means a fresher reading
+ * always overrides a stale accumulated one of the same decoded kind — ordering
+ * alone resolves that conflict, no extra same-kind filtering is needed here. Only
+ * exact `${type}-${value}` duplicates against the current frame are dropped from
+ * the accumulator; anything else (including a stale same-type/different-value
+ * entry) is passed through and left for the ordering to resolve downstream.
+ *
+ * Scoping: eligibility is time-based only (`windowMs`), not card-identity-based —
+ * this is what makes the normal combo-card case work. Known limitation (accepted,
+ * minor): if the user swaps to a *different* physical BCSC card mid-scan within the
+ * window and the new card's serial locks before the prior card's PDF-417 expires,
+ * the merge can pair a serial from card B with a birthdate from card A. This is
+ * self-correcting — the backend rejects the mismatched serial+birthdate
+ * (`VerificationCardError.MismatchedSerial` → retry), so it never produces an
+ * incorrect authorization or corrupts data. Clearing on barcode-reading decay was
+ * considered and rejected: that would defeat the feature, since carrying a
+ * no-longer-visible barcode into the lock is precisely the point. A correct
+ * card-identity-aware invalidation is deferred as out of scope.
+ *
+ * @param currentFrameCodes Qualifying codes from the frame that triggered the lock
+ * @param accumulated Map of recently-validated codes, keyed by `${type}-${value}`
+ * @param windowMs Max age (ms) for an accumulated entry to still be eligible
+ * @param now Current time in ms (injectable for tests; defaults to `Date.now()`)
+ * @returns Current-frame codes plus any still-fresh, non-duplicate accumulated codes, extras first
+ */
+export const mergeLockedCodesWithAccumulated = (
+  currentFrameCodes: EnhancedCode[],
+  accumulated: ReadonlyMap<string, AccumulatedCode>,
+  windowMs: number,
+  now: number = Date.now()
+): EnhancedCode[] => {
+  const currentFrameKeys = new Set(currentFrameCodes.map((c) => `${c.type}-${c.value}`))
+
+  const accumulatedExtras: EnhancedCode[] = []
+  accumulated.forEach((entry, key) => {
+    if (now - entry.timestamp > windowMs) {
+      return
+    }
+    if (currentFrameKeys.has(key)) {
+      return
+    }
+    accumulatedExtras.push(entry.code)
+  })
+
+  return [...accumulatedExtras, ...currentFrameCodes]
+}
+
 /**
  * Scan zone for the BC Services Card / Driver's License serial number scan screen.
  * Coordinates are normalized (0–1) relative to the camera container (portrait).

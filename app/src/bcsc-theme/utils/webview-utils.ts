@@ -16,7 +16,7 @@ const formatLongDate = (dateStr: string): string => {
  * leaving only the inner body content. This prevents invalid nested HTML when wrapping
  * API-returned HTML in our own document structure.
  */
-const stripOuterDocumentTags = (html: string): string => {
+export const stripOuterDocumentTags = (html: string): string => {
   return html
     .replace(/<\/?html[^>]*>/gi, '')
     .replace(/<\/?head[^>]*>/gi, '')

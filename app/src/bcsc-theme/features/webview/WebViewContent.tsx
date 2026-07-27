@@ -1,7 +1,11 @@
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { ensureAppError } from '@/errors/errorHandler'
+import { AppEventCode } from '@/events/appEventCode'
 import { TOKENS, useServices, useTheme } from '@bifold/core'
 import { getUserAgentString } from '@utils/user-agent'
 import React, { useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, useWindowDimensions, View } from 'react-native'
 import { WebView } from 'react-native-webview'
 import type { WebViewErrorEvent, WebViewHttpErrorEvent } from 'react-native-webview/lib/WebViewTypes'
@@ -36,9 +40,11 @@ type WebViewContentProps = (WebViewUrlSource | WebViewHtmlSource) & {
  * @returns {*} {React.ReactElement} The rendered WebView component.
  */
 const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded }) => {
+  const { t } = useTranslation()
   const { ColorPalette } = useTheme()
   const client = useBCSCApiClient()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { emitErrorModal } = useErrorAlert()
   const { fontScale } = useWindowDimensions()
 
   const styles = StyleSheet.create({
@@ -58,8 +64,13 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded }) 
     (syntheticEvent: WebViewErrorEvent) => {
       const { nativeEvent } = syntheticEvent
       logger.error('WebView Error:', { ...nativeEvent })
+      emitErrorModal(
+        t('Alerts.WebViewLoadFailed.Title'),
+        t('Alerts.WebViewLoadFailed.Description'),
+        ensureAppError(new Error(nativeEvent.description), AppEventCode.WEBVIEW_LOAD_FAILED)
+      )
     },
-    [logger]
+    [logger, emitErrorModal, t]
   )
 
   const handleHttpError = useCallback(
@@ -70,8 +81,16 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, html, onLoaded }) 
         statusCode: nativeEvent.statusCode,
         description: nativeEvent.description,
       })
+      emitErrorModal(
+        t('Alerts.WebViewHttpError.Title'),
+        t('Alerts.WebViewHttpError.Description'),
+        ensureAppError(
+          new Error(`${nativeEvent.statusCode}: ${nativeEvent.description}`),
+          AppEventCode.WEBVIEW_HTTP_ERROR
+        )
+      )
     },
-    [logger]
+    [logger, emitErrorModal, t]
   )
 
   if (!html && !url) {

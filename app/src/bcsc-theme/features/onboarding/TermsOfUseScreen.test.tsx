@@ -1,7 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCLocalStorageKeys } from '@/store'
-import { PersistentStorage } from '@bifold/core'
+import { PersistentStorage, testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
@@ -50,7 +50,7 @@ describe('TermsOfUseScreen', () => {
 
     // Simulate the webview finishing loading to enable the accept button
     fireEvent(tree.getByTestId('mocked-webview'), 'load')
-    fireEvent.press(tree.getByTestId('com.ariesbifold:id/AcceptAndContinue'))
+    fireEvent.press(tree.getByTestId(testIdWithKey('AcceptAndContinue')))
 
     return tree
   }

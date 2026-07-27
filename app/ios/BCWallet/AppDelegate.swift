@@ -31,7 +31,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     // Configure Firebase
     FirebaseApp.configure()
 
-    // Set notification delegate to allow foreground notifications
+    // Claim the notification center delegate before React Native starts: RNFB Messaging and notifee
+    // each wrap whichever delegate is set at launch and forward to it, so anything this class
+    // implements stays in the chain. Foreground presentation is decided by those libraries
     UNUserNotificationCenter.current().delegate = self
 
     let delegate = ReactNativeDelegate()

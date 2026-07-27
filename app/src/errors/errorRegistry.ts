@@ -87,6 +87,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.UNKNOWN,
     message: 'A fatal error occurred — app functionality may be compromised',
   },
+  UNKNOWN_ERROR_BOUNDARY_ERROR: {
+    statusCode: 9997,
+    appEvent: AppEventCode.UNKNOWN_ERROR_BOUNDARY_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.UNKNOWN,
+    message: 'An unknown error occurred in the React component tree — see technical details for the raw error',
+  },
   // Fallback for native bcsc-core rejections whose code is not explicitly mapped. The raw native
   // code is preserved via the error `cause` (surfaced by AppError.technicalMessage), so the failure
   // is never hidden — distinct from a true UNKNOWN_ERROR.
@@ -1004,6 +1011,27 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.ERROR,
     category: ErrorCategory.GENERAL,
     message: 'Signing key sent during initial registration was not found in the server-confirmed key set',
+  },
+  TERMS_OF_USE_LOAD_FAILED: {
+    statusCode: 2833,
+    appEvent: AppEventCode.TERMS_OF_USE_LOAD_FAILED,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.GENERAL,
+    message: 'Failed to fetch Terms of Use — user cannot view or accept the Terms of Use',
+  },
+  WEBVIEW_LOAD_FAILED: {
+    statusCode: 2834,
+    appEvent: AppEventCode.WEBVIEW_LOAD_FAILED,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.GENERAL,
+    message: 'WebView failed to load — native load error (e.g. offline, DNS/TLS failure)',
+  },
+  WEBVIEW_HTTP_ERROR: {
+    statusCode: 2835,
+    appEvent: AppEventCode.WEBVIEW_HTTP_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.GENERAL,
+    message: 'WebView request returned a non-2xx HTTP response',
   },
 
   // ============================================
