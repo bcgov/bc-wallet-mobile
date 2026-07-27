@@ -162,7 +162,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
       // Add camera device and format info to the error context for better debugging
       appError.addContext(cameraMetadata)
 
-      logger.error('[TakeVideoScreen] camera runtime error', appError)
+      logger.error('[TakeVideoScreen] camera runtime error', appError.toJSON())
 
       return appError
     },
