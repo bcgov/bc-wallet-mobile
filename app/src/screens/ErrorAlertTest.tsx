@@ -193,6 +193,23 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
       onBack() // close modal first
       injectErrorCodeIntoAxiosResponse(client, 'invalid_token', `${client.endpoints.token}`)
     },
+    // Person Credential creation (#3389) — HTTP 400 with error_description "suspended"/"deactivated"
+    // on the credential endpoint. Exercises personCredentialAccountUnavailableErrorPolicy, which
+    // shows the generic "Problem with Account" modal (error 3205/3206).
+    person_credential_suspended_400: () => {
+      onBack() // close modal first
+      injectErrorCodeIntoAxiosResponse(client, 'unauthorized_client', client.endpoints.credential, 400, {
+        error: 'unauthorized_client',
+        error_description: 'suspended',
+      })
+    },
+    person_credential_deactivated_400: () => {
+      onBack() // close modal first
+      injectErrorCodeIntoAxiosResponse(client, 'unauthorized_client', client.endpoints.credential, 400, {
+        error: 'unauthorized_client',
+        error_description: 'deactivated',
+      })
+    },
     // IAS errors 201–300
     add_card_server_configuration: () => injectErrorCodeIntoAxiosResponse(client, 'add_card_server_configuration'),
     add_card_dynamic_registration: () => injectErrorCodeIntoAxiosResponse(client, 'add_card_dynamic_registration'),
@@ -322,12 +339,13 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
     client: BCSCApiClient,
     errorCode: string,
     endpoint?: string,
-    status?: number
+    status?: number,
+    data?: Record<string, unknown>
   ) => {
     const id = client.client.interceptors.request.use((config) => {
       client.client.interceptors.request.eject(id)
       throw new AxiosError('Injected error message', errorCode, config, undefined, {
-        data: {},
+        data: data ?? {},
         status: status ?? 0,
         statusText: 'Error',
         headers: {},
