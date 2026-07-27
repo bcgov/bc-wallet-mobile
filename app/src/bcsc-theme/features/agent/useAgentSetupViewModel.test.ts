@@ -444,7 +444,14 @@ describe('useAgentSetupViewModel', () => {
       const credentialProvisioningMonitor = { start: jest.fn(), stop: jest.fn() }
       jest
         .mocked(Bifold.useServices)
-        .mockReturnValue([logger, attestationMonitor, credentialProvisioningMonitor, [], [], ocaBundleResolver] as never)
+        .mockReturnValue([
+          logger,
+          attestationMonitor,
+          credentialProvisioningMonitor,
+          [],
+          [],
+          ocaBundleResolver,
+        ] as never)
 
       const agent1 = mockAgent()
       jest.mocked(agentService.buildAgent).mockReturnValue(agent1)
