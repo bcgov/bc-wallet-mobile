@@ -105,6 +105,15 @@ describe('CameraFormat', () => {
       })
     })
 
+    describe('CodeScanningFormat: properties', () => {
+      it('should have no duplicate format properties', () => {
+        const allProperties = CameraFormat.CodeScanningFormat.flatMap((format) => Object.keys(format))
+        const uniqueProperties = new Set(allProperties)
+
+        expect(allProperties).toHaveLength(uniqueProperties.size)
+      })
+    })
+
     describe('MaskedWithBarcodeDetection: ModernDevice', () => {
       it('should return modern-format-3 for ModernDevice', () => {
         const format: any = getCameraFormat(ModernDevice as any, CameraFormat.MaskedWithBarcodeDetection)
@@ -116,6 +125,15 @@ describe('CameraFormat', () => {
         const format: any = getCameraFormat(LegacyDevice as any, CameraFormat.MaskedWithBarcodeDetection)
 
         expect(format?._id).toBe('legacy-format-1')
+      })
+    })
+
+    describe('MaskedWithBarcodeDetection: properties', () => {
+      it('should have no duplicate format properties', () => {
+        const allProperties = CameraFormat.MaskedWithBarcodeDetection.flatMap((format) => Object.keys(format))
+        const uniqueProperties = new Set(allProperties)
+
+        expect(allProperties).toHaveLength(uniqueProperties.size)
       })
     })
 
@@ -135,17 +153,12 @@ describe('CameraFormat', () => {
       })
     })
 
-    describe('SmallBarcodeScanning: ModernDevice', () => {
-      it('should return modern-format-3 for ModernDevice', () => {
-        const format: any = getCameraFormat(ModernDevice as any, CameraFormat.SmallBarcodeScanning)
+    describe('SelfiePhotoFormat: properties', () => {
+      it('should have no duplicate format properties', () => {
+        const allProperties = CameraFormat.SelfiePhoto.flatMap((format) => Object.keys(format))
+        const uniqueProperties = new Set(allProperties)
 
-        expect(format?._id).toBe('modern-format-2')
-      })
-
-      it('should return legacy-format-1 for LegacyDevice', () => {
-        const format: any = getCameraFormat(LegacyDevice as any, CameraFormat.SmallBarcodeScanning)
-
-        expect(format?._id).toBe('legacy-format-1')
+        expect(allProperties).toHaveLength(uniqueProperties.size)
       })
     })
   })

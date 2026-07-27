@@ -41,11 +41,18 @@ export type ScanState = 'scanning' | 'aligned' | 'locked'
 // ─── Camera Format Configurations ─────────────────────────────────────────────
 
 /**
- * Optimized camera format configurations for various use cases.
+ * Pre-defined camera format filters for different scanning scenarios.
  *
- * Ideal format: 1080p + 30 FPS + non-HDR + stabilization
+ * @see {@link node_modules/react-native-vision-camera/src/devices/getCameraFormat.ts} for the underlying format selection logic.
  */
 export const CameraFormat = {
+  /**
+   * Format optimized for barcode scanning (back camera, no selfie).
+   * Prioritizes high resolution and moderate frame rate for accurate detection
+   *
+   *
+   * Ideal format: 1080p + 30 FPS + non-HDR + stabilization
+   */
   CodeScanningFormat: [
     // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
     // pixel format (e.g. "btp2") is incompatible with VisionCamera's pipeline.
@@ -111,40 +118,6 @@ export const CameraFormat = {
     // Moderate FPS for smooth preview without excessive processing load
     {
       fps: 30,
-    },
-  ] satisfies FormatFilter[],
-
-  /**
-   * Format optimized for scanning small barcodes (code-39, code-128, PDF417)
-   * Prioritizes high resolution and frame rate for accurate detection of small codes
-   *
-   * Barcode sizes:
-   * - Code-39/Code-128: ~30mm x 4mm
-   * - PDF417: ~50mm x 9mm
-   *
-   *   Ideal format: 1080p + 60 FPS + non-HDR + stabilization
-   */
-  SmallBarcodeScanning: [
-    // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
-    // pixel format (e.g. "btp2") is incompatible with VisionCamera's pipeline.
-    {
-      videoHdr: false,
-    },
-    // High FPS for better real-time detection
-    {
-      fps: 60,
-    },
-    // High resolution for detecting small barcode details
-    {
-      photoResolution: PHOTO_RESOLUTION_1080P,
-    },
-    // Maximum video resolution for better preview quality
-    {
-      videoResolution: 'max',
-    },
-    // Enable video stabilization for steadier scanning
-    {
-      videoStabilizationMode: 'auto',
     },
   ] satisfies FormatFilter[],
 }
