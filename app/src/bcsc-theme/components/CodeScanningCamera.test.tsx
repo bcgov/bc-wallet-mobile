@@ -1821,7 +1821,12 @@ describe('CodeScanningCamera', () => {
 
       const camera = getByTestId('mock-camera')
       const runtimeError = new Error('Runtime camera failure')
-      const expectedAppError = { name: 'NormalizedAppError', message: 'normalized', addContext: jest.fn() }
+      const expectedAppError = {
+        name: 'NormalizedAppError',
+        message: 'normalized',
+        addContext: jest.fn(),
+        toJSON: jest.fn(),
+      }
       mockEnsureAppError.mockReturnValueOnce(expectedAppError)
 
       await act(async () => {
@@ -1905,7 +1910,12 @@ describe('CodeScanningCamera', () => {
 
       const camera = getByTestId('mock-camera')
       const runtimeError = new Error('Runtime camera failure with unknown app state')
-      const expectedAppError = { name: 'NormalizedAppError', message: 'normalized', addContext: jest.fn() }
+      const expectedAppError = {
+        name: 'NormalizedAppError',
+        message: 'normalized',
+        addContext: jest.fn(),
+        toJSON: jest.fn(),
+      }
       mockEnsureAppError.mockReturnValueOnce(expectedAppError)
 
       await act(async () => {

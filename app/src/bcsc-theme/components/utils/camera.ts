@@ -546,7 +546,7 @@ export const removeDuplicateCameraFormats = (device?: CameraDevice): CameraDevic
 
   const seenFormats = new Map<string, CameraDeviceFormat>()
 
-  for (const format of device.formats) {
+  for (const format of device?.formats ?? []) {
     // Ensures that formats with the same properties but in different orders are considered duplicates
     const sortedFormat = Object.keys(format)
       .sort()
