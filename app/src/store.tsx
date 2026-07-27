@@ -326,9 +326,8 @@ export const initialBCSCState: BCSCState = {
 }
 
 /**
- * Migrates a persisted BCSC state blob that may still carry the legacy `reportUUID` field.
- * Pure and idempotent: `installId` wins over any legacy `reportUUID`, and the legacy field is
- * always stripped so it can't round-trip back into storage under its old name.
+ * Migrates a persisted BCSC state blob that may still carry the legacy `reportUUID` field
+ * (added bcsc-v4.0.2, #4060). Safe to remove once all installs have launched on >= v4.1.
  */
 export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: string }>(
   persisted: T
