@@ -1298,7 +1298,7 @@ jobs:
   # ─── E2E Tests ──────────────────────────────────────────────────────
   # Delegated to .github/workflows/e2e.yml (reusable workflow).
   # PR: smoke tests on 1 iOS + 1 Android device (fast feedback).
-  # Main: full-regression is deferred to the nightly workflow
+  # Main: the regression suite is deferred to the nightly workflow
   #       (e2e-nightly.yml) which checks for merges in the last 24h
   #       before running. This keeps SauceLabs devices free during the
   #       day when multiple PRs merge.
@@ -1319,7 +1319,6 @@ jobs:
     needs: [ship-to-saucelabs, compute-variants, early-exit-check]
     permissions:
       contents: read
-    if: false
     uses: ./.github/workflows/e2e.yml
     with:
       suite: smoke
