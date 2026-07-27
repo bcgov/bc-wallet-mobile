@@ -70,10 +70,7 @@ const Developer: React.FC = () => {
       DeviceEventEmitter.addListener(CredentialProvisioningEventTypes.Completed, handleCompleted),
       DeviceEventEmitter.addListener(CredentialProvisioningEventTypes.FailedHandleProof, handleFailed('proof')),
       DeviceEventEmitter.addListener(CredentialProvisioningEventTypes.FailedHandleOffer, handleFailed('offer')),
-      DeviceEventEmitter.addListener(
-        CredentialProvisioningEventTypes.FailedRequestCredential,
-        handleFailed('request')
-      ),
+      DeviceEventEmitter.addListener(CredentialProvisioningEventTypes.FailedRequestCredential, handleFailed('request')),
     ]
 
     return () => {
