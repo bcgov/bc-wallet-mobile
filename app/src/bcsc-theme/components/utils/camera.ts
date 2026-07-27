@@ -1,5 +1,12 @@
 import { Platform } from 'react-native'
-import { CameraDevice, CameraDeviceFormat, Code, FormatFilter } from 'react-native-vision-camera'
+import {
+  AutoFocusSystem,
+  CameraDevice,
+  CameraDeviceFormat,
+  Code,
+  FormatFilter,
+  VideoStabilizationMode,
+} from 'react-native-vision-camera'
 
 import { PHOTO_RESOLUTION_1080P, PHOTO_RESOLUTION_720P } from '@/constants'
 
@@ -534,12 +541,63 @@ export const mergeLockedCodesWithAccumulated = (
 }
 
 /**
+ * Get camera metadata including the selected device and format, with deduplicated formats.
+ * Mostly used for logging and debugging purposes.
+ *
+ * @param device The CameraDevice to get metadata for
+ * @param format The CameraDeviceFormat to get metadata for
+ * @returns An object containing the selected device and format, with deduplicated formats
+ */
+export const getCameraMetadata = (device?: CameraDevice, format?: CameraDeviceFormat) => {
+  const cameraDevice = _removeDuplicateCameraFormats(device)
+
+  return {
+    selectedFormat: format ? _summarizeCameraFormat(format) : null,
+    selectedDevice: {
+      ...cameraDevice,
+      formats: cameraDevice?.formats.map((format) => _summarizeCameraFormat(format)),
+    },
+  }
+}
+
+/**
+ * Summarize a CameraDeviceFormat into a concise string for logging or debugging.
+ *
+ * @param format The CameraDeviceFormat to summarize
+ * @returns A string summarizing the format's key properties
+ */
+const _summarizeCameraFormat = (format: CameraDeviceFormat): string => {
+  // Maps the enumerated values to short strings for logging purposes
+  const autoFocusSystemMap: Record<AutoFocusSystem, string> = {
+    'contrast-detection': 'contrast',
+    'phase-detection': 'phase',
+    none: 'none',
+  }
+
+  const stabilizationMap: Record<VideoStabilizationMode, string> = {
+    auto: 'auto',
+    standard: 'std',
+    cinematic: 'cin',
+    off: 'off',
+    'cinematic-extended': 'cin-ext',
+  }
+
+  return [
+    `video: ${format.videoWidth}x${format.videoHeight}`,
+    `photo: ${format.photoWidth}x${format.photoHeight}`,
+    `fps: ${format.maxFps}`,
+    `focus: ${autoFocusSystemMap[format.autoFocusSystem]}`,
+    `stab: ${format.videoStabilizationModes?.map((mode) => stabilizationMap[mode]).join(',')}`,
+  ].join(' ')
+}
+
+/**
  * Remove duplicate formats from a CameraDevice's formats array, preserving the first occurrence of each unique format.
  *
  * @param device The CameraDevice to deduplicate formats for
  * @returns A new CameraDevice with deduplicated formats, or undefined if the input device is undefined
  */
-export const removeDuplicateCameraFormats = (device?: CameraDevice): CameraDevice | undefined => {
+const _removeDuplicateCameraFormats = (device?: CameraDevice): CameraDevice | undefined => {
   if (!device) {
     return
   }

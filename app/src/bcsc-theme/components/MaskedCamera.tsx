@@ -28,7 +28,7 @@ import {
 } from 'react-native-vision-camera'
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
 import { isBackgroundedAppState } from '../utils/app-state'
-import { removeDuplicateCameraFormats } from './utils/camera'
+import { getCameraMetadata } from './utils/camera'
 
 type MaskedCameraProps = {
   navigation: NavigationProp<ParamListBase>
@@ -76,12 +76,7 @@ const MaskedCamera = ({
   const { appStateStatus } = useBCSCActivity()
   const hasTorch = device?.hasTorch ?? false
 
-  const cameraMetadata = useMemo(() => {
-    return {
-      selectedFormat: format,
-      selectedDevice: removeDuplicateCameraFormats(device),
-    }
-  }, [device, format])
+  const cameraMetadata = useMemo(() => getCameraMetadata(device, format), [device, format])
 
   const styles = StyleSheet.create({
     container: {

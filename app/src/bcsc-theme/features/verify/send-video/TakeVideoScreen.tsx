@@ -1,5 +1,5 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
-import { removeDuplicateCameraFormats } from '@/bcsc-theme/components/utils/camera'
+import { getCameraMetadata } from '@/bcsc-theme/components/utils/camera'
 import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
@@ -57,8 +57,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   const { ColorPalette, Spacing, TextTheme } = useTheme()
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const rawDevice = useCameraDevice('front')
-  const device = useMemo(() => removeDuplicateCameraFormats(rawDevice), [rawDevice])
+  const device = useCameraDevice('front')
   const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } = useCameraPermission()
   const { hasPermission: hasMicrophonePermission, requestPermission: requestMicrophonePermission } =
     useMicrophonePermission()
@@ -103,12 +102,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
     throw toAppError(new Error('[TakeVideoScreen] No prompts found in store'), ErrorRegistry.VIDEO_PROMPTS_MISSING)
   }
 
-  const cameraMetadata = useMemo(() => {
-    return {
-      selectedFormat: format,
-      selectedDevice: removeDuplicateCameraFormats(device),
-    }
-  }, [device, format])
+  const cameraMetadata = useMemo(() => getCameraMetadata(device, format), [device, format])
 
   const styles = useMemo(
     () =>

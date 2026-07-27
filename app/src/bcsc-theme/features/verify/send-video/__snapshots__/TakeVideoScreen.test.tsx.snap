@@ -31,7 +31,6 @@ exports[`TakeVideoScreen renders correctly 1`] = `
       audio={true}
       device={
         {
-          "formats": [],
           "id": "mock-device",
         }
       }

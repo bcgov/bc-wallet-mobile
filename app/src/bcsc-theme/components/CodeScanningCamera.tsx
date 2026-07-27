@@ -52,10 +52,10 @@ import {
   calculateBarcodeOrientation,
   clampZoom,
   determineScanState,
+  getCameraMetadata,
   getPaddedHighlightPosition,
   isCodeAlignedWithZones,
   mergeLockedCodesWithAccumulated,
-  removeDuplicateCameraFormats,
   transformBarcodeCoordinates,
 } from './utils/camera'
 
@@ -314,12 +314,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
    */
   const format = useCameraFormat(device, CameraFormat.CodeScanningFormat)
 
-  const cameraMetadata = useMemo(() => {
-    return {
-      selectedFormat: format,
-      selectedDevice: removeDuplicateCameraFormats(device),
-    }
-  }, [device, format])
+  const cameraMetadata = useMemo(() => getCameraMetadata(device, format), [device, format])
 
   // Calculate effective zoom based on device capabilities
   const getEffectiveZoom = useCallback(
