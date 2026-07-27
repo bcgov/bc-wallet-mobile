@@ -618,7 +618,7 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   alreadyRegisteredErrorPolicy,
   cardExpiredErrorPolicy,
   cardExpiredOnBarcodesErrorPolicy,
-  personCredentialAccountUnavailableErrorPolicy,
+  digitalServiceCardAccountUnavailableErrorPolicy,
   verificationSessionExpiredErrorPolicy,
   birthdateLockoutErrorPolicy,
   noTokensReturnedErrorPolicy,

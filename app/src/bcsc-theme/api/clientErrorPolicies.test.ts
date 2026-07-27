@@ -13,6 +13,7 @@ import {
   cardExpiredErrorPolicy,
   cardExpiredOnBarcodesErrorPolicy,
   ClientErrorHandlingPolicies,
+  digitalServiceCardAccountUnavailableErrorPolicy,
   emailVerificationCodeErrorPolicy,
   failedToRetrieveStringResourceErrorPolicy,
   globalAlertErrorPolicy,
@@ -22,7 +23,6 @@ import {
   invalidUrlErrorPolicy,
   noTokensReturnedErrorPolicy,
   pairingCodeErrorPolicy,
-  personCredentialAccountUnavailableErrorPolicy,
   unexpectedServerErrorPolicy,
   unsupportedOsOnAssertionErrorPolicy,
   updateRequiredErrorPolicy,
@@ -773,7 +773,7 @@ describe('clientErrorPolicies', () => {
     })
   })
 
-  describe('personCredentialAccountUnavailableErrorPolicy', () => {
+  describe('digitalServiceCardAccountUnavailableErrorPolicy', () => {
     const credentialBase = 'https://idsit.gov.bc.ca/credentials/v1/person'
 
     const errorWithDescription = (description?: unknown): AxiosAppError => {
@@ -796,7 +796,7 @@ describe('clientErrorPolicies', () => {
           endpoint: credentialBase,
           apiEndpoints: { credential: credentialBase },
         }
-        expect(personCredentialAccountUnavailableErrorPolicy.matches(error, context as any)).toBeTruthy()
+        expect(digitalServiceCardAccountUnavailableErrorPolicy.matches(error, context as any)).toBeTruthy()
       })
 
       it('should match a 400 on the credential endpoint with a "deactivated" error_description', () => {
@@ -806,7 +806,7 @@ describe('clientErrorPolicies', () => {
           endpoint: credentialBase,
           apiEndpoints: { credential: credentialBase },
         }
-        expect(personCredentialAccountUnavailableErrorPolicy.matches(error, context as any)).toBeTruthy()
+        expect(digitalServiceCardAccountUnavailableErrorPolicy.matches(error, context as any)).toBeTruthy()
       })
 
       it('should match case-insensitively', () => {
@@ -816,7 +816,7 @@ describe('clientErrorPolicies', () => {
           endpoint: credentialBase,
           apiEndpoints: { credential: credentialBase },
         }
-        expect(personCredentialAccountUnavailableErrorPolicy.matches(error, context as any)).toBeTruthy()
+        expect(digitalServiceCardAccountUnavailableErrorPolicy.matches(error, context as any)).toBeTruthy()
       })
 
       it('should NOT match a non-400 status code', () => {
@@ -826,7 +826,7 @@ describe('clientErrorPolicies', () => {
           endpoint: credentialBase,
           apiEndpoints: { credential: credentialBase },
         }
-        expect(personCredentialAccountUnavailableErrorPolicy.matches(error, context as any)).toBeFalsy()
+        expect(digitalServiceCardAccountUnavailableErrorPolicy.matches(error, context as any)).toBeFalsy()
       })
 
       it('should NOT match a 400 on a different endpoint', () => {
@@ -836,7 +836,7 @@ describe('clientErrorPolicies', () => {
           endpoint: 'https://idsit.gov.bc.ca/device/barcodes',
           apiEndpoints: { credential: credentialBase },
         }
-        expect(personCredentialAccountUnavailableErrorPolicy.matches(error, context as any)).toBeFalsy()
+        expect(digitalServiceCardAccountUnavailableErrorPolicy.matches(error, context as any)).toBeFalsy()
       })
 
       it('should NOT match when error_description does not mention suspended/deactivated', () => {
@@ -846,7 +846,7 @@ describe('clientErrorPolicies', () => {
           endpoint: credentialBase,
           apiEndpoints: { credential: credentialBase },
         }
-        expect(personCredentialAccountUnavailableErrorPolicy.matches(error, context as any)).toBeFalsy()
+        expect(digitalServiceCardAccountUnavailableErrorPolicy.matches(error, context as any)).toBeFalsy()
       })
 
       it('should NOT match when error_description is missing', () => {
@@ -856,7 +856,7 @@ describe('clientErrorPolicies', () => {
           endpoint: credentialBase,
           apiEndpoints: { credential: credentialBase },
         }
-        expect(personCredentialAccountUnavailableErrorPolicy.matches(error, context as any)).toBeFalsy()
+        expect(digitalServiceCardAccountUnavailableErrorPolicy.matches(error, context as any)).toBeFalsy()
       })
 
       it('should NOT match when error_description is not a string', () => {
@@ -866,7 +866,7 @@ describe('clientErrorPolicies', () => {
           endpoint: credentialBase,
           apiEndpoints: { credential: credentialBase },
         }
-        expect(personCredentialAccountUnavailableErrorPolicy.matches(error, context as any)).toBeFalsy()
+        expect(digitalServiceCardAccountUnavailableErrorPolicy.matches(error, context as any)).toBeFalsy()
       })
 
       it('should NOT match when error is not "unauthorized_client", even if error_description mentions suspended/deactivated', () => {
@@ -880,7 +880,7 @@ describe('clientErrorPolicies', () => {
           endpoint: credentialBase,
           apiEndpoints: { credential: credentialBase },
         }
-        expect(personCredentialAccountUnavailableErrorPolicy.matches(error, context as any)).toBeFalsy()
+        expect(digitalServiceCardAccountUnavailableErrorPolicy.matches(error, context as any)).toBeFalsy()
       })
     })
 
@@ -898,10 +898,10 @@ describe('clientErrorPolicies', () => {
           },
         }
 
-        personCredentialAccountUnavailableErrorPolicy.handle(error, context as any)
+        digitalServiceCardAccountUnavailableErrorPolicy.handle(error, context as any)
 
         expect(loggerMock.info).toHaveBeenCalledWith(
-          '[PersonCredentialAccountUnavailableErrorPolicy] account suspended on Person Credential creation'
+          '[DigitalServiceCardAccountUnavailableErrorPolicy] account suspended on Digital Services Card creation'
         )
         expect(suspendedAlert).toHaveBeenCalledWith(error.cause)
         expect(deactivatedAlert).not.toHaveBeenCalled()
@@ -920,10 +920,10 @@ describe('clientErrorPolicies', () => {
           },
         }
 
-        personCredentialAccountUnavailableErrorPolicy.handle(error, context as any)
+        digitalServiceCardAccountUnavailableErrorPolicy.handle(error, context as any)
 
         expect(loggerMock.info).toHaveBeenCalledWith(
-          '[PersonCredentialAccountUnavailableErrorPolicy] account deactivated on Person Credential creation'
+          '[DigitalServiceCardAccountUnavailableErrorPolicy] account deactivated on Digital Services Card creation'
         )
         expect(deactivatedAlert).toHaveBeenCalledWith(error.cause)
         expect(suspendedAlert).not.toHaveBeenCalled()
@@ -935,7 +935,7 @@ describe('clientErrorPolicies', () => {
         const error = errorWithDescription('suspended')
         const context = { statusCode: 400, endpoint: credentialBase, apiEndpoints: { credential: credentialBase } }
         const policy = ClientErrorHandlingPolicies.find((p) => p.matches(error, context as any))
-        expect(policy).toBe(personCredentialAccountUnavailableErrorPolicy)
+        expect(policy).toBe(digitalServiceCardAccountUnavailableErrorPolicy)
       })
     })
   })

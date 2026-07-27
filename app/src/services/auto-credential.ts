@@ -1,4 +1,4 @@
-import { getPersonCredentialAccountProblem } from '@/bcsc-theme/utils/personCredentialAccountProblem'
+import { getDigitalServiceCardAccountProblem } from '@/bcsc-theme/utils/getDigitalServiceCardAccountProblem'
 import { AbstractBifoldLogger, CredentialProvisioningEventTypes, CredentialProvisioningMonitor } from '@bifold/core'
 import { AnonCredsRequestedAttribute, AnonCredsRequestedPredicate } from '@credo-ts/anoncreds'
 import { Agent } from '@credo-ts/core'
@@ -376,7 +376,7 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
           }
         })
     } catch (err) {
-      const accountProblem = getPersonCredentialAccountProblem(err)
+      const accountProblem = getDigitalServiceCardAccountProblem(err)
       if (accountProblem) {
         // User cannot satisfy the proof request because their BCSC card is suspended or deactivated
         // auto decline the proof
