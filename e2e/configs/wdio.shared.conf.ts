@@ -1,9 +1,12 @@
 // wdio.shared.conf.ts
-import { dirname, resolve } from 'node:path'
+import { mkdirSync } from 'node:fs'
+import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { browser } from '@wdio/globals'
 import dotenv from 'dotenv'
 import { getE2EConfig } from '../src/e2eConfig.js'
+import { acceptSystemAlert } from '../src/helpers/alerts.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -12,34 +15,109 @@ dotenv.config({ path: resolve(__dirname, '../.env.e2e') })
 
 const { variant } = getE2EConfig()
 
+/** All reporter + screenshot output lands here (gitignored; uploaded as CI artifacts). */
+const REPORTS_DIR = resolve(__dirname, '../reports')
+
+/**
+ * Save a screenshot named after the failing test. The webdriver screenshot command also attaches
+ * the image to the Allure report. Never throws — a screenshot problem must not mask the real
+ * test failure.
+ *
+ * Sauce configs override `afterTest` (to report `sauce:job-result`) and must call this first.
+ */
+export async function captureFailureScreenshot(
+  test: { parent?: string; title: string },
+  result: { passed: boolean }
+): Promise<void> {
+  if (result.passed) return
+  try {
+    const dir = join(REPORTS_DIR, 'screenshots')
+    mkdirSync(dir, { recursive: true })
+    const name = [test.parent, test.title]
+      .filter(Boolean)
+      .join(' - ')
+      .replace(/[^\w\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '_')
+      .slice(0, 120)
+    await browser.saveScreenshot(join(dir, `${name || 'failure'}-${Date.now()}.png`))
+  } catch (err) {
+    console.warn('Failed to capture failure screenshot:', err)
+  }
+}
+
 export const config: WebdriverIO.Config = {
   specs: [resolve(__dirname, `../test/${variant}/smoke.spec.ts`)],
   suites: {
     smoke: [resolve(__dirname, `../test/${variant}/smoke.spec.ts`)],
-    'happy-path': [resolve(__dirname, `../test/${variant}/happy-path.spec.ts`)],
-    'full-regression': [resolve(__dirname, `../test/${variant}/full-regression/*.spec.ts`)],
-    biometrics: [resolve(__dirname, `../test/${variant}/manual/biometrics.spec.ts`)],
+    onboarding: [resolve(__dirname, `../test/${variant}/onboarding/*.journey.ts`)],
+    auth: [resolve(__dirname, `../test/${variant}/auth/*.journey.ts`)],
+    verify: [resolve(__dirname, `../test/${variant}/verify/*.journey.ts`)],
+    main: [resolve(__dirname, `../test/${variant}/main/*.journey.ts`)],
     migration: [resolve(__dirname, `../test/${variant}/migration/migration.spec.ts`)],
   },
   exclude: [],
   capabilities: [],
 
   logLevel: 'warn',
-  bail: 1, // Stop the test suite on the first failure
+  // 0 = a failed spec FILE does not cancel the remaining files — each file is an independent
+  // session (journey), so the rest of the run still reports. Within-file ordering is handled by
+  // mochaOpts.bail below.
+  bail: 0,
   waitforTimeout: 20_000,
   connectionRetryTimeout: 180_000,
   connectionRetryCount: 2,
 
   framework: 'mocha',
-  reporters: ['spec'],
+  reporters: [
+    'spec',
+    [
+      'junit',
+      { outputDir: join(REPORTS_DIR, 'junit'), outputFileFormat: (opts: { cid: string }) => `wdio-${opts.cid}.xml` },
+    ],
+    [
+      'allure',
+      {
+        outputDir: join(REPORTS_DIR, 'allure'),
+        disableWebdriverStepsReporting: true,
+        disableWebdriverScreenshotsReporting: false,
+      },
+    ],
+  ],
   mochaOpts: {
     ui: 'bdd',
     timeout: 600_000, // 10 min per test — generous for real devices
-    bail: true, // Stop the test suite on the first failure
+    bail: true, // Checkpoints within a file are order-dependent — abort the rest of the file on first failure
   },
 
-  // Hooks for SauceLabs test status reporting
-  afterTest: async () => {
-    // Implemented in sauce config override
+  /**
+   * Real iOS devices show a "Find and Connect to Devices on Your Local Network" permission prompt at
+   * first launch, layered over the initial screen — accept it so the first interaction isn't
+   * swallowed. No-op on Android; simulators/emulators don't show it (the short wait just elapses).
+   * Best-effort: a stuck prompt must never fail the whole session.
+   */
+  before: async () => {
+    // Android (UiAutomator2): React Native's JS thread is essentially never "idle" from the
+    // accessibility framework's perspective, so the driver's implicit waitForIdle burns its full
+    // timeout (default ~10s) before AND after every interaction — turning each tap into a ~10s
+    // wait. Zero it out; our explicit waitForDisplayed calls still gate on element readiness.
+    if (browser.isAndroid) {
+      try {
+        await browser.updateSettings({ waitForIdleTimeout: 0 })
+      } catch (err) {
+        console.warn('[before] Failed to disable waitForIdleTimeout (continuing):', err)
+      }
+      return
+    }
+    if (!browser.isIOS) return
+    try {
+      await acceptSystemAlert(6_000)
+    } catch (err) {
+      console.warn('[before] iOS launch prompt handling failed (continuing):', err)
+    }
+  },
+
+  afterTest: async (test, _context, result) => {
+    await captureFailureScreenshot(test, result)
   },
 }

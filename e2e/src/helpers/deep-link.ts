@@ -1,10 +1,15 @@
 /**
  * Helpers for dispatching `<scheme>://...` deep links to the app under test.
  *
- * Both iOS XCUITest and Android UiAutomator2 expose Appium's `mobile: deepLink`
- * command, but with platform-specific arg names (`bundleId` vs `package`).
- * This module wraps that and the matching app-id lookup so spec code can stay
- * platform-agnostic.
+ * Android uses Appium's `mobile: deepLink` (`am start -a VIEW`). iOS uses the same command but WITHOUT
+ * a `bundleId` — the plain system open — then accepts the "Open in <app>?" confirmation. Passing a
+ * `bundleId` routes through the app-scoped open, which errors unless the device runtime is iOS 16.4+
+ * ("The current OS runtime does not support opening URLs with a given application"); the system open
+ * has no such requirement and works on any iOS.
+ *
+ * Requires the OFFICIAL Appium WebDriverAgent (pinned via `appiumVersion` in
+ * `configs/sauce/wdio.ios.sauce.rdc.conf.ts`). Sauce's custom WDA (the default `latest`) instead falls
+ * back to Siri for the no-bundleId open, which is slow and non-deterministic.
  */
 import { acceptSystemAlert } from './alerts.js'
 import type { DeepLinkPlatform } from './pairing-code.js'
@@ -31,20 +36,20 @@ export async function getCurrentAppId(): Promise<string> {
 }
 
 /**
- * Dispatch a deep-link URL to the named app. Mirrors how the OS would
- * resolve a tap on a `<scheme>://...` link in a mobile browser — Appium
- * routes through Safari (iOS) or `am start -a VIEW` (Android), and the
- * registered URL scheme handler in the variant manifests catches it.
- *
- * iOS: We deliberately omit `bundleId` so WDA hands the URL off through
- * Safari instead of `XCUIApplication.open(URL:)` — the latter fails on
- * App Store / Enterprise-signed builds with "The current Xcode SDK does
- * not support opening of URLs with given application". The Safari path
- * triggers an "Open in BC Wallet" system prompt, which we accept.
+ * Dispatch a deep-link URL to the named app. Mirrors how the OS would resolve a tap on a
+ * `<scheme>://...` link in a mobile browser, and the registered URL-scheme handler in the variant
+ * manifests catches it.
  */
 export async function dispatchDeepLink(url: string, appId: string): Promise<void> {
   if (driver.isIOS) {
-    await driver.execute('mobile: deepLink', { url })
+    // The pairing site mints the link with whatever env-scheme its UA maps to (e.g. `iddev`), but the
+    // installed build may register a DIFFERENT one (`idtest`, …). Dispatching an unregistered scheme
+    // fails with LSApplicationNotFound (-10814). For BCSC the iOS bundle id equals the URL scheme, so
+    // retarget the link at the running app's own scheme (a no-op when they already match).
+    const retargeted = url.replace(/^[^:]+:\/\//, `${appId}://`)
+    // No `bundleId`: the system open avoids the iOS-16.4 app-scoped-open requirement, and on the
+    // official WDA it does not fall back to Siri. It raises an "Open in <app>?" prompt, which we accept.
+    await driver.execute('mobile: deepLink', { url: retargeted })
     await acceptSystemAlert()
     return
   }

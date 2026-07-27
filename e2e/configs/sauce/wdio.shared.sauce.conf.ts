@@ -5,8 +5,7 @@ import { fileURLToPath } from 'node:url'
 
 import type { Options } from '@wdio/types'
 import dotenv from 'dotenv'
-import { jobNameFromSpec } from '../../src/helpers/sauce.js'
-import { config as baseConfig } from '../wdio.shared.conf.js'
+import { captureFailureScreenshot, config as baseConfig } from '../wdio.shared.conf.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: resolve(__dirname, '../../.env.saucelabs') })
@@ -22,13 +21,14 @@ config.services = [
   [
     'sauce',
     {
-      setJobName: (runnerConfig: Options.Testrunner, _caps: unknown, suiteTitle: string) => {
-        if (process.env.TEST_NAME) return process.env.TEST_NAME
-        const specEntry = runnerConfig.specs?.[0]
-        const specPath = Array.isArray(specEntry) ? specEntry[0] : specEntry
-        if (specPath) return jobNameFromSpec(specPath)
-        return suiteTitle
-      },
+      // Name each Sauce job after the spec it runs. The service only gives this callback the
+      // *global* runner config — whose top-level `specs` is always the hardcoded default
+      // (`smoke.spec.ts`), NOT the file this worker is running — so deriving the name from
+      // `runnerConfig.specs` labels every parallel job "Smoke". `suiteTitle` is the per-worker
+      // signal: the running file's Mocha `describe(...)` title (e.g. "Verify journey: entry
+      // detours"), which is already human-readable. TEST_NAME still overrides for one-off runs.
+      setJobName: (_runnerConfig: Options.Testrunner, _caps: unknown, suiteTitle: string) =>
+        process.env.TEST_NAME || suiteTitle || 'E2E Tests',
     },
   ],
 ]
@@ -44,8 +44,9 @@ const sauceRdcOptions = {
   imageInjection: true,
 }
 
-config.afterTest = async function (test, _context, { passed }) {
-  await browser.execute(`sauce:job-result=${passed ? 'passed' : 'failed'}`)
+config.afterTest = async function (test, _context, result) {
+  await captureFailureScreenshot(test, result)
+  await browser.execute(`sauce:job-result=${result.passed ? 'passed' : 'failed'}`)
 }
 
 export { config, sauceRdcOptions }
