@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
-import { TEST_PIN, Timeouts } from '../../../../src/constants.js'
-import { skipNotificationsIfShown } from '../../../../src/flows/onboarding.js'
+import { TEST_PIN, Timeouts } from '../../../src/constants.js'
+import { skipNotificationsIfShown } from '../../../src/flows/onboarding.js'
 import {
   OnboardingCreatePINScreen,
   OnboardingIntroScreen,
@@ -9,7 +9,7 @@ import {
   OnboardingSecureAppScreen,
   OnboardingTermsOfUseScreen,
   VerifyPromptScreen,
-} from '../../../../src/screens/onboarding.js'
+} from '../../../src/screens/onboarding.js'
 
 /**
  * Onboarding happy path journey.

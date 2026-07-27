@@ -1,8 +1,8 @@
-import { TestUsers, Timeouts } from '../../../../src/constants.js'
-import { completeOnboarding } from '../../../../src/flows/onboarding.js'
-import { chooseAddAccount, enterSerialManually, startVerification } from '../../../../src/flows/verify.js'
-import { EnterBirthdateScreen } from '../../../../src/screens/verify.js'
-import { getTestUser, setTestUser } from '../../../../src/support/context.js'
+import { TestUsers, Timeouts } from '../../../src/constants.js'
+import { completeOnboarding } from '../../../src/flows/onboarding.js'
+import { chooseAddAccount, enterSerialManually, startVerification } from '../../../src/flows/verify.js'
+import { EnterBirthdateScreen } from '../../../src/screens/verify.js'
+import { getTestUser, setTestUser } from '../../../src/support/context.js'
 
 /**
  * Verify journey: entry spine.

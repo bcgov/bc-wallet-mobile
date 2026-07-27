@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
-import { TEST_PIN, TestUsers, Timeouts } from '../../../../src/constants.js'
-import { selectAccountLandingIfPresent } from '../../../../src/flows/auth.js'
-import { completeOnboarding } from '../../../../src/flows/onboarding.js'
+import { TEST_PIN, TestUsers, Timeouts } from '../../../src/constants.js'
+import { selectAccountLandingIfPresent } from '../../../src/flows/auth.js'
+import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
   chooseAddAccount,
   completeVerification,
@@ -9,12 +9,12 @@ import {
   enterSerialManually,
   reachVerificationMethod,
   startVerification,
-} from '../../../../src/flows/verify.js'
-import { acceptSystemAlert } from '../../../../src/helpers/alerts.js'
-import { currentPlatform, dispatchDeepLink, getCurrentAppId } from '../../../../src/helpers/deep-link.js'
-import { fetchPairingCode, fetchPairingDeepLink } from '../../../../src/helpers/pairing-code.js'
-import { AccountLandingScreen, EnterPINScreen } from '../../../../src/screens/auth.js'
-import { BaseScreen } from '../../../../src/screens/core/index.js'
+} from '../../../src/flows/verify.js'
+import { acceptSystemAlert } from '../../../src/helpers/alerts.js'
+import { currentPlatform, dispatchDeepLink, getCurrentAppId } from '../../../src/helpers/deep-link.js'
+import { fetchPairingCode, fetchPairingDeepLink } from '../../../src/helpers/pairing-code.js'
+import { AccountLandingScreen, EnterPINScreen } from '../../../src/screens/auth.js'
+import { BaseScreen } from '../../../src/screens/core/index.js'
 import {
   AccountDetailsScreen,
   ContactsScreen,
@@ -32,9 +32,9 @@ import {
   TransferQRInformationScreen,
   WalletScreen,
   WhatAreContactsScreen,
-} from '../../../../src/screens/main.js'
-import { VerificationMethodSelectionScreen } from '../../../../src/screens/verify.js'
-import { getTestUser, setTestUser } from '../../../../src/support/context.js'
+} from '../../../src/screens/main.js'
+import { VerificationMethodSelectionScreen } from '../../../src/screens/verify.js'
+import { getTestUser, setTestUser } from '../../../src/support/context.js'
 
 /** Engine handle for text-based asserts on screens/elements that expose no testID (the ProfileCard name;
  *  the WhatAreContacts heading). */

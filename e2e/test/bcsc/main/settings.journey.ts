@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
-import { TEST_PIN, Timeouts, UPDATED_TEST_PIN, WRONG_TEST_PIN } from '../../../../src/constants.js'
-import { unlockWithPin } from '../../../../src/flows/auth.js'
-import { skipToHome } from '../../../../src/flows/onboarding.js'
+import { TEST_PIN, Timeouts, UPDATED_TEST_PIN, WRONG_TEST_PIN } from '../../../src/constants.js'
+import { unlockWithPin } from '../../../src/flows/auth.js'
+import { skipToHome } from '../../../src/flows/onboarding.js'
 import {
   AppSecurityScreen,
   AutoLockScreen,
@@ -13,8 +13,8 @@ import {
   RemoveAccountConfirmScreen,
   ResetWalletConfirmScreen,
   SettingsScreen,
-} from '../../../../src/screens/main.js'
-import { OnboardingIntroScreen } from '../../../../src/screens/onboarding.js'
+} from '../../../src/screens/main.js'
+import { OnboardingIntroScreen } from '../../../src/screens/onboarding.js'
 
 /**
  * Main journey: settings (unverified-safe rows).

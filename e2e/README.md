@@ -9,7 +9,7 @@ The suite is built on a typed **screen-object DSL** and **per-area journey files
 - **testID keys** live in `src/test-ids/registry.ts` — the exact keys the app passes to `testIdWithKey`. Never write `com.ariesbifold:id/...` literals; wrap registry keys with `bcsc(key)`.
 - **Screen descriptors** (`src/screens/<stack>.ts`) map semantic roles (`self`/`primary`/`secondary`/`back`/`help`/`menu` + named `links`/`inputs`/`elements`) to testIDs via `defineScreen`. Journeys call `tap('primary')`, `fill('pin', …)` — never raw selectors. `src/screens/main.ts` is the reference style.
 - **Arrange flows** (`src/flows/`) are how journeys earn preconditions — there is no app-side seeding: `completeOnboarding()`, `skipToHome()`, `unlockWithPin()`, `completeVerification()`. The VerifyPrompt exists **only in the session that completed onboarding**; never relaunch between onboarding and verify entry.
-- **Journeys** (`test/bcsc/journeys/<area>/*.journey.ts`): one file = one app session = one ordered journey of checkpoints, so a failure isolates to its file and reports per scenario. wdio `bail: 0` keeps files independent; `mochaOpts.bail: true` aborts the rest of a file on its first failure. See **[Writing Tests → Journeys](#journeys)** to add one.
+- **Journeys** (`test/bcsc/<area>/*.journey.ts`): one file = one app session = one ordered journey of checkpoints, so a failure isolates to its file and reports per scenario. wdio `bail: 0` keeps files independent; `mochaOpts.bail: true` aborts the rest of a file on its first failure. See **[Writing Tests → Journeys](#journeys)** to add one.
 - **Test context** (`src/support/context.ts`) carries the active `TestUser` across a journey's checkpoints (`setTestUser` / `getTestUser`).
 - Failure screenshots + JUnit/Allure output land in `e2e/reports/` (gitignored).
 
@@ -38,10 +38,10 @@ _Tests are organized into named suites. Use the_ `--suite` _flag to select which
 | _Suite_      | _What it tests_                                                                                      |
 | ------------ | ---------------------------------------------------------------------------------------------------- |
 | `smoke`      | _App launch + initial navigation (fast sanity check)_                                                |
-| `onboarding` | _Onboarding journeys — happy path + detours (`journeys/onboarding/*.journey.ts`)_                    |
-| `auth`       | _Returning-user unlock journey — PIN unlock, wrong-PIN retry, lockout (`journeys/auth/*.journey.ts`)_ |
-| `verify`     | _Verification journeys — the four card types + entry spine/detours (`journeys/verify/*.journey.ts`)_ |
-| `main`       | _Main-stack journeys — unverified gating + settings (`journeys/main/*.journey.ts`)_                  |
+| `onboarding` | _Onboarding journeys — happy path + detours (`onboarding/*.journey.ts`)_                    |
+| `auth`       | _Returning-user unlock journey — PIN unlock, wrong-PIN retry, lockout (`auth/*.journey.ts`)_ |
+| `verify`     | _Verification journeys — the four card types + entry spine/detours (`verify/*.journey.ts`)_ |
+| `main`       | _Main-stack journeys — unverified gating + settings (`main/*.journey.ts`)_                  |
 | `migration`  | _V3→V4 upgrade: v3 onboarding + verification, upgrade to v4, unlock with the v3 PIN_                 |
 
 ```bash
@@ -350,19 +350,19 @@ _Element lookup is cross-platform with no branching:_
 
 ### Journeys
 
-Tests are organized as **journeys**, not composable specs. Each `*.journey.ts` file is **one app session running one ordered sequence of checkpoints** (`it` blocks). Area suites glob them (`--suite verify` → `journeys/verify/*.journey.ts`). Runner-level `bail: 0` keeps files independent — a failed journey reports and the rest still run — while `mochaOpts.bail: true` stops the rest of a *single* file after its first failure, because later checkpoints depend on the state earlier ones left behind.
+Tests are organized as **journeys**, not composable specs. Each `*.journey.ts` file is **one app session running one ordered sequence of checkpoints** (`it` blocks). Area suites glob them (`--suite verify` → `verify/*.journey.ts`). Runner-level `bail: 0` keeps files independent — a failed journey reports and the rest still run — while `mochaOpts.bail: true` stops the rest of a *single* file after its first failure, because later checkpoints depend on the state earlier ones left behind.
 
 A journey earns its preconditions through the UI via **arrange flows** (`src/flows/`) — there is no state seeding — then chains dependent checkpoints so an expensive setup (a verification is ~5–8 min) is paid once and amortized. The active `TestUser` is set once and read via `src/support/context.ts`:
 
 ```typescript
-// test/bcsc/journeys/verify/verified-photo.journey.ts (abridged)
-import { TestUsers, Timeouts } from '../../../../src/constants.js'
-import { completeOnboarding } from '../../../../src/flows/onboarding.js'
+// test/bcsc/verify/verified-photo.journey.ts (abridged)
+import { TestUsers, Timeouts } from '../../../src/constants.js'
+import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
   chooseAddAccount, completeVerification, enterBirthdate, enterSerialManually, startVerification,
-} from '../../../../src/flows/verify.js'
-import { HomeScreen } from '../../../../src/screens/main.js'
-import { getTestUser, setTestUser } from '../../../../src/support/context.js'
+} from '../../../src/flows/verify.js'
+import { HomeScreen } from '../../../src/screens/main.js'
+import { getTestUser, setTestUser } from '../../../src/support/context.js'
 
 describe('Verified journey: photo card', () => {
   before(() => setTestUser(TestUsers.photo)) // the active TestUser for every checkpoint below
@@ -389,13 +389,13 @@ describe('Verified journey: photo card', () => {
 
 - **A new checkpoint on an existing journey** — add an `it` that drives screen objects **by role**, placed so the preceding checkpoints leave the app in the state it needs. Assert arrival with `expectVisible()` before acting, and leave the app in a clean state for the next checkpoint.
 - **A new screen** — add a descriptor to `src/screens/<stack>.ts` and its testID keys to `src/test-ids/registry.ts`. The keys must match what the app passes to `testIdWithKey` — **verify against the app source** (`grep testIdWithKey app/src/...`), don't guess. Anchor `self` on a stable, always-present element. For a screen with **no** usable testID (e.g. an inline `<Link>` iOS flattens into its paragraph), assert arrival by heading copy with `engine.findByText('…')` and return via the header `back` — but note not every stack sets `headerBackTestID` (AuthStack doesn't), so confirm the back button is addressable before relying on it.
-- **A new journey** — add a `*.journey.ts` under the matching `test/bcsc/journeys/<area>/` directory; the area suite globs it automatically. `setTestUser()` in a `before` hook, arrange preconditions via `src/flows/`, then chain the checkpoints.
+- **A new journey** — add a `*.journey.ts` under the matching `test/bcsc/<area>/` directory; the area suite globs it automatically. `setTestUser()` in a `before` hook, arrange preconditions via `src/flows/`, then chain the checkpoints.
 - **A new arrange flow** — if several journeys need the same UI-driven precondition, add it to `src/flows/<area>.ts` (used by ≥1 journey, reused by the rest) rather than duplicating steps.
 
 Run just the file you are iterating on:
 
 ```bash
-yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/bcsc/journeys/verify/verified-photo.journey.ts
+yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/bcsc/verify/verified-photo.journey.ts
 ```
 
 ### _Camera Image Injection_
@@ -512,25 +512,24 @@ e2e/
 │   ├── bc-wallet/                           # BC Wallet variant
 │   │   └── smoke.spec.ts                    # app launch + Preface/onboarding intro (default spec)
 │   │
-│   └── bcsc/                                # BCSC variant
+│   └── bcsc/                                # BCSC variant — per-area journey folders (globbed by --suite <area>)
 │       ├── smoke.spec.ts                    # app launch + initial navigation (default spec)
 │       │
-│       ├── journeys/                        # per-area journeys — one file = one app session (globbed by the area suites)
-│       │   ├── onboarding/
-│       │   │   ├── onboarding.journey.ts            # happy-path onboarding → VerifyPrompt
-│       │   │   └── onboarding-detours.journey.ts    # back-nav, webviews, help menu, onboarding settings, analytics decline
-│       │   ├── auth/
-│       │   │   └── auth-unlock.journey.ts           # unlock, Get Help, wrong-PIN retry, lockout
-│       │   ├── verify/
-│       │   │   ├── verify-entry.journey.ts          # entry spine (stops short of authorize)
-│       │   │   ├── verify-entry-detours.journey.ts  # transfer/scan/OtherID detours + mismatched-serial error
-│       │   │   ├── verified-photo.journey.ts        # photo card + send-video/live-call detours
-│       │   │   ├── verified-non-photo.journey.ts    # non-photo card (+ additional photo ID)
-│       │   │   ├── verified-combined.journey.ts     # combined card + login/deep-link/transfer/contacts/account
-│       │   │   └── verified-non-bcsc.journey.ts     # non-BCSC (two IDs + address + email)
-│       │   └── main/
-│       │       ├── unverified-main.journey.ts       # unverified tab / QRCore gating
-│       │       └── settings.journey.ts              # settings rows, change-PIN, auto-lock, reset/remove account
+│       ├── onboarding/                      # one file = one app session = one ordered journey
+│       │   ├── onboarding.journey.ts        # happy-path onboarding → VerifyPrompt
+│       │   └── onboarding-detours.journey.ts # back-nav, webviews, help menu, onboarding settings, analytics decline
+│       ├── auth/
+│       │   └── auth-unlock.journey.ts       # unlock, Get Help, wrong-PIN retry, lockout
+│       ├── verify/
+│       │   ├── verify-entry.journey.ts      # entry spine (stops short of authorize)
+│       │   ├── verify-entry-detours.journey.ts # transfer/scan/OtherID detours + mismatched-serial error
+│       │   ├── verified-photo.journey.ts    # photo card + send-video/live-call detours
+│       │   ├── verified-non-photo.journey.ts # non-photo card (+ additional photo ID)
+│       │   ├── verified-combined.journey.ts # combined card + login/deep-link/transfer/contacts/account
+│       │   └── verified-non-bcsc.journey.ts # non-BCSC (two IDs + address + email)
+│       ├── main/
+│       │   ├── unverified-main.journey.ts   # unverified tab / QRCore gating
+│       │   └── settings.journey.ts          # settings rows, change-PIN, auto-lock, reset/remove account
 │       │
 │       └── migration/                       # v3 → v4 upgrade (--suite migration; deprioritized). v3 phase uses v3TestIDs.ts
 │           ├── migration.spec.ts            # orchestrator: v3 onboarding → upgrade → v4 unlock

@@ -1,8 +1,8 @@
-import { TestUsers, Timeouts } from '../../../../src/constants.js'
-import { completeOnboarding } from '../../../../src/flows/onboarding.js'
-import { chooseAddAccount, enterSerialManually, startVerification } from '../../../../src/flows/verify.js'
-import { acceptSystemAlert } from '../../../../src/helpers/alerts.js'
-import { BaseScreen } from '../../../../src/screens/core/BaseScreen.js'
+import { TestUsers, Timeouts } from '../../../src/constants.js'
+import { completeOnboarding } from '../../../src/flows/onboarding.js'
+import { chooseAddAccount, enterSerialManually, startVerification } from '../../../src/flows/verify.js'
+import { acceptSystemAlert } from '../../../src/helpers/alerts.js'
+import { BaseScreen } from '../../../src/screens/core/BaseScreen.js'
 import {
   AccountSetupScreen,
   DualIdentificationRequiredScreen,
@@ -13,8 +13,8 @@ import {
   TransferAccountInstructionsScreen,
   VerificationCardErrorScreen,
   VerifyWebViewScreen,
-} from '../../../../src/screens/verify.js'
-import { getTestUser, setTestUser } from '../../../../src/support/context.js'
+} from '../../../src/screens/verify.js'
+import { getTestUser, setTestUser } from '../../../src/support/context.js'
 
 /** Engine handle for the one screen anchored on visible copy (EvidenceTypeList has no container testID). */
 const engine = new BaseScreen()

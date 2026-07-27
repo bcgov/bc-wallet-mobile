@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
-import { Timeouts } from '../../../../src/constants.js'
-import { skipToHome } from '../../../../src/flows/onboarding.js'
-import { acceptSystemAlert } from '../../../../src/helpers/alerts.js'
-import { BaseScreen } from '../../../../src/screens/core/BaseScreen.js'
+import { Timeouts } from '../../../src/constants.js'
+import { skipToHome } from '../../../src/flows/onboarding.js'
+import { acceptSystemAlert } from '../../../src/helpers/alerts.js'
+import { BaseScreen } from '../../../src/screens/core/BaseScreen.js'
 import {
   HomeScreen,
   MainVerifyPromptScreen,
@@ -10,7 +10,7 @@ import {
   SettingsScreen,
   TabBar,
   WalletScreen,
-} from '../../../../src/screens/main.js'
+} from '../../../src/screens/main.js'
 
 /**
  * Main journey: unverified gating.

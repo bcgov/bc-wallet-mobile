@@ -50,12 +50,10 @@ export const config: WebdriverIO.Config = {
   specs: [resolve(__dirname, `../test/${variant}/smoke.spec.ts`)],
   suites: {
     smoke: [resolve(__dirname, `../test/${variant}/smoke.spec.ts`)],
-    onboarding: [resolve(__dirname, `../test/${variant}/journeys/onboarding/*.journey.ts`)],
-    auth: [resolve(__dirname, `../test/${variant}/journeys/auth/*.journey.ts`)],
-    verify: [resolve(__dirname, `../test/${variant}/journeys/verify/*.journey.ts`)],
-    main: [resolve(__dirname, `../test/${variant}/journeys/main/*.journey.ts`)],
-    'happy-path': [resolve(__dirname, `../test/${variant}/happy-path.spec.ts`)],
-    'full-regression': [resolve(__dirname, `../test/${variant}/full-regression/*.spec.ts`)],
+    onboarding: [resolve(__dirname, `../test/${variant}/onboarding/*.journey.ts`)],
+    auth: [resolve(__dirname, `../test/${variant}/auth/*.journey.ts`)],
+    verify: [resolve(__dirname, `../test/${variant}/verify/*.journey.ts`)],
+    main: [resolve(__dirname, `../test/${variant}/main/*.journey.ts`)],
     migration: [resolve(__dirname, `../test/${variant}/migration/migration.spec.ts`)],
   },
   exclude: [],
@@ -73,8 +71,18 @@ export const config: WebdriverIO.Config = {
   framework: 'mocha',
   reporters: [
     'spec',
-    ['junit', { outputDir: join(REPORTS_DIR, 'junit'), outputFileFormat: (opts: { cid: string }) => `wdio-${opts.cid}.xml` }],
-    ['allure', { outputDir: join(REPORTS_DIR, 'allure'), disableWebdriverStepsReporting: true, disableWebdriverScreenshotsReporting: false }],
+    [
+      'junit',
+      { outputDir: join(REPORTS_DIR, 'junit'), outputFileFormat: (opts: { cid: string }) => `wdio-${opts.cid}.xml` },
+    ],
+    [
+      'allure',
+      {
+        outputDir: join(REPORTS_DIR, 'allure'),
+        disableWebdriverStepsReporting: true,
+        disableWebdriverScreenshotsReporting: false,
+      },
+    ],
   ],
   mochaOpts: {
     ui: 'bdd',

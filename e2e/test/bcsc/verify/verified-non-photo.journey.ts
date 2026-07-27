@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
-import { TestUsers, Timeouts } from '../../../../src/constants.js'
-import { completeOnboarding } from '../../../../src/flows/onboarding.js'
+import { TestUsers, Timeouts } from '../../../src/constants.js'
+import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
   addAdditionalPhotoId,
   chooseAddAccount,
@@ -9,10 +9,10 @@ import {
   enterSerialManually,
   reachVerificationMethod,
   startVerification,
-} from '../../../../src/flows/verify.js'
-import { HomeScreen, SettingsScreen } from '../../../../src/screens/main.js'
-import { VerificationMethodSelectionScreen } from '../../../../src/screens/verify.js'
-import { getTestUser, setTestUser } from '../../../../src/support/context.js'
+} from '../../../src/flows/verify.js'
+import { HomeScreen, SettingsScreen } from '../../../src/screens/main.js'
+import { VerificationMethodSelectionScreen } from '../../../src/screens/verify.js'
+import { getTestUser, setTestUser } from '../../../src/support/context.js'
 
 /**
  * Verified journey: non-photo card. A non-photo BC Services Card has no photo, so after the serial is

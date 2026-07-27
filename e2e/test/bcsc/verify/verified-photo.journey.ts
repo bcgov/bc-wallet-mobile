@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
-import { TestUsers, Timeouts } from '../../../../src/constants.js'
-import { completeOnboarding } from '../../../../src/flows/onboarding.js'
+import { TestUsers, Timeouts } from '../../../src/constants.js'
+import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
   chooseAddAccount,
   completeVerification,
@@ -8,14 +8,14 @@ import {
   enterSerialManually,
   reachVerificationMethod,
   startVerification,
-} from '../../../../src/flows/verify.js'
-import { HomeScreen, SettingsScreen } from '../../../../src/screens/main.js'
+} from '../../../src/flows/verify.js'
+import { HomeScreen, SettingsScreen } from '../../../src/screens/main.js'
 import {
   CallBusyOrClosedScreen,
   PhotoInstructionsScreen,
   VerificationMethodSelectionScreen,
-} from '../../../../src/screens/verify.js'
-import { getTestUser, setTestUser } from '../../../../src/support/context.js'
+} from '../../../src/screens/verify.js'
+import { getTestUser, setTestUser } from '../../../src/support/context.js'
 
 /**
  * Verified journey: photo card — the lightest verified path (serial + dob only), so it is the first

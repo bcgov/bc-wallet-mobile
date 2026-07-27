@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict'
-import { TEST_PIN, Timeouts, WRONG_TEST_PIN } from '../../../../src/constants.js'
-import { relaunchApp, selectAccountLandingIfPresent, unlockWithPin } from '../../../../src/flows/auth.js'
-import { skipToHome } from '../../../../src/flows/onboarding.js'
-import { AccountLandingScreen, EnterPINScreen, LockoutScreen } from '../../../../src/screens/auth.js'
-import { HomeScreen } from '../../../../src/screens/main.js'
+import { TEST_PIN, Timeouts, WRONG_TEST_PIN } from '../../../src/constants.js'
+import { relaunchApp, selectAccountLandingIfPresent, unlockWithPin } from '../../../src/flows/auth.js'
+import { skipToHome } from '../../../src/flows/onboarding.js'
+import { AccountLandingScreen, EnterPINScreen, LockoutScreen } from '../../../src/screens/auth.js'
+import { HomeScreen } from '../../../src/screens/main.js'
 
 /**
  * Auth/unlock journey.

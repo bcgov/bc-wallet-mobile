@@ -1,7 +1,7 @@
-import { TEST_PIN, Timeouts } from '../../../../src/constants.js'
-import { skipNotificationsIfShown } from '../../../../src/flows/onboarding.js'
-import { tapAtWindowPercent } from '../../../../src/helpers/gestures.js'
-import { BaseScreen } from '../../../../src/screens/core/BaseScreen.js'
+import { TEST_PIN, Timeouts } from '../../../src/constants.js'
+import { skipNotificationsIfShown } from '../../../src/flows/onboarding.js'
+import { tapAtWindowPercent } from '../../../src/helpers/gestures.js'
+import { BaseScreen } from '../../../src/screens/core/BaseScreen.js'
 import {
   OnboardingCreatePINScreen,
   OnboardingIntroScreen,
@@ -12,7 +12,7 @@ import {
   OnboardingTermsOfUseScreen,
   OnboardingWebViewScreen,
   VerifyPromptScreen,
-} from '../../../../src/screens/onboarding.js'
+} from '../../../src/screens/onboarding.js'
 
 /**
  * Onboarding detours journey.
