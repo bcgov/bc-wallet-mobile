@@ -162,9 +162,8 @@ const RestartVerificationListButton = ({ onClose, position }: MenuRowProps) => {
 
 /**
  * "Remove account" menu row (verify flow only). Navigates to the same confirmation screen used
- * elsewhere in the app (see {@link VerifyRemoveAccountConfirmationScreen}), giving the user a way
- * out of the verification stream at any point instead of only "Back to home" (which preserves
- * progress) or "Restart" (which wipes it but re-enters the flow).
+ * elsewhere in the app (see {@link VerifyRemoveAccountConfirmationScreen}), available at any point
+ * in the flow.
  */
 const RemoveAccountListButton = ({ onClose, position }: MenuRowProps) => {
   const { t } = useTranslation()
@@ -252,8 +251,7 @@ export type VerifyHelpMenuButtonOptions = {
 /**
  * Factory for the verification flow's help menu button. Offers "Report a problem", "Back to home"
  * (leave the flow, keeping progress), "Restart verification process" (once verification is underway),
- * and "Remove account" (reset the app and start over, available at every step so the user is never
- * stuck in the verification stream).
+ * and "Remove account" (reset and start over, available at every step).
  *
  * @param options - Whether to show the "Restart verification process" row.
  * @returns A React component that renders the verification help menu button.

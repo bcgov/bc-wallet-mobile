@@ -5,10 +5,8 @@ import { BasicAppContext } from '@mocks/helpers/app'
 import { useNavigation } from '@react-navigation/native'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 
-// RestartVerificationListButton (rendered when showRestartVerification is true) pulls in
-// useLoadingScreen/useVerificationReset/useSecureActions, which BasicAppContext doesn't provide.
-// Mocked here so the menu can render without wiring up that unrelated dependency chain — it already
-// has its own coverage in useRestartVerification.test.tsx.
+// RestartVerificationListButton pulls in useLoadingScreen/useVerificationReset/useSecureActions,
+// which BasicAppContext doesn't provide; useRestartVerification.test.tsx covers it separately.
 jest.mock('@/bcsc-theme/hooks/useRestartVerification', () => ({
   useRestartVerification: () => jest.fn(),
 }))
@@ -63,10 +61,8 @@ describe('createVerifyHelpMenuButton', () => {
 
     expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerifyRemoveAccountConfirmation)
 
-    // The row must also close the menu (not just navigate) — otherwise the full-screen menu Modal
-    // stays presented on top of the confirmation screen it just pushed. The close animation finishes
-    // asynchronously (Animated.timing callback), so assert post-animation via waitFor rather than
-    // synchronously; the RN jest Modal mock unmounts its children once `visible` goes false.
+    // The row must also close the menu, not just navigate, or the Modal stays presented over the
+    // screen it just pushed; closing is async, so assert once the close animation has settled.
     await waitFor(() => expect(queryByTestId(testIdWithKey('RemoveAccount'))).toBeNull())
   })
 })
