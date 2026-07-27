@@ -553,10 +553,12 @@ export const getCameraMetadata = (device?: CameraDevice, format?: CameraDeviceFo
 
   return {
     selectedFormat: format ? _summarizeCameraFormat(format) : null,
-    selectedDevice: {
-      ...cameraDevice,
-      formats: cameraDevice?.formats.map((format) => _summarizeCameraFormat(format)),
-    },
+    selectedDevice: cameraDevice
+      ? {
+          ...cameraDevice,
+          formats: cameraDevice?.formats.map((format) => _summarizeCameraFormat(format)),
+        }
+      : null,
   }
 }
 
