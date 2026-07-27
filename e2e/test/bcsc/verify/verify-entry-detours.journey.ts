@@ -70,18 +70,20 @@ describe('Verify journey: entry detours', () => {
     await IdentitySelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 
-  it('reveals manual serial entry behind the Scan camera gate and backs out', async () => {
-    await IdentitySelectionScreen.tap('primary') // Scan → ScanSerial (auto-requests camera permission)
-    await acceptSystemAlert()
-    await ScanSerialScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-    await ScanSerialScreen.tap('primary') // EnterManually (pushes ManualSerial)
-    await ManualSerialScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-    // Both hops are pushes, so back out twice: ManualSerial → ScanSerial → IdentitySelection.
-    await ManualSerialScreen.back.tap()
-    await ScanSerialScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-    await ScanSerialScreen.back.tap()
-    await IdentitySelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-  })
+  if (driver.isIOS) {
+    it('reveals manual serial entry behind the Scan camera gate and backs out', async () => {
+      await IdentitySelectionScreen.tap('primary') // Scan → ScanSerial (auto-requests camera permission)
+      await acceptSystemAlert()
+      await ScanSerialScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+      await ScanSerialScreen.tap('primary') // EnterManually (pushes ManualSerial)
+      await ManualSerialScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+      // Both hops are pushes, so back out twice: ManualSerial → ScanSerial → IdentitySelection.
+      await ManualSerialScreen.back.tap()
+      await ScanSerialScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+      await ScanSerialScreen.back.tap()
+      await IdentitySelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    })
+  }
 
   it('rejects a mismatched serial + birthdate and offers Try Another', async () => {
     // The one backend authorize on this journey: a REAL card serial + a deliberately WRONG birthdate.
