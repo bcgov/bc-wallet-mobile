@@ -42,7 +42,6 @@ _Tests are organized into named suites. Use the_ `--suite` _flag to select which
 | `auth`       | _Returning-user unlock journey — PIN unlock, wrong-PIN retry, lockout (`journeys/auth/*.journey.ts`)_ |
 | `verify`     | _Verification journeys — the four card types + entry spine/detours (`journeys/verify/*.journey.ts`)_ |
 | `main`       | _Main-stack journeys — unverified gating + settings (`journeys/main/*.journey.ts`)_                  |
-| `biometrics` | _Onboarding with biometric auth (Sauce Labs RDC only, requires_ `allowTouchIdEnroll`_)_              |
 | `migration`  | _V3→V4 upgrade: v3 onboarding + verification, upgrade to v4, unlock with the v3 PIN_                 |
 
 ```bash
@@ -338,7 +337,7 @@ export const OnboardingIntroScreen = defineScreen({
 
 **_Single source of test IDs._** _Test ID **keys** and the_ `com.ariesbifold:id/` _prefix live in one dependency-free registry,_ `src/test-ids/registry.ts`_;_ `bcsc(key)` _wraps a key into the selector both platforms use. That key is the same one the app passes to bifold's_ `testIdWithKey`_, and the registry is written to move into an app-owned/shared location so the app and the tests draw from it — a renamed key then updates both, enforced by_ `tsc`_. Pass a_ `{ ios, android }` _pair instead of a bare key for the rare element whose id differs per platform._
 
-> _**Legacy:** a few remaining specs — the_ `smoke` _specs and the_ `manual/` _+_ `migration/` _specs — still use_ `new BaseScreen(BCSC_TestIDs.X)` _with the flat registry in_ `src/testIDs.ts` _(re-exported through the_ `src/screens/BaseScreen.ts` _shim). Every journey and screen descriptor uses the DSL +_ `registry.ts`_._
+> _**v3 native selectors:** the migration suite's v3 phase (`migration/v3-onboarding.spec.ts`) drives the **native v3 app** (pre-React-Native) via_ `src/v3TestIDs.ts` _— those aren't bifold_ `com.ariesbifold:id/` _keys, so they can't live in_ `registry.ts`_. Everything else — every journey, every screen descriptor, and both variants' smoke — uses the DSL +_ `registry.ts`_. (The old flat_ `BCSC_TestIDs` / `BCWallet_TestIDs` _registry and the deprecated_ `BaseScreen` _shim have been removed.)_
 
 _Element lookup is cross-platform with no branching:_
 
@@ -428,11 +427,11 @@ _Tests run automatically in GitHub Actions via a device matrix that controls whi
 | _Trigger_            | _Suite_      | _Device Matrix_                     | _Variant_  | _Biometrics_ |
 | -------------------- | ------------ | ----------------------------------- | ---------- | ------------ |
 | _PR_                 | `smoke`      | _1 iOS (18) + 1 Android (15)_       | `bcsc-dev` | _No_         |
-| _Nightly (schedule)_ | `regression` | _3 iOS (16–18) + 3 Android (13–15)_ | `bcsc-dev` | _Yes_        |
+| _Nightly (schedule)_ | `regression` | _3 iOS (16–18) + 3 Android (13–15)_ | `bcsc-dev` | _—_          |
 
 > _The nightly `regression` suite (all per-area journeys) replaces the retired `happy-path` / `full-regression` suites; the workflow wiring for it is being finalized separately._
 
-_The device matrix is passed as a JSON array of_ `{platform, device, os_version}` _objects to_ `e2e.yml`_. Each entry spawns a separate SauceLabs session with its own logs and pass/fail status. Biometric tests run as a separate non-blocking job after the main E2E tests._
+_The device matrix is passed as a JSON array of_ `{platform, device, os_version}` _objects to_ `e2e.yml`_. Each entry spawns a separate SauceLabs session with its own logs and pass/fail status. (Biometric coverage was removed pending re-implementation as a journey — its Sauce configs + workflow job remain but currently run nothing.)_
 
 _**Note:** The_ `main` _merge E2E regression job is commented out pending GitHub Actions runner IP whitelisting with the BC Gov ID Check portal. See the IP whitelisting options documented in_ `main.yaml`_. Until resolved, nightly runs provide full regression coverage._
 
@@ -472,7 +471,6 @@ e2e/
 ├── src/
 │   ├── constants.ts                         # Timeouts, TestUsers, TEST_PIN, and shared values
 │   ├── e2eConfig.ts                         # variant detection (bcsc / bc-wallet)
-│   ├── testIDs.ts                           # legacy flat registry (BCSC_TestIDs) — used by smoke + manual/ + migration/ specs
 │   ├── v3TestIDs.ts                         # v3 native app selectors (iOS + Android) for migration
 │   │
 │   ├── test-ids/
@@ -508,11 +506,11 @@ e2e/
 │       ├── auth.ts                          # auth / unlock stack descriptors
 │       ├── verify.ts                        # verify stack descriptors (entry + card-type + method screens)
 │       ├── main.ts                          # main stack descriptors (tabs, settings, contacts, account, pairing, transfer)
-│       └── BaseScreen.ts                    # deprecated shim → core/BaseScreen (keeps legacy specs compiling)
+│       └── bcwallet.ts                      # BC Wallet variant intro screens (Preface + onboarding carousel)
 │
 ├── test/
 │   ├── bc-wallet/                           # BC Wallet variant
-│   │   └── smoke.spec.ts                    # app launch (default spec)
+│   │   └── smoke.spec.ts                    # app launch + Preface/onboarding intro (default spec)
 │   │
 │   └── bcsc/                                # BCSC variant
 │       ├── smoke.spec.ts                    # app launch + initial navigation (default spec)
@@ -534,17 +532,12 @@ e2e/
 │       │       ├── unverified-main.journey.ts       # unverified tab / QRCore gating
 │       │       └── settings.journey.ts              # settings rows, change-PIN, auto-lock, reset/remove account
 │       │
-│       ├── manual/                          # camera/biometric flows — local or Sauce, NOT in the CI journey suites
-│       │   ├── biometrics.spec.ts           # onboarding with biometric auth (--suite biometrics)
-│       │   ├── card-csn-scanning.spec.ts    # card barcode scan (camera injection)
-│       │   └── send-image-video.spec.ts     # photo/video capture (camera injection)
-│       │
-│       └── migration/                       # v3 → v4 upgrade (--suite migration; deprioritized)
+│       └── migration/                       # v3 → v4 upgrade (--suite migration; deprioritized). v3 phase uses v3TestIDs.ts
 │           ├── migration.spec.ts            # orchestrator: v3 onboarding → upgrade → v4 unlock
 │           ├── migration-context.ts         # shared state (PIN) between v3 and v4 specs
-│           ├── v3-onboarding.spec.ts        # v3 app onboarding + card verification
+│           ├── v3-onboarding.spec.ts        # v3 native app onboarding + card verification (v3TestIDs)
 │           ├── upgrade.spec.ts              # install v4 over v3 via driver.installApp()
-│           └── v4-unlock.spec.ts            # unlock v4 with the v3 PIN
+│           └── v4-unlock.spec.ts            # unlock v4 with the v3 PIN (DSL: AccountLanding → EnterPIN → Home)
 │
 ├── assets/                                  # test images for camera injection
 │   ├── README.md

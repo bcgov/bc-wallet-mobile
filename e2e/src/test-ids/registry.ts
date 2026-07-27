@@ -428,4 +428,19 @@ export const TestIds = {
       emailField: 'EmailAddressField',
     },
   },
+
+  /** BC Wallet variant — the Preface + onboarding-carousel intro screens (bifold `com.ariesbifold:id/`
+   *  prefix, so `bcsc()` still applies). Used by the `bc-wallet` smoke spec; distinct from the BCSC
+   *  `onboarding` stack above. */
+  bcwallet: {
+    preface: {
+      iAgree: 'IAgree',
+      continue: 'Continue',
+    },
+    onboarding: {
+      next: 'Next',
+      back: 'Back',
+      getStarted: 'GetStarted',
+    },
+  },
 } as const

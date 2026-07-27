@@ -1,29 +1,31 @@
+import { Timeouts } from '../../src/constants.js'
 import { getE2EConfig } from '../../src/e2eConfig.js'
 import { annotate } from '../../src/helpers/sauce.js'
-import { BaseScreen } from '../../src/screens/BaseScreen.js'
-import { BCWallet_TestIDs } from '../../src/testIDs.js'
+import { BCWalletOnboardingScreen, PrefaceScreen } from '../../src/screens/bcwallet.js'
 
-const Preface = new BaseScreen(BCWallet_TestIDs.Preface)
-const Onboarding = new BaseScreen(BCWallet_TestIDs.Onboarding)
-
-describe('App Launch', () => {
+/**
+ * BC Wallet smoke: prove the app cold-starts and the Preface → onboarding intro navigates. Drives the
+ * bifold intro screens via the action-based DSL (`screens/bcwallet.ts`), so a renamed testID is a
+ * one-line descriptor edit rather than spec churn.
+ */
+describe('BC Wallet smoke: app launch + intro', () => {
   const { variant } = getE2EConfig()
 
-  it('should launch and display the Preface screen', async () => {
+  it('cold-starts on the Preface screen', async () => {
     await annotate(`Variant: ${variant}`)
-    await Preface.waitFor('IAgree')
+    await PrefaceScreen.expectVisible(Timeouts.APP_LAUNCH)
   })
 
-  it('should complete Preface screen navigation', async () => {
-    await Preface.tap('IAgree')
-    await Preface.waitFor('Continue', 20_000)
-    await Preface.tap('Continue')
+  it('accepts the Preface and continues', async () => {
+    await PrefaceScreen.link('iAgree')
+    await PrefaceScreen.waitFor('continue', 20_000)
+    await PrefaceScreen.link('continue')
   })
 
-  it('should display the Onboarding screen', async () => {
-    await Onboarding.waitFor('Next')
-    await Onboarding.tap('Next')
-    await Onboarding.tap('Next')
-    await Onboarding.tap('GetStarted')
+  it('pages through onboarding to Get Started', async () => {
+    await BCWalletOnboardingScreen.waitFor('next')
+    await BCWalletOnboardingScreen.link('next')
+    await BCWalletOnboardingScreen.link('next')
+    await BCWalletOnboardingScreen.link('getStarted')
   })
 })

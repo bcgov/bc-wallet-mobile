@@ -16,17 +16,14 @@ export interface EnterTextOptions {
 }
 
 /**
- * Base screen object for E2E tests.
+ * Low-level selector engine for E2E tests — cross-platform element lookup, tap, wait, scroll.
  *
- * When constructed with a BCSC_TestIDs object (`new BaseScreen(BCSC_TestIDs.AccountSetup)`),
- * the typed convenience methods (`tap`, `waitFor`, `type`, `scrollTo`) provide
- * full autocomplete on the TestID keys. Subclasses can extend for custom behaviour.
+ * Prefer the action-based screen-object DSL (`defineScreen`) for every screen/journey; it maps semantic
+ * roles to testIDs and reuses this class verbatim as its engine (`new BaseScreen()`, no args). The
+ * optional constructor `ids` map + typed convenience methods (`tap`/`waitFor`/`type`/`scrollTo`, keyed on
+ * `ids`) are a lower-level fallback for the occasional element the DSL doesn't model.
  *
- * This is the low-level selector engine. Prefer the action-based screen-object DSL
- * (`defineScreen`) for new specs — it maps semantic roles to testIDs and reuses this
- * class verbatim as its engine.
- *
- * @typeParam T - shape of the BCSC_TestIDs object for this screen (e.g. `typeof BCSC_TestIDs.AccountSetup`)
+ * @typeParam T - shape of an optional key→testID map for this screen
  */
 export class BaseScreen<T extends Record<string, string> = Record<string, string>> {
   /** The TestID map for this screen. Access raw values via `ids.KeyName`. */

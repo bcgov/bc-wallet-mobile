@@ -14,7 +14,7 @@ import { acceptSystemAlert } from '../../../../src/helpers/alerts.js'
 import { currentPlatform, dispatchDeepLink, getCurrentAppId } from '../../../../src/helpers/deep-link.js'
 import { fetchPairingCode, fetchPairingDeepLink } from '../../../../src/helpers/pairing-code.js'
 import { AccountLandingScreen, EnterPINScreen } from '../../../../src/screens/auth.js'
-import { BaseScreen } from '../../../../src/screens/BaseScreen.js'
+import { BaseScreen } from '../../../../src/screens/core/index.js'
 import {
   AccountDetailsScreen,
   ContactsScreen,
