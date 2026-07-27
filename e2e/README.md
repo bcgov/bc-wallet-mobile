@@ -2,14 +2,15 @@
 
 _End-to-end tests for BC Wallet and BC Services Card apps using **WebDriverIO (WDIO) + Appium**. The same test suite runs locally (emulator/simulator) and on SauceLabs (real devices), with variant-aware test flows._
 
-## Rework in progress: per-area journeys + screen-object DSL
+## Architecture: per-area journeys + screen-object DSL
 
-The suite is being rebuilt (epic + tickets live in the local `.notes/` directory). Conventions for new code:
+The suite is built on a typed **screen-object DSL** and **per-area journey files**. Core conventions:
 
 - **testID keys** live in `src/test-ids/registry.ts` — the exact keys the app passes to `testIdWithKey`. Never write `com.ariesbifold:id/...` literals; wrap registry keys with `bcsc(key)`.
-- **Screen descriptors** (`src/screens/<stack>.ts`) map semantic roles (`self`/`primary`/`secondary`/`back`/`help`/`menu` + named `links`/`inputs`/`elements`) to testIDs via `defineScreen`. Specs call `tap('primary')`, `fill('pin', …)` — never raw selectors. `src/screens/onboarding.ts` is the reference style.
-- **Arrange flows** (`src/flows/`) are how journeys earn preconditions — there is no app-side seeding: `completeOnboarding()`, `skipToHome()`, `unlockWithPin()`. The VerifyPrompt exists **only in the session that completed onboarding**; never relaunch between onboarding and verify entry.
-- **Journeys** (`test/bcsc/journeys/**/*.journey.ts`, landing per area): one file = one app session = one ordered journey of checkpoints. wdio `bail: 0` keeps files independent; `mochaOpts.bail: true` aborts the rest of a file on its first failure.
+- **Screen descriptors** (`src/screens/<stack>.ts`) map semantic roles (`self`/`primary`/`secondary`/`back`/`help`/`menu` + named `links`/`inputs`/`elements`) to testIDs via `defineScreen`. Journeys call `tap('primary')`, `fill('pin', …)` — never raw selectors. `src/screens/main.ts` is the reference style.
+- **Arrange flows** (`src/flows/`) are how journeys earn preconditions — there is no app-side seeding: `completeOnboarding()`, `skipToHome()`, `unlockWithPin()`, `completeVerification()`. The VerifyPrompt exists **only in the session that completed onboarding**; never relaunch between onboarding and verify entry.
+- **Journeys** (`test/bcsc/journeys/<area>/*.journey.ts`): one file = one app session = one ordered journey of checkpoints, so a failure isolates to its file and reports per scenario. wdio `bail: 0` keeps files independent; `mochaOpts.bail: true` aborts the rest of a file on its first failure. See **[Writing Tests → Journeys](#journeys)** to add one.
+- **Test context** (`src/support/context.ts`) carries the active `TestUser` across a journey's checkpoints (`setTestUser` / `getTestUser`).
 - Failure screenshots + JUnit/Allure output land in `e2e/reports/` (gitignored).
 
 ## _Prerequisites_
@@ -34,22 +35,24 @@ _The_ `yarn setup` _step registers the Appium drivers into Appium's driver regis
 
 _Tests are organized into named suites. Use the_ `--suite` _flag to select which suite to run:_
 
-| _Suite_           | _What it tests_                                                                                  |
-| ----------------- | ------------------------------------------------------------------------------------------------ |
-| `smoke`           | _App launch + initial navigation (fast sanity check)_                                            |
-| `happy-path`      | _Full flow: straight-through onboarding (PIN auth), combined-card verification, main navigation_ |
-| `full-regression` | _Full flow: card scanning + send video verification (two orchestrated specs via directory glob)_ |
-| `biometrics`      | _Onboarding with biometric auth (Sauce Labs RDC only, requires_ `allowTouchIdEnroll`_)_          |
-| `migration`       | _V3→V4 upgrade: runs v3 onboarding + verification, upgrades to v4, unlocks with v3 PIN_          |
+| _Suite_      | _What it tests_                                                                                      |
+| ------------ | ---------------------------------------------------------------------------------------------------- |
+| `smoke`      | _App launch + initial navigation (fast sanity check)_                                                |
+| `onboarding` | _Onboarding journeys — happy path + detours (`journeys/onboarding/*.journey.ts`)_                    |
+| `auth`       | _Returning-user unlock journey — PIN unlock, wrong-PIN retry, lockout (`journeys/auth/*.journey.ts`)_ |
+| `verify`     | _Verification journeys — the four card types + entry spine/detours (`journeys/verify/*.journey.ts`)_ |
+| `main`       | _Main-stack journeys — unverified gating + settings (`journeys/main/*.journey.ts`)_                  |
+| `biometrics` | _Onboarding with biometric auth (Sauce Labs RDC only, requires_ `allowTouchIdEnroll`_)_              |
+| `migration`  | _V3→V4 upgrade: v3 onboarding + verification, upgrade to v4, unlock with the v3 PIN_                 |
 
 ```bash
-# Run by suite name
+# Run by suite name (per-area journey suites)
 yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite smoke
-yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite happy-path
-yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite full-regression
+yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite verify
+yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite main
 ```
 
-_Without_ `--suite`_, the default spec is_ `smoke.spec.ts`_._
+_Without_ `--suite`_, the default spec is_ `smoke.spec.ts`_. The verified `verify` / `main` journeys need SiteMinder credentials (see the **SiteMinder** section) for the in-person approval step. A nightly `regression` suite spanning all journeys is being wired up (see the **CI/CD** section)._
 
 ### _Local — iOS Simulator_
 
@@ -58,7 +61,7 @@ _Without_ `--suite`_, the default spec is_ `smoke.spec.ts`_._
 yarn test:ios:local
 
 # Run a specific suite
-yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite happy-path
+yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite verify
 
 # Run a single spec directly
 yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/bcsc/smoke.spec.ts
@@ -96,7 +99,7 @@ cd e2e && yarn test:android:local
 yarn test:android:local
 
 # Run a specific suite
-yarn wdio configs/local/wdio.android.local.emu.conf.ts --suite happy-path
+yarn wdio configs/local/wdio.android.local.emu.conf.ts --suite verify
 ```
 
 ### _Local — iOS Real Device_
@@ -112,7 +115,7 @@ IOS_UDID=<device-udid> XCODE_ORG_ID=<team-id> yarn test:ios:device
 
 # Run a specific suite
 IOS_UDID=<device-udid> XCODE_ORG_ID=<team-id> \
-  yarn wdio configs/local/wdio.ios.local.device.conf.ts --suite happy-path
+  yarn wdio configs/local/wdio.ios.local.device.conf.ts --suite verify
 ```
 
 _Find your device UDID via Finder (click the device name in the sidebar) or:_
@@ -142,7 +145,7 @@ ANDROID_UDID=<device-serial> yarn test:android:device
 
 # Run a specific suite
 ANDROID_UDID=<device-serial> \
-  yarn wdio configs/local/wdio.android.local.device.conf.ts --suite happy-path
+  yarn wdio configs/local/wdio.android.local.device.conf.ts --suite verify
 ```
 
 _Find your device serial via:_
@@ -166,7 +169,7 @@ yarn test:android:sauce
 yarn test:ios:sauce
 
 # Run a specific suite on SauceLabs
-yarn wdio configs/sauce/wdio.ios.sauce.rdc.conf.ts --suite happy-path
+yarn wdio configs/sauce/wdio.ios.sauce.rdc.conf.ts --suite verify
 ```
 
 ### _Migration Tests (v3 → v4)_
@@ -272,7 +275,7 @@ SM_USER='your-siteminder-username'
 SM_PASSWORD='your-siteminder-password'
 ```
 
-_The same_ `scripts/login.mjs` _can also be invoked as a CLI; it loads_ `.env.e2e` _itself when run standalone. Without these credentials, any test suite that includes in-person verification (e.g._ `happy-path`_,_ `full-regression`_,_ `migration`_) will fail at the approval step._
+_The same_ `scripts/login.mjs` _can also be invoked as a CLI; it loads_ `.env.e2e` _itself when run standalone. Without these credentials, any journey that completes in-person verification (the verified_ `verify` _/_ `main` _journeys, and_ `migration`_) will fail at the approval step._
 
 ## _Config Hierarchy_
 
@@ -335,7 +338,7 @@ export const OnboardingIntroScreen = defineScreen({
 
 **_Single source of test IDs._** _Test ID **keys** and the_ `com.ariesbifold:id/` _prefix live in one dependency-free registry,_ `src/test-ids/registry.ts`_;_ `bcsc(key)` _wraps a key into the selector both platforms use. That key is the same one the app passes to bifold's_ `testIdWithKey`_, and the registry is written to move into an app-owned/shared location so the app and the tests draw from it — a renamed key then updates both, enforced by_ `tsc`_. Pass a_ `{ ios, android }` _pair instead of a bare key for the rare element whose id differs per platform._
 
-> _**Legacy:** not-yet-migrated specs still use_ `new BaseScreen(BCSC_TestIDs.X)` _with the flat registry in_ `src/testIDs.ts` _(re-exported through the_ `src/screens/BaseScreen.ts` _shim). New specs and screens use the DSL; stacks are being migrated file by file — see_ [`.notes/rework/`](.notes/rework/README.md)_._
+> _**Legacy:** a few remaining specs — the_ `smoke` _specs and the_ `manual/` _+_ `migration/` _specs — still use_ `new BaseScreen(BCSC_TestIDs.X)` _with the flat registry in_ `src/testIDs.ts` _(re-exported through the_ `src/screens/BaseScreen.ts` _shim). Every journey and screen descriptor uses the DSL +_ `registry.ts`_._
 
 _Element lookup is cross-platform with no branching:_
 
@@ -344,46 +347,57 @@ _Element lookup is cross-platform with no branching:_
 | _iOS_      | _Accessibility ID_ | `~com.ariesbifold:id/Continue`             |
 | _Android_  | _Resource ID_      | `android=new UiSelector().resourceId(...)` |
 
-### _Composable Specs & Suite Orchestrators_
+<a id="journeys"></a>
 
-_Specs are small, focused files that each test a single action or feature. Suites are composed by importing the relevant specs in order — no runtime conditionals, no test logic duplication._
+### Journeys
 
-| _Old (flow-based)_                                   | _New (suite-based)_       |
-| ---------------------------------------------------- | ------------------------- |
-| `E2E_FLOW=simple ... --spec test/bcsc/e2e.spec.ts`   | `--suite happy-path`      |
-| `E2E_FLOW=advanced ... --spec test/bcsc/e2e.spec.ts` | `--suite full-regression` |
+Tests are organized as **journeys**, not composable specs. Each `*.journey.ts` file is **one app session running one ordered sequence of checkpoints** (`it` blocks). Area suites glob them (`--suite verify` → `journeys/verify/*.journey.ts`). Runner-level `bail: 0` keeps files independent — a failed journey reports and the rest still run — while `mochaOpts.bail: true` stops the rest of a *single* file after its first failure, because later checkpoints depend on the state earlier ones left behind.
 
-_Orchestrator files import composable specs in order, preserving a single Mocha session for stateful flows. Adding a new permutation (e.g. biometric + combined card) is just a new orchestrator with different imports:_
+A journey earns its preconditions through the UI via **arrange flows** (`src/flows/`) — there is no state seeding — then chains dependent checkpoints so an expensive setup (a verification is ~5–8 min) is paid once and amortized. The active `TestUser` is set once and read via `src/support/context.ts`:
 
 ```typescript
-// test/bcsc/happy-path.spec.ts — used by --suite happy-path
-import './onboarding/app-launch.spec.js'
-import './onboarding/add-account.spec.js'
-import './onboarding/consent.spec.js'
-import './onboarding/notifications.spec.js'
-import './onboarding/pin-auth.spec.js'
-import './verify/card-type/config-combined-card.js'
-import './verify/nickname.spec.js'
-import './verify/card-csn.spec.js'
-import './verify/in-person-verification.spec.js'
-import './main/main.spec.js'
+// test/bcsc/journeys/verify/verified-photo.journey.ts (abridged)
+import { TestUsers, Timeouts } from '../../../../src/constants.js'
+import { completeOnboarding } from '../../../../src/flows/onboarding.js'
+import {
+  chooseAddAccount, completeVerification, enterBirthdate, enterSerialManually, startVerification,
+} from '../../../../src/flows/verify.js'
+import { HomeScreen } from '../../../../src/screens/main.js'
+import { getTestUser, setTestUser } from '../../../../src/support/context.js'
+
+describe('Verified journey: photo card', () => {
+  before(() => setTestUser(TestUsers.photo)) // the active TestUser for every checkpoint below
+
+  it('onboards to the verify prompt', async () => {
+    await completeOnboarding()
+  })
+
+  it('enters the photo serial and submits the birthdate', async () => {
+    await startVerification()
+    await chooseAddAccount()
+    await enterSerialManually(getTestUser())
+    await enterBirthdate(getTestUser())
+  })
+
+  it('completes verification in person and lands on verified Home', async () => {
+    await completeVerification(getTestUser(), { method: 'in-person' })
+    await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  })
+})
 ```
 
-_The_ `full-regression` _suite uses a **directory glob** (`full-regression/*.spec.ts`) rather than a single orchestrator. Each file in the_ `full-regression/` _directory is an independent orchestrated flow (e.g. card scanning, send video). The standalone_ `full-regression.spec.ts` _orchestrator still exists for running the full non-photo-card flow via_ `--spec`_:_
+### Adding a test
 
-```typescript
-// test/bcsc/full-regression/card-csn-scanning.spec.ts — card scanning flow
-import '../onboarding/app-launch.spec.js'
-import '../onboarding/add-account.spec.js'
-import '../onboarding/consent.spec.js'
-import '../onboarding/notifications.spec.js'
-import '../onboarding/pin-auth.spec.js'
-import '../verify/card-type/config-combined-card.js'
-import '../verify/nickname.spec.js'
-import '../verify/card-scan.spec.js'
+- **A new checkpoint on an existing journey** — add an `it` that drives screen objects **by role**, placed so the preceding checkpoints leave the app in the state it needs. Assert arrival with `expectVisible()` before acting, and leave the app in a clean state for the next checkpoint.
+- **A new screen** — add a descriptor to `src/screens/<stack>.ts` and its testID keys to `src/test-ids/registry.ts`. The keys must match what the app passes to `testIdWithKey` — **verify against the app source** (`grep testIdWithKey app/src/...`), don't guess. Anchor `self` on a stable, always-present element. For a screen with **no** usable testID (e.g. an inline `<Link>` iOS flattens into its paragraph), assert arrival by heading copy with `engine.findByText('…')` and return via the header `back` — but note not every stack sets `headerBackTestID` (AuthStack doesn't), so confirm the back button is addressable before relying on it.
+- **A new journey** — add a `*.journey.ts` under the matching `test/bcsc/journeys/<area>/` directory; the area suite globs it automatically. `setTestUser()` in a `before` hook, arrange preconditions via `src/flows/`, then chain the checkpoints.
+- **A new arrange flow** — if several journeys need the same UI-driven precondition, add it to `src/flows/<area>.ts` (used by ≥1 journey, reused by the rest) rather than duplicating steps.
+
+Run just the file you are iterating on:
+
+```bash
+yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/bcsc/journeys/verify/verified-photo.journey.ts
 ```
-
-_Shared state (e.g. test user data) flows between specs via_ `verify/card-type/card-context.ts`_. Card-type config modules (e.g._ `config-combined-card.ts`_) set_ `verifyContext.testUser` _and_ `verifyContext.cardTypeButton` _at module evaluation time; downstream specs like_ `card-csn.spec.ts` _and_ `in-person-verification.spec.ts` _read them lazily inside_ `it` _blocks._
 
 ### _Camera Image Injection_
 
@@ -411,10 +425,12 @@ _For local testing, camera injection is not available — use a test-mode flag i
 
 _Tests run automatically in GitHub Actions via a device matrix that controls which OS versions are tested:_
 
-| _Trigger_            | _Suite_           | _Device Matrix_                     | _Variant_  | _Biometrics_ |
-| -------------------- | ----------------- | ----------------------------------- | ---------- | ------------ |
-| _PR_                 | `smoke`           | _1 iOS (18) + 1 Android (15)_       | `bcsc-dev` | _No_         |
-| _Nightly (schedule)_ | `full-regression` | _3 iOS (16–18) + 3 Android (13–15)_ | `bcsc-dev` | _Yes_        |
+| _Trigger_            | _Suite_      | _Device Matrix_                     | _Variant_  | _Biometrics_ |
+| -------------------- | ------------ | ----------------------------------- | ---------- | ------------ |
+| _PR_                 | `smoke`      | _1 iOS (18) + 1 Android (15)_       | `bcsc-dev` | _No_         |
+| _Nightly (schedule)_ | `regression` | _3 iOS (16–18) + 3 Android (13–15)_ | `bcsc-dev` | _Yes_        |
+
+> _The nightly `regression` suite (all per-area journeys) replaces the retired `happy-path` / `full-regression` suites; the workflow wiring for it is being finalized separately._
 
 _The device matrix is passed as a JSON array of_ `{platform, device, os_version}` _objects to_ `e2e.yml`_. Each entry spawns a separate SauceLabs session with its own logs and pass/fail status. Biometric tests run as a separate non-blocking job after the main E2E tests._
 
@@ -429,7 +445,7 @@ _Place local builds in_ `e2e/apps/` _for local testing. See_ [`apps/README.md`](
 ## _Design Principles_
 
 1. **_One test suite, many targets_** _— the same specs run locally and on SauceLabs. Config files are the only difference._
-2. **_Variant + suite driven_** _— the_ `VARIANT` _env var selects which test directory to run (e.g._ `test/bcsc/`_), while_ `--suite` _selects the depth:_ `smoke` _for a quick sanity check,_ `happy-path` _for a straight-through flow,_ `full-regression` _for full coverage with detours and additional verification._
+2. **_Variant + suite driven_** _— the_ `VARIANT` _env var selects which test directory to run (e.g._ `test/bcsc/`_), while_ `--suite` _selects scope:_ `smoke` _for a quick sanity check, or a per-area journey suite (_`onboarding`_,_ `auth`_,_ `verify`_,_ `main`_) for that area's ordered journeys._
 3. **_Action-based screen objects_** _— specs drive screens by semantic role via typed descriptors (_`defineScreen`_, one file per stack under_ `src/screens/`_) on the_ `BaseScreen` _engine in_ `src/screens/core/`_. Test IDs come from one dependency-free registry (_`src/test-ids/registry.ts`_), so a renamed id is a single edit and undeclared roles fail at compile time._
 4. **_Workspace package_** _—_ `e2e/` _is a Yarn workspace package with its own_ `package.json`_, isolated from_ `app/`_._
 
@@ -450,37 +466,36 @@ e2e/
 │
 ├── configs/
 │   ├── wdio.shared.conf.ts                  # base WDIO config (framework, reporters, suites, hooks)
-│   ├── local/
-│   │   ├── wdio.shared.local.appium.conf.ts # local Appium server settings
-│   │   ├── wdio.android.local.emu.conf.ts   # Android emulator capabilities
-│   │   ├── wdio.android.local.device.conf.ts # Android real device (USB)
-│   │   ├── wdio.ios.local.sim.conf.ts       # iOS simulator capabilities
-│   │   └── wdio.ios.local.device.conf.ts    # iOS real device (USB)
-│   └── sauce/
-│       ├── wdio.shared.sauce.conf.ts        # SauceLabs auth, region, sauce service
-│       ├── wdio.android.sauce.rdc.conf.ts   # Android real device (SauceLabs)
-│       ├── wdio.ios.sauce.rdc.conf.ts       # iOS real device (SauceLabs)
-│       ├── wdio.android.sauce.migration.conf.ts # Android migration v3→v4 (SauceLabs)
-│       ├── wdio.ios.sauce.migration.conf.ts     # iOS migration v3→v4 (SauceLabs)
-│       └── biometrics/
-│           ├── wdio.android.bio.sauce.rdc.conf.ts # Android + allowTouchIdEnroll
-│           └── wdio.ios.bio.sauce.rdc.conf.ts     # iOS + allowTouchIdEnroll
+│   ├── local/                               # local Appium: emulator/simulator + real-device caps
+│   └── sauce/                               # SauceLabs service + rdc / migration / biometrics caps
 │
 ├── src/
-│   ├── constants.ts                         # timeouts, TestUsers, and shared values
+│   ├── constants.ts                         # Timeouts, TestUsers, TEST_PIN, and shared values
 │   ├── e2eConfig.ts                         # variant detection (bcsc / bc-wallet)
-│   ├── testIDs.ts                           # legacy flat registry (BCSC_TestIDs) — used by un-migrated specs
+│   ├── testIDs.ts                           # legacy flat registry (BCSC_TestIDs) — used by smoke + manual/ + migration/ specs
 │   ├── v3TestIDs.ts                         # v3 native app selectors (iOS + Android) for migration
 │   │
 │   ├── test-ids/
 │   │   └── registry.ts                      # single source of testID keys + com.ariesbifold:id/ prefix
+│   │
+│   ├── flows/                               # UI-driven arrange flows (earn preconditions; no seeding)
+│   │   ├── onboarding.ts                    # completeOnboarding, skipToHome, skipNotificationsIfShown
+│   │   ├── auth.ts                          # unlockWithPin, relaunchApp, selectAccountLandingIfPresent
+│   │   ├── verify.ts                        # startVerification, enterSerialManually, completeVerification, evidence/email
+│   │   └── main.ts                          # main-stack arrange helpers
+│   │
+│   ├── support/
+│   │   └── context.ts                       # per-journey TestUser context (setTestUser / getTestUser)
 │   │
 │   ├── helpers/
 │   │   ├── alerts.ts                        # iOS system alert acceptance (permissions, dialogs)
 │   │   ├── approval.ts                      # in-person verification approval via SiteMinder
 │   │   ├── biometrics.ts                    # biometric simulation (Sauce Labs RDC)
 │   │   ├── camera.ts                        # camera image injection + padding (photos, QR, video)
+│   │   ├── deep-link.ts                     # dispatch <scheme>:// deep links (pairing / login)
+│   │   ├── email.ts                         # temp-inbox email verification helper
 │   │   ├── gestures.ts                      # swipe, scroll, tap-at-coordinate wrappers
+│   │   ├── pairing-code.ts                  # mint pairing codes / deep links against SIT
 │   │   └── sauce.ts                         # SauceLabs-specific utilities (detection, annotations)
 │   │
 │   └── screens/                             # action-based screen-object DSL, one file per stack
@@ -489,69 +504,55 @@ e2e/
 │       │   ├── defineScreen.ts              # role → testID descriptor + typed Screen<S>
 │       │   ├── appId.ts                     # bcsc(key): wraps a key in the shared prefix
 │       │   └── index.ts                     # core barrel
-│       ├── onboarding.ts                    # onboarding stack descriptors (migrated to DSL)
-│       ├── auth.ts                          # auth stack (placeholder)
-│       ├── verify.ts                        # verify stack (placeholder)
-│       ├── main.ts                          # main stack (placeholder)
-│       └── BaseScreen.ts                    # deprecated shim → core/BaseScreen (keeps old specs compiling)
+│       ├── onboarding.ts                    # onboarding stack descriptors
+│       ├── auth.ts                          # auth / unlock stack descriptors
+│       ├── verify.ts                        # verify stack descriptors (entry + card-type + method screens)
+│       ├── main.ts                          # main stack descriptors (tabs, settings, contacts, account, pairing, transfer)
+│       └── BaseScreen.ts                    # deprecated shim → core/BaseScreen (keeps legacy specs compiling)
 │
 ├── test/
-│   ├── bc-wallet/                           # BC Wallet variant test suite
+│   ├── bc-wallet/                           # BC Wallet variant
 │   │   └── smoke.spec.ts                    # app launch (default spec)
 │   │
-│   └── bcsc/                                # BCSC variant test suite
+│   └── bcsc/                                # BCSC variant
 │       ├── smoke.spec.ts                    # app launch + initial navigation (default spec)
-│       ├── happy-path.spec.ts               # suite orchestrator: onboarding → combined card → main
-│       ├── full-regression.spec.ts          # orchestrator: full onboarding → non-photo + passport → main
-│       ├── biometrics.spec.ts               # orchestrator: onboarding with biometric auth
-│       ├── full-regression/                 # full-regression suite (glob: *.spec.ts)
-│       │   ├── card-csn-scanning.spec.ts    # card scanning flow (onboarding → scan → verify)
-│       │   └── send-image-video.spec.ts     # send video flow (onboarding → photo/video capture)
-│       ├── onboarding/
-│       │   ├── app-launch.spec.ts           # app launch + first screen
-│       │   ├── add-account.spec.ts          # add account flow
-│       │   ├── biometric-auth.spec.ts       # biometric auth setup (biometrics suite)
-│       │   ├── consent.spec.ts              # consent screen
-│       │   ├── notifications.spec.ts        # notification permission
-│       │   ├── notifications-help.spec.ts   # notification help detour
-│       │   ├── pin-auth.spec.ts             # PIN creation
-│       │   ├── secure-app-help.spec.ts      # secure app help detour
-│       │   ├── setup-type-interaction.spec.ts # setup type selection detour
-│       │   └── transfer-detour.spec.ts      # transfer detour
-│       ├── verify/
-│       │   ├── card-csn.spec.ts             # card serial + birthdate entry
-│       │   ├── card-scan.spec.ts            # card barcode scanning via camera injection
-│       │   ├── nickname.spec.ts             # nickname entry
-│       │   ├── additional-id-passport.spec.ts # passport evidence capture
-│       │   ├── in-person-verification.spec.ts # in-person verification method
-│       │   ├── send-video-verification.spec.ts # photo + video evidence capture
-│       │   └── card-type/
-│       │       ├── card-context.ts          # shared mutable verify context (testUser, cardType)
-│       │       ├── config-combined-card.ts  # sets context for combined card (happy-path)
-│       │       └── config-non-photo-card.ts # sets context for non-photo card
-│       ├── main/
-│       │   └── main.spec.ts                 # tab navigation, settings, account tests
-│       └── migration/
-│           ├── migration.spec.ts            # suite orchestrator: v3 onboarding → upgrade → v4 unlock
+│       │
+│       ├── journeys/                        # per-area journeys — one file = one app session (globbed by the area suites)
+│       │   ├── onboarding/
+│       │   │   ├── onboarding.journey.ts            # happy-path onboarding → VerifyPrompt
+│       │   │   └── onboarding-detours.journey.ts    # back-nav, webviews, help menu, onboarding settings, analytics decline
+│       │   ├── auth/
+│       │   │   └── auth-unlock.journey.ts           # unlock, Get Help, wrong-PIN retry, lockout
+│       │   ├── verify/
+│       │   │   ├── verify-entry.journey.ts          # entry spine (stops short of authorize)
+│       │   │   ├── verify-entry-detours.journey.ts  # transfer/scan/OtherID detours + mismatched-serial error
+│       │   │   ├── verified-photo.journey.ts        # photo card + send-video/live-call detours
+│       │   │   ├── verified-non-photo.journey.ts    # non-photo card (+ additional photo ID)
+│       │   │   ├── verified-combined.journey.ts     # combined card + login/deep-link/transfer/contacts/account
+│       │   │   └── verified-non-bcsc.journey.ts     # non-BCSC (two IDs + address + email)
+│       │   └── main/
+│       │       ├── unverified-main.journey.ts       # unverified tab / QRCore gating
+│       │       └── settings.journey.ts              # settings rows, change-PIN, auto-lock, reset/remove account
+│       │
+│       ├── manual/                          # camera/biometric flows — local or Sauce, NOT in the CI journey suites
+│       │   ├── biometrics.spec.ts           # onboarding with biometric auth (--suite biometrics)
+│       │   ├── card-csn-scanning.spec.ts    # card barcode scan (camera injection)
+│       │   └── send-image-video.spec.ts     # photo/video capture (camera injection)
+│       │
+│       └── migration/                       # v3 → v4 upgrade (--suite migration; deprioritized)
+│           ├── migration.spec.ts            # orchestrator: v3 onboarding → upgrade → v4 unlock
 │           ├── migration-context.ts         # shared state (PIN) between v3 and v4 specs
 │           ├── v3-onboarding.spec.ts        # v3 app onboarding + card verification
 │           ├── upgrade.spec.ts              # install v4 over v3 via driver.installApp()
-│           └── v4-unlock.spec.ts            # unlock v4 with v3 PIN, verify Home screen
+│           └── v4-unlock.spec.ts            # unlock v4 with the v3 PIN
 │
 ├── assets/                                  # test images for camera injection
 │   ├── README.md
 │   ├── USERS.md                             # test account reference (Scooby-Doo themed)
 │   └── images/                              # ID, driver's licence, and passport photos
-│       ├── dl_daphne.jpg                    # driver's licence — Daphne (non-photo card)
-│       ├── dl_shaggy.jpg                    # driver's licence — Shaggy (photo card)
-│       ├── dl_velma.jpg                     # driver's licence — Velma (combo card)
-│       ├── id_daphne.jpg                    # ID selfie — Daphne
-│       ├── id_fred.jpg                      # ID selfie — Fred
-│       ├── id_shaggy.jpg                    # ID selfie — Shaggy
-│       ├── id_velma.jpg                     # ID selfie — Velma
-│       └── passport.jpg                     # passport photo
 │
 ├── logs/                                    # Appium logs (gitignored)
+├── reports/                                 # JUnit + Allure output + failure screenshots (gitignored)
 │
 └── apps/                                    # local app binaries (gitignored)
     ├── .gitkeep
