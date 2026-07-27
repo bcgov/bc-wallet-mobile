@@ -203,8 +203,11 @@ describe('useFactoryReset', () => {
     })
 
     expect(teardownAgentMock).toHaveBeenCalledTimes(1)
-    // teardownAgent must complete (agent shut down, store deleted) before the rest of
-    // the reset proceeds, so nothing can race a mounted consumer against the deleted store.
+    // useFactoryReset awaits agentCtx.teardownAgent() before continuing, and
+    // teardownAgentMock only pushes 'teardownAgent' to callOrder once its own async
+    // implementation resolves — so finding it before 'deleteSecureData'/'clearSecureState'
+    // proves teardownAgent COMPLETED (not just started) before the rest of the reset
+    // proceeds, so nothing can race a mounted consumer against the deleted store.
     expect(callOrder.indexOf('teardownAgent')).toBeLessThan(callOrder.indexOf('deleteSecureData'))
     expect(callOrder.indexOf('teardownAgent')).toBeLessThan(callOrder.indexOf('clearSecureState'))
   })

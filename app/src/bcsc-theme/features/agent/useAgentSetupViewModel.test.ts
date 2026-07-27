@@ -436,7 +436,16 @@ describe('useAgentSetupViewModel', () => {
       expect(result.current.agent).toBeNull()
     })
 
-    it('stops the attestation monitor before shutting down the agent', async () => {
+    it('stops both the attestation and credential-provisioning monitors before shutting down the agent', async () => {
+      // The default harness stubs credentialProvisioningMonitor as undefined (position 3
+      // of the useServices tuple), which every other test relies on. Override it here,
+      // scoped to this test, so `credentialProvisioningMonitor?.stop()` is actually
+      // exercised rather than silently no-op'd via optional chaining.
+      const credentialProvisioningMonitor = { start: jest.fn(), stop: jest.fn() }
+      jest
+        .mocked(Bifold.useServices)
+        .mockReturnValue([logger, attestationMonitor, credentialProvisioningMonitor, [], [], ocaBundleResolver] as never)
+
       const agent1 = mockAgent()
       jest.mocked(agentService.buildAgent).mockReturnValue(agent1)
 
@@ -447,14 +456,23 @@ describe('useAgentSetupViewModel', () => {
         await result.current.teardownAgent()
       })
 
-      expect(attestationMonitor.stop).toHaveBeenCalled()
+      // Ready-transition setup also calls refreshMonitors (stop+start, to rebind the
+      // listener to the new agent), so each monitor's stop() is called twice in this
+      // test: once during setup, once from teardownAgent. Take the LAST invocation —
+      // shutdownAgent is only ever called from teardownAgent, so comparing against its
+      // (single) call correctly isolates the teardown-phase stop from the earlier
+      // setup-phase one instead of trivially comparing against the setup call.
+      const lastCallOrder = (mock: jest.Mock) => mock.mock.invocationCallOrder.at(-1)
+
+      expect(attestationMonitor.stop).toHaveBeenCalledTimes(2)
+      expect(credentialProvisioningMonitor.stop).toHaveBeenCalledTimes(2)
       expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger)
-      // invocationCallOrder is a shared, monotonically increasing counter across all
-      // mocks, so comparing the two mocks' first-call indices proves relative order
-      // without attaching a stateful mockImplementation to the shared monitor mock.
-      const stopOrder = attestationMonitor.stop.mock.invocationCallOrder[0]
-      const shutdownOrder = jest.mocked(agentService.shutdownAgent).mock.invocationCallOrder[0]
-      expect(stopOrder).toBeLessThan(shutdownOrder)
+
+      const stopOrder = lastCallOrder(attestationMonitor.stop)
+      const provisioningStopOrder = lastCallOrder(credentialProvisioningMonitor.stop)
+      const shutdownOrder = lastCallOrder(jest.mocked(agentService.shutdownAgent))
+      expect(stopOrder).toBeLessThan(shutdownOrder as number)
+      expect(provisioningStopOrder).toBeLessThan(shutdownOrder as number)
     })
 
     it('logs a warning and still nulls the agent when deleteWalletStore rejects', async () => {
