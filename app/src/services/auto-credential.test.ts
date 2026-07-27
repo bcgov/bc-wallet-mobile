@@ -348,6 +348,63 @@ describe('AutoCredentialMonitor', () => {
     })
   })
 
+  describe('triggerTestWorkflow', () => {
+    it('returns false and warns when the agent is not ready', () => {
+      const monitor = new AutoCredentialMonitor(new MockLogger(), { rules: [buildRule()], attestationMonitor })
+
+      const result = monitor.triggerTestWorkflow()
+
+      expect(result).toBe(false)
+    })
+
+    it('returns false and warns when no rules are configured', () => {
+      const monitor = new AutoCredentialMonitor(new MockLogger(), { rules: [], attestationMonitor })
+      monitor.start(agent as any)
+
+      const result = monitor.triggerTestWorkflow()
+
+      expect(result).toBe(false)
+    })
+
+    it('returns false and warns when a workflow is already in progress', async () => {
+      agent.didcomm.oob.parseInvitation.mockResolvedValue({ id: 'inv-1' })
+      agent.didcomm.oob.receiveInvitation.mockResolvedValue({ connectionRecord: { id: 'conn-1' } })
+      agent.didcomm.proofs.getFormatData.mockResolvedValue(proofFormat(TRIGGER_CRED_DEF_ID))
+      mockedCredentialsMatchForProof.mockResolvedValue({
+        proofFormats: { anoncreds: { attributes: {}, predicates: {} } },
+      })
+      const { monitor, rule } = buildMonitor()
+
+      await agent.emit(DidCommProofEventTypes.ProofStateChanged, {
+        proofRecord: { id: 'trigger-proof', state: DidCommProofState.RequestReceived },
+      })
+      expect(monitor.workflowInProgress).toBe(true)
+      ;(rule.getInvitationUrl as jest.Mock).mockClear()
+
+      const result = monitor.triggerTestWorkflow()
+
+      expect(result).toBe(false)
+      expect(rule.getInvitationUrl).not.toHaveBeenCalled()
+    })
+
+    it('starts the first configured rule using a stub proof', async () => {
+      agent.didcomm.oob.parseInvitation.mockResolvedValue({ id: 'inv-1' })
+      agent.didcomm.oob.receiveInvitation.mockResolvedValue({ connectionRecord: { id: 'conn-1' } })
+      const { monitor, rule } = buildMonitor()
+
+      const result = monitor.triggerTestWorkflow()
+
+      expect(result).toBe(true)
+      expect(monitor.workflowInProgress).toBe(true)
+      expect(rule.getInvitationUrl).toHaveBeenCalledWith({ id: 'test-workflow-proof' }, agent)
+      expect(emitSpy).toHaveBeenCalledWith(CredentialProvisioningEventTypes.Started)
+
+      // let the async runWorkflow chain settle so nothing leaks into other tests
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+  })
+
   describe('stop', () => {
     it('tears down workflow subscriptions and resets in-flight workflow state', async () => {
       agent.didcomm.oob.parseInvitation.mockResolvedValue({ id: 'inv-1' })
