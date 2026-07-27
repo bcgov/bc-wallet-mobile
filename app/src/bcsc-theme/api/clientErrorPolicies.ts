@@ -10,7 +10,7 @@ import { Linking } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { VerificationCardError } from '../features/verify/verificationCardError'
 import { BCSCModals, BCSCScreens } from '../types/navigators'
-import { getPersonCredentialAccountProblem } from '../utils/personCredentialAccountProblem'
+import { getDigitalServiceCardAccountProblem } from '../utils/getDigitalServiceCardAccountProblem'
 import { ResumeStepRoute } from '../utils/resume-step-route'
 import { BCSCEndpoints } from './client'
 
@@ -527,30 +527,28 @@ export const cardExpiredOnBarcodesErrorPolicy: ErrorHandlingPolicy = {
 }
 
 /**
- * Person Credential creation (`POST /credentials/v1/person`) is rejected with HTTP 400
+ * Digital Service Card creation is rejected with HTTP 400
  * `{error: "unauthorized_client", error_description: "suspended"|"deactivated"}` when the BCSC
- * account is suspended or deactivated. Suspend/deactivate is not delivered via push notification
- * or ID token — this API error is the only place it surfaces (#3389). Show the generic
+ * account is suspended or deactivated. Show the generic
  * "Problem with Account" modal (Remove Account + Close) instead of failing silently. Suspended
  * and deactivated share the same modal copy but track as distinct analytics events.
  *
  * @returns ErrorHandlingPolicy
  */
-export const personCredentialAccountUnavailableErrorPolicy: ErrorHandlingPolicy = {
+export const digitalServiceCardAccountUnavailableErrorPolicy: ErrorHandlingPolicy = {
   matches: (error, context) => {
     if (context.statusCode !== 400 || !context.endpoint.includes(context.apiEndpoints.credential)) {
       return false
     }
-    return getPersonCredentialAccountProblem(error) !== undefined
+    return getDigitalServiceCardAccountProblem(error) !== undefined
   },
   handle: (error, context) => {
-    const accountProblem = getPersonCredentialAccountProblem(error)
+    const accountProblem = getDigitalServiceCardAccountProblem(error)
     context.logger.info(
-      `[PersonCredentialAccountUnavailableErrorPolicy] account ${accountProblem} on Person Credential creation`
+      `[DigitalServiceCardAccountUnavailableErrorPolicy] account ${accountProblem} on Digital Services Card creation`
     )
     // Pass the raw AxiosError cause (not the AppError) so ensureAppError builds a fresh AppError with
-    // the suspended/deactivated app event — the interceptor's AppError is UNKNOWN_SERVER_ERROR
-    // (unauthorized_client is unregistered), which would mislabel analytics.
+    // the suspended/deactivated app event
     const alert =
       accountProblem === 'suspended'
         ? context.alerts.personCredentialSuspendedAlert
