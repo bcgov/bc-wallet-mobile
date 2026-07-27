@@ -32,9 +32,23 @@ describe('getPersonCredentialAccountProblem', () => {
 
   it('matches case-insensitively', () => {
     const error = newAppError()
-    error.cause = axiosCause(400, { error_description: 'Account SUSPENDED' })
+    error.cause = axiosCause(400, { error: 'unauthorized_client', error_description: 'Account SUSPENDED' })
 
     expect(getPersonCredentialAccountProblem(error)).toBe('suspended')
+  })
+
+  it('returns undefined when error is not "unauthorized_client", even if error_description mentions suspended/deactivated', () => {
+    const error = newAppError()
+    error.cause = axiosCause(400, { error: 'some_other_error', error_description: 'account suspended' })
+
+    expect(getPersonCredentialAccountProblem(error)).toBeUndefined()
+  })
+
+  it('returns undefined when error is missing, even if error_description mentions suspended/deactivated', () => {
+    const error = newAppError()
+    error.cause = axiosCause(400, { error_description: 'account deactivated' })
+
+    expect(getPersonCredentialAccountProblem(error)).toBeUndefined()
   })
 
   it('returns undefined for a non-400 status', () => {
@@ -46,21 +60,21 @@ describe('getPersonCredentialAccountProblem', () => {
 
   it('returns undefined when error_description does not mention suspended/deactivated', () => {
     const error = newAppError()
-    error.cause = axiosCause(400, { error_description: 'some_other_reason' })
+    error.cause = axiosCause(400, { error: 'unauthorized_client', error_description: 'some_other_reason' })
 
     expect(getPersonCredentialAccountProblem(error)).toBeUndefined()
   })
 
   it('returns undefined when error_description is missing', () => {
     const error = newAppError()
-    error.cause = axiosCause(400, {})
+    error.cause = axiosCause(400, { error: 'unauthorized_client' })
 
     expect(getPersonCredentialAccountProblem(error)).toBeUndefined()
   })
 
   it('returns undefined when error_description is not a string', () => {
     const error = newAppError()
-    error.cause = axiosCause(400, { error_description: { nested: 'suspended' } })
+    error.cause = axiosCause(400, { error: 'unauthorized_client', error_description: { nested: 'suspended' } })
 
     expect(getPersonCredentialAccountProblem(error)).toBeUndefined()
   })

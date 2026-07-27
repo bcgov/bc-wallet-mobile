@@ -780,7 +780,10 @@ describe('clientErrorPolicies', () => {
       const error = newError('unknown_server_error')
       error.cause = {
         isAxiosError: true,
-        response: { status: 400, data: description === undefined ? {} : { error_description: description } },
+        response: {
+          status: 400,
+          data: description === undefined ? {} : { error: 'unauthorized_client', error_description: description },
+        },
       } as AxiosError
       return error
     }
@@ -858,6 +861,20 @@ describe('clientErrorPolicies', () => {
 
       it('should NOT match when error_description is not a string', () => {
         const error = errorWithDescription({ nested: 'suspended' })
+        const context = {
+          statusCode: 400,
+          endpoint: credentialBase,
+          apiEndpoints: { credential: credentialBase },
+        }
+        expect(personCredentialAccountUnavailableErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
+      it('should NOT match when error is not "unauthorized_client", even if error_description mentions suspended/deactivated', () => {
+        const error = newError('unknown_server_error')
+        error.cause = {
+          isAxiosError: true,
+          response: { status: 400, data: { error: 'some_other_error', error_description: 'account suspended' } },
+        } as AxiosError
         const context = {
           statusCode: 400,
           endpoint: credentialBase,

@@ -16,7 +16,11 @@ export const getPersonCredentialAccountProblem = (error: unknown): PersonCredent
   if (!isAxiosAppError(error, 400)) {
     return undefined
   }
-  const description = (error.cause.response?.data as { error_description?: unknown } | undefined)?.error_description
+  const data = error.cause.response?.data as { error?: unknown; error_description?: unknown } | undefined
+  if (data?.error !== 'unauthorized_client') {
+    return undefined
+  }
+  const description = data.error_description
   if (typeof description !== 'string') {
     return undefined
   }
