@@ -1191,7 +1191,7 @@ export const ErrorRegistry = {
     appEvent: AppEventCode.AUTO_CRED_ACCOUNT_SUSPENDED,
     severity: ErrorSeverity.WARNING,
     category: ErrorCategory.CREDENTIAL,
-    message: 'Person Credential creation rejected — account is suspended',
+    message: 'Person Credential creation rejected — there is a problem with the account',
   },
   AUTO_CRED_ACCOUNT_DEACTIVATED: {
     statusCode: 3206,

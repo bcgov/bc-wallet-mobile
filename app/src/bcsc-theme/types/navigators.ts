@@ -89,7 +89,6 @@ export enum BCSCScreens {
   VerifyNotComplete = 'Video Verify Incomplete',
   ResidentialAddress = 'Address Entry',
   MainRemoveAccountConfirmation = `${BCSCStacks.Main} Reset App Warning`,
-  AccountProblem = `${BCSCStacks.Main} Account Problem`,
   MainResetWalletConfirmation = `${BCSCStacks.Main} Reset Wallet Warning`,
   VerifyRemoveAccountConfirmation = `${BCSCStacks.Verify} Reset App Warning`,
   OnboardingRemoveAccountConfirmation = `${BCSCStacks.Onboarding} Reset App Warning`,
@@ -269,10 +268,6 @@ export type BCSCMainStackParams = {
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string; fromAppSwitch?: boolean }
   [BCSCScreens.MainRemoveAccountConfirmation]: undefined
-  [BCSCScreens.AccountProblem]: {
-    title: string
-    description: string
-  }
   [BCSCScreens.MainResetWalletConfirmation]: undefined
   [BCSCScreens.TransferAccountQRDisplay]: undefined
   [BCSCScreens.TransferAccountSuccess]: undefined

@@ -530,9 +530,9 @@ export const cardExpiredOnBarcodesErrorPolicy: ErrorHandlingPolicy = {
  * Person Credential creation (`POST /credentials/v1/person`) is rejected with HTTP 400
  * `{error: "unauthorized_client", error_description: "suspended"|"deactivated"}` when the BCSC
  * account is suspended or deactivated. Suspend/deactivate is not delivered via push notification
- * or ID token — this API error is the only place it surfaces (#3389). Show the account-problem
- * modal (Remove Account + Close) instead of failing silently. Suspended and deactivated share the
- * same UI but track as distinct analytics events.
+ * or ID token — this API error is the only place it surfaces (#3389). Show the generic
+ * "Problem with Account" modal (Remove Account + Close) instead of failing silently. Suspended
+ * and deactivated share the same modal copy but track as distinct analytics events.
  *
  * @returns ErrorHandlingPolicy
  */
