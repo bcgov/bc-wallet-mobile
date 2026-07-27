@@ -1,7 +1,7 @@
-import assert from 'node:assert/strict'
 import { TEST_PIN, Timeouts, WRONG_TEST_PIN } from '../../../src/constants.js'
 import { relaunchApp, selectAccountLandingIfPresent, unlockWithPin } from '../../../src/flows/auth.js'
 import { skipToHome } from '../../../src/flows/onboarding.js'
+import { expectWebViewOpen } from '../../../src/helpers/webview.js'
 import { AccountLandingScreen, EnterPINScreen, LockoutScreen } from '../../../src/screens/auth.js'
 import { HomeScreen } from '../../../src/screens/main.js'
 
@@ -32,14 +32,13 @@ describe('Auth journey: unlock', () => {
     await selectAccountLandingIfPresent()
     await AccountLandingScreen.tap('primary')
     await EnterPINScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-    // GetHelp pushes the Forgot-PIN AuthWebView. The valuable assertion is that it navigates OFF the PIN
-    // screen (its input is gone). We do NOT tap the webview back — AuthStack sets no headerBackTestID, so
+    // GetHelp pushes the Forgot-PIN AuthWebView. Assert the webview itself opened (a positive,
+    // testID-free signal via the native WebView element) rather than that the PIN screen "left":
+    // AuthStack keeps EnterPIN mounted underneath the pushed webview, so Android still reports its
+    // PINInput as displayed. We do NOT tap the webview back — AuthStack sets no headerBackTestID, so
     // that button is not addressable — the next checkpoint's relaunchApp() recovers to AccountLanding.
     await EnterPINScreen.link('getHelp')
-    assert.ok(
-      !(await EnterPINScreen.isPresent(Timeouts.ELEMENT_VISIBLE)),
-      'Get Help should navigate off the PIN screen to the help webview'
-    )
+    await expectWebViewOpen(Timeouts.SCREEN_TRANSITION)
   })
 
   it('rejects a wrong PIN inline and unlocks on retry', async () => {
@@ -70,7 +69,7 @@ describe('Auth journey: unlock', () => {
     // Native schedule: 5 consecutive misses → 1-minute lockout. The counter reset on the previous
     // checkpoint's successful unlock, so five attempts should suffice; the loop carries headroom
     // for a swallowed entry, and the per-attempt Lockout check doubles as error-settle time.
-    for (let attempt = 1; attempt <= 7; attempt++) {
+    for (let attempt = 1; attempt <= 6; attempt++) {
       await EnterPINScreen.fill('pin', WRONG_TEST_PIN)
       if (await LockoutScreen.isPresent(2_000)) {
         break

@@ -10,7 +10,7 @@ import {
   reachVerificationMethod,
   startVerification,
 } from '../../../src/flows/verify.js'
-import { acceptSystemAlert } from '../../../src/helpers/alerts.js'
+import { acceptAppAlert } from '../../../src/helpers/alerts.js'
 import { currentPlatform, dispatchDeepLink, getCurrentAppId } from '../../../src/helpers/deep-link.js'
 import { fetchPairingCode, fetchPairingDeepLink } from '../../../src/helpers/pairing-code.js'
 import { AccountLandingScreen, EnterPINScreen } from '../../../src/screens/auth.js'
@@ -236,8 +236,8 @@ describe('Verified journey: combined card', () => {
   it('verified: forgets all device pairings', async () => {
     await SettingsScreen.link('forgetPairings') // verified-only row → ForgetAllPairings confirmation
     await ForgetPairingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-    await ForgetPairingsScreen.tap('primary') // the Critical button confirms → native "Success" alert
-    await acceptSystemAlert() // dismiss "OK"
+    await ForgetPairingsScreen.tap('primary') // the Critical button confirms → app "Success"/OK alert
+    await acceptAppAlert() // tap the "Success — device unpaired" OK (app Alert.alert, not a system dialog)
     await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION) // goBack after the alert
   })
 
@@ -247,10 +247,9 @@ describe('Verified journey: combined card', () => {
   it('verified: opens Manage Devices (in-app webview) from Settings', async () => {
     await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     await SettingsScreen.link('myDevices') // verified-only row → MainWebView (account/devices)
-    assert.ok(
-      !(await SettingsScreen.isPresent(Timeouts.ELEMENT_VISIBLE)),
-      'Manage Devices should open the webview off the Settings screen'
-    )
+    // Assert the webview opened (positive arrival on its header back) rather than that Settings "left":
+    // MainStack keeps Settings mounted underneath the push, so Android still reports it as displayed.
+    await MainWebViewScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     await MainWebViewScreen.back.tap() // → Settings
     await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
