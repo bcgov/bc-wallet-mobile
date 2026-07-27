@@ -1,5 +1,5 @@
 import { Platform } from 'react-native'
-import { Code, FormatFilter } from 'react-native-vision-camera'
+import { CameraDevice, CameraDeviceFormat, Code, FormatFilter } from 'react-native-vision-camera'
 
 import { PHOTO_RESOLUTION_1080P, PHOTO_RESOLUTION_720P } from '@/constants'
 
@@ -531,6 +531,35 @@ export const mergeLockedCodesWithAccumulated = (
   })
 
   return [...accumulatedExtras, ...currentFrameCodes]
+}
+
+/**
+ * Remove duplicate formats from a CameraDevice's formats array, preserving the first occurrence of each unique format.
+ *
+ * @param device The CameraDevice to deduplicate formats for
+ * @returns A new CameraDevice with deduplicated formats, or undefined if the input device is undefined
+ */
+export const removeDuplicateCameraFormats = (device?: CameraDevice): CameraDevice | undefined => {
+  if (!device) {
+    return
+  }
+
+  const seenFormats = new Map<string, CameraDeviceFormat>()
+
+  for (const format of device.formats) {
+    // Ensures that formats with the same properties but in different orders are considered duplicates
+    const sortedFormat = Object.keys(format)
+      .sort()
+      .map((key) => [key, format[key as keyof CameraDeviceFormat]])
+
+    const formatKey = JSON.stringify(sortedFormat)
+
+    if (!seenFormats.has(formatKey)) {
+      seenFormats.set(formatKey, format)
+    }
+  }
+
+  return { ...device, formats: Array.from(seenFormats.values()) }
 }
 
 /**

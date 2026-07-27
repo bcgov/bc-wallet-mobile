@@ -2,7 +2,7 @@ import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { QRScannerTorch, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useFocusEffect, useIsFocused } from '@react-navigation/native'
 import { a11yLabel } from '@utils/accessibility'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Alert,
@@ -55,6 +55,7 @@ import {
   getPaddedHighlightPosition,
   isCodeAlignedWithZones,
   mergeLockedCodesWithAccumulated,
+  removeDuplicateCameraFormats,
   transformBarcodeCoordinates,
 } from './utils/camera'
 
@@ -312,6 +313,13 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
    * while preserving FPS (critical for barcode scanning) at each tier.
    */
   const format = useCameraFormat(device, CameraFormat.CodeScanningFormat)
+
+  const cameraMetadata = useMemo(() => {
+    return {
+      selectedFormat: format,
+      selectedDevice: removeDuplicateCameraFormats(device),
+    }
+  }, [device, format])
 
   // Calculate effective zoom based on device capabilities
   const getEffectiveZoom = useCallback(
@@ -973,18 +981,13 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       const appError = ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
 
       // Add camera device and format info to the error context for better debugging
-      appError.addContext({
-        camera: {
-          device,
-          format,
-        },
-      })
+      appError.addContext(cameraMetadata)
 
-      logger.error('[CodeScanningCamera] runtime error', appError)
+      logger.error('[CodeScanningCamera] runtime error', appError.toJSON())
 
       return appError
     },
-    [device, format, logger]
+    [cameraMetadata, logger]
   )
 
   /**
@@ -992,7 +995,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
    * Sets the zoom level once the camera is fully initialized and ready
    */
   const handleCameraInitialized = useCallback(() => {
-    logger.debug('Camera initialized', { device, format })
+    logger.debug('Camera initialized', cameraMetadata)
 
     if (!hasInitializedRef.current) {
       hasInitializedRef.current = true
@@ -1003,7 +1006,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       cameraIsReady.value = true
       logger.debug('Zoom applied after initialization', { zoom: targetZoom })
     }
-  }, [logger, device, format, getEffectiveZoom, initialZoom, zoom, cameraIsReady])
+  }, [logger, cameraMetadata, getEffectiveZoom, initialZoom, zoom, cameraIsReady])
 
   const handleCameraError = useCallback(
     (error: CameraRuntimeError) => {

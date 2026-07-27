@@ -13,7 +13,7 @@ import {
   useTheme,
 } from '@bifold/core'
 import { NavigationProp, ParamListBase, useIsFocused } from '@react-navigation/native'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -28,6 +28,7 @@ import {
 } from 'react-native-vision-camera'
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
 import { isBackgroundedAppState } from '../utils/app-state'
+import { removeDuplicateCameraFormats } from './utils/camera'
 
 type MaskedCameraProps = {
   navigation: NavigationProp<ParamListBase>
@@ -74,6 +75,13 @@ const MaskedCamera = ({
   const { preventDoublePress } = usePreventDoublePress()
   const { appStateStatus } = useBCSCActivity()
   const hasTorch = device?.hasTorch ?? false
+
+  const cameraMetadata = useMemo(() => {
+    return {
+      selectedFormat: format,
+      selectedDevice: removeDuplicateCameraFormats(device),
+    }
+  }, [device, format])
 
   const styles = StyleSheet.create({
     container: {
@@ -138,18 +146,13 @@ const MaskedCamera = ({
       const appError = ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
 
       // Add camera device and format info to the error context for better debugging
-      appError.addContext({
-        camera: {
-          device,
-          format,
-        },
-      })
+      appError.addContext(cameraMetadata)
 
-      logger.error('[MaskedCamera] runtime error', appError)
+      logger.error('[MaskedCamera] runtime error', appError.toJSON())
 
       return appError
     },
-    [device, format, logger]
+    [cameraMetadata, logger]
   )
 
   const onError = useCallback(
@@ -217,7 +220,7 @@ const MaskedCamera = ({
         video={true}
         photoQualityBalance={photoQualityBalance}
         isMirrored={false}
-        onInitialized={() => logger.debug('MaskedCamera initialized', { device, format })}
+        onInitialized={() => logger.debug('MaskedCamera initialized', cameraMetadata)}
         onError={onError}
         codeScanner={codeScanner}
         torch={torchOn ? 'on' : 'off'}

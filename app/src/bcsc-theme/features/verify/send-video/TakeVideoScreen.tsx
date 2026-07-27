@@ -1,4 +1,5 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
+import { removeDuplicateCameraFormats } from '@/bcsc-theme/components/utils/camera'
 import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
@@ -56,7 +57,8 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   const { ColorPalette, Spacing, TextTheme } = useTheme()
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const device = useCameraDevice('front')
+  const rawDevice = useCameraDevice('front')
+  const device = useMemo(() => removeDuplicateCameraFormats(rawDevice), [rawDevice])
   const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } = useCameraPermission()
   const { hasPermission: hasMicrophonePermission, requestPermission: requestMicrophonePermission } =
     useMicrophonePermission()
@@ -100,6 +102,13 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
     // catch-all 9999, giving this condition a specific signal in analytics/Loki.
     throw toAppError(new Error('[TakeVideoScreen] No prompts found in store'), ErrorRegistry.VIDEO_PROMPTS_MISSING)
   }
+
+  const cameraMetadata = useMemo(() => {
+    return {
+      selectedFormat: format,
+      selectedDevice: removeDuplicateCameraFormats(device),
+    }
+  }, [device, format])
 
   const styles = useMemo(
     () =>
@@ -157,18 +166,13 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
       const appError = ensureAppError(error, AppEventCode.CAMERA_ERROR)
 
       // Add camera device and format info to the error context for better debugging
-      appError.addContext({
-        camera: {
-          device,
-          format,
-        },
-      })
+      appError.addContext(cameraMetadata)
 
       logger.error('[TakeVideoScreen] camera runtime error', appError)
 
       return appError
     },
-    [device, format, logger]
+    [cameraMetadata, logger]
   )
 
   const handleCancel = () => {
@@ -321,7 +325,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   }
 
   const onInitialized = () => {
-    logger.info('[TakeVideoScreen] Camera initialized', { device, format })
+    logger.info('[TakeVideoScreen] Camera initialized', cameraMetadata)
     setIsActive(true)
   }
 
