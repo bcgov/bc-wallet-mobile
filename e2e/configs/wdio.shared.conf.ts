@@ -97,6 +97,18 @@ export const config: WebdriverIO.Config = {
    * Best-effort: a stuck prompt must never fail the whole session.
    */
   before: async () => {
+    // Android (UiAutomator2): React Native's JS thread is essentially never "idle" from the
+    // accessibility framework's perspective, so the driver's implicit waitForIdle burns its full
+    // timeout (default ~10s) before AND after every interaction — turning each tap into a ~10s
+    // wait. Zero it out; our explicit waitForDisplayed calls still gate on element readiness.
+    if (browser.isAndroid) {
+      try {
+        await browser.updateSettings({ waitForIdleTimeout: 0 })
+      } catch (err) {
+        console.warn('[before] Failed to disable waitForIdleTimeout (continuing):', err)
+      }
+      return
+    }
     if (!browser.isIOS) return
     try {
       await acceptSystemAlert(6_000)
