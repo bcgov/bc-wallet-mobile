@@ -20,12 +20,12 @@ jest.mock('@/bcsc-theme/contexts/BCSCStackContext', () => ({
   useBCSCStack: () => ({ stack: 'BCSCMainStack' }),
 }))
 
-const mockTrackAlertDisplayEvent = jest.fn()
-const mockTrackErrorEvent = jest.fn()
 jest.mock('@/utils/analytics/analytics-singleton', () => ({
   Analytics: {
-    trackAlertDisplayEvent: (...args: unknown[]) => mockTrackAlertDisplayEvent(...args),
-    trackErrorEvent: (...args: unknown[]) => mockTrackErrorEvent(...args),
+    trackAlertDisplayEvent: jest.fn(),
+    trackErrorEvent: jest.fn(),
+    trackAlertActionEvent: jest.fn(),
+    trackScreenEvent: jest.fn(),
   },
 }))
 
