@@ -469,7 +469,9 @@ describe('useAgentSetupViewModel', () => {
         await expect(result.current.teardownAgent()).resolves.toBeUndefined()
       })
 
-      expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('AgentTeardown: wallet store deleteStore() failed'))
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('AgentTeardown: wallet store deleteStore() failed')
+      )
       expect(result.current.agent).toBeNull()
       expect(result.current.status).toBe('idle')
     })
