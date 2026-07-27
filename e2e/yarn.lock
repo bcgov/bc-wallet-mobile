@@ -1881,18 +1881,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@wdio/allure-reporter@npm:^9.27.0":
-  version: 9.29.1
-  resolution: "@wdio/allure-reporter@npm:9.29.1"
+"@wdio/allure-reporter@npm:9.27.0":
+  version: 9.27.0
+  resolution: "@wdio/allure-reporter@npm:9.27.0"
   dependencies:
     "@types/node": "npm:^20.1.0"
-    "@wdio/reporter": "npm:9.29.1"
-    "@wdio/types": "npm:9.29.1"
+    "@wdio/reporter": "npm:9.27.0"
+    "@wdio/types": "npm:9.27.0"
     allure-js-commons: "npm:^3.3.2"
     csv-stringify: "npm:^6.0.4"
     html-entities: "npm:^2.6.0"
     strip-ansi: "npm:^7.1.0"
-  checksum: 10c0/89cf632bd0208de8e8aaa52bc02a9410afdc30ec2af00f2f84545519d80b2d9f4a77dfaa88f9a3ba8e0b50a88910bb6f6f0ba683ae0cb063d181465ccd595ca7
+  checksum: 10c0/d1c38be6aa68f22cb4cf203736f5213dbc2fff506e41192e3bab38954a2af9acdf961113b9c1994dae34da4ecf406ea03cbd16dd4efa908481d1df4615832833
   languageName: node
   linkType: hard
 
@@ -2020,15 +2020,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@wdio/junit-reporter@npm:^9.27.0":
-  version: 9.29.1
-  resolution: "@wdio/junit-reporter@npm:9.29.1"
+"@wdio/junit-reporter@npm:9.27.0":
+  version: 9.27.0
+  resolution: "@wdio/junit-reporter@npm:9.27.0"
   dependencies:
-    "@wdio/reporter": "npm:9.29.1"
-    "@wdio/types": "npm:9.29.1"
+    "@wdio/reporter": "npm:9.27.0"
+    "@wdio/types": "npm:9.27.0"
     json-stringify-safe: "npm:^5.0.1"
     junit-report-builder: "npm:^5.1.1"
-  checksum: 10c0/0c1dc1376adcc56e1fc1ee238f9550a2d78a6e6b5824dfb03c1b5caac38488b10562eeb2882751b911c5c85d543bb8bd3f14ce9d131100d969678b955a649d49
+  checksum: 10c0/f4cdb8e7c04e99c874409c7c57a31f65ce9f22f37f091749443d689a85569fe4efb0215e12fa7af6f547b4739e10248356e656cbd83c482abd4c554f32f2ce06
   languageName: node
   linkType: hard
 
@@ -2060,19 +2060,6 @@ __metadata:
     safe-regex2: "npm:^5.0.0"
     strip-ansi: "npm:^7.1.0"
   checksum: 10c0/c11cc06ea9f6696a0077f29d0360c10828317e5980815408d04cad99db1a64a6bc1491583ffef681e46e18476f061f37a2e18706f06488715291f3bfc8b32615
-  languageName: node
-  linkType: hard
-
-"@wdio/logger@npm:9.29.1":
-  version: 9.29.1
-  resolution: "@wdio/logger@npm:9.29.1"
-  dependencies:
-    chalk: "npm:^5.1.2"
-    loglevel: "npm:^1.6.0"
-    loglevel-plugin-prefix: "npm:^0.8.4"
-    safe-regex2: "npm:^5.0.0"
-    strip-ansi: "npm:^7.1.0"
-  checksum: 10c0/7262d1028f2212b8244705a39574b3b3ee3f1007c90fe80837776bf2cdcefd71e32187b69bcdfdd350e07228917936973fef2ec61732b082da69932669a71008
   languageName: node
   linkType: hard
 
@@ -2116,19 +2103,6 @@ __metadata:
     diff: "npm:^8.0.2"
     object-inspect: "npm:^1.12.0"
   checksum: 10c0/3abc9f417ae816e41ae66a3b3312a5683550da876ce4f411a0f05e56f9f2d55dbb354a425068c38bec114b38b9e41f81e0f92e3366bdda68e6ccc40e92a137fd
-  languageName: node
-  linkType: hard
-
-"@wdio/reporter@npm:9.29.1":
-  version: 9.29.1
-  resolution: "@wdio/reporter@npm:9.29.1"
-  dependencies:
-    "@types/node": "npm:^20.1.0"
-    "@wdio/logger": "npm:9.29.1"
-    "@wdio/types": "npm:9.29.1"
-    diff: "npm:^8.0.2"
-    object-inspect: "npm:^1.12.0"
-  checksum: 10c0/8ad399a654c1e6a471e4705dc6434851a6f1c9a3a9173a2fdd3ca4bfab443b720cc3b6744a1529365eabea4e2e9299626783bad6b4cd5af2dd2d92751b5ee268
   languageName: node
   linkType: hard
 
@@ -2202,15 +2176,6 @@ __metadata:
   dependencies:
     "@types/node": "npm:^20.1.0"
   checksum: 10c0/95c2ddc7434b0dd9d480ba9b9563aabb00ff576818e4191f2505ce8bf9e017876ac88aa6bc9c878a2029edb4f9c5c833bd0ca5587f7191e3a05249840eaaf623
-  languageName: node
-  linkType: hard
-
-"@wdio/types@npm:9.29.1":
-  version: 9.29.1
-  resolution: "@wdio/types@npm:9.29.1"
-  dependencies:
-    "@types/node": "npm:^20.1.0"
-  checksum: 10c0/445832ed43d53b08ad3a9bc59fa0f8f3a3398a51a14db674e8757c429ab9d09691cef0a43091f9f6b4d341ef35eb99663300e14d70a0fb1feac10415a211db50
   languageName: node
   linkType: hard
 
@@ -4089,12 +4054,12 @@ __metadata:
   dependencies:
     "@typescript-eslint/eslint-plugin": "npm:^8.0.0"
     "@typescript-eslint/parser": "npm:^8.0.0"
-    "@wdio/allure-reporter": "npm:^9.27.0"
+    "@wdio/allure-reporter": "npm:9.27.0"
     "@wdio/appium-service": "npm:^9.27.0"
     "@wdio/browserstack-service": "npm:^9.27.0"
     "@wdio/cli": "npm:^9.27.0"
     "@wdio/globals": "npm:^9.27.0"
-    "@wdio/junit-reporter": "npm:^9.27.0"
+    "@wdio/junit-reporter": "npm:9.27.0"
     "@wdio/local-runner": "npm:^9.27.0"
     "@wdio/mocha-framework": "npm:^9.27.0"
     "@wdio/sauce-service": "npm:^9.27.0"

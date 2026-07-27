@@ -35,7 +35,7 @@ import {
  * `getResumeStepRoute` (id → address → email → verify). Reaching a given step is composed from
  * `reachVerificationMethod()` + the explicit per-step arranges (`collectNonBcscEvidence`,
  * `fillResidentialAddress`, `verifyEmailWithTempInbox`, `addAdditionalPhotoId`) rather than a single
- * parameterized `reachVerifyStep`. `completeVerification(user, {method: 'in-person'})` then drives the
+ * parameterized `reachVerifyStep`. `completeVerification(user)` then drives the
  * in-person approval to VerificationSuccess.
  *
  * Reminder: the VerifyPrompt exists only in the session that completed onboarding — run
@@ -176,17 +176,10 @@ export async function reachVerificationMethod(): Promise<void> {
  * allowlisted runner IP). Assumes VerificationMethodSelection is showing. Reads the on-screen
  * confirmation code, drives the approval, then Complete → VerificationSuccess → Home (verified).
  *
- * Only `in-person` is CI-completable; the send-video / live-call methods enter camera screens and
- * live in the manual suite.
+ * In-person is the only CI-completable method (hence no `method` parameter); the send-video /
+ * live-call methods enter camera screens and are exercised in the manual suite.
  */
-export async function completeVerification(
-  user: TestUser,
-  options: { method: 'in-person' | 'send-video' | 'live-call' }
-): Promise<void> {
-  if (options.method !== 'in-person') {
-    throw new Error(`completeVerification: only 'in-person' is CI-completable (got '${options.method}')`)
-  }
-
+export async function completeVerification(user: TestUser): Promise<void> {
   await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   await VerificationMethodSelectionScreen.link('inPerson')
 

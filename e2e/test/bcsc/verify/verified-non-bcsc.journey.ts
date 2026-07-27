@@ -55,7 +55,7 @@ describe('Verified journey: non-bcsc card', () => {
   })
 
   it('completes verification in person and lands on verified Home', async () => {
-    await completeVerification(getTestUser(), { method: 'in-person' })
+    await completeVerification(getTestUser())
     await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 

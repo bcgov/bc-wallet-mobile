@@ -145,12 +145,13 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * @param testId - test ID to tap
    */
   public async tapByTestId(testId: string) {
-    const el = await this.findByTestId(testId)
+    let el = await this.findByTestId(testId)
     try {
       await el.waitForDisplayed({ timeout: 500 })
     } catch {
       console.warn(`Element "${testId}" not visible after 500ms; scrolling then retrying`)
       await this.scrollToTestId(testId, 6, 'both')
+      el = await this.findByTestId(testId) // scrolling can invalidate the cached handle — re-query
       await el.waitForDisplayed({ timeout: 500 })
     }
     await el.click()
@@ -164,12 +165,13 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * @param timeout - max time to wait for the element to become enabled (default 20s)
    */
   public async waitForEnabledAndTap(testId: string, timeout: number = Timeouts.SCREEN_TRANSITION) {
-    const el = await this.findByTestId(testId)
+    let el = await this.findByTestId(testId)
     try {
       await el.waitForDisplayed({ timeout })
     } catch {
       console.warn(`Element "${testId}" not visible after ${timeout}ms; scrolling then retrying`)
       await this.scrollToTestId(testId, 4, 'both')
+      el = await this.findByTestId(testId) // scrolling can invalidate the cached handle — re-query
       await el.waitForDisplayed({ timeout })
     }
     await el.waitForEnabled({ timeout })
@@ -197,12 +199,13 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * @param options - optional: tapFirst (focus), characterByCharacter (for secure/controlled inputs)
    */
   public async enterText(testId: string, text: string, options?: EnterTextOptions) {
-    const el = await this.findByTestId(testId)
+    let el = await this.findByTestId(testId)
     try {
       await el.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
     } catch {
       console.warn(`Element "${testId}" not visible after ${Timeouts.SCREEN_TRANSITION}ms; scrolling then retrying`)
       await this.scrollToTestId(testId, 4, 'both')
+      el = await this.findByTestId(testId) // scrolling can invalidate the cached handle — re-query
       await el.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
     }
 
