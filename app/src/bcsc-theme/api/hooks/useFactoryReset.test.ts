@@ -1,7 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { useBCSCAgentSafe } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
-import { deleteWalletStore, purgeWalletStore, shutdownAgent } from '@/bcsc-theme/features/agent/services/agent-service'
+import { purgeWalletStore } from '@/bcsc-theme/features/agent/services/agent-service'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCDispatchAction } from '@/store'
@@ -21,11 +21,11 @@ jest.mock('@/bcsc-theme/features/agent/BCSCAgentProvider', () => ({
   useBCSCAgentSafe: jest.fn(),
 }))
 // Factory mock (not automock) so the agent-service module's heavy transitive deps
-// (Credo, indy-vdr-shared, etc.) are never loaded by this hook test.
+// (Credo, indy-vdr-shared, etc.) are never loaded by this hook test. Only
+// purgeWalletStore is called directly by useFactoryReset now — the live-agent
+// shutdown/delete path is delegated to agentCtx.teardownAgent (mocked separately).
 jest.mock('@/bcsc-theme/features/agent/services/agent-service', () => ({
-  deleteWalletStore: jest.fn().mockResolvedValue(undefined),
   purgeWalletStore: jest.fn().mockResolvedValue(undefined),
-  shutdownAgent: jest.fn().mockResolvedValue(undefined),
 }))
 jest.mock('react-native-config', () => ({ Config: { INDY_VDR_PROXY_URL: '' } }))
 
@@ -141,7 +141,7 @@ describe('useFactoryReset', () => {
     expect(deleteRegistrationMock).toHaveBeenCalledWith('native-token', 'test-client-id')
   })
 
-  it('should delete the wallet store and shut down the agent before clearing state', async () => {
+  it('awaits agentCtx.teardownAgent before clearing state when a live agent exists', async () => {
     const bcscCoreMock = jest.mocked(BcscCore)
     const useSecureActionsMock = jest.mocked(useSecureActions)
     const bifoldMock = jest.mocked(Bifold)
@@ -150,14 +150,13 @@ describe('useFactoryReset', () => {
 
     const clearSecureStateMock = jest.fn()
     const deleteSecureDataMock = jest.fn().mockResolvedValue(undefined)
+    const teardownAgentMock = jest.fn()
 
     const callOrder: string[] = []
-    // Both teardown ops now route through the serialized agent-service helpers.
-    jest.mocked(deleteWalletStore).mockImplementation(async () => {
-      callOrder.push('deleteStore')
-    })
-    jest.mocked(shutdownAgent).mockImplementation(async () => {
-      callOrder.push('shutdown')
+    // Agent shutdown + wallet store deletion are now owned by useAgentSetupViewModel's
+    // teardownAgent (see its own test suite); useFactoryReset just awaits it.
+    teardownAgentMock.mockImplementation(async () => {
+      callOrder.push('teardownAgent')
     })
     deleteSecureDataMock.mockImplementation(async () => {
       callOrder.push('deleteSecureData')
@@ -173,6 +172,7 @@ describe('useFactoryReset', () => {
       error: null,
       retry: jest.fn(),
       resetWallet: jest.fn(),
+      teardownAgent: teardownAgentMock,
     })
 
     useBCSCApiClientStateMock.mockReturnValue({
@@ -202,33 +202,32 @@ describe('useFactoryReset', () => {
       expect(result.success).toBe(true)
     })
 
-    // Routed through the wallet-op queue rather than calling the agent directly.
-    expect(deleteWalletStore).toHaveBeenCalledWith(agent)
-    expect(shutdownAgent).toHaveBeenCalledWith(agent, expect.anything())
-    // Shut down before deleting (so shutdown closes a still-open store instead of
-    // throwing onCloseContext on a removed one), and both before the key-clearing
-    // steps so the wallet is removed before re-onboarding can derive a new key.
-    expect(callOrder.indexOf('shutdown')).toBeLessThan(callOrder.indexOf('deleteStore'))
-    expect(callOrder.indexOf('deleteStore')).toBeLessThan(callOrder.indexOf('deleteSecureData'))
-    expect(callOrder.indexOf('deleteStore')).toBeLessThan(callOrder.indexOf('clearSecureState'))
+    expect(teardownAgentMock).toHaveBeenCalledTimes(1)
+    // teardownAgent must complete (agent shut down, store deleted) before the rest of
+    // the reset proceeds, so nothing can race a mounted consumer against the deleted store.
+    expect(callOrder.indexOf('teardownAgent')).toBeLessThan(callOrder.indexOf('deleteSecureData'))
+    expect(callOrder.indexOf('teardownAgent')).toBeLessThan(callOrder.indexOf('clearSecureState'))
   })
 
-  it('should still succeed if the wallet store delete throws', async () => {
+  it('dispatches CLEAR_BCSC, then clearSecureState, then DID_AUTHENTICATE(false)', async () => {
     const bcscCoreMock = jest.mocked(BcscCore)
     const useSecureActionsMock = jest.mocked(useSecureActions)
     const bifoldMock = jest.mocked(Bifold)
     const useRegistrationApiMock = jest.mocked(useRegistrationApi)
     const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
-    const warnLogMock = jest.fn()
 
-    jest.mocked(deleteWalletStore).mockRejectedValue(new Error('boom'))
-    jest.mocked(shutdownAgent).mockResolvedValue(undefined)
-    jest.mocked(useBCSCAgentSafe).mockReturnValue({
-      agent: { id: 'agent' } as any,
-      loading: false,
-      error: null,
-      retry: jest.fn(),
-      resetWallet: jest.fn(),
+    const callOrder: string[] = []
+    const clearSecureStateMock = jest.fn(() => {
+      callOrder.push('clearSecureState')
+    })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const dispatchMock = jest.fn((action: any) => {
+      if (action.type === BCDispatchAction.CLEAR_BCSC) {
+        callOrder.push('CLEAR_BCSC')
+      }
+      if (action.type === DispatchAction.DID_AUTHENTICATE) {
+        callOrder.push('DID_AUTHENTICATE')
+      }
     })
 
     useBCSCApiClientStateMock.mockReturnValue({
@@ -242,14 +241,14 @@ describe('useFactoryReset', () => {
     bcscCoreMock.getAccount.mockResolvedValue({ clientID: 'test-client-id' } as any)
     bcscCoreMock.removeAccount.mockResolvedValue(undefined)
     useSecureActionsMock.mockReturnValue({
-      clearSecureState: jest.fn(),
+      clearSecureState: clearSecureStateMock,
       deleteSecureData: jest.fn().mockResolvedValue(undefined),
     } as any)
     bifoldMock.useStore.mockReturnValue([
       { bcscSecure: { registrationAccessToken: 'token', additionalEvidenceData: [] } } as any,
-      jest.fn(),
+      dispatchMock,
     ])
-    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), warn: warnLogMock, error: jest.fn() }] as any)
+    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), warn: jest.fn(), error: jest.fn() }] as any)
 
     const hook = renderHook(() => useFactoryReset())
 
@@ -258,10 +257,10 @@ describe('useFactoryReset', () => {
       expect(result.success).toBe(true)
     })
 
-    expect(warnLogMock).toHaveBeenCalledWith(
-      expect.stringContaining('deleteStore() failed'),
-      expect.objectContaining({ error: expect.any(Error) })
-    )
+    // hasAccount (CLEAR_BCSC) must flip false before bcscSecure clears, so RootStack
+    // short-circuits to OnboardingStack before it ever derives showVerifyStack —
+    // this is what prevents the transient MainStack mount described in #4336.
+    expect(callOrder).toStrictEqual(['CLEAR_BCSC', 'clearSecureState', 'DID_AUTHENTICATE'])
   })
 
   it('purges an orphaned wallet store when no live agent is held but a wallet key exists', async () => {
@@ -276,7 +275,7 @@ describe('useFactoryReset', () => {
     const useRegistrationApiMock = jest.mocked(useRegistrationApi)
     const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
 
-    // No live agent (mid-reinitialization), so the direct deleteWalletStore path
+    // No live agent (mid-reinitialization), so the agentCtx.teardownAgent path
     // is unavailable.
     jest.mocked(useBCSCAgentSafe).mockReturnValue(null)
 
@@ -318,7 +317,6 @@ describe('useFactoryReset', () => {
     expect(purgeWalletStore).toHaveBeenCalledWith(
       expect.objectContaining({ walletSecret: expect.objectContaining({ key: 'stale-wallet-key' }) })
     )
-    expect(deleteWalletStore).not.toHaveBeenCalled()
     expect(bcscCoreMock.removeAccount).toHaveBeenCalledWith()
   })
 

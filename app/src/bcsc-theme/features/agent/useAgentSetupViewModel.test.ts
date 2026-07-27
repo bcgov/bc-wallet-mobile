@@ -397,6 +397,99 @@ describe('useAgentSetupViewModel', () => {
     })
   })
 
+  describe('teardownAgent', () => {
+    it('shuts down the live agent, deletes the store, and nulls the agent', async () => {
+      const agent1 = mockAgent()
+      jest.mocked(agentService.buildAgent).mockReturnValue(agent1)
+
+      const { result } = renderHook(() => useAgentSetupViewModel())
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+
+      await act(async () => {
+        await result.current.teardownAgent()
+      })
+
+      expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger)
+      expect(agentService.deleteWalletStore).toHaveBeenCalledWith(agent1)
+      expect(result.current.agent).toBeNull()
+      expect(result.current.status).toBe('idle')
+    })
+
+    it('does not trigger re-initialization (unlike resetWallet)', async () => {
+      const agent1 = mockAgent()
+      jest.mocked(agentService.buildAgent).mockReturnValue(agent1)
+
+      const { result } = renderHook(() => useAgentSetupViewModel())
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+
+      await act(async () => {
+        await result.current.teardownAgent()
+      })
+
+      expect(result.current.status).toBe('idle')
+      // Give any spurious re-init effect a chance to fire before asserting it didn't.
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 0))
+      })
+      expect(agentService.buildAgent).toHaveBeenCalledTimes(1)
+      expect(result.current.status).toBe('idle')
+      expect(result.current.agent).toBeNull()
+    })
+
+    it('stops the attestation monitor before shutting down the agent', async () => {
+      const agent1 = mockAgent()
+      jest.mocked(agentService.buildAgent).mockReturnValue(agent1)
+
+      const { result } = renderHook(() => useAgentSetupViewModel())
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+
+      await act(async () => {
+        await result.current.teardownAgent()
+      })
+
+      expect(attestationMonitor.stop).toHaveBeenCalled()
+      expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger)
+      // invocationCallOrder is a shared, monotonically increasing counter across all
+      // mocks, so comparing the two mocks' first-call indices proves relative order
+      // without attaching a stateful mockImplementation to the shared monitor mock.
+      const stopOrder = attestationMonitor.stop.mock.invocationCallOrder[0]
+      const shutdownOrder = jest.mocked(agentService.shutdownAgent).mock.invocationCallOrder[0]
+      expect(stopOrder).toBeLessThan(shutdownOrder)
+    })
+
+    it('logs a warning and still nulls the agent when deleteWalletStore rejects', async () => {
+      const agent1 = mockAgent()
+      jest.mocked(agentService.buildAgent).mockReturnValue(agent1)
+      jest.mocked(agentService.deleteWalletStore).mockRejectedValueOnce(new Error('store gone'))
+
+      const { result } = renderHook(() => useAgentSetupViewModel())
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+
+      await act(async () => {
+        await expect(result.current.teardownAgent()).resolves.toBeUndefined()
+      })
+
+      expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('AgentTeardown: wallet store deleteStore() failed'))
+      expect(result.current.agent).toBeNull()
+      expect(result.current.status).toBe('idle')
+    })
+
+    it('is a no-op when there is no live agent', async () => {
+      jest.mocked(Bifold.useStore).mockReturnValue(mockedStore({ bcscSecure: { walletKey: undefined } }) as never)
+
+      const { result } = renderHook(() => useAgentSetupViewModel())
+      await waitFor(() => expect(result.current.status).toBe('error'))
+
+      await act(async () => {
+        await result.current.teardownAgent()
+      })
+
+      expect(agentService.shutdownAgent).not.toHaveBeenCalled()
+      expect(agentService.deleteWalletStore).not.toHaveBeenCalled()
+      expect(result.current.status).toBe('error')
+    })
+  })
+
   it('shuts down agent when didAuthenticate flips to false', async () => {
     const store: Record<string, unknown> = {
       authentication: { didAuthenticate: true },
