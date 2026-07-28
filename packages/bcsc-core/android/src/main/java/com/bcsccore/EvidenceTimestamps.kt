@@ -15,8 +15,8 @@ package com.bcsccore
  * here — the JS layer (`capture-date.ts`) applies the upper-bound plausibility check.
  */
 object EvidenceTimestamps {
-    /** 2020-01-01T00:00:00Z — no legitimate v4 capture predates this. */
-    const val MIN_PLAUSIBLE_SECONDS = 1_577_836_800L
+    /** 2026-06-01T00:00:00Z — no legitimate v4 capture predates this. */
+    const val MIN_PLAUSIBLE_SECONDS = 1_780_272_000L
 
     /** At/above this magnitude a stored value is unambiguously milliseconds. */
     const val MILLISECONDS_THRESHOLD = 100_000_000_000L

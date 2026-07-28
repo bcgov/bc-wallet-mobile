@@ -53,7 +53,7 @@ describe('useEvidenceUpload', () => {
 
   // A plausible capture date (mid-2026) — the default so existing tests aren't tripped up by
   // the date-plausibility guard added for #4338. Tests targeting that guard override this.
-  const plausibleDate = 1_780_000_000
+  const plausibleDate = 1_782_000_000
 
   const photo = (label: string, tag: string, date: number = plausibleDate): PhotoMetadata => ({
     label,
@@ -168,7 +168,7 @@ describe('useEvidenceUpload', () => {
     })
 
     it('substitutes an implausible capture date (#4338) with the file mtime before upload', async () => {
-      const mtimeMs = new Date('2026-06-01T00:00:00Z').getTime()
+      const mtimeMs = new Date('2026-06-15T00:00:00Z').getTime()
       jest.mocked(RNFS.stat).mockResolvedValue({ mtime: mtimeMs } as any)
 
       const bifoldMock = jest.mocked(Bifold)
@@ -255,7 +255,7 @@ describe('useEvidenceUpload', () => {
 
   describe('uploadSelfiePhoto', () => {
     it('substitutes an implausible selfie capture date with the file mtime before upload', async () => {
-      const mtimeMs = new Date('2026-06-01T00:00:00Z').getTime()
+      const mtimeMs = new Date('2026-06-15T00:00:00Z').getTime()
       jest.mocked(RNFS.stat).mockResolvedValue({ mtime: mtimeMs } as any)
 
       const bifoldMock = jest.mocked(Bifold)

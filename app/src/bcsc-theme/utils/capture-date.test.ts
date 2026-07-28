@@ -17,7 +17,7 @@ const photo = (overrides: Partial<PhotoMetadata> = {}): PhotoMetadata => ({
   label: 'FRONT_SIDE',
   content_type: 'image/jpeg',
   content_length: 1,
-  date: 1_780_000_000,
+  date: 1_782_000_000,
   sha256: 'sha',
   file_path: '/docs/front.jpg',
   ...overrides,
@@ -32,7 +32,7 @@ describe('capture-date utils', () => {
     const nowMs = new Date('2026-07-28T00:00:00Z').getTime()
 
     it('returns true for a plausible mid-range value', () => {
-      expect(isPlausibleCaptureDateSeconds(1_780_000_000, nowMs)).toBe(true)
+      expect(isPlausibleCaptureDateSeconds(1_782_000_000, nowMs)).toBe(true)
     })
 
     it('returns true at the exact floor boundary', () => {
@@ -68,7 +68,7 @@ describe('capture-date utils', () => {
 
     it('defaults nowMs to Date.now() when not provided', () => {
       const spy = jest.spyOn(Date, 'now').mockReturnValue(nowMs)
-      expect(isPlausibleCaptureDateSeconds(1_780_000_000)).toBe(true)
+      expect(isPlausibleCaptureDateSeconds(1_782_000_000)).toBe(true)
       spy.mockRestore()
     })
   })
@@ -76,7 +76,7 @@ describe('capture-date utils', () => {
   describe('derivePlausibleCaptureDateSeconds', () => {
     it('uses the file mtime when it is plausible', async () => {
       const mockLogger = new MockLogger()
-      const mtimeMs = new Date('2026-06-01T00:00:00Z').getTime()
+      const mtimeMs = new Date('2026-06-15T00:00:00Z').getTime()
       ;(RNFS.stat as jest.Mock).mockResolvedValue({ mtime: mtimeMs })
 
       const result = await derivePlausibleCaptureDateSeconds('/docs/front.jpg', mockLogger)
@@ -123,7 +123,7 @@ describe('capture-date utils', () => {
     it('reports no change and preserves identity when all dates are plausible', async () => {
       const mockLogger = new MockLogger()
       const evidence: EvidenceMetadata[] = [
-        { metadata: [photo({ date: 1_780_000_000 }), photo({ date: 1_780_000_030, label: 'BACK_SIDE' })] },
+        { metadata: [photo({ date: 1_782_000_000 }), photo({ date: 1_782_000_030, label: 'BACK_SIDE' })] },
       ]
 
       const { repaired, changed } = await repairEvidenceCaptureDates(evidence, mockLogger)
@@ -136,10 +136,10 @@ describe('capture-date utils', () => {
 
     it('substitutes only the implausible photo date and flags changed', async () => {
       const mockLogger = new MockLogger()
-      const mtimeMs = new Date('2026-06-01T00:00:00Z').getTime()
+      const mtimeMs = new Date('2026-06-15T00:00:00Z').getTime()
       ;(RNFS.stat as jest.Mock).mockResolvedValue({ mtime: mtimeMs })
 
-      const goodPhoto = photo({ date: 1_780_000_000, file_path: '/docs/front.jpg' })
+      const goodPhoto = photo({ date: 1_782_000_000, file_path: '/docs/front.jpg' })
       const corruptedPhoto = photo({ date: 1_780_000, file_path: '/docs/back.jpg', label: 'BACK_SIDE' })
       const evidence: EvidenceMetadata[] = [{ metadata: [goodPhoto, corruptedPhoto] }]
 
@@ -154,7 +154,7 @@ describe('capture-date utils', () => {
 
     it('is idempotent: repairing an already-repaired list reports no further change', async () => {
       const mockLogger = new MockLogger()
-      const mtimeMs = new Date('2026-06-01T00:00:00Z').getTime()
+      const mtimeMs = new Date('2026-06-15T00:00:00Z').getTime()
       ;(RNFS.stat as jest.Mock).mockResolvedValue({ mtime: mtimeMs })
 
       const evidence: EvidenceMetadata[] = [{ metadata: [photo({ date: 1_780_000, file_path: '/docs/a.jpg' })] }]
@@ -169,11 +169,11 @@ describe('capture-date utils', () => {
 
     it('handles multiple evidence entries independently', async () => {
       const mockLogger = new MockLogger()
-      const mtimeMs = new Date('2026-06-01T00:00:00Z').getTime()
+      const mtimeMs = new Date('2026-06-15T00:00:00Z').getTime()
       ;(RNFS.stat as jest.Mock).mockResolvedValue({ mtime: mtimeMs })
 
       const evidence: EvidenceMetadata[] = [
-        { metadata: [photo({ date: 1_780_000_000, file_path: '/docs/a.jpg' })] },
+        { metadata: [photo({ date: 1_782_000_000, file_path: '/docs/a.jpg' })] },
         { metadata: [photo({ date: 1_780_000, file_path: '/docs/b.jpg' })] },
       ]
 

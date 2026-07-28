@@ -307,7 +307,7 @@ describe('useEvidenceUploadModel', () => {
       const mockGetCache = jest.mocked(VerificationVideoCache.getCache)
       mockGetCache.mockResolvedValue(Buffer.from([4, 5, 6]))
 
-      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-01-01') } as any)
+      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-06-15') } as any)
 
       const mockGetVideoMeta = jest.mocked(getVideoMetadata)
       mockGetVideoMeta.mockResolvedValue({ duration: 10 } as any)
@@ -429,7 +429,7 @@ describe('useEvidenceUploadModel', () => {
       jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
       jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(undefined as any)
 
-      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-01-01') } as any)
+      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-06-15') } as any)
 
       const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 
@@ -471,7 +471,7 @@ describe('useEvidenceUploadModel', () => {
 
       jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
       jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(Buffer.from([4, 5, 6]))
-      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-01-01') } as any)
+      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-06-15') } as any)
       jest.mocked(getVideoMetadata).mockResolvedValue({ duration: 10 } as any)
       mockEvidenceApi.sendEvidenceMetadata.mockRejectedValue(new Error('Evidence metadata failed'))
 
@@ -510,7 +510,7 @@ describe('useEvidenceUploadModel', () => {
 
       jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
       jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(Buffer.from([4, 5, 6]))
-      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-01-01') } as any)
+      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-06-15') } as any)
       jest.mocked(getVideoMetadata).mockResolvedValue({ duration: 10 } as any)
       mockEvidenceApi.uploadPhotoEvidenceMetadata.mockRejectedValue(new Error('Metadata upload failed'))
 
@@ -549,7 +549,7 @@ describe('useEvidenceUploadModel', () => {
 
       jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
       jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(Buffer.from([4, 5, 6]))
-      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-01-01') } as any)
+      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-06-15') } as any)
       jest.mocked(getVideoMetadata).mockResolvedValue({ duration: 10 } as any)
 
       mockEvidenceApi.uploadPhotoEvidenceMetadata.mockResolvedValue({ upload_uri: 'photo-uri' })
@@ -591,7 +591,7 @@ describe('useEvidenceUploadModel', () => {
 
       jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
       jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(Buffer.from([4, 5, 6]))
-      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-01-01') } as any)
+      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-06-15') } as any)
       jest.mocked(getVideoMetadata).mockResolvedValue({ duration: 10 } as any)
 
       mockEvidenceApi.uploadPhotoEvidenceMetadata.mockResolvedValue({ upload_uri: 'photo-uri' })
@@ -633,7 +633,7 @@ describe('useEvidenceUploadModel', () => {
                 documentNumber: 'DL123',
                 // A plausible date so the #4338 capture-date guard is a no-op here — this test
                 // is about additional-evidence processing, not the date guard.
-                metadata: [{ label: 'front', file_path: '/front.jpg', side: 'front', date: 1_780_000_000 }],
+                metadata: [{ label: 'front', file_path: '/front.jpg', side: 'front', date: 1_782_000_000 }],
               },
             ],
           },
@@ -646,7 +646,7 @@ describe('useEvidenceUploadModel', () => {
 
       jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(Buffer.from([4, 5, 6]))
 
-      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-01-01') } as any)
+      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-06-15') } as any)
 
       jest.mocked(getVideoMetadata).mockResolvedValue({ duration: 10 } as any)
 
@@ -668,7 +668,7 @@ describe('useEvidenceUploadModel', () => {
       expect(mockEvidenceApi.sendEvidenceMetadata).toHaveBeenCalledWith({
         type: 'drivers_licence',
         number: 'DL123',
-        images: [{ label: 'FRONT_SIDE', side: 'front', file_path: undefined, date: 1_780_000_000 }],
+        images: [{ label: 'FRONT_SIDE', side: 'front', file_path: undefined, date: 1_782_000_000 }],
       })
       expect(mockEvidenceApi.uploadPhotoEvidenceBinary).toHaveBeenCalledWith('evidence-uri-front', expect.anything())
       expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledWith('req-123', {

@@ -2,8 +2,8 @@ import { BifoldLogger } from '@bifold/core'
 import { EvidenceMetadata } from 'react-native-bcsc-core'
 import RNFS from 'react-native-fs'
 
-/** 2020-01-01T00:00:00Z — no legitimate capture predates this. */
-export const MIN_PLAUSIBLE_CAPTURE_DATE_SECONDS = 1577836800
+/** 2026-06-01T00:00:00Z — no legitimate capture predates this. */
+export const MIN_PLAUSIBLE_CAPTURE_DATE_SECONDS = 1780272000
 
 /**
  * Generous ceiling above "now" to tolerate device clock skew without rejecting a genuine

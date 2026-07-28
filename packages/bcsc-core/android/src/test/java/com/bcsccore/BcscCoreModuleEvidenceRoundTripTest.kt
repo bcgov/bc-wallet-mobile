@@ -95,7 +95,7 @@ class BcscCoreModuleEvidenceRoundTripTest {
 
     @Test
     fun `single-side entry round trips capture date unchanged`() {
-        val captureSeconds = 1_780_000_000L
+        val captureSeconds = 1_782_000_000L
         val item = evidenceInput("DL123", listOf(photoInput("/docs/front.jpg", "FRONT_SIDE", captureSeconds)))
 
         val entry = module.convertToEvidenceUploadEntry(item)
@@ -108,8 +108,8 @@ class BcscCoreModuleEvidenceRoundTripTest {
 
     @Test
     fun `two-side entry round trips both capture dates unchanged`() {
-        val frontSeconds = 1_780_000_000L
-        val backSeconds = 1_780_000_030L
+        val frontSeconds = 1_782_000_000L
+        val backSeconds = 1_782_000_030L
         val item =
             evidenceInput(
                 "DL123",
@@ -127,8 +127,8 @@ class BcscCoreModuleEvidenceRoundTripTest {
 
     @Test
     fun `two entries (front and back document types) each round trip independently`() {
-        val entry1Seconds = 1_780_000_000L
-        val entry2Seconds = 1_780_100_000L
+        val entry1Seconds = 1_782_000_000L
+        val entry2Seconds = 1_782_100_000L
         val entry1 =
             module.convertToEvidenceUploadEntry(
                 evidenceInput("DL1", listOf(photoInput("/a.jpg", "FRONT_SIDE", entry1Seconds))),
@@ -147,7 +147,7 @@ class BcscCoreModuleEvidenceRoundTripTest {
 
     @Test
     fun `capture date is stable across 3 repeated write-read cycles`() {
-        var seconds = 1_780_000_000L
+        var seconds = 1_782_000_000L
 
         repeat(3) {
             val item = evidenceInput("DL123", listOf(photoInput("/docs/front.jpg", "FRONT_SIDE", seconds)))
@@ -155,14 +155,14 @@ class BcscCoreModuleEvidenceRoundTripTest {
             seconds = readBackDates(wrapAsEvidenceUpload(listOf(entry))).single().single()
         }
 
-        assertEquals(1_780_000_000L, seconds)
+        assertEquals(1_782_000_000L, seconds)
     }
 
     // MARK: - v3-format fixture (millisecond-magnitude timestamp already on disk)
 
     @Test
     fun `v3-format fixture with millisecond timestamp reads back a correct capture date in seconds`() {
-        val v3MillisTimestamp = 1_780_000_000_000L
+        val v3MillisTimestamp = 1_782_000_000_000L
         val fixtureJson =
             JSONObject()
                 .apply {
@@ -189,7 +189,7 @@ class BcscCoreModuleEvidenceRoundTripTest {
 
         val dates = readBackDates(fixtureJson)
 
-        assertEquals(listOf(listOf(1_780_000_000L)), dates)
+        assertEquals(listOf(listOf(1_782_000_000L)), dates)
     }
 
     // MARK: - corrupted / implausible values

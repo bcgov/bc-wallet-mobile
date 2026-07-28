@@ -12,7 +12,7 @@ class EvidenceTimestampsTest {
 
     @Test
     fun `apiSecondsToStoredMillis multiplies a plausible seconds value by 1000`() {
-        val midYear2026Seconds = 1_780_000_000L
+        val midYear2026Seconds = 1_782_000_000L
 
         val result = EvidenceTimestamps.apiSecondsToStoredMillis(midYear2026Seconds)
 
@@ -51,28 +51,28 @@ class EvidenceTimestampsTest {
 
     @Test
     fun `storedTimestampToApiSeconds divides a v3-style millisecond value`() {
-        val v3MillisValue = 1_780_000_000_000L
+        val v3MillisValue = 1_782_000_000_000L
 
         val result = EvidenceTimestamps.storedTimestampToApiSeconds(v3MillisValue)
 
-        assertEquals(1_780_000_000L, result)
+        assertEquals(1_782_000_000L, result)
     }
 
     @Test
     fun `storedTimestampToApiSeconds divides a value written by the fixed v4 write path`() {
         // The fixed write path always stores millis, so this is the steady-state case post-fix.
-        val fixedV4MillisValue = EvidenceTimestamps.apiSecondsToStoredMillis(1_780_000_000L)
+        val fixedV4MillisValue = EvidenceTimestamps.apiSecondsToStoredMillis(1_782_000_000L)
 
         val result = EvidenceTimestamps.storedTimestampToApiSeconds(fixedV4MillisValue)
 
-        assertEquals(1_780_000_000L, result)
+        assertEquals(1_782_000_000L, result)
     }
 
     @Test
     fun `storedTimestampToApiSeconds passes through a plausible pre-fix v4 seconds value unchanged`() {
         // Data written by the pre-#4338-fix buggy write path (seconds stored directly, no
         // multiplication) is still in the plausible-seconds range, not the millis range.
-        val preFixV4SecondsValue = 1_780_000_000L
+        val preFixV4SecondsValue = 1_782_000_000L
 
         val result = EvidenceTimestamps.storedTimestampToApiSeconds(preFixV4SecondsValue)
 
@@ -114,7 +114,7 @@ class EvidenceTimestampsTest {
 
     @Test
     fun `write then read round trip preserves a plausible capture date in seconds`() {
-        val captureSeconds = 1_780_000_000L
+        val captureSeconds = 1_782_000_000L
 
         val stored = EvidenceTimestamps.apiSecondsToStoredMillis(captureSeconds)
         val readBack = EvidenceTimestamps.storedTimestampToApiSeconds(stored)
@@ -124,13 +124,13 @@ class EvidenceTimestampsTest {
 
     @Test
     fun `write then read round trip is stable across repeated cycles`() {
-        var seconds = 1_780_000_000L
+        var seconds = 1_782_000_000L
 
         repeat(3) {
             val stored = EvidenceTimestamps.apiSecondsToStoredMillis(seconds)
             seconds = EvidenceTimestamps.storedTimestampToApiSeconds(stored)
         }
 
-        assertEquals(1_780_000_000L, seconds)
+        assertEquals(1_782_000_000L, seconds)
     }
 }

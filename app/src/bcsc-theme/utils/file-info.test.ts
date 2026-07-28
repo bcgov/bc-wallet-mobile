@@ -72,7 +72,7 @@ describe('File Info Utils', () => {
       const mockBuffer = Buffer.from('fake-jpeg-data')
 
       RNFSMock.stat.mockResolvedValue({
-        mtime: new Date('2025-06-01T10:00:00Z').getTime(),
+        mtime: new Date('2026-06-15T10:00:00Z').getTime(),
         size: mockBuffer.byteLength,
         path: '/tmp/photo.jpg',
         isFile: () => true,
@@ -96,7 +96,7 @@ describe('File Info Utils', () => {
       expect(result).toEqual({
         content_length: mockBuffer.byteLength,
         content_type: 'image/jpeg',
-        date: Math.floor(new Date('2025-06-01T10:00:00Z').getTime() / 1000),
+        date: Math.floor(new Date('2026-06-15T10:00:00Z').getTime() / 1000),
         label: 'front',
         filename: 'photo.jpg',
         sha256: 'sha256-hash-value',
@@ -110,7 +110,7 @@ describe('File Info Utils', () => {
       const mockBuffer = Buffer.from('fake-jpeg-data')
 
       RNFSMock.stat.mockResolvedValue({
-        mtime: new Date('2025-06-01T10:00:00Z').getTime(),
+        mtime: new Date('2026-06-15T10:00:00Z').getTime(),
         size: mockBuffer.byteLength,
         path: '/tmp/photo.jpg',
         isFile: () => true,
@@ -167,7 +167,7 @@ describe('File Info Utils', () => {
       const mockBuffer = Buffer.from('fake-jpeg-data')
 
       RNFSMock.stat.mockResolvedValue({
-        mtime: new Date('2025-06-01T10:00:00Z').getTime(),
+        mtime: new Date('2026-06-15T10:00:00Z').getTime(),
         size: mockBuffer.byteLength,
         path: '/tmp/photo.jpg',
         isFile: () => true,
@@ -194,7 +194,7 @@ describe('File Info Utils', () => {
         { id: 10, prompt: 'Say hello' },
         { id: 20, prompt: 'Turn left' },
       ]
-      const mtime = new Date('2025-06-01T10:00:00Z').getTime()
+      const mtime = new Date('2026-06-15T10:00:00Z').getTime()
 
       ;(hashBase64 as jest.Mock).mockResolvedValue('video-sha256-hash')
 

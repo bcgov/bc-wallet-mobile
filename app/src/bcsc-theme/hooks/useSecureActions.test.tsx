@@ -481,7 +481,7 @@ describe('useSecureActions', () => {
     })
 
     it('persists and surfaces the repaired evidence when a capture date is implausible', async () => {
-      const mtimeMs = new Date('2026-06-01T00:00:00Z').getTime()
+      const mtimeMs = new Date('2026-06-15T00:00:00Z').getTime()
       jest.mocked(RNFS.stat).mockResolvedValue({ mtime: mtimeMs } as any)
 
       const corrupted = makeEvidence({
@@ -524,7 +524,7 @@ describe('useSecureActions', () => {
             label: 'front',
             content_type: 'image/jpeg',
             content_length: 1,
-            date: 1_780_000_000,
+            date: 1_782_000_000,
             sha256: 'sha',
             file_path: '/docs/front.jpg',
           },
