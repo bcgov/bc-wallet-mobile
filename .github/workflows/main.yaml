@@ -1238,8 +1238,12 @@ jobs:
 
   ship-to-saucelabs:
     name: 'Ship to SauceLabs - ${{ matrix.variant }} - ${{ matrix.platform }}'
-    # Temporarily disable until e2e fixed
-    if: false
+    if: >-
+      always() && !cancelled() &&
+      github.event.pull_request.head.repo.fork != true &&
+      !startsWith(github.base_ref, 'release/') &&
+      !startsWith(github.ref_name, 'release/') &&
+      needs.early-exit-check.outputs.should_skip_build != 'true'
     needs: [build-ios, build-android, compute-variants, early-exit-check]
     runs-on: ubuntu-22.04
     permissions:
@@ -1303,16 +1307,18 @@ jobs:
   #       before running. This keeps SauceLabs devices free during the
   #       day when multiple PRs merge.
   #
-  # The smoke suite now targets the v4.1 launch flow (see e2e/test/*/smoke.spec.ts),
-  # so the previous hard-disable is gone. The job is still dormant in practice:
-  # `ship-to-saucelabs` remains `if: false`, and a skipped dependency skips this
-  # job too. Re-enabling that upload job is all that's needed to bring PR smoke
-  # back. Tracking: https://github.com/bcgov/bc-wallet-mobile/issues/4148
+  # PR smoke is live: the suite targets the v4.1 launch flow (see
+  # e2e/test/*/smoke.spec.ts, fixing issue #4148) and `ship-to-saucelabs` is
+  # enabled again, so there is an app in Sauce storage to test against.
   #
   # The guard keeps this to non-fork PRs off release branches, where the Sauce/SM
   # secrets are actually available. It deliberately omits `always()` so the job
-  # stays tied to a successful `ship-to-saucelabs` — without a Sauce upload there
-  # is no app to test against.
+  # stays tied to a successful `ship-to-saucelabs`.
+  #
+  # Caveat: `ship-to-saucelabs` runs under `always()` and no-ops (probe step) when
+  # a build artifact is missing, so it reports success even when nothing was
+  # uploaded. A failed platform build therefore surfaces here as an "app not found"
+  # E2E failure on top of the build failure, rather than as a skip.
   e2e:
     needs: [ship-to-saucelabs, compute-variants, early-exit-check]
     permissions:

@@ -25,7 +25,7 @@
 # Runner egress allowlist: the in-person verification step runs the SiteMinder /
 # IDcheck approval flow in-process on the runner (e2e/scripts/login.mjs), so it
 # is the RUNNER's egress IP — not SauceLabs — that BC Gov SIT must allowlist. The
-# e2e job runs on the whitelisted `large` runner (the default `runner_label` in
+# e2e job runs on the whitelisted `ubuntu-latest-m` runner (the default `runner_label` in
 # e2e.yml), whose egress ranges (20.10.68.0/28, 130.131.47.80/28) are opened on
 # the ID Broker / IDcheck firewalls. Use the "Verify Allowlist Connectivity"
 # workflow to confirm reachability before relying on a scheduled run.
