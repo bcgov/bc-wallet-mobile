@@ -27,8 +27,10 @@ export const isPlausibleCaptureDateSeconds = (seconds: number, nowMs: number = D
 /**
  * Derives a plausible replacement capture date (in seconds) for a photo whose stored date
  * failed the plausibility check. Prefers the file's on-disk modification time, since that's
- * still a real signal of when the photo was captured; falls back to the current time when the
- * file is missing/unreadable or its mtime is itself implausible. Never throws.
+ * still a real signal of when the photo was captured; returns 0 when no real capture signal is
+ * available (file missing/unreadable, or its mtime is itself implausible). Deliberately does
+ * NOT fall back to the current time here — for evidence already collected, a fabricated date
+ * with no connection to the actual capture is worse than an explicit "unknown". Never throws.
  *
  * @param filePath - Path to the evidence photo file.
  * @param logger - Logger used to record the substitution.
@@ -48,9 +50,8 @@ export const derivePlausibleCaptureDateSeconds = async (filePath: string, logger
     })
   }
 
-  const nowSeconds = Math.floor(Date.now() / 1000)
-  logger.warn('Implausible evidence capture date substituted with current time', { filePath })
-  return nowSeconds
+  logger.warn('Implausible evidence capture date has no real capture signal available, using 0', { filePath })
+  return 0
 }
 
 /**

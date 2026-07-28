@@ -88,34 +88,34 @@ describe('capture-date utils', () => {
       )
     })
 
-    it('falls back to the current time when the file mtime is itself implausible', async () => {
+    it('returns 0 when the file mtime is itself implausible (no real capture signal available)', async () => {
       const mockLogger = new MockLogger()
       ;(RNFS.stat as jest.Mock).mockResolvedValue({ mtime: 0 })
-      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(new Date('2026-07-28T00:00:00Z').getTime())
 
       const result = await derivePlausibleCaptureDateSeconds('/docs/front.jpg', mockLogger)
 
-      expect(result).toBe(Math.floor(new Date('2026-07-28T00:00:00Z').getTime() / 1000))
+      expect(result).toBe(0)
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('substituted with current time'),
+        expect.stringContaining('no real capture signal available'),
         expect.objectContaining({ filePath: '/docs/front.jpg' })
       )
-      nowSpy.mockRestore()
     })
 
-    it('falls back to the current time and never throws when RNFS.stat rejects', async () => {
+    it('returns 0 and never throws when RNFS.stat rejects', async () => {
       const mockLogger = new MockLogger()
       ;(RNFS.stat as jest.Mock).mockRejectedValue(new Error('ENOENT'))
-      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(new Date('2026-07-28T00:00:00Z').getTime())
 
       const result = await derivePlausibleCaptureDateSeconds('/docs/missing.jpg', mockLogger)
 
-      expect(result).toBe(Math.floor(new Date('2026-07-28T00:00:00Z').getTime() / 1000))
+      expect(result).toBe(0)
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Failed to read file mtime'),
         expect.objectContaining({ filePath: '/docs/missing.jpg' })
       )
-      nowSpy.mockRestore()
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('no real capture signal available'),
+        expect.objectContaining({ filePath: '/docs/missing.jpg' })
+      )
     })
   })
 
