@@ -54,7 +54,7 @@ export const config: WebdriverIO.Config = {
     auth: [resolve(__dirname, `../test/${variant}/auth/*.journey.ts`)],
     verify: [resolve(__dirname, `../test/${variant}/verify/*.journey.ts`)],
     main: [resolve(__dirname, `../test/${variant}/main/*.journey.ts`)],
-    // Nightly full run: every per-area journey (replaces the retired `happy-path`/`full-regression`).
+    // Nightly full run: every per-area journey.
     // Excludes `migration` — that suite boots the v3 app via the separate migration config, so it
     // cannot share this run's v4 RDC build (it stays its own suite + workflow path).
     regression: [

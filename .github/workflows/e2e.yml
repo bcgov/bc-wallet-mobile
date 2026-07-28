@@ -9,7 +9,7 @@
 #   auth         — auth/unlock journey
 #   main         — main navigation + settings journeys
 #   verify       — verify entry + verified card-type journeys (needs SM_* creds)
-#   regression   — every per-area journey (nightly; replaces happy-path/full-regression)
+#   regression   — every per-area journey (nightly default)
 #   migration    — v3 → v4 app upgrade flow (Sauce RDC only; separate v3 build)
 #
 # Device matrix:
@@ -83,7 +83,7 @@ on:
       runner_label:
         description: 'Label of the large runner with whitelisted egress IPs'
         type: string
-        default: 'large'
+        default: 'ubuntu-latest-m'
 
 jobs:
   # ─── E2E Tests ─────────────────────────────────────────────────────
