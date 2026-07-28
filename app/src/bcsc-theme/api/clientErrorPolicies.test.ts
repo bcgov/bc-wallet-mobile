@@ -931,7 +931,7 @@ describe('clientErrorPolicies', () => {
     })
 
     describe('ClientErrorHandlingPolicies find', () => {
-      it('should resolve to personCredentialAccountUnavailableErrorPolicy for a suspended-account 400 on the credential endpoint', () => {
+      it('should resolve to digitalServiceCardAccountUnavailableErrorPolicy for a suspended-account 400 on the credential endpoint', () => {
         const error = errorWithDescription('suspended')
         const context = { statusCode: 400, endpoint: credentialBase, apiEndpoints: { credential: credentialBase } }
         const policy = ClientErrorHandlingPolicies.find((p) => p.matches(error, context as any))
