@@ -4,7 +4,7 @@ export type DigitalServiceCardAccountProblem = 'suspended' | 'deactivated'
 
 /**
  * Detects a 400 `{error: "unauthorized_client", error_description: "suspended"|"deactivated"}`
- * response from the digital service fetch URL. Suspend/deactivate has no push
+ * response from the Person Credential endpoint (`/credentials/v1/person`). Suspend/deactivate has no push
  * notification or ID token signal.
  */
 export const getDigitalServiceCardAccountProblem = (error: unknown): DigitalServiceCardAccountProblem | undefined => {
