@@ -150,20 +150,23 @@ describe('useFactoryReset', () => {
 
     const clearSecureStateMock = jest.fn()
     const deleteSecureDataMock = jest.fn().mockResolvedValue(undefined)
-    const teardownAgentMock = jest.fn()
 
-    const callOrder: string[] = []
-    // Agent shutdown + wallet store deletion are now owned by useAgentSetupViewModel's
-    // teardownAgent (see its own test suite); useFactoryReset just awaits it.
-    teardownAgentMock.mockImplementation(async () => {
-      callOrder.push('teardownAgent')
+    // A manually-resolved deferred promise, rather than a callOrder array pushed to
+    // from inside async mock bodies. Timing-based approaches (an internal `await
+    // Promise.resolve()`, or even a macrotask `await new Promise(setTimeout)`) are
+    // unreliable here: whether or not the call site actually awaits
+    // agentCtx.teardownAgent(), the rest of the reset's own await chain
+    // (removeAccountArtifacts -> getAccount/deleteRegistration/deleteSecureData/
+    // removeAccount) gives a fire-and-forget call's continuation plenty of scheduler
+    // turns to resolve before assertion time anyway — so a timing-only test can't
+    // distinguish "awaited" from "dropped await". Holding teardownAgent open until we
+    // explicitly resolve it, and asserting nothing past it has run in the meantime,
+    // proves the call site actually blocks on it regardless of scheduling.
+    let resolveTeardown: () => void = () => undefined
+    const teardownPromise = new Promise<void>((resolve) => {
+      resolveTeardown = resolve
     })
-    deleteSecureDataMock.mockImplementation(async () => {
-      callOrder.push('deleteSecureData')
-    })
-    clearSecureStateMock.mockImplementation(() => {
-      callOrder.push('clearSecureState')
-    })
+    const teardownAgentMock = jest.fn().mockReturnValue(teardownPromise)
 
     const agent = { id: 'agent' } as any
     jest.mocked(useBCSCAgentSafe).mockReturnValue({
@@ -197,19 +200,32 @@ describe('useFactoryReset', () => {
 
     const hook = renderHook(() => useFactoryReset())
 
-    await act(async () => {
-      const result = await hook.result.current()
-      expect(result.success).toBe(true)
+    let resultPromise!: ReturnType<typeof hook.result.current>
+    act(() => {
+      resultPromise = hook.result.current()
     })
 
+    // Flush several microtask turns without resolving teardownPromise. If the call site
+    // dropped its `await`, execution falls through to removeAccountArtifacts (and on to
+    // clearSecureState) regardless of whether teardownAgent has settled — getAccount
+    // would already have been called by now.
+    await act(async () => {
+      for (let i = 0; i < 5; i++) {
+        await Promise.resolve()
+      }
+    })
+
+    expect(bcscCoreMock.getAccount).not.toHaveBeenCalled()
+    expect(clearSecureStateMock).not.toHaveBeenCalled()
+
+    resolveTeardown()
+
+    const result = await act(async () => resultPromise)
+
+    expect(result.success).toBe(true)
     expect(teardownAgentMock).toHaveBeenCalledTimes(1)
-    // useFactoryReset awaits agentCtx.teardownAgent() before continuing, and
-    // teardownAgentMock only pushes 'teardownAgent' to callOrder once its own async
-    // implementation resolves — so finding it before 'deleteSecureData'/'clearSecureState'
-    // proves teardownAgent COMPLETED (not just started) before the rest of the reset
-    // proceeds, so nothing can race a mounted consumer against the deleted store.
-    expect(callOrder.indexOf('teardownAgent')).toBeLessThan(callOrder.indexOf('deleteSecureData'))
-    expect(callOrder.indexOf('teardownAgent')).toBeLessThan(callOrder.indexOf('clearSecureState'))
+    expect(bcscCoreMock.getAccount).toHaveBeenCalled()
+    expect(clearSecureStateMock).toHaveBeenCalled()
   })
 
   it('dispatches CLEAR_BCSC, then clearSecureState, then DID_AUTHENTICATE(false)', async () => {
