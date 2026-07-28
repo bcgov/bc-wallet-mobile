@@ -8,7 +8,7 @@ import {
   VideoStabilizationMode,
 } from 'react-native-vision-camera'
 
-import { PHOTO_RESOLUTION_1080P } from '@/constants'
+import { PHOTO_RESOLUTION_1080P, PHOTO_RESOLUTION_720P } from '@/constants'
 
 // ─── Shared Types ─────────────────────────────────────────────────────────────
 
@@ -93,7 +93,7 @@ export const CameraFormat = {
     },
     // High resolution for capture quality
     {
-      photoResolution: PHOTO_RESOLUTION_1080P,
+      photoResolution: PHOTO_RESOLUTION_720P,
     },
     // High FPS for smoother preview and better barcode detection
     {
