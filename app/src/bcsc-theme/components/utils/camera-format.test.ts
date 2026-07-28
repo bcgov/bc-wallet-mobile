@@ -1,4 +1,4 @@
-import type { CameraDeviceFormat } from 'react-native-vision-camera'
+import { type CameraDeviceFormat } from 'react-native-vision-camera'
 import { CameraFormat } from './camera'
 
 type TestCameraDeviceFormat = Partial<CameraDeviceFormat> & { _id: string }
@@ -112,7 +112,9 @@ describe('CameraFormat', () => {
 
       expect(format?._id).toBe('modern-format-3')
     })
+  })
 
+  describe('MaskedWithBarcodeDetection: LegacyDevice', () => {
     it('should return legacy-format-1 for LegacyDevice', () => {
       const format: any = getCameraFormat(LegacyDevice as any, CameraFormat.MaskedWithBarcodeDetection)
 

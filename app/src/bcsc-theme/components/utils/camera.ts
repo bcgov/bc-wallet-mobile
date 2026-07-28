@@ -84,7 +84,7 @@ export const CameraFormat = {
     {
       videoHdr: false,
     },
-    // High resolution for better barcode detection
+    // High resolution for capture quality
     {
       photoResolution: PHOTO_RESOLUTION_1080P,
     },
