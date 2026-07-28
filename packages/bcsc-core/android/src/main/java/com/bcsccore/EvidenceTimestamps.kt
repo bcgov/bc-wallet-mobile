@@ -10,7 +10,9 @@ package com.bcsccore
  * v3's millisecond storage. Every v4-written value was then divided again, collapsing a
  * mid-2026 capture date to ~21 January 1970. The magnitude checks here make both directions
  * self-correcting: writes always store millis, reads infer the unit from magnitude instead of
- * assuming it, and implausible values collapse to 0 rather than propagating a bad date.
+ * assuming it, and values below the plausibility floor collapse to 0 rather than propagating a
+ * bad date. Values that are merely too far in the future (not sub-floor) pass through unchanged
+ * here — the JS layer (`capture-date.ts`) applies the upper-bound plausibility check.
  */
 object EvidenceTimestamps {
     /** 2020-01-01T00:00:00Z — no legitimate v4 capture predates this. */
@@ -19,12 +21,14 @@ object EvidenceTimestamps {
     /** At/above this magnitude a stored value is unambiguously milliseconds. */
     const val MILLISECONDS_THRESHOLD = 100_000_000_000L
 
-    /** JS seconds -> stored v3-format millis; implausible input collapses to 0. */
+    /** JS seconds -> stored v3-format millis; input below [MIN_PLAUSIBLE_SECONDS] collapses to 0. */
     fun apiSecondsToStoredMillis(seconds: Long): Long = if (seconds >= MIN_PLAUSIBLE_SECONDS) seconds * 1000L else 0L
 
     /**
      * Stored value -> API seconds: divides millis (v3 + fixed v4), passes through pre-fix v4
-     * seconds, collapses corrupted values to 0.
+     * seconds, collapses sub-floor (below [MIN_PLAUSIBLE_SECONDS]) values to 0. Does not catch
+     * implausibly-far-future second-magnitude values — that upper bound is enforced by the JS
+     * layer (`capture-date.ts`), not here.
      */
     fun storedTimestampToApiSeconds(stored: Long): Long =
         when {
