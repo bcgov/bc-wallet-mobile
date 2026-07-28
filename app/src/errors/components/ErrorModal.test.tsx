@@ -85,6 +85,7 @@ const validPayload: ErrorModalPayload = {
   title: 'Test Error Title',
   description: 'Something went wrong.',
   error: validError,
+  installId: 'default-install-id',
 }
 
 const defaultProps: BCSCErrorModalProps = {
@@ -206,7 +207,7 @@ describe('BCSCErrorModal', () => {
         description: validPayload.description,
         code: validPayload.error.statusCode,
         error: validPayload.error,
-        installId: validPayload.reportUUID,
+        installId: validPayload.installId,
       })
     })
 
@@ -234,7 +235,7 @@ describe('BCSCErrorModal', () => {
       const payload: ErrorModalPayload = {
         ...validPayload,
         error: contextError,
-        reportUUID: 'report-uuid-123',
+        installId: 'install-id-123',
       }
       const { getByTestId } = renderModal({ payload, enableReport: true })
 

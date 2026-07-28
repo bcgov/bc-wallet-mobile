@@ -91,7 +91,7 @@ export interface BCSCState {
   showAccountExpiryNotification?: boolean
   showCardRenewalNotification?: boolean
   acceptedTermsOfUseVersion?: string
-  reportUUID?: string // TODO (MD): Rename to installId or installUUID
+  installId?: string // Unique identifier for this app install (not a per-report id); preserved across CLEAR_BCSC
 }
 
 export enum VerificationStatus {
@@ -278,7 +278,7 @@ enum BCSCDispatchAction {
   SEEN_ONBOARDING_INTRO = 'bcsc/seenOnboardingIntro',
   SET_ACCOUNT_EXPIRY_NOTIFICATION = 'bcsc/setAccountExpiryNotification',
   SET_CARD_RENEWAL_NOTIFICATION = 'bcsc/setCardRenewalNotification',
-  SET_REPORT_UUID = 'bcsc/setReportUUID',
+  SET_INSTALL_ID = 'bcsc/setInstallId',
 }
 
 enum ModeDispatchAction {
@@ -323,6 +323,22 @@ export const initialBCSCState: BCSCState = {
   selectedNickname: undefined,
   bannerMessages: [],
   analyticsOptIn: false,
+}
+
+/**
+ * Migrates a persisted BCSC state blob that may still carry the legacy `reportUUID` field
+ * (added bcsc-v4.0.2, #4060). Safe to remove once all installs have launched on >= v4.1.
+ */
+export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: string }>(
+  persisted: T
+  // `& { installId?: string }` keeps installId in the return type even when T is inferred from a
+  // narrow literal that never mentions it (e.g. `{ reportUUID: 'x' }` in tests).
+): { bcsc: Omit<T, 'reportUUID'> & { installId?: string }; migrated: boolean } => {
+  const { reportUUID, ...rest } = persisted
+  if (reportUUID === undefined) {
+    return { bcsc: rest, migrated: false }
+  }
+  return { bcsc: { ...rest, installId: rest.installId ?? reportUUID }, migrated: true }
 }
 
 export enum BCLocalStorageKeys {
@@ -639,8 +655,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
     case BCSCDispatchAction.CLEAR_BCSC: {
       // Optionally accept a partial BCSC state to merge with the initial state
-      const partialBcscState = (action?.payload || []).pop() ?? {}
-      const bcsc = { ...initialBCSCState, reportUUID: state.bcsc.reportUUID, ...partialBcscState }
+      const partialBcscState: Partial<BCSCState> = (action?.payload || []).pop() ?? {}
+      // installId is applied last so state's existing id always wins over the payload (including an
+      // explicit undefined); a caller-supplied id is only used as a fallback when state has none.
+      const bcsc = {
+        ...initialBCSCState,
+        ...partialBcscState,
+        installId: state.bcsc.installId ?? partialBcscState.installId,
+      }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
@@ -752,9 +774,9 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return newState
     }
 
-    case BCSCDispatchAction.SET_REPORT_UUID: {
-      const reportUUID = (action?.payload || []).pop()
-      const bcsc = { ...state.bcsc, reportUUID }
+    case BCSCDispatchAction.SET_INSTALL_ID: {
+      const installId = (action?.payload || []).pop()
+      const bcsc = { ...state.bcsc, installId }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

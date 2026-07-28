@@ -8,7 +8,7 @@ import { AccountRenewalSystemCheck } from '@/services/system-checks/AccountRenew
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
-import { ReportUUIDSystemCheck } from '@/services/system-checks/ReportUUIDSystemCheck'
+import { InstallIdSystemCheck } from '@/services/system-checks/InstallIdSystemCheck'
 import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClockSkewSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { TermsOfUseSystemCheck } from '@/services/system-checks/TermsOfUseSystemCheck'
@@ -100,7 +100,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     const serverStatus = await configApi.getServerStatus()
 
     const systemChecks: SystemCheckStrategy[] = [
-      new ReportUUIDSystemCheck(store.bcsc.reportUUID, dispatch),
+      new InstallIdSystemCheck(store.bcsc.installId, dispatch),
       new AnalyticsSystemCheck(
         store.bcsc.analyticsOptIn,
         store.developer.environment.analyticsAppId,
@@ -125,7 +125,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     logger,
     navigation,
     store.bcsc.analyticsOptIn,
-    store.bcsc.reportUUID,
+    store.bcsc.installId,
     store.developer.environment.analyticsAppId,
     utils,
   ])

@@ -1,3 +1,4 @@
+import { Timeouts } from '../../constants.js'
 import { BaseScreen, EnterTextOptions } from './BaseScreen.js'
 
 /**
@@ -178,6 +179,25 @@ export class Screen<S extends ScreenSpec> {
     await this.engine.waitForDisplayed(resolveTestId(target), timeout)
   }
 
+  /**
+   * True if the screen's `self` (or `primary`) becomes displayed within `timeout`; never throws
+   * and never scrolls — safe for branching on conditional screens mid-transition (unlike
+   * {@link expectVisible}, whose engine scroll-retries on a miss).
+   */
+  async isPresent(timeout: number = Timeouts.ELEMENT_VISIBLE): Promise<boolean> {
+    const target = this.spec.self ?? this.spec.primary
+    if (!target) {
+      throw new Error('Screen declares neither "self" nor "primary"; cannot isPresent()')
+    }
+    const el = await this.engine.findByTestId(resolveTestId(target))
+    try {
+      await el.waitForDisplayed({ timeout })
+      return true
+    } catch {
+      return false
+    }
+  }
+
   /** Tap a declared role. Only roles the descriptor declares type-check. */
   async tap(role: PresentRoles<S>): Promise<void> {
     await this.tapRole(role as ActionRole)
@@ -206,6 +226,11 @@ export class Screen<S extends ScreenSpec> {
   /** Read the visible text of a named element. */
   async read(name: ElementKeys<S>, timeout?: number): Promise<string> {
     return this.engine.getTextByTestId(resolveTestId(this.namedId('elements', name)), timeout)
+  }
+
+  /** Wait until a named target (element, link, or input) is displayed (scrolls into view on miss). */
+  async waitFor(name: NamedKeys<S>, timeout?: number): Promise<void> {
+    await this.engine.waitForDisplayed(resolveTestId(this.anyNamedId(name)), timeout)
   }
 
   /** True if a named target (element, link, or input) is currently displayed; never throws. */

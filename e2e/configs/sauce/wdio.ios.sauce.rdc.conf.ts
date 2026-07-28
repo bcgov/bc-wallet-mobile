@@ -18,7 +18,14 @@ config.capabilities = [
     ...(process.env.IOS_PLATFORM_VERSION && {
       'appium:platformVersion': process.env.IOS_PLATFORM_VERSION,
     }),
-    'sauce:options': sauceRdcOptions,
+    // Pin the OFFICIAL Appium WebDriverAgent (appium3-2026-01+). The shared default `latest` uses Sauce's
+    // CUSTOM WDA, whose iOS deep-link open is broken: `mobile: deepLink` with a bundleId throws "The
+    // current Xcode SDK does not support opening of URLs with given application", and without a bundleId
+    // it falls back to Siri. The official WDA implements the real open. Override via env if it ages out.
+    'sauce:options': {
+      ...sauceRdcOptions,
+      appiumVersion: process.env.SAUCE_APPIUM_VERSION || 'appium3-2026-07',
+    },
   },
 ]
 

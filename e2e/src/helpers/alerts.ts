@@ -4,13 +4,15 @@ const POLL_INTERVAL_MS = 500
 const DEFAULT_APPEAR_TIMEOUT_MS = 5_000
 const DEFAULT_DISMISS_TIMEOUT_MS = 3_000
 
-const IOS_APPROVE_ALERT_BUTTON_LABELS = ['Allow', 'Allow While Using App', 'Allow Once', 'OK', 'Trust', 'Continue']
+// 'Open' accepts the iOS "Open in <app>?" confirmation raised when a deep link resolves to the app.
+const IOS_APPROVE_ALERT_BUTTON_LABELS = ['Allow', 'Allow While Using App', 'Allow Once', 'OK', 'Trust', 'Continue', 'Open']
 const IOS_DECLINE_ALERT_BUTTON_LABELS = ["Don't Allow", 'Deny', 'Cancel', 'Not Now']
 
 const ANDROID_PERM_ALLOW_REGEX = '.*:id/permission_allow.*'
 const ANDROID_PERM_DENY_REGEX = '.*:id/permission_deny.*'
 const ANDROID_PERM_ANY_REGEX = '.*:id/permission_(allow|deny).*'
 const ANDROID_RESET_APP_SELECTOR = 'android=new UiSelector().textMatches("(?i)^reset app$")'
+const ANDROID_ALERT_OK_SELECTOR = 'android=new UiSelector().textMatches("(?i)^ok$")'
 
 const webdriverLogger = logger('webdriver')
 
@@ -237,4 +239,24 @@ export async function tapResetAppConfirm(appearTimeoutMs = DEFAULT_APPEAR_TIMEOU
   } catch {
     // autoAcceptAlerts already handled it
   }
+}
+
+/**
+ * Accept an app-owned confirmation/success `Alert.alert` by tapping its OK button — e.g. the
+ * forget-pairings "Success — device unpaired" dialog.
+ *
+ * This is NOT a system permission dialog: on Android `acceptSystemAlert` only matches the OS
+ * permission controller's `permission_allow*` resourceIds, so it never dismisses this one. Mirror
+ * `tapResetAppConfirm` and match the button's visible label instead (RN `Alert.alert` renders a
+ * native AppCompat AlertDialog whose OK button carries no testID). iOS renders the same alert as a
+ * UIAlertController, which the system-alert accept path already handles.
+ */
+export async function acceptAppAlert(appearTimeoutMs = DEFAULT_APPEAR_TIMEOUT_MS): Promise<void> {
+  if (driver.isAndroid) {
+    const btn = $(ANDROID_ALERT_OK_SELECTOR)
+    await btn.waitForDisplayed({ timeout: appearTimeoutMs })
+    await btn.click()
+    return
+  }
+  await acceptSystemAlert(appearTimeoutMs)
 }
