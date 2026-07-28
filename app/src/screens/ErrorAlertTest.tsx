@@ -194,7 +194,7 @@ const ErrorAlertTest: React.FC<ErrorAlertTestProps> = ({ onBack }) => {
       injectErrorCodeIntoAxiosResponse(client, 'invalid_token', `${client.endpoints.token}`)
     },
     // Person Credential creation (#3389) — HTTP 400 with error_description "suspended"/"deactivated"
-    // on the credential endpoint. Exercises personCredentialAccountUnavailableErrorPolicy, which
+    // on the credential endpoint. Exercises digitalServiceCardAccountUnavailableErrorPolicy, which
     // shows the generic "Problem with Account" modal (error 3205/3206).
     person_credential_suspended_400: () => {
       onBack() // close modal first
