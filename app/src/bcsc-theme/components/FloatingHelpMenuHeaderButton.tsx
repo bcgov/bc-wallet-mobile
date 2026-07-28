@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import { useLeaveVerification } from '../hooks/useLeaveVerification'
 import { useRestartVerification } from '../hooks/useRestartVerification'
-import { BCSCScreens, BCSCVerifyStackParams } from '../types/navigators'
+import { BCSCScreens } from '../types/navigators'
 import FloatingHelpMenu, { FloatingHelpMenuRef } from './FloatingHelpMenu'
 import { ListButton, ListButtonGroup, ListButtonProps } from './ListButton'
 import { ReportProblemModal } from './ReportProblemModal'
@@ -161,27 +161,6 @@ const RestartVerificationListButton = ({ onClose, position }: MenuRowProps) => {
 }
 
 /**
- * "Remove account" menu row (verify flow only). Navigates to the same confirmation screen used
- * elsewhere in the app (see {@link VerifyRemoveAccountConfirmationScreen}), available at any point
- * in the flow.
- */
-const RemoveAccountListButton = ({ onClose, position }: MenuRowProps) => {
-  const { t } = useTranslation()
-  const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
-
-  const handlePress = () => {
-    navigation.navigate(BCSCScreens.VerifyRemoveAccountConfirmation)
-    onClose()
-  }
-
-  return (
-    <ListButton position={position} testID={testIdWithKey('RemoveAccount')} onPress={handlePress}>
-      {t('BCSC.HelpMenu.RemoveAccount')}
-    </ListButton>
-  )
-}
-
-/**
  * Every stack's WebView screen accepts the same `{ url, title }` params, so the floating menu
  * can navigate to whichever one belongs to the stack it is rendered in with full type safety.
  */
@@ -249,9 +228,9 @@ export type VerifyHelpMenuButtonOptions = {
 }
 
 /**
- * Factory for the verification flow's help menu button. Offers "Report a problem", "Back to home"
- * (leave the flow, keeping progress), "Restart verification process" (once verification is underway),
- * and "Remove account" (reset and start over, available at every step).
+ * Factory for the verification flow's help menu button. Uses the vertical-ellipsis trigger icon and
+ * offers "Report a problem", "Back to home" (leave the flow, keeping progress), and — once
+ * verification is underway — "Restart verification process".
  *
  * @param options - Whether to show the "Restart verification process" row.
  * @returns A React component that renders the verification help menu button.
@@ -268,7 +247,6 @@ export const createVerifyHelpMenuButton = ({ showRestartVerification = false }: 
           <ReportProblemListButton onPress={reportProblem.open} />
           <BackToHomeListButton onClose={closeMenu} />
           {showRestartVerification && <RestartVerificationListButton onClose={closeMenu} />}
-          <RemoveAccountListButton onClose={closeMenu} />
         </FloatingHelpMenuButton>
         <ReportProblemModal visible={reportProblem.visible} onClose={reportProblem.hide} />
       </>
