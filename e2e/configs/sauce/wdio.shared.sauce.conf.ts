@@ -31,6 +31,15 @@ config.region = (process.env.SAUCE_REGION || 'us') as 'us' | 'eu'
  */
 config.maxInstances = Number(process.env.SAUCE_MAX_INSTANCES) || 1
 
+/**
+ * Raised well above the shared default (180s) because on Sauce it also bounds `POST /session`, which
+ * stays open while the run queues for a free concurrency slot and a matching device — Sauce itself
+ * keeps hunting for up to 15 min. A short value turns an ordinary queue wait into "Failed to create
+ * a session". The lower default stays in place for local Appium runs, where a session that cannot be
+ * created should fail fast rather than hang.
+ */
+config.connectionRetryTimeout = 600_000
+
 config.services = [
   [
     'sauce',

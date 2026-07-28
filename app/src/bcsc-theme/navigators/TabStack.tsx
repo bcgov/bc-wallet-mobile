@@ -12,7 +12,7 @@ import {
 import { BottomTabBar, BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Animated, Platform, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -135,6 +135,22 @@ const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({ onActiveTabChange, ...p
   )
 }
 
+/**
+ * Builds the navigator's `tabBar` renderer. A factory rather than an inline arrow so the component
+ * isn't redefined inside {@link BCSCTabStack} on every render, which would remount the tab bar and
+ * restart its indicator animation.
+ *
+ * @param onActiveTabChange - Called with the route name of the tab the navigator has focused.
+ * @returns A React component that renders the animated tab bar.
+ */
+const createAnimatedTabBar = (onActiveTabChange: (routeName: string) => void) => {
+  const AnimatedTabBarRenderer = (props: BottomTabBarProps): React.JSX.Element => (
+    <AnimatedTabBar {...props} onActiveTabChange={onActiveTabChange} />
+  )
+
+  return AnimatedTabBarRenderer
+}
+
 const BCSCTabStack: React.FC = () => {
   const Tab = createBottomTabNavigator<BCSCTabStackParams>()
   const theme = useTheme()
@@ -147,6 +163,8 @@ const BCSCTabStack: React.FC = () => {
   const { isActivelyVerified, isExpired } = useCardStatus()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const defaultStackOptions = useDefaultStackOptions(theme)
+  // `setActiveTab` is a stable state setter, so the tab bar component is built once per mount.
+  const tabBar = useMemo(() => createAnimatedTabBar(setActiveTab), [])
 
   const { TabTheme, ColorPalette, Spacing } = theme
 
@@ -200,7 +218,7 @@ const BCSCTabStack: React.FC = () => {
           },
         })}
         initialRouteName={BCSCScreens.Home}
-        tabBar={(props) => <AnimatedTabBar {...props} onActiveTabChange={setActiveTab} />}
+        tabBar={tabBar}
         screenOptions={{
           ...defaultStackOptions,
           // Show the header's own (native) shadow. TabHeaderWithoutBanner draws no drop-shadow caster,
