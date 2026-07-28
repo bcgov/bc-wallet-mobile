@@ -74,7 +74,12 @@ export const config: WebdriverIO.Config = {
   // mochaOpts.bail below.
   bail: 0,
   waitforTimeout: 20_000,
-  connectionRetryTimeout: 180_000,
+  // Also the ceiling on how long `POST /session` may take. On Sauce that request stays open while
+  // the run queues for a free concurrency slot and a matching device — Sauce itself keeps hunting
+  // for up to 15 min — so a short value turns an ordinary queue wait into "Failed to create a
+  // session". Session creation happens outside any Mocha test, so this is its only bound; in-test
+  // commands are still bounded first by mochaOpts.timeout below.
+  connectionRetryTimeout: 600_000,
   connectionRetryCount: 2,
 
   framework: 'mocha',

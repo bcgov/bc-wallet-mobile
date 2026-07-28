@@ -15,7 +15,21 @@ const config = { ...baseConfig }
 config.user = process.env.SAUCE_USERNAME
 config.key = process.env.SAUCE_ACCESS_KEY
 config.region = (process.env.SAUCE_REGION || 'us') as 'us' | 'eu'
-config.maxInstances = 2
+
+/**
+ * Workers per wdio process. The Sauce account allows 2 concurrent real-device sessions (`rds`),
+ * and that budget is shared by EVERY wdio process running at once — each CI device-matrix entry is
+ * its own process, so `max-parallel` caps GitHub jobs, not Sauce sessions. Two jobs x two workers
+ * asks for four sessions against a two-session limit.
+ *
+ * Over-subscribing does not fail fast: Sauce holds `POST /session` open while the request waits for
+ * a free slot/device, so the excess workers sit in the queue until the client aborts at
+ * `connectionRetryTimeout` and reports "Failed to create a session".
+ *
+ * Default to 1 so the two-platform matrix stays inside the budget; CI raises it when fewer jobs
+ * run in parallel (see SAUCE_MAX_INSTANCES in .github/workflows/e2e.yml).
+ */
+config.maxInstances = Number(process.env.SAUCE_MAX_INSTANCES) || 1
 
 config.services = [
   [
