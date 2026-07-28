@@ -13,7 +13,7 @@ import {
   useTheme,
 } from '@bifold/core'
 import { NavigationProp, ParamListBase, useIsFocused } from '@react-navigation/native'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -28,6 +28,7 @@ import {
 } from 'react-native-vision-camera'
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
 import { isBackgroundedAppState } from '../utils/app-state'
+import { getCameraMetadata } from './utils/camera'
 
 type MaskedCameraProps = {
   navigation: NavigationProp<ParamListBase>
@@ -74,6 +75,8 @@ const MaskedCamera = ({
   const { preventDoublePress } = usePreventDoublePress()
   const { appStateStatus } = useBCSCActivity()
   const hasTorch = device?.hasTorch ?? false
+
+  const cameraMetadata = useMemo(() => getCameraMetadata(device, format), [device, format])
 
   const styles = StyleSheet.create({
     container: {
@@ -133,6 +136,20 @@ const MaskedCamera = ({
     }
   }, [isFocused])
 
+  const getCameraError = useCallback(
+    (error: unknown) => {
+      const appError = ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
+
+      // Add camera device and format info to the error context for better debugging
+      appError.addContext(cameraMetadata)
+
+      logger.error('[MaskedCamera] runtime error', appError.toJSON())
+
+      return appError
+    },
+    [cameraMetadata, logger]
+  )
+
   const onError = useCallback(
     (error: unknown) => {
       if (isBackgroundedAppState(appStateStatus)) {
@@ -142,14 +159,9 @@ const MaskedCamera = ({
         return
       }
 
-      logger.error('MaskedCamera runtime error', error as Error)
-      emitErrorModal(
-        t('BCSC.CameraDisclosure.Error'),
-        t('BCSC.CameraDisclosure.ErrorMessage'),
-        ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
-      )
+      emitErrorModal(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorMessage'), getCameraError(error))
     },
-    [appStateStatus, logger, emitErrorModal, t]
+    [appStateStatus, getCameraError, emitErrorModal, t, logger]
   )
   if (!device) {
     return (
@@ -185,11 +197,9 @@ const MaskedCamera = ({
         return
       }
 
-      emitErrorModal(
-        t('BCSC.CameraDisclosure.Error'),
-        t('BCSC.CameraDisclosure.ErrorTakingPhoto'),
-        ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
-      )
+      const appError = getCameraError(error)
+
+      emitErrorModal(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorTakingPhoto'), appError)
     }
   }
 
@@ -205,7 +215,7 @@ const MaskedCamera = ({
         video={true}
         photoQualityBalance={photoQualityBalance}
         isMirrored={false}
-        onInitialized={() => logger.debug('MaskedCamera initialized')}
+        onInitialized={() => logger.debug('MaskedCamera initialized', cameraMetadata)}
         onError={onError}
         codeScanner={codeScanner}
         torch={torchOn ? 'on' : 'off'}
