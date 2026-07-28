@@ -46,7 +46,7 @@ on:
         description: 'Label of the large runner with whitelisted egress IPs'
         type: string
         required: false
-        default: 'large'
+        default: 'ubuntu-latest-m'
     secrets:
       SAUCE_USERNAME:
         required: true
