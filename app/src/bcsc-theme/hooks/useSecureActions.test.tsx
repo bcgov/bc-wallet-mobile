@@ -26,11 +26,15 @@ import {
   setToken,
   TokenType,
 } from 'react-native-bcsc-core'
+import RNFS from 'react-native-fs'
 import { performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
 import * as useBCSCApiClientModule from './useBCSCApiClient'
 import { useSecureActions } from './useSecureActions'
 
 jest.mock('@bifold/core')
+jest.mock('react-native-fs', () => ({
+  stat: jest.fn(),
+}))
 jest.mock('../utils/key-recovery', () => ({
   performKeyRecovery: jest.fn(),
   reRegisterNewestKey: jest.fn(),
@@ -449,6 +453,93 @@ describe('useSecureActions', () => {
 
       expect(cleaned).toEqual([complete, inProgress])
       expect(setEvidence).toHaveBeenCalledWith([complete, inProgress])
+    })
+  })
+
+  describe('hydrateSecureState capture date repair (#4338)', () => {
+    const baseAccount = {
+      id: 'account-1',
+      issuer: 'https://idsit.gov.bc.ca',
+      clientID: 'client-1',
+      displayName: 'Test User',
+    }
+
+    const capturedEvidence = () => {
+      const hydrateCall = mockDispatch.mock.calls.find(
+        ([action]) => action.type === BCDispatchAction.HYDRATE_SECURE_STATE
+      )
+      return hydrateCall?.[0]?.payload?.[0]?.additionalEvidenceData as EvidenceMetadata[] | undefined
+    }
+
+    beforeEach(() => {
+      jest.mocked(getAccount).mockResolvedValue(baseAccount as any)
+      jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)
+      jest.mocked(getToken).mockResolvedValue(null as any)
+      jest.mocked(getAccountFlags).mockResolvedValue({} as any)
+      jest.mocked(getCredential).mockResolvedValue(null as any)
+      jest.mocked(getSavedServices).mockResolvedValue([] as any)
+    })
+
+    it('persists and surfaces the repaired evidence when a capture date is implausible', async () => {
+      const mtimeMs = new Date('2026-06-01T00:00:00Z').getTime()
+      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: mtimeMs } as any)
+
+      const corrupted = makeEvidence({
+        evidenceType: { evidence_type: 'passport', image_sides: [{}] } as any,
+        documentNumber: 'P1',
+        metadata: [
+          {
+            label: 'front',
+            content_type: 'image/jpeg',
+            content_length: 1,
+            // Corrupted to a near-1970 value, as the Android native round-trip bug produces.
+            date: 1_780_000,
+            sha256: 'sha',
+            file_path: '/docs/front.jpg',
+          },
+        ],
+      })
+      jest.mocked(getEvidence).mockResolvedValue([corrupted] as any)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      const expectedDate = Math.floor(mtimeMs / 1000)
+      expect(setEvidence).toHaveBeenCalledWith([
+        expect.objectContaining({
+          metadata: [expect.objectContaining({ date: expectedDate })],
+        }),
+      ])
+      expect(capturedEvidence()?.[0].metadata[0].date).toBe(expectedDate)
+    })
+
+    it('does not persist when every capture date is already plausible', async () => {
+      const valid = makeEvidence({
+        evidenceType: { evidence_type: 'passport', image_sides: [{}] } as any,
+        documentNumber: 'P1',
+        metadata: [
+          {
+            label: 'front',
+            content_type: 'image/jpeg',
+            content_length: 1,
+            date: 1_780_000_000,
+            sha256: 'sha',
+            file_path: '/docs/front.jpg',
+          },
+        ],
+      })
+      jest.mocked(getEvidence).mockResolvedValue([valid] as any)
+
+      const { result } = renderHook(() => useSecureActions())
+      await act(async () => {
+        await result.current.hydrateSecureState()
+      })
+
+      expect(setEvidence).not.toHaveBeenCalled()
+      expect(capturedEvidence()).toEqual([valid])
+      expect(RNFS.stat).not.toHaveBeenCalled()
     })
   })
 

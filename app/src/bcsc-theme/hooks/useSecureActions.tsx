@@ -45,6 +45,7 @@ import { DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
 import { TokenResponse } from '../api/hooks/useTokens'
 import { ProvinceCode } from '../utils/address-utils'
 import { createMinimalCredential, getCredentialVerificationStatus } from '../utils/bcsc-credential'
+import { repairEvidenceCaptureDates } from '../utils/capture-date'
 import { isCardEvidenceComplete, isEvidenceAwaitingDocumentNumber } from '../utils/card-utils'
 import { performKeyRecovery, reRegisterNewestKey } from '../utils/key-recovery'
 import { useBCSCApiClientState } from './useBCSCApiClient'
@@ -1066,6 +1067,19 @@ export const useSecureActions = () => {
         logger.error('Error removing abandoned evidence during hydration:', error as Error)
       }
 
+      try {
+        // Repairs capture dates corrupted by the Android native timestamp round-trip bug
+        // (#4338) so a bad on-device value doesn't keep being re-persisted and re-uploaded.
+        const { repaired, changed } = await repairEvidenceCaptureDates(cleanedEvidence, logger)
+        if (changed) {
+          await persistEvidenceData(repaired)
+          cleanedEvidence = repaired
+        }
+      } catch (error) {
+        // If repairing evidence capture dates fails, log the error but continue hydration
+        logger.error('Error repairing evidence capture dates during hydration:', error as Error)
+      }
+
       const secureData: BCSCSecureState = {
         isHydrated: true,
 
@@ -1116,7 +1130,7 @@ export const useSecureActions = () => {
       // mapped downstream (e.g. token persistence) passes through the mapper unchanged.
       throwNativeBcscError(error)
     }
-  }, [logger, apiClient, isClientReady, updateTokens, removeAbandonedEvidence, dispatch])
+  }, [logger, apiClient, isClientReady, updateTokens, removeAbandonedEvidence, persistEvidenceData, dispatch])
 
   /**
    * Clears secure state from store (does not delete from native storage).
