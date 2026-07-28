@@ -81,7 +81,16 @@ const TAB_BAR_HEIGHT = Platform.select({ ios: 49, android: 56, default: 56 })
 const ACTIVE_INDICATOR_HEIGHT = 3
 const ACTIVE_INDICATOR_DURATION_MS = 100
 
-const AnimatedTabBar: React.FC<BottomTabBarProps> = (props) => {
+type AnimatedTabBarProps = BottomTabBarProps & {
+  /**
+   * Reports the tab that is actually focused. The navigator's own state is the only reliable
+   * source for this: a `tabPress` that gets `preventDefault()`ed (the unverified Services gate)
+   * never changes the focused tab, and back navigation changes it without any press at all.
+   */
+  onActiveTabChange: (routeName: string) => void
+}
+
+const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({ onActiveTabChange, ...props }) => {
   const { ColorPalette } = useTheme()
   const { state } = props
   const tabCount = state.routes.length
@@ -90,6 +99,13 @@ const AnimatedTabBar: React.FC<BottomTabBarProps> = (props) => {
   const indicatorWidth = tabWidth * 0.8
   const indicatorOffset = (tabWidth - indicatorWidth) / 2
   const translateX = useRef(new Animated.Value(state.index * tabWidth + indicatorOffset)).current
+  const activeTabName = state.routes[state.index]?.name
+
+  useEffect(() => {
+    if (activeTabName) {
+      onActiveTabChange(activeTabName)
+    }
+  }, [activeTabName, onActiveTabChange])
 
   useEffect(() => {
     Animated.timing(translateX, {
@@ -181,12 +197,10 @@ const BCSCTabStack: React.FC = () => {
                 navigation.navigate(BCSCScreens.MainVerifyPrompt)
               }
             }
-
-            setActiveTab(route.name)
           },
         })}
         initialRouteName={BCSCScreens.Home}
-        tabBar={(props) => <AnimatedTabBar {...props} />}
+        tabBar={(props) => <AnimatedTabBar {...props} onActiveTabChange={setActiveTab} />}
         screenOptions={{
           ...defaultStackOptions,
           // Show the header's own (native) shadow. TabHeaderWithoutBanner draws no drop-shadow caster,
