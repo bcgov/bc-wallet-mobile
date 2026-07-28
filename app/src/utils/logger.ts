@@ -36,7 +36,7 @@ interface ReportProblem {
   error?: AppError
   /**
    * The install ID represents the unique identifier for the app installation on the user's device.
-   * @see store.bcsc.reportUUID for the source of this value.
+   * @see store.bcsc.installId for the source of this value.
    */
   installId?: string
 }

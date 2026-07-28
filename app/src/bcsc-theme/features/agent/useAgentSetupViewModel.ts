@@ -30,6 +30,7 @@ export interface AgentSetupResult {
   error: AppError | null
   retry: () => void
   resetWallet: () => Promise<void>
+  teardownAgent: () => Promise<void>
 }
 
 const useAgentSetupViewModel = (): AgentSetupResult => {
@@ -355,7 +356,54 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     }
   }, [logger, attestationMonitor, walletKey, mediatorUrl, walletLabel, enableProxy])
 
-  return { agent, status, error, retry, resetWallet }
+  // Permanent agent teardown (e.g. factory reset). Unlike resetWallet this never
+  // re-initializes: it shuts down, deletes the wallet store, and nulls the agent so
+  // any consumer still mounted against a transient render (see RootStack's
+  // hasAccount/showVerifyStack derivation) sees `agent: null` and skips its
+  // mount-time storage reads instead of racing Credo's store-not-found ->
+  // auto-provision fallback against the just-deleted store.
+  //
+  // Guards against a concurrent resetWallet (and a re-entrant teardownAgent) via
+  // resettingRef, but — unlike resetWallet — does NOT check initializingRef: this is
+  // a destructive path that must always delete the store when a live agent exists,
+  // never silently no-op just because an init happens to be in flight.
+  const teardownAgent = useCallback(async () => {
+    if (resettingRef.current) {
+      logger.info('AgentTeardown: a reset is already in progress, ignoring request')
+      return
+    }
+
+    const currentAgent = agentRef.current
+    if (!currentAgent) {
+      return
+    }
+
+    resettingRef.current = true
+
+    try {
+      // Stop both monitors — a provisioning/attestation poll firing against the
+      // about-to-be-deleted store is exactly the "mounted consumer issuing a
+      // storage op against a deleted store" scenario this teardown exists to prevent.
+      attestationMonitor?.stop()
+      credentialProvisioningMonitor?.stop()
+
+      await shutdownAgent(currentAgent, logger)
+
+      try {
+        await deleteWalletStore(currentAgent)
+      } catch (err) {
+        logger.warn(`AgentTeardown: wallet store deleteStore() failed; wallet file may persist: ${err}`)
+      }
+    } finally {
+      agentRef.current = null
+      setAgent(null)
+      setError(null)
+      setStatus('idle')
+      resettingRef.current = false
+    }
+  }, [logger, attestationMonitor, credentialProvisioningMonitor])
+
+  return { agent, status, error, retry, resetWallet, teardownAgent }
 }
 
 export default useAgentSetupViewModel

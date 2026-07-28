@@ -1,7 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { useBCSCAgentSafe } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
-import { deleteWalletStore, purgeWalletStore, shutdownAgent } from '@/bcsc-theme/features/agent/services/agent-service'
+import { purgeWalletStore } from '@/bcsc-theme/features/agent/services/agent-service'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCDispatchAction } from '@/store'
@@ -21,11 +21,11 @@ jest.mock('@/bcsc-theme/features/agent/BCSCAgentProvider', () => ({
   useBCSCAgentSafe: jest.fn(),
 }))
 // Factory mock (not automock) so the agent-service module's heavy transitive deps
-// (Credo, indy-vdr-shared, etc.) are never loaded by this hook test.
+// (Credo, indy-vdr-shared, etc.) are never loaded by this hook test. Only
+// purgeWalletStore is called directly by useFactoryReset now — the live-agent
+// shutdown/delete path is delegated to agentCtx.teardownAgent (mocked separately).
 jest.mock('@/bcsc-theme/features/agent/services/agent-service', () => ({
-  deleteWalletStore: jest.fn().mockResolvedValue(undefined),
   purgeWalletStore: jest.fn().mockResolvedValue(undefined),
-  shutdownAgent: jest.fn().mockResolvedValue(undefined),
 }))
 jest.mock('react-native-config', () => ({ Config: { INDY_VDR_PROXY_URL: '' } }))
 
@@ -141,7 +141,7 @@ describe('useFactoryReset', () => {
     expect(deleteRegistrationMock).toHaveBeenCalledWith('native-token', 'test-client-id')
   })
 
-  it('should delete the wallet store and shut down the agent before clearing state', async () => {
+  it('awaits agentCtx.teardownAgent before clearing state when a live agent exists', async () => {
     const bcscCoreMock = jest.mocked(BcscCore)
     const useSecureActionsMock = jest.mocked(useSecureActions)
     const bifoldMock = jest.mocked(Bifold)
@@ -151,20 +151,22 @@ describe('useFactoryReset', () => {
     const clearSecureStateMock = jest.fn()
     const deleteSecureDataMock = jest.fn().mockResolvedValue(undefined)
 
-    const callOrder: string[] = []
-    // Both teardown ops now route through the serialized agent-service helpers.
-    jest.mocked(deleteWalletStore).mockImplementation(async () => {
-      callOrder.push('deleteStore')
+    // A manually-resolved deferred promise, rather than a callOrder array pushed to
+    // from inside async mock bodies. Timing-based approaches (an internal `await
+    // Promise.resolve()`, or even a macrotask `await new Promise(setTimeout)`) are
+    // unreliable here: whether or not the call site actually awaits
+    // agentCtx.teardownAgent(), the rest of the reset's own await chain
+    // (removeAccountArtifacts -> getAccount/deleteRegistration/deleteSecureData/
+    // removeAccount) gives a fire-and-forget call's continuation plenty of scheduler
+    // turns to resolve before assertion time anyway — so a timing-only test can't
+    // distinguish "awaited" from "dropped await". Holding teardownAgent open until we
+    // explicitly resolve it, and asserting nothing past it has run in the meantime,
+    // proves the call site actually blocks on it regardless of scheduling.
+    let resolveTeardown: () => void = () => undefined
+    const teardownPromise = new Promise<void>((resolve) => {
+      resolveTeardown = resolve
     })
-    jest.mocked(shutdownAgent).mockImplementation(async () => {
-      callOrder.push('shutdown')
-    })
-    deleteSecureDataMock.mockImplementation(async () => {
-      callOrder.push('deleteSecureData')
-    })
-    clearSecureStateMock.mockImplementation(() => {
-      callOrder.push('clearSecureState')
-    })
+    const teardownAgentMock = jest.fn().mockReturnValue(teardownPromise)
 
     const agent = { id: 'agent' } as any
     jest.mocked(useBCSCAgentSafe).mockReturnValue({
@@ -173,6 +175,7 @@ describe('useFactoryReset', () => {
       error: null,
       retry: jest.fn(),
       resetWallet: jest.fn(),
+      teardownAgent: teardownAgentMock,
     })
 
     useBCSCApiClientStateMock.mockReturnValue({
@@ -197,38 +200,53 @@ describe('useFactoryReset', () => {
 
     const hook = renderHook(() => useFactoryReset())
 
-    await act(async () => {
-      const result = await hook.result.current()
-      expect(result.success).toBe(true)
+    let resultPromise!: ReturnType<typeof hook.result.current>
+    act(() => {
+      resultPromise = hook.result.current()
     })
 
-    // Routed through the wallet-op queue rather than calling the agent directly.
-    expect(deleteWalletStore).toHaveBeenCalledWith(agent)
-    expect(shutdownAgent).toHaveBeenCalledWith(agent, expect.anything())
-    // Shut down before deleting (so shutdown closes a still-open store instead of
-    // throwing onCloseContext on a removed one), and both before the key-clearing
-    // steps so the wallet is removed before re-onboarding can derive a new key.
-    expect(callOrder.indexOf('shutdown')).toBeLessThan(callOrder.indexOf('deleteStore'))
-    expect(callOrder.indexOf('deleteStore')).toBeLessThan(callOrder.indexOf('deleteSecureData'))
-    expect(callOrder.indexOf('deleteStore')).toBeLessThan(callOrder.indexOf('clearSecureState'))
+    // Flush several microtask turns without resolving teardownPromise. If the call site
+    // dropped its `await`, execution falls through to removeAccountArtifacts (and on to
+    // clearSecureState) regardless of whether teardownAgent has settled — getAccount
+    // would already have been called by now.
+    await act(async () => {
+      for (let i = 0; i < 5; i++) {
+        await Promise.resolve()
+      }
+    })
+
+    expect(bcscCoreMock.getAccount).not.toHaveBeenCalled()
+    expect(clearSecureStateMock).not.toHaveBeenCalled()
+
+    resolveTeardown()
+
+    const result = await act(async () => resultPromise)
+
+    expect(result.success).toBe(true)
+    expect(teardownAgentMock).toHaveBeenCalledTimes(1)
+    expect(bcscCoreMock.getAccount).toHaveBeenCalled()
+    expect(clearSecureStateMock).toHaveBeenCalled()
   })
 
-  it('should still succeed if the wallet store delete throws', async () => {
+  it('dispatches CLEAR_BCSC, then clearSecureState, then DID_AUTHENTICATE(false)', async () => {
     const bcscCoreMock = jest.mocked(BcscCore)
     const useSecureActionsMock = jest.mocked(useSecureActions)
     const bifoldMock = jest.mocked(Bifold)
     const useRegistrationApiMock = jest.mocked(useRegistrationApi)
     const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
-    const warnLogMock = jest.fn()
 
-    jest.mocked(deleteWalletStore).mockRejectedValue(new Error('boom'))
-    jest.mocked(shutdownAgent).mockResolvedValue(undefined)
-    jest.mocked(useBCSCAgentSafe).mockReturnValue({
-      agent: { id: 'agent' } as any,
-      loading: false,
-      error: null,
-      retry: jest.fn(),
-      resetWallet: jest.fn(),
+    const callOrder: string[] = []
+    const clearSecureStateMock = jest.fn(() => {
+      callOrder.push('clearSecureState')
+    })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const dispatchMock = jest.fn((action: any) => {
+      if (action.type === BCDispatchAction.CLEAR_BCSC) {
+        callOrder.push('CLEAR_BCSC')
+      }
+      if (action.type === DispatchAction.DID_AUTHENTICATE) {
+        callOrder.push('DID_AUTHENTICATE')
+      }
     })
 
     useBCSCApiClientStateMock.mockReturnValue({
@@ -242,14 +260,14 @@ describe('useFactoryReset', () => {
     bcscCoreMock.getAccount.mockResolvedValue({ clientID: 'test-client-id' } as any)
     bcscCoreMock.removeAccount.mockResolvedValue(undefined)
     useSecureActionsMock.mockReturnValue({
-      clearSecureState: jest.fn(),
+      clearSecureState: clearSecureStateMock,
       deleteSecureData: jest.fn().mockResolvedValue(undefined),
     } as any)
     bifoldMock.useStore.mockReturnValue([
       { bcscSecure: { registrationAccessToken: 'token', additionalEvidenceData: [] } } as any,
-      jest.fn(),
+      dispatchMock,
     ])
-    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), warn: warnLogMock, error: jest.fn() }] as any)
+    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), warn: jest.fn(), error: jest.fn() }] as any)
 
     const hook = renderHook(() => useFactoryReset())
 
@@ -258,10 +276,10 @@ describe('useFactoryReset', () => {
       expect(result.success).toBe(true)
     })
 
-    expect(warnLogMock).toHaveBeenCalledWith(
-      expect.stringContaining('deleteStore() failed'),
-      expect.objectContaining({ error: expect.any(Error) })
-    )
+    // hasAccount (CLEAR_BCSC) must flip false before bcscSecure clears, so RootStack
+    // short-circuits to OnboardingStack before it ever derives showVerifyStack —
+    // this is what prevents the transient MainStack mount described in #4336.
+    expect(callOrder).toStrictEqual(['CLEAR_BCSC', 'clearSecureState', 'DID_AUTHENTICATE'])
   })
 
   it('purges an orphaned wallet store when no live agent is held but a wallet key exists', async () => {
@@ -276,7 +294,7 @@ describe('useFactoryReset', () => {
     const useRegistrationApiMock = jest.mocked(useRegistrationApi)
     const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
 
-    // No live agent (mid-reinitialization), so the direct deleteWalletStore path
+    // No live agent (mid-reinitialization), so the agentCtx.teardownAgent path
     // is unavailable.
     jest.mocked(useBCSCAgentSafe).mockReturnValue(null)
 
@@ -318,7 +336,6 @@ describe('useFactoryReset', () => {
     expect(purgeWalletStore).toHaveBeenCalledWith(
       expect.objectContaining({ walletSecret: expect.objectContaining({ key: 'stale-wallet-key' }) })
     )
-    expect(deleteWalletStore).not.toHaveBeenCalled()
     expect(bcscCoreMock.removeAccount).toHaveBeenCalledWith()
   })
 

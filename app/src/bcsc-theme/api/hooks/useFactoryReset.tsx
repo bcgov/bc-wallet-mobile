@@ -1,5 +1,5 @@
 import { useBCSCAgentSafe } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
-import { deleteWalletStore, purgeWalletStore, shutdownAgent } from '@/bcsc-theme/features/agent/services/agent-service'
+import { purgeWalletStore } from '@/bcsc-theme/features/agent/services/agent-service'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { ledgerResolver } from '@/configs/ledgers/indy/ledgerResolver'
@@ -120,22 +120,16 @@ export const useFactoryReset = () => {
 
         // Tear the agent down before clearing keys/state: if keys were cleared first,
         // re-onboarding would derive a new wallet key and the next agent init would
-        // trip on the stale on-disk wallet (duplicate-store error, code 3). Shut down
-        // BEFORE deleting (same order as resetWallet) — deleting first leaves the
-        // agent's askar context pointing at a removed store, so its shutdown's
-        // onCloseContext throws "There is no open store". Both ops route through the
-        // agent-service wallet-op queue, and shutdownAgent is idempotent so the
-        // shutdown the provider fires on DID_AUTHENTICATE -> false unmount is a no-op.
+        // trip on the stale on-disk wallet (duplicate-store error, code 3).
+        // teardownAgent shuts down before deleting (deleting first leaves the agent's
+        // askar context pointing at a removed store, so its shutdown's onCloseContext
+        // throws "There is no open store"), nulls the provider's agent reference, and
+        // is itself best-effort/non-throwing. Both ops route through the agent-service
+        // wallet-op queue, so they never race the shutdown the provider fires on
+        // DID_AUTHENTICATE -> false unmount (also idempotent).
         if (agentCtx?.agent) {
-          const agent = agentCtx.agent
-          // shutdownAgent is best-effort and logs its own errors.
-          await shutdownAgent(agent, logger)
-          try {
-            logger.info('FactoryReset: Deleting wallet store...')
-            await deleteWalletStore(agent)
-          } catch (err) {
-            logger.warn('FactoryReset: wallet deleteStore() failed; wallet file may persist', { error: err })
-          }
+          logger.info('FactoryReset: Tearing down agent and wallet store...')
+          await agentCtx.teardownAgent()
         } else if (store.bcscSecure.walletKey) {
           // No live agent, but a reset may have been interrupted mid-rebuild and
           // left an on-disk store keyed with this about-to-be-cleared key. Purge
@@ -161,11 +155,17 @@ export const useFactoryReset = () => {
 
         await removeAccountArtifacts()
 
-        // Reset BCSC state to initial state
+        // Reset BCSC state to initial state. CLEAR_BCSC (which flips hasAccount to
+        // false) must dispatch BEFORE clearSecureState (which resets bcscSecure,
+        // including verifiedStatus out of IN_PROGRESS) — RootStack short-circuits to
+        // OnboardingStack on `hasAccount === false` before it ever derives
+        // showVerifyStack, so ordering it first prevents the transient MainStack
+        // mount that let Bifold's provider tree fire storage reads against the
+        // wallet store this reset just deleted.
         logger.info('FactoryReset: Clearing secure and plain BCSC state...')
+        dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: bcscState ? [bcscState] : undefined })
         clearSecureState()
 
-        dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: bcscState ? [bcscState] : undefined })
         client.clearTokens()
 
         logger.info('FactoryReset: Logging out user...')

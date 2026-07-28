@@ -16,6 +16,9 @@ apps/*.ipa
 # Logs
 logs/
 
+# Test reports (JUnit / Allure / failure screenshots)
+reports/
+
 # Notes
 .notes/
 

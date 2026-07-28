@@ -16,17 +16,14 @@ export interface EnterTextOptions {
 }
 
 /**
- * Base screen object for E2E tests.
+ * Low-level selector engine for E2E tests — cross-platform element lookup, tap, wait, scroll.
  *
- * When constructed with a BCSC_TestIDs object (`new BaseScreen(BCSC_TestIDs.AccountSetup)`),
- * the typed convenience methods (`tap`, `waitFor`, `type`, `scrollTo`) provide
- * full autocomplete on the TestID keys. Subclasses can extend for custom behaviour.
+ * Prefer the action-based screen-object DSL (`defineScreen`) for every screen/journey; it maps semantic
+ * roles to testIDs and reuses this class verbatim as its engine (`new BaseScreen()`, no args). The
+ * optional constructor `ids` map + typed convenience methods (`tap`/`waitFor`/`type`/`scrollTo`, keyed on
+ * `ids`) are a lower-level fallback for the occasional element the DSL doesn't model.
  *
- * This is the low-level selector engine. Prefer the action-based screen-object DSL
- * (`defineScreen`) for new specs — it maps semantic roles to testIDs and reuses this
- * class verbatim as its engine.
- *
- * @typeParam T - shape of the BCSC_TestIDs object for this screen (e.g. `typeof BCSC_TestIDs.AccountSetup`)
+ * @typeParam T - shape of an optional key→testID map for this screen
  */
 export class BaseScreen<T extends Record<string, string> = Record<string, string>> {
   /** The TestID map for this screen. Access raw values via `ids.KeyName`. */
@@ -148,12 +145,13 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * @param testId - test ID to tap
    */
   public async tapByTestId(testId: string) {
-    const el = await this.findByTestId(testId)
+    let el = await this.findByTestId(testId)
     try {
       await el.waitForDisplayed({ timeout: 500 })
     } catch {
       console.warn(`Element "${testId}" not visible after 500ms; scrolling then retrying`)
       await this.scrollToTestId(testId, 6, 'both')
+      el = await this.findByTestId(testId) // scrolling can invalidate the cached handle — re-query
       await el.waitForDisplayed({ timeout: 500 })
     }
     await el.click()
@@ -167,8 +165,15 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * @param timeout - max time to wait for the element to become enabled (default 20s)
    */
   public async waitForEnabledAndTap(testId: string, timeout: number = Timeouts.SCREEN_TRANSITION) {
-    const el = await this.findByTestId(testId)
-    await el.waitForDisplayed({ timeout })
+    let el = await this.findByTestId(testId)
+    try {
+      await el.waitForDisplayed({ timeout })
+    } catch {
+      console.warn(`Element "${testId}" not visible after ${timeout}ms; scrolling then retrying`)
+      await this.scrollToTestId(testId, 4, 'both')
+      el = await this.findByTestId(testId) // scrolling can invalidate the cached handle — re-query
+      await el.waitForDisplayed({ timeout })
+    }
     await el.waitForEnabled({ timeout })
     await el.click()
   }
@@ -194,12 +199,13 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * @param options - optional: tapFirst (focus), characterByCharacter (for secure/controlled inputs)
    */
   public async enterText(testId: string, text: string, options?: EnterTextOptions) {
-    const el = await this.findByTestId(testId)
+    let el = await this.findByTestId(testId)
     try {
       await el.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
     } catch {
       console.warn(`Element "${testId}" not visible after ${Timeouts.SCREEN_TRANSITION}ms; scrolling then retrying`)
       await this.scrollToTestId(testId, 4, 'both')
+      el = await this.findByTestId(testId) // scrolling can invalidate the cached handle — re-query
       await el.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
     }
 
