@@ -76,7 +76,7 @@ export const CameraFormat = {
    * Format optimized for masked camera with barcode detection.
    *
    * Ideal format: 1080p + 60 FPS + non-HDR + stabilization
-   * Usecaase: Capturing ID cards AND detecting barcodes in real-time.
+   * Usecase: Capturing ID cards AND detecting barcodes in real-time.
    */
   MaskedWithBarcodeDetection: [
     // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
