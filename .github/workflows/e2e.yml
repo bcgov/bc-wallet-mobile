@@ -4,10 +4,13 @@
 # Apps must already be uploaded to SauceLabs (see ship-to-saucelabs in main.yaml).
 #
 # Available suites (defined in e2e/configs/wdio.shared.conf.ts):
-#   smoke           — basic launch + first navigation
-#   happy-path      — onboarding → verify → main (straight-through)
-#   full-regression — onboarding → verify → main (with detours)
-#   migration       — v3 → v4 app upgrade flow (Sauce RDC only)
+#   smoke        — basic launch + first navigation
+#   onboarding   — onboarding journeys
+#   auth         — auth/unlock journey
+#   main         — main navigation + settings journeys
+#   verify       — verify entry + verified card-type journeys (needs SM_* creds)
+#   regression   — every per-area journey (nightly default)
+#   migration    — v3 → v4 app upgrade flow (Sauce RDC only; separate v3 build)
 #
 # Device matrix:
 #   Callers pass a device_matrix JSON array of {platform, device, os_version}
@@ -28,7 +31,7 @@ on:
   workflow_call:
     inputs:
       suite:
-        description: 'Test suite (smoke, happy-path, full-regression, migration)'
+        description: 'Test suite (smoke, onboarding, auth, main, verify, regression, migration)'
         type: string
         required: true
       build_number:
@@ -43,7 +46,7 @@ on:
         description: 'Label of the large runner with whitelisted egress IPs'
         type: string
         required: false
-        default: 'large'
+        default: 'ubuntu-latest-m'
     secrets:
       SAUCE_USERNAME:
         required: true
@@ -51,7 +54,7 @@ on:
         required: true
       SM_USER:
         required: false
-        description: 'SiteMinder username for in-person verification auto-approval (required for happy-path/full-regression/migration; omit for smoke)'
+        description: 'SiteMinder username for in-person verification auto-approval (required for verify/regression/migration; omit for smoke/onboarding/auth/main)'
       SM_PASSWORD:
         required: false
         description: 'SiteMinder password for in-person verification auto-approval'
@@ -62,8 +65,11 @@ on:
         type: choice
         options:
           - smoke
-          - happy-path
-          - full-regression
+          - onboarding
+          - auth
+          - main
+          - verify
+          - regression
           - migration
         default: smoke
       build_number:
@@ -77,14 +83,16 @@ on:
       runner_label:
         description: 'Label of the large runner with whitelisted egress IPs'
         type: string
-        default: 'large'
+        default: 'ubuntu-latest-m'
 
 jobs:
   # ─── E2E Tests ─────────────────────────────────────────────────────
   # Single unified job for all suites. Config file paths are selected at
   # runtime via a case statement on $SUITE:
-  #   smoke / happy-path / full-regression → configs/sauce/wdio.{ios,android}.sauce.rdc.conf.ts
-  #   migration                            → configs/sauce/wdio.{ios,android}.sauce.migration.conf.ts
+  #   migration                → configs/sauce/wdio.{ios,android}.sauce.migration.conf.ts
+  #   everything else (smoke,  → configs/sauce/wdio.{ios,android}.sauce.rdc.conf.ts
+  #    onboarding, auth, main,
+  #    verify, regression)
   #
   # Non-blocking suites (migration): failures are reported but
   # do not gate the pipeline.
@@ -160,3 +168,15 @@ jobs:
             ANDROID_APP_FILENAME="${SAUCE_LABS_PREFIX}-${BUILD_NUMBER}.apk" \
               yarn wdio "$ANDROID_CONF" --suite "${SUITE}"
           fi
+
+      # Per-scenario JUnit XML + Allure results + failure screenshots (e2e/reports/, gitignored).
+      # always() so a failing run still uploads its report. The name is unique per matrix entry —
+      # upload-artifact rejects a duplicate name within a run, and each device is its own job.
+      - name: Upload E2E reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-reports-${{ inputs.suite }}-${{ matrix.device.platform }}-${{ matrix.device.os_version }}
+          path: e2e/reports/
+          if-no-files-found: warn
+          retention-days: 14
