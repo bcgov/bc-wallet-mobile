@@ -1219,14 +1219,14 @@ export const ErrorRegistry = {
     appEvent: AppEventCode.AUTO_CRED_ACCOUNT_SUSPENDED,
     severity: ErrorSeverity.WARNING,
     category: ErrorCategory.CREDENTIAL,
-    message: 'Person Credential creation rejected — there is a problem with the account',
+    message: 'Digital Service Card creation rejected — there is a problem with the account',
   },
   AUTO_CRED_ACCOUNT_DEACTIVATED: {
     statusCode: 3206,
     appEvent: AppEventCode.AUTO_CRED_ACCOUNT_DEACTIVATED,
     severity: ErrorSeverity.WARNING,
     category: ErrorCategory.CREDENTIAL,
-    message: 'Person Credential creation rejected — account is deactivated',
+    message: 'Digital Service Card creation rejected — account is deactivated',
   },
 } as const satisfies Record<string, ErrorDefinition>
 
