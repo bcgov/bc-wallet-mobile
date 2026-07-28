@@ -1,5 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { EvidenceMetadataPayload, UploadEvidenceResponseData } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { derivePlausibleCaptureDateSeconds, isPlausibleCaptureDateSeconds } from '@/bcsc-theme/utils/capture-date'
 import { clampEvidenceImagesToSides, normalizeEvidenceImageLabel } from '@/bcsc-theme/utils/card-utils'
 import { BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
@@ -27,8 +28,17 @@ const useEvidenceUpload = () => {
       return
     }
 
+    let metadataToUpload = photoMetadata
+    if (!isPlausibleCaptureDateSeconds(photoMetadata.date)) {
+      logger.warn('Implausible selfie capture date, substituting a plausible value before upload', {
+        date: photoMetadata.date,
+      })
+      const date = await derivePlausibleCaptureDateSeconds(photoPath, logger)
+      metadataToUpload = { ...photoMetadata, date }
+    }
+
     logger.info('Uploading selfie photo...')
-    const metadataResponse = await evidence.uploadPhotoEvidenceMetadata(photoMetadata)
+    const metadataResponse = await evidence.uploadPhotoEvidenceMetadata(metadataToUpload)
     const photoBytes = await readFileInChunks(photoPath, logger)
     await evidence.uploadPhotoEvidenceBinary(metadataResponse.upload_uri, photoBytes)
     logger.info(`Selfie photo uploaded: ${photoBytes.length} bytes`)
@@ -57,14 +67,31 @@ const useEvidenceUpload = () => {
       // Heals over-count metadata (e.g. a stale duplicate side left behind by
       // navigating back to retake/re-accept a photo — see issue #4159) before
       // it's sent to the server, which rejects an unexpected image count.
-      const images = clampEvidenceImagesToSides(evidenceItem.metadata, evidenceItem.evidenceType?.image_sides)
-      if (images.length !== evidenceItem.metadata.length) {
+      const clampedImages = clampEvidenceImagesToSides(evidenceItem.metadata, evidenceItem.evidenceType?.image_sides)
+      if (clampedImages.length !== evidenceItem.metadata.length) {
         logger.warn('Healed evidence metadata with more images than the card expects', {
           evidenceType: evidenceItem?.evidenceType?.evidence_type,
           before: evidenceItem.metadata.length,
-          after: images.length,
+          after: clampedImages.length,
         })
       }
+
+      // Guards against an implausible capture date (e.g. corrupted by the Android native
+      // timestamp round-trip bug, #4338) reaching the upload payload.
+      const images = await Promise.all(
+        clampedImages.map(async (data) => {
+          if (isPlausibleCaptureDateSeconds(data.date)) {
+            return data
+          }
+          logger.warn('Implausible evidence image capture date, substituting a plausible value before upload', {
+            evidenceType: evidenceItem?.evidenceType?.evidence_type,
+            label: data.label,
+            date: data.date,
+          })
+          const date = await derivePlausibleCaptureDateSeconds(data.file_path, logger)
+          return { ...data, date }
+        })
+      )
 
       const metadataPayload: EvidenceMetadataPayload = {
         type: evidenceItem?.evidenceType?.evidence_type,

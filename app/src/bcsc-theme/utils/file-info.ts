@@ -4,6 +4,7 @@ import { BifoldLogger } from '@bifold/core'
 import { hashBase64, PhotoMetadata, saveEvidencePhoto } from 'react-native-bcsc-core'
 import RNFS from 'react-native-fs'
 import { VerificationPrompt, VerificationVideoUploadPayload } from '../api/hooks/useEvidenceApi'
+import { isPlausibleCaptureDateSeconds } from './capture-date'
 
 export const getFileInfo = async (filePath: string) => {
   const stats = await RNFS.stat(filePath)
@@ -31,10 +32,19 @@ export const getPhotoMetadata = async (filePath: string, logger: BifoldLogger): 
     permanentPath = filePath
   }
 
+  // Android's File.lastModified() can return 0 on failure, which getFileInfo() would otherwise
+  // pass through as an implausible 1970 capture date (#4338).
+  const capturedTimestamp = Math.floor(fileInfo.timestamp)
+  let date = capturedTimestamp
+  if (!isPlausibleCaptureDateSeconds(capturedTimestamp)) {
+    logger.warn('Implausible photo capture timestamp, substituting current time', { filePath, capturedTimestamp })
+    date = Math.floor(Date.now() / 1000)
+  }
+
   const photoMetadata: PhotoMetadata = {
     content_length: jpegBytes.byteLength,
     content_type: 'image/jpeg',
-    date: Math.floor(fileInfo.timestamp),
+    date,
     label: 'front',
     filename: fileInfo.filename,
     sha256: photoSHA,

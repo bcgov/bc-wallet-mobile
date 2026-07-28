@@ -7,6 +7,7 @@ import {
 import useEvidenceUpload from '@/bcsc-theme/hooks/useEvidenceUpload'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { isPlausibleCaptureDateSeconds } from '@/bcsc-theme/utils/capture-date'
 import { getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
 import { AppError, ErrorRegistry } from '@/errors'
@@ -56,7 +57,15 @@ const useEvidenceUploadModel = (
         throw new Error('Cache missing video data')
       }
 
-      const videoMetadata = await getVideoMetadata(videoBytes, videoDuration, prompts, videoStats.mtime)
+      // Android's File.lastModified() can return 0 on failure, which would otherwise produce
+      // an implausible 1970 capture date on the verification video (#4338).
+      let videoMtime = videoStats.mtime
+      if (!isPlausibleCaptureDateSeconds(Math.floor(videoMtime / 1000))) {
+        logger.warn('Implausible verification video mtime, substituting current time', { videoPath, videoMtime })
+        videoMtime = Date.now()
+      }
+
+      const videoMetadata = await getVideoMetadata(videoBytes, videoDuration, prompts, videoMtime)
 
       logger.debug(`Selfie photo bytes length: ${photoBytes.length}`)
       logger.debug(`Selfie video bytes length: ${videoBytes.length}`)

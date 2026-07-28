@@ -129,6 +129,38 @@ describe('File Info Utils', () => {
       expect(result.file_path).toBe('/tmp/photo.jpg')
     })
 
+    it('should substitute the current time when the file mtime is implausible (e.g. 0)', async () => {
+      const mockLogger = new MockLogger()
+      const RNFSMock = jest.mocked(RNFS)
+      const mockBuffer = Buffer.from('fake-jpeg-data')
+      const now = new Date('2026-07-28T00:00:00Z').getTime()
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(now)
+
+      // Android's File.lastModified() can return 0 on failure.
+      RNFSMock.stat.mockResolvedValue({
+        mtime: 0,
+        size: mockBuffer.byteLength,
+        path: '/tmp/photo.jpg',
+        isFile: () => true,
+        isDirectory: () => false,
+        ctime: 0,
+        name: 'photo.jpg',
+      } as any)
+
+      mockReadFileInChunks.mockResolvedValue(mockBuffer)
+      ;(hashBase64 as jest.Mock).mockResolvedValue('sha256-hash-value')
+      ;(saveEvidencePhoto as jest.Mock).mockResolvedValue('/permanent/path/photo.jpg')
+
+      const result = await getPhotoMetadata('/tmp/photo.jpg', mockLogger)
+
+      expect(result.date).toBe(Math.floor(now / 1000))
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Implausible photo capture timestamp'),
+        expect.objectContaining({ filePath: '/tmp/photo.jpg', capturedTimestamp: 0 })
+      )
+      nowSpy.mockRestore()
+    })
+
     it('should handle non-Error thrown by saveEvidencePhoto', async () => {
       const mockLogger = new MockLogger()
       const RNFSMock = jest.mocked(RNFS)

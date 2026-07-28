@@ -350,6 +350,59 @@ describe('useEvidenceUploadModel', () => {
       })
     })
 
+    it('substitutes an implausible video mtime (e.g. 0) with the current time before deriving metadata (#4338)', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([
+        {
+          ...baseStore,
+          bcsc: {
+            ...baseStore.bcsc,
+            photoPath: '/photo.jpg',
+            videoPath: '/video.mp4',
+            videoDuration: 10,
+            prompts: [{ text: 'smile' }],
+            photoMetadata: { some: 'metadata' },
+          },
+          bcscSecure: {
+            ...baseStore.bcscSecure,
+            verificationRequestId: 'req-123',
+            verificationRequestSha: 'sha-456',
+            additionalEvidenceData: [],
+          },
+        } as BCState,
+        jest.fn(),
+      ])
+
+      jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
+      jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(Buffer.from([4, 5, 6]))
+      // Android's File.lastModified() can return 0 on failure.
+      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: 0 } as any)
+      jest.mocked(getVideoMetadata).mockResolvedValue({ duration: 10 } as any)
+
+      const now = new Date('2026-07-28T00:00:00Z').getTime()
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(now)
+
+      mockEvidenceApi.uploadPhotoEvidenceMetadata.mockResolvedValue({ upload_uri: 'photo-uri' })
+      mockEvidenceApi.uploadVideoEvidenceMetadata.mockResolvedValue({ upload_uri: 'video-uri' })
+      mockEvidenceApi.uploadPhotoEvidenceBinary.mockResolvedValue(undefined)
+      mockEvidenceApi.uploadVideoEvidenceBinary.mockResolvedValue(undefined)
+      mockEvidenceApi.sendVerificationRequest.mockResolvedValue({ id: 'req-123', status: 'pending' })
+
+      const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+      await act(async () => {
+        await result.current.handleSend()
+      })
+
+      expect(getVideoMetadata).toHaveBeenCalledWith(expect.anything(), 10, expect.anything(), now)
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Implausible verification video mtime'),
+        expect.objectContaining({ videoMtime: 0 })
+      )
+
+      nowSpy.mockRestore()
+    })
+
     it('should emit fileUploadErrorAlert when video cache is missing', async () => {
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([
@@ -578,7 +631,9 @@ describe('useEvidenceUploadModel', () => {
               {
                 evidenceType: { evidence_type: 'drivers_licence' },
                 documentNumber: 'DL123',
-                metadata: [{ label: 'front', file_path: '/front.jpg', side: 'front' }],
+                // A plausible date so the #4338 capture-date guard is a no-op here — this test
+                // is about additional-evidence processing, not the date guard.
+                metadata: [{ label: 'front', file_path: '/front.jpg', side: 'front', date: 1_780_000_000 }],
               },
             ],
           },
@@ -613,7 +668,7 @@ describe('useEvidenceUploadModel', () => {
       expect(mockEvidenceApi.sendEvidenceMetadata).toHaveBeenCalledWith({
         type: 'drivers_licence',
         number: 'DL123',
-        images: [{ label: 'FRONT_SIDE', side: 'front', file_path: undefined }],
+        images: [{ label: 'FRONT_SIDE', side: 'front', file_path: undefined, date: 1_780_000_000 }],
       })
       expect(mockEvidenceApi.uploadPhotoEvidenceBinary).toHaveBeenCalledWith('evidence-uri-front', expect.anything())
       expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledWith('req-123', {
