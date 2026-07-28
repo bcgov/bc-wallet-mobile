@@ -553,7 +553,7 @@ export const digitalServiceCardAccountUnavailableErrorPolicy: ErrorHandlingPolic
       accountProblem === 'suspended'
         ? context.alerts.personCredentialSuspendedAlert
         : context.alerts.personCredentialDeactivatedAlert
-    alert(error.cause)
+    alert()
   },
 }
 
