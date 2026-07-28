@@ -50,8 +50,8 @@ export const CameraFormat = {
    * Format optimized for barcode scanning (back camera, no selfie).
    * Prioritizes high resolution and moderate frame rate for accurate detection
    *
-   *
    * Ideal format: 1080p + 30 FPS + non-HDR + stabilization
+   * Usecase: Scanning barcodes on ID cards.
    */
   CodeScanningFormat: [
     // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
@@ -76,6 +76,7 @@ export const CameraFormat = {
    * Format optimized for masked camera with barcode detection.
    *
    * Ideal format: 1080p + 60 FPS + non-HDR + stabilization
+   * Usecaase: Capturing ID cards AND detecting barcodes in real-time.
    */
   MaskedWithBarcodeDetection: [
     // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
@@ -85,11 +86,15 @@ export const CameraFormat = {
     },
     // High resolution for better barcode detection
     {
-      videoResolution: PHOTO_RESOLUTION_1080P,
+      photoResolution: PHOTO_RESOLUTION_1080P,
     },
     // High FPS for smoother preview and better barcode detection
     {
       fps: 60,
+    },
+    // High resolution for better barcode detection
+    {
+      videoResolution: PHOTO_RESOLUTION_1080P,
     },
     // Enable video stabilization for steadier scanning
     {
@@ -104,6 +109,7 @@ export const CameraFormat = {
    * barcode formats, there is no live scanning that needs high FPS.
    *
    * Ideal format: 1080p + 30 FPS + non-HDR
+   * Usecase: Capturing a selfie for identity verification or profile picture.
    */
   SelfiePhoto: [
     // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose

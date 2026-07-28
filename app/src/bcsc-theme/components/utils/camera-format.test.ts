@@ -96,69 +96,42 @@ describe('CameraFormat', () => {
 
       expect(format?._id).toBe('modern-format-3')
     })
+  })
 
-    describe('CodeScanningFormat: LegacyDevice', () => {
+  describe('CodeScanningFormat: LegacyDevice', () => {
+    it('should return legacy-format-1 for LegacyDevice', () => {
+      const format: any = getCameraFormat(LegacyDevice as any, CameraFormat.CodeScanningFormat)
+
+      expect(format?._id).toBe('legacy-format-1')
+    })
+  })
+
+  describe('MaskedWithBarcodeDetection: ModernDevice', () => {
+    it('should return modern-format-3 for ModernDevice', () => {
+      const format: any = getCameraFormat(ModernDevice as any, CameraFormat.MaskedWithBarcodeDetection)
+
+      expect(format?._id).toBe('modern-format-3')
+    })
+
+    it('should return legacy-format-1 for LegacyDevice', () => {
+      const format: any = getCameraFormat(LegacyDevice as any, CameraFormat.MaskedWithBarcodeDetection)
+
+      expect(format?._id).toBe('legacy-format-1')
+    })
+  })
+
+  describe('SelfiePhotoFormat: ModernDevice', () => {
+    it('should return modern-format-3 for ModernDevice', () => {
+      const format: any = getCameraFormat(ModernDevice as any, CameraFormat.SelfiePhoto)
+
+      expect(format?._id).toBe('modern-format-3')
+    })
+
+    describe('SelfiePhotoFormat: LegacyDevice', () => {
       it('should return legacy-format-1 for LegacyDevice', () => {
-        const format: any = getCameraFormat(LegacyDevice as any, CameraFormat.CodeScanningFormat)
+        const format: any = getCameraFormat(LegacyDevice as any, CameraFormat.SelfiePhoto)
 
         expect(format?._id).toBe('legacy-format-1')
-      })
-    })
-
-    describe('CodeScanningFormat: properties', () => {
-      it('should have no duplicate format properties', () => {
-        const allProperties = CameraFormat.CodeScanningFormat.flatMap((format) => Object.keys(format))
-        const uniqueProperties = new Set(allProperties)
-
-        expect(allProperties).toHaveLength(uniqueProperties.size)
-      })
-    })
-
-    describe('MaskedWithBarcodeDetection: ModernDevice', () => {
-      it('should return modern-format-3 for ModernDevice', () => {
-        const format: any = getCameraFormat(ModernDevice as any, CameraFormat.MaskedWithBarcodeDetection)
-
-        expect(format?._id).toBe('modern-format-3')
-      })
-
-      it('should return legacy-format-1 for LegacyDevice', () => {
-        const format: any = getCameraFormat(LegacyDevice as any, CameraFormat.MaskedWithBarcodeDetection)
-
-        expect(format?._id).toBe('legacy-format-1')
-      })
-    })
-
-    describe('MaskedWithBarcodeDetection: properties', () => {
-      it('should have no duplicate format properties', () => {
-        const allProperties = CameraFormat.MaskedWithBarcodeDetection.flatMap((format) => Object.keys(format))
-        const uniqueProperties = new Set(allProperties)
-
-        expect(allProperties).toHaveLength(uniqueProperties.size)
-      })
-    })
-
-    describe('SelfiePhotoFormat: ModernDevice', () => {
-      it('should return modern-format-3 for ModernDevice', () => {
-        const format: any = getCameraFormat(ModernDevice as any, CameraFormat.SelfiePhoto)
-
-        expect(format?._id).toBe('modern-format-3')
-      })
-
-      describe('SelfiePhotoFormat: LegacyDevice', () => {
-        it('should return legacy-format-1 for LegacyDevice', () => {
-          const format: any = getCameraFormat(LegacyDevice as any, CameraFormat.SelfiePhoto)
-
-          expect(format?._id).toBe('legacy-format-1')
-        })
-      })
-    })
-
-    describe('SelfiePhotoFormat: properties', () => {
-      it('should have no duplicate format properties', () => {
-        const allProperties = CameraFormat.SelfiePhoto.flatMap((format) => Object.keys(format))
-        const uniqueProperties = new Set(allProperties)
-
-        expect(allProperties).toHaveLength(uniqueProperties.size)
       })
     })
   })
@@ -175,6 +148,19 @@ describe('CameraFormat', () => {
       ['SelfiePhoto', CameraFormat.SelfiePhoto],
     ])('ranks videoHdr:false as the highest-priority filter in %s', (_name, filters) => {
       expect(filters[0]).toEqual({ videoHdr: false })
+    })
+  })
+
+  describe('Unique filter properties', () => {
+    it.each([
+      ['CodeScanningFormat', CameraFormat.CodeScanningFormat],
+      ['MaskedWithBarcodeDetection', CameraFormat.MaskedWithBarcodeDetection],
+      ['SelfiePhoto', CameraFormat.SelfiePhoto],
+    ])('has no duplicate filter properties in %s', (_name, filters) => {
+      const allProperties = filters.flatMap((filter) => Object.keys(filter))
+      const uniqueProperties = new Set(allProperties)
+
+      expect(allProperties).toHaveLength(uniqueProperties.size)
     })
   })
 
