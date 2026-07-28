@@ -91,7 +91,7 @@ export const CameraFormat = {
     {
       videoHdr: false,
     },
-    // High resolution for capture quality
+    // Medium resolution for moderate capture quality
     {
       photoResolution: PHOTO_RESOLUTION_720P,
     },
