@@ -60,6 +60,7 @@ describe('QRDisplay', () => {
       error: null,
       retry: jest.fn(),
       resetWallet: jest.fn(),
+      teardownAgent: jest.fn(),
     })
   }
   const setNoAgent = () => {
@@ -69,6 +70,7 @@ describe('QRDisplay', () => {
       error: null,
       retry: jest.fn(),
       resetWallet: jest.fn(),
+      teardownAgent: jest.fn(),
     })
   }
 
