@@ -885,7 +885,7 @@ describe('clientErrorPolicies', () => {
     })
 
     describe('handle', () => {
-      it('calls personCredentialSuspendedAlert with the raw cause for a suspended account', () => {
+      it('calls personCredentialSuspendedAlert for a suspended account', () => {
         const error = errorWithDescription('suspended')
         const loggerMock = { info: jest.fn() }
         const suspendedAlert = jest.fn()
@@ -903,11 +903,11 @@ describe('clientErrorPolicies', () => {
         expect(loggerMock.info).toHaveBeenCalledWith(
           '[DigitalServiceCardAccountUnavailableErrorPolicy] account suspended on Digital Services Card creation'
         )
-        expect(suspendedAlert).toHaveBeenCalledWith(error.cause)
+        expect(suspendedAlert).toHaveBeenCalledWith()
         expect(deactivatedAlert).not.toHaveBeenCalled()
       })
 
-      it('calls personCredentialDeactivatedAlert with the raw cause for a deactivated account', () => {
+      it('calls personCredentialDeactivatedAlert for a deactivated account', () => {
         const error = errorWithDescription('deactivated')
         const loggerMock = { info: jest.fn() }
         const suspendedAlert = jest.fn()
@@ -925,7 +925,7 @@ describe('clientErrorPolicies', () => {
         expect(loggerMock.info).toHaveBeenCalledWith(
           '[DigitalServiceCardAccountUnavailableErrorPolicy] account deactivated on Digital Services Card creation'
         )
-        expect(deactivatedAlert).toHaveBeenCalledWith(error.cause)
+        expect(deactivatedAlert).toHaveBeenCalledWith()
         expect(suspendedAlert).not.toHaveBeenCalled()
       })
     })
