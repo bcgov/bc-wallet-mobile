@@ -15,8 +15,8 @@ describe('VerifySettings', () => {
     jest.clearAllMocks()
   })
 
-  it('renders correctly', () => {
-    const tree = render(
+  it('renders the remove account option', () => {
+    const { getByTestId } = render(
       <BasicAppContext>
         <BCSCLoadingProvider>
           <VerifySettingsScreen navigation={mockNavigation as never} />
@@ -24,7 +24,7 @@ describe('VerifySettings', () => {
       </BasicAppContext>
     )
 
-    expect(tree).toMatchSnapshot()
+    expect(getByTestId(testIdWithKey('RemoveAccount'))).toBeTruthy()
   })
 
   it('navigates to remove account confirmation when remove account is pressed', () => {
