@@ -111,7 +111,11 @@ class EvidenceTimestampsTest {
     }
 
     @Test
-    fun `storedTimestampToApiSeconds divides a value below the old raised floor but above the 2020 floor`() {
+    fun `storedTimestampToApiSeconds divides a millis value whose quotient sits between the old and new floors`() {
+        // The input is well above MILLISECONDS_THRESHOLD, so this always takes the divide
+        // branch regardless of the floor. What's floor-relevant is the quotient, 1_773_100_000L
+        // — below the old 2026-06-01 floor, above the restored 2020-01-01 one. See the matching
+        // apiSecondsToStoredMillis case below, where the floor is actually consulted.
         val result = EvidenceTimestamps.storedTimestampToApiSeconds(1_773_100_000_000L)
 
         assertEquals(1_773_100_000L, result)
