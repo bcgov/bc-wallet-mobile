@@ -1070,6 +1070,7 @@ export const useSecureActions = () => {
       try {
         // Repairs capture dates corrupted by the Android native timestamp round-trip bug
         // (#4338) so a bad on-device value doesn't keep being re-persisted and re-uploaded.
+        // Migration-scoped — see #4373.
         const { repaired, changed } = await repairEvidenceCaptureDates(cleanedEvidence, logger)
         if (changed) {
           await persistEvidenceData(repaired)

@@ -100,7 +100,7 @@ describe('capture-date utils', () => {
   })
 
   describe('repairEvidenceCaptureDates', () => {
-    it('reports no change and preserves identity when all dates are plausible', async () => {
+    it('reports no change when all dates are plausible', async () => {
       const mockLogger = new MockLogger()
       const evidence: EvidenceMetadata[] = [
         { metadata: [photo({ date: 1_782_000_000 }), photo({ date: 1_782_000_030, label: 'BACK_SIDE' })] },
@@ -110,7 +110,9 @@ describe('capture-date utils', () => {
 
       expect(changed).toBe(false)
       expect(repaired).toEqual(evidence)
-      expect(repaired[0]).toBe(evidence[0])
+      // Photo-level identity is preserved even though the containing item is always rebuilt.
+      expect(repaired[0].metadata[0]).toBe(evidence[0].metadata[0])
+      expect(repaired[0].metadata[1]).toBe(evidence[0].metadata[1])
       expect(RNFS.stat).not.toHaveBeenCalled()
     })
 
@@ -160,8 +162,9 @@ describe('capture-date utils', () => {
       const { repaired, changed } = await repairEvidenceCaptureDates(evidence, mockLogger)
 
       expect(changed).toBe(true)
-      expect(repaired[0]).toBe(evidence[0])
-      expect(repaired[1]).not.toBe(evidence[1])
+      expect(repaired[0]).toEqual(evidence[0])
+      expect(repaired[0].metadata[0]).toBe(evidence[0].metadata[0])
+      expect(repaired[1]).not.toEqual(evidence[1])
       expect(repaired[1].metadata[0].date).toBe(Math.floor(mtimeMs / 1000))
     })
 

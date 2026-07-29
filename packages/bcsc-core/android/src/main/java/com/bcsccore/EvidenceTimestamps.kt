@@ -32,7 +32,10 @@ object EvidenceTimestamps {
     fun storedTimestampToApiSeconds(stored: Long): Long =
         when {
             stored >= MILLISECONDS_THRESHOLD -> stored / 1000L
+
+            // Migration-scoped: only pre-#4338-fix data lands here. See #4373.
             stored >= MIN_PLAUSIBLE_SECONDS -> stored
+
             else -> 0L
         }
 }

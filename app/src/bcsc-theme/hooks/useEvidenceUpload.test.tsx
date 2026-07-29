@@ -210,9 +210,12 @@ describe('useEvidenceUpload', () => {
 
       expect(frontImage.date).toBe(plausibleDate)
       expect(backImage.date).toBe(Math.floor(mtimeMs / 1000))
+      // Exactly one warn for the substitution (derivePlausibleCaptureDateSeconds logs it; the
+      // call site no longer logs its own on top — see #4373).
+      expect(mockLogger.warn).toHaveBeenCalledTimes(1)
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Implausible evidence image capture date'),
-        expect.objectContaining({ label: 'BACK_SIDE' })
+        expect.stringContaining('substituted with file mtime'),
+        expect.objectContaining({ label: 'BACK_SIDE', evidenceType: 'drivers_licence' })
       )
     })
 
@@ -281,8 +284,10 @@ describe('useEvidenceUpload', () => {
       expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalledWith(
         expect.objectContaining({ date: Math.floor(mtimeMs / 1000) })
       )
+      // Exactly one warn for the substitution — see #4373.
+      expect(mockLogger.warn).toHaveBeenCalledTimes(1)
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Implausible selfie capture date'),
+        expect.stringContaining('substituted with file mtime'),
         expect.objectContaining({ date: 1_780_000 })
       )
     })

@@ -28,12 +28,10 @@ const useEvidenceUpload = () => {
       return
     }
 
+    // Migration-scoped guard (pre-#4338-fix on-device data only) — see #4373.
     let metadataToUpload = photoMetadata
     if (!isPlausibleCaptureDateSeconds(photoMetadata.date)) {
-      logger.warn('Implausible selfie capture date, substituting a plausible value before upload', {
-        date: photoMetadata.date,
-      })
-      const date = await derivePlausibleCaptureDateSeconds(photoPath, logger)
+      const date = await derivePlausibleCaptureDateSeconds(photoPath, logger, { date: photoMetadata.date })
       metadataToUpload = { ...photoMetadata, date }
     }
 
@@ -77,18 +75,18 @@ const useEvidenceUpload = () => {
       }
 
       // Guards against an implausible capture date (e.g. corrupted by the Android native
-      // timestamp round-trip bug, #4338) reaching the upload payload.
+      // timestamp round-trip bug, #4338) reaching the upload payload. Migration-scoped
+      // (pre-#4338-fix on-device data only) — see #4373.
       const images = await Promise.all(
         clampedImages.map(async (data) => {
           if (isPlausibleCaptureDateSeconds(data.date)) {
             return data
           }
-          logger.warn('Implausible evidence image capture date, substituting a plausible value before upload', {
+          const date = await derivePlausibleCaptureDateSeconds(data.file_path, logger, {
             evidenceType: evidenceItem?.evidenceType?.evidence_type,
             label: data.label,
             date: data.date,
           })
-          const date = await derivePlausibleCaptureDateSeconds(data.file_path, logger)
           return { ...data, date }
         })
       )

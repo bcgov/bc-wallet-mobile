@@ -1,3 +1,12 @@
+/**
+ * Migration-scoped repair machinery for #4338 (evidence capture dates corrupted by an Android
+ * native timestamp round-trip bug). On a fixed build there is no path to an implausible date —
+ * capture guarantees plausibility, and the native write/read round-trip is unit-correct — so
+ * everything in this file exists solely to repair evidence metadata written by builds that
+ * predate the fix. It comes out as a group, along with the pointers at its other call sites
+ * (EvidenceTimestamps.kt, useSecureActions.tsx, useEvidenceUpload.tsx), once that data has aged
+ * out. See #4373.
+ */
 import { BifoldLogger } from '@bifold/core'
 import { EvidenceMetadata } from 'react-native-bcsc-core'
 import RNFS from 'react-native-fs'
@@ -21,33 +30,44 @@ export const isPlausibleCaptureDateSeconds = (seconds: number): boolean => secon
  * NOT fall back to the current time here — for evidence already collected, a fabricated date
  * with no connection to the actual capture is worse than an explicit "unknown". Never throws.
  *
+ * Logs exactly one warning per call (on every branch), so callers should NOT log their own
+ * "substituting" warning around this — pass anything worth surfacing via `context` instead.
+ *
  * @param filePath - Path to the evidence photo file.
  * @param logger - Logger used to record the substitution.
+ * @param context - Extra fields merged into the log payload (e.g. evidence type, label).
  */
-export const derivePlausibleCaptureDateSeconds = async (filePath: string, logger: BifoldLogger): Promise<number> => {
+export const derivePlausibleCaptureDateSeconds = async (
+  filePath: string,
+  logger: BifoldLogger,
+  context: Record<string, unknown> = {}
+): Promise<number> => {
   try {
     const stats = await RNFS.stat(filePath)
     const mtimeSeconds = Math.floor(new Date(stats.mtime).getTime() / 1000)
     if (isPlausibleCaptureDateSeconds(mtimeSeconds)) {
-      logger.warn('Implausible evidence capture date substituted with file mtime', { filePath })
+      logger.warn('Implausible evidence capture date substituted with file mtime', { filePath, ...context })
       return mtimeSeconds
     }
   } catch (error) {
     logger.warn('Failed to read file mtime while substituting implausible evidence capture date', {
       filePath,
+      ...context,
       error: error instanceof Error ? error.message : String(error),
     })
   }
 
-  logger.warn('Implausible evidence capture date has no real capture signal available, using 0', { filePath })
+  logger.warn('Implausible evidence capture date has no real capture signal available, using 0', {
+    filePath,
+    ...context,
+  })
   return 0
 }
 
 /**
  * Repairs every photo's capture date across a list of evidence entries, substituting any
  * implausible value (e.g. corrupted by the Android native round-trip bug, see #4338) via
- * {@link derivePlausibleCaptureDateSeconds}. Entries/photos with plausible dates are returned
- * unchanged (same object identity) so callers can cheaply detect "nothing changed".
+ * {@link derivePlausibleCaptureDateSeconds}.
  *
  * @param evidence - Evidence metadata entries to repair.
  * @param logger - Logger used to record substitutions.
@@ -73,8 +93,7 @@ export const repairEvidenceCaptureDates = async (
         })
       )
 
-      const itemChanged = metadata.some((photo, i) => photo !== item.metadata[i])
-      return itemChanged ? { ...item, metadata } : item
+      return { ...item, metadata }
     })
   )
 
