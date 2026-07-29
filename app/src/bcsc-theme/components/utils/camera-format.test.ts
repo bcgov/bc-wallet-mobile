@@ -107,10 +107,10 @@ describe('CameraFormat', () => {
   })
 
   describe('MaskedWithBarcodeDetection: ModernDevice', () => {
-    it('should return modern-format-3 for ModernDevice', () => {
+    it('should return modern-format-4 for ModernDevice', () => {
       const format: any = getCameraFormat(ModernDevice as any, CameraFormat.MaskedWithBarcodeDetection)
 
-      expect(format?._id).toBe('modern-format-3')
+      expect(format?._id).toBe('modern-format-4')
     })
   })
 
@@ -118,7 +118,7 @@ describe('CameraFormat', () => {
     it('should return legacy-format-1 for LegacyDevice', () => {
       const format: any = getCameraFormat(LegacyDevice as any, CameraFormat.MaskedWithBarcodeDetection)
 
-      expect(format?._id).toBe('legacy-format-1')
+      expect(format?._id).toBe('legacy-format-2')
     })
   })
 
