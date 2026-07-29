@@ -12,7 +12,7 @@ export const MIN_PLAUSIBLE_CAPTURE_DATE_SECONDS = 1780272000
 export const MAX_CLOCK_SKEW_SECONDS = 86400
 
 /**
- * True iff `seconds` falls within [2020-01-01, now + 24h]. The ceiling also catches
+ * True iff `seconds` falls within [2026-06-01, now + 24h]. The ceiling also catches
  * millisecond-magnitude values masquerading as seconds (e.g. Date.now() passed unconverted),
  * since those land far beyond "now" in seconds terms.
  *
