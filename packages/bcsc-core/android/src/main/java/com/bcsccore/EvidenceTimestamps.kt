@@ -11,8 +11,8 @@ package com.bcsccore
  * mid-2026 capture date to ~21 January 1970. The magnitude checks here make both directions
  * self-correcting: writes always store millis, reads infer the unit from magnitude instead of
  * assuming it, and values below the plausibility floor collapse to 0 rather than propagating a
- * bad date. Values that are merely too far in the future (not sub-floor) pass through unchanged
- * here — the JS layer (`capture-date.ts`) applies the upper-bound plausibility check.
+ * bad date. There is no upper bound: far-future values pass through unchanged by design, since
+ * no server-side validation depends on one.
  */
 object EvidenceTimestamps {
     /** 2026-06-01T00:00:00Z — no legitimate v4 capture predates this. */
@@ -26,9 +26,8 @@ object EvidenceTimestamps {
 
     /**
      * Stored value -> API seconds: divides millis (v3 + fixed v4), passes through pre-fix v4
-     * seconds, collapses sub-floor (below [MIN_PLAUSIBLE_SECONDS]) values to 0. Does not catch
-     * implausibly-far-future second-magnitude values — that upper bound is enforced by the JS
-     * layer (`capture-date.ts`), not here.
+     * seconds, collapses sub-floor (below [MIN_PLAUSIBLE_SECONDS]) values to 0. No upper bound
+     * is enforced — a far-future second-magnitude value passes through unchanged.
      */
     fun storedTimestampToApiSeconds(stored: Long): Long =
         when {
