@@ -1096,6 +1096,59 @@ const translation = {
         "ButtonText": "Get a BC Services Card"
       }
     },
+    // TODO: placeholder copy — needs content review before ship
+    "DeviceAuthorizationError": {
+      "InvalidParameter": {
+        "Heading": "Sorry, you can't add this card.",
+        "Description": "There was a problem with the information provided. Please try again.",
+        "ButtonText": "Contact us"
+      },
+      "CardInactive": {
+        "Heading": "Sorry, you can't add this card.",
+        "Description": "This card has been suspended.",
+        "ButtonText": "Contact us"
+      },
+      "CardReplaced": {
+        "Heading": "Sorry, you can't add this card.",
+        "Description": "This card has been replaced.",
+        "ButtonText": "Get a BC Services Card"
+      },
+      "CardCancelled": {
+        "Heading": "Sorry, you can't add this card.",
+        "Description": "This card has been cancelled.",
+        "ButtonText": "Get a BC Services Card"
+      },
+      "CardRenewed": {
+        "Heading": "Sorry, you can't add this card.",
+        "Description": "This card has been renewed. Please use your new card.",
+        "ButtonText": "Get a BC Services Card"
+      },
+      "NonPhotoCard": {
+        "Heading": "This card can't be used",
+        "Description": "This card doesn't have a photo and can't be used for this process.",
+        "ButtonText": "Contact us"
+      },
+      "CardProblem": {
+        "Heading": "Sorry, you can't add this card.",
+        "Description": "There's a problem with this card. Please contact us for help.",
+        "ButtonText": "Contact us"
+      },
+      "AdditionalCard": {
+        "Heading": "Sorry, you can't add this card.",
+        "Description": "A new card has been issued and this card is no longer authorized.",
+        "ButtonText": "Contact us"
+      },
+      "UnderMinimumAge": {
+        "Heading": "Sorry, you can't verify remotely",
+        "Description": "You must meet the minimum age requirement to verify your identity remotely.",
+        "ButtonText": "Contact us"
+      },
+      "TooManyMobileCards": {
+        "Heading": "Sorry, you can't add this card.",
+        "Description": "Your account already has the maximum number of active mobile cards.",
+        "ButtonText": "Contact us"
+      }
+    },
     "BirthdateLockout": {
       "Heading": "Sorry, you've tried too many times",
       "Message": "Please try again later.",
