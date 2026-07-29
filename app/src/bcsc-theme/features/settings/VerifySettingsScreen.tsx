@@ -51,6 +51,10 @@ export const VerifySettingsScreen: React.FC<VerifySettingsScreenProps> = ({ navi
     navigation.navigate(BCSCScreens.VerifyChangePIN, { isChangingExistingPIN: true })
   }
 
+  const onRemoveAccount = () => {
+    navigation.navigate(BCSCScreens.VerifyRemoveAccountConfirmation)
+  }
+
   return (
     <SettingsContent
       onContactUs={onContactUs}
@@ -61,6 +65,7 @@ export const VerifySettingsScreen: React.FC<VerifySettingsScreenProps> = ({ navi
       onNotifications={onNotifications}
       onAppSecurity={onAppSecurity}
       onChangePIN={onChangePIN}
+      onRemoveAccount={onRemoveAccount}
     />
   )
 }
