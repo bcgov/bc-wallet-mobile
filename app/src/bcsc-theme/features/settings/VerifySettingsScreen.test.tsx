@@ -1,7 +1,9 @@
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { render } from '@testing-library/react-native'
+import { testIdWithKey } from '@bifold/core'
+import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import { VerifySettingsScreen } from './VerifySettingsScreen'
 
@@ -23,5 +25,19 @@ describe('VerifySettings', () => {
     )
 
     expect(tree).toMatchSnapshot()
+  })
+
+  it('navigates to remove account confirmation when remove account is pressed', () => {
+    const { getByTestId } = render(
+      <BasicAppContext>
+        <BCSCLoadingProvider>
+          <VerifySettingsScreen navigation={mockNavigation as never} />
+        </BCSCLoadingProvider>
+      </BasicAppContext>
+    )
+
+    fireEvent.press(getByTestId(testIdWithKey('RemoveAccount')))
+
+    expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerifyRemoveAccountConfirmation)
   })
 })
