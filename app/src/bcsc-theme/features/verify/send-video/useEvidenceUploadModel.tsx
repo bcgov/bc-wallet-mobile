@@ -165,10 +165,12 @@ const useEvidenceUploadModel = (
       }
 
       setUploadMessage(t('BCSC.SendVideo.UploadProgress.UploadingInformation'))
-      // Migration-scoped guard (pre-#4338-fix on-device data only) — see #4373. The live-call
-      // flow's uploadSelfiePhoto has an equivalent guard, but this (send-video) path is reached
-      // independently — first-class choice on Verification Method Selection, and the fallback
-      // when a call is busy or closed — so it needs its own.
+      // Unconditional boundary check for #4338 AC3, not migration scaffolding — NOT part of
+      // #4373's removal set (same reasoning as uploadSelfiePhoto's guard: container-imp.ts's
+      // reset-on-load makes this unreachable on a fixed build today, but that's incidental, not
+      // contractual). The live-call flow's uploadSelfiePhoto has an equivalent guard, but this
+      // (send-video) path is reached independently — first-class choice on Verification Method
+      // Selection, and the fallback when a call is busy or closed — so it needs its own.
       let selfieMetadata = photoMetadata
       if (!isPlausibleCaptureDateSeconds(photoMetadata.date)) {
         const date = await derivePlausibleCaptureDateSeconds(photoMetadata.file_path, logger, {

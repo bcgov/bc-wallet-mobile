@@ -28,9 +28,13 @@ const useEvidenceUpload = () => {
       return
     }
 
-    // Migration-scoped guard (pre-#4338-fix on-device data only) — see #4373. Stats the permanent
-    // path (photoMetadata.file_path), not photoPath (the camera temp file), since the latter may
-    // already be gone by the time this runs.
+    // Unconditional boundary check for #4338 AC3, not migration scaffolding — NOT part of
+    // #4373's removal set. container-imp.ts clears bcsc.photoMetadata on every app start, so on
+    // a fixed build this can't actually fire (photoMetadata is always freshly produced by
+    // getPhotoMetadata, which guarantees a plausible date); that's an incidental invariant of
+    // container-imp.ts's reset block, not an enforced contract, so the check stays as a cheap
+    // last line of defense. Stats the permanent path (photoMetadata.file_path), not photoPath
+    // (the camera temp file), since the latter may already be gone by the time this runs.
     let metadataToUpload = photoMetadata
     if (!isPlausibleCaptureDateSeconds(photoMetadata.date)) {
       const date = await derivePlausibleCaptureDateSeconds(photoMetadata.file_path, logger, {

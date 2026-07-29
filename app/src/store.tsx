@@ -75,8 +75,8 @@ export interface BCSCState {
   selectedNickname?: string
   prompts?: VerificationPrompt[]
   videoDuration?: number
-  // Actually a PhotoMetadata (via getPhotoMetadata: PhotoReviewScreen.tsx/EvidenceCaptureScreen.tsx),
-  // which is a structural superset of VerificationPhotoUploadPayload (adds file_path). Typed as
+  // Actually a PhotoMetadata (set only by PhotoReviewScreen.tsx via getPhotoMetadata), which is
+  // a structural superset of VerificationPhotoUploadPayload (adds file_path). Typed as
   // PhotoMetadata so callers can read file_path (the permanent on-disk path) directly.
   photoMetadata?: PhotoMetadata
   photoPath?: string
