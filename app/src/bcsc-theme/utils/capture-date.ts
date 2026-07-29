@@ -40,9 +40,8 @@ export const isPlausibleCaptureDateSeconds = (seconds: number): boolean => secon
  *
  * Note: on iOS, evidence photos are re-materialised to disk on every `getEvidence` call
  * (`BcscCore.swift`'s `convertEvidenceModelToMetadata` → `savePhotoDataToDisk`), so a statted
- * mtime there is the moment of hydration, not of capture. Moot in practice — iOS capture dates
- * are never corrupted (the round-trip is symmetric), so this function's callers never fire for
- * iOS evidence — but don't rely on the mtime premise above if that ever changes.
+ * mtime there is the moment of hydration, not of capture — don't rely on the mtime premise
+ * above for iOS evidence.
  *
  * Logs exactly one warning per call (on every branch), so callers should NOT log their own
  * "substituting" warning around this — pass anything worth surfacing via `context` instead.
