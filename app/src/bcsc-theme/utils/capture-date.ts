@@ -1,14 +1,13 @@
 /**
- * Migration-scoped repair machinery for #4338 (evidence capture dates corrupted by an Android
- * native timestamp round-trip bug). On a fixed build there is no path to an implausible date —
- * capture guarantees plausibility, and the native write/read round-trip is unit-correct — so
- * everything in this file exists solely to repair evidence metadata written by builds that
- * predate the fix. It comes out as a group, along with the pointers at its other call sites
- * (EvidenceTimestamps.kt, useSecureActions.tsx, useEvidenceUpload.tsx), once that data has aged
- * out. See #4373.
+ * Capture-date plausibility checking for #4338 (evidence capture dates corrupted by an Android
+ * native timestamp round-trip bug). `isPlausibleCaptureDateSeconds` and the floor it's built on
+ * also back the live `getPhotoMetadata`/`getVideoMetadata` mtime guards in `file-info.ts`, which
+ * are not migration-scoped — those cover `File.lastModified()` returning 0 on failure
+ * independent of #4338. `derivePlausibleCaptureDateSeconds`, though, is migration-scoped: its
+ * only callers guard against pre-#4338-fix on-device data (`useEvidenceUpload.tsx`,
+ * `useEvidenceUploadModel.tsx`) and come out once that data has aged out. See #4373.
  */
 import { BifoldLogger } from '@bifold/core'
-import { EvidenceMetadata } from 'react-native-bcsc-core'
 import RNFS from 'react-native-fs'
 
 /**
@@ -67,40 +66,4 @@ export const derivePlausibleCaptureDateSeconds = async (
     ...context,
   })
   return 0
-}
-
-/**
- * Repairs every photo's capture date across a list of evidence entries, substituting any
- * implausible value (e.g. corrupted by the Android native round-trip bug, see #4338) via
- * {@link derivePlausibleCaptureDateSeconds}.
- *
- * @param evidence - Evidence metadata entries to repair.
- * @param logger - Logger used to record substitutions.
- * @returns The repaired evidence list and whether any date was actually substituted.
- */
-export const repairEvidenceCaptureDates = async (
-  evidence: EvidenceMetadata[],
-  logger: BifoldLogger
-): Promise<{ repaired: EvidenceMetadata[]; changed: boolean }> => {
-  let changed = false
-
-  const repaired = await Promise.all(
-    evidence.map(async (item) => {
-      const metadata = await Promise.all(
-        item.metadata.map(async (photo) => {
-          if (isPlausibleCaptureDateSeconds(photo.date)) {
-            return photo
-          }
-
-          changed = true
-          const date = await derivePlausibleCaptureDateSeconds(photo.file_path, logger)
-          return { ...photo, date }
-        })
-      )
-
-      return { ...item, metadata }
-    })
-  )
-
-  return { repaired, changed }
 }
