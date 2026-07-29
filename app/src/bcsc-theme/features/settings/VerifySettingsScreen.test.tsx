@@ -17,6 +17,30 @@ describe('VerifySettings', () => {
     jest.clearAllMocks()
   })
 
+  it('renders correctly when unauthenticated', () => {
+    const tree = render(
+      <BasicAppContext>
+        <BCSCLoadingProvider>
+          <VerifySettingsScreen navigation={mockNavigation as never} />
+        </BCSCLoadingProvider>
+      </BasicAppContext>
+    )
+
+    expect(tree).toMatchSnapshot()
+  })
+
+  it('renders correctly when authenticated', () => {
+    const tree = render(
+      <BasicAppContext initialStateOverride={authenticatedState}>
+        <BCSCLoadingProvider>
+          <VerifySettingsScreen navigation={mockNavigation as never} />
+        </BCSCLoadingProvider>
+      </BasicAppContext>
+    )
+
+    expect(tree).toMatchSnapshot()
+  })
+
   it('renders the remove account option', () => {
     const { getByTestId } = render(
       <BasicAppContext initialStateOverride={authenticatedState}>
