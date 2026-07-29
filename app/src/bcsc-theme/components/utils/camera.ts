@@ -95,9 +95,9 @@ export const CameraFormat = {
     {
       photoResolution: PHOTO_RESOLUTION_720P,
     },
-    // High FPS for smoother preview and better barcode detection
+    // Moderate FPS for smooth preview without excessive processing load
     {
-      fps: 60,
+      fps: 30,
     },
     // High resolution for better barcode detection
     {
@@ -512,12 +512,19 @@ const _summarizeCameraFormat = (format: CameraDeviceFormat): string => {
     'cinematic-extended': 'cin-ext',
   }
 
+  let hdr = [format.supportsVideoHdr ? 'vid' : null, format.supportsPhotoHdr ? 'photo' : null].filter(Boolean).join(',')
+
+  if (!hdr.length) {
+    hdr = 'none'
+  }
+
   return [
-    `video: ${format.videoWidth}x${format.videoHeight}`,
-    `photo: ${format.photoWidth}x${format.photoHeight}`,
-    `fps: ${format.maxFps}`,
-    `focus: ${autoFocusSystemMap[format.autoFocusSystem]}`,
-    `stab: ${format.videoStabilizationModes?.map((mode) => stabilizationMap[mode]).join(',')}`,
+    `video:${format.videoWidth}x${format.videoHeight}`,
+    `photo:${format.photoWidth}x${format.photoHeight}`,
+    `fps:${format.maxFps}`,
+    `focus:${autoFocusSystemMap[format.autoFocusSystem]}`,
+    `stab:${format.videoStabilizationModes?.map((mode) => stabilizationMap[mode]).join(',')}`,
+    `hdr:${hdr}`,
   ].join(' ')
 }
 
