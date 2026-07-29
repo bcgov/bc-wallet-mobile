@@ -69,19 +69,16 @@ describe('capture-date utils', () => {
       )
     })
 
-    it('returns 0 and never throws when RNFS.stat rejects', async () => {
+    it('returns 0 and never throws when RNFS.stat rejects, logging exactly one warning', async () => {
       const mockLogger = new MockLogger()
       ;(RNFS.stat as jest.Mock).mockRejectedValue(new Error('ENOENT'))
 
       const result = await derivePlausibleCaptureDateSeconds('/docs/missing.jpg', mockLogger)
 
       expect(result).toBe(0)
+      expect(mockLogger.warn).toHaveBeenCalledTimes(1)
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Failed to read file mtime'),
-        expect.objectContaining({ filePath: '/docs/missing.jpg' })
-      )
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('no real capture signal available'),
         expect.objectContaining({ filePath: '/docs/missing.jpg' })
       )
     })

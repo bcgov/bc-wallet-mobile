@@ -59,6 +59,7 @@ export const derivePlausibleCaptureDateSeconds = async (
       ...context,
       error: error instanceof Error ? error.message : String(error),
     })
+    return 0
   }
 
   logger.warn('Implausible evidence capture date has no real capture signal available, using 0', {
