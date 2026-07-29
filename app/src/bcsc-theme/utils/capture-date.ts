@@ -3,13 +3,14 @@
  * native timestamp round-trip bug). `isPlausibleCaptureDateSeconds` and the floor it's built on
  * also back the live `getPhotoMetadata`/`getVideoMetadata` mtime guards in `file-info.ts`, which
  * are not migration-scoped — those cover `File.lastModified()` returning 0 on failure
- * independent of #4338. `derivePlausibleCaptureDateSeconds` itself is permanent — it does NOT
- * come out with #4373. Its three call sites have mixed scoping: `useEvidenceUpload.tsx`'s
- * `processAdditionalEvidence` guard is genuinely migration-scoped (guards
- * `additionalEvidenceData`, sourced from native secure storage, which can hold pre-#4338-fix
- * data) and is #4373's removal target; `useEvidenceUpload.tsx`'s `uploadSelfiePhoto` and
- * `useEvidenceUploadModel.tsx`'s send-video guard are permanent AC3 boundary checks on
- * `bcsc.photoMetadata`, which is never persisted, so #4373 does not touch them.
+ * independent of #4338. `withPlausibleCaptureDate` (and `derivePlausibleCaptureDateSeconds`
+ * underneath it) is permanent — it does NOT come out with #4373. Its three call sites have mixed
+ * scoping: `useEvidenceUpload.tsx`'s `processAdditionalEvidence` guard is genuinely
+ * migration-scoped (guards `additionalEvidenceData`, sourced from native secure storage, which
+ * can hold pre-#4338-fix data) and is #4373's removal target; `useEvidenceUpload.tsx`'s
+ * `uploadSelfiePhoto` and `useEvidenceUploadModel.tsx`'s send-video guard are permanent AC3
+ * boundary checks on `bcsc.photoMetadata`, which is never persisted, so #4373 does not touch
+ * them.
  */
 import { BifoldLogger } from '@bifold/core'
 import RNFS from 'react-native-fs'
@@ -76,4 +77,29 @@ export const derivePlausibleCaptureDateSeconds = async (
     ...context,
   })
   return 0
+}
+
+/**
+ * Returns `photo` unchanged (same object identity) if its capture date is already plausible;
+ * otherwise substitutes a derived date via {@link derivePlausibleCaptureDateSeconds} and returns
+ * a new object. This is #4338's "no upload leaves the app with an implausible capture date"
+ * guard (AC3) — the single entry point used by all three call sites (see the file header for
+ * their scoping). Does not log its own warning; `derivePlausibleCaptureDateSeconds` owns that.
+ *
+ * @param photo - Evidence metadata with a `date` and permanent `file_path`.
+ * @param logger - Logger passed through on substitution.
+ * @param context - Extra fields merged into the log payload if a substitution happens (e.g.
+ * evidence type, label).
+ */
+export const withPlausibleCaptureDate = async <T extends { date: number; file_path: string }>(
+  photo: T,
+  logger: BifoldLogger,
+  context: Record<string, unknown> = {}
+): Promise<T> => {
+  if (isPlausibleCaptureDateSeconds(photo.date)) {
+    return photo
+  }
+
+  const date = await derivePlausibleCaptureDateSeconds(photo.file_path, logger, { date: photo.date, ...context })
+  return { ...photo, date }
 }

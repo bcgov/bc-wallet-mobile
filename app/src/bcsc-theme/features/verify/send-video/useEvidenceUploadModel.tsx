@@ -7,7 +7,7 @@ import {
 import useEvidenceUpload from '@/bcsc-theme/hooks/useEvidenceUpload'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { derivePlausibleCaptureDateSeconds, isPlausibleCaptureDateSeconds } from '@/bcsc-theme/utils/capture-date'
+import { withPlausibleCaptureDate } from '@/bcsc-theme/utils/capture-date'
 import { getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
 import { AppError, ErrorRegistry } from '@/errors'
@@ -165,19 +165,11 @@ const useEvidenceUploadModel = (
       }
 
       setUploadMessage(t('BCSC.SendVideo.UploadProgress.UploadingInformation'))
-      // Unconditional boundary check for #4338 AC3, not migration scaffolding — NOT part of
-      // #4373's removal set (same reasoning as uploadSelfiePhoto's guard: container-imp.ts's
-      // reset-on-load makes this unreachable on a fixed build today, but that's incidental, not
-      // contractual). The live-call flow's uploadSelfiePhoto has an equivalent guard, but this
-      // (send-video) path is reached independently — first-class choice on Verification Method
-      // Selection, and the fallback when a call is busy or closed — so it needs its own.
-      let selfieMetadata = photoMetadata
-      if (!isPlausibleCaptureDateSeconds(photoMetadata.date)) {
-        const date = await derivePlausibleCaptureDateSeconds(photoMetadata.file_path, logger, {
-          date: photoMetadata.date,
-        })
-        selfieMetadata = { ...photoMetadata, date }
-      }
+      // AC3 boundary check — see capture-date.ts's file header for scoping. Reached
+      // independently of the live-call flow's equivalent guard in uploadSelfiePhoto: send-video
+      // is a first-class choice on Verification Method Selection, and the fallback when a call
+      // is busy or closed, so it needs its own.
+      const selfieMetadata = await withPlausibleCaptureDate(photoMetadata, logger)
 
       const evidenceMetadata = await uploadEvidenceMetadata(selfieMetadata, localFiles.videoMetadata)
       if (isCancelledRef.current) {

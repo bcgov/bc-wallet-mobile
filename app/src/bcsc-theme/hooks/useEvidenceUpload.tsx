@@ -1,6 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { EvidenceMetadataPayload, UploadEvidenceResponseData } from '@/bcsc-theme/api/hooks/useEvidenceApi'
-import { derivePlausibleCaptureDateSeconds, isPlausibleCaptureDateSeconds } from '@/bcsc-theme/utils/capture-date'
+import { withPlausibleCaptureDate } from '@/bcsc-theme/utils/capture-date'
 import { clampEvidenceImagesToSides, normalizeEvidenceImageLabel } from '@/bcsc-theme/utils/card-utils'
 import { BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
@@ -28,20 +28,8 @@ const useEvidenceUpload = () => {
       return
     }
 
-    // Unconditional boundary check for #4338 AC3, not migration scaffolding — NOT part of
-    // #4373's removal set. container-imp.ts clears bcsc.photoMetadata on every app start, so on
-    // a fixed build this can't actually fire (photoMetadata is always freshly produced by
-    // getPhotoMetadata, which guarantees a plausible date); that's an incidental invariant of
-    // container-imp.ts's reset block, not an enforced contract, so the check stays as a cheap
-    // last line of defense. Stats the permanent path (photoMetadata.file_path), not photoPath
-    // (the camera temp file), since the latter may already be gone by the time this runs.
-    let metadataToUpload = photoMetadata
-    if (!isPlausibleCaptureDateSeconds(photoMetadata.date)) {
-      const date = await derivePlausibleCaptureDateSeconds(photoMetadata.file_path, logger, {
-        date: photoMetadata.date,
-      })
-      metadataToUpload = { ...photoMetadata, date }
-    }
+    // AC3 boundary check — see capture-date.ts's file header for scoping.
+    const metadataToUpload = await withPlausibleCaptureDate(photoMetadata, logger)
 
     logger.info('Uploading selfie photo...')
     const metadataResponse = await evidence.uploadPhotoEvidenceMetadata(metadataToUpload)
@@ -82,21 +70,14 @@ const useEvidenceUpload = () => {
         })
       }
 
-      // Guards against an implausible capture date (e.g. corrupted by the Android native
-      // timestamp round-trip bug, #4338) reaching the upload payload. Migration-scoped
-      // (pre-#4338-fix on-device data only) — see #4373.
+      // Migration-scoped AC3 guard (pre-#4338-fix on-device data only) — see #4373.
       const images = await Promise.all(
-        clampedImages.map(async (data) => {
-          if (isPlausibleCaptureDateSeconds(data.date)) {
-            return data
-          }
-          const date = await derivePlausibleCaptureDateSeconds(data.file_path, logger, {
+        clampedImages.map((data) =>
+          withPlausibleCaptureDate(data, logger, {
             evidenceType: evidenceItem?.evidenceType?.evidence_type,
             label: data.label,
-            date: data.date,
           })
-          return { ...data, date }
-        })
+        )
       )
 
       const metadataPayload: EvidenceMetadataPayload = {
