@@ -1,0 +1,299 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Switch Component renders correctly when off 1`] = `
+<View
+  accessibilityElementsHidden={false}
+  accessibilityLabel="Test switch"
+  accessibilityRole="switch"
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": false,
+      "disabled": false,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  importantForAccessibility="auto"
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  pointerEvents="auto"
+  testID="test-switch"
+>
+  <View
+    style={
+      [
+        {
+          "borderRadius": 16,
+          "height": 32,
+          "justifyContent": "center",
+          "opacity": 1,
+          "padding": 3,
+          "width": 52,
+        },
+        {
+          "backgroundColor": "rgba(96, 96, 96, 1)",
+        },
+      ]
+    }
+  >
+    <View
+      style={
+        [
+          {
+            "alignItems": "center",
+            "backgroundColor": "#FFFFFF",
+            "borderRadius": 13,
+            "height": 26,
+            "justifyContent": "center",
+            "width": 26,
+          },
+          {
+            "transform": [
+              {
+                "translateX": 0,
+              },
+            ],
+          },
+        ]
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "position": "absolute",
+            },
+            {
+              "opacity": 0,
+            },
+          ]
+        }
+      >
+        <Text
+          allowFontScaling={false}
+          selectable={false}
+          style={
+            [
+              {
+                "color": "#003366",
+                "fontSize": 18,
+              },
+              undefined,
+              {
+                "fontFamily": "Material Icons",
+                "fontStyle": "normal",
+                "fontWeight": "normal",
+              },
+              {},
+            ]
+          }
+        >
+          
+        </Text>
+      </View>
+      <View
+        style={
+          [
+            {
+              "position": "absolute",
+            },
+            {
+              "opacity": 1,
+            },
+          ]
+        }
+      >
+        <Text
+          allowFontScaling={false}
+          selectable={false}
+          style={
+            [
+              {
+                "color": "#606060",
+                "fontSize": 18,
+              },
+              undefined,
+              {
+                "fontFamily": "Material Icons",
+                "fontStyle": "normal",
+                "fontWeight": "normal",
+              },
+              {},
+            ]
+          }
+        >
+          
+        </Text>
+      </View>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`Switch Component renders correctly when on 1`] = `
+<View
+  accessibilityElementsHidden={false}
+  accessibilityLabel="Test switch"
+  accessibilityRole="switch"
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": true,
+      "disabled": false,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  importantForAccessibility="auto"
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  pointerEvents="auto"
+  testID="test-switch"
+>
+  <View
+    style={
+      [
+        {
+          "borderRadius": 16,
+          "height": 32,
+          "justifyContent": "center",
+          "opacity": 1,
+          "padding": 3,
+          "width": 52,
+        },
+        {
+          "backgroundColor": "rgba(0, 51, 102, 1)",
+        },
+      ]
+    }
+  >
+    <View
+      style={
+        [
+          {
+            "alignItems": "center",
+            "backgroundColor": "#FFFFFF",
+            "borderRadius": 13,
+            "height": 26,
+            "justifyContent": "center",
+            "width": 26,
+          },
+          {
+            "transform": [
+              {
+                "translateX": 20,
+              },
+            ],
+          },
+        ]
+      }
+    >
+      <View
+        style={
+          [
+            {
+              "position": "absolute",
+            },
+            {
+              "opacity": 1,
+            },
+          ]
+        }
+      >
+        <Text
+          allowFontScaling={false}
+          selectable={false}
+          style={
+            [
+              {
+                "color": "#003366",
+                "fontSize": 18,
+              },
+              undefined,
+              {
+                "fontFamily": "Material Icons",
+                "fontStyle": "normal",
+                "fontWeight": "normal",
+              },
+              {},
+            ]
+          }
+        >
+          
+        </Text>
+      </View>
+      <View
+        style={
+          [
+            {
+              "position": "absolute",
+            },
+            {
+              "opacity": 0,
+            },
+          ]
+        }
+      >
+        <Text
+          allowFontScaling={false}
+          selectable={false}
+          style={
+            [
+              {
+                "color": "#606060",
+                "fontSize": 18,
+              },
+              undefined,
+              {
+                "fontFamily": "Material Icons",
+                "fontStyle": "normal",
+                "fontWeight": "normal",
+              },
+              {},
+            ]
+          }
+        >
+          
+        </Text>
+      </View>
+    </View>
+  </View>
+</View>
+`;

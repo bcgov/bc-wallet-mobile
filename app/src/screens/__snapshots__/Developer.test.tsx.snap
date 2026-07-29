@@ -21,49 +21,41 @@ exports[`Developer Screen screen renders correctly 1`] = `
   }
 >
   <RCTScrollView
-    style={
-      {
-        "backgroundColor": "#F2F2F2",
-        "width": "100%",
-      }
+    contentContainerStyle={
+      [
+        false,
+        {
+          "padding": 24,
+        },
+      ]
     }
+    showsVerticalScrollIndicator={false}
   >
     <View>
       <View
         style={
           {
-            "backgroundColor": "#FFFFFF",
-            "padding": 24,
+            "borderRadius": 8,
+            "gap": 2,
+            "overflow": "hidden",
           }
         }
       >
         <View
           style={
             {
-              "flexDirection": "row",
+              "flexDirection": "column",
+              "gap": 2,
             }
           }
         >
-          <Text
-            style={
-              {
-                "color": "#313132",
-                "flex": 1,
-                "flexWrap": "wrap",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 21,
-                "fontWeight": "normal",
-              }
-            }
-          >
-            Developer.DeveloperMode
-          </Text>
           <View
             accessibilityLabel="Developer.Toggle"
+            accessibilityRole="switch"
             accessibilityState={
               {
                 "busy": undefined,
-                "checked": undefined,
+                "checked": true,
                 "disabled": undefined,
                 "expanded": undefined,
                 "selected": undefined,
@@ -91,58 +83,218 @@ exports[`Developer Screen screen renders correctly 1`] = `
             onStartShouldSetResponder={[Function]}
             style={
               {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "justifyContent": "space-between",
+                "backgroundColor": "#003366",
+                "opacity": 1,
+                "padding": 16,
               }
             }
             testID="com.ariesbifold:id/ToggleDeveloper"
           >
-            <RCTSwitch
-              accessibilityLabel="Developer.DeveloperMode"
-              accessibilityRole="switch"
-              onChange={[Function]}
-              onResponderTerminationRequest={[Function]}
-              onStartShouldSetResponder={[Function]}
-              onTintColor="#757575"
+            <View
               style={
-                [
-                  {
-                    "alignSelf": "flex-start",
-                  },
-                  {
-                    "backgroundColor": "#D3D3D3",
-                    "borderRadius": 16,
-                  },
-                ]
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 8,
+                }
               }
-              thumbTintColor="#003366"
-              tintColor="#D3D3D3"
-              value={true}
-            />
+            >
+              <View
+                style={
+                  {
+                    "flex": 1,
+                    "gap": 8,
+                  }
+                }
+              >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "bold",
+                        },
+                        {
+                          "color": "#FFFFFF",
+                          "flex": 1,
+                          "flexWrap": "wrap",
+                        },
+                      ]
+                    }
+                  >
+                    Developer.DeveloperMode
+                  </Text>
+                  <View
+                    accessibilityElementsHidden={true}
+                    accessibilityRole="switch"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": true,
+                        "disabled": false,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={false}
+                    collapsable={false}
+                    focusable={true}
+                    importantForAccessibility="no-hide-descendants"
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    pointerEvents="none"
+                  >
+                    <View
+                      style={
+                        [
+                          {
+                            "borderRadius": 16,
+                            "height": 32,
+                            "justifyContent": "center",
+                            "opacity": 1,
+                            "padding": 3,
+                            "width": 52,
+                          },
+                          {
+                            "backgroundColor": "rgba(0, 51, 102, 1)",
+                          },
+                        ]
+                      }
+                    >
+                      <View
+                        style={
+                          [
+                            {
+                              "alignItems": "center",
+                              "backgroundColor": "#FFFFFF",
+                              "borderRadius": 13,
+                              "height": 26,
+                              "justifyContent": "center",
+                              "width": 26,
+                            },
+                            {
+                              "transform": [
+                                {
+                                  "translateX": 20,
+                                },
+                              ],
+                            },
+                          ]
+                        }
+                      >
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 1,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#003366",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 0,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#606060",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
           </View>
         </View>
       </View>
       <View
+        accessibilityRole="header"
         style={
           {
-            "marginBottom": 10,
+            "alignItems": "center",
+            "flexDirection": "row",
+            "gap": 8,
+            "paddingVertical": 16,
           }
-        }
-      />
-      <View
-        style={
-          [
-            {
-              "backgroundColor": "#FFFFFF",
-              "padding": 24,
-            },
-            {
-              "alignItems": "center",
-              "flexDirection": "row",
-              "paddingBottom": 0,
-            },
-          ]
         }
       >
         <Text
@@ -151,13 +303,10 @@ exports[`Developer Screen screen renders correctly 1`] = `
           style={
             [
               {
-                "color": undefined,
-                "fontSize": 24,
-              },
-              {
                 "color": "#313132",
-                "marginRight": 10,
+                "fontSize": 22,
               },
+              undefined,
               {
                 "fontFamily": "Material Icons",
                 "fontStyle": "normal",
@@ -170,12 +319,13 @@ exports[`Developer Screen screen renders correctly 1`] = `
           
         </Text>
         <Text
+          maxFontSizeMultiplier={2}
           style={
             [
               {
                 "color": "#313132",
                 "fontFamily": "BCSans-Regular",
-                "fontSize": 26,
+                "fontSize": 18,
                 "fontWeight": "bold",
               },
               {
@@ -190,34 +340,23 @@ exports[`Developer Screen screen renders correctly 1`] = `
       <View
         style={
           {
-            "backgroundColor": "#FFFFFF",
-            "padding": 24,
+            "borderRadius": 8,
+            "gap": 2,
+            "overflow": "hidden",
           }
         }
       >
         <View
           style={
             {
-              "flexDirection": "row",
+              "flexDirection": "column",
+              "gap": 2,
             }
           }
         >
-          <Text
-            style={
-              {
-                "color": "#313132",
-                "flex": 1,
-                "flexWrap": "wrap",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 21,
-                "fontWeight": "normal",
-              }
-            }
-          >
-            Developer.Environment
-          </Text>
           <View
             accessibilityLabel="Developer.Environment"
+            accessibilityRole="button"
             accessibilityState={
               {
                 "busy": undefined,
@@ -249,933 +388,325 @@ exports[`Developer Screen screen renders correctly 1`] = `
             onStartShouldSetResponder={[Function]}
             style={
               {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "justifyContent": "space-between",
+                "backgroundColor": "#003366",
+                "borderTopLeftRadius": 8,
+                "borderTopRightRadius": 8,
+                "opacity": 1,
+                "padding": 16,
               }
             }
             testID="com.ariesbifold:id/developer.environment"
           >
-            <Text
+            <View
               style={
-                [
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 8,
+                }
+              }
+            >
+              <View
+                style={
                   {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 21,
-                    "fontWeight": "bold",
-                  },
-                  {
-                    "color": "#1A5A96",
-                    "fontWeight": "normal",
-                  },
-                ]
-              }
-            >
-              Prod
-            </Text>
-          </View>
-        </View>
-      </View>
-      <View
-        style={
-          {
-            "marginBottom": 10,
-          }
-        }
-      />
-      <View>
-        <View
-          style={
-            {
-              "backgroundColor": "#FFFFFF",
-              "padding": 24,
-            }
-          }
-        >
-          <View
-            style={
-              {
-                "flexDirection": "row",
-              }
-            }
-          >
-            <Text
-              style={
-                {
-                  "color": "#313132",
-                  "flex": 1,
-                  "flexWrap": "wrap",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 21,
-                  "fontWeight": "normal",
+                    "flex": 1,
+                    "gap": 8,
+                  }
                 }
-              }
-            >
-              PasteUrl.UseShareableLink
-            </Text>
-            <View
-              accessibilityLabel="PasteUrl.UseShareableLink"
-              accessibilityState={
-                {
-                  "busy": undefined,
-                  "checked": undefined,
-                  "disabled": undefined,
-                  "expanded": undefined,
-                  "selected": undefined,
-                }
-              }
-              accessibilityValue={
-                {
-                  "max": undefined,
-                  "min": undefined,
-                  "now": undefined,
-                  "text": undefined,
-                }
-              }
-              accessible={true}
-              collapsable={false}
-              focusable={true}
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onResponderGrant={[Function]}
-              onResponderMove={[Function]}
-              onResponderRelease={[Function]}
-              onResponderTerminate={[Function]}
-              onResponderTerminationRequest={[Function]}
-              onStartShouldSetResponder={[Function]}
-              style={
-                {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                }
-              }
-              testID="com.ariesbifold:id/ToggleUseShareableLink"
-            >
-              <RCTSwitch
-                accessibilityLabel="PasteUrl.UseShareableLink"
-                accessibilityRole="switch"
-                disabled={true}
-                onChange={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
-                onTintColor="#757575"
-                style={
-                  [
+              >
+                <View
+                  style={
                     {
-                      "alignSelf": "flex-start",
-                    },
-                    {
-                      "backgroundColor": "#D3D3D3",
-                      "borderRadius": 16,
-                    },
-                  ]
-                }
-                thumbTintColor="#606060"
-                tintColor="#D3D3D3"
-                value={false}
-              />
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                        },
+                        {
+                          "color": "#FFFFFF",
+                          "flex": 1,
+                          "flexWrap": "wrap",
+                        },
+                      ]
+                    }
+                  >
+                    Developer.Environment
+                  </Text>
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "bold",
+                        },
+                        {
+                          "color": "#003366",
+                        },
+                      ]
+                    }
+                  >
+                    PROD
+                  </Text>
+                </View>
+              </View>
             </View>
           </View>
-        </View>
-        <View
-          style={
-            {
-              "backgroundColor": "#FFFFFF",
-              "padding": 24,
-            }
-          }
-        >
           <View
-            style={
-              {
-                "flexDirection": "row",
-              }
-            }
-          >
-            <Text
-              style={
-                {
-                  "color": "#313132",
-                  "flex": 1,
-                  "flexWrap": "wrap",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 21,
-                  "fontWeight": "normal",
-                }
-              }
-            >
-              Verifier.UseVerifierCapability
-            </Text>
-            <View
-              accessibilityLabel="Verifier.Toggle"
-              accessibilityState={
-                {
-                  "busy": undefined,
-                  "checked": undefined,
-                  "disabled": undefined,
-                  "expanded": undefined,
-                  "selected": undefined,
-                }
-              }
-              accessibilityValue={
-                {
-                  "max": undefined,
-                  "min": undefined,
-                  "now": undefined,
-                  "text": undefined,
-                }
-              }
-              accessible={true}
-              collapsable={false}
-              focusable={true}
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onResponderGrant={[Function]}
-              onResponderMove={[Function]}
-              onResponderRelease={[Function]}
-              onResponderTerminate={[Function]}
-              onResponderTerminationRequest={[Function]}
-              onStartShouldSetResponder={[Function]}
-              style={
-                {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                }
-              }
-              testID="com.ariesbifold:id/ToggleVerifierCapability"
-            >
-              <RCTSwitch
-                accessibilityLabel="Verifier.UseVerifierCapability"
-                accessibilityRole="switch"
-                onChange={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
-                onTintColor="#757575"
-                style={
-                  [
-                    {
-                      "alignSelf": "flex-start",
-                    },
-                    {
-                      "backgroundColor": "#D3D3D3",
-                      "borderRadius": 16,
-                    },
-                  ]
-                }
-                thumbTintColor="#606060"
-                tintColor="#D3D3D3"
-                value={false}
-              />
-            </View>
-          </View>
-        </View>
-        <View
-          style={
-            {
-              "backgroundColor": "#FFFFFF",
-            }
-          }
-        >
-          <View
-            style={
-              {
-                "borderBottomColor": "#F2F2F2",
-                "borderBottomWidth": 1,
-                "marginHorizontal": 24,
-              }
-            }
-          />
-        </View>
-        <View
-          style={
-            {
-              "backgroundColor": "#FFFFFF",
-              "padding": 24,
-            }
-          }
-        >
-          <View
-            style={
-              {
-                "flexDirection": "row",
-              }
-            }
-          >
-            <Text
-              style={
-                {
-                  "color": "#313132",
-                  "flex": 1,
-                  "flexWrap": "wrap",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 21,
-                  "fontWeight": "normal",
-                }
-              }
-            >
-              Verifier.AcceptDevCredentials
-            </Text>
-            <View
-              accessibilityLabel="Verifier.Toggle"
-              accessibilityState={
-                {
-                  "busy": undefined,
-                  "checked": undefined,
-                  "disabled": undefined,
-                  "expanded": undefined,
-                  "selected": undefined,
-                }
-              }
-              accessibilityValue={
-                {
-                  "max": undefined,
-                  "min": undefined,
-                  "now": undefined,
-                  "text": undefined,
-                }
-              }
-              accessible={true}
-              collapsable={false}
-              focusable={true}
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onResponderGrant={[Function]}
-              onResponderMove={[Function]}
-              onResponderRelease={[Function]}
-              onResponderTerminate={[Function]}
-              onResponderTerminationRequest={[Function]}
-              onStartShouldSetResponder={[Function]}
-              style={
-                {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                }
-              }
-              testID="com.ariesbifold:id/ToggleAcceptDevCredentials"
-            >
-              <RCTSwitch
-                accessibilityLabel="Verifier.AcceptDevCredentials"
-                accessibilityRole="switch"
-                onChange={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
-                onTintColor="#757575"
-                style={
-                  [
-                    {
-                      "alignSelf": "flex-start",
-                    },
-                    {
-                      "backgroundColor": "#D3D3D3",
-                      "borderRadius": 16,
-                    },
-                  ]
-                }
-                thumbTintColor="#606060"
-                tintColor="#D3D3D3"
-                value={false}
-              />
-            </View>
-          </View>
-        </View>
-        <View
-          style={
-            {
-              "backgroundColor": "#FFFFFF",
-            }
-          }
-        >
-          <View
-            style={
-              {
-                "borderBottomColor": "#F2F2F2",
-                "borderBottomWidth": 1,
-                "marginHorizontal": 24,
-              }
-            }
-          />
-        </View>
-        <View
-          style={
-            {
-              "backgroundColor": "#FFFFFF",
-              "padding": 24,
-            }
-          }
-        >
-          <View
-            style={
-              {
-                "flexDirection": "row",
-              }
-            }
-          >
-            <Text
-              style={
-                {
-                  "color": "#313132",
-                  "flex": 1,
-                  "flexWrap": "wrap",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 21,
-                  "fontWeight": "normal",
-                }
-              }
-            >
-              Connection.UseConnectionInviterCapability
-            </Text>
-            <View
-              accessibilityLabel="Connection.Toggle"
-              accessibilityState={
-                {
-                  "busy": undefined,
-                  "checked": undefined,
-                  "disabled": undefined,
-                  "expanded": undefined,
-                  "selected": undefined,
-                }
-              }
-              accessibilityValue={
-                {
-                  "max": undefined,
-                  "min": undefined,
-                  "now": undefined,
-                  "text": undefined,
-                }
-              }
-              accessible={true}
-              collapsable={false}
-              focusable={true}
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onResponderGrant={[Function]}
-              onResponderMove={[Function]}
-              onResponderRelease={[Function]}
-              onResponderTerminate={[Function]}
-              onResponderTerminationRequest={[Function]}
-              onStartShouldSetResponder={[Function]}
-              style={
-                {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                }
-              }
-              testID="com.ariesbifold:id/ToggleConnectionInviterCapabilitySwitch"
-            >
-              <RCTSwitch
-                accessibilityLabel="Connection.UseConnectionInviterCapability"
-                accessibilityRole="switch"
-                onChange={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
-                onTintColor="#757575"
-                style={
-                  [
-                    {
-                      "alignSelf": "flex-start",
-                    },
-                    {
-                      "backgroundColor": "#D3D3D3",
-                      "borderRadius": 16,
-                    },
-                  ]
-                }
-                thumbTintColor="#606060"
-                tintColor="#D3D3D3"
-                value={false}
-              />
-            </View>
-          </View>
-        </View>
-        <View
-          style={
-            {
-              "backgroundColor": "#FFFFFF",
-            }
-          }
-        >
-          <View
-            style={
-              {
-                "borderBottomColor": "#F2F2F2",
-                "borderBottomWidth": 1,
-                "marginHorizontal": 24,
-              }
-            }
-          />
-        </View>
-        <View
-          style={
-            {
-              "backgroundColor": "#FFFFFF",
-              "padding": 24,
-            }
-          }
-        >
-          <View
-            style={
-              {
-                "flexDirection": "row",
-              }
-            }
-          >
-            <Text
-              style={
-                {
-                  "color": "#313132",
-                  "flex": 1,
-                  "flexWrap": "wrap",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 21,
-                  "fontWeight": "normal",
-                }
-              }
-            >
-              Verifier.UseDevVerifierTemplates
-            </Text>
-            <View
-              accessibilityLabel="Verifier.ToggleDevTemplates"
-              accessibilityState={
-                {
-                  "busy": undefined,
-                  "checked": undefined,
-                  "disabled": undefined,
-                  "expanded": undefined,
-                  "selected": undefined,
-                }
-              }
-              accessibilityValue={
-                {
-                  "max": undefined,
-                  "min": undefined,
-                  "now": undefined,
-                  "text": undefined,
-                }
-              }
-              accessible={true}
-              collapsable={false}
-              focusable={true}
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onResponderGrant={[Function]}
-              onResponderMove={[Function]}
-              onResponderRelease={[Function]}
-              onResponderTerminate={[Function]}
-              onResponderTerminationRequest={[Function]}
-              onStartShouldSetResponder={[Function]}
-              style={
-                {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                }
-              }
-              testID="com.ariesbifold:id/ToggleDevVerifierTemplatesSwitch"
-            >
-              <RCTSwitch
-                accessibilityLabel="Verifier.UseDevVerifierTemplates"
-                accessibilityRole="switch"
-                onChange={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
-                onTintColor="#757575"
-                style={
-                  [
-                    {
-                      "alignSelf": "flex-start",
-                    },
-                    {
-                      "backgroundColor": "#D3D3D3",
-                      "borderRadius": 16,
-                    },
-                  ]
-                }
-                thumbTintColor="#606060"
-                tintColor="#D3D3D3"
-                value={false}
-              />
-            </View>
-          </View>
-        </View>
-        <View
-          style={
-            {
-              "backgroundColor": "#FFFFFF",
-            }
-          }
-        >
-          <View
-            style={
-              {
-                "borderBottomColor": "#F2F2F2",
-                "borderBottomWidth": 1,
-                "marginHorizontal": 24,
-              }
-            }
-          />
-        </View>
-        <View
-          style={
-            {
-              "backgroundColor": "#FFFFFF",
-              "padding": 24,
-            }
-          }
-        >
-          <View
-            style={
-              {
-                "flexDirection": "row",
-              }
-            }
-          >
-            <Text
-              style={
-                {
-                  "color": "#313132",
-                  "flex": 1,
-                  "flexWrap": "wrap",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 21,
-                  "fontWeight": "normal",
-                }
-              }
-            >
-              NameWallet.EnableWalletNaming
-            </Text>
-            <View
-              accessibilityLabel="NameWallet.ToggleWalletNaming"
-              accessibilityState={
-                {
-                  "busy": undefined,
-                  "checked": undefined,
-                  "disabled": undefined,
-                  "expanded": undefined,
-                  "selected": undefined,
-                }
-              }
-              accessibilityValue={
-                {
-                  "max": undefined,
-                  "min": undefined,
-                  "now": undefined,
-                  "text": undefined,
-                }
-              }
-              accessible={true}
-              collapsable={false}
-              focusable={true}
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onResponderGrant={[Function]}
-              onResponderMove={[Function]}
-              onResponderRelease={[Function]}
-              onResponderTerminate={[Function]}
-              onResponderTerminationRequest={[Function]}
-              onStartShouldSetResponder={[Function]}
-              style={
-                {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                }
-              }
-              testID="com.ariesbifold:id/ToggleWalletNamingSwitch"
-            >
-              <RCTSwitch
-                accessibilityLabel="NameWallet.EnableWalletNaming"
-                accessibilityRole="switch"
-                onChange={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
-                onTintColor="#757575"
-                style={
-                  [
-                    {
-                      "alignSelf": "flex-start",
-                    },
-                    {
-                      "backgroundColor": "#D3D3D3",
-                      "borderRadius": 16,
-                    },
-                  ]
-                }
-                thumbTintColor="#606060"
-                tintColor="#D3D3D3"
-                value={false}
-              />
-            </View>
-          </View>
-        </View>
-        <View
-          style={
-            {
-              "backgroundColor": "#FFFFFF",
-            }
-          }
-        >
-          <View
-            style={
-              {
-                "borderBottomColor": "#F2F2F2",
-                "borderBottomWidth": 1,
-                "marginHorizontal": 24,
-              }
-            }
-          />
-        </View>
-        <View
-          style={
-            {
-              "backgroundColor": "#FFFFFF",
-              "padding": 24,
-            }
-          }
-        >
-          <View
-            style={
-              {
-                "flexDirection": "row",
-              }
-            }
-          >
-            <Text
-              style={
-                {
-                  "color": "#313132",
-                  "flex": 1,
-                  "flexWrap": "wrap",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 21,
-                  "fontWeight": "normal",
-                }
-              }
-            >
-              Settings.PreventAutoLock
-            </Text>
-            <View
-              accessibilityLabel="Settings.TogglePreventAutoLock"
-              accessibilityState={
-                {
-                  "busy": undefined,
-                  "checked": undefined,
-                  "disabled": undefined,
-                  "expanded": undefined,
-                  "selected": undefined,
-                }
-              }
-              accessibilityValue={
-                {
-                  "max": undefined,
-                  "min": undefined,
-                  "now": undefined,
-                  "text": undefined,
-                }
-              }
-              accessible={true}
-              collapsable={false}
-              focusable={true}
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onResponderGrant={[Function]}
-              onResponderMove={[Function]}
-              onResponderRelease={[Function]}
-              onResponderTerminate={[Function]}
-              onResponderTerminationRequest={[Function]}
-              onStartShouldSetResponder={[Function]}
-              style={
-                {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                }
-              }
-              testID="com.ariesbifold:id/TogglePreventAutoLockSwitch"
-            >
-              <RCTSwitch
-                accessibilityLabel="Settings.PreventAutoLock"
-                accessibilityRole="switch"
-                onChange={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
-                onTintColor="#757575"
-                style={
-                  [
-                    {
-                      "alignSelf": "flex-start",
-                    },
-                    {
-                      "backgroundColor": "#D3D3D3",
-                      "borderRadius": 16,
-                    },
-                  ]
-                }
-                thumbTintColor="#606060"
-                tintColor="#D3D3D3"
-                value={false}
-              />
-            </View>
-          </View>
-        </View>
-        <View
-          style={
-            {
-              "backgroundColor": "#FFFFFF",
-            }
-          }
-        >
-          <View
-            style={
-              {
-                "borderBottomColor": "#F2F2F2",
-                "borderBottomWidth": 1,
-                "marginHorizontal": 24,
-              }
-            }
-          />
-        </View>
-        <View
-          style={
-            {
-              "backgroundColor": "#FFFFFF",
-              "padding": 24,
-            }
-          }
-        >
-          <View
-            style={
-              {
-                "flexDirection": "row",
-              }
-            }
-          >
-            <Text
-              style={
-                {
-                  "color": "#313132",
-                  "flex": 1,
-                  "flexWrap": "wrap",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 21,
-                  "fontWeight": "normal",
-                }
-              }
-            >
-              Developer.EnableAppToAppPersonFlow
-            </Text>
-            <View
-              accessibilityLabel="Developer.EnableAppToAppPersonFlow"
-              accessibilityState={
-                {
-                  "busy": undefined,
-                  "checked": undefined,
-                  "disabled": undefined,
-                  "expanded": undefined,
-                  "selected": undefined,
-                }
-              }
-              accessibilityValue={
-                {
-                  "max": undefined,
-                  "min": undefined,
-                  "now": undefined,
-                  "text": undefined,
-                }
-              }
-              accessible={true}
-              collapsable={false}
-              focusable={true}
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onResponderGrant={[Function]}
-              onResponderMove={[Function]}
-              onResponderRelease={[Function]}
-              onResponderTerminate={[Function]}
-              onResponderTerminationRequest={[Function]}
-              onStartShouldSetResponder={[Function]}
-              style={
-                {
-                  "alignItems": "center",
-                  "flexDirection": "row",
-                  "justifyContent": "space-between",
-                }
-              }
-              testID="com.ariesbifold:id/ToggleEnableAppToAppPersonFlow"
-            >
-              <RCTSwitch
-                accessibilityLabel="Developer.EnableAppToAppPersonFlow"
-                accessibilityRole="switch"
-                onChange={[Function]}
-                onResponderTerminationRequest={[Function]}
-                onStartShouldSetResponder={[Function]}
-                onTintColor="#757575"
-                style={
-                  [
-                    {
-                      "alignSelf": "flex-start",
-                    },
-                    {
-                      "backgroundColor": "#D3D3D3",
-                      "borderRadius": 16,
-                    },
-                  ]
-                }
-                thumbTintColor="#606060"
-                tintColor="#D3D3D3"
-                value={false}
-              />
-            </View>
-          </View>
-        </View>
-      </View>
-      <View
-        style={
-          {
-            "backgroundColor": "#FFFFFF",
-            "padding": 24,
-          }
-        }
-      >
-        <View
-          style={
-            {
-              "flexDirection": "row",
-            }
-          }
-        >
-          <Text
-            style={
-              {
-                "color": "#313132",
-                "flex": 1,
-                "flexWrap": "wrap",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 21,
-                "fontWeight": "normal",
-              }
-            }
-          >
-            Remote Logging
-          </Text>
-          <View
-            accessibilityLabel="Remote Logging"
+            accessibilityLabel="PasteUrl.UseShareableLink"
+            accessibilityRole="switch"
             accessibilityState={
               {
                 "busy": undefined,
-                "checked": undefined,
+                "checked": false,
+                "disabled": true,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "backgroundColor": "#003366",
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="com.ariesbifold:id/ToggleUseShareableLink"
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 8,
+                }
+              }
+            >
+              <View
+                style={
+                  {
+                    "flex": 1,
+                    "gap": 8,
+                  }
+                }
+              >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                        },
+                        {
+                          "color": "#FFFFFF",
+                          "flex": 1,
+                          "flexWrap": "wrap",
+                        },
+                      ]
+                    }
+                  >
+                    PasteUrl.UseShareableLink
+                  </Text>
+                  <View
+                    accessibilityElementsHidden={true}
+                    accessibilityRole="switch"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": false,
+                        "disabled": true,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={false}
+                    collapsable={false}
+                    focusable={true}
+                    importantForAccessibility="no-hide-descendants"
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    pointerEvents="none"
+                  >
+                    <View
+                      style={
+                        [
+                          {
+                            "borderRadius": 16,
+                            "height": 32,
+                            "justifyContent": "center",
+                            "opacity": 0.5,
+                            "padding": 3,
+                            "width": 52,
+                          },
+                          {
+                            "backgroundColor": "rgba(96, 96, 96, 1)",
+                          },
+                        ]
+                      }
+                    >
+                      <View
+                        style={
+                          [
+                            {
+                              "alignItems": "center",
+                              "backgroundColor": "#FFFFFF",
+                              "borderRadius": 13,
+                              "height": 26,
+                              "justifyContent": "center",
+                              "width": 26,
+                            },
+                            {
+                              "transform": [
+                                {
+                                  "translateX": 0,
+                                },
+                              ],
+                            },
+                          ]
+                        }
+                      >
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 0,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#757575",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 1,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#606060",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View
+            accessibilityLabel="Verifier.Toggle"
+            accessibilityRole="switch"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": false,
                 "disabled": undefined,
                 "expanded": undefined,
                 "selected": undefined,
@@ -1203,73 +734,214 @@ exports[`Developer Screen screen renders correctly 1`] = `
             onStartShouldSetResponder={[Function]}
             style={
               {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "justifyContent": "space-between",
+                "backgroundColor": "#003366",
+                "opacity": 1,
+                "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/ToggleRemoteLoggingSwitch"
+            testID="com.ariesbifold:id/ToggleVerifierCapability"
           >
-            <RCTSwitch
-              accessibilityLabel="RemoteLogging.ScreenTitle"
-              accessibilityRole="switch"
-              onChange={[Function]}
-              onResponderTerminationRequest={[Function]}
-              onStartShouldSetResponder={[Function]}
-              onTintColor="#757575"
+            <View
               style={
-                [
-                  {
-                    "alignSelf": "flex-start",
-                  },
-                  {
-                    "backgroundColor": "#D3D3D3",
-                    "borderRadius": 16,
-                  },
-                ]
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 8,
+                }
               }
-              thumbTintColor="#606060"
-              tintColor="#D3D3D3"
-              value={false}
-            />
+            >
+              <View
+                style={
+                  {
+                    "flex": 1,
+                    "gap": 8,
+                  }
+                }
+              >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                        },
+                        {
+                          "color": "#FFFFFF",
+                          "flex": 1,
+                          "flexWrap": "wrap",
+                        },
+                      ]
+                    }
+                  >
+                    Verifier.UseVerifierCapability
+                  </Text>
+                  <View
+                    accessibilityElementsHidden={true}
+                    accessibilityRole="switch"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": false,
+                        "disabled": false,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={false}
+                    collapsable={false}
+                    focusable={true}
+                    importantForAccessibility="no-hide-descendants"
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    pointerEvents="none"
+                  >
+                    <View
+                      style={
+                        [
+                          {
+                            "borderRadius": 16,
+                            "height": 32,
+                            "justifyContent": "center",
+                            "opacity": 1,
+                            "padding": 3,
+                            "width": 52,
+                          },
+                          {
+                            "backgroundColor": "rgba(96, 96, 96, 1)",
+                          },
+                        ]
+                      }
+                    >
+                      <View
+                        style={
+                          [
+                            {
+                              "alignItems": "center",
+                              "backgroundColor": "#FFFFFF",
+                              "borderRadius": 13,
+                              "height": 26,
+                              "justifyContent": "center",
+                              "width": 26,
+                            },
+                            {
+                              "transform": [
+                                {
+                                  "translateX": 0,
+                                },
+                              ],
+                            },
+                          ]
+                        }
+                      >
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 0,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#003366",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 1,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#606060",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
           </View>
-        </View>
-      </View>
-      <View
-        style={
-          {
-            "backgroundColor": "#FFFFFF",
-            "padding": 24,
-          }
-        }
-      >
-        <View
-          style={
-            {
-              "flexDirection": "row",
-            }
-          }
-        >
-          <Text
-            style={
-              {
-                "color": "#313132",
-                "flex": 1,
-                "flexWrap": "wrap",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 21,
-                "fontWeight": "normal",
-              }
-            }
-          >
-            Developer.EnableProxy
-          </Text>
           <View
-            accessibilityLabel="Developer.EnableProxy"
+            accessibilityLabel="Verifier.Toggle"
+            accessibilityRole="switch"
             accessibilityState={
               {
                 "busy": undefined,
-                "checked": undefined,
+                "checked": false,
                 "disabled": undefined,
                 "expanded": undefined,
                 "selected": undefined,
@@ -1297,73 +969,214 @@ exports[`Developer Screen screen renders correctly 1`] = `
             onStartShouldSetResponder={[Function]}
             style={
               {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "justifyContent": "space-between",
+                "backgroundColor": "#003366",
+                "opacity": 1,
+                "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/ToggleEnableProxy"
+            testID="com.ariesbifold:id/ToggleAcceptDevCredentials"
           >
-            <RCTSwitch
-              accessibilityLabel="Developer.EnableProxy"
-              accessibilityRole="switch"
-              onChange={[Function]}
-              onResponderTerminationRequest={[Function]}
-              onStartShouldSetResponder={[Function]}
-              onTintColor="#757575"
+            <View
               style={
-                [
-                  {
-                    "alignSelf": "flex-start",
-                  },
-                  {
-                    "backgroundColor": "#D3D3D3",
-                    "borderRadius": 16,
-                  },
-                ]
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 8,
+                }
               }
-              thumbTintColor="#606060"
-              tintColor="#D3D3D3"
-              value={false}
-            />
+            >
+              <View
+                style={
+                  {
+                    "flex": 1,
+                    "gap": 8,
+                  }
+                }
+              >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                        },
+                        {
+                          "color": "#FFFFFF",
+                          "flex": 1,
+                          "flexWrap": "wrap",
+                        },
+                      ]
+                    }
+                  >
+                    Verifier.AcceptDevCredentials
+                  </Text>
+                  <View
+                    accessibilityElementsHidden={true}
+                    accessibilityRole="switch"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": false,
+                        "disabled": false,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={false}
+                    collapsable={false}
+                    focusable={true}
+                    importantForAccessibility="no-hide-descendants"
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    pointerEvents="none"
+                  >
+                    <View
+                      style={
+                        [
+                          {
+                            "borderRadius": 16,
+                            "height": 32,
+                            "justifyContent": "center",
+                            "opacity": 1,
+                            "padding": 3,
+                            "width": 52,
+                          },
+                          {
+                            "backgroundColor": "rgba(96, 96, 96, 1)",
+                          },
+                        ]
+                      }
+                    >
+                      <View
+                        style={
+                          [
+                            {
+                              "alignItems": "center",
+                              "backgroundColor": "#FFFFFF",
+                              "borderRadius": 13,
+                              "height": 26,
+                              "justifyContent": "center",
+                              "width": 26,
+                            },
+                            {
+                              "transform": [
+                                {
+                                  "translateX": 0,
+                                },
+                              ],
+                            },
+                          ]
+                        }
+                      >
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 0,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#003366",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 1,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#606060",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
           </View>
-        </View>
-      </View>
-      <View
-        style={
-          {
-            "backgroundColor": "#FFFFFF",
-            "padding": 24,
-          }
-        }
-      >
-        <View
-          style={
-            {
-              "flexDirection": "row",
-            }
-          }
-        >
-          <Text
-            style={
-              {
-                "color": "#313132",
-                "flex": 1,
-                "flexWrap": "wrap",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 21,
-                "fontWeight": "normal",
-              }
-            }
-          >
-            Developer.SwitchTheme
-          </Text>
           <View
-            accessibilityLabel="Developer.SwitchTheme"
+            accessibilityLabel="Connection.Toggle"
+            accessibilityRole="switch"
             accessibilityState={
               {
                 "busy": undefined,
-                "checked": undefined,
+                "checked": false,
                 "disabled": undefined,
                 "expanded": undefined,
                 "selected": undefined,
@@ -1391,73 +1204,214 @@ exports[`Developer Screen screen renders correctly 1`] = `
             onStartShouldSetResponder={[Function]}
             style={
               {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "justifyContent": "space-between",
+                "backgroundColor": "#003366",
+                "opacity": 1,
+                "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/ToggleTheme"
+            testID="com.ariesbifold:id/ToggleConnectionInviterCapabilitySwitch"
           >
-            <RCTSwitch
-              accessibilityLabel="Developer.SwitchTheme"
-              accessibilityRole="switch"
-              onChange={[Function]}
-              onResponderTerminationRequest={[Function]}
-              onStartShouldSetResponder={[Function]}
-              onTintColor="#757575"
+            <View
               style={
-                [
-                  {
-                    "alignSelf": "flex-start",
-                  },
-                  {
-                    "backgroundColor": "#D3D3D3",
-                    "borderRadius": 16,
-                  },
-                ]
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 8,
+                }
               }
-              thumbTintColor="#606060"
-              tintColor="#D3D3D3"
-              value={false}
-            />
+            >
+              <View
+                style={
+                  {
+                    "flex": 1,
+                    "gap": 8,
+                  }
+                }
+              >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                        },
+                        {
+                          "color": "#FFFFFF",
+                          "flex": 1,
+                          "flexWrap": "wrap",
+                        },
+                      ]
+                    }
+                  >
+                    Connection.UseConnectionInviterCapability
+                  </Text>
+                  <View
+                    accessibilityElementsHidden={true}
+                    accessibilityRole="switch"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": false,
+                        "disabled": false,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={false}
+                    collapsable={false}
+                    focusable={true}
+                    importantForAccessibility="no-hide-descendants"
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    pointerEvents="none"
+                  >
+                    <View
+                      style={
+                        [
+                          {
+                            "borderRadius": 16,
+                            "height": 32,
+                            "justifyContent": "center",
+                            "opacity": 1,
+                            "padding": 3,
+                            "width": 52,
+                          },
+                          {
+                            "backgroundColor": "rgba(96, 96, 96, 1)",
+                          },
+                        ]
+                      }
+                    >
+                      <View
+                        style={
+                          [
+                            {
+                              "alignItems": "center",
+                              "backgroundColor": "#FFFFFF",
+                              "borderRadius": 13,
+                              "height": 26,
+                              "justifyContent": "center",
+                              "width": 26,
+                            },
+                            {
+                              "transform": [
+                                {
+                                  "translateX": 0,
+                                },
+                              ],
+                            },
+                          ]
+                        }
+                      >
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 0,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#003366",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 1,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#606060",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
           </View>
-        </View>
-      </View>
-      <View
-        style={
-          {
-            "backgroundColor": "#FFFFFF",
-            "padding": 24,
-          }
-        }
-      >
-        <View
-          style={
-            {
-              "flexDirection": "row",
-            }
-          }
-        >
-          <Text
-            style={
-              {
-                "color": "#313132",
-                "flex": 1,
-                "flexWrap": "wrap",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 21,
-                "fontWeight": "normal",
-              }
-            }
-          >
-            Developer.SwitchMode
-          </Text>
           <View
-            accessibilityLabel="Developer.SwitchMode"
+            accessibilityLabel="Verifier.ToggleDevTemplates"
+            accessibilityRole="switch"
             accessibilityState={
               {
                 "busy": undefined,
-                "checked": undefined,
+                "checked": false,
                 "disabled": undefined,
                 "expanded": undefined,
                 "selected": undefined,
@@ -1485,61 +1439,1944 @@ exports[`Developer Screen screen renders correctly 1`] = `
             onStartShouldSetResponder={[Function]}
             style={
               {
-                "alignItems": "center",
-                "flexDirection": "row",
-                "justifyContent": "space-between",
+                "backgroundColor": "#003366",
+                "opacity": 1,
+                "padding": 16,
               }
             }
-            testID="com.ariesbifold:id/ToggleMode"
+            testID="com.ariesbifold:id/ToggleDevVerifierTemplatesSwitch"
           >
-            <RCTSwitch
-              accessibilityLabel="Developer.SwitchMode"
-              accessibilityRole="switch"
-              onChange={[Function]}
-              onResponderTerminationRequest={[Function]}
-              onStartShouldSetResponder={[Function]}
-              onTintColor="#757575"
+            <View
               style={
-                [
-                  {
-                    "alignSelf": "flex-start",
-                  },
-                  {
-                    "backgroundColor": "#D3D3D3",
-                    "borderRadius": 16,
-                  },
-                ]
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 8,
+                }
               }
-              thumbTintColor="#606060"
-              tintColor="#D3D3D3"
-              value={false}
-            />
+            >
+              <View
+                style={
+                  {
+                    "flex": 1,
+                    "gap": 8,
+                  }
+                }
+              >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                        },
+                        {
+                          "color": "#FFFFFF",
+                          "flex": 1,
+                          "flexWrap": "wrap",
+                        },
+                      ]
+                    }
+                  >
+                    Verifier.UseDevVerifierTemplates
+                  </Text>
+                  <View
+                    accessibilityElementsHidden={true}
+                    accessibilityRole="switch"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": false,
+                        "disabled": false,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={false}
+                    collapsable={false}
+                    focusable={true}
+                    importantForAccessibility="no-hide-descendants"
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    pointerEvents="none"
+                  >
+                    <View
+                      style={
+                        [
+                          {
+                            "borderRadius": 16,
+                            "height": 32,
+                            "justifyContent": "center",
+                            "opacity": 1,
+                            "padding": 3,
+                            "width": 52,
+                          },
+                          {
+                            "backgroundColor": "rgba(96, 96, 96, 1)",
+                          },
+                        ]
+                      }
+                    >
+                      <View
+                        style={
+                          [
+                            {
+                              "alignItems": "center",
+                              "backgroundColor": "#FFFFFF",
+                              "borderRadius": 13,
+                              "height": 26,
+                              "justifyContent": "center",
+                              "width": 26,
+                            },
+                            {
+                              "transform": [
+                                {
+                                  "translateX": 0,
+                                },
+                              ],
+                            },
+                          ]
+                        }
+                      >
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 0,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#003366",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 1,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#606060",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View
+            accessibilityLabel="NameWallet.ToggleWalletNaming"
+            accessibilityRole="switch"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": false,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "backgroundColor": "#003366",
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="com.ariesbifold:id/ToggleWalletNamingSwitch"
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 8,
+                }
+              }
+            >
+              <View
+                style={
+                  {
+                    "flex": 1,
+                    "gap": 8,
+                  }
+                }
+              >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                        },
+                        {
+                          "color": "#FFFFFF",
+                          "flex": 1,
+                          "flexWrap": "wrap",
+                        },
+                      ]
+                    }
+                  >
+                    NameWallet.EnableWalletNaming
+                  </Text>
+                  <View
+                    accessibilityElementsHidden={true}
+                    accessibilityRole="switch"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": false,
+                        "disabled": false,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={false}
+                    collapsable={false}
+                    focusable={true}
+                    importantForAccessibility="no-hide-descendants"
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    pointerEvents="none"
+                  >
+                    <View
+                      style={
+                        [
+                          {
+                            "borderRadius": 16,
+                            "height": 32,
+                            "justifyContent": "center",
+                            "opacity": 1,
+                            "padding": 3,
+                            "width": 52,
+                          },
+                          {
+                            "backgroundColor": "rgba(96, 96, 96, 1)",
+                          },
+                        ]
+                      }
+                    >
+                      <View
+                        style={
+                          [
+                            {
+                              "alignItems": "center",
+                              "backgroundColor": "#FFFFFF",
+                              "borderRadius": 13,
+                              "height": 26,
+                              "justifyContent": "center",
+                              "width": 26,
+                            },
+                            {
+                              "transform": [
+                                {
+                                  "translateX": 0,
+                                },
+                              ],
+                            },
+                          ]
+                        }
+                      >
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 0,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#003366",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 1,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#606060",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View
+            accessibilityLabel="Settings.TogglePreventAutoLock"
+            accessibilityRole="switch"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": false,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "backgroundColor": "#003366",
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="com.ariesbifold:id/TogglePreventAutoLockSwitch"
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 8,
+                }
+              }
+            >
+              <View
+                style={
+                  {
+                    "flex": 1,
+                    "gap": 8,
+                  }
+                }
+              >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                        },
+                        {
+                          "color": "#FFFFFF",
+                          "flex": 1,
+                          "flexWrap": "wrap",
+                        },
+                      ]
+                    }
+                  >
+                    Settings.PreventAutoLock
+                  </Text>
+                  <View
+                    accessibilityElementsHidden={true}
+                    accessibilityRole="switch"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": false,
+                        "disabled": false,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={false}
+                    collapsable={false}
+                    focusable={true}
+                    importantForAccessibility="no-hide-descendants"
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    pointerEvents="none"
+                  >
+                    <View
+                      style={
+                        [
+                          {
+                            "borderRadius": 16,
+                            "height": 32,
+                            "justifyContent": "center",
+                            "opacity": 1,
+                            "padding": 3,
+                            "width": 52,
+                          },
+                          {
+                            "backgroundColor": "rgba(96, 96, 96, 1)",
+                          },
+                        ]
+                      }
+                    >
+                      <View
+                        style={
+                          [
+                            {
+                              "alignItems": "center",
+                              "backgroundColor": "#FFFFFF",
+                              "borderRadius": 13,
+                              "height": 26,
+                              "justifyContent": "center",
+                              "width": 26,
+                            },
+                            {
+                              "transform": [
+                                {
+                                  "translateX": 0,
+                                },
+                              ],
+                            },
+                          ]
+                        }
+                      >
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 0,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#003366",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 1,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#606060",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View
+            accessibilityLabel="Developer.EnableAppToAppPersonFlow"
+            accessibilityRole="switch"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": false,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "backgroundColor": "#003366",
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="com.ariesbifold:id/ToggleEnableAppToAppPersonFlow"
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 8,
+                }
+              }
+            >
+              <View
+                style={
+                  {
+                    "flex": 1,
+                    "gap": 8,
+                  }
+                }
+              >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                        },
+                        {
+                          "color": "#FFFFFF",
+                          "flex": 1,
+                          "flexWrap": "wrap",
+                        },
+                      ]
+                    }
+                  >
+                    Developer.EnableAppToAppPersonFlow
+                  </Text>
+                  <View
+                    accessibilityElementsHidden={true}
+                    accessibilityRole="switch"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": false,
+                        "disabled": false,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={false}
+                    collapsable={false}
+                    focusable={true}
+                    importantForAccessibility="no-hide-descendants"
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    pointerEvents="none"
+                  >
+                    <View
+                      style={
+                        [
+                          {
+                            "borderRadius": 16,
+                            "height": 32,
+                            "justifyContent": "center",
+                            "opacity": 1,
+                            "padding": 3,
+                            "width": 52,
+                          },
+                          {
+                            "backgroundColor": "rgba(96, 96, 96, 1)",
+                          },
+                        ]
+                      }
+                    >
+                      <View
+                        style={
+                          [
+                            {
+                              "alignItems": "center",
+                              "backgroundColor": "#FFFFFF",
+                              "borderRadius": 13,
+                              "height": 26,
+                              "justifyContent": "center",
+                              "width": 26,
+                            },
+                            {
+                              "transform": [
+                                {
+                                  "translateX": 0,
+                                },
+                              ],
+                            },
+                          ]
+                        }
+                      >
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 0,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#003366",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 1,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#606060",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
           </View>
         </View>
       </View>
       <View
-        style={
-          {
-            "marginBottom": 10,
-          }
-        }
-      />
-      <View
+        accessibilityRole="header"
         style={
           {
             "alignItems": "center",
-            "marginVertical": 25,
+            "flexDirection": "row",
+            "gap": 8,
+            "paddingVertical": 16,
           }
         }
       >
         <Text
+          allowFontScaling={false}
+          selectable={false}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontSize": 22,
+              },
+              undefined,
+              {
+                "fontFamily": "Material Icons",
+                "fontStyle": "normal",
+                "fontWeight": "normal",
+              },
+              {},
+            ]
+          }
+        >
+          
+        </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "bold",
+              },
+              {
+                "flexShrink": 1,
+              },
+            ]
+          }
+        >
+          Developer.AppSection
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "borderRadius": 8,
+            "gap": 2,
+            "overflow": "hidden",
+          }
+        }
+      >
+        <View
           style={
             {
-              "color": "#313132",
-              "fontFamily": "BCSans-Regular",
-              "fontSize": 14,
-              "fontWeight": "normal",
+              "flexDirection": "column",
+              "gap": 2,
             }
+          }
+        >
+          <View
+            accessibilityLabel="RemoteLogging.ScreenTitle"
+            accessibilityRole="switch"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": false,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "backgroundColor": "#003366",
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="com.ariesbifold:id/ToggleRemoteLoggingSwitch"
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 8,
+                }
+              }
+            >
+              <View
+                style={
+                  {
+                    "flex": 1,
+                    "gap": 8,
+                  }
+                }
+              >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                        },
+                        {
+                          "color": "#FFFFFF",
+                          "flex": 1,
+                          "flexWrap": "wrap",
+                        },
+                      ]
+                    }
+                  >
+                    Remote Logging
+                  </Text>
+                  <View
+                    accessibilityElementsHidden={true}
+                    accessibilityRole="switch"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": false,
+                        "disabled": false,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={false}
+                    collapsable={false}
+                    focusable={true}
+                    importantForAccessibility="no-hide-descendants"
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    pointerEvents="none"
+                  >
+                    <View
+                      style={
+                        [
+                          {
+                            "borderRadius": 16,
+                            "height": 32,
+                            "justifyContent": "center",
+                            "opacity": 1,
+                            "padding": 3,
+                            "width": 52,
+                          },
+                          {
+                            "backgroundColor": "rgba(96, 96, 96, 1)",
+                          },
+                        ]
+                      }
+                    >
+                      <View
+                        style={
+                          [
+                            {
+                              "alignItems": "center",
+                              "backgroundColor": "#FFFFFF",
+                              "borderRadius": 13,
+                              "height": 26,
+                              "justifyContent": "center",
+                              "width": 26,
+                            },
+                            {
+                              "transform": [
+                                {
+                                  "translateX": 0,
+                                },
+                              ],
+                            },
+                          ]
+                        }
+                      >
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 0,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#003366",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 1,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#606060",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View
+            accessibilityLabel="Developer.EnableProxy"
+            accessibilityRole="switch"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": false,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "backgroundColor": "#003366",
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="com.ariesbifold:id/ToggleEnableProxy"
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 8,
+                }
+              }
+            >
+              <View
+                style={
+                  {
+                    "flex": 1,
+                    "gap": 8,
+                  }
+                }
+              >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                        },
+                        {
+                          "color": "#FFFFFF",
+                          "flex": 1,
+                          "flexWrap": "wrap",
+                        },
+                      ]
+                    }
+                  >
+                    Developer.EnableProxy
+                  </Text>
+                  <View
+                    accessibilityElementsHidden={true}
+                    accessibilityRole="switch"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": false,
+                        "disabled": false,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={false}
+                    collapsable={false}
+                    focusable={true}
+                    importantForAccessibility="no-hide-descendants"
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    pointerEvents="none"
+                  >
+                    <View
+                      style={
+                        [
+                          {
+                            "borderRadius": 16,
+                            "height": 32,
+                            "justifyContent": "center",
+                            "opacity": 1,
+                            "padding": 3,
+                            "width": 52,
+                          },
+                          {
+                            "backgroundColor": "rgba(96, 96, 96, 1)",
+                          },
+                        ]
+                      }
+                    >
+                      <View
+                        style={
+                          [
+                            {
+                              "alignItems": "center",
+                              "backgroundColor": "#FFFFFF",
+                              "borderRadius": 13,
+                              "height": 26,
+                              "justifyContent": "center",
+                              "width": 26,
+                            },
+                            {
+                              "transform": [
+                                {
+                                  "translateX": 0,
+                                },
+                              ],
+                            },
+                          ]
+                        }
+                      >
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 0,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#003366",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 1,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#606060",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View
+            accessibilityLabel="Developer.SwitchTheme"
+            accessibilityRole="switch"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": false,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "backgroundColor": "#003366",
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="com.ariesbifold:id/ToggleTheme"
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 8,
+                }
+              }
+            >
+              <View
+                style={
+                  {
+                    "flex": 1,
+                    "gap": 8,
+                  }
+                }
+              >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                        },
+                        {
+                          "color": "#FFFFFF",
+                          "flex": 1,
+                          "flexWrap": "wrap",
+                        },
+                      ]
+                    }
+                  >
+                    Developer.SwitchTheme
+                  </Text>
+                  <View
+                    accessibilityElementsHidden={true}
+                    accessibilityRole="switch"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": false,
+                        "disabled": false,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={false}
+                    collapsable={false}
+                    focusable={true}
+                    importantForAccessibility="no-hide-descendants"
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    pointerEvents="none"
+                  >
+                    <View
+                      style={
+                        [
+                          {
+                            "borderRadius": 16,
+                            "height": 32,
+                            "justifyContent": "center",
+                            "opacity": 1,
+                            "padding": 3,
+                            "width": 52,
+                          },
+                          {
+                            "backgroundColor": "rgba(96, 96, 96, 1)",
+                          },
+                        ]
+                      }
+                    >
+                      <View
+                        style={
+                          [
+                            {
+                              "alignItems": "center",
+                              "backgroundColor": "#FFFFFF",
+                              "borderRadius": 13,
+                              "height": 26,
+                              "justifyContent": "center",
+                              "width": 26,
+                            },
+                            {
+                              "transform": [
+                                {
+                                  "translateX": 0,
+                                },
+                              ],
+                            },
+                          ]
+                        }
+                      >
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 0,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#003366",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 1,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#606060",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View
+            accessibilityLabel="Developer.SwitchMode"
+            accessibilityRole="switch"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": false,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "backgroundColor": "#003366",
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="com.ariesbifold:id/ToggleMode"
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "gap": 8,
+                }
+              }
+            >
+              <View
+                style={
+                  {
+                    "flex": 1,
+                    "gap": 8,
+                  }
+                }
+              >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "gap": 8,
+                    }
+                  }
+                >
+                  <Text
+                    maxFontSizeMultiplier={2}
+                    style={
+                      [
+                        {
+                          "color": "#313132",
+                          "fontFamily": "BCSans-Regular",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                        },
+                        {
+                          "color": "#FFFFFF",
+                          "flex": 1,
+                          "flexWrap": "wrap",
+                        },
+                      ]
+                    }
+                  >
+                    Developer.SwitchMode
+                  </Text>
+                  <View
+                    accessibilityElementsHidden={true}
+                    accessibilityRole="switch"
+                    accessibilityState={
+                      {
+                        "busy": undefined,
+                        "checked": false,
+                        "disabled": false,
+                        "expanded": undefined,
+                        "selected": undefined,
+                      }
+                    }
+                    accessibilityValue={
+                      {
+                        "max": undefined,
+                        "min": undefined,
+                        "now": undefined,
+                        "text": undefined,
+                      }
+                    }
+                    accessible={false}
+                    collapsable={false}
+                    focusable={true}
+                    importantForAccessibility="no-hide-descendants"
+                    onBlur={[Function]}
+                    onClick={[Function]}
+                    onFocus={[Function]}
+                    onResponderGrant={[Function]}
+                    onResponderMove={[Function]}
+                    onResponderRelease={[Function]}
+                    onResponderTerminate={[Function]}
+                    onResponderTerminationRequest={[Function]}
+                    onStartShouldSetResponder={[Function]}
+                    pointerEvents="none"
+                  >
+                    <View
+                      style={
+                        [
+                          {
+                            "borderRadius": 16,
+                            "height": 32,
+                            "justifyContent": "center",
+                            "opacity": 1,
+                            "padding": 3,
+                            "width": 52,
+                          },
+                          {
+                            "backgroundColor": "rgba(96, 96, 96, 1)",
+                          },
+                        ]
+                      }
+                    >
+                      <View
+                        style={
+                          [
+                            {
+                              "alignItems": "center",
+                              "backgroundColor": "#FFFFFF",
+                              "borderRadius": 13,
+                              "height": 26,
+                              "justifyContent": "center",
+                              "width": 26,
+                            },
+                            {
+                              "transform": [
+                                {
+                                  "translateX": 0,
+                                },
+                              ],
+                            },
+                          ]
+                        }
+                      >
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 0,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#003366",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                        <View
+                          style={
+                            [
+                              {
+                                "position": "absolute",
+                              },
+                              {
+                                "opacity": 1,
+                              },
+                            ]
+                          }
+                        >
+                          <Text
+                            allowFontScaling={false}
+                            selectable={false}
+                            style={
+                              [
+                                {
+                                  "color": "#606060",
+                                  "fontSize": 18,
+                                },
+                                undefined,
+                                {
+                                  "fontFamily": "Material Icons",
+                                  "fontStyle": "normal",
+                                  "fontWeight": "normal",
+                                },
+                                {},
+                              ]
+                            }
+                          >
+                            
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "paddingTop": 24,
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 14,
+                "fontWeight": "normal",
+              },
+              undefined,
+            ]
           }
         >
           Version 4.0.0 (142)

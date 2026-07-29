@@ -213,6 +213,7 @@ const translation = {
     "EnableAppToAppPersonFlow": "App-to-app Person flow",
     "SwitchMode": "Switch mode",
     "SwitchTheme": "Switch theme",
+    "AppSection": "App",
     "Testing": "Testing",
     "ErrorAlertTest": "Error & Alert Testing",
     "StaleTermsOfUse": "Stale Terms of Use Acceptance",

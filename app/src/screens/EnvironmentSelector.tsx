@@ -58,7 +58,7 @@ const EnvironmentSelector: React.FC<EnvironmentSelectorProps> = ({ onEnvironment
           const { name }: IASEnvironment = environment
           return (
             <View style={[styles.section, styles.sectionRow]}>
-              <Text style={TextTheme.title}>{name}</Text>
+              <Text style={TextTheme.title}>{name.toUpperCase()}</Text>
               <BouncyCheckbox
                 accessibilityLabel={name}
                 disableText
