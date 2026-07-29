@@ -7,7 +7,7 @@ import {
 import useEvidenceUpload from '@/bcsc-theme/hooks/useEvidenceUpload'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { isPlausibleCaptureDateSeconds } from '@/bcsc-theme/utils/capture-date'
+import { derivePlausibleCaptureDateSeconds, isPlausibleCaptureDateSeconds } from '@/bcsc-theme/utils/capture-date'
 import { getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
 import { AppError, ErrorRegistry } from '@/errors'
@@ -57,15 +57,8 @@ const useEvidenceUploadModel = (
         throw new Error('Cache missing video data')
       }
 
-      // Android's File.lastModified() can return 0 on failure, which would otherwise produce
-      // an implausible 1970 capture date on the verification video (#4338).
-      let videoMtime = videoStats.mtime
-      if (!isPlausibleCaptureDateSeconds(Math.floor(videoMtime / 1000))) {
-        logger.warn('Implausible verification video mtime, substituting current time', { videoPath, videoMtime })
-        videoMtime = Date.now()
-      }
-
-      const videoMetadata = await getVideoMetadata(videoBytes, videoDuration, prompts, videoMtime)
+      // Implausible-mtime substitution (#4338) lives inside getVideoMetadata now — see file-info.ts.
+      const videoMetadata = await getVideoMetadata(videoBytes, videoDuration, prompts, videoStats.mtime, logger)
 
       logger.debug(`Selfie photo bytes length: ${photoBytes.length}`)
       logger.debug(`Selfie video bytes length: ${videoBytes.length}`)
@@ -172,7 +165,19 @@ const useEvidenceUploadModel = (
       }
 
       setUploadMessage(t('BCSC.SendVideo.UploadProgress.UploadingInformation'))
-      const evidenceMetadata = await uploadEvidenceMetadata(photoMetadata, localFiles.videoMetadata)
+      // Migration-scoped guard (pre-#4338-fix on-device data only) — see #4373. The live-call
+      // flow's uploadSelfiePhoto has an equivalent guard, but this (send-video) path is reached
+      // independently — first-class choice on Verification Method Selection, and the fallback
+      // when a call is busy or closed — so it needs its own.
+      let selfieMetadata = photoMetadata
+      if (!isPlausibleCaptureDateSeconds(photoMetadata.date)) {
+        const date = await derivePlausibleCaptureDateSeconds(photoMetadata.file_path, logger, {
+          date: photoMetadata.date,
+        })
+        selfieMetadata = { ...photoMetadata, date }
+      }
+
+      const evidenceMetadata = await uploadEvidenceMetadata(selfieMetadata, localFiles.videoMetadata)
       if (isCancelledRef.current) {
         return
       }
