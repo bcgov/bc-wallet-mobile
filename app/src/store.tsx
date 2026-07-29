@@ -8,11 +8,11 @@ import {
   ReducerAction,
 } from '@bifold/core'
 import { getInitialEnvironment, IASEnvironment } from '@utils/environment'
-import { BCSCCardProcess, EvidenceMetadata } from 'react-native-bcsc-core'
+import { BCSCCardProcess, EvidenceMetadata, PhotoMetadata } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
-import { VerificationPhotoUploadPayload, VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
+import { VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
 
@@ -75,7 +75,10 @@ export interface BCSCState {
   selectedNickname?: string
   prompts?: VerificationPrompt[]
   videoDuration?: number
-  photoMetadata?: VerificationPhotoUploadPayload
+  // Actually a PhotoMetadata (via getPhotoMetadata: PhotoReviewScreen.tsx/EvidenceCaptureScreen.tsx),
+  // which is a structural superset of VerificationPhotoUploadPayload (adds file_path). Typed as
+  // PhotoMetadata so callers can read file_path (the permanent on-disk path) directly.
+  photoMetadata?: PhotoMetadata
   photoPath?: string
   videoPath?: string
   videoThumbnailPath?: string

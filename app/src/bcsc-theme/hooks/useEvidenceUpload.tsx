@@ -28,10 +28,14 @@ const useEvidenceUpload = () => {
       return
     }
 
-    // Migration-scoped guard (pre-#4338-fix on-device data only) — see #4373.
+    // Migration-scoped guard (pre-#4338-fix on-device data only) — see #4373. Stats the permanent
+    // path (photoMetadata.file_path), not photoPath (the camera temp file), since the latter may
+    // already be gone by the time this runs.
     let metadataToUpload = photoMetadata
     if (!isPlausibleCaptureDateSeconds(photoMetadata.date)) {
-      const date = await derivePlausibleCaptureDateSeconds(photoPath, logger, { date: photoMetadata.date })
+      const date = await derivePlausibleCaptureDateSeconds(photoMetadata.file_path, logger, {
+        date: photoMetadata.date,
+      })
       metadataToUpload = { ...photoMetadata, date }
     }
 

@@ -257,7 +257,7 @@ describe('useEvidenceUpload', () => {
   })
 
   describe('uploadSelfiePhoto', () => {
-    it('substitutes an implausible selfie capture date with the file mtime before upload', async () => {
+    it('substitutes an implausible selfie capture date with the permanent file mtime before upload', async () => {
       const mtimeMs = new Date('2026-06-15T00:00:00Z').getTime()
       jest.mocked(RNFS.stat).mockResolvedValue({ mtime: mtimeMs } as any)
 
@@ -266,8 +266,10 @@ describe('useEvidenceUpload', () => {
         {
           ...baseStore,
           bcsc: {
-            photoPath: '/selfie.jpg',
-            photoMetadata: photo('front', 'selfie', 1_780_000),
+            // The camera temp path — distinct from photoMetadata.file_path (the permanent path)
+            // so the test can't pass by accident if the guard stats the wrong one.
+            photoPath: '/tmp/camera/selfie-temp.jpg',
+            photoMetadata: { ...photo('front', 'selfie', 1_780_000), file_path: '/permanent/selfie.jpg' },
           },
         } as unknown as BCState,
         jest.fn(),
@@ -281,6 +283,7 @@ describe('useEvidenceUpload', () => {
         await result.current.uploadSelfiePhoto()
       })
 
+      expect(RNFS.stat).toHaveBeenCalledWith('/permanent/selfie.jpg')
       expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalledWith(
         expect.objectContaining({ date: Math.floor(mtimeMs / 1000) })
       )
