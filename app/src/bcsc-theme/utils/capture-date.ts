@@ -3,9 +3,13 @@
  * native timestamp round-trip bug). `isPlausibleCaptureDateSeconds` and the floor it's built on
  * also back the live `getPhotoMetadata`/`getVideoMetadata` mtime guards in `file-info.ts`, which
  * are not migration-scoped — those cover `File.lastModified()` returning 0 on failure
- * independent of #4338. `derivePlausibleCaptureDateSeconds`, though, is migration-scoped: its
- * only callers guard against pre-#4338-fix on-device data (`useEvidenceUpload.tsx`,
- * `useEvidenceUploadModel.tsx`) and come out once that data has aged out. See #4373.
+ * independent of #4338. `derivePlausibleCaptureDateSeconds` itself is permanent — it does NOT
+ * come out with #4373. Its three call sites have mixed scoping: `useEvidenceUpload.tsx`'s
+ * `processAdditionalEvidence` guard is genuinely migration-scoped (guards
+ * `additionalEvidenceData`, sourced from native secure storage, which can hold pre-#4338-fix
+ * data) and is #4373's removal target; `useEvidenceUpload.tsx`'s `uploadSelfiePhoto` and
+ * `useEvidenceUploadModel.tsx`'s send-video guard are permanent AC3 boundary checks on
+ * `bcsc.photoMetadata`, which is never persisted, so #4373 does not touch them.
  */
 import { BifoldLogger } from '@bifold/core'
 import RNFS from 'react-native-fs'
@@ -29,10 +33,16 @@ export const isPlausibleCaptureDateSeconds = (seconds: number): boolean => secon
 /**
  * Derives a plausible replacement capture date (in seconds) for a photo whose stored date
  * failed the plausibility check. Prefers the file's on-disk modification time, since that's
- * still a real signal of when the photo was captured; returns 0 when no real capture signal is
- * available (file missing/unreadable, or its mtime is itself implausible). Deliberately does
- * NOT fall back to the current time here — for evidence already collected, a fabricated date
+ * still a real signal of when the photo was captured on Android; returns 0 when no real capture
+ * signal is available (file missing/unreadable, or its mtime is itself implausible). Deliberately
+ * does NOT fall back to the current time here — for evidence already collected, a fabricated date
  * with no connection to the actual capture is worse than an explicit "unknown". Never throws.
+ *
+ * Note: on iOS, evidence photos are re-materialised to disk on every `getEvidence` call
+ * (`BcscCore.swift`'s `convertEvidenceModelToMetadata` → `savePhotoDataToDisk`), so a statted
+ * mtime there is the moment of hydration, not of capture. Moot in practice — iOS capture dates
+ * are never corrupted (the round-trip is symmetric), so this function's callers never fire for
+ * iOS evidence — but don't rely on the mtime premise above if that ever changes.
  *
  * Logs exactly one warning per call (on every branch), so callers should NOT log their own
  * "substituting" warning around this — pass anything worth surfacing via `context` instead.
