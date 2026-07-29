@@ -2,7 +2,7 @@ import { PressableOpacity } from '@/components/PressableOpacity'
 import { a11yLabel } from '@/utils/accessibility'
 import { ThemedText, useTheme } from '@bifold/core'
 import React, { Children, isValidElement, ReactElement, ReactNode } from 'react'
-import { StyleSheet, View } from 'react-native'
+import { AccessibilityRole, AccessibilityState, StyleSheet, View } from 'react-native'
 
 interface ListButtonGroupProps {
   // Optional gap between buttons in the group. Defaults to theme Spacing.xs / 2
@@ -25,6 +25,9 @@ export interface ListButtonProps {
    */
   accessibilityLabel?: string
   accessibilityHint?: string
+  /** Defaults to `button`. Override for rows that own a control, e.g. `switch`. */
+  accessibilityRole?: AccessibilityRole
+  accessibilityState?: AccessibilityState
   testID?: string
   disabled?: boolean
   position?: 'first' | 'middle' | 'last' | 'only' // Position in the list to determine border radius
@@ -99,7 +102,8 @@ export const ListButton = (props: ListButtonProps) => {
       style={[styles.container, getBorderRadiusStyle()]}
       onPress={props.onPress}
       disabled={props.disabled}
-      accessibilityRole="button"
+      accessibilityRole={props.accessibilityRole ?? 'button'}
+      accessibilityState={props.accessibilityState}
       accessibilityLabel={resolvedA11yLabel}
       accessibilityHint={props.accessibilityHint}
       testID={props.testID}
