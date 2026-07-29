@@ -7,6 +7,8 @@ import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import { VerifySettingsScreen } from './VerifySettingsScreen'
 
+const authenticatedState = { authentication: { didAuthenticate: true } } as never
+
 describe('VerifySettings', () => {
   let mockNavigation: any
 
@@ -17,7 +19,7 @@ describe('VerifySettings', () => {
 
   it('renders the remove account option', () => {
     const { getByTestId } = render(
-      <BasicAppContext>
+      <BasicAppContext initialStateOverride={authenticatedState}>
         <BCSCLoadingProvider>
           <VerifySettingsScreen navigation={mockNavigation as never} />
         </BCSCLoadingProvider>
@@ -29,7 +31,7 @@ describe('VerifySettings', () => {
 
   it('navigates to remove account confirmation when remove account is pressed', () => {
     const { getByTestId } = render(
-      <BasicAppContext>
+      <BasicAppContext initialStateOverride={authenticatedState}>
         <BCSCLoadingProvider>
           <VerifySettingsScreen navigation={mockNavigation as never} />
         </BCSCLoadingProvider>
