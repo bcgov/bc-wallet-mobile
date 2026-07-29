@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { Timeouts } from '../../../src/constants.js'
 import { skipToHome } from '../../../src/flows/onboarding.js'
-import { acceptSystemAlert } from '../../../src/helpers/alerts.js'
+import { reachCameraScreen } from '../../../src/helpers/screens.js'
 import { BaseScreen } from '../../../src/screens/core/BaseScreen.js'
 import {
   HomeScreen,
@@ -57,11 +57,10 @@ describe('Main journey: unverified gating', () => {
 
   it('the scan FAB opens the ungated QR scanner', async () => {
     await HomeScreen.link('scanFab')
-    // Scanner mount auto-requests camera permission; no-op when already granted.
-    await acceptSystemAlert()
-    await QRCoreScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-    // The torch control only renders once the camera is live — the scanner-ready marker.
-    await QRCoreScreen.waitFor('torch', Timeouts.SCREEN_TRANSITION)
+    // Scanner mount auto-requests camera permission; accept it whenever the OS raises it (no-op when
+    // already granted). The torch control only renders once the camera is live, so it — not the tab
+    // bar (the screen's `self`), which is up immediately — is the scanner-ready marker.
+    await reachCameraScreen('QRCore scanner', () => QRCoreScreen.isVisible('torch'))
     // QRDisplay is developer-mode-gated and must be absent in a normal run (descoped from CI).
     assert.equal(await QRCoreScreen.isVisible('displayTab'), false, 'dev-only Display tab should be absent')
   })
