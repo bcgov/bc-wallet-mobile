@@ -6,23 +6,12 @@ import RNFS from 'react-native-fs'
 export const MIN_PLAUSIBLE_CAPTURE_DATE_SECONDS = 1780272000
 
 /**
- * Generous ceiling above "now" to tolerate device clock skew without rejecting a genuine
- * just-captured photo.
- */
-export const MAX_CLOCK_SKEW_SECONDS = 86400
-
-/**
- * True iff `seconds` falls within [2026-06-01, now + 24h]. The ceiling also catches
- * millisecond-magnitude values masquerading as seconds (e.g. Date.now() passed unconverted),
- * since those land far beyond "now" in seconds terms.
+ * True iff `seconds` is at or after 2026-06-01. No upper bound is enforced — there's no
+ * server-side validation that cares about future-dated captures.
  *
  * @param seconds - A Unix timestamp, in seconds, to validate.
- * @param nowMs - The current time in milliseconds; overridable for testing.
  */
-export const isPlausibleCaptureDateSeconds = (seconds: number, nowMs: number = Date.now()): boolean => {
-  const ceilingSeconds = nowMs / 1000 + MAX_CLOCK_SKEW_SECONDS
-  return seconds >= MIN_PLAUSIBLE_CAPTURE_DATE_SECONDS && seconds <= ceilingSeconds
-}
+export const isPlausibleCaptureDateSeconds = (seconds: number): boolean => seconds >= MIN_PLAUSIBLE_CAPTURE_DATE_SECONDS
 
 /**
  * Derives a plausible replacement capture date (in seconds) for a photo whose stored date

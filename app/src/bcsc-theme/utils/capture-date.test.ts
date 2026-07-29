@@ -1,7 +1,6 @@
 import {
   derivePlausibleCaptureDateSeconds,
   isPlausibleCaptureDateSeconds,
-  MAX_CLOCK_SKEW_SECONDS,
   MIN_PLAUSIBLE_CAPTURE_DATE_SECONDS,
   repairEvidenceCaptureDates,
 } from '@/bcsc-theme/utils/capture-date'
@@ -29,47 +28,28 @@ describe('capture-date utils', () => {
   })
 
   describe('isPlausibleCaptureDateSeconds', () => {
-    const nowMs = new Date('2026-07-28T00:00:00Z').getTime()
-
     it('returns true for a plausible mid-range value', () => {
-      expect(isPlausibleCaptureDateSeconds(1_782_000_000, nowMs)).toBe(true)
+      expect(isPlausibleCaptureDateSeconds(1_782_000_000)).toBe(true)
     })
 
     it('returns true at the exact floor boundary', () => {
-      expect(isPlausibleCaptureDateSeconds(MIN_PLAUSIBLE_CAPTURE_DATE_SECONDS, nowMs)).toBe(true)
+      expect(isPlausibleCaptureDateSeconds(MIN_PLAUSIBLE_CAPTURE_DATE_SECONDS)).toBe(true)
     })
 
     it('returns false just below the floor boundary', () => {
-      expect(isPlausibleCaptureDateSeconds(MIN_PLAUSIBLE_CAPTURE_DATE_SECONDS - 1, nowMs)).toBe(false)
+      expect(isPlausibleCaptureDateSeconds(MIN_PLAUSIBLE_CAPTURE_DATE_SECONDS - 1)).toBe(false)
     })
 
-    it('returns true at the exact ceiling boundary (now + max clock skew)', () => {
-      const ceiling = Math.floor(nowMs / 1000) + MAX_CLOCK_SKEW_SECONDS
-      expect(isPlausibleCaptureDateSeconds(ceiling, nowMs)).toBe(true)
-    })
-
-    it('returns false just above the ceiling boundary', () => {
-      const justAboveCeiling = Math.floor(nowMs / 1000) + MAX_CLOCK_SKEW_SECONDS + 1
-      expect(isPlausibleCaptureDateSeconds(justAboveCeiling, nowMs)).toBe(false)
-    })
-
-    it('returns false for a millisecond-magnitude value masquerading as seconds', () => {
-      // e.g. Date.now() passed unconverted — this is what a unit-mismatch bug would produce.
-      expect(isPlausibleCaptureDateSeconds(nowMs, nowMs)).toBe(false)
+    it('returns true for a far-future value (no upper bound is enforced)', () => {
+      expect(isPlausibleCaptureDateSeconds(MIN_PLAUSIBLE_CAPTURE_DATE_SECONDS + 100 * 365 * 24 * 60 * 60)).toBe(true)
     })
 
     it('returns false for zero (the corrupted-to-1970 case)', () => {
-      expect(isPlausibleCaptureDateSeconds(0, nowMs)).toBe(false)
+      expect(isPlausibleCaptureDateSeconds(0)).toBe(false)
     })
 
     it('returns false for a negative value', () => {
-      expect(isPlausibleCaptureDateSeconds(-1, nowMs)).toBe(false)
-    })
-
-    it('defaults nowMs to Date.now() when not provided', () => {
-      const spy = jest.spyOn(Date, 'now').mockReturnValue(nowMs)
-      expect(isPlausibleCaptureDateSeconds(1_782_000_000)).toBe(true)
-      spy.mockRestore()
+      expect(isPlausibleCaptureDateSeconds(-1)).toBe(false)
     })
   })
 
