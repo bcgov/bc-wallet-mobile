@@ -160,36 +160,66 @@ class BcscCoreModuleEvidenceRoundTripTest {
 
     // MARK: - v3-format fixture (millisecond-magnitude timestamp already on disk)
 
+    /** Builds a v3-shaped evidence JSON blob (single entry, single photo) with the given stored millisecond timestamp. */
+    private fun v3FixtureJson(timestampMillis: Long): String =
+        JSONObject()
+            .apply {
+                put(
+                    "evidence1",
+                    JSONObject().apply {
+                        put("evidencedetails", JSONObject().put("document_number", "DL123"))
+                        put(
+                            "images",
+                            JSONObject().put(
+                                "evidencePhotos",
+                                org.json.JSONArray().put(
+                                    JSONObject().apply {
+                                        put("filepath", "/docs/front.jpg")
+                                        put("label", "FRONT_SIDE")
+                                        put("timestamp", timestampMillis)
+                                    },
+                                ),
+                            ),
+                        )
+                    },
+                )
+            }.toString()
+
     @Test
     fun `v3-format fixture with millisecond timestamp reads back a correct capture date in seconds`() {
         val v3MillisTimestamp = 1_782_000_000_000L
-        val fixtureJson =
-            JSONObject()
-                .apply {
-                    put(
-                        "evidence1",
-                        JSONObject().apply {
-                            put("evidencedetails", JSONObject().put("document_number", "DL123"))
-                            put(
-                                "images",
-                                JSONObject().put(
-                                    "evidencePhotos",
-                                    org.json.JSONArray().put(
-                                        JSONObject().apply {
-                                            put("filepath", "/docs/front.jpg")
-                                            put("label", "FRONT_SIDE")
-                                            put("timestamp", v3MillisTimestamp)
-                                        },
-                                    ),
-                                ),
-                            )
-                        },
-                    )
-                }.toString()
 
-        val dates = readBackDates(fixtureJson)
+        val dates = readBackDates(v3FixtureJson(v3MillisTimestamp))
 
         assertEquals(listOf(listOf(1_782_000_000L)), dates)
+    }
+
+    @Test
+    fun `v3-format fixture below the old raised floor but above the 2020 floor survives read then write-back`() {
+        // 1_773_100_000_000L is ~2026-03-10 in millis — below the pre-revision raised floor
+        // (2026-06-01, 1_780_272_000 seconds) but above the 2020-01-01 floor this revision
+        // restores. The existing v3 fixture above (1_782_000_000_000L) is above BOTH floors and
+        // can't distinguish the two; this one can.
+        val belowOldFloorMillis = 1_773_100_000_000L
+        val belowOldFloorSeconds = 1_773_100_000L
+
+        val readSeconds = readBackDates(v3FixtureJson(belowOldFloorMillis)).single().single()
+        assertEquals(belowOldFloorSeconds, readSeconds)
+
+        // Feed the read-back seconds value through the write path (as the JS layer would on
+        // re-upload) and assert it survives — NOT collapsed to 0.
+        val writeBackEntry =
+            module.convertToEvidenceUploadEntry(
+                evidenceInput("DL123", listOf(photoInput("/docs/front.jpg", "FRONT_SIDE", readSeconds))),
+            )
+        val storedTimestamp =
+            writeBackEntry
+                .getJSONObject("images")
+                .getJSONArray("evidencePhotos")
+                .getJSONObject(0)
+                .getLong("timestamp")
+
+        assertEquals(belowOldFloorMillis, storedTimestamp)
     }
 
     // MARK: - corrupted / implausible values

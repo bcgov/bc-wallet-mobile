@@ -11,11 +11,16 @@ import { BifoldLogger } from '@bifold/core'
 import { EvidenceMetadata } from 'react-native-bcsc-core'
 import RNFS from 'react-native-fs'
 
-/** 2026-06-01T00:00:00Z — no legitimate capture predates this. */
-export const MIN_PLAUSIBLE_CAPTURE_DATE_SECONDS = 1780272000
+/**
+ * 2020-01-01T00:00:00Z. This floor's job is separating structurally corrupt values from real
+ * dates, not rejecting clock skew: the pre-fix double-division bug's corrupted-value ladder tops
+ * out around 1_782_000 seconds (~1970-01-21), four orders of magnitude below this floor, so
+ * there's no realistic corrupted value anywhere near it.
+ */
+export const MIN_PLAUSIBLE_CAPTURE_DATE_SECONDS = 1577836800
 
 /**
- * True iff `seconds` is at or after 2026-06-01. No upper bound is enforced — there's no
+ * True iff `seconds` is at or after 2020-01-01. No upper bound is enforced — there's no
  * server-side validation that cares about future-dated captures.
  *
  * @param seconds - A Unix timestamp, in seconds, to validate.

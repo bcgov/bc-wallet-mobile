@@ -15,8 +15,13 @@ package com.bcsccore
  * no server-side validation depends on one.
  */
 object EvidenceTimestamps {
-    /** 2026-06-01T00:00:00Z — no legitimate v4 capture predates this. */
-    const val MIN_PLAUSIBLE_SECONDS = 1_780_272_000L
+    /**
+     * 2020-01-01T00:00:00Z. This floor's job is separating structurally corrupt values from real
+     * dates, not rejecting clock skew: the pre-fix double-division bug's corrupted-value ladder
+     * tops out around 1_782_000 seconds (~1970-01-21), four orders of magnitude below this floor,
+     * so there's no realistic corrupted value anywhere near it.
+     */
+    const val MIN_PLAUSIBLE_SECONDS = 1_577_836_800L
 
     /** At/above this magnitude a stored value is unambiguously milliseconds. */
     const val MILLISECONDS_THRESHOLD = 100_000_000_000L

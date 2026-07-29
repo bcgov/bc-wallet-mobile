@@ -110,6 +110,20 @@ class EvidenceTimestampsTest {
         assertEquals(justBelowThreshold, result)
     }
 
+    @Test
+    fun `storedTimestampToApiSeconds divides a value below the old raised floor but above the 2020 floor`() {
+        val result = EvidenceTimestamps.storedTimestampToApiSeconds(1_773_100_000_000L)
+
+        assertEquals(1_773_100_000L, result)
+    }
+
+    @Test
+    fun `apiSecondsToStoredMillis multiplies a value below the old raised floor but above the 2020 floor`() {
+        val result = EvidenceTimestamps.apiSecondsToStoredMillis(1_773_100_000L)
+
+        assertEquals(1_773_100_000_000L, result)
+    }
+
     // MARK: - round trip
 
     @Test
