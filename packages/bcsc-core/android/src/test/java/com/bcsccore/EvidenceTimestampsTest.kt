@@ -95,6 +95,19 @@ class EvidenceTimestampsTest {
     }
 
     @Test
+    fun `storedTimestampToApiSeconds divides a pre-2020 v3 millis value without flooring the quotient`() {
+        // A genuine v3 capture date (2015-01-01) is millis-magnitude, so the floor must NOT
+        // apply to its quotient — flooring it here would destroy a real date, which is the
+        // AC2 defect this revision's floor revert exists to prevent. See the KDoc on
+        // storedTimestampToApiSeconds.
+        val genuinePre2020V3Millis = 1_420_070_400_000L
+
+        val result = EvidenceTimestamps.storedTimestampToApiSeconds(genuinePre2020V3Millis)
+
+        assertEquals(1_420_070_400L, result)
+    }
+
+    @Test
     fun `storedTimestampToApiSeconds treats the millis threshold boundary as milliseconds`() {
         val result = EvidenceTimestamps.storedTimestampToApiSeconds(EvidenceTimestamps.MILLISECONDS_THRESHOLD)
 
