@@ -107,7 +107,7 @@ describe('CameraFormat', () => {
   })
 
   describe('MaskedWithBarcodeDetection: ModernDevice', () => {
-    it('should return modern-format-3 for ModernDevice', () => {
+    it('should return modern-format-4 for ModernDevice', () => {
       const format: any = getCameraFormat(ModernDevice as any, CameraFormat.MaskedWithBarcodeDetection)
 
       expect(format?._id).toBe('modern-format-4')
