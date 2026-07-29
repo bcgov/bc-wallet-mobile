@@ -1,4 +1,4 @@
-import { ListButton, ListButtonGroup } from '@/bcsc-theme/components/ListButton'
+import { ListButton, ListButtonGroup, ListButtonProps } from '@/bcsc-theme/components/ListButton'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { Switch } from '@/components/Switch'
 import { BCThemeNames, Mode } from '@/constants'
@@ -81,6 +81,7 @@ interface ToggleRowProps {
   bold?: boolean
   disabled?: boolean
   subContent?: ReactNode
+  position?: ListButtonProps['position']
 }
 
 const ToggleRow: React.FC<ToggleRowProps> = ({
@@ -92,6 +93,7 @@ const ToggleRow: React.FC<ToggleRowProps> = ({
   bold,
   disabled,
   subContent,
+  position,
 }) => (
   <ListButton
     onPress={onToggle}
@@ -100,6 +102,7 @@ const ToggleRow: React.FC<ToggleRowProps> = ({
     accessibilityRole="switch"
     accessibilityState={{ checked: value, disabled }}
     testID={testID}
+    position={position}
   >
     <Row
       title={title}

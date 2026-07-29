@@ -84,6 +84,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
             style={
               {
                 "backgroundColor": "#003366",
+                "borderRadius": 8,
                 "opacity": 1,
                 "padding": 16,
               }
@@ -500,6 +501,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
             style={
               {
                 "backgroundColor": "#003366",
+                "borderRadius": 0,
                 "opacity": 1,
                 "padding": 16,
               }
@@ -735,6 +737,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
             style={
               {
                 "backgroundColor": "#003366",
+                "borderRadius": 0,
                 "opacity": 1,
                 "padding": 16,
               }
@@ -970,6 +973,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
             style={
               {
                 "backgroundColor": "#003366",
+                "borderRadius": 0,
                 "opacity": 1,
                 "padding": 16,
               }
@@ -1205,6 +1209,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
             style={
               {
                 "backgroundColor": "#003366",
+                "borderRadius": 0,
                 "opacity": 1,
                 "padding": 16,
               }
@@ -1440,6 +1445,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
             style={
               {
                 "backgroundColor": "#003366",
+                "borderRadius": 0,
                 "opacity": 1,
                 "padding": 16,
               }
@@ -1675,6 +1681,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
             style={
               {
                 "backgroundColor": "#003366",
+                "borderRadius": 0,
                 "opacity": 1,
                 "padding": 16,
               }
@@ -1910,6 +1917,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
             style={
               {
                 "backgroundColor": "#003366",
+                "borderRadius": 0,
                 "opacity": 1,
                 "padding": 16,
               }
@@ -2145,6 +2153,8 @@ exports[`Developer Screen screen renders correctly 1`] = `
             style={
               {
                 "backgroundColor": "#003366",
+                "borderBottomLeftRadius": 8,
+                "borderBottomRightRadius": 8,
                 "opacity": 1,
                 "padding": 16,
               }
@@ -2450,6 +2460,8 @@ exports[`Developer Screen screen renders correctly 1`] = `
             style={
               {
                 "backgroundColor": "#003366",
+                "borderTopLeftRadius": 8,
+                "borderTopRightRadius": 8,
                 "opacity": 1,
                 "padding": 16,
               }
@@ -2685,6 +2697,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
             style={
               {
                 "backgroundColor": "#003366",
+                "borderRadius": 0,
                 "opacity": 1,
                 "padding": 16,
               }
@@ -2920,6 +2933,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
             style={
               {
                 "backgroundColor": "#003366",
+                "borderRadius": 0,
                 "opacity": 1,
                 "padding": 16,
               }
@@ -3155,6 +3169,8 @@ exports[`Developer Screen screen renders correctly 1`] = `
             style={
               {
                 "backgroundColor": "#003366",
+                "borderBottomLeftRadius": 8,
+                "borderBottomRightRadius": 8,
                 "opacity": 1,
                 "padding": 16,
               }
