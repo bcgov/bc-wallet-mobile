@@ -7,6 +7,276 @@ const { getCameraFormat } = jest.requireActual(
   'react-native-vision-camera/src/devices/getCameraFormat'
 ) as typeof import('react-native-vision-camera/src/devices/getCameraFormat')
 
+const RealDevice = {
+  id: 'real-device-id',
+  formats: [
+    {
+      _id: 'format-1',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'phase-detection',
+      maxFps: 60,
+      videoWidth: 192,
+      videoHeight: 144,
+      photoWidth: 4032,
+      photoHeight: 3024,
+      videoStabilizationModes: ['auto', 'off'],
+    },
+    {
+      _id: 'format-2',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'phase-detection',
+      maxFps: 60,
+      videoWidth: 352,
+      videoHeight: 288,
+      photoWidth: 3696,
+      photoHeight: 3024,
+      videoStabilizationModes: ['auto', 'off'],
+    },
+    {
+      _id: 'format-3',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'phase-detection',
+      maxFps: 60,
+      videoWidth: 480,
+      videoHeight: 360,
+      photoWidth: 4032,
+      photoHeight: 3024,
+      videoStabilizationModes: ['auto', 'off'],
+    },
+    {
+      _id: 'format-4',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'phase-detection',
+      maxFps: 60,
+      videoWidth: 640,
+      videoHeight: 480,
+      photoWidth: 4032,
+      photoHeight: 3024,
+      videoStabilizationModes: ['auto', 'off'],
+    },
+    {
+      _id: 'format-5',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'phase-detection',
+      maxFps: 60,
+      videoWidth: 640,
+      videoHeight: 480,
+      photoWidth: 2016,
+      photoHeight: 1512,
+      videoStabilizationModes: ['auto', 'off'],
+    },
+    {
+      _id: 'format-6',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'phase-detection',
+      maxFps: 60,
+      videoWidth: 960,
+      videoHeight: 540,
+      photoWidth: 4224,
+      photoHeight: 2384,
+      videoStabilizationModes: ['auto', 'cinematic', 'off', 'standard', 'cinematic-extended'],
+    },
+    {
+      _id: 'format-7',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'phase-detection',
+      maxFps: 60,
+      videoWidth: 1024,
+      videoHeight: 768,
+      photoWidth: 4032,
+      photoHeight: 3024,
+      videoStabilizationModes: ['auto', 'off', 'standard'],
+    },
+    {
+      _id: 'format-8',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'phase-detection',
+      maxFps: 30,
+      videoWidth: 1280,
+      videoHeight: 720,
+      photoWidth: 4224,
+      photoHeight: 2376,
+      videoStabilizationModes: ['auto', 'cinematic', 'off', 'standard', 'cinematic-extended'],
+    },
+    {
+      _id: 'format-9',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'phase-detection',
+      maxFps: 60,
+      videoWidth: 1280,
+      videoHeight: 720,
+      photoWidth: 4224,
+      photoHeight: 2384,
+      videoStabilizationModes: ['auto', 'cinematic', 'off', 'standard', 'cinematic-extended'],
+    },
+    {
+      _id: 'format-10',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'contrast-detection',
+      maxFps: 60,
+      videoWidth: 1280,
+      videoHeight: 720,
+      photoWidth: 2112,
+      photoHeight: 1188,
+      videoStabilizationModes: ['auto', 'cinematic', 'off', 'standard', 'cinematic-extended'],
+    },
+    {
+      _id: 'format-11',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'contrast-detection',
+      maxFps: 240,
+      videoWidth: 1280,
+      videoHeight: 720,
+      photoWidth: 1280,
+      photoHeight: 720,
+      videoStabilizationModes: ['auto', 'off', 'standard'],
+    },
+    {
+      _id: 'format-12',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'phase-detection',
+      maxFps: 60,
+      videoWidth: 1440,
+      videoHeight: 1080,
+      photoWidth: 2016,
+      photoHeight: 1512,
+      videoStabilizationModes: ['auto', 'off'],
+    },
+    {
+      _id: 'format-13',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'phase-detection',
+      maxFps: 30,
+      videoWidth: 1920,
+      videoHeight: 1080,
+      photoWidth: 4224,
+      photoHeight: 2376,
+      videoStabilizationModes: ['auto', 'cinematic', 'off', 'standard', 'cinematic-extended'],
+    },
+    {
+      _id: 'format-14',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'phase-detection',
+      maxFps: 60,
+      videoWidth: 1920,
+      videoHeight: 1080,
+      photoWidth: 4224,
+      photoHeight: 2384,
+      videoStabilizationModes: ['auto', 'cinematic', 'off', 'standard', 'cinematic-extended'],
+    },
+    {
+      _id: 'format-15',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'contrast-detection',
+      maxFps: 60,
+      videoWidth: 1920,
+      videoHeight: 1080,
+      photoWidth: 2112,
+      photoHeight: 1188,
+      videoStabilizationModes: ['auto', 'cinematic', 'off', 'standard', 'cinematic-extended'],
+    },
+    {
+      _id: 'format-16',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'phase-detection',
+      maxFps: 120,
+      videoWidth: 1920,
+      videoHeight: 1080,
+      photoWidth: 1920,
+      photoHeight: 1080,
+      videoStabilizationModes: ['auto', 'cinematic', 'off', 'standard'],
+    },
+    {
+      _id: 'format-17',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'contrast-detection',
+      maxFps: 240,
+      videoWidth: 1920,
+      videoHeight: 1080,
+      photoWidth: 1920,
+      photoHeight: 1080,
+      videoStabilizationModes: ['auto', 'off', 'standard'],
+    },
+    {
+      _id: 'format-18',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'phase-detection',
+      maxFps: 30,
+      videoWidth: 1920,
+      videoHeight: 1440,
+      photoWidth: 4032,
+      photoHeight: 3024,
+      videoStabilizationModes: ['auto', 'off'],
+    },
+    {
+      _id: 'format-19',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'phase-detection',
+      maxFps: 60,
+      videoWidth: 1920,
+      videoHeight: 1440,
+      photoWidth: 2016,
+      photoHeight: 1512,
+      videoStabilizationModes: ['auto', 'off'],
+    },
+    {
+      _id: 'format-20',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'phase-detection',
+      maxFps: 30,
+      videoWidth: 2592,
+      videoHeight: 1944,
+      photoWidth: 4032,
+      photoHeight: 3024,
+      videoStabilizationModes: ['auto', 'off'],
+    },
+    {
+      _id: 'format-21',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'phase-detection',
+      maxFps: 30,
+      videoWidth: 3264,
+      videoHeight: 2448,
+      photoWidth: 4032,
+      photoHeight: 3024,
+      videoStabilizationModes: ['auto', 'off'],
+    },
+    {
+      _id: 'format-22',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'phase-detection',
+      maxFps: 30,
+      videoWidth: 3840,
+      videoHeight: 2160,
+      photoWidth: 4224,
+      photoHeight: 2376,
+      videoStabilizationModes: ['auto', 'cinematic', 'off', 'standard', 'cinematic-extended'],
+    },
+    {
+      _id: 'format-23',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'phase-detection',
+      maxFps: 60,
+      videoWidth: 3840,
+      videoHeight: 2160,
+      photoWidth: 3840,
+      photoHeight: 2160,
+      videoStabilizationModes: ['auto', 'cinematic', 'off', 'standard', 'cinematic-extended'],
+    },
+    {
+      _id: 'format-24',
+      supportsVideoHdr: false,
+      autoFocusSystem: 'phase-detection',
+      maxFps: 30,
+      videoWidth: 4032,
+      videoHeight: 3024,
+      photoWidth: 4032,
+      photoHeight: 3024,
+      videoStabilizationModes: ['auto', 'off'],
+    },
+  ],
+}
+
 const ModernDevice = {
   id: 'modern-device-id',
   formats: [
@@ -107,10 +377,10 @@ describe('CameraFormat', () => {
   })
 
   describe('MaskedWithBarcodeDetection: ModernDevice', () => {
-    it('should return modern-format-4 for ModernDevice', () => {
+    it('should return modern-format-3 for ModernDevice', () => {
       const format: any = getCameraFormat(ModernDevice as any, CameraFormat.MaskedWithBarcodeDetection)
 
-      expect(format?._id).toBe('modern-format-4')
+      expect(format?._id).toBe('modern-format-3')
     })
   })
 
@@ -118,7 +388,15 @@ describe('CameraFormat', () => {
     it('should return legacy-format-1 for LegacyDevice', () => {
       const format: any = getCameraFormat(LegacyDevice as any, CameraFormat.MaskedWithBarcodeDetection)
 
-      expect(format?._id).toBe('legacy-format-2')
+      expect(format?._id).toBe('legacy-format-1')
+    })
+  })
+
+  describe('MaskedWithBarcodeDetection: RealDevice', () => {
+    it('should return format-3 for RealDevice', () => {
+      const format: any = getCameraFormat(RealDevice as any, CameraFormat.MaskedWithBarcodeDetection)
+
+      expect(format?._id).toBe('format-16')
     })
   })
 
