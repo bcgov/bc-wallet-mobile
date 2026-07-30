@@ -843,7 +843,7 @@ const translation = {
     },
     "AccountSetup": {
       "Title": "Have you verified before? (FR)",
-      "Description": "Do you already have the BC Services Card appset up on another nearby phone or tablet? (FR)",
+      "Description": "Do you already have the BC Services Card app set up on another nearby phone or tablet? (FR)",
       "AddAccount": "No, continue setup (FR)",
       "TransferAccount": "Yes, connect this device (FR)",
       "ContinueAs": "Continue as: (FR)",
