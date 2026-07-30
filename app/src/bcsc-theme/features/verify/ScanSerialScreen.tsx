@@ -200,6 +200,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const [cameraFailed, setCameraFailed] = useState(false)
   const [cameraKey, setCameraKey] = useState(0)
 
+  const isProcessingScan = useRef(false)
   const bcscSerialRef = useRef<string | null>(null)
   const birthDateRef = useRef<Date | null>(null)
 
@@ -226,21 +227,26 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     setCameraFailed(false)
     setScanState('scanning')
     setCameraKey((prev) => prev + 1)
-    scanner.startScan()
     // Reset the caches so we can scan again.
+    isProcessingScan.current = false
     bcscSerialRef.current = null
     birthDateRef.current = null
-  }, [scanner])
+  }, [])
 
   useFocusEffect(useCallback(() => retryCamera(), [retryCamera]))
 
   const onCodeScanned = async (barcodes: ScanableCode[]): Promise<boolean> => {
+    if (isProcessingScan.current) {
+      return true
+    }
+
     const decodedBarcodes = scanner.scanCard(barcodes)
 
     for (const decoded of decodedBarcodes) {
       if (!decoded && !bcscSerialRef.current && !birthDateRef.current) {
-        scanner.completeScan()
-        // Scanned a non-BCSC barcode
+        // Scanned a non-BCSC barcode - lock the camera and handle it as a non-BCSC card.
+        isProcessingScan.current = true
+        setScanState('locked')
         scanner.handleScanNonBcsc()
         return true
       }
@@ -260,7 +266,9 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     }
 
     if (bcscSerialRef.current && birthDateRef.current) {
-      scanner.completeScan()
+      // We have both the serial and the birthdate — lock the camera and handle the card.
+      isProcessingScan.current = true
+      setScanState('locked')
       await scanner.handleScanComboCard(bcscSerialRef.current, { birthDate: birthDateRef.current })
       return true
     }
@@ -365,7 +373,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
               hideTorchButton
               torchActive={torchOn}
               onToggleTorch={toggleTorch}
-              onScanStateChange={setScanState}
+              // onScanStateChange={setScanState}
               onError={onCameraError}
               style={StyleSheet.absoluteFillObject}
             />
