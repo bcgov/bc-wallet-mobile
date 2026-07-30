@@ -1,11 +1,12 @@
 import type { TestUser } from '../constants.js'
-import { Timeouts } from '../constants.js'
-import { acceptSystemAlert } from '../helpers/alerts.js'
+import { COMBO_CARD_BARCODE_MASKS, Timeouts } from '../constants.js'
 import { ApproveInPersonInput, approveInPersonRequest } from '../helpers/approval.js'
+import type { ImageMaskRegion } from '../helpers/camera.js'
 import { injectPhoto } from '../helpers/camera.js'
 import { getEmailConfirmationCode, getTempEmailAddress } from '../helpers/email.js'
 import { swipeUpBy } from '../helpers/gestures.js'
 import { isSauceLabs } from '../helpers/sauce.js'
+import { describeCurrentScreen, reachCameraScreen } from '../helpers/screens.js'
 import { BaseScreen } from '../screens/core/BaseScreen.js'
 import { HomeScreen } from '../screens/main.js'
 import { VerifyPromptScreen } from '../screens/onboarding.js'
@@ -60,16 +61,15 @@ export async function chooseAddAccount(): Promise<void> {
 
 /**
  * The CI-default serial path — no live camera: IdentitySelection `Scan` → ScanSerial (accepting the
- * OS camera dialog when it appears; no-op when permission is already granted) → `EnterManually` →
+ * OS camera dialog whenever it appears; no-op when permission is already granted) → `EnterManually` →
  * ManualSerial → serial typed → EnterBirthdate. Card type is derived later, by `authorizeDevice`
  * at the birthdate submit.
  */
 export async function enterSerialManually(user: TestUser): Promise<void> {
   await IdentitySelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-  await IdentitySelectionScreen.tap('primary')
-  await acceptSystemAlert()
-  await ScanSerialScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-  await ScanSerialScreen.tap('primary')
+  await IdentitySelectionScreen.tapToNavigate('primary')
+  await reachCameraScreen('ScanSerial', () => ScanSerialScreen.isPresent(1_000))
+  await ScanSerialScreen.tapToNavigate('primary')
   await ManualSerialScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   await ManualSerialScreen.fill('serial', user.cardSerial, { tapFirst: true })
   await engine.dismissKeyboard()
@@ -114,28 +114,6 @@ function approvalInputForUser(user: TestUser): ApproveInPersonInput {
     }
   }
   return { flow: 'photo', cardSerialNumber: user.cardSerial, cardBirthdate: user.dob }
-}
-
-/**
- * Dump the first several visible text strings on the current screen — makes "unexpected screen"
- * failures self-diagnosing by revealing which screen we actually landed on.
- */
-async function describeCurrentScreen(): Promise<string> {
-  const selector = driver.isIOS
-    ? '-ios predicate string:type == "XCUIElementTypeStaticText"'
-    : 'android=new UiSelector().className("android.widget.TextView")'
-  const els = await $$(selector)
-  const texts: string[] = []
-  for (const el of els) {
-    const t = driver.isIOS ? await el.getAttribute('label').catch(() => null) : await el.getText().catch(() => null)
-    if (t) {
-      texts.push(t)
-    }
-    if (texts.length >= 8) {
-      break
-    }
-  }
-  return texts.length ? texts.join(' | ') : '(no visible text found)'
 }
 
 /**
@@ -253,6 +231,9 @@ async function selectEvidenceType(match: string): Promise<void> {
   }
 
   if (count === 1 && target) {
+    // The list arrives on a push animation, so settle the row before tapping — a tap dispatched against
+    // bounds the view has already moved past is silently dropped, and the flow blames the NEXT screen.
+    await engine.waitForSteadyPosition(target)
     await target.click()
     return
   }
@@ -264,27 +245,65 @@ async function selectEvidenceType(match: string): Promise<void> {
 }
 
 /**
+ * Wait for EvidenceCapture's shutter, and on failure say WHICH of the two very different causes it was.
+ *
+ * The screen's `self` is the shutter, which renders last: the MaskedCamera container mounts as soon as
+ * the permission request settles, but the shutter waits on `useCameraDevice` resolving a device. So a
+ * missing shutter means either the push never landed (container absent) or the camera never came up
+ * (container present) — indistinguishable from the timeout alone, and the ambiguity is what makes this
+ * failure expensive to read off a CI log.
+ */
+async function reachEvidenceCamera(): Promise<void> {
+  try {
+    await reachCameraScreen('EvidenceCapture', () => EvidenceCaptureScreen.isPresent(1_000))
+  } catch (err) {
+    const containerMounted = await EvidenceCaptureScreen.isVisible('maskedCamera')
+    throw new Error(
+      `${(err as Error).message}\nMaskedCamera container ${containerMounted ? 'IS' : 'is NOT'} mounted — ` +
+        (containerMounted
+          ? 'the screen was reached but no camera device resolved.'
+          : 'EvidenceCapture is not on screen: the push never landed, or the app navigated AWAY mid-capture. ' +
+            'If the on-screen dump above shows IDPhotoInformation right after a UsePhoto, a barcode decoded ' +
+            'off the injected image made the app reroute into card setup — mask the barcode regions ' +
+            '(see COMBO_CARD_BARCODE_MASKS) instead of re-tapping through; the flow state is corrupted at that point.')
+    )
+  }
+}
+
+/**
  * Capture a document's photo(s). CAMERA-ONLY: on Sauce the supplied image is injected before the
  * shutter (RN camera feeds are unreliable — see `helpers/camera`); on a local real device the physical
  * camera captures whatever it sees (`injectPhoto` throws off-Sauce). Shutter → accept in PhotoReview,
  * repeating per side (1 for a passport, 2 for a licence — backend-driven) until the typed
  * EvidenceIDCollection form appears.
+ *
+ * `barcodeMasks` MUST cover any decodable barcode on the injected image: the document camera runs a
+ * live code scanner behind the shutter, and on Android the injected frames feed it. An unmasked SIT
+ * combo barcode gets "scanned", and in the non-BCSC flow the app then verifies it with the backend on
+ * UsePhoto and — on a match — quietly resets the flow into card setup (observed: sees the template's
+ * serial C26444539, authorizes THAT card, resumes at IDPhotoInformation, journey dead). iOS injection
+ * never produces barcode scans, which is why this only ever broke Android.
  */
-async function capturePhotoIdDocument(image: string): Promise<void> {
+async function capturePhotoIdDocument(image: string, barcodeMasks: readonly ImageMaskRegion[] = []): Promise<void> {
   await IDPhotoInformationScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-  await IDPhotoInformationScreen.tap('primary') // → EvidenceCapture (camera)
-  // The document camera requests camera permission on first entry — accept it, otherwise
-  // EvidenceCapture renders the PermissionDisabled fallback and the MaskedCamera never mounts.
-  await acceptSystemAlert()
+  // The primer's CTA pushes EvidenceCapture — confirm the push actually landed rather than assuming it.
+  // A tap dispatched while the screen is still transitioning gets swallowed on Android, and because the
+  // element WAS found the tap reports success; the flow then waits out its whole timeout on the shutter
+  // of a camera screen that was never opened, and blames the camera.
+  await IDPhotoInformationScreen.tapToNavigate('primary')
 
   for (let side = 0; side < 2; side++) {
-    await EvidenceCaptureScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    // The document camera requests camera permission on first entry — accept it whenever it appears,
+    // otherwise EvidenceCapture renders the PermissionDisabled fallback and MaskedCamera never mounts.
+    // On the second side permission is long granted, but the capture session still has to restart — so
+    // both sides get the camera budget rather than a screen-transition one.
+    await reachEvidenceCamera()
     if (isSauceLabs()) {
-      await injectPhoto(image, {}) // padding may need tuning to the document mask
+      await injectPhoto(image, {}, barcodeMasks) // padding may need tuning to the document mask
     }
-    await EvidenceCaptureScreen.tap('primary') // MaskedCamera shutter
+    await EvidenceCaptureScreen.tap('primary') // MaskedCamera shutter — NOT tapToNavigate (not idempotent)
     await PhotoReviewScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-    await PhotoReviewScreen.tap('primary') // UsePhoto
+    await PhotoReviewScreen.tapToNavigate('primary') // UsePhoto → next side or the typed form
     if (await EvidenceIDCollectionScreen.isPresent(Timeouts.SCREEN_TRANSITION)) {
       return
     }
@@ -307,9 +326,11 @@ export async function addAdditionalPhotoId(user: TestUser, evidenceMatch: string
     ? '-ios predicate string:label CONTAINS "provide additional ID"'
     : 'android=new UiSelector().textContains("provide additional ID")'
   await $(headingSelector).waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
-  await AdditionalIdentificationRequiredScreen.tap('primary') // Continue → EvidenceTypeList
+  await AdditionalIdentificationRequiredScreen.tapToNavigate('primary') // Continue → EvidenceTypeList
   await selectEvidenceType(evidenceMatch)
-  await capturePhotoIdDocument(user.cardScanImage)
+  // The card-back template carries the SIT combo barcode. The reroute-on-scan has only been observed
+  // in the non-BCSC flow, but the code scanner runs behind every document capture — mask on principle.
+  await capturePhotoIdDocument(user.cardScanImage, COMBO_CARD_BARCODE_MASKS)
   await EvidenceIDCollectionScreen.fill('documentNumber', user.documentNumber, { tapFirst: true })
   await engine.dismissKeyboard()
   await EvidenceIDCollectionScreen.tapWhenEnabled('primary') // EvidenceIDCollectionContinue
@@ -349,18 +370,22 @@ export async function collectNonBcscEvidence(
     throw new Error(`collectNonBcscEvidence requires a non-bcsc TestUser (got '${user.flow}')`)
   }
   await IdentitySelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-  await IdentitySelectionScreen.tap('secondary') // OtherID → DualIdentificationRequired
+  await IdentitySelectionScreen.tapToNavigate('secondary') // OtherID → DualIdentificationRequired
 
   // DualIdentificationRequired's only CTA is the generic `Continue`; confirm by heading before tapping.
   const dualHeadingSelector = driver.isIOS
     ? '-ios predicate string:label CONTAINS "two government"'
     : 'android=new UiSelector().textContains("two government")'
   await $(dualHeadingSelector).waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
-  await DualIdentificationRequiredScreen.tap('primary') // Continue → EvidenceTypeList (first ID)
+  // Safe to confirm-and-retry on the generic `Continue` here: EvidenceTypeList renders no Continue of
+  // its own, so the button going away really does mean the push landed.
+  await DualIdentificationRequiredScreen.tapToNavigate('primary') // Continue → EvidenceTypeList (first ID)
 
-  // First ID — captured + typed WITH name/birthdate.
+  // First ID — captured + typed WITH name/birthdate. The card-back image carries the SIT combo
+  // barcode, and this is the flow where the app verifies a scanned barcode with the backend on
+  // UsePhoto and reroutes on a match — so the barcode regions must be masked out of the injection.
   await selectEvidenceType(firstDocMatch)
-  await capturePhotoIdDocument(user.cardScanImage)
+  await capturePhotoIdDocument(user.cardScanImage, COMBO_CARD_BARCODE_MASKS)
   await fillEvidenceIdCollection(user.primaryDocumentNumber, {
     lastName: user.lastName,
     firstName: user.firstName,

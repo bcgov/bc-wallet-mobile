@@ -203,6 +203,39 @@ export async function acceptSystemAlert(appearTimeoutMs = DEFAULT_APPEAR_TIMEOUT
 }
 
 /**
+ * Wait for a screen to become ready, accepting any native permission dialog that shows up along the
+ * way — however late, and however many times.
+ *
+ * `acceptSystemAlert` alone races the app on camera screens: it polls a fixed window and gives up
+ * silently, but the OS permission controller can take longer than that to appear after a heavy camera
+ * screen mounts, and the screen re-renders its whole tree around the request (loading → permission
+ * fallback → camera). Interleaving the two checks removes the race in both directions — a dialog that
+ * arrives late still gets accepted, and a permission that was already granted costs nothing because
+ * `isReady` simply passes on the first poll.
+ *
+ * @param isReady - cheap, non-throwing probe for "the screen we want is on display"
+ * @returns true once `isReady` passes; false if the timeout elapsed first (caller reports the context)
+ */
+export async function acceptSystemAlertsUntil(
+  isReady: () => Promise<boolean>,
+  { timeoutMs = 30_000, pollMs = 500 }: { timeoutMs?: number; pollMs?: number } = {}
+): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs
+  for (;;) {
+    if (await hasNativePopup()) {
+      // Short appear-timeout: we already know a popup is up, so this goes straight to accepting it.
+      await acceptSystemAlert(1_000).catch((err) => {
+        console.log(`[alerts] Failed to accept popup while waiting for screen: ${(err as Error).message ?? err}`)
+      })
+    } else if (await isReady()) {
+      return true
+    }
+    if (Date.now() > deadline) return false
+    await driver.pause(pollMs)
+  }
+}
+
+/**
  * Dismiss/deny a native system alert — the negative counterpart of
  * `acceptSystemAlert`. Used to exercise declined-permission codepaths.
  */

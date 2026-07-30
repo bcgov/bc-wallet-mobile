@@ -17,6 +17,15 @@ export interface ImagePadding {
   bottom?: number
   left?: number
 }
+
+/** A rectangle of the source image to cover with opaque white, normalized 0–1 in both axes. */
+export interface ImageMaskRegion {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
 /**
  * Add whitespace padding around an image so it aligns with a scanner target
  * area after Sauce Labs scales it to fill the camera frame.
@@ -27,11 +36,11 @@ export interface ImagePadding {
  * @returns base64-encoded PNG of the padded image.
  */
 export async function padImage(
-  imagePath: string,
+  image: string | Buffer,
   padding: ImagePadding,
   background: sharp.Color = DEFAULT_PAD_IMAGE_BACKGROUND
 ): Promise<string> {
-  const buf = await sharp(imagePath)
+  const buf = await sharp(image)
     .extend({
       top: padding.top ?? 0,
       right: padding.right ?? 0,
@@ -42,6 +51,38 @@ export async function padImage(
     .png()
     .toBuffer()
   return buf.toString('base64')
+}
+
+/**
+ * Cover regions of an image with opaque white so no barcode on it can decode.
+ *
+ * Needed because Sauce's Android injection replaces the WHOLE camera pipeline — including the
+ * frame stream vision-camera's code scanner (MLKit) reads — so a decodable barcode on an injected
+ * evidence image is scanned exactly as if a real card were held to the camera, and the app REACTS
+ * to it (e.g. the non-BCSC evidence flow asks the backend about a scanned serial and reroutes into
+ * card setup on a match). Masking keeps the picture looking like the document while making it
+ * undecodable. iOS injection cannot synthesize code-39/PDF-417 scans at all, so masking there is a
+ * harmless no-op in effect.
+ */
+export async function maskImageRegions(imagePath: string, masks: readonly ImageMaskRegion[]): Promise<Buffer> {
+  const image = sharp(imagePath)
+  const { width, height } = await image.metadata()
+  if (!width || !height) {
+    throw new Error(`maskImageRegions: could not read dimensions of ${imagePath}`)
+  }
+  const overlays: sharp.OverlayOptions[] = masks.map((mask) => ({
+    input: {
+      create: {
+        width: Math.max(1, Math.round(mask.width * width)),
+        height: Math.max(1, Math.round(mask.height * height)),
+        channels: 3,
+        background: { r: 255, g: 255, b: 255 },
+      },
+    },
+    left: Math.round(mask.x * width),
+    top: Math.round(mask.y * height),
+  }))
+  return image.composite(overlays).toBuffer()
 }
 
 /**
@@ -114,11 +155,17 @@ export async function injectCameraImage(imagePathOrBase64: string): Promise<void
 /**
  * Inject a photo (ID card, selfie, evidence) into the device camera.
  *
- * Convenience wrapper — resolves from `e2e/assets/` and delegates to
- * {@link injectCameraImage}.
+ * Convenience wrapper — resolves from `e2e/assets/`, optionally masks barcode regions
+ * ({@link maskImageRegions} — REQUIRED for any image carrying a decodable barcode when a code
+ * scanner is live behind the capture screen), pads, and delegates to {@link injectCameraImage}.
  */
-export async function injectPhoto(imagePathOrName: string, padding: ImagePadding): Promise<void> {
+export async function injectPhoto(
+  imagePathOrName: string,
+  padding: ImagePadding,
+  masks: readonly ImageMaskRegion[] = []
+): Promise<void> {
   const resolved = resolveAssetPath(imagePathOrName)
-  const padded = await padImage(resolved, padding)
+  const source = masks.length > 0 ? await maskImageRegions(resolved, masks) : resolved
+  const padded = await padImage(source, padding)
   await injectCameraImage(padded)
 }
