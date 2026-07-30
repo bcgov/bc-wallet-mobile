@@ -1091,7 +1091,7 @@ const translation = {
     },
     "VerificationCardError": {
       "CardExpired": {
-        "Heading": "Sorry, you can't add this card.",
+        "Heading": "Sorry, you can't add this card",
         "Description": "This card is no longer valid. It has expired.",
         "ButtonText": "Get a BC Services Card"
       }
@@ -1099,27 +1099,27 @@ const translation = {
     // TODO: placeholder copy — needs content review before ship
     "DeviceAuthorizationError": {
       "InvalidParameter": {
-        "Heading": "Sorry, you can't add this card.",
+        "Heading": "Sorry, you can't add this card",
         "Description": "There was a problem with the information provided. Please try again.",
         "ButtonText": "Contact us"
       },
       "CardInactive": {
-        "Heading": "Sorry, you can't add this card.",
+        "Heading": "Sorry, you can't add this card",
         "Description": "There is a problem with the card.",
         "ButtonText": "Contact us"
       },
       "CardReplaced": {
-        "Heading": "Sorry, you can't add this card.",
+        "Heading": "Sorry, you can't add this card",
         "Description": "This card is no longer valid. It's been replaced by another card.",
         "ButtonText": "Get a BC Services Card"
       },
       "CardCancelled": {
-        "Heading": "Sorry, you can't add this card.",
+        "Heading": "Sorry, you can't add this card",
         "Description": "This card is no longer valid. It's been cancelled.",
         "ButtonText": "Get a BC Services Card"
       },
       "CardRenewed": {
-        "Heading": "Sorry, you can't add this card.",
+        "Heading": "Sorry, you can't add this card",
         "Description": "This card is no longer valid. It has been renewed by another card.",
         "ButtonText": "Get a BC Services Card"
       },
@@ -1129,17 +1129,17 @@ const translation = {
         "ButtonText": "Get a BC Services Card"
       },
       "TooManyAttempts": {
-        "Heading": "Sorry, you can't add this card.",
+        "Heading": "Sorry, you can't add this card",
         "Description": "Please try again later.",
         "ButtonText": ""
       },
       "CardProblem": {
-        "Heading": "Sorry, you can't add this card.",
+        "Heading": "Sorry, you can't add this card",
         "Description": "There's a problem with this card. Please contact us for help.",
         "ButtonText": "Contact us"
       },
       "AdditionalCard": {
-        "Heading": "Sorry, you can't add this card.",
+        "Heading": "Sorry, you can't add this card",
         "Description": "A new card has been issued and this card is no longer authorized.",
         "ButtonText": "Contact us"
       },
@@ -1149,8 +1149,8 @@ const translation = {
         "ButtonText": "Contact us"
       },
       "TooManyMobileCards": {
-        "Heading": "Sorry, you can't add this card.",
-        "Description": "Your account already has the maximum number of active mobile cards.",
+        "Heading": "Sorry, you can't add this card",
+        "Description": "\nYou may only have the app on five mobile devices at a time.\n\nIf you deleted the app from a device without resetting it first, then it will still count as one of your devices.\n\nYou need to remove at least one of the devices from your account.",
         "ButtonText": "Contact us"
       }
     },
