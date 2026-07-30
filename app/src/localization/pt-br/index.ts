@@ -277,7 +277,7 @@ const translation = {
     "HelpMenu": {
       "Title": "Need help? (PT-BR)",
       "AccessibilityLabel": "Help menu (PT-BR)",
-      "Version": "BCSC version: {{ version }} (PT-BR)",
+      "Version": "App version: {{ version }} (PT-BR)",
       "LearnMore": "Learn more (PT-BR)",
       "GiveFeedback": "Give feedback (PT-BR)",
       "ReportProblem": "Report a problem (PT-BR)",
@@ -364,7 +364,7 @@ const translation = {
     },
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online (PT-BR)",
-      "AppStartup": "Getting your BCSC App ready... (PT-BR)"
+      "AppStartup": "Getting your BC Services Card app ready... (PT-BR)"
     },
     "AccountLanding": {
       "Title": "BC Services Card (PT-BR)",
@@ -430,7 +430,7 @@ const translation = {
       "HelpHeader": "Help (PT-BR)",
       "MoreInfoHeader": "More Information (PT-BR)",
       "Help": "Help (PT-BR)",
-      "HelpUsingApp": "Help using BC Services Card app(PT-BR)",
+      "HelpUsingApp": "Help using BC Services Card app (PT-BR)",
       "SignOut": "Sign out (PT-BR)",
       "Biometrics": "Biometrics (PT-BR)",
       "EditNickname": "Edit Nickname (PT-BR)",

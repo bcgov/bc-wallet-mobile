@@ -277,7 +277,7 @@ const translation = {
     "HelpMenu": {
       "Title": "Need help?",
       "AccessibilityLabel": "Help menu",
-      "Version": "BCSC version: {{ version }}",
+      "Version": "App version: {{ version }}",
       "LearnMore": "Learn more",
       "GiveFeedback": "Give feedback",
       "ReportProblem": "Report a problem",
@@ -364,7 +364,7 @@ const translation = {
     },
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online",
-      "AppStartup": "Getting your BCSC App ready..."
+      "AppStartup": "Getting your BC Services Card app ready..."
     },
     "AccountLanding": {
       "Title": "BC Services Card",
