@@ -393,7 +393,7 @@ describe('CameraFormat', () => {
   })
 
   describe('MaskedWithBarcodeDetection: RealDevice', () => {
-    it('should return format-3 for RealDevice', () => {
+    it('should return format-16 for RealDevice', () => {
       const format: any = getCameraFormat(RealDevice as any, CameraFormat.MaskedWithBarcodeDetection)
 
       expect(format?._id).toBe('format-16')
