@@ -16,17 +16,15 @@ describe('capture-date utils', () => {
   })
 
   describe('isPlausibleCaptureDateSeconds', () => {
-    it('pins the floor to 2020-01-01, not the pre-revision 2026-06-01 value', () => {
+    it('pins the floor to 2020-01-01', () => {
       // The boundary tests below assert relative to this constant, so they pass for ANY floor
       // value — pinning the literal here is what actually protects against a floor regression.
       expect(MIN_PLAUSIBLE_CAPTURE_DATE_SECONDS).toBe(1577836800)
     })
 
-    it('treats a v3-migrated early-2026 date as plausible (below the pre-revision floor, above the 2020 one)', () => {
-      // 1_773_100_000 (~2026-03-10) sits below the old 2026-06-01 floor this revision reverted
-      // and above the 2020-01-01 floor it restored — mirrors EvidenceTimestampsTest.kt's
-      // equivalent case on the Kotlin side. Without this, no test here would catch a regression
-      // back to the old floor value.
+    it('treats a v3-migrated early-2026 date as plausible', () => {
+      // Mirrors EvidenceTimestampsTest.kt's equivalent case: v3-migrated data can predate the
+      // v4 release, so the floor must not creep toward capture-recent.
       expect(isPlausibleCaptureDateSeconds(1_773_100_000)).toBe(true)
     })
 
