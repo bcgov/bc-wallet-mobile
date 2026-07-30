@@ -2,8 +2,9 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { isCanadianPostalCode, ProvinceCode } from '@/bcsc-theme/utils/address-utils'
+import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
+import { firstErrorKey, postalCodeSchema } from '@/bcsc-theme/utils/validation'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
@@ -82,7 +83,6 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
    */
   const validateForm = useCallback(
     (values: ResidentialAddressFormState): ResidentialAddressFormErrors => {
-      // TODO (MD): Investigate a proper schema validation library if this gets more complex ie: yup, zod, etc.
       const errors: ResidentialAddressFormErrors = {}
 
       if (!values.streetAddress) {
@@ -94,8 +94,9 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
       if (!values.province) {
         errors.province = t('BCSC.Address.ProvinceInvalid')
       }
-      if (!isCanadianPostalCode(values.postalCode)) {
-        errors.postalCode = t('BCSC.Address.PostalCodeInvalid')
+      const postalCodeErrorKey = firstErrorKey(postalCodeSchema, values.postalCode)
+      if (postalCodeErrorKey) {
+        errors.postalCode = t(postalCodeErrorKey)
       }
 
       return errors
