@@ -186,10 +186,10 @@ const MaskedCamera = ({
     try {
       let photo: PhotoFile
       if (cameraFace === 'back') {
-        // Use `takeSnapshot` on back camera: signifigantly faster read and write
+        // Use `takeSnapshot` on back camera: significantly faster read/write
         photo = await cameraRef.current.takeSnapshot({ quality: 90 })
       } else {
-        // Use `takePhoto` on front camera: `takeSnapshot` flips image vertially (front camera bug)
+        // Use `takePhoto` on front camera: `takeSnapshot` flips image vertically (front camera bug)
         photo = await cameraRef.current.takePhoto({
           flash: 'off',
           enableShutterSound: false,
