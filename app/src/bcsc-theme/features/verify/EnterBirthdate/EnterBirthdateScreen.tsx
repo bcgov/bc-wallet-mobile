@@ -19,7 +19,6 @@ import moment from 'moment'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
-import { VerificationCardError } from '../verificationCardError'
 import { useEnterBirthdateViewModel } from './useEnterBirthdateViewModel'
 
 type EnterBirthdateScreenProps = {
@@ -62,14 +61,9 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
       }
       await vm.authorizeDevice(vm.serial, parseBirthdateToLocalDate(birthDate))
     } catch (error) {
-      if (isHandledAppError(error)) {
-        return
+      if (!isHandledAppError(error)) {
+        logger.error('Device authorization failed while entering birthdate', { error })
       }
-
-      logger.error('CSN and birthdate mismatch, card not found', { error })
-      navigation.navigate(BCSCScreens.VerificationCardError, {
-        errorType: VerificationCardError.MismatchedSerial,
-      })
     } finally {
       setLoading(false)
     }
