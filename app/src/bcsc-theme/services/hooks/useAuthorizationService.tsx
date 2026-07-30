@@ -39,10 +39,8 @@ const DEVICE_AUTHORIZATION_ERROR_MAP: Partial<Record<AppEventCode, DeviceAuthori
 
 export interface AuthorizationServiceCallOptions {
   /**
-   * Skip this service's error handling (navigation/alert) entirely and rethrow the raw error
-   * untouched — for callers that already own error handling for this call. Barcode scanning is
-   * the current example: an unmatched card is an expected "not a BCSC, continue as evidence"
-   * outcome there, not a failure this service should surface.
+   * Skip this service's error handling and rethrow the error
+   * Barcode scanning is an example of a flow that will handle errors on it's own
    */
   skipErrorHandling?: boolean
 }
@@ -82,7 +80,7 @@ export const useAuthorizationService = () => {
 
   /**
    * Matches a device authorization error's appEvent to a card-status error screen and navigates
-   * to it. Falls back to a global alert for anything not in the card-status map.
+   * to it. Falls back to a global alert for anything not found
    *
    * @param error - The error thrown by a device authorization api call.
    */
@@ -97,13 +95,13 @@ export const useAuthorizationService = () => {
         return
       }
 
-      const cardErrorType = VERIFICATION_CARD_ERROR_MAP[error.appEvent]
+      const cardErrorType = VERIFICATION_CARD_ERROR_MAP[error.technicalMessage]
       if (cardErrorType) {
         navigation.navigate(BCSCScreens.VerificationCardError, { errorType: cardErrorType })
         return
       }
 
-      const deviceAuthErrorType = DEVICE_AUTHORIZATION_ERROR_MAP[error.appEvent]
+      const deviceAuthErrorType = DEVICE_AUTHORIZATION_ERROR_MAP[error.technicalMessage]
       if (deviceAuthErrorType) {
         navigation.navigate(BCSCScreens.DeviceAuthorizationError, { errorType: deviceAuthErrorType })
         return
@@ -115,10 +113,10 @@ export const useAuthorizationService = () => {
   )
 
   /**
-   * Authorizes a device with a known BCSC card, handling card-status errors.
+   * Authorizes a device with a known BCSC card
    *
    * @param serial - BCSC serial number
-   * @param birthdate - User's birth date
+   * @param birthdate - Birth date
    * @param options - Set `skipErrorHandling` to rethrow errors untouched instead of navigating/alerting
    */
   const authorizeDevice = useCallback(
@@ -191,7 +189,7 @@ export const useAuthorizationService = () => {
 
   return useMemo(
     () => ({
-      ...authorizationApi, // Spread the base API to include all its methods
+      ...authorizationApi,
       authorizeDevice,
       authorizeDeviceWithUnknownBCSC,
       authorizeDeviceWithBarcodes,
