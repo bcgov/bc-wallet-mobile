@@ -1105,28 +1105,33 @@ const translation = {
       },
       "CardInactive": {
         "Heading": "Sorry, you can't add this card.",
-        "Description": "This card has been suspended.",
+        "Description": "There is a problem with the card.",
         "ButtonText": "Contact us"
       },
       "CardReplaced": {
         "Heading": "Sorry, you can't add this card.",
-        "Description": "This card has been replaced.",
+        "Description": "This card is no longer valid. It's been replaced by another card.",
         "ButtonText": "Get a BC Services Card"
       },
       "CardCancelled": {
         "Heading": "Sorry, you can't add this card.",
-        "Description": "This card has been cancelled.",
+        "Description": "This card is no longer valid. It's been cancelled.",
         "ButtonText": "Get a BC Services Card"
       },
       "CardRenewed": {
         "Heading": "Sorry, you can't add this card.",
-        "Description": "This card has been renewed. Please use your new card.",
+        "Description": "This card is no longer valid. It has been renewed by another card.",
         "ButtonText": "Get a BC Services Card"
       },
       "NonPhotoCard": {
         "Heading": "This card can't be used",
-        "Description": "This card doesn't have a photo and can't be used for this process.",
-        "ButtonText": "Contact us"
+        "Description": "A card with a photo is required.",
+        "ButtonText": "Get a BC Services Card"
+      },
+      "TooManyAttempts": {
+        "Heading": "Sorry, you can't add this card.",
+        "Description": "Please try again later.",
+        "ButtonText": ""
       },
       "CardProblem": {
         "Heading": "Sorry, you can't add this card.",
@@ -1347,8 +1352,6 @@ const translation = {
       "MissingPrerequisiteAttributes": "Missing prerequisite user attributes",
       "NoDeviceCodeFound": "Device previously registered, but no deviceCode found in store",
       "AddressSaved": "Address saved",
-      "AuthorizationErrorTitle": "Authorization failed",
-      "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again.",
     },
     "Wallet": {
       "EmptyMessage": "Your wallet is empty",
