@@ -1,7 +1,7 @@
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
 import { TOKENS, useServices } from '@bifold/core'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SystemModal } from '../../modal/components/SystemModal'
 import useCancelledReviewViewModel from './CancelledReviewViewModel'
@@ -19,6 +19,7 @@ const CancelledReview = ({ route }: CancelledReviewProps) => {
   const { t } = useTranslation()
   const { cleanUpVerificationData, goToMethodSelection } = useCancelledReviewViewModel()
   const [isLoading, setIsLoading] = useState(false)
+  const resettingRef = useRef(false)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const loadingScreen = useLoadingScreen()
 
@@ -38,6 +39,8 @@ const CancelledReview = ({ route }: CancelledReviewProps) => {
       buttonText={t('BCSC.CancelledVerification.Button')}
       buttonDisabled={isLoading}
       onButtonPress={async () => {
+        if (resettingRef.current) return
+        resettingRef.current = true
         setIsLoading(true)
         const stopLoading = loadingScreen.startLoading(t('Alerts.RestartVerification.Loading'))
         try {
@@ -47,9 +50,11 @@ const CancelledReview = ({ route }: CancelledReviewProps) => {
             goToMethodSelection()
             return
           }
+          resettingRef.current = false
           setIsLoading(false)
         } catch (error) {
           logger.error('CancelledReview: Error during factory reset on account', error as Error)
+          resettingRef.current = false
           setIsLoading(false)
         } finally {
           stopLoading()
