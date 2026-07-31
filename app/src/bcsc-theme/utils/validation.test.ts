@@ -94,7 +94,13 @@ describe('validation', () => {
     })
 
     it('accepts ordinary addresses', () => {
-      const valid = ['a@b.io', 'jane@some-company.com', 'jane.doe@sub.domain.co.uk', 'name@host.museum']
+      const valid = [
+        'a@b.io',
+        'jane@some-company.com',
+        'jane.doe@sub.domain.co.uk',
+        'name@host.museum',
+        'first_last@example.com', // underscores, which the previous regex also allowed
+      ]
 
       for (const email of valid) {
         expect(firstErrorKey(emailSchema, email)).toBeNull()

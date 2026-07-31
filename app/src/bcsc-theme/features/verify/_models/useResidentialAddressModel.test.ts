@@ -374,6 +374,47 @@ describe('useResidentialAddressModel', () => {
       expect(mockUpdateCardProcess).toHaveBeenCalledWith('test-process')
     })
 
+    it('should send the same trimmed values it persists', async () => {
+      const mockDeviceAuth = {
+        device_code: 'new-device-code',
+        user_code: 'new-user-code',
+        expires_in: 3600,
+        verification_options: 'video_call',
+        process: 'test-process',
+      }
+      mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockResolvedValue(mockDeviceAuth)
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      // Padded input passes validation because the schema trims, so the payload must be trimmed too
+      act(() => {
+        result.current.handleChange('postalCode', ' V6B 1A1 ')
+        result.current.handleChange('city', ' Vancouver ')
+        result.current.handleChange('streetAddress', ' 123 Main St ')
+      })
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(mockAuthorizationApi.authorizeDeviceWithUnknownBCSC).toHaveBeenCalledWith(
+        expect.objectContaining({
+          address: {
+            streetAddress: '123 Main St',
+            city: 'Vancouver',
+            province: 'BC',
+            postalCode: 'V6B 1A1',
+          },
+        })
+      )
+
+      expect(mockUpdateUserMetadata).toHaveBeenCalledWith(
+        expect.objectContaining({
+          address: expect.objectContaining({ city: 'Vancouver', postalCode: 'V6B 1A1' }),
+        })
+      )
+    })
+
     it('should merge streetAddress2 with newline when present', async () => {
       const storeWithAddress2 = {
         ...mockStore,
