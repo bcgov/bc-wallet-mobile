@@ -49,9 +49,11 @@ config.services = [
       // (`smoke.spec.ts`), NOT the file this worker is running — so deriving the name from
       // `runnerConfig.specs` labels every parallel job "Smoke". `suiteTitle` is the per-worker
       // signal: the running file's Mocha `describe(...)` title (e.g. "Verify journey: entry
-      // detours"), which is already human-readable. TEST_NAME still overrides for one-off runs.
+      // detours"), which is already human-readable. TEST_NAME (e.g. nightly's
+      // "E2E regression - Android 15") is a PREFIX, not an override — as an override every job
+      // in a run shares one name and the Sauce job list cannot tell the journeys apart.
       setJobName: (_runnerConfig: Options.Testrunner, _caps: unknown, suiteTitle: string) =>
-        process.env.TEST_NAME || suiteTitle || 'E2E Tests',
+        [process.env.TEST_NAME, suiteTitle].filter(Boolean).join(' - ') || 'E2E Tests',
     },
   ],
 ]

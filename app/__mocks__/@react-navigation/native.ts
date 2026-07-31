@@ -47,6 +47,20 @@ const StackActions = {
   pop: jest.fn((count) => ({ type: 'POP', payload: { count } })),
 }
 
+// Minimal stand-in for React Navigation's theme context, used by @react-navigation/elements
+// components (e.g. Header) that can be rendered outside a navigator.
+const useTheme = () => ({
+  dark: false,
+  colors: {
+    primary: '#003366',
+    background: '#FFFFFF',
+    card: '#FFFFFF',
+    text: '#313132',
+    border: '#D3D3D3',
+    notification: '#003366',
+  },
+})
+
 const useFocusEffect = jest.fn()
 const createNavigatorFactory = jest.fn()
 const createNavigationContainerRef = jest.fn(() => ({
@@ -65,4 +79,5 @@ export {
   useIsFocused,
   useNavigation,
   useRoute,
+  useTheme,
 }

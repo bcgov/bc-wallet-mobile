@@ -128,7 +128,7 @@ exports[`EnvironmentSelector snapshots renders correctly 1`] = `
               }
             }
           >
-            Prod
+            PROD
           </Text>
           <View
             ImageComponent={[Function]}
@@ -296,7 +296,7 @@ exports[`EnvironmentSelector snapshots renders correctly 1`] = `
               }
             }
           >
-            Preprod
+            PREPROD
           </Text>
           <View
             ImageComponent={[Function]}
@@ -588,7 +588,7 @@ exports[`EnvironmentSelector snapshots renders correctly 1`] = `
               }
             }
           >
-            Test
+            TEST
           </Text>
           <View
             ImageComponent={[Function]}
@@ -734,7 +734,7 @@ exports[`EnvironmentSelector snapshots renders correctly 1`] = `
               }
             }
           >
-            Sit
+            SIT
           </Text>
           <View
             ImageComponent={[Function]}
@@ -880,7 +880,7 @@ exports[`EnvironmentSelector snapshots renders correctly 1`] = `
               }
             }
           >
-            Dev
+            DEV
           </Text>
           <View
             ImageComponent={[Function]}
@@ -1026,7 +1026,7 @@ exports[`EnvironmentSelector snapshots renders correctly 1`] = `
               }
             }
           >
-            Dev2
+            DEV2
           </Text>
           <View
             ImageComponent={[Function]}

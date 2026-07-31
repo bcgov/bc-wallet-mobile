@@ -8,7 +8,7 @@ import {
   VideoStabilizationMode,
 } from 'react-native-vision-camera'
 
-import { PHOTO_RESOLUTION_1080P, PHOTO_RESOLUTION_720P } from '@/constants'
+import { PHOTO_RESOLUTION_1080P } from '@/constants'
 
 // ─── Shared Types ─────────────────────────────────────────────────────────────
 
@@ -91,17 +91,21 @@ export const CameraFormat = {
     {
       videoHdr: false,
     },
-    // Medium resolution for moderate capture quality
+    // Use phase-detection autofocus for faster and more accurate focusing on barcodes
     {
-      photoResolution: PHOTO_RESOLUTION_720P,
-    },
-    // Moderate FPS for smooth preview without excessive processing load
-    {
-      fps: 30,
+      autoFocusSystem: 'phase-detection',
     },
     // High resolution for better barcode detection
     {
       videoResolution: PHOTO_RESOLUTION_1080P,
+    },
+    // High resolution for better photo quality when capturing the ID card
+    {
+      photoResolution: PHOTO_RESOLUTION_1080P,
+    },
+    // Moderate FPS for smooth preview without excessive processing load
+    {
+      fps: 60,
     },
     // Enable video stabilization for steadier scanning
     {
