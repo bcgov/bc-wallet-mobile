@@ -1,7 +1,7 @@
 import * as BCSCLoadingContextModule from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { testIdWithKey } from '@bifold/core'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import CancelledReview from './CancelledReview'
