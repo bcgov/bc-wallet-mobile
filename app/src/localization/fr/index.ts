@@ -1294,6 +1294,8 @@ const translation = {
       "MissingPrerequisiteAttributes": "Missing prerequisite user attributes (FR)",
       "NoDeviceCodeFound": "Device previously registered, but no deviceCode found in store (FR)",
       "AddressSaved": "Address saved (FR)",
+      "AuthorizationErrorTitle": "Authorization failed (FR)",
+      "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again. (FR)",
     },
     "Wallet": {
       "EmptyMessage": "Your wallet is empty (FR)",
