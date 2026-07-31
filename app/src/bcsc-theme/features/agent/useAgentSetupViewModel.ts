@@ -31,6 +31,7 @@ export interface AgentSetupResult {
   retry: () => void
   resetWallet: () => Promise<void>
   teardownAgent: () => Promise<void>
+  waitForAgent: () => Promise<Agent | null>
 }
 
 const useAgentSetupViewModel = (): AgentSetupResult => {
@@ -403,7 +404,31 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
     }
   }, [logger, attestationMonitor, credentialProvisioningMonitor])
 
-  return { agent, status, error, retry, resetWallet, teardownAgent }
+  /**
+   * Asynchronously waits for the agent to be ready. Resolves immediately if the
+   * agent is already ready, otherwise polls until the agent is ready or an error occurs.
+   *
+   * @returns The agent if ready, or null if an error occurred
+   */
+  const waitForAgent = useCallback(async (): Promise<Agent | null> => {
+    if (agentRef.current || agentRef.current === null) {
+      return agentRef.current
+    }
+
+    return new Promise((resolve) => {
+      const interval = setInterval(() => {
+        if (agentRef.current) {
+          clearInterval(interval)
+          resolve(agentRef.current)
+        } else if (statusRef.current === 'error') {
+          clearInterval(interval)
+          resolve(null)
+        }
+      }, 100)
+    })
+  }, [])
+
+  return { agent, status, error, retry, resetWallet, teardownAgent, waitForAgent }
 }
 
 export default useAgentSetupViewModel

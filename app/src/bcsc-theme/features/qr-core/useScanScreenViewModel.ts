@@ -40,7 +40,7 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
   // pairing-code QR path — keep working while the agent is still booting or has
   // failed to initialize. Strategies tolerate a missing agent: PairingCodeStrategy
   // ignores it; DidCommOobStrategy returns `{ kind: 'unsupported', reason: 'AgentNotReady' }`.
-  const agent = useBCSCAgent().agent ?? undefined
+  const { waitForAgent } = useBCSCAgent()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store] = useStore<BCState>()
   // Sent to the inviter as our label when we accept their invitation — they
@@ -50,6 +50,7 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
   const { hasPermission, requestPermission } = useCameraPermission()
   const { isLoading: isPermissionLoading } = useAutoRequestPermission(hasPermission, requestPermission)
   const [isProcessing, setIsProcessing] = useState(false)
+  // TODO (MD): Swap this for AppError OR directly display BCSC error modal
   const [scanError, setScanError] = useState<QrCodeScanError | null>(null)
   const isProcessingRef = useRef(false)
   // ScanCamera continues firing frames after a successful scan, so a second
@@ -70,12 +71,14 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
 
       try {
         const strategy = strategies.find((s) => s.matches(value))
+        logger.info(value)
         if (!strategy) {
           setScanError(new QrCodeScanError(t('BCSC.Scan.UnrecognizedQR'), value))
           return
         }
 
-        const result = await strategy.handle(value, { agent, logger, label: scanLabel })
+        const result = await strategy.handle(value, { agent: waitForAgent(), logger, label: scanLabel })
+
         switch (result.kind) {
           case 'connection':
             // Latch before the navigation handoff so frames that land during
@@ -128,7 +131,7 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
         setIsProcessing(false)
       }
     },
-    [strategies, scanError, t, agent, logger, scanLabel, onConnectionFound, onPairingCodeFound]
+    [scanError, strategies, waitForAgent, logger, scanLabel, t, onConnectionFound, onPairingCodeFound]
   )
 
   const dismissError = useCallback(() => setScanError(null), [])

@@ -1,6 +1,8 @@
 import type { BifoldLogger } from '@bifold/core'
 import type { Agent } from '@credo-ts/core'
 
+type AnyAgent = Agent | null | Promise<Agent | null>
+
 export type ScanResult =
   | { kind: 'connection'; oobRecordId: string }
   | { kind: 'pairing-code'; pairingCode: string }
@@ -8,7 +10,7 @@ export type ScanResult =
   | { kind: 'unrecognized' }
 
 export interface ScanContext {
-  agent: Agent | undefined
+  agent: AnyAgent
   logger: BifoldLogger
   /**
    * Label this wallet sends to the inviter when accepting an OOB invitation.

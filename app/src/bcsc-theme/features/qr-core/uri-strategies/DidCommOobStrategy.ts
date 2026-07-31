@@ -15,7 +15,11 @@ const DidCommOobStrategy: UriStrategy = {
   },
 
   async handle(uri, ctx: ScanContext): Promise<ScanResult> {
-    const { agent, logger } = ctx
+    const { agent: agentPromise, logger } = ctx
+
+    // agent may be a promise, so await it here to ensure it's ready before proceeding
+    const agent = await agentPromise
+
     if (!agent) {
       return { kind: 'unsupported', reason: 'AgentNotReady' }
     }
