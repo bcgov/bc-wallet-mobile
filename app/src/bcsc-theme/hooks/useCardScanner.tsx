@@ -161,10 +161,10 @@ export const useCardScanner = () => {
       )
 
       try {
+        // short cutting the error handling in authorizationService because
+        // the scan flow pushes non matches into the non-bcsc flow
         const deviceAuth = await authorizationService.authorizeDeviceWithBarcodes(
           buildBarcodePayload(bcscSerial, license),
-          // A non-match here is an expected "not a BCSC, continue as evidence" outcome, not a
-          // failure — the service's card-status navigation/alerting doesn't apply.
           { skipErrorHandling: true }
         )
         await updateUserInfo({ serial: bcscSerial, birthdate: license.birthDate })
