@@ -9,6 +9,7 @@ import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCh
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { InstallIdSystemCheck } from '@/services/system-checks/InstallIdSystemCheck'
+import { PendingVerificationRecoverySystemCheck } from '@/services/system-checks/PendingVerificationRecoverySystemCheck'
 import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClockSkewSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { TermsOfUseSystemCheck } from '@/services/system-checks/TermsOfUseSystemCheck'
@@ -179,6 +180,15 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
             }
             return tokenApi.checkDeviceCodeStatus(deviceCode, userCode)
           },
+          utils
+        )
+      )
+    } else if (!isVerified && store.bcscSecure.deviceCode && store.bcscSecure.userCode) {
+      // Only meaningful when a verification request has been approved but the user has closed the app before completing the work flow
+      const { deviceCode, userCode } = store.bcscSecure
+      systemChecks.push(
+        new PendingVerificationRecoverySystemCheck(
+          () => tokenService.checkVerificationStatus(deviceCode, userCode),
           utils
         )
       )
