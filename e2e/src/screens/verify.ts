@@ -39,10 +39,14 @@ export const IdentitySelectionScreen = defineScreen({
 })
 
 /**
- * Camera scan screen (`ScanSerial`). Mount auto-requests camera permission — the OS dialog appears
- * on first entry (`acceptSystemAlert`); while the request is pending the screen is a loading view,
- * and when denied it renders the PermissionDisabled fallback (no testID — title copy only).
- * `primary` (EnterManually) is the CI path around the live camera.
+ * Camera scan screen (`ScanSerial`). Mount auto-requests camera permission and the screen swaps its
+ * whole tree around that request — loading view while it is pending, PermissionDisabled when denied,
+ * camera when granted — so reach it with `reachCameraScreen`, which accepts the OS dialog whenever it
+ * lands instead of racing a fixed window against the re-renders.
+ *
+ * `primary` (EnterManually) is the CI path around the live camera, and it is a deliberately good anchor:
+ * the PermissionDisabled fallback renders the SAME testID as its secondary action, so the flow reaches
+ * manual entry whether permission was granted or refused — only the loading view lacks it.
  */
 export const ScanSerialScreen = defineScreen({
   self: bcsc(v.scanSerial.enterManually),
@@ -223,13 +227,21 @@ export const IDPhotoInformationScreen = defineScreen({
 
 /**
  * `EvidenceCapture` — the MaskedCamera document capture (camera-only; on Sauce the image is injected,
- * else the physical camera is used). `self` is the camera container; `primary` is the shutter,
- * `secondary` the cancel/close.
+ * else the physical camera is used). `self`/`primary` is the shutter, `secondary` the cancel/close.
+ *
+ * `maskedCamera` is the container, and it renders EARLIER than the shutter: the container appears once
+ * the permission request settles, while the shutter waits on `useCameraDevice` resolving a device (until
+ * then MaskedCamera shows a "no camera available" placeholder with no shutter). Probe the container to
+ * tell "the push landed" apart from "the camera is still coming up" — anchoring only on the shutter
+ * makes a slow camera and a swallowed tap produce the identical failure.
  */
 export const EvidenceCaptureScreen = defineScreen({
   self: bcsc(v.evidenceCapture.takePhoto),
   primary: bcsc(v.evidenceCapture.takePhoto),
   secondary: bcsc(v.evidenceCapture.cancel),
+  elements: {
+    maskedCamera: bcsc(v.evidenceCapture.maskedCamera),
+  },
 })
 
 /**

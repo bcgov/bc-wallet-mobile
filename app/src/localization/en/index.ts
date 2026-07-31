@@ -125,13 +125,13 @@ const translation = {
       "ButtonTitle": "Finish up"
     },
     "AccountExpired": {
-      "Title": "Your BC Services card account has expired",
+      "Title": "Your BC Services Card account has expired",
       "Description": "Please reverify yourself to get access to your services",
       "ButtonTitle": "Start renewal"
     },
     "AccountRenewal": {
       "Title": "Time for renewal",
-      "Description": "Renew your BC Services card account before it expires on {{expiryDate}}",
+      "Description": "Renew your BC Services Card account before it expires on {{expiryDate}}",
       "ButtonTitle": "Start renewal"
     },
     "BasicMessage": {
@@ -213,6 +213,7 @@ const translation = {
     "EnableAppToAppPersonFlow": "App-to-app Person flow",
     "SwitchMode": "Switch mode",
     "SwitchTheme": "Switch theme",
+    "AppSection": "App",
     "Testing": "Testing",
     "ErrorAlertTest": "Error & Alert Testing",
     "StaleTermsOfUse": "Stale Terms of Use Acceptance",
@@ -260,7 +261,7 @@ const translation = {
     "Components": {
       "CloseDropdown": "Close dropdown menu",
     },
-    "Title": "BC Services card",
+    "Title": "BC Services Card",
     "LocaleStringFormat": "en-CA",
     "Screens": {
       "Settings": "Menu",
@@ -278,7 +279,7 @@ const translation = {
     "HelpMenu": {
       "Title": "Need help?",
       "AccessibilityLabel": "Help menu",
-      "Version": "BCSC version: {{ version }}",
+      "Version": "App version: {{ version }}",
       "LearnMore": "Learn more",
       "GiveFeedback": "Give feedback",
       "ReportProblem": "Report a problem",
@@ -365,10 +366,10 @@ const translation = {
     },
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online",
-      "AppStartup": "Getting your BCSC App ready..."
+      "AppStartup": "Getting your BC Services Card app ready..."
     },
     "AccountLanding": {
-      "Title": "BC Services card",
+      "Title": "BC Services Card",
       "Description": "A secure way to prove\nwho you are online",
       "Unlock": "Unlock",
     },
@@ -431,7 +432,7 @@ const translation = {
       "HelpHeader": "Help",
       "MoreInfoHeader": "More Information",
       "Help": "Help",
-      "HelpUsingApp": "Help using BCSC app",
+      "HelpUsingApp": "Help using BC Services Card app",
       "SignOut": "Sign out",
       "Biometrics": "Biometrics",
       "EditNickname": "Edit Nickname",
@@ -638,7 +639,7 @@ const translation = {
     },
     "ReverifyAccount": {
       "RenewalTitle": "Renew your account",
-      "ExpiredTitle": "Your BC Services card account has expired",
+      "ExpiredTitle": "Your BC Services Card account has expired",
       "Body": "Services require you to re-verify your account. You will need to complete this step in order to access your services online.",
       "BulletHeader": "You will need to:",
       "BulletOne": "Verify your email",
@@ -844,7 +845,7 @@ const translation = {
     },
     "AccountSetup": {
       "Title": "Have you verified before?",
-      "Description": "Do you already have the BCSC app set up on another nearby phone or tablet?",
+      "Description": "Do you already have the BC Services Card app set up on another nearby phone or tablet?",
       "AddAccount": "No, continue setup",
       "TransferAccount": "Yes, connect this device",
       "ContinueAs": "Continue as:",

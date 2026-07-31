@@ -125,13 +125,13 @@ const translation = {
       "ButtonTitle": "Finish up (FR)"
     },
     "AccountExpired": {
-      "Title": "Your BC Services card account has expired (FR)",
+      "Title": "Your BC Services Card account has expired (FR)",
       "Description": "Please reverify yourself to get access to your services (FR)",
       "ButtonTitle": "Start renewal (FR)"
     },
     "AccountRenewal": {
       "Title": "Time for renewal (FR)",
-      "Description": "Renew your BC Services card account before it expires on {{expiryDate}} (FR)",
+      "Description": "Renew your BC Services Card account before it expires on {{expiryDate}} (FR)",
       "ButtonTitle": "Start renewal (FR)"
     },
     "BasicMessage": {
@@ -213,6 +213,7 @@ const translation = {
     "EnableAppToAppPersonFlow": "App-to-app Person flow (FR)",
     "SwitchMode": "Switch mode (FR)",
     "SwitchTheme": "Switch theme (FR)",
+    "AppSection": "App (FR)",
     "Testing": "Testing (FR)",
     "ErrorAlertTest": "Error & Alert Testing (FR)",
     "StaleTermsOfUse": "Stale Terms of Use Acceptance (FR)",
@@ -260,7 +261,7 @@ const translation = {
     "Components": {
       "CloseDropdown": "Close dropdown menu (FR)",
     },
-    "Title": "BC Services card (FR)",
+    "Title": "BC Services Card (FR)",
     "LocaleStringFormat": "fr-CA",
     "Screens": {
       "Settings": "Menu (FR)",
@@ -278,7 +279,7 @@ const translation = {
     "HelpMenu": {
       "Title": "Need help? (FR)",
       "AccessibilityLabel": "Help menu (FR)",
-      "Version": "BCSC version: {{ version }} (FR)",
+      "Version": "App version: {{ version }} (FR)",
       "LearnMore": "Learn more (FR)",
       "GiveFeedback": "Give feedback (FR)",
       "ReportProblem": "Report a problem (FR)",
@@ -365,10 +366,10 @@ const translation = {
     },
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online (FR)",
-      "AppStartup": "Getting your BCSC App ready... (FR)"
+      "AppStartup": "Getting your BC Services Card app ready... (FR)"
     },
     "AccountLanding": {
-      "Title": "BC Services card (FR)",
+      "Title": "BC Services Card (FR)",
       "Description": "A secure way to prove\nwho you are online (FR)",
       "Unlock": "Unlock (FR)",
     },
@@ -431,7 +432,7 @@ const translation = {
       "HelpHeader": "Help (FR)",
       "MoreInfoHeader": "More Information (FR)",
       "Help": "Help (FR)",
-      "HelpUsingApp": "Help using BCSC app (FR)",
+      "HelpUsingApp": "Help using BC Services Card app (FR)",
       "SignOut": "Sign out (FR)",
       "Biometrics": "Biometrics (FR)",
       "EditNickname": "Edit Nickname (FR)",
@@ -638,7 +639,7 @@ const translation = {
     },
     "ReverifyAccount": {
       "RenewalTitle": "Renew your account (FR)",
-      "ExpiredTitle": "Your BC Services card account has expired (FR)",
+      "ExpiredTitle": "Your BC Services Card account has expired (FR)",
       "Body": "Services require you to re-verify your account. You will need to complete this step in order to access your services online. (FR)",
       "BulletHeader": "You will need to: (FR)",
       "BulletOne": "Verify your email (FR)",
@@ -844,7 +845,7 @@ const translation = {
     },
     "AccountSetup": {
       "Title": "Have you verified before? (FR)",
-      "Description": "Do you already have the BCSC app set up on another nearby phone or tablet? (FR)",
+      "Description": "Do you already have the BC Services Card app set up on another nearby phone or tablet? (FR)",
       "AddAccount": "No, continue setup (FR)",
       "TransferAccount": "Yes, connect this device (FR)",
       "ContinueAs": "Continue as: (FR)",

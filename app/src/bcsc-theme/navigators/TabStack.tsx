@@ -12,7 +12,7 @@ import {
 import { BottomTabBar, BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Animated, Platform, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -81,7 +81,16 @@ const TAB_BAR_HEIGHT = Platform.select({ ios: 49, android: 56, default: 56 })
 const ACTIVE_INDICATOR_HEIGHT = 3
 const ACTIVE_INDICATOR_DURATION_MS = 100
 
-const AnimatedTabBar: React.FC<BottomTabBarProps> = (props) => {
+type AnimatedTabBarProps = BottomTabBarProps & {
+  /**
+   * Reports the tab that is actually focused. The navigator's own state is the only reliable
+   * source for this: a `tabPress` that gets `preventDefault()`ed (the unverified Services gate)
+   * never changes the focused tab, and back navigation changes it without any press at all.
+   */
+  onActiveTabChange: (routeName: string) => void
+}
+
+const AnimatedTabBar: React.FC<AnimatedTabBarProps> = ({ onActiveTabChange, ...props }) => {
   const { ColorPalette } = useTheme()
   const { state } = props
   const tabCount = state.routes.length
@@ -90,6 +99,13 @@ const AnimatedTabBar: React.FC<BottomTabBarProps> = (props) => {
   const indicatorWidth = tabWidth * 0.8
   const indicatorOffset = (tabWidth - indicatorWidth) / 2
   const translateX = useRef(new Animated.Value(state.index * tabWidth + indicatorOffset)).current
+  const activeTabName = state.routes[state.index]?.name
+
+  useEffect(() => {
+    if (activeTabName) {
+      onActiveTabChange(activeTabName)
+    }
+  }, [activeTabName, onActiveTabChange])
 
   useEffect(() => {
     Animated.timing(translateX, {
@@ -119,6 +135,22 @@ const AnimatedTabBar: React.FC<BottomTabBarProps> = (props) => {
   )
 }
 
+/**
+ * Builds the navigator's `tabBar` renderer. A factory rather than an inline arrow so the component
+ * isn't redefined inside {@link BCSCTabStack} on every render, which would remount the tab bar and
+ * restart its indicator animation.
+ *
+ * @param onActiveTabChange - Called with the route name of the tab the navigator has focused.
+ * @returns A React component that renders the animated tab bar.
+ */
+const createAnimatedTabBar = (onActiveTabChange: (routeName: string) => void) => {
+  const AnimatedTabBarRenderer = (props: BottomTabBarProps): React.JSX.Element => (
+    <AnimatedTabBar {...props} onActiveTabChange={onActiveTabChange} />
+  )
+
+  return AnimatedTabBarRenderer
+}
+
 const BCSCTabStack: React.FC = () => {
   const Tab = createBottomTabNavigator<BCSCTabStackParams>()
   const theme = useTheme()
@@ -131,6 +163,8 @@ const BCSCTabStack: React.FC = () => {
   const { isActivelyVerified, isExpired } = useCardStatus()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const defaultStackOptions = useDefaultStackOptions(theme)
+  // `setActiveTab` is a stable state setter, so the tab bar component is built once per mount.
+  const tabBar = useMemo(() => createAnimatedTabBar(setActiveTab), [])
 
   const { TabTheme, ColorPalette, Spacing } = theme
 
@@ -181,12 +215,10 @@ const BCSCTabStack: React.FC = () => {
                 navigation.navigate(BCSCScreens.MainVerifyPrompt)
               }
             }
-
-            setActiveTab(route.name)
           },
         })}
         initialRouteName={BCSCScreens.Home}
-        tabBar={(props) => <AnimatedTabBar {...props} />}
+        tabBar={tabBar}
         screenOptions={{
           ...defaultStackOptions,
           // Show the header's own (native) shadow. TabHeaderWithoutBanner draws no drop-shadow caster,

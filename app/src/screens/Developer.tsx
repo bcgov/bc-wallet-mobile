@@ -1,4 +1,6 @@
+import { ListButton, ListButtonGroup, ListButtonProps } from '@/bcsc-theme/components/ListButton'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { Switch } from '@/components/Switch'
 import { BCThemeNames, Mode } from '@/constants'
 import { AutoCredentialMonitor } from '@/services/auto-credential'
 import { BCDispatchAction, BCState } from '@/store'
@@ -10,6 +12,7 @@ import {
   Screens,
   ScreenWrapper,
   testIdWithKey,
+  ThemedText,
   TOKENS,
   useAuth,
   useServices,
@@ -20,7 +23,7 @@ import { RemoteLogger, RemoteLoggerEventTypes } from '@bifold/remote-logs'
 import { useNavigation } from '@react-navigation/native'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { DeviceEventEmitter, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native'
+import { DeviceEventEmitter, StyleSheet, View } from 'react-native'
 import { deleteToken, TokenType } from 'react-native-bcsc-core'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import Icon from 'react-native-vector-icons/MaterialIcons'
@@ -29,12 +32,109 @@ import IASEnvironment from './IASEnvironment'
 import RemoteLogWarning from './RemoteLogWarning'
 import WalletEnvironment from './WalletEnvironment'
 
+const SectionHeader: React.FC<{ icon: string; title: string }> = ({ icon, title }) => {
+  const { TextTheme, Spacing } = useTheme()
+
+  return (
+    <View
+      style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingVertical: Spacing.md }}
+      accessibilityRole="header"
+    >
+      <Icon name={icon} size={22} color={TextTheme.bold.color} />
+      <ThemedText variant="bold" style={{ flexShrink: 1 }}>
+        {title}
+      </ThemedText>
+    </View>
+  )
+}
+
+interface RowProps {
+  title: string
+  bold?: boolean
+  endAdornment?: ReactNode
+  subContent?: ReactNode
+}
+
+const Row: React.FC<RowProps> = ({ title, bold, endAdornment, subContent }) => {
+  const { ColorPalette, Spacing } = useTheme()
+
+  return (
+    <View style={{ flex: 1, gap: Spacing.sm }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
+        <ThemedText
+          variant={bold ? 'bold' : 'normal'}
+          style={{ flex: 1, flexWrap: 'wrap', color: ColorPalette.brand.headerText }}
+        >
+          {title}
+        </ThemedText>
+        {endAdornment}
+      </View>
+      {subContent}
+    </View>
+  )
+}
+
+interface ToggleRowProps {
+  title: string
+  value: boolean
+  onToggle: () => void
+  accessibilityLabel: string
+  testID: string
+  bold?: boolean
+  disabled?: boolean
+  subContent?: ReactNode
+  position?: ListButtonProps['position']
+}
+
+const ToggleRow: React.FC<ToggleRowProps> = ({
+  title,
+  value,
+  onToggle,
+  accessibilityLabel,
+  testID,
+  bold,
+  disabled,
+  subContent,
+  position,
+}) => (
+  <ListButton
+    onPress={onToggle}
+    disabled={disabled}
+    accessibilityLabel={accessibilityLabel}
+    accessibilityRole="switch"
+    accessibilityState={{ checked: value, disabled }}
+    testID={testID}
+    position={position}
+  >
+    <Row
+      title={title}
+      bold={bold}
+      subContent={subContent}
+      endAdornment={<Switch value={value} disabled={disabled} presentational />}
+    />
+  </ListButton>
+)
+
+/** `Label: value` line shown beneath a row's title. */
+const RowDetail: React.FC<{ label: string; value: string }> = ({ label, value }) => {
+  const { ColorPalette } = useTheme()
+
+  return (
+    <ThemedText style={{ color: ColorPalette.brand.headerText }}>
+      {`${label}: `}
+      <ThemedText variant="bold" style={{ color: ColorPalette.brand.headerText }}>
+        {value}
+      </ThemedText>
+    </ThemedText>
+  )
+}
+
 const Developer: React.FC = () => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const { lockOutUser } = useAuth()
   const { client: apiClient } = useBCSCApiClientState()
-  const { SettingsTheme, TextTheme, ColorPalette, setTheme, themeName } = useTheme()
+  const { ColorPalette, Spacing, setTheme, themeName } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER]) as [RemoteLogger]
   const [credentialProvisioningMonitor] = useServices([TOKENS.UTIL_CREDENTIAL_PROVISIONING_MONITOR])
   const [environmentModalVisible, setEnvironmentModalVisible] = useState<boolean>(false)
@@ -82,44 +182,15 @@ const Developer: React.FC = () => {
 
   const styles = StyleSheet.create({
     container: {
-      backgroundColor: ColorPalette.brand.primaryBackground,
-      width: '100%',
+      padding: Spacing.lg,
     },
-    section: {
-      backgroundColor: SettingsTheme.groupBackground,
-      padding: 24,
-    },
-    sectionHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingBottom: 0,
-    },
-    sectionSeparator: {
-      marginBottom: 10,
-    },
-    sectionRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    rowTitle: {
-      ...TextTheme.headingFour,
-      flex: 1,
-      fontWeight: 'normal',
-      flexWrap: 'wrap',
-    },
-    rowSeparator: {
-      borderBottomWidth: 1,
-      borderBottomColor: ColorPalette.brand.primaryBackground,
-      marginHorizontal: 24,
-    },
-    logo: {
-      height: 64,
-      width: '50%',
-      marginVertical: 16,
+    sectionContainer: {
+      gap: Spacing.xs / 2,
+      borderRadius: Spacing.sm,
+      overflow: 'hidden',
     },
     footer: {
-      marginVertical: 25,
+      paddingTop: Spacing.lg,
       alignItems: 'center',
     },
   })
@@ -127,58 +198,6 @@ const Developer: React.FC = () => {
   const shouldDismissModal = () => {
     setEnvironmentModalVisible(false)
   }
-
-  const SectionHeader = ({ icon, title }: { icon: string; title: string }): React.ReactElement => (
-    <View style={[styles.section, styles.sectionHeader]}>
-      <Icon name={icon} size={24} style={{ marginRight: 10, color: TextTheme.normal.color }} />
-      <Text style={[TextTheme.headingThree, { flexShrink: 1 }]}>{title}</Text>
-    </View>
-  )
-
-  interface SectionRowProps {
-    title: string
-    accessibilityLabel?: string
-    testID?: string
-    children: React.ReactElement
-    showRowSeparator?: boolean
-    subContent?: React.ReactElement
-    onPress?: () => void
-  }
-  const SectionRow = ({
-    title,
-    accessibilityLabel,
-    testID,
-    onPress,
-    children,
-    showRowSeparator,
-    subContent,
-  }: SectionRowProps) => (
-    <>
-      <View style={styles.section}>
-        <View style={{ flexDirection: 'row' }}>
-          <Text style={styles.rowTitle}>{title}</Text>
-          <Pressable
-            onPress={onPress}
-            accessible={true}
-            accessibilityLabel={accessibilityLabel}
-            testID={testID}
-            style={styles.sectionRow}
-          >
-            {children}
-          </Pressable>
-        </View>
-        {subContent}
-      </View>
-      {showRowSeparator && (
-        <View style={{ backgroundColor: SettingsTheme.groupBackground }}>
-          <View style={styles.rowSeparator}></View>
-        </View>
-      )}
-    </>
-  )
-
-  const getSwitchColor = (isEnabled: boolean) =>
-    isEnabled ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey
 
   const toggleSwitch = () => {
     dispatch({
@@ -389,7 +408,7 @@ const Developer: React.FC = () => {
   }
 
   return (
-    <ScreenWrapper padded={false} scrollable={false}>
+    <ScreenWrapper padded={false} scrollViewContainerStyle={styles.container}>
       <SafeAreaModal
         visible={remoteLoggingWarningModalVisible}
         transparent={false}
@@ -424,312 +443,239 @@ const Developer: React.FC = () => {
       >
         <ErrorAlertTest onBack={() => setErrorAlertTestModalVisible(false)} />
       </SafeAreaModal>
-      <ScrollView style={styles.container}>
-        <SectionRow
-          title={t('Developer.DeveloperMode')}
-          accessibilityLabel={t('Developer.Toggle')}
-          testID={testIdWithKey('ToggleDeveloper')}
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={getSwitchColor(devMode)}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleSwitch}
-            value={devMode}
-            accessibilityLabel={t('Developer.DeveloperMode')}
-          />
-        </SectionRow>
-        <View style={styles.sectionSeparator}></View>
-        <SectionHeader icon={'apartment'} title={'IAS'} />
-        <SectionRow
-          title={t('Developer.Environment')}
-          accessibilityLabel={t('Developer.Environment')}
-          testID={testIdWithKey(t('Developer.Environment').toLowerCase())}
-          onPress={() => {
-            setEnvironmentModalVisible(true)
-          }}
-        >
-          <Text style={[TextTheme.headingFour, { fontWeight: 'normal', color: ColorPalette.brand.link }]}>
-            {store.developer.environment.name}
-          </Text>
-        </SectionRow>
-        <View style={styles.sectionSeparator}></View>
 
-        {BCSCMode ? null : (
-          <View>
-            <SectionRow
-              title={t('PasteUrl.UseShareableLink')}
-              accessibilityLabel={t('PasteUrl.UseShareableLink')}
-              testID={testIdWithKey('ToggleUseShareableLink')}
+      <View style={styles.sectionContainer}>
+        <ListButtonGroup>
+          <ToggleRow
+            title={t('Developer.DeveloperMode')}
+            bold
+            value={devMode}
+            onToggle={toggleSwitch}
+            accessibilityLabel={t('Developer.Toggle')}
+            testID={testIdWithKey('ToggleDeveloper')}
+          />
+        </ListButtonGroup>
+      </View>
+
+      <SectionHeader icon={'apartment'} title={'IAS'} />
+      <View style={styles.sectionContainer}>
+        <ListButtonGroup>
+          {[
+            <ListButton
+              key="environment"
+              onPress={() => setEnvironmentModalVisible(true)}
+              accessibilityLabel={t('Developer.Environment')}
+              testID={testIdWithKey(t('Developer.Environment').toLowerCase())}
             >
-              <Switch
-                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-                thumbColor={getSwitchColor(enableShareableLink)}
-                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-                onValueChange={toggleShareableLinkSwitch}
+              <Row
+                title={t('Developer.Environment')}
+                endAdornment={
+                  <ThemedText variant="bold" style={{ color: ColorPalette.brand.primary }}>
+                    {store.developer.environment.name.toUpperCase()}
+                  </ThemedText>
+                }
+              />
+            </ListButton>,
+            BCSCMode ? null : (
+              <ToggleRow
+                key="shareableLink"
+                title={t('PasteUrl.UseShareableLink')}
                 value={enableShareableLink}
+                onToggle={toggleShareableLinkSwitch}
                 disabled={!store.authentication.didAuthenticate}
                 accessibilityLabel={t('PasteUrl.UseShareableLink')}
+                testID={testIdWithKey('ToggleUseShareableLink')}
               />
-            </SectionRow>
-            <SectionRow
-              title={t('Verifier.UseVerifierCapability')}
-              accessibilityLabel={t('Verifier.Toggle')}
-              testID={testIdWithKey('ToggleVerifierCapability')}
-              showRowSeparator
-            >
-              <Switch
-                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-                thumbColor={getSwitchColor(useVerifierCapability)}
-                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-                onValueChange={toggleVerifierCapabilitySwitch}
+            ),
+            BCSCMode ? null : (
+              <ToggleRow
+                key="verifierCapability"
+                title={t('Verifier.UseVerifierCapability')}
                 value={useVerifierCapability}
-                accessibilityLabel={t('Verifier.UseVerifierCapability')}
+                onToggle={toggleVerifierCapabilitySwitch}
+                accessibilityLabel={t('Verifier.Toggle')}
+                testID={testIdWithKey('ToggleVerifierCapability')}
               />
-            </SectionRow>
-            <SectionRow
-              title={t('Verifier.AcceptDevCredentials')}
-              accessibilityLabel={t('Verifier.Toggle')}
-              testID={testIdWithKey('ToggleAcceptDevCredentials')}
-              showRowSeparator
-            >
-              <Switch
-                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-                thumbColor={getSwitchColor(acceptDevCredentials)}
-                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-                onValueChange={toggleAcceptDevCredentialsSwitch}
+            ),
+            BCSCMode ? null : (
+              <ToggleRow
+                key="acceptDevCredentials"
+                title={t('Verifier.AcceptDevCredentials')}
                 value={acceptDevCredentials}
-                accessibilityLabel={t('Verifier.AcceptDevCredentials')}
+                onToggle={toggleAcceptDevCredentialsSwitch}
+                accessibilityLabel={t('Verifier.Toggle')}
+                testID={testIdWithKey('ToggleAcceptDevCredentials')}
               />
-            </SectionRow>
-            <SectionRow
-              title={t('Connection.UseConnectionInviterCapability')}
-              accessibilityLabel={t('Connection.Toggle')}
-              testID={testIdWithKey('ToggleConnectionInviterCapabilitySwitch')}
-              showRowSeparator
-            >
-              <Switch
-                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-                thumbColor={getSwitchColor(useConnectionInviterCapability)}
-                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-                onValueChange={toggleConnectionInviterCapabilitySwitch}
+            ),
+            BCSCMode ? null : (
+              <ToggleRow
+                key="connectionInviter"
+                title={t('Connection.UseConnectionInviterCapability')}
                 value={useConnectionInviterCapability}
-                accessibilityLabel={t('Connection.UseConnectionInviterCapability')}
+                onToggle={toggleConnectionInviterCapabilitySwitch}
+                accessibilityLabel={t('Connection.Toggle')}
+                testID={testIdWithKey('ToggleConnectionInviterCapabilitySwitch')}
               />
-            </SectionRow>
-            <SectionRow
-              title={t('Verifier.UseDevVerifierTemplates')}
-              accessibilityLabel={t('Verifier.ToggleDevTemplates')}
-              testID={testIdWithKey('ToggleDevVerifierTemplatesSwitch')}
-              showRowSeparator
-            >
-              <Switch
-                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-                thumbColor={getSwitchColor(useDevVerifierTemplates)}
-                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-                onValueChange={toggleDevVerifierTemplatesSwitch}
+            ),
+            BCSCMode ? null : (
+              <ToggleRow
+                key="devVerifierTemplates"
+                title={t('Verifier.UseDevVerifierTemplates')}
                 value={useDevVerifierTemplates}
-                accessibilityLabel={t('Verifier.UseDevVerifierTemplates')}
+                onToggle={toggleDevVerifierTemplatesSwitch}
+                accessibilityLabel={t('Verifier.ToggleDevTemplates')}
+                testID={testIdWithKey('ToggleDevVerifierTemplatesSwitch')}
               />
-            </SectionRow>
-            {!store.onboarding.didCreatePIN && (
-              <SectionRow
+            ),
+            !BCSCMode && !store.onboarding.didCreatePIN ? (
+              <ToggleRow
+                key="walletNaming"
                 title={t('NameWallet.EnableWalletNaming')}
+                value={enableWalletNaming}
+                onToggle={toggleWalletNamingSwitch}
                 accessibilityLabel={t('NameWallet.ToggleWalletNaming')}
                 testID={testIdWithKey('ToggleWalletNamingSwitch')}
-                showRowSeparator
-              >
-                <Switch
-                  trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-                  thumbColor={getSwitchColor(enableWalletNaming)}
-                  ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-                  onValueChange={toggleWalletNamingSwitch}
-                  value={enableWalletNaming}
-                  accessibilityLabel={t('NameWallet.EnableWalletNaming')}
-                />
-              </SectionRow>
-            )}
-            <SectionRow
-              title={t('Settings.PreventAutoLock')}
-              accessibilityLabel={t('Settings.TogglePreventAutoLock')}
-              testID={testIdWithKey('TogglePreventAutoLockSwitch')}
-              showRowSeparator
-            >
-              <Switch
-                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-                thumbColor={getSwitchColor(preventAutoLock)}
-                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-                onValueChange={togglePreventAutoLockSwitch}
+              />
+            ) : null,
+            BCSCMode ? null : (
+              <ToggleRow
+                key="preventAutoLock"
+                title={t('Settings.PreventAutoLock')}
                 value={preventAutoLock}
-                accessibilityLabel={t('Settings.PreventAutoLock')}
+                onToggle={togglePreventAutoLockSwitch}
+                accessibilityLabel={t('Settings.TogglePreventAutoLock')}
+                testID={testIdWithKey('TogglePreventAutoLockSwitch')}
               />
-            </SectionRow>
-            <SectionRow
-              title={t('Developer.EnableAppToAppPersonFlow')}
-              accessibilityLabel={t('Developer.EnableAppToAppPersonFlow')}
-              testID={testIdWithKey('ToggleEnableAppToAppPersonFlow')}
-            >
-              <Switch
-                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-                thumbColor={getSwitchColor(enableAppToAppPersonFlow)}
-                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-                onValueChange={toggleEnableAppToAppPersonFlowSwitch}
+            ),
+            BCSCMode ? null : (
+              <ToggleRow
+                key="appToAppPersonFlow"
+                title={t('Developer.EnableAppToAppPersonFlow')}
                 value={enableAppToAppPersonFlow}
+                onToggle={toggleEnableAppToAppPersonFlowSwitch}
                 accessibilityLabel={t('Developer.EnableAppToAppPersonFlow')}
+                testID={testIdWithKey('ToggleEnableAppToAppPersonFlow')}
               />
-            </SectionRow>
-          </View>
-        )}
-        <SectionRow
-          title={'Remote Logging'}
-          accessibilityLabel={'Remote Logging'}
-          testID={testIdWithKey('ToggleRemoteLoggingSwitch')}
-          subContent={
-            remoteLoggingEnabled ? (
-              <Text style={[styles.rowTitle, { marginTop: 10 }]}>
-                {`${t('RemoteLogging.SessionID')}: `}
-                <Text style={[styles.rowTitle, { fontWeight: 'bold' }]}>{logger.sessionId.toString()}</Text>
-              </Text>
-            ) : (
-              <></>
-            )
-          }
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={getSwitchColor(remoteLoggingEnabled)}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleRemoteLoggingSwitch}
-            value={remoteLoggingEnabled}
+            ),
+          ]}
+        </ListButtonGroup>
+      </View>
+
+      <SectionHeader icon={'tune'} title={t('Developer.AppSection')} />
+      <View style={styles.sectionContainer}>
+        <ListButtonGroup>
+          <ToggleRow
+            title={'Remote Logging'}
+            value={!!remoteLoggingEnabled}
+            onToggle={toggleRemoteLoggingSwitch}
             accessibilityLabel={t('RemoteLogging.ScreenTitle')}
+            testID={testIdWithKey('ToggleRemoteLoggingSwitch')}
+            subContent={
+              remoteLoggingEnabled ? (
+                <RowDetail label={t('RemoteLogging.SessionID')} value={logger.sessionId.toString()} />
+              ) : null
+            }
           />
-        </SectionRow>
-
-        <SectionRow
-          title={t('Developer.EnableProxy')}
-          accessibilityLabel={t('Developer.EnableProxy')}
-          testID={testIdWithKey('ToggleEnableProxy')}
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={getSwitchColor(enableProxy)}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleEnableProxySwitch}
+          <ToggleRow
+            title={t('Developer.EnableProxy')}
             value={enableProxy}
+            onToggle={toggleEnableProxySwitch}
             accessibilityLabel={t('Developer.EnableProxy')}
+            testID={testIdWithKey('ToggleEnableProxy')}
           />
-        </SectionRow>
-
-        <SectionRow
-          title={t('Developer.SwitchTheme')}
-          accessibilityLabel={t('Developer.SwitchTheme')}
-          testID={testIdWithKey('ToggleTheme')}
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={getSwitchColor(themeName === BCThemeNames.Dark)}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleTheme}
+          <ToggleRow
+            title={t('Developer.SwitchTheme')}
             value={themeName === BCThemeNames.Dark}
+            onToggle={toggleTheme}
             accessibilityLabel={t('Developer.SwitchTheme')}
+            testID={testIdWithKey('ToggleTheme')}
           />
-        </SectionRow>
-
-        <SectionRow
-          title={t('Developer.SwitchMode')}
-          accessibilityLabel={t('Developer.SwitchMode')}
-          testID={testIdWithKey('ToggleMode')}
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={getSwitchColor(BCSCMode)}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleMode}
+          <ToggleRow
+            title={t('Developer.SwitchMode')}
             value={BCSCMode}
+            onToggle={toggleMode}
             accessibilityLabel={t('Developer.SwitchMode')}
+            testID={testIdWithKey('ToggleMode')}
           />
-        </SectionRow>
+        </ListButtonGroup>
+      </View>
 
-        <View style={styles.sectionSeparator}></View>
-        {BCSCMode ? (
-          <>
-            <SectionHeader icon={'bug-report'} title={t('Developer.Testing')} />
-            <SectionRow
-              title={t('Developer.ErrorAlertTest')}
-              accessibilityLabel={t('Developer.ErrorAlertTest')}
-              testID={testIdWithKey('ErrorAlertTest')}
-              onPress={() => setErrorAlertTestModalVisible(true)}
-              showRowSeparator
-            >
-              <Icon name="chevron-right" size={24} color={ColorPalette.brand.link} />
-            </SectionRow>
-            <SectionRow
-              title={t('Developer.StaleTermsOfUse')}
-              accessibilityLabel={t('Developer.StaleTermsOfUse')}
-              testID={testIdWithKey('StaleTermsOfUse')}
-              onPress={staleTermsOfUseAcceptance}
-              showRowSeparator
-              subContent={
-                <Text style={[styles.rowTitle, { marginTop: 10 }]}>
-                  {`${t('Developer.AcceptedTermsVersion')}: `}
-                  <Text style={[styles.rowTitle, { fontWeight: 'bold' }]}>
-                    {store.bcsc.acceptedTermsOfUseVersion ?? '—'}
-                  </Text>
-                </Text>
-              }
-            >
-              <Icon name="restore" size={24} color={ColorPalette.brand.link} />
-            </SectionRow>
-            <SectionRow
-              title={t('Developer.ResetOnboardingIntro')}
-              accessibilityLabel={t('Developer.ResetOnboardingIntro')}
-              testID={testIdWithKey('ResetOnboardingIntro')}
-              onPress={resetOnboardingIntro}
-              subContent={
-                <Text style={[styles.rowTitle, { marginTop: 10 }]}>
-                  {`${t('Developer.OnboardingIntroSeen')}: `}
-                  <Text style={[styles.rowTitle, { fontWeight: 'bold' }]}>
-                    {String(store.bcsc.hasSeenOnboardingIntro ?? false)}
-                  </Text>
-                </Text>
-              }
-            >
-              <Icon name="restore" size={24} color={ColorPalette.brand.link} />
-            </SectionRow>
-            <SectionRow
-              title={t('Developer.DeleteTokens')}
-              accessibilityLabel={t('Developer.DeleteTokens')}
-              testID={testIdWithKey('DeleteTokens')}
-              onPress={deleteTokens}
-              subContent={
-                <Text style={[styles.rowTitle, { marginTop: 10 }]}>
-                  {`${t('Developer.DeletedTokens')}: `}
-                  <Text style={[styles.rowTitle, { fontWeight: 'bold' }]}>{String(tokensDeleted)}</Text>
-                </Text>
-              }
-            >
-              <Icon name="delete" size={24} color={ColorPalette.brand.link} />
-            </SectionRow>
-            <SectionRow
-              title={t('Developer.FetchPersonCredentialTest')}
-              accessibilityLabel={t('Developer.FetchPersonCredentialTest')}
-              testID={testIdWithKey('FetchPersonCredentialTest')}
-              onPress={fetchPersonCredentialTest}
-              subContent={
-                <Text style={[styles.rowTitle, { marginTop: 10 }]}>
-                  {`${t('Developer.FetchPersonCredentialStatus')}: `}
-                  <Text style={[styles.rowTitle, { fontWeight: 'bold' }]}>{personCredentialFetchStatus}</Text>
-                </Text>
-              }
-            >
-              <Icon name="badge" size={24} color={ColorPalette.brand.link} />
-            </SectionRow>
-          </>
-        ) : null}
-        <View style={styles.footer}>
-          <Text style={TextTheme.caption}>{`Version ${getVersion()} (${getBuildNumber()})`}</Text>
-        </View>
-      </ScrollView>
+      {BCSCMode ? (
+        <>
+          <SectionHeader icon={'bug-report'} title={t('Developer.Testing')} />
+          <View style={styles.sectionContainer}>
+            <ListButtonGroup>
+              <ListButton
+                onPress={() => setErrorAlertTestModalVisible(true)}
+                accessibilityLabel={t('Developer.ErrorAlertTest')}
+                testID={testIdWithKey('ErrorAlertTest')}
+              >
+                <Row title={t('Developer.ErrorAlertTest')} />
+              </ListButton>
+              <ListButton
+                onPress={staleTermsOfUseAcceptance}
+                accessibilityLabel={t('Developer.StaleTermsOfUse')}
+                testID={testIdWithKey('StaleTermsOfUse')}
+              >
+                <Row
+                  title={t('Developer.StaleTermsOfUse')}
+                  endAdornment={<Icon name="restore" size={24} color={ColorPalette.brand.primary} />}
+                  subContent={
+                    <RowDetail
+                      label={t('Developer.AcceptedTermsVersion')}
+                      value={store.bcsc.acceptedTermsOfUseVersion ?? '—'}
+                    />
+                  }
+                />
+              </ListButton>
+              <ListButton
+                onPress={resetOnboardingIntro}
+                accessibilityLabel={t('Developer.ResetOnboardingIntro')}
+                testID={testIdWithKey('ResetOnboardingIntro')}
+              >
+                <Row
+                  title={t('Developer.ResetOnboardingIntro')}
+                  endAdornment={<Icon name="restore" size={24} color={ColorPalette.brand.primary} />}
+                  subContent={
+                    <RowDetail
+                      label={t('Developer.OnboardingIntroSeen')}
+                      value={String(store.bcsc.hasSeenOnboardingIntro ?? false)}
+                    />
+                  }
+                />
+              </ListButton>
+              <ListButton
+                onPress={deleteTokens}
+                accessibilityLabel={t('Developer.DeleteTokens')}
+                testID={testIdWithKey('DeleteTokens')}
+              >
+                <Row
+                  title={t('Developer.DeleteTokens')}
+                  endAdornment={<Icon name="delete" size={24} color={ColorPalette.brand.primary} />}
+                  subContent={<RowDetail label={t('Developer.DeletedTokens')} value={String(tokensDeleted)} />}
+                />
+              </ListButton>
+              <ListButton
+                accessibilityLabel={t('Developer.FetchPersonCredentialTest')}
+                testID={testIdWithKey('FetchPersonCredentialTest')}
+                onPress={fetchPersonCredentialTest}
+              >
+                <Row
+                  title={t('Developer.FetchPersonCredentialTest')}
+                  endAdornment={<Icon name="badge" size={24} color={ColorPalette.brand.link} />}
+                  subContent={
+                    <RowDetail label={t('Developer.FetchPersonCredentialStatus')} value={personCredentialFetchStatus} />
+                  }
+                />
+              </ListButton>
+            </ListButtonGroup>
+          </View>
+        </>
+      ) : null}
+
+      <View style={styles.footer}>
+        <ThemedText variant="caption">{`Version ${getVersion()} (${getBuildNumber()})`}</ThemedText>
+      </View>
     </ScreenWrapper>
   )
 }
