@@ -42,11 +42,17 @@ jest.mock('@/bcsc-theme/utils/file-info', () => ({
 
 jest.mock('@/bcsc-theme/hooks/useCardScanner', () => ({
   useCardScanner: () => ({
-    // scanCard immediately resolves the scanned serial + licence so the screen's
-    // refs are populated (simulating a combo/AAMVA card in the Non-BCSC flow).
-    scanCard: jest.fn(async (_codes: any, cb: any) => {
-      await cb('S00023254', { birthDate: new Date('1970-01-01'), licenseNumber: '123' })
-    }),
+    scanCard: jest.fn((codes: { type: string; value: string }[]) =>
+      codes.map((c) => {
+        if (c.type === 'code-39') {
+          return { kind: 'BCServicesCardBarcode', bcscSerial: c.value }
+        }
+        if (c.type === 'pdf-417') {
+          return { kind: 'DriversLicenseBarcode', birthDate: new Date('1970-01-01'), licenseNumber: '123' }
+        }
+        return null
+      })
+    ),
     startScan: jest.fn(),
     completeScan: jest.fn(),
     handleScanComboCard: jest.fn(),

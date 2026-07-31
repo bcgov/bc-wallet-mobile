@@ -251,17 +251,16 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
         return true
       }
 
-      if (decoded?.kind === DecodedCodeKind.BCServicesComboCardCardBarcode) {
-        // Note: Not assigning bcscSerialRef to we ensure both barcodes are decoded before proceeding
-        birthDateRef.current = decoded.birthDate
-      }
-
-      if (decoded?.kind === DecodedCodeKind.DriversLicenseBarcode) {
-        birthDateRef.current = decoded.birthDate
-      }
-
-      if (decoded?.kind === DecodedCodeKind.BCServicesCardBarcode) {
-        bcscSerialRef.current = decoded.bcscSerial
+      switch (decoded?.kind) {
+        case DecodedCodeKind.BCServicesComboCardCardBarcode:
+          // Use the serial from the 1D barcode for safety (ie: Alberta DL + appended health number)
+          birthDateRef.current = decoded.birthDate
+          break
+        case DecodedCodeKind.BCServicesCardBarcode:
+          bcscSerialRef.current = decoded.bcscSerial
+          break
+        case DecodedCodeKind.DriversLicenseBarcode:
+          birthDateRef.current = decoded.birthDate
       }
     }
 
@@ -373,7 +372,6 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
               hideTorchButton
               torchActive={torchOn}
               onToggleTorch={toggleTorch}
-              // onScanStateChange={setScanState}
               onError={onCameraError}
               style={StyleSheet.absoluteFillObject}
             />
