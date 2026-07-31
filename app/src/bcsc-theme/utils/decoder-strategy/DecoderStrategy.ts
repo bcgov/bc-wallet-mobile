@@ -123,9 +123,9 @@ export const decodeScannedCode = (
 }
 
 /**
- * Decodes an array of scanable codes using the provided decoding strategies.
+ * Decodes an array of scannable codes using the provided decoding strategies.
  *
- * @param codes An array of scanable codes to decode.
+ * @param codes An array of scannable codes to decode.
  * @param logger A logger instance for logging decoding attempts and errors.
  * @returns An array of decoded code information, with null entries for codes that could not be decoded.
  */
