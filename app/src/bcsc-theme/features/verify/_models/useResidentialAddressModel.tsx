@@ -85,10 +85,10 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
     (values: ResidentialAddressFormState): ResidentialAddressFormErrors => {
       const errors: ResidentialAddressFormErrors = {}
 
-      if (!values.streetAddress) {
+      if (!values.streetAddress.trim()) {
         errors.streetAddress = t('BCSC.Address.StreetAddressRequired')
       }
-      if (!values.city) {
+      if (!values.city.trim()) {
         errors.city = t('BCSC.Address.CityRequired')
       }
       if (!values.province) {

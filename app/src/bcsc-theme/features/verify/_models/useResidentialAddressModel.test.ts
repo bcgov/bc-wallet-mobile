@@ -243,6 +243,24 @@ describe('useResidentialAddressModel', () => {
       expect(result.current.formErrors.postalCode).toBeDefined()
       expect(mockUpdateUserMetadata).not.toHaveBeenCalled()
     })
+
+    it('should reject whitespace-only required fields rather than persisting empty strings', async () => {
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      act(() => {
+        result.current.handleChange('streetAddress', '   ')
+        result.current.handleChange('city', '   ')
+      })
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(result.current.formErrors.streetAddress).toBeDefined()
+      expect(result.current.formErrors.city).toBeDefined()
+      expect(mockUpdateUserMetadata).not.toHaveBeenCalled()
+      expect(mockAuthorizationApi.authorizeDeviceWithUnknownBCSC).not.toHaveBeenCalled()
+    })
   })
 
   describe('handleSubmit - device already authorized', () => {
