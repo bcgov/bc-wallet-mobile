@@ -7,7 +7,7 @@ import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { buildBarcodePayload } from '@/bcsc-theme/utils/barcode'
-import { DriversLicenseMetadata } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
+import { DecodedCodeKind, DriversLicenseMetadata } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
 import { getPhotoMetadata } from '@/bcsc-theme/utils/file-info'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
@@ -88,15 +88,20 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
         return
       }
 
-      await scanner.scanCard(codes, async (bcscSerial, license) => {
-        if (bcscSerial) {
-          bcscSerialRef.current = bcscSerial
-        }
+      const decodedBarcodes = scanner.scanCard(codes)
 
-        if (license) {
-          licenseRef.current = license
+      for (const decoded of decodedBarcodes) {
+        switch (decoded?.kind) {
+          case DecodedCodeKind.BCServicesCardBarcode:
+            bcscSerialRef.current = decoded.bcscSerial
+            break
+          case DecodedCodeKind.DriversLicenseBarcode:
+            licenseRef.current = decoded
+            break
+          case DecodedCodeKind.BCServicesComboCardCardBarcode:
+            licenseRef.current = decoded
         }
-      })
+      }
     },
   })
 
