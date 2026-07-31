@@ -224,17 +224,7 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
         (restriction.schema_id && rule.triggerSchemaIds?.includes(restriction.schema_id))
     )
 
-  /**
-   * Returns true if the proof requests one of the rule's trigger cred def IDs
-   * or schema IDs AND the wallet has no credential that satisfies it.
-   *
-   * For example:
-   * Rule: CredDefId: A
-   * Proof request received: request credential with CredDefId A
-   * Wallet: No Credential with CredDefId A
-   *
-   * Proof request triggers the rule AND credential is missing, return true to trigger a workflow
-   */
+  /** True when the proof requests a trigger ID and the wallet lacks a matching credential. */
   private async isCredentialMissingForRule(
     proofId: string,
     proofFormat: ProofRequestFormat,
@@ -244,7 +234,6 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
       return false
     }
 
-    // Step 1: does the proof's restrictions reference any of our trigger cred def IDs or schema IDs?
     const triggeredAttributeKeys = new Set<string>()
     const triggeredPredicateKeys = new Set<string>()
 
@@ -457,7 +446,6 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     ]
 
     for (const rule of this.rules) {
-      // compare the cred def id/schema id against the rule trigger IDs, if any match then this proof is requesting a credential that would trigger the workflow
       const proofRequestsWatchedCredential = restrictions.some((restriction) =>
         this.restrictionMatchesRule(restriction, rule)
       )

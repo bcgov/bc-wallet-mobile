@@ -21,13 +21,7 @@ export interface AutoFetchCredentialConfigEntry {
   schemaIDs: readonly string[]
 }
 
-/**
- * Per-environment Person Credential cred def IDs and schema IDs.
- * AutoCredentialMonitor flattens these into its trigger sets; a proof
- * requesting a cred def or schema in either set tells the wallet a Person
- * Credential is missing and the BCSC-initiated flow (POST
- * /credentials/v1/person) is used to mint an issuer invitation.
- */
+/** Per-environment Person Credential identifiers flattened into AutoCredentialMonitor trigger sets. */
 export const AutoFetchCredentialConfig: Record<string, AutoFetchCredentialConfigEntry> = {
   Development: {
     credDefIDs: ['XpgeQa93eZvGSZBZef3PHn:3:CL:28075:PersonDEV'],

@@ -32,17 +32,9 @@ const getDigitalServicesCardInvitationUrl = async (): Promise<string> => {
   return response.data.invitation_url
 }
 
-/**
- * All DigitalServicesCard cred def IDs across all environments, flattened into a single
- * array for use as the `triggerCredDefIds` of the AutoCredentialRule.
- */
 const allDigitalServicesCardCredDefIds = (): string[] =>
   Object.values(AutoFetchCredentialConfig).flatMap((env) => [...env.credDefIDs])
 
-/**
- * All DigitalServicesCard schema IDs across all environments, flattened into a single
- * array for use as the `triggerSchemaIds` of the AutoCredentialRule.
- */
 const allDigitalServicesCardSchemaIds = (): string[] =>
   Object.values(AutoFetchCredentialConfig).flatMap((env) => [...env.schemaIDs])
 
