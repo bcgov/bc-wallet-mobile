@@ -95,10 +95,10 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
           case DecodedCodeKind.BCServicesCardBarcode:
             bcscSerialRef.current = decoded.bcscSerial
             break
-          case DecodedCodeKind.DriversLicenseBarcode:
+          case DecodedCodeKind.BCServicesComboCardCardBarcode:
             licenseRef.current = decoded
             break
-          case DecodedCodeKind.BCServicesComboCardCardBarcode:
+          case DecodedCodeKind.DriversLicenseBarcode:
             licenseRef.current = decoded
         }
       }

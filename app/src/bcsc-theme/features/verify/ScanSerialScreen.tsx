@@ -252,15 +252,16 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       }
 
       switch (decoded?.kind) {
+        case DecodedCodeKind.BCServicesCardBarcode:
+          bcscSerialRef.current = decoded.bcscSerial
+          break
         case DecodedCodeKind.BCServicesComboCardCardBarcode:
           // Use the serial from the 1D barcode for safety (ie: Alberta DL + appended health number)
           birthDateRef.current = decoded.birthDate
           break
-        case DecodedCodeKind.BCServicesCardBarcode:
-          bcscSerialRef.current = decoded.bcscSerial
-          break
         case DecodedCodeKind.DriversLicenseBarcode:
           birthDateRef.current = decoded.birthDate
+          break
       }
     }
 
