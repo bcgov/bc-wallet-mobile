@@ -18,26 +18,32 @@ export interface CredentialRestrictionEnvironment {
 
 export interface AutoFetchCredentialConfigEntry {
   credDefIDs: readonly string[]
+  schemaIDs: readonly string[]
 }
 
 /**
- * Per-environment Person Credential cred def IDs. AutoCredentialMonitor
- * flattens these into its trigger set; a proof requesting any of them tells
- * the wallet a Person Credential is missing and the BCSC-initiated flow
- * (POST /credentials/v1/person) is used to mint an issuer invitation.
+ * Per-environment Person Credential cred def IDs and schema IDs.
+ * AutoCredentialMonitor flattens these into its trigger sets; a proof
+ * requesting a cred def or schema in either set tells the wallet a Person
+ * Credential is missing and the BCSC-initiated flow (POST
+ * /credentials/v1/person) is used to mint an issuer invitation.
  */
 export const AutoFetchCredentialConfig: Record<string, AutoFetchCredentialConfigEntry> = {
   Development: {
     credDefIDs: ['XpgeQa93eZvGSZBZef3PHn:3:CL:28075:PersonDEV'],
+    schemaIDs: ['XpgeQa93eZvGSZBZef3PHn:2:Person:1.0'],
   },
   SIT: {
     credDefIDs: ['7xjfawcnyTUcduWVysLww5:3:CL:28075:PersonSIT'],
+    schemaIDs: ['7xjfawcnyTUcduWVysLww5:2:Person:1.0'],
   },
   QA: {
     credDefIDs: ['KCxVC8GkKywjhWJnUfCmkW:3:CL:20:PersonQA'],
+    schemaIDs: ['KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0'],
   },
   Production: {
     credDefIDs: ['RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person'],
+    schemaIDs: ['RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0'],
   },
 } as const
 
@@ -244,9 +250,6 @@ export const DIGITAL_SERVICES_CARD_CREDENTIAL_DEFINITION_IDS = [
   '7xjfawcnyTUcduWVysLww5:3:CL:28075:PersonSIT',
   'XpgeQa93eZvGSZBZef3PHn:3:CL:28075:PersonDEV',
 ]
-export const DIGITAL_SERVICES_CARD_SCHEMA_IDS = [
-  'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0',
-  'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0',
-  '7xjfawcnyTUcduWVysLww5:2:Person:1.0',
-  'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0',
-]
+export const DIGITAL_SERVICES_CARD_SCHEMA_IDS = Object.values(AutoFetchCredentialConfig).flatMap((env) => [
+  ...env.schemaIDs,
+])

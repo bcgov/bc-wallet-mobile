@@ -64,9 +64,11 @@ const createMockAgent = () => {
 }
 
 const TRIGGER_CRED_DEF_ID = 'issuer:3:CL:1:Person'
+const TRIGGER_SCHEMA_ID = 'issuer:2:Person:1.0'
 
 const buildRule = (overrides: Partial<AutoCredentialRule> = {}): AutoCredentialRule => ({
   triggerCredDefIds: [TRIGGER_CRED_DEF_ID],
+  triggerSchemaIds: [TRIGGER_SCHEMA_ID],
   getInvitationUrl: jest.fn().mockResolvedValue('https://issuer.example?c_i=abc'),
   autoAcceptIssuerProofRequest: true,
   autoAcceptCredentialOffer: true,
@@ -87,11 +89,11 @@ const accountUnavailableError = (reason: 'suspended' | 'deactivated'): AppError 
   return error
 }
 
-const proofFormat = (credDefId: string) => ({
+const proofFormat = (restriction: Record<string, unknown>) => ({
   request: {
     anoncreds: {
       requested_attributes: {
-        group1: { restrictions: [{ cred_def_id: credDefId }] },
+        group1: { restrictions: [restriction] },
       },
       requested_predicates: {},
     },
@@ -134,7 +136,7 @@ describe('AutoCredentialMonitor', () => {
 
     it('does not trigger a workflow when the proof does not match any rule', async () => {
       const { monitor, rule } = buildMonitor()
-      agent.didcomm.proofs.getFormatData.mockResolvedValue(proofFormat('unrelated:cred:def'))
+      agent.didcomm.proofs.getFormatData.mockResolvedValue(proofFormat({ cred_def_id: 'unrelated:cred:def' }))
 
       await agent.emit(DidCommProofEventTypes.ProofStateChanged, {
         proofRecord: { id: 'p1', state: DidCommProofState.RequestReceived },
@@ -146,7 +148,7 @@ describe('AutoCredentialMonitor', () => {
 
     it('does not trigger a workflow when the matching credential is already in the wallet', async () => {
       const { monitor, rule } = buildMonitor()
-      agent.didcomm.proofs.getFormatData.mockResolvedValue(proofFormat(TRIGGER_CRED_DEF_ID))
+      agent.didcomm.proofs.getFormatData.mockResolvedValue(proofFormat({ cred_def_id: TRIGGER_CRED_DEF_ID }))
       mockedCredentialsMatchForProof.mockResolvedValue({
         proofFormats: { anoncreds: { attributes: { group1: [{ credentialId: 'c-1' }] }, predicates: {} } },
       })
@@ -159,10 +161,66 @@ describe('AutoCredentialMonitor', () => {
       expect(monitor.workflowInProgress).toBe(false)
     })
 
+    it('triggers a workflow when the restriction matches by schema_id only and the credential is missing', async () => {
+      agent.didcomm.oob.parseInvitation.mockResolvedValue({ id: 'inv-1' })
+      agent.didcomm.oob.receiveInvitation.mockResolvedValue({ connectionRecord: { id: 'conn-1' } })
+      const { monitor, rule } = buildMonitor()
+      agent.didcomm.proofs.getFormatData.mockResolvedValue(proofFormat({ schema_id: TRIGGER_SCHEMA_ID }))
+      mockedCredentialsMatchForProof.mockResolvedValue({
+        proofFormats: { anoncreds: { attributes: {}, predicates: {} } },
+      })
+
+      await agent.emit(DidCommProofEventTypes.ProofStateChanged, {
+        proofRecord: { id: 'p1', state: DidCommProofState.RequestReceived },
+      })
+
+      expect(rule.getInvitationUrl).toHaveBeenCalled()
+      expect(monitor.workflowInProgress).toBe(true)
+    })
+
+    it('does not trigger a workflow when the restriction schema_id matches no rule', async () => {
+      const { monitor, rule } = buildMonitor()
+      agent.didcomm.proofs.getFormatData.mockResolvedValue(proofFormat({ schema_id: 'unrelated:2:Schema:1.0' }))
+
+      await agent.emit(DidCommProofEventTypes.ProofStateChanged, {
+        proofRecord: { id: 'p1', state: DidCommProofState.RequestReceived },
+      })
+
+      expect(rule.getInvitationUrl).not.toHaveBeenCalled()
+      expect(monitor.workflowInProgress).toBe(false)
+    })
+
+    it('does not trigger a workflow when the schema-matched credential is already in the wallet', async () => {
+      const { monitor, rule } = buildMonitor()
+      agent.didcomm.proofs.getFormatData.mockResolvedValue(proofFormat({ schema_id: TRIGGER_SCHEMA_ID }))
+      mockedCredentialsMatchForProof.mockResolvedValue({
+        proofFormats: { anoncreds: { attributes: { group1: [{ credentialId: 'c-1' }] }, predicates: {} } },
+      })
+
+      await agent.emit(DidCommProofEventTypes.ProofStateChanged, {
+        proofRecord: { id: 'p1', state: DidCommProofState.RequestReceived },
+      })
+
+      expect(rule.getInvitationUrl).not.toHaveBeenCalled()
+      expect(monitor.workflowInProgress).toBe(false)
+    })
+
+    it('ignores schema_id restrictions when the rule has no triggerSchemaIds (backward compat)', async () => {
+      const { monitor, rule } = buildMonitor(buildRule({ triggerSchemaIds: undefined }))
+      agent.didcomm.proofs.getFormatData.mockResolvedValue(proofFormat({ schema_id: TRIGGER_SCHEMA_ID }))
+
+      await agent.emit(DidCommProofEventTypes.ProofStateChanged, {
+        proofRecord: { id: 'p1', state: DidCommProofState.RequestReceived },
+      })
+
+      expect(rule.getInvitationUrl).not.toHaveBeenCalled()
+      expect(monitor.workflowInProgress).toBe(false)
+    })
+
     it('ignores further proof requests once a workflow is already in progress', async () => {
       agent.didcomm.oob.parseInvitation.mockResolvedValue({ id: 'inv-1' })
       agent.didcomm.oob.receiveInvitation.mockResolvedValue({ connectionRecord: { id: 'conn-1' } })
-      agent.didcomm.proofs.getFormatData.mockResolvedValue(proofFormat(TRIGGER_CRED_DEF_ID))
+      agent.didcomm.proofs.getFormatData.mockResolvedValue(proofFormat({ cred_def_id: TRIGGER_CRED_DEF_ID }))
       mockedCredentialsMatchForProof.mockResolvedValue({
         proofFormats: { anoncreds: { attributes: {}, predicates: {} } },
       })
@@ -186,7 +244,7 @@ describe('AutoCredentialMonitor', () => {
     beforeEach(() => {
       agent.didcomm.oob.parseInvitation.mockResolvedValue({ id: 'inv-1' })
       agent.didcomm.oob.receiveInvitation.mockResolvedValue({ connectionRecord: { id: 'conn-1' } })
-      agent.didcomm.proofs.getFormatData.mockResolvedValue(proofFormat(TRIGGER_CRED_DEF_ID))
+      agent.didcomm.proofs.getFormatData.mockResolvedValue(proofFormat({ cred_def_id: TRIGGER_CRED_DEF_ID }))
       mockedCredentialsMatchForProof.mockResolvedValue({
         proofFormats: { anoncreds: { attributes: {}, predicates: {} } },
       })
@@ -369,7 +427,7 @@ describe('AutoCredentialMonitor', () => {
     it('returns false and warns when a workflow is already in progress', async () => {
       agent.didcomm.oob.parseInvitation.mockResolvedValue({ id: 'inv-1' })
       agent.didcomm.oob.receiveInvitation.mockResolvedValue({ connectionRecord: { id: 'conn-1' } })
-      agent.didcomm.proofs.getFormatData.mockResolvedValue(proofFormat(TRIGGER_CRED_DEF_ID))
+      agent.didcomm.proofs.getFormatData.mockResolvedValue(proofFormat({ cred_def_id: TRIGGER_CRED_DEF_ID }))
       mockedCredentialsMatchForProof.mockResolvedValue({
         proofFormats: { anoncreds: { attributes: {}, predicates: {} } },
       })
@@ -409,7 +467,7 @@ describe('AutoCredentialMonitor', () => {
     it('tears down workflow subscriptions and resets in-flight workflow state', async () => {
       agent.didcomm.oob.parseInvitation.mockResolvedValue({ id: 'inv-1' })
       agent.didcomm.oob.receiveInvitation.mockResolvedValue({ connectionRecord: { id: 'conn-1' } })
-      agent.didcomm.proofs.getFormatData.mockResolvedValue(proofFormat(TRIGGER_CRED_DEF_ID))
+      agent.didcomm.proofs.getFormatData.mockResolvedValue(proofFormat({ cred_def_id: TRIGGER_CRED_DEF_ID }))
       mockedCredentialsMatchForProof.mockResolvedValue({
         proofFormats: { anoncreds: { attributes: {}, predicates: {} } },
       })

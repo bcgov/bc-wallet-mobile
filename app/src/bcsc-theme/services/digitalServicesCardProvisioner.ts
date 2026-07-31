@@ -40,10 +40,18 @@ const allDigitalServicesCardCredDefIds = (): string[] =>
   Object.values(AutoFetchCredentialConfig).flatMap((env) => [...env.credDefIDs])
 
 /**
+ * All DigitalServicesCard schema IDs across all environments, flattened into a single
+ * array for use as the `triggerSchemaIds` of the AutoCredentialRule.
+ */
+const allDigitalServicesCardSchemaIds = (): string[] =>
+  Object.values(AutoFetchCredentialConfig).flatMap((env) => [...env.schemaIDs])
+
+/**
  * Builds the AutoCredentialRule for the DigitalServicesCard just-in-time workflow
  */
 export const buildDigitalServicesCardCredentialRule = (): AutoCredentialRule => ({
   triggerCredDefIds: allDigitalServicesCardCredDefIds(),
+  triggerSchemaIds: allDigitalServicesCardSchemaIds(),
   getInvitationUrl: getDigitalServicesCardInvitationUrl,
   autoAcceptIssuerProofRequest: true,
   autoAcceptCredentialOffer: true,

@@ -30,6 +30,13 @@ describe('digitalServicesCardProvisioner', () => {
       expect(rule.triggerCredDefIds).toHaveLength(expected.length)
     })
 
+    it('flattens every schema ID from AutoFetchCredentialConfig into triggerSchemaIds', () => {
+      const rule = buildDigitalServicesCardCredentialRule()
+      const expected = Object.values(AutoFetchCredentialConfig).flatMap((env) => [...env.schemaIDs])
+      expect(rule.triggerSchemaIds).toEqual(expect.arrayContaining(expected))
+      expect(rule.triggerSchemaIds).toHaveLength(expected.length)
+    })
+
     it('defaults autoAcceptIssuerProofRequest and autoAcceptCredentialOffer to true', () => {
       const rule = buildDigitalServicesCardCredentialRule()
       expect(rule.autoAcceptIssuerProofRequest).toBe(true)
