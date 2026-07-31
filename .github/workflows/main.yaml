@@ -1238,8 +1238,12 @@ jobs:
 
   ship-to-saucelabs:
     name: 'Ship to SauceLabs - ${{ matrix.variant }} - ${{ matrix.platform }}'
-    # Temporarily disable until e2e fixed
-    if: false
+    if: >-
+      always() && !cancelled() &&
+      github.event.pull_request.head.repo.fork != true &&
+      !startsWith(github.base_ref, 'release/') &&
+      !startsWith(github.ref_name, 'release/') &&
+      needs.early-exit-check.outputs.should_skip_build != 'true'
     needs: [build-ios, build-android, compute-variants, early-exit-check]
     runs-on: ubuntu-22.04
     permissions:
@@ -1298,28 +1302,32 @@ jobs:
   # ─── E2E Tests ──────────────────────────────────────────────────────
   # Delegated to .github/workflows/e2e.yml (reusable workflow).
   # PR: smoke tests on 1 iOS + 1 Android device (fast feedback).
-  # Main: full-regression is deferred to the nightly workflow
+  # Main: the regression suite is deferred to the nightly workflow
   #       (e2e-nightly.yml) which checks for merges in the last 24h
   #       before running. This keeps SauceLabs devices free during the
   #       day when multiple PRs merge.
   #
-  # DISABLED: smoke suite fails on every PR post v4.1 stack merge —
-  # the specs haven't been updated for the new root-stack/first-screen
-  # flow. Not a required status check, so this doesn't affect
-  # mergeability. Tracking: https://github.com/bcgov/bc-wallet-mobile/issues/4148
+  # PR smoke is live: the suite targets the v4.1 launch flow (see
+  # e2e/test/*/smoke.spec.ts, fixing issue #4148) and `ship-to-saucelabs` is
+  # enabled again, so there is an app in Sauce storage to test against.
   #
-  # To re-enable once the specs are fixed, restore:
-  #   if: >-
-  #     always() && !cancelled() &&
-  #     github.event_name == 'pull_request' &&
-  #     github.event.pull_request.head.repo.fork != true &&
-  #     !startsWith(github.base_ref, 'release/') &&
-  #     needs.early-exit-check.outputs.should_skip_build != 'true'
+  # The guard keeps this to non-fork PRs off release branches, where the Sauce/SM
+  # secrets are actually available. It deliberately omits `always()` so the job
+  # stays tied to a successful `ship-to-saucelabs`.
+  #
+  # Caveat: `ship-to-saucelabs` runs under `always()` and no-ops (probe step) when
+  # a build artifact is missing, so it reports success even when nothing was
+  # uploaded. A failed platform build therefore surfaces here as an "app not found"
+  # E2E failure on top of the build failure, rather than as a skip.
   e2e:
     needs: [ship-to-saucelabs, compute-variants, early-exit-check]
     permissions:
       contents: read
-    if: false
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.fork != true &&
+      !startsWith(github.base_ref, 'release/') &&
+      needs.early-exit-check.outputs.should_skip_build != 'true'
     uses: ./.github/workflows/e2e.yml
     with:
       suite: smoke

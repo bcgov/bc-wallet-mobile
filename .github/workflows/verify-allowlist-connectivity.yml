@@ -10,7 +10,7 @@ on:
       runner_label:
         description: 'Label of the large runner with whitelisted egress IPs'
         required: true
-        default: 'large'
+        default: 'ubuntu-latest-m'
 
 permissions:
   contents: read

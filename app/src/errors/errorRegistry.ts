@@ -108,6 +108,7 @@ export const ErrorRegistry = {
   // ============================================
   // Camera/Scanning Errors (2000-2099)
   // ============================================
+  // TODO (MD): Rename to CARD_CAMERA_BROKEN to avoid confusion with general camera errors
   CAMERA_BROKEN: {
     statusCode: 2000,
     appEvent: AppEventCode.ADD_CARD_CAMERA_BROKEN,
@@ -121,6 +122,13 @@ export const ErrorRegistry = {
     severity: ErrorSeverity.WARNING,
     category: ErrorCategory.CAMERA,
     message: 'Scanned QR code could not be parsed or contains invalid data',
+  },
+  CAMERA_ERROR: {
+    statusCode: 2002,
+    appEvent: AppEventCode.CAMERA_ERROR,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.CAMERA,
+    message: 'Camera runtime error — check device camera permissions and availability',
   },
 
   // ============================================

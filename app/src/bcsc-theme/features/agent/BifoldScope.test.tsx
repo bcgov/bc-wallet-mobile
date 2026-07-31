@@ -30,6 +30,7 @@ describe('BifoldScope', () => {
       error: null,
       retry: jest.fn(),
       resetWallet: jest.fn(),
+      teardownAgent: jest.fn(),
     })
 
     const { getByText } = render(
@@ -45,7 +46,14 @@ describe('BifoldScope', () => {
   it('mounts AgentProvider with the live agent when ready', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const agent = {} as Agent
-    mockUseBCSCAgent.mockReturnValue({ agent, loading: false, error: null, retry: jest.fn(), resetWallet: jest.fn() })
+    mockUseBCSCAgent.mockReturnValue({
+      agent,
+      loading: false,
+      error: null,
+      retry: jest.fn(),
+      resetWallet: jest.fn(),
+      teardownAgent: jest.fn(),
+    })
 
     const { getByText } = render(
       <BifoldScope>

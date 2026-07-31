@@ -1,7 +1,7 @@
 # E2E Nightly Full Regression
 #
-# Runs the full-regression E2E suite against the latest successful main
-# build's SauceLabs artifacts.
+# Runs the `regression` E2E suite (every per-area journey) against the
+# latest successful main build's SauceLabs artifacts.
 #
 # Default device matrix: 2 iOS + 2 Android OS versions (moderate coverage).
 #
@@ -25,7 +25,7 @@
 # Runner egress allowlist: the in-person verification step runs the SiteMinder /
 # IDcheck approval flow in-process on the runner (e2e/scripts/login.mjs), so it
 # is the RUNNER's egress IP — not SauceLabs — that BC Gov SIT must allowlist. The
-# e2e job runs on the whitelisted `large` runner (the default `runner_label` in
+# e2e job runs on the whitelisted `ubuntu-latest-m` runner (the default `runner_label` in
 # e2e.yml), whose egress ranges (20.10.68.0/28, 130.131.47.80/28) are opened on
 # the ID Broker / IDcheck firewalls. Use the "Verify Allowlist Connectivity"
 # workflow to confirm reachability before relying on a scheduled run.
@@ -44,11 +44,14 @@ on:
         description: 'Test suite to run'
         type: choice
         options:
-          - full-regression
-          - happy-path
+          - regression
           - smoke
+          - onboarding
+          - auth
+          - main
+          - verify
           - migration
-        default: full-regression
+        default: regression
       device_matrix:
         description: 'JSON array of {platform, device, os_version} objects'
         type: string
@@ -153,7 +156,7 @@ jobs:
     if: needs.check-for-merges.outputs.should_run == 'true'
     uses: ./.github/workflows/e2e.yml
     with:
-      suite: ${{ inputs.suite || 'full-regression' }}
+      suite: ${{ inputs.suite || 'regression' }}
       build_number: ${{ needs.resolve-build.outputs.build_number }}
       device_matrix: ${{ inputs.device_matrix || '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"iOS","device":"iPhone.*","os_version":"17"},{"platform":"Android","device":"Google.*","os_version":"15"},{"platform":"Android","device":"Google.*","os_version":"14"}]' }}
     secrets:

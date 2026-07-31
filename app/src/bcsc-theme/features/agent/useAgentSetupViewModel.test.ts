@@ -397,6 +397,126 @@ describe('useAgentSetupViewModel', () => {
     })
   })
 
+  describe('teardownAgent', () => {
+    it('shuts down the live agent, deletes the store, and nulls the agent', async () => {
+      const agent1 = mockAgent()
+      jest.mocked(agentService.buildAgent).mockReturnValue(agent1)
+
+      const { result } = renderHook(() => useAgentSetupViewModel())
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+
+      await act(async () => {
+        await result.current.teardownAgent()
+      })
+
+      expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger)
+      expect(agentService.deleteWalletStore).toHaveBeenCalledWith(agent1)
+      expect(result.current.agent).toBeNull()
+      expect(result.current.status).toBe('idle')
+    })
+
+    it('does not trigger re-initialization (unlike resetWallet)', async () => {
+      const agent1 = mockAgent()
+      jest.mocked(agentService.buildAgent).mockReturnValue(agent1)
+
+      const { result } = renderHook(() => useAgentSetupViewModel())
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+
+      await act(async () => {
+        await result.current.teardownAgent()
+      })
+
+      expect(result.current.status).toBe('idle')
+      // Give any spurious re-init effect a chance to fire before asserting it didn't.
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 0))
+      })
+      expect(agentService.buildAgent).toHaveBeenCalledTimes(1)
+      expect(result.current.status).toBe('idle')
+      expect(result.current.agent).toBeNull()
+    })
+
+    it('stops both the attestation and credential-provisioning monitors before shutting down the agent', async () => {
+      // The default harness stubs credentialProvisioningMonitor as undefined (position 3
+      // of the useServices tuple), which every other test relies on. Override it here,
+      // scoped to this test, so `credentialProvisioningMonitor?.stop()` is actually
+      // exercised rather than silently no-op'd via optional chaining.
+      const credentialProvisioningMonitor = { start: jest.fn(), stop: jest.fn() }
+      jest
+        .mocked(Bifold.useServices)
+        .mockReturnValue([
+          logger,
+          attestationMonitor,
+          credentialProvisioningMonitor,
+          [],
+          [],
+          ocaBundleResolver,
+        ] as never)
+
+      const agent1 = mockAgent()
+      jest.mocked(agentService.buildAgent).mockReturnValue(agent1)
+
+      const { result } = renderHook(() => useAgentSetupViewModel())
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+
+      await act(async () => {
+        await result.current.teardownAgent()
+      })
+
+      // Ready-transition setup also calls refreshMonitors (stop+start, to rebind the
+      // listener to the new agent), so each monitor's stop() is called twice in this
+      // test: once during setup, once from teardownAgent. Take the LAST invocation —
+      // shutdownAgent is only ever called from teardownAgent, so comparing against its
+      // (single) call correctly isolates the teardown-phase stop from the earlier
+      // setup-phase one instead of trivially comparing against the setup call.
+      const lastCallOrder = (mock: jest.Mock) => mock.mock.invocationCallOrder.at(-1)
+
+      expect(attestationMonitor.stop).toHaveBeenCalledTimes(2)
+      expect(credentialProvisioningMonitor.stop).toHaveBeenCalledTimes(2)
+      expect(agentService.shutdownAgent).toHaveBeenCalledWith(agent1, logger)
+
+      const stopOrder = lastCallOrder(attestationMonitor.stop)
+      const provisioningStopOrder = lastCallOrder(credentialProvisioningMonitor.stop)
+      const shutdownOrder = lastCallOrder(jest.mocked(agentService.shutdownAgent))
+      expect(stopOrder).toBeLessThan(shutdownOrder as number)
+      expect(provisioningStopOrder).toBeLessThan(shutdownOrder as number)
+    })
+
+    it('logs a warning and still nulls the agent when deleteWalletStore rejects', async () => {
+      const agent1 = mockAgent()
+      jest.mocked(agentService.buildAgent).mockReturnValue(agent1)
+      jest.mocked(agentService.deleteWalletStore).mockRejectedValueOnce(new Error('store gone'))
+
+      const { result } = renderHook(() => useAgentSetupViewModel())
+      await waitFor(() => expect(result.current.status).toBe('ready'))
+
+      await act(async () => {
+        await expect(result.current.teardownAgent()).resolves.toBeUndefined()
+      })
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('AgentTeardown: wallet store deleteStore() failed')
+      )
+      expect(result.current.agent).toBeNull()
+      expect(result.current.status).toBe('idle')
+    })
+
+    it('is a no-op when there is no live agent', async () => {
+      jest.mocked(Bifold.useStore).mockReturnValue(mockedStore({ bcscSecure: { walletKey: undefined } }) as never)
+
+      const { result } = renderHook(() => useAgentSetupViewModel())
+      await waitFor(() => expect(result.current.status).toBe('error'))
+
+      await act(async () => {
+        await result.current.teardownAgent()
+      })
+
+      expect(agentService.shutdownAgent).not.toHaveBeenCalled()
+      expect(agentService.deleteWalletStore).not.toHaveBeenCalled()
+      expect(result.current.status).toBe('error')
+    })
+  })
+
   it('shuts down agent when didAuthenticate flips to false', async () => {
     const store: Record<string, unknown> = {
       authentication: { didAuthenticate: true },

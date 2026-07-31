@@ -51,7 +51,7 @@ yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite verify
 yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite main
 ```
 
-_Without_ `--suite`_, the default spec is_ `smoke.spec.ts`_. The verified `verify` / `main` journeys need SiteMinder credentials (see the **SiteMinder** section) for the in-person approval step. A nightly `regression` suite spanning all journeys is being wired up (see the **CI/CD** section)._
+_Without_ `--suite`_, the default spec is_ `smoke.spec.ts`_. The verified `verify` / `main` journeys need SiteMinder credentials (see the **SiteMinder** section) for the in-person approval step. A nightly `regression` suite spans all journeys (see the **CI/CD** section)._
 
 ### _Local — iOS Simulator_
 
@@ -429,11 +429,11 @@ _Tests run automatically in GitHub Actions via a device matrix that controls whi
 | _PR_                 | `smoke`      | _1 iOS (18) + 1 Android (15)_       | `bcsc-dev` | _No_         |
 | _Nightly (schedule)_ | `regression` | _3 iOS (16–18) + 3 Android (13–15)_ | `bcsc-dev` | _—_          |
 
-> _The nightly `regression` suite (all per-area journeys) replaces the retired `happy-path` / `full-regression` suites; the workflow wiring for it is being finalized separately._
+> _The nightly `regression` suite (all per-area journeys) replaces the retired `happy-path` / `full-regression` suites. It is the default suite in_ `e2e-nightly.yml` _and selectable from_ `e2e.yml` _(alongside the per-area suites); `migration` stays a separate suite because it boots the v3 app via its own config._
 
-_The device matrix is passed as a JSON array of_ `{platform, device, os_version}` _objects to_ `e2e.yml`_. Each entry spawns a separate SauceLabs session with its own logs and pass/fail status. (Biometric coverage was removed pending re-implementation as a journey — its Sauce configs + workflow job remain but currently run nothing.)_
+_The device matrix is passed as a JSON array of_ `{platform, device, os_version}` _objects to_ `e2e.yml`_. Each entry spawns a separate SauceLabs session with its own logs and pass/fail status. (Biometric CI wiring — its Sauce configs, dev scripts, and workflow job — has been removed pending re-implementation as a journey; the_ `biometrics` _helper is retained for that future work.)_
 
-_**Note:** The_ `main` _merge E2E regression job is commented out pending GitHub Actions runner IP whitelisting with the BC Gov ID Check portal. See the IP whitelisting options documented in_ `main.yaml`_. Until resolved, nightly runs provide full regression coverage._
+_**Note:** There is no E2E job on_ `main` _merge by design — regression is deferred to the nightly workflow so SauceLabs devices stay free during the day when multiple PRs merge. The in-person verification step needs the runner's egress IP allowlisted with the BC Gov ID Check portal; see the notes in_ `e2e-nightly.yml` _and use the "Verify Allowlist Connectivity" workflow to confirm reachability._
 
 _**Concurrency:** SauceLabs sessions are limited to_ `max-parallel: 2`_. For PRs (2 devices = 2 jobs) this fits within a single round. Nightly runs with the full device matrix queue longer._
 
@@ -466,7 +466,7 @@ e2e/
 ├── configs/
 │   ├── wdio.shared.conf.ts                  # base WDIO config (framework, reporters, suites, hooks)
 │   ├── local/                               # local Appium: emulator/simulator + real-device caps
-│   └── sauce/                               # SauceLabs service + rdc / migration / biometrics caps
+│   └── sauce/                               # SauceLabs service + rdc / migration caps
 │
 ├── src/
 │   ├── constants.ts                         # Timeouts, TestUsers, TEST_PIN, and shared values

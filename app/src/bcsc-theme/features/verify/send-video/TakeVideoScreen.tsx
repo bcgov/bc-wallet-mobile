@@ -1,4 +1,5 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
+import { getCameraMetadata } from '@/bcsc-theme/components/utils/camera'
 import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
@@ -11,7 +12,10 @@ import {
   SELFIE_VIDEO_FRAME_RATE,
   VIDEO_RESOLUTION_480P,
 } from '@/constants'
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { ensureAppError } from '@/errors/errorHandler'
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
@@ -82,6 +86,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   const prompts = useMemo(() => store.bcsc.prompts?.map(({ prompt }) => prompt) || [], [store.bcsc.prompts])
   const safeAreaInsets = useSafeAreaInsets()
   const { failedToWriteToLocalStorageAlert } = useAlerts(navigation)
+  const { emitErrorModal } = useErrorAlert()
   const isLastPrompt = useMemo(() => {
     if (prompt === '') {
       return true // Recording finished, treat as last prompt
@@ -96,6 +101,8 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
     // catch-all 9999, giving this condition a specific signal in analytics/Loki.
     throw toAppError(new Error('[TakeVideoScreen] No prompts found in store'), ErrorRegistry.VIDEO_PROMPTS_MISSING)
   }
+
+  const cameraMetadata = useMemo(() => getCameraMetadata(device, format), [device, format])
 
   const styles = useMemo(
     () =>
@@ -146,6 +153,20 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
         },
       }),
     [ColorPalette.notification.popupOverlay, Spacing.lg, Spacing.md, Spacing.sm, safeAreaInsets.bottom]
+  )
+
+  const getCameraError = useCallback(
+    (error: unknown) => {
+      const appError = ensureAppError(error, AppEventCode.CAMERA_ERROR)
+
+      // Add camera device and format info to the error context for better debugging
+      appError.addContext(cameraMetadata)
+
+      logger.error('[TakeVideoScreen] camera runtime error', appError.toJSON())
+
+      return appError
+    },
+    [cameraMetadata, logger]
   )
 
   const handleCancel = () => {
@@ -257,9 +278,10 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           return
         }
 
-        Alert.alert(
+        emitErrorModal(
           t('BCSC.SendVideo.TakeVideo.RecordingError'),
-          t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription')
+          t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription'),
+          getCameraError(error)
         )
       },
       onRecordingFinished: async (video) => {
@@ -274,7 +296,17 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
         navigation.navigate(BCSCScreens.VideoReview, { videoPath: video.path, videoThumbnailPath: snapshot.path })
       },
     })
-  }, [prompts, startTimer, logger, stopTimer, t, failedToWriteToLocalStorageAlert, navigation])
+  }, [
+    prompts,
+    startTimer,
+    logger,
+    stopTimer,
+    navigation,
+    failedToWriteToLocalStorageAlert,
+    t,
+    emitErrorModal,
+    getCameraError,
+  ])
 
   const onPressNextPrompt = async () => {
     const currentIndex = prompts.indexOf(prompt)
@@ -287,12 +319,23 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   }
 
   const onInitialized = () => {
+    logger.info('[TakeVideoScreen] Camera initialized', cameraMetadata)
     setIsActive(true)
   }
 
   const onError = (error: CameraRuntimeError) => {
-    logger.error('Camera error:', error)
-    Alert.alert(t('BCSC.SendVideo.TakeVideo.CameraError'), t('BCSC.SendVideo.TakeVideo.CameraErrorMessage'))
+    if (isBackgroundedAppState(appStateStatus)) {
+      // Ignore camera errors while backgrounded or transitioning (app switcher, notification
+      // shade, incoming call on iOS) — they are expected and not actionable.
+      logger.info('[TakeVideoScreen] Camera error ignored due to backgrounded app state', { appStateStatus })
+      return
+    }
+
+    emitErrorModal(
+      t('BCSC.SendVideo.TakeVideo.CameraError'),
+      t('BCSC.SendVideo.TakeVideo.CameraErrorMessage'),
+      getCameraError(error)
+    )
   }
 
   useEffect(() => {
