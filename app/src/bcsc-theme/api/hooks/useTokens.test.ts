@@ -4,7 +4,7 @@ import { AppError, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { renderHook } from '@testing-library/react-native'
 import { BasicAppContext } from '__mocks__/helpers/app'
-import { getDeviceCodeRequestBody, setToken } from 'react-native-bcsc-core'
+import { deleteAuthorizationRequest, getDeviceCodeRequestBody, setToken } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import useTokenApi, { TokenResponse } from './useTokens'
 import { withAccount } from './withAccountGuard'
@@ -23,6 +23,9 @@ jest.mock('react-native-bcsc-core', () => ({
   getToken: jest.fn().mockResolvedValue(null),
   setToken: jest.fn().mockResolvedValue(true),
   deleteToken: jest.fn().mockResolvedValue(true),
+  getAuthorizationRequest: jest.fn().mockResolvedValue(null),
+  setAuthorizationRequest: jest.fn().mockResolvedValue(true),
+  deleteAuthorizationRequest: jest.fn().mockResolvedValue(true),
   // Delegate to the central manual mock so the predicate can't drift from the real implementation.
   isBcscNativeError: jest.requireActual('../../../../__mocks__/react-native-bcsc-core').isBcscNativeError,
 }))
@@ -151,6 +154,48 @@ describe('useTokenApi', () => {
 
       expect(mockApiClient.tokens).toEqual(mockTokenResponse)
       expect(response).toEqual(mockTokenResponse)
+    })
+
+    it('clears the authorization request from native storage after a successful exchange', async () => {
+      const mockAccount = { clientID: 'mock_client_id', issuer: 'mock_issuer' }
+      ;(getDeviceCodeRequestBody as jest.Mock).mockResolvedValue('mock-body')
+      ;(withAccount as jest.Mock).mockImplementation(async (callback) => callback(mockAccount))
+      mockApiClient.post.mockResolvedValue(mockAxiosResponse)
+
+      const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
+      await result.current.checkDeviceCodeStatus('test_device_code', 'test_confirmation')
+
+      expect(deleteAuthorizationRequest).toHaveBeenCalled()
+    })
+
+    it('does not clear the authorization request when the exchange never succeeds', async () => {
+      ;(withAccount as jest.Mock).mockRejectedValue(new Error('Account not found'))
+
+      const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
+      await expect(result.current.checkDeviceCodeStatus('test_device_code', 'test_confirmation')).rejects.toThrow(
+        'Account not found'
+      )
+
+      expect(deleteAuthorizationRequest).not.toHaveBeenCalled()
+    })
+
+    it('still returns tokens when clearing the authorization request fails', async () => {
+      const mockAccount = { clientID: 'mock_client_id', issuer: 'mock_issuer' }
+      ;(getDeviceCodeRequestBody as jest.Mock).mockResolvedValue('mock-body')
+      ;(withAccount as jest.Mock).mockImplementation(async (callback) => callback(mockAccount))
+      mockApiClient.post.mockResolvedValue(mockAxiosResponse)
+      ;(deleteAuthorizationRequest as jest.Mock).mockRejectedValueOnce(
+        Object.assign(new Error('native failure'), { code: 'E_DELETE_AUTH_REQUEST_ERROR' })
+      )
+
+      const { result } = renderHook(() => useTokenApi(mockApiClient), { wrapper: BasicAppContext })
+      const response = await result.current.checkDeviceCodeStatus('test_device_code', 'test_confirmation')
+
+      expect(response).toEqual(mockTokenResponse)
+      expect(mockApiClient.logger.error).toHaveBeenCalledWith(
+        '[checkDeviceCodeStatus] Failed to clear authorization request',
+        expect.anything()
+      )
     })
 
     it('should handle withAccount errors', async () => {

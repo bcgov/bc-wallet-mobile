@@ -119,6 +119,18 @@ jest.mock('@/services/system-checks/VerificationRequestStatusSystemCheck', () =>
   },
 }))
 
+jest.mock('@/services/system-checks/PendingVerificationRecoverySystemCheck', () => ({
+  PendingVerificationRecoverySystemCheck: class PendingVerificationRecoverySystemCheck {
+    checkVerificationStatus: () => Promise<boolean>
+    utils: unknown
+
+    constructor(checkVerificationStatus: () => Promise<boolean>, utils: unknown) {
+      this.checkVerificationStatus = checkVerificationStatus
+      this.utils = utils
+    }
+  },
+}))
+
 jest.mock('@/bcsc-theme/components/AppBanner', () => ({
   BCSCBanner: {
     IAS_SERVER_UNAVAILABLE: 'IASServerUnavailableBanner',
@@ -506,6 +518,85 @@ describe('useGetSystemChecks', () => {
         await check.checkDeviceCodeStatus()
 
         expect(checkDeviceCodeStatus).toHaveBeenCalledWith('device-1', 'user-1')
+      })
+    })
+
+    describe('PendingVerificationRecoverySystemCheck', () => {
+      const mockStoreWith = (bcscSecureOverrides: Record<string, unknown>) => {
+        jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.bad')
+        mockUseStore.mockReturnValue([
+          {
+            stateLoaded: true,
+            developer: { environment: { analyticsAppId: 'test-app-id' } },
+            bcsc: { analyticsOptIn: true },
+            bcscSecure: { isHydrated: true, verified: false, ...bcscSecureOverrides },
+          },
+          jest.fn(),
+        ])
+        mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
+        mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
+        mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
+        mockGetBundleId.mockReturnValue('ca.bc.gov.BCWallet')
+        jest.spyOn(React, 'useContext').mockReturnValue({ account: null })
+        mockUseConfigApi.mockReturnValue({ getTermsOfUse: jest.fn() })
+        mockUseRegistrationApi.mockReturnValue({})
+        mockUseEvidenceApi.mockReturnValue({ getVerificationRequestStatus: jest.fn() })
+      }
+
+      it('is not added when there is no pending deviceCode/userCode', async () => {
+        mockStoreWith({ deviceCode: undefined, userCode: undefined })
+        mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn(), checkDeviceCodeStatus: jest.fn() })
+
+        const { result } = renderHook(() => useCreateSystemChecks())
+        const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+
+        expect(systemChecks.map((c) => c.constructor.name)).not.toContain('PendingVerificationRecoverySystemCheck')
+      })
+
+      it('is not added once the user is verified, even with deviceCode/userCode present', async () => {
+        mockStoreWith({ verified: true, deviceCode: 'device-1', userCode: 'user-1' })
+        mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn(), checkDeviceCodeStatus: jest.fn() })
+
+        const { result } = renderHook(() => useCreateSystemChecks())
+        const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+
+        expect(systemChecks.map((c) => c.constructor.name)).not.toContain('PendingVerificationRecoverySystemCheck')
+      })
+
+      it('is not added when a verificationRequestId is present — the backcheck check handles that case', async () => {
+        mockStoreWith({ verificationRequestId: 'req-1', deviceCode: 'device-1', userCode: 'user-1' })
+        mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn(), checkDeviceCodeStatus: jest.fn() })
+
+        const { result } = renderHook(() => useCreateSystemChecks())
+        const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+        const names = systemChecks.map((c) => c.constructor.name)
+
+        expect(names).toContain('VerificationRequestStatusSystemCheck')
+        expect(names).not.toContain('PendingVerificationRecoverySystemCheck')
+      })
+
+      it('is added when unverified with a pending deviceCode/userCode and no verificationRequestId', async () => {
+        mockStoreWith({ deviceCode: 'device-1', userCode: 'user-1' })
+        mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn(), checkDeviceCodeStatus: jest.fn() })
+
+        const { result } = renderHook(() => useCreateSystemChecks())
+        const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+
+        expect(systemChecks.map((c) => c.constructor.name)).toContain('PendingVerificationRecoverySystemCheck')
+      })
+
+      it('wires checkVerificationStatus to the token service using the pending device/user code', async () => {
+        mockStoreWith({ deviceCode: 'device-2', userCode: 'user-2' })
+        const checkDeviceCodeStatus = jest.fn().mockResolvedValue(undefined)
+        mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn(), checkDeviceCodeStatus })
+
+        const { result } = renderHook(() => useCreateSystemChecks())
+        const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+        const check = systemChecks.find((c) => c.constructor.name === 'PendingVerificationRecoverySystemCheck') as any
+
+        await check.checkVerificationStatus()
+
+        expect(checkDeviceCodeStatus).toHaveBeenCalledWith('device-2', 'user-2')
       })
     })
   })
