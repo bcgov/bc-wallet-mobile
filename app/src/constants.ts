@@ -244,12 +244,9 @@ export const TEMPORARY_ACCOUNT_CLIENT_ID = ''
 
 // Credential constants
 // TODO (MD): Pull these values from well-known urls or remote config (ie: Firebase Remote Config)
-export const DIGITAL_SERVICES_CARD_CREDENTIAL_DEFINITION_IDS = [
-  'RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person',
-  'KCxVC8GkKywjhWJnUfCmkW:3:CL:20:PersonQA',
-  '7xjfawcnyTUcduWVysLww5:3:CL:28075:PersonSIT',
-  'XpgeQa93eZvGSZBZef3PHn:3:CL:28075:PersonDEV',
-]
+export const DIGITAL_SERVICES_CARD_CREDENTIAL_DEFINITION_IDS = Object.values(AutoFetchCredentialConfig).flatMap(
+  (env) => [...env.credDefIDs]
+)
 export const DIGITAL_SERVICES_CARD_SCHEMA_IDS = Object.values(AutoFetchCredentialConfig).flatMap((env) => [
   ...env.schemaIDs,
 ])
