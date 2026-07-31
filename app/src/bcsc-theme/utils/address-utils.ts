@@ -92,20 +92,6 @@ export function getProvinceCode(province: string): ProvinceCode | null {
 }
 
 /**
- * Validates if a given string is a valid Canadian postal code.
- *
- * Note: This is not strict validation, it checks for the general format of Canadian postal codes.
- *
- * @param {string} postalCode - The postal code to validate.
- * @returns {*} {boolean} - True if the postal code is valid, false otherwise.
- */
-export function isCanadianPostalCode(postalCode: string): boolean {
-  const postalCodeRegex = new RegExp(/^(?:[A-Z]\d[A-Z][ -]?\d[A-Z]\d)$/, 'i')
-
-  return postalCodeRegex.test(postalCode)
-}
-
-/**
  * Formats a ResidentialAddress object into a single string suitable for display.
  *
  * @param {ResidentialAddress} address - The address object to format.

@@ -146,6 +146,7 @@
     "rxjs": "~7.8.2",
     "tsyringe": "~4.8.0",
     "uuid": "~9.0.1",
+    "zod": "~4.4.3",
     "zustand": "~4.5.4"
   },
   "devDependencies": {
