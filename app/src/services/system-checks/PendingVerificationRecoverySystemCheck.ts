@@ -2,8 +2,8 @@ import { BCDispatchAction } from '@/store'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
- * Recovers a pending in-person or live-call verification (VerificationRequestSystemCheck handles send-video requests)
- * if the app was closed before the app itself detected success (App was closed before "Complete" was pressed)
+ * Recovers a pending in-person or live-call verification (VerificationRequestStatusSystemCheck handles send-video requests)
+ * if the app was closed before the app itself detected success (i.e., before "Complete" was pressed)
  */
 export class PendingVerificationRecoverySystemCheck implements SystemCheckStrategy {
   private readonly checkVerificationStatus: () => Promise<boolean>
