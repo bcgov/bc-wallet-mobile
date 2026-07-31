@@ -52,9 +52,7 @@ const useVerificationResponseViewModel = () => {
       dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
       dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [undefined] })
       setIsSettingUpAccount(false)
-      // no navigation call here: RootStack watches `verified` (via useVerificationStatus) and
-      // swaps VerifyStack for BCSCMainStack, which mounts at the Tab stack's Home route. An
-      // imperative navigate fired here targets a stack not yet mounted and is unreachable (#4368).
+      // RootStack swaps to MainStack on `verified` flip — no imperative navigate needed (#4368)
     } catch (error) {
       const errMessage = error instanceof Error ? error.message : String(error)
       logger.error(`[handleAccountSetup] Failed to clean up verification process: ${errMessage}`)
