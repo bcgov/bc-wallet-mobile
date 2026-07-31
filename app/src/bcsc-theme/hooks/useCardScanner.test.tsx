@@ -3,7 +3,7 @@ import { VerificationCardError } from '@/bcsc-theme/features/verify/verification
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { DecodedCodeKind, ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
+import { ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
 import { AccountSetupType } from '@/store'
 import * as Bifold from '@bifold/core'
 import * as navigation from '@react-navigation/native'
@@ -45,6 +45,7 @@ describe('useCardScanner', () => {
         type: 'code-39',
         value: 'K12345678',
       }
+      const mockHandleCardData = jest.fn()
 
       useApiMock.mockReturnValue(mockAuthorization)
       useSecureActionsMock.mockReturnValue({
@@ -60,11 +61,9 @@ describe('useCardScanner', () => {
 
       const scanCard = hook.result.current.scanCard
 
-      const decoded = scanCard([mockBarcode])
+      await scanCard([mockBarcode], mockHandleCardData)
 
-      expect(decoded).toEqual([
-        expect.objectContaining({ kind: DecodedCodeKind.BCServicesCardBarcode, bcscSerial: 'K12345678' }),
-      ])
+      expect(mockHandleCardData).toHaveBeenNthCalledWith(1, 'K12345678', null)
     })
 
     it('should handle combo card scan DL barcode only', async () => {
@@ -85,6 +84,7 @@ describe('useCardScanner', () => {
         type: 'pdf-417',
         value: BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C,
       }
+      const mockHandleCardData = jest.fn()
 
       useApiMock.mockReturnValue(mockAuthorization)
       useSecureActionsMock.mockReturnValue({
@@ -100,15 +100,16 @@ describe('useCardScanner', () => {
 
       const scanCard = hook.result.current.scanCard
 
-      const decoded = scanCard([mockBarcode])
+      await scanCard([mockBarcode], mockHandleCardData)
 
-      expect(decoded).toEqual([
+      expect(mockHandleCardData).toHaveBeenNthCalledWith(
+        1,
+        'S00023254',
         expect.objectContaining({
-          kind: DecodedCodeKind.BCServicesComboCardCardBarcode,
           licenseNumber: '2222222',
           bcscSerial: 'S00023254',
-        }),
-      ])
+        })
+      )
     })
 
     it('should handle drivers license barcode scan', async () => {
@@ -129,6 +130,7 @@ describe('useCardScanner', () => {
         type: 'pdf-417',
         value: BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A,
       }
+      const mockHandleCardData = jest.fn()
 
       useApiMock.mockReturnValue(mockAuthorization)
       useSecureActionsMock.mockReturnValue({
@@ -144,17 +146,18 @@ describe('useCardScanner', () => {
 
       const scanCard = hook.result.current.scanCard
 
-      const decoded = scanCard([mockBarcode])
+      await scanCard([mockBarcode], mockHandleCardData)
 
-      expect(decoded).toEqual([
+      expect(mockHandleCardData).toHaveBeenNthCalledWith(
+        1,
+        null,
         expect.objectContaining({
-          kind: DecodedCodeKind.DriversLicenseBarcode,
           licenseNumber: '2222222',
-        }),
-      ])
+        })
+      )
     })
 
-    it('should decode each barcode independently when scanning multiple codes', async () => {
+    it('should process multiple barcodes on a combo card scan', async () => {
       const useApiMock = jest.mocked(useApi)
       const bifoldMock = jest.mocked(Bifold)
       const useSecureActionsMock = jest.mocked(useSecureActions)
@@ -176,6 +179,7 @@ describe('useCardScanner', () => {
         type: 'code-39',
         value: 'S00023254',
       }
+      const mockHandleCardData = jest.fn()
 
       useApiMock.mockReturnValue(mockAuthorization)
       useSecureActionsMock.mockReturnValue({
@@ -191,15 +195,22 @@ describe('useCardScanner', () => {
 
       const scanCard = hook.result.current.scanCard
 
-      const decoded = scanCard([mockDLBarcode, mockBCSCBarcode])
+      await scanCard([mockDLBarcode, mockBCSCBarcode], mockHandleCardData)
 
-      expect(decoded).toEqual([
-        expect.objectContaining({ kind: DecodedCodeKind.DriversLicenseBarcode, licenseNumber: '2222222' }),
-        expect.objectContaining({ kind: DecodedCodeKind.BCServicesCardBarcode, bcscSerial: 'S00023254' }),
-      ])
+      expect(mockHandleCardData).toHaveBeenNthCalledWith(
+        1,
+        'S00023254',
+        expect.objectContaining({
+          licenseNumber: '2222222',
+        })
+      )
     })
 
-    it('should decode each barcode independently regardless of array order (regression #4256/#4302)', async () => {
+    it('should process a combo card scan with the serial ordered before the licence code (regression #4256/#4302)', async () => {
+      // scanCard/handleCardScan is order-independent: it decodes each code by kind into
+      // separate bcscSerial/license fields regardless of array position. This deliberately
+      // passes [serial, licence] — the REVERSE of mergeLockedCodesWithAccumulated's actual
+      // output order (accumulated extras like the licence come first: [licence, serial]).
       const useApiMock = jest.mocked(useApi)
       const bifoldMock = jest.mocked(Bifold)
       const useSecureActionsMock = jest.mocked(useSecureActions)
@@ -221,6 +232,7 @@ describe('useCardScanner', () => {
         type: 'pdf-417',
         value: BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A,
       }
+      const mockHandleCardData = jest.fn()
 
       useApiMock.mockReturnValue(mockAuthorization)
       useSecureActionsMock.mockReturnValue({
@@ -236,12 +248,15 @@ describe('useCardScanner', () => {
 
       const scanCard = hook.result.current.scanCard
 
-      const decoded = scanCard([code39Serial, pdf417DL])
+      await scanCard([code39Serial, pdf417DL], mockHandleCardData)
 
-      expect(decoded).toEqual([
-        expect.objectContaining({ kind: DecodedCodeKind.BCServicesCardBarcode, bcscSerial: 'S00023254' }),
-        expect.objectContaining({ kind: DecodedCodeKind.DriversLicenseBarcode, licenseNumber: '2222222' }),
-      ])
+      expect(mockHandleCardData).toHaveBeenNthCalledWith(
+        1,
+        'S00023254',
+        expect.objectContaining({
+          licenseNumber: '2222222',
+        })
+      )
     })
   })
 

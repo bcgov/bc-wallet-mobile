@@ -121,3 +121,33 @@ export const decodeScannedCode = (
 
   return null
 }
+
+/**
+ * Decodes an array of scanable codes using the provided decoding strategies.
+ *
+ * @param codes An array of scanable codes to decode.
+ * @param logger A logger instance for logging decoding attempts and errors.
+ * @returns An array of decoded code information, with null entries for codes that could not be decoded.
+ */
+export const decodeBarcodes = (codes: ScanableCode[], logger: AbstractBifoldLogger): (DecodedCode | null)[] => {
+  const decodedCodes: Array<DecodedCode | null> = []
+
+  for (const code of codes) {
+    if (code.type === 'unknown') {
+      logger.debug('[DecodeBarcodes] Skipping unknown barcode')
+      continue
+    }
+
+    const decodedCode = decodeScannedCode(code, logger)
+
+    if (!decodedCode) {
+      logger.debug('[DecodeBarcodes] Failed to decode barcode', { barcode: code })
+    } else {
+      logger.debug('[DecodeBarcodes] Decoded barcode metadata:', { barcode: code, metadata: decodedCode })
+    }
+
+    decodedCodes.push(decodedCode)
+  }
+
+  return decodedCodes
+}
