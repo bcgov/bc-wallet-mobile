@@ -1,6 +1,6 @@
+import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
 import { TOKENS, useServices } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SystemModal } from '../../modal/components/SystemModal'
@@ -24,10 +24,10 @@ const CancelledReview = ({ route }: CancelledReviewProps) => {
   const { agentReason } = route.params
   const verificationReset = useVerificationReset()
   const { t } = useTranslation()
-  const navigation = useNavigation()
-  const { cleanUpVerificationData } = useCancelledReviewViewModel()
+  const { cleanUpVerificationData, goToMethodSelection } = useCancelledReviewViewModel()
   const [isLoading, setIsLoading] = useState(false)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const loadingScreen = useLoadingScreen()
 
   useEffect(() => {
     // This clears up verification request artifacts (images, address data ect.)
@@ -46,17 +46,23 @@ const CancelledReview = ({ route }: CancelledReviewProps) => {
       buttonText={t('BCSC.CancelledVerification.Button')}
       buttonDisabled={isLoading}
       onButtonPress={async () => {
+        setIsLoading(true)
+        const stopLoading = loadingScreen.startLoading(t('Alerts.RestartVerification.Loading'))
         try {
-          setIsLoading(true)
           // Clear everything related to verification so it appears as if the user has never started the process before
           const success = await verificationReset()
           if (success) {
-            navigation.goBack()
+            // goBack() would no-op: clearing verified status unmounts the stack hosting
+            // this screen mid-reset (#4387). Re-enter the verify flow via store state.
+            goToMethodSelection()
+            return
           }
+          setIsLoading(false)
         } catch (error) {
           logger.error('CancelledReview: Error during factory reset on account', error as Error)
-        } finally {
           setIsLoading(false)
+        } finally {
+          stopLoading()
         }
       }}
     />
