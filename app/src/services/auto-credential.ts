@@ -88,6 +88,8 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
 
   // State for the active workflow (one at a time)
   private _workflowInProgress = false
+  private _workflowDoneResolve?: (value: undefined) => void
+  private _workflowDonePromise = Promise.resolve(undefined)
   private _pendingProofRequest?: DidCommProofExchangeRecord
   private _pendingConnectionId?: string
   private _activeRule?: AutoCredentialRule
@@ -102,6 +104,11 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
 
   public get workflowInProgress(): boolean {
     return this._workflowInProgress
+  }
+
+  public startAndWait(agent: Agent): Promise<void> {
+    this.start(agent)
+    return this._workflowDonePromise
   }
 
   public start(agent: Agent): void {
@@ -119,6 +126,7 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     this._pendingProofRequest = undefined
     this._pendingConnectionId = undefined
     this._activeRule = undefined
+    this._workflowDoneResolve?.(undefined)
   }
 
   // ---------------------------------------------------------------------------
@@ -129,6 +137,9 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     this._workflowInProgress = true
     this._pendingProofRequest = proof
     this._activeRule = rule
+    this._workflowDonePromise = new Promise((resolve) => {
+      this._workflowDoneResolve = resolve
+    })
     DeviceEventEmitter.emit(CredentialProvisioningEventTypes.Started)
     this.log?.info('[AutoCredentialMonitor] Workflow started')
   }
@@ -140,6 +151,7 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     this._pendingProofRequest = undefined
     this._pendingConnectionId = undefined
     this._activeRule = undefined
+    this._workflowDoneResolve?.(undefined)
     DeviceEventEmitter.emit(CredentialProvisioningEventTypes.Completed)
     this.log?.info('[AutoCredentialMonitor] Workflow completed')
   }
@@ -157,6 +169,7 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     this._pendingProofRequest = undefined
     this._pendingConnectionId = undefined
     this._activeRule = undefined
+    this._workflowDoneResolve?.(undefined)
     DeviceEventEmitter.emit(eventType, error)
     this.log?.error('[AutoCredentialMonitor] Workflow failed', error)
   }

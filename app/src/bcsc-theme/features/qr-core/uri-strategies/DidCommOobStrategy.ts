@@ -1,5 +1,8 @@
 import { isDidCommInvitation, isOpenIdCredentialOffer, isOpenIdPresentationRequest } from '@bifold/core'
 
+import { buildDigitalServicesCardCredentialRule } from '@/bcsc-theme/services/digitalServicesCardProvisioner'
+import { noOpAttestationMonitor } from '@/services/attestation'
+import { AutoCredentialMonitor } from '@/services/auto-credential'
 import type { ScanContext, ScanResult, UriStrategy } from './types'
 
 // Aries-standard goal code for mediator invitations; checked inline so we
@@ -11,7 +14,9 @@ const DidCommOobStrategy: UriStrategy = {
   name: 'didcomm-oob',
 
   matches(uri) {
-    return isDidCommInvitation(uri) || isOpenIdCredentialOffer(uri) || isOpenIdPresentationRequest(uri)
+    return (
+      isDidCommInvitation(uri) || isOpenIdCredentialOffer(uri) || isOpenIdPresentationRequest(uri) || isVcAuthnUri(uri)
+    )
   },
 
   async handle(uri, ctx: ScanContext): Promise<ScanResult> {
@@ -23,6 +28,7 @@ const DidCommOobStrategy: UriStrategy = {
     if (!agent) {
       return { kind: 'unsupported', reason: 'AgentNotReady' }
     }
+
     if (isOpenIdCredentialOffer(uri) || isOpenIdPresentationRequest(uri)) {
       logger.info('[DidCommOobStrategy] OpenID URI rejected (BCSC v4.1 is AnonCreds-only)')
       return { kind: 'unsupported', reason: 'OpenID' }
@@ -33,9 +39,21 @@ const DidCommOobStrategy: UriStrategy = {
       logger.warn('[DidCommOobStrategy] could not parse OOB invitation')
       return { kind: 'unrecognized' }
     }
+
     if (invitation.goalCode === MEDIATOR_GOAL_CODE) {
       logger.info('[DidCommOobStrategy] mediator invitation rejected (BCSC uses .env mediator)')
       return { kind: 'unsupported', reason: 'Mediator' }
+    }
+
+    const autoDigitalServicesCard = new AutoCredentialMonitor(ctx.logger, {
+      rules: [buildDigitalServicesCardCredentialRule()],
+      attestationMonitor: noOpAttestationMonitor(),
+    })
+
+    autoDigitalServicesCard.startAndWait(agent)
+
+    while (autoDigitalServicesCard.workflowInProgress) {
+      logger.info('[DidCommOobStrategy] waiting for auto-credential workflow to complete...')
     }
 
     // Dedupe duplicate scans of the same QR: two didexchange requests for one
@@ -51,8 +69,13 @@ const DidCommOobStrategy: UriStrategy = {
     const { outOfBandRecord } = await agent.modules.didcomm.oob.receiveInvitation(invitation, {
       label: ctx.label || 'didcomm-oob-invitation',
     })
+
     return { kind: 'connection', oobRecordId: outOfBandRecord.id }
   },
+}
+
+function isVcAuthnUri(uri: string): boolean {
+  return uri.includes('vc-authn')
 }
 
 export default DidCommOobStrategy
