@@ -2,9 +2,9 @@ import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { DecodedCodeKind, ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
+import { decodeBarcodes, DecodedCodeKind, ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
@@ -199,6 +199,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const [showHelp, setShowHelp] = useState(false)
   const [cameraFailed, setCameraFailed] = useState(false)
   const [cameraKey, setCameraKey] = useState(0)
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const isProcessingScan = useRef(false)
   const bcscSerialRef = useRef<string | null>(null)
@@ -240,7 +241,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       return true
     }
 
-    const decodedBarcodes = scanner.scanCard(barcodes)
+    const decodedBarcodes = decodeBarcodes(barcodes, logger)
 
     for (const decoded of decodedBarcodes) {
       if (!decoded && !bcscSerialRef.current && !birthDateRef.current) {
