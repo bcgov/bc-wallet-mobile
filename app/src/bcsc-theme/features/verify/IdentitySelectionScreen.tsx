@@ -24,7 +24,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   const { t } = useTranslation()
   const { Spacing } = useTheme()
   const [store] = useStore<BCState>()
-  const { updateCardProcess } = useSecureActions()
+  const { updateCardProcess, deleteScannedCardData: deleteCardInfo } = useSecureActions()
   const verificationReset = useVerificationReset()
 
   // Reset the card registration process when the user navigates back
@@ -53,14 +53,20 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
     }, [updateCardProcess])
   )
 
-  const onPressScan = useCallback(() => {
+  const onPressScan = useCallback(async () => {
     navigation.navigate(BCSCScreens.ScanSerial)
-  }, [navigation])
+    if (store.bcscSecure.birthdate || store.bcscSecure.serial) {
+      await deleteCardInfo()
+    }
+  }, [deleteCardInfo, navigation, store.bcscSecure.birthdate, store.bcscSecure.serial])
 
   const onPressOtherID = useCallback(async () => {
     navigation.navigate(BCSCScreens.DualIdentificationRequired)
     await updateCardProcess(BCSCCardProcess.NonBCSC)
-  }, [navigation, updateCardProcess])
+    if (store.bcscSecure.birthdate || store.bcscSecure.serial) {
+      await deleteCardInfo()
+    }
+  }, [deleteCardInfo, navigation, store.bcscSecure.birthdate, store.bcscSecure.serial, updateCardProcess])
 
   const controls = (
     <ControlContainer>

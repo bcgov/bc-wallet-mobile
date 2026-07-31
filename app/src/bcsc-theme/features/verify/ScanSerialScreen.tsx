@@ -2,11 +2,12 @@ import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
+import { decodeBarcodes, DecodedCodeKind, ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, TOKENS, useServices, useTheme } from '@bifold/core'
+import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -189,9 +190,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const insets = useSafeAreaInsets()
   const { hasPermission, requestPermission } = useCameraPermission()
   const scanner = useCardScanner()
-
   const { isLoading } = useAutoRequestPermission(hasPermission, requestPermission)
-
   const [torchOn, setTorchOn] = useState(false)
   const [size, setSize] = useState<{ width: number; height: number } | null>(null)
   const [scanState, setScanState] = useState<ScanState>('scanning')
@@ -200,6 +199,11 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const [showHelp, setShowHelp] = useState(false)
   const [cameraFailed, setCameraFailed] = useState(false)
   const [cameraKey, setCameraKey] = useState(0)
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+
+  const isProcessingScan = useRef(false)
+  const bcscSerialRef = useRef<string | null>(null)
+  const birthDateRef = useRef<Date | null>(null)
 
   useEffect(() => {
     const timer = setTimeout(() => setShowHelp(true), SCAN_HELP_TIMEOUT_MS)
@@ -224,28 +228,55 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     setCameraFailed(false)
     setScanState('scanning')
     setCameraKey((prev) => prev + 1)
+    // Reset the caches so we can scan again.
+    isProcessingScan.current = false
+    bcscSerialRef.current = null
+    birthDateRef.current = null
   }, [])
 
-  const onCodeScanned = async (barcodes: ScanableCode[]): Promise<boolean | void> => {
-    let accepted = true
-    await scanner.scanCard(barcodes, async (bcscSerial, license) => {
-      if (bcscSerial && license) {
-        scanner.completeScan()
-        await scanner.handleScanComboCard(bcscSerial, license)
-        return
+  useFocusEffect(useCallback(() => retryCamera(), [retryCamera]))
+
+  const onCodeScanned = async (barcodes: ScanableCode[]): Promise<boolean> => {
+    if (isProcessingScan.current) {
+      return true
+    }
+
+    const decodedBarcodes = decodeBarcodes(barcodes, logger)
+
+    for (const decoded of decodedBarcodes) {
+      if (!decoded && !bcscSerialRef.current && !birthDateRef.current) {
+        // Scanned a non-BCSC barcode - lock the camera and handle it as a non-BCSC card.
+        isProcessingScan.current = true
+        setScanState('locked')
+        scanner.handleScanNonBcsc()
+        return true
       }
 
-      if (bcscSerial) {
-        scanner.completeScan()
-        await scanner.handleScanBCServicesCard(bcscSerial)
-        return
+      switch (decoded?.kind) {
+        case DecodedCodeKind.BCServicesCardBarcode:
+          bcscSerialRef.current = decoded.bcscSerial
+          break
+        case DecodedCodeKind.BCServicesComboCardCardBarcode:
+          // Use the serial from the 1D barcode for safety (ie: Alberta DL + appended health number)
+          birthDateRef.current = decoded.birthDate
+          break
+        case DecodedCodeKind.DriversLicenseBarcode:
+          birthDateRef.current = decoded.birthDate
+          break
       }
+    }
 
-      accepted = false
-      scanner.completeScan()
-      await scanner.handleScanNonBcsc()
-    })
-    return accepted
+    if (bcscSerialRef.current && birthDateRef.current) {
+      // We have both the serial and the birthdate — lock the camera and handle the card.
+      isProcessingScan.current = true
+      setScanState('locked')
+      await scanner.handleScanComboCard(bcscSerialRef.current, { birthDate: birthDateRef.current })
+      return true
+    }
+
+    // Still missing the serial or the birthdate — tell CodeScanningCamera to
+    // unlock and keep scanning instead of freezing on this one barcode.
+    return false
   }
 
   const styles = StyleSheet.create({
@@ -343,7 +374,6 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
               hideTorchButton
               torchActive={torchOn}
               onToggleTorch={toggleTorch}
-              onScanStateChange={setScanState}
               onError={onCameraError}
               style={StyleSheet.absoluteFillObject}
             />
