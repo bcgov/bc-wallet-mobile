@@ -39,7 +39,9 @@ const CancelledReview = ({ route }: CancelledReviewProps) => {
       buttonText={t('BCSC.CancelledVerification.Button')}
       buttonDisabled={isLoading}
       onButtonPress={async () => {
-        if (resettingRef.current) { return }
+        if (resettingRef.current) {
+          return
+        }
         resettingRef.current = true
         setIsLoading(true)
         const stopLoading = loadingScreen.startLoading(t('Alerts.RestartVerification.Loading'))
