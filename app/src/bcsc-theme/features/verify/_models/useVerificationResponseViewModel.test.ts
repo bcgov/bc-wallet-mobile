@@ -3,6 +3,7 @@ import * as useRegistrationServiceModule from '@/bcsc-theme/services/hooks/useRe
 import * as useTokenServiceModule from '@/bcsc-theme/services/hooks/useTokenService'
 import { BCDispatchAction, BCState } from '@/store'
 import * as Bifold from '@bifold/core'
+import { useNavigation } from '@react-navigation/native'
 import { act, renderHook } from '@testing-library/react-native'
 
 const mockGetCachedIdTokenMetadata = jest.fn().mockResolvedValue(undefined)
@@ -292,6 +293,21 @@ describe('useVerificationResponseViewModel', () => {
           await result.current.handleAccountSetup()
         })
       ).resolves.not.toThrow()
+    })
+
+    it('should not perform imperative navigation on success (#4368)', async () => {
+      mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
+
+      const nav = useNavigation()
+      const { result } = renderHook(() => useVerificationResponseViewModel())
+
+      await act(async () => {
+        await result.current.handleAccountSetup()
+      })
+
+      expect(nav.navigate).not.toHaveBeenCalled()
+      expect(nav.reset).not.toHaveBeenCalled()
+      expect(nav.dispatch).not.toHaveBeenCalled()
     })
   })
 
