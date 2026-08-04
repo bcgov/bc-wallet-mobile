@@ -162,6 +162,15 @@ describe('useSecureActions', () => {
       })
     })
 
+    it('maps a delete rejection during clearAuthorizationRequest to NATIVE_STORAGE_DELETE_FAILED', async () => {
+      jest.mocked(deleteAuthorizationRequest).mockRejectedValueOnce(nativeError('E_DELETE_AUTH_REQUEST_ERROR'))
+      const { result } = renderHook(() => useSecureActions())
+
+      await expect(result.current.clearAuthorizationRequest()).rejects.toMatchObject({
+        appEvent: AppEventCode.NATIVE_STORAGE_DELETE_FAILED,
+      })
+    })
+
     it('maps a delete rejection during deleteSecureData to NATIVE_STORAGE_DELETE_FAILED', async () => {
       jest.mocked(deleteAuthorizationRequest).mockRejectedValueOnce(nativeError('E_DELETE_AUTH_REQUEST_ERROR'))
       const { result } = renderHook(() => useSecureActions())
@@ -1039,6 +1048,18 @@ describe('useSecureActions', () => {
       })
 
       expect(scheduleVerificationReminders).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('clearAuthorizationRequest', () => {
+    it('deletes the authorization request from native storage', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.clearAuthorizationRequest()
+      })
+
+      expect(deleteAuthorizationRequest).toHaveBeenCalled()
     })
   })
 

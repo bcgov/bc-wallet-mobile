@@ -129,6 +129,13 @@ export const REPORT_SUSPICIOUS_URL =
   'https://www2.gov.bc.ca/gov/content/governments/government-id/bcservicescardapp/help'
 export const WALLET_LEARN_MORE_URL = 'https://digital.gov.bc.ca/design/digital-trust/'
 
+//TODO: replace hardcoded values with enums
+export enum VerificationRequestStatus {
+  PENDING = 'pending',
+  CANCELLED = 'cancelled',
+  VERIFIED = 'verified',
+}
+
 export enum HelpCentreUrl {
   HOME = 'https://id.gov.bc.ca/static/help/topics.html?fromapp=1',
   HOW_TO_SETUP = 'https://id.gov.bc.ca/static/help/setup_app.html?fromapp=1',

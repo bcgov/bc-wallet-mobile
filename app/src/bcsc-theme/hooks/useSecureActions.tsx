@@ -385,6 +385,19 @@ export const useSecureActions = () => {
   }, [dispatch, logger])
 
   /**
+   * Clear the authorization request record from native storage entirely.
+   */
+  const clearAuthorizationRequest = useCallback(async () => {
+    try {
+      await deleteAuthorizationRequest()
+      logger.info('Authorization request cleared from native storage')
+    } catch (error) {
+      logger.error('Failed to clear authorization request:', error as Error)
+      throwNativeBcscError(error)
+    }
+  }, [logger])
+
+  /**
    * Update the identification process type in state and persist to native storage.
    * Process value determines which verification flow to use (e.g., 'IDIM L3 Remote BCSC Photo Identity Verification').
    */
@@ -1216,6 +1229,7 @@ export const useSecureActions = () => {
     updateUserInfo,
     updateDeviceCodes,
     clearDeviceCodes,
+    clearAuthorizationRequest,
     updateCardProcess,
     updateUserMetadata,
     updateVerified,

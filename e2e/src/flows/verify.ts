@@ -401,6 +401,10 @@ export async function collectNonBcscEvidence(
 /**
  * Fill the ResidentialAddress form (non-BCSC only) and continue → the mandatory email step. Province
  * is a dropdown: tap it to open the modal, then pick British Columbia.
+ *
+ * This screen is why {@link BaseScreen.dismissKeyboard} no longer blind-taps on iOS: once the
+ * postal-code field is focused, the province dropdown sits under the old tap point, so the "dismiss"
+ * opened its modal and left Continue unreachable. Nothing here may dismiss the keyboard positionally.
  */
 export async function fillResidentialAddress(): Promise<void> {
   await ResidentialAddressScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
@@ -411,8 +415,23 @@ export async function fillResidentialAddress(): Promise<void> {
   await ResidentialAddressScreen.link('province')
   await ResidentialAddressScreen.waitFor('provinceBC', Timeouts.SCREEN_TRANSITION)
   await ResidentialAddressScreen.link('provinceBC')
+  await expectProvinceDropdownClosed()
 
   await ResidentialAddressScreen.fill('postalCode', 'V8W 2Y2', { tapFirst: true })
   await engine.dismissKeyboard()
   await ResidentialAddressScreen.tapWhenEnabled('primary') // ResidentialAddressContinue
+}
+
+/**
+ * Wait for the province dropdown's modal to close — the BC option exists only inside it, so its
+ * disappearance is the signal. Asserted explicitly so a swallowed option tap is named here rather
+ * than surfacing later as an unreachable postal-code field.
+ */
+async function expectProvinceDropdownClosed(): Promise<void> {
+  const deadline = Date.now() + Timeouts.SCREEN_TRANSITION
+  do {
+    if (!(await ResidentialAddressScreen.isVisible('provinceBC'))) return
+    await driver.pause(250)
+  } while (Date.now() < deadline)
+  throw new Error('The province dropdown did not close after selecting British Columbia')
 }

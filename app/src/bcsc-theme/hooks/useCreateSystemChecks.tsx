@@ -9,6 +9,7 @@ import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCh
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { InstallIdSystemCheck } from '@/services/system-checks/InstallIdSystemCheck'
+import { PendingVerificationRecoverySystemCheck } from '@/services/system-checks/PendingVerificationRecoverySystemCheck'
 import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClockSkewSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { TermsOfUseSystemCheck } from '@/services/system-checks/TermsOfUseSystemCheck'
@@ -167,7 +168,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       )
     }
 
-    // Only meaningful when a verification request has been submitted and is awaiting review
     if (!isVerified && verificationRequestId) {
       const { deviceCode, userCode } = store.bcscSecure
       systemChecks.push(
@@ -177,10 +177,25 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
             if (!deviceCode || !userCode) {
               return Promise.reject(new Error('Missing deviceCode or userCode for verification token exchange'))
             }
+            // Token exists, nothing to check
+            if (store.bcscSecure.refreshToken) {
+              return Promise.resolve(undefined)
+            }
             return tokenApi.checkDeviceCodeStatus(deviceCode, userCode)
           },
           utils
         )
+      )
+    } else if (!isVerified && store.bcscSecure.deviceCode && store.bcscSecure.userCode) {
+      const { deviceCode, userCode } = store.bcscSecure
+      systemChecks.push(
+        new PendingVerificationRecoverySystemCheck(() => {
+          // Token exists, nothing to check
+          if (store.bcscSecure.refreshToken) {
+            return Promise.resolve(true)
+          }
+          return tokenService.checkVerificationStatus(deviceCode, userCode)
+        }, utils)
       )
     }
 

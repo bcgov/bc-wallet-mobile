@@ -1,21 +1,37 @@
-import { TEST_PIN, Timeouts, WRONG_TEST_PIN } from '../../../src/constants.js'
-import { relaunchApp, selectAccountLandingIfPresent, unlockWithPin } from '../../../src/flows/auth.js'
+import assert from 'node:assert/strict'
+import {
+  BACKGROUND_LOCK_SECONDS,
+  BACKGROUND_NO_LOCK_SECONDS,
+  TEST_PIN,
+  Timeouts,
+  WRONG_TEST_PIN,
+} from '../../../src/constants.js'
+import {
+  backgroundAppFor,
+  relaunchApp,
+  selectAccountLandingIfPresent,
+  unlockWithPin,
+} from '../../../src/flows/auth.js'
 import { skipToHome } from '../../../src/flows/onboarding.js'
 import { expectWebViewOpen } from '../../../src/helpers/webview.js'
 import { AccountLandingScreen, EnterPINScreen, LockoutScreen } from '../../../src/screens/auth.js'
-import { HomeScreen } from '../../../src/screens/main.js'
+import { AutoLockScreen, HomeScreen, SettingsScreen } from '../../../src/screens/main.js'
 
 /**
  * Auth/unlock journey.
  *
  * Arrange is UI-driven: onboard + skip to unverified Home, then every relaunch lands on
- * AccountLanding → EnterPIN (`didAuthenticate` is in-memory). Ordered checkpoints, destructive
- * last: unlock happy path → wrong-PIN inline error (single miss; the native attempt counter resets
- * on the subsequent success) → five consecutive misses → the timed Lockout screen (terminal — the
- * app stays locked for 1 minute, so nothing runs after it).
+ * AccountLanding → EnterPIN (`didAuthenticate` is in-memory). Ordered checkpoints, slowest and most
+ * state-changing last: unlock happy path → wrong-PIN inline error (single miss; the native attempt
+ * counter resets on the subsequent success) → five consecutive misses → the timed Lockout screen →
+ * its unattended expiry → the background-timeout lock (TERMINAL: it leaves auto-lock at 1 minute,
+ * which would race every checkpoint after it).
  *
- * SessionRecovery is deliberately absent: `sessionRecoveryRequired` is derived from native secure
- * storage at hydration (verified account with no refresh token) and has no UI-reachable trigger.
+ * The two unattended waits (~1-minute lockout countdown, 70s background) make this the longest of
+ * the cheap journeys. Both are the assertion, not overhead.
+ *
+ * SessionRecovery is deliberately absent: `sessionRecoveryRequired` is derived at hydration from a
+ * verified account with no refresh token, so it is unreachable from this unverified session.
  */
 
 describe('Auth journey: unlock', () => {
@@ -76,5 +92,47 @@ describe('Auth journey: unlock', () => {
       }
     }
     await LockoutScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  })
+
+  it('auto-unlocks itself when the lockout countdown runs out', async () => {
+    // Nothing is tapped — the wait IS the assertion. The Lockout screen counts the native lock down
+    // and calls `unlockApp()` at zero, routing a no-longer-locked PIN account to EnterPIN.
+    // `isPresent` polls without the scroll-retry `expectVisible` would waste here.
+    assert.ok(
+      await EnterPINScreen.isPresent(Timeouts.LOCKOUT_AUTO_UNLOCK),
+      'the lockout did not release itself to EnterPIN within the countdown window'
+    )
+    await EnterPINScreen.fill('pin', TEST_PIN)
+    await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  })
+
+  it('shortens auto-lock and survives a background inside the timeout', async () => {
+    // Distinct from the inactivity timer the settings journey covers: backgrounding CLEARS that timer
+    // and the foreground handler compares elapsed time instead. Shorten the timeout first — the
+    // 5-minute default would need a 5-minute background.
+    await HomeScreen.tap('menu')
+    await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await SettingsScreen.link('autoLock')
+    await AutoLockScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await AutoLockScreen.link('time1') // saved immediately on tap; the activity context re-arms live
+    await AutoLockScreen.back.tap()
+    await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await SettingsScreen.back.tap()
+    await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+
+    // The control for the checkpoint below: a short background must NOT lock, and landing back on
+    // Home proves the app was RESUMED rather than relaunched — a relaunch reaches the unlock screen
+    // anyway, which would let the next checkpoint pass without proving anything.
+    await backgroundAppFor(BACKGROUND_NO_LOCK_SECONDS)
+    await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  })
+
+  it('locks on return from a long background and re-unlocks with the PIN (terminal)', async () => {
+    // Straight after the control, so the foreground gap stays seconds long: idle a minute here and
+    // the inactivity timer fires first, proving the wrong branch.
+    await backgroundAppFor(BACKGROUND_LOCK_SECONDS)
+
+    // Coming back logs the user out, so RootStack swaps to AuthStack and the normal spine applies.
+    await unlockWithPin(TEST_PIN)
   })
 })
