@@ -1,26 +1,56 @@
+import * as BCSCLoadingContextModule from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@mocks/@react-navigation/native'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { fireEvent, render } from '@testing-library/react-native'
+import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import CancelledReview from './CancelledReview'
 
+jest.mock('@/bcsc-theme/contexts/BCSCLoadingContext', () => ({
+  useLoadingScreen: jest.fn(),
+}))
+
+const mockVerificationReset = jest.fn().mockResolvedValue(true)
+jest.mock('@/bcsc-theme/hooks/useVerificationReset', () => ({
+  useVerificationReset: jest.fn(() => mockVerificationReset),
+}))
+
 const mockCleanUpVerificationData = jest.fn()
+const mockGoToMethodSelection = jest.fn()
 jest.mock('./CancelledReviewViewModel', () => ({
   __esModule: true,
   default: jest.fn(() => ({
     cleanUpVerificationData: mockCleanUpVerificationData,
+    goToMethodSelection: mockGoToMethodSelection,
   })),
 }))
+
+const mockStopLoading = jest.fn()
+const mockStartLoading = jest.fn().mockReturnValue(mockStopLoading)
 
 describe('CancelledReview', () => {
   let mockNavigation: any
   beforeEach(() => {
     jest.clearAllMocks()
+    jest.useFakeTimers()
     mockNavigation = useNavigation()
+    mockVerificationReset.mockResolvedValue(true)
+    jest.mocked(BCSCLoadingContextModule.useLoadingScreen).mockReturnValue({
+      startLoading: mockStartLoading,
+    } as any)
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
   })
 
   it('renders correctly with agent reason', () => {
-    const route = { params: { agentReason: 'Face does not match ID document' } } as any
+    const agentReason = 'Face does not match ID document'
+    const route = {
+      params: {
+        agentReason,
+      },
+    } as any
 
     const tree = render(
       <BasicAppContext>
@@ -34,7 +64,11 @@ describe('CancelledReview', () => {
   })
 
   it('renders with default message when no agent reason provided', () => {
-    const route = { params: { agentReason: undefined } } as any
+    const route = {
+      params: {
+        agentReason: undefined,
+      },
+    } as any
 
     const tree = render(
       <BasicAppContext>
@@ -47,7 +81,9 @@ describe('CancelledReview', () => {
   })
 
   it('renders with empty object params', () => {
-    const route = { params: {} } as any
+    const route = {
+      params: {},
+    } as any
 
     const tree = render(
       <BasicAppContext>
@@ -59,20 +95,13 @@ describe('CancelledReview', () => {
     expect(tree.getByText('BCSC.CancelledVerification.Label')).toBeTruthy()
   })
 
-  it('cleans up verification data on mount', () => {
-    const route = { params: { agentReason: 'Test reason' } } as any
-
-    render(
-      <BasicAppContext>
-        <CancelledReview route={route} />
-      </BasicAppContext>
-    )
-
-    expect(mockCleanUpVerificationData).toHaveBeenCalledTimes(1)
-  })
-
-  it('cleans up verification data and resets stack to VerificationMethodSelection on press', () => {
-    const route = { params: { agentReason: 'Test reason' } } as any
+  it('re-enters the verify flow via goToMethodSelection and resets the stack to IdentitySelection', async () => {
+    const agentReason = 'Test reason'
+    const route = {
+      params: {
+        agentReason,
+      },
+    } as any
 
     const tree = render(
       <BasicAppContext>
@@ -80,19 +109,137 @@ describe('CancelledReview', () => {
       </BasicAppContext>
     )
 
-    jest.clearAllMocks()
-    fireEvent.press(tree.getByText('BCSC.CancelledVerification.Button'))
+    const okButton = tree.getByText('BCSC.CancelledVerification.Button')
+    fireEvent.press(okButton)
 
-    expect(mockCleanUpVerificationData).toHaveBeenCalledTimes(1)
+    await waitFor(() => {
+      expect(mockGoToMethodSelection).toHaveBeenCalledTimes(1)
+    })
     expect(mockNavigation.reset).toHaveBeenCalledWith({
       index: 0,
-      routes: [{ name: 'Verify Options' }],
+      routes: [{ name: 'New Setup ID Confirmation' }],
     })
     expect(mockNavigation.goBack).not.toHaveBeenCalled()
   })
 
+  it('shows a loading screen while the reset is in flight and hides it once settled', async () => {
+    const route = {
+      params: {
+        agentReason: 'Test reason',
+      },
+    } as any
+
+    const tree = render(
+      <BasicAppContext>
+        <CancelledReview route={route} />
+      </BasicAppContext>
+    )
+
+    const okButton = tree.getByText('BCSC.CancelledVerification.Button')
+    fireEvent.press(okButton)
+
+    expect(mockStartLoading).toHaveBeenCalledWith('Alerts.RestartVerification.Loading')
+
+    await waitFor(() => {
+      expect(mockStopLoading).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  it('does not start a second reset when pressed again after success', async () => {
+    const route = {
+      params: {
+        agentReason: 'Test reason',
+      },
+    } as any
+
+    const tree = render(
+      <BasicAppContext>
+        <CancelledReview route={route} />
+      </BasicAppContext>
+    )
+
+    const okButton = tree.getByText('BCSC.CancelledVerification.Button')
+    fireEvent.press(okButton)
+
+    await waitFor(() => {
+      expect(mockGoToMethodSelection).toHaveBeenCalledTimes(1)
+    })
+
+    fireEvent.press(okButton)
+
+    await waitFor(() => {
+      expect(mockVerificationReset).toHaveBeenCalledTimes(2)
+    })
+    expect(mockGoToMethodSelection).toHaveBeenCalledTimes(2)
+  })
+
+  it('blocks a second tap while a reset is already in flight', async () => {
+    let resolveReset: (value: boolean) => void = () => {}
+    mockVerificationReset.mockReturnValue(
+      new Promise<boolean>((resolve) => {
+        resolveReset = resolve
+      })
+    )
+
+    const route = {
+      params: {
+        agentReason: 'Test reason',
+      },
+    } as any
+
+    const tree = render(
+      <BasicAppContext>
+        <CancelledReview route={route} />
+      </BasicAppContext>
+    )
+
+    const okButton = tree.getByText('BCSC.CancelledVerification.Button')
+    fireEvent.press(okButton)
+    fireEvent.press(okButton)
+
+    expect(mockVerificationReset).toHaveBeenCalledTimes(1)
+    expect(mockStartLoading).toHaveBeenCalledTimes(1)
+
+    resolveReset(true)
+    await waitFor(() => {
+      expect(mockStopLoading).toHaveBeenCalledTimes(1)
+    })
+    expect(mockGoToMethodSelection).toHaveBeenCalledTimes(1)
+  })
+
+  it('re-enables the button and does not navigate when the reset fails', async () => {
+    mockVerificationReset.mockResolvedValue(false)
+
+    const route = {
+      params: {
+        agentReason: 'Test reason',
+      },
+    } as any
+
+    const tree = render(
+      <BasicAppContext>
+        <CancelledReview route={route} />
+      </BasicAppContext>
+    )
+
+    const okButton = tree.getByText('BCSC.CancelledVerification.Button')
+    fireEvent.press(okButton)
+
+    await waitFor(() => {
+      expect(mockStopLoading).toHaveBeenCalledTimes(1)
+    })
+
+    expect(mockGoToMethodSelection).not.toHaveBeenCalled()
+    const buttonTouchable = tree.getByTestId(testIdWithKey('SystemModalButton'))
+    expect(buttonTouchable.props.accessibilityState?.disabled).toBeFalsy()
+  })
+
   it('displays OK button', () => {
-    const route = { params: { agentReason: 'Test reason' } } as any
+    const route = {
+      params: {
+        agentReason: 'Test reason',
+      },
+    } as any
 
     const tree = render(
       <BasicAppContext>
@@ -101,5 +248,23 @@ describe('CancelledReview', () => {
     )
 
     expect(tree.getByText('BCSC.CancelledVerification.Button')).toBeTruthy()
+  })
+
+  it('renders SystemModal component', () => {
+    const agentReason = 'Test reason'
+    const route = {
+      params: {
+        agentReason,
+      },
+    } as any
+
+    const tree = render(
+      <BasicAppContext>
+        <CancelledReview route={route} />
+      </BasicAppContext>
+    )
+
+    // SystemModal should render with the header text
+    expect(tree.getByText('BCSC.CancelledVerification.Title')).toBeTruthy()
   })
 })
