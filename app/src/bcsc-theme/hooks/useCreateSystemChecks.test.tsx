@@ -536,8 +536,6 @@ describe('useGetSystemChecks', () => {
         const check = systemChecks.find((c) => c.constructor.name === 'VerificationRequestStatusSystemCheck') as any
 
         await expect(check.checkDeviceCodeStatus()).resolves.toBeUndefined()
-        // The device code is single-use — re-submitting an already-redeemed one returns
-        // invalid_grant, so a refreshToken from a prior successful exchange must short-circuit this.
         expect(checkDeviceCodeStatus).not.toHaveBeenCalled()
       })
     })
@@ -630,8 +628,6 @@ describe('useGetSystemChecks', () => {
         const check = systemChecks.find((c) => c.constructor.name === 'PendingVerificationRecoverySystemCheck') as any
 
         await expect(check.checkVerificationStatus()).resolves.toBe(true)
-        // The device code is single-use — re-submitting an already-redeemed one returns
-        // invalid_grant, so a refreshToken from a prior successful exchange must short-circuit this.
         expect(checkDeviceCodeStatus).not.toHaveBeenCalled()
       })
     })

@@ -312,6 +312,53 @@ describe('useVerificationResponseViewModel', () => {
       expect(nav.reset).not.toHaveBeenCalled()
       expect(nav.dispatch).not.toHaveBeenCalled()
     })
+
+    it('calls clearAuthorizationRequest after marking the account verified', async () => {
+      mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
+
+      const { result } = renderHook(() => useVerificationResponseViewModel())
+
+      await act(async () => {
+        await result.current.handleAccountSetup()
+      })
+
+      expect(mockClearAuthorizationRequest).toHaveBeenCalled()
+      expect(mockUpdateVerified.mock.invocationCallOrder[0]).toBeLessThan(
+        mockClearAuthorizationRequest.mock.invocationCallOrder[0]
+      )
+    })
+
+    it('logs and skips navigating home when clearAuthorizationRequest fails', async () => {
+      mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
+      mockClearAuthorizationRequest.mockRejectedValue(new Error('Native delete failed'))
+
+      const { result } = renderHook(() => useVerificationResponseViewModel())
+
+      await act(async () => {
+        await result.current.handleAccountSetup()
+      })
+
+      expect(mockUpdateVerified).toHaveBeenCalledWith(true)
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to clean up verification process: Native delete failed')
+      )
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS })
+      )
+      expect(result.current.isSettingUpAccount).toBe(false)
+    })
+
+    it('does not clear the authorization request when updateVerified never succeeds', async () => {
+      mockUpdateVerified.mockRejectedValue(new Error('Update verified failed'))
+
+      const { result } = renderHook(() => useVerificationResponseViewModel())
+
+      await act(async () => {
+        await result.current.handleAccountSetup()
+      })
+
+      expect(mockClearAuthorizationRequest).not.toHaveBeenCalled()
+    })
   })
 
   describe('Complex scenarios', () => {
@@ -332,10 +379,6 @@ describe('useVerificationResponseViewModel', () => {
 
       // Verify all operations were called in order:
       // updateUserMetadata → token refresh → updateRegistration → updateVerified → clearAuthorizationRequest
-      // clearAuthorizationRequest must come after updateVerified: deleting the authorization request
-      // (deviceCode/userCode/cardProcess) any earlier would strand an in-progress verification if the
-      // app closes before this point, since updateVerified's card-type mapping and the recovery system
-      // checks both depend on that record still existing.
       const calls = [
         mockUpdateUserMetadata.mock.invocationCallOrder[0],
         mockGetCachedIdTokenMetadata.mock.invocationCallOrder[0],
