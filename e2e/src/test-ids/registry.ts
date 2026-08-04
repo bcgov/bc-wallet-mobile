@@ -52,9 +52,8 @@ export const TestIds = {
     notifications: {
       enable: 'EnableNotifications',
       skip: 'SkipNotifications',
-      // The same route renders a `PermissionDisabled` variant INSTEAD of the enable/skip pair once
-      // the user has been prompted at least once AND the live OS status is denied/blocked
-      // (`NotificationsScreen.checkPermissions`). Re-entering the screen is what re-runs that check.
+      // The same route renders a `PermissionDisabled` variant INSTEAD of the enable/skip pair once the
+      // user has been prompted and the live OS status is denied/blocked. Re-entering re-runs the check.
       openSettings: 'OpenSettings',
       continueWithout: 'ContinueWithoutNotifications',
     },
@@ -322,8 +321,7 @@ export const TestIds = {
       accessibility: 'Accessibility',
       termsOfUse: 'TermsOfUse',
       privacy: 'Privacy',
-      // Hidden until developer mode is enabled (see the `developer` namespace) — absent by default,
-      // so it doubles as the "the dev menu stays hidden" assertion on any stack's settings surface.
+      // Hidden until developer mode is enabled — so its absence is itself an assertion.
       developerMode: 'DeveloperMode',
       // verified-only (isVerified-gated): absence-assert unverified, presence when verified
       profile: 'Profile',
@@ -441,16 +439,9 @@ export const TestIds = {
 
   /**
    * The hidden Developer (IAS) menu — ONE shared `Developer` screen registered per stack
-   * (`OnboardingDeveloper` / `AuthDeveloper` / `VerifyDeveloper` / `MainDeveloper`).
-   *
-   * Two entry points exist in the app; only the second is addressable from a test:
-   *  - the `DeveloperCounter` tap target wrapping the Intro / AccountSetup illustration — it carries a
-   *    testID but ALSO `accessibilityElementsHidden` / `importantForAccessibility="no-hide-descendants"`,
-   *    so it is absent from both the XCUITest and UiAutomator2 trees and cannot be selected;
-   *  - the version line in the footer of any Settings surface (`SettingsContent`), which is a plain
-   *    text node — see `helpers/developer.ts`.
-   *
-   * The `Testing` section (stale terms / reset intro / delete tokens) renders in BCSC mode only.
+   * (`OnboardingDeveloper` / `AuthDeveloper` / `VerifyDeveloper` / `MainDeveloper`). Reached only via
+   * the Settings version footer (`helpers/developer.ts`); the app's `DeveloperCounter` trigger is
+   * hidden from the accessibility tree and cannot be selected. `Testing` rows are BCSC-mode only.
    */
   developer: {
     /** Always-rendered first row — the reliable "Developer screen mounted" marker. */

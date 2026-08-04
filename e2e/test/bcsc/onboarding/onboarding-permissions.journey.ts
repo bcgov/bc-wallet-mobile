@@ -16,17 +16,14 @@ import {
 /**
  * Onboarding journey: granted notification permission.
  *
- * The one onboarding branch that needs the OS permission to be GRANTED: after the user allows push
- * notifications, the analytics screen stops routing through the Notifications screen at all
- * (`OnboardingOptInAnalyticsScreen.nextScreen` reads the live status and jumps to SecureApp).
+ * The one onboarding branch needing the OS permission GRANTED: once it is, the analytics screen reads
+ * the live status and jumps straight to SecureApp, skipping Notifications entirely.
  *
- * It needs its own fresh install because permission answers are one-way within a session: iOS never
- * re-prompts after a refusal, and Android only re-prompts once. The opposite answer — and the
- * `PermissionDisabled` variant it unlocks — lives in `onboarding-detours.journey.ts`.
+ * Its own fresh install, because permission answers are one-way within a session (iOS never re-prompts
+ * after a refusal). The opposite answer lives in `onboarding-detours.journey.ts`.
  *
- * Assumes Android 13+ (runtime POST_NOTIFICATIONS), i.e. that push permission is NOT granted on a
- * fresh install. On an older Android the first analytics answer would already skip Notifications and
- * the enable checkpoint below would have nothing to drive.
+ * Assumes Android 13+ (runtime POST_NOTIFICATIONS): on older Android the permission is implicit, so
+ * the enable checkpoint would have nothing to drive.
  */
 describe('Onboarding journey: notification permission granted', () => {
   it('walks to the analytics opt-in and accepts it', async () => {
@@ -45,14 +42,13 @@ describe('Onboarding journey: notification permission granted', () => {
   })
 
   it('grants the OS notification permission from the Notifications screen', async () => {
-    // Permission has never been requested at this point, so the screen is offered rather than skipped.
+    // Never requested yet, so the screen is offered rather than skipped.
     await answerNotificationPermission('allow')
   })
 
   it('keeps the normal Notifications body once permission is granted', async () => {
-    // The mirror of the detours journey's refusal branch: `checkPermissions` only swaps in
-    // PermissionDisabled for a denied/blocked status, so a granted user re-entering the screen still
-    // sees the enable/skip pair.
+    // Mirror of the detours journey's refusal branch: `PermissionDisabled` only swaps in for a
+    // denied/blocked status, so a granted user re-entering still sees the enable/skip pair.
     await OnboardingSecureAppScreen.back.tap()
     await OnboardingNotificationsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     assert.equal(
@@ -67,8 +63,7 @@ describe('Onboarding journey: notification permission granted', () => {
     await OnboardingOptInAnalyticsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     await OnboardingOptInAnalyticsScreen.tap('primary')
 
-    // The branch under test: with permission already granted the analytics screen navigates straight
-    // to SecureApp. Assert the absence first so a regression fails here rather than in a scroll hunt.
+    // The branch under test. Absence first, so a regression fails here rather than in a scroll hunt.
     assert.equal(
       await OnboardingNotificationsScreen.isPresent(Timeouts.ELEMENT_VISIBLE),
       false,

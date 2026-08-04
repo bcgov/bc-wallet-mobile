@@ -11,10 +11,8 @@ const STEADY_POSITION_TIMEOUT_MS = 3_000
 const STEADY_POSITION_SAMPLE_MS = 120
 
 /**
- * Keys XCUITest may press to close the iOS keyboard, tried in order. Case matters — these are the
- * rendered key labels, and iOS uses lower case on the alphabetic keyboard's return key but title
- * case on the accessory keys. None of the app's inputs set `onSubmitEditing`, so pressing any of
- * them only blurs the field.
+ * Keys XCUITest may press to close the iOS keyboard, tried in order — rendered key labels, so case
+ * matters. No app input sets `onSubmitEditing`, so pressing one only blurs the field.
  */
 const IOS_KEYBOARD_DISMISS_KEYS = ['done', 'Done', 'return', 'Return', 'go', 'Go', 'next', 'Next', 'search', 'Search']
 
@@ -167,12 +165,9 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * Wait for an element by its visible TEXT — the counterpart of {@link waitForDisplayed} for the
    * inline errors, headings and menu titles that carry no testID, scroll-on-miss included.
    *
-   * The scroll hunt is the point. A bare `findByText(...).waitForDisplayed()` asserts only what is
-   * currently on screen, which is a different claim from "the app rendered this": a keyboard-aware
-   * form scrolls to keep the FOCUSED field clear of the keyboard, so text attached to any other
-   * field can sit above the fold while being perfectly well rendered. That is what broke the
-   * CreatePIN too-short assertion — the error belongs to the first PIN field while the second one
-   * held focus.
+   * The hunt matters: a bare `findByText(...).waitForDisplayed()` only asserts what is currently in
+   * the viewport, and a keyboard-aware form scrolls to keep the FOCUSED field clear — pushing
+   * another field's text above the fold while it is perfectly well rendered.
    */
   public async waitForText(text: string, timeout: number = Timeouts.ELEMENT_VISIBLE): Promise<void> {
     const el = await this.findByText(text)
@@ -325,26 +320,20 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
   }
 
   /**
-   * Dismiss the soft keyboard without ever touching the app's own UI.
+   * Dismiss the soft keyboard without ever touching the app's own UI — press one of the keyboard's
+   * own dismissal keys.
    *
-   * iOS used to do this with a blind tap a quarter of the way down the screen, relying on the form's
-   * scroll view to swallow it (`keyboardShouldPersistTaps: 'handled'` in bifold's `KeyboardView`, so
-   * a tap NOT handled by a child closes the keyboard). That only holds while nothing interactive sits
-   * under the point — and on iOS 17 nightlies it didn't: with the postal-code field focused, the
-   * keyboard-aware scroll puts ResidentialAddress's province dropdown right at that coordinate, so
-   * "dismiss the keyboard" opened the province modal, the tap was handled (so the keyboard stayed),
-   * and the journey stranded with Continue unreachable behind the modal. There is no safe coordinate
-   * to move to either: every `InputWithValidation` carries a 44px hitSlop, so the gaps between fields
-   * are live too. The blind tap had to go, not move.
+   * iOS used to blind-tap a quarter down the screen and let the form's scroll view swallow it. That
+   * only works while nothing interactive sits there: on iOS 17 it landed on ResidentialAddress's
+   * province dropdown, opening the modal and stranding the journey. No coordinate is safe —
+   * `InputWithValidation`'s 44px hitSlop makes the gaps between fields live too.
    *
-   * What replaces it only ever addresses the keyboard itself: press one of its own dismissal keys.
-   * Number pads (the birthdate and email-confirmation inputs) have no such key, and there the
-   * keyboard is simply left up — which is safe, because every form that calls this renders through
-   * `ScreenWrapper keyboardActive`, laying its controls out ABOVE the keyboard, and `tapWhenEnabled`
-   * scroll-retries if a target still isn't visible.
+   * Number pads (birthdate, email code) have no dismissal key, so the keyboard is left up. That is
+   * fine: every form calling this uses `ScreenWrapper keyboardActive`, which lays its controls out
+   * above the keyboard.
    */
   async dismissKeyboard() {
-    // A probe failure must not skip the dismissal, so an unreadable state is treated as "shown".
+    // An unreadable probe counts as "shown" — better to attempt a (now harmless) dismissal.
     if (!(await driver.isKeyboardShown().catch(() => true))) return
 
     if (driver.isAndroid) {
@@ -354,12 +343,10 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
     }
 
     try {
-      // Proxies to WDA's /wda/keyboard/dismiss, which taps the first of these keys the keyboard has
-      // and throws when it has none — so a failure here is "no dismissal key", not "command missing".
+      // Throws when the keyboard has none of these keys — not when the command is missing.
       await driver.execute('mobile: hideKeyboard', { keys: IOS_KEYBOARD_DISMISS_KEYS })
-      await driver.pause(300) // let the layout settle as the keyboard collapses
+      await driver.pause(300)
     } catch {
-      // No dismissal key on this keyboard (number pad). Leaving it open beats tapping the form.
       console.warn('[keyboard] No iOS dismissal key available; leaving the keyboard open')
     }
   }
@@ -370,10 +357,9 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * reads the drag as gesture input and TYPES into the still-focused field (observed on a Pixel 7 Pro:
    * a scroll hunt for the next input appended " TY TY TY TY" to the just-filled last-name field).
    *
-   * Android-only by design: this exists for the glide-typing hazard above, which is a Gboard
-   * behaviour with no iOS equivalent — iOS forms keep the focused field clear of the keyboard on
-   * their own, and {@link dismissKeyboard} covers the cases that genuinely need it there. Never
-   * throws — a keyboard probe must not fail the caller's real action.
+   * Android-only: the glide-typing hazard is a Gboard behaviour with no iOS equivalent, and
+   * {@link dismissKeyboard} covers the iOS cases that need it. Never throws — a keyboard probe must
+   * not fail the caller's real action.
    */
   public async hideAndroidKeyboardIfShown(): Promise<void> {
     if (!driver.isAndroid) return
@@ -462,9 +448,8 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
   }
 
   /**
-   * Swipe until a target becomes visible. Shared by the testID and visible-text hunts, which differ
-   * only in how they locate the target — `isVisible` re-queries on every pass, so a handle
-   * invalidated by the scroll does not poison the search.
+   * Swipe until a target becomes visible — shared by the testID and visible-text hunts. `isVisible`
+   * re-queries each pass, so a handle invalidated by the scroll doesn't poison the search.
    *
    * @param description - how the target is named in the failure message
    * @param isVisible - cheap, non-throwing "is it on screen" probe

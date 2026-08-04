@@ -27,12 +27,11 @@ import { AutoLockScreen, HomeScreen, SettingsScreen } from '../../../src/screens
  * its unattended expiry → the background-timeout lock (TERMINAL: it leaves auto-lock at 1 minute,
  * which would race every checkpoint after it).
  *
- * Two slow, unattended waits live here — the ~1-minute lockout countdown and the 70s background —
- * so this file is the longest of the cheap journeys by design. Both are the assertion, not overhead.
+ * The two unattended waits (~1-minute lockout countdown, 70s background) make this the longest of
+ * the cheap journeys. Both are the assertion, not overhead.
  *
  * SessionRecovery is deliberately absent: `sessionRecoveryRequired` is derived at hydration from a
- * verified account with no refresh token, so it cannot be reached from this unverified session (see
- * the UAT-12 ticket for the verified-journey recipe).
+ * verified account with no refresh token, so it is unreachable from this unverified session.
  */
 
 describe('Auth journey: unlock', () => {
@@ -96,10 +95,9 @@ describe('Auth journey: unlock', () => {
   })
 
   it('auto-unlocks itself when the lockout countdown runs out', async () => {
-    // Nothing is tapped here — the wait IS the assertion. The Lockout screen counts down the native
-    // lock's remaining time and calls `unlockApp()` at zero, which routes a no-longer-locked
-    // PIN account to EnterPIN. `isPresent` polls without the scroll-retry `expectVisible` would
-    // spend on a screen that has nothing to scroll.
+    // Nothing is tapped — the wait IS the assertion. The Lockout screen counts the native lock down
+    // and calls `unlockApp()` at zero, routing a no-longer-locked PIN account to EnterPIN.
+    // `isPresent` polls without the scroll-retry `expectVisible` would waste here.
     assert.ok(
       await EnterPINScreen.isPresent(Timeouts.LOCKOUT_AUTO_UNLOCK),
       'the lockout did not release itself to EnterPIN within the countdown window'
@@ -110,9 +108,8 @@ describe('Auth journey: unlock', () => {
 
   it('shortens auto-lock and survives a background inside the timeout', async () => {
     // Distinct from the inactivity timer the settings journey covers: backgrounding CLEARS that timer
-    // (its handle does not survive suspension) and the foreground handler instead compares elapsed
-    // time against the configured timeout. Shorten the timeout first — the 5-minute default would
-    // need a 5-minute background.
+    // and the foreground handler compares elapsed time instead. Shorten the timeout first — the
+    // 5-minute default would need a 5-minute background.
     await HomeScreen.tap('menu')
     await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     await SettingsScreen.link('autoLock')
@@ -123,21 +120,19 @@ describe('Auth journey: unlock', () => {
     await SettingsScreen.back.tap()
     await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
 
-    // The control for the checkpoint below. Landing back on Home proves two things the lock
-    // assertion depends on: a short background does NOT lock, and the app is RESUMED rather than
-    // relaunched — a relaunch would reach the unlock screen for the ordinary in-memory
-    // `didAuthenticate` reason, which would make the next checkpoint pass without proving anything.
+    // The control for the checkpoint below: a short background must NOT lock, and landing back on
+    // Home proves the app was RESUMED rather than relaunched — a relaunch reaches the unlock screen
+    // anyway, which would let the next checkpoint pass without proving anything.
     await backgroundAppFor(BACKGROUND_NO_LOCK_SECONDS)
     await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 
   it('locks on return from a long background and re-unlocks with the PIN (terminal)', async () => {
-    // Runs straight after the control so the foreground gap stays seconds long: idle here for a
-    // minute and the inactivity timer would log the user out first, proving the wrong branch.
+    // Straight after the control, so the foreground gap stays seconds long: idle a minute here and
+    // the inactivity timer fires first, proving the wrong branch.
     await backgroundAppFor(BACKGROUND_LOCK_SECONDS)
 
-    // Coming back logs the user out (`didAuthenticate` → false), so RootStack swaps to AuthStack and
-    // the normal unlock spine applies.
+    // Coming back logs the user out, so RootStack swaps to AuthStack and the normal spine applies.
     await unlockWithPin(TEST_PIN)
   })
 })

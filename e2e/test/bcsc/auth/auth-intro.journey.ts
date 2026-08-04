@@ -11,17 +11,14 @@ import { OnboardingIntroScreen } from '../../../src/screens/onboarding.js'
  * Auth journey: the returning-user welcome intro (AuthIntro).
  *
  * AuthStack opens on `AuthIntro` instead of `AccountLanding` when `hasSeenOnboardingIntro` was never
- * recorded — the one-time "the app has changed" gate an already-onboarded user meets on launch. The
- * onboarding walk sets that flag on its very first tap, so the only way to observe the variant is to
- * clear it again: the Developer menu's "Reset Welcome Intro" tool, reached PRE-authentication from
- * AccountLanding's header menu.
+ * recorded. Onboarding sets that flag on its very first tap, so the only way to observe the variant
+ * is the Developer menu's "Reset Welcome Intro", reached PRE-auth from AccountLanding's header menu.
  *
- * It is a separate file from `auth-unlock.journey.ts` on purpose. Getting here depends on the hidden
- * developer-menu trigger (eleven taps on a text node — see `helpers/developer.ts`), and a failure
- * there must not take the core unlock spine down with it.
+ * Separate from `auth-unlock.journey.ts` on purpose: this depends on the hidden developer-menu
+ * trigger, and a failure there must not take the core unlock spine down with it.
  */
 
-/** The dev tools dispatch and persist without awaiting the write; let it flush before terminating. */
+/** The dev tools persist without awaiting the write; let it flush before terminating. */
 const PREFERENCE_WRITE_SETTLE_MS = 1_000
 
 describe('Auth journey: returning-user intro', () => {
@@ -32,8 +29,7 @@ describe('Auth journey: returning-user intro', () => {
   it('opens the pre-authentication settings from AccountLanding', async () => {
     await relaunchApp()
     await selectAccountLandingIfPresent()
-    // Header-left menu → AuthSettings. `didAuthenticate` is still false, so the AuthenticatedSection
-    // rows are absent and ContactUs is the arrival marker.
+    // Header-left menu → AuthSettings (pre-auth, so ContactUs is the arrival marker).
     await AccountLandingScreen.tap('menu')
     await AuthSettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
@@ -43,17 +39,16 @@ describe('Auth journey: returning-user intro', () => {
     await DeveloperScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     await DeveloperScreen.link('resetOnboardingIntro')
     await driver.pause(PREFERENCE_WRITE_SETTLE_MS)
-    // No assertion on the row's own state readout (it is a split label/value pair with no testID);
-    // the next checkpoint's intro is the observable effect. AuthStack sets no `headerBackTestID`, so
-    // this screen is left by relaunching rather than by tapping Back.
+    // The row's own readout has no testID; the next checkpoint's intro is the observable effect.
+    // AuthStack sets no `headerBackTestID`, so this screen is left by relaunching.
   })
 
   it('shows the welcome intro on the next launch and slides on to AccountLanding', async () => {
-    // AuthStack picks its initial route at mount, so the reset only takes effect on a fresh launch.
+    // AuthStack picks its initial route at mount, so the reset only lands on a fresh launch.
     await relaunchApp()
     await OnboardingIntroScreen.expectVisible(Timeouts.APP_LAUNCH)
-    // The same component as the onboarding intro — what identifies the AuthIntro variant is where
-    // Continue goes: it REPLACES itself with AccountLanding, where onboarding pushes the privacy policy.
+    // Same component as the onboarding intro — what identifies the variant is where Continue goes:
+    // it REPLACES itself with AccountLanding, where onboarding pushes the privacy policy.
     await OnboardingIntroScreen.tap('primary')
     await AccountLandingScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
@@ -69,8 +64,8 @@ describe('Auth journey: returning-user intro', () => {
   })
 
   it('leaves the developer menu row exposed in settings', async () => {
-    // The counterpart of the onboarding detours journey's "hidden on a default install" assertion:
-    // once enabled the preference is persisted, so the row is now offered on every settings surface.
+    // Counterpart of the detours journey's "hidden on a default install" assertion — the preference
+    // is persisted, so the row is now offered on every settings surface.
     await HomeScreen.tap('menu')
     await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     await SettingsScreen.waitFor('developerMode', Timeouts.SCREEN_TRANSITION)

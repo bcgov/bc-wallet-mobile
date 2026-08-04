@@ -17,25 +17,19 @@ export async function relaunchApp(): Promise<void> {
 }
 
 /**
- * Send the app to the background for `seconds`, then bring it back to the foreground — WITHOUT
- * terminating it, so in-memory state survives and the app observes a real AppState background →
- * active transition (which is what auto-lock's backgrounded-too-long branch keys off).
+ * Background the app for `seconds`, then foreground it — WITHOUT terminating, so in-memory state
+ * survives and the app sees a real AppState background → active transition (what auto-lock's
+ * backgrounded-too-long branch keys off).
  *
- * The wait is deliberately NOT the driver's. Asking a driver to hold the app down for N seconds —
- * `mobile: backgroundApp` with a POSITIVE `seconds`, or the legacy `driver.background(n)` — blocks
- * that one request for the whole duration (on iOS it is `POST /wda/deactivateApp {duration}`), and
- * Sauce's gateway terminates a session whose command has not answered within 60s. A 70s background
- * therefore killed the iOS 17 job mid-run: "did not receive any response ... within 60000 ms",
- * immediately followed by "A session is either terminated or not started".
- *
- * A NEGATIVE `seconds` means "leave it in the background" and returns straight away, so the wait
- * becomes a client-side `pause` (wdio implements it as a plain `setTimeout` — no driver traffic at
- * all, bounded by `newCommandTimeout` rather than the gateway), and `activateApp` resumes the still
- * running app. Keep any single driver command well under 60s on Sauce.
+ * The wait is deliberately not the driver's. A POSITIVE `seconds` (or the legacy
+ * `driver.background(n)`) blocks that one request for its full duration, and Sauce terminates a
+ * session whose command hasn't answered within 60s — which is how a 70s background killed the iOS 17
+ * job. A NEGATIVE `seconds` means "leave it there" and returns at once, so the wait becomes a
+ * client-side `pause` (wdio implements it as a plain `setTimeout`). Keep any single driver command
+ * well under 60s on Sauce.
  */
 export async function backgroundAppFor(seconds: number): Promise<void> {
-  // Resolve the id while the app is still frontmost — `getCurrentAppId` reads the ACTIVE app, so
-  // after backgrounding it would report the home screen / launcher instead.
+  // Resolve while frontmost — `getCurrentAppId` reads the ACTIVE app.
   const appId = await getCurrentAppId()
   await driver.execute('mobile: backgroundApp', { seconds: -1 })
   await driver.pause(seconds * 1_000)

@@ -20,13 +20,12 @@ export const AccountLandingScreen = defineScreen({
 })
 
 /**
- * Pre-authentication settings (`AuthSettings`, the AccountLanding header-left destination). Wraps the
- * same `SettingsContent` as Main/Onboarding, but `didAuthenticate` is still false here so the whole
- * `AuthenticatedSection` (AppSecurity/ChangePIN/AutoLock/…) is ABSENT — the always-rendered Help
- * section's `ContactUs` row is the arrival marker, as on the onboarding settings surface.
+ * Pre-authentication settings (`AuthSettings`, the AccountLanding header-left destination). Same
+ * `SettingsContent` as Main/Onboarding, but `didAuthenticate` is still false so the whole
+ * `AuthenticatedSection` is ABSENT; the always-rendered `ContactUs` row is the arrival marker.
  *
- * NB no `back` role: AuthStack sets no `headerBackTestID` (see the note at the foot of this file), so
- * leave this surface by relaunching rather than by tapping the header.
+ * No `back` role — AuthStack sets no `headerBackTestID` (see the note at the foot of this file), so
+ * leave this surface by relaunching.
  */
 export const AuthSettingsScreen = defineScreen({
   self: bcsc(TestIds.main.settings.contactUs),

@@ -3,39 +3,25 @@ import { DeveloperScreen } from '../screens/developer.js'
 import { swipeUpBy } from './gestures.js'
 
 /**
- * Reaching the hidden Developer (IAS) menu.
+ * Reaching the hidden Developer (IAS) menu, by tapping the version line in a Settings footer.
  *
- * The app exposes two triggers and only one of them is drivable:
+ * The app's other trigger — `DeveloperCounter` on the Intro illustration — is unusable: the same
+ * `Pressable` sets `accessibilityElementsHidden` / `importantForAccessibility="no-hide-descendants"`,
+ * so neither driver can see it.
  *
- *  - `DeveloperModeTrigger` (the Intro / AccountSetup illustration) carries testID `DeveloperCounter`,
- *    but the same `Pressable` sets `accessibilityElementsHidden` + `importantForAccessibility=
- *    "no-hide-descendants"`. Both drivers read the accessibility tree, so the node is not in the
- *    snapshot on either platform and no selector can reach it — only a blind coordinate tap could,
- *    which would be a screen-geometry bet, not a test.
- *  - The version line in every Settings footer (`SettingsContent`) is wrapped in a
- *    `TouchableWithoutFeedback`. Its child text nodes ARE in the tree, and a tap on a child is routed
- *    to the parent responder — so it is selectable, scrollable-to, and works identically on both
- *    platforms. That is the route implemented here.
- *
- * Enabling developer mode is a persisted preference change: the `DeveloperMode` settings row appears
- * for the rest of the session, and developer-gated surfaces elsewhere (e.g. the QRCore Display tab)
- * become reachable. Only use this on a journey whose remaining checkpoints tolerate that.
+ * Enabling developer mode persists: the `DeveloperMode` settings row and other dev-gated surfaces
+ * (e.g. the QRCore Display tab) stay available for the rest of the session.
  */
 
 /** bifold's `useDeveloperMode` fires on the tap AFTER its 10-touch threshold — so eleven, not ten. */
 const TAPS_TO_ENABLE_DEVELOPER_MODE = 11
 
-/** Top-up taps allowed if one of the eleven was swallowed mid-scroll. */
+/** Top-up taps allowed if one of the eleven was swallowed. */
 const MAX_EXTRA_TAPS = 4
 
-/** Swipes spent hunting the footer. The pre-auth settings surface often needs none. */
 const MAX_FOOTER_SCROLLS = 8
 
-/**
- * The footer's `Version <version> (<build>)` line. Matched by text prefix because the value is
- * build-dependent, and it is the only "Version …" string on a settings surface. The sibling
- * `BC Services Card` line is deliberately not used — that copy recurs elsewhere in the app.
- */
+/** The footer's `Version <version> (<build>)` line — prefix-matched, since the value is build-dependent. */
 async function versionFooter() {
   return driver.isIOS
     ? $('-ios predicate string:type == "XCUIElementTypeStaticText" AND label BEGINSWITH "Version "')
@@ -43,10 +29,8 @@ async function versionFooter() {
 }
 
 /**
- * Scroll the settings version footer into view.
- *
- * Also positions the `DeveloperMode` row (which sits directly above the footer) on screen, so an
- * absence assertion made after this call means "not rendered" rather than "below the fold".
+ * Scroll the settings version footer into view. Also brings the `DeveloperMode` row (directly above
+ * it) on screen, so an absence assertion after this means "not rendered", not "below the fold".
  */
 export async function scrollToSettingsVersionFooter(): Promise<void> {
   for (let scroll = 0; scroll < MAX_FOOTER_SCROLLS; scroll++) {
@@ -60,22 +44,18 @@ export async function scrollToSettingsVersionFooter(): Promise<void> {
 }
 
 /**
- * Open the Developer menu from the Settings surface currently on screen (works pre-auth on
- * `AuthSettings`/`OnboardingSettings` as well as on `MainSettings`).
- *
- * Leaves the Developer screen on top; the caller asserts and drives it.
+ * Open the Developer menu from whichever Settings surface is on screen (pre-auth `AuthSettings` /
+ * `OnboardingSettings` as well as `MainSettings`), leaving it on top for the caller.
  */
 export async function openDeveloperMenuFromSettings(): Promise<void> {
   await scrollToSettingsVersionFooter()
 
-  // The counter is a `useRef` on the mounted SettingsContent, so every tap has to land on this
-  // instance — no relaunching or re-navigating in between.
+  // The counter is a `useRef` on the mounted SettingsContent — every tap must land on this instance.
   for (let tap = 0; tap < TAPS_TO_ENABLE_DEVELOPER_MODE; tap++) {
     await (await versionFooter()).click()
   }
 
-  // A swallowed tap only under-counts (taps below the threshold do nothing but increment), so top up
-  // until the menu is on top. Once it opens the footer is gone and the loop exits on the check.
+  // A swallowed tap only under-counts, so top up until the menu opens.
   for (let extra = 0; extra < MAX_EXTRA_TAPS; extra++) {
     if (await DeveloperScreen.isPresent(Timeouts.ELEMENT_VISIBLE)) return
     await (await versionFooter()).click()

@@ -26,18 +26,17 @@ import {
  * checkpoint per detour, so a failure reports exactly which detour broke (mocha bail skips the rest
  * of THIS file; other journey files still run).
  *
- * The notification permission is DENIED here — that direction both exercises the `PermissionDisabled`
- * variant and leaves the device no more permissive than it started. The opposite answer (and the
- * screen-skipping branch it unlocks) needs its own fresh install: `onboarding-permissions.journey.ts`.
+ * The notification permission is DENIED here — that direction exercises the `PermissionDisabled`
+ * variant and leaves the device no more permissive than it started. The opposite answer needs its own
+ * fresh install: `onboarding-permissions.journey.ts`.
  */
 
 /** Engine handle for the elements that expose no testIDs (matched by visible text). */
 const engine = new BaseScreen()
 
 /**
- * Inline validation copy on the CreatePIN form. `PINInput`'s error line and the checkbox error are
- * plain `ThemedText` nodes with no testIDs, so they are matched by their rendered string — keys
- * `BCSC.PIN.PINTooShort` / `PINsDoNotMatch` / `MustCheckBox` in `app/src/localization/en`.
+ * Inline validation copy on the CreatePIN form — plain `ThemedText` with no testIDs, so matched by
+ * their rendered string. Keys `BCSC.PIN.PINTooShort` / `PINsDoNotMatch` / `MustCheckBox`.
  */
 const CREATE_PIN_ERRORS = {
   tooShort: 'PIN must be 6 digits',
@@ -46,13 +45,9 @@ const CREATE_PIN_ERRORS = {
 } as const
 
 /**
- * Wait for a testID-free inline error to render.
- *
- * `waitForText` rather than a bare `findByText`, because these errors are not reliably ON SCREEN
- * when they appear: the form only drops the keyboard once a field reaches six digits, and while it
- * is up the keyboard-aware scroll keeps the FOCUSED field clear — which pushes an error belonging to
- * the other field above the fold. The hunt makes the assertion "the app rendered this" rather than
- * "this happens to be in the viewport".
+ * Wait for a testID-free inline error to render. `waitForText` (which scrolls on a miss) rather than
+ * a bare `findByText`: the form only drops the keyboard at six digits, and while it is up the
+ * keyboard-aware scroll keeps the FOCUSED field clear — pushing the other field's error above the fold.
  */
 async function expectInlineError(message: string): Promise<void> {
   await engine.waitForText(message)
@@ -65,9 +60,8 @@ describe('Onboarding journey: detours', () => {
     // Pre-auth, the AuthenticatedSection rows are absent; the always-rendered ContactUs row is the marker.
     await OnboardingSettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
 
-    // A default install must not expose the developer menu. Scroll to the footer first so the
-    // absence means "not rendered" rather than "below the fold" — the row sits directly above it.
-    // Revealing it is covered where it is actually needed, in `auth/auth-intro.journey.ts`.
+    // A default install must not expose the developer menu. Scroll to the footer first so the absence
+    // means "not rendered", not "below the fold". Revealing it lives in `auth/auth-intro.journey.ts`.
     await scrollToSettingsVersionFooter()
     assert.equal(
       await OnboardingSettingsScreen.isVisible('developerMode'),
@@ -127,9 +121,8 @@ describe('Onboarding journey: detours', () => {
   })
 
   it('re-entering Notifications after the refusal shows the permission-disabled variant', async () => {
-    // The screen re-reads the live OS status on mount, so navigating BACK to it is what swaps the
-    // enable/skip body for PermissionDisabled. OpenSettings hands off to the OS settings app — assert
-    // it, never tap it; ContinueWithoutNotifications is the in-app way forward.
+    // The screen re-reads the live OS status on mount, so navigating BACK is what swaps the body.
+    // OpenSettings hands off to the OS settings app — assert it, never tap it.
     await OnboardingSecureAppScreen.back.tap()
     await OnboardingNotificationsDisabledScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     assert.ok(
@@ -148,8 +141,7 @@ describe('Onboarding journey: detours', () => {
   it('rejects a short PIN, a mismatched confirmation and an unchecked acknowledgement', async () => {
     await OnboardingCreatePINScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
 
-    // Validation runs on submit and stops at the first failing rule, so the three are exercised in
-    // the order the form checks them. Every rejection leaves the user on the form.
+    // Validation stops at the first failing rule, so the three run in the order the form checks them.
     await OnboardingCreatePINScreen.fill('pin', SHORT_TEST_PIN)
     await OnboardingCreatePINScreen.fill('confirmPin', SHORT_TEST_PIN)
     await OnboardingCreatePINScreen.tap('primary')

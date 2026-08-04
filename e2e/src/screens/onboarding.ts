@@ -81,13 +81,12 @@ export const OnboardingNotificationsScreen = defineScreen({
 })
 
 /**
- * The `PermissionDisabled` variant of the SAME `OnboardingNotifications` route: it replaces the
- * enable/skip body once the user has been prompted at least once and the live OS status is
- * denied/blocked. The check runs on mount, so it is reached by leaving the screen after a declined
- * permission dialog and navigating back to it (SecureApp's header `back`).
+ * The `PermissionDisabled` variant of the SAME `OnboardingNotifications` route — it replaces the
+ * enable/skip body once the user has been prompted and the live OS status is denied/blocked. The
+ * check runs on mount, so it is reached by navigating BACK to the screen after refusing the dialog.
  *
- * `primary` (OpenSettings) leaves the app for the OS settings — assert it, never tap it in CI.
- * `secondary` (ContinueWithoutNotifications) is the in-app way forward → SecureApp.
+ * `primary` (OpenSettings) leaves the app for the OS settings — assert it, never tap it in CI;
+ * `secondary` (ContinueWithoutNotifications) → SecureApp.
  */
 export const OnboardingNotificationsDisabledScreen = defineScreen({
   self: bcsc(ob.notifications.continueWithout),

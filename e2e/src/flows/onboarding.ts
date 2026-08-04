@@ -38,23 +38,17 @@ export async function skipNotificationsIfShown(): Promise<void> {
   }
 }
 
-/**
- * Grace period for the OS notification-permission dialog to appear after `EnableNotifications`. The
- * system permission controller can take several seconds to surface on a loaded real device, well past
- * the helper's 5s default.
- */
+/** The OS permission controller can take several seconds to surface on a loaded real device. */
 const PERMISSION_DIALOG_APPEAR_MS = 15_000
 
 /**
- * Take the Notifications screen's `EnableNotifications` path and answer the OS permission dialog it
- * raises, ending on SecureApp (both answers advance).
+ * Take the Notifications screen's `EnableNotifications` path and answer the OS permission dialog,
+ * ending on SecureApp (both answers advance).
  *
- * The app does not wait for us: on Android its permission request self-resolves after ~2s (a
- * workaround for a React Native hang, see `PushNotificationsHelper.requestNotificationPermission`),
- * so it can navigate to SecureApp while the dialog is still up. That only affects what the app
- * *recorded*; the OS permission itself is decided by this dialog, and every branch that keys off it
- * (`PermissionDisabled`, the analytics screen's skip-Notifications shortcut) re-reads the live status.
- * So resolve the dialog first, then assert the destination.
+ * Resolve the dialog before asserting the destination: on Android the app's permission request
+ * self-resolves after ~2s (an RN hang workaround in `PushNotificationsHelper`), so it can navigate on
+ * while the dialog is still up. Only what the app *recorded* is affected — every branch keying off
+ * the permission re-reads the live OS status.
  */
 export async function answerNotificationPermission(decision: 'allow' | 'deny'): Promise<void> {
   await OnboardingNotificationsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)

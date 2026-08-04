@@ -26,9 +26,8 @@ export enum Timeouts {
   /** First checkpoint of a journey file: the run's FIRST session may also pay simulator/device
    *  boot + WebDriverAgent install + first-ever app launch, all competing for CPU. */
   COLD_START = 60_000,
-  /** A timed lockout expiring on its own. The native schedule's first tier is 1 minute (5 consecutive
-   *  wrong PINs) and the Lockout screen unlocks itself when its countdown reaches zero — this is the
-   *  bound on that unattended wait, with headroom for a slow mount reading the remaining time late. */
+  /** A timed lockout releasing itself. The first native tier is 1 minute (5 wrong PINs); the extra
+   *  headroom covers a slow mount reading the remaining time late. */
   LOCKOUT_AUTO_UNLOCK = 120_000,
   /** Per-test timeout (Mocha) */
   TEST_TIMEOUT = 300_000,
@@ -37,20 +36,17 @@ export enum Timeouts {
 }
 
 /**
- * How long (seconds) the app is held in the background to trip auto-lock's "backgrounded too long"
- * branch — a different code path from the inactivity timer, which is cleared on backgrounding and
- * replaced by an elapsed-time comparison when the app returns to the foreground.
- *
- * Must exceed the auto-lock timeout the caller sets first (the journeys set the 1-minute option; the
- * 5-minute default would cost a 5-minute background). The margin covers the AppState round-trip.
+ * Seconds in the background to trip auto-lock's "backgrounded too long" branch — a different path
+ * from the inactivity timer, which is cleared on backgrounding and replaced by an elapsed-time
+ * check on return. Must exceed the auto-lock timeout the caller sets first (the journeys pick the
+ * 1-minute option; the 5-minute default would cost a 5-minute background).
  */
 export const BACKGROUND_LOCK_SECONDS = 70
 
 /**
- * A background comfortably INSIDE the auto-lock timeout — the control for the background-lock
- * checkpoint. Returning from this must leave the user authenticated, which both pins down the
- * boundary and proves the app is resumed rather than relaunched (a relaunch would land on the unlock
- * screen for the ordinary in-memory `didAuthenticate` reason and make the lock assertion vacuous).
+ * A background well inside the auto-lock timeout — the control for the checkpoint above. Coming back
+ * still authenticated proves the app was resumed, not relaunched (a relaunch reaches the unlock
+ * screen anyway, which would make the lock assertion vacuous).
  */
 export const BACKGROUND_NO_LOCK_SECONDS = 5
 
