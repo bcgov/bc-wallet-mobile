@@ -177,7 +177,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
             if (!deviceCode || !userCode) {
               return Promise.reject(new Error('Missing deviceCode or userCode for verification token exchange'))
             }
-            // Token exsists, nothing to check
+            // Token exists, nothing to check
             if (store.bcscSecure.refreshToken) {
               return Promise.resolve(undefined)
             }
@@ -190,7 +190,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       const { deviceCode, userCode } = store.bcscSecure
       systemChecks.push(
         new PendingVerificationRecoverySystemCheck(() => {
-          // Token exsists, nothing to check
+          // Token exists, nothing to check
           if (store.bcscSecure.refreshToken) {
             return Promise.resolve(true)
           }
