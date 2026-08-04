@@ -3,6 +3,7 @@ import * as useRegistrationServiceModule from '@/bcsc-theme/services/hooks/useRe
 import * as useTokenServiceModule from '@/bcsc-theme/services/hooks/useTokenService'
 import { BCDispatchAction, BCState } from '@/store'
 import * as Bifold from '@bifold/core'
+import { useNavigation } from '@react-navigation/native'
 import { act, renderHook } from '@testing-library/react-native'
 
 const mockGetCachedIdTokenMetadata = jest.fn().mockResolvedValue(undefined)
@@ -297,54 +298,19 @@ describe('useVerificationResponseViewModel', () => {
       ).resolves.not.toThrow()
     })
 
-    it('calls clearAuthorizationRequest after marking the account verified', async () => {
+    it('should not perform imperative navigation on success (#4368)', async () => {
       mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
 
+      const nav = useNavigation()
       const { result } = renderHook(() => useVerificationResponseViewModel())
 
       await act(async () => {
         await result.current.handleAccountSetup()
       })
 
-      expect(mockClearAuthorizationRequest).toHaveBeenCalled()
-      expect(mockUpdateVerified.mock.invocationCallOrder[0]).toBeLessThan(
-        mockClearAuthorizationRequest.mock.invocationCallOrder[0]
-      )
-    })
-
-    it('logs and skips navigating home when clearAuthorizationRequest fails', async () => {
-      mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
-      mockClearAuthorizationRequest.mockRejectedValue(new Error('Native delete failed'))
-
-      const { result } = renderHook(() => useVerificationResponseViewModel())
-
-      await act(async () => {
-        await result.current.handleAccountSetup()
-      })
-
-      // clearAuthorizationRequest isn't wrapped in its own try/catch (kept consistent with the
-      // rest of the function), so a failure here falls through to the outer catch: it's logged
-      // under the generic message and the post-cleanup dispatches / navigation are skipped.
-      expect(mockUpdateVerified).toHaveBeenCalledWith(true)
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to clean up verification process: Native delete failed')
-      )
-      expect(mockDispatch).not.toHaveBeenCalledWith(
-        expect.objectContaining({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS })
-      )
-      expect(result.current.isSettingUpAccount).toBe(false)
-    })
-
-    it('does not clear the authorization request when updateVerified never succeeds', async () => {
-      mockUpdateVerified.mockRejectedValue(new Error('Update verified failed'))
-
-      const { result } = renderHook(() => useVerificationResponseViewModel())
-
-      await act(async () => {
-        await result.current.handleAccountSetup()
-      })
-
-      expect(mockClearAuthorizationRequest).not.toHaveBeenCalled()
+      expect(nav.navigate).not.toHaveBeenCalled()
+      expect(nav.reset).not.toHaveBeenCalled()
+      expect(nav.dispatch).not.toHaveBeenCalled()
     })
   })
 
