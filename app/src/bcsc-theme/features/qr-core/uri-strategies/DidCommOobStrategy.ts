@@ -6,6 +6,7 @@ import type { ScanContext, ScanResult, UriStrategy } from './types'
 // only parse the invitation once on the success path (Bifold's
 // `isMediatorInvitation` does its own parse, which would double the work).
 const MEDIATOR_GOAL_CODE = 'aries.vc.mediate'
+const VC_AUTHN_SCHEME = 'vc-authn'
 
 const DidCommOobStrategy: UriStrategy = {
   name: 'didcomm-oob',
@@ -31,6 +32,7 @@ const DidCommOobStrategy: UriStrategy = {
       return { kind: 'unsupported', reason: 'OpenID' }
     }
 
+    // TODO (MD): Fully type the agent and it's modules
     const invitation = await agent.modules.didcomm.oob.parseInvitation(uri)
     if (!invitation) {
       logger.warn('[DidCommOobStrategy] could not parse OOB invitation')
@@ -61,7 +63,7 @@ const DidCommOobStrategy: UriStrategy = {
 }
 
 function isVcAuthnUri(uri: string): boolean {
-  return uri.includes('vc-authn')
+  return uri.includes(VC_AUTHN_SCHEME) || uri.includes('pres_exch')
 }
 
 export default DidCommOobStrategy

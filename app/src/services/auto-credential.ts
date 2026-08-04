@@ -1,5 +1,9 @@
 import { AbstractBifoldLogger, CredentialProvisioningEventTypes, CredentialProvisioningMonitor } from '@bifold/core'
-import { AnonCredsRequestedAttribute, AnonCredsRequestedPredicate } from '@credo-ts/anoncreds'
+import {
+  AnonCredsProofRequestRestriction,
+  AnonCredsRequestedAttribute,
+  AnonCredsRequestedPredicate,
+} from '@credo-ts/anoncreds'
 import { Agent } from '@credo-ts/core'
 import {
   DidCommCredentialEventTypes,
@@ -34,6 +38,8 @@ interface PausableAttestationMonitor {
 export interface AutoCredentialRule {
   /** Cred def IDs whose absence in the wallet triggers this rule. */
   triggerCredDefIds: string[]
+
+  triggerProofRestrictions: AnonCredsProofRequestRestriction[]
 
   /**
    * Returns the OOB invitation URL for the issuer that can provide the missing
@@ -88,8 +94,6 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
 
   // State for the active workflow (one at a time)
   private _workflowInProgress = false
-  private _workflowDoneResolve?: (value: undefined) => void
-  private _workflowDonePromise = Promise.resolve(undefined)
   private _pendingProofRequest?: DidCommProofExchangeRecord
   private _pendingConnectionId?: string
   private _activeRule?: AutoCredentialRule
@@ -104,11 +108,6 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
 
   public get workflowInProgress(): boolean {
     return this._workflowInProgress
-  }
-
-  public startAndWait(agent: Agent): Promise<void> {
-    this.start(agent)
-    return this._workflowDonePromise
   }
 
   public start(agent: Agent): void {
@@ -126,7 +125,6 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     this._pendingProofRequest = undefined
     this._pendingConnectionId = undefined
     this._activeRule = undefined
-    this._workflowDoneResolve?.(undefined)
   }
 
   // ---------------------------------------------------------------------------
@@ -137,9 +135,6 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     this._workflowInProgress = true
     this._pendingProofRequest = proof
     this._activeRule = rule
-    this._workflowDonePromise = new Promise((resolve) => {
-      this._workflowDoneResolve = resolve
-    })
     DeviceEventEmitter.emit(CredentialProvisioningEventTypes.Started)
     this.log?.info('[AutoCredentialMonitor] Workflow started')
   }
@@ -151,7 +146,6 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     this._pendingProofRequest = undefined
     this._pendingConnectionId = undefined
     this._activeRule = undefined
-    this._workflowDoneResolve?.(undefined)
     DeviceEventEmitter.emit(CredentialProvisioningEventTypes.Completed)
     this.log?.info('[AutoCredentialMonitor] Workflow completed')
   }
@@ -169,7 +163,6 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     this._pendingProofRequest = undefined
     this._pendingConnectionId = undefined
     this._activeRule = undefined
-    this._workflowDoneResolve?.(undefined)
     DeviceEventEmitter.emit(eventType, error)
     this.log?.error('[AutoCredentialMonitor] Workflow failed', error)
   }
@@ -194,6 +187,28 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
   // ---------------------------------------------------------------------------
   // Private — credential check
   // ---------------------------------------------------------------------------
+
+  private restrictionMatchesRule(restriction: AnonCredsProofRequestRestriction, rule: AutoCredentialRule): boolean {
+    // Matching by cred def ID
+    if (restriction.cred_def_id && rule.triggerCredDefIds.includes(restriction.cred_def_id)) {
+      return true
+    }
+
+    // Matching by issuer schema (issuer DID + schema name + schema version)
+    if (
+      rule.triggerProofRestrictions.some((schema) => {
+        return (
+          schema.issuer_did === restriction.issuer_did &&
+          schema.schema_name === restriction.schema_name &&
+          schema.schema_version === restriction.schema_version
+        )
+      })
+    ) {
+      return true
+    }
+
+    return false
+  }
 
   /**
    * Returns true if the proof requests one of the rule's trigger cred def IDs
@@ -220,12 +235,12 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     const triggeredPredicateKeys = new Set<string>()
 
     for (const [key, attr] of Object.entries(proofFormat.requested_attributes ?? {})) {
-      if ((attr.restrictions ?? []).some((r) => r.cred_def_id && rule.triggerCredDefIds.includes(r.cred_def_id))) {
+      if ((attr.restrictions ?? []).some((restriction) => this.restrictionMatchesRule(restriction, rule))) {
         triggeredAttributeKeys.add(key)
       }
     }
     for (const [key, pred] of Object.entries(proofFormat.requested_predicates ?? {})) {
-      if ((pred.restrictions ?? []).some((r) => r.cred_def_id && rule.triggerCredDefIds.includes(r.cred_def_id))) {
+      if ((pred.restrictions ?? []).some((restriction) => this.restrictionMatchesRule(restriction, rule))) {
         triggeredPredicateKeys.add(key)
       }
     }
@@ -380,6 +395,7 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     if (proof.state !== DidCommProofState.RequestReceived) {
       return
     }
+
     // A workflow already claimed a proof; the workflow-scoped subscription
     // handles proofs on its own connection. Ignore everything else.
     if (this._workflowInProgress) {
@@ -411,8 +427,8 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
 
     for (const rule of this.rules) {
       // compare the cred def id against the rule trigger IDs, if any match then this proof is requesting a credential that would trigger the workflow
-      const proofRequestsWatchedCredential = restrictions.some(
-        (restriction) => restriction.cred_def_id && rule.triggerCredDefIds.includes(restriction.cred_def_id)
+      const proofRequestsWatchedCredential = restrictions.some((restriction) =>
+        this.restrictionMatchesRule(restriction, rule)
       )
 
       this.log?.info(
