@@ -15,7 +15,7 @@ const useVerificationResponseViewModel = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const registration = useRegistrationService()
   const { getCachedIdTokenMetadata } = useTokenService()
-  const { updateVerified, updateUserMetadata } = useSecureActions()
+  const { updateVerified, updateUserMetadata, clearAuthorizationRequest } = useSecureActions()
   const [isSettingUpAccount, setIsSettingUpAccount] = useState(false)
 
   const handleUpdateRegistration = useCallback(
@@ -52,6 +52,9 @@ const useVerificationResponseViewModel = () => {
       await handleUpdateRegistration(nickname)
       // this marks their account as verified, so we know to navigate them to the correct stack
       await updateVerified(true)
+      // account setup is complete, clear the authorization request record
+      await clearAuthorizationRequest()
+
       dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: [undefined] })
       dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
       dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [undefined] })
@@ -66,6 +69,7 @@ const useVerificationResponseViewModel = () => {
   }, [
     updateVerified,
     updateUserMetadata,
+    clearAuthorizationRequest,
     handleUpdateRegistration,
     getCachedIdTokenMetadata,
     logger,

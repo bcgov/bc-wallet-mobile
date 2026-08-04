@@ -28,7 +28,7 @@ export interface TokenResponse {
 export type TokenApi = ReturnType<typeof useTokenApi>
 
 const useTokenApi = (apiClient: BCSCApiClient) => {
-  const { updateTokens, clearAuthorizationRequest } = useSecureActions()
+  const { updateTokens } = useSecureActions()
   const deviceToken = useCallback(
     async (payload: DeviceTokenPayload) => {
       const { data } = await apiClient.post<TokenResponse>(
@@ -75,20 +75,13 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
           throw error
         }
 
-        // Device code exchange succeeded — the user is verified, clean up auth request
-        try {
-          await clearAuthorizationRequest()
-        } catch (error) {
-          apiClient.logger.error(`[checkDeviceCodeStatus] Failed to clear authorization request`, error as Error)
-        }
-
         // doesn't throw
         await cancelVerificationReminders(apiClient.logger)
 
         return apiClient.tokens!
       })
     },
-    [apiClient, updateTokens, clearAuthorizationRequest]
+    [apiClient, updateTokens]
   )
 
   /**
