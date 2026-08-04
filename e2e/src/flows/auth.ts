@@ -17,6 +17,30 @@ export async function relaunchApp(): Promise<void> {
 }
 
 /**
+ * Background the app for `seconds`, then foreground it. Nothing here terminates the app, so it sees a
+ * real AppState background → active transition — what auto-lock's backgrounded-too-long branch keys
+ * off. The OS may still evict a backgrounded app on its own, so in-memory state surviving is likely
+ * but not guaranteed: callers that depend on it must assert their own post-resume marker (see the
+ * short-background control step in `auth-unlock.journey.ts`).
+ *
+ * The wait is deliberately not the driver's. A POSITIVE `seconds` (or the legacy
+ * `driver.background(n)`) blocks that one request for its full duration, and Sauce terminates a
+ * session whose command hasn't answered within 60s — which is how a 70s background killed the iOS 17
+ * job. A NEGATIVE `seconds` means "leave it there" and returns at once, so the wait becomes a
+ * client-side `pause` (wdio implements it as a plain `setTimeout`). Keep any single driver command
+ * well under 60s on Sauce.
+ */
+export async function backgroundAppFor(seconds: number): Promise<void> {
+  // Resolve while frontmost — `getCurrentAppId` reads the ACTIVE app.
+  const appId = await getCurrentAppId()
+  // Cross-platform: XCUITest and UiAutomator2 both register `mobile: backgroundApp` (the latter
+  // already defaults `seconds` to -1). It is NOT an iOS-only extension.
+  await driver.execute('mobile: backgroundApp', { seconds: -1 })
+  await driver.pause(seconds * 1_000)
+  await driver.activateApp(appId)
+}
+
+/**
  * Wait for AccountLanding, advancing past the returning-user intro (AuthIntro — the same component
  * as the onboarding intro, shown only when `hasSeenOnboardingIntro` was never recorded) if it
  * appears first. No-op when AccountLanding is already visible.

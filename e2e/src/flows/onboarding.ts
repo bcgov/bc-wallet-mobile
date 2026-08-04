@@ -1,4 +1,5 @@
 import { TEST_PIN, Timeouts } from '../constants.js'
+import { acceptSystemAlert, dismissSystemAlert } from '../helpers/alerts.js'
 import { HomeScreen } from '../screens/main.js'
 import {
   OnboardingCreatePINScreen,
@@ -35,6 +36,31 @@ export async function skipNotificationsIfShown(): Promise<void> {
       throw new Error('Neither Notifications nor SecureApp appeared after the analytics opt-in')
     }
   }
+}
+
+/** The OS permission controller can take several seconds to surface on a loaded real device. */
+const PERMISSION_DIALOG_APPEAR_MS = 15_000
+
+/**
+ * Take the Notifications screen's `EnableNotifications` path and answer the OS permission dialog,
+ * ending on SecureApp (both answers advance).
+ *
+ * Resolve the dialog before asserting the destination: on Android the app's permission request
+ * self-resolves after ~2s (an RN hang workaround in `PushNotificationsHelper`), so it can navigate on
+ * while the dialog is still up. Only what the app *recorded* is affected — every branch keying off
+ * the permission re-reads the live OS status.
+ */
+export async function answerNotificationPermission(decision: 'allow' | 'deny'): Promise<void> {
+  await OnboardingNotificationsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await OnboardingNotificationsScreen.tap('primary')
+
+  if (decision === 'allow') {
+    await acceptSystemAlert(PERMISSION_DIALOG_APPEAR_MS)
+  } else {
+    await dismissSystemAlert(PERMISSION_DIALOG_APPEAR_MS)
+  }
+
+  await OnboardingSecureAppScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
 }
 
 /**
