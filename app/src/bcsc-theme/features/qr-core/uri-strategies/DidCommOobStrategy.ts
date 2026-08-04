@@ -1,8 +1,5 @@
 import { isDidCommInvitation, isOpenIdCredentialOffer, isOpenIdPresentationRequest } from '@bifold/core'
 
-import { buildDigitalServicesCardCredentialRule } from '@/bcsc-theme/services/digitalServicesCardProvisioner'
-import { noOpAttestationMonitor } from '@/services/attestation'
-import { AutoCredentialMonitor } from '@/services/auto-credential'
 import type { ScanContext, ScanResult, UriStrategy } from './types'
 
 // Aries-standard goal code for mediator invitations; checked inline so we
@@ -43,17 +40,6 @@ const DidCommOobStrategy: UriStrategy = {
     if (invitation.goalCode === MEDIATOR_GOAL_CODE) {
       logger.info('[DidCommOobStrategy] mediator invitation rejected (BCSC uses .env mediator)')
       return { kind: 'unsupported', reason: 'Mediator' }
-    }
-
-    const autoDigitalServicesCard = new AutoCredentialMonitor(ctx.logger, {
-      rules: [buildDigitalServicesCardCredentialRule()],
-      attestationMonitor: noOpAttestationMonitor(),
-    })
-
-    autoDigitalServicesCard.startAndWait(agent)
-
-    while (autoDigitalServicesCard.workflowInProgress) {
-      logger.info('[DidCommOobStrategy] waiting for auto-credential workflow to complete...')
     }
 
     // Dedupe duplicate scans of the same QR: two didexchange requests for one

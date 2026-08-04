@@ -52,6 +52,7 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   const [error, setError] = useState<AppError | null>(null)
   const [retryCount, setRetryCount] = useState(0)
   const agentRef = useRef<Agent | null>(null)
+  const agentPromiseRef = useRef<Promise<Agent | null> | null>(null)
   const initializingRef = useRef(false)
   const resettingRef = useRef(false)
   const statusRef = useRef<AgentSetupStatus>('idle')
@@ -273,11 +274,13 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
       }
     }
 
-    run()
+    // Store the promise so consumers can await agent initialization
+    agentPromiseRef.current = run().then(() => agentRef.current)
 
     return () => {
       cancelled = true
       initializingRef.current = false
+      agentPromiseRef.current = null
     }
   }, [
     didAuthenticate,
@@ -405,27 +408,20 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
   }, [logger, attestationMonitor, credentialProvisioningMonitor])
 
   /**
-   * Asynchronously waits for the agent to be ready. Resolves immediately if the
-   * agent is already ready, otherwise polls until the agent is ready or an error occurs.
+   * Waits for the agent to be ready and returns it, or null if the agent is not ready or has failed to initialize.
    *
-   * @returns The agent if ready, or null if an error occurred
+   * @returns A promise that resolves to the agent or null if not ready.
    */
   const waitForAgent = useCallback(async (): Promise<Agent | null> => {
-    if (agentRef.current || agentRef.current === null) {
+    if (agentRef.current) {
       return agentRef.current
     }
 
-    return new Promise((resolve) => {
-      const interval = setInterval(() => {
-        if (agentRef.current) {
-          clearInterval(interval)
-          resolve(agentRef.current)
-        } else if (statusRef.current === 'error') {
-          clearInterval(interval)
-          resolve(null)
-        }
-      }, 100)
-    })
+    if (statusRef.current !== 'initializing') {
+      return null
+    }
+
+    return agentPromiseRef.current
   }, [])
 
   return { agent, status, error, retry, resetWallet, teardownAgent, waitForAgent }
