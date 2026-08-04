@@ -1,12 +1,10 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useResidentialAddressModel from '@/bcsc-theme/features/verify/_models/useResidentialAddressModel'
-import { isCanadianPostalCode } from '@/bcsc-theme/utils/address-utils'
 import { BCState } from '@/store'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
-jest.mock('@/bcsc-theme/utils/address-utils')
 jest.mock('react-native-toast-message', () => ({
   show: jest.fn(),
 }))
@@ -102,9 +100,6 @@ describe('useResidentialAddressModel', () => {
     bifoldMock.useStore.mockReturnValue([mockStore, mockDispatch])
     bifoldMock.useServices.mockReturnValue([mockLogger] as any)
     bifoldMock.useTheme.mockReturnValue(mockTheme as any)
-
-    const isCanadianPostalCodeMock = jest.mocked(isCanadianPostalCode)
-    isCanadianPostalCodeMock.mockReturnValue(true)
   })
 
   describe('Initial state', () => {
@@ -176,9 +171,6 @@ describe('useResidentialAddressModel', () => {
     })
 
     it('should clear field error when field changes', () => {
-      const isCanadianPostalCodeMock = jest.mocked(isCanadianPostalCode)
-      isCanadianPostalCodeMock.mockReturnValue(false)
-
       const storeWithEmptyAddress = {
         bcscSecure: {
           birthdate: new Date(1990, 0, 15),
@@ -211,9 +203,6 @@ describe('useResidentialAddressModel', () => {
 
   describe('handleSubmit - validation', () => {
     it('should set validation errors for empty required fields', async () => {
-      const isCanadianPostalCodeMock = jest.mocked(isCanadianPostalCode)
-      isCanadianPostalCodeMock.mockReturnValue(false)
-
       const storeWithEmptyAddress = {
         bcscSecure: {
           birthdate: new Date(1990, 0, 15),
@@ -240,16 +229,37 @@ describe('useResidentialAddressModel', () => {
     })
 
     it('should set validation error for invalid postal code', async () => {
-      const isCanadianPostalCodeMock = jest.mocked(isCanadianPostalCode)
-      isCanadianPostalCodeMock.mockReturnValue(false)
-
       const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      // D is never issued as a leading postal code letter
+      act(() => {
+        result.current.handleChange('postalCode', 'D1A 1A1')
+      })
 
       await act(async () => {
         await result.current.handleSubmit()
       })
 
       expect(result.current.formErrors.postalCode).toBeDefined()
+      expect(mockUpdateUserMetadata).not.toHaveBeenCalled()
+    })
+
+    it('should reject whitespace-only required fields rather than persisting empty strings', async () => {
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      act(() => {
+        result.current.handleChange('streetAddress', '   ')
+        result.current.handleChange('city', '   ')
+      })
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(result.current.formErrors.streetAddress).toBeDefined()
+      expect(result.current.formErrors.city).toBeDefined()
+      expect(mockUpdateUserMetadata).not.toHaveBeenCalled()
+      expect(mockAuthorizationApi.authorizeDeviceWithUnknownBCSC).not.toHaveBeenCalled()
     })
   })
 
@@ -380,6 +390,47 @@ describe('useResidentialAddressModel', () => {
 
       expect(mockNavigation.dispatch).toHaveBeenCalled()
       expect(mockUpdateCardProcess).toHaveBeenCalledWith('test-process')
+    })
+
+    it('should send the same trimmed values it persists', async () => {
+      const mockDeviceAuth = {
+        device_code: 'new-device-code',
+        user_code: 'new-user-code',
+        expires_in: 3600,
+        verification_options: 'video_call',
+        process: 'test-process',
+      }
+      mockAuthorizationApi.authorizeDeviceWithUnknownBCSC.mockResolvedValue(mockDeviceAuth)
+
+      const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
+
+      // Padded input passes validation because the schema trims, so the payload must be trimmed too
+      act(() => {
+        result.current.handleChange('postalCode', ' V6B 1A1 ')
+        result.current.handleChange('city', ' Vancouver ')
+        result.current.handleChange('streetAddress', ' 123 Main St ')
+      })
+
+      await act(async () => {
+        await result.current.handleSubmit()
+      })
+
+      expect(mockAuthorizationApi.authorizeDeviceWithUnknownBCSC).toHaveBeenCalledWith(
+        expect.objectContaining({
+          address: {
+            streetAddress: '123 Main St',
+            city: 'Vancouver',
+            province: 'BC',
+            postalCode: 'V6B 1A1',
+          },
+        })
+      )
+
+      expect(mockUpdateUserMetadata).toHaveBeenCalledWith(
+        expect.objectContaining({
+          address: expect.objectContaining({ city: 'Vancouver', postalCode: 'V6B 1A1' }),
+        })
+      )
     })
 
     it('should merge streetAddress2 with newline when present', async () => {

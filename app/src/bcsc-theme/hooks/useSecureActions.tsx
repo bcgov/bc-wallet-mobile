@@ -1189,6 +1189,14 @@ export const useSecureActions = () => {
   }, [logger])
 
   /**
+   * Deletes card info (birthdate and serial) from secure state. Does not delete from native storage.
+   */
+  const deleteCardInfo = useCallback(async () => {
+    dispatch({ type: BCDispatchAction.UPDATE_SECURE_BIRTHDATE, payload: [undefined] })
+    dispatch({ type: BCDispatchAction.UPDATE_SECURE_SERIAL, payload: [undefined] })
+  }, [dispatch])
+
+  /**
    * Handles successful authentication by updating wallet key, hydrating state, and dispatching auth success.
    * Call this after setPIN, setupDeviceSecurity, unlockWithDeviceSecurity, or verifyPIN succeeds.
    * @param walletKey wallet key (PBKDF2 hash of PIN) for Askar wallet encryption
@@ -1233,6 +1241,7 @@ export const useSecureActions = () => {
     logout,
     deleteSecureData,
     deleteVerificationData,
+    deleteScannedCardData: deleteCardInfo,
   }
 }
 
