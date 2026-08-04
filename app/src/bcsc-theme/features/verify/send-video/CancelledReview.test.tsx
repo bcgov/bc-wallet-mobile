@@ -95,7 +95,7 @@ describe('CancelledReview', () => {
     expect(tree.getByText('BCSC.CancelledVerification.Label')).toBeTruthy()
   })
 
-  it('re-enters the verify flow via goToMethodSelection when reset succeeds, without calling goBack', async () => {
+  it('re-enters the verify flow via goToMethodSelection and resets the stack to IdentitySelection', async () => {
     const agentReason = 'Test reason'
     const route = {
       params: {
@@ -114,6 +114,10 @@ describe('CancelledReview', () => {
 
     await waitFor(() => {
       expect(mockGoToMethodSelection).toHaveBeenCalledTimes(1)
+    })
+    expect(mockNavigation.reset).toHaveBeenCalledWith({
+      index: 0,
+      routes: [{ name: 'New Setup ID Confirmation' }],
     })
     expect(mockNavigation.goBack).not.toHaveBeenCalled()
   })
