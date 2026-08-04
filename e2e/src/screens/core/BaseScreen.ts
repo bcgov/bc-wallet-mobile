@@ -11,6 +11,14 @@ const STEADY_POSITION_TIMEOUT_MS = 3_000
 const STEADY_POSITION_SAMPLE_MS = 120
 
 /**
+ * Keys XCUITest may press to close the iOS keyboard, tried in order. Case matters — these are the
+ * rendered key labels, and iOS uses lower case on the alphabetic keyboard's return key but title
+ * case on the accessory keys. None of the app's inputs set `onSubmitEditing`, so pressing any of
+ * them only blurs the field.
+ */
+const IOS_KEYBOARD_DISMISS_KEYS = ['done', 'Done', 'return', 'Return', 'go', 'Go', 'next', 'Next', 'search', 'Search']
+
+/**
  * The bit of an element {@link BaseScreen.waitForSteadyPosition} needs — structural so it accepts both a
  * resolved `WebdriverIO.Element` (from `$$`) and the chainable handle `findByTestId` returns.
  */
@@ -286,15 +294,42 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
   }
 
   /**
-   * Dismiss the soft keyboard using platform-native commands (no test IDs needed).
-   * Call before tapping buttons when the keyboard may be covering them.
+   * Dismiss the soft keyboard without ever touching the app's own UI.
+   *
+   * iOS used to do this with a blind tap a quarter of the way down the screen, relying on the form's
+   * scroll view to swallow it (`keyboardShouldPersistTaps: 'handled'` in bifold's `KeyboardView`, so
+   * a tap NOT handled by a child closes the keyboard). That only holds while nothing interactive sits
+   * under the point — and on iOS 17 nightlies it didn't: with the postal-code field focused, the
+   * keyboard-aware scroll puts ResidentialAddress's province dropdown right at that coordinate, so
+   * "dismiss the keyboard" opened the province modal, the tap was handled (so the keyboard stayed),
+   * and the journey stranded with Continue unreachable behind the modal. There is no safe coordinate
+   * to move to either: every `InputWithValidation` carries a 44px hitSlop, so the gaps between fields
+   * are live too. The blind tap had to go, not move.
+   *
+   * What replaces it only ever addresses the keyboard itself: press one of its own dismissal keys.
+   * Number pads (the birthdate and email-confirmation inputs) have no such key, and there the
+   * keyboard is simply left up — which is safe, because every form that calls this renders through
+   * `ScreenWrapper keyboardActive`, laying its controls out ABOVE the keyboard, and `tapWhenEnabled`
+   * scroll-retries if a target still isn't visible.
    */
   async dismissKeyboard() {
-    if (driver.isIOS) {
-      const { width, height } = await driver.getWindowSize()
-      await driver.execute('mobile: tap', { x: Math.round(width / 2), y: Math.round(height / 4) })
-    } else {
-      await driver.hideKeyboard()
+    // A probe failure must not skip the dismissal, so an unreadable state is treated as "shown".
+    if (!(await driver.isKeyboardShown().catch(() => true))) return
+
+    if (driver.isAndroid) {
+      await driver.hideKeyboard().catch(() => undefined)
+      await driver.pause(300) // let the layout settle as the keyboard collapses
+      return
+    }
+
+    try {
+      // Proxies to WDA's /wda/keyboard/dismiss, which taps the first of these keys the keyboard has
+      // and throws when it has none — so a failure here is "no dismissal key", not "command missing".
+      await driver.execute('mobile: hideKeyboard', { keys: IOS_KEYBOARD_DISMISS_KEYS })
+      await driver.pause(300) // let the layout settle as the keyboard collapses
+    } catch {
+      // No dismissal key on this keyboard (number pad). Leaving it open beats tapping the form.
+      console.warn('[keyboard] No iOS dismissal key available; leaving the keyboard open')
     }
   }
 
@@ -304,9 +339,10 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * reads the drag as gesture input and TYPES into the still-focused field (observed on a Pixel 7 Pro:
    * a scroll hunt for the next input appended " TY TY TY TY" to the just-filled last-name field).
    *
-   * Android-only by design: iOS has no `hideKeyboard`, its `dismissKeyboard` is a blind tap that could
-   * press a real control if fired speculatively, and its forms keep the focused field clear of the
-   * keyboard on their own. Never throws — a keyboard probe must not fail the caller's real action.
+   * Android-only by design: this exists for the glide-typing hazard above, which is a Gboard
+   * behaviour with no iOS equivalent — iOS forms keep the focused field clear of the keyboard on
+   * their own, and {@link dismissKeyboard} covers the cases that genuinely need it there. Never
+   * throws — a keyboard probe must not fail the caller's real action.
    */
   public async hideAndroidKeyboardIfShown(): Promise<void> {
     if (!driver.isAndroid) return
