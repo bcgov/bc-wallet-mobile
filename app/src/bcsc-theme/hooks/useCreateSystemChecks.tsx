@@ -178,6 +178,10 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
             if (!deviceCode || !userCode) {
               return Promise.reject(new Error('Missing deviceCode or userCode for verification token exchange'))
             }
+            // Token exsists, nothing to check
+            if (store.bcscSecure.refreshToken) {
+              return Promise.resolve(undefined)
+            }
             return tokenApi.checkDeviceCodeStatus(deviceCode, userCode)
           },
           utils
@@ -187,10 +191,13 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       // Only meaningful when a verification request has been approved but the user has closed the app before completing the workflow
       const { deviceCode, userCode } = store.bcscSecure
       systemChecks.push(
-        new PendingVerificationRecoverySystemCheck(
-          () => tokenService.checkVerificationStatus(deviceCode, userCode),
-          utils
-        )
+        new PendingVerificationRecoverySystemCheck(() => {
+          // Token exsists, nothing to check
+          if (store.bcscSecure.refreshToken) {
+            return Promise.resolve(true)
+          }
+          return tokenService.checkVerificationStatus(deviceCode, userCode)
+        }, utils)
       )
     }
 

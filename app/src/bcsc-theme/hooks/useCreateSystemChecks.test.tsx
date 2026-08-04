@@ -519,6 +519,27 @@ describe('useGetSystemChecks', () => {
 
         expect(checkDeviceCodeStatus).toHaveBeenCalledWith('device-1', 'user-1')
       })
+
+      it('skips the token exchange when a refreshToken already exists (device code already redeemed)', async () => {
+        mockStoreWith({
+          verificationRequestId: 'req-1',
+          deviceCode: 'device-1',
+          userCode: 'user-1',
+          refreshToken: 'existing-refresh-token',
+        })
+        const checkDeviceCodeStatus = jest.fn()
+        mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn(), checkDeviceCodeStatus })
+        mockUseEvidenceApi.mockReturnValue({ getVerificationRequestStatus: jest.fn() })
+
+        const { result } = renderHook(() => useCreateSystemChecks())
+        const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+        const check = systemChecks.find((c) => c.constructor.name === 'VerificationRequestStatusSystemCheck') as any
+
+        await expect(check.checkDeviceCodeStatus()).resolves.toBeUndefined()
+        // The device code is single-use — re-submitting an already-redeemed one returns
+        // invalid_grant, so a refreshToken from a prior successful exchange must short-circuit this.
+        expect(checkDeviceCodeStatus).not.toHaveBeenCalled()
+      })
     })
 
     describe('PendingVerificationRecoverySystemCheck', () => {
@@ -597,6 +618,21 @@ describe('useGetSystemChecks', () => {
         await check.checkVerificationStatus()
 
         expect(checkDeviceCodeStatus).toHaveBeenCalledWith('device-2', 'user-2')
+      })
+
+      it('reports success without a network call when a refreshToken already exists (device code already redeemed)', async () => {
+        mockStoreWith({ deviceCode: 'device-2', userCode: 'user-2', refreshToken: 'existing-refresh-token' })
+        const checkDeviceCodeStatus = jest.fn()
+        mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn(), checkDeviceCodeStatus })
+
+        const { result } = renderHook(() => useCreateSystemChecks())
+        const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+        const check = systemChecks.find((c) => c.constructor.name === 'PendingVerificationRecoverySystemCheck') as any
+
+        await expect(check.checkVerificationStatus()).resolves.toBe(true)
+        // The device code is single-use — re-submitting an already-redeemed one returns
+        // invalid_grant, so a refreshToken from a prior successful exchange must short-circuit this.
+        expect(checkDeviceCodeStatus).not.toHaveBeenCalled()
       })
     })
   })
