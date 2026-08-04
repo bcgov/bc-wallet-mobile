@@ -17,9 +17,11 @@ export async function relaunchApp(): Promise<void> {
 }
 
 /**
- * Background the app for `seconds`, then foreground it — WITHOUT terminating, so in-memory state
- * survives and the app sees a real AppState background → active transition (what auto-lock's
- * backgrounded-too-long branch keys off).
+ * Background the app for `seconds`, then foreground it. Nothing here terminates the app, so it sees a
+ * real AppState background → active transition — what auto-lock's backgrounded-too-long branch keys
+ * off. The OS may still evict a backgrounded app on its own, so in-memory state surviving is likely
+ * but not guaranteed: callers that depend on it must assert their own post-resume marker (see the
+ * short-background control step in `auth-unlock.journey.ts`).
  *
  * The wait is deliberately not the driver's. A POSITIVE `seconds` (or the legacy
  * `driver.background(n)`) blocks that one request for its full duration, and Sauce terminates a
@@ -31,6 +33,8 @@ export async function relaunchApp(): Promise<void> {
 export async function backgroundAppFor(seconds: number): Promise<void> {
   // Resolve while frontmost — `getCurrentAppId` reads the ACTIVE app.
   const appId = await getCurrentAppId()
+  // Cross-platform: XCUITest and UiAutomator2 both register `mobile: backgroundApp` (the latter
+  // already defaults `seconds` to -1). It is NOT an iOS-only extension.
   await driver.execute('mobile: backgroundApp', { seconds: -1 })
   await driver.pause(seconds * 1_000)
   await driver.activateApp(appId)

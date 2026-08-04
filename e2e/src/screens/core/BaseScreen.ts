@@ -17,6 +17,18 @@ const STEADY_POSITION_SAMPLE_MS = 120
 const IOS_KEYBOARD_DISMISS_KEYS = ['done', 'Done', 'return', 'Return', 'go', 'Go', 'next', 'Next', 'search', 'Search']
 
 /**
+ * Escape a value before it is embedded in a quoted iOS predicate / UiSelector string. Both parsers
+ * take the same two escapes, so one helper covers them. Without it a quote or backslash in localized
+ * copy produces an invalid selector rather than a miss. (Mirrors `escapeIosSelectorValue` in
+ * `helpers/alerts.ts`, which escapes alert-button labels for the same reason.)
+ */
+function escapeSelectorValue(value: string): string {
+  const backslash = String.fromCodePoint(0x5c)
+  const doubleQuote = String.fromCodePoint(0x22)
+  return value.replaceAll(backslash, `${backslash}${backslash}`).replaceAll(doubleQuote, `${backslash}${doubleQuote}`)
+}
+
+/**
  * The bit of an element {@link BaseScreen.waitForSteadyPosition} needs — structural so it accepts both a
  * resolved `WebdriverIO.Element` (from `$$`) and the chainable handle `findByTestId` returns.
  */
@@ -145,9 +157,10 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * @returns the element
    */
   public async findByText(text: string) {
+    const value = escapeSelectorValue(text)
     const selector = driver.isIOS
-      ? `-ios predicate string:label == "${text}" OR value == "${text}"`
-      : `android=new UiSelector().text("${text}")`
+      ? `-ios predicate string:label == "${value}" OR value == "${value}"`
+      : `android=new UiSelector().text("${value}")`
     return $(selector)
   }
 
