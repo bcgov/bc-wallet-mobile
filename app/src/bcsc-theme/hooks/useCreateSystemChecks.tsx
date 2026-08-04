@@ -168,7 +168,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       )
     }
 
-    // Only meaningful when a verification request has been submitted and is awaiting review
     if (!isVerified && verificationRequestId) {
       const { deviceCode, userCode } = store.bcscSecure
       systemChecks.push(
@@ -188,7 +187,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
         )
       )
     } else if (!isVerified && store.bcscSecure.deviceCode && store.bcscSecure.userCode) {
-      // Only meaningful when a verification request has been approved but the user has closed the app before completing the workflow
       const { deviceCode, userCode } = store.bcscSecure
       systemChecks.push(
         new PendingVerificationRecoverySystemCheck(() => {
