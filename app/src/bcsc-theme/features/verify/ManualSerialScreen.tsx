@@ -2,6 +2,7 @@ import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { firstErrorKey, serialSchema } from '@/bcsc-theme/utils/validation'
 import { BCState } from '@/store'
 import SerialHighlightImage from '@assets/img/highlight_serial_barcode.png'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
@@ -31,13 +32,10 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
   }, [])
 
   const onContinuePressed = useCallback(async () => {
-    if (serial.length < 1) {
-      setError(t('BCSC.ManualSerial.EmptySerialError'))
-      return
-    }
+    const errorKey = firstErrorKey(serialSchema, serial)
 
-    if (serial.length > maxSerialNumberLength) {
-      setError(t('BCSC.ManualSerial.CharCountError'))
+    if (errorKey) {
+      setError(t(errorKey))
       return
     }
 

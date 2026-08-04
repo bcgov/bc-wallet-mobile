@@ -822,7 +822,7 @@ const translation = {
       "InputTitle": "Enter your card's serial number manually (FR)",
       "InputSubText": "Enter the letter and numbers by the barcode on the back of your card. (FR)",
       "EmptySerialError": "Required (FR)",
-      "CharCountError": "Cannot exceed 15 characters (FR)",
+      "FormatError": "Enter a valid card serial number (FR)",
     },
     "Birthdate": {
       "CardSerialNumber": "Card serial number: {{ serial }} (FR)",
@@ -1262,8 +1262,10 @@ const translation = {
       "FirstNameLabel": "First name (FR)",
       "FirstNameSubtext": "Your first given name (FR)",
       "FirstNameError": "Please enter a first name (FR)",
+      "FirstNameLengthError": "Enter 15 characters or less (FR)",
       "LastNameLabel": "Last name (FR)",
       "LastNameError": "Please enter a last name (FR)",
+      "LastNameLengthError": "Enter 35 characters or less (FR)",
       "LastNameSubtext": "Also known as surname or family name (FR)",
       "BirthDateLabel": "Birth date (FR)",
       "BirthDateSubtext": "Enter your birth date (FR)",
@@ -1274,6 +1276,7 @@ const translation = {
       "MiddleNamesLabel": "Middle names (FR)",
       "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed (FR)",
       "MiddleNamesError": "Please enter up to two middle names (FR)",
+      "MiddleNamesLengthError": "Enter 30 characters or less (FR)",
       "TakeSecondIdPhoto": "Take photo of your second ID (FR)",
     },
     "Address": {

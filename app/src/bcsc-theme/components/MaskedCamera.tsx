@@ -23,6 +23,7 @@ import {
   CameraCaptureError,
   CodeScanner,
   FormatFilter,
+  PhotoFile,
   useCameraDevice,
   useCameraFormat,
 } from 'react-native-vision-camera'
@@ -178,16 +179,25 @@ const MaskedCamera = ({
   }
 
   const takePhoto = async () => {
+    if (!cameraRef.current || !isFocused) {
+      return
+    }
+
     try {
-      if (cameraRef.current && isFocused) {
-        const photo = await cameraRef.current.takePhoto({
+      let photo: PhotoFile
+      if (cameraFace === 'back') {
+        // Use `takeSnapshot` on back camera: significantly faster read/write
+        photo = await cameraRef.current.takeSnapshot({ quality: 90 })
+      } else {
+        // Use `takePhoto` on front camera: `takeSnapshot` flips image vertically (front camera bug)
+        photo = await cameraRef.current.takePhoto({
           flash: 'off',
           enableShutterSound: false,
         })
-
-        onPhotoTaken(photo.path)
-        logger.info(`Photo taken and saved temporarily: ${photo.path}`)
       }
+
+      onPhotoTaken(photo.path)
+      logger.info(`Photo taken and saved temporarily: ${photo.path}`)
     } catch (error) {
       logger.error(`Error taking photo: ${error}`)
 

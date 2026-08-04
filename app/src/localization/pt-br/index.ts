@@ -822,7 +822,7 @@ const translation = {
       "InputTitle": "Enter your card's serial number manually (PT-BR)",
       "InputSubText": "Enter the letter and numbers by the barcode on the back of your card. (PT-BR)",
       "EmptySerialError": "Required (PT-BR)",
-      "CharCountError": "Cannot exceed 15 characters (PT-BR)",
+      "FormatError": "Enter a valid card serial number (PT-BR)",
     },
     "Birthdate": {
       "CardSerialNumber": "Card serial number: {{ serial }} (PT-BR)",
@@ -1262,8 +1262,10 @@ const translation = {
       "FirstNameLabel": "First name (PT-BR)",
       "FirstNameSubtext": "Your first given name (PT-BR)",
       "FirstNameError": "Please enter a first name (PT-BR)",
+      "FirstNameLengthError": "Enter 15 characters or less (PT-BR)",
       "LastNameLabel": "Last name (PT-BR)",
       "LastNameError": "Please enter a last name (PT-BR)",
+      "LastNameLengthError": "Enter 35 characters or less (PT-BR)",
       "LastNameSubtext": "Also known as surname or family name (PT-BR)",
       "BirthDateLabel": "Birth date (PT-BR)",
       "BirthDateSubtext": "Enter your birth date (PT-BR)",
@@ -1274,6 +1276,7 @@ const translation = {
       "MiddleNamesLabel": "Middle names (PT-BR)",
       "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed (PT-BR)",
       "MiddleNamesError": "Please enter up to two middle names (PT-BR)",
+      "MiddleNamesLengthError": "Enter 30 characters or less (PT-BR)",
       "TakeSecondIdPhoto": "Take photo of your second ID (PT-BR)",
     },
     "Address": {

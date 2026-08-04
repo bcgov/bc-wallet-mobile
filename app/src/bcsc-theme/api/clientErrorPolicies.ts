@@ -384,7 +384,7 @@ export const birthdateLockoutErrorPolicy: ErrorHandlingPolicy = {
     context.navigation.dispatch(
       CommonActions.reset({
         index: 1,
-        routes: [context.getResumeRoute(), { name: BCSCScreens.BirthdateLockout }],
+        routes: [{ name: BCSCScreens.IdentitySelection }, { name: BCSCScreens.BirthdateLockout }],
       })
     )
   },

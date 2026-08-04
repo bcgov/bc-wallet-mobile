@@ -1,3 +1,4 @@
+import { firstErrorKey, firstNameSchema, lastNameSchema, middleNamesSchema } from '@/bcsc-theme/utils/validation'
 import moment from 'moment'
 import { useCallback } from 'react'
 
@@ -85,10 +86,16 @@ const useEvidenceIDCollectionModel = () => {
       }
 
       // First name is intentionally optional to support mononyms (people with a single
-      // legal name). Last name remains required; trim so whitespace-only input is rejected
-      // (the value is trimmed before it is persisted).
-      if (!values.lastName.trim()) {
-        errors.lastName = t('BCSC.EvidenceIDCollection.LastNameError')
+      // legal name), so it is only length-checked. Last name remains required; the schemas
+      // trim, so whitespace-only input is rejected (the value is trimmed before it is persisted).
+      const lastNameErrorKey = firstErrorKey(lastNameSchema, values.lastName)
+      if (lastNameErrorKey) {
+        errors.lastName = t(lastNameErrorKey)
+      }
+
+      const firstNameErrorKey = firstErrorKey(firstNameSchema, values.firstName)
+      if (firstNameErrorKey) {
+        errors.firstName = t(firstNameErrorKey)
       }
 
       // Convert from YYYY/MM/DD to YYYY-MM-DD for validation
@@ -103,8 +110,9 @@ const useEvidenceIDCollectionModel = () => {
         errors.birthDate = t('BCSC.EvidenceIDCollection.BirthDateAgeError', { minimumAge })
       }
 
-      if (values.middleNames && values.middleNames.split(' ').length > 2) {
-        errors.middleNames = t('BCSC.EvidenceIDCollection.MiddleNamesError')
+      const middleNamesErrorKey = firstErrorKey(middleNamesSchema, values.middleNames)
+      if (middleNamesErrorKey) {
+        errors.middleNames = t(middleNamesErrorKey)
       }
 
       return errors

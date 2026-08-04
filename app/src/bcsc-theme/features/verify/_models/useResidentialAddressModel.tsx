@@ -2,8 +2,9 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { isCanadianPostalCode, ProvinceCode } from '@/bcsc-theme/utils/address-utils'
+import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
+import { firstErrorKey, postalCodeSchema } from '@/bcsc-theme/utils/validation'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
@@ -82,20 +83,20 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
    */
   const validateForm = useCallback(
     (values: ResidentialAddressFormState): ResidentialAddressFormErrors => {
-      // TODO (MD): Investigate a proper schema validation library if this gets more complex ie: yup, zod, etc.
       const errors: ResidentialAddressFormErrors = {}
 
-      if (!values.streetAddress) {
+      if (!values.streetAddress.trim()) {
         errors.streetAddress = t('BCSC.Address.StreetAddressRequired')
       }
-      if (!values.city) {
+      if (!values.city.trim()) {
         errors.city = t('BCSC.Address.CityRequired')
       }
       if (!values.province) {
         errors.province = t('BCSC.Address.ProvinceInvalid')
       }
-      if (!isCanadianPostalCode(values.postalCode)) {
-        errors.postalCode = t('BCSC.Address.PostalCodeInvalid')
+      const postalCodeErrorKey = firstErrorKey(postalCodeSchema, values.postalCode)
+      if (postalCodeErrorKey) {
+        errors.postalCode = t(postalCodeErrorKey)
       }
 
       return errors
@@ -120,16 +121,18 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
     // A1: update user metadata
     // QUESTION: Does updating the data here make sense if the IAS device auth is tied to the previous values?
     // If no: swap this block (A1) and the check for the deviceCode (A2)
+    const address = {
+      streetAddress: formState.streetAddress.trim(),
+      streetAddress2: formState.streetAddress2.trim() || undefined,
+      postalCode: formState.postalCode.trim(),
+      city: formState.city.trim(),
+      province: formState.province as ProvinceCode, // we know this is present because validation passed
+      country: 'CA' as const,
+    }
+
     const updatedUserMetadata: NonBCSCUserMetadata = {
       ...store.bcscSecure.userMetadata,
-      address: {
-        streetAddress: formState.streetAddress.trim(),
-        streetAddress2: formState.streetAddress2.trim() || undefined,
-        postalCode: formState.postalCode.trim(),
-        city: formState.city.trim(),
-        province: formState.province as ProvinceCode, // we know this is present because validation passed
-        country: 'CA' as const,
-      },
+      address,
     }
     await updateUserMetadata(updatedUserMetadata)
 
@@ -168,10 +171,9 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
     try {
       setIsSubmitting(true)
 
-      const streetAddress2Trimmed = formState.streetAddress2.trim()
-      const mergedStreetAddress = streetAddress2Trimmed
-        ? `${formState.streetAddress.trim()}\n${streetAddress2Trimmed}`
-        : formState.streetAddress.trim()
+      const mergedStreetAddress = address.streetAddress2
+        ? `${address.streetAddress}\n${address.streetAddress2}`
+        : address.streetAddress
 
       const deviceAuth = await authorization.authorizeDeviceWithUnknownBCSC({
         firstName: store.bcscSecure.userMetadata.name.first,
@@ -180,9 +182,9 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
         middleNames: store.bcscSecure.userMetadata.name.middle,
         address: {
           streetAddress: mergedStreetAddress,
-          city: formState.city,
-          province: formState.province as ProvinceCode, // field has already been validated
-          postalCode: formState.postalCode,
+          city: address.city,
+          province: address.province,
+          postalCode: address.postalCode,
         },
       })
 

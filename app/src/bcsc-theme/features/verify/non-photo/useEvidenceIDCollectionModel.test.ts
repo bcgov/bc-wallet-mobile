@@ -60,6 +60,44 @@ describe('useEvidenceIDCollectionModel', () => {
       expect(errors.lastName).toBe('BCSC.EvidenceIDCollection.LastNameError')
     })
 
+    it('enforces the per-field name lengths carried over from ias-ios', () => {
+      const validateEvidence = getValidateEvidence()
+
+      const errors = validateEvidence({
+        values: {
+          ...baseValues,
+          firstName: 'A'.repeat(16),
+          lastName: 'B'.repeat(36),
+          middleNames: 'C'.repeat(31),
+        },
+        personalInfoRequired: true,
+        minimumAge: 19,
+        t,
+      })
+
+      expect(errors.firstName).toBe('BCSC.EvidenceIDCollection.FirstNameLengthError')
+      expect(errors.lastName).toBe('BCSC.EvidenceIDCollection.LastNameLengthError')
+      expect(errors.middleNames).toBe('BCSC.EvidenceIDCollection.MiddleNamesLengthError')
+    })
+
+    it('accepts names at the length limits', () => {
+      const validateEvidence = getValidateEvidence()
+
+      const errors = validateEvidence({
+        values: {
+          ...baseValues,
+          firstName: 'A'.repeat(15),
+          lastName: 'B'.repeat(35),
+          middleNames: 'C'.repeat(30),
+        },
+        personalInfoRequired: true,
+        minimumAge: 19,
+        t,
+      })
+
+      expect(errors).toEqual({})
+    })
+
     it('skips personal info validation entirely when not required', () => {
       const validateEvidence = getValidateEvidence()
 

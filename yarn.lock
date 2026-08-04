@@ -7855,6 +7855,7 @@ __metadata:
     typescript: "npm:~5.9.2"
     typescript-eslint: "npm:~7.18.0"
     uuid: "npm:~9.0.1"
+    zod: "npm:~4.4.3"
     zustand: "npm:~4.5.4"
   languageName: unknown
   linkType: soft
@@ -20109,7 +20110,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^4.3.5, zod@npm:^4.3.6":
+"zod@npm:^4.3.5, zod@npm:^4.3.6, zod@npm:~4.4.3":
   version: 4.4.3
   resolution: "zod@npm:4.4.3"
   checksum: 10c0/7ea31b558e88f9faf44f31dd185e2e1cbf51fed3081787fb96cc2534749b50c0acfc6da7f0922a7353ed092dd358c7d50c28ea96c94d04af64191bd33152eca3

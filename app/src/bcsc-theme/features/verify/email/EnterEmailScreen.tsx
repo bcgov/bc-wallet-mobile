@@ -4,6 +4,7 @@ import { HighlightDivider } from '@/bcsc-theme/components/HighlightDivider'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { EMAIL_MAX_LENGTH, emailSchema, parseField } from '@/bcsc-theme/utils/validation'
 import BulletPointList from '@/components/BulletPointList'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
 import { BCState } from '@/store'
@@ -54,11 +55,10 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
   }
 
   const handleSubmit = async () => {
-    const isInvalidEmail = !/^[-_A-Za-z0-9+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$/.test(
-      email
-    )
-    if (!email || isInvalidEmail) {
-      setError(t('BCSC.EmailConfirmation.EmailError'))
+    const parsedEmail = parseField(emailSchema, email)
+
+    if (!parsedEmail.ok) {
+      setError(t(parsedEmail.errorKey))
       return
     }
 
@@ -66,8 +66,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
 
     try {
       setLoading(true)
-      // Email verification is case-insensitive, so normalize before persisting/sending
-      const normalizedEmail = email.toLowerCase()
+      const normalizedEmail = parsedEmail.value
       const { email_address_id } = await evidence.createEmailVerification(normalizedEmail)
       await updateAccountFlags({ userSkippedEmailVerification: false })
       await updateUserInfo({ email: normalizedEmail, isEmailVerified: false })
@@ -147,7 +146,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
         onErrorClear={() => setError(null)}
         keyboardType={'email-address'}
         textInputProps={{
-          maxLength: 50,
+          maxLength: EMAIL_MAX_LENGTH,
           autoCorrect: false,
           autoComplete: 'email',
           textContentType: 'emailAddress',
