@@ -11,6 +11,24 @@ const STEADY_POSITION_TIMEOUT_MS = 3_000
 const STEADY_POSITION_SAMPLE_MS = 120
 
 /**
+ * Keys XCUITest may press to close the iOS keyboard, tried in order — rendered key labels, so case
+ * matters. No app input sets `onSubmitEditing`, so pressing one only blurs the field.
+ */
+const IOS_KEYBOARD_DISMISS_KEYS = ['done', 'Done', 'return', 'Return', 'go', 'Go', 'next', 'Next', 'search', 'Search']
+
+/**
+ * Escape a value before it is embedded in a quoted iOS predicate / UiSelector string. Both parsers
+ * take the same two escapes, so one helper covers them. Without it a quote or backslash in localized
+ * copy produces an invalid selector rather than a miss. (Mirrors `escapeIosSelectorValue` in
+ * `helpers/alerts.ts`, which escapes alert-button labels for the same reason.)
+ */
+function escapeSelectorValue(value: string): string {
+  const backslash = String.fromCodePoint(0x5c)
+  const doubleQuote = String.fromCodePoint(0x22)
+  return value.replaceAll(backslash, `${backslash}${backslash}`).replaceAll(doubleQuote, `${backslash}${doubleQuote}`)
+}
+
+/**
  * The bit of an element {@link BaseScreen.waitForSteadyPosition} needs — structural so it accepts both a
  * resolved `WebdriverIO.Element` (from `$$`) and the chainable handle `findByTestId` returns.
  */
@@ -139,10 +157,39 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * @returns the element
    */
   public async findByText(text: string) {
+    const value = escapeSelectorValue(text)
     const selector = driver.isIOS
-      ? `-ios predicate string:label == "${text}" OR value == "${text}"`
-      : `android=new UiSelector().text("${text}")`
+      ? `-ios predicate string:label == "${value}" OR value == "${value}"`
+      : `android=new UiSelector().text("${value}")`
     return $(selector)
+  }
+
+  /** True if an element with the given visible text is displayed; never throws. */
+  public async isTextDisplayed(text: string): Promise<boolean> {
+    const el = await this.findByText(text)
+    try {
+      return await el.isDisplayed()
+    } catch {
+      return false
+    }
+  }
+
+  /**
+   * Wait for an element by its visible TEXT — the counterpart of {@link waitForDisplayed} for the
+   * inline errors, headings and menu titles that carry no testID, scroll-on-miss included.
+   *
+   * The hunt matters: a bare `findByText(...).waitForDisplayed()` only asserts what is currently in
+   * the viewport, and a keyboard-aware form scrolls to keep the FOCUSED field clear — pushing
+   * another field's text above the fold while it is perfectly well rendered.
+   */
+  public async waitForText(text: string, timeout: number = Timeouts.ELEMENT_VISIBLE): Promise<void> {
+    const el = await this.findByText(text)
+    try {
+      await el.waitForDisplayed({ timeout })
+    } catch {
+      console.warn(`Text "${text}" not visible after ${timeout}ms; scrolling then retrying`)
+      await this.scrollUntilVisible(`Text "${text}"`, () => this.isTextDisplayed(text), 4, 'both')
+    }
   }
 
   /**
@@ -286,15 +333,34 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
   }
 
   /**
-   * Dismiss the soft keyboard using platform-native commands (no test IDs needed).
-   * Call before tapping buttons when the keyboard may be covering them.
+   * Dismiss the soft keyboard without ever touching the app's own UI — press one of the keyboard's
+   * own dismissal keys.
+   *
+   * iOS used to blind-tap a quarter down the screen and let the form's scroll view swallow it. That
+   * only works while nothing interactive sits there: on iOS 17 it landed on ResidentialAddress's
+   * province dropdown, opening the modal and stranding the journey. No coordinate is safe —
+   * `InputWithValidation`'s 44px hitSlop makes the gaps between fields live too.
+   *
+   * Number pads (birthdate, email code) have no dismissal key, so the keyboard is left up. That is
+   * fine: every form calling this uses `ScreenWrapper keyboardActive`, which lays its controls out
+   * above the keyboard.
    */
   async dismissKeyboard() {
-    if (driver.isIOS) {
-      const { width, height } = await driver.getWindowSize()
-      await driver.execute('mobile: tap', { x: Math.round(width / 2), y: Math.round(height / 4) })
-    } else {
-      await driver.hideKeyboard()
+    // An unreadable probe counts as "shown" — better to attempt a (now harmless) dismissal.
+    if (!(await driver.isKeyboardShown().catch(() => true))) return
+
+    if (driver.isAndroid) {
+      await driver.hideKeyboard().catch(() => undefined)
+      await driver.pause(300) // let the layout settle as the keyboard collapses
+      return
+    }
+
+    try {
+      // Throws when the keyboard has none of these keys — not when the command is missing.
+      await driver.execute('mobile: hideKeyboard', { keys: IOS_KEYBOARD_DISMISS_KEYS })
+      await driver.pause(300)
+    } catch {
+      console.warn('[keyboard] No iOS dismissal key available; leaving the keyboard open')
     }
   }
 
@@ -304,9 +370,9 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * reads the drag as gesture input and TYPES into the still-focused field (observed on a Pixel 7 Pro:
    * a scroll hunt for the next input appended " TY TY TY TY" to the just-filled last-name field).
    *
-   * Android-only by design: iOS has no `hideKeyboard`, its `dismissKeyboard` is a blind tap that could
-   * press a real control if fired speculatively, and its forms keep the focused field clear of the
-   * keyboard on their own. Never throws — a keyboard probe must not fail the caller's real action.
+   * Android-only: the glide-typing hazard is a Gboard behaviour with no iOS equivalent, and
+   * {@link dismissKeyboard} covers the iOS cases that need it. Never throws — a keyboard probe must
+   * not fail the caller's real action.
    */
   public async hideAndroidKeyboardIfShown(): Promise<void> {
     if (!driver.isAndroid) return
@@ -391,15 +457,22 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * @param directions - `down` scrolls toward content below; `both` tries down then up
    */
   public async scrollToTestId(testId: string, maxScrolls = 8, directions: 'down' | 'both' = 'down') {
-    const isVisible = async () => {
-      const candidate = await this.findByTestId(testId)
-      try {
-        return await candidate.isDisplayed()
-      } catch {
-        return false
-      }
-    }
+    await this.scrollUntilVisible(`Element "${testId}"`, () => this.isTestIdDisplayed(testId), maxScrolls, directions)
+  }
 
+  /**
+   * Swipe until a target becomes visible — shared by the testID and visible-text hunts. `isVisible`
+   * re-queries each pass, so a handle invalidated by the scroll doesn't poison the search.
+   *
+   * @param description - how the target is named in the failure message
+   * @param isVisible - cheap, non-throwing "is it on screen" probe
+   */
+  private async scrollUntilVisible(
+    description: string,
+    isVisible: () => Promise<boolean>,
+    maxScrolls: number,
+    directions: 'down' | 'both'
+  ): Promise<void> {
     if (await isVisible()) return
 
     // An open keyboard both hides the lower half of the screen and turns the swipes below into
@@ -426,7 +499,7 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
     }
 
     throw new Error(
-      `Element "${testId}" not visible after ${maxScrolls} scroll attempt(s)` +
+      `${description} not visible after ${maxScrolls} scroll attempt(s)` +
         (directions === 'both' ? ' in each direction' : '')
     )
   }

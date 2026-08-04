@@ -122,6 +122,7 @@ export const SettingsScreen = defineScreen({
     profile: bcsc(main.settings.profile), // verified-only → AccountDetails; isVisible spans links, so the unverified absence-assert still holds
     myDevices: bcsc(main.settings.myDevices), // verified-only → in-app WebView (server-rendered device list)
     resetWallet: bcsc(main.settings.resetWallet), // always present → shared DestructiveConfirmationScreen
+    developerMode: bcsc(main.settings.developerMode), // absent until developer mode is enabled
   },
 })
 

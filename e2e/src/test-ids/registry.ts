@@ -52,6 +52,10 @@ export const TestIds = {
     notifications: {
       enable: 'EnableNotifications',
       skip: 'SkipNotifications',
+      // The same route renders a `PermissionDisabled` variant INSTEAD of the enable/skip pair once the
+      // user has been prompted and the live OS status is denied/blocked. Re-entering re-runs the check.
+      openSettings: 'OpenSettings',
+      continueWithout: 'ContinueWithoutNotifications',
     },
     secureApp: {
       choosePin: 'ChoosePINButton',
@@ -74,9 +78,11 @@ export const TestIds = {
   },
 
   auth: {
-    /** Returning-user landing — the unlock entry every cold start of an onboarded user hits. */
+    /** Returning-user landing — the unlock entry every cold start of an onboarded user hits.
+     *  `settings` is its header-left menu button → the PRE-authentication `AuthSettings` surface. */
     accountLanding: {
       unlock: 'Unlock',
+      settings: 'SettingsMenuButton',
     },
     /** Existing-PIN entry (`EnterPIN`). The PIN auto-submits on the 6th digit; Continue is the manual fallback. */
     enterPin: {
@@ -315,6 +321,8 @@ export const TestIds = {
       accessibility: 'Accessibility',
       termsOfUse: 'TermsOfUse',
       privacy: 'Privacy',
+      // Hidden until developer mode is enabled — so its absence is itself an assertion.
+      developerMode: 'DeveloperMode',
       // verified-only (isVerified-gated): absence-assert unverified, presence when verified
       profile: 'Profile',
       editProfile: 'EditProfile',
@@ -427,6 +435,24 @@ export const TestIds = {
       dateOfBirthField: 'DateOfBirthField',
       emailField: 'EmailAddressField',
     },
+  },
+
+  /**
+   * The hidden Developer (IAS) menu — ONE shared `Developer` screen registered per stack
+   * (`OnboardingDeveloper` / `AuthDeveloper` / `VerifyDeveloper` / `MainDeveloper`). Reached only via
+   * the Settings version footer (`helpers/developer.ts`); the app's `DeveloperCounter` trigger is
+   * hidden from the accessibility tree and cannot be selected. `Testing` rows are BCSC-mode only.
+   */
+  developer: {
+    /** Always-rendered first row — the reliable "Developer screen mounted" marker. */
+    toggleDeveloper: 'ToggleDeveloper',
+    /** i18n-DERIVED: `testIdWithKey(t('Developer.Environment').toLowerCase())` — breaks under a locale change. */
+    environment: 'environment',
+    staleTermsOfUse: 'StaleTermsOfUse',
+    /** Clears `hasSeenOnboardingIntro` → the next AuthStack mount opens on the AuthIntro variant. */
+    resetOnboardingIntro: 'ResetOnboardingIntro',
+    /** Deletes the refresh/registration/access tokens from the native keychain. */
+    deleteTokens: 'DeleteTokens',
   },
 
   /** BC Wallet variant — the Preface + onboarding-carousel intro screens (bifold `com.ariesbifold:id/`
