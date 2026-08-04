@@ -52,6 +52,11 @@ export const TestIds = {
     notifications: {
       enable: 'EnableNotifications',
       skip: 'SkipNotifications',
+      // The same route renders a `PermissionDisabled` variant INSTEAD of the enable/skip pair once
+      // the user has been prompted at least once AND the live OS status is denied/blocked
+      // (`NotificationsScreen.checkPermissions`). Re-entering the screen is what re-runs that check.
+      openSettings: 'OpenSettings',
+      continueWithout: 'ContinueWithoutNotifications',
     },
     secureApp: {
       choosePin: 'ChoosePINButton',
@@ -74,9 +79,11 @@ export const TestIds = {
   },
 
   auth: {
-    /** Returning-user landing — the unlock entry every cold start of an onboarded user hits. */
+    /** Returning-user landing — the unlock entry every cold start of an onboarded user hits.
+     *  `settings` is its header-left menu button → the PRE-authentication `AuthSettings` surface. */
     accountLanding: {
       unlock: 'Unlock',
+      settings: 'SettingsMenuButton',
     },
     /** Existing-PIN entry (`EnterPIN`). The PIN auto-submits on the 6th digit; Continue is the manual fallback. */
     enterPin: {
@@ -315,6 +322,9 @@ export const TestIds = {
       accessibility: 'Accessibility',
       termsOfUse: 'TermsOfUse',
       privacy: 'Privacy',
+      // Hidden until developer mode is enabled (see the `developer` namespace) — absent by default,
+      // so it doubles as the "the dev menu stays hidden" assertion on any stack's settings surface.
+      developerMode: 'DeveloperMode',
       // verified-only (isVerified-gated): absence-assert unverified, presence when verified
       profile: 'Profile',
       editProfile: 'EditProfile',
@@ -427,6 +437,31 @@ export const TestIds = {
       dateOfBirthField: 'DateOfBirthField',
       emailField: 'EmailAddressField',
     },
+  },
+
+  /**
+   * The hidden Developer (IAS) menu — ONE shared `Developer` screen registered per stack
+   * (`OnboardingDeveloper` / `AuthDeveloper` / `VerifyDeveloper` / `MainDeveloper`).
+   *
+   * Two entry points exist in the app; only the second is addressable from a test:
+   *  - the `DeveloperCounter` tap target wrapping the Intro / AccountSetup illustration — it carries a
+   *    testID but ALSO `accessibilityElementsHidden` / `importantForAccessibility="no-hide-descendants"`,
+   *    so it is absent from both the XCUITest and UiAutomator2 trees and cannot be selected;
+   *  - the version line in the footer of any Settings surface (`SettingsContent`), which is a plain
+   *    text node — see `helpers/developer.ts`.
+   *
+   * The `Testing` section (stale terms / reset intro / delete tokens) renders in BCSC mode only.
+   */
+  developer: {
+    /** Always-rendered first row — the reliable "Developer screen mounted" marker. */
+    toggleDeveloper: 'ToggleDeveloper',
+    /** i18n-DERIVED: `testIdWithKey(t('Developer.Environment').toLowerCase())` — breaks under a locale change. */
+    environment: 'environment',
+    staleTermsOfUse: 'StaleTermsOfUse',
+    /** Clears `hasSeenOnboardingIntro` → the next AuthStack mount opens on the AuthIntro variant. */
+    resetOnboardingIntro: 'ResetOnboardingIntro',
+    /** Deletes the refresh/registration/access tokens from the native keychain. */
+    deleteTokens: 'DeleteTokens',
   },
 
   /** BC Wallet variant — the Preface + onboarding-carousel intro screens (bifold `com.ariesbifold:id/`

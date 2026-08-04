@@ -153,6 +153,37 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
     return $(selector)
   }
 
+  /** True if an element with the given visible text is displayed; never throws. */
+  public async isTextDisplayed(text: string): Promise<boolean> {
+    const el = await this.findByText(text)
+    try {
+      return await el.isDisplayed()
+    } catch {
+      return false
+    }
+  }
+
+  /**
+   * Wait for an element by its visible TEXT — the counterpart of {@link waitForDisplayed} for the
+   * inline errors, headings and menu titles that carry no testID, scroll-on-miss included.
+   *
+   * The scroll hunt is the point. A bare `findByText(...).waitForDisplayed()` asserts only what is
+   * currently on screen, which is a different claim from "the app rendered this": a keyboard-aware
+   * form scrolls to keep the FOCUSED field clear of the keyboard, so text attached to any other
+   * field can sit above the fold while being perfectly well rendered. That is what broke the
+   * CreatePIN too-short assertion — the error belongs to the first PIN field while the second one
+   * held focus.
+   */
+  public async waitForText(text: string, timeout: number = Timeouts.ELEMENT_VISIBLE): Promise<void> {
+    const el = await this.findByText(text)
+    try {
+      await el.waitForDisplayed({ timeout })
+    } catch {
+      console.warn(`Text "${text}" not visible after ${timeout}ms; scrolling then retrying`)
+      await this.scrollUntilVisible(`Text "${text}"`, () => this.isTextDisplayed(text), 4, 'both')
+    }
+  }
+
   /**
    * Find an element by test ID.
    * @param testId - test ID to find
@@ -427,15 +458,23 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * @param directions - `down` scrolls toward content below; `both` tries down then up
    */
   public async scrollToTestId(testId: string, maxScrolls = 8, directions: 'down' | 'both' = 'down') {
-    const isVisible = async () => {
-      const candidate = await this.findByTestId(testId)
-      try {
-        return await candidate.isDisplayed()
-      } catch {
-        return false
-      }
-    }
+    await this.scrollUntilVisible(`Element "${testId}"`, () => this.isTestIdDisplayed(testId), maxScrolls, directions)
+  }
 
+  /**
+   * Swipe until a target becomes visible. Shared by the testID and visible-text hunts, which differ
+   * only in how they locate the target — `isVisible` re-queries on every pass, so a handle
+   * invalidated by the scroll does not poison the search.
+   *
+   * @param description - how the target is named in the failure message
+   * @param isVisible - cheap, non-throwing "is it on screen" probe
+   */
+  private async scrollUntilVisible(
+    description: string,
+    isVisible: () => Promise<boolean>,
+    maxScrolls: number,
+    directions: 'down' | 'both'
+  ): Promise<void> {
     if (await isVisible()) return
 
     // An open keyboard both hides the lower half of the screen and turns the swipes below into
@@ -462,7 +501,7 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
     }
 
     throw new Error(
-      `Element "${testId}" not visible after ${maxScrolls} scroll attempt(s)` +
+      `${description} not visible after ${maxScrolls} scroll attempt(s)` +
         (directions === 'both' ? ' in each direction' : '')
     )
   }

@@ -12,10 +12,28 @@ import { bcsc, defineScreen } from './core/index.js'
 
 const auth = TestIds.auth
 
-/** Returning-user landing. `primary` (Unlock) → EnterPIN. */
+/** Returning-user landing. `primary` (Unlock) → EnterPIN · `menu` (header-left) → AuthSettings. */
 export const AccountLandingScreen = defineScreen({
   self: bcsc(auth.accountLanding.unlock),
   primary: bcsc(auth.accountLanding.unlock),
+  menu: bcsc(auth.accountLanding.settings),
+})
+
+/**
+ * Pre-authentication settings (`AuthSettings`, the AccountLanding header-left destination). Wraps the
+ * same `SettingsContent` as Main/Onboarding, but `didAuthenticate` is still false here so the whole
+ * `AuthenticatedSection` (AppSecurity/ChangePIN/AutoLock/…) is ABSENT — the always-rendered Help
+ * section's `ContactUs` row is the arrival marker, as on the onboarding settings surface.
+ *
+ * NB no `back` role: AuthStack sets no `headerBackTestID` (see the note at the foot of this file), so
+ * leave this surface by relaunching rather than by tapping the header.
+ */
+export const AuthSettingsScreen = defineScreen({
+  self: bcsc(TestIds.main.settings.contactUs),
+  links: {
+    // Absent until the footer version line is tapped into developer mode (see `helpers/developer.ts`).
+    developerMode: bcsc(TestIds.main.settings.developerMode),
+  },
 })
 
 /**

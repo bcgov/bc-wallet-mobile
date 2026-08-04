@@ -81,6 +81,27 @@ export const OnboardingNotificationsScreen = defineScreen({
 })
 
 /**
+ * The `PermissionDisabled` variant of the SAME `OnboardingNotifications` route: it replaces the
+ * enable/skip body once the user has been prompted at least once and the live OS status is
+ * denied/blocked. The check runs on mount, so it is reached by leaving the screen after a declined
+ * permission dialog and navigating back to it (SecureApp's header `back`).
+ *
+ * `primary` (OpenSettings) leaves the app for the OS settings — assert it, never tap it in CI.
+ * `secondary` (ContinueWithoutNotifications) is the in-app way forward → SecureApp.
+ */
+export const OnboardingNotificationsDisabledScreen = defineScreen({
+  self: bcsc(ob.notifications.continueWithout),
+  primary: bcsc(ob.notifications.openSettings),
+  secondary: bcsc(ob.notifications.continueWithout),
+  back: bcsc(common.back),
+  help: bcsc(common.help),
+  elements: {
+    openSettings: bcsc(ob.notifications.openSettings),
+    continueWithout: bcsc(ob.notifications.continueWithout),
+  },
+})
+
+/**
  * "Secure your app" selector (`OnboardingSecureApp`, rendered by `SecurityMethodSelector`). The
  * `deviceAuth` link only appears when the device/emulator has biometrics or a passcode configured;
  * `primary` (ChoosePINButton) is always present, so it is the reliable `self`.
@@ -154,4 +175,8 @@ export const OnboardingWebViewScreen = defineScreen({
 export const OnboardingSettingsScreen = defineScreen({
   self: bcsc(TestIds.main.settings.contactUs),
   back: bcsc(common.back),
+  links: {
+    // Absent until the footer version line is tapped into developer mode (see `helpers/developer.ts`).
+    developerMode: bcsc(TestIds.main.settings.developerMode),
+  },
 })

@@ -8,6 +8,9 @@ export const UPDATED_TEST_PIN = '555555'
 /** A PIN that is always wrong (never used as TEST_PIN/UPDATED_TEST_PIN) — for error/lockout paths. */
 export const WRONG_TEST_PIN = '111111'
 
+/** Fewer than the required 6 digits — trips the PIN forms' "too short" inline validation. */
+export const SHORT_TEST_PIN = '2222'
+
 export enum Timeouts {
   /** Default wait for an element to appear on screen */
   ELEMENT_VISIBLE = 5_000,
@@ -23,11 +26,33 @@ export enum Timeouts {
   /** First checkpoint of a journey file: the run's FIRST session may also pay simulator/device
    *  boot + WebDriverAgent install + first-ever app launch, all competing for CPU. */
   COLD_START = 60_000,
+  /** A timed lockout expiring on its own. The native schedule's first tier is 1 minute (5 consecutive
+   *  wrong PINs) and the Lockout screen unlocks itself when its countdown reaches zero — this is the
+   *  bound on that unattended wait, with headroom for a slow mount reading the remaining time late. */
+  LOCKOUT_AUTO_UNLOCK = 120_000,
   /** Per-test timeout (Mocha) */
   TEST_TIMEOUT = 300_000,
   /** Browser handoff pause (ms) */
   BROWSER_HANDOFF_PAUSE_MS = 1_000,
 }
+
+/**
+ * How long (seconds) the app is held in the background to trip auto-lock's "backgrounded too long"
+ * branch — a different code path from the inactivity timer, which is cleared on backgrounding and
+ * replaced by an elapsed-time comparison when the app returns to the foreground.
+ *
+ * Must exceed the auto-lock timeout the caller sets first (the journeys set the 1-minute option; the
+ * 5-minute default would cost a 5-minute background). The margin covers the AppState round-trip.
+ */
+export const BACKGROUND_LOCK_SECONDS = 70
+
+/**
+ * A background comfortably INSIDE the auto-lock timeout — the control for the background-lock
+ * checkpoint. Returning from this must leave the user authenticated, which both pins down the
+ * boundary and proves the app is resumed rather than relaunched (a relaunch would land on the unlock
+ * screen for the ordinary in-memory `didAuthenticate` reason and make the lock assertion vacuous).
+ */
+export const BACKGROUND_NO_LOCK_SECONDS = 5
 
 export const TestUsers = {
   photo: {
