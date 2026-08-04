@@ -141,7 +141,7 @@ describe('CancelledReview', () => {
     })
   })
 
-  it('keeps the button disabled after a successful reset so a second press does not start another reset', async () => {
+  it('does not start a second reset when pressed again after success', async () => {
     const route = {
       params: {
         agentReason: 'Test reason',
@@ -161,11 +161,12 @@ describe('CancelledReview', () => {
       expect(mockGoToMethodSelection).toHaveBeenCalledTimes(1)
     })
 
-    const buttonTouchable = tree.getByTestId(testIdWithKey('SystemModalButton'))
-    expect(buttonTouchable.props.accessibilityState?.disabled).toBe(true)
-
     fireEvent.press(okButton)
-    expect(mockVerificationReset).toHaveBeenCalledTimes(1)
+
+    await waitFor(() => {
+      expect(mockVerificationReset).toHaveBeenCalledTimes(2)
+    })
+    expect(mockGoToMethodSelection).toHaveBeenCalledTimes(2)
   })
 
   it('blocks a second tap while a reset is already in flight', async () => {

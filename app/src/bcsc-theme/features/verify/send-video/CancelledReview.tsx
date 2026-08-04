@@ -1,7 +1,7 @@
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
-import { TOKENS, useServices } from '@bifold/core'
-import React, { useEffect, useRef, useState } from 'react'
+import { TOKENS, usePreventDoublePress, useServices } from '@bifold/core'
+import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SystemModal } from '../../modal/components/SystemModal'
 import useCancelledReviewViewModel from './CancelledReviewViewModel'
@@ -18,8 +18,7 @@ const CancelledReview = ({ route }: CancelledReviewProps) => {
   const verificationReset = useVerificationReset()
   const { t } = useTranslation()
   const { cleanUpVerificationData, goToMethodSelection } = useCancelledReviewViewModel()
-  const [isLoading, setIsLoading] = useState(false)
-  const resettingRef = useRef(false)
+  const { preventDoublePress, isPressing } = usePreventDoublePress()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const loadingScreen = useLoadingScreen()
 
@@ -37,31 +36,21 @@ const CancelledReview = ({ route }: CancelledReviewProps) => {
         }),
       ]}
       buttonText={t('BCSC.CancelledVerification.Button')}
-      buttonDisabled={isLoading}
-      onButtonPress={async () => {
-        if (resettingRef.current) {
-          return
-        }
-        resettingRef.current = true
-        setIsLoading(true)
+      buttonDisabled={isPressing}
+      onButtonPress={preventDoublePress(async () => {
         const stopLoading = loadingScreen.startLoading(t('Alerts.RestartVerification.Loading'))
         try {
           const success = await verificationReset()
           if (success) {
             // goBack() no-ops here: the reset unmounts this screen's stack mid-flight (#4387)
             goToMethodSelection()
-            return
           }
-          resettingRef.current = false
-          setIsLoading(false)
         } catch (error) {
           logger.error('CancelledReview: Error during factory reset on account', error as Error)
-          resettingRef.current = false
-          setIsLoading(false)
         } finally {
           stopLoading()
         }
-      }}
+      })}
     />
   )
 }
