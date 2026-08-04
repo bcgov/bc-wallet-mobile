@@ -95,7 +95,9 @@ describe('CancelledReview', () => {
     expect(tree.getByText('BCSC.CancelledVerification.Label')).toBeTruthy()
   })
 
-  it('re-enters the verify flow via goToMethodSelection and resets the stack to IdentitySelection', async () => {
+  // This screen is hosted by both MainStack and VerifyStack, and the verify routes exist only
+  // in the latter — so it must leave via store state, never an in-stack navigation.
+  it('re-enters the verify flow via goToMethodSelection without navigating in-stack', async () => {
     const agentReason = 'Test reason'
     const route = {
       params: {
@@ -115,10 +117,7 @@ describe('CancelledReview', () => {
     await waitFor(() => {
       expect(mockGoToMethodSelection).toHaveBeenCalledTimes(1)
     })
-    expect(mockNavigation.reset).toHaveBeenCalledWith({
-      index: 0,
-      routes: [{ name: 'New Setup ID Confirmation' }],
-    })
+    expect(mockNavigation.reset).not.toHaveBeenCalled()
     expect(mockNavigation.goBack).not.toHaveBeenCalled()
   })
 
