@@ -52,12 +52,15 @@ type ApproveInPersonLoginInput = ApproveInPersonInput extends infer T
  *
  * @param formattedCode - The confirmation code as displayed in the app (XXXX-XXXX)
  * @param input - Flow selector + per-flow inputs
- * @param timeoutMs - Max time to wait for the approval flow (default 30s)
+ * @param timeoutMs - Budget for the WHOLE chain, not per request. That chain is ~10 sequential round
+ *   trips to SIT, so a thin budget expires on whichever one is in flight — structurally the last,
+ *   `POST /deviceCredential/approve` — which reads as "approve is broken" no matter what was slow.
+ *   The per-step timings `login.mjs` logs are what tells the two apart.
  */
 export async function approveInPersonRequest(
   formattedCode: string,
   input: ApproveInPersonInput,
-  timeoutMs = 30_000
+  timeoutMs = 60_000
 ): Promise<void> {
   const code = formattedCode.replaceAll(/[\s-]/g, '')
   if (!/^[A-Za-z0-9]{8}$/.test(code)) {
@@ -76,12 +79,20 @@ export async function approveInPersonRequest(
 
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+  const startedAt = Date.now()
 
   try {
     await approveInPersonLogin(loginInput, { signal: controller.signal })
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error)
-    throw new Error(`In-person approval failed (flow=${input.flow}, code="${code}"): ${message}`)
+    const elapsedMs = Date.now() - startedAt
+    // Our own abort surfaces from undici as a bare "This operation was aborted" against whichever
+    // request it interrupted. Name it as OUR budget so it is never mistaken for an SM rejection.
+    const detail = controller.signal.aborted
+      ? `the ${timeoutMs}ms budget for the whole SM chain ran out (see the per-step [sm-login] timings for where it went)`
+      : error instanceof Error
+        ? error.message
+        : String(error)
+    throw new Error(`In-person approval failed after ${elapsedMs}ms (flow=${input.flow}, code="${code}"): ${detail}`)
   } finally {
     clearTimeout(timeoutId)
   }
