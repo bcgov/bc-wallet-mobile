@@ -64,7 +64,7 @@ const createMockAgent = () => {
 const TRIGGER_CRED_DEF_ID = 'issuer:3:CL:1:Person'
 
 const buildRule = (overrides: Partial<AutoCredentialRule> = {}): AutoCredentialRule => ({
-  triggerCredDefIds: [TRIGGER_CRED_DEF_ID],
+  triggerRestrictions: [{ cred_def_id: TRIGGER_CRED_DEF_ID }],
   getInvitationUrl: jest.fn().mockResolvedValue('https://issuer.example?c_i=abc'),
   autoAcceptIssuerProofRequest: true,
   autoAcceptCredentialOffer: true,

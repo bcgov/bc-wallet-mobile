@@ -36,6 +36,12 @@ interface PausableAttestationMonitor {
  * Configuration for a single just-in-time credential acquisition rule
  */
 export interface AutoCredentialRule {
+  /**
+   * An array of AnonCredsProofRequestRestriction objects that match the proof request
+   * to trigger the workflow.  If any of the restrictions match, the rule is triggered.
+   *
+   * @example [ { cred_def_id: 'abc' }, { schema_id: 'xyz' } ] // first tries matching cred def, then schema
+   */
   triggerRestrictions: AnonCredsProofRequestRestriction[]
 
   /**
@@ -429,9 +435,7 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
 
       try {
         const isMissing = await this.isCredentialMissingForRule(proof.id, requestFormat, rule)
-        this.log?.info(
-          `[AutoCredentialMonitor] Credential (${rule.triggerCredDefIds.join(', ')}) is ${isMissing ? 'NOT ' : ''}in the wallet`
-        )
+        this.log?.info(`[AutoCredentialMonitor] Credential  is ${isMissing ? 'NOT ' : ''}in the wallet`)
         if (isMissing) {
           // Fire and forget — inside runWorkflow drives its own subscriptions
           // and error handling. Return so we don't try further rules against the

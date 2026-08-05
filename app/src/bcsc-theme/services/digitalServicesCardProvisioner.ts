@@ -1,4 +1,4 @@
-import { DIGITAL_SERVICES_CARD_CREDENTIAL_IDENTITIES } from '@/constants'
+import { DIGITAL_SERVICES_CARD_CREDENTIAL_IDENTITY_RECORDS } from '@/constants'
 import { AutoCredentialRule } from '@/services/auto-credential'
 import { AnonCredsProofRequestRestriction } from '@credo-ts/anoncreds'
 import { Platform } from 'react-native'
@@ -34,25 +34,25 @@ const getDigitalServicesCardInvitationUrl = async (): Promise<string> => {
  * All DigitalServicesCard proof restrictions across all environments, flattened into a single
  * array for use as the `triggerRestrictions` of the AutoCredentialRule.
  */
-const allDigitalServicesCardProofRestrictions = (): AnonCredsProofRequestRestriction[] => {
+export const allDigitalServicesCardProofRestrictions = (): AnonCredsProofRequestRestriction[] => {
   const triggerRestrictions: AnonCredsProofRequestRestriction[] = []
 
-  DIGITAL_SERVICES_CARD_CREDENTIAL_IDENTITIES.map((credential) => {
+  DIGITAL_SERVICES_CARD_CREDENTIAL_IDENTITY_RECORDS.map((identity) => {
     // 1. Add a restriction for the credential definition ID
     triggerRestrictions.push({
-      cred_def_id: credential.credDefId,
+      cred_def_id: identity.credDefId,
     })
 
     //2. Add a restriction for the schema ID
     triggerRestrictions.push({
-      schema_id: credential.schemaId,
+      schema_id: identity.schemaId,
     })
 
     // 3. Add a restriction for schema shape (issuer DID, schema name, schema version)
     triggerRestrictions.push({
-      schema_name: credential.schemaName,
-      schema_version: credential.schemaVersion,
-      issuer_did: credential.issuerDid,
+      schema_name: identity.schemaName,
+      schema_version: identity.schemaVersion,
+      issuer_did: identity.issuerDid,
     })
   })
 
