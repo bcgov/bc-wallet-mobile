@@ -461,16 +461,20 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
       ...Object.values(requestFormat.requested_predicates ?? {}).flatMap((predicates) => predicates.restrictions ?? []),
     ]
 
-    const matchedRules = this.rules.filter((rule) =>
-      restrictions.some((restriction) => this.restrictionMatchesRule(restriction, rule))
-    )
+    for (const rule of this.rules) {
+      // compare the cred def id against the rule trigger IDs, if any match then this proof is requesting a credential that would trigger the workflow
+      const proofRequestsWatchedCredential = restrictions.some((restriction) =>
+        this.restrictionMatchesRule(restriction, rule)
+      )
 
-    if (matchedRules.length === 0) {
-      this.log?.info(`[AutoCredentialMonitor] Proof ${proof.id} does not match any rule trigger IDs`)
-      return
-    }
+      this.log?.info(
+        `[AutoCredentialMonitor] Proof ${proof.id} requests credential(s) that match rule trigger IDs: ${proofRequestsWatchedCredential}`
+      )
 
-    for (const rule of matchedRules) {
+      if (!proofRequestsWatchedCredential) {
+        continue
+      }
+
       try {
         const isMissing = await this.isCredentialMissingForRule(proof.id, requestFormat, rule)
         this.log?.info(`[AutoCredentialMonitor] Credential  is ${isMissing ? 'NOT ' : ''}in the wallet`)
