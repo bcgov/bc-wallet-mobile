@@ -1,8 +1,42 @@
-import { CredentialIdentity } from './credential-repository'
+import { CredentialDefinitionRecord, CredentialIdentity, CredentialSchemaRecord } from './credential-repository'
 
 describe('Credential Repository', () => {
+  describe('CredentialDefinitionRecord', () => {
+    it('parses a valid credential definition ID', () => {
+      const record = new CredentialDefinitionRecord('XpgeQa93eZvGSZBZef3PHn:3:CL:28075:PersonDEV')
+
+      expect(record.credDefId).toBe('XpgeQa93eZvGSZBZef3PHn:3:CL:28075:PersonDEV')
+      expect(record.issuerDid).toBe('XpgeQa93eZvGSZBZef3PHn')
+      expect(record.schemaSeqNo).toBe(28075)
+      expect(record.tag).toBe('PersonDEV')
+    })
+
+    it('throws when the credential definition ID does not have 5 parts', () => {
+      expect(() => new CredentialDefinitionRecord('too:few:parts')).toThrow(
+        '[CredentialDefinitionRecord] Credential Definition ID is not in the expected format'
+      )
+    })
+  })
+
+  describe('CredentialSchemaRecord', () => {
+    it('parses a valid schema ID', () => {
+      const record = new CredentialSchemaRecord('XpgeQa93eZvGSZBZef3PHn:2:PersonDEV:1.0')
+
+      expect(record.schemaId).toBe('XpgeQa93eZvGSZBZef3PHn:2:PersonDEV:1.0')
+      expect(record.issuerDid).toBe('XpgeQa93eZvGSZBZef3PHn')
+      expect(record.schemaName).toBe('PersonDEV')
+      expect(record.schemaVersion).toBe('1.0')
+    })
+
+    it('throws when the schema ID does not have 4 parts', () => {
+      expect(() => new CredentialSchemaRecord('too:many:parts:here:now')).toThrow(
+        '[CredentialSchemaRecord] Schema ID is not in the expected format'
+      )
+    })
+  })
+
   describe('CredentialIdentity', () => {
-    it('parses a valid credential definition ID and schema ID', () => {
+    it('combines the credential definition and schema records', () => {
       const identity = new CredentialIdentity(
         'XpgeQa93eZvGSZBZef3PHn:3:CL:28075:PersonDEV',
         'XpgeQa93eZvGSZBZef3PHn:2:PersonDEV:1.0'
@@ -11,7 +45,8 @@ describe('Credential Repository', () => {
       expect(identity.credDefId).toBe('XpgeQa93eZvGSZBZef3PHn:3:CL:28075:PersonDEV')
       expect(identity.schemaId).toBe('XpgeQa93eZvGSZBZef3PHn:2:PersonDEV:1.0')
       expect(identity.issuerDid).toBe('XpgeQa93eZvGSZBZef3PHn')
-      expect(identity.schemaSeqNo).toBe('28075')
+      expect(identity.schemaIssuerDid).toBe('XpgeQa93eZvGSZBZef3PHn')
+      expect(identity.schemaSeqNo).toBe(28075)
       expect(identity.tag).toBe('PersonDEV')
       expect(identity.schemaName).toBe('PersonDEV')
       expect(identity.schemaVersion).toBe('1.0')
@@ -19,14 +54,14 @@ describe('Credential Repository', () => {
 
     it('throws when the credential definition ID does not have 5 parts', () => {
       expect(() => new CredentialIdentity('too:few:parts', 'XpgeQa93eZvGSZBZef3PHn:2:PersonDEV:1.0')).toThrow(
-        '[CredentialIdentity] Credential Definition ID is not in the expected format'
+        '[CredentialDefinitionRecord] Credential Definition ID is not in the expected format'
       )
     })
 
     it('throws when the schema ID does not have 4 parts', () => {
       expect(
         () => new CredentialIdentity('XpgeQa93eZvGSZBZef3PHn:3:CL:28075:PersonDEV', 'too:many:parts:here:now')
-      ).toThrow('[CredentialIdentity] Schema ID is not in the expected format')
+      ).toThrow('[CredentialSchemaRecord] Schema ID is not in the expected format')
     })
   })
 })

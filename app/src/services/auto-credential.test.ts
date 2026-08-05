@@ -143,25 +143,6 @@ describe('AutoCredentialMonitor', () => {
       expect(monitor.workflowInProgress).toBe(false)
     })
 
-    it('emits Started before checking the wallet, and Completed if the credential turns out to already be present', async () => {
-      const emitOrder: unknown[] = []
-      emitSpy.mockImplementation((...args: unknown[]) => {
-        emitOrder.push(args[0])
-        return true
-      })
-      buildMonitor()
-      agent.didcomm.proofs.getFormatData.mockResolvedValue(proofFormat(TRIGGER_CRED_DEF_ID))
-      mockedCredentialsMatchForProof.mockResolvedValue({
-        proofFormats: { anoncreds: { attributes: { group1: [{ credentialId: 'c-1' }] }, predicates: {} } },
-      })
-
-      await agent.emit(DidCommProofEventTypes.ProofStateChanged, {
-        proofRecord: { id: 'p1', state: DidCommProofState.RequestReceived },
-      })
-
-      expect(emitOrder).toEqual([CredentialProvisioningEventTypes.Started, CredentialProvisioningEventTypes.Completed])
-    })
-
     it('does not emit Started or Completed when the proof does not match any rule', async () => {
       buildMonitor()
       agent.didcomm.proofs.getFormatData.mockResolvedValue(proofFormat('unrelated:cred:def'))

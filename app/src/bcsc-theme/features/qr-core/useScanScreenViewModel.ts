@@ -71,7 +71,6 @@ const useScanScreenViewModel = (options: UseScanScreenViewModelOptions) => {
 
       try {
         const strategy = strategies.find((s) => s.matches(value))
-        logger.info(value)
         if (!strategy) {
           setScanError(new QrCodeScanError(t('BCSC.Scan.UnrecognizedQR'), value))
           return
