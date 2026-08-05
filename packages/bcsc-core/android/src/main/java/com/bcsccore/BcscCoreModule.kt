@@ -3575,7 +3575,9 @@ class BcscCoreModule(
         }
     }
 
-    private fun addEvidenceMetadataFromObjectJson(
+    // internal (not private) so BcscCoreModuleEvidenceRoundTripTest can drive the write/read
+    // round trip directly without going through file-backed setEvidence/getEvidence.
+    internal fun addEvidenceMetadataFromObjectJson(
         trimmedEvidenceJson: String,
         result: WritableArray,
     ) {
@@ -3611,8 +3613,12 @@ class BcscCoreModule(
 
                     photoMetadata.putString("label", photo.optString("label", ""))
                     photoMetadata.putString("content_type", contentType)
-                    // v3 Android stores timestamp in milliseconds; convert to seconds for the API
-                    photoMetadata.putDouble("date", (photo.optLong("timestamp", 0L) / 1000L).toDouble())
+                    // Stored timestamp may be v3-style millis or (pre-#4338-fix) v4 seconds; infer
+                    // the unit from magnitude rather than assuming millis. See EvidenceTimestamps.
+                    photoMetadata.putDouble(
+                        "date",
+                        EvidenceTimestamps.storedTimestampToApiSeconds(photo.optLong("timestamp", 0L)).toDouble(),
+                    )
                     photoMetadata.putString("file_path", filePath)
 
                     // Compute sha256 and content_length from file on disk
@@ -3775,8 +3781,11 @@ class BcscCoreModule(
 
     /**
      * Converts an evidence metadata entry to evidence_upload JSON format.
+     *
+     * internal (not private) so BcscCoreModuleEvidenceRoundTripTest can drive the write/read
+     * round trip directly without going through file-backed setEvidence/getEvidence.
      */
-    private fun convertToEvidenceUploadEntry(item: ReadableMap): JSONObject {
+    internal fun convertToEvidenceUploadEntry(item: ReadableMap): JSONObject {
         val entry = JSONObject()
 
         // Evidence type
@@ -3804,7 +3813,10 @@ class BcscCoreModule(
                     val photo = JSONObject()
                     photo.put("filepath", photoMeta.getString("file_path") ?: "")
                     photo.put("label", photoMeta.getString("label") ?: "")
-                    photo.put("timestamp", photoMeta.getDouble("date").toLong())
+                    photo.put(
+                        "timestamp",
+                        EvidenceTimestamps.apiSecondsToStoredMillis(photoMeta.getDouble("date").toLong()),
+                    )
                     photosArray.put(photo)
                 }
             }

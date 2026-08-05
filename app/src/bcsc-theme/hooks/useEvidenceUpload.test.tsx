@@ -5,9 +5,13 @@ import readFileInChunks from '@/utils/read-file'
 import * as Bifold from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import { PhotoMetadata } from 'react-native-bcsc-core'
+import RNFS from 'react-native-fs'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
 jest.mock('@/utils/read-file')
+jest.mock('react-native-fs', () => ({
+  stat: jest.fn(),
+}))
 jest.mock('@bifold/core', () => {
   const actual = jest.requireActual('@bifold/core')
   return {
@@ -47,11 +51,15 @@ describe('useEvidenceUpload', () => {
     { image_side_name: 'BACK_SIDE', image_side_label: 'Back', image_side_tip: 'tip' },
   ]
 
-  const photo = (label: string, tag: string): PhotoMetadata => ({
+  // A plausible capture date (mid-2026) — the default so existing tests aren't tripped up by
+  // the date-plausibility guard added for #4338. Tests targeting that guard override this.
+  const plausibleDate = 1_782_000_000
+
+  const photo = (label: string, tag: string, date: number = plausibleDate): PhotoMetadata => ({
     label,
     content_type: 'image/jpeg',
     content_length: 1,
-    date: 0,
+    date,
     sha256: tag,
     file_path: `/${tag}.jpg`,
   })
@@ -156,6 +164,162 @@ describe('useEvidenceUpload', () => {
       const payload = mockEvidenceApi.sendEvidenceMetadata.mock.calls[0][0]
       expect(payload.images).toHaveLength(2)
       expect(uploads).toHaveLength(2)
+      expect(mockLogger.warn).not.toHaveBeenCalled()
+    })
+
+    it('substitutes an implausible capture date (#4338) with the file mtime before upload', async () => {
+      const mtimeMs = new Date('2026-06-15T00:00:00Z').getTime()
+      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: mtimeMs } as any)
+
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([
+        {
+          ...baseStore,
+          bcscSecure: {
+            ...baseStore.bcscSecure,
+            additionalEvidenceData: [
+              {
+                evidenceType: { evidence_type: 'drivers_licence', image_sides: bcdlImageSides },
+                documentNumber: 'DL123',
+                metadata: [
+                  photo('FRONT_SIDE', 'front'),
+                  // Corrupted to a near-1970 value, as the Android native round-trip bug produces.
+                  photo('BACK_SIDE', 'back', 1_780_000),
+                ],
+              },
+            ],
+          },
+        } as BCState,
+        jest.fn(),
+      ])
+
+      mockEvidenceApi.sendEvidenceMetadata.mockResolvedValue([
+        { label: 'FRONT_SIDE', upload_uri: 'front-uri' },
+        { label: 'BACK_SIDE', upload_uri: 'back-uri' },
+      ])
+
+      const { result } = renderHook(() => useEvidenceUpload())
+
+      await act(async () => {
+        await result.current.processAdditionalEvidence()
+      })
+
+      const payload = mockEvidenceApi.sendEvidenceMetadata.mock.calls[0][0]
+      const frontImage = payload.images.find((i: PhotoMetadata) => i.label === 'FRONT_SIDE')
+      const backImage = payload.images.find((i: PhotoMetadata) => i.label === 'BACK_SIDE')
+
+      expect(frontImage.date).toBe(plausibleDate)
+      expect(backImage.date).toBe(Math.floor(mtimeMs / 1000))
+      // Exactly one warn for the substitution (derivePlausibleCaptureDateSeconds logs it; the
+      // call site no longer logs its own on top — see #4373).
+      expect(mockLogger.warn).toHaveBeenCalledTimes(1)
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('substituted with file mtime'),
+        expect.objectContaining({ label: 'BACK_SIDE', evidenceType: 'drivers_licence' })
+      )
+    })
+
+    it('passes a plausible capture date through untouched', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([
+        {
+          ...baseStore,
+          bcscSecure: {
+            ...baseStore.bcscSecure,
+            additionalEvidenceData: [
+              {
+                evidenceType: { evidence_type: 'drivers_licence', image_sides: bcdlImageSides },
+                documentNumber: 'DL123',
+                metadata: [photo('FRONT_SIDE', 'front'), photo('BACK_SIDE', 'back')],
+              },
+            ],
+          },
+        } as BCState,
+        jest.fn(),
+      ])
+
+      mockEvidenceApi.sendEvidenceMetadata.mockResolvedValue([
+        { label: 'FRONT_SIDE', upload_uri: 'front-uri' },
+        { label: 'BACK_SIDE', upload_uri: 'back-uri' },
+      ])
+
+      const { result } = renderHook(() => useEvidenceUpload())
+
+      await act(async () => {
+        await result.current.processAdditionalEvidence()
+      })
+
+      const payload = mockEvidenceApi.sendEvidenceMetadata.mock.calls[0][0]
+      expect(payload.images.every((i: PhotoMetadata) => i.date === plausibleDate)).toBe(true)
+      expect(RNFS.stat).not.toHaveBeenCalled()
+      expect(mockLogger.warn).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('uploadSelfiePhoto', () => {
+    it('substitutes an implausible selfie capture date with the permanent file mtime before upload', async () => {
+      const mtimeMs = new Date('2026-06-15T00:00:00Z').getTime()
+      jest.mocked(RNFS.stat).mockResolvedValue({ mtime: mtimeMs } as any)
+
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([
+        {
+          ...baseStore,
+          bcsc: {
+            // The camera temp path — distinct from photoMetadata.file_path (the permanent path)
+            // so the test can't pass by accident if the guard stats the wrong one.
+            photoPath: '/tmp/camera/selfie-temp.jpg',
+            photoMetadata: { ...photo('front', 'selfie', 1_780_000), file_path: '/permanent/selfie.jpg' },
+          },
+        } as unknown as BCState,
+        jest.fn(),
+      ])
+
+      mockEvidenceApi.uploadPhotoEvidenceMetadata.mockResolvedValue({ upload_uri: 'selfie-uri' })
+
+      const { result } = renderHook(() => useEvidenceUpload())
+
+      await act(async () => {
+        await result.current.uploadSelfiePhoto()
+      })
+
+      expect(RNFS.stat).toHaveBeenCalledWith('/permanent/selfie.jpg')
+      expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalledWith(
+        expect.objectContaining({ date: Math.floor(mtimeMs / 1000) })
+      )
+      // Exactly one warn for the substitution — see #4373.
+      expect(mockLogger.warn).toHaveBeenCalledTimes(1)
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('substituted with file mtime'),
+        expect.objectContaining({ date: 1_780_000 })
+      )
+    })
+
+    it('passes a plausible selfie capture date through untouched', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([
+        {
+          ...baseStore,
+          bcsc: {
+            photoPath: '/selfie.jpg',
+            photoMetadata: photo('front', 'selfie'),
+          },
+        } as unknown as BCState,
+        jest.fn(),
+      ])
+
+      mockEvidenceApi.uploadPhotoEvidenceMetadata.mockResolvedValue({ upload_uri: 'selfie-uri' })
+
+      const { result } = renderHook(() => useEvidenceUpload())
+
+      await act(async () => {
+        await result.current.uploadSelfiePhoto()
+      })
+
+      expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalledWith(
+        expect.objectContaining({ date: plausibleDate })
+      )
+      expect(RNFS.stat).not.toHaveBeenCalled()
       expect(mockLogger.warn).not.toHaveBeenCalled()
     })
   })

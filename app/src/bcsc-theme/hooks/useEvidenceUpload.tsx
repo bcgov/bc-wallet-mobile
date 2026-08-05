@@ -1,5 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { EvidenceMetadataPayload, UploadEvidenceResponseData } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { withPlausibleCaptureDate } from '@/bcsc-theme/utils/capture-date'
 import { clampEvidenceImagesToSides, normalizeEvidenceImageLabel } from '@/bcsc-theme/utils/card-utils'
 import { BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
@@ -27,8 +28,11 @@ const useEvidenceUpload = () => {
       return
     }
 
+    // AC3 boundary check — see capture-date.ts's file header for scoping.
+    const metadataToUpload = await withPlausibleCaptureDate(photoMetadata, logger)
+
     logger.info('Uploading selfie photo...')
-    const metadataResponse = await evidence.uploadPhotoEvidenceMetadata(photoMetadata)
+    const metadataResponse = await evidence.uploadPhotoEvidenceMetadata(metadataToUpload)
     const photoBytes = await readFileInChunks(photoPath, logger)
     await evidence.uploadPhotoEvidenceBinary(metadataResponse.upload_uri, photoBytes)
     logger.info(`Selfie photo uploaded: ${photoBytes.length} bytes`)
@@ -57,14 +61,24 @@ const useEvidenceUpload = () => {
       // Heals over-count metadata (e.g. a stale duplicate side left behind by
       // navigating back to retake/re-accept a photo — see issue #4159) before
       // it's sent to the server, which rejects an unexpected image count.
-      const images = clampEvidenceImagesToSides(evidenceItem.metadata, evidenceItem.evidenceType?.image_sides)
-      if (images.length !== evidenceItem.metadata.length) {
+      const clampedImages = clampEvidenceImagesToSides(evidenceItem.metadata, evidenceItem.evidenceType?.image_sides)
+      if (clampedImages.length !== evidenceItem.metadata.length) {
         logger.warn('Healed evidence metadata with more images than the card expects', {
           evidenceType: evidenceItem?.evidenceType?.evidence_type,
           before: evidenceItem.metadata.length,
-          after: images.length,
+          after: clampedImages.length,
         })
       }
+
+      // Migration-scoped AC3 guard (pre-#4338-fix on-device data only) — see #4373.
+      const images = await Promise.all(
+        clampedImages.map((data) =>
+          withPlausibleCaptureDate(data, logger, {
+            evidenceType: evidenceItem?.evidenceType?.evidence_type,
+            label: data.label,
+          })
+        )
+      )
 
       const metadataPayload: EvidenceMetadataPayload = {
         type: evidenceItem?.evidenceType?.evidence_type,

@@ -81,6 +81,18 @@ describe('useEvidenceUploadModel', () => {
     getVerificationRequestPrompts: jest.fn(),
   }
 
+  // A plausible capture date and permanent file_path — the default photoMetadata fixture so
+  // tests aren't tripped up by the send-video selfie date-plausibility guard (#4338). Tests
+  // targeting that guard override this.
+  const plausiblePhotoMetadata = {
+    label: 'front',
+    content_type: 'image/jpeg',
+    content_length: 1,
+    date: 1_782_000_000,
+    sha256: 'selfie-sha',
+    file_path: '/permanent/selfie.jpg',
+  }
+
   const baseStore: any = {
     bcsc: {
       photoPath: undefined,
@@ -204,7 +216,7 @@ describe('useEvidenceUploadModel', () => {
             videoPath: '/video.mp4',
             videoDuration: 10,
             prompts: [{ text: 'smile' }],
-            photoMetadata: { some: 'metadata' },
+            photoMetadata: plausiblePhotoMetadata,
           },
           bcscSecure: {
             ...baseStore.bcscSecure,
@@ -258,7 +270,7 @@ describe('useEvidenceUploadModel', () => {
             videoPath: '/video.mp4',
             videoDuration: 10,
             prompts: [{ text: 'smile' }],
-            photoMetadata: { some: 'metadata' },
+            photoMetadata: plausiblePhotoMetadata,
           },
         } as BCState,
         mockDispatch,
@@ -289,7 +301,7 @@ describe('useEvidenceUploadModel', () => {
             videoPath: '/video.mp4',
             videoDuration: 10,
             prompts: [{ text: 'smile' }],
-            photoMetadata: { some: 'metadata' },
+            photoMetadata: plausiblePhotoMetadata,
           },
           bcscSecure: {
             ...baseStore.bcscSecure,
@@ -361,7 +373,7 @@ describe('useEvidenceUploadModel', () => {
             videoPath: '/video.mp4',
             videoDuration: 10,
             prompts: [{ text: 'smile' }],
-            photoMetadata: { some: 'metadata' },
+            photoMetadata: plausiblePhotoMetadata,
           },
           bcscSecure: {
             ...baseStore.bcscSecure,
@@ -398,7 +410,7 @@ describe('useEvidenceUploadModel', () => {
             videoPath: '/video.mp4',
             videoDuration: 10,
             prompts: [{ text: 'smile' }],
-            photoMetadata: { some: 'metadata' },
+            photoMetadata: plausiblePhotoMetadata,
           },
           bcscSecure: {
             ...baseStore.bcscSecure,
@@ -443,7 +455,7 @@ describe('useEvidenceUploadModel', () => {
             videoPath: '/video.mp4',
             videoDuration: 10,
             prompts: [{ text: 'smile' }],
-            photoMetadata: { some: 'metadata' },
+            photoMetadata: plausiblePhotoMetadata,
           },
           bcscSecure: {
             ...baseStore.bcscSecure,
@@ -482,7 +494,7 @@ describe('useEvidenceUploadModel', () => {
             videoPath: '/video.mp4',
             videoDuration: 10,
             prompts: [{ text: 'smile' }],
-            photoMetadata: { some: 'metadata' },
+            photoMetadata: plausiblePhotoMetadata,
           },
           bcscSecure: {
             ...baseStore.bcscSecure,
@@ -524,7 +536,7 @@ describe('useEvidenceUploadModel', () => {
             videoPath: '/video.mp4',
             videoDuration: 10,
             prompts: [{ text: 'smile' }],
-            photoMetadata: { some: 'metadata' },
+            photoMetadata: plausiblePhotoMetadata,
           },
           bcscSecure: {
             ...baseStore.bcscSecure,
@@ -568,7 +580,7 @@ describe('useEvidenceUploadModel', () => {
             videoPath: '/video.mp4',
             videoDuration: 10,
             prompts: [{ text: 'smile' }],
-            photoMetadata: { some: 'metadata' },
+            photoMetadata: plausiblePhotoMetadata,
           },
           bcscSecure: {
             ...baseStore.bcscSecure,
@@ -578,7 +590,9 @@ describe('useEvidenceUploadModel', () => {
               {
                 evidenceType: { evidence_type: 'drivers_licence' },
                 documentNumber: 'DL123',
-                metadata: [{ label: 'front', file_path: '/front.jpg', side: 'front' }],
+                // A plausible date so the #4338 capture-date guard is a no-op here — this test
+                // is about additional-evidence processing, not the date guard.
+                metadata: [{ label: 'front', file_path: '/front.jpg', side: 'front', date: 1_782_000_000 }],
               },
             ],
           },
@@ -613,12 +627,86 @@ describe('useEvidenceUploadModel', () => {
       expect(mockEvidenceApi.sendEvidenceMetadata).toHaveBeenCalledWith({
         type: 'drivers_licence',
         number: 'DL123',
-        images: [{ label: 'FRONT_SIDE', side: 'front', file_path: undefined }],
+        images: [{ label: 'FRONT_SIDE', side: 'front', file_path: undefined, date: 1_782_000_000 }],
       })
       expect(mockEvidenceApi.uploadPhotoEvidenceBinary).toHaveBeenCalledWith('evidence-uri-front', expect.anything())
       expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledWith('req-123', {
         upload_uris: ['photo-uri', 'video-uri', 'evidence-uri-front'],
         sha256: 'sha-456',
+      })
+    })
+
+    describe('send-video selfie capture-date guard (#4338)', () => {
+      // Reached only by the send-video flow — the live-call flow's uploadSelfiePhoto has its own
+      // equivalent guard (useEvidenceUpload.test.tsx).
+      const storeWithSha = (photoMetadata: unknown): any => ({
+        ...baseStore,
+        bcsc: {
+          ...baseStore.bcsc,
+          photoPath: '/photo.jpg',
+          videoPath: '/video.mp4',
+          videoDuration: 10,
+          prompts: [{ text: 'smile' }],
+          photoMetadata,
+        },
+        bcscSecure: {
+          ...baseStore.bcscSecure,
+          verificationRequestId: 'req-123',
+          verificationRequestSha: 'sha-456',
+          additionalEvidenceData: [],
+        },
+      })
+
+      beforeEach(() => {
+        jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
+        jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(Buffer.from([4, 5, 6]))
+        jest.mocked(getVideoMetadata).mockResolvedValue({ duration: 10 } as any)
+        mockEvidenceApi.uploadPhotoEvidenceMetadata.mockResolvedValue({ upload_uri: 'photo-uri' })
+        mockEvidenceApi.uploadVideoEvidenceMetadata.mockResolvedValue({ upload_uri: 'video-uri' })
+        mockEvidenceApi.uploadPhotoEvidenceBinary.mockResolvedValue(undefined)
+        mockEvidenceApi.uploadVideoEvidenceBinary.mockResolvedValue(undefined)
+        mockEvidenceApi.sendVerificationRequest.mockResolvedValue({ id: 'req-123', status: 'pending' })
+      })
+
+      it('substitutes an implausible selfie capture date with the permanent file mtime before upload', async () => {
+        const mtimeMs = new Date('2026-06-15T00:00:00Z').getTime()
+        jest.mocked(RNFS.stat).mockResolvedValue({ mtime: mtimeMs } as any)
+
+        const bifoldMock = jest.mocked(Bifold)
+        bifoldMock.useStore.mockReturnValue([
+          storeWithSha({ ...plausiblePhotoMetadata, date: 1_780_000 }) as BCState,
+          jest.fn(),
+        ])
+
+        const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+        await act(async () => {
+          await result.current.handleSend()
+        })
+
+        expect(RNFS.stat).toHaveBeenCalledWith(plausiblePhotoMetadata.file_path)
+        expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalledWith(
+          expect.objectContaining({ date: Math.floor(mtimeMs / 1000) })
+        )
+      })
+
+      it('passes a plausible selfie capture date through untouched', async () => {
+        // Only the video stat call in prepareLocalFiles hits RNFS.stat here.
+        jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-01-01') } as any)
+
+        const bifoldMock = jest.mocked(Bifold)
+        bifoldMock.useStore.mockReturnValue([storeWithSha(plausiblePhotoMetadata) as BCState, jest.fn()])
+
+        const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+        await act(async () => {
+          await result.current.handleSend()
+        })
+
+        expect(RNFS.stat).not.toHaveBeenCalledWith(plausiblePhotoMetadata.file_path)
+        expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalledWith(
+          expect.objectContaining({ date: plausiblePhotoMetadata.date })
+        )
       })
     })
   })
