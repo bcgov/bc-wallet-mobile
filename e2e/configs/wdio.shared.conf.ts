@@ -74,6 +74,10 @@ export const config: WebdriverIO.Config = {
   // mochaOpts.bail below.
   bail: 0,
   waitforTimeout: 20_000,
+  // Also the ceiling on how long `POST /session` may take, and session creation happens outside any
+  // Mocha test so this is its only bound (in-test commands are bounded first by mochaOpts.timeout
+  // below). Kept short here so a local run against a missing Appium server or an unavailable device
+  // fails promptly; the Sauce config raises it to cover that grid's device-queue wait.
   connectionRetryTimeout: 180_000,
   connectionRetryCount: 2,
 

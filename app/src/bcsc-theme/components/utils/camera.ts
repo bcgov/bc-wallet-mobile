@@ -8,7 +8,7 @@ import {
   VideoStabilizationMode,
 } from 'react-native-vision-camera'
 
-import { PHOTO_RESOLUTION_1080P, PHOTO_RESOLUTION_720P } from '@/constants'
+import { PHOTO_RESOLUTION_1080P } from '@/constants'
 
 // ─── Shared Types ─────────────────────────────────────────────────────────────
 
@@ -48,98 +48,68 @@ export type ScanState = 'scanning' | 'aligned' | 'locked'
 // ─── Camera Format Configurations ─────────────────────────────────────────────
 
 /**
- * Optimized camera format configurations for various use cases
+ * Pre-defined camera format filters for different scanning scenarios.
+ *
+ * @see {@link node_modules/react-native-vision-camera/src/devices/getCameraFormat.ts} for the underlying format selection logic.
  */
 export const CameraFormat = {
+  /**
+   * Format optimized for barcode scanning (back camera, no selfie).
+   * Prioritizes high resolution and moderate frame rate for accurate detection
+   *
+   * Ideal format: 1080p + 30 FPS + non-HDR + stabilization
+   * Usecase: Scanning barcodes on ID cards.
+   */
   CodeScanningFormat: [
-    // Tier 1: Ideal — 1080p + 30 FPS + non-HDR + stabilization
-    // Primary target for Android and modern iOS devices
+    // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
+    // pixel format (e.g. "btp2") is incompatible with VisionCamera's pipeline.
     {
       videoHdr: false,
+    },
+    // High resolution for better barcode detection
+    {
       videoResolution: PHOTO_RESOLUTION_1080P,
+    },
+    // Moderate FPS for smooth preview without excessive processing load
+    {
       fps: 30,
+    },
+    // Enable video stabilization for steadier scanning
+    {
       videoStabilizationMode: 'auto',
-    },
-    // Tier 2: 1080p + 30 FPS + non-HDR (drop stabilization if needed)
-    // Maintains critical 30 FPS for barcode scanning while dropping optional stabilization
-    {
-      videoHdr: false,
-      videoResolution: PHOTO_RESOLUTION_1080P,
-      fps: 30,
-    },
-    // Tier 3: 720p + 30 FPS + non-HDR (lower resolution but preserve FPS)
-    // 720p is sufficient for barcode detection; preserves 30 FPS for catching both barcodes
-    {
-      videoHdr: false,
-      videoResolution: PHOTO_RESOLUTION_720P,
-      fps: 30,
-    },
-    // Tier 4: 720p + 24 FPS + non-HDR (minimum viable FPS for scanning)
-    // If 30 FPS unavailable, 24 FPS still gives 2.4x more attempts than 10 FPS
-    {
-      videoHdr: false,
-      videoResolution: PHOTO_RESOLUTION_720P,
-      fps: 24,
-    },
-    // Tier 5: Any resolution + non-HDR (absolute fallback)
-    // Prevents "device/pixel-format-not-supported" errors on iOS devices with limited format support.
-    // Quality degraded but camera will work.
-    {
-      videoHdr: false,
     },
   ] satisfies FormatFilter[],
   /**
    * Format optimized for masked camera with barcode detection.
-   * Starts with high-FPS / max-resolution tiers (ideal for preview quality),
-   * then falls back through the same tiers as CodeScanningFormat so the camera
-   * still works on devices that can't sustain 60 FPS or max resolution.
+   *
+   * Ideal format: 1080p + 60 FPS + non-HDR + stabilization
+   * Usecase: Capturing ID cards AND detecting barcodes in real-time.
    */
   MaskedWithBarcodeDetection: [
-    // Tier 1: Ideal — 60 FPS + max video resolution + non-HDR + 720p photo
-    // Best for preview quality and barcode detection on capable devices.
+    // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
+    // pixel format (e.g. "btp2") is incompatible with VisionCamera's pipeline.
     {
       videoHdr: false,
-      fps: 60,
-      videoResolution: 'max',
-      photoResolution: PHOTO_RESOLUTION_720P,
     },
-    // Tier 2: 60 FPS + non-HDR (drop resolution requirement)
-    // Keeps high frame rate when max resolution is unavailable.
+    // Use phase-detection autofocus for faster and more accurate focusing on barcodes
     {
-      videoHdr: false,
-      fps: 60,
+      autoFocusSystem: 'phase-detection',
     },
-    // Tier 3: 1080p + 30 FPS + non-HDR + stabilization
-    // Primary fallback — sufficient for barcode scanning on most devices.
+    // High resolution for better barcode detection
     {
-      videoHdr: false,
       videoResolution: PHOTO_RESOLUTION_1080P,
-      fps: 30,
+    },
+    // High resolution for better photo quality when capturing the ID card
+    {
+      photoResolution: PHOTO_RESOLUTION_1080P,
+    },
+    // Moderate FPS for smooth preview without excessive processing load
+    {
+      fps: 60,
+    },
+    // Enable video stabilization for steadier scanning
+    {
       videoStabilizationMode: 'auto',
-    },
-    // Tier 4: 1080p + 30 FPS + non-HDR (drop stabilization if needed)
-    {
-      videoHdr: false,
-      videoResolution: PHOTO_RESOLUTION_1080P,
-      fps: 30,
-    },
-    // Tier 5: 720p + 30 FPS + non-HDR
-    // 720p is still sufficient for barcode detection.
-    {
-      videoHdr: false,
-      videoResolution: PHOTO_RESOLUTION_720P,
-      fps: 30,
-    },
-    // Tier 6: 720p + 24 FPS + non-HDR (minimum viable FPS)
-    {
-      videoHdr: false,
-      videoResolution: PHOTO_RESOLUTION_720P,
-      fps: 24,
-    },
-    // Tier 7: Any resolution + non-HDR (absolute fallback)
-    // Prevents "device/pixel-format-not-supported" errors on iOS devices with limited format support.
-    {
-      videoHdr: false,
     },
   ] satisfies FormatFilter[],
 
@@ -148,52 +118,23 @@ export const CameraFormat = {
    * Prioritizes photo resolution and quality over preview frame rate, since the output
    * is a single still image that gets displayed full-screen and uploaded — unlike the
    * barcode formats, there is no live scanning that needs high FPS.
+   *
+   * Ideal format: 1080p + 30 FPS + non-HDR
+   * Usecase: Capturing a selfie for identity verification or profile picture.
    */
   SelfiePhoto: [
-    // Tier 1: Ideal — 1080p photo + non-HDR + 30 FPS preview.
-    // 1080p is plenty sharp for a face selfie without bloating the upload the way
-    // a 'max'-resolution capture would.
-    {
-      videoHdr: false,
-      photoResolution: PHOTO_RESOLUTION_1080P,
-      fps: 30,
-    },
-    // Tier 2: any non-HDR format (absolute fallback)
-    // Prevents "device/pixel-format-not-supported" errors on devices with limited support.
-    {
-      videoHdr: false,
-    },
-  ] satisfies FormatFilter[],
-
-  /**
-   * Format optimized for scanning small barcodes (code-39, code-128, PDF417)
-   * Prioritizes high resolution and frame rate for accurate detection of small codes
-   *
-   * Barcode sizes:
-   * - Code-39/Code-128: ~30mm x 4mm
-   * - PDF417: ~50mm x 9mm
-   */
-  SmallBarcodeScanning: [
     // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
     // pixel format (e.g. "btp2") is incompatible with VisionCamera's pipeline.
     {
       videoHdr: false,
     },
-    // High FPS for better real-time detection
+    // High resolution for better selfie quality
     {
-      fps: 60,
+      photoResolution: PHOTO_RESOLUTION_1080P,
     },
-    // High resolution for detecting small barcode details
+    // Moderate FPS for smooth preview without excessive processing load
     {
-      photoResolution: { width: 1920, height: 1080 },
-    },
-    // Maximum video resolution for better preview quality
-    {
-      videoResolution: 'max',
-    },
-    // Enable video stabilization for steadier scanning
-    {
-      videoStabilizationMode: 'auto',
+      fps: 30,
     },
   ] satisfies FormatFilter[],
 }
@@ -575,12 +516,19 @@ const _summarizeCameraFormat = (format: CameraDeviceFormat): string => {
     'cinematic-extended': 'cin-ext',
   }
 
+  let hdr = [format.supportsVideoHdr ? 'vid' : null, format.supportsPhotoHdr ? 'photo' : null].filter(Boolean).join(',')
+
+  if (!hdr.length) {
+    hdr = 'none'
+  }
+
   return [
-    `video: ${format.videoWidth}x${format.videoHeight}`,
-    `photo: ${format.photoWidth}x${format.photoHeight}`,
-    `fps: ${format.maxFps}`,
-    `focus: ${autoFocusSystemMap[format.autoFocusSystem]}`,
-    `stab: ${format.videoStabilizationModes?.map((mode) => stabilizationMap[mode]).join(',')}`,
+    `video:${format.videoWidth}x${format.videoHeight}`,
+    `photo:${format.photoWidth}x${format.photoHeight}`,
+    `fps:${format.maxFps}`,
+    `focus:${autoFocusSystemMap[format.autoFocusSystem]}`,
+    `stab:${format.videoStabilizationModes?.map((mode) => stabilizationMap[mode]).join(',')}`,
+    `hdr:${hdr}`,
   ].join(' ')
 }
 

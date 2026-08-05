@@ -1,6 +1,41 @@
 import { Timeouts } from '../../constants.js'
 import { swipeDownBy, swipeUpBy } from '../../helpers/gestures.js'
 
+/**
+ * How long to keep re-sampling an element's position before giving up and tapping anyway.
+ * Only ever spent while a view is genuinely moving (see {@link BaseScreen.waitForSteadyPosition}).
+ */
+const STEADY_POSITION_TIMEOUT_MS = 3_000
+
+/** Gap between position samples when waiting for a view to stop moving. */
+const STEADY_POSITION_SAMPLE_MS = 120
+
+/**
+ * Keys XCUITest may press to close the iOS keyboard, tried in order — rendered key labels, so case
+ * matters. No app input sets `onSubmitEditing`, so pressing one only blurs the field.
+ */
+const IOS_KEYBOARD_DISMISS_KEYS = ['done', 'Done', 'return', 'Return', 'go', 'Go', 'next', 'Next', 'search', 'Search']
+
+/**
+ * Escape a value before it is embedded in a quoted iOS predicate / UiSelector string. Both parsers
+ * take the same two escapes, so one helper covers them. Without it a quote or backslash in localized
+ * copy produces an invalid selector rather than a miss. (Mirrors `escapeIosSelectorValue` in
+ * `helpers/alerts.ts`, which escapes alert-button labels for the same reason.)
+ */
+function escapeSelectorValue(value: string): string {
+  const backslash = String.fromCodePoint(0x5c)
+  const doubleQuote = String.fromCodePoint(0x22)
+  return value.replaceAll(backslash, `${backslash}${backslash}`).replaceAll(doubleQuote, `${backslash}${doubleQuote}`)
+}
+
+/**
+ * The bit of an element {@link BaseScreen.waitForSteadyPosition} needs — structural so it accepts both a
+ * resolved `WebdriverIO.Element` (from `$$`) and the chainable handle `findByTestId` returns.
+ */
+interface PositionedElement {
+  getLocation(): Promise<{ x: number; y: number }>
+}
+
 /** Options for text entry. Use for inputs that need special handling (e.g. PIN, secure text). */
 export interface EnterTextOptions {
   /**
@@ -122,10 +157,39 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * @returns the element
    */
   public async findByText(text: string) {
+    const value = escapeSelectorValue(text)
     const selector = driver.isIOS
-      ? `-ios predicate string:label == "${text}" OR value == "${text}"`
-      : `android=new UiSelector().text("${text}")`
+      ? `-ios predicate string:label == "${value}" OR value == "${value}"`
+      : `android=new UiSelector().text("${value}")`
     return $(selector)
+  }
+
+  /** True if an element with the given visible text is displayed; never throws. */
+  public async isTextDisplayed(text: string): Promise<boolean> {
+    const el = await this.findByText(text)
+    try {
+      return await el.isDisplayed()
+    } catch {
+      return false
+    }
+  }
+
+  /**
+   * Wait for an element by its visible TEXT — the counterpart of {@link waitForDisplayed} for the
+   * inline errors, headings and menu titles that carry no testID, scroll-on-miss included.
+   *
+   * The hunt matters: a bare `findByText(...).waitForDisplayed()` only asserts what is currently in
+   * the viewport, and a keyboard-aware form scrolls to keep the FOCUSED field clear — pushing
+   * another field's text above the fold while it is perfectly well rendered.
+   */
+  public async waitForText(text: string, timeout: number = Timeouts.ELEMENT_VISIBLE): Promise<void> {
+    const el = await this.findByText(text)
+    try {
+      await el.waitForDisplayed({ timeout })
+    } catch {
+      console.warn(`Text "${text}" not visible after ${timeout}ms; scrolling then retrying`)
+      await this.scrollUntilVisible(`Text "${text}"`, () => this.isTextDisplayed(text), 4, 'both')
+    }
   }
 
   /**
@@ -141,20 +205,109 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
   }
 
   /**
-   * Tap an element by test ID.
-   * @param testId - test ID to tap
+   * Block until an element stops moving, so a tap is dispatched against coordinates that are still
+   * accurate when it lands.
+   *
+   * Android only, and it exists because of a deliberate trade-off in the shared config: RN's JS thread
+   * never looks idle to the accessibility framework, so UiAutomator2's implicit `waitForIdleTimeout`
+   * burned its full budget on EVERY interaction and we zero it out. That also removed the only thing
+   * that used to absorb screen-transition animations — `click()` reads an element's bounds and then
+   * injects a tap one round-trip later, so mid-animation the tap lands where the view WAS and is
+   * silently swallowed (no error: the element was found, the tap just missed). Two matching position
+   * samples means the view has settled. Costs one sample interval on a static screen.
+   *
+   * Best-effort by design: on timeout we tap anyway rather than fail a test on a jittery view.
    */
-  public async tapByTestId(testId: string) {
+  public async waitForSteadyPosition(el: PositionedElement): Promise<void> {
+    // XCUITest waits for app quiescence itself, so this is Android-only overhead.
+    if (!driver.isAndroid) return
+
+    const deadline = Date.now() + STEADY_POSITION_TIMEOUT_MS
+    let previous: string | null = null
+    while (Date.now() < deadline) {
+      const location = await el.getLocation().catch(() => null)
+      if (!location) return // element handle went stale — let the caller's click surface the real error
+      const current = `${Math.round(location.x)},${Math.round(location.y)}`
+      if (previous === current) return
+      previous = current
+      await driver.pause(STEADY_POSITION_SAMPLE_MS)
+    }
+    console.warn(`Element never stopped moving after ${STEADY_POSITION_TIMEOUT_MS}ms; tapping anyway`)
+  }
+
+  /**
+   * Tap an element by test ID.
+   *
+   * Waits the full `timeout` for the element rather than a token 500ms: screens that swap their whole
+   * tree while an async permission/camera request is in flight (ScanSerial, EvidenceCapture) can render
+   * a control, replace it with a loading view, and render it again — a short window lands in the gap and
+   * mistakes a re-render for a missing element, then wastes ~10s blind-scrolling a screen that does not
+   * scroll before failing.
+   *
+   * @param testId - test ID to tap
+   * @param timeout - how long to wait for the element before falling back to a scroll hunt
+   */
+  public async tapByTestId(testId: string, timeout: number = Timeouts.ELEMENT_VISIBLE) {
     let el = await this.findByTestId(testId)
     try {
-      await el.waitForDisplayed({ timeout: 500 })
+      await el.waitForDisplayed({ timeout })
     } catch {
-      console.warn(`Element "${testId}" not visible after 500ms; scrolling then retrying`)
+      console.warn(`Element "${testId}" not visible after ${timeout}ms; scrolling then retrying`)
       await this.scrollToTestId(testId, 6, 'both')
       el = await this.findByTestId(testId) // scrolling can invalidate the cached handle — re-query
-      await el.waitForDisplayed({ timeout: 500 })
+      await el.waitForDisplayed({ timeout })
     }
+    await this.waitForSteadyPosition(el)
     await el.click()
+  }
+
+  /**
+   * Tap a control that must take us OFF the current screen, and confirm it did.
+   *
+   * The tap is re-issued only while the tapped control is still on screen — proof the previous tap was
+   * swallowed rather than slow — so a navigation that already happened is never double-fired. Once the
+   * control is gone we stop retrying and return, whatever rendered next (including an OS permission
+   * dialog); asserting the destination is the caller's job.
+   *
+   * Use for pushes off animated screens; do NOT use for non-idempotent actions like a camera shutter.
+   *
+   * @param testId - test ID of the control to tap
+   * @param attempts - how many taps to try before failing
+   * @param timeout - how long to wait for the control itself before each tap
+   * @param settleMs - how long a tap gets to visibly leave the screen. Deliberately short: a stack push
+   *   that has not even started after this long did not happen, and a generous value would just add
+   *   dead time to every swallowed tap. Kept well above a normal transition so a camera mount stalling
+   *   the JS thread is not mistaken for a missed tap.
+   */
+  public async tapToNavigate(
+    testId: string,
+    {
+      attempts = 3,
+      timeout = Timeouts.SCREEN_TRANSITION,
+      settleMs = 5_000,
+    }: { attempts?: number; timeout?: number; settleMs?: number } = {}
+  ): Promise<void> {
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+      await this.tapByTestId(testId, timeout)
+
+      const deadline = Date.now() + settleMs
+      while (Date.now() < deadline) {
+        if (!(await this.isTestIdDisplayed(testId))) return
+        await driver.pause(250)
+      }
+      console.warn(`Tap on "${testId}" did not leave the screen (attempt ${attempt}/${attempts}); re-tapping`)
+    }
+    throw new Error(`Tapped "${testId}" ${attempts} time(s) but "${testId}" never left the screen`)
+  }
+
+  /** True if an element (by raw test ID) is currently displayed; never throws. */
+  public async isTestIdDisplayed(testId: string): Promise<boolean> {
+    const el = await this.findByTestId(testId)
+    try {
+      return await el.isDisplayed()
+    } catch {
+      return false
+    }
   }
 
   /**
@@ -175,20 +328,58 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
       await el.waitForDisplayed({ timeout })
     }
     await el.waitForEnabled({ timeout })
+    await this.waitForSteadyPosition(el)
     await el.click()
   }
 
   /**
-   * Dismiss the soft keyboard using platform-native commands (no test IDs needed).
-   * Call before tapping buttons when the keyboard may be covering them.
+   * Dismiss the soft keyboard without ever touching the app's own UI — press one of the keyboard's
+   * own dismissal keys.
+   *
+   * iOS used to blind-tap a quarter down the screen and let the form's scroll view swallow it. That
+   * only works while nothing interactive sits there: on iOS 17 it landed on ResidentialAddress's
+   * province dropdown, opening the modal and stranding the journey. No coordinate is safe —
+   * `InputWithValidation`'s 44px hitSlop makes the gaps between fields live too.
+   *
+   * Number pads (birthdate, email code) have no dismissal key, so the keyboard is left up. That is
+   * fine: every form calling this uses `ScreenWrapper keyboardActive`, which lays its controls out
+   * above the keyboard.
    */
   async dismissKeyboard() {
-    if (driver.isIOS) {
-      const { width, height } = await driver.getWindowSize()
-      await driver.execute('mobile: tap', { x: Math.round(width / 2), y: Math.round(height / 4) })
-    } else {
-      await driver.hideKeyboard()
+    // An unreadable probe counts as "shown" — better to attempt a (now harmless) dismissal.
+    if (!(await driver.isKeyboardShown().catch(() => true))) return
+
+    if (driver.isAndroid) {
+      await driver.hideKeyboard().catch(() => undefined)
+      await driver.pause(300) // let the layout settle as the keyboard collapses
+      return
     }
+
+    try {
+      // Throws when the keyboard has none of these keys — not when the command is missing.
+      await driver.execute('mobile: hideKeyboard', { keys: IOS_KEYBOARD_DISMISS_KEYS })
+      await driver.pause(300)
+    } catch {
+      console.warn('[keyboard] No iOS dismissal key available; leaving the keyboard open')
+    }
+  }
+
+  /**
+   * Hide the Android soft keyboard if one is open. MUST run before any swipe-scroll: with a keyboard
+   * up, a "scroll" swipe lands on the keys — it does not move the content, and Gboard's glide typing
+   * reads the drag as gesture input and TYPES into the still-focused field (observed on a Pixel 7 Pro:
+   * a scroll hunt for the next input appended " TY TY TY TY" to the just-filled last-name field).
+   *
+   * Android-only: the glide-typing hazard is a Gboard behaviour with no iOS equivalent, and
+   * {@link dismissKeyboard} covers the iOS cases that need it. Never throws — a keyboard probe must
+   * not fail the caller's real action.
+   */
+  public async hideAndroidKeyboardIfShown(): Promise<void> {
+    if (!driver.isAndroid) return
+    const shown = await driver.isKeyboardShown().catch(() => false)
+    if (!shown) return
+    await driver.hideKeyboard().catch(() => undefined)
+    await driver.pause(300) // let the layout settle as the keyboard collapses
   }
 
   /**
@@ -200,6 +391,12 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    */
   public async enterText(testId: string, text: string, options?: EnterTextOptions) {
     let el = await this.findByTestId(testId)
+    // On a form, the usual reason the NEXT input is "not visible" is the previous field's keyboard
+    // sitting over it. Hide it up front instead of burning the full wait and then scroll-hunting —
+    // which, with a keyboard open, glide-types into the field we just filled.
+    if (!(await el.isDisplayed().catch(() => false))) {
+      await this.hideAndroidKeyboardIfShown()
+    }
     try {
       await el.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
     } catch {
@@ -211,6 +408,25 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
 
     if (options?.tapFirst) {
       await el.click()
+      // Focusing a field opens the keyboard, and the keyboard-aware form scrolls the input clear of
+      // it. Mid-animation the node can briefly drop out of the accessibility tree, so the NEXT
+      // command's stale-element re-find dies with "element wasn't found" (observed on the last form
+      // field, which travels the farthest). Re-acquire the handle and let the layout settle before
+      // typing into it.
+      el = await this.findByTestId(testId)
+      try {
+        await el.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
+      } catch {
+        // Some forms do NOT scroll their bottom field clear — the click focuses it and its own
+        // keyboard slides over it (observed: ResidentialAddress postal code). The focus took; on
+        // Android setValue is an accessibility setText that needs neither the keyboard nor the
+        // field on screen — only a findable node. Hide the keyboard so the node is reliably back
+        // in the snapshot, then continue.
+        console.warn(`Element "${testId}" hidden after focus (keyboard over it?); hiding keyboard and retrying`)
+        await this.hideAndroidKeyboardIfShown()
+        await el.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
+      }
+      await this.waitForSteadyPosition(el)
     }
 
     // iOS/XCUITest clearValue and mobile:clearText both trigger a
@@ -241,15 +457,28 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * @param directions - `down` scrolls toward content below; `both` tries down then up
    */
   public async scrollToTestId(testId: string, maxScrolls = 8, directions: 'down' | 'both' = 'down') {
-    const isVisible = async () => {
-      const candidate = await this.findByTestId(testId)
-      try {
-        return await candidate.isDisplayed()
-      } catch {
-        return false
-      }
-    }
+    await this.scrollUntilVisible(`Element "${testId}"`, () => this.isTestIdDisplayed(testId), maxScrolls, directions)
+  }
 
+  /**
+   * Swipe until a target becomes visible — shared by the testID and visible-text hunts. `isVisible`
+   * re-queries each pass, so a handle invalidated by the scroll doesn't poison the search.
+   *
+   * @param description - how the target is named in the failure message
+   * @param isVisible - cheap, non-throwing "is it on screen" probe
+   */
+  private async scrollUntilVisible(
+    description: string,
+    isVisible: () => Promise<boolean>,
+    maxScrolls: number,
+    directions: 'down' | 'both'
+  ): Promise<void> {
+    if (await isVisible()) return
+
+    // An open keyboard both hides the lower half of the screen and turns the swipes below into
+    // glide-typed garbage in the focused field — clear it before the first swipe. Often the target
+    // is visible right after, no scrolling needed.
+    await this.hideAndroidKeyboardIfShown()
     if (await isVisible()) return
 
     const scrollFraction = 0.25
@@ -270,7 +499,7 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
     }
 
     throw new Error(
-      `Element "${testId}" not visible after ${maxScrolls} scroll attempt(s)` +
+      `${description} not visible after ${maxScrolls} scroll attempt(s)` +
         (directions === 'both' ? ' in each direction' : '')
     )
   }
@@ -281,11 +510,6 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * @returns true if the element is displayed, false otherwise
    */
   public async isDisplayed(key: keyof T & string): Promise<boolean> {
-    const el = await this.findByTestId(this.ids[key])
-    try {
-      return await el.isDisplayed()
-    } catch {
-      return false
-    }
+    return this.isTestIdDisplayed(this.ids[key])
   }
 }

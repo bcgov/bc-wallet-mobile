@@ -1,7 +1,7 @@
+import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
-import { TOKENS, useServices } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
-import React, { useEffect, useState } from 'react'
+import { usePreventDoublePress } from '@bifold/core'
+import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SystemModal } from '../../modal/components/SystemModal'
 import useCancelledReviewViewModel from './CancelledReviewViewModel'
@@ -13,24 +13,15 @@ interface CancelledReviewProps {
     }
   }
 }
-/**
- * A SystemModal wrapper that displays a cancellation message when a video verification request is cancelled.
- * This component will also clean up related values (video path, metadata, prompts, etc.) from the store.
- *
- * @param agentReason - A reason provided by the reviewing agent on why the verification request was cancelled
- * @returns
- */
 const CancelledReview = ({ route }: CancelledReviewProps) => {
   const { agentReason } = route.params
   const verificationReset = useVerificationReset()
   const { t } = useTranslation()
-  const navigation = useNavigation()
-  const { cleanUpVerificationData } = useCancelledReviewViewModel()
-  const [isLoading, setIsLoading] = useState(false)
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { cleanUpVerificationData, resumeVerification } = useCancelledReviewViewModel()
+  const { preventDoublePress, isPressing } = usePreventDoublePress()
+  const loadingScreen = useLoadingScreen()
 
   useEffect(() => {
-    // This clears up verification request artifacts (images, address data ect.)
     cleanUpVerificationData()
   }, [cleanUpVerificationData])
 
@@ -44,21 +35,21 @@ const CancelledReview = ({ route }: CancelledReviewProps) => {
         }),
       ]}
       buttonText={t('BCSC.CancelledVerification.Button')}
-      buttonDisabled={isLoading}
-      onButtonPress={async () => {
+      buttonDisabled={isPressing}
+      onButtonPress={preventDoublePress(async () => {
+        const stopLoading = loadingScreen.startLoading(t('Alerts.RestartVerification.Loading'))
         try {
-          setIsLoading(true)
-          // Clear everything related to verification so it appears as if the user has never started the process before
+          // Signals failure by returning false (with its own alert), never by throwing.
           const success = await verificationReset()
           if (success) {
-            navigation.goBack()
+            // Leaves via store state, not navigation: each stack registers this screen under its
+            // own route name, so the RootStack swap drops it and lands on the new initialRouteName.
+            resumeVerification()
           }
-        } catch (error) {
-          logger.error('CancelledReview: Error during factory reset on account', error as Error)
         } finally {
-          setIsLoading(false)
+          stopLoading()
         }
-      }}
+      })}
     />
   )
 }

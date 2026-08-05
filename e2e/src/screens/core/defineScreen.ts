@@ -86,6 +86,11 @@ export class RawElement {
     await this.engine.tapByTestId(this.id)
   }
 
+  /** Tap the element and confirm it left the screen, re-tapping a swallowed tap. */
+  async tapToNavigate(options?: { attempts?: number; timeout?: number; settleMs?: number }): Promise<void> {
+    await this.engine.tapToNavigate(this.id, options)
+  }
+
   /** Wait until the element is enabled, then tap it. */
   async tapWhenEnabled(timeout?: number): Promise<void> {
     await this.engine.waitForEnabledAndTap(this.id, timeout)
@@ -201,6 +206,18 @@ export class Screen<S extends ScreenSpec> {
   /** Tap a declared role. Only roles the descriptor declares type-check. */
   async tap(role: PresentRoles<S>): Promise<void> {
     await this.tapRole(role as ActionRole)
+  }
+
+  /**
+   * Tap a declared role that must navigate AWAY from this screen, and confirm it did — re-tapping only
+   * while the control is still on screen (see {@link BaseScreen.tapToNavigate}). Use on the seams where
+   * Android swallows a tap dispatched mid-transition; never for a non-idempotent action.
+   */
+  async tapToNavigate(
+    role: PresentRoles<S>,
+    options?: { attempts?: number; timeout?: number; settleMs?: number }
+  ): Promise<void> {
+    await this.engine.tapToNavigate(resolveTestId(this.roleId(role as ActionRole)), options)
   }
 
   /** Wait until a declared role is enabled, then tap it. */

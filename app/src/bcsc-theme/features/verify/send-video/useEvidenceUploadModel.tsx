@@ -7,6 +7,7 @@ import {
 import useEvidenceUpload from '@/bcsc-theme/hooks/useEvidenceUpload'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { withPlausibleCaptureDate } from '@/bcsc-theme/utils/capture-date'
 import { getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
 import { AppError, ErrorRegistry } from '@/errors'
@@ -56,7 +57,8 @@ const useEvidenceUploadModel = (
         throw new Error('Cache missing video data')
       }
 
-      const videoMetadata = await getVideoMetadata(videoBytes, videoDuration, prompts, videoStats.mtime)
+      // Implausible-mtime substitution (#4338) lives inside getVideoMetadata now — see file-info.ts.
+      const videoMetadata = await getVideoMetadata(videoBytes, videoDuration, prompts, videoStats.mtime, logger)
 
       logger.debug(`Selfie photo bytes length: ${photoBytes.length}`)
       logger.debug(`Selfie video bytes length: ${videoBytes.length}`)
@@ -163,7 +165,13 @@ const useEvidenceUploadModel = (
       }
 
       setUploadMessage(t('BCSC.SendVideo.UploadProgress.UploadingInformation'))
-      const evidenceMetadata = await uploadEvidenceMetadata(photoMetadata, localFiles.videoMetadata)
+      // AC3 boundary check — see capture-date.ts's file header for scoping. Reached
+      // independently of the live-call flow's equivalent guard in uploadSelfiePhoto: send-video
+      // is a first-class choice on Verification Method Selection, and the fallback when a call
+      // is busy or closed, so it needs its own.
+      const selfieMetadata = await withPlausibleCaptureDate(photoMetadata, logger)
+
+      const evidenceMetadata = await uploadEvidenceMetadata(selfieMetadata, localFiles.videoMetadata)
       if (isCancelledRef.current) {
         return
       }

@@ -331,6 +331,39 @@ describe('EnterEmailScreen', () => {
       )
     })
 
+    it('should submit and persist the trimmed, lower-cased address', async () => {
+      mockCreateEmailVerification.mockResolvedValue({ email_address_id: 'test-id' })
+
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <ErrorAlertProvider>
+            <EnterEmailScreen
+              navigation={mockNavigation}
+              route={{ params: { cardProcess: BCSCCardProcess.BCSCPhoto } }}
+            />
+          </ErrorAlertProvider>
+        </BasicAppContext>
+      )
+
+      const emailInput = getByTestId('com.ariesbifold:id/email-input')
+      act(() => {
+        fireEvent.changeText(emailInput, ' Jane.Doe+Tag@Some-Company.COM ')
+      })
+
+      const continueButton = getByTestId(testIdWithKey('Continue'))
+      act(() => {
+        fireEvent.press(continueButton)
+      })
+
+      await waitFor(() => {
+        expect(mockCreateEmailVerification).toHaveBeenCalledWith('jane.doe+tag@some-company.com')
+        expect(mockUpdateUserInfo).toHaveBeenCalledWith({
+          email: 'jane.doe+tag@some-company.com',
+          isEmailVerified: false,
+        })
+      })
+    })
+
     it('should show error on API failure', async () => {
       mockCreateEmailVerification.mockRejectedValue(new Error('API Error'))
 

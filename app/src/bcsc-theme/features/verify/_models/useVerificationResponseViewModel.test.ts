@@ -3,6 +3,7 @@ import * as useRegistrationServiceModule from '@/bcsc-theme/services/hooks/useRe
 import * as useTokenServiceModule from '@/bcsc-theme/services/hooks/useTokenService'
 import { BCDispatchAction, BCState } from '@/store'
 import * as Bifold from '@bifold/core'
+import { useNavigation } from '@react-navigation/native'
 import { act, renderHook } from '@testing-library/react-native'
 
 const mockGetCachedIdTokenMetadata = jest.fn().mockResolvedValue(undefined)
@@ -25,12 +26,14 @@ jest.mock('react-native-bcsc-core', () => ({
 
 const mockUpdateVerified = jest.fn().mockResolvedValue(undefined)
 const mockUpdateUserMetadata = jest.fn().mockResolvedValue(undefined)
+const mockClearAuthorizationRequest = jest.fn().mockResolvedValue(undefined)
 
 jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   __esModule: true,
   default: jest.fn(() => ({
     updateVerified: mockUpdateVerified,
     updateUserMetadata: mockUpdateUserMetadata,
+    clearAuthorizationRequest: mockClearAuthorizationRequest,
   })),
 }))
 
@@ -65,6 +68,7 @@ describe('useVerificationResponseViewModel', () => {
     // Reset mock implementations
     mockUpdateVerified.mockResolvedValue(undefined)
     mockUpdateUserMetadata.mockResolvedValue(undefined)
+    mockClearAuthorizationRequest.mockResolvedValue(undefined)
     mockGetCachedIdTokenMetadata.mockResolvedValue({ given_name: 'TestNickname' })
     mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
 
@@ -293,6 +297,68 @@ describe('useVerificationResponseViewModel', () => {
         })
       ).resolves.not.toThrow()
     })
+
+    it('should not perform imperative navigation on success (#4368)', async () => {
+      mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
+
+      const nav = useNavigation()
+      const { result } = renderHook(() => useVerificationResponseViewModel())
+
+      await act(async () => {
+        await result.current.handleAccountSetup()
+      })
+
+      expect(nav.navigate).not.toHaveBeenCalled()
+      expect(nav.reset).not.toHaveBeenCalled()
+      expect(nav.dispatch).not.toHaveBeenCalled()
+    })
+
+    it('calls clearAuthorizationRequest after marking the account verified', async () => {
+      mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
+
+      const { result } = renderHook(() => useVerificationResponseViewModel())
+
+      await act(async () => {
+        await result.current.handleAccountSetup()
+      })
+
+      expect(mockClearAuthorizationRequest).toHaveBeenCalled()
+      expect(mockUpdateVerified.mock.invocationCallOrder[0]).toBeLessThan(
+        mockClearAuthorizationRequest.mock.invocationCallOrder[0]
+      )
+    })
+
+    it('logs and skips navigating home when clearAuthorizationRequest fails', async () => {
+      mockRegistrationService.updateRegistration.mockResolvedValue(undefined)
+      mockClearAuthorizationRequest.mockRejectedValue(new Error('Native delete failed'))
+
+      const { result } = renderHook(() => useVerificationResponseViewModel())
+
+      await act(async () => {
+        await result.current.handleAccountSetup()
+      })
+
+      expect(mockUpdateVerified).toHaveBeenCalledWith(true)
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to clean up verification process: Native delete failed')
+      )
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS })
+      )
+      expect(result.current.isSettingUpAccount).toBe(false)
+    })
+
+    it('does not clear the authorization request when updateVerified never succeeds', async () => {
+      mockUpdateVerified.mockRejectedValue(new Error('Update verified failed'))
+
+      const { result } = renderHook(() => useVerificationResponseViewModel())
+
+      await act(async () => {
+        await result.current.handleAccountSetup()
+      })
+
+      expect(mockClearAuthorizationRequest).not.toHaveBeenCalled()
+    })
   })
 
   describe('Complex scenarios', () => {
@@ -312,12 +378,13 @@ describe('useVerificationResponseViewModel', () => {
       })
 
       // Verify all operations were called in order:
-      // updateUserMetadata → token refresh → updateRegistration → updateVerified
+      // updateUserMetadata → token refresh → updateRegistration → updateVerified → clearAuthorizationRequest
       const calls = [
         mockUpdateUserMetadata.mock.invocationCallOrder[0],
         mockGetCachedIdTokenMetadata.mock.invocationCallOrder[0],
         mockRegistrationService.updateRegistration.mock.invocationCallOrder[0],
         mockUpdateVerified.mock.invocationCallOrder[0],
+        mockClearAuthorizationRequest.mock.invocationCallOrder[0],
       ]
 
       for (let i = 1; i < calls.length; i++) {

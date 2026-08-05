@@ -1,21 +1,17 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { useTokenService } from '@/bcsc-theme/services/hooks/useTokenService'
-import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { getShortDisplayName } from '@/bcsc-theme/utils/account-utils'
 import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useState } from 'react'
 
 const useVerificationResponseViewModel = () => {
-  const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const registration = useRegistrationService()
   const { getCachedIdTokenMetadata } = useTokenService()
-  const { updateVerified, updateUserMetadata } = useSecureActions()
+  const { updateVerified, updateUserMetadata, clearAuthorizationRequest } = useSecureActions()
   const [isSettingUpAccount, setIsSettingUpAccount] = useState(false)
 
   const handleUpdateRegistration = useCallback(
@@ -52,12 +48,14 @@ const useVerificationResponseViewModel = () => {
       await handleUpdateRegistration(nickname)
       // this marks their account as verified, so we know to navigate them to the correct stack
       await updateVerified(true)
+      // account setup is complete, clear the authorization request record
+      await clearAuthorizationRequest()
+
       dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: [undefined] })
       dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS_MESSAGE, payload: [undefined] })
       dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [undefined] })
       setIsSettingUpAccount(false)
-      // all done here, back to the home screen
-      navigation.navigate(BCSCStacks.Tab, { screen: BCSCScreens.Home })
+      // RootStack swaps to MainStack on `verified` flip — no imperative navigate needed (#4368)
     } catch (error) {
       const errMessage = error instanceof Error ? error.message : String(error)
       logger.error(`[handleAccountSetup] Failed to clean up verification process: ${errMessage}`)
@@ -66,11 +64,11 @@ const useVerificationResponseViewModel = () => {
   }, [
     updateVerified,
     updateUserMetadata,
+    clearAuthorizationRequest,
     handleUpdateRegistration,
     getCachedIdTokenMetadata,
     logger,
     updateNicknameInLocalStorage,
-    navigation,
     dispatch,
   ])
   return {

@@ -385,6 +385,19 @@ export const useSecureActions = () => {
   }, [dispatch, logger])
 
   /**
+   * Clear the authorization request record from native storage entirely.
+   */
+  const clearAuthorizationRequest = useCallback(async () => {
+    try {
+      await deleteAuthorizationRequest()
+      logger.info('Authorization request cleared from native storage')
+    } catch (error) {
+      logger.error('Failed to clear authorization request:', error as Error)
+      throwNativeBcscError(error)
+    }
+  }, [logger])
+
+  /**
    * Update the identification process type in state and persist to native storage.
    * Process value determines which verification flow to use (e.g., 'IDIM L3 Remote BCSC Photo Identity Verification').
    */
@@ -1189,6 +1202,14 @@ export const useSecureActions = () => {
   }, [logger])
 
   /**
+   * Deletes card info (birthdate and serial) from secure state. Does not delete from native storage.
+   */
+  const deleteCardInfo = useCallback(async () => {
+    dispatch({ type: BCDispatchAction.UPDATE_SECURE_BIRTHDATE, payload: [undefined] })
+    dispatch({ type: BCDispatchAction.UPDATE_SECURE_SERIAL, payload: [undefined] })
+  }, [dispatch])
+
+  /**
    * Handles successful authentication by updating wallet key, hydrating state, and dispatching auth success.
    * Call this after setPIN, setupDeviceSecurity, unlockWithDeviceSecurity, or verifyPIN succeeds.
    * @param walletKey wallet key (PBKDF2 hash of PIN) for Askar wallet encryption
@@ -1208,6 +1229,7 @@ export const useSecureActions = () => {
     updateUserInfo,
     updateDeviceCodes,
     clearDeviceCodes,
+    clearAuthorizationRequest,
     updateCardProcess,
     updateUserMetadata,
     updateVerified,
@@ -1233,6 +1255,7 @@ export const useSecureActions = () => {
     logout,
     deleteSecureData,
     deleteVerificationData,
+    deleteScannedCardData: deleteCardInfo,
   }
 }
 

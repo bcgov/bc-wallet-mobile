@@ -125,13 +125,13 @@ const translation = {
       "ButtonTitle": "Finish up (PT-BR)"
     },
     "AccountExpired": {
-      "Title": "Your BC Services card account has expired (PT-BR)",
+      "Title": "Your BC Services Card account has expired (PT-BR)",
       "Description": "Please reverify yourself to get access to your services (PT-BR)",
       "ButtonTitle": "Start renewal (PT-BR)"
     },
     "AccountRenewal": {
       "Title": "Time for renewal (PT-BR)",
-      "Description": "Renew your BC Services card account before it expires on {{expiryDate}} (PT-BR)",
+      "Description": "Renew your BC Services Card account before it expires on {{expiryDate}} (PT-BR)",
       "ButtonTitle": "Start renewal (PT-BR)"
     },
     "BasicMessage": {
@@ -213,6 +213,7 @@ const translation = {
     "EnableAppToAppPersonFlow": "App-to-app Person flow (PT-BR)",
     "SwitchMode": "Switch mode (PT-BR)",
     "SwitchTheme": "Switch theme (PT-BR)",
+    "AppSection": "App (PT-BR)",
     "Testing": "Testing (PT-BR)",
     "ErrorAlertTest": "Error & Alert Testing (PT-BR)",
     "StaleTermsOfUse": "Stale Terms of Use Acceptance (PT-BR)",
@@ -258,7 +259,7 @@ const translation = {
     "Components": {
       "CloseDropdown": "Close dropdown menu (PT-BR)",
     },
-    "Title": "BC Services card (PT-BR)",
+    "Title": "BC Services Card (PT-BR)",
     "LocaleStringFormat": "pt-BR",
     "Screens": {
       "Settings": "Menu (PT-BR)",
@@ -276,7 +277,7 @@ const translation = {
     "HelpMenu": {
       "Title": "Need help? (PT-BR)",
       "AccessibilityLabel": "Help menu (PT-BR)",
-      "Version": "BCSC version: {{ version }} (PT-BR)",
+      "Version": "App version: {{ version }} (PT-BR)",
       "LearnMore": "Learn more (PT-BR)",
       "GiveFeedback": "Give feedback (PT-BR)",
       "ReportProblem": "Report a problem (PT-BR)",
@@ -363,10 +364,10 @@ const translation = {
     },
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online (PT-BR)",
-      "AppStartup": "Getting your BCSC App ready... (PT-BR)"
+      "AppStartup": "Getting your BC Services Card app ready... (PT-BR)"
     },
     "AccountLanding": {
-      "Title": "BC Services card (PT-BR)",
+      "Title": "BC Services Card (PT-BR)",
       "Description": "A secure way to prove\nwho you are online (PT-BR)",
       "Unlock": "Unlock (PT-BR)",
     },
@@ -429,7 +430,7 @@ const translation = {
       "HelpHeader": "Help (PT-BR)",
       "MoreInfoHeader": "More Information (PT-BR)",
       "Help": "Help (PT-BR)",
-      "HelpUsingApp": "Help using BCSC app (PT-BR)",
+      "HelpUsingApp": "Help using BC Services Card app (PT-BR)",
       "SignOut": "Sign out (PT-BR)",
       "Biometrics": "Biometrics (PT-BR)",
       "EditNickname": "Edit Nickname (PT-BR)",
@@ -636,7 +637,7 @@ const translation = {
     },
     "ReverifyAccount": {
       "RenewalTitle": "Renew your account (PT-BR)",
-      "ExpiredTitle": "Your BC Services card account has expired (PT-BR)",
+      "ExpiredTitle": "Your BC Services Card account has expired (PT-BR)",
       "Body": "Services require you to re-verify your account. You will need to complete this step in order to access your services online. (PT-BR)",
       "BulletHeader": "You will need to: (PT-BR)",
       "BulletOne": "Verify your email (PT-BR)",
@@ -819,7 +820,7 @@ const translation = {
       "InputTitle": "Enter your card's serial number manually (PT-BR)",
       "InputSubText": "Enter the letter and numbers by the barcode on the back of your card. (PT-BR)",
       "EmptySerialError": "Required (PT-BR)",
-      "CharCountError": "Cannot exceed 15 characters (PT-BR)",
+      "FormatError": "Enter a valid card serial number (PT-BR)",
     },
     "Birthdate": {
       "CardSerialNumber": "Card serial number: {{ serial }} (PT-BR)",
@@ -842,7 +843,7 @@ const translation = {
     },
     "AccountSetup": {
       "Title": "Have you verified before? (PT-BR)",
-      "Description": "Do you already have the BCSC app set up on another nearby phone or tablet? (PT-BR)",
+      "Description": "Do you already have the BC Services Card app set up on another nearby phone or tablet? (PT-BR)",
       "AddAccount": "No, continue setup (PT-BR)",
       "TransferAccount": "Yes, connect this device (PT-BR)",
       "ContinueAs": "Continue as: (PT-BR)",
@@ -1259,8 +1260,10 @@ const translation = {
       "FirstNameLabel": "First name (PT-BR)",
       "FirstNameSubtext": "Your first given name (PT-BR)",
       "FirstNameError": "Please enter a first name (PT-BR)",
+      "FirstNameLengthError": "Enter 15 characters or less (PT-BR)",
       "LastNameLabel": "Last name (PT-BR)",
       "LastNameError": "Please enter a last name (PT-BR)",
+      "LastNameLengthError": "Enter 35 characters or less (PT-BR)",
       "LastNameSubtext": "Also known as surname or family name (PT-BR)",
       "BirthDateLabel": "Birth date (PT-BR)",
       "BirthDateSubtext": "Enter your birth date (PT-BR)",
@@ -1271,6 +1274,7 @@ const translation = {
       "MiddleNamesLabel": "Middle names (PT-BR)",
       "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed (PT-BR)",
       "MiddleNamesError": "Please enter up to two middle names (PT-BR)",
+      "MiddleNamesLengthError": "Enter 30 characters or less (PT-BR)",
       "TakeSecondIdPhoto": "Take photo of your second ID (PT-BR)",
     },
     "Address": {

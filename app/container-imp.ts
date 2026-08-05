@@ -145,17 +145,18 @@ export class AppContainer implements Container {
     this._container.registerInstance(TOKENS.SCREEN_ONBOARDING_ITEM, Onboarding)
     this._container.registerInstance(TOKENS.UTIL_LEDGERS, filePersistedLedgers)
 
-    this._container.registerInstance(TOKENS.CRED_HELP_ACTION_OVERRIDES, [
-      {
-        credDefIds: DIGITAL_SERVICES_CARD_CREDENTIAL_DEFINITION_IDS,
-        schemaIds: DIGITAL_SERVICES_CARD_SCHEMA_IDS,
-        action: (navigation: NavigationProp<ReactNavigation.RootParamList>) => {
-          navigation.getParent()?.navigate(Stacks.NotificationStack, {
-            screen: Screens.CustomNotification,
-          })
+    Config.BUILD_TARGET === 'bcwallet' &&
+      this._container.registerInstance(TOKENS.CRED_HELP_ACTION_OVERRIDES, [
+        {
+          credDefIds: DIGITAL_SERVICES_CARD_CREDENTIAL_DEFINITION_IDS,
+          schemaIds: DIGITAL_SERVICES_CARD_SCHEMA_IDS,
+          action: (navigation: NavigationProp<ReactNavigation.RootParamList>) => {
+            navigation.getParent()?.navigate(Stacks.NotificationStack, {
+              screen: Screens.CustomNotification,
+            })
+          },
         },
-      },
-    ])
+      ])
     this._container.registerInstance(TOKENS.CONFIG, {
       ...defaultConfig,
       PINSecurity: { rules: PINRules, displayHelper: false },

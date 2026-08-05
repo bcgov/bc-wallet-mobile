@@ -21,7 +21,9 @@
 #   workflow_call  — called from main.yaml after builds (PR smoke tests)
 #   workflow_dispatch — manual runs from the Actions UI
 #
-# Constraint: max-parallel=2 (SauceLabs concurrent-session limit).
+# Constraint: the SauceLabs account allows 2 concurrent real-device sessions, shared across every
+# job AND every wdio worker inside them. max-parallel caps the jobs; SAUCE_MAX_INSTANCES (computed
+# in the run step) divides the session budget among the jobs running in parallel.
 name: E2E Tests
 
 permissions:
@@ -141,6 +143,9 @@ jobs:
           SM_PASSWORD: ${{ secrets.SM_PASSWORD }}
           SAUCE_REGION: us
           VARIANT: bcsc-dev
+          DEVICE_MATRIX: ${{ inputs.device_matrix }}
+          # Concurrent real-device sessions the Sauce account allows (its `rds` allowance).
+          SAUCE_RDS_CONCURRENCY: 2
           PLATFORM: ${{ matrix.device.platform }}
           IOS_DEVICE_NAME: ${{ matrix.device.platform == 'iOS' && matrix.device.device || '' }}
           IOS_PLATFORM_VERSION: ${{ matrix.device.platform == 'iOS' && matrix.device.os_version || '' }}
@@ -151,6 +156,16 @@ jobs:
           BUILD_NAME: 'build-${{ inputs.build_number }}'
           TEST_NAME: 'E2E ${{ inputs.suite }} - ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
         run: |
+          # Split the account's real-device session budget across the jobs running in parallel.
+          # Each matrix entry is a separate wdio process, so without this a 2-device matrix asks
+          # for (jobs x maxInstances) sessions; anything over the limit queues inside
+          # POST /session until the client aborts and reports "Failed to create a session".
+          DEVICE_COUNT=$(printf '%s' "$DEVICE_MATRIX" | jq 'length')
+          [ "$DEVICE_COUNT" -ge 1 ] 2>/dev/null || DEVICE_COUNT=1
+          PARALLEL_JOBS=$(( DEVICE_COUNT > 2 ? 2 : DEVICE_COUNT ))   # strategy.max-parallel is 2
+          export SAUCE_MAX_INSTANCES=$(( SAUCE_RDS_CONCURRENCY / PARALLEL_JOBS ))
+          echo "Devices: $DEVICE_COUNT | parallel jobs: $PARALLEL_JOBS | wdio maxInstances: $SAUCE_MAX_INSTANCES"
+
           case "$SUITE" in
             migration)
               IOS_CONF="configs/sauce/wdio.ios.sauce.migration.conf.ts"
