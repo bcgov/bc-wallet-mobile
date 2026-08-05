@@ -16,6 +16,9 @@ interface CreatePersonCredentialResponse {
  * Person Credential is missing. Environment selection is implicit — the
  * request goes to whichever IAS the currently-configured BCSC client points at,
  * and IAS mints an invitation whose cred def matches that env.
+ *
+ * 400 errors with suspended or deactivated error messages are handled by the error policy.
+ * When detected, the user is shown the generic "Problem with Account" modal and the workflow is stopped.
  */
 const getDigitalServicesCardInvitationUrl = async (): Promise<string> => {
   const apiClient = getBCSCApiClient()

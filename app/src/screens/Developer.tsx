@@ -2,8 +2,10 @@ import { ListButton, ListButtonGroup, ListButtonProps } from '@/bcsc-theme/compo
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { Switch } from '@/components/Switch'
 import { BCThemeNames, Mode } from '@/constants'
+import { AutoCredentialMonitor } from '@/services/auto-credential'
 import { BCDispatchAction, BCState } from '@/store'
 import {
+  CredentialProvisioningEventTypes,
   DispatchAction,
   LockoutReason,
   SafeAreaModal,
@@ -19,7 +21,7 @@ import {
 } from '@bifold/core'
 import { RemoteLogger, RemoteLoggerEventTypes } from '@bifold/remote-logs'
 import { useNavigation } from '@react-navigation/native'
-import React, { ReactNode, useState } from 'react'
+import React, { ReactNode, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, StyleSheet, View } from 'react-native'
 import { deleteToken, TokenType } from 'react-native-bcsc-core'
@@ -134,6 +136,7 @@ const Developer: React.FC = () => {
   const { client: apiClient } = useBCSCApiClientState()
   const { ColorPalette, Spacing, setTheme, themeName } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER]) as [RemoteLogger]
+  const [credentialProvisioningMonitor] = useServices([TOKENS.UTIL_CREDENTIAL_PROVISIONING_MONITOR])
   const [environmentModalVisible, setEnvironmentModalVisible] = useState<boolean>(false)
   const [errorAlertTestModalVisible, setErrorAlertTestModalVisible] = useState<boolean>(false)
   const [devMode, setDevMode] = useState<boolean>(true)
@@ -151,7 +154,29 @@ const Developer: React.FC = () => {
   const [enableProxy, setEnableProxy] = useState(!!store.developer.enableProxy)
   const [enableAppToAppPersonFlow, setEnableAppToAppPersonFlow] = useState(!!store.developer.enableAppToAppPersonFlow)
   const [tokensDeleted, setTokensDeleted] = useState<boolean>(false)
+  const [personCredentialFetchStatus, setPersonCredentialFetchStatus] = useState<string>('idle')
   const navigation = useNavigation()
+
+  useEffect(() => {
+    const handleStarted = () => setPersonCredentialFetchStatus('started')
+    const handleCompleted = () => setPersonCredentialFetchStatus('completed')
+    const handleFailed = (eventName: string) => (error: Error) => {
+      logger.error(`Developer: Person Credential test fetch failed (${eventName})`, error)
+      setPersonCredentialFetchStatus(`failed (${eventName}): ${error.message}`)
+    }
+
+    const subscriptions = [
+      DeviceEventEmitter.addListener(CredentialProvisioningEventTypes.Started, handleStarted),
+      DeviceEventEmitter.addListener(CredentialProvisioningEventTypes.Completed, handleCompleted),
+      DeviceEventEmitter.addListener(CredentialProvisioningEventTypes.FailedHandleProof, handleFailed('proof')),
+      DeviceEventEmitter.addListener(CredentialProvisioningEventTypes.FailedHandleOffer, handleFailed('offer')),
+      DeviceEventEmitter.addListener(CredentialProvisioningEventTypes.FailedRequestCredential, handleFailed('request')),
+    ]
+
+    return () => {
+      subscriptions.forEach((subscription) => subscription.remove())
+    }
+  }, [logger])
 
   const BCSCMode = store.mode === Mode.BCSC
 
@@ -351,6 +376,21 @@ const Developer: React.FC = () => {
       setTokensDeleted(true)
     } catch (error) {
       logger.error('Developer: Failed to delete tokens', error as Error)
+    }
+  }
+
+  const fetchPersonCredentialTest = () => {
+    const monitor = credentialProvisioningMonitor as AutoCredentialMonitor | undefined
+    if (!monitor || typeof monitor.triggerTestWorkflow !== 'function') {
+      logger.warn('Developer: No AutoCredentialMonitor registered, cannot trigger test fetch')
+      setPersonCredentialFetchStatus('unavailable — monitor not registered')
+      return
+    }
+
+    setPersonCredentialFetchStatus('triggering...')
+    const started = monitor.triggerTestWorkflow()
+    if (!started) {
+      setPersonCredentialFetchStatus('not started — already in progress or agent not ready')
     }
   }
 
@@ -613,6 +653,19 @@ const Developer: React.FC = () => {
                   title={t('Developer.DeleteTokens')}
                   endAdornment={<Icon name="delete" size={24} color={ColorPalette.brand.primary} />}
                   subContent={<RowDetail label={t('Developer.DeletedTokens')} value={String(tokensDeleted)} />}
+                />
+              </ListButton>
+              <ListButton
+                accessibilityLabel={t('Developer.FetchPersonCredentialTest')}
+                testID={testIdWithKey('FetchPersonCredentialTest')}
+                onPress={fetchPersonCredentialTest}
+              >
+                <Row
+                  title={t('Developer.FetchPersonCredentialTest')}
+                  endAdornment={<Icon name="badge" size={24} color={ColorPalette.brand.link} />}
+                  subContent={
+                    <RowDetail label={t('Developer.FetchPersonCredentialStatus')} value={personCredentialFetchStatus} />
+                  }
                 />
               </ListButton>
             </ListButtonGroup>

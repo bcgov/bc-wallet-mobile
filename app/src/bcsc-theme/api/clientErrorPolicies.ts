@@ -10,6 +10,7 @@ import { Linking } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { VerificationCardError } from '../features/verify/verificationCardError'
 import { BCSCModals, BCSCScreens } from '../types/navigators'
+import { getDigitalServiceCardAccountProblem } from '../utils/getDigitalServiceCardAccountProblem'
 import { ResumeStepRoute } from '../utils/resume-step-route'
 import { BCSCEndpoints } from './client'
 
@@ -526,6 +527,37 @@ export const cardExpiredOnBarcodesErrorPolicy: ErrorHandlingPolicy = {
 }
 
 /**
+ * Digital Service Card creation is rejected with HTTP 400
+ * `{error: "unauthorized_client", error_description: "suspended"|"deactivated"}` when the BCSC
+ * account is suspended or deactivated. Show the generic
+ * "Problem with Account" modal (Remove Account + Close) instead of failing silently. Suspended
+ * and deactivated share the same modal copy but track as distinct analytics events.
+ *
+ * @returns ErrorHandlingPolicy
+ */
+export const digitalServiceCardAccountUnavailableErrorPolicy: ErrorHandlingPolicy = {
+  matches: (error, context) => {
+    if (context.statusCode !== 400 || !context.endpoint.includes(context.apiEndpoints.credential)) {
+      return false
+    }
+    return getDigitalServiceCardAccountProblem(error) !== undefined
+  },
+  handle: (error, context) => {
+    const accountProblem = getDigitalServiceCardAccountProblem(error)
+    context.logger.info(
+      `[DigitalServiceCardAccountUnavailableErrorPolicy] account ${accountProblem} on Digital Services Card creation`
+    )
+    // Pass the raw AxiosError cause (not the AppError) so ensureAppError builds a fresh AppError with
+    // the suspended/deactivated app event
+    const alert =
+      accountProblem === 'suspended'
+        ? context.alerts.personCredentialSuspendedAlert
+        : context.alerts.personCredentialDeactivatedAlert
+    alert()
+  },
+}
+
+/**
  * Error policy for an expired/superseded verification session on the evidence endpoints.
  *
  * Evidence calls authenticate only with the short-lived `device_code`, so a 401 on the evidence base
@@ -586,6 +618,7 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   alreadyRegisteredErrorPolicy,
   cardExpiredErrorPolicy,
   cardExpiredOnBarcodesErrorPolicy,
+  digitalServiceCardAccountUnavailableErrorPolicy,
   verificationSessionExpiredErrorPolicy,
   birthdateLockoutErrorPolicy,
   noTokensReturnedErrorPolicy,

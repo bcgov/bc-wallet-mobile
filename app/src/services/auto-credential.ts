@@ -1,3 +1,4 @@
+import { getDigitalServiceCardAccountProblem } from '@/bcsc-theme/utils/getDigitalServiceCardAccountProblem'
 import { AbstractBifoldLogger, CredentialProvisioningEventTypes, CredentialProvisioningMonitor } from '@bifold/core'
 import { AnonCredsRequestedAttribute, AnonCredsRequestedPredicate } from '@credo-ts/anoncreds'
 import { Agent } from '@credo-ts/core'
@@ -119,6 +120,30 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     this._pendingProofRequest = undefined
     this._pendingConnectionId = undefined
     this._activeRule = undefined
+  }
+
+  /**
+   * Manually starts the first configured rule's workflow, bypassing the normal
+   * "proof request references a missing cred def" trigger.
+   */
+  public triggerTestWorkflow(): boolean {
+    if (this._workflowInProgress) {
+      this.log?.warn('[AutoCredentialMonitor] triggerTestWorkflow: workflow already in progress')
+      return false
+    }
+    if (!this.agent) {
+      this.log?.warn('[AutoCredentialMonitor] triggerTestWorkflow: agent not ready')
+      return false
+    }
+    const rule = this.rules[0]
+    if (!rule) {
+      this.log?.warn('[AutoCredentialMonitor] triggerTestWorkflow: no rules configured')
+      return false
+    }
+    this.log?.info('[AutoCredentialMonitor] triggerTestWorkflow: manually starting workflow')
+    const stubProof = { id: 'test-workflow-proof' } as DidCommProofExchangeRecord
+    this.runWorkflow(rule, stubProof)
+    return true
   }
 
   // ---------------------------------------------------------------------------
@@ -351,6 +376,24 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
           }
         })
     } catch (err) {
+      const accountProblem = getDigitalServiceCardAccountProblem(err)
+      if (accountProblem) {
+        // User cannot satisfy the proof request because their BCSC card is suspended or deactivated
+        // auto decline the proof
+        try {
+          await this.agent.didcomm.proofs.declineRequest({
+            proofExchangeRecordId: proof.id,
+            sendProblemReport: true,
+          })
+          this.log?.info(
+            `[AutoCredentialMonitor] Declined proof request — account ${accountProblem}, cannot be satisfied`
+          )
+        } catch (declineErr) {
+          this.log?.warn('[AutoCredentialMonitor] Failed to decline proof request after account-unavailable error', {
+            error: declineErr as Error,
+          })
+        }
+      }
       this.failWorkflow(CredentialProvisioningEventTypes.FailedRequestCredential, err as Error)
     }
   }
