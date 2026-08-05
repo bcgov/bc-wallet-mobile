@@ -476,7 +476,7 @@ const MainStack: React.FC = () => {
             })}
           />
           <Stack.Screen
-            name={BCSCScreens.CancelledReview}
+            name={BCSCScreens.MainCancelledReview}
             component={CancelledReview}
             options={() => ({
               headerShown: true,
