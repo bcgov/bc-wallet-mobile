@@ -111,7 +111,7 @@ export async function getEmailConfirmationCode(
     if (!candidates.length) {
       continue
     }
-    const email = candidates.reduce((newest, next) => (mailId(next) > mailId(newest) ? next : newest))
+    const email = candidates.reduce((newest, next) => (mailId(next) > mailId(newest) ? next : newest), candidates[0])
     console.log(`Received email ${mailId(email)} from: ${email.mail_from}`)
 
     const emailResponse = await fetch(`${TEMP_EMAIL_API}?f=fetch_email&email_id=${email.mail_id}&sid_token=${token}`)
