@@ -47,17 +47,27 @@ export const IdentitySelectionScreen = defineScreen({
  * `primary` (EnterManually) is the CI path around the live camera, and it is a deliberately good anchor:
  * the PermissionDisabled fallback renders the SAME testID as its secondary action, so the flow reaches
  * manual entry whether permission was granted or refused — only the loading view lacks it.
+ *
+ * Which of the two bodies rendered is therefore NOT knowable from `self`: `openSettings` is the
+ * permission-refused marker (it exists only in the fallback). It is asserted, never tapped — it hands
+ * the session off to the OS settings app.
  */
 export const ScanSerialScreen = defineScreen({
   self: bcsc(v.scanSerial.enterManually),
   primary: bcsc(v.scanSerial.enterManually),
   back: bcsc(common.back),
+  elements: {
+    openSettings: bcsc(v.scanSerial.openSettings),
+  },
 })
 
 /**
- * Manual serial form (`ManualSerial`). Continue is always enabled — validation runs on press
- * (empty-serial error); the input caps at 15 chars. iOS types into the pressable wrapper,
- * Android into the inner input (the `InputWithValidation` pattern).
+ * Manual serial form (`ManualSerial`). Continue is always enabled — validation runs on press, against
+ * a schema that rejects an empty value ("Required") and anything outside 3–15 alphanumerics ("Enter a
+ * valid card serial number"). The input itself caps at 15 characters, so the over-long case is not
+ * typeable. iOS types into the pressable wrapper, Android into the inner input (the
+ * `InputWithValidation` pattern); `error` is that component's shared subtext slot, present only while
+ * a validation message is showing.
  */
 export const ManualSerialScreen = defineScreen({
   self: { ios: bcsc(v.manualSerial.serialPressable), android: bcsc(v.manualSerial.serialInput) },
@@ -65,6 +75,9 @@ export const ManualSerialScreen = defineScreen({
   back: bcsc(common.back),
   inputs: {
     serial: { ios: bcsc(v.manualSerial.serialPressable), android: bcsc(v.manualSerial.serialInput) },
+  },
+  elements: {
+    error: bcsc(v.manualSerial.serialSubtext),
   },
 })
 
@@ -195,6 +208,15 @@ export const EmailConfirmationScreen = defineScreen({
   inputs: {
     code: bcsc(v.emailConfirmation.codeInput),
   },
+  links: {
+    // BARE testID — written without `testIdWithKey`, so it carries no prefix and is NOT `bcsc()`-wrapped.
+    resendCode: v.emailConfirmationBare.resendCode,
+  },
+  elements: {
+    // Rendered only while the code is rejected; its text distinguishes "not six digits" (client-side)
+    // from "does not match" (the 404, which also raises an alert).
+    codeError: bcsc(v.emailConfirmation.codeError),
+  },
 })
 
 /**
@@ -275,6 +297,28 @@ export const EvidenceIDCollectionScreen = defineScreen({
     firstName: bcsc(v.evidenceIdCollection.firstName),
     middleNames: bcsc(v.evidenceIdCollection.middleNames),
     birthdate: bcsc(v.evidenceIdCollection.birthdate),
+  },
+  elements: {
+    // ALWAYS present: the birthdate field ships a static subtext and its errors share that node, so
+    // this reads as the hint until a rule fails and as the message afterwards. Compare the text.
+    birthdateSubtext: bcsc(v.evidenceIdCollection.birthdateSubtext),
+  },
+})
+
+/**
+ * `EvidenceTypeList` — the document-type picker. It has no container testID and its rows are
+ * server-keyed (`EvidenceTypeListItem-<evidence_type>`), so rows are selected through
+ * `selectEvidenceType` rather than this descriptor; what IS stable is the non-photo escape hatch.
+ *
+ * `otherOptions` renders ONLY on the non-photo BCSC path's first list (`photoFilter === 'photo'` with
+ * nothing collected yet) and REPLACES the list with the non-photo one — so there is no back to the
+ * photo list, only back out to AdditionalIdentificationRequired.
+ */
+export const EvidenceTypeListScreen = defineScreen({
+  self: bcsc(v.evidenceTypeList.otherOptions),
+  back: bcsc(common.back),
+  links: {
+    otherOptions: bcsc(v.evidenceTypeList.otherOptions),
   },
 })
 

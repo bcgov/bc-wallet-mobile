@@ -1,7 +1,8 @@
+import assert from 'node:assert/strict'
 import { TestUsers, Timeouts } from '../../../src/constants.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import { chooseAddAccount, enterSerialManually, startVerification } from '../../../src/flows/verify.js'
-import { acceptSystemAlert } from '../../../src/helpers/alerts.js'
+import { dismissSystemAlert } from '../../../src/helpers/alerts.js'
 import { BaseScreen } from '../../../src/screens/core/BaseScreen.js'
 import {
   AccountSetupScreen,
@@ -20,6 +21,12 @@ import { getTestUser, setTestUser } from '../../../src/support/context.js'
 const engine = new BaseScreen()
 /** A valid-format birthdate that does NOT match the photo card, to force the CSN/birthdate mismatch. */
 const MISMATCH_DOB = '19800101'
+/** Shorter than the serial schema's 3-character minimum, so it trips the format rule rather than the empty one. */
+const TOO_SHORT_SERIAL = 'AB'
+/** ManualSerial's two reachable inline errors (`BCSC.ManualSerial.EmptySerialError` / `FormatError`).
+ *  Asserted verbatim: only the message tells the two validation rules apart. */
+const EMPTY_SERIAL_ERROR = 'Required'
+const SERIAL_FORMAT_ERROR = 'Enter a valid card serial number'
 
 /**
  * Verify journey: entry detours — the cheap, no-verification-completed browse of the verify entry
@@ -32,6 +39,13 @@ const MISMATCH_DOB = '19800101'
  * Structure avoids ambiguous back-navigation: the AccountSetup detour is a self-contained round-trip;
  * the serial branch backs out through its push stack (ManualSerial → ScanSerial → IdentitySelection);
  * the Other-ID branch chains FORWARD (DualId webview → EvidenceTypeList) with no deep back-out.
+ *
+ * The camera permission is REFUSED at the first ScanSerial, which is why that checkpoint comes before
+ * everything else on the serial branch: the answer is one-way within a session (iOS never re-prompts),
+ * so a grant anywhere earlier would make the refused body unreachable. It costs the later checkpoints
+ * nothing — `EnterManually` is rendered by both the camera body and the permission fallback, so the
+ * CI path around the camera works either way (which is also why this now runs on both platforms
+ * rather than iOS only: nothing here depends on a live camera coming up).
  *
  * Anchors + navigation verified against app source (main): AccountSetup Add/Transfer
  * (AddAccount/TransferAccount → TransferAccountInstructions), TransferInstructions `ScanQRCode`,
@@ -70,20 +84,39 @@ describe('Verify journey: entry detours', () => {
     await IdentitySelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 
-  if (driver.isIOS) {
-    it('reveals manual serial entry behind the Scan camera gate and backs out', async () => {
-      await IdentitySelectionScreen.tap('primary') // Scan → ScanSerial (auto-requests camera permission)
-      await acceptSystemAlert()
-      await ScanSerialScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-      await ScanSerialScreen.tap('primary') // EnterManually (pushes ManualSerial)
-      await ManualSerialScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-      // Both hops are pushes, so back out twice: ManualSerial → ScanSerial → IdentitySelection.
-      await ManualSerialScreen.back.tap()
-      await ScanSerialScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-      await ScanSerialScreen.back.tap()
-      await IdentitySelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-    })
-  }
+  it('offers manual entry when the camera permission is refused', async () => {
+    await IdentitySelectionScreen.tapToNavigate('primary') // Scan → ScanSerial (auto-requests the camera)
+    // REFUSING is a one-way door for the session (iOS never re-prompts), so it has to be the first
+    // thing the camera screen is asked, before any checkpoint grants it.
+    await dismissSystemAlert(Timeouts.SCREEN_TRANSITION)
+    // `self` cannot tell the two bodies apart — EnterManually renders in both, which is what keeps the
+    // CI path working either way. `openSettings` exists only in the refused one. It is never tapped:
+    // it hands the session off to the OS settings app.
+    await ScanSerialScreen.waitFor('openSettings', Timeouts.SCREEN_TRANSITION)
+    await ScanSerialScreen.tapToNavigate('primary') // EnterManually (pushes ManualSerial)
+    await ManualSerialScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  })
+
+  it('rejects an empty and a malformed serial with inline errors', async () => {
+    // Continue is always enabled here — validation runs on press, so both cases are a press away.
+    await ManualSerialScreen.tapWhenEnabled('primary') // empty field
+    assert.equal(await ManualSerialScreen.read('error'), EMPTY_SERIAL_ERROR)
+
+    await ManualSerialScreen.fill('serial', TOO_SHORT_SERIAL, { tapFirst: true })
+    await engine.dismissKeyboard()
+    await ManualSerialScreen.tapWhenEnabled('primary')
+    assert.equal(await ManualSerialScreen.read('error'), SERIAL_FORMAT_ERROR)
+    // The third rule the schema carries — over 15 characters — is unreachable from the UI: the input
+    // sets maxLength 15, so those keystrokes never arrive.
+  })
+
+  it('backs out of the serial branch to identity selection', async () => {
+    // Both hops were pushes, so back out twice: ManualSerial → ScanSerial → IdentitySelection.
+    await ManualSerialScreen.back.tap()
+    await ScanSerialScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await ScanSerialScreen.back.tap()
+    await IdentitySelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  })
 
   it('rejects a mismatched serial + birthdate and offers Try Another', async () => {
     // The one backend authorize on this journey: a REAL card serial + a deliberately WRONG birthdate.
