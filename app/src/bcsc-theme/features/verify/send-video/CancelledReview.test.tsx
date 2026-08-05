@@ -143,7 +143,9 @@ describe('CancelledReview', () => {
     })
   })
 
-  it('does not start a second reset when pressed again after success', async () => {
+  // In the app a successful reset unmounts this screen, so a second press is unreachable; rendered
+  // in isolation it still fires, which is what proves the guard releases rather than latching.
+  it('releases the double-press guard once a reset has settled', async () => {
     const route = {
       params: {
         agentReason: 'Test reason',
