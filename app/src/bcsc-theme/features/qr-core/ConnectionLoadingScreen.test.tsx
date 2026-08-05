@@ -1,15 +1,34 @@
 import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
-import { Connection } from '@bifold/core'
+import { Connection, CredentialProvisioningEventTypes, LoadingPlaceholder } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
-import { render } from '@testing-library/react-native'
+import { act, render } from '@testing-library/react-native'
 import React from 'react'
-import { BackHandler } from 'react-native'
+import { BackHandler, DeviceEventEmitter } from 'react-native'
 
 import ConnectionLoadingScreen from './ConnectionLoadingScreen'
+
+const mockProvisioningMonitor = { workflowInProgress: false }
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }))
 jest.mock('@bifold/core', () => ({
   Connection: jest.fn().mockReturnValue(null),
+  CredentialProvisioningEventTypes: {
+    Started: 'CredentialProvisioningEvent.Started',
+    Completed: 'CredentialProvisioningEvent.Completed',
+    FailedHandleOffer: 'CredentialProvisioningEvent.FailedHandleOffer',
+    FailedHandleProof: 'CredentialProvisioningEvent.FailedHandleProof',
+    FailedRequestCredential: 'CredentialProvisioningEvent.FailedRequestCredential',
+  },
+  LoadingPlaceholder: jest.fn().mockReturnValue(null),
+  LoadingPlaceholderWorkflowType: {
+    Connection: 'Connection',
+    ReceiveOffer: 'ReceiveOffer',
+    ProofRequested: 'ProofRequested',
+  },
+  testIdWithKey: (key: string) => `com.ariesbifold:id/${key}`,
+  TOKENS: { UTIL_CREDENTIAL_PROVISIONING_MONITOR: 'utility.credential-provisioning-monitor' },
+  useServices: jest.fn(() => [mockProvisioningMonitor]),
+  useTheme: jest.fn(() => ({ ColorPalette: { brand: { primaryBackground: '#000000' } } })),
 }))
 // `@react-navigation/native` isn't transformed by jest (see transformIgnorePatterns), so
 // pull-through imports like NavigationContext come back as undefined. Spread the real module
@@ -113,6 +132,62 @@ describe('ConnectionLoadingScreen', () => {
       const handler = spy.mock.calls.at(-1)![1] as () => boolean
       expect(handler()).toBe(true)
       expect(navigation.goBack).not.toHaveBeenCalled()
+    })
+  })
+
+  // The wrapper holds a loading overlay while AutoCredentialMonitor fetches a
+  // missing credential in the background, because Bifold's Connection screen
+  // has no provisioning gate and its ProofRequest registers listeners too late
+  // to reliably catch Started.
+  describe('credential provisioning gate', () => {
+    const LoadingPlaceholderMock = LoadingPlaceholder as jest.MockedFunction<typeof LoadingPlaceholder>
+
+    afterEach(() => {
+      mockProvisioningMonitor.workflowInProgress = false
+    })
+
+    it('shows the overlay on Started and hides it on Completed', () => {
+      const { navigation, route } = mkProps()
+      render(<ConnectionLoadingScreen navigation={navigation} route={route} />)
+      expect(LoadingPlaceholderMock).not.toHaveBeenCalled()
+
+      act(() => {
+        DeviceEventEmitter.emit(CredentialProvisioningEventTypes.Started)
+      })
+      expect(LoadingPlaceholderMock).toHaveBeenCalled()
+
+      LoadingPlaceholderMock.mockClear()
+      act(() => {
+        DeviceEventEmitter.emit(CredentialProvisioningEventTypes.Completed)
+      })
+      expect(LoadingPlaceholderMock).not.toHaveBeenCalled()
+    })
+
+    it.each([
+      CredentialProvisioningEventTypes.FailedHandleProof,
+      CredentialProvisioningEventTypes.FailedHandleOffer,
+      CredentialProvisioningEventTypes.FailedRequestCredential,
+    ])('hides the overlay on %s', (failureEvent) => {
+      const { navigation, route } = mkProps()
+      render(<ConnectionLoadingScreen navigation={navigation} route={route} />)
+      act(() => {
+        DeviceEventEmitter.emit(CredentialProvisioningEventTypes.Started)
+      })
+
+      LoadingPlaceholderMock.mockClear()
+      act(() => {
+        DeviceEventEmitter.emit(failureEvent, new Error('provisioning failed'))
+      })
+      expect(LoadingPlaceholderMock).not.toHaveBeenCalled()
+    })
+
+    it('shows the overlay immediately when a workflow is already in progress at mount', () => {
+      // DeviceEventEmitter has no replay: a Started emitted before this screen
+      // mounts (e.g. entry from a home notification) would otherwise be missed.
+      mockProvisioningMonitor.workflowInProgress = true
+      const { navigation, route } = mkProps()
+      render(<ConnectionLoadingScreen navigation={navigation} route={route} />)
+      expect(LoadingPlaceholderMock).toHaveBeenCalled()
     })
   })
 })
