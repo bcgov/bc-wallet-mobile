@@ -36,10 +36,7 @@ interface PausableAttestationMonitor {
  * Configuration for a single just-in-time credential acquisition rule
  */
 export interface AutoCredentialRule {
-  /** Cred def IDs whose absence in the wallet triggers this rule. */
-  triggerCredDefIds: string[]
-
-  triggerProofRestrictions: AnonCredsProofRequestRestriction[]
+  triggerRestrictions: AnonCredsProofRequestRestriction[]
 
   /**
    * Returns the OOB invitation URL for the issuer that can provide the missing
@@ -188,26 +185,18 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
   // Private — credential check
   // ---------------------------------------------------------------------------
 
+  // Check if all key-value pairs in the trigger match the restriction
+  // ie: { cred_def_id: 'abc' } matches { cred_def_id: 'abc', schema_id: 'xyz' }
+  // ie: { cred_def_id: 'abc', schema_id: 'xyz' } does NOT match { cred_def_id: 'abc' }
   private restrictionMatchesRule(restriction: AnonCredsProofRequestRestriction, rule: AutoCredentialRule): boolean {
-    // Matching by cred def ID
-    if (restriction.cred_def_id && rule.triggerCredDefIds.includes(restriction.cred_def_id)) {
-      return true
-    }
-
-    // Matching by issuer schema (issuer DID + schema name + schema version)
-    if (
-      rule.triggerProofRestrictions.some((schema) => {
-        return (
-          schema.issuer_did === restriction.issuer_did &&
-          schema.schema_name === restriction.schema_name &&
-          schema.schema_version === restriction.schema_version
-        )
+    const restrictionMatchesTrigger = (trigger: AnonCredsProofRequestRestriction): boolean => {
+      return Object.entries(trigger).every(([key, value]) => {
+        const restrictionValue = restriction[key as keyof AnonCredsProofRequestRestriction]
+        return restrictionValue === value
       })
-    ) {
-      return true
     }
 
-    return false
+    return rule.triggerRestrictions.some(restrictionMatchesTrigger)
   }
 
   /**

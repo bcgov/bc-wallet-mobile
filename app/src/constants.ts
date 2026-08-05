@@ -1,5 +1,10 @@
-import { AnonCredsProofRequestRestriction } from '@credo-ts/anoncreds'
 import { ViewStyle } from 'react-native'
+import {
+  DigitalServicesCredentialDEV,
+  DigitalServicesCredentialPROD,
+  DigitalServicesCredentialQA,
+  DigitalServicesCredentialSIT,
+} from './utils/credential-repository'
 
 // TODO (MD): Normalize casing of constants (ie: SCREAMING_SNAKE_CASE vs camelCase) and group them in a more structured way (ie: AnalyticsConstants, BCSCConstants, etc.)
 
@@ -16,65 +21,6 @@ export interface CredentialRestrictionEnvironment {
   credDefIDs: readonly string[]
   invitationUrl: string
 }
-
-export interface AutoFetchCredentialConfigEntry {
-  credDefIDs: readonly string[]
-  /**
-   * The proof restrictions that trigger the auto-fetch flow.
-   * If a proof request exactly matches any of these restrictions, the auto-fetch flow will be triggered.
-   * @example issuer_did + schema_name + schema_version must match exactly.
-   */
-  proofRestrictions: AnonCredsProofRequestRestriction[]
-}
-
-/**
- * Per-environment Person Credential cred def IDs. AutoCredentialMonitor
- * flattens these into its trigger set; a proof requesting any of them tells
- * the wallet a Person Credential is missing and the BCSC-initiated flow
- * (POST /credentials/v1/person) is used to mint an issuer invitation.
- */
-export const AutoFetchCredentialConfig: Record<string, AutoFetchCredentialConfigEntry> = {
-  Development: {
-    credDefIDs: ['XpgeQa93eZvGSZBZef3PHn:3:CL:28075:PersonDEV'],
-    proofRestrictions: [
-      {
-        issuer_did: 'XpgeQa93eZvGSZBZef3PHn',
-        schema_name: 'PersonDEV',
-        schema_version: '1.0',
-      },
-    ],
-  },
-  SIT: {
-    credDefIDs: ['7xjfawcnyTUcduWVysLww5:3:CL:28075:PersonSIT'],
-    proofRestrictions: [
-      {
-        issuer_did: '7xjfawcnyTUcduWVysLww5',
-        schema_name: 'PersonSIT',
-        schema_version: '1.0',
-      },
-    ],
-  },
-  QA: {
-    credDefIDs: ['KCxVC8GkKywjhWJnUfCmkW:3:CL:20:PersonQA'],
-    proofRestrictions: [
-      {
-        issuer_did: 'KCxVC8GkKywjhWJnUfCmkW',
-        schema_name: 'PersonQA',
-        schema_version: '1.0',
-      },
-    ],
-  },
-  Production: {
-    credDefIDs: ['RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person'],
-    proofRestrictions: [
-      {
-        issuer_did: 'RGjWbW1eycP7FrMf4QJvX8',
-        schema_name: 'Person',
-        schema_version: '1.0',
-      },
-    ],
-  },
-} as const
 
 export const AttestationRestrictions: { [key: string]: CredentialRestrictionEnvironment } = {
   Development: {
@@ -273,15 +219,15 @@ export const TEMPORARY_ACCOUNT_CLIENT_ID = ''
 
 // Credential constants
 // TODO (MD): Pull these values from well-known urls or remote config (ie: Firebase Remote Config)
-export const DIGITAL_SERVICES_CARD_CREDENTIAL_DEFINITION_IDS = [
-  'RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person',
-  'KCxVC8GkKywjhWJnUfCmkW:3:CL:20:PersonQA',
-  '7xjfawcnyTUcduWVysLww5:3:CL:28075:PersonSIT',
-  'XpgeQa93eZvGSZBZef3PHn:3:CL:28075:PersonDEV',
+export const DIGITAL_SERVICES_CARD_CREDENTIAL_IDENTITIES = [
+  DigitalServicesCredentialPROD,
+  DigitalServicesCredentialSIT,
+  DigitalServicesCredentialQA,
+  DigitalServicesCredentialDEV,
 ]
-export const DIGITAL_SERVICES_CARD_SCHEMA_IDS = [
-  'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0',
-  'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0',
-  '7xjfawcnyTUcduWVysLww5:2:Person:1.0',
-  'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0',
-]
+export const DIGITAL_SERVICES_CARD_CREDENTIAL_DEFINITION_IDS = DIGITAL_SERVICES_CARD_CREDENTIAL_IDENTITIES.map(
+  (credential) => credential.credDefId
+)
+export const DIGITAL_SERVICES_CARD_SCHEMA_IDS = DIGITAL_SERVICES_CARD_CREDENTIAL_IDENTITIES.map(
+  (credential) => credential.schemaId
+)
