@@ -25,9 +25,11 @@ export async function getTempEmailAddress(): Promise<{ email: string; token: str
     // sends the next person hunting through the app.
     const cause = (error as { cause?: { code?: string } }).cause?.code
     const blocked = cause === 'SELF_SIGNED_CERT_IN_CHAIN' || cause === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE'
+    const host = new URL(TEMP_EMAIL_API).host
+    const causeDetail = cause ? `: ${cause}` : ''
     console.error('Error fetching temporary email address:', error)
     throw new Error(
-      `Could not reach the temporary-inbox provider (${new URL(TEMP_EMAIL_API).host})${cause ? `: ${cause}` : ''}. ` +
+      `Could not reach the temporary-inbox provider (${host})${causeDetail}. ` +
         (blocked
           ? 'The TLS chain was replaced, which is what a network filtering disposable-email services looks like — ' +
             'run this journey from a network that allows it (CI does).'
@@ -97,7 +99,8 @@ export async function getEmailConfirmationCode(
   const { timeout = 60_000, interval = 10_000, afterMailId = 0 } = options
   const deadline = Date.now() + timeout
 
-  console.log(`Waiting for email confirmation code${afterMailId ? ` newer than mail ${afterMailId}` : ''}...`)
+  const newerThan = afterMailId ? ` newer than mail ${afterMailId}` : ''
+  console.log(`Waiting for email confirmation code${newerThan}...`)
   while (Date.now() < deadline) {
     await new Promise((resolve) => setTimeout(resolve, interval))
 

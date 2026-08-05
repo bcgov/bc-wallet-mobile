@@ -84,13 +84,12 @@ export async function approveInPersonRequest(
     await approveInPersonLogin(loginInput, { signal: controller.signal })
   } catch (error: unknown) {
     const elapsedMs = Date.now() - startedAt
+    const message = error instanceof Error ? error.message : String(error)
     // Our own abort surfaces from undici as a bare "This operation was aborted" — name it as OUR budget
     // so it is never mistaken for an SM rejection.
     const detail = controller.signal.aborted
       ? `the ${timeoutMs}ms budget for the whole SM chain ran out (see the per-step [sm-login] timings for where it went)`
-      : error instanceof Error
-        ? error.message
-        : String(error)
+      : message
     throw new Error(`In-person approval failed after ${elapsedMs}ms (flow=${input.flow}, code="${code}"): ${detail}`)
   } finally {
     clearTimeout(timeoutId)
