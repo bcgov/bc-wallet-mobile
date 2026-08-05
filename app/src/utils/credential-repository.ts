@@ -59,10 +59,10 @@ export class CredentialSchemaRecord {
 }
 
 /**
- * Credential identity record class that combines a credential definition record and a credential schema record.
- * @class CredentialIdentityRecord
+ * Credential identity class that combines a credential definition record and a credential schema record.
+ * @class CredentialIdentity
  */
-export class CredentialIdentityRecord {
+export class CredentialIdentity {
   credDefId: string
   schemaId: string
   issuerDid: string
@@ -95,19 +95,19 @@ export class CredentialIdentityRecord {
 // CREDENTIAL IDENTITY RECORDS
 
 // Digital Services Card Credentials (Person credentials)
-export const DigitalServicesCardCredentialDEV = new CredentialIdentityRecord(
+export const DigitalServicesCardCredentialIdentityDEV = new CredentialIdentity(
   'XpgeQa93eZvGSZBZef3PHn:3:CL:28075:PersonDEV',
-  'XpgeQa93eZvGSZBZef3PHn:2:PersonDEV:1.0'
+  'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0'
 )
-export const DigitalServicesCardCredentialQA = new CredentialIdentityRecord(
+export const DigitalServicesCardCredentialIdentityQA = new CredentialIdentity(
   'KCxVC8GkKywjhWJnUfCmkW:3:CL:20:PersonQA',
   'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0'
 )
-export const DigitalServicesCardCredentialSIT = new CredentialIdentityRecord(
+export const DigitalServicesCardCredentialIdentitySIT = new CredentialIdentity(
   '7xjfawcnyTUcduWVysLww5:3:CL:28075:PersonSIT',
   '7xjfawcnyTUcduWVysLww5:2:Person:1.0'
 )
-export const DigitalServicesCardCredentialPROD = new CredentialIdentityRecord(
+export const DigitalServicesCardCredentialIdentityPROD = new CredentialIdentity(
   'RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person',
   'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0'
 )

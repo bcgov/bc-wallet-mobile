@@ -1,9 +1,9 @@
 import { ViewStyle } from 'react-native'
 import {
-  DigitalServicesCardCredentialDEV,
-  DigitalServicesCardCredentialPROD,
-  DigitalServicesCardCredentialQA,
-  DigitalServicesCardCredentialSIT,
+  DigitalServicesCardCredentialIdentityDEV,
+  DigitalServicesCardCredentialIdentityPROD,
+  DigitalServicesCardCredentialIdentityQA,
+  DigitalServicesCardCredentialIdentitySIT,
 } from './utils/credential-repository'
 
 // TODO (MD): Normalize casing of constants (ie: SCREAMING_SNAKE_CASE vs camelCase) and group them in a more structured way (ie: AnalyticsConstants, BCSCConstants, etc.)
@@ -220,10 +220,10 @@ export const TEMPORARY_ACCOUNT_CLIENT_ID = ''
 // Credential constants
 // TODO (MD): Pull these values from well-known urls or remote config (ie: Firebase Remote Config)
 export const DIGITAL_SERVICES_CARD_CREDENTIAL_IDENTITY_RECORDS = [
-  DigitalServicesCardCredentialPROD,
-  DigitalServicesCardCredentialSIT,
-  DigitalServicesCardCredentialQA,
-  DigitalServicesCardCredentialDEV,
+  DigitalServicesCardCredentialIdentityPROD,
+  DigitalServicesCardCredentialIdentitySIT,
+  DigitalServicesCardCredentialIdentityQA,
+  DigitalServicesCardCredentialIdentityDEV,
 ]
 export const DIGITAL_SERVICES_CARD_CREDENTIAL_DEFINITION_IDS = DIGITAL_SERVICES_CARD_CREDENTIAL_IDENTITY_RECORDS.map(
   (identity) => identity.credDefId

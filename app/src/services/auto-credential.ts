@@ -195,14 +195,12 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
   // ie: { cred_def_id: 'abc' } matches { cred_def_id: 'abc', schema_id: 'xyz' }
   // ie: { cred_def_id: 'abc', schema_id: 'xyz' } does NOT match { cred_def_id: 'abc' }
   private restrictionMatchesRule(restriction: AnonCredsProofRequestRestriction, rule: AutoCredentialRule): boolean {
-    const restrictionMatchesTrigger = (trigger: AnonCredsProofRequestRestriction): boolean => {
+    return rule.triggerRestrictions.some((trigger) => {
       return Object.entries(trigger).every(([key, value]) => {
         const restrictionValue = restriction[key as keyof AnonCredsProofRequestRestriction]
         return restrictionValue === value
       })
-    }
-
-    return rule.triggerRestrictions.some(restrictionMatchesTrigger)
+    })
   }
 
   /**
@@ -420,19 +418,16 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
       ...Object.values(requestFormat.requested_predicates ?? {}).flatMap((predicates) => predicates.restrictions ?? []),
     ]
 
-    for (const rule of this.rules) {
-      // compare the cred def id against the rule trigger IDs, if any match then this proof is requesting a credential that would trigger the workflow
-      const proofRequestsWatchedCredential = restrictions.some((restriction) =>
-        this.restrictionMatchesRule(restriction, rule)
-      )
+    const matchedRules = this.rules.filter((rule) =>
+      restrictions.some((restriction) => this.restrictionMatchesRule(restriction, rule))
+    )
 
-      this.log?.info(
-        `[AutoCredentialMonitor] Proof ${proof.id} requests credential(s) that match rule trigger IDs: ${proofRequestsWatchedCredential}`
-      )
-      if (!proofRequestsWatchedCredential) {
-        continue
-      }
+    if (matchedRules.length === 0) {
+      this.log?.info(`[AutoCredentialMonitor] Proof ${proof.id} does not match any rule trigger IDs`)
+      return
+    }
 
+    for (const rule of matchedRules) {
       try {
         const isMissing = await this.isCredentialMissingForRule(proof.id, requestFormat, rule)
         this.log?.info(`[AutoCredentialMonitor] Credential  is ${isMissing ? 'NOT ' : ''}in the wallet`)
