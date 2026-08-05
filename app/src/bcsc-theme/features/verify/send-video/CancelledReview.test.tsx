@@ -16,12 +16,12 @@ jest.mock('@/bcsc-theme/hooks/useVerificationReset', () => ({
 }))
 
 const mockCleanUpVerificationData = jest.fn()
-const mockGoToMethodSelection = jest.fn()
+const mockResumeVerification = jest.fn()
 jest.mock('./CancelledReviewViewModel', () => ({
   __esModule: true,
   default: jest.fn(() => ({
     cleanUpVerificationData: mockCleanUpVerificationData,
-    goToMethodSelection: mockGoToMethodSelection,
+    resumeVerification: mockResumeVerification,
   })),
 }))
 
@@ -97,7 +97,7 @@ describe('CancelledReview', () => {
 
   // MainStack and VerifyStack register this screen under distinct route names, so it must
   // leave via store state (a stack swap), never an in-stack navigation.
-  it('re-enters the verify flow via goToMethodSelection without navigating in-stack', async () => {
+  it('re-enters the verify flow via resumeVerification without navigating in-stack', async () => {
     const agentReason = 'Test reason'
     const route = {
       params: {
@@ -115,7 +115,7 @@ describe('CancelledReview', () => {
     fireEvent.press(okButton)
 
     await waitFor(() => {
-      expect(mockGoToMethodSelection).toHaveBeenCalledTimes(1)
+      expect(mockResumeVerification).toHaveBeenCalledTimes(1)
     })
     expect(mockNavigation.reset).not.toHaveBeenCalled()
     expect(mockNavigation.goBack).not.toHaveBeenCalled()
@@ -161,7 +161,7 @@ describe('CancelledReview', () => {
     fireEvent.press(okButton)
 
     await waitFor(() => {
-      expect(mockGoToMethodSelection).toHaveBeenCalledTimes(1)
+      expect(mockResumeVerification).toHaveBeenCalledTimes(1)
     })
 
     fireEvent.press(okButton)
@@ -169,7 +169,7 @@ describe('CancelledReview', () => {
     await waitFor(() => {
       expect(mockVerificationReset).toHaveBeenCalledTimes(2)
     })
-    expect(mockGoToMethodSelection).toHaveBeenCalledTimes(2)
+    expect(mockResumeVerification).toHaveBeenCalledTimes(2)
   })
 
   it('blocks a second tap while a reset is already in flight', async () => {
@@ -203,7 +203,7 @@ describe('CancelledReview', () => {
     await waitFor(() => {
       expect(mockStopLoading).toHaveBeenCalledTimes(1)
     })
-    expect(mockGoToMethodSelection).toHaveBeenCalledTimes(1)
+    expect(mockResumeVerification).toHaveBeenCalledTimes(1)
   })
 
   it('re-enables the button and does not navigate when the reset fails', async () => {
@@ -228,7 +228,7 @@ describe('CancelledReview', () => {
       expect(mockStopLoading).toHaveBeenCalledTimes(1)
     })
 
-    expect(mockGoToMethodSelection).not.toHaveBeenCalled()
+    expect(mockResumeVerification).not.toHaveBeenCalled()
     const buttonTouchable = tree.getByTestId(testIdWithKey('SystemModalButton'))
     expect(buttonTouchable.props.accessibilityState?.disabled).toBeFalsy()
   })

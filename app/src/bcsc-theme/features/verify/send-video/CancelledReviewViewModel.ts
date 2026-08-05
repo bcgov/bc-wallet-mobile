@@ -19,10 +19,13 @@ const useCancelledReviewViewModel = () => {
     dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [undefined] })
     updateAccountFlags({ userSubmittedVerificationVideo: false })
   }, [dispatch, updateAccountFlags, updateVerificationRequest])
-  const goToMethodSelection = () => continueVerificationProcess()
+  // Deliberately not named for a screen: this flips verification back to in-progress and lets
+  // VerifyStack pick the landing step via getResumeStepRoute, which resolves to IdentitySelection
+  // after a full reset and moves whenever the resume rules do.
+  const resumeVerification = () => continueVerificationProcess()
   return {
     cleanUpVerificationData,
-    goToMethodSelection,
+    resumeVerification,
   }
 }
 
