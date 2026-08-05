@@ -16,14 +16,9 @@ const VALIDATE_CARDHOLDER_URL = 'https://idsit.gov.bc.ca/idcheck/protected/valid
 const VERIFY_NON_BCSC_URL = 'https://idsit.gov.bc.ca/idcheck/protected/counterNonBcscRequest/verifyIdentity'
 
 /**
- * Wall-clock at the previous {@link logStep}, so each line can report how long its request took.
- * Reset at the top of {@link approveInPersonLogin}.
- *
- * Worth the module-level state: the whole SM chain runs under ONE client-side abort budget, so when
- * that budget expires the error names whichever request was in flight — structurally the last one —
- * and says nothing about which step actually ate the time. These timings are the difference between
- * "the budget was thin" and "that endpoint hung". Safe as module state because each wdio worker is
- * its own process and runs one journey at a time.
+ * Wall-clock at the previous {@link logStep}, so each line reports how long its request took. The whole
+ * chain shares ONE abort budget, so a timeout names the request in flight — structurally the last one —
+ * not the slow one; these timings tell them apart. Module state is safe: one wdio worker, one journey.
  */
 let previousStepAt = 0
 
@@ -55,9 +50,8 @@ async function logStep(step, response, bodyText) {
     try {
       const parsed = JSON.parse(body)
       console.log(`  body: ${JSON.stringify(parsed).slice(0, 300)}`)
-      // The transaction's device list falls outside that 300-char slice, and it is the one thing in
-      // this response that reflects what EARLIER runs left on the account — the same test cards are
-      // shared by every platform's suite, and nothing here deregisters them afterwards.
+      // The device list falls outside that 300-char slice, and it is the only thing here that shows what
+      // EARLIER runs left on the shared test cards — nothing deregisters them afterwards.
       if (Array.isArray(parsed.devices)) {
         const names = parsed.devices.map((device) => device?.applicationName ?? '(unnamed)').join(', ')
         console.log(`  devices (${parsed.devices.length}): ${names}`)

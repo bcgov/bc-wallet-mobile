@@ -20,10 +20,9 @@ export async function getTempEmailAddress(): Promise<{ email: string; token: str
 
     return { email: email_addr, token: sid_token }
   } catch (error) {
-    // This request comes from the RUNNER, not the device, so it is the runner's network that has to
-    // reach a disposable-email service — and those are a standard corporate-filtering target. A TLS
-    // error here is that block, not a broken test: say so, because `fetch failed` alone sends the
-    // next person hunting through the app.
+    // This runs on the RUNNER's network, and disposable-email services are a standard filtering target,
+    // so a TLS error here is that block rather than a broken test — say so, or `fetch failed` alone
+    // sends the next person hunting through the app.
     const cause = (error as { cause?: { code?: string } }).cause?.code
     const blocked = cause === 'SELF_SIGNED_CERT_IN_CHAIN' || cause === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE'
     console.error('Error fetching temporary email address:', error)
@@ -57,10 +56,9 @@ function mailId(email: Email): number {
 /**
  * The highest message id in the inbox, waiting until there is at least one message.
  *
- * Take this BEFORE an action that should send another email, then pass it as `afterMailId` so the wait
- * for that email cannot be satisfied by one already in flight. The waiting is the point: a baseline of
- * 0 taken from an inbox whose first message simply has not arrived yet would let the NEXT wait return
- * that first message — the very one the action being tested has just superseded.
+ * Take this BEFORE an action that should send another email, then pass it as `afterMailId` so that
+ * wait cannot be satisfied by a message already in flight. Waiting is the point: a 0 baseline from a
+ * not-yet-delivered inbox would let the next wait return that first, now-superseded message.
  */
 export async function getLatestMailId(
   token: string,
@@ -84,13 +82,12 @@ export async function getLatestMailId(
 /**
  * Retrieves the confirmation code from the email inbox.
  *
- * Always reads the NEWEST message (highest `mail_id`), not the first in the listing: a resend leaves
- * two codes in the inbox and only the latest one still matches the verification the screen is now
- * pointing at — the resend mints a new `email_address_id`, which retires the previous code.
+ * Always reads the NEWEST message (highest `mail_id`), not the first in the listing: a resend leaves two
+ * codes in the inbox, and it mints a new `email_address_id`, so only the latest one still works.
  *
  * @param token - The token associated with the temporary email address, used to check for incoming emails.
- * @param options - Timeout/polling, plus `afterMailId`: ignore anything already in the inbox and wait
- *   for a message newer than that id (see {@link getLatestMailId}).
+ * @param options - Timeout/polling, plus `afterMailId`: wait for a message newer than that id, ignoring
+ *   anything already in the inbox (see {@link getLatestMailId}).
  * @returns The 6-digit confirmation code extracted from the email body.
  */
 export async function getEmailConfirmationCode(

@@ -17,14 +17,10 @@ const STEADY_POSITION_SAMPLE_MS = 120
 const IOS_KEYBOARD_DISMISS_KEYS = ['done', 'Done', 'return', 'Return', 'go', 'Go', 'next', 'Next', 'search', 'Search']
 
 /**
- * Does the on-screen keyboard carry any of {@link IOS_KEYBOARD_DISMISS_KEYS}? Built from that list so
- * the two cannot drift, and it mirrors the test WebDriverAgent runs inside `mobile: hideKeyboard` —
- * identifier or label, over every key and button under the keyboard — so a hit here means that
- * command has something to press.
- *
- * Asking first is what makes number pads cheap. WDA has no answer for a keyboard carrying no
- * dismissal key: it falls through to a hard-coded 3s re-check of keyboard visibility and only then
- * throws. This probe is one query, and it turns that 3s failure into a decision not to try.
+ * Does the on-screen keyboard carry any of {@link IOS_KEYBOARD_DISMISS_KEYS}? Built from that list so the
+ * two cannot drift, and it mirrors the test WDA runs inside `mobile: hideKeyboard` — so a hit means that
+ * command has something to press. Asking first is what makes number pads cheap: with no dismissal key
+ * WDA falls through to a hard-coded 3s re-check before throwing, and this probe is one query.
  */
 const IOS_KEYBOARD_DISMISS_KEY_SELECTOR = `-ios class chain:**/XCUIElementTypeKeyboard/**/*[\`${IOS_KEYBOARD_DISMISS_KEYS.map(
   (key) => `name == "${key}" OR label == "${key}"`
@@ -361,16 +357,14 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * province dropdown, opening the modal and stranding the journey. No coordinate is safe —
    * `InputWithValidation`'s 44px hitSlop makes the gaps between fields live too.
    *
-   * Number pads (birthdate, email code, PIN) carry digits and a delete key only, so on iOS nothing on
-   * the keyboard itself can close them — we detect that up front and leave the keyboard up instead of
-   * paying WDA's 3s failure for it. That is fine by default: every form calling this uses
-   * `ScreenWrapper keyboardActive`, which lays its controls out above the keyboard. For the screens
-   * where it is not fine, pass `tapToDismiss`.
+   * On iOS, number pads (birthdate, email code, PIN) carry no key that can close them — detected up
+   * front, so the keyboard is left up rather than pay WDA's 3s failure. Usually fine: the forms calling
+   * this use `ScreenWrapper keyboardActive`, which lays controls out above the keyboard. Where it is
+   * not, pass `tapToDismiss`.
    *
-   * @param options.tapToDismiss - testID of an INERT element on the current screen (a heading, say)
-   *   to tap when the keyboard carries no dismissal key of its own. `ScreenWrapper`'s scroll view
-   *   sets `keyboardShouldPersistTaps: 'handled'`, so a tap no child handles blurs the focused input.
-   *   Named, never positional — see the coordinate hazard above.
+   * @param options.tapToDismiss - testID of an INERT element (a heading, say) to tap when the keyboard
+   *   has no dismissal key. `ScreenWrapper` sets `keyboardShouldPersistTaps: 'handled'`, so a tap no
+   *   child handles blurs the focused input. Named, never positional — see the coordinate hazard above.
    * @returns whether the keyboard is down by the time this returns
    */
   async dismissKeyboard(options?: { tapToDismiss?: string }): Promise<boolean> {
@@ -382,8 +376,8 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
     const hasDismissKey = await this.hasIosKeyboardDismissKey()
     if (hasDismissKey) {
       try {
-        // Presses the first matching key. Throws when the keyboard has none of them — not when the
-        // command is missing — which the probe above has already ruled out in the common case.
+        // Presses the first matching key; throws when the keyboard has none — which the probe above has
+        // already ruled out in the common case.
         await driver.execute('mobile: hideKeyboard', { keys: IOS_KEYBOARD_DISMISS_KEYS })
         if (await this.waitForKeyboardHidden()) return true
       } catch {
@@ -410,11 +404,9 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
   }
 
   /**
-   * Does the current iOS keyboard have a key that closes it? Number pads do not; the alphabetic and
-   * email keyboards carry a `return`.
-   *
-   * An unanswerable probe returns true: attempting the command anyway is the older behaviour and no
-   * worse than it was.
+   * Does the current iOS keyboard have a key that closes it? Number pads do not; alphabetic and email
+   * keyboards carry a `return`. An unanswerable probe returns true — attempting the command anyway is
+   * the older behaviour.
    */
   private async hasIosKeyboardDismissKey(): Promise<boolean> {
     try {
@@ -425,17 +417,13 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
   }
 
   /**
-   * Close the Android soft keyboard, verified. `driver.hideKeyboard()` is adb underneath: ESC, then
-   * BACK, each polled against `dumpsys input_method`. It throws when neither lands — notably when the
-   * IME reports `mIsInputViewShown=false`, where adb sends no key at all and only waits.
+   * Close the Android soft keyboard, verified. `driver.hideKeyboard()` is adb underneath (ESC, then
+   * BACK) and throws when neither lands — notably when the IME reports `mIsInputViewShown=false`.
    *
-   * The IME's own "done" editor action is a second, independent way in: it blurs the focused field
-   * through the input connection instead of pressing a system key. Kept as the fallback rather than
-   * the first move because Appium implements it by swapping the device IME to its own, sending the
-   * action, then swapping back — worth it only once the cheap route has already failed. No app input
-   * sets `onSubmitEditing`, so the action blurs and nothing else fires.
-   *
-   * Never throws — a keyboard probe must not fail the caller's real action.
+   * The IME's "done" editor action is an independent way in: it blurs through the input connection
+   * rather than a system key. Second because Appium implements it by swapping the device IME and back.
+   * No app input sets `onSubmitEditing`, so it only blurs. Never throws — a keyboard probe must not
+   * fail the caller's real action.
    */
   private async hideAndroidKeyboard(): Promise<boolean> {
     await driver.hideKeyboard().catch(() => undefined)
@@ -449,13 +437,10 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
   }
 
   /**
-   * Poll until the keyboard is actually gone, then let the layout it was covering settle. Both
-   * platforms' dismissal commands already block until the keyboard reports hidden, so on the happy
-   * path this costs one probe; it earns its keep when one of them reports success over a keyboard
-   * that is still up.
-   *
-   * An unreadable probe counts as "gone" — like every other keyboard probe here, when we cannot tell,
-   * take the cheap branch and let the caller's real action be the thing that fails.
+   * Poll until the keyboard is actually gone, then let the layout settle. Both platforms' dismissal
+   * commands already block until it reports hidden, so this costs one probe on the happy path; it earns
+   * its keep when one of them reports success over a keyboard that is still up. An unreadable probe
+   * counts as "gone" — let the caller's real action be the thing that fails.
    */
   private async waitForKeyboardHidden(timeout: number = KEYBOARD_RETRACT_TIMEOUT_MS): Promise<boolean> {
     try {

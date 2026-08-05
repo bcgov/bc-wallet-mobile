@@ -55,10 +55,9 @@ const EMAIL_ALERT_OK = 'OK'
  * selectEvidenceType lists the real ones on a miss), the ResidentialAddress province dropdown
  * (`province-option-BC`), and the mandatory email step all resolve.
  *
- * Because this is the only journey that reaches them, it also carries the branch-sweep riders that need
- * this state: the under-12 birthdate rejection on the first document's form, the second slot's filtered
- * ID list, the wrong-code/resend email detours, and the two resume steps (address, email) that cannot be
- * reached without paying for two captured documents.
+ * Being the only journey that reaches them, it also carries the riders that need this state: the under-12
+ * birthdate rejection, the second slot's filtered ID list, the wrong-code/resend email detours, and the
+ * two resume steps (address, email) that cost two captured documents.
  *
  * Ordered session: onboard → OtherID → two documents → residential address → email (temp inbox) →
  * method selection → in-person → verified Home
@@ -77,14 +76,12 @@ describe('Verified journey: non-bcsc card', () => {
     await chooseAddAccount()
     await captureFirstNonBcscDocument(getTestUser(), FIRST_DOC_MATCH)
 
-    // The age rule is client-side and lives ONLY here — there is no under-12 card process, so this
-    // inline rejection is the whole of the app's under-12 behaviour. Submit an under-age date first,
-    // then the real one; the form re-types every field, so the second submit replaces it cleanly.
+    // The age rule is client-side and lives ONLY here — there is no under-12 card process. Submit an
+    // under-age date, then the real one; the form re-types every field, so the second submit is clean.
     const user = getNonBcscTestUser()
     const personalInfo = { lastName: user.lastName, firstName: user.firstName, dob: UNDER_AGE_DOB }
     await submitEvidenceIdCollection(user.primaryDocumentNumber, personalInfo)
-    // The birthdate field always renders this node (it doubles as the field's static hint), so the
-    // assertion is on its TEXT, not its presence. `waitFor` scroll-hunts it into view first.
+    // This node doubles as the field's static hint, so assert its TEXT, not its presence.
     await EvidenceIDCollectionScreen.waitFor('birthdateSubtext', Timeouts.SCREEN_TRANSITION)
     assert.equal(await EvidenceIDCollectionScreen.read('birthdateSubtext'), UNDER_AGE_ERROR)
 
@@ -92,8 +89,8 @@ describe('Verified journey: non-bcsc card', () => {
   })
 
   it('offers a different ID list for the second slot, without the one already used', async () => {
-    // The list filters by `collection_order` AND hides anything already chosen, so the two slots are
-    // genuinely different lists — the second must not offer the licence just collected.
+    // The list filters by `collection_order` and hides what is already chosen, so the second slot must
+    // not offer the licence just collected.
     const rows = await listEvidenceTypeRowIds()
     assert.ok(
       !rows.some((id) => id.toLowerCase().includes(FIRST_DOC_MATCH.toLowerCase())),
@@ -112,8 +109,7 @@ describe('Verified journey: non-bcsc card', () => {
   })
 
   it('resumes onto the address step after leaving verification', async () => {
-    // Both documents are complete but the device is not yet authorized, so the address step is what
-    // the app owes the user — the resume row that cannot be reached without paying for two captures.
+    // Both documents are complete but the device is not yet authorized, so address is the owed step.
     await leaveVerificationToHome()
     await resumeVerification()
     await ResidentialAddressScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
@@ -133,15 +129,15 @@ describe('Verified journey: non-bcsc card', () => {
   it('rejects a wrong email code, then verifies with a resent one', async () => {
     const token = await startEmailVerification()
 
-    // Six digits, so this is the SERVER's rejection (404) rather than the client-side length rule:
-    // it renders the message inline and raises an alert carrying the same copy.
+    // Six digits, so this is the SERVER's 404 rather than the client-side length rule: it renders the
+    // message inline and raises an alert carrying the same copy.
     await submitEmailCode(WRONG_EMAIL_CODE)
     await tapAlertButton(EMAIL_ALERT_OK)
     await EmailConfirmationScreen.waitFor('codeError', Timeouts.SCREEN_TRANSITION)
     assert.equal(await EmailConfirmationScreen.read('codeError'), CODE_DOES_NOT_MATCH)
 
-    // Resending mints a new verification, retiring the code already sent — so the only code that can
-    // work from here is the one the resend produces. That it arrives is the resend's assertion.
+    // The resend retires the code already sent, so only the new one can work — and that it arrives at
+    // all is the resend's assertion.
     await submitEmailCode(await resendEmailCode(token))
     await completeEmailVerification()
     await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)

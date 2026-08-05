@@ -6,10 +6,8 @@ const DEFAULT_DISMISS_TIMEOUT_MS = 3_000
 
 // 'Open' accepts the iOS "Open in <app>?" confirmation raised when a deep link resolves to the app.
 const IOS_APPROVE_ALERT_BUTTON_LABELS = ['Allow', 'Allow While Using App', 'Allow Once', 'OK', 'Trust', 'Continue', 'Open']
-// iOS types the apostrophe in "Don't Allow" as U+2019, not U+0027 — observed on iOS 17, where matching
-// only the straight form dropped the deny through to the label-blind `mobile: alert dismiss` fallback.
-// Both are listed (rather than swapped) because the rendered form is an OS-version detail, not a
-// contract, and the escape keeps the two visually indistinguishable characters apart in source.
+// iOS renders the apostrophe in "Don't Allow" as U+2019 — matching only the straight form let the deny
+// fall through to the label-blind dismiss fallback. Both are listed; the rendered form is OS-dependent.
 const IOS_DECLINE_ALERT_BUTTON_LABELS = ["Don't Allow", 'Don\u2019t Allow', 'Deny', 'Cancel', 'Not Now']
 
 const ANDROID_PERM_ALLOW_REGEX = '.*:id/permission_allow.*'
@@ -279,22 +277,18 @@ export async function tapResetAppConfirm(appearTimeoutMs = DEFAULT_APPEAR_TIMEOU
 }
 
 /**
- * Tap a NAMED button on an app-owned `Alert.alert` — the two-action confirmations the verify flow
- * raises (restart verification, skip email), where cancel and confirm must be told apart.
+ * Tap a NAMED button on an app-owned `Alert.alert` — the verify flow's two-action confirmations, where
+ * cancel and confirm must be told apart. `acceptSystemAlert`/`acceptAppAlert` cannot: they take whichever
+ * button the platform calls the accept action, which for such a pair is the choice under test.
  *
- * `acceptSystemAlert` / `acceptAppAlert` cannot do this: they take whichever button the platform
- * considers the accept action, which for a cancel/destructive pair is exactly the choice under test.
- *
- * iOS goes through WDA's `buttonLabel` (it reaches the alert even when it is presented over a modal,
- * as the help menu's are), falling back to a direct tap inside the alert. Android matches the button's
- * visible label case-insensitively — the AppCompat dialog theme may upper-case it for display — and
- * never consults the popup probes, which on that platform only recognize the OS permission dialog.
+ * iOS uses WDA's `buttonLabel` (it reaches alerts presented over a modal, as the help menu's are), then
+ * falls back to a direct tap. Android matches the visible label case-insensitively — AppCompat may
+ * upper-case it.
  */
 export async function tapAlertButton(label: string, appearTimeoutMs = DEFAULT_APPEAR_TIMEOUT_MS): Promise<void> {
   if (driver.isAndroid) {
-    // The presence probes above only know the OS permission controller, so an app dialog is waited on
-    // through the button itself (as `tapResetAppConfirm` / `acceptAppAlert` do). The reverse wait is
-    // what proves the tap landed — the dialog is gone, not merely tapped at.
+    // The popup probes above only know the OS permission controller, so an app dialog is waited on
+    // through the button itself; the reverse wait is what proves the tap landed.
     const escaped = label.replaceAll(/[.*+?^${}()|[\]\\]/g, (match) => `\\${match}`)
     const button = $(`android=new UiSelector().textMatches("(?i)^${escaped}$")`)
     await button.waitForDisplayed({ timeout: appearTimeoutMs })
@@ -307,8 +301,7 @@ export async function tapAlertButton(label: string, appearTimeoutMs = DEFAULT_AP
   if (!(await waitForPopup(appearTimeoutMs))) {
     throw new Error(`[alerts] No alert appeared within ${appearTimeoutMs}ms to tap "${label}" on`)
   }
-  // WDA's accept-by-name taps the button it is given, whichever role it plays — so this is how the
-  // cancel action is chosen too, not just the confirming one.
+  // WDA's accept-by-name taps whichever button it is given, whatever role it plays — cancel included.
   const tappedByLabel = await quietly(() =>
     driver
       .execute('mobile: alert', { action: 'accept', buttonLabel: label })

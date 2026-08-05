@@ -40,23 +40,16 @@ import {
 } from '../screens/verify.js'
 
 /**
- * Verify-stack arranges: the entry spine plus the post-authorize step arranges that mirror the app's
- * `getResumeStepRoute` (id → address → email → verify). Reaching a given step is composed from
- * `reachVerificationMethod()` + the explicit per-step arranges (`collectNonBcscEvidence`,
- * `fillResidentialAddress`, `verifyEmailWithTempInbox`, `addAdditionalPhotoId`) rather than a single
- * parameterized `reachVerifyStep`. `completeVerification(user)` then drives the
- * in-person approval to VerificationSuccess.
+ * Verify-stack arranges: the entry spine plus the per-step arranges that mirror the app's
+ * `getResumeStepRoute` (id → address → email → verify), composed with `reachVerificationMethod()`.
  *
- * Reminder: the VerifyPrompt exists only in the session that completed onboarding — run
- * `completeOnboarding()` first and never relaunch in between.
+ * VerifyPrompt exists only in the session that completed onboarding — run `completeOnboarding()` first
+ * and never relaunch in between.
  */
 
 const engine = new BaseScreen()
 
-/**
- * The confirming action on EnterEmail's skip alert (`BCSC.EnterEmail.EmailSkipButton2`) — copy-matched,
- * as the alert's buttons carry no testIDs. Its sibling action keeps the user on the form.
- */
+/** Confirming action on EnterEmail's skip alert — copy-matched, as its buttons carry no testIDs. */
 const EMAIL_SKIP_CONFIRM = 'Skip'
 
 /** VerifyPrompt `Continue` → the AccountSetup add-or-transfer choice. */
@@ -74,12 +67,8 @@ export async function chooseAddAccount(): Promise<void> {
 }
 
 /**
- * Leave an in-progress verification for Home via the header help menu's "Back to home", KEEPING
- * progress (`useLeaveVerification` only moves the verification status out of IN_PROGRESS, which makes
- * RootStack render the MainStack; nothing is cleared).
- *
- * Available on every verify screen except the initial VerifyPrompt and the two transfer screens, which
- * override `headerRight` with the default help menu.
+ * Help menu → "Back to home", KEEPING progress (the app only moves the status out of IN_PROGRESS).
+ * Available on every verify screen except VerifyPrompt and the two transfer screens.
  */
 export async function leaveVerificationToHome(): Promise<void> {
   await openHelpMenu()
@@ -88,10 +77,9 @@ export async function leaveVerificationToHome(): Promise<void> {
 }
 
 /**
- * Re-enter an interrupted verification from Home by tapping the Start/Continue-verification card —
- * the app's ONLY route back in, since the in-progress flag is in-memory and every relaunch recomputes
- * it as unverified. The VerifyStack then mounts at `getResumeStepRoute`; WHICH screen that is, is the
- * caller's assertion (that mapping is the thing under test).
+ * Re-enter an interrupted verification from Home's verification card — the only route back in, since
+ * the in-progress flag is in-memory. The stack mounts at `getResumeStepRoute`; which screen that is,
+ * is the caller's assertion.
  */
 export async function resumeVerification(): Promise<void> {
   await HomeNotificationCard.expectVisible(Timeouts.SCREEN_TRANSITION)
@@ -99,12 +87,10 @@ export async function resumeVerification(): Promise<void> {
 }
 
 /**
- * Open the help menu's "Restart verification process" and answer its confirmation alert.
+ * Help menu → "Restart verification process", answering its confirmation alert.
  *
- * `confirm` wipes all verification progress and re-registers the device with IAS (a backend round trip
- * behind a loading screen), then clears the recorded setup type — so the flow reopens on AccountSetup,
- * NOT IdentitySelection. `cancel` leaves the menu open, so it is closed here to return the caller to
- * the screen they started on.
+ * `confirm` wipes progress and re-registers the device with IAS, reopening on AccountSetup — NOT
+ * IdentitySelection. `cancel` leaves the menu open, so it is closed here.
  */
 export async function restartVerification(answer: 'confirm' | 'cancel'): Promise<void> {
   await openHelpMenu()
@@ -118,10 +104,9 @@ export async function restartVerification(answer: 'confirm' | 'cancel'): Promise
 }
 
 /**
- * The CI-default serial path — no live camera: IdentitySelection `Scan` → ScanSerial (accepting the
- * OS camera dialog whenever it appears; no-op when permission is already granted) → `EnterManually` →
- * ManualSerial → serial typed → EnterBirthdate. Card type is derived later, by `authorizeDevice`
- * at the birthdate submit.
+ * The CI-default serial path, no live camera: `Scan` → ScanSerial (accepting the OS camera dialog if it
+ * appears) → `EnterManually` → serial typed → EnterBirthdate. Card type is derived later, by
+ * `authorizeDevice` at the birthdate submit.
  */
 export async function enterSerialManually(user: TestUser): Promise<void> {
   await IdentitySelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
@@ -136,10 +121,9 @@ export async function enterSerialManually(user: TestUser): Promise<void> {
 }
 
 /**
- * Fill and SUBMIT the birthdate — the submit fires the backend `authorizeDevice(serial, dob)` that
- * derives the card type and resumes the flow. Callers assert the post-authorize screen themselves
- * (it differs per card type). For a no-network fill (e.g. the entry-spine journey), use
- * `EnterBirthdateScreen.fill(...)` directly instead.
+ * Fill and SUBMIT the birthdate — the submit fires `authorizeDevice(serial, dob)`, which derives the
+ * card type. Callers assert the post-authorize screen themselves (it differs per card type); for a
+ * no-network fill, use `EnterBirthdateScreen.fill(...)` directly.
  */
 export async function enterBirthdate(user: TestUser): Promise<void> {
   await EnterBirthdateScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
@@ -148,11 +132,7 @@ export async function enterBirthdate(user: TestUser): Promise<void> {
   await EnterBirthdateScreen.tapWhenEnabled('primary')
 }
 
-/**
- * Build the SiteMinder in-person approval payload from a TestUser's flow — card-tap flows pass the
- * serial + birthdate, document flows pass the typed document number(s). Mirrors the per-flow inputs
- * `approveInPersonRequest` expects.
- */
+/** The SiteMinder approval payload for a user's flow: serial + birthdate, typed document numbers, or both. */
 function approvalInputForUser(user: TestUser): ApproveInPersonInput {
   if (user.flow === 'non-bcsc') {
     return {
@@ -175,11 +155,9 @@ function approvalInputForUser(user: TestUser): ApproveInPersonInput {
 }
 
 /**
- * From the post-authorize state (birthdate submitted), reach VerificationMethodSelection. For a
- * card-tap flow the address step is auto-satisfied once the device is authorized; the email step only
- * appears when the card supplied no verified email — detect it by its SkipEmail button (a stable
- * testID via the EnterEmail descriptor; the input marker is less reliable) and skip it (BCSC cards
- * allow skipping). On an unexpected screen the error reports what is actually on screen.
+ * From the post-authorize state, reach VerificationMethodSelection. The address step is auto-satisfied
+ * once the device is authorized; the email step only appears when the card supplied no verified email —
+ * detect it by its SkipEmail button and skip it (BCSC cards allow skipping).
  */
 export async function reachVerificationMethod(): Promise<void> {
   const deadline = Date.now() + Timeouts.APP_LAUNCH
@@ -189,10 +167,8 @@ export async function reachVerificationMethod(): Promise<void> {
     }
     if (await EnterEmailScreen.isVisible('skip')) {
       await EnterEmailScreen.tap('secondary') // SkipEmail (BCSC flow) → confirmation alert
-      // Skipping is confirm-gated: the tap only raises an `Alert.alert`, and the skip is recorded by
-      // its second action. Unanswered, that alert blocks the screen — so this branch cannot be a bare
-      // tap. It is currently unexercised (every SIT BCSC card carries a verified email, so the email
-      // step never renders), which is exactly why the alert had gone unnoticed.
+      // Confirm-gated: the tap only raises the alert, which blocks the screen until answered. Unexercised
+      // today, as every SIT BCSC card carries a verified email.
       await tapAlertButton(EMAIL_SKIP_CONFIRM)
       await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
       return
@@ -202,23 +178,17 @@ export async function reachVerificationMethod(): Promise<void> {
         `reachVerificationMethod: neither VerificationMethodSelection nor EnterEmail appeared. On screen: ${await describeCurrentScreen()}`
       )
     }
-    // VerificationMethodSelection anchors on the Hours-of-Service heading, which sits at the BOTTOM of
-    // the screen and can be below the fold on a short viewport — where isPresent() (which never scrolls)
-    // reads a genuine arrival as a miss. Nudge the content up to reveal the anchor before the next
-    // probe. Safe on the email screen (its Skip button is caught above, before we ever swipe) and a
-    // no-op while the post-authorize transition is still settling.
+    // VerificationMethodSelection anchors on the Hours-of-Service heading, which can sit below the fold
+    // where isPresent() (which never scrolls) reads an arrival as a miss. Nudge it into view.
     await swipeUpBy()
   }
 }
 
 /**
- * Complete verification via the IN-PERSON method — the CI default: no in-app camera, approved by the
- * real SiteMinder/IDcheck SIT flow (`approveInPersonRequest`; needs `SM_USER`/`SM_PASSWORD` and an
- * allowlisted runner IP). Assumes VerificationMethodSelection is showing. Reads the on-screen
- * confirmation code, drives the approval, then Complete → VerificationSuccess → Home (verified).
- *
- * In-person is the only CI-completable method (hence no `method` parameter); the send-video /
- * live-call methods enter camera screens and are exercised in the manual suite.
+ * Complete verification via the IN-PERSON method — the only CI-completable one (send-video and
+ * live-call open camera screens). From VerificationMethodSelection: read the confirmation code, drive
+ * the real SiteMinder SIT approval (needs `SM_USER`/`SM_PASSWORD` and an allowlisted runner IP), then
+ * Complete → VerificationSuccess → Home.
  */
 export async function completeVerification(user: TestUser): Promise<void> {
   await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
@@ -236,12 +206,11 @@ export async function completeVerification(user: TestUser): Promise<void> {
 }
 
 /**
- * Start the email step against a throwaway inbox: enter a temp address and continue to
- * EmailConfirmation. Returns the inbox token the code is later read with.
+ * Start the email step against a throwaway inbox, continuing to EmailConfirmation. Returns the inbox
+ * token the code is later read with.
  *
- * The email step is MANDATORY in the non-BCSC flow (Skip is hidden there and a non-BCSC user has no
- * card-provided email), so this belongs to the non-bcsc journey. BCSC photo/combined cards carry a
- * verified email and never see the step — those use `reachVerificationMethod` instead.
+ * Non-BCSC only: the step is mandatory there (Skip is hidden), while BCSC cards carry a verified email
+ * and never see it — those use `reachVerificationMethod` instead.
  */
 export async function startEmailVerification(): Promise<string> {
   const { email, token } = await getTempEmailAddress()
@@ -256,10 +225,8 @@ export async function startEmailVerification(): Promise<string> {
 }
 
 /**
- * Type a code into EmailConfirmation and press Continue. Deliberately asserts NOTHING about what
- * follows: a correct code resets the stack to EmailVerified, while a wrong one keeps the screen and
- * adds an inline error (plus, for a rejected-by-the-server code, an alert). The caller decides which
- * it expected.
+ * Type a code into EmailConfirmation and Continue. Asserts NOTHING about what follows — a correct code
+ * resets the stack to EmailVerified, a wrong one stays put with an inline error — so the caller decides.
  */
 export async function submitEmailCode(code: string): Promise<void> {
   await EmailConfirmationScreen.fill('code', code, { tapFirst: true })
@@ -270,25 +237,21 @@ export async function submitEmailCode(code: string): Promise<void> {
 /**
  * Tap "Send a new code" and return the code from the message that arrives AFTER it.
  *
- * Waiting for a NEW message is the assertion — the resend's only other feedback is a toast that
- * auto-hides in 1.5s, which a polling client cannot observe reliably. It also has to be a new message:
- * the resend mints a fresh `email_address_id`, so the code already in the inbox is dead from that
- * moment and submitting it would fail as a mismatch.
+ * The new message IS the assertion: the resend's only other feedback is a 1.5s toast, and it mints a
+ * fresh `email_address_id`, retiring the code already in the inbox.
  */
 export async function resendEmailCode(token: string): Promise<string> {
-  // Waits for the FIRST code to land before resending: taking the baseline from a still-empty inbox
-  // would let the wait below return that first message, whose code the resend has just retired.
+  // Wait for the first code before resending — a baseline taken from a still-empty inbox would let the
+  // wait below return that first, now-retired message.
   const alreadyReceived = await getLatestMailId(token)
   await tapResendCodeLink()
   return getEmailConfirmationCode(token, { afterMailId: alreadyReceived })
 }
 
 /**
- * Tap "Send a new code". Its testID sits on a `ThemedText` nested INSIDE another `ThemedText`, and RN
- * flattens nested text into the parent paragraph — the same shape that turned out to be unaddressable
- * for the Contacts inline link. It may still surface as its own element here, because this one also
- * carries `accessibilityRole="link"` and a label, so both handles are tried before giving up; the
- * failure names the cause rather than reporting a missing element.
+ * Tap "Send a new code". Its testID sits on a `ThemedText` nested inside another, which RN flattens into
+ * the parent paragraph — so the accessibility label is tried too, and the failure names that cause
+ * rather than reporting a missing element.
  */
 async function tapResendCodeLink(): Promise<void> {
   if (await EmailConfirmationScreen.isVisible('resendCode')) {
@@ -314,8 +277,8 @@ async function tapResendCodeLink(): Promise<void> {
 }
 
 /**
- * Finish the email step after a code was accepted: EmailVerified → VerificationMethodSelection.
- * EmailVerified's only testID is the shared Continue, so arrival is confirmed by its title copy.
+ * EmailVerified → VerificationMethodSelection. EmailVerified's only testID is the shared Continue, so
+ * arrival is confirmed by its title copy.
  */
 export async function completeEmailVerification(): Promise<void> {
   const verifiedTitle = await engine.findByText('Your email has been verified')
@@ -325,10 +288,7 @@ export async function completeEmailVerification(): Promise<void> {
   await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
 }
 
-/**
- * Every EvidenceTypeList row on screen, paired with its testID. The list has no container testID and
- * its rows are keyed by the SERVER's `evidence_type`, so the ids are discovered rather than declared.
- */
+/** Every EvidenceTypeList row with its testID — discovered, not declared: the ids embed the server's `evidence_type`. */
 async function evidenceTypeRows(): Promise<{ id: string; element: WebdriverIO.Element }[]> {
   const rowsSelector = driver.isIOS
     ? '-ios predicate string:name CONTAINS "EvidenceTypeListItem"'
@@ -345,24 +305,20 @@ async function evidenceTypeRows(): Promise<{ id: string; element: WebdriverIO.El
 }
 
 /**
- * The testIDs of the rows the list is currently offering — for asserting what it does NOT offer (an
- * ID already used, or one that belongs to the other collection slot). The ids embed the server's
- * `evidence_type`, so match them as substrings, and put the whole list in the failure message: it is
- * the only record of what the backend actually served.
+ * The testIDs the list is currently offering — for asserting what it does NOT offer. Match as
+ * substrings, and print the whole list on failure: it is the only record of what the backend served.
  */
 export async function listEvidenceTypeRowIds(): Promise<string[]> {
   return (await evidenceTypeRows()).map((row) => row.id)
 }
 
 /**
- * Tap an EvidenceTypeList row. Rows carry testID `EvidenceTypeListItem-<evidence_type>` where the
- * evidence_type suffix is SERVER-PROVIDED — so match it as a case-insensitive substring of the row's
- * testID (`match`, e.g. `'Passport'`) rather than a guessed exact label. Requires exactly one match;
- * on zero or multiple it throws WITH the list of row testIDs found, so a mismatch is self-diagnosing
- * (the next run's error reveals the real evidence_type values to pin).
+ * Tap the one EvidenceTypeList row whose testID contains `match` (case-insensitive; the
+ * `EvidenceTypeListItem-<evidence_type>` suffix is server-provided, so never guess an exact label).
+ * Zero or multiple matches throw with the row ids found, making a mismatch self-diagnosing.
  *
- * Selecting a row PERSISTS the choice and pushes IDPhotoInformation — so a caller that stops here has
- * left an evidence entry with no photos, which is the app's "capture interrupted" state.
+ * Selecting PERSISTS the choice and pushes IDPhotoInformation — stopping here leaves an evidence entry
+ * with no photos, the app's "capture interrupted" state.
  */
 export async function selectEvidenceType(match: string): Promise<void> {
   const rows = await evidenceTypeRows()
@@ -378,8 +334,8 @@ export async function selectEvidenceType(match: string): Promise<void> {
   }
 
   if (count === 1 && target) {
-    // The list arrives on a push animation, so settle the row before tapping — a tap dispatched against
-    // bounds the view has already moved past is silently dropped, and the flow blames the NEXT screen.
+    // The list arrives on a push animation — settle the row first, or the tap lands on stale bounds,
+    // is silently dropped, and the flow blames the NEXT screen.
     await engine.waitForSteadyPosition(target)
     await target.click()
     return
@@ -392,13 +348,9 @@ export async function selectEvidenceType(match: string): Promise<void> {
 }
 
 /**
- * Wait for EvidenceCapture's shutter, and on failure say WHICH of the two very different causes it was.
- *
- * The screen's `self` is the shutter, which renders last: the MaskedCamera container mounts as soon as
- * the permission request settles, but the shutter waits on `useCameraDevice` resolving a device. So a
- * missing shutter means either the push never landed (container absent) or the camera never came up
- * (container present) — indistinguishable from the timeout alone, and the ambiguity is what makes this
- * failure expensive to read off a CI log.
+ * Wait for EvidenceCapture's shutter, naming which of two causes a timeout was. The shutter renders only
+ * once `useCameraDevice` resolves, so a miss means either the push never landed (container absent) or no
+ * camera came up (container present) — indistinguishable from the timeout alone.
  */
 async function reachEvidenceCamera(): Promise<void> {
   try {
@@ -418,22 +370,16 @@ async function reachEvidenceCamera(): Promise<void> {
 }
 
 /**
- * Capture a document's photo(s). CAMERA-ONLY: on Sauce the supplied image is injected before the
- * shutter (RN camera feeds are unreliable — see `helpers/camera`); on a local real device the physical
- * camera captures whatever it sees (`injectPhoto` throws off-Sauce). Shutter → accept in PhotoReview,
- * repeating per side (1 for a passport, 2 for a licence — backend-driven) until the typed
- * EvidenceIDCollection form appears.
+ * Capture a document's photo(s), repeating per side (1 for a passport, 2 for a licence — backend-driven)
+ * until the typed EvidenceIDCollection form appears. CAMERA-ONLY: on Sauce the image is injected before
+ * the shutter; on a local device the physical camera captures whatever it sees.
  *
- * `barcodeMasks` MUST cover any decodable barcode on the injected image: the document camera runs a
- * live code scanner behind the shutter, and on Android the injected frames feed it. An unmasked SIT
- * combo barcode gets "scanned", and in the non-BCSC flow the app then verifies it with the backend on
- * UsePhoto and — on a match — quietly resets the flow into card setup (observed: sees the template's
- * serial C26444539, authorizes THAT card, resumes at IDPhotoInformation, journey dead). iOS injection
- * never produces barcode scans, which is why this only ever broke Android.
+ * `barcodeMasks` MUST cover any decodable barcode on the image: the camera runs a live code scanner
+ * behind the shutter that Android's injected frames feed. An unmasked SIT combo barcode gets scanned,
+ * and in the non-BCSC flow the app then authorizes THAT card and resets into card setup mid-capture.
  *
- * `retakeFirstSide` exercises PhotoReview's Retake before accepting: it pops back to the camera for the
- * SAME side, so the side is simply shot again. Nothing about the resulting evidence differs — the point
- * is that the discard-and-return path works — so it is an option here rather than a separate flow.
+ * `retakeFirstSide` exercises PhotoReview's Retake — it re-shoots the same side, so only the
+ * discard-and-return path differs.
  */
 async function capturePhotoIdDocument(
   image: string,
@@ -441,10 +387,8 @@ async function capturePhotoIdDocument(
   options: { retakeFirstSide?: boolean } = {}
 ): Promise<void> {
   await IDPhotoInformationScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-  // The primer's CTA pushes EvidenceCapture — confirm the push actually landed rather than assuming it.
-  // A tap dispatched while the screen is still transitioning gets swallowed on Android, and because the
-  // element WAS found the tap reports success; the flow then waits out its whole timeout on the shutter
-  // of a camera screen that was never opened, and blames the camera.
+  // Confirm the push landed: a tap dispatched mid-transition is swallowed on Android yet still reports
+  // success, and the flow then waits out its timeout on a camera screen that never opened.
   await IDPhotoInformationScreen.tapToNavigate('primary')
 
   for (let side = 0; side < 2; side++) {
@@ -463,10 +407,9 @@ async function capturePhotoIdDocument(
 
 /** One trip through the document camera: reach it, inject, fire the shutter, land on PhotoReview. */
 async function shootDocumentSide(image: string, barcodeMasks: readonly ImageMaskRegion[]): Promise<void> {
-  // The document camera requests camera permission on first entry — accept it whenever it appears,
-  // otherwise EvidenceCapture renders the PermissionDisabled fallback and MaskedCamera never mounts.
-  // On later entries permission is long granted, but the capture session still has to restart — so
-  // every entry gets the camera budget rather than a screen-transition one.
+  // Camera permission is requested on first entry — accepted whenever it appears, or EvidenceCapture
+  // renders the PermissionDisabled fallback. Later entries still restart the capture session, so every
+  // entry gets the camera budget rather than a screen-transition one.
   await reachEvidenceCamera()
   if (isSauceLabs()) {
     await injectPhoto(image, {}, barcodeMasks) // padding may need tuning to the document mask
@@ -476,14 +419,13 @@ async function shootDocumentSide(image: string, barcodeMasks: readonly ImageMask
 }
 
 /**
- * Non-photo BCSC "additional ID", step one: from AdditionalIdentificationRequired, open the photo-ID
- * list. Separate from the capture because the list is where the non-photo escape hatch lives, and
- * because backing out of that hatch lands here again — so this is re-callable.
+ * Non-photo BCSC "additional ID", step one: open the photo-ID list from AdditionalIdentificationRequired.
+ * Separate from the capture, and re-callable, because backing out of the list's non-photo escape hatch
+ * lands here again.
  */
 export async function reachAdditionalPhotoIdList(): Promise<void> {
-  // AdditionalIdentificationRequired's only testID is the generic `Continue` (shared by ~10 screens),
-  // so wait for its UNIQUE heading to settle before tapping — otherwise a lingering `Continue` from the
-  // previous screen can be tapped mid-transition and the flow never advances.
+  // This screen's only testID is the generic `Continue` (shared by ~10 screens), so wait for its unique
+  // heading — otherwise a lingering `Continue` from the previous screen gets tapped mid-transition.
   const headingSelector = driver.isIOS
     ? '-ios predicate string:label CONTAINS "provide additional ID"'
     : 'android=new UiSelector().textContains("provide additional ID")'
@@ -492,11 +434,10 @@ export async function reachAdditionalPhotoIdList(): Promise<void> {
 }
 
 /**
- * Non-photo BCSC "additional ID", step two: pick the ID type and capture its photo(s), stopping ON the
- * typed EvidenceIDCollection form (its document number is submitted separately, by
- * {@link submitEvidenceIdCollection} — the gap between capture and number is itself a resumable state).
- * `evidenceMatch` is a case-insensitive substring of the target row's testID (server-provided; e.g.
- * `'Passport'`). Camera-only via {@link capturePhotoIdDocument}.
+ * Non-photo BCSC "additional ID", step two: pick the ID type and capture it, stopping ON the typed
+ * EvidenceIDCollection form — the number is submitted separately by {@link submitEvidenceIdCollection},
+ * and that gap is itself a resumable state. `evidenceMatch` is a case-insensitive substring of the
+ * target row's testID (e.g. `'Passport'`). Camera-only via {@link capturePhotoIdDocument}.
  */
 export async function captureAdditionalPhotoId(
   user: TestUser,
@@ -504,18 +445,14 @@ export async function captureAdditionalPhotoId(
   options: { retakeFirstSide?: boolean } = {}
 ): Promise<void> {
   await selectEvidenceType(evidenceMatch)
-  // The card-back template carries the SIT combo barcode. The reroute-on-scan has only been observed
-  // in the non-BCSC flow, but the code scanner runs behind every document capture — mask on principle.
+  // The card-back template carries the SIT combo barcode; the scanner runs behind every capture, so mask
+  // it even though the reroute has only been observed in the non-BCSC flow.
   await capturePhotoIdDocument(user.cardScanImage, COMBO_CARD_BARCODE_MASKS, options)
 }
 
 /**
- * Fill an EvidenceIDCollection form — the typed document number, plus (first non-BCSC ID only) the
- * name + birthdate personal-info fields — then Continue.
- *
- * Every field is re-typed from scratch, so calling this again after a rejected submit replaces the
- * offending value rather than appending to it (the engine clears before typing, and the form clears a
- * field's error as soon as it changes).
+ * Fill an EvidenceIDCollection form — document number, plus (first non-BCSC ID only) name + birthdate —
+ * then Continue. Every field is re-typed from scratch, so this is re-callable after a rejected submit.
  */
 export async function submitEvidenceIdCollection(
   documentNumber: string,
@@ -533,12 +470,10 @@ export async function submitEvidenceIdCollection(
 }
 
 /**
- * Enter the non-BCSC branch: IdentitySelection `OtherID` → DualIdentificationRequired → the first-ID
- * EvidenceTypeList. Choosing OtherID sets the non-BCSC card process and discards any serial already
- * entered, so this is a one-way turn off the BCSC path.
+ * Enter the non-BCSC branch: `OtherID` → DualIdentificationRequired → the first-ID EvidenceTypeList.
+ * OtherID discards any serial already entered, so this is a one-way turn off the BCSC path.
  *
- * Stops AT the list — no camera and no document is committed — so it is also the cheap way to reach
- * the evidence screens on a session that never verifies.
+ * Stops AT the list, committing no document — the cheap way to reach the evidence screens.
  */
 export async function chooseOtherIdPath(): Promise<void> {
   await IdentitySelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
@@ -549,19 +484,17 @@ export async function chooseOtherIdPath(): Promise<void> {
     ? '-ios predicate string:label CONTAINS "two government"'
     : 'android=new UiSelector().textContains("two government")'
   await $(dualHeadingSelector).waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
-  // Safe to confirm-and-retry on the generic `Continue` here: EvidenceTypeList renders no Continue of
-  // its own, so the button going away really does mean the push landed.
+  // Confirm-and-retry is safe on the generic `Continue` here: EvidenceTypeList renders no Continue of
+  // its own, so the button going away means the push landed.
   await DualIdentificationRequiredScreen.tapToNavigate('primary') // Continue → EvidenceTypeList (first ID)
 }
 
 /**
- * Non-BCSC path, first of the two required IDs: OtherID → the first-ID list → pick → capture, stopping
- * ON the typed form (which for this document also collects name + birthdate). `docMatch` is a
- * case-insensitive substring of the target row's testID. Camera-only via {@link capturePhotoIdDocument}.
+ * Non-BCSC first ID: OtherID → list → pick → capture, stopping ON the typed form (which also collects
+ * name + birthdate). `docMatch` is a case-insensitive substring of the target row's testID.
  *
- * The card-back image carries the SIT combo barcode, and this is the flow where the app verifies a
- * scanned barcode with the backend on UsePhoto and reroutes on a match — so the barcode regions must be
- * masked out of the injection.
+ * The card-back image carries the SIT combo barcode, and this is the flow that reroutes on a scan — so
+ * those regions are masked out of the injection.
  */
 export async function captureFirstNonBcscDocument(user: TestUser, docMatch: string): Promise<void> {
   if (user.flow !== 'non-bcsc') {
@@ -573,11 +506,9 @@ export async function captureFirstNonBcscDocument(user: TestUser, docMatch: stri
 }
 
 /**
- * Non-BCSC path, second ID: pick → capture, stopping ON its typed form. Submitting that form (number
- * only — the personal info was collected with the first document) resumes to ResidentialAddress.
- *
- * The list this picks from is a DIFFERENT list from the first document's: the screen filters by
- * `collection_order` and hides anything already chosen, so the two slots genuinely offer different rows.
+ * Non-BCSC second ID: pick → capture, stopping ON its typed form. Submitting that form (number only)
+ * resumes to ResidentialAddress. The list differs from the first document's — the screen filters by
+ * `collection_order` and hides what was already chosen.
  */
 export async function captureSecondNonBcscDocument(user: TestUser, docMatch: string): Promise<void> {
   await selectEvidenceType(docMatch)
@@ -585,12 +516,11 @@ export async function captureSecondNonBcscDocument(user: TestUser, docMatch: str
 }
 
 /**
- * Fill the ResidentialAddress form (non-BCSC only) and continue → the mandatory email step. Province
- * is a dropdown: tap it to open the modal, then pick British Columbia.
+ * Fill the ResidentialAddress form (non-BCSC only) → the mandatory email step. Province is a dropdown:
+ * tap to open the modal, then pick British Columbia.
  *
- * This screen is why {@link BaseScreen.dismissKeyboard} no longer blind-taps on iOS: once the
- * postal-code field is focused, the province dropdown sits under the old tap point, so the "dismiss"
- * opened its modal and left Continue unreachable. Nothing here may dismiss the keyboard positionally.
+ * Nothing here may dismiss the keyboard positionally — the province dropdown sits under the old blind
+ * tap point, which is why {@link BaseScreen.dismissKeyboard} no longer uses one on iOS.
  */
 export async function fillResidentialAddress(): Promise<void> {
   await ResidentialAddressScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
@@ -609,9 +539,8 @@ export async function fillResidentialAddress(): Promise<void> {
 }
 
 /**
- * Wait for the province dropdown's modal to close — the BC option exists only inside it, so its
- * disappearance is the signal. Asserted explicitly so a swallowed option tap is named here rather
- * than surfacing later as an unreachable postal-code field.
+ * Wait for the province modal to close — the BC option only exists inside it. Asserted explicitly so a
+ * swallowed option tap is named here, not later as an unreachable postal-code field.
  */
 async function expectProvinceDropdownClosed(): Promise<void> {
   const deadline = Date.now() + Timeouts.SCREEN_TRANSITION

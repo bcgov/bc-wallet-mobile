@@ -53,9 +53,8 @@ describe('Verified journey: photo card', () => {
   })
 
   it('resumes onto the method selection after leaving verification', async () => {
-    // The last resume step: everything before the method choice is done, so an authorized-but-
-    // unverified user must come back to the choice itself. This is the cheapest journey that reaches
-    // that state, which is why the row is asserted here rather than on one of the document journeys.
+    // The last resume row: everything before the method choice is done, so an authorized-but-unverified
+    // user comes back to the choice itself. Asserted here as the cheapest journey reaching that state.
     await leaveVerificationToHome()
     await resumeVerification()
     await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)

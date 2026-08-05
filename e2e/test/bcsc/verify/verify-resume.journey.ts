@@ -19,30 +19,24 @@ import { getTestUser, setTestUser } from '../../../src/support/context.js'
 const INTERRUPTED_EVIDENCE_MATCH = 'BC Drivers Licence'
 
 /**
- * Verify journey: resume routing — what `getResumeStepRoute` puts on screen when a user comes BACK to
- * an unfinished verification. That mapping drives the verify stack's initial route and every
- * step-completion navigation, and none of it was covered.
+ * Verify journey: resume routing — what `getResumeStepRoute` puts on screen when a user comes BACK to an
+ * unfinished verification. That mapping drives the verify stack's initial route and every step-completion
+ * navigation, and none of it was covered.
  *
- * The route back in is always the same and is worth stating, because it is not the obvious one: the
- * verification-in-progress flag is in-memory and hydration recomputes it from the credential, so
- * leaving the flow AND every relaunch land on Home, where the Start/Continue-verification notification
- * card is the only way back into the stack. Each checkpoint therefore leaves, returns, and asserts
- * which step the app chose.
+ * The route back in is always Home's verification card: the in-progress flag is in-memory and hydration
+ * recomputes it, so leaving the flow AND every relaunch land there. Each checkpoint leaves, returns, and
+ * asserts which step the app chose.
  *
- * Deliberately cheap: no verification is completed and no camera is used. The serial is saved but never
- * submitted (no `authorizeDevice`), and the interrupted-capture state is reached by selecting an ID and
- * stopping — the app persists that selection with zero photos, which is exactly its "capture was
- * interrupted" state. Backend traffic is the terms fetch, the evidence-type list, and the IAS
- * re-registration that Restart performs.
+ * Deliberately cheap — nothing is verified and no camera is used. The serial is saved but never submitted
+ * (no `authorizeDevice`), and the interrupted capture is a selected ID with zero photos, which the app
+ * persists as exactly that state.
  *
- * Two rows of the resume matrix are NOT here because they cost a full verification: the captured-but-
- * unnumbered document (→ EvidenceIDCollection) and the post-authorize steps (→ ResidentialAddress /
- * EnterEmail / VerificationMethodSelection). They belong on the journeys that already pay for that
- * state. The video-submitted row (→ PendingReview) needs a submitted video, which CI cannot produce.
+ * The rows costing a full verification (captured-but-unnumbered document, the post-authorize steps) live
+ * on the journeys already paying for that state; the video-submitted row needs a video CI cannot produce.
  *
- * ORDER MATTERS: the serial and the interrupted capture are mutually exclusive resume states (a serial
- * only routes to EnterBirthdate while no card process is set, and choosing Other ID sets one), so the
- * serial rows run first and Restart is what clears them for the evidence rows.
+ * ORDER MATTERS: a saved serial and an interrupted capture are mutually exclusive resume states (choosing
+ * Other ID sets a card process, which retires the serial route), so the serial rows run first and Restart
+ * is what clears them for the evidence rows.
  */
 describe('Verify journey: resume routing', () => {
   before(() => {
@@ -63,8 +57,7 @@ describe('Verify journey: resume routing', () => {
 
   it('leaves verification for home and offers a way back in', async () => {
     await leaveVerificationToHome()
-    // Progress is kept, so Home offers the verification card. Which variant it is (Start vs Continue)
-    // depends on whether the ID step is complete — it is not here — and both re-enter the same way.
+    // Progress is kept, so Home offers the verification card; both variants re-enter the same way.
     await HomeNotificationCard.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 
@@ -74,17 +67,15 @@ describe('Verify journey: resume routing', () => {
   })
 
   it('leaves again via the resumed step back button, which has nothing to pop', async () => {
-    // Resuming makes EnterBirthdate the stack's INITIAL route, so its back button has no destination.
-    // Rather than being dead it leaves the flow (VerifyResumeHeaderBackButton) — the same exit as the
-    // help menu, and the reason those screens carry a custom header-left at all.
+    // Resuming makes EnterBirthdate the stack's INITIAL route, so its back button has nothing to pop —
+    // it leaves the flow instead (`VerifyResumeHeaderBackButton`), the same exit as the help menu.
     await EnterBirthdateScreen.back.tap()
     await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 
   it('still resumes onto the birthdate step after a relaunch', async () => {
-    // A relaunch is the case the in-memory flag cannot cover: the serial has to survive in native
-    // storage AND hydration has to recompute the step. Landing on Home (not the verify stack) is part
-    // of the assertion — `unlockWithPin` requires it.
+    // A relaunch is what the in-memory flag cannot cover: the serial must survive in native storage and
+    // hydration must recompute the step. Landing on Home is part of it — `unlockWithPin` requires it.
     await unlockWithPin(TEST_PIN, { relaunch: true })
     await resumeVerification()
     await EnterBirthdateScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
@@ -97,9 +88,8 @@ describe('Verify journey: resume routing', () => {
 
   it('wipes progress when the restart is confirmed, reopening on the setup question', async () => {
     await restartVerification('confirm')
-    // Restart clears the recorded setup type as well as the verification data, so the flow reopens on
-    // the add-or-transfer question — NOT on IdentitySelection, which is where the serial branch began.
-    // The wait is generous: the reset deletes and recreates the IAS registration behind a loading screen.
+    // Restart clears the recorded setup type too, so the flow reopens on the add-or-transfer question,
+    // NOT IdentitySelection. The generous wait covers the IAS re-registration behind its loading screen.
     await AccountSetupScreen.expectVisible(Timeouts.APP_LAUNCH)
   })
 
@@ -113,10 +103,8 @@ describe('Verify journey: resume routing', () => {
   it('resumes an interrupted capture onto the photo primer', async () => {
     await leaveVerificationToHome()
     await resumeVerification()
-    // A selected ID with no photos resumes to the primer so capture restarts from the first side,
-    // rather than dropping the user on the document-number form or back at the start of the ID step.
-    // Nothing else could produce this route here: Restart wiped the serial, and choosing Other ID set
-    // the non-BCSC card process, so the interrupted capture is the only progress left to resume.
+    // A selected ID with no photos resumes to the primer, so capture restarts from the first side rather
+    // than dropping the user on the number form or back at the start of the ID step.
     await IDPhotoInformationScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 })

@@ -23,8 +23,7 @@ const engine = new BaseScreen()
 const MISMATCH_DOB = '19800101'
 /** Shorter than the serial schema's 3-character minimum, so it trips the format rule rather than the empty one. */
 const TOO_SHORT_SERIAL = 'AB'
-/** ManualSerial's two reachable inline errors (`BCSC.ManualSerial.EmptySerialError` / `FormatError`).
- *  Asserted verbatim: only the message tells the two validation rules apart. */
+/** ManualSerial's two reachable inline errors — asserted verbatim, as only the message tells them apart. */
 const EMPTY_SERIAL_ERROR = 'Required'
 const SERIAL_FORMAT_ERROR = 'Enter a valid card serial number'
 
@@ -40,12 +39,10 @@ const SERIAL_FORMAT_ERROR = 'Enter a valid card serial number'
  * the serial branch backs out through its push stack (ManualSerial → ScanSerial → IdentitySelection);
  * the Other-ID branch chains FORWARD (DualId webview → EvidenceTypeList) with no deep back-out.
  *
- * The camera permission is REFUSED at the first ScanSerial, which is why that checkpoint comes before
- * everything else on the serial branch: the answer is one-way within a session (iOS never re-prompts),
- * so a grant anywhere earlier would make the refused body unreachable. It costs the later checkpoints
- * nothing — `EnterManually` is rendered by both the camera body and the permission fallback, so the
- * CI path around the camera works either way (which is also why this now runs on both platforms
- * rather than iOS only: nothing here depends on a live camera coming up).
+ * The camera permission is REFUSED at the first ScanSerial, which is why that checkpoint comes first on
+ * the serial branch: the answer is one-way within a session (iOS never re-prompts), so a grant earlier
+ * would make the refused body unreachable. It costs the later checkpoints nothing — `EnterManually`
+ * renders in both bodies — which is also why this now runs on both platforms rather than iOS only.
  *
  * Anchors + navigation verified against app source (main): AccountSetup Add/Transfer
  * (AddAccount/TransferAccount → TransferAccountInstructions), TransferInstructions `ScanQRCode`,
@@ -86,12 +83,11 @@ describe('Verify journey: entry detours', () => {
 
   it('offers manual entry when the camera permission is refused', async () => {
     await IdentitySelectionScreen.tapToNavigate('primary') // Scan → ScanSerial (auto-requests the camera)
-    // REFUSING is a one-way door for the session (iOS never re-prompts), so it has to be the first
-    // thing the camera screen is asked, before any checkpoint grants it.
+    // Refusing is a one-way door for the session (iOS never re-prompts), so it must be the first thing
+    // the camera screen is asked.
     await dismissSystemAlert(Timeouts.SCREEN_TRANSITION)
-    // `self` cannot tell the two bodies apart — EnterManually renders in both, which is what keeps the
-    // CI path working either way. `openSettings` exists only in the refused one. It is never tapped:
-    // it hands the session off to the OS settings app.
+    // `self` cannot tell the two bodies apart — EnterManually renders in both — while `openSettings`
+    // exists only in the refused one. Never tapped: it exits to the OS settings app.
     await ScanSerialScreen.waitFor('openSettings', Timeouts.SCREEN_TRANSITION)
     await ScanSerialScreen.tapToNavigate('primary') // EnterManually (pushes ManualSerial)
     await ManualSerialScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
@@ -106,8 +102,7 @@ describe('Verify journey: entry detours', () => {
     await engine.dismissKeyboard()
     await ManualSerialScreen.tapWhenEnabled('primary')
     assert.equal(await ManualSerialScreen.read('error'), SERIAL_FORMAT_ERROR)
-    // The third rule the schema carries — over 15 characters — is unreachable from the UI: the input
-    // sets maxLength 15, so those keystrokes never arrive.
+    // The schema's third rule — over 15 characters — is unreachable: the input sets maxLength 15.
   })
 
   it('backs out of the serial branch to identity selection', async () => {

@@ -7,14 +7,10 @@ import { TestIds } from '../test-ids/registry.js'
  * The floating help menu (`FloatingHelpMenu`) — the header `HelpMenu` button every onboarding/verify
  * screen carries, and the only route to "Back to home" and "Restart verification process".
  *
- * Its rows have NO testIDs: `ListButton` only sets one when the caller passes it, and the verify
- * menu's rows don't. They are therefore matched by COPY — a localization edit to these strings breaks
- * these helpers, which is the accepted cost (the alternative, testIDs on the rows, is app work this
- * epic does not do). The app renders each row's accessibility label through `a11yLabel`, which joins
- * words with non-breaking spaces, so the visible text and the a11y label differ by whitespace only —
- * hence the candidate-selector hunt below rather than a single matcher.
- *
- * No escaping is applied to the labels: they are fixed English UI copy with no quotes or backslashes.
+ * Its rows have no testIDs, so they are matched by COPY — a localization edit to these strings breaks
+ * these helpers, which is the accepted cost of not touching the app. The app also renders row labels
+ * through `a11yLabel`, which joins words with non-breaking spaces, hence the candidate-selector hunt
+ * below rather than a single matcher. Labels are fixed English copy, so nothing needs escaping.
  */
 
 /** Verify-flow menu rows (`BCSC.HelpMenu.*`). Copy-matched — see the module note. */
@@ -37,19 +33,18 @@ const CLOSE_LABEL = 'Close'
 const engine = new BaseScreen()
 
 /**
- * Non-breaking-space form of a label — how the app's `a11yLabel` renders every derived row label.
- * Written as an escape, never as a literal: a raw U+00A0 in source is indistinguishable from a plain
- * space on screen, so a reformat or a copy-paste could silently turn every selector below into a miss.
+ * Non-breaking-space form of a label — how `a11yLabel` renders every derived row label. Kept as an
+ * escape: a literal U+00A0 is indistinguishable from a space in source, so a reformat could silently
+ * turn every selector below into a miss.
  */
 function nonBreaking(label: string): string {
   return label.replaceAll(' ', '\u00A0')
 }
 
 /**
- * Selectors that could match a menu row, most to least specific: the row Pressable's a11y label
- * (nbsp-joined, the form the app actually sets), the same label with plain spaces (in case a row
- * passes its own label), and the visible text of the row's inner `ThemedText` (Android only —
- * on iOS the `accessible` Pressable merges its children out of the tree).
+ * Selectors that could match a menu row, most to least specific: the a11y label the app sets
+ * (nbsp-joined), the same with plain spaces, and the inner `ThemedText` (Android only — iOS merges the
+ * Pressable's children out of the tree).
  */
 function rowSelectors(label: string): string[] {
   const nbsp = nonBreaking(label)
@@ -72,9 +67,8 @@ export async function openHelpMenu(): Promise<void> {
 }
 
 /**
- * Tap a help-menu row by its copy, waiting out the menu's slide-in first. The menu is a `Modal`
- * animating in over the screen, so a tap dispatched at the old coordinates is silently swallowed on
- * Android (see {@link BaseScreen.waitForSteadyPosition}).
+ * Tap a help-menu row by its copy, waiting out the modal's slide-in first — a tap dispatched at the old
+ * coordinates is silently swallowed on Android (see {@link BaseScreen.waitForSteadyPosition}).
  */
 export async function tapHelpMenuRow(label: string, timeout: number = Timeouts.SCREEN_TRANSITION): Promise<void> {
   const deadline = Date.now() + timeout

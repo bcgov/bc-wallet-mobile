@@ -22,10 +22,9 @@ export function getTestUser(): TestUser {
 }
 
 /**
- * The journey's TestUser, narrowed to the non-BCSC persona — the only one carrying the SECOND set of
- * document fields (`primaryDocumentNumber` / `primaryDocumentTypeId`), because it is the only flow that
- * collects two documents. Use it where those fields are read; `getTestUser()` returns the union, on
- * which they do not exist.
+ * The journey's TestUser, narrowed to the non-BCSC persona — the only flow that collects two documents,
+ * so the only one carrying `primaryDocumentNumber` / `primaryDocumentTypeId`. `getTestUser()` returns
+ * the union, on which those fields do not exist.
  */
 export function getNonBcscTestUser(): Extract<TestUser, { flow: 'non-bcsc' }> {
   const user = getTestUser()

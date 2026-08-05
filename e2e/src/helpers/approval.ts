@@ -52,10 +52,9 @@ type ApproveInPersonLoginInput = ApproveInPersonInput extends infer T
  *
  * @param formattedCode - The confirmation code as displayed in the app (XXXX-XXXX)
  * @param input - Flow selector + per-flow inputs
- * @param timeoutMs - Budget for the WHOLE chain, not per request. That chain is ~10 sequential round
- *   trips to SIT, so a thin budget expires on whichever one is in flight — structurally the last,
- *   `POST /deviceCredential/approve` — which reads as "approve is broken" no matter what was slow.
- *   The per-step timings `login.mjs` logs are what tells the two apart.
+ * @param timeoutMs - Budget for the WHOLE chain (~10 sequential SIT round trips), not per request — so a
+ *   thin budget always expires on the last one, `approve`, whatever was actually slow. The per-step
+ *   `[sm-login]` timings tell them apart.
  */
 export async function approveInPersonRequest(
   formattedCode: string,
@@ -85,8 +84,8 @@ export async function approveInPersonRequest(
     await approveInPersonLogin(loginInput, { signal: controller.signal })
   } catch (error: unknown) {
     const elapsedMs = Date.now() - startedAt
-    // Our own abort surfaces from undici as a bare "This operation was aborted" against whichever
-    // request it interrupted. Name it as OUR budget so it is never mistaken for an SM rejection.
+    // Our own abort surfaces from undici as a bare "This operation was aborted" — name it as OUR budget
+    // so it is never mistaken for an SM rejection.
     const detail = controller.signal.aborted
       ? `the ${timeoutMs}ms budget for the whole SM chain ran out (see the per-step [sm-login] timings for where it went)`
       : error instanceof Error

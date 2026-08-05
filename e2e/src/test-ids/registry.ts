@@ -114,17 +114,16 @@ export const TestIds = {
       scan: 'Scan',
       otherId: 'OtherID',
     },
-    /** Camera scan screen; `EnterManually` is the CI path around the live camera. When the camera
-     *  permission is refused the screen renders the shared `PermissionDisabled` body INSTEAD of the
-     *  camera — `openSettings` is that fallback's marker (it hands off to the OS settings app, so it
-     *  is asserted, never tapped), while `enterManually` renders in BOTH bodies as the way out. */
+    /** Camera scan screen; `EnterManually` is the CI path around the live camera and renders in BOTH
+     *  bodies. `openSettings` marks the refused-permission `PermissionDisabled` fallback — asserted,
+     *  never tapped (it exits to the OS settings app). */
     scanSerial: {
       enterManually: 'EnterManually',
       openSettings: 'OpenSettings',
     },
-    /** Manual serial form (`InputWithValidation id='serial'` → derived input/pressable/subtext ids).
-     *  `serialSubtext` is the shared error slot: this screen passes no static subtext, so the element
-     *  exists ONLY while an inline validation error is showing, and its text is which rule failed. */
+    /** Manual serial form (`InputWithValidation id='serial'` → derived ids). `serialSubtext` is the
+     *  shared error slot: no static subtext here, so it exists only while a validation error shows,
+     *  and its text is which rule failed. */
     manualSerial: {
       serialPressable: 'serial-pressable',
       serialInput: 'serial-input',
@@ -198,13 +197,13 @@ export const TestIds = {
      *  them.) */
     emailConfirmation: {
       codeInput: 'EmailConfirmationCodeInput',
-      // `CodeInput` renders its error as `<the input's testID>-subtext`, so this one is already
-      // prefixed by the app — it is NOT wrapped by `bcsc()` a second time.
+      // `CodeInput` renders its error as `<input testID>-subtext`, so the app has already prefixed this
+      // one — do NOT wrap it in `bcsc()` again.
       codeError: 'EmailConfirmationCodeInput-subtext',
       continue: 'Continue',
     },
-    /** BARE testIDs on EmailConfirmation — written without `testIdWithKey`, so they carry NO prefix.
-     *  Pass them to a descriptor as raw strings; `bcsc()` would produce an id that does not exist. */
+    /** BARE testIDs on EmailConfirmation — no `testIdWithKey`, so no prefix. Pass them as raw strings;
+     *  `bcsc()` would produce an id that does not exist. */
     emailConfirmationBare: {
       resendCode: 'ResendCodeLink',
       goToMyEmail: 'GoToMyEmailLink',
@@ -263,9 +262,8 @@ export const TestIds = {
       firstName: 'firstName-input',
       middleNames: 'middleNames-input',
       birthdate: 'birthDate-input',
-      // The birthdate field carries a STATIC subtext as well as its validation errors, and
-      // `InputWithValidation` renders both through the same node — so this element is always present
-      // and only its TEXT says whether the value was rejected. Compare it; never assert presence.
+      // The static subtext and the validation errors share this node, so it is always present and only
+      // its TEXT says whether the value was rejected. Compare the text; never assert presence.
       birthdateSubtext: 'birthDate-subtext',
     },
     /** `ResidentialAddress` ('Address Entry') — non-BCSC only, after both documents. Text fields are
@@ -301,11 +299,10 @@ export const TestIds = {
     header: {
       settings: 'SettingsMenuButton',
     },
-    /** Home's notification list card (`NotificationActionCard`). For an unverified account with
-     *  verification progress this is the Start/Continue-verification card, whose `view` button
-     *  re-enters the verify stack at `getResumeStepRoute` — the app's ONLY route back into an
-     *  interrupted verification. All four keys are shared by every action card, so which card is
-     *  showing is told apart by `headerText`/`bodyText` copy, not by testID. */
+    /** Home's notification list card (`NotificationActionCard`). For an unverified account this is the
+     *  Start/Continue-verification card, whose `view` re-enters the verify stack at `getResumeStepRoute`
+     *  — the ONLY route back into an interrupted verification. All four keys are shared by every action
+     *  card, so tell cards apart by `headerText`/`bodyText` copy, not by testID. */
     notification: {
       item: 'NotificationListItem',
       headerText: 'HeaderText',
