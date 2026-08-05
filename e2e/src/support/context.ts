@@ -21,6 +21,19 @@ export function getTestUser(): TestUser {
   return currentUser
 }
 
+/**
+ * The journey's TestUser, narrowed to the non-BCSC persona — the only flow that collects two documents,
+ * so the only one carrying `primaryDocumentNumber` / `primaryDocumentTypeId`. `getTestUser()` returns
+ * the union, on which those fields do not exist.
+ */
+export function getNonBcscTestUser(): Extract<TestUser, { flow: 'non-bcsc' }> {
+  const user = getTestUser()
+  if (user.flow !== 'non-bcsc') {
+    throw new Error(`This journey drives a '${user.flow}' user; it needs the non-bcsc persona`)
+  }
+  return user
+}
+
 /** Clear the context — defensive reset for suites that run multiple journeys in one worker. */
 export function clearTestUser(): void {
   currentUser = undefined

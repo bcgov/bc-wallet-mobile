@@ -114,14 +114,20 @@ export const TestIds = {
       scan: 'Scan',
       otherId: 'OtherID',
     },
-    /** Camera scan screen; `EnterManually` is the CI path around the live camera. */
+    /** Camera scan screen; `EnterManually` is the CI path around the live camera and renders in BOTH
+     *  bodies. `openSettings` marks the refused-permission `PermissionDisabled` fallback — asserted,
+     *  never tapped (it exits to the OS settings app). */
     scanSerial: {
       enterManually: 'EnterManually',
+      openSettings: 'OpenSettings',
     },
-    /** Manual serial form (`InputWithValidation id='serial'` → derived input/pressable ids). */
+    /** Manual serial form (`InputWithValidation id='serial'` → derived ids). `serialSubtext` is the
+     *  shared error slot: no static subtext here, so it exists only while a validation error shows,
+     *  and its text is which rule failed. */
     manualSerial: {
       serialPressable: 'serial-pressable',
       serialInput: 'serial-input',
+      serialSubtext: 'serial-subtext',
       continue: 'Continue',
     },
     /** Birthdate form (`DateInput id='birthDate'`, digits progressive-format to YYYY/MM/DD).
@@ -191,7 +197,16 @@ export const TestIds = {
      *  them.) */
     emailConfirmation: {
       codeInput: 'EmailConfirmationCodeInput',
+      // `CodeInput` appends `-subtext` to the input's already-prefixed testID, which puts the suffix at
+      // the END — so this stays a normal key and IS `bcsc()`-wrapped, unlike the bare ids below.
+      codeError: 'EmailConfirmationCodeInput-subtext',
       continue: 'Continue',
+    },
+    /** BARE testIDs on EmailConfirmation — no `testIdWithKey`, so no prefix. Pass them as raw strings;
+     *  `bcsc()` would produce an id that does not exist. */
+    emailConfirmationBare: {
+      resendCode: 'ResendCodeLink',
+      goToMyEmail: 'GoToMyEmailLink',
     },
     /** Email verified (`'Email Verified'`, no header) — success interstitial. Its only testID is the
      *  shared `continue`, so the screen is identified by its title copy ("Your email has been
@@ -247,6 +262,9 @@ export const TestIds = {
       firstName: 'firstName-input',
       middleNames: 'middleNames-input',
       birthdate: 'birthDate-input',
+      // The static subtext and the validation errors share this node, so it is always present and only
+      // its TEXT says whether the value was rejected. Compare the text; never assert presence.
+      birthdateSubtext: 'birthDate-subtext',
     },
     /** `ResidentialAddress` ('Address Entry') — non-BCSC only, after both documents. Text fields are
      *  InputWithValidation (iOS types the pressable wrapper); `province` is a DropdownWithValidation —
@@ -280,6 +298,16 @@ export const TestIds = {
     /** Header settings (menu) button on the Home/Services tab headers. */
     header: {
       settings: 'SettingsMenuButton',
+    },
+    /** Home's notification list card (`NotificationActionCard`). For an unverified account this is the
+     *  Start/Continue-verification card, whose `view` re-enters the verify stack at `getResumeStepRoute`
+     *  — the ONLY route back into an interrupted verification. All four keys are shared by every action
+     *  card, so tell cards apart by `headerText`/`bodyText` copy, not by testID. */
+    notification: {
+      item: 'NotificationListItem',
+      headerText: 'HeaderText',
+      bodyText: 'BodyText',
+      view: 'ViewNotification',
     },
     /** Floating scan FAB (rendered on the Home + Wallet tabs, not verification-gated) → QRCore. */
     scan: {

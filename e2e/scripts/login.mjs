@@ -16,6 +16,13 @@ const VALIDATE_CARDHOLDER_URL = 'https://idsit.gov.bc.ca/idcheck/protected/valid
 const VERIFY_NON_BCSC_URL = 'https://idsit.gov.bc.ca/idcheck/protected/counterNonBcscRequest/verifyIdentity'
 
 /**
+ * Wall-clock at the previous {@link logStep}, so each line reports how long its request took. The whole
+ * chain shares ONE abort budget, so a timeout names the request in flight — structurally the last one —
+ * not the slow one; these timings tell them apart. Module state is safe: one wdio worker, one journey.
+ */
+let previousStepAt = 0
+
+/**
  * Logs a compact summary line for a response and throws on non-2xx status.
  * Returns the response body text so callers that need it can use the return value.
  *
@@ -26,9 +33,12 @@ const VERIFY_NON_BCSC_URL = 'https://idsit.gov.bc.ca/idcheck/protected/counterNo
  */
 async function logStep(step, response, bodyText) {
   const body = bodyText ?? (await response.text())
+  const now = Date.now()
+  const elapsedSeconds = previousStepAt ? ((now - previousStepAt) / 1000).toFixed(1) : '?'
+  previousStepAt = now
   const pathname = new URL(response.url).pathname
   const icon = response.ok ? '+' : '!'
-  console.log(`[sm-login] [${icon}] ${step}: ${response.status} ${pathname}`)
+  console.log(`[sm-login] [${icon}] ${step}: ${response.status} ${pathname} (${elapsedSeconds}s)`)
 
   if (!response.ok) {
     const errorDetail = extractErrorMessage(body)
@@ -40,6 +50,12 @@ async function logStep(step, response, bodyText) {
     try {
       const parsed = JSON.parse(body)
       console.log(`  body: ${JSON.stringify(parsed).slice(0, 300)}`)
+      // The device list falls outside that 300-char slice, and it is the only thing here that shows what
+      // EARLIER runs left on the shared test cards — nothing deregisters them afterwards.
+      if (Array.isArray(parsed.devices)) {
+        const names = parsed.devices.map((device) => device?.applicationName ?? '(unnamed)').join(', ')
+        console.log(`  devices (${parsed.devices.length}): ${names}`)
+      }
     } catch {
       console.log(`  body: ${body.slice(0, 300)}`)
     }
@@ -176,6 +192,7 @@ function buildUsercodeBody(csrfToken, input) {
  */
 export async function approveInPersonLogin(input, options = {}) {
   const { signal } = options
+  previousStepAt = Date.now()
 
   const cookieJar = new CookieJar()
   const fetchWithCookies = makeFetchCookie(fetch, cookieJar)

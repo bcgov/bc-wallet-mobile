@@ -517,12 +517,15 @@ e2e/
 │       │
 │       ├── onboarding/                      # one file = one app session = one ordered journey
 │       │   ├── onboarding.journey.ts        # happy-path onboarding → VerifyPrompt
-│       │   └── onboarding-detours.journey.ts # back-nav, webviews, help menu, onboarding settings, analytics decline
+│       │   ├── onboarding-detours.journey.ts # back-nav, webviews, help menu, onboarding settings, analytics decline
+│       │   └── onboarding-permissions.journey.ts # notifications granted → enable path + skip-notifications branch
 │       ├── auth/
-│       │   └── auth-unlock.journey.ts       # unlock, Get Help, wrong-PIN retry, lockout
+│       │   ├── auth-unlock.journey.ts       # unlock, Get Help, wrong-PIN retry, lockout, background lock
+│       │   └── auth-intro.journey.ts        # AuthIntro variant via the developer menu's Reset Welcome Intro
 │       ├── verify/
 │       │   ├── verify-entry.journey.ts      # entry spine (stops short of authorize)
-│       │   ├── verify-entry-detours.journey.ts # transfer/scan/OtherID detours + mismatched-serial error
+│       │   ├── verify-entry-detours.journey.ts # transfer/scan/OtherID detours, refused-camera fallback, serial errors, mismatched-serial
+│       │   ├── verify-resume.journey.ts     # leave/relaunch → resume routing, restart verification
 │       │   ├── verified-photo.journey.ts    # photo card + send-video/live-call detours
 │       │   ├── verified-non-photo.journey.ts # non-photo card (+ additional photo ID)
 │       │   ├── verified-combined.journey.ts # combined card + login/deep-link/transfer/contacts/account

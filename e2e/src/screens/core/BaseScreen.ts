@@ -17,6 +17,24 @@ const STEADY_POSITION_SAMPLE_MS = 120
 const IOS_KEYBOARD_DISMISS_KEYS = ['done', 'Done', 'return', 'Return', 'go', 'Go', 'next', 'Next', 'search', 'Search']
 
 /**
+ * Does the on-screen keyboard carry any of {@link IOS_KEYBOARD_DISMISS_KEYS}? Built from that list so the
+ * two cannot drift, and it mirrors the test WDA runs inside `mobile: hideKeyboard` — so a hit means that
+ * command has something to press. Asking first is what makes number pads cheap: with no dismissal key
+ * WDA falls through to a hard-coded 3s re-check before throwing, and this probe is one query.
+ */
+const IOS_KEYBOARD_DISMISS_KEY_MATCHES = IOS_KEYBOARD_DISMISS_KEYS.map(
+  (key) => `name == "${key}" OR label == "${key}"`
+).join(' OR ')
+
+const IOS_KEYBOARD_DISMISS_KEY_SELECTOR = `-ios class chain:**/XCUIElementTypeKeyboard/**/*[\`${IOS_KEYBOARD_DISMISS_KEY_MATCHES}\`]`
+
+/** How long to keep asking whether a keyboard we pressed or blurred has actually retracted. */
+const KEYBOARD_RETRACT_TIMEOUT_MS = 1_500
+
+/** Pause once a keyboard is down, letting the layout it was covering settle before we tap into it. */
+const KEYBOARD_SETTLE_MS = 300
+
+/**
  * Escape a value before it is embedded in a quoted iOS predicate / UiSelector string. Both parsers
  * take the same two escapes, so one helper covers them. Without it a quote or backslash in localized
  * copy produces an invalid selector rather than a miss. (Mirrors `escapeIosSelectorValue` in
@@ -341,27 +359,102 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * province dropdown, opening the modal and stranding the journey. No coordinate is safe —
    * `InputWithValidation`'s 44px hitSlop makes the gaps between fields live too.
    *
-   * Number pads (birthdate, email code) have no dismissal key, so the keyboard is left up. That is
-   * fine: every form calling this uses `ScreenWrapper keyboardActive`, which lays its controls out
-   * above the keyboard.
+   * On iOS, number pads (birthdate, email code, PIN) carry no key that can close them — detected up
+   * front, so the keyboard is left up rather than pay WDA's 3s failure. Usually fine: the forms calling
+   * this use `ScreenWrapper keyboardActive`, which lays controls out above the keyboard. Where it is
+   * not, pass `tapToDismiss`.
+   *
+   * @param options.tapToDismiss - testID of an INERT element (a heading, say) to tap when the keyboard
+   *   has no dismissal key. `ScreenWrapper` sets `keyboardShouldPersistTaps: 'handled'`, so a tap no
+   *   child handles blurs the focused input. Named, never positional — see the coordinate hazard above.
+   * @returns whether the keyboard is down by the time this returns
    */
-  async dismissKeyboard() {
+  async dismissKeyboard(options?: { tapToDismiss?: string }): Promise<boolean> {
     // An unreadable probe counts as "shown" — better to attempt a (now harmless) dismissal.
-    if (!(await driver.isKeyboardShown().catch(() => true))) return
+    if (!(await driver.isKeyboardShown().catch(() => true))) return true
 
-    if (driver.isAndroid) {
-      await driver.hideKeyboard().catch(() => undefined)
-      await driver.pause(300) // let the layout settle as the keyboard collapses
-      return
+    if (driver.isAndroid) return await this.hideAndroidKeyboard()
+
+    const hasDismissKey = await this.hasIosKeyboardDismissKey()
+    if (hasDismissKey) {
+      try {
+        // Presses the first matching key; throws when the keyboard has none — which the probe above has
+        // already ruled out in the common case.
+        await driver.execute('mobile: hideKeyboard', { keys: IOS_KEYBOARD_DISMISS_KEYS })
+        if (await this.waitForKeyboardHidden()) return true
+      } catch {
+        // Still up — fall through to the caller's tap target, if it gave us one.
+      }
     }
 
+    if (options?.tapToDismiss) {
+      try {
+        const el = await this.findByTestId(options.tapToDismiss)
+        await el.click()
+        if (await this.waitForKeyboardHidden()) return true
+      } catch {
+        console.warn(`[keyboard] Could not tap "${options.tapToDismiss}" to dismiss the keyboard`)
+      }
+    }
+
+    console.warn(
+      hasDismissKey
+        ? '[keyboard] iOS dismissal key would not close the keyboard; leaving it up'
+        : '[keyboard] iOS keyboard carries no dismissal key (number pad); leaving it up'
+    )
+    return false
+  }
+
+  /**
+   * Does the current iOS keyboard have a key that closes it? Number pads do not; alphabetic and email
+   * keyboards carry a `return`. An unanswerable probe returns true — attempting the command anyway is
+   * the older behaviour.
+   */
+  private async hasIosKeyboardDismissKey(): Promise<boolean> {
     try {
-      // Throws when the keyboard has none of these keys — not when the command is missing.
-      await driver.execute('mobile: hideKeyboard', { keys: IOS_KEYBOARD_DISMISS_KEYS })
-      await driver.pause(300)
+      return await $(IOS_KEYBOARD_DISMISS_KEY_SELECTOR).isExisting()
     } catch {
-      console.warn('[keyboard] No iOS dismissal key available; leaving the keyboard open')
+      return true
     }
+  }
+
+  /**
+   * Close the Android soft keyboard, verified. `driver.hideKeyboard()` is adb underneath (ESC, then
+   * BACK) and throws when neither lands — notably when the IME reports `mIsInputViewShown=false`.
+   *
+   * The IME's "done" editor action is an independent way in: it blurs through the input connection
+   * rather than a system key. Second because Appium implements it by swapping the device IME and back.
+   * No app input sets `onSubmitEditing`, so it only blurs. Never throws — a keyboard probe must not
+   * fail the caller's real action.
+   */
+  private async hideAndroidKeyboard(): Promise<boolean> {
+    await driver.hideKeyboard().catch(() => undefined)
+    if (await this.waitForKeyboardHidden()) return true
+
+    await driver.execute('mobile: performEditorAction', { action: 'done' }).catch(() => undefined)
+    if (await this.waitForKeyboardHidden()) return true
+
+    console.warn('[keyboard] Android keyboard would not close; continuing with it up')
+    return false
+  }
+
+  /**
+   * Poll until the keyboard is actually gone, then let the layout settle. Both platforms' dismissal
+   * commands already block until it reports hidden, so this costs one probe on the happy path; it earns
+   * its keep when one of them reports success over a keyboard that is still up. An unreadable probe
+   * counts as "gone" — let the caller's real action be the thing that fails.
+   */
+  private async waitForKeyboardHidden(timeout: number = KEYBOARD_RETRACT_TIMEOUT_MS): Promise<boolean> {
+    try {
+      await driver.waitUntil(async () => !(await driver.isKeyboardShown().catch(() => false)), {
+        timeout,
+        interval: 150,
+      })
+    } catch {
+      return false
+    }
+    await driver.pause(KEYBOARD_SETTLE_MS)
+    return true
   }
 
   /**
@@ -378,8 +471,7 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
     if (!driver.isAndroid) return
     const shown = await driver.isKeyboardShown().catch(() => false)
     if (!shown) return
-    await driver.hideKeyboard().catch(() => undefined)
-    await driver.pause(300) // let the layout settle as the keyboard collapses
+    await this.hideAndroidKeyboard()
   }
 
   /**
