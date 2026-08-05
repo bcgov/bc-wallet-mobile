@@ -197,8 +197,8 @@ export const TestIds = {
      *  them.) */
     emailConfirmation: {
       codeInput: 'EmailConfirmationCodeInput',
-      // `CodeInput` renders its error as `<input testID>-subtext`, so the app has already prefixed this
-      // one — do NOT wrap it in `bcsc()` again.
+      // `CodeInput` appends `-subtext` to the input's already-prefixed testID, which puts the suffix at
+      // the END — so this stays a normal key and IS `bcsc()`-wrapped, unlike the bare ids below.
       codeError: 'EmailConfirmationCodeInput-subtext',
       continue: 'Continue',
     },

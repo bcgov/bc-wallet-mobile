@@ -22,9 +22,11 @@ const IOS_KEYBOARD_DISMISS_KEYS = ['done', 'Done', 'return', 'Return', 'go', 'Go
  * command has something to press. Asking first is what makes number pads cheap: with no dismissal key
  * WDA falls through to a hard-coded 3s re-check before throwing, and this probe is one query.
  */
-const IOS_KEYBOARD_DISMISS_KEY_SELECTOR = `-ios class chain:**/XCUIElementTypeKeyboard/**/*[\`${IOS_KEYBOARD_DISMISS_KEYS.map(
+const IOS_KEYBOARD_DISMISS_KEY_MATCHES = IOS_KEYBOARD_DISMISS_KEYS.map(
   (key) => `name == "${key}" OR label == "${key}"`
-).join(' OR ')}\`]`
+).join(' OR ')
+
+const IOS_KEYBOARD_DISMISS_KEY_SELECTOR = `-ios class chain:**/XCUIElementTypeKeyboard/**/*[\`${IOS_KEYBOARD_DISMISS_KEY_MATCHES}\`]`
 
 /** How long to keep asking whether a keyboard we pressed or blurred has actually retracted. */
 const KEYBOARD_RETRACT_TIMEOUT_MS = 1_500
