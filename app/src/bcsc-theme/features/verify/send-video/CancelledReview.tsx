@@ -39,13 +39,11 @@ const CancelledReview = ({ route }: CancelledReviewProps) => {
       onButtonPress={preventDoublePress(async () => {
         const stopLoading = loadingScreen.startLoading(t('Alerts.RestartVerification.Loading'))
         try {
-          // Reports failure by returning false (it shows its own factory-reset alert), never by
-          // throwing — so there is nothing here to catch.
+          // Signals failure by returning false (with its own alert), never by throwing.
           const success = await verificationReset()
           if (success) {
-            // Each stack registers this screen under its own route name, so the swap RootStack
-            // performs on this state change drops the inherited route and lands the user on the
-            // incoming stack's initialRouteName. An in-stack navigation cannot do that.
+            // Leaves via store state, not navigation: each stack registers this screen under its
+            // own route name, so the RootStack swap drops it and lands on the new initialRouteName.
             resumeVerification()
           }
         } finally {

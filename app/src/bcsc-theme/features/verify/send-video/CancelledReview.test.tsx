@@ -95,8 +95,7 @@ describe('CancelledReview', () => {
     expect(tree.getByText('BCSC.CancelledVerification.Label')).toBeTruthy()
   })
 
-  // MainStack and VerifyStack register this screen under distinct route names, so it must
-  // leave via store state (a stack swap), never an in-stack navigation.
+  // Distinct route names per stack mean this screen must leave via store state, not navigation.
   it('re-enters the verify flow via resumeVerification without navigating in-stack', async () => {
     const agentReason = 'Test reason'
     const route = {

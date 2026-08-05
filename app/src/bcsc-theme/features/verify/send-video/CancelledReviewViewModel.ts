@@ -3,10 +3,7 @@ import { BCDispatchAction, BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { useCallback } from 'react'
 
-/**
- * ViewModel hook for the CancelledReview component that provides
- * the method to clean up verification related data from storage
- */
+/** ViewModel for CancelledReview: clears verification artifacts and re-enters the verify flow. */
 const useCancelledReviewViewModel = () => {
   const [, dispatch] = useStore<BCState>()
   const { updateAccountFlags, updateVerificationRequest, continueVerificationProcess } = useSecureActions()
@@ -19,9 +16,8 @@ const useCancelledReviewViewModel = () => {
     dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [undefined] })
     updateAccountFlags({ userSubmittedVerificationVideo: false })
   }, [dispatch, updateAccountFlags, updateVerificationRequest])
-  // Deliberately not named for a screen: this flips verification back to in-progress and lets
-  // VerifyStack pick the landing step via getResumeStepRoute, which resolves to IdentitySelection
-  // after a full reset and moves whenever the resume rules do.
+  // Not named for a screen: VerifyStack picks the landing step via getResumeStepRoute
+  // (IdentitySelection after a full reset).
   const resumeVerification = () => continueVerificationProcess()
   return {
     cleanUpVerificationData,
