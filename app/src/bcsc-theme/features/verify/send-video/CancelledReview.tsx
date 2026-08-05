@@ -42,9 +42,11 @@ const CancelledReview = ({ route }: CancelledReviewProps) => {
         try {
           const success = await verificationReset()
           if (success) {
-            // This screen is registered in both MainStack and VerifyStack, and the verify
-            // routes exist only in the latter — so leaving has to go through store state
-            // (RootStack swaps the stack) rather than an in-stack navigation.
+            // MainStack and VerifyStack each register this screen under a distinct route name
+            // (MainCancelledReview vs CancelledReview), so leaving has to go through store state
+            // (RootStack swaps the stack) rather than an in-stack navigation: on the swap, the
+            // inherited route no longer matches a name the incoming stack knows, gets dropped,
+            // and the incoming stack falls back to its own initialRouteName.
             goToMethodSelection()
           }
         } catch (error) {

@@ -95,8 +95,8 @@ describe('CancelledReview', () => {
     expect(tree.getByText('BCSC.CancelledVerification.Label')).toBeTruthy()
   })
 
-  // This screen is hosted by both MainStack and VerifyStack, and the verify routes exist only
-  // in the latter — so it must leave via store state, never an in-stack navigation.
+  // MainStack and VerifyStack register this screen under distinct route names, so it must
+  // leave via store state (a stack swap), never an in-stack navigation.
   it('re-enters the verify flow via goToMethodSelection without navigating in-stack', async () => {
     const agentReason = 'Test reason'
     const route = {

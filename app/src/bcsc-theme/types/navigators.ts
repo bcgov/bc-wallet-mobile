@@ -116,6 +116,7 @@ export enum BCSCScreens {
   OnboardingDeveloper = `${BCSCStacks.Onboarding} Developer`,
   VerifyPrompt = `${BCSCStacks.Verify} Verify Prompt`,
   MainVerifyPrompt = `${BCSCStacks.Main} Verify Prompt`,
+  MainCancelledReview = `${BCSCStacks.Main} Cancelled Review`,
   MainLoading = `${BCSCStacks.Main} Loading`,
   MainSettings = `${BCSCStacks.Main} In App Settings`,
   MainWebView = `${BCSCStacks.Main} Web view`,
@@ -309,7 +310,7 @@ export type BCSCMainStackParams = {
   [BCSCScreens.QRCore]: NavigatorScreenParams<BCSCQRCoreTabParams> | undefined
   [BCSCScreens.ConnectionLoading]: { oobRecordId?: string; credentialId?: string; proofId?: string }
   [BCSCScreens.VerificationSuccess]: undefined
-  [BCSCScreens.CancelledReview]: { agentReason?: string }
+  [BCSCScreens.MainCancelledReview]: { agentReason?: string }
   [BCSCScreens.MainVerifyPrompt]: undefined
 
   [BCSCModals.InternetDisconnected]: undefined
