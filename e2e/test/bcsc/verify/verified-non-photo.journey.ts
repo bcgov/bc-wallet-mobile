@@ -1,18 +1,33 @@
 import assert from 'node:assert/strict'
-import { TestUsers, Timeouts } from '../../../src/constants.js'
+import { TEST_PIN, TestUsers, Timeouts } from '../../../src/constants.js'
+import { unlockWithPin } from '../../../src/flows/auth.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
-  addAdditionalPhotoId,
+  captureAdditionalPhotoId,
   chooseAddAccount,
   completeVerification,
   enterBirthdate,
   enterSerialManually,
+  reachAdditionalPhotoIdList,
   reachVerificationMethod,
+  resumeVerification,
   startVerification,
+  submitEvidenceIdCollection,
 } from '../../../src/flows/verify.js'
+import { BaseScreen } from '../../../src/screens/core/BaseScreen.js'
 import { HomeScreen, SettingsScreen } from '../../../src/screens/main.js'
-import { VerificationMethodSelectionScreen } from '../../../src/screens/verify.js'
+import {
+  EvidenceIDCollectionScreen,
+  EvidenceTypeListScreen,
+  VerificationMethodSelectionScreen,
+} from '../../../src/screens/verify.js'
 import { getTestUser, setTestUser } from '../../../src/support/context.js'
+
+/** Engine handle for the one screen anchored on visible copy (EvidenceTypeList has no container testID). */
+const engine = new BaseScreen()
+
+/** `BCSC.EvidenceTypeList.OtherIDOptionsHeading` — proves the list swapped to the non-photo filter. */
+const OTHER_ID_OPTIONS_HEADING = 'Other ID options'
 
 /**
  * Verified journey: non-photo card. A non-photo BC Services Card has no photo, so after the serial is
@@ -22,6 +37,10 @@ import { getTestUser, setTestUser } from '../../../src/support/context.js'
  *
  * CAMERA-DEPENDENT — the document capture uses Sauce image injection (`injectPhoto` throws off-Sauce)
  * or a physical camera; validated on Sauce.
+ *
+ * This is the only journey whose evidence list is photo-FILTERED, so it also carries the riders that live
+ * there: the "Show more options" escape hatch, PhotoReview's Retake, and the resume step for a document
+ * captured but not yet numbered — the one mid-capture state that survives a relaunch.
  *
  * One ordered session: onboard → Continue → Scan serial → birthdate (authorizeDevice, non-photo) →
  * additional photo ID (pick → capture → typed number) → method selection → in-person → verified Home.
@@ -42,10 +61,33 @@ describe('Verified journey: non-photo card', () => {
     await enterBirthdate(getTestUser())
   })
 
-  it('adds the required additional photo ID (passport) via capture + typed number', async () => {
-    // Matches the EvidenceTypeList row whose testID contains 'Passport' (server-provided evidence_type).
-    // If it throws listing the rows, pin the exact substring for daphne's document type (id 12).
-    await addAdditionalPhotoId(getTestUser(), 'Passport')
+  it('browses the non-photo ID options and returns to the photo list', async () => {
+    await reachAdditionalPhotoIdList()
+    // The escape hatch renders ONLY here — photo-filtered list, nothing collected yet — and REPLACES the
+    // list rather than pushing, so the way out is back to the primer and in again.
+    await EvidenceTypeListScreen.waitFor('otherOptions', Timeouts.SCREEN_TRANSITION)
+    await EvidenceTypeListScreen.link('otherOptions')
+    await engine.waitForText(OTHER_ID_OPTIONS_HEADING, Timeouts.SCREEN_TRANSITION)
+    await EvidenceTypeListScreen.back.tap()
+    await reachAdditionalPhotoIdList()
+  })
+
+  it('captures the passport, retaking the first photo before accepting it', async () => {
+    // Retake returns to the camera for the SAME side, so what this proves is the discard-and-return path.
+    await captureAdditionalPhotoId(getTestUser(), 'Passport', { retakeFirstSide: true })
+    await EvidenceIDCollectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  })
+
+  it('resumes onto the document-number form after a relaunch', async () => {
+    // Photos-but-no-number is the ONE mid-capture state hydration preserves (an evidence with no photos
+    // is dropped), so the photos must survive the relaunch and the app must resume here.
+    await unlockWithPin(TEST_PIN, { relaunch: true })
+    await resumeVerification()
+    await EvidenceIDCollectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  })
+
+  it('types the captured document number', async () => {
+    await submitEvidenceIdCollection(getTestUser().documentNumber)
   })
 
   it('resumes to the verification method selection after the document', async () => {

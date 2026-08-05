@@ -129,6 +129,38 @@ describe('File Info Utils', () => {
       expect(result.file_path).toBe('/tmp/photo.jpg')
     })
 
+    it('should substitute the current time when the file mtime is implausible (e.g. 0)', async () => {
+      const mockLogger = new MockLogger()
+      const RNFSMock = jest.mocked(RNFS)
+      const mockBuffer = Buffer.from('fake-jpeg-data')
+      const now = new Date('2026-07-28T00:00:00Z').getTime()
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(now)
+
+      // Android's File.lastModified() can return 0 on failure.
+      RNFSMock.stat.mockResolvedValue({
+        mtime: 0,
+        size: mockBuffer.byteLength,
+        path: '/tmp/photo.jpg',
+        isFile: () => true,
+        isDirectory: () => false,
+        ctime: 0,
+        name: 'photo.jpg',
+      } as any)
+
+      mockReadFileInChunks.mockResolvedValue(mockBuffer)
+      ;(hashBase64 as jest.Mock).mockResolvedValue('sha256-hash-value')
+      ;(saveEvidencePhoto as jest.Mock).mockResolvedValue('/permanent/path/photo.jpg')
+
+      const result = await getPhotoMetadata('/tmp/photo.jpg', mockLogger)
+
+      expect(result.date).toBe(Math.floor(now / 1000))
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Implausible photo capture timestamp'),
+        expect.objectContaining({ filePath: '/tmp/photo.jpg', capturedTimestamp: 0 })
+      )
+      nowSpy.mockRestore()
+    })
+
     it('should handle non-Error thrown by saveEvidencePhoto', async () => {
       const mockLogger = new MockLogger()
       const RNFSMock = jest.mocked(RNFS)
@@ -157,6 +189,7 @@ describe('File Info Utils', () => {
 
   describe('getVideoMetadata', () => {
     it('should return video metadata with hashed content', async () => {
+      const mockLogger = new MockLogger()
       const mockBuffer = Buffer.from('fake-video-data')
       const mockPrompts = [
         { id: 10, prompt: 'Say hello' },
@@ -166,7 +199,7 @@ describe('File Info Utils', () => {
 
       ;(hashBase64 as jest.Mock).mockResolvedValue('video-sha256-hash')
 
-      const result = await getVideoMetadata(mockBuffer, 30, mockPrompts, mtime)
+      const result = await getVideoMetadata(mockBuffer, 30, mockPrompts, mtime, mockLogger)
 
       expect(hashBase64).toHaveBeenCalledWith(mockBuffer.toString('base64'))
       expect(result).toEqual({
@@ -181,17 +214,38 @@ describe('File Info Utils', () => {
           { id: 20, prompted_at: 1 },
         ],
       })
+      expect(mockLogger.warn).not.toHaveBeenCalled()
     })
 
     it('should handle empty prompts array', async () => {
+      const mockLogger = new MockLogger()
       const mockBuffer = Buffer.from('video')
       const mtime = Date.now()
 
       ;(hashBase64 as jest.Mock).mockResolvedValue('hash')
 
-      const result = await getVideoMetadata(mockBuffer, 5, [], mtime)
+      const result = await getVideoMetadata(mockBuffer, 5, [], mtime, mockLogger)
 
       expect(result.prompts).toEqual([])
+    })
+
+    it('should substitute the current time when the video mtime is implausible (e.g. 0)', async () => {
+      const mockLogger = new MockLogger()
+      const mockBuffer = Buffer.from('fake-video-data')
+      const now = new Date('2026-07-28T00:00:00Z').getTime()
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(now)
+
+      ;(hashBase64 as jest.Mock).mockResolvedValue('video-sha256-hash')
+
+      // Android's File.lastModified() can return 0 on failure.
+      const result = await getVideoMetadata(mockBuffer, 30, [], 0, mockLogger)
+
+      expect(result.date).toBe(Math.floor(now / 1000))
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Implausible video mtime'),
+        expect.objectContaining({ mtime: 0 })
+      )
+      nowSpy.mockRestore()
     })
   })
 

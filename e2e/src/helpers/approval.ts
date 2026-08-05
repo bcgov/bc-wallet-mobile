@@ -52,12 +52,14 @@ type ApproveInPersonLoginInput = ApproveInPersonInput extends infer T
  *
  * @param formattedCode - The confirmation code as displayed in the app (XXXX-XXXX)
  * @param input - Flow selector + per-flow inputs
- * @param timeoutMs - Max time to wait for the approval flow (default 30s)
+ * @param timeoutMs - Budget for the WHOLE chain (~10 sequential SIT round trips), not per request — so a
+ *   thin budget always expires on the last one, `approve`, whatever was actually slow. The per-step
+ *   `[sm-login]` timings tell them apart.
  */
 export async function approveInPersonRequest(
   formattedCode: string,
   input: ApproveInPersonInput,
-  timeoutMs = 30_000
+  timeoutMs = 60_000
 ): Promise<void> {
   const code = formattedCode.replaceAll(/[\s-]/g, '')
   if (!/^[A-Za-z0-9]{8}$/.test(code)) {
@@ -76,12 +78,19 @@ export async function approveInPersonRequest(
 
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+  const startedAt = Date.now()
 
   try {
     await approveInPersonLogin(loginInput, { signal: controller.signal })
   } catch (error: unknown) {
+    const elapsedMs = Date.now() - startedAt
     const message = error instanceof Error ? error.message : String(error)
-    throw new Error(`In-person approval failed (flow=${input.flow}, code="${code}"): ${message}`)
+    // Our own abort surfaces from undici as a bare "This operation was aborted" — name it as OUR budget
+    // so it is never mistaken for an SM rejection.
+    const detail = controller.signal.aborted
+      ? `the ${timeoutMs}ms budget for the whole SM chain ran out (see the per-step [sm-login] timings for where it went)`
+      : message
+    throw new Error(`In-person approval failed after ${elapsedMs}ms (flow=${input.flow}, code="${code}"): ${detail}`)
   } finally {
     clearTimeout(timeoutId)
   }

@@ -13,6 +13,7 @@ import {
   cardExpiredErrorPolicy,
   cardExpiredOnBarcodesErrorPolicy,
   ClientErrorHandlingPolicies,
+  digitalServiceCardAccountUnavailableErrorPolicy,
   emailVerificationCodeErrorPolicy,
   failedToRetrieveStringResourceErrorPolicy,
   globalAlertErrorPolicy,
@@ -768,6 +769,173 @@ describe('clientErrorPolicies', () => {
         ])
 
         expect(alertMock).toHaveBeenCalledTimes(1)
+      })
+    })
+  })
+
+  describe('digitalServiceCardAccountUnavailableErrorPolicy', () => {
+    const credentialBase = 'https://idsit.gov.bc.ca/credentials/v1/person'
+
+    const errorWithDescription = (description?: unknown): AxiosAppError => {
+      const error = newError('unknown_server_error')
+      error.cause = {
+        isAxiosError: true,
+        response: {
+          status: 400,
+          data: description === undefined ? {} : { error: 'unauthorized_client', error_description: description },
+        },
+      } as AxiosError
+      return error
+    }
+
+    describe('matches', () => {
+      it('should match a 400 on the credential endpoint with a "suspended" error_description', () => {
+        const error = errorWithDescription('suspended')
+        const context = {
+          statusCode: 400,
+          endpoint: credentialBase,
+          apiEndpoints: { credential: credentialBase },
+        }
+        expect(digitalServiceCardAccountUnavailableErrorPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it('should match a 400 on the credential endpoint with a "deactivated" error_description', () => {
+        const error = errorWithDescription('deactivated')
+        const context = {
+          statusCode: 400,
+          endpoint: credentialBase,
+          apiEndpoints: { credential: credentialBase },
+        }
+        expect(digitalServiceCardAccountUnavailableErrorPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it('should match case-insensitively', () => {
+        const error = errorWithDescription('Account SUSPENDED')
+        const context = {
+          statusCode: 400,
+          endpoint: credentialBase,
+          apiEndpoints: { credential: credentialBase },
+        }
+        expect(digitalServiceCardAccountUnavailableErrorPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it('should NOT match a non-400 status code', () => {
+        const error = errorWithDescription('suspended')
+        const context = {
+          statusCode: 401,
+          endpoint: credentialBase,
+          apiEndpoints: { credential: credentialBase },
+        }
+        expect(digitalServiceCardAccountUnavailableErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
+      it('should NOT match a 400 on a different endpoint', () => {
+        const error = errorWithDescription('suspended')
+        const context = {
+          statusCode: 400,
+          endpoint: 'https://idsit.gov.bc.ca/device/barcodes',
+          apiEndpoints: { credential: credentialBase },
+        }
+        expect(digitalServiceCardAccountUnavailableErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
+      it('should NOT match when error_description does not mention suspended/deactivated', () => {
+        const error = errorWithDescription('some_other_reason')
+        const context = {
+          statusCode: 400,
+          endpoint: credentialBase,
+          apiEndpoints: { credential: credentialBase },
+        }
+        expect(digitalServiceCardAccountUnavailableErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
+      it('should NOT match when error_description is missing', () => {
+        const error = errorWithDescription()
+        const context = {
+          statusCode: 400,
+          endpoint: credentialBase,
+          apiEndpoints: { credential: credentialBase },
+        }
+        expect(digitalServiceCardAccountUnavailableErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
+      it('should NOT match when error_description is not a string', () => {
+        const error = errorWithDescription({ nested: 'suspended' })
+        const context = {
+          statusCode: 400,
+          endpoint: credentialBase,
+          apiEndpoints: { credential: credentialBase },
+        }
+        expect(digitalServiceCardAccountUnavailableErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+
+      it('should NOT match when error is not "unauthorized_client", even if error_description mentions suspended/deactivated', () => {
+        const error = newError('unknown_server_error')
+        error.cause = {
+          isAxiosError: true,
+          response: { status: 400, data: { error: 'some_other_error', error_description: 'account suspended' } },
+        } as AxiosError
+        const context = {
+          statusCode: 400,
+          endpoint: credentialBase,
+          apiEndpoints: { credential: credentialBase },
+        }
+        expect(digitalServiceCardAccountUnavailableErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle', () => {
+      it('calls personCredentialSuspendedAlert for a suspended account', () => {
+        const error = errorWithDescription('suspended')
+        const loggerMock = { info: jest.fn() }
+        const suspendedAlert = jest.fn()
+        const deactivatedAlert = jest.fn()
+        const context = {
+          logger: loggerMock,
+          alerts: {
+            personCredentialSuspendedAlert: suspendedAlert,
+            personCredentialDeactivatedAlert: deactivatedAlert,
+          },
+        }
+
+        digitalServiceCardAccountUnavailableErrorPolicy.handle(error, context as any)
+
+        expect(loggerMock.info).toHaveBeenCalledWith(
+          '[DigitalServiceCardAccountUnavailableErrorPolicy] account suspended on Digital Services Card creation'
+        )
+        expect(suspendedAlert).toHaveBeenCalledWith()
+        expect(deactivatedAlert).not.toHaveBeenCalled()
+      })
+
+      it('calls personCredentialDeactivatedAlert for a deactivated account', () => {
+        const error = errorWithDescription('deactivated')
+        const loggerMock = { info: jest.fn() }
+        const suspendedAlert = jest.fn()
+        const deactivatedAlert = jest.fn()
+        const context = {
+          logger: loggerMock,
+          alerts: {
+            personCredentialSuspendedAlert: suspendedAlert,
+            personCredentialDeactivatedAlert: deactivatedAlert,
+          },
+        }
+
+        digitalServiceCardAccountUnavailableErrorPolicy.handle(error, context as any)
+
+        expect(loggerMock.info).toHaveBeenCalledWith(
+          '[DigitalServiceCardAccountUnavailableErrorPolicy] account deactivated on Digital Services Card creation'
+        )
+        expect(deactivatedAlert).toHaveBeenCalledWith()
+        expect(suspendedAlert).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('ClientErrorHandlingPolicies find', () => {
+      it('should resolve to digitalServiceCardAccountUnavailableErrorPolicy for a suspended-account 400 on the credential endpoint', () => {
+        const error = errorWithDescription('suspended')
+        const context = { statusCode: 400, endpoint: credentialBase, apiEndpoints: { credential: credentialBase } }
+        const policy = ClientErrorHandlingPolicies.find((p) => p.matches(error, context as any))
+        expect(policy).toBe(digitalServiceCardAccountUnavailableErrorPolicy)
       })
     })
   })

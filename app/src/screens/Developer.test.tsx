@@ -1,6 +1,6 @@
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { Mode } from '@/constants'
-import { AuthProvider, testIdWithKey, useServices } from '@bifold/core'
+import { AuthProvider, testIdWithKey, TOKENS, useServices } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
@@ -105,5 +105,76 @@ describe('Developer Screen', () => {
     expect(mockClearTokens).not.toHaveBeenCalled()
     expect(mockLogger.info).not.toHaveBeenCalled()
     expect(queryByText('true')).toBeNull()
+  })
+
+  describe('fetchPersonCredentialTest', () => {
+    const mockServiceForToken = (monitor: unknown) => {
+      mockUseServices.mockImplementation((tokens: unknown[]) => {
+        if (tokens[0] === TOKENS.UTIL_CREDENTIAL_PROVISIONING_MONITOR) {
+          return [monitor]
+        }
+        return [mockLogger]
+      })
+    }
+
+    const renderDeveloperScreen = () =>
+      render(
+        <BasicAppContext initialStateOverride={{ mode: Mode.BCSC }}>
+          <AuthProvider>
+            <Developer />
+          </AuthProvider>
+        </BasicAppContext>
+      )
+
+    test('warns and shows unavailable status when no monitor is registered', () => {
+      mockServiceForToken(undefined)
+
+      const { getByTestId, getByText } = renderDeveloperScreen()
+
+      fireEvent.press(getByTestId(testIdWithKey('FetchPersonCredentialTest')))
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Developer: No AutoCredentialMonitor registered, cannot trigger test fetch'
+      )
+      expect(getByText('unavailable — monitor not registered')).toBeTruthy()
+    })
+
+    test('warns and shows unavailable status when the registered service has no triggerTestWorkflow function', () => {
+      mockServiceForToken({})
+
+      const { getByTestId, getByText } = renderDeveloperScreen()
+
+      fireEvent.press(getByTestId(testIdWithKey('FetchPersonCredentialTest')))
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Developer: No AutoCredentialMonitor registered, cannot trigger test fetch'
+      )
+      expect(getByText('unavailable — monitor not registered')).toBeTruthy()
+    })
+
+    test('shows triggering status and does not warn when triggerTestWorkflow starts successfully', () => {
+      const triggerTestWorkflow = jest.fn().mockReturnValue(true)
+      mockServiceForToken({ triggerTestWorkflow })
+
+      const { getByTestId, getByText } = renderDeveloperScreen()
+
+      fireEvent.press(getByTestId(testIdWithKey('FetchPersonCredentialTest')))
+
+      expect(triggerTestWorkflow).toHaveBeenCalledTimes(1)
+      expect(getByText('triggering...')).toBeTruthy()
+      expect(mockLogger.warn).not.toHaveBeenCalled()
+    })
+
+    test('shows not-started status when triggerTestWorkflow returns false', () => {
+      const triggerTestWorkflow = jest.fn().mockReturnValue(false)
+      mockServiceForToken({ triggerTestWorkflow })
+
+      const { getByTestId, getByText } = renderDeveloperScreen()
+
+      fireEvent.press(getByTestId(testIdWithKey('FetchPersonCredentialTest')))
+
+      expect(triggerTestWorkflow).toHaveBeenCalledTimes(1)
+      expect(getByText('not started — already in progress or agent not ready')).toBeTruthy()
+    })
   })
 })

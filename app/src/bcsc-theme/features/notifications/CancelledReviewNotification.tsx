@@ -21,7 +21,7 @@ const CancelledReviewNotification = () => {
       icon="information"
       hideIconCircle={true}
       iconColor={ColorPalette.brand.primary}
-      onPress={() => navigation.navigate(BCSCScreens.CancelledReview, { agentReason })}
+      onPress={() => navigation.navigate(BCSCScreens.MainCancelledReview, { agentReason })}
     />
   )
 }

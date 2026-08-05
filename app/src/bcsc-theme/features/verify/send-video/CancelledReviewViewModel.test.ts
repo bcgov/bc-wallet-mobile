@@ -95,11 +95,11 @@ describe('useCancelledReviewViewModel', () => {
     })
   })
 
-  describe('goToMethodSelection', () => {
+  describe('resumeVerification', () => {
     it('continues the verification process', () => {
       const { result } = renderHook(() => useCancelledReviewViewModel())
 
-      result.current.goToMethodSelection()
+      result.current.resumeVerification()
 
       expect(mockContinueVerificationProcess).toHaveBeenCalledTimes(1)
     })

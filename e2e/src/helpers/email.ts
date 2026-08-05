@@ -20,44 +20,102 @@ export async function getTempEmailAddress(): Promise<{ email: string; token: str
 
     return { email: email_addr, token: sid_token }
   } catch (error) {
+    // This runs on the RUNNER's network, and disposable-email services are a standard filtering target,
+    // so a TLS error here is that block rather than a broken test — say so, or `fetch failed` alone
+    // sends the next person hunting through the app.
+    const cause = (error as { cause?: { code?: string } }).cause?.code
+    const blocked = cause === 'SELF_SIGNED_CERT_IN_CHAIN' || cause === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE'
+    const host = new URL(TEMP_EMAIL_API).host
+    const causeDetail = cause ? `: ${cause}` : ''
     console.error('Error fetching temporary email address:', error)
-    throw error
+    throw new Error(
+      `Could not reach the temporary-inbox provider (${host})${causeDetail}. ` +
+        (blocked
+          ? 'The TLS chain was replaced, which is what a network filtering disposable-email services looks like — ' +
+            'run this journey from a network that allows it (CI does).'
+          : 'The email step cannot run without it.')
+    )
+  }
+}
+
+/** Fetch the inbox listing, or null on a transient failure (the caller retries). */
+async function fetchInbox(token: string): Promise<Email[] | null> {
+  try {
+    const response = await fetch(`${TEMP_EMAIL_API}?f=check_email&seq=1&sid_token=${token}`)
+    const inbox = (await response.json()) as { list?: Email[] }
+    return inbox.list ?? []
+  } catch (error) {
+    console.warn('Transient error checking email inbox, retrying...', error)
+    return null
+  }
+}
+
+/** `mail_id` comes back as a string on some responses — compare it as a number, always. */
+function mailId(email: Email): number {
+  return Number(email.mail_id)
+}
+
+/**
+ * The highest message id in the inbox, waiting until there is at least one message.
+ *
+ * Take this BEFORE an action that should send another email, then pass it as `afterMailId` so that
+ * wait cannot be satisfied by a message already in flight. Waiting is the point: a 0 baseline from a
+ * not-yet-delivered inbox would let the next wait return that first, now-superseded message.
+ */
+export async function getLatestMailId(
+  token: string,
+  options: { timeout?: number; interval?: number } = {}
+): Promise<number> {
+  const { timeout = 60_000, interval = 10_000 } = options
+  const deadline = Date.now() + timeout
+
+  for (;;) {
+    const list = await fetchInbox(token)
+    if (list?.length) {
+      return Math.max(...list.map(mailId))
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`No email arrived within ${timeout}ms, so there is no baseline message id to take`)
+    }
+    await new Promise((resolve) => setTimeout(resolve, interval))
   }
 }
 
 /**
  * Retrieves the confirmation code from the email inbox.
  *
+ * Always reads the NEWEST message (highest `mail_id`), not the first in the listing: a resend leaves two
+ * codes in the inbox, and it mints a new `email_address_id`, so only the latest one still works.
+ *
  * @param token - The token associated with the temporary email address, used to check for incoming emails.
- * @param options - Optional configuration for timeout and polling interval.
+ * @param options - Timeout/polling, plus `afterMailId`: wait for a message newer than that id, ignoring
+ *   anything already in the inbox (see {@link getLatestMailId}).
  * @returns The 6-digit confirmation code extracted from the email body.
  */
 export async function getEmailConfirmationCode(
   token: string,
-  options = { timeout: 60_000, interval: 10_000 }
+  options: { timeout?: number; interval?: number; afterMailId?: number } = {}
 ): Promise<string> {
-  const deadline = Date.now() + options.timeout
+  const { timeout = 60_000, interval = 10_000, afterMailId = 0 } = options
+  const deadline = Date.now() + timeout
 
-  console.log(`Waiting for email confirmation code...`)
+  const newerThan = afterMailId ? ` newer than mail ${afterMailId}` : ''
+  console.log(`Waiting for email confirmation code${newerThan}...`)
   while (Date.now() < deadline) {
-    await new Promise((resolve) => setTimeout(resolve, options.interval))
+    await new Promise((resolve) => setTimeout(resolve, interval))
 
-    let inbox: { list: Email[] }
-    try {
-      console.log('Checking inbox for confirmation code email...')
-      const inboxResponse = await fetch(`${TEMP_EMAIL_API}?f=check_email&seq=1&sid_token=${token}`)
-      inbox = (await inboxResponse.json()) as { list: Email[] }
-    } catch (error) {
-      console.warn('Transient error checking email inbox, retrying...', error)
+    console.log('Checking inbox for confirmation code email...')
+    const list = await fetchInbox(token)
+    if (!list?.length) {
       continue
     }
 
-    if (!inbox.list.length) {
+    const candidates = list.filter((email) => mailId(email) > afterMailId)
+    if (!candidates.length) {
       continue
     }
-
-    const email = inbox.list[0]
-    console.log(`Received email from: ${email.mail_from}`)
+    const email = candidates.reduce((newest, next) => (mailId(next) > mailId(newest) ? next : newest), candidates[0])
+    console.log(`Received email ${mailId(email)} from: ${email.mail_from}`)
 
     const emailResponse = await fetch(`${TEMP_EMAIL_API}?f=fetch_email&email_id=${email.mail_id}&sid_token=${token}`)
     const emailContent = (await emailResponse.json()) as { mail_body: string }

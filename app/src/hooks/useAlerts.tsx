@@ -359,6 +359,8 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       tokenUnexpectedlyNullAlert: _createBasicErrorModal(AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL, 'SomethingWentWrong'),
       loginServerErrorAlert: _createBasicErrorModal(AppEventCode.LOGIN_SERVER_ERROR, 'ProblemWithLogin', { errorCode: '303' }),
       problemWithLoginAlert: _createBasicErrorModal(AppEventCode.LOGIN_PARSE_URI, 'ProblemWithLogin', { errorCode: '304' }),
+      personCredentialSuspendedAlert: _createProblemWithAccountErrorModal(AppEventCode.AUTO_CRED_ACCOUNT_SUSPENDED, '3205'),
+      personCredentialDeactivatedAlert: _createProblemWithAccountErrorModal(AppEventCode.AUTO_CRED_ACCOUNT_DEACTIVATED, '3206'),
       loginRejected401Alert: _createProblemWithAccountErrorModal(AppEventCode.LOGIN_REJECTED_401, '401'),
       loginRejected403Alert: _createProblemWithAccountErrorModal(AppEventCode.LOGIN_REJECTED_403, '403'),
       loginRejected400Alert: _createProblemWithAccountErrorModal(AppEventCode.LOGIN_REJECTED_400, '400-1'),

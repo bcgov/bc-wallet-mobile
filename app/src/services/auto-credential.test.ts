@@ -1,3 +1,5 @@
+import { AppError, ErrorCategory } from '@/errors'
+import { AppEventCode } from '@/events/appEventCode'
 import { AutoCredentialMonitor, AutoCredentialRule } from '@/services/auto-credential'
 import { CredentialProvisioningEventTypes, MockLogger } from '@bifold/core'
 import {
@@ -70,6 +72,20 @@ const buildRule = (overrides: Partial<AutoCredentialRule> = {}): AutoCredentialR
   autoAcceptCredentialOffer: true,
   ...overrides,
 })
+
+/** Builds an AppError shaped like a 400 suspended/deactivated response from /credentials/v1/person. */
+const accountUnavailableError = (reason: 'suspended' | 'deactivated'): AppError => {
+  const error = new AppError(
+    'account unavailable',
+    { category: ErrorCategory.CREDENTIAL, appEvent: AppEventCode.UNKNOWN_SERVER_ERROR, statusCode: 9999 },
+    { track: false }
+  )
+  error.cause = Object.assign(new Error('Request failed'), {
+    isAxiosError: true,
+    response: { status: 400, data: { error: 'unauthorized_client', error_description: reason } },
+  })
+  return error
+}
 
 const proofFormat = (credDefId: string) => ({
   request: {
@@ -287,6 +303,117 @@ describe('AutoCredentialMonitor', () => {
       expect(emitSpy).toHaveBeenCalledWith(CredentialProvisioningEventTypes.FailedRequestCredential, expect.any(Error))
       expect(attestationMonitor.start).toHaveBeenCalledTimes(1)
       expect(monitor.workflowInProgress).toBe(false)
+    })
+
+    it('does NOT decline the triggering proof for a generic (retryable) getInvitationUrl failure', async () => {
+      const failingRule = buildRule({
+        getInvitationUrl: jest.fn().mockRejectedValue(new Error('issuer unavailable')),
+      })
+      buildMonitor(failingRule)
+
+      await triggerWorkflow()
+
+      expect(agent.didcomm.proofs.declineRequest).not.toHaveBeenCalled()
+    })
+
+    it('declines the triggering proof when getInvitationUrl fails because the account is suspended', async () => {
+      const failingRule = buildRule({
+        getInvitationUrl: jest.fn().mockRejectedValue(accountUnavailableError('suspended')),
+      })
+      const { monitor } = buildMonitor(failingRule)
+
+      await triggerWorkflow()
+
+      expect(agent.didcomm.proofs.declineRequest).toHaveBeenCalledWith({
+        proofExchangeRecordId: 'trigger-proof',
+        sendProblemReport: true,
+      })
+      expect(emitSpy).toHaveBeenCalledWith(CredentialProvisioningEventTypes.FailedRequestCredential, expect.any(Error))
+      expect(monitor.workflowInProgress).toBe(false)
+    })
+
+    it('declines the triggering proof when getInvitationUrl fails because the account is deactivated', async () => {
+      const failingRule = buildRule({
+        getInvitationUrl: jest.fn().mockRejectedValue(accountUnavailableError('deactivated')),
+      })
+      buildMonitor(failingRule)
+
+      await triggerWorkflow()
+
+      expect(agent.didcomm.proofs.declineRequest).toHaveBeenCalledWith({
+        proofExchangeRecordId: 'trigger-proof',
+        sendProblemReport: true,
+      })
+    })
+
+    it('still fails the workflow even if declining the triggering proof itself throws', async () => {
+      agent.didcomm.proofs.declineRequest.mockRejectedValueOnce(new Error('decline failed'))
+      const failingRule = buildRule({
+        getInvitationUrl: jest.fn().mockRejectedValue(accountUnavailableError('suspended')),
+      })
+      const { monitor } = buildMonitor(failingRule)
+
+      await triggerWorkflow()
+
+      expect(emitSpy).toHaveBeenCalledWith(CredentialProvisioningEventTypes.FailedRequestCredential, expect.any(Error))
+      expect(monitor.workflowInProgress).toBe(false)
+    })
+  })
+
+  describe('triggerTestWorkflow', () => {
+    it('returns false and warns when the agent is not ready', () => {
+      const monitor = new AutoCredentialMonitor(new MockLogger(), { rules: [buildRule()], attestationMonitor })
+
+      const result = monitor.triggerTestWorkflow()
+
+      expect(result).toBe(false)
+    })
+
+    it('returns false and warns when no rules are configured', () => {
+      const monitor = new AutoCredentialMonitor(new MockLogger(), { rules: [], attestationMonitor })
+      monitor.start(agent as any)
+
+      const result = monitor.triggerTestWorkflow()
+
+      expect(result).toBe(false)
+    })
+
+    it('returns false and warns when a workflow is already in progress', async () => {
+      agent.didcomm.oob.parseInvitation.mockResolvedValue({ id: 'inv-1' })
+      agent.didcomm.oob.receiveInvitation.mockResolvedValue({ connectionRecord: { id: 'conn-1' } })
+      agent.didcomm.proofs.getFormatData.mockResolvedValue(proofFormat(TRIGGER_CRED_DEF_ID))
+      mockedCredentialsMatchForProof.mockResolvedValue({
+        proofFormats: { anoncreds: { attributes: {}, predicates: {} } },
+      })
+      const { monitor, rule } = buildMonitor()
+
+      await agent.emit(DidCommProofEventTypes.ProofStateChanged, {
+        proofRecord: { id: 'trigger-proof', state: DidCommProofState.RequestReceived },
+      })
+      expect(monitor.workflowInProgress).toBe(true)
+      ;(rule.getInvitationUrl as jest.Mock).mockClear()
+
+      const result = monitor.triggerTestWorkflow()
+
+      expect(result).toBe(false)
+      expect(rule.getInvitationUrl).not.toHaveBeenCalled()
+    })
+
+    it('starts the first configured rule using a stub proof', async () => {
+      agent.didcomm.oob.parseInvitation.mockResolvedValue({ id: 'inv-1' })
+      agent.didcomm.oob.receiveInvitation.mockResolvedValue({ connectionRecord: { id: 'conn-1' } })
+      const { monitor, rule } = buildMonitor()
+
+      const result = monitor.triggerTestWorkflow()
+
+      expect(result).toBe(true)
+      expect(monitor.workflowInProgress).toBe(true)
+      expect(rule.getInvitationUrl).toHaveBeenCalledWith({ id: 'test-workflow-proof' }, agent)
+      expect(emitSpy).toHaveBeenCalledWith(CredentialProvisioningEventTypes.Started)
+
+      // let the async runWorkflow chain settle so nothing leaks into other tests
+      await Promise.resolve()
+      await Promise.resolve()
     })
   })
 

@@ -38,7 +38,8 @@ interface SectionData {
  *
  * When `photoFilter` is set (non-photo BCSC flow), the list is further restricted
  * to photo-only or non-photo-only IDs, and an "Other Options" escape hatch lets
- * users without a photo ID switch to the non-photo list.
+ * users without a photo ID switch to the non-photo list. The Non-BCSC flow derives
+ * the same photo-only restriction for its second ID when the first one had no photo.
  *
  * On focus, the screen also reconciles the evidence store with the navigation
  * state: incomplete (abandoned) selections are removed on the first visit, and
@@ -150,6 +151,13 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
     [store.bcscSecure.additionalEvidenceData]
   )
 
+  const firstEvidence = store.bcscSecure.additionalEvidenceData[0]
+  const nonBcscSecondIdRequiresPhoto =
+    cardProcess === BCSCCardProcess.NonBCSC &&
+    isCardEvidenceComplete(firstEvidence) &&
+    !firstEvidence.evidenceType?.has_photo
+  const effectivePhotoFilter = nonBcscSecondIdRequiresPhoto ? 'photo' : photoFilter
+
   useEffect(() => {
     if (!data) {
       return
@@ -166,10 +174,10 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
         // first and second runs will show slightly different cards
         p.evidence_types.forEach((e) => {
           // Apply photo filter if specified (used by non-photo BCSC flow)
-          if (photoFilter === 'photo' && !e.has_photo) {
+          if (effectivePhotoFilter === 'photo' && !e.has_photo) {
             return
           }
-          if (photoFilter === 'nonPhoto' && e.has_photo) {
+          if (effectivePhotoFilter === 'nonPhoto' && e.has_photo) {
             return
           }
 
@@ -181,7 +189,7 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
     })
     const mappedData = mapEvidenceToSections(cards)
     setEvidenceSections(mappedData)
-  }, [data, cardProcess, photoFilter, shouldAddEvidence])
+  }, [data, cardProcess, effectivePhotoFilter, shouldAddEvidence])
 
   const mapEvidenceToSections = (cards: Record<string, EvidenceType[]>): SectionData[] => {
     const mappedData: { title: string; data: EvidenceType[] }[] = []
