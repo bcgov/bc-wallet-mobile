@@ -2,16 +2,47 @@ import assert from 'node:assert/strict'
 import { TestUsers, Timeouts } from '../../../src/constants.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
+  captureFirstNonBcscDocument,
+  captureSecondNonBcscDocument,
   chooseAddAccount,
-  collectNonBcscEvidence,
+  completeEmailVerification,
   completeVerification,
   fillResidentialAddress,
+  leaveVerificationToHome,
+  listEvidenceTypeRowIds,
+  resendEmailCode,
+  resumeVerification,
+  startEmailVerification,
   startVerification,
-  verifyEmailWithTempInbox,
+  submitEmailCode,
+  submitEvidenceIdCollection,
 } from '../../../src/flows/verify.js'
+import { tapAlertButton } from '../../../src/helpers/alerts.js'
 import { HomeScreen, SettingsScreen } from '../../../src/screens/main.js'
-import { VerificationMethodSelectionScreen } from '../../../src/screens/verify.js'
-import { getTestUser, setTestUser } from '../../../src/support/context.js'
+import {
+  EmailConfirmationScreen,
+  EnterEmailScreen,
+  EvidenceIDCollectionScreen,
+  ResidentialAddressScreen,
+  VerificationMethodSelectionScreen,
+} from '../../../src/screens/verify.js'
+import { getNonBcscTestUser, getTestUser, setTestUser } from '../../../src/support/context.js'
+
+/** The two documents, in slot order. Case-insensitive substrings of the server-keyed row testIDs. */
+const FIRST_DOC_MATCH = 'BC Drivers Licence'
+const SECOND_DOC_MATCH = 'Canadian Passport'
+
+/** Under the app's 12-year minimum until 2032, and a valid past date — so it fails ONLY the age rule. */
+const UNDER_AGE_DOB = '20200101'
+/** `BCSC.EvidenceIDCollection.BirthDateAgeError` with `MINIMUM_VERIFICATION_AGE` interpolated. */
+const UNDER_AGE_ERROR = 'You must be 12 years or older to set up a mobile card'
+
+/** Six digits, so the server (not the client-side length rule) is what rejects it. */
+const WRONG_EMAIL_CODE = '000000'
+/** `BCSC.EmailConfirmation.CodeDoesNotMatch` — shown inline AND in an alert on the 404. */
+const CODE_DOES_NOT_MATCH = 'The code you entered does not match. Try again.'
+/** The 404 alert's only action (`Global.OK`). */
+const EMAIL_ALERT_OK = 'OK'
 
 /**
  * Verified journey: non-BCSC card — the heaviest path. The user has no BC Services Card, so instead of
@@ -23,6 +54,11 @@ import { getTestUser, setTestUser } from '../../../src/support/context.js'
  * Sauce: the per-slot EvidenceTypeList row substrings ('BC Drivers Licence' / 'Canadian Passport';
  * selectEvidenceType lists the real ones on a miss), the ResidentialAddress province dropdown
  * (`province-option-BC`), and the mandatory email step all resolve.
+ *
+ * Because this is the only journey that reaches them, it also carries the branch-sweep riders that need
+ * this state: the under-12 birthdate rejection on the first document's form, the second slot's filtered
+ * ID list, the wrong-code/resend email detours, and the two resume steps (address, email) that cannot be
+ * reached without paying for two captured documents.
  *
  * Ordered session: onboard → OtherID → two documents → residential address → email (temp inbox) →
  * method selection → in-person → verified Home
@@ -36,21 +72,78 @@ describe('Verified journey: non-bcsc card', () => {
     await completeOnboarding()
   })
 
-  it('chooses Other ID and provides two government documents', async () => {
+  it('captures the first ID and rejects an under-12 birthdate on its form', async () => {
     await startVerification()
     await chooseAddAccount()
-    // The options DIFFER per slot: the first document's list offers 'BC Drivers Licence', the second
-    // uses 'Canadian Drivers Licence'. Each substring must uniquely match its slot's list and map to
-    // fred's document types (18 / 12) for the SM approval — so the specific document matters.
-    await collectNonBcscEvidence(getTestUser(), 'BC Drivers Licence', 'Canadian Passport')
+    await captureFirstNonBcscDocument(getTestUser(), FIRST_DOC_MATCH)
+
+    // The age rule is client-side and lives ONLY here — there is no under-12 card process, so this
+    // inline rejection is the whole of the app's under-12 behaviour. Submit an under-age date first,
+    // then the real one; the form re-types every field, so the second submit replaces it cleanly.
+    const user = getNonBcscTestUser()
+    const personalInfo = { lastName: user.lastName, firstName: user.firstName, dob: UNDER_AGE_DOB }
+    await submitEvidenceIdCollection(user.primaryDocumentNumber, personalInfo)
+    // The birthdate field always renders this node (it doubles as the field's static hint), so the
+    // assertion is on its TEXT, not its presence. `waitFor` scroll-hunts it into view first.
+    await EvidenceIDCollectionScreen.waitFor('birthdateSubtext', Timeouts.SCREEN_TRANSITION)
+    assert.equal(await EvidenceIDCollectionScreen.read('birthdateSubtext'), UNDER_AGE_ERROR)
+
+    await submitEvidenceIdCollection(user.primaryDocumentNumber, { ...personalInfo, dob: user.dob })
+  })
+
+  it('offers a different ID list for the second slot, without the one already used', async () => {
+    // The list filters by `collection_order` AND hides anything already chosen, so the two slots are
+    // genuinely different lists — the second must not offer the licence just collected.
+    const rows = await listEvidenceTypeRowIds()
+    assert.ok(
+      !rows.some((id) => id.toLowerCase().includes(FIRST_DOC_MATCH.toLowerCase())),
+      `"${FIRST_DOC_MATCH}" is already collected and should not be selectable again. Rows: ${JSON.stringify(rows)}`
+    )
+    assert.ok(
+      rows.some((id) => id.toLowerCase().includes(SECOND_DOC_MATCH.toLowerCase())),
+      `"${SECOND_DOC_MATCH}" should be offered for the second ID. Rows: ${JSON.stringify(rows)}`
+    )
+  })
+
+  it('captures the second ID and reaches the address step', async () => {
+    await captureSecondNonBcscDocument(getTestUser(), SECOND_DOC_MATCH)
+    await submitEvidenceIdCollection(getTestUser().documentNumber)
+    await ResidentialAddressScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  })
+
+  it('resumes onto the address step after leaving verification', async () => {
+    // Both documents are complete but the device is not yet authorized, so the address step is what
+    // the app owes the user — the resume row that cannot be reached without paying for two captures.
+    await leaveVerificationToHome()
+    await resumeVerification()
+    await ResidentialAddressScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 
   it('fills the residential address', async () => {
     await fillResidentialAddress()
   })
 
-  it('verifies the mandatory email via a temporary inbox', async () => {
-    await verifyEmailWithTempInbox()
+  it('resumes onto the email step after leaving verification', async () => {
+    // The address submit authorizes the device, which moves the owed step from address to email.
+    await leaveVerificationToHome()
+    await resumeVerification()
+    await EnterEmailScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  })
+
+  it('rejects a wrong email code, then verifies with a resent one', async () => {
+    const token = await startEmailVerification()
+
+    // Six digits, so this is the SERVER's rejection (404) rather than the client-side length rule:
+    // it renders the message inline and raises an alert carrying the same copy.
+    await submitEmailCode(WRONG_EMAIL_CODE)
+    await tapAlertButton(EMAIL_ALERT_OK)
+    await EmailConfirmationScreen.waitFor('codeError', Timeouts.SCREEN_TRANSITION)
+    assert.equal(await EmailConfirmationScreen.read('codeError'), CODE_DOES_NOT_MATCH)
+
+    // Resending mints a new verification, retiring the code already sent — so the only code that can
+    // work from here is the one the resend produces. That it arrives is the resend's assertion.
+    await submitEmailCode(await resendEmailCode(token))
+    await completeEmailVerification()
     await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 

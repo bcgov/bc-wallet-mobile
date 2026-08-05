@@ -37,6 +37,25 @@ export const HomeScreen = defineScreen({
 })
 
 /**
+ * The notification card in Home's list. An unverified account renders the Start- (no id progress) or
+ * Continue-verification (id step done) variant here; both cards are the same component with the same
+ * testIDs, and both re-enter the verify stack at `getResumeStepRoute` — so tell them apart by
+ * `title`/`body` copy, not by testID, and treat either as "the way back in" (see `resumeVerification`).
+ *
+ * `primary` (its CTA) is the ONLY in-app route back into an interrupted verification: leaving the flow
+ * (help menu → Back to home) and every relaunch land here, because the verification-in-progress flag is
+ * in-memory and hydration recomputes it from the credential.
+ */
+export const HomeNotificationCard = defineScreen({
+  self: bcsc(main.notification.item),
+  primary: bcsc(main.notification.view),
+  elements: {
+    title: bcsc(main.notification.headerText),
+    body: bcsc(main.notification.bodyText),
+  },
+})
+
+/**
  * The no-skip verify prompt (`MainVerifyPrompt`) — where the tab listeners send unverified users
  * who tap Services (TabStack) or PairingCode (QRCoreStack). Continue is its only body testID;
  * the screen is otherwise distinguished by its "Verify your account" title copy. `back` (header)
