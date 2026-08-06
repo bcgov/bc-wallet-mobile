@@ -1,4 +1,10 @@
 import { ViewStyle } from 'react-native'
+import {
+  DigitalServicesCardCredentialIdentityDEV,
+  DigitalServicesCardCredentialIdentityPROD,
+  DigitalServicesCardCredentialIdentityQA,
+  DigitalServicesCardCredentialIdentitySIT,
+} from './utils/credential-repository'
 
 // TODO (MD): Normalize casing of constants (ie: SCREAMING_SNAKE_CASE vs camelCase) and group them in a more structured way (ie: AnalyticsConstants, BCSCConstants, etc.)
 
@@ -15,31 +21,6 @@ export interface CredentialRestrictionEnvironment {
   credDefIDs: readonly string[]
   invitationUrl: string
 }
-
-export interface AutoFetchCredentialConfigEntry {
-  credDefIDs: readonly string[]
-}
-
-/**
- * Per-environment Person Credential cred def IDs. AutoCredentialMonitor
- * flattens these into its trigger set; a proof requesting any of them tells
- * the wallet a Person Credential is missing and the BCSC-initiated flow
- * (POST /credentials/v1/person) is used to mint an issuer invitation.
- */
-export const AutoFetchCredentialConfig: Record<string, AutoFetchCredentialConfigEntry> = {
-  Development: {
-    credDefIDs: ['XpgeQa93eZvGSZBZef3PHn:3:CL:28075:PersonDEV'],
-  },
-  SIT: {
-    credDefIDs: ['7xjfawcnyTUcduWVysLww5:3:CL:28075:PersonSIT'],
-  },
-  QA: {
-    credDefIDs: ['KCxVC8GkKywjhWJnUfCmkW:3:CL:20:PersonQA'],
-  },
-  Production: {
-    credDefIDs: ['RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person'],
-  },
-} as const
 
 export const AttestationRestrictions: { [key: string]: CredentialRestrictionEnvironment } = {
   Development: {
@@ -238,15 +219,15 @@ export const TEMPORARY_ACCOUNT_CLIENT_ID = ''
 
 // Credential constants
 // TODO (MD): Pull these values from well-known urls or remote config (ie: Firebase Remote Config)
-export const DIGITAL_SERVICES_CARD_CREDENTIAL_DEFINITION_IDS = [
-  'RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person',
-  'KCxVC8GkKywjhWJnUfCmkW:3:CL:20:PersonQA',
-  '7xjfawcnyTUcduWVysLww5:3:CL:28075:PersonSIT',
-  'XpgeQa93eZvGSZBZef3PHn:3:CL:28075:PersonDEV',
+export const DIGITAL_SERVICES_CARD_CREDENTIAL_IDENTITY_RECORDS = [
+  DigitalServicesCardCredentialIdentityPROD,
+  DigitalServicesCardCredentialIdentitySIT,
+  DigitalServicesCardCredentialIdentityQA,
+  DigitalServicesCardCredentialIdentityDEV,
 ]
-export const DIGITAL_SERVICES_CARD_SCHEMA_IDS = [
-  'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0',
-  'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0',
-  '7xjfawcnyTUcduWVysLww5:2:Person:1.0',
-  'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0',
-]
+export const DIGITAL_SERVICES_CARD_CREDENTIAL_DEFINITION_IDS = DIGITAL_SERVICES_CARD_CREDENTIAL_IDENTITY_RECORDS.map(
+  (identity) => identity.credDefId
+)
+export const DIGITAL_SERVICES_CARD_SCHEMA_IDS = DIGITAL_SERVICES_CARD_CREDENTIAL_IDENTITY_RECORDS.map(
+  (identity) => identity.schemaId
+)

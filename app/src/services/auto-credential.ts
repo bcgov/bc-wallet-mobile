@@ -1,6 +1,10 @@
 import { getDigitalServiceCardAccountProblem } from '@/bcsc-theme/utils/getDigitalServiceCardAccountProblem'
 import { AbstractBifoldLogger, CredentialProvisioningEventTypes, CredentialProvisioningMonitor } from '@bifold/core'
-import { AnonCredsRequestedAttribute, AnonCredsRequestedPredicate } from '@credo-ts/anoncreds'
+import {
+  AnonCredsProofRequestRestriction,
+  AnonCredsRequestedAttribute,
+  AnonCredsRequestedPredicate,
+} from '@credo-ts/anoncreds'
 import { Agent } from '@credo-ts/core'
 import {
   DidCommCredentialEventTypes,
@@ -33,8 +37,13 @@ interface PausableAttestationMonitor {
  * Configuration for a single just-in-time credential acquisition rule
  */
 export interface AutoCredentialRule {
-  /** Cred def IDs whose absence in the wallet triggers this rule. */
-  triggerCredDefIds: string[]
+  /**
+   * An array of AnonCredsProofRequestRestriction objects that match the proof request
+   * to trigger the workflow.  If any of the restrictions match, the rule is triggered.
+   *
+   * @example [ { cred_def_id: 'abc' }, { schema_id: 'xyz' } ] // first tries matching cred def, then schema
+   */
+  triggerRestrictions: AnonCredsProofRequestRestriction[]
 
   /**
    * Returns the OOB invitation URL for the issuer that can provide the missing
@@ -207,6 +216,21 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
   // Private — credential check
   // ---------------------------------------------------------------------------
 
+  // Check if all key-value pairs in the trigger match the restriction
+  // ie: { cred_def_id: 'abc' } matches { cred_def_id: 'abc', schema_id: 'xyz' }
+  // ie: { cred_def_id: 'abc', schema_id: 'xyz' } does NOT match { cred_def_id: 'abc' }
+  private restrictionMatchesRule(restriction: AnonCredsProofRequestRestriction, rule: AutoCredentialRule): boolean {
+    return rule.triggerRestrictions.some((trigger) => {
+      if (Object.keys(trigger).length === 0) {
+        return false
+      }
+      return Object.entries(trigger).every(([key, value]) => {
+        const restrictionValue = restriction[key as keyof AnonCredsProofRequestRestriction]
+        return restrictionValue === value
+      })
+    })
+  }
+
   /**
    * Returns true if the proof requests one of the rule's trigger cred def IDs
    * AND the wallet has no credential that satisfies it.
@@ -232,12 +256,12 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     const triggeredPredicateKeys = new Set<string>()
 
     for (const [key, attr] of Object.entries(proofFormat.requested_attributes ?? {})) {
-      if ((attr.restrictions ?? []).some((r) => r.cred_def_id && rule.triggerCredDefIds.includes(r.cred_def_id))) {
+      if ((attr.restrictions ?? []).some((restriction) => this.restrictionMatchesRule(restriction, rule))) {
         triggeredAttributeKeys.add(key)
       }
     }
     for (const [key, pred] of Object.entries(proofFormat.requested_predicates ?? {})) {
-      if ((pred.restrictions ?? []).some((r) => r.cred_def_id && rule.triggerCredDefIds.includes(r.cred_def_id))) {
+      if ((pred.restrictions ?? []).some((restriction) => this.restrictionMatchesRule(restriction, rule))) {
         triggeredPredicateKeys.add(key)
       }
     }
@@ -410,6 +434,7 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
     if (proof.state !== DidCommProofState.RequestReceived) {
       return
     }
+
     // A workflow already claimed a proof; the workflow-scoped subscription
     // handles proofs on its own connection. Ignore everything else.
     if (this._workflowInProgress) {
@@ -441,22 +466,21 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
 
     for (const rule of this.rules) {
       // compare the cred def id against the rule trigger IDs, if any match then this proof is requesting a credential that would trigger the workflow
-      const proofRequestsWatchedCredential = restrictions.some(
-        (restriction) => restriction.cred_def_id && rule.triggerCredDefIds.includes(restriction.cred_def_id)
+      const proofRequestsWatchedCredential = restrictions.some((restriction) =>
+        this.restrictionMatchesRule(restriction, rule)
       )
 
       this.log?.info(
         `[AutoCredentialMonitor] Proof ${proof.id} requests credential(s) that match rule trigger IDs: ${proofRequestsWatchedCredential}`
       )
+
       if (!proofRequestsWatchedCredential) {
         continue
       }
 
       try {
         const isMissing = await this.isCredentialMissingForRule(proof.id, requestFormat, rule)
-        this.log?.info(
-          `[AutoCredentialMonitor] Credential (${rule.triggerCredDefIds.join(', ')}) is ${isMissing ? 'NOT ' : ''}in the wallet`
-        )
+        this.log?.info(`[AutoCredentialMonitor] Credential  is${isMissing ? ' NOT' : ''} in the wallet`)
         if (isMissing) {
           // Fire and forget — inside runWorkflow drives its own subscriptions
           // and error handling. Return so we don't try further rules against the

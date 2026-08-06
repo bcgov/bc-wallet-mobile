@@ -12,6 +12,7 @@ export interface BCSCAgentContextValue {
   retry: () => void
   resetWallet: () => Promise<void>
   teardownAgent: () => Promise<void>
+  waitForAgent: () => Promise<Agent | null>
 }
 
 const BCSCAgentContext = createContext<BCSCAgentContextValue | null>(null)
@@ -49,7 +50,7 @@ export const useBCSCAgentSafe = (): BCSCAgentContextValue | null => useContext(B
  * through `useBCSCAgent().agent` rather than Bifold's `useAgent()`.
  */
 const BCSCAgentProvider: React.FC<PropsWithChildren> = ({ children }) => {
-  const { agent, status, error, retry, resetWallet, teardownAgent } = useAgentSetupViewModel()
+  const { agent, status, error, retry, resetWallet, teardownAgent, waitForAgent } = useAgentSetupViewModel()
 
   const value = useMemo<BCSCAgentContextValue>(
     () => ({
@@ -59,8 +60,9 @@ const BCSCAgentProvider: React.FC<PropsWithChildren> = ({ children }) => {
       retry,
       resetWallet,
       teardownAgent,
+      waitForAgent,
     }),
-    [agent, status, error, retry, resetWallet, teardownAgent]
+    [agent, status, error, retry, resetWallet, teardownAgent, waitForAgent]
   )
 
   return <BCSCAgentContext.Provider value={value}>{children}</BCSCAgentContext.Provider>

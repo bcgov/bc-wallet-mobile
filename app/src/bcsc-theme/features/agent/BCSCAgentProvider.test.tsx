@@ -31,6 +31,7 @@ describe('BCSCAgentProvider', () => {
       retry: jest.fn(),
       resetWallet: jest.fn(),
       teardownAgent: jest.fn(),
+      waitForAgent: jest.fn().mockResolvedValue(null),
     })
 
     const { getByText } = render(
@@ -50,6 +51,7 @@ describe('BCSCAgentProvider', () => {
       retry: jest.fn(),
       resetWallet: jest.fn(),
       teardownAgent: jest.fn(),
+      waitForAgent: jest.fn().mockResolvedValue(null),
     })
 
     const { getByText } = render(
@@ -71,6 +73,7 @@ describe('BCSCAgentProvider', () => {
       retry: jest.fn(),
       resetWallet: jest.fn(),
       teardownAgent: jest.fn(),
+      waitForAgent: jest.fn().mockResolvedValue(agent),
     })
 
     const { getByText } = render(
@@ -91,6 +94,7 @@ describe('BCSCAgentProvider', () => {
       retry: jest.fn(),
       resetWallet: jest.fn(),
       teardownAgent: jest.fn(),
+      waitForAgent: jest.fn().mockRejectedValue(error),
     })
 
     const { getByText } = render(

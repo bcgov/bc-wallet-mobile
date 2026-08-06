@@ -31,6 +31,7 @@ describe('BifoldScope', () => {
       retry: jest.fn(),
       resetWallet: jest.fn(),
       teardownAgent: jest.fn(),
+      waitForAgent: jest.fn().mockResolvedValue(null),
     })
 
     const { getByText } = render(
@@ -53,6 +54,7 @@ describe('BifoldScope', () => {
       retry: jest.fn(),
       resetWallet: jest.fn(),
       teardownAgent: jest.fn(),
+      waitForAgent: jest.fn().mockResolvedValue(agent),
     })
 
     const { getByText } = render(

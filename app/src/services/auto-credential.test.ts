@@ -66,7 +66,7 @@ const createMockAgent = () => {
 const TRIGGER_CRED_DEF_ID = 'issuer:3:CL:1:Person'
 
 const buildRule = (overrides: Partial<AutoCredentialRule> = {}): AutoCredentialRule => ({
-  triggerCredDefIds: [TRIGGER_CRED_DEF_ID],
+  triggerRestrictions: [{ cred_def_id: TRIGGER_CRED_DEF_ID }],
   getInvitationUrl: jest.fn().mockResolvedValue('https://issuer.example?c_i=abc'),
   autoAcceptIssuerProofRequest: true,
   autoAcceptCredentialOffer: true,
@@ -157,6 +157,18 @@ describe('AutoCredentialMonitor', () => {
 
       expect(rule.getInvitationUrl).not.toHaveBeenCalled()
       expect(monitor.workflowInProgress).toBe(false)
+    })
+
+    it('does not emit Started or Completed when the proof does not match any rule', async () => {
+      buildMonitor()
+      agent.didcomm.proofs.getFormatData.mockResolvedValue(proofFormat('unrelated:cred:def'))
+
+      await agent.emit(DidCommProofEventTypes.ProofStateChanged, {
+        proofRecord: { id: 'p1', state: DidCommProofState.RequestReceived },
+      })
+
+      expect(emitSpy).not.toHaveBeenCalledWith(CredentialProvisioningEventTypes.Started)
+      expect(emitSpy).not.toHaveBeenCalledWith(CredentialProvisioningEventTypes.Completed)
     })
 
     it('ignores further proof requests once a workflow is already in progress', async () => {
