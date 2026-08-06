@@ -23,7 +23,13 @@ export class CredentialDefinitionRecord {
 
     this.credDefId = credDefId
     this.issuerDid = issuerDid
-    this.schemaSeqNo = Number(schemaSeqNo)
+
+    const parsedSchemaSeqNo = Number(schemaSeqNo)
+    if (!Number.isFinite(parsedSchemaSeqNo)) {
+      throw new Error('[CredentialDefinitionRecord] schemaSeqNo is not a number')
+    }
+
+    this.schemaSeqNo = parsedSchemaSeqNo
     this.tag = tag
   }
 }
