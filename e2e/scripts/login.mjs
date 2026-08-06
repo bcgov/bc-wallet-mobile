@@ -15,6 +15,19 @@ const IDENTIFY_URL =
 const VALIDATE_CARDHOLDER_URL = 'https://idsit.gov.bc.ca/idcheck/protected/validatecardholder'
 const VERIFY_NON_BCSC_URL = 'https://idsit.gov.bc.ca/idcheck/protected/counterNonBcscRequest/verifyIdentity'
 
+// Send-video submissions are reviewed by a different controller family than in-person.
+const BACKCHECK_BASE_URL = 'https://idsit.gov.bc.ca/idcheck/protected/backCheckRequest'
+const BACKCHECK_DASHBOARD_URL = `${BACKCHECK_BASE_URL}/dashboard`
+const BACKCHECK_CLAIM_URL = `${BACKCHECK_BASE_URL}/verifyIdentity`
+const BACKCHECK_CONTINUE_URL = `${BACKCHECK_BASE_URL}/continue`
+const BACKCHECK_APPROVE_URL = `${BACKCHECK_BASE_URL}/approve`
+const BACKCHECK_NOTE_URL = `${BACKCHECK_BASE_URL}/note`
+
+// 22 = "additional person in photo or video", the reason used in the reference capture.
+const DEFAULT_REJECT_REASON_ID = '22'
+const CLAIM_POLL_INTERVAL_MS = 5_000
+const DEFAULT_CLAIM_TIMEOUT_MS = 120_000
+
 /**
  * Wall-clock at the previous {@link logStep}, so each line reports how long its request took. The whole
  * chain shares ONE abort budget, so a timeout names the request in flight — structurally the last one —
@@ -113,6 +126,61 @@ function extractPageDataAttributes(html) {
 }
 
 /**
+ * First value of the named form input. Duplicated from src/helpers/pairing-code.ts — this file is
+ * plain node ESM and cannot import the TS helper.
+ *
+ * @param {ReturnType<typeof load>} $
+ * @param {string} name
+ */
+function inputValue($, name) {
+  return $(`input[name="${name}"]`).first().attr('value') ?? null
+}
+
+/** @param {string} html */
+function extractPageTitle(html) {
+  return load(html)('h1#page-title').first().text().trim()
+}
+
+/**
+ * Throws unless the page's h1 title matches, so a 200 error page can never pass as success.
+ *
+ * @param {string} step
+ * @param {string} html
+ * @param {string} expectedTitle
+ */
+function assertPageTitle(step, html, expectedTitle) {
+  const title = extractPageTitle(html)
+  if (title !== expectedTitle) {
+    throw new Error(`[${step}] expected page "${expectedTitle}" but got "${title || extractErrorMessage(html)}"`)
+  }
+}
+
+/**
+ * Abortable sleep so the caller's whole-chain budget can cut a claim-poll wait mid-interval.
+ *
+ * @param {number} ms
+ * @param {AbortSignal} [signal]
+ * @returns {Promise<void>}
+ */
+function sleep(ms, signal) {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(signal.reason ?? new Error('This operation was aborted'))
+      return
+    }
+    const onAbort = () => {
+      clearTimeout(timeoutId)
+      reject(signal?.reason ?? new Error('This operation was aborted'))
+    }
+    const timeoutId = setTimeout(() => {
+      signal?.removeEventListener('abort', onAbort)
+      resolve()
+    }, ms)
+    signal?.addEventListener('abort', onAbort, { once: true })
+  })
+}
+
+/**
  * @typedef {{ typeId: string, number: string }} RegistrationDocument
  *
  * @typedef {Object} ApprovePhotoInput
@@ -182,16 +250,12 @@ function buildUsercodeBody(csrfToken, input) {
 }
 
 /**
- * SM login flow to approve in-person verification. Selects one of three flows:
- *   - 'photo'     : BCSC card with photo (card serial + birthdate identifies user)
- *   - 'non-photo' : BCSC card without photo (adds an extra evidence + registration doc step)
- *   - 'non-bcsc'  : User has no BCSC card (identifies via usercode + two registration documents)
+ * Shared SM preamble: seeds the cookie jar, authenticates with SiteMinder, and hands the SMSESSION
+ * into IDCheck. Returns the cookie-bound fetch every later request must go through.
  *
- * @param {ApproveInPersonInput} input
- * @param {{ signal?: AbortSignal }} [options]
+ * @param {AbortSignal} [signal]
  */
-export async function approveInPersonLogin(input, options = {}) {
-  const { signal } = options
+async function establishIdcheckSession(signal) {
   previousStepAt = Date.now()
 
   const cookieJar = new CookieJar()
@@ -265,6 +329,22 @@ export async function approveInPersonLogin(input, options = {}) {
     signal,
   })
   await logStep('idcheck redirect', idcheckResponse)
+
+  return fetchWithCookies
+}
+
+/**
+ * SM login flow to approve in-person verification. Selects one of three flows:
+ *   - 'photo'     : BCSC card with photo (card serial + birthdate identifies user)
+ *   - 'non-photo' : BCSC card without photo (adds an extra evidence + registration doc step)
+ *   - 'non-bcsc'  : User has no BCSC card (identifies via usercode + two registration documents)
+ *
+ * @param {ApproveInPersonInput} input
+ * @param {{ signal?: AbortSignal }} [options]
+ */
+export async function approveInPersonLogin(input, options = {}) {
+  const { signal } = options
+  const fetchWithCookies = await establishIdcheckSession(signal)
 
   const identifyResponse = await fetchWithCookies(IDENTIFY_URL, {
     headers: {
@@ -513,6 +593,237 @@ export async function approveInPersonLogin(input, options = {}) {
   await logStep('approve usercode', approveResponse)
 }
 
+/**
+ * Browser-mimic header block for a same-origin document navigation GET.
+ *
+ * @param {string} referer
+ */
+function backcheckDocumentHeaders(referer) {
+  return {
+    accept:
+      'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+    'accept-language': 'en-US,en;q=0.9,en-CA;q=0.8,pt;q=0.7',
+    'cache-control': 'max-age=0',
+    'sec-ch-ua': '"Not:A-Brand";v="99", "Microsoft Edge";v="145", "Chromium";v="145"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+    'sec-fetch-dest': 'document',
+    'sec-fetch-mode': 'navigate',
+    'sec-fetch-site': 'same-origin',
+    'sec-fetch-user': '?1',
+    'upgrade-insecure-requests': '1',
+    Referer: referer,
+  }
+}
+
+/**
+ * Same block for a document form POST — adds the content type and Origin seen in the capture.
+ *
+ * @param {string} referer
+ */
+function backcheckFormPostHeaders(referer) {
+  return {
+    ...backcheckDocumentHeaders(referer),
+    'content-type': 'application/x-www-form-urlencoded',
+    Origin: 'https://idsit.gov.bc.ca',
+  }
+}
+
+/**
+ * Builds the attestation form body; field order mirrors the captured browser submission.
+ * All attestation answers are the "all good" values — the fork is suspiciousActivityVerificationValue
+ * ('0' confident = approve path, '2' not confident = reject path).
+ *
+ * @param {string} csrfToken
+ * @param {string} requestIdentifier
+ * @param {'0' | '2'} suspiciousActivityValue
+ * @param {'Continue' | 'CloseRequest'} command
+ * @returns {string}
+ */
+function buildBackcheckContinueBody(csrfToken, requestIdentifier, suspiciousActivityValue, command) {
+  return new URLSearchParams({
+    remoteTxSessionName: requestIdentifier,
+    requestIdentifier,
+    videoVerificationValue: '0',
+    nameVerificationValue: '0',
+    photoVerificationValue: '0',
+    csrftoken: csrfToken,
+    suspiciousActivityVerificationValue: suspiciousActivityValue,
+    command,
+  }).toString()
+}
+
+/**
+ * @typedef {Object} SendVideoApproveInput
+ * @property {'approve'} decision
+ * @property {string} cardSerialNumber - Expected serial; guards the blind FIFO claim
+ *
+ * @typedef {Object} SendVideoRejectInput
+ * @property {'reject'} decision
+ * @property {string} cardSerialNumber
+ * @property {string} verificationComment - Reason text the app shows the user on the cancelled-review screen
+ * @property {string} [comment] - Internal portal note; defaults to verificationComment
+ * @property {string} [typeReasonId] - Portal reject-reason id; defaults to DEFAULT_REJECT_REASON_ID
+ *
+ * @typedef {SendVideoApproveInput | SendVideoRejectInput} SendVideoReviewInput
+ */
+
+/**
+ * SM login flow to review (approve or reject) a queued send-video verification request.
+ *
+ * The portal has no queue listing — the dashboard's "Open Next Request" claims the next submission
+ * FIFO, so the claim is polled until one appears and the claimed item's card serial is checked
+ * against the expected one before any decision is posted.
+ *
+ * @param {SendVideoReviewInput} input
+ * @param {{ signal?: AbortSignal, claimTimeoutMs?: number }} [options]
+ * @returns {Promise<{ requestIdentifier: string, claimedSerial: string, claimedName: string }>}
+ */
+export async function reviewSendVideoLogin(input, options = {}) {
+  const { signal, claimTimeoutMs = DEFAULT_CLAIM_TIMEOUT_MS } = options
+
+  if (input.decision !== 'approve' && input.decision !== 'reject') {
+    throw new Error(`Unknown decision: ${/** @type {{decision: string}} */ (input).decision}`)
+  }
+  // Guards JS/CLI callers the TS types cannot protect.
+  if (input.decision === 'reject' && !input.verificationComment) {
+    throw new Error('reject requires verificationComment (the reason text shown to the user in the app)')
+  }
+
+  const fetchWithCookies = await establishIdcheckSession(signal)
+
+  // Claim loop: re-scrape the dashboard each attempt, exactly like a human reloading and clicking
+  // "Open Next Request" until the submission lands in the queue.
+  const claimDeadline = Date.now() + claimTimeoutMs
+  let csrfToken
+  let detailUrl
+  let detailHtml
+
+  for (let attempt = 1; ; attempt++) {
+    const dashboardResponse = await fetchWithCookies(BACKCHECK_DASHBOARD_URL, {
+      headers: backcheckDocumentHeaders('https://idsit.gov.bc.ca/idcheck/?'),
+      body: null,
+      method: 'GET',
+      signal,
+    })
+    const dashboardHtml = await logStep('backcheck dashboard', dashboardResponse)
+
+    // The dashboard #pageData carries no csrf attr — the token is the claim form's hidden input.
+    csrfToken = inputValue(load(dashboardHtml), 'csrftoken')
+    if (!csrfToken) {
+      // A fresh-login role interstitial would land here — name the page so the failure self-diagnoses.
+      throw new Error(
+        `[backcheck dashboard] no csrftoken input found — page is "${extractPageTitle(dashboardHtml) || extractErrorMessage(dashboardHtml)}"`
+      )
+    }
+
+    const claimResponse = await fetchWithCookies(BACKCHECK_CLAIM_URL, {
+      headers: backcheckFormPostHeaders(BACKCHECK_DASHBOARD_URL),
+      body: new URLSearchParams({ csrftoken: csrfToken }).toString(),
+      method: 'POST',
+      signal,
+    })
+    const claimHtml = await claimResponse.text()
+    // fetch-cookie follows the 302; landing on a detail page means a request was claimed.
+    if (claimResponse.ok && /\/backCheckRequest\/verifyIdentity\/[^/?#]+$/.test(claimResponse.url)) {
+      await logStep('claim send-video request', claimResponse, claimHtml)
+      detailUrl = claimResponse.url
+      detailHtml = claimHtml
+      break
+    }
+    if (!claimResponse.ok) {
+      // Reuses logStep's throw path — a real error is never blind-retried.
+      await logStep('claim send-video request', claimResponse, claimHtml)
+    }
+
+    const landedPath = new URL(claimResponse.url).pathname
+    console.log(`[sm-login] [~] claim attempt ${attempt}: nothing queued yet (landed on ${landedPath})`)
+    if (Date.now() + CLAIM_POLL_INTERVAL_MS >= claimDeadline) {
+      throw new Error(
+        `[claim send-video request] no queued submission within ${claimTimeoutMs}ms — last page: "${extractPageTitle(claimHtml) || landedPath}"`
+      )
+    }
+    await sleep(CLAIM_POLL_INTERVAL_MS, signal)
+  }
+
+  const detailAttributes = extractPageDataAttributes(detailHtml)
+  const requestIdentifier = detailAttributes?.['request-identifier']
+  if (!requestIdentifier) {
+    throw new Error('[claim send-video request] Missing request-identifier in page data')
+  }
+  // The detail page repeats the session csrf token; prefer the freshest value.
+  csrfToken = detailAttributes['csrf-token'] ?? csrfToken
+
+  const $detail = load(detailHtml)
+  const claimedSerial = $detail('#card-serial-number').first().text().trim()
+  const claimedName = $detail('#name-on-card span')
+    .map((_, element) => $detail(element).text().trim())
+    .get()
+    .filter(Boolean)
+    .join(', ')
+  console.log(`  claimed ${requestIdentifier}: ${claimedName} — serial ${claimedSerial}`)
+
+  if (claimedSerial.toUpperCase() !== input.cardSerialNumber.toUpperCase()) {
+    // Never review someone else's submission; try to release it, then fail loudly.
+    try {
+      await fetchWithCookies(BACKCHECK_CONTINUE_URL, {
+        headers: backcheckFormPostHeaders(detailUrl),
+        body: buildBackcheckContinueBody(csrfToken, requestIdentifier, '0', 'CloseRequest'),
+        method: 'POST',
+        signal,
+      })
+    } catch {
+      // best-effort release only — the throw below carries the real failure
+    }
+    throw new Error(
+      `[claim send-video request] claimed ${requestIdentifier} ("${claimedName}", serial ${claimedSerial}) but expected serial ${input.cardSerialNumber} — a CloseRequest release was attempted; check the SIT backcheck dashboard before re-running`
+    )
+  }
+
+  const suspiciousActivityValue = input.decision === 'approve' ? '0' : '2'
+  const continueResponse = await fetchWithCookies(BACKCHECK_CONTINUE_URL, {
+    headers: backcheckFormPostHeaders(detailUrl),
+    body: buildBackcheckContinueBody(csrfToken, requestIdentifier, suspiciousActivityValue, 'Continue'),
+    method: 'POST',
+    signal,
+  })
+  const continueHtml = await logStep('submit attestation', continueResponse)
+  assertPageTitle(
+    'submit attestation',
+    continueHtml,
+    input.decision === 'approve' ? 'Choose how to assist the individual' : 'Add Note to Activity Log'
+  )
+
+  if (input.decision === 'approve') {
+    const approveResponse = await fetchWithCookies(BACKCHECK_APPROVE_URL, {
+      headers: backcheckFormPostHeaders(BACKCHECK_CONTINUE_URL),
+      body: new URLSearchParams({ remoteTxSessionName: requestIdentifier, csrftoken: csrfToken }).toString(),
+      method: 'POST',
+      signal,
+    })
+    const approveHtml = await logStep('approve send-video request', approveResponse)
+    assertPageTitle('approve send-video request', approveHtml, 'Card Added to Mobile')
+  } else {
+    const noteResponse = await fetchWithCookies(BACKCHECK_NOTE_URL, {
+      headers: backcheckFormPostHeaders(BACKCHECK_CONTINUE_URL),
+      body: new URLSearchParams({
+        csrftoken: csrfToken,
+        identifier: requestIdentifier,
+        remoteTxSessionName: requestIdentifier,
+        typeReasonId: input.typeReasonId ?? DEFAULT_REJECT_REASON_ID,
+        comment: input.comment ?? input.verificationComment,
+        verificationComment: input.verificationComment,
+      }).toString(),
+      method: 'POST',
+      signal,
+    })
+    const noteHtml = await logStep('reject send-video request', noteResponse)
+    assertPageTitle('reject send-video request', noteHtml, 'Note Added to Activity Log')
+  }
+
+  return { requestIdentifier, claimedSerial, claimedName }
+}
+
 function isRunAsCli() {
   const entry = process.argv[1]
   if (!entry) {
@@ -541,6 +852,8 @@ function printUsage() {
   console.error('  node login.mjs photo     <serial> <birthdate(YYYY-MM-DD)> <code>')
   console.error('  node login.mjs non-photo <serial> <birthdate(YYYY-MM-DD)> <code> <docTypeId>:<docNum>')
   console.error('  node login.mjs non-bcsc  <code> <docTypeId>:<docNum> <docTypeId>:<docNum>')
+  console.error('  node login.mjs send-video approve <serial>')
+  console.error('  node login.mjs send-video reject  <serial> [reasonId] [message]')
 }
 
 if (isRunAsCli()) {
@@ -555,6 +868,8 @@ if (isRunAsCli()) {
 
   /** @type {ApproveInPersonInput | null} */
   let input = null
+  /** @type {SendVideoReviewInput | null} */
+  let sendVideoInput = null
 
   try {
     if (flow === 'photo') {
@@ -585,6 +900,20 @@ if (isRunAsCli()) {
         userCode: code,
         documents: [parseDocSpec(docSpec1), parseDocSpec(docSpec2)],
       }
+    } else if (flow === 'send-video') {
+      const [decision, serial, reasonId, message] = rest
+      if ((decision !== 'approve' && decision !== 'reject') || !serial) {
+        throw new Error('send-video requires approve|reject <serial>')
+      }
+      sendVideoInput =
+        decision === 'approve'
+          ? { decision, cardSerialNumber: serial }
+          : {
+              decision,
+              cardSerialNumber: serial,
+              typeReasonId: reasonId ?? DEFAULT_REJECT_REASON_ID,
+              verificationComment: message ?? 'e2e automated rejection',
+            }
     } else {
       throw new Error(`Unknown or missing flow: "${flow ?? ''}"`)
     }
@@ -594,5 +923,10 @@ if (isRunAsCli()) {
     process.exit(1)
   }
 
-  await approveInPersonLogin(input)
+  if (sendVideoInput) {
+    const claimed = await reviewSendVideoLogin(sendVideoInput)
+    console.log(`[sm-login] reviewed ${claimed.requestIdentifier}: ${claimed.claimedName} (serial ${claimed.claimedSerial})`)
+  } else {
+    await approveInPersonLogin(input)
+  }
 }
