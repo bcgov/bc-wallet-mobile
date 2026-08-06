@@ -221,6 +221,9 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
   // ie: { cred_def_id: 'abc', schema_id: 'xyz' } does NOT match { cred_def_id: 'abc' }
   private restrictionMatchesRule(restriction: AnonCredsProofRequestRestriction, rule: AutoCredentialRule): boolean {
     return rule.triggerRestrictions.some((trigger) => {
+      if (Object.keys(trigger).length === 0) {
+        return false
+      }
       return Object.entries(trigger).every(([key, value]) => {
         const restrictionValue = restriction[key as keyof AnonCredsProofRequestRestriction]
         return restrictionValue === value
