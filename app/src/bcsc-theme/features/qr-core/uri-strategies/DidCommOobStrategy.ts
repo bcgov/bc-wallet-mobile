@@ -6,14 +6,16 @@ import type { ScanContext, ScanResult, UriStrategy } from './types'
 // only parse the invitation once on the success path (Bifold's
 // `isMediatorInvitation` does its own parse, which would double the work).
 const MEDIATOR_GOAL_CODE = 'aries.vc.mediate'
-const VC_AUTHN_SCHEME = 'vc-authn'
 
 const DidCommOobStrategy: UriStrategy = {
   name: 'didcomm-oob',
 
   matches(uri) {
     return (
-      isDidCommInvitation(uri) || isOpenIdCredentialOffer(uri) || isOpenIdPresentationRequest(uri) || isVcAuthnUri(uri)
+      isDidCommInvitation(uri) ||
+      isOpenIdCredentialOffer(uri) ||
+      isOpenIdPresentationRequest(uri) ||
+      isVcAuthnLogin(uri)
     )
   },
 
@@ -62,8 +64,25 @@ const DidCommOobStrategy: UriStrategy = {
   },
 }
 
-function isVcAuthnUri(uri: string): boolean {
-  return uri.includes(VC_AUTHN_SCHEME) || uri.includes('pres_exch')
+/**
+ * Checks if a given URI is a VC Authn login URI.
+ *
+ * @example https://example.com/url/pres_exch/123e4567-e89b-12d3-a456-426614174000
+ *
+ * @param uri The URI to check
+ * @returns True if the URI is a VC Authn URI, false otherwise
+ */
+function isVcAuthnLogin(uri: string): boolean {
+  let url: URL
+  const vcauthnRegex = /^\/url\/pres_exch\/[0-9a-f-]{36}\/?$/i
+
+  try {
+    url = new URL(uri)
+  } catch {
+    return false
+  }
+
+  return vcauthnRegex.test(url.pathname)
 }
 
 export default DidCommOobStrategy
