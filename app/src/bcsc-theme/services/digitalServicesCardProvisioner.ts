@@ -40,7 +40,7 @@ const getDigitalServicesCardInvitationUrl = async (): Promise<string> => {
 export const allDigitalServicesCardProofRestrictions = (): AnonCredsProofRequestRestriction[] => {
   const triggerRestrictions: AnonCredsProofRequestRestriction[] = []
 
-  DIGITAL_SERVICES_CARD_CREDENTIAL_IDENTITY_RECORDS.map((identity) => {
+  DIGITAL_SERVICES_CARD_CREDENTIAL_IDENTITY_RECORDS.forEach((identity) => {
     // 1. Add a restriction for the credential definition ID
     triggerRestrictions.push({
       cred_def_id: identity.credDefId,
