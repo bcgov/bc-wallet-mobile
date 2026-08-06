@@ -15,6 +15,7 @@ import {
   streetAddressSchema,
 } from '@/bcsc-theme/utils/validation'
 
+// NOTE: ask bm about this suite if you need to update validation rules: the rules are based on ias-ios
 describe('validation', () => {
   describe('postalCodeSchema', () => {
     it('accepts real postal codes in any casing, with or without a separator', () => {
