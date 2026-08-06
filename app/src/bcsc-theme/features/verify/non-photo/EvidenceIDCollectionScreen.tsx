@@ -128,7 +128,6 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
    * @returns {*} {Promise<void>}
    */
   const handleOnContinue = async () => {
-    // Normalized once so the persisted value and the predicted store below cannot drift.
     const documentNumber = normalizeForSubmission(formState.documentNumber)
 
     try {
@@ -137,7 +136,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       setFormErrors({})
 
       const evidenceFormErrors = validateEvidence({
-        values: formState,
+        values: { ...formState, documentNumber },
         personalInfoRequired,
         documentReferenceInputMask: cardType.document_reference_input_mask,
         minimumAge: MINIMUM_VERIFICATION_AGE,

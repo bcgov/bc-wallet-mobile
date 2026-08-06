@@ -105,8 +105,8 @@ export const middleNamesSchema = withNameCharacterRules(
  * persisted, not at the request boundary, since the authorization request is reconstructed back
  * into user metadata on session recovery.
  *
- * Run after validation only: the name rules reject the non-ASCII input whose upper-cased form
- * would differ (`ß` uppercases to `SS`).
+ * Never run this on a name before its schema: the name rules reject the non-ASCII input whose
+ * upper-cased form would slip through (`ß` uppercases to `SS`).
  */
 export const normalizeForSubmission = (value: string): string => value.trim().toUpperCase()
 

@@ -305,4 +305,29 @@ describe('EvidenceIDCollection', () => {
     )
     expect(mockUpdateEvidenceDocumentNumber).toHaveBeenCalledWith(mockEvidenceType, '123456789')
   })
+
+  it('applies the document mask to the normalized number, not the raw input', async () => {
+    // An upper-case-only mask must not reject what will be submitted upper-cased anyway.
+    const upperCaseMaskType = { ...mockEvidenceType, document_reference_input_mask: '^[A-Z]{2}[0-9]{6}$' }
+    const tree = render(
+      <BasicAppContext
+        initialStateOverride={{
+          bcscSecure: { ...initialBCSCSecureState, cardProcess: BCSCCardProcess.BCSCNonPhoto },
+        }}
+      >
+        <EvidenceIDCollectionScreen
+          navigation={mockNavigation as never}
+          route={{ params: { cardType: upperCaseMaskType } } as never}
+        />
+      </BasicAppContext>
+    )
+
+    fireEvent(tree.getByTestId('com.ariesbifold:id/documentNumber-input'), 'change', {
+      nativeEvent: { text: ' ab123456 ' },
+    })
+    await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+
+    expect(tree.queryByText('Please enter a valid document number')).toBeNull()
+    expect(mockUpdateEvidenceDocumentNumber).toHaveBeenCalledWith(upperCaseMaskType, 'AB123456')
+  })
 })
