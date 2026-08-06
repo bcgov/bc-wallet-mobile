@@ -1,4 +1,4 @@
-import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import {
   Connection,
   CredentialProvisioningEventTypes,
@@ -82,8 +82,18 @@ const ConnectionLoadingScreen: React.FC<Props> = ({ navigation, route }) => {
     [route]
   )
 
+  // TODO (MD): Fix this on the Bifold side so the loading screen keeps rendering while the credential is being provisioned.
+  // Tip: Remove this block to see broken flow -> connection loading -> **missing credential** -> proof request loading -> proof
   if (provisioningLoading) {
-    return <LoadingPlaceholder workflowType={LoadingPlaceholderWorkflowType.Connection} loadingProgressPercent={50} />
+    return (
+      <LoadingPlaceholder
+        workflowType={LoadingPlaceholderWorkflowType.Connection}
+        loadingProgressPercent={50}
+        onCancelTouched={() => {
+          navigation.navigate(BCSCStacks.Tab, { screen: BCSCScreens.Home })
+        }}
+      />
+    )
   }
 
   return (
