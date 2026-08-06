@@ -221,6 +221,15 @@ export async function completeVerification(user: TestUser): Promise<void> {
  */
 const MAX_VIDEO_PROMPTS = 8
 
+/**
+ * Budget for a prompt's button to enable. Generous against the app's per-prompt minimum, but short
+ * enough that the finalizing-recording window (where it never enables again) is not a long stall.
+ */
+const PROMPT_ENABLE_TIMEOUT_MS = 10_000
+
+/** Just past the app's 30s recording cap — long enough to trip it, short enough not to idle a session. */
+const OVER_LONG_RECORDING_MS = 32_000
+
 /** How long to keep re-entering PendingReview before giving up on the agent's decision. */
 const REVIEW_DECISION_TIMEOUT_MS = 180_000
 
@@ -267,30 +276,14 @@ async function captureSelfie(user: TestUser): Promise<void> {
 }
 
 /**
- * The recording half: start, then answer prompts until the app stops the recording itself and shows
- * the review. How many prompts there are is server-issued, so this advances until VideoReview appears
- * rather than counting.
+ * The recording half: start, answer the prompts, land on the review. How many prompts there are is
+ * server-issued, so this never counts them — the last one ends the recording by itself.
  */
 async function recordPromptedVideo(): Promise<void> {
-  await VideoInstructionsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-  // Disabled until a fresh prompt set lands — the wait for it IS the wait for the fetch.
-  await VideoInstructionsScreen.tapWhenEnabled('primary')
+  await startVideoRecording()
+  await answerVideoPrompts()
 
-  // No start button: recording arms itself after a 3-2-1 countdown, behind camera AND microphone
-  // dialogs, so the first prompt button gets a camera budget rather than a transition one.
-  await reachCameraScreen('TakeVideo', () => TakeVideoScreen.isPresent(1_000))
-
-  for (let prompt = 0; prompt < MAX_VIDEO_PROMPTS; prompt++) {
-    if (await VideoReviewScreen.isPresent(1_000)) {
-      return
-    }
-    if (!(await TakeVideoScreen.isPresent(1_000))) {
-      break // left the recorder without reaching the review — diagnosed below
-    }
-    await TakeVideoScreen.tapWhenEnabled('primary') // NextPrompt — disabled for the first seconds of each prompt
-  }
-
-  // The last prompt stops the recording, and finalizing it takes a moment before the review appears.
+  // Finalizing the file takes a moment after the recording stops, so the review is a transition wait.
   if (await VideoReviewScreen.isPresent(Timeouts.SCREEN_TRANSITION)) {
     return
   }
@@ -306,6 +299,62 @@ async function recordPromptedVideo(): Promise<void> {
   throw new Error(
     `The recording did not reach the review after ${MAX_VIDEO_PROMPTS} prompts. On screen: ${await describeCurrentScreen()}`
   )
+}
+
+/** VideoInstructions → an armed recorder, with the prompt set the recording will be judged against. */
+async function startVideoRecording(): Promise<void> {
+  await VideoInstructionsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  // Disabled until a fresh prompt set lands — the wait for it IS the wait for the fetch.
+  await VideoInstructionsScreen.tapWhenEnabled('primary')
+
+  // No start button: recording arms itself after a 3-2-1 countdown, behind camera AND microphone
+  // dialogs, so the first prompt button gets a camera budget rather than a transition one.
+  await reachCameraScreen('TakeVideo', () => TakeVideoScreen.isPresent(1_000))
+}
+
+/**
+ * Answer prompts until the recorder is done with us. Callers assert where that left them — this only
+ * gets the recording stopped, and both of its endings (review, too-long) go through here.
+ */
+async function answerVideoPrompts(): Promise<void> {
+  for (let prompt = 0; prompt < MAX_VIDEO_PROMPTS; prompt++) {
+    if (!(await TakeVideoScreen.isPresent(1_000))) {
+      return
+    }
+    try {
+      await TakeVideoScreen.tapWhenEnabled('primary', PROMPT_ENABLE_TIMEOUT_MS)
+    } catch {
+      // The button stops enabling once the last prompt has stopped the recording, while the screen is
+      // still up finalizing the file. Nothing is swallowed: the caller asserts what we landed on.
+      return
+    }
+  }
+}
+
+/**
+ * Record past the app's length cap and finish the take, which the app rejects with VideoTooLong instead
+ * of the review — then take that screen's Cancel back to method selection.
+ *
+ * Uploads nothing, so it leaves no submission in the agent queue and can precede a real one.
+ */
+export async function recordOverLongVideoDetour(user: TestUser): Promise<void> {
+  await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await VerificationMethodSelectionScreen.link('sendVideo')
+
+  await PhotoInstructionsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await PhotoInstructionsScreen.tap('primary')
+  await captureSelfie(user)
+  await startVideoRecording()
+
+  // Hold BEFORE answering anything: the length is only judged when the recording ends, so the overrun
+  // has to happen while it is still running. A client-side pause, so no single command is left hanging.
+  await driver.pause(OVER_LONG_RECORDING_MS)
+  await answerVideoPrompts()
+
+  await VideoTooLongScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  // Cancel, the screen's only addressable control — Retake has no testID at all.
+  await VideoTooLongScreen.tap('secondary')
+  await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
 }
 
 /**

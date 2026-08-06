@@ -6,6 +6,7 @@ import {
   enterSerialManually,
   expectCancelledReviewReason,
   reachVerificationMethod,
+  recordOverLongVideoDetour,
   startVerification,
   submitSendVideoVerification,
   waitForSendVideoDecision,
@@ -44,6 +45,12 @@ describe('Verified journey: send video, rejected', () => {
     await enterSerialManually(getTestUser())
     await enterBirthdate(getTestUser())
     await reachVerificationMethod()
+  })
+
+  it('rejects a recording that runs past the length limit', async () => {
+    // Rides here rather than in its own journey because it uploads nothing: the take is discarded, so
+    // no submission reaches the agent queue and the real one below is still this session's only item.
+    await recordOverLongVideoDetour(getTestUser())
   })
 
   it('records and uploads a send-video request', async () => {

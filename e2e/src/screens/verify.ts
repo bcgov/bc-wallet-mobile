@@ -239,9 +239,10 @@ export const VideoReviewScreen = defineScreen({
 })
 
 /**
- * `VideoTooLong` — where a recording over 30s lands instead of VideoReview. Its only testID is a BARE
- * `Cancel` (Retake has none), so this models just enough to ASSERT the screen: a journey that arrives
- * here recorded too slowly and should fail saying so.
+ * `VideoTooLong` — where a recording over 30s lands instead of VideoReview.
+ *
+ * `secondary` (Cancel, a BARE testID) resets to method selection and is the only addressable control:
+ * the primary Retake button has no testID, so re-recording from here cannot be driven.
  *
  * That marker is not unique while TakeVideo is up: its cancel control has no testID but carries
  * "Cancel" as its accessibility label, which iOS reports as the element name — the same thing `~Cancel`
@@ -249,7 +250,7 @@ export const VideoReviewScreen = defineScreen({
  */
 export const VideoTooLongScreen = defineScreen({
   self: v.videoTooLongBare.cancel,
-  primary: v.videoTooLongBare.cancel,
+  secondary: v.videoTooLongBare.cancel,
 })
 
 /**

@@ -1,18 +1,20 @@
 import assert from 'node:assert/strict'
-import { TestUsers, Timeouts } from '../../../src/constants.js'
+import { TEST_PIN, TestUsers, Timeouts } from '../../../src/constants.js'
+import { unlockWithPin } from '../../../src/flows/auth.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
   chooseAddAccount,
   enterBirthdate,
   enterSerialManually,
   reachVerificationMethod,
+  resumeVerification,
   startVerification,
   submitSendVideoVerification,
   waitForSendVideoDecision,
 } from '../../../src/flows/verify.js'
 import { reviewSendVideoRequest } from '../../../src/helpers/approval.js'
 import { HomeScreen, SettingsScreen } from '../../../src/screens/main.js'
-import { VerificationSuccessScreen } from '../../../src/screens/verify.js'
+import { PendingReviewScreen, VerificationSuccessScreen } from '../../../src/screens/verify.js'
 import { getTestUser, setTestUser } from '../../../src/support/context.js'
 
 /**
@@ -48,6 +50,19 @@ describe('Verified journey: send video, approved', () => {
 
   it('records and uploads a send-video request', async () => {
     await submitSendVideoVerification(getTestUser())
+  })
+
+  it('resumes onto the pending review after a relaunch', async () => {
+    // The one resume-matrix row nothing could reach before a submission existed. A relaunch is what
+    // makes it worth asserting: the submitted-video flag has to survive native storage and hydration
+    // has to route back to the status screen, rather than the in-memory flag carrying it.
+    await unlockWithPin(TEST_PIN, { relaunch: true })
+    await resumeVerification()
+    await PendingReviewScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    // Back marks the account unverified rather than popping, which returns the stack to Home — where
+    // the decision wait below starts.
+    await PendingReviewScreen.back.tap()
+    await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 
   it('is approved by the agent (scripted against the SIT review portal)', async () => {
