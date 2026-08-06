@@ -22,6 +22,15 @@ const VERIFICATION_CARD_ERROR_MAP: Partial<Record<AppEventCode, VerificationCard
   [AppEventCode.CARD_NOT_FOUND]: VerificationCardError.MismatchedSerial,
 }
 
+// authorizeDevice (known-BCSC serial + birthdate lookup, used by both card scanning and manual
+// birthdate entry) treats a bad/mismatched serial+birthdate pair as "card not found" — matching
+// V3's AddCardErrorModel switch, which groups invalid_parameter with card_not_found under the same
+// "Card not found" screen. This does NOT apply to authorizeDeviceWithUnknownBCSC (the non-BCSC flow
+// has no serial to show on that screen).
+const AUTHORIZE_DEVICE_EXTRA_CARD_ERROR_MAP: Partial<Record<AppEventCode, VerificationCardError>> = {
+  [AppEventCode.INVALID_PARAMETER]: VerificationCardError.MismatchedSerial,
+}
+
 // Codes routed to the generic title/description/link-out-button DeviceAuthorizationErrorScreen.
 const DEVICE_AUTHORIZATION_ERROR_MAP: Partial<Record<AppEventCode, DeviceAuthorizationError>> = {
   [AppEventCode.INVALID_PARAMETER]: DeviceAuthorizationError.InvalidParameter,
@@ -43,6 +52,23 @@ export interface AuthorizationServiceCallOptions {
    * Barcode scanning is an example of a flow that will handle errors on it's own
    */
   skipErrorHandling?: boolean
+}
+
+/**
+ * A helper function to search for a technical message in a given map of app event codes
+ *
+ * returns the value of the matched message or undefined
+ */
+const findByTechnicalMessage = <T,>(
+  technicalMessage: string | null,
+  map: Partial<Record<AppEventCode, T>>
+): T | undefined => {
+  if (!technicalMessage) {
+    return undefined
+  }
+
+  const matchedEvent = (Object.keys(map) as AppEventCode[]).find((appEvent) => technicalMessage.includes(appEvent))
+  return matchedEvent ? map[matchedEvent] : undefined
 }
 
 /**
@@ -79,13 +105,14 @@ export const useAuthorizationService = () => {
   )
 
   /**
-   * Matches a device authorization error's appEvent to a card-status error screen and navigates
-   * to it. Falls back to a global alert for anything not found
+   * Matches a device authorization error and navigates to appropriate error screen
+   * Anything not matched will emit a global alert
    *
    * @param error - The error thrown by a device authorization api call.
+   * @param extraCardErrorMap - Additional VerificationCardError routing specific to the calling method.
    */
   const handleAuthorizationError = useCallback(
-    (error: unknown) => {
+    (error: unknown, extraCardErrorMap?: Partial<Record<AppEventCode, VerificationCardError>>) => {
       if (isHandledAppError(error)) {
         // Already handled by a global client error policy (e.g. invalid_registration_request).
         return
@@ -95,15 +122,20 @@ export const useAuthorizationService = () => {
         return
       }
 
-      const cardErrorType = VERIFICATION_CARD_ERROR_MAP[error.technicalMessage]
+      const cardErrorMap = extraCardErrorMap
+        ? { ...VERIFICATION_CARD_ERROR_MAP, ...extraCardErrorMap }
+        : VERIFICATION_CARD_ERROR_MAP
+      const cardErrorType = findByTechnicalMessage(error.technicalMessage, cardErrorMap)
       if (cardErrorType) {
         navigation.navigate(BCSCScreens.VerificationCardError, { errorType: cardErrorType })
+        error.handled = true
         return
       }
 
-      const deviceAuthErrorType = DEVICE_AUTHORIZATION_ERROR_MAP[error.technicalMessage]
+      const deviceAuthErrorType = findByTechnicalMessage(error.technicalMessage, DEVICE_AUTHORIZATION_ERROR_MAP)
       if (deviceAuthErrorType) {
         navigation.navigate(BCSCScreens.DeviceAuthorizationError, { errorType: deviceAuthErrorType })
+        error.handled = true
         return
       }
 
@@ -131,7 +163,7 @@ export const useAuthorizationService = () => {
         if (options?.skipErrorHandling) {
           throw error
         }
-        handleAuthorizationError(error)
+        handleAuthorizationError(error, AUTHORIZE_DEVICE_EXTRA_CARD_ERROR_MAP)
         throw error
       }
     },

@@ -20,6 +20,8 @@ export enum DeviceAuthorizationError {
   TooManyMobileCards = 'TooManyMobileCards',
   MismatchedSerial = 'MismatchedSerial', // TODO: swap this with invalidparameter
   CardExpired = 'CardExpired',
+  TooManyAttempts = 'TooManyAttempts',
+  TooManyAttemptsQRScan = 'TooManyAttemptsQRScan',
 }
 
 export interface DeviceAuthorizationErrorConfig {
@@ -99,8 +101,8 @@ export const DEVICE_AUTHORIZATION_ERROR_CONFIG: Record<DeviceAuthorizationError,
     headingKey: 'BCSC.DeviceAuthorizationError.TooManyMobileCards.Heading',
     descriptionKey: 'BCSC.DeviceAuthorizationError.TooManyMobileCards.Description',
     buttonTextKey: 'BCSC.DeviceAuthorizationError.TooManyMobileCards.ButtonText',
-    buttonUrl: CONTACT_US_GOVERNMENT_WEBSITE_URL,
-    buttonVisible: true,
+    buttonUrl: '',
+    buttonVisible: false,
   },
   [DeviceAuthorizationError.CardExpired]: {
     headingKey: 'BCSC.DeviceAuthorizationError.CardExpired.Heading',
@@ -115,5 +117,19 @@ export const DEVICE_AUTHORIZATION_ERROR_CONFIG: Record<DeviceAuthorizationError,
     buttonTextKey: 'BCSC.DeviceAuthorizationError.MismatchedSerial.ButtonText',
     buttonUrl: CONTACT_US_GOVERNMENT_WEBSITE_URL,
     buttonVisible: true,
+  },
+  [DeviceAuthorizationError.TooManyAttempts]: {
+    headingKey: 'BCSC.DeviceAuthorizationError.TooManyAttempts.Heading',
+    descriptionKey: 'BCSC.DeviceAuthorizationError.TooManyAttempts.Description',
+    buttonTextKey: 'BCSC.DeviceAuthorizationError.TooManyAttempts.ButtonText',
+    buttonUrl: '',
+    buttonVisible: false,
+  },
+  [DeviceAuthorizationError.TooManyAttemptsQRScan]: {
+    headingKey: 'BCSC.DeviceAuthorizationError.TooManyAttemptsQRScan.Heading',
+    descriptionKey: 'BCSC.DeviceAuthorizationError.TooManyAttemptsQRScan.Description',
+    buttonTextKey: 'BCSC.DeviceAuthorizationError.TooManyAttemptsQRScan.ButtonText',
+    buttonUrl: '',
+    buttonVisible: false,
   },
 }
