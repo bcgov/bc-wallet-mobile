@@ -103,7 +103,8 @@ jobs:
     runs-on: ${{ inputs.runner_label }}
     permissions:
       contents: read
-    timeout-minutes: 45
+    # regression runs every journey serially (~50m+ on iOS and growing); other suites (merge-queue smoke) stay tight
+    timeout-minutes: ${{ inputs.suite == 'regression' && 90 || 45 }}
     continue-on-error: ${{ inputs.suite == 'migration' }}
     strategy:
       max-parallel: 2
