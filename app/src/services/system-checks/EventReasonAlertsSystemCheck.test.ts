@@ -1,9 +1,9 @@
 import { tokenToCredentialMetadata } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
 import { BCSCEvent, BCSCReason, IdToken } from '@/bcsc-theme/utils/id-token'
 import { AppEventCode } from '@/events/appEventCode'
-import { BCDispatchAction, VerificationStatus } from '@/store'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { SystemCheckNavigation, SystemCheckUtils } from '@/services/system-checks/system-checks'
+import { BCDispatchAction, VerificationStatus } from '@/store'
 
 describe('EventReasonAlertsSystemCheck', () => {
   let mockUtils: SystemCheckUtils
