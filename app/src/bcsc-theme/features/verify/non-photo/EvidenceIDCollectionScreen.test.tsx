@@ -269,4 +269,40 @@ describe('EvidenceIDCollection', () => {
       })
     )
   })
+
+  it('persists names and the document number upper-cased, as IAS stores them', async () => {
+    const tree = render(
+      <BasicAppContext
+        initialStateOverride={{
+          bcscSecure: {
+            ...initialBCSCSecureState,
+            cardProcess: BCSCCardProcess.NonBCSC,
+            additionalEvidenceData: [{ evidenceType: mockEvidenceType, metadata: [] }],
+          },
+        }}
+      >
+        <EvidenceIDCollectionScreen
+          navigation={mockNavigation as never}
+          route={{ params: { cardType: mockEvidenceType } } as never}
+        />
+      </BasicAppContext>
+    )
+
+    const enter = (field: string, text: string) =>
+      fireEvent(tree.getByTestId(`com.ariesbifold:id/${field}-input`), 'change', { nativeEvent: { text } })
+
+    enter('documentNumber', '123456789')
+    enter('firstName', 'Jane')
+    enter('middleNames', 'Alex')
+    enter('lastName', "o'brien-smith")
+    // DateInput formats digits itself, so it listens on onChangeText rather than onChange
+    fireEvent.changeText(tree.getByTestId('com.ariesbifold:id/birthDate-input'), '19900101')
+
+    await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+
+    expect(mockUpdateUserMetadata).toHaveBeenCalledWith(
+      expect.objectContaining({ name: { first: 'JANE', middle: 'ALEX', last: "O'BRIEN-SMITH" } })
+    )
+    expect(mockUpdateEvidenceDocumentNumber).toHaveBeenCalledWith(mockEvidenceType, '123456789')
+  })
 })
