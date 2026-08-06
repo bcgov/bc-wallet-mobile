@@ -111,7 +111,7 @@ export const DigitalServicesCardCredentialIdentityQA = new CredentialIdentity(
 )
 export const DigitalServicesCardCredentialIdentitySIT = new CredentialIdentity(
   '7xjfawcnyTUcduWVysLww5:3:CL:28075:PersonSIT',
-  '7xjfawcnyTUcduWVysLww5:2:Person:1.0'
+  'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0' // Note: same issuer_did as DEV
 )
 export const DigitalServicesCardCredentialIdentityPROD = new CredentialIdentity(
   'RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person',

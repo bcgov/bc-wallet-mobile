@@ -480,7 +480,7 @@ export class AutoCredentialMonitor implements CredentialProvisioningMonitor {
 
       try {
         const isMissing = await this.isCredentialMissingForRule(proof.id, requestFormat, rule)
-        this.log?.info(`[AutoCredentialMonitor] Credential  is ${isMissing ? 'NOT ' : ''}in the wallet`)
+        this.log?.info(`[AutoCredentialMonitor] Credential  is${isMissing ? ' NOT' : ''} in the wallet`)
         if (isMissing) {
           // Fire and forget — inside runWorkflow drives its own subscriptions
           // and error handling. Return so we don't try further rules against the
