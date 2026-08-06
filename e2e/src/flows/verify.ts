@@ -21,6 +21,7 @@ import { VerifyPromptScreen } from '../screens/onboarding.js'
 import {
   AccountSetupScreen,
   AdditionalIdentificationRequiredScreen,
+  CancelledReviewScreen,
   DualIdentificationRequiredScreen,
   EmailConfirmationScreen,
   EmailVerifiedScreen,
@@ -31,12 +32,20 @@ import {
   IdentitySelectionScreen,
   IDPhotoInformationScreen,
   ManualSerialScreen,
+  PendingReviewScreen,
+  PhotoInstructionsScreen,
   PhotoReviewScreen,
   ResidentialAddressScreen,
   ScanSerialScreen,
+  SelfieCaptureScreen,
+  SuccessfullySentScreen,
+  TakeVideoScreen,
   VerificationMethodSelectionScreen,
   VerificationSuccessScreen,
   VerifyInPersonScreen,
+  VideoInstructionsScreen,
+  VideoReviewScreen,
+  VideoTooLongScreen,
 } from '../screens/verify.js'
 
 /**
@@ -203,6 +212,168 @@ export async function completeVerification(user: TestUser): Promise<void> {
   await VerificationSuccessScreen.tap('primary') // Continue → exits verify stack to Home
 
   await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+}
+
+/**
+ * Upper bound on prompts to answer before calling the recording stuck. The set is server-issued (three
+ * today), and each prompt costs at least MIN_PROMPT_DURATION_SECONDS, so this also has to stay well
+ * inside the app's 30s recording ceiling.
+ */
+const MAX_VIDEO_PROMPTS = 8
+
+/** How long to keep re-entering PendingReview before giving up on the agent's decision. */
+const REVIEW_DECISION_TIMEOUT_MS = 180_000
+
+/** Gap between those re-entries. Each one is a fresh status check, not a retry of a stuck request. */
+const REVIEW_DECISION_POLL_MS = 5_000
+
+/**
+ * Submit a send-video verification: selfie photo, the prompted recording, upload, and out to Home —
+ * the state in which an agent decision can be scripted (`reviewSendVideoRequest`) and then awaited
+ * with {@link waitForSendVideoDecision}.
+ *
+ * CAMERA-ONLY. On Sauce the selfie is injected; the RECORDING is not — there is no video injection, so
+ * the recorder captures whatever the rack camera sees. That does not matter: the scripted reviewer
+ * never watches it, and the flow only needs a recording to upload.
+ */
+export async function submitSendVideoVerification(user: TestUser): Promise<void> {
+  await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await VerificationMethodSelectionScreen.link('sendVideo')
+
+  await PhotoInstructionsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  // Plain tap, NOT tapToNavigate: the camera's shutter carries the same testID as this CTA, so a
+  // confirm-and-retry would read the push as a miss and fire the shutter.
+  await PhotoInstructionsScreen.tap('primary')
+  await captureSelfie(user)
+  await recordPromptedVideo()
+
+  await VideoReviewScreen.tapWhenEnabled('primary') // UseVideo → RESETS to EvidenceUploading, which uploads on mount
+  await SuccessfullySentScreen.expectVisible(Timeouts.VIDEO_UPLOAD)
+  await SuccessfullySentScreen.tapToNavigate('primary') // Go to home — the screen's only way out
+
+  await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+}
+
+/** The selfie half: enter the front camera, inject on Sauce, shoot, accept. Ends on VideoInstructions. */
+async function captureSelfie(user: TestUser): Promise<void> {
+  await reachCameraScreen('TakePhoto (selfie)', () => SelfieCaptureScreen.isPresent(1_000))
+  if (isSauceLabs()) {
+    // No masks: the selfie template carries no barcode, unlike the card-back images.
+    await injectPhoto(user.selfieImage, {})
+  }
+  await SelfieCaptureScreen.tap('primary') // shutter — NOT tapToNavigate (not idempotent)
+  await PhotoReviewScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await PhotoReviewScreen.tapToNavigate('primary') // UsePhoto → RESETS to VideoInstructions
+}
+
+/**
+ * The recording half: start, then answer prompts until the app stops the recording itself and shows
+ * the review. How many prompts there are is server-issued, so this advances until VideoReview appears
+ * rather than counting.
+ */
+async function recordPromptedVideo(): Promise<void> {
+  await VideoInstructionsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  // Disabled until a fresh prompt set lands — the wait for it IS the wait for the fetch.
+  await VideoInstructionsScreen.tapWhenEnabled('primary')
+
+  // No start button: recording arms itself after a 3-2-1 countdown, behind camera AND microphone
+  // dialogs, so the first prompt button gets a camera budget rather than a transition one.
+  await reachCameraScreen('TakeVideo', () => TakeVideoScreen.isPresent(1_000))
+
+  for (let prompt = 0; prompt < MAX_VIDEO_PROMPTS; prompt++) {
+    if (await VideoReviewScreen.isPresent(1_000)) {
+      return
+    }
+    if (!(await TakeVideoScreen.isPresent(1_000))) {
+      break // left the recorder without reaching the review — diagnosed below
+    }
+    await TakeVideoScreen.tapWhenEnabled('primary') // NextPrompt — disabled for the first seconds of each prompt
+  }
+
+  // The last prompt stops the recording, and finalizing it takes a moment before the review appears.
+  if (await VideoReviewScreen.isPresent(Timeouts.SCREEN_TRANSITION)) {
+    return
+  }
+  // Probed only now that the recorder is gone: VideoTooLong's marker is a BARE `Cancel`, and TakeVideo's
+  // own cancel control carries "Cancel" as its accessibility label — which iOS reports as the element
+  // name when no identifier is set, so the same selector matches it while that screen is up.
+  if (await VideoTooLongScreen.isPresent(1_000)) {
+    throw new Error(
+      'The recording ran past the 30s limit and landed on VideoTooLong. Each prompt is held for a minimum ' +
+        'duration before its button enables, so this means the run answered them too slowly.'
+    )
+  }
+  throw new Error(
+    `The recording did not reach the review after ${MAX_VIDEO_PROMPTS} prompts. On screen: ${await describeCurrentScreen()}`
+  )
+}
+
+/**
+ * Wait for the agent's decision to reach the app, and assert it is the expected one.
+ *
+ * Re-entering PendingReview is the poll: it re-checks the request status on every mount and navigates
+ * on by itself, so this loops Home → verification card → decision-or-back-out. Backgrounding and
+ * foregrounding would NOT do — the Home-side status check runs once per stack mount, not per resume.
+ * The push notification is advisory and never navigates, so it is not waited on either.
+ */
+export async function waitForSendVideoDecision(expected: 'verified' | 'cancelled'): Promise<void> {
+  const deadline = Date.now() + REVIEW_DECISION_TIMEOUT_MS
+  for (;;) {
+    await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await resumeVerification()
+
+    const settleBy = Date.now() + Timeouts.SCREEN_TRANSITION
+    for (;;) {
+      if (await VerificationSuccessScreen.isPresent(1_000)) {
+        if (expected === 'verified') {
+          return
+        }
+        throw new Error('The request was APPROVED, but this journey scripted a rejection')
+      }
+      if (await CancelledReviewScreen.isPresent(1_000)) {
+        if (expected === 'cancelled') {
+          return
+        }
+        throw new Error('The request was REJECTED, but this journey scripted an approval')
+      }
+      if (await PendingReviewScreen.isPresent(1_000)) {
+        break // still pending — leave and come back for another status check
+      }
+      if (Date.now() > settleBy) {
+        throw new Error(
+          `Re-entering verification reached none of PendingReview / VerificationSuccess / CancelledReview. On screen: ${await describeCurrentScreen()}`
+        )
+      }
+    }
+
+    if (Date.now() + REVIEW_DECISION_POLL_MS >= deadline) {
+      throw new Error(
+        `The agent decision (${expected}) did not reach the app within ${REVIEW_DECISION_TIMEOUT_MS}ms of re-checking. ` +
+          'The scripted review reported success, so suspect the status endpoint or a submission other than this one.'
+      )
+    }
+    // Back does not pop here: it marks the account unverified, which swaps the stack back to Home.
+    await PendingReviewScreen.back.tap()
+    await driver.pause(REVIEW_DECISION_POLL_MS)
+  }
+}
+
+/**
+ * Assert the cancelled-review modal is showing the agent's reason — the text the rejecting script sent
+ * as `verificationComment`. Matched as a SUBSTRING: the app renders it inside a longer "Details from
+ * Service BC agent:" sentence, in one text node.
+ */
+export async function expectCancelledReviewReason(reason: string): Promise<void> {
+  await CancelledReviewScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  const selector = driver.isIOS
+    ? `-ios predicate string:label CONTAINS "${reason}"`
+    : `android=new UiSelector().textContains("${reason}")`
+  const detail = $(selector)
+  if (!(await detail.isDisplayed().catch(() => false))) {
+    throw new Error(
+      `CancelledReview does not show the agent reason "${reason}". On screen: ${await describeCurrentScreen()}`
+    )
+  }
 }
 
 /**
