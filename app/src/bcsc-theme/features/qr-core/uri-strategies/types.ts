@@ -1,7 +1,7 @@
 import type { BifoldLogger } from '@bifold/core'
 import type { Agent } from '@credo-ts/core'
 
-type AnyAgent = Agent | null | Promise<Agent | null>
+type AnyAgent = Agent | null | undefined | Promise<Agent | null | undefined>
 
 export type ScanResult =
   | { kind: 'connection'; oobRecordId: string }
