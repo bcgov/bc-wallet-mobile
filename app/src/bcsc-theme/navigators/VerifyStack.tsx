@@ -33,6 +33,7 @@ import { NotificationSettingsScreen } from '../features/settings/NotificationSet
 import { VerifyPrivacyPolicyScreen } from '../features/settings/VerifyPrivacyPolicyScreen'
 import { VerifySettingsScreen } from '../features/settings/VerifySettingsScreen'
 import BirthdateLockoutScreen from '../features/verify/BirthdateLockoutScreen'
+import DeviceAuthorizationErrorScreen from '../features/verify/DeviceAuthorizationErrorScreen'
 import EnterBirthdateScreen from '../features/verify/EnterBirthdate/EnterBirthdateScreen'
 import IdentitySelectionScreen from '../features/verify/IdentitySelectionScreen'
 import ManualSerialScreen from '../features/verify/ManualSerialScreen'
@@ -231,6 +232,11 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
       <Stack.Screen
         name={BCSCScreens.VerificationCardError}
         component={VerificationCardErrorScreen}
+        options={{ header: createProgressHeader(1, 40) }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.DeviceAuthorizationError}
+        component={DeviceAuthorizationErrorScreen}
         options={{ header: createProgressHeader(1, 40) }}
       />
       <Stack.Screen

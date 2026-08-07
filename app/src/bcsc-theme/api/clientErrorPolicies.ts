@@ -8,7 +8,6 @@ import { AxiosError } from 'axios'
 import { TFunction } from 'i18next'
 import { Linking } from 'react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
-import { VerificationCardError } from '../features/verify/verificationCardError'
 import { BCSCModals, BCSCScreens } from '../types/navigators'
 import { getDigitalServiceCardAccountProblem } from '../utils/getDigitalServiceCardAccountProblem'
 import { ResumeStepRoute } from '../utils/resume-step-route'
@@ -459,32 +458,6 @@ export const alreadyVerifiedErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
-// Error policy for expired physical card on device authorization endpoint
-export const cardExpiredErrorPolicy: ErrorHandlingPolicy = {
-  matches: (error, context) => {
-    return (
-      error.appEvent === AppEventCode.UNKNOWN_SERVER_ERROR &&
-      error.technicalMessage === 'card_expired' &&
-      context.endpoint.includes(context.apiEndpoints.deviceAuthorization)
-    )
-  },
-  handle: (_error, context) => {
-    context.logger.info('[CardExpiredErrorPolicy] Card expired, navigating to VerificationCardError screen')
-    context.navigation.dispatch(
-      CommonActions.reset({
-        index: 1,
-        routes: [
-          context.getResumeRoute(),
-          {
-            name: BCSCScreens.VerificationCardError,
-            params: { errorType: VerificationCardError.CardExpired },
-          },
-        ],
-      })
-    )
-  },
-}
-
 /**
  * Error policy for an expired identity document detected during the Non-BCSC barcode check.
  *
@@ -616,7 +589,6 @@ export const invalidRegistrationRequestErrorPolicy: ErrorHandlingPolicy = {
 // Aggregate of all client error handling policies
 export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   alreadyRegisteredErrorPolicy,
-  cardExpiredErrorPolicy,
   cardExpiredOnBarcodesErrorPolicy,
   digitalServiceCardAccountUnavailableErrorPolicy,
   verificationSessionExpiredErrorPolicy,

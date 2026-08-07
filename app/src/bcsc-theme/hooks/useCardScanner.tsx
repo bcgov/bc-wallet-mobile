@@ -8,9 +8,8 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo, useRef } from 'react'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { CodeType } from 'react-native-vision-camera'
-import useApi from '../api/hooks/useApi'
 import { DeviceAuthorizationResponse, DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
-import { VerificationCardError } from '../features/verify/verificationCardError'
+import { useAuthorizationService } from '../services/hooks/useAuthorizationService'
 import { BCSCScreens, BCSCVerifyStackParams } from '../types/navigators'
 import { buildBarcodePayload } from '../utils/barcode'
 import {
@@ -46,7 +45,7 @@ type DriversLicenseMetadataStub = { birthDate: Date }
  *  	 Outcome: unknown?
  */
 export const useCardScanner = () => {
-  const { authorization } = useApi()
+  const authorizationService = useAuthorizationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store] = useStore<BCState>()
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
@@ -114,35 +113,31 @@ export const useCardScanner = () => {
 
       await updateUserInfo({ serial: bcscSerial, birthdate: license.birthDate })
 
+      const isNonBcscFlow = store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC
+
       try {
-        const deviceAuth = await authorization.authorizeDevice(bcscSerial, license.birthDate)
+        // Skip error handling, any false authorization returned push the user into a Non BCSC flow
+        const deviceAuth = await authorizationService.authorizeDevice(bcscSerial, license.birthDate, {
+          skipErrorHandling: isNonBcscFlow,
+        })
         await applyDeviceAuthorization(deviceAuth, { serial: bcscSerial, birthdate: license.birthDate })
         return true
       } catch (error) {
-        if (isHandledAppError(error)) {
-          return true
-        }
-
-        // In the Non-BCSC flow the camera may pick up a code-128 barcode on a
-        // DL that looks like a BCSC serial but isn't valid.  Silently continue
-        // so the user stays in the evidence-capture flow (matching v3 behaviour).
-        if (store.bcscSecure.cardProcess === BCSCCardProcess.NonBCSC) {
+        if (isNonBcscFlow) {
           logger.info('[CardScanner] Authorization failed in Non-BCSC flow, continuing silently', {
             error: String(error),
           })
           return false
         }
 
-        logger.error('Device authorization failed during combo card scan', error as Error)
-        // navigate (not reset) so the scan screen stays beneath the error — the header back button
-        // returns there to re-scan instead of being a dead button on a collapsed stack.
-        navigation.navigate(BCSCScreens.VerificationCardError, {
-          errorType: VerificationCardError.MismatchedSerial,
-        })
+        if (!isHandledAppError(error)) {
+          logger.error('Device authorization failed during combo card scan', error as Error)
+        }
+
         return true
       }
     },
-    [authorization, updateUserInfo, applyDeviceAuthorization, logger, navigation, store.bcscSecure.cardProcess]
+    [authorizationService, updateUserInfo, applyDeviceAuthorization, logger, store.bcscSecure.cardProcess]
   )
 
   /**
@@ -166,14 +161,19 @@ export const useCardScanner = () => {
       )
 
       try {
-        const deviceAuth = await authorization.authorizeDeviceWithBarcodes(buildBarcodePayload(bcscSerial, license))
+        // short cutting the error handling in authorizationService because
+        // the scan flow pushes non matches into the non-bcsc flow
+        const deviceAuth = await authorizationService.authorizeDeviceWithBarcodes(
+          buildBarcodePayload(bcscSerial, license),
+          { skipErrorHandling: true }
+        )
         await updateUserInfo({ serial: bcscSerial, birthdate: license.birthDate })
         await applyDeviceAuthorization(deviceAuth, { serial: bcscSerial, birthdate: license.birthDate })
         logger.info('[CardScanner] Scanned card matched a BC Services Card; switching to setup')
         return true
       } catch (error) {
+        // A global client error policy (e.g. cardExpiredOnBarcodesErrorPolicy) may already have
         // navigated the user to an error screen, so stop here instead of continuing.
-        // `card_expired` -> VerificationCardErrorScreen
         if (isHandledAppError(error)) {
           return true
         }
@@ -187,7 +187,7 @@ export const useCardScanner = () => {
         return false
       }
     },
-    [authorization, updateUserInfo, applyDeviceAuthorization, logger]
+    [authorizationService, updateUserInfo, applyDeviceAuthorization, logger]
   )
 
   /**
