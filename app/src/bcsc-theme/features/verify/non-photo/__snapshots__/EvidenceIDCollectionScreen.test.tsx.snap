@@ -218,6 +218,7 @@ exports[`EvidenceIDCollection renders correctly 1`] = `
                     accessibilityLabel="Passport Number"
                     autoCapitalize="characters"
                     autoCorrect={false}
+                    keyboardType="default"
                     onBlur={[Function]}
                     onChange={[Function]}
                     onChangeText={[Function]}
