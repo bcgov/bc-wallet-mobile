@@ -4,7 +4,13 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
-import { firstErrorKey, postalCodeSchema } from '@/bcsc-theme/utils/validation'
+import {
+  citySchema,
+  firstErrorKey,
+  postalCodeSchema,
+  streetAddress2Schema,
+  streetAddressSchema,
+} from '@/bcsc-theme/utils/validation'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
@@ -85,11 +91,17 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
     (values: ResidentialAddressFormState): ResidentialAddressFormErrors => {
       const errors: ResidentialAddressFormErrors = {}
 
-      if (!values.streetAddress.trim()) {
-        errors.streetAddress = t('BCSC.Address.StreetAddressRequired')
+      const streetAddressErrorKey = firstErrorKey(streetAddressSchema, values.streetAddress)
+      if (streetAddressErrorKey) {
+        errors.streetAddress = t(streetAddressErrorKey)
       }
-      if (!values.city.trim()) {
-        errors.city = t('BCSC.Address.CityRequired')
+      const streetAddress2ErrorKey = firstErrorKey(streetAddress2Schema, values.streetAddress2)
+      if (streetAddress2ErrorKey) {
+        errors.streetAddress2 = t(streetAddress2ErrorKey)
+      }
+      const cityErrorKey = firstErrorKey(citySchema, values.city)
+      if (cityErrorKey) {
+        errors.city = t(cityErrorKey)
       }
       if (!values.province) {
         errors.province = t('BCSC.Address.ProvinceInvalid')

@@ -176,6 +176,7 @@ describe('useFactoryReset', () => {
       retry: jest.fn(),
       resetWallet: jest.fn(),
       teardownAgent: teardownAgentMock,
+      waitForAgent: jest.fn().mockResolvedValue(agent),
     })
 
     useBCSCApiClientStateMock.mockReturnValue({

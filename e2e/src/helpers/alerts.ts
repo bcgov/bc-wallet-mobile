@@ -6,7 +6,9 @@ const DEFAULT_DISMISS_TIMEOUT_MS = 3_000
 
 // 'Open' accepts the iOS "Open in <app>?" confirmation raised when a deep link resolves to the app.
 const IOS_APPROVE_ALERT_BUTTON_LABELS = ['Allow', 'Allow While Using App', 'Allow Once', 'OK', 'Trust', 'Continue', 'Open']
-const IOS_DECLINE_ALERT_BUTTON_LABELS = ["Don't Allow", 'Deny', 'Cancel', 'Not Now']
+// iOS renders the apostrophe in "Don't Allow" as U+2019 — matching only the straight form let the deny
+// fall through to the label-blind dismiss fallback. Both are listed; the rendered form is OS-dependent.
+const IOS_DECLINE_ALERT_BUTTON_LABELS = ["Don't Allow", 'Don\u2019t Allow', 'Deny', 'Cancel', 'Not Now']
 
 const ANDROID_PERM_ALLOW_REGEX = '.*:id/permission_allow.*'
 const ANDROID_PERM_DENY_REGEX = '.*:id/permission_deny.*'
@@ -272,6 +274,47 @@ export async function tapResetAppConfirm(appearTimeoutMs = DEFAULT_APPEAR_TIMEOU
   } catch {
     // autoAcceptAlerts already handled it
   }
+}
+
+/**
+ * Tap a NAMED button on an app-owned `Alert.alert` — the verify flow's two-action confirmations, where
+ * cancel and confirm must be told apart. `acceptSystemAlert`/`acceptAppAlert` cannot: they take whichever
+ * button the platform calls the accept action, which for such a pair is the choice under test.
+ *
+ * iOS uses WDA's `buttonLabel` (it reaches alerts presented over a modal, as the help menu's are), then
+ * falls back to a direct tap. Android matches the visible label case-insensitively — AppCompat may
+ * upper-case it.
+ */
+export async function tapAlertButton(label: string, appearTimeoutMs = DEFAULT_APPEAR_TIMEOUT_MS): Promise<void> {
+  if (driver.isAndroid) {
+    // The popup probes above only know the OS permission controller, so an app dialog is waited on
+    // through the button itself; the reverse wait is what proves the tap landed.
+    const escaped = label.replaceAll(/[.*+?^${}()|[\]\\]/g, (match) => `\\${match}`)
+    const button = $(`android=new UiSelector().textMatches("(?i)^${escaped}$")`)
+    await button.waitForDisplayed({ timeout: appearTimeoutMs })
+    await button.click()
+    await button.waitForDisplayed({ timeout: DEFAULT_DISMISS_TIMEOUT_MS, reverse: true })
+    console.log(`[alerts] Tapped "${label}" on the app alert`)
+    return
+  }
+
+  if (!(await waitForPopup(appearTimeoutMs))) {
+    throw new Error(`[alerts] No alert appeared within ${appearTimeoutMs}ms to tap "${label}" on`)
+  }
+  // WDA's accept-by-name taps whichever button it is given, whatever role it plays — cancel included.
+  const tappedByLabel = await quietly(() =>
+    driver
+      .execute('mobile: alert', { action: 'accept', buttonLabel: label })
+      .then(() => true)
+      .catch(() => false)
+  )
+  if (!tappedByLabel && !(await tapIosButtonInsideAlert([label]))) {
+    throw new Error(`[alerts] Alert is showing but has no button labelled "${label}"`)
+  }
+  if (!(await waitForDismissal(DEFAULT_DISMISS_TIMEOUT_MS))) {
+    throw new Error(`[alerts] Tapped "${label}" but the alert did not dismiss`)
+  }
+  console.log(`[alerts] Tapped "${label}" on the app alert`)
 }
 
 /**

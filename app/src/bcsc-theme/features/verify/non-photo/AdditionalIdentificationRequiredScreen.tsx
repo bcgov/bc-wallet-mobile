@@ -37,7 +37,7 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
       primaryAction={{
         label: t('Global.Continue'),
         onPress: () => {
-          navigation.navigate(BCSCScreens.EvidenceTypeList, {
+          navigation.push(BCSCScreens.EvidenceTypeList, {
             // The cardProcess should have been defined prior to reaching this screen.
             // @see EnterBirthdateViewModel.authorizeDevice()
             cardProcess: store.bcscSecure.cardProcess ?? BCSCCardProcess.None,

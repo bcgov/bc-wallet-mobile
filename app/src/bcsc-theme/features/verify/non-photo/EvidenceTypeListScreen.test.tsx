@@ -298,6 +298,151 @@ describe('EvidenceTypeList', () => {
     })
   })
 
+  describe('non-photo BCSC second ID', () => {
+    // Once a non-photo ID has been submitted as the first additional ID, the next list must be the
+    // SECOND-order photo IDs (which is where groups like "OTHER COUNTRIES" live) — not a repeat of
+    // the first-ID list, and without the "Other Options" escape hatch.
+    it('shows SECOND-order photo IDs and hides "Other Options"', () => {
+      const firstPhotoCard = makeEvidenceType({
+        evidence_type: 'BC Drivers Licence',
+        evidence_type_label: 'BC Drivers Licence',
+        collection_order: 'FIRST',
+        has_photo: true,
+      })
+      const secondPhotoCard = makeEvidenceType({
+        evidence_type: 'Foreign Passport',
+        evidence_type_label: 'Foreign Passport',
+        collection_order: 'SECOND',
+        has_photo: true,
+        group: 'OTHER COUNTRIES',
+      })
+      const birthCertificate = makeEvidenceType({
+        evidence_type: 'Birth Certificate',
+        evidence_type_label: 'Birth Certificate',
+        collection_order: 'FIRST',
+        has_photo: false,
+      })
+      const process = BCSCCardProcess.BCSCNonPhoto as string
+
+      const completedBirthCertificate: EvidenceMetadata = {
+        evidenceType: birthCertificate,
+        metadata: [{ uri: 'front.jpg' } as any],
+        documentNumber: 'BC123',
+      }
+
+      mockUseStore.mockReturnValue([
+        {
+          ...initialState,
+          bcscSecure: {
+            ...initialState.bcscSecure,
+            cardProcess: BCSCCardProcess.BCSCNonPhoto,
+            additionalEvidenceData: [completedBirthCertificate],
+          },
+        },
+        jest.fn(),
+      ])
+      mockUseDataLoader.mockReturnValue({
+        data: mockMetadata([firstPhotoCard, secondPhotoCard, birthCertificate], process),
+        load: jest.fn(),
+        isLoading: false,
+      })
+
+      const { getByText, queryByText } = render(
+        <BasicAppContext>
+          <EvidenceTypeListScreen
+            navigation={mockNavigation as never}
+            route={
+              { params: { cardProcess: BCSCCardProcess.BCSCNonPhoto, photoFilter: 'photo' } } as EvidenceTypeListRoute
+            }
+          />
+        </BasicAppContext>
+      )
+
+      expect(getByText('OTHER COUNTRIES')).toBeTruthy()
+      expect(getByText('Foreign Passport')).toBeTruthy()
+      expect(queryByText('BC Drivers Licence')).toBeNull()
+      expect(queryByText('Birth Certificate')).toBeNull()
+      expect(queryByText('BCSC.EvidenceTypeList.ShowMoreOptions')).toBeNull()
+    })
+  })
+
+  describe('non-BCSC second ID', () => {
+    const nonPhotoFirstId = makeEvidenceType({
+      evidence_type: 'Birth Certificate',
+      evidence_type_label: 'Birth Certificate',
+      collection_order: 'FIRST',
+      has_photo: false,
+    })
+    const photoSecondId = makeEvidenceType({
+      evidence_type: 'Foreign Passport',
+      evidence_type_label: 'Foreign Passport',
+      collection_order: 'SECOND',
+      has_photo: true,
+    })
+    const nonPhotoSecondId = makeEvidenceType({
+      evidence_type: 'Marriage Certificate',
+      evidence_type_label: 'Marriage Certificate',
+      collection_order: 'SECOND',
+      has_photo: false,
+    })
+
+    const renderWithFirstId = (firstIdType: EvidenceType) => {
+      const completedFirstId: EvidenceMetadata = {
+        evidenceType: firstIdType,
+        metadata: [{ uri: 'front.jpg' } as any],
+        documentNumber: 'ID123',
+      }
+
+      mockUseStore.mockReturnValue([
+        {
+          ...initialState,
+          bcscSecure: {
+            ...initialState.bcscSecure,
+            cardProcess: BCSCCardProcess.NonBCSC,
+            additionalEvidenceData: [completedFirstId],
+          },
+        },
+        jest.fn(),
+      ])
+      mockUseDataLoader.mockReturnValue({
+        data: mockMetadata([nonPhotoFirstId, photoSecondId, nonPhotoSecondId], BCSCCardProcess.NonBCSC as string),
+        load: jest.fn(),
+        isLoading: false,
+      })
+
+      return render(
+        <BasicAppContext>
+          <EvidenceTypeListScreen
+            navigation={mockNavigation as never}
+            route={{ params: { cardProcess: BCSCCardProcess.NonBCSC } } as EvidenceTypeListRoute}
+          />
+        </BasicAppContext>
+      )
+    }
+
+    // Two IDs are collected and at least one must carry a photo, so a photo-less first ID forces
+    // the second list to photo IDs even though no photoFilter route param is passed.
+    it('restricts the list to photo IDs when the first ID has no photo', () => {
+      const { getByText, queryByText } = renderWithFirstId(nonPhotoFirstId)
+
+      expect(getByText('Foreign Passport')).toBeTruthy()
+      expect(queryByText('Marriage Certificate')).toBeNull()
+    })
+
+    it('allows non-photo IDs when the first ID already has a photo', () => {
+      const photoFirstId = makeEvidenceType({
+        evidence_type: 'BC Drivers Licence',
+        evidence_type_label: 'BC Drivers Licence',
+        collection_order: 'FIRST',
+        has_photo: true,
+      })
+      const { getByText } = renderWithFirstId(photoFirstId)
+
+      expect(getByText('Foreign Passport')).toBeTruthy()
+      expect(getByText('Marriage Certificate')).toBeTruthy()
+    })
+  })
+
   describe('useFocusEffect', () => {
     it('should call removeIncompleteEvidence on mount', () => {
       jest.spyOn(Navigation, 'useFocusEffect').mockImplementation((callback) => {

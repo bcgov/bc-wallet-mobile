@@ -1,10 +1,17 @@
-import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { Connection } from '@bifold/core'
+import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
+import {
+  Connection,
+  CredentialProvisioningEventTypes,
+  LoadingPlaceholder,
+  LoadingPlaceholderWorkflowType,
+  TOKENS,
+  useServices,
+} from '@bifold/core'
 import { NavigationContext } from '@react-navigation/native'
 import { StackScreenProps } from '@react-navigation/stack'
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { BackHandler } from 'react-native'
+import { BackHandler, DeviceEventEmitter } from 'react-native'
 
 import { createBifoldNavigationAdapter } from './BifoldNavigationAdapter'
 
@@ -24,6 +31,26 @@ const ConnectionLoadingScreen: React.FC<Props> = ({ navigation, route }) => {
   const { t } = useTranslation()
   const adaptedNavigation = useMemo(() => createBifoldNavigationAdapter(navigation, { t }), [navigation, t])
   const { credentialId, proofId } = route.params
+  const [credentialProvisioningMonitor] = useServices([TOKENS.UTIL_CREDENTIAL_PROVISIONING_MONITOR])
+  const [provisioningLoading, setProvisioningLoading] = useState<boolean>(
+    () => credentialProvisioningMonitor?.workflowInProgress ?? false
+  )
+
+  useEffect(() => {
+    if (!credentialProvisioningMonitor) {
+      return
+    }
+    const handleStarted = () => setProvisioningLoading(true)
+    const handleEnded = () => setProvisioningLoading(false)
+    const subscriptions = [
+      DeviceEventEmitter.addListener(CredentialProvisioningEventTypes.Started, handleStarted),
+      DeviceEventEmitter.addListener(CredentialProvisioningEventTypes.Completed, handleEnded),
+      DeviceEventEmitter.addListener(CredentialProvisioningEventTypes.FailedHandleProof, handleEnded),
+      DeviceEventEmitter.addListener(CredentialProvisioningEventTypes.FailedHandleOffer, handleEnded),
+      DeviceEventEmitter.addListener(CredentialProvisioningEventTypes.FailedRequestCredential, handleEnded),
+    ]
+    return () => subscriptions.forEach((subscription) => subscription.remove())
+  }, [credentialProvisioningMonitor])
 
   // Bifold's Connection screen blocks the Android hardware back button for its
   // entire lifetime (it assumes a locked QR handshake flow). Offers / proof
@@ -54,6 +81,20 @@ const ConnectionLoadingScreen: React.FC<Props> = ({ navigation, route }) => {
     }),
     [route]
   )
+
+  // TODO (MD): Fix this on the Bifold side so the loading screen keeps rendering while the credential is being provisioned.
+  // Tip: Remove this block to see broken flow -> connection loading -> **missing credential** -> proof request loading -> proof
+  if (provisioningLoading) {
+    return (
+      <LoadingPlaceholder
+        workflowType={LoadingPlaceholderWorkflowType.Connection}
+        loadingProgressPercent={50}
+        onCancelTouched={() => {
+          navigation.navigate(BCSCStacks.Tab, { screen: BCSCScreens.Home })
+        }}
+      />
+    )
+  }
 
   return (
     <NavigationContext.Provider value={adaptedNavigation as any}>

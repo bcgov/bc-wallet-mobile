@@ -1,15 +1,29 @@
 import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
-import { Connection } from '@bifold/core'
+import { Connection, CredentialProvisioningEventTypes } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
-import { render } from '@testing-library/react-native'
+import { act, render, screen } from '@testing-library/react-native'
 import React from 'react'
-import { BackHandler } from 'react-native'
+import { BackHandler, DeviceEventEmitter } from 'react-native'
 
 import ConnectionLoadingScreen from './ConnectionLoadingScreen'
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }))
 jest.mock('@bifold/core', () => ({
   Connection: jest.fn().mockReturnValue(null),
+  CredentialProvisioningEventTypes: {
+    Started: 'CredentialProvisioningEvent.Started',
+    Completed: 'CredentialProvisioningEvent.Completed',
+    FailedHandleOffer: 'CredentialProvisioningEvent.FailedHandleOffer',
+    FailedHandleProof: 'CredentialProvisioningEvent.FailedHandleProof',
+    FailedRequestCredential: 'CredentialProvisioningEvent.FailedRequestCredential',
+  },
+  LoadingPlaceholder: ({ workflowType }: { workflowType: string }) => {
+    const { Text } = jest.requireActual('react-native')
+    return <Text>{`LoadingPlaceholder:${workflowType}`}</Text>
+  },
+  LoadingPlaceholderWorkflowType: { Connection: 'Connection', ProofRequested: 'ProofRequested' },
+  TOKENS: { UTIL_CREDENTIAL_PROVISIONING_MONITOR: 'UTIL_CREDENTIAL_PROVISIONING_MONITOR' },
+  useServices: jest.fn().mockReturnValue([undefined]),
 }))
 // `@react-navigation/native` isn't transformed by jest (see transformIgnorePatterns), so
 // pull-through imports like NavigationContext come back as undefined. Spread the real module
@@ -74,6 +88,62 @@ describe('ConnectionLoadingScreen', () => {
         routes: [{ name: BCSCStacks.Tab, state: { routes: [{ name: BCSCScreens.Home }] } }],
       })
     )
+  })
+
+  describe('credential provisioning loading gate', () => {
+    it('renders Connection (not the loading placeholder) when no monitor is registered', () => {
+      const { useServices } = jest.requireMock('@bifold/core')
+      useServices.mockReturnValue([undefined])
+      const { navigation, route } = mkProps()
+      render(<ConnectionLoadingScreen navigation={navigation} route={route} />)
+      expect(screen.queryByText('LoadingPlaceholder:Connection')).toBeNull()
+      expect(ConnectionMock).toHaveBeenCalled()
+    })
+
+    it('renders the loading placeholder instead of Connection while a workflow is already in progress', () => {
+      const { useServices } = jest.requireMock('@bifold/core')
+      useServices.mockReturnValue([{ workflowInProgress: true }])
+      const { navigation, route } = mkProps()
+      render(<ConnectionLoadingScreen navigation={navigation} route={route} />)
+      expect(screen.getByText('LoadingPlaceholder:Connection')).toBeTruthy()
+      expect(ConnectionMock).not.toHaveBeenCalled()
+    })
+
+    it('switches to the loading placeholder on Started and back to Connection on Completed', () => {
+      const { useServices } = jest.requireMock('@bifold/core')
+      useServices.mockReturnValue([{ workflowInProgress: false }])
+      const { navigation, route } = mkProps()
+      render(<ConnectionLoadingScreen navigation={navigation} route={route} />)
+      expect(ConnectionMock).toHaveBeenCalledTimes(1)
+
+      act(() => {
+        DeviceEventEmitter.emit(CredentialProvisioningEventTypes.Started)
+      })
+      expect(screen.getByText('LoadingPlaceholder:Connection')).toBeTruthy()
+
+      act(() => {
+        DeviceEventEmitter.emit(CredentialProvisioningEventTypes.Completed)
+      })
+      expect(screen.queryByText('LoadingPlaceholder:Connection')).toBeNull()
+      expect(ConnectionMock).toHaveBeenCalledTimes(2)
+    })
+
+    it('clears the loading placeholder on a failure event too', () => {
+      const { useServices } = jest.requireMock('@bifold/core')
+      useServices.mockReturnValue([{ workflowInProgress: false }])
+      const { navigation, route } = mkProps()
+      render(<ConnectionLoadingScreen navigation={navigation} route={route} />)
+
+      act(() => {
+        DeviceEventEmitter.emit(CredentialProvisioningEventTypes.Started)
+      })
+      expect(screen.getByText('LoadingPlaceholder:Connection')).toBeTruthy()
+
+      act(() => {
+        DeviceEventEmitter.emit(CredentialProvisioningEventTypes.FailedRequestCredential)
+      })
+      expect(screen.queryByText('LoadingPlaceholder:Connection')).toBeNull()
+    })
   })
 
   // Bifold's Connection screen blocks the Android hardware back button. For

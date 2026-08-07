@@ -1,6 +1,8 @@
-import { AutoFetchCredentialConfig } from '@/constants'
 import { getBCSCApiClient } from '@bcsc-theme/contexts/BCSCApiClientContext'
-import { buildDigitalServicesCardCredentialRule } from '@bcsc-theme/services/digitalServicesCardProvisioner'
+import {
+  allDigitalServicesCardProofRestrictions,
+  buildDigitalServicesCardCredentialRule,
+} from '@bcsc-theme/services/digitalServicesCardProvisioner'
 import { Platform } from 'react-native'
 import { getBundleId } from 'react-native-device-info'
 
@@ -23,11 +25,9 @@ describe('digitalServicesCardProvisioner', () => {
   })
 
   describe('buildDigitalServicesCardCredentialRule', () => {
-    it('flattens every cred def ID from AutoFetchCredentialConfig into triggerCredDefIds', () => {
+    it('builds an AutoCredentialRule with the correct triggerRestrictions', () => {
       const rule = buildDigitalServicesCardCredentialRule()
-      const expected = Object.values(AutoFetchCredentialConfig).flatMap((env) => [...env.credDefIDs])
-      expect(rule.triggerCredDefIds).toEqual(expect.arrayContaining(expected))
-      expect(rule.triggerCredDefIds).toHaveLength(expected.length)
+      expect(rule.triggerRestrictions).toStrictEqual(allDigitalServicesCardProofRestrictions())
     })
 
     it('defaults autoAcceptIssuerProofRequest and autoAcceptCredentialOffer to true', () => {

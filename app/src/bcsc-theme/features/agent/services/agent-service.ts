@@ -1,4 +1,4 @@
-import { CACHED_LEDGERS_TTL_DAYS } from '@/constants'
+import { CACHED_LEDGER_READ_TIMEOUT_MS, CACHED_LEDGERS_TTL_DAYS } from '@/constants'
 import { AppError, ErrorRegistry } from '@/errors'
 import { BCLocalStorageKeys } from '@/store'
 import { getBCAgentModules } from '@/utils/bc-agent-modules'
@@ -67,16 +67,25 @@ const enqueueWalletOp = <T>(op: () => Promise<T>): Promise<T> => {
  * Loads previously cached pool genesis transactions from persistent storage.
  *
  * Used to skip live ledger discovery on subsequent agent inits. Returns `undefined`
- * if no cache exists or if the cache is older than `CACHED_LEDGERS_TTL_DAYS`,
- * signalling that callers should fall back to the configured ledgers and refresh
- * the cache.
+ * if no cache exists, if the read times out, or if the cache is older than
+ * `CACHED_LEDGERS_TTL_DAYS`, signalling that callers should fall back to the
+ * configured ledgers and refresh the cache.
+ *
+ * The read is bounded because `AsyncStorage.getItem` never settles when the
+ * native callback is dropped
  *
  * @returns Cached ledger configs if fresh, otherwise `undefined`.
  */
 export const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => {
-  const cached = await PersistentStorage.fetchValueForKey<CachedGenesisTransactions>(
-    BCLocalStorageKeys.GenesisTransactions
-  )
+  let timeoutId: ReturnType<typeof setTimeout> | undefined
+  const cached = await Promise.race([
+    PersistentStorage.fetchValueForKey<CachedGenesisTransactions>(BCLocalStorageKeys.GenesisTransactions),
+    new Promise<undefined>((resolve) => {
+      timeoutId = setTimeout(() => resolve(undefined), CACHED_LEDGER_READ_TIMEOUT_MS)
+    }),
+  ])
+  clearTimeout(timeoutId)
+
   if (!cached) {
     return undefined
   }

@@ -6,7 +6,9 @@ import {
   completeVerification,
   enterBirthdate,
   enterSerialManually,
+  leaveVerificationToHome,
   reachVerificationMethod,
+  resumeVerification,
   startVerification,
 } from '../../../src/flows/verify.js'
 import { HomeScreen, SettingsScreen } from '../../../src/screens/main.js'
@@ -47,6 +49,14 @@ describe('Verified journey: photo card', () => {
 
   it('resumes to the verification method selection after authorizing', async () => {
     await reachVerificationMethod()
+    await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  })
+
+  it('resumes onto the method selection after leaving verification', async () => {
+    // The last resume row: everything before the method choice is done, so an authorized-but-unverified
+    // user comes back to the choice itself. Asserted here as the cheapest journey reaching that state.
+    await leaveVerificationToHome()
+    await resumeVerification()
     await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 

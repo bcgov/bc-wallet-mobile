@@ -1,15 +1,21 @@
 import {
+  ADDRESS_MAX_LENGTH,
+  citySchema,
   EMAIL_MAX_LENGTH,
   emailSchema,
   firstErrorKey,
   firstNameSchema,
   lastNameSchema,
   middleNamesSchema,
+  normalizeForSubmission,
   parseField,
   postalCodeSchema,
   serialSchema,
+  streetAddress2Schema,
+  streetAddressSchema,
 } from '@/bcsc-theme/utils/validation'
 
+// NOTE: ask bm about this suite if you need to update validation rules: the rules are based on ias-ios
 describe('validation', () => {
   describe('postalCodeSchema', () => {
     it('accepts real postal codes in any casing, with or without a separator', () => {
@@ -178,10 +184,70 @@ describe('validation', () => {
       expect(firstErrorKey(middleNamesSchema, 'A'.repeat(31))).toBe('BCSC.EvidenceIDCollection.MiddleNamesLengthError')
     })
 
-    it('accepts names with accents and punctuation', () => {
-      // ias-ios rejects these via its ASCII-only isValidName; deliberately not carried over.
-      expect(firstErrorKey(firstNameSchema, 'Émile')).toBeNull()
-      expect(firstErrorKey(lastNameSchema, "O'Brien-Nuñez")).toBeNull()
+    it('accepts the ASCII punctuation and digits that appear in real names', () => {
+      expect(firstErrorKey(lastNameSchema, "O'Brien-Smith")).toBeNull()
+      expect(firstErrorKey(lastNameSchema, 'St. John')).toBeNull()
+      expect(firstErrorKey(lastNameSchema, 'Windsor 3rd')).toBeNull()
+      expect(firstErrorKey(middleNamesSchema, "Jean-Luc D'Arcy")).toBeNull()
+    })
+
+    it('rejects non-ASCII characters, which IAS will not store', () => {
+      expect(firstErrorKey(firstNameSchema, 'Émile')).toBe('BCSC.EvidenceIDCollection.FirstNameFormatError')
+      expect(firstErrorKey(lastNameSchema, 'Nuñez')).toBe('BCSC.EvidenceIDCollection.NameCharactersError')
+      expect(firstErrorKey(middleNamesSchema, 'Renée')).toBe('BCSC.EvidenceIDCollection.NameCharactersError')
+    })
+
+    it('rejects symbols outside the accepted set', () => {
+      expect(firstErrorKey(lastNameSchema, 'Smith_Jones')).toBe('BCSC.EvidenceIDCollection.NameCharactersError')
+      expect(firstErrorKey(lastNameSchema, 'Smith (Jones)')).toBe('BCSC.EvidenceIDCollection.NameCharactersError')
+      expect(firstErrorKey(lastNameSchema, 'Smith, Jane')).toBe('BCSC.EvidenceIDCollection.NameCharactersError')
+    })
+
+    it('reports a leading non-letter separately from invalid characters', () => {
+      expect(firstErrorKey(firstNameSchema, '3rd')).toBe('BCSC.EvidenceIDCollection.FirstNameFormatError')
+      expect(firstErrorKey(lastNameSchema, "'Brien")).toBe('BCSC.EvidenceIDCollection.LastNameFormatError')
+      expect(firstErrorKey(middleNamesSchema, '-Luc')).toBe('BCSC.EvidenceIDCollection.MiddleNamesFormatError')
+    })
+
+    it('reports requiredness and length ahead of the character rules', () => {
+      expect(firstErrorKey(lastNameSchema, '')).toBe('BCSC.EvidenceIDCollection.LastNameError')
+      expect(firstErrorKey(lastNameSchema, 'É'.repeat(36))).toBe('BCSC.EvidenceIDCollection.LastNameLengthError')
+    })
+  })
+
+  describe('address schemas', () => {
+    it('requires a street address and city, but not the second street line', () => {
+      expect(firstErrorKey(streetAddressSchema, '')).toBe('BCSC.Address.StreetAddressRequired')
+      expect(firstErrorKey(streetAddressSchema, '   ')).toBe('BCSC.Address.StreetAddressRequired')
+      expect(firstErrorKey(citySchema, '')).toBe('BCSC.Address.CityRequired')
+      expect(firstErrorKey(streetAddress2Schema, '')).toBeNull()
+    })
+
+    it('caps every address line at 32 characters', () => {
+      const atLimit = 'A'.repeat(ADDRESS_MAX_LENGTH)
+      const overLimit = 'A'.repeat(ADDRESS_MAX_LENGTH + 1)
+
+      expect(firstErrorKey(streetAddressSchema, atLimit)).toBeNull()
+      expect(firstErrorKey(streetAddressSchema, overLimit)).toBe('BCSC.Address.StreetAddressLengthError')
+      expect(firstErrorKey(streetAddress2Schema, overLimit)).toBe('BCSC.Address.StreetAddress2LengthError')
+      expect(firstErrorKey(citySchema, overLimit)).toBe('BCSC.Address.CityLengthError')
+    })
+
+    it('accepts accented place names, which IAS does not restrict the way it restricts names', () => {
+      expect(firstErrorKey(citySchema, 'Montréal')).toBeNull()
+      expect(firstErrorKey(streetAddressSchema, '123 Côte-des-Neiges')).toBeNull()
+    })
+  })
+
+  describe('normalizeForSubmission', () => {
+    it('trims and upper-cases, matching what ias-ios sends', () => {
+      expect(normalizeForSubmission('  Jane Doe ')).toBe('JANE DOE')
+      expect(normalizeForSubmission("o'brien-smith")).toBe("O'BRIEN-SMITH")
+      expect(normalizeForSubmission('d1234567')).toBe('D1234567')
+    })
+
+    it('leaves an omitted optional name empty rather than producing whitespace', () => {
+      expect(normalizeForSubmission('   ')).toBe('')
     })
   })
 })

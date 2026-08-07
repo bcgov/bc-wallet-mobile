@@ -61,6 +61,7 @@ describe('QRDisplay', () => {
       retry: jest.fn(),
       resetWallet: jest.fn(),
       teardownAgent: jest.fn(),
+      waitForAgent: jest.fn().mockResolvedValue(agentHandle.agent),
     })
   }
   const setNoAgent = () => {
@@ -71,6 +72,7 @@ describe('QRDisplay', () => {
       retry: jest.fn(),
       resetWallet: jest.fn(),
       teardownAgent: jest.fn(),
+      waitForAgent: jest.fn().mockResolvedValue(null),
     })
   }
 

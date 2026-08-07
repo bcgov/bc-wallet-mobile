@@ -269,4 +269,65 @@ describe('EvidenceIDCollection', () => {
       })
     )
   })
+
+  it('persists names and the document number upper-cased, as IAS stores them', async () => {
+    const tree = render(
+      <BasicAppContext
+        initialStateOverride={{
+          bcscSecure: {
+            ...initialBCSCSecureState,
+            cardProcess: BCSCCardProcess.NonBCSC,
+            additionalEvidenceData: [{ evidenceType: mockEvidenceType, metadata: [] }],
+          },
+        }}
+      >
+        <EvidenceIDCollectionScreen
+          navigation={mockNavigation as never}
+          route={{ params: { cardType: mockEvidenceType } } as never}
+        />
+      </BasicAppContext>
+    )
+
+    const enter = (field: string, text: string) =>
+      fireEvent(tree.getByTestId(`com.ariesbifold:id/${field}-input`), 'change', { nativeEvent: { text } })
+
+    enter('documentNumber', '123456789')
+    enter('firstName', 'Jane')
+    enter('middleNames', 'Alex')
+    enter('lastName', "o'brien-smith")
+    // DateInput formats digits itself, so it listens on onChangeText rather than onChange
+    fireEvent.changeText(tree.getByTestId('com.ariesbifold:id/birthDate-input'), '19900101')
+
+    await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+
+    expect(mockUpdateUserMetadata).toHaveBeenCalledWith(
+      expect.objectContaining({ name: { first: 'JANE', middle: 'ALEX', last: "O'BRIEN-SMITH" } })
+    )
+    expect(mockUpdateEvidenceDocumentNumber).toHaveBeenCalledWith(mockEvidenceType, '123456789')
+  })
+
+  it('applies the document mask to the normalized number, not the raw input', async () => {
+    // An upper-case-only mask must not reject what will be submitted upper-cased anyway.
+    const upperCaseMaskType = { ...mockEvidenceType, document_reference_input_mask: '^[A-Z]{2}[0-9]{6}$' }
+    const tree = render(
+      <BasicAppContext
+        initialStateOverride={{
+          bcscSecure: { ...initialBCSCSecureState, cardProcess: BCSCCardProcess.BCSCNonPhoto },
+        }}
+      >
+        <EvidenceIDCollectionScreen
+          navigation={mockNavigation as never}
+          route={{ params: { cardType: upperCaseMaskType } } as never}
+        />
+      </BasicAppContext>
+    )
+
+    fireEvent(tree.getByTestId('com.ariesbifold:id/documentNumber-input'), 'change', {
+      nativeEvent: { text: ' ab123456 ' },
+    })
+    await fireEvent.press(tree.getByTestId('com.ariesbifold:id/EvidenceIDCollectionContinue'))
+
+    expect(tree.queryByText('Please enter a valid document number')).toBeNull()
+    expect(mockUpdateEvidenceDocumentNumber).toHaveBeenCalledWith(upperCaseMaskType, 'AB123456')
+  })
 })

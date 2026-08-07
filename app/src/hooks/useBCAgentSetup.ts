@@ -1,4 +1,5 @@
 import { ledgerResolver } from '@/configs/ledgers/indy/ledgerResolver'
+import { CACHED_LEDGER_READ_TIMEOUT_MS } from '@/constants'
 import { BCLocalStorageKeys, BCState } from '@/store'
 import { activate } from '@/utils/PushNotificationsHelper'
 import { getBCAgentModules } from '@/utils/bc-agent-modules'
@@ -34,9 +35,19 @@ import { CachesDirectoryPath } from 'react-native-fs'
 const DEFAULT_MEDIATION_EXPIRED_THRESHOLD_DAYS = '90'
 const CONNECTION_COMPLETION_TIMEOUT_MS = 10000
 
+// AsyncStorage.getItem never settles if the native callback is dropped so time it
+// out and fall through to a full refresh
 const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const cachedTransactions = await PersistentStorage.fetchValueForKey<any>(BCLocalStorageKeys.GenesisTransactions)
+  let timeoutId: ReturnType<typeof setTimeout> | undefined
+  const cachedTransactions = await Promise.race([
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    PersistentStorage.fetchValueForKey<any>(BCLocalStorageKeys.GenesisTransactions),
+    new Promise<undefined>((resolve) => {
+      timeoutId = setTimeout(() => resolve(undefined), CACHED_LEDGER_READ_TIMEOUT_MS)
+    }),
+  ])
+  clearTimeout(timeoutId)
+
   if (cachedTransactions) {
     const { timestamp, transactions } = cachedTransactions
     return moment().diff(moment(timestamp), 'days') >= 1 ? undefined : transactions
