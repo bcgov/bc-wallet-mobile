@@ -182,6 +182,63 @@ export const TestIds = {
     photoInstructions: {
       takePhoto: 'TakePhoto',
     },
+    /** Selfie camera (`TakePhoto`) — the shared bifold MaskedCamera, front-facing and oval-masked.
+     *  CAMERA-ONLY (Sauce injection). NB the shutter key is the SAME `TakePhoto` that PhotoInstructions
+     *  uses for its CTA, so `cancel` is the only thing that tells the two screens apart. */
+    selfieCapture: {
+      takePhoto: 'TakePhoto',
+      cancel: 'CancelCamera',
+    },
+    /** `VideoInstructions` ('Selfie Video Tips') — issues a FRESH prompt set on every focus, and
+     *  `startRecording` stays disabled until that lands (a recording is only accepted against the set
+     *  the server issued for it). */
+    videoInstructions: {
+      startRecording: 'StartRecording',
+    },
+    /** BARE testIDs on VideoInstructions — no `testIdWithKey`, so no prefix. `promptsLoading` is up
+     *  while the set is being issued; `retryLoadPrompts` replaces it when that fetch failed. */
+    videoInstructionsBare: {
+      promptsLoading: 'PromptsLoading',
+      retryLoadPrompts: 'RetryLoadPrompts',
+    },
+    /** `TakeVideo` — recording ARMS ITSELF on focus after a 3-2-1 countdown; there is no start button,
+     *  and the screen needs camera AND microphone permission (two sequential dialogs). `nextPrompt` is
+     *  disabled for the first 2s of each prompt and its LAST press stops the recording. The Cancel
+     *  control carries only an accessibility label — no testID. */
+    takeVideo: {
+      nextPrompt: 'NextPrompt',
+    },
+    /** `VideoReview` — accept or retake the recording. `useVideo` resets the stack to EvidenceUploading. */
+    videoReview: {
+      useVideo: 'UseVideo',
+      retakeVideo: 'RetakeVideo',
+      togglePlayPause: 'TogglePlayPause',
+    },
+    /** `VideoTooLong` — a recording over 30s lands here instead of VideoReview. BARE `Cancel`; its
+     *  Retake button has no testID at all. */
+    videoTooLongBare: {
+      cancel: 'Cancel',
+    },
+    /** `EvidenceUploading` — uploads on mount with no confirm step; `cancelUpload` is its only control. */
+    evidenceUploading: {
+      cancelUpload: 'CancelUpload',
+    },
+    /** `SuccessfullySent` — the post-upload confirmation. Its button id is i18n-DERIVED (the visible
+     *  title, spaces and all) and it is the screen's ONLY way out: hardware back is disabled. */
+    successfullySent: {
+      goToHome: 'Go to home',
+    },
+    /** `PendingReview` — re-checks the request status on EVERY mount, which is what makes re-entering
+     *  it the app's own poll for the agent's decision. `chooseAnotherWay` cancels the request
+     *  (confirm-gated) and returns to method selection. */
+    pendingReview: {
+      chooseAnotherWay: 'ChooseAnotherWayToVerify',
+    },
+    /** `CancelledReview` and its MainStack twin — both render the shared SystemModal, so the button is
+     *  that component's generic key. The agent's reason is body COPY (no testID): assert it by text. */
+    cancelledReview: {
+      button: 'SystemModalButton',
+    },
     /** Live-call busy/closed (`'Video Verify Closed'`) — the live-call branch when no agent queue is
      *  free or outside service hours. `callStatusTitle` is the marker; `sendVideo` resets to method
      *  selection. */
