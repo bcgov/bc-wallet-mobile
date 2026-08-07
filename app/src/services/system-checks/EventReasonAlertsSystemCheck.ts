@@ -3,7 +3,7 @@ import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BCSCEvent, BCSCReason, IdToken } from '@/bcsc-theme/utils/id-token'
 import { AlertOptions } from '@/contexts/ErrorAlertContext'
 import { AppEventCode } from '@/events/appEventCode'
-import { BCDispatchAction, CredentialMetadata } from '@/store'
+import { BCDispatchAction, CredentialMetadata, VerificationStatus } from '@/store'
 import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
@@ -11,6 +11,10 @@ import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './
  * Reasons:
  * Cancel
  *  - displays a modal instructing user to reset their app
+ *
+ * Expire:
+ *  - marks the credential deactivated; no alert (see IASP-12489)
+ *
  * Renew:
  *  - emits an alert informing the user their information has been updated
  *
@@ -73,6 +77,13 @@ export class EventReasonAlertsSystemCheck implements SystemCheckStrategy {
     switch (this.event) {
       case BCSCEvent.Cancel:
         this.navigation.navigate(BCSCModals.DeviceInvalidated, { invalidationReason: this.reason })
+        break
+      case BCSCEvent.Expire:
+        // Login, pairing, and Services, will only be usable in emergency mode, but don't force reverification
+        this.utils.dispatch({
+          type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS,
+          payload: [VerificationStatus.DEACTIVATED],
+        })
         break
       case BCSCEvent.Renewal:
         this.alertBuilder(AppEventCode.CARD_STATUS_UPDATED)
