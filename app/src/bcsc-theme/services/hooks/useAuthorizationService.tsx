@@ -5,7 +5,6 @@ import {
   DeviceAuthorizationResponse,
 } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import { DeviceAuthorizationError } from '@/bcsc-theme/features/verify/deviceAuthorizationError'
-import { VerificationCardError } from '@/bcsc-theme/features/verify/verificationCardError'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { isAppError, isHandledAppError } from '@/errors/appError'
 import { AppEventCode } from '@/events/appEventCode'
@@ -15,22 +14,6 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo } from 'react'
 import type { BarcodePayload } from 'react-native-bcsc-core'
 
-// Codes routed to the existing VerificationCardErrorScreen — each has a bespoke layout
-// (MismatchedSerial shows the scanned serial/birthdate; both predate this service).
-const VERIFICATION_CARD_ERROR_MAP: Partial<Record<AppEventCode, VerificationCardError>> = {
-  [AppEventCode.CARD_EXPIRED]: VerificationCardError.CardExpired,
-  [AppEventCode.CARD_NOT_FOUND]: VerificationCardError.MismatchedSerial,
-}
-
-// authorizeDevice (known-BCSC serial + birthdate lookup, used by both card scanning and manual
-// birthdate entry) treats a bad/mismatched serial+birthdate pair as "card not found" — matching
-// V3's AddCardErrorModel switch, which groups invalid_parameter with card_not_found under the same
-// "Card not found" screen. This does NOT apply to authorizeDeviceWithUnknownBCSC (the non-BCSC flow
-// has no serial to show on that screen).
-const AUTHORIZE_DEVICE_EXTRA_CARD_ERROR_MAP: Partial<Record<AppEventCode, VerificationCardError>> = {
-  [AppEventCode.INVALID_PARAMETER]: VerificationCardError.MismatchedSerial,
-}
-
 // Codes routed to the generic title/description/link-out-button DeviceAuthorizationErrorScreen.
 const DEVICE_AUTHORIZATION_ERROR_MAP: Partial<Record<AppEventCode, DeviceAuthorizationError>> = {
   [AppEventCode.INVALID_PARAMETER]: DeviceAuthorizationError.InvalidParameter,
@@ -38,9 +21,10 @@ const DEVICE_AUTHORIZATION_ERROR_MAP: Partial<Record<AppEventCode, DeviceAuthori
   [AppEventCode.CARD_REPLACED]: DeviceAuthorizationError.CardReplaced,
   [AppEventCode.CARD_CANCELLED]: DeviceAuthorizationError.CardCancelled,
   [AppEventCode.CARD_RENEWED]: DeviceAuthorizationError.CardRenewed,
-  [AppEventCode.NON_PHOTO_CARD]: DeviceAuthorizationError.NonPhotoCard,
   [AppEventCode.CARD_PROBLEM]: DeviceAuthorizationError.CardProblem,
   [AppEventCode.ADDITIONAL_CARD]: DeviceAuthorizationError.AdditionalCard,
+  [AppEventCode.CARD_EXPIRED]: DeviceAuthorizationError.CardExpired,
+  [AppEventCode.CARD_NOT_FOUND]: DeviceAuthorizationError.MismatchedSerial,
   // Per IAS, only returned for the non-BCSC (authorizeDeviceWithUnknownBCSC) flow.
   [AppEventCode.UNDER_MINIMUM_AGE]: DeviceAuthorizationError.UnderMinimumAge,
   [AppEventCode.TOO_MANY_MOBILE_CARDS]: DeviceAuthorizationError.TooManyMobileCards,
@@ -112,7 +96,7 @@ export const useAuthorizationService = () => {
    * @param extraCardErrorMap - Additional VerificationCardError routing specific to the calling method.
    */
   const handleAuthorizationError = useCallback(
-    (error: unknown, extraCardErrorMap?: Partial<Record<AppEventCode, VerificationCardError>>) => {
+    (error: unknown) => {
       if (isHandledAppError(error)) {
         // Already handled by a global client error policy (e.g. invalid_registration_request).
         return
@@ -122,9 +106,10 @@ export const useAuthorizationService = () => {
         return
       }
 
-      const cardErrorMap = extraCardErrorMap
-        ? { ...VERIFICATION_CARD_ERROR_MAP, ...extraCardErrorMap }
-        : VERIFICATION_CARD_ERROR_MAP
+      const cardErrorMap = {
+        [AppEventCode.CARD_NOT_FOUND]: DeviceAuthorizationError.MismatchedSerial,
+        [AppEventCode.INVALID_PARAMETER]: DeviceAuthorizationError.InvalidParameter,
+      }
       const cardErrorType = findByTechnicalMessage(error.technicalMessage, cardErrorMap)
       if (cardErrorType) {
         navigation.navigate(BCSCScreens.VerificationCardError, { errorType: cardErrorType })
@@ -134,11 +119,21 @@ export const useAuthorizationService = () => {
 
       const deviceAuthErrorType = findByTechnicalMessage(error.technicalMessage, DEVICE_AUTHORIZATION_ERROR_MAP)
       if (deviceAuthErrorType) {
-        navigation.navigate(BCSCScreens.DeviceAuthorizationError, { errorType: deviceAuthErrorType })
+        // Mark error as handled to prevent global alert
         error.handled = true
+
+        // These two errors are handled by VerificationCardErrorScreen
+        if (
+          deviceAuthErrorType === DeviceAuthorizationError.MismatchedSerial ||
+          deviceAuthErrorType === DeviceAuthorizationError.InvalidParameter
+        ) {
+          navigation.navigate(BCSCScreens.VerificationCardError, { errorType: deviceAuthErrorType })
+          return
+        }
+
+        navigation.navigate(BCSCScreens.DeviceAuthorizationError, { errorType: deviceAuthErrorType })
         return
       }
-
       emitAuthorizationAlert(error)
     },
     [navigation, emitAuthorizationAlert]
@@ -163,7 +158,7 @@ export const useAuthorizationService = () => {
         if (options?.skipErrorHandling) {
           throw error
         }
-        handleAuthorizationError(error, AUTHORIZE_DEVICE_EXTRA_CARD_ERROR_MAP)
+        handleAuthorizationError(error)
         throw error
       }
     },

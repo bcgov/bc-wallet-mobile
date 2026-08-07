@@ -2,7 +2,6 @@ import { Screens } from '@bifold/core'
 import { NavigatorScreenParams } from '@react-navigation/native'
 import { BCSCCardProcess, EvidenceType } from 'react-native-bcsc-core'
 import { DeviceAuthorizationError } from '../features/verify/deviceAuthorizationError'
-import { VerificationCardError } from '../features/verify/verificationCardError'
 import { BCSCReason } from '../utils/id-token'
 import { FormattedServicePeriod } from '../utils/service-hours-formatter'
 
@@ -207,7 +206,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.ManualSerial]: undefined
   [BCSCScreens.ScanSerial]: undefined
   [BCSCScreens.EnterBirthdate]: undefined
-  [BCSCScreens.VerificationCardError]: { errorType: VerificationCardError }
+  [BCSCScreens.VerificationCardError]: { errorType: DeviceAuthorizationError }
   [BCSCScreens.DeviceAuthorizationError]: { errorType: DeviceAuthorizationError }
   [BCSCScreens.BirthdateLockout]: undefined
   [BCSCScreens.EnterEmail]: { cardProcess: BCSCCardProcess }

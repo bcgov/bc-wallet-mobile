@@ -2,7 +2,8 @@ import { BasicAppContext } from '@mocks/helpers/app'
 import { useRoute } from '@react-navigation/native'
 import { render } from '@testing-library/react-native'
 import React from 'react'
-import VerificationCardErrorScreen, { VerificationCardError } from './VerificationCardErrorScreen'
+import VerificationCardErrorScreen from './VerificationCardErrorScreen'
+import { DeviceAuthorizationError } from './deviceAuthorizationError'
 
 describe('VerificationCardErrorScreen', () => {
   beforeEach(() => {
@@ -18,7 +19,7 @@ describe('VerificationCardErrorScreen', () => {
     jest.mocked(useRoute).mockReturnValue({
       key: 'test',
       name: 'BCSCVerificationCardError',
-      params: { errorType: VerificationCardError.MismatchedSerial },
+      params: { errorType: DeviceAuthorizationError.MismatchedSerial },
     })
 
     const tree = render(
@@ -34,7 +35,7 @@ describe('VerificationCardErrorScreen', () => {
     jest.mocked(useRoute).mockReturnValue({
       key: 'test',
       name: 'BCSCVerificationCardError',
-      params: { errorType: VerificationCardError.CardExpired },
+      params: { errorType: DeviceAuthorizationError.CardExpired },
     })
 
     const tree = render(
