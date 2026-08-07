@@ -149,6 +149,7 @@ exports[`EditNickname renders correctly 1`] = `
                   accessibilityLabel="BCSC.NicknameAccount.AccountName"
                   autoCapitalize="sentences"
                   autoCorrect={false}
+                  keyboardType="default"
                   maxLength={30}
                   onBlur={[Function]}
                   onChange={[Function]}

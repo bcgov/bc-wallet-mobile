@@ -141,8 +141,8 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
             onPressIn={props.onPressIn}
             accessibilityLabel={a11yLabel(props.label)}
             testID={testIdWithKey(`${props.id}-input`)}
-            keyboardType={props.keyboardType}
             {...props.textInputProps}
+            keyboardType={props.textInputProps?.keyboardType ?? props.keyboardType ?? 'default'}
             onFocus={(event) => {
               setIsFocused(true)
               props.onFocus?.()
