@@ -431,7 +431,7 @@ export async function waitForSendVideoDecision(expected: 'verified' | 'cancelled
  * later mistaken for an escape sequence introduced by this function.
  */
 function escapeForSelectorLiteral(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+  return value.replaceAll('\\', String.raw`\\`).replaceAll('"', String.raw`\"`)
 }
 
 /**
