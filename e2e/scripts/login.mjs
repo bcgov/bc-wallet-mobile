@@ -924,20 +924,22 @@ async function waitForNextClaimAttemptOrThrow(claimDeadline, claimTimeoutMs, sig
 /**
  * Confirms the claimed request belongs to the expected person, releasing it (best-effort) and
  * throwing loudly on any mismatch. Serial alone cannot identify a cardless request (they all read
- * "N/A"), so the surname is what actually distinguishes those — both are checked.
+ * "N/A"), so the surname AND first name are what actually distinguish those — all three are checked,
+ * since a shared surname alone could otherwise let this claim the wrong queued request.
  *
  * @param {typeof fetch} fetchWithCookies
  * @param {ReturnType<typeof load>} $detail
  * @param {string} detailUrl
- * @param {{ requestIdentifier: string, claimedSerial: string, claimedName: string, claimedSurname: string }} claimed
+ * @param {{ requestIdentifier: string, claimedSerial: string, claimedName: string, claimedSurname: string, claimedFirstName: string }} claimed
  * @param {SendVideoReviewInput} input
  * @param {AbortSignal} [signal]
  */
 async function assertClaimedIdentityMatches(fetchWithCookies, $detail, detailUrl, claimed, input, signal) {
-  const { requestIdentifier, claimedSerial, claimedName, claimedSurname } = claimed
+  const { requestIdentifier, claimedSerial, claimedName, claimedSurname, claimedFirstName } = claimed
   const serialMatches = claimedSerial.toUpperCase() === input.cardSerialNumber.toUpperCase()
   const surnameMatches = claimedSurname.toUpperCase() === input.surname.toUpperCase()
-  if (serialMatches && surnameMatches) {
+  const firstNameMatches = claimedFirstName.toUpperCase() === input.firstName.toUpperCase()
+  if (serialMatches && surnameMatches && firstNameMatches) {
     return
   }
 
@@ -953,7 +955,7 @@ async function assertClaimedIdentityMatches(fetchWithCookies, $detail, detailUrl
     // best-effort release only — the throw below carries the real failure
   }
   throw new Error(
-    `[claim send-video request] claimed ${requestIdentifier} ("${claimedName}", serial ${claimedSerial}) but expected "${input.surname}" with serial ${input.cardSerialNumber} — a CloseRequest release was attempted; check the SIT backcheck dashboard before re-running`
+    `[claim send-video request] claimed ${requestIdentifier} ("${claimedName}", serial ${claimedSerial}) but expected "${input.surname}, ${input.firstName}" with serial ${input.cardSerialNumber} — a CloseRequest release was attempted; check the SIT backcheck dashboard before re-running`
   )
 }
 
@@ -1064,7 +1066,13 @@ export async function reviewSendVideoLogin(input, options = {}) {
     fetchWithCookies,
     $detail,
     detailUrl,
-    { requestIdentifier, claimedSerial, claimedName, claimedSurname: claimedNames[0] ?? '' },
+    {
+      requestIdentifier,
+      claimedSerial,
+      claimedName,
+      claimedSurname: claimedNames[0] ?? '',
+      claimedFirstName: claimedNames[1] ?? '',
+    },
     input,
     signal
   )

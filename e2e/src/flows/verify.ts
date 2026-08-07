@@ -426,15 +426,25 @@ export async function waitForSendVideoDecision(expected: 'verified' | 'cancelled
 }
 
 /**
+ * Escapes a string for embedding inside a double-quoted literal in an iOS predicate string or an
+ * Android UiSelector expression. Backslashes are escaped first so a reason containing one is not
+ * later mistaken for an escape sequence introduced by this function.
+ */
+function escapeForSelectorLiteral(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+}
+
+/**
  * Assert the cancelled-review modal is showing the agent's reason — the text the rejecting script sent
  * as `verificationComment`. Matched as a SUBSTRING: the app renders it inside a longer "Details from
  * Service BC agent:" sentence, in one text node.
  */
 export async function expectCancelledReviewReason(reason: string): Promise<void> {
   await CancelledReviewScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  const escapedReason = escapeForSelectorLiteral(reason)
   const selector = driver.isIOS
-    ? `-ios predicate string:label CONTAINS "${reason}"`
-    : `android=new UiSelector().textContains("${reason}")`
+    ? `-ios predicate string:label CONTAINS "${escapedReason}"`
+    : `android=new UiSelector().textContains("${escapedReason}")`
   const detail = $(selector)
   if (!(await detail.isDisplayed().catch(() => false))) {
     throw new Error(
