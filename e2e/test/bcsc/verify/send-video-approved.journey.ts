@@ -66,7 +66,13 @@ describe('Verified journey: send video, approved', () => {
   })
 
   it('is approved by the agent (scripted against the SIT review portal)', async () => {
-    await reviewSendVideoRequest({ decision: 'approve', cardSerialNumber: getTestUser().cardSerial })
+    const user = getTestUser()
+    await reviewSendVideoRequest({
+      decision: 'approve',
+      cardSerialNumber: user.cardSerial,
+      surname: user.lastName,
+      firstName: user.firstName,
+    })
   })
 
   it('picks up the approval and lands on verified Home', async () => {

@@ -58,9 +58,12 @@ describe('Verified journey: send video, rejected', () => {
   })
 
   it('is rejected by the agent, with a reason (scripted against the SIT review portal)', async () => {
+    const user = getTestUser()
     await reviewSendVideoRequest({
       decision: 'reject',
-      cardSerialNumber: getTestUser().cardSerial,
+      cardSerialNumber: user.cardSerial,
+      surname: user.lastName,
+      firstName: user.firstName,
       verificationComment: AGENT_REASON,
     })
   })
