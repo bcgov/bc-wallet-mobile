@@ -357,6 +357,42 @@ export async function recordOverLongVideoDetour(user: TestUser): Promise<void> {
   await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
 }
 
+type ReviewSettleStatus = 'verified' | 'cancelled' | 'pending'
+
+/**
+ * Polls the three post-resume outcomes until one is present, returning 'pending' for a still-queued
+ * request so the caller can decide whether to keep polling or give up.
+ */
+async function waitForReviewSettleStatus(): Promise<ReviewSettleStatus> {
+  const settleBy = Date.now() + Timeouts.SCREEN_TRANSITION
+  for (;;) {
+    if (await VerificationSuccessScreen.isPresent(1_000)) {
+      return 'verified'
+    }
+    if (await CancelledReviewScreen.isPresent(1_000)) {
+      return 'cancelled'
+    }
+    if (await PendingReviewScreen.isPresent(1_000)) {
+      return 'pending' // still pending — leave and come back for another status check
+    }
+    if (Date.now() > settleBy) {
+      throw new Error(
+        `Re-entering verification reached none of PendingReview / VerificationSuccess / CancelledReview. On screen: ${await describeCurrentScreen()}`
+      )
+    }
+  }
+}
+
+/** Throws when the settled decision does not match what this journey scripted. */
+function assertExpectedDecision(actual: 'verified' | 'cancelled', expected: 'verified' | 'cancelled'): void {
+  if (actual === expected) {
+    return
+  }
+  throw actual === 'verified'
+    ? new Error('The request was APPROVED, but this journey scripted a rejection')
+    : new Error('The request was REJECTED, but this journey scripted an approval')
+}
+
 /**
  * Wait for the agent's decision to reach the app, and assert it is the expected one.
  *
@@ -371,28 +407,10 @@ export async function waitForSendVideoDecision(expected: 'verified' | 'cancelled
     await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     await resumeVerification()
 
-    const settleBy = Date.now() + Timeouts.SCREEN_TRANSITION
-    for (;;) {
-      if (await VerificationSuccessScreen.isPresent(1_000)) {
-        if (expected === 'verified') {
-          return
-        }
-        throw new Error('The request was APPROVED, but this journey scripted a rejection')
-      }
-      if (await CancelledReviewScreen.isPresent(1_000)) {
-        if (expected === 'cancelled') {
-          return
-        }
-        throw new Error('The request was REJECTED, but this journey scripted an approval')
-      }
-      if (await PendingReviewScreen.isPresent(1_000)) {
-        break // still pending — leave and come back for another status check
-      }
-      if (Date.now() > settleBy) {
-        throw new Error(
-          `Re-entering verification reached none of PendingReview / VerificationSuccess / CancelledReview. On screen: ${await describeCurrentScreen()}`
-        )
-      }
+    const status = await waitForReviewSettleStatus()
+    if (status !== 'pending') {
+      assertExpectedDecision(status, expected)
+      return
     }
 
     if (Date.now() + REVIEW_DECISION_POLL_MS >= deadline) {

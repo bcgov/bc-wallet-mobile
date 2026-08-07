@@ -834,40 +834,32 @@ async function resolveIdentityMatch(fetchWithCookies, matchesHtml, matchesUrl, e
  */
 
 /**
- * SM login flow to review (approve or reject) a queued send-video verification request.
- *
- * The portal has no queue listing — its claim button takes the next submission FIFO — so the claim is
- * polled until one appears and the claimed person is checked against the expected one before any
- * decision is posted. Which claim button exists depends on the queue holding the work, and what the
- * review asks for depends on what the person submitted, so both are read off the pages themselves:
- * cardholder requests go straight to the decision, while a cardless registration inserts an
- * identity-match step first.
- *
+ * Guards JS/CLI callers the TS types cannot protect against.
  * @param {SendVideoReviewInput} input
- * @param {{ signal?: AbortSignal, claimTimeoutMs?: number }} [options]
- * @returns {Promise<{ requestIdentifier: string, claimedSerial: string, claimedName: string }>}
  */
-export async function reviewSendVideoLogin(input, options = {}) {
-  const { signal, claimTimeoutMs = DEFAULT_CLAIM_TIMEOUT_MS } = options
-
+function assertValidSendVideoReviewInput(input) {
   if (input.decision !== 'approve' && input.decision !== 'reject') {
     throw new Error(`Unknown decision: ${/** @type {{decision: string}} */ (input).decision}`)
   }
-  // Guards JS/CLI callers the TS types cannot protect.
   if (input.decision === 'reject' && !input.verificationComment) {
     throw new Error('reject requires verificationComment (the reason text shown to the user in the app)')
   }
   if (!input.surname || !input.firstName) {
     throw new Error('surname and firstName are required — they guard the claim and pick the identity match')
   }
+}
 
-  const fetchWithCookies = await establishIdcheckSession(signal)
-
-  // Claim loop: re-scrape the dashboard each attempt, exactly like a human reloading and clicking the
-  // claim button until the submission lands in the queue.
+/**
+ * Polls the backcheck dashboard, re-scraping it each attempt exactly like a human reloading and
+ * clicking the claim button until the submission lands in the queue.
+ *
+ * @param {typeof fetch} fetchWithCookies
+ * @param {number} claimTimeoutMs
+ * @param {AbortSignal} [signal]
+ * @returns {Promise<{ detailUrl: string, detailHtml: string }>}
+ */
+async function claimNextSendVideoRequest(fetchWithCookies, claimTimeoutMs, signal) {
   const claimDeadline = Date.now() + claimTimeoutMs
-  let detailUrl
-  let detailHtml
 
   for (let attempt = 1; ; attempt++) {
     const dashboardResponse = await fetchWithCookies(BACKCHECK_DASHBOARD_URL, {
@@ -885,10 +877,7 @@ export async function reviewSendVideoLogin(input, options = {}) {
       console.log(
         `[sm-login] [~] claim attempt ${attempt}: no claim button on the dashboard — page is "${extractPageTitle(dashboardHtml) || '(untitled)'}"`
       )
-      if (Date.now() + CLAIM_POLL_INTERVAL_MS >= claimDeadline) {
-        throw new Error(`[claim send-video request] no queued submission within ${claimTimeoutMs}ms`)
-      }
-      await sleep(CLAIM_POLL_INTERVAL_MS, signal)
+      await waitForNextClaimAttemptOrThrow(claimDeadline, claimTimeoutMs, signal)
       continue
     }
 
@@ -902,9 +891,7 @@ export async function reviewSendVideoLogin(input, options = {}) {
     // fetch-cookie follows the 302; landing on a per-request page means something was claimed.
     if (claimResponse.ok && /\/backCheckRequest\/(verify|review)Identity\/[^/?#]+$/.test(claimResponse.url)) {
       await logStep('claim send-video request', claimResponse, claimHtml)
-      detailUrl = claimResponse.url
-      detailHtml = claimHtml
-      break
+      return { detailUrl: claimResponse.url, detailHtml: claimHtml }
     }
     if (!claimResponse.ok) {
       // Reuses logStep's throw path — a real error is never blind-retried.
@@ -913,51 +900,76 @@ export async function reviewSendVideoLogin(input, options = {}) {
 
     const landedPath = new URL(claimResponse.url).pathname
     console.log(`[sm-login] [~] claim attempt ${attempt}: nothing queued yet (landed on ${landedPath})`)
-    if (Date.now() + CLAIM_POLL_INTERVAL_MS >= claimDeadline) {
-      throw new Error(
-        `[claim send-video request] no queued submission within ${claimTimeoutMs}ms — last page: "${extractPageTitle(claimHtml) || landedPath}"`
-      )
-    }
+    await waitForNextClaimAttemptOrThrow(claimDeadline, claimTimeoutMs, signal, () => extractPageTitle(claimHtml) || landedPath)
+  }
+}
+
+/**
+ * Sleeps until the next claim poll, or throws if the deadline would be exceeded first.
+ *
+ * @param {number} claimDeadline
+ * @param {number} claimTimeoutMs
+ * @param {AbortSignal} [signal]
+ * @param {() => string} [describeLastPage]
+ */
+async function waitForNextClaimAttemptOrThrow(claimDeadline, claimTimeoutMs, signal, describeLastPage) {
+  if (Date.now() + CLAIM_POLL_INTERVAL_MS < claimDeadline) {
     await sleep(CLAIM_POLL_INTERVAL_MS, signal)
+    return
   }
+  const suffix = describeLastPage ? ` — last page: "${describeLastPage()}"` : ''
+  throw new Error(`[claim send-video request] no queued submission within ${claimTimeoutMs}ms${suffix}`)
+}
 
-  const detailAttributes = extractPageDataAttributes(detailHtml)
-  const requestIdentifier = detailAttributes?.['request-identifier']
-  if (!requestIdentifier) {
-    throw new Error('[claim send-video request] Missing request-identifier in page data')
-  }
-  const csrfToken = detailAttributes['csrf-token']
-
-  const $detail = load(detailHtml)
-  const claimedSerial = $detail('#card-serial-number').first().text().trim()
-  const claimedNames = $detail('#name-on-card span')
-    .map((_, element) => $detail(element).text().trim())
-    .get()
-    .filter(Boolean)
-  const claimedName = claimedNames.join(', ')
-  console.log(`  claimed ${requestIdentifier}: ${claimedName} — serial ${claimedSerial}`)
-
-  // Serial alone cannot identify a cardless request (they all read "N/A"), so the surname is what
-  // actually distinguishes those — both are checked, and either mismatch stops the review.
+/**
+ * Confirms the claimed request belongs to the expected person, releasing it (best-effort) and
+ * throwing loudly on any mismatch. Serial alone cannot identify a cardless request (they all read
+ * "N/A"), so the surname is what actually distinguishes those — both are checked.
+ *
+ * @param {typeof fetch} fetchWithCookies
+ * @param {ReturnType<typeof load>} $detail
+ * @param {string} detailUrl
+ * @param {{ requestIdentifier: string, claimedSerial: string, claimedName: string, claimedSurname: string }} claimed
+ * @param {SendVideoReviewInput} input
+ * @param {AbortSignal} [signal]
+ */
+async function assertClaimedIdentityMatches(fetchWithCookies, $detail, detailUrl, claimed, input, signal) {
+  const { requestIdentifier, claimedSerial, claimedName, claimedSurname } = claimed
   const serialMatches = claimedSerial.toUpperCase() === input.cardSerialNumber.toUpperCase()
-  const surnameMatches = (claimedNames[0] ?? '').toUpperCase() === input.surname.toUpperCase()
-  if (!serialMatches || !surnameMatches) {
-    // Never review someone else's submission; try to release it, then fail loudly.
-    try {
-      await fetchWithCookies(BACKCHECK_CONTINUE_URL, {
-        headers: backcheckFormPostHeaders(detailUrl),
-        body: buildAttestationBody($detail, AFFIRMATIVE_ANSWER, 'CloseRequest'),
-        method: 'POST',
-        signal,
-      })
-    } catch {
-      // best-effort release only — the throw below carries the real failure
-    }
-    throw new Error(
-      `[claim send-video request] claimed ${requestIdentifier} ("${claimedName}", serial ${claimedSerial}) but expected "${input.surname}" with serial ${input.cardSerialNumber} — a CloseRequest release was attempted; check the SIT backcheck dashboard before re-running`
-    )
+  const surnameMatches = claimedSurname.toUpperCase() === input.surname.toUpperCase()
+  if (serialMatches && surnameMatches) {
+    return
   }
 
+  // Never review someone else's submission; try to release it, then fail loudly.
+  try {
+    await fetchWithCookies(BACKCHECK_CONTINUE_URL, {
+      headers: backcheckFormPostHeaders(detailUrl),
+      body: buildAttestationBody($detail, AFFIRMATIVE_ANSWER, 'CloseRequest'),
+      method: 'POST',
+      signal,
+    })
+  } catch {
+    // best-effort release only — the throw below carries the real failure
+  }
+  throw new Error(
+    `[claim send-video request] claimed ${requestIdentifier} ("${claimedName}", serial ${claimedSerial}) but expected "${input.surname}" with serial ${input.cardSerialNumber} — a CloseRequest release was attempted; check the SIT backcheck dashboard before re-running`
+  )
+}
+
+/**
+ * Submits the attestation, resolves an identity-match step if the portal asks for one (cardless
+ * registrations only), and posts the final approve/reject decision.
+ *
+ * @param {typeof fetch} fetchWithCookies
+ * @param {ReturnType<typeof load>} $detail
+ * @param {string} detailUrl
+ * @param {string} requestIdentifier
+ * @param {string} csrfToken
+ * @param {SendVideoReviewInput} input
+ * @param {AbortSignal} [signal]
+ */
+async function submitSendVideoDecision(fetchWithCookies, $detail, detailUrl, requestIdentifier, csrfToken, input, signal) {
   const decisionTitle = input.decision === 'approve' ? REVIEW_READY_TITLE : REJECT_NOTE_TITLE
   const suspiciousActivityValue = input.decision === 'approve' ? AFFIRMATIVE_ANSWER : '2'
   const continueResponse = await fetchWithCookies(BACKCHECK_CONTINUE_URL, {
@@ -990,23 +1002,74 @@ export async function reviewSendVideoLogin(input, options = {}) {
     })
     const approveHtml = await logStep('approve send-video request', approveResponse)
     assertPageTitle('approve send-video request', approveHtml, APPROVE_DONE_TITLE)
-  } else {
-    const noteResponse = await fetchWithCookies(BACKCHECK_NOTE_URL, {
-      headers: backcheckFormPostHeaders(BACKCHECK_CONTINUE_URL),
-      body: new URLSearchParams({
-        csrftoken: csrfToken,
-        identifier: requestIdentifier,
-        remoteTxSessionName: requestIdentifier,
-        typeReasonId: input.typeReasonId ?? DEFAULT_REJECT_REASON_ID,
-        comment: input.comment ?? input.verificationComment,
-        verificationComment: input.verificationComment,
-      }).toString(),
-      method: 'POST',
-      signal,
-    })
-    const noteHtml = await logStep('reject send-video request', noteResponse)
-    assertPageTitle('reject send-video request', noteHtml, NOTE_DONE_TITLE)
+    return
   }
+
+  const noteResponse = await fetchWithCookies(BACKCHECK_NOTE_URL, {
+    headers: backcheckFormPostHeaders(BACKCHECK_CONTINUE_URL),
+    body: new URLSearchParams({
+      csrftoken: csrfToken,
+      identifier: requestIdentifier,
+      remoteTxSessionName: requestIdentifier,
+      typeReasonId: input.typeReasonId ?? DEFAULT_REJECT_REASON_ID,
+      comment: input.comment ?? input.verificationComment,
+      verificationComment: input.verificationComment,
+    }).toString(),
+    method: 'POST',
+    signal,
+  })
+  const noteHtml = await logStep('reject send-video request', noteResponse)
+  assertPageTitle('reject send-video request', noteHtml, NOTE_DONE_TITLE)
+}
+
+/**
+ * SM login flow to review (approve or reject) a queued send-video verification request.
+ *
+ * The portal has no queue listing — its claim button takes the next submission FIFO — so the claim is
+ * polled until one appears and the claimed person is checked against the expected one before any
+ * decision is posted. Which claim button exists depends on the queue holding the work, and what the
+ * review asks for depends on what the person submitted, so both are read off the pages themselves:
+ * cardholder requests go straight to the decision, while a cardless registration inserts an
+ * identity-match step first.
+ *
+ * @param {SendVideoReviewInput} input
+ * @param {{ signal?: AbortSignal, claimTimeoutMs?: number }} [options]
+ * @returns {Promise<{ requestIdentifier: string, claimedSerial: string, claimedName: string }>}
+ */
+export async function reviewSendVideoLogin(input, options = {}) {
+  const { signal, claimTimeoutMs = DEFAULT_CLAIM_TIMEOUT_MS } = options
+
+  assertValidSendVideoReviewInput(input)
+
+  const fetchWithCookies = await establishIdcheckSession(signal)
+  const { detailUrl, detailHtml } = await claimNextSendVideoRequest(fetchWithCookies, claimTimeoutMs, signal)
+
+  const detailAttributes = extractPageDataAttributes(detailHtml)
+  const requestIdentifier = detailAttributes?.['request-identifier']
+  if (!requestIdentifier) {
+    throw new Error('[claim send-video request] Missing request-identifier in page data')
+  }
+  const csrfToken = detailAttributes['csrf-token']
+
+  const $detail = load(detailHtml)
+  const claimedSerial = $detail('#card-serial-number').first().text().trim()
+  const claimedNames = $detail('#name-on-card span')
+    .map((_, element) => $detail(element).text().trim())
+    .get()
+    .filter(Boolean)
+  const claimedName = claimedNames.join(', ')
+  console.log(`  claimed ${requestIdentifier}: ${claimedName} — serial ${claimedSerial}`)
+
+  await assertClaimedIdentityMatches(
+    fetchWithCookies,
+    $detail,
+    detailUrl,
+    { requestIdentifier, claimedSerial, claimedName, claimedSurname: claimedNames[0] ?? '' },
+    input,
+    signal
+  )
+
+  await submitSendVideoDecision(fetchWithCookies, $detail, detailUrl, requestIdentifier, csrfToken, input, signal)
 
   return { requestIdentifier, claimedSerial, claimedName }
 }
