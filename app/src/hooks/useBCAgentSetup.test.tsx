@@ -26,6 +26,7 @@ import {
 import { act, renderHook } from '@testing-library/react-native'
 import useBCAgentSetup from './useBCAgentSetup'
 
+import { CACHED_LEDGER_READ_TIMEOUT_MS } from '@/constants'
 import { PersistentStorage, useServices, useStore as useStoreBifold } from '@bifold/core'
 import moment from 'moment'
 
@@ -234,6 +235,26 @@ describe('useBCAgentSetup', () => {
         key: 'wallet-key',
         salt: 'wallet-salt',
       })
+    })
+
+    expect(Agent).toHaveBeenCalled()
+    expect(result.current.agent).toBeTruthy()
+  })
+
+  it('should still create an agent when the cached ledger read never settles', async () => {
+    jest.useFakeTimers()
+    jest.spyOn(PersistentStorage, 'fetchValueForKey').mockReturnValue(new Promise(() => {}))
+
+    const { result } = renderHook(() => useBCAgentSetup())
+
+    await act(async () => {
+      const initializePromise = result.current.initializeAgent({
+        id: 'wallet-id',
+        key: 'wallet-key',
+        salt: 'wallet-salt',
+      })
+      await jest.advanceTimersByTimeAsync(CACHED_LEDGER_READ_TIMEOUT_MS)
+      await initializePromise
     })
 
     expect(Agent).toHaveBeenCalled()

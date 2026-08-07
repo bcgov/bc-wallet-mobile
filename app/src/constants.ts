@@ -191,6 +191,7 @@ export const DEVICE_COUNT_BANNER_COOLDOWN_MS_PROD = 30 * 24 * 60 * 60 * 1000 // 
 // Agent constants
 export const WALLET_ID = 'bc-wallet-bcsc'
 export const CACHED_LEDGERS_TTL_DAYS = 1
+export const CACHED_LEDGER_READ_TIMEOUT_MS = 3000
 
 // Shadow constants
 export const SHADOW_CASTER_HEIGHT = 1
