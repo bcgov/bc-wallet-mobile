@@ -125,12 +125,12 @@ export const useAuthorizationService = () => {
         // These two errors are handled by VerificationCardErrorScreen
         if (
           deviceAuthErrorType === DeviceAuthorizationError.MismatchedSerial ||
-          deviceAuthErrorType === DeviceAuthorizationError.InvalidParameter
+          deviceAuthErrorType === DeviceAuthorizationError.InvalidParameter ||
+          deviceAuthErrorType === DeviceAuthorizationError.CardExpired
         ) {
           navigation.navigate(BCSCScreens.VerificationCardError, { errorType: deviceAuthErrorType })
           return
         }
-
         navigation.navigate(BCSCScreens.DeviceAuthorizationError, { errorType: deviceAuthErrorType })
         return
       }

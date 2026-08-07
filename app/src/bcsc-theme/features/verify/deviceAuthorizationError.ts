@@ -45,7 +45,7 @@ export const DEVICE_AUTHORIZATION_ERROR_CONFIG: Record<DeviceAuthorizationError,
     headingKey: 'BCSC.DeviceAuthorizationError.CardInactive.Heading',
     descriptionKey: 'BCSC.DeviceAuthorizationError.CardInactive.Description',
     buttonTextKey: 'BCSC.DeviceAuthorizationError.CardInactive.ButtonText',
-    buttonUrl: GET_BCSC_CARD_URL,
+    buttonUrl: CONTACT_US_GOVERNMENT_WEBSITE_URL,
     buttonVisible: true,
   },
   [DeviceAuthorizationError.CardReplaced]: {
