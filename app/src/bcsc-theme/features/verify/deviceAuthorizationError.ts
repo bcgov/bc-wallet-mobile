@@ -1,11 +1,7 @@
 import { CONTACT_US_GOVERNMENT_WEBSITE_URL, GET_BCSC_CARD_URL } from '@/constants'
 
 /**
- * Device authorization (device/code) 400 error codes that render the generic
- * title/description/link-out-button layout in DeviceAuthorizationErrorScreen.
- *
- * card_not_found and card_expired are handled separately by VerificationCardErrorScreen
- * (VerificationCardError.MismatchedSerial / .CardExpired) and are not part of this set.
+ * Device authorization (device/code) 400 error codes
  */
 export enum DeviceAuthorizationError {
   InvalidParameter = 'InvalidParameter',
@@ -18,7 +14,7 @@ export enum DeviceAuthorizationError {
   AdditionalCard = 'AdditionalCard',
   UnderMinimumAge = 'UnderMinimumAge',
   TooManyMobileCards = 'TooManyMobileCards',
-  MismatchedSerial = 'MismatchedSerial', // TODO: swap this with invalidparameter
+  MismatchedSerial = 'MismatchedSerial',
   CardExpired = 'CardExpired',
   TooManyAttempts = 'TooManyAttempts',
   TooManyAttemptsQRScan = 'TooManyAttemptsQRScan',
@@ -32,7 +28,6 @@ export interface DeviceAuthorizationErrorConfig {
   buttonVisible: boolean
 }
 
-/** Title/description/link-out-button config for every DeviceAuthorizationError. */
 export const DEVICE_AUTHORIZATION_ERROR_CONFIG: Record<DeviceAuthorizationError, DeviceAuthorizationErrorConfig> = {
   [DeviceAuthorizationError.InvalidParameter]: {
     headingKey: 'BCSC.DeviceAuthorizationError.InvalidParameter.Heading',
