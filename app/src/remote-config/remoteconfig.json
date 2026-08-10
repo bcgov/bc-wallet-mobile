@@ -1,0 +1,5 @@
+{
+  "FEATURE_FLAGS": {
+    "TEST_FEATURE": true
+  }
+}
