@@ -1,15 +1,19 @@
 import { RemoteLogger } from '@bifold/remote-logs'
-import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react'
 import z from 'zod'
-import remoteConfigJSON from './remoteconfig.json'
+import remoteConfigJSON from './remote-config-defaults.json'
 
 const RemoteConfigSchema = z.strictObject({
-  FEATURE_FLAGS: z.strictObject({
-    TEST_FEATURE: z.boolean(),
+  featureFlags: z.strictObject({
+    // TODO (FF): Remove this test feature when feature flagging fully enabled
+    'debug.testFeature': z.boolean(),
+    // 'kill.featureX': z.boolean(),
+    // 'release.featureY': z.boolean(),
   }),
 })
+let REMOTE_CONFIG_CACHE: RemoteConfig
 
-type RemoteConfig = z.infer<typeof RemoteConfigSchema>
+export type RemoteConfig = z.infer<typeof RemoteConfigSchema>
 
 interface RemoteConfigContextType {
   remoteConfig: RemoteConfig
@@ -24,39 +28,30 @@ interface RemoteConfigProviderProps extends PropsWithChildren {
 const RemoteConfigContext = createContext<RemoteConfigContextType | null>(null)
 
 export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
-  const [remoteConfig, setRemoteConfig] = useState<RemoteConfig | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading] = useState(false)
+  const [remoteConfig, setRemoteConfigState] = useState<RemoteConfig>(() => setRemoteConfig(remoteConfigJSON))
 
-  useEffect(() => {
-    const load = async () => {
-      const result = RemoteConfigSchema.safeParse(remoteConfigJSON)
+  const setRemoteConfig = useCallback((newConfig: RemoteConfig) => {
+    setRemoteConfigState(newConfig)
+    REMOTE_CONFIG_CACHE = newConfig
+    return newConfig
+  }, [])
 
-      if (!result.success && __DEV__) {
-        throw new Error(`[RemoteConfig] remoteconfig.json is invalid: ${result.error.message}`)
-      }
+  // TODO (MD): Implement remote config fetching and caching logic here
+  // useEffect(() => {
+  //   const load = async () => {}
+  //   load()
+  // }, [])
 
-      if (result.success) {
-        setRemoteConfig(result.data)
-        setLoading(false)
-      }
-    }
+  const context = useMemo(() => ({ remoteConfig, setRemoteConfig, loading }), [remoteConfig, setRemoteConfig, loading])
 
-    load()
-  }, [props.logger])
-
-  return (
-    <RemoteConfigContext.Provider
-      value={{
-        remoteConfig: remoteConfig ?? (remoteConfigJSON as RemoteConfig),
-        setRemoteConfig,
-        loading,
-      }}
-    >
-      {props.children}
-    </RemoteConfigContext.Provider>
-  )
+  return <RemoteConfigContext.Provider value={context}>{props.children}</RemoteConfigContext.Provider>
 }
 
+/**
+ * Hook to access the remote config context. Must be used within a RemoteConfigProvider.
+ * @returns The remote config context value, including the current remote config, a setter function, and a loading state.
+ */
 export const useRemoteConfig = () => {
   const context = useContext(RemoteConfigContext)
 
@@ -67,48 +62,14 @@ export const useRemoteConfig = () => {
   return context
 }
 
-export const useFeatureFlags = () => {
-  const { remoteConfig, setRemoteConfig } = useRemoteConfig()
-  const FeatureFlags = remoteConfig.FEATURE_FLAGS
+export function getRemoteConfig(): RemoteConfig {
+  if (!REMOTE_CONFIG_CACHE) {
+    throw new Error(
+      '[RemoteConfig] Remote config has not been initialized. Please use the RemoteConfigProvider to initialize it.'
+    )
+  }
 
-  const FeatureGates = useMemo(
-    () => ({
-      testFeatureEnabled() {
-        return FeatureFlags.TEST_FEATURE && __DEV__
-      },
-    }),
-    [FeatureFlags]
-  )
-
-  const getFeatureFlag = useCallback(
-    <TFlag extends keyof RemoteConfig['FEATURE_FLAGS']>(flag: TFlag) => {
-      return remoteConfig.FEATURE_FLAGS[flag]
-    },
-    [remoteConfig.FEATURE_FLAGS]
-  )
-
-  const setFeatureFlag = useCallback(
-    <TFlag extends keyof RemoteConfig['FEATURE_FLAGS']>(flag: TFlag, value: boolean) => {
-      setRemoteConfig({
-        ...remoteConfig,
-        FEATURE_FLAGS: {
-          ...remoteConfig.FEATURE_FLAGS,
-          [flag]: value,
-        },
-      })
-    },
-    [remoteConfig, setRemoteConfig]
-  )
-
-  return useMemo(
-    () => ({
-      FeatureFlags,
-      FeatureGates,
-      getFeatureFlag,
-      setFeatureFlag,
-    }),
-    [FeatureFlags, FeatureGates, getFeatureFlag, setFeatureFlag]
-  )
+  return REMOTE_CONFIG_CACHE
 }
 
 // export const useFeatureFlags = () => {
@@ -211,11 +172,12 @@ export const useFeatureFlags = () => {
 //   return null
 // }
 //
+
 // async function _getCachedRemoteConfig(cacheMs: number, logger: RemoteLogger): Promise<RemoteConfig | null> {
 //   let cachedConfig: CachedRemoteConfig | undefined
 //
 //   try {
-//     cachedConfig = await PersistentStorage.fetchValueForKey<CachedRemoteConfig>(REMOTE_CONFIG_KEY)
+//     cachedConfig = await PersistentStorage.fetchValueForKey<CachedRemoteConfig>(REMOTE_CONFIG_CACHE_KEY)
 //   } catch (error) {
 //     logger.error('[RemoteConfig] Error fetching cached remote config:', { error })
 //     return null
@@ -231,12 +193,12 @@ export const useFeatureFlags = () => {
 //     return null
 //   }
 //
-//   // const result = RemoteConfigSchema.safeParse(cachedConfig.remoteConfig)
-//   //
-//   // if (!result.success) {
-//   //   logger.info('[RemoteConfig] Cached remote config is invalid.', { error: result.error.message })
-//   //   return null
-//   // }
+//   const result = RemoteConfigSchema.safeParse(cachedConfig.remoteConfig)
+//
+//   if (!result.success) {
+//     logger.info('[RemoteConfig] Cached remote config is invalid.', { error: result.error.message })
+//     return null
+//   }
 //
 //   return cachedConfig.remoteConfig
 // }

@@ -7,13 +7,14 @@ import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useCardStatus } from '@/bcsc-theme/hooks/useCardStatus'
 import { BCSCQRCoreScreens, BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
+import { useFeatureFlags } from '@/remote-config/FeatureFlags'
 import { BCState } from '@/store'
 import { testIdWithKey, useStore, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import SectionButton from '../../components/SectionButton'
 import HomeHeader from './components/HomeHeader'
 import { NotificationsList } from './components/NotificationsList'
@@ -50,6 +51,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   const { account } = useAccount()
   const { isActivelyVerified } = useCardStatus()
   const handleManageDevices = useManageDevicesNavigation(navigation)
+  const { featureGates } = useFeatureFlags()
 
   const handlePairingCodePress = () => {
     navigation.getParent()?.navigate(BCSCScreens.QRCore, { screen: BCSCQRCoreScreens.PairingCode })
@@ -59,6 +61,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
     <>
       <NotificationBannerContainer onManageDevices={handleManageDevices} bannerMessages={store.bcsc.bannerMessages} />
       <TabScreenWrapper scrollViewProps={{ contentContainerStyle: { padding: Spacing.lg, gap: Spacing.lg } }}>
+        {featureGates.testFeatureEnabled() ? <Text>Feature flag example is enabled!</Text> : null}
         {/* Header and pairing shortcut are only shown to actively-verified users, since the pairing
             code screen itself is gated on verification (see QRCoreStack) and unusable otherwise. */}
         {isActivelyVerified && account ? <WelcomeHeader name={account.fullname_formatted} /> : null}

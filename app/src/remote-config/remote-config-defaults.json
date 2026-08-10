@@ -1,0 +1,5 @@
+{
+  "featureFlags": {
+    "debug.testFeature": true
+  }
+}
