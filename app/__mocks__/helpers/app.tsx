@@ -1,7 +1,7 @@
 import { BCSCStackProvider } from '@/bcsc-theme/contexts/BCSCStackContext'
 import { BCThemeNames } from '@/constants'
 import { ErrorAlertProvider } from '@/contexts/ErrorAlertContext'
-import { RemoteConfigProvider } from '@/remote-config/RemoteConfigContext'
+import { RemoteConfigProvider } from '@/remote-config/RemoteConfig'
 import { BCState, initialState, reducer } from '@/store'
 import { themes } from '@/theme'
 import { ContainerProvider, MainContainer, MockLogger, StoreProvider, ThemeProvider, TOKENS } from '@bifold/core'

@@ -2,7 +2,8 @@ import { ListButton, ListButtonGroup, ListButtonProps } from '@/bcsc-theme/compo
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { Switch } from '@/components/Switch'
 import { BCThemeNames, Mode } from '@/constants'
-import { FeatureFlag, useFeatureFlags } from '@/remote-config/FeatureFlags'
+import { useFeatureFlags } from '@/remote-config/FeatureFlags'
+import { useRemoteConfig } from '@/remote-config/RemoteConfig'
 import { AutoCredentialMonitor } from '@/services/auto-credential'
 import { BCDispatchAction, BCState } from '@/store'
 import {
@@ -156,6 +157,7 @@ const Developer: React.FC = () => {
   const [enableAppToAppPersonFlow, setEnableAppToAppPersonFlow] = useState(!!store.developer.enableAppToAppPersonFlow)
   const [tokensDeleted, setTokensDeleted] = useState<boolean>(false)
   const [personCredentialFetchStatus, setPersonCredentialFetchStatus] = useState<string>('idle')
+  const remoteConfig = useRemoteConfig()
   const { featureFlags, setFeatureFlag } = useFeatureFlags()
   const navigation = useNavigation()
 
@@ -683,7 +685,10 @@ const Developer: React.FC = () => {
               key={flag}
               title={flag}
               value={value}
-              onToggle={() => setFeatureFlag(flag as FeatureFlag, !value)}
+              onToggle={() => {
+                // Override the feature flag value in local state for testing purposes
+                remoteConfig.setValue('featureFlags', { ...featureFlags, [flag]: !value })
+              }}
               accessibilityLabel={flag}
               testID={`toggle-${flag}`}
             />
