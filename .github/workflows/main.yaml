@@ -28,39 +28,7 @@ jobs:
           required_env_vars=(
             "CERTIFICATE"
             "KEYCHIAN_PASSWD"
-            "PROVISIONING_PROFILE"
-            "PROVISIONING_PROFILE_SADEV"
-            "PROVISIONING_PROFILE_SAQA"
-            "PROVISIONING_PROFILE_SATEST"
-            "PROVISIONING_PROFILE_SAPROD"
-            "PLAY_STORE_JKS_BASE64"
-            "PLAY_STORE_JKS_ALIAS"
-            "PLAY_STORE_JKS_PASSWD"
-            "PLAY_STORE_JKS_BASE64_SADEV"
-            "PLAY_STORE_JKS_ALIAS_SADEV"
-            "PLAY_STORE_JKS_PASSWD_SADEV"
-            "PLAY_STORE_JKS_BASE64_SAQA"
-            "PLAY_STORE_JKS_ALIAS_SAQA"
-            "PLAY_STORE_JKS_PASSWD_SAQA"
-            "PLAY_STORE_JKS_BASE64_SATEST"
-            "PLAY_STORE_JKS_ALIAS_SATEST"
-            "PLAY_STORE_JKS_PASSWD_SATEST"
-            "PLAY_STORE_JKS_BASE64_SAPROD"
-            "PLAY_STORE_JKS_ALIAS_SAPROD"
-            "PLAY_STORE_JKS_PASSWD_SAPROD"
-            "GOOGLE_SERVICES_CREDENTIALS_ANDROID"
-            "GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV"
-            "GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAQA"
-            "GOOGLE_SERVICES_CREDENTIALS_ANDROID_SATEST"
-            "GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAPROD"
-            "GOOGLE_SERVICES_CREDENTIALS_IOS"
-            "GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV"
-            "GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA"
-            "GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST"
-            "GOOGLE_SERVICES_CREDENTIALS_IOS_SAPROD"
-            "FIREBASE_SERVICE_ACCOUNT_BCWALLET"
-            "FIREBASE_SERVICE_ACCOUNT_BCSC_IOS"
-            "FIREBASE_SERVICE_ACCOUNT_BCSC_ANDROID"
+            "OP_SERVICE_ACCOUNT_TOKEN"
           )
           for var in "${required_env_vars[@]}"; do
             if [ -z "${!var}" ]; then
@@ -71,39 +39,7 @@ jobs:
         env:
           CERTIFICATE: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
           KEYCHIAN_PASSWD: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
-          PROVISIONING_PROFILE: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
-          PROVISIONING_PROFILE_SADEV: ${{ secrets.BUILD_PROVISION_PROFILE_SADEV_BASE64 }}
-          PROVISIONING_PROFILE_SAQA: ${{ secrets.BUILD_PROVISION_PROFILE_SAQA_BASE64 }}
-          PROVISIONING_PROFILE_SATEST: ${{ secrets.BUILD_PROVISION_PROFILE_SATEST_BASE64 }}
-          PROVISIONING_PROFILE_SAPROD: ${{ secrets.BUILD_PROVISION_PROFILE_SAPROD_BASE64 }}
-          PLAY_STORE_JKS_BASE64: ${{ secrets.PLAY_STORE_JKS_BASE64 }}
-          PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
-          PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
-          PLAY_STORE_JKS_BASE64_SADEV: ${{ secrets.PLAY_STORE_JKS_BASE64_SADEV }}
-          PLAY_STORE_JKS_ALIAS_SADEV: ${{ secrets.PLAY_STORE_JKS_ALIAS_SADEV }}
-          PLAY_STORE_JKS_PASSWD_SADEV: ${{ secrets.PLAY_STORE_JKS_PASSWD_SADEV }}
-          PLAY_STORE_JKS_BASE64_SAQA: ${{ secrets.PLAY_STORE_JKS_BASE64_SAQA }}
-          PLAY_STORE_JKS_ALIAS_SAQA: ${{ secrets.PLAY_STORE_JKS_ALIAS_SAQA }}
-          PLAY_STORE_JKS_PASSWD_SAQA: ${{ secrets.PLAY_STORE_JKS_PASSWD_SAQA }}
-          PLAY_STORE_JKS_BASE64_SATEST: ${{ secrets.PLAY_STORE_JKS_BASE64_SATEST }}
-          PLAY_STORE_JKS_ALIAS_SATEST: ${{ secrets.PLAY_STORE_JKS_ALIAS_SATEST }}
-          PLAY_STORE_JKS_PASSWD_SATEST: ${{ secrets.PLAY_STORE_JKS_PASSWD_SATEST }}
-          PLAY_STORE_JKS_BASE64_SAPROD: ${{ secrets.PLAY_STORE_JKS_BASE64_SAPROD }}
-          PLAY_STORE_JKS_ALIAS_SAPROD: ${{ secrets.PLAY_STORE_JKS_ALIAS_SAPROD }}
-          PLAY_STORE_JKS_PASSWD_SAPROD: ${{ secrets.PLAY_STORE_JKS_PASSWD_SAPROD }}
-          GOOGLE_SERVICES_CREDENTIALS_ANDROID: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_BASE64 }}
-          GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV_BASE64 }}
-          GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAQA: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAQA_BASE64 }}
-          GOOGLE_SERVICES_CREDENTIALS_ANDROID_SATEST: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SATEST_BASE64 }}
-          GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAPROD: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAPROD_BASE64 }}
-          GOOGLE_SERVICES_CREDENTIALS_IOS: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_BASE64 }}
-          GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV_BASE64 }}
-          GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA_BASE64 }}
-          GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST_BASE64 }}
-          GOOGLE_SERVICES_CREDENTIALS_IOS_SAPROD: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SAPROD_BASE64 }}
-          FIREBASE_SERVICE_ACCOUNT_BCWALLET: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BCWALLET_BASE64 }}
-          FIREBASE_SERVICE_ACCOUNT_BCSC_IOS: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BCSC_IOS_BASE64 }}
-          FIREBASE_SERVICE_ACCOUNT_BCSC_ANDROID: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BCSC_ANDROID_BASE64 }}
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
   check-vars:
     runs-on: ubuntu-22.04
     permissions: {}
@@ -698,6 +634,15 @@ jobs:
           plutil -replace aps-environment -string production app/ios/BCWallet/BCWallet.entitlements
           plutil -p app/ios/BCWallet/BCWallet.entitlements
 
+      - name: Fetch iOS provisioning profile
+        if: github.event.pull_request.head.repo.fork != true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          # `op read` to stdout appends a trailing newline, which would corrupt
+          # this binary provisioning profile. --out-file writes the bytes as-is.
+          op read "op://bcsc-mobile-app-cd/ios-provisioning-${{ matrix.variant }}/${{ matrix.variant }}.mobileprovision" --out-file "${{ matrix.variant }}.mobileprovision" --force
+
       - name: Create prod signing credentials
         # This step will not work in a `fork` because it will not have access
         # to org and repo secrets.
@@ -707,18 +652,18 @@ jobs:
           certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
           certificate_password: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
           app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
-          provisioning_profile: ${{ secrets[env.IOS_PROVISIONING_PROFILE_SECRET] }}
+          provisioning_profile_file: ${{ matrix.variant }}.mobileprovision
 
       - name: Generate iOS signing config
         # This step will not work in a `fork` because it will not have access
         # to org and repo secrets.
         if: github.event.pull_request.head.repo.fork != true
         env:
-          PROVISIONING_PROFILE: ${{ secrets[env.IOS_PROVISIONING_PROFILE_SECRET] }}
+          PROVISIONING_PROFILE_FILE: ${{ matrix.variant }}.mobileprovision
         run: |
           # Extract the UUID from the provisioning profile
           PP_UUID=$(/usr/libexec/plistbuddy -c Print:UUID /dev/stdin <<< \
-            "$(echo "${PROVISIONING_PROFILE}" | base64 -d | security cms -D)")
+            "$(security cms -D -i "${PROVISIONING_PROFILE_FILE}")")
           echo "Provisioning profile UUID: ${PP_UUID}"
 
           cat > export-options.plist <<EOF
@@ -1079,7 +1024,7 @@ jobs:
         if: github.ref_name == 'main'
         # working-directory: app/android
         env:
-          GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           GOOGLE_API_CREDENTIALS_FILE: 'api_keys.json'
           ANDROID_BUNDLE_PATH: 'app/android/app/build/outputs/bundle/release/app-release.aab'
           ANDROID_PACKAGE_NAME: ${{ env.ANDROID_PACKAGE_NAME }}
@@ -1088,7 +1033,10 @@ jobs:
         run: |
           # when we updated to yarn we started getting an error with paths
           # and had to add `/android` to the path.
-          echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS_FILE} && \
+          #
+          # `op read` to stdout appends a trailing newline, which would corrupt
+          # this JSON credentials file. --out-file writes the bytes as-is.
+          op read "op://bcsc-mobile-app-cd/google-play-publisher/service-account.json" --out-file "${GOOGLE_API_CREDENTIALS_FILE}" --force && \
           GOOGLE_API_CREDENTIALS="$PWD/${GOOGLE_API_CREDENTIALS_FILE}" npx @bcgov/gpublish
 
       # TODO: Change this to a Teams integration
@@ -1357,12 +1305,21 @@ jobs:
           ARTIFACT_INNER_NAME=${INNER_FILENAME}
           EOF
 
+      - name: Load SauceLabs secrets from 1Password
+        id: op_saucelabs
+        if: steps.probe.outcome == 'success'
+        uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          SAUCE_USERNAME: op://bcsc-mobile-app-cd/saucelabs/username
+          SAUCE_ACCESS_KEY: op://bcsc-mobile-app-cd/saucelabs/credential
+
       - name: Ship Artifact to SauceLabs
         if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/ship-to-saucelabs
         with:
-          sauce_labs_username: ${{ secrets.SAUCE_USERNAME }}
-          sauce_labs_password: ${{ secrets.SAUCE_ACCESS_KEY }}
+          sauce_labs_username: ${{ steps.op_saucelabs.outputs.SAUCE_USERNAME }}
+          sauce_labs_password: ${{ steps.op_saucelabs.outputs.SAUCE_ACCESS_KEY }}
           sauce_labs_name: ${{ env.SAUCE_LABS_NAME }}
           sauce_labs_description: ${{ env.SAUCE_LABS_DESCRIPTION }}
           artifact_ref: ${{ env.ARTIFACT_REF }}
@@ -1403,7 +1360,4 @@ jobs:
       build_number: ${{ github.run_number }}
       device_matrix: '[{"platform":"iOS","device":"iPhone.*","os_version":""},{"platform":"Android","device":"Google.*","os_version":""}]'
     secrets:
-      SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-      SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-      SM_USER: ${{ secrets.SM_USER }}
-      SM_PASSWORD: ${{ secrets.SM_PASSWORD }}
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
