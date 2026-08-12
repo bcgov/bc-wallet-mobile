@@ -46,7 +46,7 @@ jest.mock('@bifold/core', () => ({
       },
       developer: {
         remoteDebugging: {
-          sessionId: 'session',
+          sessionId: 123,
         },
       },
     },
