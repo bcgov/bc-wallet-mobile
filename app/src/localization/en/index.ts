@@ -215,6 +215,7 @@ const translation = {
     "SwitchTheme": "Switch theme",
     "ProofRequestExpiration": "Proof request expiration",
     "ProofRequestExpirationTimes": {
+      "TwoMinutes": "2 minutes",
       "OneHour": "1 hour",
       "FortyEightHours": "48 hours",
       "SevenDays": "7 days",

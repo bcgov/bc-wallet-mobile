@@ -213,6 +213,14 @@ const translation = {
     "EnableAppToAppPersonFlow": "App-to-app Person flow (FR)",
     "SwitchMode": "Switch mode (FR)",
     "SwitchTheme": "Switch theme (FR)",
+    "ProofRequestExpiration": "Proof request expiration (FR)",
+    "ProofRequestExpirationTimes": {
+      "TwoMinutes": "2 minutes (FR)",
+      "OneHour": "1 hour (FR)",
+      "FortyEightHours": "48 hours (FR)",
+      "SevenDays": "7 days (FR)",
+      "Never": "Never (FR)"
+    },
     "AppSection": "App (FR)",
     "Testing": "Testing (FR)",
     "ErrorAlertTest": "Error & Alert Testing (FR)",

@@ -1,20 +1,16 @@
-import { showPersonCredentialSelector } from '@/bcwallet-theme/features/person-flow/utils/BCIDHelper'
-import {
-  AttestationRestrictions,
-  NOTIFICATION_REFRESH_INTERVAL_MS,
-  PROOF_REQUEST_NOTIFICATION_TTL_MS,
-} from '@/constants'
+import { AttestationRestrictions, NOTIFICATION_REFRESH_INTERVAL_MS } from '@/constants'
+import { declineProofRequest } from '@/hooks/useDeclineProofRequest'
 import { BCState } from '@/store'
 import {
   BasicMessageMetadata,
   CredentialMetadata,
+  ProofRequestExpirationTime,
   basicMessageCustomMetadata,
   credentialCustomMetadata,
   useStore,
 } from '@bifold/core'
 import { useBasicMessages, useCredentialByState, useOptionalAgent, useProofByState } from '@bifold/react-hooks'
 import { ProofCustomMetadata, ProofMetadata } from '@bifold/verifier'
-import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds'
 import {
   DidCommCredentialExchangeRecord as CredentialRecord,
   DidCommBasicMessageRecord,
@@ -24,11 +20,8 @@ import {
 } from '@credo-ts/didcomm'
 import { isProofRequestingAttestation } from '@services/attestation'
 import { BCAgent } from '@utils/bc-agent-modules'
-import { useEffect, useMemo, useState } from 'react'
-import { getBundleId } from 'react-native-device-info'
-
-const BC_WALLET_SUFFIX = 'bcwallet'
-const isBCWalletBundle = getBundleId().toLowerCase().includes(BC_WALLET_SUFFIX)
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export type CredentialNotificationRecord = DidCommBasicMessageRecord | CredentialRecord | DidCommProofExchangeRecord
 
@@ -48,6 +41,10 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
   )
   const proofsDone = useProofByState(doneStates)
   const [now, setNow] = useState(() => Date.now())
+  const { t } = useTranslation()
+  const decliningProofIds = useRef<Set<string>>(new Set())
+  const proofRequestExpirationMs =
+    store.preferences.proofRequestExpirationMs ?? ProofRequestExpirationTime.FortyEightHours
 
   // Tick periodically so time-based rules (proof request TTL, expiry warnings) are
   // re-evaluated while the notifications list stays mounted
@@ -81,26 +78,19 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
       }
     })
 
-    const credentials = [...credsDone, ...credsReceived]
-    const credentialDefinitionIDs = credentials.map(
-      (c) => c.metadata.data[AnonCredsCredentialMetadataKey].credentialDefinitionId as string
-    )
-
     const custom: { type: 'CustomNotification'; createdAt: Date; id: string }[] = []
 
-    // TODO (MD) V4.1: Remove this block once we don't support BCWallet anymore
-    const showPersonCredential = showPersonCredentialSelector(credentialDefinitionIDs)
-    const personCredentialOfferDismissed = store.dismissPersonCredentialOffer.personCredentialOfferDismissed
-    if (isBCWalletBundle && showPersonCredential && !personCredentialOfferDismissed) {
-      custom.push({ type: 'CustomNotification', createdAt: new Date(), id: 'custom' })
-    }
-
     const proofs = nonAttestationProofs.filter((proof) => {
-      const isDone = [DidCommProofState.Done, DidCommProofState.PresentationReceived].includes(proof.state)
+      const isDone = doneStates.includes(proof.state)
 
       // Pending proof requests are usually abandoned once they get old (e.g. the user scanned
-      // a new QR code), so they are removed from the list after their TTL passes
-      if (!isDone && new Date(proof.createdAt).getTime() + PROOF_REQUEST_NOTIFICATION_TTL_MS <= now) {
+      // a new QR code), so they are removed from the list after their TTL passes. A TTL of 0
+      // means the user has configured proof requests to never expire.
+      if (
+        !isDone &&
+        proofRequestExpirationMs > 0 &&
+        new Date(proof.createdAt).getTime() + proofRequestExpirationMs <= now
+      ) {
         return false
       }
 
@@ -121,8 +111,10 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
     credsDone,
     basicMessages,
     nonAttestationProofs,
+    doneStates,
     store.dismissPersonCredentialOffer.personCredentialOfferDismissed,
     now,
+    proofRequestExpirationMs,
   ])
 
   useEffect(() => {
@@ -140,6 +132,30 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
       })
     ).then((val) => setNonAttestationProofs(val.filter((v) => v.include).map((data) => data.value)))
   }, [proofsRequested, proofsDone, agent])
+
+  // Once a proof "expires" decline it
+  useEffect(() => {
+    if (!agent) {
+      return
+    }
+
+    const expired = nonAttestationProofs.filter((proof) => {
+      if (doneStates.includes(proof.state) || proofRequestExpirationMs <= 0) {
+        return false
+      }
+      return new Date(proof.createdAt).getTime() + proofRequestExpirationMs <= now
+    })
+
+    expired.forEach((proof) => {
+      if (decliningProofIds.current.has(proof.id)) {
+        return
+      }
+      decliningProofIds.current.add(proof.id)
+      declineProofRequest(agent, proof, t('ProofRequest.Declined')).finally(() => {
+        decliningProofIds.current.delete(proof.id)
+      })
+    })
+  }, [agent, nonAttestationProofs, doneStates, now, t, proofRequestExpirationMs])
 
   return notifications
 }
