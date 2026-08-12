@@ -23,6 +23,9 @@ export enum Timeouts {
    *  app does around that request, camera-device enumeration, and the capture session warming up —
    *  all slower on Sauce real devices than a simulator. */
   CAMERA_READY = 45_000,
+  /** A recorded selfie video uploading and its confirmation landing — a real media upload off the
+   *  device, so nothing like a screen transition. */
+  VIDEO_UPLOAD = 90_000,
   /** First checkpoint of a journey file: the run's FIRST session may also pay simulator/device
    *  boot + WebDriverAgent install + first-ever app launch, all competing for CPU. */
   COLD_START = 60_000,
