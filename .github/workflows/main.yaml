@@ -966,26 +966,46 @@ jobs:
           snowplow_collector_url: ${{ vars.SNOWPLOW_COLLECTOR_URL }}
           default_environment: ${{ env.DEFAULT_ENVIRONMENT }}
 
+      # Secrets are being consolidated into the bcsc-mobile-app-cd 1Password vault;
+      # OP_SERVICE_ACCOUNT_TOKEN is the single bootstrap secret that stays in GitHub.
+      # These steps are fork-guarded because fork PRs cannot read that secret.
+      - name: Install 1Password CLI
+        if: github.event.pull_request.head.repo.fork != true
+        uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
+
+      # Outputs (not export-env) keep these two values scoped to only the
+      # steps that reference them, matching the pre-migration scoping.
+      - name: Load Android signing secrets from 1Password
+        id: op_android_signing
+        if: github.event.pull_request.head.repo.fork != true
+        uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          PLAY_STORE_JKS_ALIAS: op://bcsc-mobile-app-cd/android-signing-${{ matrix.variant }}/key-alias
+          PLAY_STORE_JKS_PASSWD: op://bcsc-mobile-app-cd/android-signing-${{ matrix.variant }}/store-password
+
       - name: Create release keystore
         # This step will not work in a `fork` because it will not have access
         # to org and repo secrets.
         if: github.event.pull_request.head.repo.fork != true
         working-directory: app/android/app
         env:
-          PLAY_STORE_JKS_BASE64: ${{ secrets[env.ANDROID_JKS_BASE64_SECRET] }}
-          PLAY_STORE_JKS_ALIAS: ${{ secrets[env.ANDROID_JKS_ALIAS_SECRET] }}
-          PLAY_STORE_JKS_PASSWD: ${{ secrets[env.ANDROID_JKS_PASSWD_SECRET] }}
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          PLAY_STORE_JKS_ALIAS: ${{ steps.op_android_signing.outputs.PLAY_STORE_JKS_ALIAS }}
+          PLAY_STORE_JKS_PASSWD: ${{ steps.op_android_signing.outputs.PLAY_STORE_JKS_PASSWD }}
         run: |
-          echo "${PLAY_STORE_JKS_BASE64}" | base64 -d >release.keystore && \
-          keytool -list -v -keystore release.keystore -alias ${PLAY_STORE_JKS_ALIAS} -storepass:env PLAY_STORE_JKS_PASSWD | \
+          # `op read` to stdout appends a trailing newline, which would corrupt
+          # this binary keystore. --out-file writes the bytes as-is.
+          op read "op://bcsc-mobile-app-cd/android-signing-${{ matrix.variant }}/release.keystore" --out-file release.keystore --force
+          keytool -list -v -keystore release.keystore -alias "${PLAY_STORE_JKS_ALIAS}" -storepass:env PLAY_STORE_JKS_PASSWD | \
           grep "SHA1"
 
       - name: Android release build
         if: github.event.pull_request.head.repo.fork != true
         working-directory: app/android
         env:
-          PLAY_STORE_JKS_ALIAS: ${{ secrets[env.ANDROID_JKS_ALIAS_SECRET] }}
-          PLAY_STORE_JKS_PASSWD: ${{ secrets[env.ANDROID_JKS_PASSWD_SECRET] }}
+          PLAY_STORE_JKS_ALIAS: ${{ steps.op_android_signing.outputs.PLAY_STORE_JKS_ALIAS }}
+          PLAY_STORE_JKS_PASSWD: ${{ steps.op_android_signing.outputs.PLAY_STORE_JKS_PASSWD }}
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}
           # Skip Metro bundling: use the pre-built JS bundle from the
