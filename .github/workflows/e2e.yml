@@ -140,12 +140,13 @@ jobs:
       # The wallet journey (main + regression suites) drives the e2e issuer — a Traction dev tenant
       # (e2e/issuer/README.md) — over its admin API. This preflight runs the idempotent provisioning
       # script against it: validates tenant + creds, ensures schema/cred def, and resolves their ids.
-      # The script logs to stderr and prints ONLY dotenv lines on stdout, so its output feeds
-      # $GITHUB_ENV directly — the Run step below needs no ISSUER_* env of its own. A missing or
-      # unreachable issuer fails HERE, with a named cause, before any Sauce session is paid for.
+      # The script logs to stderr and prints ONLY dotenv id lines on stdout — no secrets — so its
+      # output feeds $GITHUB_ENV directly. A missing or unreachable issuer fails HERE, with a named
+      # cause, before any Sauce session is paid for.
       # The issuer credentials live in the bcsc-mobile-app-cd 1Password vault ("traction" item:
       # username = tenant id, credential = API key); OP_SERVICE_ACCOUNT_TOKEN is the single
-      # bootstrap secret that stays in GitHub. export-env feeds them to the preflight below.
+      # bootstrap secret that stays in GitHub. export-env feeds them to every step below, so the
+      # Run step needs no ISSUER_* env of its own and the script never has to echo them.
       - name: Load issuer credentials from 1Password
         if: contains(fromJSON('["main","regression"]'), inputs.suite)
         uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
