@@ -1,7 +1,6 @@
 name: Create Environment Settings
 description: |
-  Create the .env file with environment settings and write
-  Firebase/Google Services credentials to the file system.
+  Create the .env file with environment settings.
 
 inputs:
   build_target:
@@ -30,12 +29,6 @@ inputs:
     required: true
   indy_vdr_proxy_url:
     description: 'The Indy VDR proxy URL'
-    required: true
-  google_services_credentials_base64:
-    description: 'Base64 encoded Google Services credentials file'
-    required: true
-  platform:
-    description: 'The platform (ios or android)'
     required: true
   snowplow_collector_url:
     description: 'The Snowplow collector URL'
@@ -74,18 +67,3 @@ runs:
         echo "INDY_VDR_PROXY_URL=${INDY_VDR_PROXY_URL}" >>.env
         echo "SNOWPLOW_COLLECTOR_URL=${SNOWPLOW_COLLECTOR_URL}" >>.env
         echo "DEFAULT_ENVIRONMENT=${DEFAULT_ENVIRONMENT}" >>.env
-
-    - name: Write Google Services credentials
-      shell: bash
-      env:
-        GOOGLE_SERVICES_CREDENTIALS_BASE64: ${{ inputs.google_services_credentials_base64 }}
-        PLATFORM: ${{ inputs.platform }}
-      run: |
-        if [ "${PLATFORM}" = "ios" ]; then
-          echo "${GOOGLE_SERVICES_CREDENTIALS_BASE64}" | base64 --decode > app/ios/GoogleService-Info.plist
-        elif [ "${PLATFORM}" = "android" ]; then
-          echo "${GOOGLE_SERVICES_CREDENTIALS_BASE64}" | base64 --decode > app/android/app/google-services.json
-        else
-          echo "error: Unknown platform '${PLATFORM}'"
-          exit 1
-        fi

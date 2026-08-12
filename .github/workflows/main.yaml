@@ -674,10 +674,24 @@ jobs:
           ledger_auto_update: ${{ vars.LEDGER_AUTO_UPDATE }}
           remote_logging_url: ${{ secrets.REMOTE_LOGGING_URL }}
           indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
-          google_services_credentials_base64: ${{ secrets[env.IOS_GOOGLE_SERVICES_SECRET] }}
-          platform: ios
           snowplow_collector_url: ${{ vars.SNOWPLOW_COLLECTOR_URL }}
           default_environment: ${{ env.DEFAULT_ENVIRONMENT }}
+
+      # Secrets are being consolidated into the bcsc-mobile-app-cd 1Password vault;
+      # OP_SERVICE_ACCOUNT_TOKEN is the single bootstrap secret that stays in GitHub.
+      # These steps are fork-guarded because fork PRs cannot read that secret.
+      - name: Install 1Password CLI
+        if: github.event.pull_request.head.repo.fork != true
+        uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
+
+      - name: Fetch Google Services config
+        if: github.event.pull_request.head.repo.fork != true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          # `op read` to stdout appends a trailing newline; --out-file writes
+          # the document byte-for-byte instead.
+          op read "op://bcsc-mobile-app-cd/google-services-ios-${{ matrix.variant }}/GoogleService-Info.plist" --out-file app/ios/GoogleService-Info.plist --force
 
       - name: Update APS environment
         run: |
@@ -961,8 +975,6 @@ jobs:
           ledger_auto_update: ${{ vars.LEDGER_AUTO_UPDATE }}
           remote_logging_url: ${{ secrets.REMOTE_LOGGING_URL }}
           indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
-          google_services_credentials_base64: ${{ secrets[env.ANDROID_GOOGLE_SERVICES_SECRET] }}
-          platform: android
           snowplow_collector_url: ${{ vars.SNOWPLOW_COLLECTOR_URL }}
           default_environment: ${{ env.DEFAULT_ENVIRONMENT }}
 
@@ -972,6 +984,15 @@ jobs:
       - name: Install 1Password CLI
         if: github.event.pull_request.head.repo.fork != true
         uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
+
+      - name: Fetch Google Services config
+        if: github.event.pull_request.head.repo.fork != true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          # `op read` to stdout appends a trailing newline; --out-file writes
+          # the document byte-for-byte instead.
+          op read "op://bcsc-mobile-app-cd/google-services-android-${{ matrix.variant }}/google-services.json" --out-file app/android/app/google-services.json --force
 
       # Outputs (not export-env) keep these two values scoped to only the
       # steps that reference them, matching the pre-migration scoping.
