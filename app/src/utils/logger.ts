@@ -42,6 +42,7 @@ interface ReportProblem {
   /**
    * The remote logging ID represents the unique identifier for the remote logging session.
    * This is optional and can be omitted if there is no remote logging session available.
+   * @see `store.developer.remoteDebugging.sessionId` for the source of this value.
    */
   sessionId?: number
 }
