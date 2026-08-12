@@ -10,8 +10,8 @@ export type FeatureGates = ReturnType<typeof useFeatureFlags>['featureGates']
  * @returns An object containing the current feature flags, feature gates, and functions to get and set feature flags.
  */
 export const useFeatureFlags = () => {
-  const { getValue } = useRemoteConfig()
-  const featureFlags = useMemo(() => getValue('featureFlags'), [getValue])
+  const remoteConfig = useRemoteConfig()
+  const featureFlags = remoteConfig.getValue('featureFlags')
 
   /**
    * Get the value of a feature flag.

@@ -1,33 +1,16 @@
 import { PersistentStorage } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
-import axios from 'axios'
 import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import z from 'zod'
-import remoteConfigJSON from './remote-config-defaults.json'
+import {
+  CachedRemoteConfig,
+  CachedRemoteConfigStrategy,
+  CommonObjectStorageRemoteConfigStrategy,
+  JSONRemoteConfigStrategy,
+  REMOTE_CONFIG_STORAGE_KEY,
+  RemoteConfig,
+} from './RemoteConfigStrategy'
 
-const RemoteConfigSchema = z.strictObject({
-  featureFlags: z.strictObject({
-    // TODO (FF): Remove this test feature when feature flagging fully enabled
-    'debug.testFeature': z.boolean(),
-    // 'kill.featureX': z.boolean(),
-    // 'release.featureY': z.boolean(),
-  }),
-})
-
-const OBJECT_STORAGE_REMOTE_CONFIG_FILE_NAME = 'remote-config.json'
-const OBJECT_STORAGE_REMOTE_CONFIG_BUCKET_ID = 'TODO (MD): Add your object storage bucket ID here'
-const OBJECT_STORAGE_REMOTE_CONFIG_ENDPOINT = 'TODO (MD): Add your object storage endpoint here'
-
-let REMOTE_CONFIG_CACHE = _parseDefaultRemoteConfig()
-const REMOTE_CONFIG_STORAGE_KEY = 'remoteConfigCache'
-const REMOTE_CONFIG_CACHE_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
-
-export type RemoteConfig = z.infer<typeof RemoteConfigSchema>
-
-interface CachedRemoteConfig {
-  remoteConfig: RemoteConfig
-  timestamp: number
-}
+let REMOTE_CONFIG_CACHE = JSONRemoteConfigStrategy.getRemoteConfig()
 
 interface RemoteConfigContextType {
   /**
@@ -145,118 +128,18 @@ export function getRemoteConfig(): RemoteConfig {
 // HELPER FUNCTIONS
 // -----------------------------
 
-/**
- * Init the remote config by fetching it from the server or using the cached version if available and valid.
- * @returns The initialized remote config object.
- */
 async function _initRemoteConfig(logger: RemoteLogger): Promise<RemoteConfig> {
-  const cachedConfig = await _getCachedRemoteConfig(REMOTE_CONFIG_CACHE_TTL_MS, logger)
+  const strategies = [CachedRemoteConfigStrategy, CommonObjectStorageRemoteConfigStrategy, JSONRemoteConfigStrategy]
 
-  if (cachedConfig) {
-    logger.info('[RemoteConfig] Using cached remote config.')
-    return cachedConfig
+  for (const strategy of strategies) {
+    const remoteConfig = await strategy.getRemoteConfig(logger)
+
+    if (remoteConfig) {
+      logger.info(`[RemoteConfig] Using remote config from strategy: ${strategy.name}`)
+      return remoteConfig
+    }
   }
 
-  const remoteConfig = await _fetchRemoteConfig(logger)
-
-  if (!remoteConfig) {
-    logger.info('[RemoteConfig] Using default remote config.')
-    return RemoteConfigSchema.parse(remoteConfigJSON)
-  }
-
-  // Store the remote config in persistent storage for future use
-  try {
-    await PersistentStorage.storeValueForKey<CachedRemoteConfig>(REMOTE_CONFIG_STORAGE_KEY, {
-      remoteConfig: remoteConfig,
-      timestamp: Date.now(),
-    })
-  } catch (error) {
-    logger.error('[RemoteConfig] Error storing remote config in persistent storage:', error as Error)
-  }
-
-  logger.info('[RemoteConfig] Fetched and cached new remote config.')
-
-  return remoteConfig
-}
-
-/**
- * Parse the default remote config from the JSON file and validate it against the schema.
- * @returns The parsed and validated default remote config object.
- */
-function _parseDefaultRemoteConfig(): RemoteConfig {
-  const result = RemoteConfigSchema.safeParse(remoteConfigJSON)
-
-  if (!result.success && __DEV__) {
-    throw new Error(`[RemoteConfig] Default remote config is invalid: ${result.error.message}`)
-  }
-
-  if (result.success) {
-    return result.data
-  }
-
-  return remoteConfigJSON as RemoteConfig
-}
-
-/**
- * Fetch the remote config from the server.
- * @returns The fetched remote config object, or null if the fetch failed.
- */
-async function _fetchRemoteConfig(logger: RemoteLogger): Promise<RemoteConfig | null> {
-  const objectSearchUrl = new URL(OBJECT_STORAGE_REMOTE_CONFIG_ENDPOINT)
-
-  objectSearchUrl.searchParams.append('bucketId', OBJECT_STORAGE_REMOTE_CONFIG_BUCKET_ID)
-  objectSearchUrl.searchParams.append('public', 'true')
-  objectSearchUrl.searchParams.append('name', OBJECT_STORAGE_REMOTE_CONFIG_FILE_NAME)
-
-  try {
-    const response = await axios.get<RemoteConfig>(objectSearchUrl.toString(), {
-      headers: {
-        // 'Content-Type': 'application/octet-stream',
-        // Authorization: `Basic ${authorization}`,
-        // 'x-amz-bucket': options.bucketName,
-        // 'x-amz-endpoint': options.serviceEndpoint,
-      },
-    })
-    return response.data
-  } catch (error) {
-    logger.error('[RemoteConfig] Error fetching remote config:', error as Error)
-  }
-
-  return null
-}
-
-/**
- * Get the cached remote config from persistent storage if it exists and is valid.
- * @param cacheMs The maximum age of the cached config in milliseconds.
- * @param logger The logger to use for logging errors and info.
- * @returns The cached remote config object, or null if it doesn't exist or is invalid.
- */
-async function _getCachedRemoteConfig(cacheMs: number, logger: RemoteLogger): Promise<RemoteConfig | null> {
-  let cachedConfig: CachedRemoteConfig | undefined
-
-  try {
-    cachedConfig = await PersistentStorage.fetchValueForKey(REMOTE_CONFIG_STORAGE_KEY)
-  } catch (error) {
-    logger.error('[RemoteConfig] Error fetching cached remote config:', { error })
-    return null
-  }
-
-  if (!cachedConfig) {
-    logger.info('[RemoteConfig] No cached remote config found.')
-    return null
-  }
-
-  if (Date.now() - cachedConfig.timestamp > cacheMs) {
-    logger.info('[RemoteConfig] Cached remote config is expired.')
-    return null
-  }
-
-  const result = RemoteConfigSchema.safeParse(cachedConfig.remoteConfig)
-
-  if (!result.success) {
-    logger.info('[RemoteConfig] Cached remote config is invalid.', { error: result.error.message })
-    return null
-  }
-
-  return cachedConfig.remoteConfig
+  // Impossible to reach here if JSONRemoteConfigStrategy is always valid, but just in case
+  throw new Error('[RemoteConfig] Failed to initialize remote config from all strategies.')
 }
