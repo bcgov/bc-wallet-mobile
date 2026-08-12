@@ -213,6 +213,13 @@ const translation = {
     "EnableAppToAppPersonFlow": "App-to-app Person flow",
     "SwitchMode": "Switch mode",
     "SwitchTheme": "Switch theme",
+    "ProofRequestExpiration": "Proof request expiration",
+    "ProofRequestExpirationTimes": {
+      "OneHour": "1 hour",
+      "FortyEightHours": "48 hours",
+      "SevenDays": "7 days",
+      "Never": "Never"
+    },
     "AppSection": "App",
     "Testing": "Testing",
     "ErrorAlertTest": "Error & Alert Testing",
@@ -1099,7 +1106,6 @@ const translation = {
         "ButtonText": "Get a BC Services Card"
       }
     },
-    // TODO: placeholder copy — needs content review before ship
     "DeviceAuthorizationError": {
       "InvalidParameter": {
         "Heading": "Card Not Found",
