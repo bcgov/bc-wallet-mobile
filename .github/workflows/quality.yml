@@ -54,7 +54,7 @@ jobs:
       # Secrets are being consolidated into the bcsc-mobile-app-cd 1Password vault;
       # OP_SERVICE_ACCOUNT_TOKEN is the single bootstrap secret that stays in GitHub.
       - name: Load secrets from 1Password
-        uses: 1password/load-secrets-action@v5
+        uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
         with:
           export-env: true
         env:
