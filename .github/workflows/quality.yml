@@ -51,9 +51,20 @@ jobs:
       - name: Run tests and generate coverage report
         run: yarn coverage
 
+      # Secrets are being consolidated into the bcsc-mobile-app-cd 1Password vault;
+      # OP_SERVICE_ACCOUNT_TOKEN is the single bootstrap secret that stays in GitHub.
+      - name: Load secrets from 1Password
+        uses: 1password/load-secrets-action@v5
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          CODECOV_TOKEN: op://bcsc-mobile-app-cd/codecov/credential
+        if: always() && !startsWith(github.base_ref, 'release/') && !startsWith(github.ref_name, 'release/')
+
       - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # (v7.0.0) pinning for SonarQube
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          token: ${{ env.CODECOV_TOKEN }}
           fail_ci_if_error: true
           verbose: true
         if: always() && !startsWith(github.base_ref, 'release/') && !startsWith(github.ref_name, 'release/')
