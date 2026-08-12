@@ -1222,14 +1222,28 @@ jobs:
         with:
           variant: ${{ matrix.variant }}
 
+      - name: Install 1Password CLI
+        if: steps.probe.outcome == 'success'
+        uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
+
+      - name: Fetch Firebase credentials
+        if: steps.probe.outcome == 'success'
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          # `op read` to stdout appends a trailing newline; --out-file writes
+          # the document byte-for-byte instead.
+          op read "op://bcsc-mobile-app-cd/google-services-ios-${{ matrix.variant }}/GoogleService-Info.plist" --out-file "${RUNNER_TEMP}/google-services-source" --force
+          op read "${FIREBASE_IOS_SA_REF}" --out-file "${RUNNER_TEMP}/firebase-service-account.json" --force
+
       - name: Distribute to Firebase App Distribution
         if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/distribute-firebase
         with:
           platform: ios
           app_identifier: ${{ env.IOS_BUNDLE_ID }}
-          google_services_base64: ${{ secrets[env.IOS_GOOGLE_SERVICES_SECRET] }}
-          service_account_base64: ${{ secrets[env.FIREBASE_IOS_SERVICE_ACCOUNT_SECRET] }}
+          google_services_file: ${{ runner.temp }}/google-services-source
+          service_account_file: ${{ runner.temp }}/firebase-service-account.json
           artifact_path: ${{ runner.temp }}/firebase-artifact/BCWallet.ipa
           groups: ${{ env.FIREBASE_IOS_TESTER_GROUPS }}
           version_name: ${{ env.APP_VERSION }}
@@ -1264,14 +1278,28 @@ jobs:
         with:
           variant: ${{ matrix.variant }}
 
+      - name: Install 1Password CLI
+        if: steps.probe.outcome == 'success'
+        uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
+
+      - name: Fetch Firebase credentials
+        if: steps.probe.outcome == 'success'
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          # `op read` to stdout appends a trailing newline; --out-file writes
+          # the document byte-for-byte instead.
+          op read "op://bcsc-mobile-app-cd/google-services-android-${{ matrix.variant }}/google-services.json" --out-file "${RUNNER_TEMP}/google-services-source" --force
+          op read "${FIREBASE_ANDROID_SA_REF}" --out-file "${RUNNER_TEMP}/firebase-service-account.json" --force
+
       - name: Distribute to Firebase App Distribution
         if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/distribute-firebase
         with:
           platform: android
           app_identifier: ${{ env.ANDROID_PACKAGE_NAME }}
-          google_services_base64: ${{ secrets[env.ANDROID_GOOGLE_SERVICES_SECRET] }}
-          service_account_base64: ${{ secrets[env.FIREBASE_ANDROID_SERVICE_ACCOUNT_SECRET] }}
+          google_services_file: ${{ runner.temp }}/google-services-source
+          service_account_file: ${{ runner.temp }}/firebase-service-account.json
           artifact_path: ${{ runner.temp }}/firebase-artifact/app-release.apk
           groups: ${{ env.FIREBASE_ANDROID_TESTER_GROUPS }}
           version_name: ${{ env.APP_VERSION }}

@@ -12,11 +12,11 @@ inputs:
   app_identifier:
     description: 'Bundle ID (iOS) or package name (Android) — used to locate the matching Firebase App ID in the google-services file.'
     required: true
-  google_services_base64:
-    description: "Base64 GoogleService-Info.plist (iOS) or google-services.json (Android) for this variant."
+  google_services_file:
+    description: "Path to the variant's GoogleService-Info.plist (iOS) or google-services.json (Android)."
     required: true
-  service_account_base64:
-    description: 'Base64 GCP service-account JSON with the Firebase App Distribution Admin role.'
+  service_account_file:
+    description: 'Path to the GCP service-account JSON with the Firebase App Distribution Admin role.'
     required: true
   artifact_path:
     description: 'Path to the .ipa (iOS) or .apk (Android) to distribute.'
@@ -42,33 +42,27 @@ runs:
         bundler-cache: true
         working-directory: app/fastlane
 
-    - name: Decode credentials and derive Firebase App ID
+    - name: Derive Firebase App ID
       id: prep
       shell: bash
       env:
         PLATFORM: ${{ inputs.platform }}
         APP_IDENTIFIER: ${{ inputs.app_identifier }}
-        GOOGLE_SERVICES_BASE64: ${{ inputs.google_services_base64 }}
-        SERVICE_ACCOUNT_BASE64: ${{ inputs.service_account_base64 }}
+        GS_FILE: ${{ inputs.google_services_file }}
+        SA_FILE: ${{ inputs.service_account_file }}
       run: |
         set -euo pipefail
 
-        if [ -z "${SERVICE_ACCOUNT_BASE64}" ]; then
-          echo "::error::No Firebase service-account secret provided for this variant."
+        if [ ! -f "${SA_FILE}" ]; then
+          echo "::error::No Firebase service-account file provided for this variant."
           exit 1
         fi
-
-        SA_FILE="${RUNNER_TEMP}/firebase-service-account.json"
-        echo "${SERVICE_ACCOUNT_BASE64}" | base64 --decode > "${SA_FILE}"
         echo "service_credentials_file=${SA_FILE}" >> "$GITHUB_OUTPUT"
 
-        if [ -z "${GOOGLE_SERVICES_BASE64}" ]; then
-          echo "::error::No google-services secret provided for this variant."
+        if [ ! -f "${GS_FILE}" ]; then
+          echo "::error::No google-services file provided for this variant."
           exit 1
         fi
-
-        GS_FILE="${RUNNER_TEMP}/google-services-source"
-        echo "${GOOGLE_SERVICES_BASE64}" | base64 --decode > "${GS_FILE}"
 
         if [ "${PLATFORM}" = "ios" ]; then
           APP_ID=$(python3 - "$GS_FILE" <<'PY'
