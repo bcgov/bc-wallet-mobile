@@ -39,6 +39,11 @@ interface ReportProblem {
    * @see store.bcsc.installId for the source of this value.
    */
   installId?: string
+  /**
+   * The remote logging ID represents the unique identifier for the remote logging session.
+   * This is optional and can be omitted if there is no remote logging session available.
+   */
+  sessionId?: number
 }
 
 const baseOptions: RemoteLoggerOptions = {
@@ -136,6 +141,7 @@ export const reportProblem = (problem: ReportProblem, options?: { includeDeviceD
               error: error?.toJSON(),
               report_id: referenceCode, // this report problem - ie: "7K2P-9XQF"
               install_id: problem.installId, // this app installation - ie: "f3e2c1d4-5b6a-7c8d-9e0f-1a2b3c4d5e6f"
+              session_id: problem.sessionId, // this remote logging session - ie: 1234567890
 
               // Only attach `stack` when the error actually carries one — user-initiated reports have no real
               // trace, so the field is omitted rather than logging meaningless construction frames.
