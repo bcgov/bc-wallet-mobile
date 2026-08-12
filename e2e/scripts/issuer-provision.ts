@@ -21,6 +21,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   adminFetch,
+  describeError,
   getIssuerConfig,
   getTenantInfo,
   ISSUER_SCHEMA_ATTRIBUTES,
@@ -253,7 +254,9 @@ async function main(): Promise<void> {
   emit(config, did, schemaId, credDefId)
 }
 
-main().catch((error) => {
-  console.error(`[issuer-provision] FAILED: ${error instanceof Error ? error.message : error}`)
+try {
+  await main()
+} catch (error) {
+  console.error(`[issuer-provision] FAILED: ${describeError(error)}`)
   process.exit(1)
-})
+}

@@ -20,6 +20,11 @@ export class ApiError extends Error {
   }
 }
 
+/** A caught `unknown` as a readable string — its `Error.message`, or the value itself. */
+export function describeError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
 export interface ApiFetchOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
   /** JSON-serialized when provided. */
@@ -52,11 +57,7 @@ export async function apiFetch<T>(url: string, options: ApiFetchOptions = {}): P
       signal: controller.signal,
     })
   } catch (error: unknown) {
-    const detail = controller.signal.aborted
-      ? `the ${timeoutMs}ms request budget ran out`
-      : error instanceof Error
-        ? error.message
-        : String(error)
+    const detail = controller.signal.aborted ? `the ${timeoutMs}ms request budget ran out` : describeError(error)
     throw new Error(`${method} ${url} failed after ${Date.now() - startedAt}ms: ${detail}`)
   } finally {
     clearTimeout(timeoutId)
@@ -84,6 +85,14 @@ export interface PollOptions {
   lastObserved?: () => string | undefined
 }
 
+/** The budget-overrun message, assembled off the poll loop so the wait itself stays readable. */
+function timeoutMessage(timeoutMs: number, description: string, observed?: string, lastError?: string): string {
+  const parts = [`Timed out after ${timeoutMs}ms waiting for ${description}`]
+  if (observed) parts.push(`last observed: ${observed}`)
+  if (lastError) parts.push(`last error: ${lastError}`)
+  return parts.join('; ')
+}
+
 /**
  * Re-run `probe` until it returns a value (anything but `undefined`) or the budget runs out.
  * A throwing probe counts as "not yet" and its message is kept for the timeout error.
@@ -98,15 +107,10 @@ export async function pollUntil<T>(probe: () => Promise<T | undefined>, options:
       const value = await probe()
       if (value !== undefined) return value
     } catch (error: unknown) {
-      lastError = error instanceof Error ? error.message : String(error)
+      lastError = describeError(error)
     }
     if (Date.now() > deadline) {
-      const observed = lastObserved?.()
-      throw new Error(
-        `Timed out after ${timeoutMs}ms waiting for ${description}` +
-          (observed ? `; last observed: ${observed}` : '') +
-          (lastError ? `; last error: ${lastError}` : '')
-      )
+      throw new Error(timeoutMessage(timeoutMs, description, lastObserved?.(), lastError))
     }
     await new Promise((resolve) => setTimeout(resolve, intervalMs))
   }

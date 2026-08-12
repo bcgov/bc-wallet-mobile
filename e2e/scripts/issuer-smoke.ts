@@ -13,6 +13,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   createInvitation,
+  describeError,
   getIssuerConfig,
   getIssuerStatus,
   getTenantInfo,
@@ -54,7 +55,7 @@ async function main(): Promise<void> {
     })
     console.log(`[issuer-smoke] a wallet actually connected: ${connectionId}`)
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
+    const message = describeError(error)
     if (!message.includes('Timed out')) throw error
     console.log(`[issuer-smoke] poller timeout copy as expected:\n  ${message}`)
   }
@@ -62,7 +63,9 @@ async function main(): Promise<void> {
   console.log('[issuer-smoke] PASS')
 }
 
-main().catch((error) => {
-  console.error(`[issuer-smoke] FAILED: ${error instanceof Error ? error.message : error}`)
+try {
+  await main()
+} catch (error) {
+  console.error(`[issuer-smoke] FAILED: ${describeError(error)}`)
   process.exit(1)
-})
+}

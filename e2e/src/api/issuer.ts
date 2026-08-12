@@ -179,8 +179,9 @@ export async function adminFetch<T>(path: string, options: ApiFetchOptions = {})
 async function resolveCredDefId(): Promise<string> {
   const config = getIssuerConfig()
   if (config.credDefId) return config.credDefId
+  const schemaQuery = config.schemaId ? `?schema_id=${encodeURIComponent(config.schemaId)}` : ''
   const found = await adminFetch<{ credential_definition_ids?: string[] }>(
-    `/credential-definitions/created${config.schemaId ? `?schema_id=${encodeURIComponent(config.schemaId)}` : ''}`
+    `/credential-definitions/created${schemaQuery}`
   )
   const credDefId = found.credential_definition_ids?.[0]
   if (!credDefId) {
@@ -359,9 +360,8 @@ export async function waitForCredExState(
       lastState = record.state
       if (record.state === state) return record
       if (record.state === 'abandoned') {
-        throw new Error(
-          `cred-ex ${credExId} was abandoned while waiting for "${state}"${record.error_msg ? `: ${record.error_msg}` : ''}`
-        )
+        const reason = record.error_msg ? `: ${record.error_msg}` : ''
+        throw new Error(`cred-ex ${credExId} was abandoned while waiting for "${state}"${reason}`)
       }
       if (!nudged && record.state === 'request-received' && (state === 'done' || state === 'credential-issued')) {
         nudged = true
@@ -447,9 +447,8 @@ export async function waitForPresentationVerified(
       lastState = current.state
       if (current.state === 'done') return current
       if (current.state === 'abandoned') {
-        throw new Error(
-          `pres-ex ${presExId} was abandoned (holder declined?)${current.error_msg ? `: ${current.error_msg}` : ''}`
-        )
+        const reason = current.error_msg ? `: ${current.error_msg}` : ''
+        throw new Error(`pres-ex ${presExId} was abandoned (holder declined?)${reason}`)
       }
       if (!nudged && current.state === 'presentation-received') {
         nudged = true
