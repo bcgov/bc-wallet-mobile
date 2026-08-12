@@ -1,16 +1,14 @@
-import { PersistentStorage } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
-import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  CachedRemoteConfig,
-  CachedRemoteConfigStrategy,
-  CommonObjectStorageRemoteConfigStrategy,
-  JSONRemoteConfigStrategy,
-  REMOTE_CONFIG_STORAGE_KEY,
+  cacheRemoteConfig,
+  getBundledRemoteConfig,
+  getCachedRemoteConfig,
+  getHostedRemoteConfig,
   RemoteConfig,
-} from './RemoteConfigStrategy'
+} from './remote-config-utils'
 
-let REMOTE_CONFIG_CACHE = JSONRemoteConfigStrategy.getRemoteConfig()
+let REMOTE_CONFIG_CACHE = getBundledRemoteConfig()
 
 interface RemoteConfigContextType {
   /**
@@ -48,15 +46,16 @@ const RemoteConfigContext = createContext<RemoteConfigContextType | null>(null)
 export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
   const [loading, setLoading] = useState(true)
   const [remoteConfig, setRemoteConfigState] = useState<RemoteConfig>(REMOTE_CONFIG_CACHE)
+  const initializedRef = useRef(false)
 
-  const setRemoteConfig = useCallback((newConfig: RemoteConfig) => {
-    REMOTE_CONFIG_CACHE = newConfig
-    setRemoteConfigState(newConfig)
-    PersistentStorage.storeValueForKey<CachedRemoteConfig>(REMOTE_CONFIG_STORAGE_KEY, {
-      remoteConfig: newConfig,
-      timestamp: Date.now(),
-    })
-  }, [])
+  const setRemoteConfig = useCallback(
+    (newConfig: RemoteConfig) => {
+      REMOTE_CONFIG_CACHE = newConfig
+      setRemoteConfigState(newConfig)
+      cacheRemoteConfig(newConfig, props.logger)
+    },
+    [props.logger]
+  )
 
   const getValue = useCallback(
     <T extends keyof RemoteConfig>(key: T): RemoteConfig[T] => {
@@ -76,12 +75,17 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
   )
 
   useEffect(() => {
+    if (initializedRef.current) {
+      return
+    }
+
     const load = async () => {
       try {
         const remoteConfig = await _initRemoteConfig(props.logger)
         setRemoteConfig(remoteConfig)
       } finally {
         setLoading(false)
+        initializedRef.current = true
       }
     }
     load()
@@ -129,17 +133,21 @@ export function getRemoteConfig(): RemoteConfig {
 // -----------------------------
 
 async function _initRemoteConfig(logger: RemoteLogger): Promise<RemoteConfig> {
-  const strategies = [CachedRemoteConfigStrategy, CommonObjectStorageRemoteConfigStrategy, JSONRemoteConfigStrategy]
+  const cachedRemoteConfig = await getCachedRemoteConfig(logger)
 
-  for (const strategy of strategies) {
-    const remoteConfig = await strategy.getRemoteConfig(logger)
-
-    if (remoteConfig) {
-      logger.info(`[RemoteConfig] Using remote config from strategy: ${strategy.name}`)
-      return remoteConfig
-    }
+  if (cachedRemoteConfig) {
+    logger.info('[RemoteConfig] Using cached remote config.')
+    return cachedRemoteConfig
   }
 
-  // Impossible to reach here if JSONRemoteConfigStrategy is always valid, but just in case
-  throw new Error('[RemoteConfig] Failed to initialize remote config from all strategies.')
+  const hostedRemoteConfig = await getHostedRemoteConfig(logger)
+
+  if (hostedRemoteConfig) {
+    logger.info('[RemoteConfig] Using hosted remote config.')
+    return hostedRemoteConfig
+  }
+
+  logger.info('[RemoteConfig] Using bundled remote config.')
+
+  return getBundledRemoteConfig()
 }

@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react'
-import { getRemoteConfig, RemoteConfig, useRemoteConfig } from './RemoteConfig'
+import { getRemoteConfig, useRemoteConfig } from './RemoteConfig'
+import { RemoteConfig } from './remote-config-utils'
 
 export type FeatureFlags = RemoteConfig['featureFlags']
 export type FeatureFlag = keyof FeatureFlags

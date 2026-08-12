@@ -158,7 +158,7 @@ const Developer: React.FC = () => {
   const [tokensDeleted, setTokensDeleted] = useState<boolean>(false)
   const [personCredentialFetchStatus, setPersonCredentialFetchStatus] = useState<string>('idle')
   const remoteConfig = useRemoteConfig()
-  const { featureFlags, setFeatureFlag } = useFeatureFlags()
+  const { featureFlags } = useFeatureFlags()
   const navigation = useNavigation()
 
   useEffect(() => {
