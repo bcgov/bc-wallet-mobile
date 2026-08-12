@@ -24,3 +24,6 @@ reports/
 
 # Local environment variables
 local.env
+
+# Issuer provisioning output (ids only, no secrets)
+issuer/.issuer-env
