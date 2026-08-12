@@ -112,6 +112,11 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
     }
   }
 
+  // The warning banner has a light amber background, so it needs dark text and
+  // icons to stay legible. Every other banner colour is dark enough for white.
+  // Resolved once here so the icon, title and description can't drift apart.
+  const foregroundColor = type === 'warning' ? ColorPalette.grayscale.darkGrey : ColorPalette.grayscale.white
+
   if (!showBanner) {
     return null
   }
@@ -133,7 +138,7 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
       <Icon
         name={iconName(type)}
         size={24}
-        color={type === 'warning' ? ColorPalette.brand.secondaryBackground : ColorPalette.grayscale.white}
+        color={foregroundColor}
         style={styles.icon}
         testID={testIdWithKey(`icon-${type}`)}
       />
@@ -142,7 +147,7 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
           <ThemedText
             variant={'bold'}
             style={{
-              color: type === 'warning' ? ColorPalette.brand.secondaryBackground : ColorPalette.grayscale.white,
+              color: foregroundColor,
             }}
             testID={testIdWithKey(`text-${type}`)}
           >
@@ -153,7 +158,7 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
           <ThemedText
             style={{
               lineHeight: 24,
-              color: type === 'warning' ? ColorPalette.brand.secondaryBackground : ColorPalette.grayscale.white,
+              color: foregroundColor,
             }}
             testID={testIdWithKey(`description-${type}`)}
           >
