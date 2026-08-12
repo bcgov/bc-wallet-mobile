@@ -159,9 +159,11 @@ jobs:
       - name: Issuer preflight (wallet journey)
         if: contains(fromJSON('["main","regression"]'), inputs.suite)
         working-directory: e2e
+        env:
+          SUITE: ${{ inputs.suite }} # via env, never inline in run — inputs are attacker-controlled
         run: |
           if [ -z "$ISSUER_TENANT_ID" ] || [ -z "$ISSUER_API_KEY" ]; then
-            echo "::error::Suite '${{ inputs.suite }}' includes the wallet journey, but the 1Password issuer credentials are empty (op://bcsc-mobile-app-cd/traction — see e2e/issuer/README.md)"
+            echo "::error::Suite '$SUITE' includes the wallet journey, but the 1Password issuer credentials are empty (op://bcsc-mobile-app-cd/traction — see e2e/issuer/README.md)"
             exit 1
           fi
           # tsx binary directly — yarn's own stdout banners would corrupt GITHUB_ENV
