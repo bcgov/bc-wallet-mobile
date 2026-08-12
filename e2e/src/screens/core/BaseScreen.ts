@@ -254,6 +254,51 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
   }
 
   /**
+   * iOS counterpart of {@link waitForSteadyPosition} — the other way a "found" tap silently misses.
+   * XCUITest reports an element as displayed from its first straddling pixel (and the scroll hunt
+   * stops right there), but WDA taps a non-hittable element at its full-frame CENTER — for a control
+   * straddling the fold that point is outside the viewport (or in the home-indicator gesture zone)
+   * and the click lands on nothing (Sauce iOS: a credential-offer footer straddled the fold, Accept
+   * "clicked" fine, app never saw it). Android is immune: UiAutomator clicks the center of the
+   * VISIBLE bounds. So on iOS, nudge-scroll until the tap point sits safely inside the viewport.
+   * Best-effort like its sibling: a screen that will not scroll stops making progress and we tap anyway.
+   *
+   * @returns whether a nudge swipe was issued — the caller's element handle may then be stale
+   */
+  private async nudgeTapPointIntoView(testId: string): Promise<boolean> {
+    if (!driver.isIOS) return false
+
+    const safeEdgePt = 24 // band the tap point must land in; fixed bottom controls (tab-bar items center ~40pt up) never trigger it
+    const overshootPt = 60 // scroll to comfortably inside the band, not onto its boundary
+    const maxNudges = 3
+
+    const { height: windowHeight } = await driver.getWindowSize()
+    let nudged = false
+    let previousCenter = Number.NaN
+    for (let attempt = 0; attempt <= maxNudges; attempt++) {
+      const el = await this.findByTestId(testId)
+      const [{ y }, { height }] = await Promise.all([el.getLocation(), el.getSize()])
+      const center = y + height / 2
+      const pastBottom = center - (windowHeight - safeEdgePt)
+      const pastTop = safeEdgePt - center
+      if (pastBottom <= 0 && pastTop <= 0) return nudged
+      if (attempt === maxNudges || Math.abs(center - previousCenter) < 4) break // <4pt moved = not scrolling
+      previousCenter = center
+
+      const fraction = Math.min(0.35, (Math.max(pastBottom, pastTop) + overshootPt) / windowHeight)
+      if (pastBottom > 0) {
+        await swipeUpBy(fraction)
+      } else {
+        await swipeDownBy(fraction)
+      }
+      await driver.pause(150)
+      nudged = true
+    }
+    console.warn(`Tap point for "${testId}" is still at the screen edge after nudging; tapping anyway`)
+    return nudged
+  }
+
+  /**
    * Tap an element by test ID.
    *
    * Waits the full `timeout` for the element rather than a token 500ms: screens that swap their whole
@@ -276,6 +321,9 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
       await el.waitForDisplayed({ timeout })
     }
     await this.waitForSteadyPosition(el)
+    if (await this.nudgeTapPointIntoView(testId)) {
+      el = await this.findByTestId(testId) // the nudge scrolled — re-query like the hunt above
+    }
     await el.click()
   }
 
@@ -347,6 +395,9 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
     }
     await el.waitForEnabled({ timeout })
     await this.waitForSteadyPosition(el)
+    if (await this.nudgeTapPointIntoView(testId)) {
+      el = await this.findByTestId(testId) // the nudge scrolled — re-query like the hunt above
+    }
     await el.click()
   }
 

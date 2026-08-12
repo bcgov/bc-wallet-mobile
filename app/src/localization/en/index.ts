@@ -222,6 +222,8 @@ const translation = {
     "OnboardingIntroSeen": "Intro seen",
     "DeleteTokens": "Delete Tokens",
     "DeletedTokens": "Deleted tokens",
+    "FetchPersonCredentialTest": "Fetch Person Credential",
+    "FetchPersonCredentialStatus": "Status",
     "ErrorModals": "Error Modals",
     "ErrorModalsDescription": "Trigger errors that display as modal dialogs with title, description, and technical details.",
     "ErrorAsNativeAlert": "Errors as Native Alerts",
@@ -1092,9 +1094,67 @@ const translation = {
     },
     "VerificationCardError": {
       "CardExpired": {
-        "Heading": "Sorry, you can't add this card.",
+        "Heading": "Sorry, you can't add this card",
         "Description": "This card is no longer valid. It has expired.",
         "ButtonText": "Get a BC Services Card"
+      }
+    },
+    // TODO: placeholder copy — needs content review before ship
+    "DeviceAuthorizationError": {
+      "InvalidParameter": {
+        "Heading": "Card Not Found",
+        "Description": "A card can't be found with this serial number and birthdate.",
+        "ButtonText": ""
+      },
+      "CardInactive": {
+        "Heading": "Sorry, you can't add this card",
+        "Description": "There is a problem with the card.",
+        "ButtonText": "Get a BC Services Card"
+      },
+      "CardReplaced": {
+        "Heading": "Sorry, you can't add this card",
+        "Description": "This card is no longer valid. It's been replaced by another card.",
+        "ButtonText": "Get a BC Services Card"
+      },
+      "CardCancelled": {
+        "Heading": "Sorry, you can't add this card",
+        "Description": "This card is no longer valid. It has been cancelled.",
+        "ButtonText": "Get a BC Services Card"
+      },
+      "CardRenewed": {
+        "Heading": "Sorry, you can't add this card",
+        "Description": "This card is no longer valid. It has been renewed by another card.",
+        "ButtonText": "Get a BC Services Card"
+      },
+      "NonPhotoCard": {
+        "Heading": "Sorry, you can't add this card",
+        "Description": "A card with a photo is required.",
+        "ButtonText": "Get a BC Services Card"
+      },
+      "TooManyAttempts": {
+        "Heading": "Sorry, you've tried too many times",
+        "Description": "Please try again later.",
+        "ButtonText": "Ok"
+      },
+      "CardProblem": {
+        "Heading": "Sorry, you can't add this card",
+        "Description": "There is a problem with the data associated with the card.",
+        "ButtonText": "Get a BC Services Card"
+      },
+      "AdditionalCard": {
+        "Heading": "Sorry, you can't add this card",
+        "Description": "You can't use this card to set up the app because you have more than one BC Services Card. Contact us for help.",
+        "ButtonText": ""
+      },
+      "UnderMinimumAge": {
+        "Heading": "Sorry, you can't add this card",
+        "Description": "You must be 12 years old or older to set up a mobile card.",
+        "ButtonText": ""
+      },
+      "TooManyMobileCards": {
+        "Heading": "App is on too many of your devices",
+        "Description": "You may only have the app on five mobile devices at a time.\n\nIf you deleted the app from a device without resetting it first, then it will still count as one of your devices.\n\nYou need to remove at least one of the devices from your account.",
+        "ButtonText": ""
       }
     },
     "BirthdateLockout": {
@@ -1261,9 +1321,11 @@ const translation = {
       "FirstNameSubtext": "Your first given name",
       "FirstNameError": "Please enter a first name",
       "FirstNameLengthError": "Enter 15 characters or less",
+      "FirstNameFormatError": "First name must start with a letter A to Z",
       "LastNameLabel": "Last name",
       "LastNameError": "Please enter a last name",
       "LastNameLengthError": "Enter 35 characters or less",
+      "LastNameFormatError": "Last name must start with a letter A to Z",
       "LastNameSubtext": "Also known as surname or family name",
       "BirthDateLabel": "Birth date",
       "BirthDateSubtext": "Enter your birth date",
@@ -1275,6 +1337,8 @@ const translation = {
       "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed",
       "MiddleNamesError": "Please enter up to two middle names",
       "MiddleNamesLengthError": "Enter 30 characters or less",
+      "MiddleNamesFormatError": "Middle names must start with a letter A to Z",
+      "NameCharactersError": "Enter valid characters only - no accents or symbols",
       "TakeSecondIdPhoto": "Take photo of your second ID",
     },
     "Address": {
@@ -1283,11 +1347,14 @@ const translation = {
       "StreetAddressLabel": "Street address",
       "StreetAddressSubtext": "Your residential street address",
       "StreetAddressRequired": "Please enter a street address",
+      "StreetAddressLengthError": "Enter 32 characters or less",
       "StreetAddress2Label": "Apt, suite, etc (optional)",
       "StreetAddress2Subtext": "Apartment, suite, unit, building, floor, etc.",
+      "StreetAddress2LengthError": "Enter 32 characters or less",
       "CityLabel": "City",
       "CitySubtext": "The city of your current address",
       "CityRequired": "Please enter a city",
+      "CityLengthError": "Enter 32 characters or less",
       "ProvinceLabel": "Province or Territory",
       "ProvincePlaceholder": "Select a province or territory",
       "ProvinceSubtext": "For example, BC or British Columbia",

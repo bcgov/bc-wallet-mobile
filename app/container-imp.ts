@@ -281,6 +281,7 @@ export class AppContainer implements Container {
     }
     this._container.registerInstance(TOKENS.COMPONENT_CRED_SUBHEADER, CredentialDetailsSubHeader)
     this._container.registerInstance(TOKENS.COMPONENT_RECORD, Record)
+    // TODO (MD): Move these to the credential-repository
     this._container.registerInstance(TOKENS.CACHE_CRED_DEFS, [
       // { did: "4WW6792ksq62UroZyfd6nQ", id: "4WW6792ksq62UroZyfd6nQ:3:CL:1098:SellingItRight" },
       { did: 'TeT8SJGHruVL9up3Erp4o', id: 'TeT8SJGHruVL9up3Erp4o:3:CL:224665:Selling It Right' },

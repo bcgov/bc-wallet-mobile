@@ -1,6 +1,6 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
+import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
 import { BCState } from '@/store'
@@ -16,14 +16,14 @@ export const useEnterBirthdateViewModel = (
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EnterBirthdate>
 ) => {
   const [store] = useStore<BCState>()
-  const { authorization } = useApi()
+  const authorizationService = useAuthorizationService()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { updateUserInfo, updateDeviceCodes, updateCardProcess, updateVerificationOptions } = useSecureActions()
 
   const authorizeDevice = useCallback(
     async (serial: string, date: Date) => {
       await updateUserInfo({ birthdate: date })
-      const deviceAuth = await authorization.authorizeDevice(serial, date)
+      const deviceAuth = await authorizationService.authorizeDevice(serial, date)
 
       // Store authorization data
       const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
@@ -66,7 +66,7 @@ export const useEnterBirthdateViewModel = (
       )
     },
     [
-      authorization,
+      authorizationService,
       navigation,
       logger,
       store,

@@ -119,6 +119,20 @@ export enum AppEventCode {
   ERR_300_EMPTY_RESPONSE = 'err_300_empty_response',
   ERR_500_INVALID_URL = 'err_500_invalid_url',
   ERR_501_INVALID_REGISTRATION_REQUEST = 'err_501_invalid_registration_request',
+  // Device Authorization (device/code) card-status errors — 400 responses from the device
+  // authorization endpoint, distinguishing why the card/registration was rejected.
+  INVALID_PARAMETER = 'invalid_parameter',
+  CARD_NOT_FOUND = 'card_not_found',
+  CARD_INACTIVE = 'card_inactive',
+  CARD_EXPIRED = 'card_expired',
+  CARD_REPLACED = 'card_replaced',
+  CARD_CANCELLED = 'card_cancelled',
+  CARD_RENEWED = 'card_renewed',
+  NON_PHOTO_CARD = 'non_photo_card',
+  CARD_PROBLEM = 'card_problem',
+  ADDITIONAL_CARD = 'additional_card',
+  UNDER_MINIMUM_AGE = 'under_minimum_age',
+  TOO_MANY_MOBILE_CARDS = 'too_many_mobile_cards',
   AUTHORIZATION_PENDING = 'authorization_pending',
   RATE_IN_APP_STORE = 'rate_in_app_store',
   VOLUME_TOO_LOW = 'volume_too_low',
@@ -189,6 +203,8 @@ export enum AppEventCode {
   AUTO_CRED_PROOF_ERROR = 'auto_cred_proof_error',
   AUTO_CRED_OFFER_ERROR = 'auto_cred_offer_error',
   AUTO_CRED_GENERAL_ERROR = 'auto_cred_general_error',
+  AUTO_CRED_ACCOUNT_SUSPENDED = 'auto_cred_account_problem', // we want to avoid displaying the word 'suspended'
+  AUTO_CRED_ACCOUNT_DEACTIVATED = 'auto_cred_account_deactivated',
   // Account Errors
   ACCOUNT_NOT_FOUND = 'account_not_found', // Non-IAS error code
   // Native module errors (#3419) — distinct codes for bcsc-core native rejections

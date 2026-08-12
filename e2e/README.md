@@ -41,7 +41,7 @@ _Tests are organized into named suites. Use the_ `--suite` _flag to select which
 | `onboarding` | _Onboarding journeys — happy path + detours (`onboarding/*.journey.ts`)_                    |
 | `auth`       | _Returning-user unlock journey — PIN unlock, wrong-PIN retry, lockout (`auth/*.journey.ts`)_ |
 | `verify`     | _Verification journeys — the four card types + entry spine/detours (`verify/*.journey.ts`)_ |
-| `main`       | _Main-stack journeys — unverified gating + settings (`main/*.journey.ts`)_                  |
+| `main`       | _Main-stack journeys — unverified gating + settings + wallet credential lifecycle (`main/*.journey.ts`)_ |
 | `migration`  | _V3→V4 upgrade: v3 onboarding + verification, upgrade to v4, unlock with the v3 PIN_                 |
 
 ```bash
@@ -51,7 +51,7 @@ yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite verify
 yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite main
 ```
 
-_Without_ `--suite`_, the default spec is_ `smoke.spec.ts`_. The verified `verify` / `main` journeys need SiteMinder credentials (see the **SiteMinder** section) for the in-person approval step. A nightly `regression` suite spans all journeys (see the **CI/CD** section)._
+_Without_ `--suite`_, the default spec is_ `smoke.spec.ts`_. The verified `verify` / `main` journeys need SiteMinder credentials (see the **SiteMinder** section) for the in-person approval step. The `main` suite's wallet journey additionally needs the Traction issuer tenant configured (`ISSUER_TENANT_ID`/`ISSUER_API_KEY` in `.env.e2e`, one-time `yarn issuer:provision` — see `issuer/README.md`). A nightly `regression` suite spans all journeys (see the **CI/CD** section)._
 
 ### _Local — iOS Simulator_
 

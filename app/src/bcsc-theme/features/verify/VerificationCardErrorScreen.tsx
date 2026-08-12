@@ -6,9 +6,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { Linking, View } from 'react-native'
 import { BCSCScreens, BCSCVerifyStackParams } from '../../types/navigators'
-import { VerificationCardError } from './verificationCardError'
-
-export { VerificationCardError }
+import { DeviceAuthorizationError } from './deviceAuthorizationError'
 
 const GET_BCSC_URL = 'https://www2.gov.bc.ca/gov/content?id=98CEBFB7201143378046AC4AE5F0B9DE'
 
@@ -24,7 +22,7 @@ const VerificationCardErrorScreen = ({ navigation }: VerificationCardErrorScreen
 
   const errorType = params.errorType
 
-  if (errorType === VerificationCardError.CardExpired) {
+  if (errorType === DeviceAuthorizationError.CardExpired) {
     const controls = (
       <ControlContainer>
         <Button

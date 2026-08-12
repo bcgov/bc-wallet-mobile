@@ -1,3 +1,4 @@
+import { CACHED_LEDGER_READ_TIMEOUT_MS } from '@/constants'
 import { AppError } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { PersistentStorage } from '@bifold/core'
@@ -98,6 +99,18 @@ beforeEach(() => {
 })
 
 describe('loadCachedLedgers', () => {
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
+  it('reads the cached genesis transactions key', async () => {
+    mockFetchValueForKey.mockResolvedValue(undefined)
+
+    await loadCachedLedgers()
+
+    expect(mockFetchValueForKey).toHaveBeenCalledWith('GenesisTransactions')
+  })
+
   it('returns undefined when no cache exists', async () => {
     mockFetchValueForKey.mockResolvedValue(undefined)
 
@@ -127,6 +140,42 @@ describe('loadCachedLedgers', () => {
     const result = await loadCachedLedgers()
 
     expect(result).toBeUndefined()
+  })
+
+  it('returns undefined when the storage read never settles', async () => {
+    jest.useFakeTimers()
+    mockFetchValueForKey.mockReturnValue(new Promise(() => {}))
+
+    const resultPromise = loadCachedLedgers()
+    await jest.advanceTimersByTimeAsync(CACHED_LEDGER_READ_TIMEOUT_MS)
+
+    await expect(resultPromise).resolves.toBeUndefined()
+  })
+
+  it('does not time out a read that settles before the threshold', async () => {
+    jest.useFakeTimers()
+    const transactions = [{ id: 'ledger-1' }]
+    let resolveRead: (value: unknown) => void = () => {}
+    mockFetchValueForKey.mockReturnValue(
+      new Promise((resolve) => {
+        resolveRead = resolve
+      })
+    )
+
+    const resultPromise = loadCachedLedgers()
+    await jest.advanceTimersByTimeAsync(CACHED_LEDGER_READ_TIMEOUT_MS - 1)
+    resolveRead({ timestamp: moment().toISOString(), transactions })
+
+    await expect(resultPromise).resolves.toEqual(transactions)
+  })
+
+  it('clears the timeout once the read settles', async () => {
+    jest.useFakeTimers()
+    mockFetchValueForKey.mockResolvedValue(undefined)
+
+    await loadCachedLedgers()
+
+    expect(jest.getTimerCount()).toBe(0)
   })
 })
 

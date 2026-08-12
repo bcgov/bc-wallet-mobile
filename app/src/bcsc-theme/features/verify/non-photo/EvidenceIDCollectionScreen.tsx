@@ -5,6 +5,7 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { parseBirthdateToLocalDate } from '@/bcsc-theme/utils/birthdate'
 import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
+import { normalizeForSubmission } from '@/bcsc-theme/utils/validation'
 import { MINIMUM_VERIFICATION_AGE } from '@/constants'
 import { BCState, NonBCSCUserMetadata } from '@/store'
 import {
@@ -127,13 +128,15 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
    * @returns {*} {Promise<void>}
    */
   const handleOnContinue = async () => {
+    const documentNumber = normalizeForSubmission(formState.documentNumber)
+
     try {
       setIsSubmitting(true)
       // clear previous validation errors
       setFormErrors({})
 
       const evidenceFormErrors = validateEvidence({
-        values: formState,
+        values: { ...formState, documentNumber },
         personalInfoRequired,
         documentReferenceInputMask: cardType.document_reference_input_mask,
         minimumAge: MINIMUM_VERIFICATION_AGE,
@@ -159,9 +162,9 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
 
         const newUserMetadata: NonBCSCUserMetadata = {
           name: {
-            first: formState.firstName.trim(),
-            last: formState.lastName.trim(),
-            middle: formState.middleNames.trim(),
+            first: normalizeForSubmission(formState.firstName),
+            last: normalizeForSubmission(formState.lastName),
+            middle: normalizeForSubmission(formState.middleNames),
           },
         }
 
@@ -173,7 +176,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
         await updateUserMetadata(newUserMetadata)
       }
 
-      await updateEvidenceDocumentNumber(route.params.cardType, formState.documentNumber)
+      await updateEvidenceDocumentNumber(route.params.cardType, documentNumber)
     } catch (error) {
       logger.error('Error submitting user metadata form', error as Error)
       return
@@ -185,9 +188,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     // the matching evidence entry into a "completed" piece of evidence, which is
     // what drives step1 / step2 completion in getResumeStepRoute.
     const predictedAdditionalEvidence = store.bcscSecure.additionalEvidenceData.map((item) =>
-      item.evidenceType?.evidence_type === cardType.evidence_type
-        ? { ...item, documentNumber: formState.documentNumber }
-        : item
+      item.evidenceType?.evidence_type === cardType.evidence_type ? { ...item, documentNumber } : item
     )
     const predictedStore: BCState = {
       ...store,

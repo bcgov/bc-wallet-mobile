@@ -188,6 +188,7 @@ exports[`ManualSerial renders correctly 1`] = `
                   autoCapitalize="characters"
                   autoComplete="off"
                   autoCorrect={false}
+                  keyboardType="default"
                   maxLength={15}
                   onBlur={[Function]}
                   onChange={[Function]}

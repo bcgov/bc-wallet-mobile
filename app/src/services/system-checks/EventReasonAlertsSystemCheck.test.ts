@@ -3,6 +3,7 @@ import { BCSCEvent, BCSCReason, IdToken } from '@/bcsc-theme/utils/id-token'
 import { AppEventCode } from '@/events/appEventCode'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { SystemCheckNavigation, SystemCheckUtils } from '@/services/system-checks/system-checks'
+import { BCDispatchAction, VerificationStatus } from '@/store'
 
 describe('EventReasonAlertsSystemCheck', () => {
   let mockUtils: SystemCheckUtils
@@ -203,6 +204,30 @@ describe('EventReasonAlertsSystemCheck', () => {
         })
       )
     })
+    it('should mark the credential deactivated without alerting when the event is Expire', async () => {
+      const mockIdToken = createMockIdToken({
+        bcsc_event: BCSCEvent.Expire,
+        bcsc_reason: BCSCReason.ExpiredBySystem,
+      })
+      const getIdToken = jest.fn().mockResolvedValue(mockIdToken)
+      const check = new EventReasonAlertsSystemCheck(getIdToken, emitAlert, undefined, mockUtils, mockNavigation)
+      await check.runCheck()
+      check.onFail()
+
+      // The reason is persisted so useCardStatus can gate login, pairing, and Services on it.
+      expect(mockUtils.dispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_CREDENTIAL_METADATA,
+        payload: [expect.objectContaining({ bcscReason: BCSCReason.ExpiredBySystem })],
+      })
+      expect(mockUtils.dispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS,
+        payload: [VerificationStatus.DEACTIVATED],
+      })
+      // ias-ios suppresses the expiry alert deliberately (IASP-12489); v4 matches it.
+      expect(emitAlert).not.toHaveBeenCalled()
+      expect(mockNavigation.navigate).not.toHaveBeenCalled()
+    })
+
     it('should render an alert with CARD_TYPE_CHANGED event when reason Replace', async () => {
       const mockIdToken = createMockIdToken({
         bcsc_event: BCSCEvent.Replace,

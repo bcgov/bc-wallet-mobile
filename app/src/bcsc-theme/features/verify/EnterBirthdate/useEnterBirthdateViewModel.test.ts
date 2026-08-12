@@ -1,6 +1,6 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useEnterBirthdateViewModel } from '@/bcsc-theme/features/verify/EnterBirthdate/useEnterBirthdateViewModel'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
+import { useAuthorizationService } from '@/bcsc-theme/services/hooks/useAuthorizationService'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { AccountSetupType } from '@/store'
 import * as Bifold from '@bifold/core'
@@ -9,7 +9,9 @@ import { renderHook, waitFor } from '@testing-library/react-native'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 
 const mockAuthorizeDevice = jest.fn().mockResolvedValue(null)
-const mockUseApi = jest.mocked(useApi)
+
+jest.mock('@/bcsc-theme/services/hooks/useAuthorizationService')
+const mockUseAuthorizationService = jest.mocked(useAuthorizationService)
 
 // Mock secure actions
 const mockUpdateUserInfo = jest.fn()
@@ -58,10 +60,8 @@ describe('EnterBirthdateViewModel', () => {
   beforeEach(() => {
     jest.clearAllMocks()
 
-    mockUseApi.mockReturnValue({
-      authorization: {
-        authorizeDevice: mockAuthorizeDevice,
-      },
+    mockUseAuthorizationService.mockReturnValue({
+      authorizeDevice: mockAuthorizeDevice,
     } as any)
 
     mockUseSecureActions.mockReturnValue({

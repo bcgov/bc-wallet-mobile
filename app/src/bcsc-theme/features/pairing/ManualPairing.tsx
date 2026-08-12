@@ -111,6 +111,7 @@ const ManualPairing: React.FC = () => {
         onErrorClear={() => setError(null)}
         separator
         textInputProps={{
+          keyboardType: 'default',
           autoCapitalize: 'characters',
           autoComplete: 'off',
           autoCorrect: false,
