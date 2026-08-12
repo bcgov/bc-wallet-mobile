@@ -7,9 +7,9 @@
 #   smoke        — basic launch + first navigation
 #   onboarding   — onboarding journeys
 #   auth         — auth/unlock journey
-#   main         — main navigation + settings journeys
+#   main         — main navigation + settings + wallet credential journeys (needs E2E_ISSUER_* secrets)
 #   verify       — verify entry + verified card-type journeys (needs SM_* creds)
-#   regression   — every per-area journey (nightly default)
+#   regression   — every per-area journey (nightly default; needs SM_* + E2E_ISSUER_*)
 #   migration    — v3 → v4 app upgrade flow (Sauce RDC only; separate v3 build)
 #
 # Device matrix:
@@ -60,6 +60,12 @@ on:
       SM_PASSWORD:
         required: false
         description: 'SiteMinder password for in-person verification auto-approval'
+      E2E_ISSUER_TENANT_ID:
+        required: false
+        description: 'Traction dev tenant id of the e2e issuer driving the wallet journey — required for main/regression (see e2e/issuer/README.md)'
+      E2E_ISSUER_API_KEY:
+        required: false
+        description: 'API key for the Traction tenant (exchanged for a bearer token at run time)'
   workflow_dispatch:
     inputs:
       suite:
@@ -133,6 +139,26 @@ jobs:
       - name: Install E2E dependencies
         working-directory: e2e
         run: yarn install --immutable
+
+      # The wallet journey (main + regression suites) drives the e2e issuer — a Traction dev tenant
+      # (e2e/issuer/README.md) — over its admin API. This preflight runs the idempotent provisioning
+      # script against it: validates tenant + creds, ensures schema/cred def, and resolves their ids.
+      # The script logs to stderr and prints ONLY dotenv lines on stdout, so its output feeds
+      # $GITHUB_ENV directly — the Run step below needs no ISSUER_* env of its own. A missing or
+      # unreachable issuer fails HERE, with a named cause, before any Sauce session is paid for.
+      - name: Issuer preflight (wallet journey)
+        if: contains(fromJSON('["main","regression"]'), inputs.suite)
+        working-directory: e2e
+        env:
+          ISSUER_TENANT_ID: ${{ secrets.E2E_ISSUER_TENANT_ID }}
+          ISSUER_API_KEY: ${{ secrets.E2E_ISSUER_API_KEY }}
+        run: |
+          if [ -z "$ISSUER_TENANT_ID" ] || [ -z "$ISSUER_API_KEY" ]; then
+            echo "::error::Suite '${{ inputs.suite }}' includes the wallet journey, which needs the E2E_ISSUER_TENANT_ID and E2E_ISSUER_API_KEY secrets (see e2e/issuer/README.md)"
+            exit 1
+          fi
+          # tsx binary directly — yarn's own stdout banners would corrupt GITHUB_ENV
+          ./node_modules/.bin/tsx scripts/issuer-provision.ts >> "$GITHUB_ENV"
 
       - name: Run WDIO tests
         working-directory: e2e
