@@ -30,6 +30,7 @@ import { VerifyPromptScreen } from '../features/onboarding/VerifyPromptScreen'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
 import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { NotificationSettingsScreen } from '../features/settings/NotificationSettingsScreen'
+import { ProofRequestExpirationScreen } from '../features/settings/ProofRequestExpirationScreen'
 import { VerifyPrivacyPolicyScreen } from '../features/settings/VerifyPrivacyPolicyScreen'
 import { VerifySettingsScreen } from '../features/settings/VerifySettingsScreen'
 import BirthdateLockoutScreen from '../features/verify/BirthdateLockoutScreen'
@@ -431,6 +432,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
       />
       <Stack.Screen name={BCSCScreens.VerifySettings} component={VerifySettingsScreen} />
       <Stack.Screen name={BCSCScreens.VerifyAutoLock} component={AutoLockScreen} />
+      <Stack.Screen name={BCSCScreens.ProofRequestExpiry} component={ProofRequestExpirationScreen} />
       <Stack.Screen
         name={BCSCScreens.VerifyNotificationSettings}
         component={NotificationSettingsScreen}

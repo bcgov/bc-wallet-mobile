@@ -125,6 +125,7 @@ export enum BCSCScreens {
   MainPrivacyPolicy = `${BCSCStacks.Main} Privacy Information`,
   MainDeveloper = `${BCSCStacks.Main} Developer`,
   MainAutoLock = 'BCSCMainAutoLock',
+  ProofRequestExpiry = 'BCSCProofRequestExpiry',
   MainNotificationSettings = 'BCSCMainNotificationSettings',
   MainAppSecurity = `${BCSCStacks.Main} App Security Setting`,
   MainChangePIN = `${BCSCStacks.Main} Change PIN`,
@@ -247,6 +248,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.VerifyContactUs]: undefined
   [BCSCScreens.VerifyDeveloper]: undefined
   [BCSCScreens.VerifyAutoLock]: undefined
+  [BCSCScreens.ProofRequestExpiry]: undefined
   [BCSCScreens.VerifyNotificationSettings]: undefined
   [BCSCScreens.VerifyAppSecurity]: undefined
   [BCSCScreens.VerifyChangePIN]: { isChangingExistingPIN?: boolean } | undefined
@@ -289,6 +291,7 @@ export type BCSCMainStackParams = {
   [BCSCScreens.AccountDetails]: undefined
   [BCSCScreens.MainDeveloper]: undefined
   [BCSCScreens.MainAutoLock]: undefined
+  [BCSCScreens.ProofRequestExpiry]: undefined
   [BCSCScreens.MainNotificationSettings]: undefined
   [BCSCScreens.MainAppSecurity]: undefined
   [BCSCScreens.MainChangePIN]: { isChangingExistingPIN?: boolean } | undefined

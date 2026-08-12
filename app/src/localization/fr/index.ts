@@ -213,7 +213,6 @@ const translation = {
     "EnableAppToAppPersonFlow": "App-to-app Person flow (FR)",
     "SwitchMode": "Switch mode (FR)",
     "SwitchTheme": "Switch theme (FR)",
-    "ProofRequestExpiration": "Proof request expiration (FR)",
     "ProofRequestExpirationTimes": {
       "TwoMinutes": "2 minutes (FR)",
       "OneHour": "1 hour (FR)",
@@ -445,6 +444,7 @@ const translation = {
       "Biometrics": "Biometrics (FR)",
       "EditNickname": "Edit Nickname (FR)",
       "AutoLockTime": "Auto lock time (FR)",
+      "ProofRequestExpiry": "Proof request expiration (FR)",
       "Notifications": "Notifications (FR)",
       "ChangeNotificationsHeader": "Change notification settings? (FR)",
       "NotificationsEnabledContent": "With notifications enabled, stay informed about account updates, credential changes and service interruptions. (FR)",
