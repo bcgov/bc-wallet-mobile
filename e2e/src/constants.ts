@@ -29,6 +29,11 @@ export enum Timeouts {
   /** A timed lockout releasing itself. The first native tier is 1 minute (5 wrong PINs); the extra
    *  headroom covers a slow mount reading the remaining time late. */
   LOCKOUT_AUTO_UNLOCK = 120_000,
+  /** One DIDComm leg landing in the UI (or in an issuer-side record): issuer → mediator → WSS live
+   *  pickup → wallet processing (ledger reads for cred-def/rev-reg) → re-render. The mediator flush
+   *  after a live-pickup restart is the known slow seam, and Sauce real devices pay it all on CPU.
+   *  Also the default budget for issuer-API polls (src/api). */
+  DIDCOMM_DELIVERY = 90_000,
   /** Per-test timeout (Mocha) */
   TEST_TIMEOUT = 300_000,
   /** Browser handoff pause (ms) */

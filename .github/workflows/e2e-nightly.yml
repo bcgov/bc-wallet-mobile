@@ -164,3 +164,4 @@ jobs:
       SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
       SM_USER: ${{ secrets.SM_USER }}
       SM_PASSWORD: ${{ secrets.SM_PASSWORD }}
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}

@@ -309,6 +309,19 @@ export const TestIds = {
       bodyText: 'BodyText',
       view: 'ViewNotification',
     },
+    /** Home's credential/proof/revocation/message card (`NotificationCard.tsx`) — a DIFFERENT
+     *  component from `notification` above (no `ViewNotification`; the whole card is the pressable).
+     *  All four card types share these keys, so select by `headerText` COPY ("Credential offer" /
+     *  "Proof request" / "Credential revoked") via `helpers/notifications.ts`. NB the ✕ (`dismiss`)
+     *  is a REAL decline for offers and pending proofs, not a mere dismiss. */
+    notificationCard: {
+      pressable: 'NotificationCardPressable',
+      item: 'NotificationListItem',
+      headerText: 'HeaderText',
+      bodyText: 'BodyText',
+      timestamp: 'TimestampText',
+      dismiss: 'DismissNotification',
+    },
     /** Floating scan FAB (rendered on the Home + Wallet tabs, not verification-gated) → QRCore. */
     scan: {
       fab: 'FloatingScanButton',
@@ -462,6 +475,76 @@ export const TestIds = {
       addressFieldEdit: 'AddressField-edit',
       dateOfBirthField: 'DateOfBirthField',
       emailField: 'EmailAddressField',
+    },
+  },
+
+  /**
+   * Credential lifecycle screens — Bifold's, hosted inside the BCSC Main stack (offer/proof render
+   * inside `ConnectionLoading`; details/list under the Wallet tab). Kept as a top-level namespace
+   * (like `bcwallet`) because the keys are Bifold's, not BCSC's.
+   */
+  credential: {
+    /** `CredentialOffer` (rendered inline by the connection screen). */
+    offer: {
+      accept: 'AcceptCredentialOffer',
+      decline: 'DeclineCredentialOffer',
+      header: 'HeaderText',
+    },
+    /** `CredentialOfferAccept` full-screen modal. `done` resets to the Wallet tab; `backToHome` to Home. */
+    offerAccept: {
+      onTheWay: 'CredentialOnTheWay',
+      added: 'CredentialAddedToYourWallet',
+      done: 'Done',
+      backToHome: 'BackToHome',
+    },
+    /** A wallet-list credential card (`Card11Pure`). NOT unique per credential — with >1 stored
+     *  credential, disambiguate by `name` text. `revoked` renders only on a revoked card. */
+    card: {
+      card: 'CredentialCard',
+      name: 'CredentialName',
+      issuer: 'CredentialIssuer',
+      revoked: 'RevokedOrNotAvailable',
+      showDetails: 'ShowCredentialDetails',
+    },
+    /** `CredentialDetails` — behind an agent gate (`loading`, not in the shared registry pattern of
+     *  Wallet.Loading). `issuedDate` is DEVELOPER-MODE-ONLY (dev builds hide it otherwise);
+     *  `revokedDate`/`revocationMessage` render only when the issuer revoked WITH a notification.
+     *  `remove` sits at the bottom (scroll to it). */
+    details: {
+      loading: 'CredentialDetails.Loading',
+      issuerName: 'IssuerName',
+      issuedDate: 'IssuedDate',
+      revokedDate: 'RevokedDate',
+      revocationMessage: 'RevocationMessage',
+      remove: 'RemoveFromWallet',
+    },
+    /** `CommonRemoveModal` in its remove-credential usage. */
+    removeModal: {
+      confirm: 'ConfirmRemoveButton',
+      cancel: 'CancelRemoveButton',
+    },
+    /** `CommonRemoveModal` in its decline-offer usage (confirm → declineOffer + problem report → Home). */
+    declineModal: {
+      confirm: 'ConfirmDeclineButton',
+      cancel: 'CancelDeclineButton',
+    },
+  },
+
+  /** Proof-request screens (Bifold's, same hosting as `credential`). */
+  proof: {
+    /** `ProofRequest`. NB `share` is REPLACED by `cancel` when no stored credential satisfies the
+     *  request — assert `share` presence before tapping (its absence means a cred-def mismatch). */
+    request: {
+      share: 'Share',
+      decline: 'Decline',
+      cancel: 'Cancel',
+      loading: 'ProofRequestLoading',
+    },
+    /** `ProofRequestAccept` full-screen modal. */
+    accept: {
+      sending: 'SendingProofRequest',
+      sent: 'SentProofRequest',
+      backToHome: 'BackToHome',
     },
   },
 

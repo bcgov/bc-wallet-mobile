@@ -7,9 +7,9 @@
 #   smoke        — basic launch + first navigation
 #   onboarding   — onboarding journeys
 #   auth         — auth/unlock journey
-#   main         — main navigation + settings journeys
+#   main         — main navigation + settings + wallet credential journeys (issuer creds from 1Password; needs OP_SERVICE_ACCOUNT_TOKEN)
 #   verify       — verify entry + verified card-type journeys (needs SM_* creds)
-#   regression   — every per-area journey (nightly default)
+#   regression   — every per-area journey (nightly default; needs SM_* + OP_SERVICE_ACCOUNT_TOKEN)
 #   migration    — v3 → v4 app upgrade flow (Sauce RDC only; separate v3 build)
 #
 # Device matrix:
@@ -60,6 +60,9 @@ on:
       SM_PASSWORD:
         required: false
         description: 'SiteMinder password for in-person verification auto-approval'
+      OP_SERVICE_ACCOUNT_TOKEN:
+        required: false
+        description: '1Password service-account token — required for main/regression, whose issuer credentials load from the bcsc-mobile-app-cd vault (see e2e/issuer/README.md)'
   workflow_dispatch:
     inputs:
       suite:
@@ -133,6 +136,39 @@ jobs:
       - name: Install E2E dependencies
         working-directory: e2e
         run: yarn install --immutable
+
+      # The wallet journey (main + regression suites) drives the e2e issuer — a Traction dev tenant
+      # (e2e/issuer/README.md) — over its admin API. This preflight runs the idempotent provisioning
+      # script against it: validates tenant + creds, ensures schema/cred def, and resolves their ids.
+      # The script logs to stderr and prints ONLY dotenv id lines on stdout — no secrets — so its
+      # output feeds $GITHUB_ENV directly. A missing or unreachable issuer fails HERE, with a named
+      # cause, before any Sauce session is paid for.
+      # The issuer credentials live in the bcsc-mobile-app-cd 1Password vault ("traction" item:
+      # username = tenant id, credential = API key); OP_SERVICE_ACCOUNT_TOKEN is the single
+      # bootstrap secret that stays in GitHub. export-env feeds them to every step below, so the
+      # Run step needs no ISSUER_* env of its own and the script never has to echo them.
+      - name: Load issuer credentials from 1Password
+        if: contains(fromJSON('["main","regression"]'), inputs.suite)
+        uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          ISSUER_TENANT_ID: op://bcsc-mobile-app-cd/traction/username
+          ISSUER_API_KEY: op://bcsc-mobile-app-cd/traction/credential
+
+      - name: Issuer preflight (wallet journey)
+        if: contains(fromJSON('["main","regression"]'), inputs.suite)
+        working-directory: e2e
+        env:
+          SUITE: ${{ inputs.suite }} # via env, never inline in run — inputs are attacker-controlled
+        run: |
+          if [ -z "$ISSUER_TENANT_ID" ] || [ -z "$ISSUER_API_KEY" ]; then
+            echo "::error::Suite '$SUITE' includes the wallet journey, but the 1Password issuer credentials are empty (op://bcsc-mobile-app-cd/traction — see e2e/issuer/README.md)"
+            exit 1
+          fi
+          # tsx binary directly — yarn's own stdout banners would corrupt GITHUB_ENV
+          ./node_modules/.bin/tsx scripts/issuer-provision.ts >> "$GITHUB_ENV"
 
       - name: Run WDIO tests
         working-directory: e2e
