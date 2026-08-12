@@ -164,5 +164,4 @@ jobs:
       SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
       SM_USER: ${{ secrets.SM_USER }}
       SM_PASSWORD: ${{ secrets.SM_PASSWORD }}
-      E2E_ISSUER_TENANT_ID: ${{ secrets.E2E_ISSUER_TENANT_ID }}
-      E2E_ISSUER_API_KEY: ${{ secrets.E2E_ISSUER_API_KEY }}
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}

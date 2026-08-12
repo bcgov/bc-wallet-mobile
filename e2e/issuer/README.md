@@ -44,7 +44,9 @@ ids. They land in `issuer/.issuer-env` (ids only, no secrets); explicit `ISSUER_
 
 ## CI
 
-GitHub secrets `E2E_ISSUER_TENANT_ID` + `E2E_ISSUER_API_KEY`. The e2e workflow runs the same
+The credentials live in the `bcsc-mobile-app-cd` 1Password vault — item `traction`, `username` =
+tenant id, `credential` = API key — loaded in-workflow by `1password/load-secrets-action` with the
+`OP_SERVICE_ACCOUNT_TOKEN` GitHub secret as the only bootstrap. The e2e workflow runs the same
 provisioning script as an idempotent preflight for the `main`/`regression` suites — it validates
 the tenant before any Sauce session is paid for and feeds the resolved `ISSUER_*` env to the test
 step, so CI never hardcodes schema/cred-def ids.

@@ -7,9 +7,9 @@
 #   smoke        — basic launch + first navigation
 #   onboarding   — onboarding journeys
 #   auth         — auth/unlock journey
-#   main         — main navigation + settings + wallet credential journeys (needs E2E_ISSUER_* secrets)
+#   main         — main navigation + settings + wallet credential journeys (issuer creds from 1Password; needs OP_SERVICE_ACCOUNT_TOKEN)
 #   verify       — verify entry + verified card-type journeys (needs SM_* creds)
-#   regression   — every per-area journey (nightly default; needs SM_* + E2E_ISSUER_*)
+#   regression   — every per-area journey (nightly default; needs SM_* + OP_SERVICE_ACCOUNT_TOKEN)
 #   migration    — v3 → v4 app upgrade flow (Sauce RDC only; separate v3 build)
 #
 # Device matrix:
@@ -60,12 +60,9 @@ on:
       SM_PASSWORD:
         required: false
         description: 'SiteMinder password for in-person verification auto-approval'
-      E2E_ISSUER_TENANT_ID:
+      OP_SERVICE_ACCOUNT_TOKEN:
         required: false
-        description: 'Traction dev tenant id of the e2e issuer driving the wallet journey — required for main/regression (see e2e/issuer/README.md)'
-      E2E_ISSUER_API_KEY:
-        required: false
-        description: 'API key for the Traction tenant (exchanged for a bearer token at run time)'
+        description: '1Password service-account token — required for main/regression, whose issuer credentials load from the bcsc-mobile-app-cd vault (see e2e/issuer/README.md)'
   workflow_dispatch:
     inputs:
       suite:
@@ -146,15 +143,25 @@ jobs:
       # The script logs to stderr and prints ONLY dotenv lines on stdout, so its output feeds
       # $GITHUB_ENV directly — the Run step below needs no ISSUER_* env of its own. A missing or
       # unreachable issuer fails HERE, with a named cause, before any Sauce session is paid for.
+      # The issuer credentials live in the bcsc-mobile-app-cd 1Password vault ("traction" item:
+      # username = tenant id, credential = API key); OP_SERVICE_ACCOUNT_TOKEN is the single
+      # bootstrap secret that stays in GitHub. export-env feeds them to the preflight below.
+      - name: Load issuer credentials from 1Password
+        if: contains(fromJSON('["main","regression"]'), inputs.suite)
+        uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          ISSUER_TENANT_ID: op://bcsc-mobile-app-cd/traction/username
+          ISSUER_API_KEY: op://bcsc-mobile-app-cd/traction/credential
+
       - name: Issuer preflight (wallet journey)
         if: contains(fromJSON('["main","regression"]'), inputs.suite)
         working-directory: e2e
-        env:
-          ISSUER_TENANT_ID: ${{ secrets.E2E_ISSUER_TENANT_ID }}
-          ISSUER_API_KEY: ${{ secrets.E2E_ISSUER_API_KEY }}
         run: |
           if [ -z "$ISSUER_TENANT_ID" ] || [ -z "$ISSUER_API_KEY" ]; then
-            echo "::error::Suite '${{ inputs.suite }}' includes the wallet journey, which needs the E2E_ISSUER_TENANT_ID and E2E_ISSUER_API_KEY secrets (see e2e/issuer/README.md)"
+            echo "::error::Suite '${{ inputs.suite }}' includes the wallet journey, but the 1Password issuer credentials are empty (op://bcsc-mobile-app-cd/traction — see e2e/issuer/README.md)"
             exit 1
           fi
           # tsx binary directly — yarn's own stdout banners would corrupt GITHUB_ENV
