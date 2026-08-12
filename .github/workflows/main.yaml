@@ -973,11 +973,12 @@ jobs:
         if: github.event.pull_request.head.repo.fork != true
         uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
 
+      # Outputs (not export-env) keep these two values scoped to only the
+      # steps that reference them, matching the pre-migration scoping.
       - name: Load Android signing secrets from 1Password
+        id: op_android_signing
         if: github.event.pull_request.head.repo.fork != true
         uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
-        with:
-          export-env: true
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           PLAY_STORE_JKS_ALIAS: op://bcsc-mobile-app-cd/android-signing-${{ matrix.variant }}/key-alias
@@ -990,6 +991,8 @@ jobs:
         working-directory: app/android/app
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          PLAY_STORE_JKS_ALIAS: ${{ steps.op_android_signing.outputs.PLAY_STORE_JKS_ALIAS }}
+          PLAY_STORE_JKS_PASSWD: ${{ steps.op_android_signing.outputs.PLAY_STORE_JKS_PASSWD }}
         run: |
           # `op read` to stdout appends a trailing newline, which would corrupt
           # this binary keystore. --out-file writes the bytes as-is.
@@ -1001,6 +1004,8 @@ jobs:
         if: github.event.pull_request.head.repo.fork != true
         working-directory: app/android
         env:
+          PLAY_STORE_JKS_ALIAS: ${{ steps.op_android_signing.outputs.PLAY_STORE_JKS_ALIAS }}
+          PLAY_STORE_JKS_PASSWD: ${{ steps.op_android_signing.outputs.PLAY_STORE_JKS_PASSWD }}
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}
           # Skip Metro bundling: use the pre-built JS bundle from the
