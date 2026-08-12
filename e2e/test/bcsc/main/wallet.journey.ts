@@ -102,11 +102,11 @@ describe('Wallet journey: DIDComm credential lifecycle', () => {
     ;({ credExId: acceptedCredExId } = await sendCredentialOffer(connectionId, CREDENTIAL_ATTRIBUTES))
     await CredentialOfferScreen.expectVisible(Timeouts.DIDCOMM_DELIVERY)
     await CredentialOfferScreen.tap('primary') // Accept (gated on NetInfo reaching the mediator)
-    // The overlay shows CredentialOnTheWay while the issuer issues; `added` = stored in the wallet.
-    // A stall here is the ISSUANCE leg — the issuer-side state in the next wait names the culprit.
     await CredentialOfferAcceptModal.expectVisible(Timeouts.SCREEN_TRANSITION)
-    await CredentialOfferAcceptModal.waitFor('added', Timeouts.DIDCOMM_DELIVERY)
+    // Issuer-side wait first: it can unstick a non-auto-issuing instance (the client issues
+    // explicitly at request-received) and a stall names the cred-ex state. `added` = stored in wallet.
     await waitForCredExState(acceptedCredExId, 'done')
+    await CredentialOfferAcceptModal.waitFor('added', Timeouts.DIDCOMM_DELIVERY)
     // Modal confirms use tapToNavigate: RN Modals slide in from below and UiAutomator can hold the
     // below-screen entrance bounds, silently missing a plain tap — re-tap until the modal is gone.
     await CredentialOfferAcceptModal.tapToNavigate('primary') // Done → resets to the Wallet tab
