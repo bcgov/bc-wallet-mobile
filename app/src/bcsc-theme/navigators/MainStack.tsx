@@ -55,7 +55,6 @@ import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import ConnectionLoadingScreen from '../features/qr-core/ConnectionLoadingScreen'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
-import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsScreen'
 import { MainPrivacyPolicyScreen } from '../features/settings/MainPrivacyPolicyScreen'
 import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
@@ -399,14 +398,6 @@ const MainStack: React.FC = () => {
             initialParams={pairingInitialParams}
             options={() => ({
               headerShown: true,
-            })}
-          />
-          <Stack.Screen
-            name={BCSCScreens.MainContactUs}
-            component={ContactUsScreen}
-            options={() => ({
-              headerShown: true,
-              title: t('BCSC.Screens.ContactUs'),
             })}
           />
           <Stack.Screen

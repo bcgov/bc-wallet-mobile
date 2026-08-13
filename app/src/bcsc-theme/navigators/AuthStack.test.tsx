@@ -57,9 +57,6 @@ jest.mock('../features/settings/AuthPrivacyPolicyScreen', () => ({
 jest.mock('../features/settings/AuthSettingsScreen', () => ({
   AuthSettingsScreen: 'AuthSettingsScreen',
 }))
-jest.mock('../features/settings/ContactUsScreen', () => ({
-  ContactUsScreen: 'ContactUsScreen',
-}))
 jest.mock('../features/webview/WebViewScreen', () => ({
   WebViewScreen: 'WebViewScreen',
 }))
