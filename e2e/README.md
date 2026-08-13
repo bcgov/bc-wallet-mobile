@@ -420,6 +420,79 @@ await TakePhoto.tap('TakePhoto')
 
 _For local testing, camera injection is not available — use a test-mode flag in the app instead._
 
+### _Scanning from injection — verdict matrix_
+
+_Injection replaces the WHOLE camera pipeline, so injected images can drive the app's LIVE barcode/QR
+scanners — with hard per-platform limits. Android decodes in-app (CameraX `ImageAnalysis` → bundled
+MLKit), so anything MLKit can read from an injected frame fires for real. iOS decodes in the OS
+(`AVCaptureMetadataOutput`) and Sauce synthesizes **QR only**, so no injected image can ever fire a
+code-39/PDF-417 scan on iOS — that is structural, not tunable (mitigation: the manual serial-entry
+path CI already uses)._
+
+| _Platform_ | _Format (surface)_ | _Verdict_ | _Evidence (Sauce job)_ | _Notes / mitigation_ |
+| --- | --- | --- | --- | --- |
+| Android | PDF-417 (evidence capture — live scanner behind the shutter) | ✅ WORKS | `8819e61675d340b4afa096d6ed886adf`, `ed55eb7cd49e4cf2a3a6240b1b516323` | _Pixel 7 Pro / Android 14; decoded an injected card back and rerouted the flow — why `COMBO_CARD_BARCODE_MASKS` exists_ |
+| Android | Code-39 + PDF-417 (serial-scan screen) — full decode | ⚠️ WORKS BUT RACY | `94241d04…`, `88d9f8d377584709a40183aebfe66245` | _Proven: with a purpose-built card the app reached `VerificationCardError` showing the serial AND the birthdate it had decoded — only reachable after both codes decode, pair and hit the backend. Not yet CI-reliable: the screen reroutes to the non-BCSC flow on ANY value-less barcode detection (see below), which usually wins the race. Blocker is app behaviour, not image quality — CI keeps manual serial entry meanwhile_ |
+| Android | Non-BCSC reroute at the serial screen | ✅ WORKS (deterministic) | same jobs | _An unrecognised/undecodable code at `ScanSerial` routes to DualIdentificationRequired within seconds, every run — an edge case previously untestable_ |
+| Android | QR (FAB scanner) | ✅ WORKS | `a6f63e6f9f674fab95eea0f560918234` | _junk QR → "not recognized" popup AND pairing QR → full strategy pipeline, both first try; transfer-in scanning shares the same camera component_ |
+| iOS | QR (FAB scanner) | ✅ WORKS | `d7ea2c3c39c548a8a7ddc422d2c32714` | _Sauce's synthesized QR metadata reaches the vision-camera delegate: junk QR → "not recognized" popup AND pairing QR → full strategy pipeline_ |
+| iOS | Code-39 / PDF-417 (any surface) | ❌ DEAD (structural) | `d7ea2c3c39c548a8a7ddc422d2c32714`, `e7214db3895d4d67bb05d053e38e6350` | _Proven, not just documented: the injected card is plainly VISIBLE and sharp in the iOS preview, and code-39/PDF-417 still never fire, while QR fires reliably from the same image. iOS decodes in the OS (`AVCaptureMetadataOutput`) and Sauce only synthesizes QR metadata, so no rotation/clarity/size change can ever help. Mitigation: manual serial entry_ |
+
+_What that buys CI today: the QR row. `unverified-main.journey.ts` injects an unrecognised QR and
+asserts the scan-error popup; `verified-combined.journey.ts` injects a QR carrying a freshly minted
+pairing code and asserts the app logs in and names the service. Card-serial scanning stays on manual
+entry on both platforms._
+
+#### _Injecting a scan target_
+
+_Use `injectScanTarget` for a committed asset and `injectQrCode` for a payload only known at runtime
+(a live pairing code). Both centre the code on a frame-aspect white canvas — which doubles as an
+oversized quiet zone — and both must run **before** the scanner opens: swapping the image into a live
+camera leaves transition frames carrying only part of it, which the scanner reads as a malformed code._
+
+```typescript
+import { injectQrCode, injectScanTarget } from '../../src/helpers/camera.js'
+import { fetchPairingCode, pairingQrUri } from '../../src/helpers/pairing-code.js'
+
+const session = await fetchPairingCode()
+await injectQrCode(pairingQrUri(session.pairingCode)) // rendered at runtime
+await injectScanTarget(getTestUser().cardScanTarget) // committed card back
+```
+
+#### _Authoring injected images_
+
+_Two rules, both learned the hard way:_
+
+1. **_Always author 16:9 LANDSCAPE._** _Sauce scales the injected image to FILL the landscape sensor
+   frame (1920×1080) and center-crops the overflow. A portrait image loses its top and bottom thirds
+   on Android — enough to clip a barcode clean out of the analysed frame — and on iOS it fails to
+   inject at all, leaving Sauce's placeholder image on screen. A 16:9 image maps ~1:1._
+2. **_Size codes by their fraction of image width, not absolute pixels_** _(the frame rescales
+   everything). For PDF-417, column count — not payload length — sets module width: the data region
+   is `columns × 17` modules, so fewer columns means fatter, more decodable modules. Never resample a
+   barcode with a smoothing kernel: a blurred bar merges, and code-39 has no checksum to catch it, so
+   it decodes as a silently WRONG serial._
+
+_`scripts/generate-scan-assets.mjs` writes `assets/images/scan/card_<persona>.png` — one combo-card
+back per BCSC persona in `src/constants.ts`, reachable as that persona's `cardScanTarget`. Rerun it
+after changing a payload or size; it prints px-per-module for every code it writes._
+
+_The cards are generated rather than photographed because the serial screen needs BOTH codes — the
+serial from the 1D code-39 and the birthdate from the PDF-417 — matching the same persona. The shared
+`dl_*.jpg` template's own 1D codes encode the design default `S00021029`, which would authorize a
+nonexistent card._
+
+> **_App behaviour that limits this (worth its own ticket):_** `ScanSerialScreen` reroutes to the
+> non-BCSC ("two government-issued IDs") flow the instant any scanned code decodes to `null`, guarded
+> only by "nothing captured yet". Since the vision-camera patch enables ML Kit's
+> `enableAllPotentialBarcodes()` and `decodeBarcodes` does not filter value-less codes, a partial
+> detection triggers it — so a real user whose card is still half-aligned can be bounced out of the
+> BCSC flow before the scanner ever gets a clean read. Seven purpose-built image variants across six
+> device sessions (varying geometry, sharpness, module size, orientation and injection ordering) all
+> reroute within seconds, so this is not an image problem. Skipping value-less codes in
+> `decodeBarcodes` — the same guard it already applies to `type === 'unknown'` — would fix the
+> user-facing behaviour and make this screen testable by injection._
+
 ## _CI/CD_
 
 _Tests run automatically in GitHub Actions via a device matrix that controls which OS versions are tested:_
