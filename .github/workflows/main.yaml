@@ -606,9 +606,6 @@ jobs:
           agvtool new-version ${CURRENT_PROJECT_VERSION} && \
           agvtool new-marketing-version ${MARKETING_VERSION}
 
-        # Actual environment variables are not being picked up
-        # by the build so they're put into an .env file.
-
       # Secrets are being consolidated into the bcsc-mobile-app-cd 1Password vault;
       # OP_SERVICE_ACCOUNT_TOKEN is the single bootstrap secret that stays in GitHub.
       # This step is fork-guarded because fork PRs cannot read that secret; when
@@ -622,6 +619,8 @@ jobs:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           REMOTE_LOGGING_URL: op://bcsc-mobile-app-cd/remote-logging-url-prod/prod
 
+        # Actual environment variables are not being picked up
+        # by the build so they're put into an .env file.
       - name: Create environment settings
         uses: ./.github/workflows/actions/create-environment-settings
         with:
@@ -919,9 +918,6 @@ jobs:
       - name: Apply variant configuration
         run: node scripts/apply-variant.mjs ${{ matrix.variant }}
 
-      # Actual environment variables are not being picked up
-      # by the build so they're put into an .env file.
-
       # Secrets are being consolidated into the bcsc-mobile-app-cd 1Password vault;
       # OP_SERVICE_ACCOUNT_TOKEN is the single bootstrap secret that stays in GitHub.
       # This step is fork-guarded because fork PRs cannot read that secret; when
@@ -935,6 +931,8 @@ jobs:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           REMOTE_LOGGING_URL: op://bcsc-mobile-app-cd/remote-logging-url-prod/prod
 
+      # Actual environment variables are not being picked up
+      # by the build so they're put into an .env file.
       - name: Create environment settings
         uses: ./.github/workflows/actions/create-environment-settings
         with:
