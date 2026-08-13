@@ -1,5 +1,5 @@
 import { PressableOpacity } from '@/components/PressableOpacity'
-import { CONTACT_US_GOVERNMENT_WEBSITE_URL, hitSlop, USER_REPORT_ERROR_CODE } from '@/constants'
+import { CONTACT_US_HELP_URL, hitSlop, USER_REPORT_ERROR_CODE } from '@/constants'
 import { BCState } from '@/store'
 import { reportProblem } from '@/utils/logger'
 import { Button, ButtonType, Link, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
@@ -204,10 +204,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
       <ThemedText>
         <ThemedText variant="bold">{t('BCSC.ReportProblem.NotePrefix')}</ThemedText>
         {t('BCSC.ReportProblem.NoteBody')}
-        <Link
-          linkText={t('BCSC.ReportProblem.SupportLink')}
-          onPress={() => Linking.openURL(CONTACT_US_GOVERNMENT_WEBSITE_URL)}
-        />
+        <Link linkText={t('BCSC.ReportProblem.SupportLink')} onPress={() => Linking.openURL(CONTACT_US_HELP_URL)} />
       </ThemedText>
 
       <Button

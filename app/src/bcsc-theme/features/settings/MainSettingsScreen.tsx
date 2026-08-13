@@ -2,7 +2,7 @@ import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { parseBirthdateToLocalDate } from '@/bcsc-theme/utils/birthdate'
-import { HELP_URL } from '@/constants'
+import { HELP_URL, HelpCentreUrl } from '@/constants'
 import { StackNavigationProp } from '@react-navigation/stack'
 import moment from 'moment'
 import React from 'react'
@@ -23,7 +23,10 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
   const apiClient = useBCSCApiClient()
 
   const onContactUs = () => {
-    navigation.navigate(BCSCScreens.MainContactUs)
+    navigation.navigate(BCSCScreens.MainWebView, {
+      url: HelpCentreUrl.CONTACT_US,
+      title: t('BCSC.Screens.ContactUs'),
+    })
   }
 
   const onHelp = () => {
