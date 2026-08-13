@@ -1,3 +1,4 @@
+import bwipjs from 'bwip-js'
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
@@ -168,4 +169,86 @@ export async function injectPhoto(
   const source = masks.length > 0 ? await maskImageRegions(resolved, masks) : resolved
   const padded = await padImage(source, padding)
   await injectCameraImage(padded)
+}
+
+/** Options for {@link composeScanTarget}: canvas defaults to a 1080p landscape frame. */
+export interface ScanTargetOptions {
+  /** Resize the asset to this fraction of canvas width (nearest-neighbor — 2D codes only; 1D assets
+   *  are generated at final pixel size and must be composited as-is, so leave this unset for them). */
+  widthFraction?: number
+  canvasWidth?: number
+  canvasHeight?: number
+}
+
+/**
+ * Center a barcode/QR asset on a white canvas matching the camera-frame aspect and return base64 PNG.
+ *
+ * Sauce scales the injected image to FILL the landscape sensor frame, center-cropping the overflow —
+ * a canvas already at the frame's aspect maps ~1:1, so the code's on-sensor size is predictable and
+ * nothing is cropped away. The white surround doubles as an oversized quiet zone.
+ *
+ * @param source Asset filename under `e2e/assets/`, an absolute path, or a rendered image buffer.
+ */
+export async function composeScanTarget(source: string | Buffer, options: ScanTargetOptions = {}): Promise<string> {
+  const { widthFraction, canvasWidth = 1920, canvasHeight = 1080 } = options
+  const input = typeof source === 'string' ? resolveAssetPath(source) : source
+  const asset = sharp(input)
+  const { width, height } = await asset.metadata()
+  if (!width || !height) {
+    throw new Error(`composeScanTarget: could not read dimensions of ${typeof source === 'string' ? input : 'buffer'}`)
+  }
+
+  const scaled = widthFraction
+    ? await asset.resize({ width: Math.round(widthFraction * canvasWidth), kernel: 'nearest' }).toBuffer()
+    : await asset.toBuffer()
+  const { width: w = width, height: h = height } = widthFraction ? await sharp(scaled).metadata() : { width, height }
+  if (w > canvasWidth || h > canvasHeight) {
+    throw new Error(`composeScanTarget: asset ${w}x${h} does not fit the ${canvasWidth}x${canvasHeight} canvas`)
+  }
+
+  const composed = await sharp({
+    create: { width: canvasWidth, height: canvasHeight, channels: 3, background: { r: 255, g: 255, b: 255 } },
+  })
+    .composite([{ input: scaled, gravity: 'center' }])
+    .png()
+    .toBuffer()
+  return composed.toString('base64')
+}
+
+/** Compose a scan target ({@link composeScanTarget}) and inject it — the scanning counterpart to
+ *  {@link injectPhoto}. */
+export async function injectScanTarget(source: string | Buffer, options: ScanTargetOptions = {}): Promise<void> {
+  await injectCameraImage(await composeScanTarget(source, options))
+}
+
+/** Roughly the on-canvas size of a rendered QR — the size proven to decode on both platforms. */
+const QR_TARGET_PX = 800
+
+/**
+ * Render `text` as a QR sized for the injected frame.
+ *
+ * Rendered at an INTEGER bwip-js scale rather than resized to a target width: modules stay exactly
+ * square with no resampling, and the module count (and so the native size) varies with payload
+ * length, which a fixed scale would leave over- or undersized.
+ */
+async function renderQrCode(text: string): Promise<Buffer> {
+  const unit = await bwipjs.toBuffer({ bcid: 'qrcode', text, scale: 1, backgroundcolor: 'FFFFFF' })
+  const { width = QR_TARGET_PX } = await sharp(unit).metadata()
+  return bwipjs.toBuffer({
+    bcid: 'qrcode',
+    text,
+    scale: Math.max(1, Math.round(QR_TARGET_PX / width)),
+    backgroundcolor: 'FFFFFF',
+  })
+}
+
+/**
+ * Render a QR for `text` and inject it — for codes minted at runtime (a live pairing code), which no
+ * committed asset can carry.
+ *
+ * Inject BEFORE opening the scanner: swapping the image into a live camera leaves transition frames
+ * where only part of it has landed, which the scanner reads as a malformed code.
+ */
+export async function injectQrCode(text: string, options: ScanTargetOptions = {}): Promise<void> {
+  await injectScanTarget(await renderQrCode(text), options)
 }

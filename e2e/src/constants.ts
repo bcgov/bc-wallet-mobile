@@ -50,6 +50,12 @@ export const BACKGROUND_LOCK_SECONDS = 70
  */
 export const BACKGROUND_NO_LOCK_SECONDS = 5
 
+/**
+ * `cardScanImage` is a photo of the card, for EVIDENCE capture. `cardScanTarget` is a generated
+ * combo-card back carrying that persona's own serial (code-39) and birthdate (PDF-417) — the pair
+ * `ScanSerial` needs — built by `scripts/generate-scan-assets.mjs`. Fred has neither: the non-BCSC
+ * persona has no card serial.
+ */
 export const TestUsers = {
   photo: {
     username: 'e2e_shaggy',
@@ -57,6 +63,7 @@ export const TestUsers = {
     dob: '19690913',
     documentNumber: 'WG12345678',
     cardScanImage: 'images/dl_shaggy.jpg',
+    cardScanTarget: 'images/scan/card_shaggy.png',
     selfieImage: 'images/id_shaggy.jpg',
     firstName: 'Shaggy',
     lastName: 'Rogers',
@@ -68,6 +75,7 @@ export const TestUsers = {
     dob: '19951217',
     documentNumber: 'WG12345678',
     cardScanImage: 'images/dl_velma.jpg',
+    cardScanTarget: 'images/scan/card_velma.png',
     selfieImage: 'images/id_velma.jpg',
     firstName: 'Velma',
     lastName: 'Dinkley',
@@ -80,6 +88,7 @@ export const TestUsers = {
     documentNumber: 'WG12345678',
     documentTypeId: '12',
     cardScanImage: 'images/dl_daphne.jpg',
+    cardScanTarget: 'images/scan/card_daphne.png',
     selfieImage: 'images/id_daphne.jpg',
     firstName: 'Daphne',
     lastName: 'Blake',
