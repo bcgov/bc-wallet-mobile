@@ -8,6 +8,7 @@ import { BCDispatchAction, BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import * as PushNotifications from '@/utils/PushNotificationsHelper'
 import {
+  ProofRequestExpirationTime,
   ScreenWrapper,
   testIdWithKey,
   ThemedText,
@@ -53,6 +54,7 @@ interface SettingsContentProps {
   onContacts?: () => void
   onForgetAllPairings?: () => void
   onAutoLock?: () => void
+  onProofRequestExpiration?: () => void
   onAppSecurity?: () => void
   onChangePIN?: () => void
   onResetWallet?: () => void
@@ -224,6 +226,7 @@ interface AuthenticatedSectionProps {
   onEditNickname?: () => void
   onAccountDetails?: () => void
   onAutoLock?: () => void
+  onProofRequestExpiration?: () => void
   onForgetAllPairings?: () => void
   onResetWallet?: () => void
   onContacts?: () => void
@@ -244,6 +247,7 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
   onEditNickname,
   onAccountDetails,
   onAutoLock,
+  onProofRequestExpiration,
   onForgetAllPairings,
   onResetWallet,
   onContacts,
@@ -271,6 +275,11 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
   const notificationsOnText =
     notificationStatus === PushNotifications.NotificationPermissionStatus.GRANTED ? 'ON' : 'OFF'
   const autoLockTimeText = `${store.preferences.autoLockTime ?? DEFAULT_AUTO_LOCK_TIME_MIN} min`
+  const proofRequestExpirationMs = store.preferences.proofRequestExpirationMs ?? ProofRequestExpirationTime.FortyEightHours
+  const proofRequestExpirationLabelKey =
+    Object.entries(ProofRequestExpirationTime).find(([, value]) => value === proofRequestExpirationMs)?.[0] ??
+    'FortyEightHours'
+  const proofRequestExpirationText = t(`Developer.ProofRequestExpirationTimes.${proofRequestExpirationLabelKey}`)
   const profileName = store.bcsc.selectedNickname?.trim() || t('BCSC.Title')
 
   return (
@@ -330,6 +339,15 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
               onAutoLock ? (
                 <ListButton key="lock" onPress={onAutoLock} testID={testIdWithKey('AutoLock')}>
                   <Row title={t('BCSC.Settings.AutoLockTime')} endAdornment={autoLockTimeText} />
+                </ListButton>
+              ) : null,
+              developerModeEnabled && onProofRequestExpiration ? (
+                <ListButton
+                  key="proofRequestExpiration"
+                  onPress={onProofRequestExpiration}
+                  testID={testIdWithKey('ProofRequestExpiration')}
+                >
+                  <Row title={t('BCSC.Settings.ProofRequestExpiry')} endAdornment={proofRequestExpirationText} />
                 </ListButton>
               ) : null,
               <ListButton key="notifications" onPress={onNotifications ?? noop} testID={testIdWithKey('Notifications')}>
@@ -432,6 +450,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   onAccountDetails,
   onForgetAllPairings,
   onAutoLock,
+  onProofRequestExpiration,
   onAppSecurity,
   onChangePIN,
   onResetWallet,
@@ -536,6 +555,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           onEditNickname={onEditNickname}
           onAccountDetails={onAccountDetails}
           onAutoLock={onAutoLock}
+          onProofRequestExpiration={onProofRequestExpiration}
           onForgetAllPairings={onForgetAllPairings}
           onResetWallet={onResetWallet}
           onPressOptInAnalytics={onPressOptInAnalytics}

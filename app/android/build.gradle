@@ -24,7 +24,21 @@ buildscript {
     }
 }
 
-allprojects {
+allprojects { project ->
+    // TODO: rewrite this
+    // @animo-id/expo-secure-environment (pulled in via the locally-linked bifold
+    // fork) sets its own kotlinOptions.jvmTarget = "17" directly, which finalizes
+    // that toolchain property. RNGP's global Java/Kotlin alignment then tries to
+    // set the same value again and Gradle throws "the value for property
+    // 'languageVersion' is final and cannot be changed any further", even though
+    // the values already match. Scope the alignment opt-out to just this module
+    // (rather than disabling it globally) so every other module - notably
+    // expo-modules-core, which relies on the global aligner to bump its Java
+    // compile task to 17 - still gets aligned automatically.
+    if (project.path == ':animo-id-expo-secure-environment') {
+        project.ext.set('react.internal.disableJavaVersionAlignment', 'true')
+    }
+
     repositories {
         mavenCentral()
         mavenLocal()
