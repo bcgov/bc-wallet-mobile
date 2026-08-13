@@ -3,10 +3,7 @@ import { render, screen } from '@testing-library/react-native'
 import React from 'react'
 import FloatingHelpMenu from './FloatingHelpMenu'
 
-// The global react-i18next mock (see app/__mocks__/react-i18next.ts) drops interpolation
-// values and returns the raw key, which would hide a regression in the version/build
-// interpolation this test is meant to catch. Override locally with a mock that actually
-// interpolates the `version`/`build` options into the real Version copy.
+// The global react-i18next mock returns raw keys, so interpolate locally to assert version/build.
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, options?: Record<string, string>) => {
@@ -28,8 +25,7 @@ describe('FloatingHelpMenu', () => {
       </BasicAppContext>
     )
 
-    // react-native-device-info mock (__mocks__/react-native-device-info.ts) fixes
-    // getVersion() to '4.0.0' and getBuildNumber() to '142'.
+    // '4.0.0' and '142' come from the react-native-device-info jest mock.
     expect(screen.getByText('App version: 4.0.0 (142)')).toBeTruthy()
   })
 })
