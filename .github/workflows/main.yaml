@@ -606,6 +606,20 @@ jobs:
           agvtool new-version ${CURRENT_PROJECT_VERSION} && \
           agvtool new-marketing-version ${MARKETING_VERSION}
 
+      # Secrets are being consolidated into the bcsc-mobile-app-cd 1Password vault;
+      # OP_SERVICE_ACCOUNT_TOKEN is the single bootstrap secret that stays in GitHub.
+      # This step is fork-guarded because fork PRs cannot read that secret; when
+      # skipped, both outputs are empty, so .env gets the same empty values on
+      # forks as it did before these moved to 1Password.
+      - name: Load .env secrets from 1Password
+        id: op_remote_logging
+        if: github.event.pull_request.head.repo.fork != true
+        uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          REMOTE_LOGGING_URL: op://bcsc-mobile-app-cd/remote-logging-url/prod
+          MEDIATOR_URL: op://bcsc-mobile-app-cd/mediator-url/prod
+
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
@@ -613,11 +627,11 @@ jobs:
         with:
           build_target: ${{ env.BUILD_TARGET }}
           mediator_use_push_notifications: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
-          mediator_url: ${{ secrets.MEDIATOR_URL }}
+          mediator_url: ${{ steps.op_remote_logging.outputs.MEDIATOR_URL }}
           oca_url: ${{ vars.OCA_URL }}
           proof_template_url: ${{ vars.PROOF_TEMPLATE_URL }}
           ledger_auto_update: ${{ vars.LEDGER_AUTO_UPDATE }}
-          remote_logging_url: ${{ secrets.REMOTE_LOGGING_URL }}
+          remote_logging_url: ${{ steps.op_remote_logging.outputs.REMOTE_LOGGING_URL }}
           indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
           snowplow_collector_url: ${{ vars.SNOWPLOW_COLLECTOR_URL }}
           default_environment: ${{ env.DEFAULT_ENVIRONMENT }}
@@ -905,6 +919,20 @@ jobs:
       - name: Apply variant configuration
         run: node scripts/apply-variant.mjs ${{ matrix.variant }}
 
+      # Secrets are being consolidated into the bcsc-mobile-app-cd 1Password vault;
+      # OP_SERVICE_ACCOUNT_TOKEN is the single bootstrap secret that stays in GitHub.
+      # This step is fork-guarded because fork PRs cannot read that secret; when
+      # skipped, both outputs are empty, so .env gets the same empty values on
+      # forks as it did before these moved to 1Password.
+      - name: Load .env secrets from 1Password
+        id: op_remote_logging
+        if: github.event.pull_request.head.repo.fork != true
+        uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          REMOTE_LOGGING_URL: op://bcsc-mobile-app-cd/remote-logging-url/prod
+          MEDIATOR_URL: op://bcsc-mobile-app-cd/mediator-url/prod
+
       # Actual environment variables are not being picked up
       # by the build so they're put into an .env file.
       - name: Create environment settings
@@ -912,11 +940,11 @@ jobs:
         with:
           build_target: ${{ env.BUILD_TARGET }}
           mediator_use_push_notifications: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
-          mediator_url: ${{ secrets.MEDIATOR_URL }}
+          mediator_url: ${{ steps.op_remote_logging.outputs.MEDIATOR_URL }}
           oca_url: ${{ vars.OCA_URL }}
           proof_template_url: ${{ vars.PROOF_TEMPLATE_URL }}
           ledger_auto_update: ${{ vars.LEDGER_AUTO_UPDATE }}
-          remote_logging_url: ${{ secrets.REMOTE_LOGGING_URL }}
+          remote_logging_url: ${{ steps.op_remote_logging.outputs.REMOTE_LOGGING_URL }}
           indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
           snowplow_collector_url: ${{ vars.SNOWPLOW_COLLECTOR_URL }}
           default_environment: ${{ env.DEFAULT_ENVIRONMENT }}
