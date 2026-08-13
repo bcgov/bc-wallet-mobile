@@ -19,6 +19,16 @@ on:
 
 jobs:
   check-secrets:
+    # Fork PRs never have access to repo/org secrets (including
+    # OP_SERVICE_ACCOUNT_TOKEN), so this job would otherwise always fail
+    # for external contributors. Downstream jobs (build-ios, build-android)
+    # already implicitly require this job to succeed via `needs:`, and
+    # today already skip entirely on fork PRs because this job fails —
+    # skipping it cleanly here reports that as "skipped" instead of a
+    # confusing red "failed" check, without changing that downstream
+    # outcome (a skipped `needs:` job still fails the default success()
+    # gate on build-ios/build-android, same as a failed one did).
+    if: github.event.pull_request.head.repo.fork != true
     runs-on: ubuntu-22.04
     permissions: {}
     steps:
