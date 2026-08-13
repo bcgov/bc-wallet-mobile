@@ -614,7 +614,6 @@ jobs:
           build_target: ${{ env.BUILD_TARGET }}
           mediator_use_push_notifications: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           mediator_url: ${{ secrets.MEDIATOR_URL }}
-          ias_agent_invite_url: ${{ secrets.IAS_AGENT_INVITE_URL }}
           oca_url: ${{ vars.OCA_URL }}
           proof_template_url: ${{ vars.PROOF_TEMPLATE_URL }}
           ledger_auto_update: ${{ vars.LEDGER_AUTO_UPDATE }}
@@ -789,16 +788,6 @@ jobs:
           app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           app_store_connect_key_identifier: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
 
-      # TODO: Change this to a Teams integration
-      # - name: Send notification for iOS failure
-      #   if: failure() && github.ref_name == 'main' && github.event.pull_request.head.repo.fork != true
-      #   uses: ./.github/workflows/actions/send-rocketchat-notification
-      #   with:
-      #     job_title: "iOS Build (${{ matrix.variant }}) - Run number ${{ github.run_number }}"
-      #     job_status: ${{ job.status }}
-      #     webhook_url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
-
   build-android:
     name: Build Android - ${{ matrix.variant }}
     needs: [check-secrets, check-vars, early-exit-check, prepare-android, compute-variants]
@@ -924,7 +913,6 @@ jobs:
           build_target: ${{ env.BUILD_TARGET }}
           mediator_use_push_notifications: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           mediator_url: ${{ secrets.MEDIATOR_URL }}
-          ias_agent_invite_url: ${{ secrets.IAS_AGENT_INVITE_URL }}
           oca_url: ${{ vars.OCA_URL }}
           proof_template_url: ${{ vars.PROOF_TEMPLATE_URL }}
           ledger_auto_update: ${{ vars.LEDGER_AUTO_UPDATE }}
@@ -1048,16 +1036,6 @@ jobs:
           # this JSON credentials file. --out-file writes the bytes as-is.
           op read "op://bcsc-mobile-app-cd/google-play-publisher/service-account.json" --out-file "${GOOGLE_API_CREDENTIALS_FILE}" --force && \
           GOOGLE_API_CREDENTIALS="$PWD/${GOOGLE_API_CREDENTIALS_FILE}" npx @bcgov/gpublish
-
-      # TODO: Change this to a Teams integration
-      # - name: Send notification for Android failure
-      #   if: failure() && github.ref_name == 'main' && github.event.pull_request.head.repo.fork != true
-      #   uses: ./.github/workflows/actions/send-rocketchat-notification
-      #   with:
-      #     job_title: "Android Build (${{ matrix.variant }}) - Run number ${{ github.run_number }}"
-      #     job_status: ${{ job.status }}
-      #     webhook_url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
 
   build-summary:
     runs-on: ubuntu-latest
