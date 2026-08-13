@@ -223,11 +223,8 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   useEffect(() => {
     if (flowState === VideoCallFlowState.IDLE) {
       startVideoCall()
-      // Passing boolean false maps to force-speaker flag -1 (speaker forced OFF,
-      // earpiece as default route) — it does NOT clear the override (a non-boolean
-      // arg / flag 0 does that). We set it before start() so start({ media: 'video' })
-      // does not force audio to the speaker on Android, allowing routing to
-      // Bluetooth/wired headsets.
+      // Boolean false maps to force-speaker flag -1 (force earpiece on Android); it does NOT clear
+      // the override (flag 0 does). start() re-initialises routing, so this does not set the initial route.
       InCallManager.setForceSpeakerphoneOn(false)
       InCallManager.start({ media: 'video', auto: true })
     }
