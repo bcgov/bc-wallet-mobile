@@ -7,10 +7,15 @@
 #   smoke        — basic launch + first navigation
 #   onboarding   — onboarding journeys
 #   auth         — auth/unlock journey
-#   main         — main navigation + settings + wallet credential journeys (issuer creds from 1Password; needs OP_SERVICE_ACCOUNT_TOKEN)
-#   verify       — verify entry + verified card-type journeys (needs SM_* creds)
-#   regression   — every per-area journey (nightly default; needs SM_* + OP_SERVICE_ACCOUNT_TOKEN)
+#   main         — main navigation + settings + wallet credential journeys (issuer creds from 1Password)
+#   verify       — verify entry + verified card-type journeys (uses SM_* creds)
+#   regression   — every per-area journey (nightly default)
 #   migration    — v3 → v4 app upgrade flow (Sauce RDC only; separate v3 build)
+#
+# All suites require the single OP_SERVICE_ACCOUNT_TOKEN secret: SAUCE_USERNAME,
+# SAUCE_ACCESS_KEY, SM_USER, and SM_PASSWORD are all loaded from the
+# bcsc-mobile-app-cd 1Password vault unconditionally, even for suites (smoke,
+# onboarding, auth) that don't use the SM_* values.
 #
 # Device matrix:
 #   Callers pass a device_matrix JSON array of {platform, device, os_version}
@@ -50,19 +55,18 @@ on:
         required: false
         default: 'ubuntu-latest-m'
     secrets:
-      SAUCE_USERNAME:
-        required: true
-      SAUCE_ACCESS_KEY:
-        required: true
-      SM_USER:
-        required: false
-        description: 'SiteMinder username for in-person verification auto-approval (required for verify/regression/migration; omit for smoke/onboarding/auth/main)'
-      SM_PASSWORD:
-        required: false
-        description: 'SiteMinder password for in-person verification auto-approval'
       OP_SERVICE_ACCOUNT_TOKEN:
-        required: false
-        description: '1Password service-account token — required for main/regression, whose issuer credentials load from the bcsc-mobile-app-cd vault (see e2e/issuer/README.md)'
+        required: true
+        description: >
+          1Password service account token. This job loads SAUCE_USERNAME,
+          SAUCE_ACCESS_KEY, SM_USER, and SM_PASSWORD from the
+          bcsc-mobile-app-cd vault itself (in addition to the traction issuer
+          credentials it already loaded — see e2e/issuer/README.md), so
+          callers only need to pass this one bootstrap secret through. SM_*
+          were previously optional (only required for verify/regression/
+          migration suites); since all four values now come from the vault
+          unconditionally, SM_* are always present, even for suites that
+          don't use them.
   workflow_dispatch:
     inputs:
       suite:
@@ -171,13 +175,25 @@ jobs:
           # tsx binary directly — yarn's own stdout banners would corrupt GITHUB_ENV
           ./node_modules/.bin/tsx scripts/issuer-provision.ts >> "$GITHUB_ENV"
 
+      # Outputs (not export-env) keep these four values scoped to only the
+      # step below that references them.
+      - name: Load SauceLabs and SiteMinder secrets from 1Password
+        id: op_e2e
+        uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          SAUCE_USERNAME: op://bcsc-mobile-app-cd/saucelabs/username
+          SAUCE_ACCESS_KEY: op://bcsc-mobile-app-cd/saucelabs/credential
+          SM_USER: op://bcsc-mobile-app-cd/bcsc-e2e-test-account/username
+          SM_PASSWORD: op://bcsc-mobile-app-cd/bcsc-e2e-test-account/password
+
       - name: Run WDIO tests
         working-directory: e2e
         env:
-          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-          SM_USER: ${{ secrets.SM_USER }}
-          SM_PASSWORD: ${{ secrets.SM_PASSWORD }}
+          SAUCE_USERNAME: ${{ steps.op_e2e.outputs.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ steps.op_e2e.outputs.SAUCE_ACCESS_KEY }}
+          SM_USER: ${{ steps.op_e2e.outputs.SM_USER }}
+          SM_PASSWORD: ${{ steps.op_e2e.outputs.SM_PASSWORD }}
           SAUCE_REGION: us
           VARIANT: bcsc-dev
           DEVICE_MATRIX: ${{ inputs.device_matrix }}
