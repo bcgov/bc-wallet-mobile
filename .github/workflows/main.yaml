@@ -608,6 +608,20 @@ jobs:
 
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
+
+      # Secrets are being consolidated into the bcsc-mobile-app-cd 1Password vault;
+      # OP_SERVICE_ACCOUNT_TOKEN is the single bootstrap secret that stays in GitHub.
+      # This step is fork-guarded because fork PRs cannot read that secret; when
+      # skipped, the output is empty, so REMOTE_LOGGING_URL in .env comes out
+      # empty on forks too — same as before this value moved to 1Password.
+      - name: Load remote logging URL from 1Password
+        id: op_remote_logging
+        if: github.event.pull_request.head.repo.fork != true
+        uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          REMOTE_LOGGING_URL: op://bcsc-mobile-app-cd/remote-logging-url-prod/prod
+
       - name: Create environment settings
         uses: ./.github/workflows/actions/create-environment-settings
         with:
@@ -617,7 +631,7 @@ jobs:
           oca_url: ${{ vars.OCA_URL }}
           proof_template_url: ${{ vars.PROOF_TEMPLATE_URL }}
           ledger_auto_update: ${{ vars.LEDGER_AUTO_UPDATE }}
-          remote_logging_url: ${{ secrets.REMOTE_LOGGING_URL }}
+          remote_logging_url: ${{ steps.op_remote_logging.outputs.REMOTE_LOGGING_URL }}
           indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
           snowplow_collector_url: ${{ vars.SNOWPLOW_COLLECTOR_URL }}
           default_environment: ${{ env.DEFAULT_ENVIRONMENT }}
@@ -907,6 +921,20 @@ jobs:
 
       # Actual environment variables are not being picked up
       # by the build so they're put into an .env file.
+
+      # Secrets are being consolidated into the bcsc-mobile-app-cd 1Password vault;
+      # OP_SERVICE_ACCOUNT_TOKEN is the single bootstrap secret that stays in GitHub.
+      # This step is fork-guarded because fork PRs cannot read that secret; when
+      # skipped, the output is empty, so REMOTE_LOGGING_URL in .env comes out
+      # empty on forks too — same as before this value moved to 1Password.
+      - name: Load remote logging URL from 1Password
+        id: op_remote_logging
+        if: github.event.pull_request.head.repo.fork != true
+        uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          REMOTE_LOGGING_URL: op://bcsc-mobile-app-cd/remote-logging-url-prod/prod
+
       - name: Create environment settings
         uses: ./.github/workflows/actions/create-environment-settings
         with:
@@ -916,7 +944,7 @@ jobs:
           oca_url: ${{ vars.OCA_URL }}
           proof_template_url: ${{ vars.PROOF_TEMPLATE_URL }}
           ledger_auto_update: ${{ vars.LEDGER_AUTO_UPDATE }}
-          remote_logging_url: ${{ secrets.REMOTE_LOGGING_URL }}
+          remote_logging_url: ${{ steps.op_remote_logging.outputs.REMOTE_LOGGING_URL }}
           indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
           snowplow_collector_url: ${{ vars.SNOWPLOW_COLLECTOR_URL }}
           default_environment: ${{ env.DEFAULT_ENVIRONMENT }}
