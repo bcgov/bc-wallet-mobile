@@ -75,7 +75,7 @@ import { getResumeStepRoute } from '../utils/resume-step-route'
 
 /**
  * Creates a custom back button for the verify stack that handles navigation and verification flow logic.
- * @param onPress Optional callback to handle back button press. If provided, it will be called with the navigation prop.
+ * @param onPress Optional callback to handle back button press
  * @returns A React component that renders the custom back button.
  */
 const createVerifyHeaderBackButton = (
