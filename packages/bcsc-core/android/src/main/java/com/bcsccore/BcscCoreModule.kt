@@ -2812,15 +2812,8 @@ class BcscCoreModule(
         reason: String?,
         promise: Promise,
     ) {
-        // The biometric SUCCESS callback below fires on the main thread
-        // (DeviceAuthenticationServiceImpl uses runOnUiThread + getMainExecutor). Its work
-        // performs multiple secure key store round trips (issuer/account file decryption, PIN
-        // hash lookup, and — on the v3 migration path with no stored PIN hash — a 210,000
-        // iteration PBKDF2 derivation plus a second key store write) that can take long enough
-        // to trigger an ANR. That branch is moved onto backgroundExecutor so the main thread is
-        // never blocked; every settle path is routed through a GuardedPromise since running the
-        // work asynchronously widens the window in which more than one terminal callback path
-        // could attempt to settle the same promise.
+        // The biometric callback fires on the main thread, so the SUCCESS branch's keystore work
+        // runs on backgroundExecutor; async settling means every path must go through GuardedPromise.
         val guarded = GuardedPromise(promise)
 
         try {
@@ -2852,7 +2845,6 @@ class BcscCoreModule(
                         try {
                             backgroundExecutor.execute {
                                 try {
-                                    // Get the stored PIN hash
                                     val hashResult = pinService.getPINHash(accountID)
 
                                     if (hashResult != null) {
@@ -2887,10 +2879,7 @@ class BcscCoreModule(
                                 }
                             }
                         } catch (e: RejectedExecutionException) {
-                            // The executor has already been shut down (e.g. invalidate() ran
-                            // during a dev reload or activity teardown while the biometric
-                            // prompt was still open). Settle rather than leave the JS promise
-                            // pending forever.
+                            // Executor shut down while the prompt was open; settle so JS is not left pending.
                             Log.w(NAME, "unlockWithDeviceSecurity: background executor unavailable, rejecting", e)
                             guarded.reject(
                                 "E_UNLOCK_DEVICE_SECURITY_ERROR",
@@ -4147,11 +4136,8 @@ class BcscCoreModule(
         PinService(reactApplicationContext, nativeStorage)
     }
 
-    // Single-thread executor for offloading main-thread-unsafe work triggered from
-    // biometric/device-authentication callbacks (see unlockWithDeviceSecurity). Deliberately a
-    // plain java.util.concurrent executor rather than coroutines: bcsc-core declares no
-    // coroutines dependency, the workload here is a single hop with nothing to compose, and one
-    // named serialized thread gives mutual exclusion over keystore/PIN-storage work for free.
+    // Serialized off-main thread for keystore/PIN work reached from biometric callbacks.
+    // A plain executor, not coroutines: bcsc-core declares no coroutines dependency.
     private val backgroundExecutorDelegate =
         lazy {
             Executors.newSingleThreadExecutor { r -> Thread(r, "BcscCoreBackground") }
@@ -4159,10 +4145,8 @@ class BcscCoreModule(
     private val backgroundExecutor: ExecutorService by backgroundExecutorDelegate
 
     /**
-     * Shuts down [backgroundExecutor] when the module is torn down (dev reload, activity
-     * teardown). Checks [Lazy.isInitialized] first so tearing down a module that never used the
-     * executor doesn't create one just to shut it down. Uses shutdown() rather than
-     * shutdownNow() so an in-flight migration write is never interrupted mid-keystore-write.
+     * Shuts the background executor down on teardown, without initializing one that was never used.
+     * shutdown(), not shutdownNow(): an in-flight migration must never be interrupted mid-keystore-write.
      */
     override fun invalidate() {
         if (backgroundExecutorDelegate.isInitialized()) {
