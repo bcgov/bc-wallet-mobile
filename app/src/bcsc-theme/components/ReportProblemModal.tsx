@@ -86,11 +86,12 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
       title: t('BCSC.ReportProblem.Title'),
       description: description.trim(),
       code: USER_REPORT_ERROR_CODE,
-      installId: store.bcsc.installId,
+      installId: store.bcsc.installId, // App install ID
+      sessionId: store.developer.remoteDebugging.sessionId, // Remote logging session ID
     })
 
     setReportId(reportId)
-  }, [description, t, store.bcsc.installId])
+  }, [description, t, store.bcsc.installId, store.developer.remoteDebugging.sessionId])
 
   const handleCopy = useCallback(() => {
     if (!reportId) {

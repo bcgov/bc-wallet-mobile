@@ -160,7 +160,4 @@ jobs:
       build_number: ${{ needs.resolve-build.outputs.build_number }}
       device_matrix: ${{ inputs.device_matrix || '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"iOS","device":"iPhone.*","os_version":"17"},{"platform":"Android","device":"Google.*","os_version":"15"},{"platform":"Android","device":"Google.*","os_version":"14"}]' }}
     secrets:
-      SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-      SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-      SM_USER: ${{ secrets.SM_USER }}
-      SM_PASSWORD: ${{ secrets.SM_PASSWORD }}
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}

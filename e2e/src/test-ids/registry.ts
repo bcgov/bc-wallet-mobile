@@ -182,6 +182,63 @@ export const TestIds = {
     photoInstructions: {
       takePhoto: 'TakePhoto',
     },
+    /** Selfie camera (`TakePhoto`) — the shared bifold MaskedCamera, front-facing and oval-masked.
+     *  CAMERA-ONLY (Sauce injection). NB the shutter key is the SAME `TakePhoto` that PhotoInstructions
+     *  uses for its CTA, so `cancel` is the only thing that tells the two screens apart. */
+    selfieCapture: {
+      takePhoto: 'TakePhoto',
+      cancel: 'CancelCamera',
+    },
+    /** `VideoInstructions` ('Selfie Video Tips') — issues a FRESH prompt set on every focus, and
+     *  `startRecording` stays disabled until that lands (a recording is only accepted against the set
+     *  the server issued for it). */
+    videoInstructions: {
+      startRecording: 'StartRecording',
+    },
+    /** BARE testIDs on VideoInstructions — no `testIdWithKey`, so no prefix. `promptsLoading` is up
+     *  while the set is being issued; `retryLoadPrompts` replaces it when that fetch failed. */
+    videoInstructionsBare: {
+      promptsLoading: 'PromptsLoading',
+      retryLoadPrompts: 'RetryLoadPrompts',
+    },
+    /** `TakeVideo` — recording ARMS ITSELF on focus after a 3-2-1 countdown; there is no start button,
+     *  and the screen needs camera AND microphone permission (two sequential dialogs). `nextPrompt` is
+     *  disabled for the first 2s of each prompt and its LAST press stops the recording. The Cancel
+     *  control carries only an accessibility label — no testID. */
+    takeVideo: {
+      nextPrompt: 'NextPrompt',
+    },
+    /** `VideoReview` — accept or retake the recording. `useVideo` resets the stack to EvidenceUploading. */
+    videoReview: {
+      useVideo: 'UseVideo',
+      retakeVideo: 'RetakeVideo',
+      togglePlayPause: 'TogglePlayPause',
+    },
+    /** `VideoTooLong` — a recording over 30s lands here instead of VideoReview. BARE `Cancel`; its
+     *  Retake button has no testID at all. */
+    videoTooLongBare: {
+      cancel: 'Cancel',
+    },
+    /** `EvidenceUploading` — uploads on mount with no confirm step; `cancelUpload` is its only control. */
+    evidenceUploading: {
+      cancelUpload: 'CancelUpload',
+    },
+    /** `SuccessfullySent` — the post-upload confirmation. Its button id is i18n-DERIVED (the visible
+     *  title, spaces and all) and it is the screen's ONLY way out: hardware back is disabled. */
+    successfullySent: {
+      goToHome: 'Go to home',
+    },
+    /** `PendingReview` — re-checks the request status on EVERY mount, which is what makes re-entering
+     *  it the app's own poll for the agent's decision. `chooseAnotherWay` cancels the request
+     *  (confirm-gated) and returns to method selection. */
+    pendingReview: {
+      chooseAnotherWay: 'ChooseAnotherWayToVerify',
+    },
+    /** `CancelledReview` and its MainStack twin — both render the shared SystemModal, so the button is
+     *  that component's generic key. The agent's reason is body COPY (no testID): assert it by text. */
+    cancelledReview: {
+      button: 'SystemModalButton',
+    },
     /** Live-call busy/closed (`'Video Verify Closed'`) — the live-call branch when no agent queue is
      *  free or outside service hours. `callStatusTitle` is the marker; `sendVideo` resets to method
      *  selection. */
@@ -308,6 +365,19 @@ export const TestIds = {
       headerText: 'HeaderText',
       bodyText: 'BodyText',
       view: 'ViewNotification',
+    },
+    /** Home's credential/proof/revocation/message card (`NotificationCard.tsx`) — a DIFFERENT
+     *  component from `notification` above (no `ViewNotification`; the whole card is the pressable).
+     *  All four card types share these keys, so select by `headerText` COPY ("Credential offer" /
+     *  "Proof request" / "Credential revoked") via `helpers/notifications.ts`. NB the ✕ (`dismiss`)
+     *  is a REAL decline for offers and pending proofs, not a mere dismiss. */
+    notificationCard: {
+      pressable: 'NotificationCardPressable',
+      item: 'NotificationListItem',
+      headerText: 'HeaderText',
+      bodyText: 'BodyText',
+      timestamp: 'TimestampText',
+      dismiss: 'DismissNotification',
     },
     /** Floating scan FAB (rendered on the Home + Wallet tabs, not verification-gated) → QRCore. */
     scan: {
@@ -470,6 +540,76 @@ export const TestIds = {
       addressFieldEdit: 'AddressField-edit',
       dateOfBirthField: 'DateOfBirthField',
       emailField: 'EmailAddressField',
+    },
+  },
+
+  /**
+   * Credential lifecycle screens — Bifold's, hosted inside the BCSC Main stack (offer/proof render
+   * inside `ConnectionLoading`; details/list under the Wallet tab). Kept as a top-level namespace
+   * (like `bcwallet`) because the keys are Bifold's, not BCSC's.
+   */
+  credential: {
+    /** `CredentialOffer` (rendered inline by the connection screen). */
+    offer: {
+      accept: 'AcceptCredentialOffer',
+      decline: 'DeclineCredentialOffer',
+      header: 'HeaderText',
+    },
+    /** `CredentialOfferAccept` full-screen modal. `done` resets to the Wallet tab; `backToHome` to Home. */
+    offerAccept: {
+      onTheWay: 'CredentialOnTheWay',
+      added: 'CredentialAddedToYourWallet',
+      done: 'Done',
+      backToHome: 'BackToHome',
+    },
+    /** A wallet-list credential card (`Card11Pure`). NOT unique per credential — with >1 stored
+     *  credential, disambiguate by `name` text. `revoked` renders only on a revoked card. */
+    card: {
+      card: 'CredentialCard',
+      name: 'CredentialName',
+      issuer: 'CredentialIssuer',
+      revoked: 'RevokedOrNotAvailable',
+      showDetails: 'ShowCredentialDetails',
+    },
+    /** `CredentialDetails` — behind an agent gate (`loading`, not in the shared registry pattern of
+     *  Wallet.Loading). `issuedDate` is DEVELOPER-MODE-ONLY (dev builds hide it otherwise);
+     *  `revokedDate`/`revocationMessage` render only when the issuer revoked WITH a notification.
+     *  `remove` sits at the bottom (scroll to it). */
+    details: {
+      loading: 'CredentialDetails.Loading',
+      issuerName: 'IssuerName',
+      issuedDate: 'IssuedDate',
+      revokedDate: 'RevokedDate',
+      revocationMessage: 'RevocationMessage',
+      remove: 'RemoveFromWallet',
+    },
+    /** `CommonRemoveModal` in its remove-credential usage. */
+    removeModal: {
+      confirm: 'ConfirmRemoveButton',
+      cancel: 'CancelRemoveButton',
+    },
+    /** `CommonRemoveModal` in its decline-offer usage (confirm → declineOffer + problem report → Home). */
+    declineModal: {
+      confirm: 'ConfirmDeclineButton',
+      cancel: 'CancelDeclineButton',
+    },
+  },
+
+  /** Proof-request screens (Bifold's, same hosting as `credential`). */
+  proof: {
+    /** `ProofRequest`. NB `share` is REPLACED by `cancel` when no stored credential satisfies the
+     *  request — assert `share` presence before tapping (its absence means a cred-def mismatch). */
+    request: {
+      share: 'Share',
+      decline: 'Decline',
+      cancel: 'Cancel',
+      loading: 'ProofRequestLoading',
+    },
+    /** `ProofRequestAccept` full-screen modal. */
+    accept: {
+      sending: 'SendingProofRequest',
+      sent: 'SentProofRequest',
+      backToHome: 'BackToHome',
     },
   },
 

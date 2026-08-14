@@ -23,6 +23,9 @@ export enum Timeouts {
    *  app does around that request, camera-device enumeration, and the capture session warming up —
    *  all slower on Sauce real devices than a simulator. */
   CAMERA_READY = 45_000,
+  /** A recorded selfie video uploading and its confirmation landing — a real media upload off the
+   *  device, so nothing like a screen transition. */
+  VIDEO_UPLOAD = 90_000,
   /** First checkpoint of a journey file: the run's FIRST session may also pay simulator/device
    *  boot + WebDriverAgent install + first-ever app launch, all competing for CPU. */
   COLD_START = 60_000,
@@ -37,6 +40,11 @@ export enum Timeouts {
    *  Generous on purpose: recorded Sauce runs range from seconds to well over a minute, because the
    *  serial screen opens at 2× zoom and locks on only after several consistent readings. */
   CARD_SCAN = 180_000,
+  /** One DIDComm leg landing in the UI (or in an issuer-side record): issuer → mediator → WSS live
+   *  pickup → wallet processing (ledger reads for cred-def/rev-reg) → re-render. The mediator flush
+   *  after a live-pickup restart is the known slow seam, and Sauce real devices pay it all on CPU.
+   *  Also the default budget for issuer-API polls (src/api). */
+  DIDCOMM_DELIVERY = 90_000,
   /** Per-test timeout (Mocha) */
   TEST_TIMEOUT = 300_000,
   /** Browser handoff pause (ms) */

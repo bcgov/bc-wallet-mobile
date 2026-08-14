@@ -279,7 +279,7 @@ const translation = {
     "HelpMenu": {
       "Title": "Need help? (PT-BR)",
       "AccessibilityLabel": "Help menu (PT-BR)",
-      "Version": "App version: {{ version }} (PT-BR)",
+      "Version": "App version: {{ version }} ({{ build }}) (PT-BR)",
       "LearnMore": "Learn more (PT-BR)",
       "GiveFeedback": "Give feedback (PT-BR)",
       "ReportProblem": "Report a problem (PT-BR)",

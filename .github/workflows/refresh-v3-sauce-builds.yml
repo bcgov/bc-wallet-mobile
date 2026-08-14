@@ -52,10 +52,18 @@ jobs:
             --pattern "$V3_ANDROID_FILENAME" \
             --dir .
 
+      - name: Load SauceLabs secrets from 1Password
+        id: op_saucelabs
+        uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          SAUCE_USERNAME: op://bcsc-mobile-app-cd/saucelabs/username
+          SAUCE_ACCESS_KEY: op://bcsc-mobile-app-cd/saucelabs/credential
+
       - name: Upload v3 iOS to SauceLabs
         env:
-          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+          SAUCE_USERNAME: ${{ steps.op_saucelabs.outputs.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ steps.op_saucelabs.outputs.SAUCE_ACCESS_KEY }}
         run: |
           response=$(curl -s -w "\n%{http_code}" \
             -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
@@ -74,8 +82,8 @@ jobs:
 
       - name: Upload v3 Android to SauceLabs
         env:
-          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+          SAUCE_USERNAME: ${{ steps.op_saucelabs.outputs.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ steps.op_saucelabs.outputs.SAUCE_ACCESS_KEY }}
         run: |
           response=$(curl -s -w "\n%{http_code}" \
             -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \

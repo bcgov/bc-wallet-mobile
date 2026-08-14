@@ -17,5 +17,5 @@
       "@wdio/sauce-service"
     ]
   },
-  "include": ["./configs/**/*.ts", "./src/**/*.ts", "./test/**/*.ts"]
+  "include": ["./configs/**/*.ts", "./src/**/*.ts", "./test/**/*.ts", "./scripts/**/*.ts"]
 }

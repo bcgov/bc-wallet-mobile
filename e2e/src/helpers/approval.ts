@@ -95,3 +95,72 @@ export async function approveInPersonRequest(
     clearTimeout(timeoutId)
   }
 }
+
+/** Who the claimed request must be for. Checked before any decision, and never guessed at. */
+export interface SendVideoReviewIdentity {
+  /** Guards the claim. A cardless registration has no card, and the portal shows 'N/A' for it. */
+  cardSerialNumber: string
+  /** The real guard for a cardless request, where every serial reads the same. */
+  surname: string
+  /** Also picks the identity match, on the flows where the portal asks for one. */
+  firstName: string
+}
+
+export type SendVideoReviewInput =
+  | ({
+      decision: 'approve'
+    } & SendVideoReviewIdentity)
+  | ({
+      decision: 'reject'
+      /** Reason text the app shows the user on the cancelled-review screen — tests assert it verbatim. */
+      verificationComment: string
+      /** Internal portal note; defaults to verificationComment. */
+      comment?: string
+      /** Portal reject-reason id; defaults to '22' (additional person in photo or video). */
+      typeReasonId?: string
+    } & SendVideoReviewIdentity)
+
+/**
+ * Review (approve or reject) a queued send-video verification request by running the SM login flow
+ * in-process.
+ *
+ * The portal's queue is a blind FIFO claim, so the script polls until the submission appears and
+ * refuses to review one that is not for the expected person. It works for every card type: the review
+ * form is echoed back as rendered, which covers the extra document and name fields an added photo ID
+ * or a cardless registration brings, and the identity-match step a cardless one inserts.
+ *
+ * @param input - Decision + who the request must be for (reject adds the reason fields)
+ * @param timeoutMs - Budget for the WHOLE chain — dominated by the claim polling (up to 120s in the
+ *   script) plus SM login and the decision round trips, so a thin budget expires mid-poll.
+ */
+export async function reviewSendVideoRequest(input: SendVideoReviewInput, timeoutMs = 180_000): Promise<void> {
+  console.log(`[approval] Reviewing send-video request (decision=${input.decision}, serial=${input.cardSerialNumber})`)
+
+  const { reviewSendVideoLogin } = (await import(loginModuleUrl)) as {
+    reviewSendVideoLogin: (
+      input: SendVideoReviewInput,
+      options?: { signal?: AbortSignal; claimTimeoutMs?: number }
+    ) => Promise<{ requestIdentifier: string; claimedSerial: string; claimedName: string }>
+  }
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+  const startedAt = Date.now()
+
+  try {
+    await reviewSendVideoLogin(input, { signal: controller.signal })
+  } catch (error: unknown) {
+    const elapsedMs = Date.now() - startedAt
+    const message = error instanceof Error ? error.message : String(error)
+    // Our own abort surfaces from undici as a bare "This operation was aborted" — name it as OUR budget
+    // so it is never mistaken for an SM rejection.
+    const detail = controller.signal.aborted
+      ? `the ${timeoutMs}ms budget for the whole SM chain ran out (see the per-step [sm-login] timings for where it went)`
+      : message
+    throw new Error(
+      `Send-video ${input.decision} failed after ${elapsedMs}ms (serial=${input.cardSerialNumber}): ${detail}`
+    )
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
