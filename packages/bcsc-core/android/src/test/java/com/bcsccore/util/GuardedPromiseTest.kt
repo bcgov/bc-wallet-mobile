@@ -99,15 +99,15 @@ class GuardedPromiseTest {
      * in both `resolve` and `reject`): a latch-based version of this test passed cleanly at 500
      * *and* 20,000 iterations, never once observing the double-settle.
      *
-     * Instead, two long-lived threads busy-spin on a shared, plain (non-volatile) `Int`
-     * generation counter — no blocking primitive, no `park`/`unpark`, no OS wake latency. Both
-     * threads are already actively polling when the main thread bumps the counter, so they act
-     * within a handful of CPU cycles of each other and of the counter update becoming visible,
-     * which is what actually exercises the interleaving window. The [GuardedPromise] under test
-     * and its settle counter are published to the workers by writing them (via [AtomicReference])
-     * before the generation bump; per the Java Memory Model, a volatile write of the generation
-     * counter after those writes guarantees a worker that observes the new generation also sees
-     * the fresh promise and counter (safe publication).
+     * Instead, two long-lived threads busy-spin on a shared `AtomicInteger` generation counter —
+     * no blocking primitive, no `park`/`unpark`, no OS wake latency. Both threads are already
+     * actively polling when the main thread bumps the counter, so they act within a handful of
+     * CPU cycles of each other and of the counter update becoming visible, which is what actually
+     * exercises the interleaving window. The [GuardedPromise] under test and its settle counter
+     * are published to the workers by writing them (via [AtomicReference]) before the generation
+     * bump; per the Java Memory Model, a volatile write of the generation counter after those
+     * writes guarantees a worker that observes the new generation also sees the fresh promise and
+     * counter (safe publication).
      */
     @Test
     fun `concurrent settle attempts result in exactly one delegate call total across many iterations`() {
