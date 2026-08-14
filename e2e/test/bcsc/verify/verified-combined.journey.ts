@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { TEST_PIN, TestUsers, Timeouts } from '../../../src/constants.js'
 import { selectAccountLandingIfPresent } from '../../../src/flows/auth.js'
+import { openScanner } from '../../../src/flows/main.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
   chooseAddAccount,
@@ -11,8 +12,11 @@ import {
   startVerification,
 } from '../../../src/flows/verify.js'
 import { acceptAppAlert } from '../../../src/helpers/alerts.js'
+import { injectQrCode } from '../../../src/helpers/camera.js'
 import { currentPlatform, dispatchDeepLink, getCurrentAppId } from '../../../src/helpers/deep-link.js'
-import { fetchPairingCode, fetchPairingDeepLink } from '../../../src/helpers/pairing-code.js'
+import { fetchPairingCode, fetchPairingDeepLink, pairingQrUri } from '../../../src/helpers/pairing-code.js'
+import { isSauceLabs } from '../../../src/helpers/sauce.js'
+import { reachCameraScreen } from '../../../src/helpers/screens.js'
 import { AccountLandingScreen, EnterPINScreen } from '../../../src/screens/auth.js'
 import { BaseScreen } from '../../../src/screens/core/index.js'
 import {
@@ -24,6 +28,7 @@ import {
   MainWebViewScreen,
   ManualPairingScreen,
   PairingConfirmationScreen,
+  QRCoreScreen,
   ServiceLoginScreen,
   ServicesScreen,
   SettingsScreen,
@@ -43,6 +48,10 @@ const NEW_NICKNAME = 'E2E Photo Account'
 /** The WhatAreContacts info screen has no usable testID (its only one is an inline text Link that RN
  *  flattens), so arrival is asserted by its heading copy — `BCSC.Contacts.WhatAre.Title` (en). */
 const WHAT_ARE_CONTACTS_TITLE = 'What are Contacts?'
+/** PairingConfirmation's body — `BCSC.ManualPairing.CompletionDescription` (en) with the paired
+ *  service interpolated. The service name carries no testID of its own. */
+const pairedServiceCopy = (serviceName: string): string =>
+  `Go back to the device you started on to continue logging in to ${serviceName}.`
 
 /**
  * Verified journey: combined card. A combined card uses the same BCSC-photo authorize process as the
@@ -53,15 +62,15 @@ const WHAT_ARE_CONTACTS_TITLE = 'What are Contacts?'
  * This is also the consolidation point for verified-state DETOURS — features that only need a verified
  * account, chained after verification so a SINGLE in-person approval validates them all: verified tab
  * nav + Services catalogue, the Contacts + Account Details surfaces, login-from-computer (minted pairing
- * code), login via deep link (warm then cold), the transferer "add another device" QR, and the
- * verified-only settings rows (nickname edit + forget pairings). The cold deep-link checkpoint
- * terminates + relaunches the app, so it re-authenticates before continuing.
+ * code, entered then SCANNED), login via deep link (warm then cold), the transferer "add another device"
+ * QR, and the verified-only settings rows (nickname edit + forget pairings). The cold deep-link
+ * checkpoint terminates + relaunches the app, so it re-authenticates before continuing.
  *
  * One ordered session: onboard → manual serial → birthdate (authorizeDevice) → method selection →
  * in-person → verified Home → tab nav + Services → Contacts (empty) + Account Details →
- * login-from-computer → deep-link login (warm, then cold) → transferer QR → nickname edit → forget
- * pairings. mocha bail isolates any failure to this file. (There is no manual sign-out control in the
- * app — the only re-lock is the inactivity auto-lock, covered by the settings journey.)
+ * login-from-computer → pairing-QR scan → deep-link login (warm, then cold) → transferer QR → nickname
+ * edit → forget pairings. mocha bail isolates any failure to this file. (There is no manual sign-out
+ * control in the app — the only re-lock is the inactivity auto-lock, covered by the settings journey.)
  */
 describe('Verified journey: combined card', () => {
   before(() => {
@@ -165,6 +174,33 @@ describe('Verified journey: combined card', () => {
     await ManualPairingScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     await ManualPairingScreen.fill('code', session.pairingCode) // 6 chars AUTO-SUBMIT → PairingConfirmation
     await PairingConfirmationScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await PairingConfirmationScreen.tap('primary') // Close → back to the tabs (Home)
+    await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  })
+
+  // The same login, driven through the CAMERA instead of the keyboard: a QR carrying a freshly minted
+  // pairing code, injected before the scanner opens. Sauce-only (injection is), but the one scan
+  // surface that works on BOTH platforms — Android decodes in-app via MLKit, iOS via Sauce's
+  // synthesized QR metadata. Card barcodes have no such iOS path, so serial scanning stays manual.
+  it('verified: scans a pairing QR and lands on the service confirmation', async function () {
+    if (!isSauceLabs()) {
+      return this.skip()
+    }
+    const session = await fetchPairingCode()
+    await injectQrCode(pairingQrUri(session.pairingCode)) // before opening — see injectQrCode
+    await openScanner()
+    // The first frame can decode before the torch marker settles, skipping the scanner entirely —
+    // accept either as "we got there". Also absorbs the camera-permission dialog, still ungranted in
+    // this journey (verification took the manual-serial route, which never opens a camera).
+    await reachCameraScreen(
+      'QRCore scanner',
+      async () => (await QRCoreScreen.isVisible('torch')) || (await PairingConfirmationScreen.isPresent(500))
+    )
+    // Decode → the sibling PairingCode tab, which auto-submits the scanned code → PairingConfirmation.
+    await PairingConfirmationScreen.expectVisible(Timeouts.CAMERA_READY)
+    // Naming the right service is the point of the checkpoint: reaching this screen only proves a
+    // pairing succeeded, not that it was OUR transaction's service.
+    await engine.waitForText(pairedServiceCopy(session.clientName), Timeouts.SCREEN_TRANSITION)
     await PairingConfirmationScreen.tap('primary') // Close → back to the tabs (Home)
     await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
