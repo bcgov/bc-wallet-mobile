@@ -79,7 +79,11 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
         await updateAccountFlags({
           userSubmittedVerificationVideo: false,
         })
-        navigation.navigate(BCSCScreens.VerificationMethodSelection)
+        // reset navigation stack
+        navigation.reset({
+          index: 0,
+          routes: [{ name: BCSCScreens.VerificationMethodSelection }],
+        })
       }
     })
   }, [
