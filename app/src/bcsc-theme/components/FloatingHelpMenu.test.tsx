@@ -32,9 +32,8 @@ describe('FloatingHelpMenu', () => {
     expect(screen.getByText('App version: 4.0.0 (142)')).toBeTruthy()
   })
 
-  // The mock above hardcodes its own template, so it can't catch a regression in the
-  // shipped locale copy itself. Assert directly against the real locale resources so a
-  // dropped `{{ build }}` placeholder in any locale file fails this test.
+  // The mock above hardcodes its template, so it can't catch a regression in the shipped
+  // locale copy; assert against the real locale resources so a dropped `{{ build }}` fails.
   it('keeps the build placeholder in the shipped locale strings', () => {
     expect(en.BCSC.HelpMenu.Version).toContain('{{ version }}')
     expect(en.BCSC.HelpMenu.Version).toContain('{{ build }}')
