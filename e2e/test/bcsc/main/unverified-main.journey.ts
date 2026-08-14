@@ -97,7 +97,9 @@ describe('Main journey: unverified gating', () => {
       async () => (await QRCoreScreen.isVisible('torch')) || (await ScanErrorModal.isPresent(500))
     )
     await ScanErrorModal.expectVisible(Timeouts.CAMERA_READY)
-    assert.equal((await ScanErrorModal.read('body')).trim(), UNRECOGNIZED_QR_MESSAGE)
+    // `body`'s testID (`BodyText`) collides with the Home notification card, so assert the popup's
+    // copy by visible text instead — unambiguous regardless of what else is mounted underneath.
+    await engine.waitForText(UNRECOGNIZED_QR_MESSAGE, Timeouts.CAMERA_READY)
     await ScanErrorModal.tap('primary') // Dismiss → clears the error and re-arms the scanner
     await QRCoreScreen.back.tap()
     await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
