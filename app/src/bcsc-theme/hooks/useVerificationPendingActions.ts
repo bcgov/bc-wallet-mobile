@@ -72,7 +72,7 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
       } catch (error) {
         logger.error(`Error cancelling verification request: ${error}`)
       } finally {
-        updateVerificationRequest(null, null)
+        updateVerificationRequest(undefined, null)
         dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
         dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
         dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [undefined] })

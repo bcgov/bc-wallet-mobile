@@ -16,7 +16,12 @@ export class PendingVerificationRecoverySystemCheck implements SystemCheckStrate
   }
 
   async runCheck(): Promise<boolean> {
-    return this.checkVerificationStatus()
+    try {
+      // this request will fail if there is no pending in-person or live-call verification, treat this failure as unverified
+      return await this.checkVerificationStatus()
+    } catch (error) {
+      return false
+    }
   }
 
   onFail() {

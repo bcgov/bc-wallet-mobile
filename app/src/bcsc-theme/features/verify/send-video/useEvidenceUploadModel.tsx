@@ -137,7 +137,7 @@ const useEvidenceUploadModel = (
         logger.warn(
           '[useEvidenceUploadModel] Missing verification request data at submit; routing back to Verification Method Selection so prompts can be refreshed and video re-recorded'
         )
-        await updateVerificationRequest(null, null)
+        await updateVerificationRequest(undefined, null)
         dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
         dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
         navigation.dispatch(

@@ -8,7 +8,7 @@ const useCancelledReviewViewModel = () => {
   const [, dispatch] = useStore<BCState>()
   const { updateAccountFlags, updateVerificationRequest, continueVerificationProcess } = useSecureActions()
   const cleanUpVerificationData = useCallback(() => {
-    updateVerificationRequest(null, null)
+    updateVerificationRequest(undefined, null)
     dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
     dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
     dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS, payload: [undefined] })

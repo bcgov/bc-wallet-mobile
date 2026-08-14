@@ -55,7 +55,7 @@ export const useEvidenceService = () => {
         const data = await evidenceApi.cancelVerificationRequest(verificationId)
 
         // Clear the verification request from secure storage after cancellation
-        await updateVerificationRequest(null, null)
+        await updateVerificationRequest(undefined, null)
 
         return data
       } catch (error) {
@@ -65,7 +65,7 @@ export const useEvidenceService = () => {
             `[useEvidenceService] Verification request not found for ID: ${verificationId}. Expected resource already deleted.`
           )
 
-          await updateVerificationRequest(null, null)
+          await updateVerificationRequest(undefined, null)
           // Don't throw an error since the resource is already deleted, just return
           return
         }

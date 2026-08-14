@@ -600,7 +600,7 @@ export const useSecureActions = () => {
    * The SHA is kept in memory only (not persisted, matching v3 behavior).
    */
   const updateVerificationRequest = useCallback(
-    async (verificationRequestId: string | null, verificationRequestSha: string | null) => {
+    async (verificationRequestId: string | undefined, verificationRequestSha: string | null) => {
       dispatch({
         type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID,
         payload: [verificationRequestId],
@@ -612,9 +612,7 @@ export const useSecureActions = () => {
       })
 
       // Persist ID to authorization request (SHA is not persisted in v3)
-      if (verificationRequestId !== null) {
-        await persistAuthorizationRequest({ backCheckVerificationId: verificationRequestId })
-      }
+      await persistAuthorizationRequest({ backCheckVerificationId: verificationRequestId })
     },
     [dispatch, persistAuthorizationRequest]
   )
