@@ -219,7 +219,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
               // If the user has navigated to EnterBirthdate from a previous screen, go back to that screen.
               return navigation.goBack()
             }
-            // If the user has navigated to EnterBirthdate directly (from home) go back to IdentitySelection.
+            // If EnterBirthdate is the stack's initial route (e.g., resumed after entering a serial), go back to IdentitySelection.
             navigation.replace(BCSCScreens.IdentitySelection)
           }),
         }}
