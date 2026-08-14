@@ -15,6 +15,7 @@ import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizatio
 import { VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
+import { appLogger } from './utils/logger'
 
 export type RemoteDebuggingState = {
   enabledAt?: Date
@@ -786,6 +787,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     }
 
     default:
+      appLogger.error('Unhandled reducer action', { actionType: action.type })
       return state
   }
 }
