@@ -29,6 +29,14 @@ export enum Timeouts {
   /** A timed lockout releasing itself. The first native tier is 1 minute (5 wrong PINs); the extra
    *  headroom covers a slow mount reading the remaining time late. */
   LOCKOUT_AUTO_UNLOCK = 120_000,
+  /** Dwell on a live document camera after injecting, so the scanner behind the shutter can read the
+   *  card BEFORE the photo is taken. There is no on-screen signal for a successful read, and the app
+   *  only acts on codes captured before the shutter — so this is a blind wait by necessity. */
+  CARD_SCAN_DWELL = 10_000,
+  /** A card barcode being read off injected frames, end to end (decode → backend → navigation).
+   *  Generous on purpose: recorded Sauce runs range from seconds to well over a minute, because the
+   *  serial screen opens at 2× zoom and locks on only after several consistent readings. */
+  CARD_SCAN = 180_000,
   /** Per-test timeout (Mocha) */
   TEST_TIMEOUT = 300_000,
   /** Browser handoff pause (ms) */

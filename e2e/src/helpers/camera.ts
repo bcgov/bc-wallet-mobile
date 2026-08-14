@@ -171,6 +171,17 @@ export async function injectPhoto(
   await injectCameraImage(padded)
 }
 
+/**
+ * Whether this session can drive a CARD barcode (code-39 / PDF-417) from an injected image.
+ *
+ * Sauce-only because injection is, and Android-only because iOS decodes in the OS from metadata Sauce
+ * synthesizes for QR alone — no injected image can ever fire a 1D or PDF-417 scan there. QR scanning
+ * has no such limit and needs only {@link isSauceLabs}.
+ */
+export function canInjectCardBarcodes(): boolean {
+  return isSauceLabs() && driver.isAndroid
+}
+
 /** Options for {@link composeScanTarget}: canvas defaults to a 1080p landscape frame. */
 export interface ScanTargetOptions {
   /** Resize the asset to this fraction of canvas width (nearest-neighbor — 2D codes only; 1D assets
@@ -221,25 +232,27 @@ export async function injectScanTarget(source: string | Buffer, options: ScanTar
   await injectCameraImage(await composeScanTarget(source, options))
 }
 
-/** Roughly the on-canvas size of a rendered QR — the size proven to decode on both platforms. */
+/** On-canvas size of a rendered QR — the size proven to decode on both platforms. */
 const QR_TARGET_PX = 800
+/**
+ * On-canvas WIDTH of a rendered 1D code. Deliberately about a third of the frame: the serial screen
+ * opens at 2× zoom, so a code much wider than this is center-cropped out of the analysed frame, and a
+ * narrower one runs out of module width. ~4px/module here reads as ~8px/module after the zoom.
+ */
+const CODE39_TARGET_PX = 660
 
 /**
- * Render `text` as a QR sized for the injected frame.
+ * Render a barcode at the INTEGER bwip-js scale that lands closest to `targetPx`.
  *
- * Rendered at an INTEGER bwip-js scale rather than resized to a target width: modules stay exactly
- * square with no resampling, and the module count (and so the native size) varies with payload
- * length, which a fixed scale would leave over- or undersized.
+ * Never resized afterwards: a smoothing kernel blurs bar edges, and a merged narrow bar in a
+ * checksum-free symbology like code-39 decodes as a SHORTER string with no error. Scaling at render
+ * time keeps modules exactly square, and measuring first absorbs the payload-length variation that a
+ * fixed scale would leave over- or undersized.
  */
-async function renderQrCode(text: string): Promise<Buffer> {
-  const unit = await bwipjs.toBuffer({ bcid: 'qrcode', text, scale: 1, backgroundcolor: 'FFFFFF' })
-  const { width = QR_TARGET_PX } = await sharp(unit).metadata()
-  return bwipjs.toBuffer({
-    bcid: 'qrcode',
-    text,
-    scale: Math.max(1, Math.round(QR_TARGET_PX / width)),
-    backgroundcolor: 'FFFFFF',
-  })
+async function renderCode(opts: { bcid: string; text: string; height?: number }, targetPx: number): Promise<Buffer> {
+  const render = (scale: number): Promise<Buffer> => bwipjs.toBuffer({ backgroundcolor: 'FFFFFF', scale, ...opts })
+  const { width = targetPx } = await sharp(await render(1)).metadata()
+  return render(Math.max(1, Math.round(targetPx / width)))
 }
 
 /**
@@ -250,5 +263,20 @@ async function renderQrCode(text: string): Promise<Buffer> {
  * where only part of it has landed, which the scanner reads as a malformed code.
  */
 export async function injectQrCode(text: string, options: ScanTargetOptions = {}): Promise<void> {
-  await injectScanTarget(await renderQrCode(text), options)
+  await injectScanTarget(await renderCode({ bcid: 'qrcode', text }, QR_TARGET_PX), options)
+}
+
+/**
+ * Render `text` as a code-39 and inject it — the 1D counterpart to {@link injectQrCode}, for driving
+ * the card-serial scanner with a value chosen by the test.
+ *
+ * ANDROID ONLY in effect: iOS decodes in the OS and Sauce synthesizes QR metadata only, so no injected
+ * 1D code can ever fire there.
+ *
+ * UNLIKE {@link injectQrCode}, inject once the scanner is already up: the serial screen navigates on
+ * the first frame it cannot resolve to a BC Services Card, so a code waiting in the feed leaves the
+ * screen before a test can assert it ever opened.
+ */
+export async function injectCode39(text: string, options: ScanTargetOptions = {}): Promise<void> {
+  await injectScanTarget(await renderCode({ bcid: 'code39', text, height: 12 }, CODE39_TARGET_PX), options)
 }

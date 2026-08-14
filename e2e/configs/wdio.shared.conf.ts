@@ -54,6 +54,10 @@ export const config: WebdriverIO.Config = {
     auth: [resolve(__dirname, `../test/${variant}/auth/*.journey.ts`)],
     verify: [resolve(__dirname, `../test/${variant}/verify/*.journey.ts`)],
     main: [resolve(__dirname, `../test/${variant}/main/*.journey.ts`)],
+    // Card-barcode scanning: ANDROID-ONLY (iOS cannot fire a 1D/PDF-417 scan from an injected image)
+    // and Sauce-only. Its own suite rather than part of `regression`, which would spend a session per
+    // spec on iOS to skip every one. Dispatch with an Android-only device matrix.
+    scan: [resolve(__dirname, `../test/${variant}/scan/*.journey.ts`)],
     // Nightly full run: every per-area journey.
     // Excludes `migration` — that suite boots the v3 app via the separate migration config, so it
     // cannot share this run's v4 RDC build (it stays its own suite + workflow path).

@@ -3,7 +3,7 @@ import { COMBO_CARD_BARCODE_MASKS, Timeouts } from '../constants.js'
 import { tapAlertButton } from '../helpers/alerts.js'
 import { ApproveInPersonInput, approveInPersonRequest } from '../helpers/approval.js'
 import type { ImageMaskRegion } from '../helpers/camera.js'
-import { injectPhoto } from '../helpers/camera.js'
+import { injectPhoto, injectScanTarget } from '../helpers/camera.js'
 import { getEmailConfirmationCode, getLatestMailId, getTempEmailAddress } from '../helpers/email.js'
 import { swipeUpBy } from '../helpers/gestures.js'
 import {
@@ -419,18 +419,99 @@ async function shootDocumentSide(image: string, barcodeMasks: readonly ImageMask
 }
 
 /**
+ * IdentitySelection → ScanSerial, with the camera live (the OS permission dialog is accepted on the
+ * way). The scan path's entry point; the typed path is {@link enterSerialManually}.
+ */
+export async function openSerialScanner(): Promise<void> {
+  await IdentitySelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await IdentitySelectionScreen.tapToNavigate('primary') // Scan → ScanSerial
+  await reachCameraScreen('ScanSerial', () => ScanSerialScreen.isPresent(1_000))
+}
+
+/**
+ * Photograph a REAL BC Services Card during non-BCSC evidence capture — the reroute arrange.
+ *
+ * The exact inverse of {@link capturePhotoIdDocument}: NO barcode masks, so the card's codes decode for
+ * real. On UsePhoto the app asks `/device/barcodes`, the backend matches the card, and the app resets
+ * into THAT card's own setup flow, discarding the evidence. Where it lands depends on the card process
+ * the backend returns, so the caller asserts it.
+ *
+ * ANDROID ONLY: iOS cannot fire code-39/PDF-417 from injection at all, so the reroute can never happen
+ * there. Sauce-only for the same reason injection is.
+ *
+ * Stops at the UsePhoto tap — a second side never comes, because the reroute replaces the whole stack.
+ */
+export async function presentBcscCardAsEvidence(scanTarget: string): Promise<void> {
+  await IDPhotoInformationScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await IDPhotoInformationScreen.tapToNavigate('primary')
+  await reachEvidenceCamera()
+  await injectScanTarget(scanTarget)
+  // The scanner must read the card BEFORE the shutter: UsePhoto only asks the backend when a serial
+  // AND a licence were already captured off the live frame stream. Nothing on screen reports a read,
+  // so the dwell is blind — see Timeouts.CARD_SCAN_DWELL.
+  await driver.pause(Timeouts.CARD_SCAN_DWELL)
+  await EvidenceCaptureScreen.tap('primary') // MaskedCamera shutter — NOT tapToNavigate (not idempotent)
+  await PhotoReviewScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  // UsePhoto fires the /device/barcodes round trip. Plain tap, never tapToNavigate — its retry would
+  // re-submit the authorization while the first is still in flight.
+  await PhotoReviewScreen.tap('primary')
+}
+
+/**
+ * Wait out the `/device/barcodes` round trip that {@link presentBcscCardAsEvidence}'s UsePhoto starts,
+ * until `hasRerouted` reports the card's own setup flow on screen.
+ *
+ * Where the reroute lands depends on the card process the backend returns, so the caller supplies the
+ * probe. Dropping back into the capture flow is called out separately from a timeout: it means the
+ * live scanner never read the card, so the app never asked about it — a different fault entirely from
+ * a slow or mismatched backend.
+ */
+export async function expectEvidenceReroute(hasRerouted: () => Promise<boolean>): Promise<void> {
+  const deadline = Date.now() + Timeouts.CARD_SCAN
+  for (;;) {
+    if (await hasRerouted()) return
+    if ((await EvidenceCaptureScreen.isPresent(500)) || (await EvidenceIDCollectionScreen.isPresent(500))) {
+      throw new Error(
+        'The injected card was captured as ordinary evidence: its barcodes were never read off the live ' +
+          'frame stream, so the app never asked /device/barcodes about them. Card barcodes only scan from ' +
+          'injection on Android; check the asset still carries a decodable serial + AAMVA pair.'
+      )
+    }
+    if (Date.now() > deadline) {
+      throw new Error(
+        `No reroute out of evidence capture within ${Timeouts.CARD_SCAN / 1000}s. ` +
+          `On screen: ${await describeCurrentScreen()}`
+      )
+    }
+    await driver.pause(1_000)
+  }
+}
+
+/**
  * Non-photo BCSC "additional ID", step one: open the photo-ID list from AdditionalIdentificationRequired.
  * Separate from the capture, and re-callable, because backing out of the list's non-photo escape hatch
  * lands here again.
  */
 export async function reachAdditionalPhotoIdList(): Promise<void> {
-  // This screen's only testID is the generic `Continue` (shared by ~10 screens), so wait for its unique
-  // heading — otherwise a lingering `Continue` from the previous screen gets tapped mid-transition.
-  const headingSelector = driver.isIOS
+  // Wait for the unique heading first — otherwise a lingering `Continue` from the previous screen gets
+  // tapped mid-transition.
+  await $(additionalIdHeadingSelector()).waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+  await AdditionalIdentificationRequiredScreen.tapToNavigate('primary') // Continue → EvidenceTypeList
+}
+
+/** AdditionalIdentificationRequired's heading. Its only testID is the generic `Continue` (shared by
+ *  ~10 screens), so the copy is the only thing that identifies the screen. */
+function additionalIdHeadingSelector(): string {
+  return driver.isIOS
     ? '-ios predicate string:label CONTAINS "provide additional ID"'
     : 'android=new UiSelector().textContains("provide additional ID")'
-  await $(headingSelector).waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
-  await AdditionalIdentificationRequiredScreen.tapToNavigate('primary') // Continue → EvidenceTypeList
+}
+
+/** Non-throwing probe for AdditionalIdentificationRequired — for callers choosing between landings. */
+export async function isAdditionalIdentificationRequired(): Promise<boolean> {
+  return $(additionalIdHeadingSelector())
+    .isDisplayed()
+    .catch(() => false)
 }
 
 /**
@@ -479,14 +560,24 @@ export async function chooseOtherIdPath(): Promise<void> {
   await IdentitySelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   await IdentitySelectionScreen.tapToNavigate('secondary') // OtherID → DualIdentificationRequired
 
-  // DualIdentificationRequired's only CTA is the generic `Continue`; confirm by heading before tapping.
-  const dualHeadingSelector = driver.isIOS
-    ? '-ios predicate string:label CONTAINS "two government"'
-    : 'android=new UiSelector().textContains("two government")'
-  await $(dualHeadingSelector).waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+  await expectDualIdentificationRequired()
   // Confirm-and-retry is safe on the generic `Continue` here: EvidenceTypeList renders no Continue of
   // its own, so the button going away means the push landed.
   await DualIdentificationRequiredScreen.tapToNavigate('primary') // Continue → EvidenceTypeList (first ID)
+}
+
+/**
+ * Assert arrival on DualIdentificationRequired — reached by choosing OtherID, and also by the serial
+ * scanner reading a code it cannot resolve to a BC Services Card.
+ *
+ * The screen's only CTA is the generic `Continue` (shared by ~10 screens), so its heading copy is the
+ * only distinguishing marker.
+ */
+export async function expectDualIdentificationRequired(timeoutMs: number = Timeouts.SCREEN_TRANSITION): Promise<void> {
+  const selector = driver.isIOS
+    ? '-ios predicate string:label CONTAINS "two government"'
+    : 'android=new UiSelector().textContains("two government")'
+  await $(selector).waitForDisplayed({ timeout: timeoutMs })
 }
 
 /**

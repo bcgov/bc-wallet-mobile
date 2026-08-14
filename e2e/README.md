@@ -43,12 +43,16 @@ _Tests are organized into named suites. Use the_ `--suite` _flag to select which
 | `verify`     | _Verification journeys — the four card types + entry spine/detours (`verify/*.journey.ts`)_ |
 | `main`       | _Main-stack journeys — unverified gating + settings (`main/*.journey.ts`)_                  |
 | `migration`  | _V3→V4 upgrade: v3 onboarding + verification, upgrade to v4, unlock with the v3 PIN_                 |
+| `scan`       | _Card-barcode scanning — non-BCSC→BCSC reroutes + the serial scanner (`scan/*.journey.ts`). **Android + Sauce only**; every spec skips elsewhere_ |
 
 ```bash
 # Run by suite name (per-area journey suites)
 yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite smoke
 yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite verify
 yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite main
+
+# Card-barcode scanning — Sauce Android only, and NOT part of `regression`
+yarn wdio configs/sauce/wdio.android.sauce.rdc.conf.ts --suite scan
 ```
 
 _Without_ `--suite`_, the default spec is_ `smoke.spec.ts`_. The verified `verify` / `main` journeys need SiteMinder credentials (see the **SiteMinder** section) for the in-person approval step. A nightly `regression` suite spans all journeys (see the **CI/CD** section)._
@@ -438,10 +442,19 @@ path CI already uses)._
 | iOS | QR (FAB scanner) | ✅ WORKS | `d7ea2c3c39c548a8a7ddc422d2c32714` | _Sauce's synthesized QR metadata reaches the vision-camera delegate: junk QR → "not recognized" popup AND pairing QR → full strategy pipeline_ |
 | iOS | Code-39 / PDF-417 (any surface) | ❌ DEAD (structural) | `d7ea2c3c39c548a8a7ddc422d2c32714`, `e7214db3895d4d67bb05d053e38e6350` | _Proven, not just documented: the injected card is plainly VISIBLE and sharp in the iOS preview, and code-39/PDF-417 still never fire, while QR fires reliably from the same image. iOS decodes in the OS (`AVCaptureMetadataOutput`) and Sauce only synthesizes QR metadata, so no rotation/clarity/size change can ever help. Mitigation: manual serial entry_ |
 
-_What that buys CI today: the QR row. `unverified-main.journey.ts` injects an unrecognised QR and
-asserts the scan-error popup; `verified-combined.journey.ts` injects a QR carrying a freshly minted
-pairing code and asserts the app logs in and names the service. Card-serial scanning stays on manual
-entry on both platforms._
+_What that buys CI today, split by what each platform can actually do:_
+
+- **_QR, both platforms_** _(in the regular journeys): `unverified-main.journey.ts` injects an
+  unrecognised QR and asserts the scan-error popup; `verified-combined.journey.ts` injects a QR
+  carrying a freshly minted pairing code and asserts the app logs in and names the service._
+- **_Card barcodes, Android only_** _(the `scan` suite): the non-BCSC → BCSC reroutes, one journey per
+  card type plus one on the second ID, and the serial scanner's unrecognised-code path. The reroute
+  journeys are the end-to-end proof that Android reads a card barcode off an injected frame — decode →
+  decoder strategy → `/device/barcodes` → navigation._
+
+_Still NOT automated: the serial-scan HAPPY path (scan your own card and get authorized). It is dead on
+iOS and racy on Android — the screen reroutes on any value-less detection before a clean read lands —
+so both platforms keep manual serial entry. See the app-behaviour note at the end of this section._
 
 #### _Injecting a scan target_
 
