@@ -46,11 +46,6 @@ const getIdStepRoute = (store: BCState, idCompletion: StepCompletionResult['id']
     return { name: BCSCScreens.AdditionalIdentificationRequired }
   }
 
-  console.log({
-    serial: store.bcscSecure.serial,
-    deviceCode: store.bcscSecure.deviceCode,
-    cardProcess: store.bcscSecure.cardProcess,
-  })
   // The user entered (or scanned) a BC Services Card serial and left before finishing the
   // birthdate → device-authorization step. Their serial is still saved, so resume them on the
   // birthdate screen rather than sending them back to the start of the ID step. A set
