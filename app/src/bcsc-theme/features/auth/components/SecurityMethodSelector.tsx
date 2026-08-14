@@ -12,15 +12,12 @@ import {
   useTheme,
 } from '@bifold/core'
 import { TFunction } from 'i18next'
-import { upperFirst } from 'lodash'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Platform, StyleSheet } from 'react-native'
 import {
   AccountSecurityMethod,
-  BiometricType,
   canPerformDeviceAuthentication,
-  getAvailableBiometricType,
   performDeviceAuthentication,
 } from 'react-native-bcsc-core'
 
@@ -67,12 +64,10 @@ const getSecurityCopy = (
     isSettingsContext,
     isCurrentMethodDeviceAuth,
     isCurrentMethodPin,
-    deviceAuthMethodName,
   }: {
     isSettingsContext: boolean
     isCurrentMethodDeviceAuth: boolean
     isCurrentMethodPin: boolean
-    deviceAuthMethodName: string
   }
 ): SecurityCopy => {
   if (!isSettingsContext) {
@@ -91,7 +86,7 @@ const getSecurityCopy = (
   // as its subtext, while the other keeps its actionable copy.
   const platformName = Platform.OS === 'ios' ? 'iPhone or iPad' : 'Android device'
   const currentMethodLabel = t('BCSC.Settings.AppSecurity.CurrentMethod')
-  const deviceAuthName = deviceAuthMethodName || t('BCSC.Settings.AppSecurity.DeviceAuth')
+  const deviceAuthMethodName = t('BCSC.Settings.AppSecurity.DeviceAuth')
   return {
     header: t('BCSC.Onboarding.SecureAppOnboardingHeader'),
     content: t('BCSC.Onboarding.SecureAppOnboardingContent'),
@@ -99,7 +94,7 @@ const getSecurityCopy = (
       ? currentMethodLabel
       : t('BCSC.Onboarding.SecureAppDeviceAuthTitle', { deviceAuthMethodName }),
     deviceAuthSubtext: isCurrentMethodDeviceAuth
-      ? deviceAuthName
+      ? deviceAuthMethodName
       : t('BCSC.Onboarding.SecureAppDeviceAuthSubtext', { platform: platformName }),
     pinTitle: isCurrentMethodPin ? currentMethodLabel : t('BCSC.Onboarding.SecureAppPINTitle'),
     pinSubtext: isCurrentMethodPin ? t('BCSC.Settings.AppSecurity.PIN') : t('BCSC.Onboarding.SecureAppPINSubtext'),
@@ -124,7 +119,6 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
 
   const [isLoading, setIsLoading] = useState(true)
   const [isDeviceAuthAvailable, setIsDeviceAuthAvailable] = useState(false)
-  const [deviceAuthMethodName, setDeviceAuthMethodName] = useState('')
 
   const isSettingsContext = currentMethod !== undefined
   const isCurrentMethodDeviceAuth = currentMethod === AccountSecurityMethod.DeviceAuth
@@ -141,12 +135,8 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
   useEffect(() => {
     const loadDeviceAuthInfo = async () => {
       try {
-        const [deviceAuthAvailable, biometricType] = await Promise.all([
-          canPerformDeviceAuthentication(),
-          getAvailableBiometricType(),
-        ])
+        const deviceAuthAvailable = await canPerformDeviceAuthentication()
         setIsDeviceAuthAvailable(deviceAuthAvailable)
-        setDeviceAuthMethodName(biometricType === BiometricType.None ? 'Device Passcode' : upperFirst(biometricType))
       } catch (error) {
         const errMessage = error instanceof Error ? error.message : String(error)
         logger.error(`Error checking device auth availability: ${errMessage}`)
@@ -191,7 +181,6 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
     isSettingsContext,
     isCurrentMethodDeviceAuth,
     isCurrentMethodPin,
-    deviceAuthMethodName,
   })
 
   // In settings, the active method's card is shown as selected (highlighted + check) rather than a
@@ -234,7 +223,7 @@ export const SecurityMethodSelector: React.FC<SecurityMethodSelectorProps> = ({
           title={copy.deviceAuthTitle}
           testID={testIdWithKey('ChooseDeviceAuthButton')}
           subtext={copy.deviceAuthSubtext}
-          startIcon="fingerprint"
+          startIcon="screen-lock-portrait"
           onPress={handleDeviceAuthentication}
           selected={deviceAuthSelected}
         />
