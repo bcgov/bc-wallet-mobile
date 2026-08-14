@@ -47,6 +47,9 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import java.util.UUID
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.RejectedExecutionException
 import javax.crypto.SecretKey
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -90,6 +93,9 @@ import com.bcsccore.authentication.device.DeviceAuthenticationService
 import com.bcsccore.authentication.device.DeviceAuthenticationServiceImpl
 import com.bcsccore.authentication.device.DeviceAuthenticationResult
 import com.bcsccore.authentication.PinService
+
+// Utility imports
+import com.bcsccore.util.GuardedPromise
 
 // Native-compatible storage imports
 import com.bcsccore.storage.NativeCompatibleStorage
@@ -2806,10 +2812,21 @@ class BcscCoreModule(
         reason: String?,
         promise: Promise,
     ) {
+        // The biometric SUCCESS callback below fires on the main thread
+        // (DeviceAuthenticationServiceImpl uses runOnUiThread + getMainExecutor). Its work
+        // performs multiple secure key store round trips (issuer/account file decryption, PIN
+        // hash lookup, and — on the v3 migration path with no stored PIN hash — a 210,000
+        // iteration PBKDF2 derivation plus a second key store write) that can take long enough
+        // to trigger an ANR. That branch is moved onto backgroundExecutor so the main thread is
+        // never blocked; every settle path is routed through a GuardedPromise since running the
+        // work asynchronously widens the window in which more than one terminal callback path
+        // could attempt to settle the same promise.
+        val guarded = GuardedPromise(promise)
+
         try {
             val account = resolveFirstAccount()
             if (account == null) {
-                promise.reject("E_ACCOUNT_NOT_FOUND", "No account found")
+                guarded.reject("E_ACCOUNT_NOT_FOUND", "No account found")
                 return
             }
 
@@ -2817,7 +2834,7 @@ class BcscCoreModule(
 
             val activity = reactApplicationContext.currentActivity
             if (activity == null || activity !is FragmentActivity) {
-                promise.reject("E_NO_ACTIVITY", "No FragmentActivity available for authentication")
+                guarded.reject("E_NO_ACTIVITY", "No FragmentActivity available for authentication")
                 return
             }
 
@@ -2833,41 +2850,60 @@ class BcscCoreModule(
                 when (authResult) {
                     DeviceAuthenticationResult.SUCCESS -> {
                         try {
-                            // Get the stored PIN hash
-                            val hashResult = pinService.getPINHash(accountID)
+                            backgroundExecutor.execute {
+                                try {
+                                    // Get the stored PIN hash
+                                    val hashResult = pinService.getPINHash(accountID)
 
-                            if (hashResult != null) {
-                                val result = Arguments.createMap()
-                                result.putBoolean("success", true)
-                                result.putString("walletKey", hashResult.first)
-                                promise.resolve(result)
-                            } else {
-                                // No PIN hash found - this is a v3 migration scenario
-                                // User had device security but no random PIN. Generate one now.
-                                val secureRandom = java.security.SecureRandom()
-                                val pinDigits = StringBuilder()
-                                for (i in 0 until 6) {
-                                    pinDigits.append(secureRandom.nextInt(10))
+                                    if (hashResult != null) {
+                                        val result = Arguments.createMap()
+                                        result.putBoolean("success", true)
+                                        result.putString("walletKey", hashResult.first)
+                                        guarded.resolve(result)
+                                    } else {
+                                        // No PIN hash found - this is a v3 migration scenario
+                                        // User had device security but no random PIN. Generate one now.
+                                        val secureRandom = java.security.SecureRandom()
+                                        val pinDigits = StringBuilder()
+                                        for (i in 0 until 6) {
+                                            pinDigits.append(secureRandom.nextInt(10))
+                                        }
+                                        val pin = pinDigits.toString()
+
+                                        val hash = pinService.setupDeviceSecurityPIN(accountID, pin)
+
+                                        val result = Arguments.createMap()
+                                        result.putBoolean("success", true)
+                                        result.putString("walletKey", hash)
+                                        result.putBoolean("migrated", true)
+                                        guarded.resolve(result)
+                                    }
+                                } catch (e: Exception) {
+                                    guarded.reject(
+                                        "E_UNLOCK_DEVICE_SECURITY_ERROR",
+                                        "Error during unlock: ${e.message}",
+                                        e,
+                                    )
                                 }
-                                val pin = pinDigits.toString()
-
-                                val hash = pinService.setupDeviceSecurityPIN(accountID, pin)
-
-                                val result = Arguments.createMap()
-                                result.putBoolean("success", true)
-                                result.putString("walletKey", hash)
-                                result.putBoolean("migrated", true)
-                                promise.resolve(result)
                             }
-                        } catch (e: Exception) {
-                            promise.reject("E_UNLOCK_DEVICE_SECURITY_ERROR", "Error during unlock: ${e.message}", e)
+                        } catch (e: RejectedExecutionException) {
+                            // The executor has already been shut down (e.g. invalidate() ran
+                            // during a dev reload or activity teardown while the biometric
+                            // prompt was still open). Settle rather than leave the JS promise
+                            // pending forever.
+                            Log.w(NAME, "unlockWithDeviceSecurity: background executor unavailable, rejecting", e)
+                            guarded.reject(
+                                "E_UNLOCK_DEVICE_SECURITY_ERROR",
+                                "Unable to complete unlock: module is shutting down",
+                                e,
+                            )
                         }
                     }
 
                     DeviceAuthenticationResult.CANCELLED -> {
                         val result = Arguments.createMap()
                         result.putBoolean("success", false)
-                        promise.resolve(result)
+                        guarded.resolve(result)
                     }
 
                     DeviceAuthenticationResult.FAILED -> {
@@ -2879,13 +2915,13 @@ class BcscCoreModule(
                     DeviceAuthenticationResult.ERROR -> {
                         val result = Arguments.createMap()
                         result.putBoolean("success", false)
-                        promise.resolve(result)
+                        guarded.resolve(result)
                     }
                 }
             }
         } catch (e: Exception) {
             Log.e(NAME, "unlockWithDeviceSecurity error: ${e.message}", e)
-            promise.reject("E_UNLOCK_DEVICE_SECURITY_ERROR", "Error unlocking with device security: ${e.message}", e)
+            guarded.reject("E_UNLOCK_DEVICE_SECURITY_ERROR", "Error unlocking with device security: ${e.message}", e)
         }
     }
 
@@ -4109,6 +4145,30 @@ class BcscCoreModule(
 
     private val pinService: PinService by lazy {
         PinService(reactApplicationContext, nativeStorage)
+    }
+
+    // Single-thread executor for offloading main-thread-unsafe work triggered from
+    // biometric/device-authentication callbacks (see unlockWithDeviceSecurity). Deliberately a
+    // plain java.util.concurrent executor rather than coroutines: bcsc-core declares no
+    // coroutines dependency, the workload here is a single hop with nothing to compose, and one
+    // named serialized thread gives mutual exclusion over keystore/PIN-storage work for free.
+    private val backgroundExecutorDelegate =
+        lazy {
+            Executors.newSingleThreadExecutor { r -> Thread(r, "BcscCoreBackground") }
+        }
+    private val backgroundExecutor: ExecutorService by backgroundExecutorDelegate
+
+    /**
+     * Shuts down [backgroundExecutor] when the module is torn down (dev reload, activity
+     * teardown). Checks [Lazy.isInitialized] first so tearing down a module that never used the
+     * executor doesn't create one just to shut it down. Uses shutdown() rather than
+     * shutdownNow() so an in-flight migration write is never interrupted mid-keystore-write.
+     */
+    override fun invalidate() {
+        if (backgroundExecutorDelegate.isInitialized()) {
+            backgroundExecutorDelegate.value.shutdown()
+        }
+        super.invalidate()
     }
 
     // MARK: - JSON Conversion Helpers
