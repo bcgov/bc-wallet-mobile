@@ -37,7 +37,7 @@ describe('useCancelledReviewViewModel', () => {
 
       result.current.cleanUpVerificationData()
 
-      expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(null, null)
+      expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(undefined, null)
     })
 
     it('resets send video and video prompt state', () => {
