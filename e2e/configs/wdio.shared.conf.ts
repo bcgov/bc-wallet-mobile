@@ -19,6 +19,14 @@ const { variant } = getE2EConfig()
 const REPORTS_DIR = resolve(__dirname, '../reports')
 
 /**
+ * Card-barcode scanning journeys — ANDROID ONLY. Android reads codes off the frame buffer with MLKit,
+ * which Sauce's injection replaces wholesale; iOS scans via `AVCaptureMetadataOutput`, which Sauce
+ * feeds for QR alone. Every iOS config sets `exclude` to this, so a run never spends a session just to
+ * reach the in-test skip.
+ */
+export const ANDROID_ONLY_SPECS = [resolve(__dirname, `../test/${variant}/scan/*.journey.ts`)]
+
+/**
  * Save a screenshot named after the failing test. The webdriver screenshot command also attaches
  * the image to the Allure report. Never throws — a screenshot problem must not mask the real
  * test failure.
@@ -54,10 +62,9 @@ export const config: WebdriverIO.Config = {
     auth: [resolve(__dirname, `../test/${variant}/auth/*.journey.ts`)],
     verify: [resolve(__dirname, `../test/${variant}/verify/*.journey.ts`)],
     main: [resolve(__dirname, `../test/${variant}/main/*.journey.ts`)],
-    // Card-barcode scanning: ANDROID-ONLY (iOS cannot fire a 1D/PDF-417 scan from an injected image)
-    // and Sauce-only. Its own suite rather than part of `regression`, which would spend a session per
-    // spec on iOS to skip every one. Dispatch with an Android-only device matrix.
-    scan: [resolve(__dirname, `../test/${variant}/scan/*.journey.ts`)],
+    // Card-barcode scanning: Sauce + Android only (see ANDROID_ONLY_SPECS). Its own suite for targeted
+    // runs, and part of `regression` — the iOS configs exclude it rather than schedule and skip it.
+    scan: ANDROID_ONLY_SPECS,
     // Nightly full run: every per-area journey.
     // Excludes `migration` — that suite boots the v3 app via the separate migration config, so it
     // cannot share this run's v4 RDC build (it stays its own suite + workflow path).
@@ -66,6 +73,7 @@ export const config: WebdriverIO.Config = {
       resolve(__dirname, `../test/${variant}/auth/*.journey.ts`),
       resolve(__dirname, `../test/${variant}/verify/*.journey.ts`),
       resolve(__dirname, `../test/${variant}/main/*.journey.ts`),
+      ...ANDROID_ONLY_SPECS,
     ],
     migration: [resolve(__dirname, `../test/${variant}/migration/migration.spec.ts`)],
   },

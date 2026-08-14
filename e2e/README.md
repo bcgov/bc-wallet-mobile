@@ -43,7 +43,7 @@ _Tests are organized into named suites. Use the_ `--suite` _flag to select which
 | `verify`     | _Verification journeys — the four card types + entry spine/detours (`verify/*.journey.ts`)_ |
 | `main`       | _Main-stack journeys — unverified gating + settings (`main/*.journey.ts`)_                  |
 | `migration`  | _V3→V4 upgrade: v3 onboarding + verification, upgrade to v4, unlock with the v3 PIN_                 |
-| `scan`       | _Card-barcode scanning — non-BCSC→BCSC reroutes + the serial scanner (`scan/*.journey.ts`). **Android + Sauce only**; every spec skips elsewhere_ |
+| `scan`       | _Card-barcode scanning — non-BCSC→BCSC reroutes + the serial scanner (`scan/*.journey.ts`). **Android + Sauce only**, and also part of `regression`; the iOS configs `exclude` it_ |
 
 ```bash
 # Run by suite name (per-area journey suites)
@@ -51,7 +51,7 @@ yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite smoke
 yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite verify
 yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite main
 
-# Card-barcode scanning — Sauce Android only, and NOT part of `regression`
+# Card-barcode scanning on its own — Sauce Android only (it also runs inside `regression`)
 yarn wdio configs/sauce/wdio.android.sauce.rdc.conf.ts --suite scan
 ```
 
@@ -515,7 +515,7 @@ _Tests run automatically in GitHub Actions via a device matrix that controls whi
 | _PR_                 | `smoke`      | _1 iOS (18) + 1 Android (15)_       | `bcsc-dev` | _No_         |
 | _Nightly (schedule)_ | `regression` | _3 iOS (16–18) + 3 Android (13–15)_ | `bcsc-dev` | _—_          |
 
-> _The nightly `regression` suite (all per-area journeys) replaces the retired `happy-path` / `full-regression` suites. It is the default suite in_ `e2e-nightly.yml` _and selectable from_ `e2e.yml` _(alongside the per-area suites); `migration` stays a separate suite because it boots the v3 app via its own config._
+> _The nightly `regression` suite (all per-area journeys) replaces the retired `happy-path` / `full-regression` suites. It is the default suite in_ `e2e-nightly.yml` _and selectable from_ `e2e.yml` _(alongside the per-area suites); `migration` stays a separate suite because it boots the v3 app via its own config. `scan` is inside `regression` but Android-only — the iOS configs list it in_ `exclude` _(`ANDROID_ONLY_SPECS`), so those specs are dropped before scheduling instead of costing an iOS session each to reach a skip._
 
 _The device matrix is passed as a JSON array of_ `{platform, device, os_version}` _objects to_ `e2e.yml`_. Each entry spawns a separate SauceLabs session with its own logs and pass/fail status. (Biometric CI wiring — its Sauce configs, dev scripts, and workflow job — has been removed pending re-implementation as a journey; the_ `biometrics` _helper is retained for that future work.)_
 
