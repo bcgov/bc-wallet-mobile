@@ -157,6 +157,12 @@ class BcscCoreModule(
         // Notification channel constants
         private const val NOTIFICATION_CHANNEL_ID = "bcsc_foreground_notifications"
         private const val NOTIFICATION_CHANNEL_NAME = "BCSC Notifications"
+
+        // Auto-generated device-security PIN constants
+        private const val AUTO_GENERATED_PIN_LENGTH = 6
+
+        // Exclusive upper bound passed to SecureRandom.nextInt() to produce a single decimal digit (0-9)
+        private const val DECIMAL_DIGIT_BOUND = 10
     }
 
     override fun getName(): String = NAME
@@ -2777,11 +2783,11 @@ class BcscCoreModule(
 
             val accountID = account.uuid
 
-            // Generate a cryptographically secure random 6-digit PIN
+            // Generate a cryptographically secure random PIN
             val secureRandom = java.security.SecureRandom()
             val pinDigits = StringBuilder()
-            for (i in 0 until 6) {
-                val digit = secureRandom.nextInt(10)
+            for (i in 0 until AUTO_GENERATED_PIN_LENGTH) {
+                val digit = secureRandom.nextInt(DECIMAL_DIGIT_BOUND)
                 pinDigits.append(digit)
             }
             val pin = pinDigits.toString()
@@ -2857,8 +2863,8 @@ class BcscCoreModule(
                                         // User had device security but no random PIN. Generate one now.
                                         val secureRandom = java.security.SecureRandom()
                                         val pinDigits = StringBuilder()
-                                        for (i in 0 until 6) {
-                                            pinDigits.append(secureRandom.nextInt(10))
+                                        for (i in 0 until AUTO_GENERATED_PIN_LENGTH) {
+                                            pinDigits.append(secureRandom.nextInt(DECIMAL_DIGIT_BOUND))
                                         }
                                         val pin = pinDigits.toString()
 
