@@ -2,9 +2,9 @@ import { RemoteLogger } from '@bifold/remote-logs'
 import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
   cacheRemoteConfig,
+  fetchRemoteConfig,
   getBundledRemoteConfig,
   getCachedRemoteConfig,
-  getHostedRemoteConfig,
   RemoteConfig,
 } from './remote-config-utils'
 
@@ -48,6 +48,11 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
   const [remoteConfig, setRemoteConfigState] = useState<RemoteConfig>(REMOTE_CONFIG_CACHE)
   const initializedRef = useRef(false)
 
+  /**
+   * Sets the remote config in memory and persistent storage.
+   * @param newConfig The new remote config to set.
+   * @returns void
+   */
   const setRemoteConfig = useCallback(
     (newConfig: RemoteConfig) => {
       REMOTE_CONFIG_CACHE = newConfig
@@ -57,6 +62,11 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
     [props.logger]
   )
 
+  /**
+   * Get the value of a remote config key.
+   * @param key The key of the remote config to get.
+   * @returns The value of the remote config key.
+   */
   const getValue = useCallback(
     <T extends keyof RemoteConfig>(key: T): RemoteConfig[T] => {
       return remoteConfig[key]
@@ -64,6 +74,13 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
     [remoteConfig]
   )
 
+  /**
+   * Set the local value of a remote config key.
+   * Note: This will only update the value in memory and persistent storage - **not** the server.
+   * @param key The key of the remote config to set.
+   * @param value The value to set for the remote config key.
+   * @returns void
+   */
   const setValue = useCallback(
     <T extends keyof RemoteConfig>(key: T, value: RemoteConfig[T]) => {
       setRemoteConfig({
@@ -88,10 +105,18 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
         initializedRef.current = true
       }
     }
+
     load()
   }, [props.logger, setRemoteConfig])
 
-  const context = useMemo(() => ({ getValue, setValue, loading }), [getValue, setValue, loading])
+  const context = useMemo(
+    () => ({
+      getValue,
+      setValue,
+      loading,
+    }),
+    [getValue, setValue, loading]
+  )
 
   return <RemoteConfigContext.Provider value={context}>{props.children}</RemoteConfigContext.Provider>
 }
@@ -133,21 +158,27 @@ export function getRemoteConfig(): RemoteConfig {
 // -----------------------------
 
 async function _initRemoteConfig(logger: RemoteLogger): Promise<RemoteConfig> {
+  // 1. Try to get the cached remote config from persistent storage
   const cachedRemoteConfig = await getCachedRemoteConfig(logger)
 
+  // Valid shape and not expired
   if (cachedRemoteConfig) {
     logger.info('[RemoteConfig] Using cached remote config.')
     return cachedRemoteConfig
   }
 
-  const hostedRemoteConfig = await getHostedRemoteConfig(logger)
+  // 2. Fetch the remote config from the server (object storage)
+  const hostedRemoteConfig = await fetchRemoteConfig(logger)
 
   if (hostedRemoteConfig) {
     logger.info('[RemoteConfig] Using hosted remote config.')
+    await cacheRemoteConfig(hostedRemoteConfig, logger)
     return hostedRemoteConfig
   }
 
-  logger.info('[RemoteConfig] Using bundled remote config.')
+  // THOUGHT (MD): Maybe use the expired cached config if the hosted remote config fetch fails
 
+  // 3. Fallback to the bundled remote config
+  logger.info('[RemoteConfig] Using bundled remote config.')
   return getBundledRemoteConfig()
 }
