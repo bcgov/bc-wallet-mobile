@@ -2,7 +2,7 @@ diff --git a/RNFSManager.m b/RNFSManager.m
 index 5ddd9417de101a0b18a298434dbc57f46b130f21..7bca62aadd52e2aa1575887965541c6972bcebb1 100755
 --- a/RNFSManager.m
 +++ b/RNFSManager.m
-@@ -294,8 +294,8 @@ RCT_EXPORT_METHOD(readFile:(NSString *)filepath
+@@ -294,8 +294,8 @@ + (BOOL)requiresMainQueueSetup
  }
  
  RCT_EXPORT_METHOD(read:(NSString *)filepath
@@ -13,3 +13,16 @@ index 5ddd9417de101a0b18a298434dbc57f46b130f21..7bca62aadd52e2aa1575887965541c69
                    resolver:(RCTPromiseResolveBlock)resolve
                    rejecter:(RCTPromiseRejectBlock)reject)
  {
+diff --git a/android/src/main/java/com/rnfs/RNFSManager.java b/android/src/main/java/com/rnfs/RNFSManager.java
+index 351ac066dd7936bba7f35627a0730db1dd272b2c..c350ddcc91ab280be7aa772bf1144edb7e746b85 100755
+--- a/android/src/main/java/com/rnfs/RNFSManager.java
++++ b/android/src/main/java/com/rnfs/RNFSManager.java
+@@ -975,7 +975,7 @@ public class RNFSManager extends ReactContextBaseJavaModule {
+       return;
+     }
+ 
+-    promise.reject(null, ex.getMessage());
++    promise.reject("RNFS", ex.getMessage());
+   }
+ 
+   private void rejectFileNotFound(Promise promise, String filepath) {

@@ -7816,7 +7816,7 @@ __metadata:
     react-native-confirmation-code-field: "npm:~7.3.2"
     react-native-device-info: "npm:~8.7.1"
     react-native-drop-shadow: "npm:^1.0.3"
-    react-native-fs: "npm:~2.20.0"
+    react-native-fs: "patch:react-native-fs@npm%3A2.20.0#~/.yarn/patches/react-native-fs-npm-2.20.0-a38fe24051.patch"
     react-native-gesture-handler: "npm:~2.28.0"
     react-native-get-random-values: "npm:~1.11.0"
     react-native-gifted-chat: "npm:*"
@@ -16511,7 +16511,7 @@ __metadata:
 
 "react-native-fs@patch:react-native-fs@npm%3A2.20.0#~/.yarn/patches/react-native-fs-npm-2.20.0-a38fe24051.patch":
   version: 2.20.0
-  resolution: "react-native-fs@patch:react-native-fs@npm%3A2.20.0#~/.yarn/patches/react-native-fs-npm-2.20.0-a38fe24051.patch::version=2.20.0&hash=6622c7"
+  resolution: "react-native-fs@patch:react-native-fs@npm%3A2.20.0#~/.yarn/patches/react-native-fs-npm-2.20.0-a38fe24051.patch::version=2.20.0&hash=b1f4bf"
   dependencies:
     base-64: "npm:^0.1.0"
     utf8: "npm:^3.0.0"
@@ -16521,7 +16521,7 @@ __metadata:
   peerDependenciesMeta:
     react-native-windows:
       optional: true
-  checksum: 10c0/bfb84f28551378aa22bac974609e382498ab47ee7e6eb653fd0edae46f49b028a08c3ead5c7d09bc5411eca297d0a6e82b0ab74855ffa0d8b5d51669b768746b
+  checksum: 10c0/69c20222fd7892eba27057023f3c942ed2d07266656fce664ef460f2907d362e6a48bc564931e2f3dbf511883b454547bbe66118ff0391765ba033763251ddab
   languageName: node
   linkType: hard
 
