@@ -1,15 +1,17 @@
 /**
  * Helpers for dispatching `<scheme>://...` deep links to the app under test.
  *
- * Android uses Appium's `mobile: deepLink` (`am start -a VIEW`). iOS uses the same command but WITHOUT
- * a `bundleId` — the plain system open — then accepts the "Open in <app>?" confirmation. Passing a
- * `bundleId` routes through the app-scoped open, which errors unless the device runtime is iOS 16.4+
- * ("The current OS runtime does not support opening URLs with a given application"); the system open
- * has no such requirement and works on any iOS.
+ * Android uses Appium's `mobile: deepLink` (`am start -a VIEW`). iOS tries the same command WITH a
+ * `bundleId` first — the app-scoped open, deterministic and prompt-free on iOS 16.4+ — and only on
+ * an error falls back to the no-bundleId system open plus its "Open in <app>?" confirmation.
  *
- * Requires the OFFICIAL Appium WebDriverAgent (pinned via `appiumVersion` in
- * `configs/sauce/wdio.ios.sauce.rdc.conf.ts`). Sauce's custom WDA (the default `latest`) instead falls
- * back to Siri for the no-bundleId open, which is slow and non-deterministic.
+ * The order matters on Sauce: the no-bundleId open is only safe on the OFFICIAL Appium
+ * WebDriverAgent (pinned via `appiumVersion` in `configs/sauce/wdio.ios.sauce.rdc.conf.ts`). Sauce's
+ * custom WDA (the default `latest`, and what a silently aged-out pin falls back to) instead routes it
+ * through Siri, which has been observed to hang past the 60s command timeout and KILL the session.
+ * The bundleId-scoped open never touches Siri on either WDA — it errors fast where unsupported
+ * (runtime below 16.4, or the custom WDA's "does not support opening of URLs with given application"),
+ * which is what makes the fallback safe to attempt.
  */
 import { acceptSystemAlert } from './alerts.js'
 import type { DeepLinkPlatform } from './pairing-code.js'
@@ -47,8 +49,15 @@ export async function dispatchDeepLink(url: string, appId: string): Promise<void
     // fails with LSApplicationNotFound (-10814). For BCSC the iOS bundle id equals the URL scheme, so
     // retarget the link at the running app's own scheme (a no-op when they already match).
     const retargeted = url.replace(/^[^:]+:\/\//, `${appId}://`)
-    // No `bundleId`: the system open avoids the iOS-16.4 app-scoped-open requirement, and on the
-    // official WDA it does not fall back to Siri. It raises an "Open in <app>?" prompt, which we accept.
+    try {
+      // App-scoped open: deterministic, no confirmation prompt, and NEVER Siri (see header).
+      await driver.execute('mobile: deepLink', { url: retargeted, bundleId: appId })
+      return
+    } catch (err) {
+      console.warn(`[deep-link] app-scoped open failed (${String(err).split('\n')[0]}); using the system open`)
+    }
+    // System open: works on any runtime/WDA that rejected the scoped form, at the cost of the
+    // "Open in <app>?" prompt — and Siri, if the session is on Sauce's custom WDA.
     await driver.execute('mobile: deepLink', { url: retargeted })
     await acceptSystemAlert()
     return
