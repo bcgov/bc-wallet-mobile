@@ -40,6 +40,24 @@ config.maxInstances = Number(process.env.SAUCE_MAX_INSTANCES) || 1
  */
 config.connectionRetryTimeout = 600_000
 
+/**
+ * Re-run a FAILED journey file once, in a brand-new session.
+ *
+ * The failures this clears are the device's, not the suite's: a rack camera that will not start a
+ * recording, a session that comes up with a wedged WebDriverAgent. Nothing in-process can retry past
+ * those — the app is already in an unrecoverable state by the time we see it — and a fresh session is
+ * exactly what a human does. Journeys are self-contained (each onboards from a clean install), so a
+ * retry starts from the same place the first attempt did.
+ *
+ * Only failed files re-run, so the cost is proportional to the failures, not the suite. Retries are
+ * deferred to the end of the queue by default, which keeps the send-video journeys' one-at-a-time
+ * agent-queue rule intact at `maxInstances: 1`.
+ *
+ * Set SAUCE_SPEC_RETRIES=0 to see the raw pass rate (what a flake investigation wants).
+ */
+const requestedRetries = Number(process.env.SAUCE_SPEC_RETRIES)
+config.specFileRetries = Number.isInteger(requestedRetries) && requestedRetries >= 0 ? requestedRetries : 1
+
 config.services = [
   [
     'sauce',
@@ -58,12 +76,21 @@ config.services = [
   ],
 ]
 
-/** Shared Sauce RDC session options (biometrics, image injection, build metadata). */
-const sauceRdcOptions = {
+/**
+ * Shared Sauce RDC session options WITHOUT camera injection — the Android send-video lane
+ * (see wdio.android.sauce.rdc.conf.ts): injection instruments the whole camera pipeline, which
+ * kills the recorder's stop/finalize, and those journeys record from the rack feed instead.
+ */
+const sauceRdcOptionsNoCameraInjection = {
   appiumVersion: 'latest',
   build: process.env.BUILD_NAME || `local-${Date.now()}`,
   name: process.env.TEST_NAME || 'E2E Tests',
   phoneOnly: true,
+}
+
+/** Shared Sauce RDC session options (biometrics, image injection, build metadata) — the default. */
+const sauceRdcOptions = {
+  ...sauceRdcOptionsNoCameraInjection,
   sauceLabsImageInjectionEnabled: true,
   /** Sauce RDC; not on WebdriverIO's SauceLabsCapabilities type yet */
   imageInjection: true,
@@ -74,4 +101,4 @@ config.afterTest = async function (test, _context, result) {
   await browser.execute(`sauce:job-result=${result.passed ? 'passed' : 'failed'}`)
 }
 
-export { config, sauceRdcOptions }
+export { config, sauceRdcOptions, sauceRdcOptionsNoCameraInjection }
