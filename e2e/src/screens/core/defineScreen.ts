@@ -1,5 +1,5 @@
 import { Timeouts } from '../../constants.js'
-import { BaseScreen, EnterTextOptions } from './BaseScreen.js'
+import { BaseScreen, EnterTextOptions, ScrollHint } from './BaseScreen.js'
 
 /**
  * A test ID that either resolves to the same string on both platforms, or differs per platform.
@@ -18,6 +18,9 @@ export type TestId = string | { readonly ios: string; readonly android: string }
  * - `links` — named buttons / tabs / list options.
  * - `inputs` — text fields.
  * - `elements` — read/assert targets (labels, status text, …).
+ * - `scroll` — scroll-hunt budget for screens whose content is KNOWN to run long (the default reaches
+ *   about one viewport, which a small phone can exhaust before the target). Applies to every find on
+ *   the screen; use `directions: 'down'` when the targets only ever sit below the fold.
  */
 export interface ScreenSpec {
   readonly self?: TestId
@@ -29,6 +32,7 @@ export interface ScreenSpec {
   readonly links?: Readonly<Record<string, TestId>>
   readonly inputs?: Readonly<Record<string, TestId>>
   readonly elements?: Readonly<Record<string, TestId>>
+  readonly scroll?: ScrollHint
 }
 
 /** The single-instance control roles. */
@@ -46,7 +50,28 @@ type ElementKeys<S> = S extends { elements: infer E } ? Extract<keyof E, string>
 /** Any named target — link, input, or element. */
 type NamedKeys<S> = LinkKeys<S> | InputKeys<S> | ElementKeys<S>
 
-type BackNamespace = { readonly tap: () => Promise<void> }
+/**
+ * Anything that can answer "am I mounted?" — every {@link Screen} is one, so a destination can be
+ * named by passing the screen object itself.
+ */
+export interface ScreenPresence {
+  isPresent(timeout?: number): Promise<boolean>
+  expectVisible(timeout?: number): Promise<void>
+}
+
+/** Options for the confirm-and-retry taps, minus the probe the DSL supplies itself. */
+export type TapToNavigateOptions = { attempts?: number; timeout?: number; settleMs?: number }
+
+/**
+ * Budget for one "did we land yet" probe inside the retry loop. Short by design: it is polled, so this
+ * is the sampling interval, not the time allowed to arrive.
+ */
+const DESTINATION_PROBE_MS = 500
+
+type BackNamespace = {
+  readonly tap: () => Promise<void>
+  readonly tapToReach: (destination: ScreenPresence, options?: TapToNavigateOptions) => Promise<void>
+}
 type HelpNamespace = { readonly open: () => Promise<void> }
 /**
  * `back` / `help` are exposed only when the descriptor declares that role, so `screen.back.tap()` on
@@ -131,13 +156,16 @@ export class Screen<S extends ScreenSpec> {
   private readonly engine: BaseScreen
 
   /** Convenience namespace for the header back button (`await Screen.back.tap()`). */
-  readonly back: { tap(): Promise<void> }
+  readonly back: BackNamespace
   /** Convenience namespace for the floating help menu (`await Screen.help.open()`). */
   readonly help: { open(): Promise<void> }
 
   constructor(private readonly spec: S) {
     this.engine = new BaseScreen()
-    this.back = { tap: () => this.tapRole('back') }
+    this.back = {
+      tap: () => this.tapRole('back'),
+      tapToReach: (destination, options) => this.tapRoleToReach('back', destination, options),
+    }
     this.help = { open: () => this.tapRole('help') }
   }
 
@@ -170,7 +198,35 @@ export class Screen<S extends ScreenSpec> {
   }
 
   private async tapRole(role: ActionRole): Promise<void> {
-    await this.engine.tapByTestId(resolveTestId(this.roleId(role)))
+    await this.engine.tapByTestId(resolveTestId(this.roleId(role)), undefined, this.spec.scroll)
+  }
+
+  private async tapRoleToReach(
+    role: ActionRole,
+    destination: ScreenPresence,
+    options?: TapToNavigateOptions
+  ): Promise<void> {
+    try {
+      await this.engine.tapToNavigate(resolveTestId(this.roleId(role)), {
+        ...options,
+        arrivedAt: () => destination.isPresent(DESTINATION_PROBE_MS),
+      })
+    } catch (err) {
+      // The arrival probe deliberately never scrolls, so a destination whose marker sits below the
+      // fold reads exactly like a swallowed tap. Let the scroll hunt have the last word before we
+      // report the taps as lost.
+      if (await this.isVisibleAfterScrolling(destination)) return
+      throw err
+    }
+  }
+
+  private async isVisibleAfterScrolling(destination: ScreenPresence): Promise<boolean> {
+    try {
+      await destination.expectVisible(Timeouts.ELEMENT_VISIBLE)
+      return true
+    } catch {
+      return false
+    }
   }
 
   // --- public API ----------------------------------------------------------
@@ -181,7 +237,7 @@ export class Screen<S extends ScreenSpec> {
     if (!target) {
       throw new Error('Screen declares neither "self" nor "primary"; cannot expectVisible()')
     }
-    await this.engine.waitForDisplayed(resolveTestId(target), timeout)
+    await this.engine.waitForDisplayed(resolveTestId(target), timeout, this.spec.scroll)
   }
 
   /**
@@ -213,21 +269,34 @@ export class Screen<S extends ScreenSpec> {
    * while the control is still on screen (see {@link BaseScreen.tapToNavigate}). Use on the seams where
    * Android swallows a tap dispatched mid-transition; never for a non-idempotent action.
    */
-  async tapToNavigate(
-    role: PresentRoles<S>,
-    options?: { attempts?: number; timeout?: number; settleMs?: number }
-  ): Promise<void> {
+  async tapToNavigate(role: PresentRoles<S>, options?: TapToNavigateOptions): Promise<void> {
     await this.engine.tapToNavigate(resolveTestId(this.roleId(role as ActionRole)), options)
+  }
+
+  /**
+   * Tap a declared role and confirm `destination` mounted, re-tapping a swallowed tap.
+   *
+   * Prefer this over {@link tapToNavigate} wherever the destination is known: it proves arrival rather
+   * than departure, so it also catches the taps react-navigation discards while a pushed screen is
+   * rendered but not yet interactive. Required for controls whose id survives the push (a header
+   * Back), where departure cannot be read at all.
+   */
+  async tapToReach(
+    role: PresentRoles<S>,
+    destination: ScreenPresence,
+    options?: TapToNavigateOptions
+  ): Promise<void> {
+    await this.tapRoleToReach(role as ActionRole, destination, options)
   }
 
   /** Wait until a declared role is enabled, then tap it. */
   async tapWhenEnabled(role: PresentRoles<S>, timeout?: number): Promise<void> {
-    await this.engine.waitForEnabledAndTap(resolveTestId(this.roleId(role as ActionRole)), timeout)
+    await this.engine.waitForEnabledAndTap(resolveTestId(this.roleId(role as ActionRole)), timeout, this.spec.scroll)
   }
 
   /** Tap a named link. */
   async link(name: LinkKeys<S>): Promise<void> {
-    await this.engine.tapByTestId(resolveTestId(this.namedId('links', name)))
+    await this.engine.tapByTestId(resolveTestId(this.namedId('links', name)), undefined, this.spec.scroll)
   }
 
   /** Scroll a named link into view (no tap). */
@@ -247,7 +316,7 @@ export class Screen<S extends ScreenSpec> {
 
   /** Wait until a named target (element, link, or input) is displayed (scrolls into view on miss). */
   async waitFor(name: NamedKeys<S>, timeout?: number): Promise<void> {
-    await this.engine.waitForDisplayed(resolveTestId(this.anyNamedId(name)), timeout)
+    await this.engine.waitForDisplayed(resolveTestId(this.anyNamedId(name)), timeout, this.spec.scroll)
   }
 
   /** True if a named target (element, link, or input) is currently displayed; never throws. */
