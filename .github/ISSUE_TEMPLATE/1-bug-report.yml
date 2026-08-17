@@ -83,9 +83,7 @@ body:
     attributes:
       label: Impact
       description: Optional. Who is blocked, and how badly?
-      placeholder: |
-        Testers can't add the Digital Person credential, which blocks the rest of the
-        UAT script. No known workaround.
+      placeholder: Testers can't add the Digital Person credential, which blocks the rest of the UAT script. No known workaround.
     validations:
       required: false
 
