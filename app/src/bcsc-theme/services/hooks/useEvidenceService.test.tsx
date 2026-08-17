@@ -69,7 +69,7 @@ describe('useEvidenceService', () => {
       const data = await result.current.cancelVerificationRequest('verification-id')
 
       expect(mockEvidenceApi.cancelVerificationRequest).toHaveBeenCalledWith('verification-id')
-      expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(null, null)
+      expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(undefined, null)
       expect(data).toEqual(mockData)
     })
 
@@ -81,7 +81,7 @@ describe('useEvidenceService', () => {
       const data = await result.current.cancelVerificationRequest('verification-id')
 
       expect(mockEvidenceApi.cancelVerificationRequest).toHaveBeenCalledWith('verification-id')
-      expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(null, null)
+      expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(undefined, null)
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('Verification request not found for ID: verification-id')
       )

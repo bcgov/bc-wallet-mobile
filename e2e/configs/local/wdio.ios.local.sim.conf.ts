@@ -1,11 +1,15 @@
 // local/wdio.ios.local.sim.conf.ts
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { ANDROID_ONLY_SPECS } from '../wdio.shared.conf.js'
 import { config as localConfig } from './wdio.shared.local.appium.conf.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const config = { ...localConfig }
+
+// Dropped before scheduling, so `--suite regression` costs no iOS session on them.
+config.exclude = ANDROID_ONLY_SPECS
 
 config.capabilities = [
   {

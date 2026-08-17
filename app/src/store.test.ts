@@ -7,8 +7,12 @@ jest.mock('react-native-config', () => ({
 }))
 
 jest.mock('react-native-device-info', () => ({
+  getApplicationName: jest.fn(() => 'BCServicesCard'),
   getVersion: jest.fn(() => '4.0.0'),
   getBuildNumber: jest.fn(() => '100'),
+  getSystemName: jest.fn(() => 'iOS'),
+  getSystemVersion: jest.fn(() => '17.4'),
+  getDeviceId: jest.fn(() => 'iPhone15,2'),
 }))
 
 jest.mock('react-native-bcsc-core', () => ({}))

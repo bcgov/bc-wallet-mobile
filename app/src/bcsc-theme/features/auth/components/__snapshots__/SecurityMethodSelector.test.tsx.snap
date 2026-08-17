@@ -79,7 +79,7 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) marks t
             BCSC.Onboarding.SecureAppOnboardingContent
           </Text>
           <View
-            accessibilityLabel="BCSC.Settings.AppSecurity.CurrentMethod. Face id"
+            accessibilityLabel="BCSC.Settings.AppSecurity.CurrentMethod. BCSC.Settings.AppSecurity.DeviceAuth"
             accessibilityState={
               {
                 "selected": true,
@@ -132,7 +132,7 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) marks t
                   ]
                 }
               >
-                
+                
               </Text>
               <View
                 style={
@@ -187,7 +187,7 @@ exports[`SecurityMethodSelector in settings context (with currentMethod) marks t
                     ]
                   }
                 >
-                  Face id
+                  BCSC.Settings.AppSecurity.DeviceAuth
                 </Text>
               </View>
               <Text
@@ -1313,7 +1313,7 @@ exports[`SecurityMethodSelector when device auth is available renders both devic
                   ]
                 }
               >
-                
+                
               </Text>
               <View
                 style={

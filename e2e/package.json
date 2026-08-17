@@ -46,6 +46,7 @@
     "appium": "^2.13.1",
     "appium-uiautomator2-driver": "^3.9.6",
     "appium-xcuitest-driver": "^7.35.0",
+    "bwip-js": "^4.11.2",
     "cheerio": "^1.2.0",
     "dotenv": "^16.3.1",
     "eslint-plugin-wdio": "^9.27.0",
