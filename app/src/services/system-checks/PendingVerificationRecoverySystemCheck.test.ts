@@ -5,7 +5,7 @@ import { BCDispatchAction } from '@/store'
 const makeUtils = (): SystemCheckUtils => ({
   dispatch: jest.fn(),
   translation: jest.fn() as any,
-  logger: {} as any,
+  logger: { error: jest.fn() } as any,
 })
 
 describe('PendingVerificationRecoverySystemCheck', () => {
