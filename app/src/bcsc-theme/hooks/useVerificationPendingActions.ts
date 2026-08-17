@@ -72,14 +72,20 @@ export const useVerificationPendingActions = (navigation: StackNavigationProp<BC
       } catch (error) {
         logger.error(`Error cancelling verification request: ${error}`)
       } finally {
-        updateVerificationRequest(null, null)
+        await updateVerificationRequest(undefined, null)
         dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
         dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
         dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT, payload: [undefined] })
         await updateAccountFlags({
           userSubmittedVerificationVideo: false,
+        }).catch((error) => {
+          logger.error(`Error resetting account flags after cancelling verification: ${error}`)
         })
-        navigation.navigate(BCSCScreens.VerificationMethodSelection)
+        // reset navigation stack
+        navigation.reset({
+          index: 0,
+          routes: [{ name: BCSCScreens.VerificationMethodSelection }],
+        })
       }
     })
   }, [

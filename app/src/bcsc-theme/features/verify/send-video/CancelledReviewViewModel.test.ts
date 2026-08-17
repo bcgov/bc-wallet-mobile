@@ -32,18 +32,18 @@ describe('useCancelledReviewViewModel', () => {
   })
 
   describe('cleanUpVerificationData', () => {
-    it('clears the verification request', () => {
+    it('clears the verification request', async () => {
       const { result } = renderHook(() => useCancelledReviewViewModel())
 
-      result.current.cleanUpVerificationData()
+      await result.current.cleanUpVerificationData()
 
-      expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(null, null)
+      expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(undefined, null)
     })
 
-    it('resets send video and video prompt state', () => {
+    it('resets send video and video prompt state', async () => {
       const { result } = renderHook(() => useCancelledReviewViewModel())
 
-      result.current.cleanUpVerificationData()
+      await result.current.cleanUpVerificationData()
 
       expect(mockDispatch).toHaveBeenCalledWith({ type: BCDispatchAction.RESET_SEND_VIDEO })
       expect(mockDispatch).toHaveBeenCalledWith({
@@ -52,10 +52,10 @@ describe('useCancelledReviewViewModel', () => {
       })
     })
 
-    it('clears the secure verification request status and message', () => {
+    it('clears the secure verification request status and message', async () => {
       const { result } = renderHook(() => useCancelledReviewViewModel())
 
-      result.current.cleanUpVerificationData()
+      await result.current.cleanUpVerificationData()
 
       expect(mockDispatch).toHaveBeenCalledWith({
         type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_STATUS,
@@ -67,10 +67,10 @@ describe('useCancelledReviewViewModel', () => {
       })
     })
 
-    it('clears the secure verification video submitted at timestamp', () => {
+    it('clears the secure verification video submitted at timestamp', async () => {
       const { result } = renderHook(() => useCancelledReviewViewModel())
 
-      result.current.cleanUpVerificationData()
+      await result.current.cleanUpVerificationData()
 
       expect(mockDispatch).toHaveBeenCalledWith({
         type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT,
@@ -78,18 +78,18 @@ describe('useCancelledReviewViewModel', () => {
       })
     })
 
-    it('resets the userSubmittedVerificationVideo account flag', () => {
+    it('resets the userSubmittedVerificationVideo account flag', async () => {
       const { result } = renderHook(() => useCancelledReviewViewModel())
 
-      result.current.cleanUpVerificationData()
+      await result.current.cleanUpVerificationData()
 
       expect(mockUpdateAccountFlags).toHaveBeenCalledWith({ userSubmittedVerificationVideo: false })
     })
 
-    it('dispatches exactly the expected five actions', () => {
+    it('dispatches exactly the expected five actions', async () => {
       const { result } = renderHook(() => useCancelledReviewViewModel())
 
-      result.current.cleanUpVerificationData()
+      await result.current.cleanUpVerificationData()
 
       expect(mockDispatch).toHaveBeenCalledTimes(5)
     })

@@ -7,7 +7,7 @@ import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore,
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import moment from 'moment'
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BackHandler, View } from 'react-native'
 
@@ -31,10 +31,12 @@ const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
     }, [dispatch])
   )
 
-  // Check status when the screen mounts
-  useEffect(() => {
-    handleCheckStatus()
-  }, [handleCheckStatus])
+  // Check status when the screen is visible
+  useFocusEffect(
+    useCallback(() => {
+      handleCheckStatus()
+    }, [handleCheckStatus])
+  )
 
   const controls = (
     <ControlContainer>
