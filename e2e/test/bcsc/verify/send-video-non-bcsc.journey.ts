@@ -39,8 +39,9 @@ const SECOND_DOC_MATCH = 'Canadian Passport'
  * mandatory for a cardless registration, so this cannot run on a network that intercepts the disposable
  * -inbox providers — see the non-BCSC in-person journey's note.
  *
- * QUEUE HYGIENE: reviews claim the NEXT queued request blindly, so no other send-video journey may run
- * CONCURRENTLY (the suite is serial at the default `maxInstances: 1`).
+ * QUEUE HYGIENE: reviews claim the NEXT queued request blindly — a foreign head is CLOSED and the
+ * claim retried — so no other send-video journey may run CONCURRENTLY: its live request would be
+ * closed too (the suite is serial at the default `maxInstances: 1`).
  */
 describe('Verified journey: non-bcsc, send video', () => {
   before(() => {

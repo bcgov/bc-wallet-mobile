@@ -26,10 +26,10 @@ import { getTestUser, setTestUser } from '../../../src/support/context.js'
  * IDCheck SIT review portal (`reviewSendVideoRequest`; needs `SM_USER`/`SM_PASSWORD` on an allowlisted
  * runner), then the app's own status re-check → VerificationSuccess and verified Home.
  *
- * QUEUE HYGIENE: the portal has no worklist — a review claims the NEXT queued request, blindly. So the
- * SIT queue must be empty when this starts, and no other send-video journey may run CONCURRENTLY with
- * it (the suite is serial at the default `maxInstances: 1`; raising `SAUCE_MAX_INSTANCES` breaks that).
- * The script still refuses to review a request whose card serial is not this user's.
+ * QUEUE HYGIENE: the portal has no worklist — a review claims the NEXT queued request, blindly. A
+ * foreign head (stale or third-party) is CLOSED and the claim retried, so a polluted queue self-heals;
+ * that is exactly why no other send-video journey may run CONCURRENTLY with this one — its live
+ * request would be closed too (the suite is serial at the default `maxInstances: 1`).
  */
 describe('Verified journey: send video, approved', () => {
   before(() => {
