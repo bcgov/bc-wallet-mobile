@@ -100,8 +100,10 @@ body:
     id: build
     attributes:
       label: Build number
-      description: Found in the app's Settings → About screen (e.g. "4.1.0 (6892)").
-      placeholder: "4.1.0 (6892)"
+      description: >-
+        On the app's Settings screen you'll see "Version 4.1.0 Build (6892)".
+        Combine the two numbers as version-build.
+      placeholder: "4.1.0-6892"
     validations:
       required: true
 
