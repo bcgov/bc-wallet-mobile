@@ -116,6 +116,21 @@ export const QRCoreScreen = defineScreen({
 })
 
 /**
+ * The QR scanner's failed-scan popup (bifold `DismissiblePopupModal`, e.g. "QR code not recognized").
+ * `self`/`primary` is its CTA (testID `Okay`, labelled "Dismiss") — dismissing clears the error and
+ * re-arms the scanner (`enableCameraOnError`). `header`/`body` are bifold-generic ids that collide
+ * with the Home notification card, so only assert this descriptor while the QRCore scanner is up.
+ */
+export const ScanErrorModal = defineScreen({
+  self: bcsc(main.scanError.okay),
+  primary: bcsc(main.scanError.okay),
+  elements: {
+    header: bcsc(main.scanError.header),
+    body: bcsc(main.scanError.body),
+  },
+})
+
+/**
  * Main settings menu (`SettingsContent.tsx`). `self` is the always-present AppSecurity row. The
  * unverified-safe rows are exposed as `links`; the `isVerified`-gated `profile` (→ AccountDetails) and
  * `forgetPairings` render only when VERIFIED, so their absence is the unverified-gating assert.
