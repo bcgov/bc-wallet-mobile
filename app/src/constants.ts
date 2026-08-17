@@ -57,7 +57,8 @@ export const BCSC_GOOGLE_PLAY_STORE_URL = 'https://play.google.com/store/apps/de
 export const ACCOUNT_SERVICES_URL = 'https://id.gov.bc.ca/account/services'
 export const TERMS_OF_USE_URL = 'https://id.gov.bc.ca/static/termsOfUse.html'
 export const FEEDBACK_URL = 'https://id.gov.bc.ca/static/feedback.html'
-export const ACCESSIBILITY_URL = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bcservicescardapp'
+export const ACCESSIBILITY_URL =
+  'https://www2.gov.bc.ca/gov/content/governments/government-id/bcservicescardapp#accessibility'
 // appending param fromapp=1 to certain id.gov urls automatically removes header and footer and such
 export const BC_LOGIN_PRIVACY_URL = 'https://id.gov.bc.ca/static/privacy.html'
 export const SECURE_APP_LEARN_MORE_URL = 'https://id.gov.bc.ca/static/help/secure_app.html?fromapp=1'

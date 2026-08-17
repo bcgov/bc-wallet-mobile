@@ -121,7 +121,9 @@ describe('SettingsContent', () => {
     fireEvent.press(screen.getByTestId(tid('Accessibility')))
     fireEvent.press(screen.getByTestId(tid('TermsOfUse')))
     expect(spy).toHaveBeenCalledTimes(3)
-    expect(spy).toHaveBeenCalledWith('https://www2.gov.bc.ca/gov/content/governments/government-id/bcservicescardapp')
+    expect(spy).toHaveBeenCalledWith(
+      'https://www2.gov.bc.ca/gov/content/governments/government-id/bcservicescardapp#accessibility'
+    )
     spy.mockRestore()
   })
 
