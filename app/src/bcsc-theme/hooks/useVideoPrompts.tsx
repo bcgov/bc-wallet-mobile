@@ -57,23 +57,7 @@ const useVideoPrompts = () => {
     async (verificationRequest: VerificationResponseData): Promise<boolean> => {
       const usable = Boolean(verificationRequest.prompts?.length)
 
-      try {
-        // The id is worth holding even for an unusable response: it lets the next attempt recover
-        // through GET /prompts rather than burning another create, which the server rate limits. This
-        // response's sha is not — pairing it with the prompts already in the store would let a
-        // recording finalize against a challenge it never answered, and `useEvidenceUploadModel` can
-        // only detect a sha that is missing, never one that is merely wrong. Null it instead.
-        await updateVerificationRequest(verificationRequest.id, usable ? verificationRequest.sha256 : null)
-      } catch (error) {
-        // Best-effort. `updateVerificationRequest` dispatches both values before it touches native
-        // storage and the sha is memory-only by design, so a failed write costs the id on the next app
-        // cycle and nothing more. A full disk must not sink a refresh whose response arrived intact.
-        logger.warn(
-          `[useVideoPrompts] Failed to persist the verification request id: ${
-            error instanceof Error ? error.message : String(error)
-          }`
-        )
-      }
+      await updateVerificationRequest(verificationRequest.id, usable ? verificationRequest.sha256 : null)
 
       if (!usable) {
         // The previous prompts stay in the store deliberately. TakeVideoScreen hard-throws on an empty

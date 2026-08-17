@@ -611,10 +611,18 @@ export const useSecureActions = () => {
         payload: [verificationRequestSha],
       })
 
-      // Persist ID to authorization request (SHA is not persisted in v3)
-      await persistAuthorizationRequest({ backCheckVerificationId: verificationRequestId })
+      try {
+        // Persist ID to authorization request (SHA is not persisted in v3)
+        await persistAuthorizationRequest({ backCheckVerificationId: verificationRequestId })
+      } catch (error) {
+        logger.warn(
+          `[updateVerificationRequest] Failed to persist verification request id: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        )
+      }
     },
-    [dispatch, persistAuthorizationRequest]
+    [dispatch, persistAuthorizationRequest, logger]
   )
 
   /**

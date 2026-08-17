@@ -787,7 +787,10 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     }
 
     default:
-      appLogger.error('Unhandled reducer action', { actionType: action.type })
+      // log any BDDispatch actions that are not handled by the reducer
+      if (Object.values(BCDispatchAction).includes(action.type)) {
+        appLogger.error('Unhandled reducer action', { actionType: action.type })
+      }
       return state
   }
 }
