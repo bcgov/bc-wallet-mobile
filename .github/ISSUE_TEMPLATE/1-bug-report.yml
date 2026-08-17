@@ -1,6 +1,5 @@
 name: Bug report
 description: Something in BC Wallet behaves incorrectly. Report it so we can fix it.
-title: "[Bug]: "
 body:
   - type: markdown
     attributes:
