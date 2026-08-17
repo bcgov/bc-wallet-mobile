@@ -4,7 +4,7 @@ type: Bug
 body:
   - type: markdown
     attributes:
-      value: |
+      value: >-
         Thanks for reporting a bug. The fields below are short on purpose — the
         goal is that someone who has never seen the problem can reproduce it
         from your report alone. The greyed-out text in each box is a worked
