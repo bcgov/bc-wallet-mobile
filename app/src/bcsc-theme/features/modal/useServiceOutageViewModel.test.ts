@@ -1,5 +1,4 @@
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { HELP_URL } from '@/constants'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { openLink } from '@/utils/links'
 import * as Bifold from '@bifold/core'
@@ -91,12 +90,12 @@ describe('useServiceOutageViewModel', () => {
     expect(result.current.isCheckDisabled).toBe(true)
   })
 
-  it('handleLearnMore calls openLink with HELP_URL', () => {
+  it('calls openLink with the help centre home URL', () => {
     const { result } = renderHook(() => useServiceOutageViewModel())
 
     result.current.handleLearnMore()
 
-    expect(openLink).toHaveBeenCalledWith(HELP_URL)
+    expect(openLink).toHaveBeenCalledWith('https://id.gov.bc.ca/static/help/topics.html?fromapp=1')
   })
 
   it('handleCheckAgain does nothing when client is not ready', async () => {

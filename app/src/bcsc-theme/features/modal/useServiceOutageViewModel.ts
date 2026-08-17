@@ -2,7 +2,7 @@ import BCSCApiClient from '@/bcsc-theme/api/client'
 import useConfigApi from '@/bcsc-theme/api/hooks/useConfigApi'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { BCSCAuthStackParams, BCSCModals } from '@/bcsc-theme/types/navigators'
-import { HELP_URL } from '@/constants'
+import { HelpCentreUrl } from '@/constants'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { BCState } from '@/store'
 import { openLink } from '@/utils/links'
@@ -52,7 +52,7 @@ const useServiceOutageViewModel = () => {
   const contentText = statusMessage ? [statusMessage] : [t('BCSC.SystemChecks.ServerStatus.UnavailableBannerTitle')]
 
   const handleLearnMore = useCallback(() => {
-    openLink(HELP_URL)
+    openLink(HelpCentreUrl.HOME)
   }, [])
 
   return {

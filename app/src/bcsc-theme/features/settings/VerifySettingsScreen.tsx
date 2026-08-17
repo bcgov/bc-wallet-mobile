@@ -1,5 +1,5 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { HELP_URL, HelpCentreUrl } from '@/constants'
+import { HelpCentreUrl } from '@/constants'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -25,7 +25,7 @@ export const VerifySettingsScreen: React.FC<VerifySettingsScreenProps> = ({ navi
 
   const onHelp = () => {
     navigation.navigate(BCSCScreens.VerifyWebView, {
-      url: HELP_URL,
+      url: HelpCentreUrl.HOME,
       title: t('BCSC.Screens.HelpCentre'),
     })
   }
