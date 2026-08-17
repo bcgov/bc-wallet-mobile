@@ -7,9 +7,11 @@ import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants
 import { BCState } from '@/store'
 import { testIdWithKey, useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
 import { HeaderBackButtonProps } from '@react-navigation/elements'
-import { useNavigation } from '@react-navigation/native'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
+import { BackHandler } from 'react-native'
 import Developer from '../../screens/Developer'
 import { createFloatingHelpMenuButton, createVerifyHelpMenuButton } from '../components/FloatingHelpMenuHeaderButton'
 import { createHeaderBackButton, HeaderBackButton } from '../components/HeaderBackButton'
@@ -85,7 +87,7 @@ const createVerifyHeaderBackButton = (
     const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
     const leaveVerification = useLeaveVerification()
 
-    const handlePressBack = () => {
+    const handlePressBack = useCallback(() => {
       if (onPress) {
         // If a custom onPress handler is provided, call it with the navigation prop and leaveVerification function.
         return onPress(navigation, leaveVerification)
@@ -98,7 +100,21 @@ const createVerifyHeaderBackButton = (
 
       // If the navigation stack cannot go back, leave the verification flow and return to the app's home screen.
       leaveVerification()
-    }
+    }, [leaveVerification, navigation])
+
+    useFocusEffect(
+      useCallback(() => {
+        // Parity for Android hardware back navigation
+        const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+          handlePressBack()
+          return true
+        })
+
+        return () => {
+          subscription.remove()
+        }
+      }, [handlePressBack])
+    )
 
     return <HeaderBackButton {...props} onPress={handlePressBack} />
   }
