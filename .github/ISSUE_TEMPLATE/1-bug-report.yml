@@ -15,7 +15,7 @@ body:
     attributes:
       label: What happened?
       description: What did the app actually do?
-      placeholder: |
+      placeholder: >-
         After scanning the invitation QR code, the "Add credential" screen
         stayed on the spinner for about 30 seconds, then returned to Home with
         no credential added and no error message.
@@ -27,7 +27,7 @@ body:
     attributes:
       label: What did you expect instead?
       description: What should the app have done?
-      placeholder: |
+      placeholder: >-
         The credential offer should appear so I can review and accept it, and
         the new credential should then show up in my credential list.
     validations:
