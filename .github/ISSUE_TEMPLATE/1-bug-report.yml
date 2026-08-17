@@ -1,0 +1,117 @@
+name: Bug report
+description: Something in BC Wallet behaves incorrectly. Report it so we can fix it.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. The fields below are short on purpose — the
+        goal is that someone who has never seen the problem can reproduce it
+        from your report alone. The greyed-out text in each box is a worked
+        example, not an instruction.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did the app actually do?
+      placeholder: |
+        After scanning the invitation QR code, the "Add credential" screen
+        stayed on the spinner for about 30 seconds, then returned to Home with
+        no credential added and no error message.
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-expected
+    attributes:
+      label: What did you expect instead?
+      description: What should the app have done?
+      placeholder: |
+        The credential offer should appear so I can review and accept it, and
+        the new credential should then show up in my credential list.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps, starting from a known state (e.g. a fresh Home screen).
+      placeholder: |
+        1. From Home, tap Scan.
+        2. Scan the QR code at https://example.ca/invite (or attach it below).
+        3. On the "Add credential" screen, wait ~30 seconds.
+        4. Observe that the app returns to Home with no credential added.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where did you hit this?
+      description: Which environment were you using when the bug happened?
+      options:
+        - UAT / internal testing build
+        - Production (published App Store / Play Store app)
+        - Local development build
+        - Not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: How often does it happen?
+      options:
+        - Every time
+        - Most of the time
+        - Occasionally
+        - Saw it once
+    validations:
+      required: true
+
+  - type: input
+    id: build
+    attributes:
+      label: Build number
+      description: Found in the app's Settings → About screen (e.g. "4.1.0 (6892)").
+      placeholder: "4.1.0 (6892)"
+    validations:
+      required: true
+
+  - type: input
+    id: device
+    attributes:
+      label: Device and OS version
+      description: Optional, but it helps when a bug is platform-specific.
+      placeholder: "iPhone 14, iOS 18.1  /  Pixel 7, Android 15"
+    validations:
+      required: false
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: Optional. Who is blocked, and how badly?
+      placeholder: |
+        Testers can't add the Person credential, which blocks the rest of the
+        UAT script. No known workaround.
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots or log output
+      description: Optional. Drag images in, or paste logs between triple backticks.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Before you submit
+      options:
+        - label: Someone who has never seen this screen could follow my steps to reproduce.
+          required: true
