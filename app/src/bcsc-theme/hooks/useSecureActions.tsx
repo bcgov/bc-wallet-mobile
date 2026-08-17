@@ -402,14 +402,14 @@ export const useSecureActions = () => {
    * Process value determines which verification flow to use (e.g., 'IDIM L3 Remote BCSC Photo Identity Verification').
    */
   const updateCardProcess = useCallback(
-    async (cardProcess: BCSCCardProcess | undefined) => {
+    async (cardProcess: BCSCCardProcess | undefined | null) => {
       dispatch({
         type: BCDispatchAction.UPDATE_SECURE_CARD_PROCESS,
         payload: [cardProcess],
       })
 
       if (cardProcess !== undefined) {
-        await persistAuthorizationRequest({ cardProcess })
+        await persistAuthorizationRequest({ cardProcess: cardProcess ?? undefined })
       }
     },
     [dispatch, persistAuthorizationRequest]
