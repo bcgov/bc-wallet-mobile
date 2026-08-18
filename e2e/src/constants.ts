@@ -74,10 +74,13 @@ export const BACKGROUND_NO_LOCK_SECONDS = 5
  */
 export const TestUsers = {
   photo: {
-    username: 'e2e_shaggy',
-    cardSerial: 'C74455103',
-    dob: '19690913',
-    documentNumber: 'WG12345678',
+    username: 'e2e_shaggy_2',
+    cardSerial: 'C42606379',
+    dob: '19981114',
+    documentNumber: '3836365133',
+    documentTypeId: '113',
+    primaryDocumentNumber: '4124657708',
+    primaryDocumentTypeId: '18',
     cardScanImage: 'images/dl_shaggy.jpg',
     cardScanTarget: 'images/scan/card_shaggy.png',
     selfieImage: 'images/id_shaggy.jpg',
@@ -123,6 +126,20 @@ export const TestUsers = {
     firstName: 'Fred',
     lastName: 'Jones',
     flow: 'non-bcsc' as const,
+  },
+  u12: {
+    username: 'e2e_scrappy',
+    cardSerial: 'C30397560',
+    dob: '20200101',
+    documentNumber: '8786036764',
+    documentTypeId: '110',
+    primaryDocumentNumber: '7557153621',
+    primaryDocumentTypeId: '113',
+    cardScanImage: 'images/dl_fred.jpg',
+    selfieImage: 'images/id_fred.jpg',
+    firstName: 'Scrappy',
+    lastName: 'Doo',
+    flow: 'photo' as const,
   },
 }
 

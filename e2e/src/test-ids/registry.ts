@@ -508,6 +508,11 @@ export const TestIds = {
       getQrCode: 'GetQRCodeButton',
       newQrCode: 'GetNewQRCode',
     },
+    /** Where `settings.addDevice` lands instead when the account holder is under 12. Static copy; the
+     *  title is its only testID (the description has none) and the header title is blank. */
+    transferAgeRestriction: {
+      title: 'AgeRestrictedTransferTitle',
+    },
     /** Contacts feature (`features/contacts/*`, verified-only via Settings → `settings.contacts`). The
      *  list (`ContactsScreen`) is `withAgentReadyGate`-wrapped — a `loading` spinner shows until the
      *  Credo agent is ready — and resolves to its EMPTY state for a verification-only account: the list
