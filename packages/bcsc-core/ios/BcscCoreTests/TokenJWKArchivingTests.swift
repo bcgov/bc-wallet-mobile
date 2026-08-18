@@ -195,7 +195,9 @@ final class JWKArchivingTests: XCTestCase {
       JWKKey.exponent: "AQAB",
       JWKKey.modulus: "0vx7ag",
     ]
-    if let omitted { strings.removeValue(forKey: omitted) }
+    if let omitted {
+      strings.removeValue(forKey: omitted)
+    }
     return PartialFixture(strings: strings)
   }
 
