@@ -2176,6 +2176,15 @@ class BcscCoreModule(
         }
     }
 
+    /**
+     * No-op on android, `allowBackup="false"` (AndroidManifest.xml) means the OS already wipes KeyStore-backed keys
+     * and EncryptedSharedPreferences on uninstall.
+     */
+    @ReactMethod
+    override fun clearAllKeychainData(promise: Promise) {
+        promise.resolve(null)
+    }
+
     // MARK: - Account management methods
 
     /**
