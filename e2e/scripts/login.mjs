@@ -963,6 +963,9 @@ async function claimMatchingSendVideoRequest(fetchWithCookies, input, claimTimeo
       const timesClaimed = (foreignClaims.get(claimed.requestIdentifier) ?? 0) + 1
       foreignClaims.set(claimed.requestIdentifier, timesClaimed)
       if (timesClaimed >= 3) {
+        // One last release before failing: the previous ones evidently did not stick, but bailing
+        // while still holding the claim would leave the queue head ours and block the next run too.
+        await releaseClaimedRequest(fetchWithCookies, claimed.$detail, claimResponse.url, signal)
         throw new Error(
           `[claim send-video request] CloseRequest is not clearing ${claimed.requestIdentifier} ` +
             `("${claimed.claimedName}", serial ${claimed.claimedSerial}) — claimed it ${timesClaimed} times while ` +

@@ -59,7 +59,7 @@ export interface ScreenPresence {
   expectVisible(timeout?: number): Promise<void>
 }
 
-/** Options for the confirm-and-retry taps, minus the probe the DSL supplies itself. */
+/** Options for the confirm-and-retry taps, minus what the DSL supplies from the descriptor. */
 export type TapToNavigateOptions = { attempts?: number; timeout?: number; settleMs?: number }
 
 /**
@@ -209,6 +209,7 @@ export class Screen<S extends ScreenSpec> {
     try {
       await this.engine.tapToNavigate(resolveTestId(this.roleId(role)), {
         ...options,
+        scroll: this.spec.scroll,
         arrivedAt: () => destination.isPresent(DESTINATION_PROBE_MS),
       })
     } catch (err) {
@@ -270,7 +271,10 @@ export class Screen<S extends ScreenSpec> {
    * Android swallows a tap dispatched mid-transition; never for a non-idempotent action.
    */
   async tapToNavigate(role: PresentRoles<S>, options?: TapToNavigateOptions): Promise<void> {
-    await this.engine.tapToNavigate(resolveTestId(this.roleId(role as ActionRole)), options)
+    await this.engine.tapToNavigate(resolveTestId(this.roleId(role as ActionRole)), {
+      ...options,
+      scroll: this.spec.scroll,
+    })
   }
 
   /**

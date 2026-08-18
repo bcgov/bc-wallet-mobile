@@ -400,6 +400,7 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    *   dead time to every swallowed tap. Kept well above a normal transition so a camera mount stalling
    *   the JS thread is not mistaken for a missed tap.
    * @param arrivedAt - cheap, non-throwing "did we get there" probe; defaults to the control leaving
+   * @param scroll - scroll-hunt budget for a miss (screen-declared), same as every other find
    */
   public async tapToNavigate(
     testId: string,
@@ -408,13 +409,20 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
       timeout = Timeouts.SCREEN_TRANSITION,
       settleMs = 5_000,
       arrivedAt,
-    }: { attempts?: number; timeout?: number; settleMs?: number; arrivedAt?: () => Promise<boolean> } = {}
+      scroll,
+    }: {
+      attempts?: number
+      timeout?: number
+      settleMs?: number
+      arrivedAt?: () => Promise<boolean>
+      scroll?: ScrollHint
+    } = {}
   ): Promise<void> {
     const navigated = arrivedAt ?? (async () => !(await this.isTestIdDisplayed(testId)))
     const unmoved = arrivedAt ? 'the destination never appeared' : `"${testId}" never left the screen`
 
     for (let attempt = 1; attempt <= attempts; attempt++) {
-      await this.tapByTestId(testId, timeout)
+      await this.tapByTestId(testId, timeout, scroll)
 
       const deadline = Date.now() + settleMs
       while (Date.now() < deadline) {
