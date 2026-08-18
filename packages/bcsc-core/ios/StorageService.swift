@@ -208,7 +208,7 @@ class StorageService {
     }
   }
 
-  /// Reads `clientID` straight out of the client_registration file. Used a fallback if the account itself
+  /// Reads `clientID` straight out of the client_registration file. Used as a fallback if the account itself
   /// doesn't have a clientID.
   ///
   /// v3's ClientRegistrationSource keyed this file by `provider.issuer` and accumulated one entry
