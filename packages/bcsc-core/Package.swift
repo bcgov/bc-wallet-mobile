@@ -24,6 +24,7 @@ let package = Package(
                 "Data.swift",
                 "DocumentsDataModel.swift",
                 "JWK.swift",
+                "KeychainClearingService.swift",
                 "KeyPairManager.swift",
                 "LAContext+Extensions.swift",
                 "Logger.swift",
