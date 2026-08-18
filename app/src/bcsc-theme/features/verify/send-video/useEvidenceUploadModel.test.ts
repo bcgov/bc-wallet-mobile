@@ -242,7 +242,7 @@ describe('useEvidenceUploadModel', () => {
       // Local state cleared: id + sha both nulled so the next handlePressSendVideo
       // calls createVerificationRequest and gets a fresh, valid request to record
       // against. The orphaned server-side id is TTL'd by IAS.
-      expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(null, null)
+      expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(undefined, null)
       expect(mockDispatch).toHaveBeenCalledWith(
         expect.objectContaining({ type: expect.stringContaining('updateVideoPrompts') })
       )
@@ -284,7 +284,7 @@ describe('useEvidenceUploadModel', () => {
 
       expect(mockEvidenceApi.getVerificationRequestPrompts).not.toHaveBeenCalled()
       expect(mockEvidenceApi.createVerificationRequest).not.toHaveBeenCalled()
-      expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(null, null)
+      expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(undefined, null)
       expect(mockNavigation.dispatch).toHaveBeenCalled()
       expect(mockFileUploadErrorAlert).toHaveBeenCalled()
     })

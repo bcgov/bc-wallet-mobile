@@ -5,7 +5,6 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { BCState } from '@/store'
 import ScanExampleImage from '@assets/img/scan_example.png'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
-import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -43,22 +42,13 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
     return unsubscribe
   }, [verificationReset, navigation, store.bcscSecure?.deviceCode, store.bcscSecure?.userCode])
 
-  /**
-   * This fixes an issue where the user has selected Non-BCSC ID,
-   * then navigated back to this screen, and the previous selection remains.
-   */
-  useFocusEffect(
-    useCallback(() => {
-      updateCardProcess(undefined)
-    }, [updateCardProcess])
-  )
-
   const onPressScan = useCallback(async () => {
     navigation.navigate(BCSCScreens.ScanSerial)
     if (store.bcscSecure.birthdate || store.bcscSecure.serial) {
       await deleteCardInfo()
     }
-  }, [deleteCardInfo, navigation, store.bcscSecure.birthdate, store.bcscSecure.serial])
+    await updateCardProcess(null)
+  }, [deleteCardInfo, navigation, store.bcscSecure.birthdate, store.bcscSecure.serial, updateCardProcess])
 
   const onPressOtherID = useCallback(async () => {
     navigation.navigate(BCSCScreens.DualIdentificationRequired)
