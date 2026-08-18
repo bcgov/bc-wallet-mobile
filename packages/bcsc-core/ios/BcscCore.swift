@@ -291,7 +291,7 @@ class BcscCore: NSObject {
   /// Deletes every Keychain item belonging to this app (all Sec item classes). Used by the
   /// factory reset flow to ensure no stale tokens/keys/PIN secrets survive an app reinstall
   func clearAllKeychainData(
-    _ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
+    _ resolve: @escaping RCTPromiseResolveBlock, _: @escaping RCTPromiseRejectBlock
   ) {
     KeychainClearingService().clearAll()
     logger.log("Keychain cleared for this app.")
