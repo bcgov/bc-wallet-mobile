@@ -464,7 +464,7 @@ describe('useFactoryReset', () => {
 
     expect(warnLogMock).toHaveBeenCalledWith(
       expect.stringContaining('Failed to clear Keychain data'),
-      expect.objectContaining({ error: expect.any(Error) })
+      expect.objectContaining({ message: 'keychain boom' })
     )
   })
 

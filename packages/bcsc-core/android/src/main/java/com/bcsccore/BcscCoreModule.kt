@@ -98,6 +98,7 @@ import com.bcsccore.authentication.PinService
 import com.bcsccore.util.GuardedPromise
 
 // Native-compatible storage imports
+import com.bcsccore.storage.KeychainClearingService
 import com.bcsccore.storage.NativeCompatibleStorage
 import com.bcsccore.storage.NativeAccount
 import com.bcsccore.storage.NativeAccountSecurityType
@@ -180,6 +181,10 @@ class BcscCoreModule(
     // Initialize native-compatible storage for rollback support
     private val nativeStorage: NativeCompatibleStorage by lazy {
         NativeCompatibleStorage(reactApplicationContext)
+    }
+
+    private val keychainClearingService: KeychainClearingService by lazy {
+        KeychainClearingService(reactApplicationContext)
     }
 
     @ReactMethod
@@ -2177,11 +2182,11 @@ class BcscCoreModule(
     }
 
     /**
-     * No-op on android, `allowBackup="false"` (AndroidManifest.xml) means the OS already wipes KeyStore-backed keys
-     * and EncryptedSharedPreferences on uninstall.
+     * Wipes all AndroidKeyStore-backed secrets and known key-material prefs files for this app
      */
     @ReactMethod
     override fun clearAllKeychainData(promise: Promise) {
+        keychainClearingService.clearAll()
         promise.resolve(null)
     }
 

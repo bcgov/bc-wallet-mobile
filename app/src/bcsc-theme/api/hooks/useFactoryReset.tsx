@@ -106,7 +106,12 @@ export const useFactoryReset = () => {
       logger.info('FactoryReset: Clearing all Keychain data...')
       await BcscCore.clearAllKeychainData()
     } catch (error) {
-      logger.warn('FactoryReset: Failed to clear Keychain data', { error })
+      const err = error as { message?: string; code?: string; userInfo?: unknown } | undefined
+      logger.warn('FactoryReset: Failed to clear Keychain data', {
+        message: err?.message,
+        code: err?.code,
+        userInfo: err?.userInfo,
+      })
     }
   }, [deleteRegistration, deleteSecureData, logger])
 
