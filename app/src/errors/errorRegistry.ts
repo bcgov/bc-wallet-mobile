@@ -237,6 +237,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.NETWORK,
     message: 'Server returned 404 — requested resource or endpoint was not found',
   },
+  CONFLICT: {
+    statusCode: 2114,
+    appEvent: AppEventCode.CONFLICT,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.NETWORK,
+    message: 'Server returned 409 — request conflicts with the current state of the resource',
+  },
 
   // ============================================
   // Authentication/Login Errors (2200-2299)

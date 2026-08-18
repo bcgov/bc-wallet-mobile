@@ -13,6 +13,7 @@ import {
   ClientErrorHandlingPolicies,
   digitalServiceCardAccountUnavailableErrorPolicy,
   emailVerificationCodeErrorPolicy,
+  evidenceAlreadyApprovedErrorPolicy,
   failedToRetrieveStringResourceErrorPolicy,
   globalAlertErrorPolicy,
   iasErrorPolicy,
@@ -968,6 +969,81 @@ describe('clientErrorPolicies', () => {
         expect(loggerMock.info).toHaveBeenCalledWith(
           '[AttestationPollingErrorPolicy] 400 or 404 expected during polling — attestation not yet consumed or already consumed'
         )
+      })
+    })
+  })
+
+  describe('evidenceAlreadyApprovedErrorPolicy', () => {
+    const evidenceBase = 'https://idsit.gov.bc.ca/evidence'
+
+    describe('matches', () => {
+      it.each([
+        [`${evidenceBase}/v1/photos`],
+        [`${evidenceBase}/v1/videos`],
+        [`${evidenceBase}/v1/documents`],
+        // The IAS-hosted binary PUT target handed back by the metadata responses
+        ['https://idsit.gov.bc.ca/video/v1/uploads/78be099e-0a51-48bb-8064-547755b6e2c7'],
+      ])('should match 409 on the evidence upload endpoint %s', (endpoint) => {
+        const error = newError('err_209_bad_request')
+        const context = { statusCode: 409, endpoint, apiEndpoints: { evidence: evidenceBase } }
+        expect(evidenceAlreadyApprovedErrorPolicy.matches(error, context as any)).toBeTruthy()
+      })
+
+      it.each([[`${evidenceBase}/v1/verifications/abc-123`], ['https://idsit.gov.bc.ca/device/token']])(
+        'should NOT match 409 on %s, so it keeps the generic modal',
+        (endpoint) => {
+          const error = newError('err_209_bad_request')
+          const context = { statusCode: 409, endpoint, apiEndpoints: { evidence: evidenceBase } }
+          expect(evidenceAlreadyApprovedErrorPolicy.matches(error, context as any)).toBeFalsy()
+        }
+      )
+
+      it('should NOT match other status codes on the evidence uploads', () => {
+        const error = newError('err_209_bad_request')
+        const context = {
+          statusCode: 400,
+          endpoint: `${evidenceBase}/v1/photos`,
+          apiEndpoints: { evidence: evidenceBase },
+        }
+        expect(evidenceAlreadyApprovedErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
+    })
+
+    describe('handle', () => {
+      it('should log expected info message', () => {
+        const error = newError('err_209_bad_request')
+        const loggerMock = { info: jest.fn() }
+        evidenceAlreadyApprovedErrorPolicy.handle(error, { logger: loggerMock } as any)
+
+        expect(loggerMock.info).toHaveBeenCalledWith(
+          '[EvidenceAlreadyApprovedErrorPolicy] Suppressing global alert — the upload catch block completes the verification'
+        )
+      })
+    })
+
+    describe('ClientErrorHandlingPolicies find', () => {
+      // CONFLICT is mapped to badRequestAlert in the IAS alert map, so this policy must be ordered
+      // ahead of iasErrorPolicy or the modal it exists to suppress would fire anyway.
+      it('should resolve to evidenceAlreadyApprovedErrorPolicy ahead of iasErrorPolicy', () => {
+        const error = newError('conflict')
+        const context = {
+          statusCode: 409,
+          endpoint: `${evidenceBase}/v1/photos`,
+          apiEndpoints: { evidence: evidenceBase },
+        }
+        const policy = ClientErrorHandlingPolicies.find((p) => p.matches(error, context as any))
+        expect(policy).toBe(evidenceAlreadyApprovedErrorPolicy)
+      })
+
+      it('should still resolve a non-evidence 409 to iasErrorPolicy', () => {
+        const error = newError('conflict')
+        const context = {
+          statusCode: 409,
+          endpoint: 'https://idsit.gov.bc.ca/device/token',
+          apiEndpoints: { evidence: evidenceBase },
+        }
+        const policy = ClientErrorHandlingPolicies.find((p) => p.matches(error, context as any))
+        expect(policy).toBe(iasErrorPolicy)
       })
     })
   })

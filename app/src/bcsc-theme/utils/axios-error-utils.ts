@@ -199,7 +199,7 @@ const getClientErrorDefinitionFromStatus = (status?: number): ErrorDefinition =>
     case 404:
       return ErrorRegistry.NOT_FOUND
     case 409:
-      return ErrorRegistry.ALREADY_VERIFIED
+      return ErrorRegistry.CONFLICT
     case 429:
       return ErrorRegistry.RETRY_LATER
     default:
