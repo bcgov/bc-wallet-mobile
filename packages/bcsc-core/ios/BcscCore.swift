@@ -825,8 +825,12 @@ class BcscCore: NSObject {
     let storage = StorageService()
 
     // Extract required fields from the dictionary
+    // `as? String ?? ""` rather than `as!` — a force-cast inside the guard's own condition traps
+    // the process when JS omits securityMethod, instead of rejecting as this guard intends.
     guard let issuer = account["issuer"] as? String, let clientID = account["clientID"] as? String,
-          let securityMethod = AccountSecurityMethod(rawValue: account["securityMethod"] as! String)
+          let securityMethod = AccountSecurityMethod(
+            rawValue: account["securityMethod"] as? String ?? ""
+          )
     else {
       reject(
         "E_INVALID_ACCOUNT_DATA",

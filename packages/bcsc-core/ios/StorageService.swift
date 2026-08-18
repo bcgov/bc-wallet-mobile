@@ -187,6 +187,16 @@ class StorageService {
 
       if let obj: T = try? decodeArchivedObject(from: data) {
         logger.log("Decoded object: \(obj)")
+
+        if let account = obj as? Account, account.clientIDMissingFromArchive,
+           account.clientID.isEmpty,
+           let recovered = readClientRegistrationClientID(pathDirectory: pathDirectory),
+           !recovered.isEmpty
+        {
+          logger.log("readData: repaired empty Account.clientID from client_registration")
+          account.clientID = recovered
+        }
+
         return obj
       }
 
@@ -194,6 +204,64 @@ class StorageService {
 
       return nil
     } catch {
+      return nil
+    }
+  }
+
+  /// Reads `clientID` straight out of the client_registration file. Used a fallback if the account itself
+  /// doesn't have a clientID.
+  ///
+  /// v3's ClientRegistrationSource keyed this file by `provider.issuer` and accumulated one entry
+  /// per environment
+  private func readClientRegistrationClientID(
+    pathDirectory: FileManager.SearchPathDirectory
+  ) -> String? {
+    do {
+      guard let accountID = self.currentAccountID else { return nil }
+
+      let fileUrl = try FileManager.default.url(
+        for: pathDirectory,
+        in: .userDomainMask,
+        appropriateFor: nil,
+        create: false
+      )
+      .appendingPathComponent(self.basePath)
+      .appendingPathComponent(accountID)
+      .appendingPathComponent(AccountFiles.clientRegistration.rawValue)
+
+      guard FileManager.default.fileExists(atPath: fileUrl.path) else { return nil }
+
+      // Register both production and dev module names for v3 compatibility
+      NSKeyedUnarchiver.setClass(
+        ClientRegistration.self, forClassName: "bc_services_card.ClientRegistration"
+      )
+      NSKeyedUnarchiver.setClass(
+        ClientRegistration.self, forClassName: "bc_services_card_dev.ClientRegistration"
+      )
+      NSKeyedUnarchiver.setClass(Credential.self, forClassName: "bc_services_card.Credential")
+      NSKeyedUnarchiver.setClass(Credential.self, forClassName: "bc_services_card_dev.Credential")
+
+      let data = try Data(contentsOf: fileUrl)
+      let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
+      unarchiver.requiresSecureCoding = false
+
+      let rootObject = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
+
+      guard let registrations = rootObject as? [String: ClientRegistration] else { return nil }
+
+      // they somehow have a client_registration for a different environment
+      guard let registration = registrations[provider] else {
+        if !registrations.isEmpty {
+          logger.error(
+            "readClientRegistrationClientID: no entry for '\(provider)' among \(registrations.keys); not repairing"
+          )
+        }
+        return nil
+      }
+
+      return registration.clientID
+    } catch {
+      logger.error("readClientRegistrationClientID: \(error.localizedDescription)")
       return nil
     }
   }
