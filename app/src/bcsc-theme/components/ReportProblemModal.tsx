@@ -204,7 +204,17 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
       <ThemedText>
         <ThemedText variant="bold">{t('BCSC.ReportProblem.NotePrefix')}</ThemedText>
         {t('BCSC.ReportProblem.NoteBody')}
-        <Link linkText={t('BCSC.ReportProblem.SupportLink')} onPress={() => Linking.openURL(CONTACT_US_HELP_URL)} />
+        <Link
+          linkText={t('BCSC.ReportProblem.SupportLink')}
+          onPress={() => Linking.openURL(CONTACT_US_HELP_URL)}
+        />{' '}
+        <CommunityIcon
+          name="open-in-new"
+          size={16}
+          color={ColorPalette.brand.link}
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+        />
       </ThemedText>
 
       <Button
