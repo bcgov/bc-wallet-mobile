@@ -2,13 +2,14 @@ import { PersistentStorage } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios from 'axios'
 import z from 'zod'
-import remoteConfigJSON from './default-remote-config.json'
+import remoteConfigJSON from './prod-remote-config.json'
 
 const REMOTE_CONFIG_STORAGE_KEY = 'remoteConfigCache'
 const REMOTE_CONFIG_CACHE_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
-const OBJECT_STORAGE_REMOTE_CONFIG_FILE_NAME = 'remote-config.json'
-const OBJECT_STORAGE_REMOTE_CONFIG_BUCKET_ID = 'TODO (MD): Add your object storage bucket ID here'
-const OBJECT_STORAGE_ENDPOINT = 'https://coms.api.gov.bc.ca/api/v1'
+const OBJECT_STORAGE_SERVER_ENDPOINT = 'https://idim.objectstore.gov.bc.ca'
+const OBJECT_STORAGE_REMOTE_CONFIG_BUCKET_NAME = 'bcsc-mobile-prod-remote-config'
+const OBJECT_STORAGE_REMOTE_CONFIG_FILE_NAME = 'prod-remote-config.json'
+const OBJECT_STORAGE_REMOTE_CONFIG_URL = `${OBJECT_STORAGE_SERVER_ENDPOINT}/${OBJECT_STORAGE_REMOTE_CONFIG_BUCKET_NAME}/${OBJECT_STORAGE_REMOTE_CONFIG_FILE_NAME}`
 
 /**
  * RemoteConfigSchema defines the expected structure of the remote configuration object.
@@ -97,11 +98,9 @@ export async function getCachedRemoteConfig(logger: RemoteLogger): Promise<Remot
  */
 export async function fetchRemoteConfig(logger: RemoteLogger): Promise<RemoteConfig | null> {
   try {
-    const searchResponse = await axios.get<{ id: string }>(_getObjectStorageSearchUrl())
-    const objectResponse = await axios.get(_getObjectStorageGetUrl(searchResponse.data.id))
+    const response = await axios.get(OBJECT_STORAGE_REMOTE_CONFIG_URL)
 
-    // TODO (MD): Check what this response is
-    const result = RemoteConfigSchema.safeParse(objectResponse.data)
+    const result = RemoteConfigSchema.safeParse(response.data)
 
     if (!result.success) {
       logger.error('[RemoteConfig] Hosted remote config is invalid.', { error: result.error.message })
@@ -131,26 +130,4 @@ export async function cacheRemoteConfig(remoteConfig: RemoteConfig, logger: Remo
   } catch (error) {
     logger.error('[RemoteConfig] Error caching remote config:', error as Error)
   }
-}
-
-// -----------------------------
-// HELPER FUNCTIONS
-// -----------------------------
-
-// https://{endpoint}/object?bucketId={bucketId}&name={fileName}&public=true
-function _getObjectStorageSearchUrl(): string {
-  const searchUrl = new URL(OBJECT_STORAGE_ENDPOINT)
-  searchUrl.pathname = '/object'
-  searchUrl.searchParams.append('bucketId', OBJECT_STORAGE_REMOTE_CONFIG_BUCKET_ID)
-  searchUrl.searchParams.append('name', OBJECT_STORAGE_REMOTE_CONFIG_FILE_NAME)
-  searchUrl.searchParams.append('public', 'true')
-  return searchUrl.toString()
-}
-
-// https://{endpoint}/object/{objectId}?download=proxy
-function _getObjectStorageGetUrl(objectId: string): string {
-  const searchUrl = new URL(OBJECT_STORAGE_ENDPOINT)
-  searchUrl.pathname = `/object/${objectId}`
-  searchUrl.searchParams.append('download', 'proxy')
-  return searchUrl.toString()
 }

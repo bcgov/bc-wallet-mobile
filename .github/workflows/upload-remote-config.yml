@@ -1,0 +1,25 @@
+# TODO (MD): This should only run if the TS test suite passes
+
+name: Upload Remote Config
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - app/src/remote-config/prod-remote-config.json
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Upload to ObjectStore
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.OBJECTSTORE_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.OBJECTSTORE_SECRET_KEY }}
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+        run: |
+          aws s3 cp ./app/src/remote-config/prod-remote-config.json \
+          s3://bcsc-mobile-prod-remote-configuration/prod-remote-config.json \
+          --endpoint-url https://idim.objectstore.gov.bc.ca

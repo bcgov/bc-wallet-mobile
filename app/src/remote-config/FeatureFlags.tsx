@@ -8,7 +8,7 @@ export type FeatureGates = ReturnType<typeof useFeatureFlags>['featureGates']
 
 /**
  * Hook to access feature flags and feature gates. Must be used within a RemoteConfigProvider.
- * @returns An object containing the current feature flags, feature gates, and functions to get and set feature flags.
+ * @returns An object containing the current feature flags, feature gates, and functions to get feature flags.
  */
 export const useFeatureFlags = () => {
   const remoteConfig = useRemoteConfig()
