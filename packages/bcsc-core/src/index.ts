@@ -655,7 +655,7 @@ export const removeAccount = async (): Promise<void> => {
 };
 
 /**
- * Deletes all locally stored skeychain data
+ * Deletes all locally stored keychain data
  * @returns A promise that resolves when the work is done
  */
 export const clearAllKeychainData = async (): Promise<void> => {
