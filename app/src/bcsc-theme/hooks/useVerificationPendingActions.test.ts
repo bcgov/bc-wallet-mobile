@@ -14,16 +14,20 @@ jest.mock('./useSecureActions')
 jest.mock('@/hooks/useAlerts')
 jest.mock('../services/hooks/useEvidenceService')
 
-const navigation = { navigate: jest.fn() } as any
+const navigation = { navigate: jest.fn(), reset: jest.fn() } as any
 
 describe('useVerificationPendingActions', () => {
-  const updateVerificationRequestMock = jest.fn().mockResolvedValue(undefined)
-  const updateAccountFlagsMock = jest.fn().mockResolvedValue(undefined)
-  const cancelVerificationRequestMock = jest.fn().mockResolvedValue(undefined)
+  const updateVerificationRequestMock = jest.fn()
+  const updateAccountFlagsMock = jest.fn()
+  const cancelVerificationRequestMock = jest.fn()
   const dispatchMock = jest.fn()
 
   beforeEach(() => {
     jest.resetAllMocks()
+
+    updateVerificationRequestMock.mockResolvedValue(undefined)
+    updateAccountFlagsMock.mockResolvedValue(undefined)
+    cancelVerificationRequestMock.mockResolvedValue(undefined)
 
     jest
       .mocked(Bifold)
@@ -52,7 +56,7 @@ describe('useVerificationPendingActions', () => {
       })
 
       expect(cancelVerificationRequestMock).toHaveBeenCalledWith('request-id')
-      expect(updateVerificationRequestMock).toHaveBeenCalledWith(null, null)
+      expect(updateVerificationRequestMock).toHaveBeenCalledWith(undefined, null)
       expect(dispatchMock).toHaveBeenCalledWith({ type: BCDispatchAction.RESET_SEND_VIDEO })
       expect(dispatchMock).toHaveBeenCalledWith({
         type: BCDispatchAction.UPDATE_VIDEO_PROMPTS,
@@ -63,7 +67,10 @@ describe('useVerificationPendingActions', () => {
         payload: [undefined],
       })
       expect(updateAccountFlagsMock).toHaveBeenCalledWith({ userSubmittedVerificationVideo: false })
-      expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationMethodSelection)
+      expect(navigation.reset).toHaveBeenCalledWith({
+        index: 0,
+        routes: [{ name: BCSCScreens.VerificationMethodSelection }],
+      })
     })
 
     it('still clears verification state and navigates back when there is no pending request id', async () => {
@@ -76,9 +83,12 @@ describe('useVerificationPendingActions', () => {
       })
 
       expect(cancelVerificationRequestMock).not.toHaveBeenCalled()
-      expect(updateVerificationRequestMock).toHaveBeenCalledWith(null, null)
+      expect(updateVerificationRequestMock).toHaveBeenCalledWith(undefined, null)
       expect(updateAccountFlagsMock).toHaveBeenCalledWith({ userSubmittedVerificationVideo: false })
-      expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationMethodSelection)
+      expect(navigation.reset).toHaveBeenCalledWith({
+        index: 0,
+        routes: [{ name: BCSCScreens.VerificationMethodSelection }],
+      })
     })
 
     it('still clears verification state and navigates back when cancelling the request fails', async () => {
@@ -95,10 +105,13 @@ describe('useVerificationPendingActions', () => {
       })
 
       expect(errorLogMock).toHaveBeenCalledWith(expect.stringContaining('Error cancelling verification request'))
-      expect(updateVerificationRequestMock).toHaveBeenCalledWith(null, null)
+      expect(updateVerificationRequestMock).toHaveBeenCalledWith(undefined, null)
       expect(dispatchMock).toHaveBeenCalledWith({ type: BCDispatchAction.RESET_SEND_VIDEO })
       expect(updateAccountFlagsMock).toHaveBeenCalledWith({ userSubmittedVerificationVideo: false })
-      expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationMethodSelection)
+      expect(navigation.reset).toHaveBeenCalledWith({
+        index: 0,
+        routes: [{ name: BCSCScreens.VerificationMethodSelection }],
+      })
     })
 
     it('does not invoke cleanup when the user dismisses the confirmation alert', async () => {
@@ -114,7 +127,7 @@ describe('useVerificationPendingActions', () => {
 
       expect(cancelVerificationRequestMock).not.toHaveBeenCalled()
       expect(updateVerificationRequestMock).not.toHaveBeenCalled()
-      expect(navigation.navigate).not.toHaveBeenCalled()
+      expect(navigation.reset).not.toHaveBeenCalled()
     })
   })
 })
