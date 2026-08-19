@@ -679,20 +679,28 @@ const Developer: React.FC = () => {
 
       {BCSCMode ? (
         <>
-          <SectionHeader icon={'flag'} title={'Local Feature Flags'} />
-          {Object.entries(featureFlags).map(([flag, value]) => (
-            <ToggleRow
-              key={flag}
-              title={flag}
-              value={value}
-              onToggle={() => {
-                // Override the feature flag value in local state for testing purposes
-                remoteConfig.setValue('featureFlags', { ...featureFlags, [flag]: !value })
-              }}
-              accessibilityLabel={flag}
-              testID={`toggle-${flag}`}
-            />
-          ))}
+          <SectionHeader icon={'flag'} title={'Remote Config + Feature Flags'} />
+          <ListButtonGroup>
+            <ListButton onPress={remoteConfig.refresh}>
+              <Row
+                title={'Refresh Remote Config'}
+                endAdornment={<Icon name="refresh" size={24} color={ColorPalette.brand.primary} />}
+              />
+            </ListButton>
+            {Object.entries(featureFlags).map(([flag, value]) => (
+              <ToggleRow
+                key={flag}
+                title={flag}
+                value={value}
+                onToggle={() => {
+                  // Override the feature flag value in local state for testing purposes
+                  remoteConfig.setValue('featureFlags', { ...featureFlags, [flag]: !value })
+                }}
+                accessibilityLabel={flag}
+                testID={`toggle-${flag}`}
+              />
+            ))}
+          </ListButtonGroup>
         </>
       ) : null}
 

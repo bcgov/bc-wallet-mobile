@@ -26,6 +26,11 @@ interface RemoteConfigContextType {
    * */
   setValue: <T extends keyof RemoteConfig>(key: T, value: RemoteConfig[T]) => void
   /**
+   * Refresh the remote config from the server and update the local cache.
+   * @returns A promise that resolves when the refresh is complete.
+   */
+  refresh: () => Promise<void>
+  /**
    * Indicates whether the remote config is currently being loaded.
    * @returns True if the remote config is loading, false otherwise.
    */
@@ -91,6 +96,27 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
     [remoteConfig, setRemoteConfig]
   )
 
+  /**
+   * Refresh the remote config from the server and update the local cache.
+   * @returns A promise that resolves when the refresh is complete.
+   */
+  const refresh = useCallback(async () => {
+    try {
+      const remoteConfig = await fetchRemoteConfig(props.logger)
+
+      if (remoteConfig) {
+        props.logger.info('[RemoteConfig] Refresh successful, updating remote config.', { remoteConfig })
+        setRemoteConfig(remoteConfig)
+        return
+      }
+    } catch (error) {
+      props.logger.error('[RemoteConfig] Refresh failed:', error as Error)
+      return
+    }
+
+    props.logger.info('[RemoteConfig] Refresh failed, keeping current remote config.')
+  }, [props.logger, setRemoteConfig])
+
   useEffect(() => {
     if (initializedRef.current) {
       return
@@ -113,9 +139,10 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
     () => ({
       getValue,
       setValue,
+      refresh,
       loading,
     }),
-    [getValue, setValue, loading]
+    [getValue, setValue, refresh, loading]
   )
 
   return <RemoteConfigContext.Provider value={context}>{props.children}</RemoteConfigContext.Provider>
@@ -163,7 +190,7 @@ async function _initRemoteConfig(logger: RemoteLogger): Promise<RemoteConfig> {
 
   // Valid shape and not expired
   if (cachedRemoteConfig) {
-    logger.info('[RemoteConfig] Using cached remote config.')
+    logger.info('[RemoteConfig] Using cached remote config.', { remoteConfig: cachedRemoteConfig })
     return cachedRemoteConfig
   }
 
@@ -171,14 +198,14 @@ async function _initRemoteConfig(logger: RemoteLogger): Promise<RemoteConfig> {
   const hostedRemoteConfig = await fetchRemoteConfig(logger)
 
   if (hostedRemoteConfig) {
-    logger.info('[RemoteConfig] Using hosted remote config.')
-    await cacheRemoteConfig(hostedRemoteConfig, logger)
+    logger.info('[RemoteConfig] Using hosted remote config.', { remoteConfig: hostedRemoteConfig })
     return hostedRemoteConfig
   }
 
   // THOUGHT (MD): Maybe use the expired cached config if the hosted remote config fetch fails
 
   // 3. Fallback to the bundled remote config
-  logger.info('[RemoteConfig] Using bundled remote config.')
-  return getBundledRemoteConfig()
+  const bundledRemoteConfig = getBundledRemoteConfig()
+  logger.info('[RemoteConfig] Using bundled remote config.', { remoteConfig: bundledRemoteConfig })
+  return bundledRemoteConfig
 }
