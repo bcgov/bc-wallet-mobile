@@ -309,6 +309,13 @@ export const TransferQRDisplayScreen = defineScreen({
   back: bcsc(common.back),
 })
 
+/** Age-restricted transfer (`TransferAgeRestriction`) — where Settings → AddDevice lands for an under-12
+ *  account instead of the QR flow. Static copy only; `back` returns to Settings. */
+export const TransferAgeRestrictionScreen = defineScreen({
+  self: bcsc(main.transferAgeRestriction.title),
+  back: bcsc(common.back),
+})
+
 /** Contacts list (`ContactsScreen`, verified-only, reached from Settings → Contacts). Wrapped in
  *  `withAgentReadyGate`, so a `loading` spinner shows until the Credo agent is ready. For a
  *  verification-only account the list is EMPTY — its only control is the `whatAreContacts` button, so

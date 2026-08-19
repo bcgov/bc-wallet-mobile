@@ -30,7 +30,7 @@ const CARD_W = Math.round((CARD_H * 402) / 271)
  * persona (fred) has no card serial and gets no asset.
  */
 const CARDS = [
-  { persona: 'shaggy', lastName: 'ROGERS', firstName: 'SHAGGY', serial: 'C74455103', birthDate: '19690913' },
+  { persona: 'shaggy', lastName: 'ROGERS', firstName: 'SHAGGY', serial: 'C42606379', birthDate: '19981114' },
   { persona: 'velma', lastName: 'DINKLEY', firstName: 'VELMA', serial: 'C82643367', birthDate: '19951217' },
   { persona: 'daphne', lastName: 'BLAKE', firstName: 'DAPHNE', serial: 'C26444539', birthDate: '19800922' },
 ]
