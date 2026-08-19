@@ -198,6 +198,8 @@ const getClientErrorDefinitionFromStatus = (status?: number): ErrorDefinition =>
       return ErrorRegistry.FORBIDDEN
     case 404:
       return ErrorRegistry.NOT_FOUND
+    case 409:
+      return ErrorRegistry.CONFLICT
     case 429:
       return ErrorRegistry.RETRY_LATER
     default:

@@ -12,6 +12,7 @@ export enum VideoCallErrorType {
   SESSION_FAILED = 'session_failed',
   CALL_FAILED = 'call_failed',
   DOCUMENT_UPLOAD_FAILED = 'document_upload_failed',
+  ALREADY_VERIFIED = 'already_verified',
   NETWORK_ERROR = 'network_error',
   PERMISSION_DENIED = 'permission_denied',
 }

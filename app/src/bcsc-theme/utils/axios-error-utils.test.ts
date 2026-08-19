@@ -218,7 +218,8 @@ describe('Error Utils', () => {
       [403, 'forbidden'],
       [404, 'not_found'],
       [429, 'err_212_retry_later'],
-      [409, 'err_209_bad_request'], // unmapped 4xx falls back to BAD_REQUEST
+      [409, 'conflict'], // evidence uploads suppress the modal via policy; the code stays generic
+      [422, 'err_209_bad_request'], // unmapped 4xx falls back to BAD_REQUEST
     ])('BAD_REQUEST with status %s should resolve to appEvent "%s"', (status, expectedAppEvent) => {
       const errorDefinition = getAxiosErrorDefinition('ERR_BAD_REQUEST', status)
 
