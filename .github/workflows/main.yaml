@@ -62,6 +62,7 @@ jobs:
             "PROOF_TEMPLATE_URL"
             "MEDIATOR_USE_PUSH_NOTIFICATIONS"
             "INDY_VDR_PROXY_URL"
+            "SNOWPLOW_COLLECTOR_URL"
           )
           for var in "${required_env_vars[@]}"; do
             if [ -z "${!var}" ]; then
@@ -74,6 +75,7 @@ jobs:
           PROOF_TEMPLATE_URL: ${{ vars.PROOF_TEMPLATE_URL }}
           MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           INDY_VDR_PROXY_URL: ${{ vars.INDY_VDR_PROXY_URL }}
+          SNOWPLOW_COLLECTOR_URL: ${{ vars.SNOWPLOW_COLLECTOR_URL }}
 
   # ─── Dynamic Variant Matrix ──────────────────────────────────────────
   # Determine variant matrix
