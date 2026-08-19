@@ -416,19 +416,16 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
 
 /**
  * Shows an error alert based on the provided error.
- * Fallsback to a generic unknown error modal if not recognized.
+ * Falls back to a generic unknown error modal if not recognized.
  * @param error - The error to handle.
  * @param alerts - The AppAlerts object containing alert functions.
  * @returns void
  */
 export function showErrorAlert(error: unknown, alerts: AppAlerts) {
-  const alertMap = getGlobalAlertMap(alerts)
+  const alert = isAppError(error) && getGlobalAlertMap(alerts).get(error.appEvent)
 
-  const globalAlert = isAppError(error) ? alertMap.get(error.appEvent) : undefined
-
-  if (globalAlert) {
-    // If a specific alert is found for the error, show that alert.
-    globalAlert(error)
+  if (alert) {
+    alert(error)
     return
   }
 
