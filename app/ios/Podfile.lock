@@ -2836,7 +2836,7 @@ PODS:
     - React-perflogger (= 0.81.5)
     - React-utils (= 0.81.5)
     - SocketRocket
-  - ReactNativeIncallManager (4.2.1):
+  - ReactNativeIncallManager (4.2.2):
     - React-Core
   - RNCAsyncStorage (2.2.0):
     - boost
@@ -3858,7 +3858,7 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: 1bcd3527ac0390a1c898c114f81ff954be35ed79
   ReactCodegen: 6c26f8c25d0b5ae66f86a1cce1777076ac8bcbd8
   ReactCommon: 5f0e5c09a64a2717215dd84380e1a747810406f2
-  ReactNativeIncallManager: dccd3e7499caa3bb73d3acfedf4fb0360f1a87d5
+  ReactNativeIncallManager: c6e08cc005da0f73d5a1ecbd58ad33bc61d5d79f
   RNCAsyncStorage: 29f0230e1a25f36c20b05f65e2eb8958d6526e82
   RNCClipboard: 4b58c780f63676367640f23c8e114e9bd0cf86ac
   RNDeviceInfo: d3e91ffb33ee97a7982108476edb68cb3672efa6

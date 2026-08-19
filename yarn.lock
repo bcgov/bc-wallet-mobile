@@ -16582,11 +16582,11 @@ __metadata:
   linkType: hard
 
 "react-native-incall-manager@npm:~4.2.1":
-  version: 4.2.1
-  resolution: "react-native-incall-manager@npm:4.2.1"
+  version: 4.2.2
+  resolution: "react-native-incall-manager@npm:4.2.2"
   peerDependencies:
     react-native: ">=0.40.0"
-  checksum: 10c0/5458621cbab0704e6d57f0e9b9e5e0eef141e6db58f5237fe77f0e6d9f65bc923ec98f54cffa766e394f4e81d5ea26fe01c54e547a1c385a56913f2e58337bcb
+  checksum: 10c0/232e2f4cff8a9840ee70f7ba1b6cef5c5e9e5e5b63ccb145090240db0a0af7fadec28883dfddbe6eefe698280dbb848d080a4547be450a49f8ff2a2ce61cea76
   languageName: node
   linkType: hard
 
