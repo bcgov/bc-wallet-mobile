@@ -53,7 +53,7 @@ class KeychainClearingService(
             try {
                 val prefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE)
                 if (BuildConfig.DEBUG) {
-                    Log.d(TAG, "clearLegacyPrefs: '$prefsName' has ${prefs.all.size} entrie(s) before clear")
+                    Log.d(TAG, "clearLegacyPrefs: '$prefsName' has ${prefs.all.size} entries before clear")
                 }
                 prefs.edit().clear().apply()
             } catch (e: Exception) {
