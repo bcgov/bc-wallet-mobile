@@ -172,6 +172,20 @@ export async function injectPhoto(
 }
 
 /**
+ * Whether THIS session's camera stack is injection-instrumented — i.e. its requested `sauce:options`
+ * carried `sauceLabsImageInjectionEnabled`. The Android send-video lane deliberately drops that
+ * capability (the instrumentation rides the whole pipeline and wrecks the recorder's stop/finalize),
+ * so capture flows that can degrade to the rack feed gate on this instead of {@link isSauceLabs}.
+ */
+export function canInjectImages(): boolean {
+  if (!isSauceLabs()) return false
+  const sauceOptions = (driver.requestedCapabilities as Record<string, unknown>)['sauce:options'] as
+    | { sauceLabsImageInjectionEnabled?: boolean }
+    | undefined
+  return sauceOptions?.sauceLabsImageInjectionEnabled === true
+}
+
+/**
  * Whether this session can drive a CARD barcode (code-39 / PDF-417) from an injected image.
  *
  * Sauce-only because injection is, and Android-only because iOS decodes in the OS from metadata Sauce

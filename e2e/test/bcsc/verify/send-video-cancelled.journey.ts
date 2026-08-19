@@ -24,9 +24,9 @@ import { getTestUser, setTestUser } from '../../../src/support/context.js'
  * Deliberately stops at that screen. Its button re-registers the device from scratch to re-enter
  * verification, which is the account-reset journey's story, not this one's.
  *
- * QUEUE HYGIENE: reviews claim the NEXT queued request blindly, so this must not run CONCURRENTLY with
- * the approved journey (the suite is serial at the default `maxInstances: 1`). The script still refuses
- * to review a request whose card serial is not this user's.
+ * QUEUE HYGIENE: reviews claim the NEXT queued request blindly — a foreign head is CLOSED and the
+ * claim retried, so this must not run CONCURRENTLY with another send-video journey, whose live request
+ * would be closed too (the suite is serial at the default `maxInstances: 1`).
  */
 const AGENT_REASON = 'Automated e2e rejection'
 

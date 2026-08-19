@@ -850,16 +850,79 @@ function assertValidSendVideoReviewInput(input) {
 }
 
 /**
- * Polls the backcheck dashboard, re-scraping it each attempt exactly like a human reloading and
- * clicking the claim button until the submission lands in the queue.
+ * One claimed request's identity, parsed off its detail page.
+ *
+ * @typedef {Object} ClaimedRequest
+ * @property {string} requestIdentifier
+ * @property {string | undefined} csrfToken
+ * @property {ReturnType<typeof load>} $detail
+ * @property {string} claimedSerial
+ * @property {string} claimedName
+ * @property {string} claimedSurname
+ * @property {string} claimedFirstName
+ */
+
+/**
+ * @param {string} detailHtml
+ * @returns {ClaimedRequest}
+ */
+function parseClaimedRequest(detailHtml) {
+  const detailAttributes = extractPageDataAttributes(detailHtml)
+  const requestIdentifier = detailAttributes?.['request-identifier']
+  if (!requestIdentifier) {
+    throw new Error('[claim send-video request] Missing request-identifier in page data')
+  }
+  const $detail = load(detailHtml)
+  const claimedNames = $detail('#name-on-card span')
+    .map((_, element) => $detail(element).text().trim())
+    .get()
+    .filter(Boolean)
+  return {
+    requestIdentifier,
+    csrfToken: detailAttributes['csrf-token'],
+    $detail,
+    claimedSerial: $detail('#card-serial-number').first().text().trim(),
+    claimedName: claimedNames.join(', '),
+    claimedSurname: claimedNames[0] ?? '',
+    claimedFirstName: claimedNames[1] ?? '',
+  }
+}
+
+/**
+ * Serial alone cannot identify a cardless request (they all read "N/A"), so the surname AND first
+ * name are what actually distinguish those — all three are checked, since a shared surname alone
+ * could otherwise match the wrong queued request.
+ *
+ * @param {ClaimedRequest} claimed
+ * @param {SendVideoReviewInput} input
+ */
+function matchesExpectedIdentity(claimed, input) {
+  return (
+    claimed.claimedSerial.toUpperCase() === input.cardSerialNumber.toUpperCase() &&
+    claimed.claimedSurname.toUpperCase() === input.surname.toUpperCase() &&
+    claimed.claimedFirstName.toUpperCase() === input.firstName.toUpperCase()
+  )
+}
+
+/**
+ * Polls the backcheck dashboard, claiming until the claimed request matches the expected person.
+ *
+ * The claim button takes the next submission blindly (FIFO, no worklist), and the queue is shared —
+ * the other platform's run, a crashed run's leftovers, other SIT users — so the head can be anyone's.
+ * Never review someone else's submission: a foreign claim is closed (`CloseRequest`, observed to
+ * clear it from the queue) and the poll continues. The same request coming back a third time means
+ * the release is not sticking, and the loop fails rather than churn the queue.
  *
  * @param {typeof fetch} fetchWithCookies
+ * @param {SendVideoReviewInput} input
  * @param {number} claimTimeoutMs
  * @param {AbortSignal} [signal]
- * @returns {Promise<{ detailUrl: string, detailHtml: string }>}
+ * @returns {Promise<{ detailUrl: string, claimed: ClaimedRequest }>}
  */
-async function claimNextSendVideoRequest(fetchWithCookies, claimTimeoutMs, signal) {
+async function claimMatchingSendVideoRequest(fetchWithCookies, input, claimTimeoutMs, signal) {
   const claimDeadline = Date.now() + claimTimeoutMs
+  /** @type {Map<string, number>} how often each foreign request id has been claimed (and closed) */
+  const foreignClaims = new Map()
 
   for (let attempt = 1; ; attempt++) {
     const dashboardResponse = await fetchWithCookies(BACKCHECK_DASHBOARD_URL, {
@@ -890,8 +953,38 @@ async function claimNextSendVideoRequest(fetchWithCookies, claimTimeoutMs, signa
     const claimHtml = await claimResponse.text()
     // fetch-cookie follows the 302; landing on a per-request page means something was claimed.
     if (claimResponse.ok && /\/backCheckRequest\/(verify|review)Identity\/[^/?#]+$/.test(claimResponse.url)) {
-      await logStep('claim send-video request', claimResponse, claimHtml)
-      return { detailUrl: claimResponse.url, detailHtml: claimHtml }
+      const claimed = parseClaimedRequest(claimHtml)
+      if (matchesExpectedIdentity(claimed, input)) {
+        await logStep('claim send-video request', claimResponse, claimHtml)
+        console.log(`  claimed ${claimed.requestIdentifier}: ${claimed.claimedName} — serial ${claimed.claimedSerial}`)
+        return { detailUrl: claimResponse.url, claimed }
+      }
+
+      const timesClaimed = (foreignClaims.get(claimed.requestIdentifier) ?? 0) + 1
+      foreignClaims.set(claimed.requestIdentifier, timesClaimed)
+      if (timesClaimed >= 3) {
+        // One last release before failing: the previous ones evidently did not stick, but bailing
+        // while still holding the claim would leave the queue head ours and block the next run too.
+        await releaseClaimedRequest(fetchWithCookies, claimed.$detail, claimResponse.url, signal)
+        throw new Error(
+          `[claim send-video request] CloseRequest is not clearing ${claimed.requestIdentifier} ` +
+            `("${claimed.claimedName}", serial ${claimed.claimedSerial}) — claimed it ${timesClaimed} times while ` +
+            `waiting for "${input.surname}, ${input.firstName}" (serial ${input.cardSerialNumber}); ` +
+            `check the SIT backcheck dashboard`
+        )
+      }
+      console.log(
+        `[sm-login] [~] claim attempt ${attempt}: claimed foreign request ${claimed.requestIdentifier} ` +
+          `("${claimed.claimedName}", serial ${claimed.claimedSerial}) — closing it and retrying`
+      )
+      await releaseClaimedRequest(fetchWithCookies, claimed.$detail, claimResponse.url, signal)
+      await waitForNextClaimAttemptOrThrow(
+        claimDeadline,
+        claimTimeoutMs,
+        signal,
+        () => `closed foreign request ${claimed.requestIdentifier} ("${claimed.claimedName}")`
+      )
+      continue
     }
     if (!claimResponse.ok) {
       // Reuses logStep's throw path — a real error is never blind-retried.
@@ -917,46 +1010,34 @@ async function waitForNextClaimAttemptOrThrow(claimDeadline, claimTimeoutMs, sig
     await sleep(CLAIM_POLL_INTERVAL_MS, signal)
     return
   }
-  const suffix = describeLastPage ? ` — last page: "${describeLastPage()}"` : ''
-  throw new Error(`[claim send-video request] no queued submission within ${claimTimeoutMs}ms${suffix}`)
+  const suffix = describeLastPage ? ` — last: "${describeLastPage()}"` : ''
+  throw new Error(`[claim send-video request] no matching submission within ${claimTimeoutMs}ms${suffix}`)
 }
 
 /**
- * Confirms the claimed request belongs to the expected person, releasing it (best-effort) and
- * throwing loudly on any mismatch. Serial alone cannot identify a cardless request (they all read
- * "N/A"), so the surname AND first name are what actually distinguish those — all three are checked,
- * since a shared surname alone could otherwise let this claim the wrong queued request.
+ * Best-effort `CloseRequest` release of a claimed request. Never throws — the claim loop decides
+ * what a release that did not stick means — but a non-OK response is worth a warning, since a
+ * silently failed release is exactly how the same foreign request comes straight back.
  *
  * @param {typeof fetch} fetchWithCookies
  * @param {ReturnType<typeof load>} $detail
  * @param {string} detailUrl
- * @param {{ requestIdentifier: string, claimedSerial: string, claimedName: string, claimedSurname: string, claimedFirstName: string }} claimed
- * @param {SendVideoReviewInput} input
  * @param {AbortSignal} [signal]
  */
-async function assertClaimedIdentityMatches(fetchWithCookies, $detail, detailUrl, claimed, input, signal) {
-  const { requestIdentifier, claimedSerial, claimedName, claimedSurname, claimedFirstName } = claimed
-  const serialMatches = claimedSerial.toUpperCase() === input.cardSerialNumber.toUpperCase()
-  const surnameMatches = claimedSurname.toUpperCase() === input.surname.toUpperCase()
-  const firstNameMatches = claimedFirstName.toUpperCase() === input.firstName.toUpperCase()
-  if (serialMatches && surnameMatches && firstNameMatches) {
-    return
-  }
-
-  // Never review someone else's submission; try to release it, then fail loudly.
+async function releaseClaimedRequest(fetchWithCookies, $detail, detailUrl, signal) {
   try {
-    await fetchWithCookies(BACKCHECK_CONTINUE_URL, {
+    const response = await fetchWithCookies(BACKCHECK_CONTINUE_URL, {
       headers: backcheckFormPostHeaders(detailUrl),
       body: buildAttestationBody($detail, AFFIRMATIVE_ANSWER, 'CloseRequest'),
       method: 'POST',
       signal,
     })
-  } catch {
-    // best-effort release only — the throw below carries the real failure
+    if (!response.ok) {
+      console.warn(`[sm-login] [!] CloseRequest release returned ${response.status}`)
+    }
+  } catch (err) {
+    console.warn('[sm-login] [!] CloseRequest release failed:', err)
   }
-  throw new Error(
-    `[claim send-video request] claimed ${requestIdentifier} ("${claimedName}", serial ${claimedSerial}) but expected "${input.surname}, ${input.firstName}" with serial ${input.cardSerialNumber} — a CloseRequest release was attempted; check the SIT backcheck dashboard before re-running`
-  )
 }
 
 /**
@@ -1028,11 +1109,11 @@ async function submitSendVideoDecision(fetchWithCookies, $detail, detailUrl, req
  * SM login flow to review (approve or reject) a queued send-video verification request.
  *
  * The portal has no queue listing — its claim button takes the next submission FIFO — so the claim is
- * polled until one appears and the claimed person is checked against the expected one before any
- * decision is posted. Which claim button exists depends on the queue holding the work, and what the
- * review asks for depends on what the person submitted, so both are read off the pages themselves:
- * cardholder requests go straight to the decision, while a cardless registration inserts an
- * identity-match step first.
+ * polled until it lands on the expected person, closing foreign submissions along the way (see
+ * {@link claimMatchingSendVideoRequest}). Which claim button exists depends on the queue holding the
+ * work, and what the review asks for depends on what the person submitted, so both are read off the
+ * pages themselves: cardholder requests go straight to the decision, while a cardless registration
+ * inserts an identity-match step first.
  *
  * @param {SendVideoReviewInput} input
  * @param {{ signal?: AbortSignal, claimTimeoutMs?: number }} [options]
@@ -1044,38 +1125,8 @@ export async function reviewSendVideoLogin(input, options = {}) {
   assertValidSendVideoReviewInput(input)
 
   const fetchWithCookies = await establishIdcheckSession(signal)
-  const { detailUrl, detailHtml } = await claimNextSendVideoRequest(fetchWithCookies, claimTimeoutMs, signal)
-
-  const detailAttributes = extractPageDataAttributes(detailHtml)
-  const requestIdentifier = detailAttributes?.['request-identifier']
-  if (!requestIdentifier) {
-    throw new Error('[claim send-video request] Missing request-identifier in page data')
-  }
-  const csrfToken = detailAttributes['csrf-token']
-
-  const $detail = load(detailHtml)
-  const claimedSerial = $detail('#card-serial-number').first().text().trim()
-  const claimedNames = $detail('#name-on-card span')
-    .map((_, element) => $detail(element).text().trim())
-    .get()
-    .filter(Boolean)
-  const claimedName = claimedNames.join(', ')
-  console.log(`  claimed ${requestIdentifier}: ${claimedName} — serial ${claimedSerial}`)
-
-  await assertClaimedIdentityMatches(
-    fetchWithCookies,
-    $detail,
-    detailUrl,
-    {
-      requestIdentifier,
-      claimedSerial,
-      claimedName,
-      claimedSurname: claimedNames[0] ?? '',
-      claimedFirstName: claimedNames[1] ?? '',
-    },
-    input,
-    signal
-  )
+  const { detailUrl, claimed } = await claimMatchingSendVideoRequest(fetchWithCookies, input, claimTimeoutMs, signal)
+  const { requestIdentifier, csrfToken, $detail, claimedSerial, claimedName } = claimed
 
   await submitSendVideoDecision(fetchWithCookies, $detail, detailUrl, requestIdentifier, csrfToken, input, signal)
 

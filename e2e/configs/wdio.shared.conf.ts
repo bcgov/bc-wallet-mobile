@@ -1,5 +1,5 @@
 // wdio.shared.conf.ts
-import { mkdirSync } from 'node:fs'
+import { mkdirSync, readdirSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -25,6 +25,21 @@ const REPORTS_DIR = resolve(__dirname, '../reports')
  * reach the in-test skip.
  */
 export const ANDROID_ONLY_SPECS = [resolve(__dirname, `../test/${variant}/scan/*.journey.ts`)]
+
+/**
+ * Send-video journeys vs everything else, partitioned from ONE scan of the test tree so the two sets
+ * are complementary by construction (a new spec file lands in the default lane automatically). On
+ * Sauce Android they run in separate capability lanes: send-video WITHOUT the camera-injection
+ * instrumentation (it rides the whole camera pipeline and wrecks the recorder's stop/finalize),
+ * the rest with it (see sauce/wdio.android.sauce.rdc.conf.ts).
+ */
+const TEST_ROOT = resolve(__dirname, `../test/${variant}`)
+const ALL_SPEC_FILES = readdirSync(TEST_ROOT, { recursive: true })
+  .map((entry) => join(TEST_ROOT, String(entry)))
+  .filter((path) => /\.(journey|spec)\.ts$/.test(path))
+const isSendVideoSpec = (path: string) => /\/verify\/send-video-[^/]+\.journey\.ts$/.test(path)
+export const SEND_VIDEO_SPECS = ALL_SPEC_FILES.filter(isSendVideoSpec)
+export const NON_SEND_VIDEO_SPECS = ALL_SPEC_FILES.filter((path) => !isSendVideoSpec(path))
 
 /**
  * Save a screenshot named after the failing test. The webdriver screenshot command also attaches
