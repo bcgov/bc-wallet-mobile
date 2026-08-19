@@ -1,4 +1,5 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
+import useEvidenceApi from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { AppError, ErrorCategory } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import * as Bifold from '@bifold/core'
@@ -7,7 +8,8 @@ import { renderHook } from '@testing-library/react-native'
 import { AxiosError } from 'axios'
 import { useEvidenceService } from './useEvidenceService'
 
-jest.mock('@/bcsc-theme/api/hooks/useApi')
+jest.mock('@/bcsc-theme/api/hooks/useEvidenceApi')
+jest.mock('@/bcsc-theme/hooks/useBCSCApiClient')
 jest.mock('@bifold/core', () => ({
   __esModule: true,
   TOKENS: { UTIL_LOGGER: 'UTIL_LOGGER' },
@@ -28,8 +30,10 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
 }))
 
 const mockServerErrorAlert = jest.fn()
-const mockAlerts = { serverErrorAlert: mockServerErrorAlert }
+const mockUnknownErrorModal = jest.fn()
+const mockAlerts = { serverErrorAlert: mockServerErrorAlert, unknownErrorModal: mockUnknownErrorModal }
 jest.mock('@/hooks/useAlerts', () => ({
+  ...jest.requireActual('@/hooks/useAlerts'),
   useAlerts: () => mockAlerts,
 }))
 
@@ -56,7 +60,8 @@ describe('useEvidenceService', () => {
     mockUpdateVerificationRequest.mockResolvedValue(undefined)
 
     jest.mocked(Bifold).useServices.mockReturnValue([mockLogger] as any)
-    jest.mocked(useApi).mockReturnValue({ evidence: mockEvidenceApi } as any)
+    jest.mocked(useBCSCApiClientState).mockReturnValue({ client: {} as any, isClientReady: true, error: null })
+    jest.mocked(useEvidenceApi).mockReturnValue(mockEvidenceApi as any)
   })
 
   describe('cancelVerificationRequest', () => {
@@ -101,7 +106,7 @@ describe('useEvidenceService', () => {
       expect(mockUpdateVerificationRequest).not.toHaveBeenCalled()
     })
 
-    it('should rethrow non-AppErrors without showing an alert or clearing the verification request', async () => {
+    it('should rethrow non-AppErrors, showing the generic unknown error modal, without clearing the verification request', async () => {
       const mockError = new Error('Unexpected failure')
       mockEvidenceApi.cancelVerificationRequest.mockRejectedValue(mockError)
 
@@ -109,6 +114,7 @@ describe('useEvidenceService', () => {
 
       await expect(result.current.cancelVerificationRequest('verification-id')).rejects.toThrow(mockError)
       expect(mockServerErrorAlert).not.toHaveBeenCalled()
+      expect(mockUnknownErrorModal).toHaveBeenCalledWith(mockError)
       expect(mockUpdateVerificationRequest).not.toHaveBeenCalled()
     })
   })
