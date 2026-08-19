@@ -1,9 +1,11 @@
 import { TEST_PIN, Timeouts } from '../constants.js'
 import { acceptSystemAlert, dismissSystemAlert } from '../helpers/alerts.js'
+import { describeCurrentScreen } from '../helpers/screens.js'
 import { HomeScreen } from '../screens/main.js'
 import {
   OnboardingCreatePINScreen,
   OnboardingIntroScreen,
+  OnboardingNotificationsDisabledScreen,
   OnboardingNotificationsScreen,
   OnboardingOptInAnalyticsScreen,
   OnboardingPrivacyPolicyScreen,
@@ -45,13 +47,35 @@ const PERMISSION_DIALOG_APPEAR_MS = 15_000
  * Take the Notifications screen's `EnableNotifications` path and answer the OS permission dialog,
  * ending on SecureApp (both answers advance).
  *
+ * Probe the route's variants instead of blind-asserting: `EnableNotifications` sits OUTSIDE the
+ * scroll view, so when the enable variant is not up no scroll hunt can ever find it — and the route
+ * renders three ways: enable, PermissionDisabled (the OS remembered an earlier refusal), or skipped
+ * entirely (permission pre-granted — always so below Android 13, which has no notification runtime
+ * permission). Naming the actual state beats a long hunt ending in "not visible".
+ *
  * Resolve the dialog before asserting the destination: on Android the app's permission request
  * self-resolves after ~2s (an RN hang workaround in `PushNotificationsHelper`), so it can navigate on
  * while the dialog is still up. Only what the app *recorded* is affected — every branch keying off
  * the permission re-reads the live OS status.
  */
 export async function answerNotificationPermission(decision: 'allow' | 'deny'): Promise<void> {
-  await OnboardingNotificationsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  const deadline = Date.now() + Timeouts.SCREEN_TRANSITION
+  for (;;) {
+    if (await OnboardingNotificationsScreen.isPresent(1_000)) break
+    if (await OnboardingNotificationsDisabledScreen.isPresent(1_000)) {
+      throw new Error(
+        'Notifications rendered its PermissionDisabled variant — the OS remembered an earlier refusal on this device, so the grant path cannot run'
+      )
+    }
+    if (await OnboardingSecureAppScreen.isPresent(1_000)) {
+      throw new Error(
+        'Notifications was skipped — push permission is already granted (always so below Android 13), so the grant path cannot run'
+      )
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`Notifications never appeared. On screen: ${await describeCurrentScreen()}`)
+    }
+  }
   await OnboardingNotificationsScreen.tap('primary')
 
   if (decision === 'allow') {

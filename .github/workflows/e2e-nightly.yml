@@ -3,7 +3,10 @@
 # Runs the `regression` E2E suite (every per-area journey) against the
 # latest successful main build's SauceLabs artifacts.
 #
-# Default device matrix: 2 iOS + 2 Android OS versions (moderate coverage).
+# Default device matrix: 1 iOS + 1 Android device (one modern OS major each).
+# os_version stays PINNED: unpinned, Sauce hands out iOS 15-era devices, where
+# deep links open through Siri (hangs, kills the session) — the app-scoped open
+# needs iOS 16.4+.
 #
 # Trigger modes:
 #   schedule         — runs every night at midnight PT (7 AM UTC)
@@ -55,7 +58,7 @@ on:
       device_matrix:
         description: 'JSON array of {platform, device, os_version} objects'
         type: string
-        default: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"iOS","device":"iPhone.*","os_version":"17"},{"platform":"Android","device":"Google.*","os_version":"15"},{"platform":"Android","device":"Google.*","os_version":"14"}]'
+        default: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
 
 jobs:
   # ─── Gate: skip scheduled runs when nothing merged to main ──────
@@ -158,6 +161,6 @@ jobs:
     with:
       suite: ${{ inputs.suite || 'regression' }}
       build_number: ${{ needs.resolve-build.outputs.build_number }}
-      device_matrix: ${{ inputs.device_matrix || '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"iOS","device":"iPhone.*","os_version":"17"},{"platform":"Android","device":"Google.*","os_version":"15"},{"platform":"Android","device":"Google.*","os_version":"14"}]' }}
+      device_matrix: ${{ inputs.device_matrix || '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]' }}
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}

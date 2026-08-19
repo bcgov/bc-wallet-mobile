@@ -1,9 +1,10 @@
 import type { TestUser } from '../constants.js'
 import { COMBO_CARD_BARCODE_MASKS, Timeouts } from '../constants.js'
 import { tapAlertButton } from '../helpers/alerts.js'
+import { isAppErrorShowing, throwIfAppErrorShowing } from '../helpers/app-error.js'
 import { ApproveInPersonInput, approveInPersonRequest } from '../helpers/approval.js'
 import type { ImageMaskRegion } from '../helpers/camera.js'
-import { injectPhoto, injectScanTarget } from '../helpers/camera.js'
+import { canInjectImages, injectPhoto, injectScanTarget } from '../helpers/camera.js'
 import { getEmailConfirmationCode, getLatestMailId, getTempEmailAddress } from '../helpers/email.js'
 import { swipeUpBy } from '../helpers/gestures.js'
 import {
@@ -13,7 +14,6 @@ import {
   RestartVerificationAlert,
   tapHelpMenuRow,
 } from '../helpers/help-menu.js'
-import { isSauceLabs } from '../helpers/sauce.js'
 import { describeCurrentScreen, reachCameraScreen } from '../helpers/screens.js'
 import { BaseScreen } from '../screens/core/BaseScreen.js'
 import { HomeNotificationCard, HomeScreen } from '../screens/main.js'
@@ -61,18 +61,22 @@ const engine = new BaseScreen()
 /** Confirming action on EnterEmail's skip alert — copy-matched, as its buttons carry no testIDs. */
 const EMAIL_SKIP_CONFIRM = 'Skip'
 
-/** VerifyPrompt `Continue` → the AccountSetup add-or-transfer choice. */
+/**
+ * VerifyPrompt `Continue` → the AccountSetup add-or-transfer choice.
+ *
+ * `tapToReach`, not `tap`: this pair sits on a freshly pushed screen, and react-navigation renders a
+ * screen before it makes it interactive — the control is visible and steady, and the tap is discarded
+ * anyway. Confirming the destination is what turns that into a re-tap instead of a failed journey.
+ */
 export async function startVerification(): Promise<void> {
   await VerifyPromptScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-  await VerifyPromptScreen.tap('primary')
-  await AccountSetupScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await VerifyPromptScreen.tapToReach('primary', AccountSetupScreen)
 }
 
-/** AccountSetup `AddAccount` → IdentitySelection. */
+/** AccountSetup `AddAccount` → IdentitySelection. Confirm-and-retry, for the reason above. */
 export async function chooseAddAccount(): Promise<void> {
   await AccountSetupScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-  await AccountSetupScreen.tap('primary')
-  await IdentitySelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await AccountSetupScreen.tapToReach('primary', IdentitySelectionScreen)
 }
 
 /**
@@ -263,10 +267,12 @@ export async function submitSendVideoVerification(user: TestUser): Promise<void>
   await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
 }
 
-/** The selfie half: enter the front camera, inject on Sauce, shoot, accept. Ends on VideoInstructions. */
+/** The selfie half: enter the front camera, inject when the session can, shoot, accept. Ends on VideoInstructions. */
 async function captureSelfie(user: TestUser): Promise<void> {
   await reachCameraScreen('TakePhoto (selfie)', () => SelfieCaptureScreen.isPresent(1_000))
-  if (isSauceLabs()) {
+  // The send-video lane runs without injection (it breaks the recorder) — the rack feed is fine
+  // here, since the scripted reviewer never looks at the content.
+  if (canInjectImages()) {
     // No masks: the selfie template carries no barcode, unlike the card-back images.
     await injectPhoto(user.selfieImage, {})
   }
@@ -282,6 +288,12 @@ async function captureSelfie(user: TestUser): Promise<void> {
 async function recordPromptedVideo(): Promise<void> {
   await startVideoRecording()
   await answerVideoPrompts()
+
+  // The device's own recorder failing is not a test failure to reason about — report the app's error
+  // rather than the symptom, so a rack-camera flake is never mistaken for a broken journey. Probed
+  // BEFORE the review, whose full transition budget would otherwise be spent on a screen that is
+  // never coming.
+  await throwIfAppErrorShowing('The recording failed')
 
   // Finalizing the file takes a moment after the recording stops, so the review is a transition wait.
   if (await VideoReviewScreen.isPresent(Timeouts.SCREEN_TRANSITION)) {
@@ -309,7 +321,16 @@ async function startVideoRecording(): Promise<void> {
 
   // No start button: recording arms itself after a 3-2-1 countdown, behind camera AND microphone
   // dialogs, so the first prompt button gets a camera budget rather than a transition one.
-  await reachCameraScreen('TakeVideo', () => TakeVideoScreen.isPresent(1_000))
+  //
+  // The error modal counts as "we got somewhere": iOS drops the covered recorder out of the
+  // accessibility tree, so a recording that fails on arm would otherwise spend the whole camera budget
+  // waiting for a screen that is already there and unreachable. Ending the wait on either outcome lets
+  // the assert below name the app's error instead of a 45s timeout.
+  await reachCameraScreen(
+    'TakeVideo',
+    async () => (await TakeVideoScreen.isPresent(1_000)) || (await isAppErrorShowing())
+  )
+  await throwIfAppErrorShowing('The recording failed to start')
 }
 
 /**
@@ -319,6 +340,12 @@ async function startVideoRecording(): Promise<void> {
 async function answerVideoPrompts(): Promise<void> {
   for (let prompt = 0; prompt < MAX_VIDEO_PROMPTS; prompt++) {
     if (!(await TakeVideoScreen.isPresent(1_000))) {
+      return
+    }
+    // Android keeps the covered recorder in a second window, so its controls stay findable and
+    // enabled under the error modal — without this, a failed recording spends every remaining prompt
+    // driving a screen nothing is listening to.
+    if (await isAppErrorShowing()) {
       return
     }
     try {
@@ -351,6 +378,9 @@ export async function recordOverLongVideoDetour(user: TestUser): Promise<void> {
   await driver.pause(OVER_LONG_RECORDING_MS)
   await answerVideoPrompts()
 
+  // Same reason as the review path: a recorder that errored never reaches the length check, and the
+  // app's own error says so where "Cancel not visible" does not.
+  await throwIfAppErrorShowing('The over-long recording failed')
   await VideoTooLongScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   // Cancel, the screen's only addressable control — Retake has no testID at all.
   await VideoTooLongScreen.tap('secondary')
@@ -599,10 +629,17 @@ export async function selectEvidenceType(match: string): Promise<void> {
  * Wait for EvidenceCapture's shutter, naming which of two causes a timeout was. The shutter renders only
  * once `useCameraDevice` resolves, so a miss means either the push never landed (container absent) or no
  * camera came up (container present) — indistinguishable from the timeout alone.
+ *
+ * The error modal ends the wait early, same as the recorder's arm (see {@link startVideoRecording}):
+ * a camera that failed to open — seen on RE-entries, e.g. a retake — reports the app's own error in
+ * seconds instead of spending the whole camera budget on a screen that is never coming.
  */
 async function reachEvidenceCamera(): Promise<void> {
   try {
-    await reachCameraScreen('EvidenceCapture', () => EvidenceCaptureScreen.isPresent(1_000))
+    await reachCameraScreen(
+      'EvidenceCapture',
+      async () => (await EvidenceCaptureScreen.isPresent(1_000)) || (await isAppErrorShowing())
+    )
   } catch (err) {
     const containerMounted = await EvidenceCaptureScreen.isVisible('maskedCamera')
     throw new Error(
@@ -615,6 +652,7 @@ async function reachEvidenceCamera(): Promise<void> {
             '(see COMBO_CARD_BARCODE_MASKS) instead of re-tapping through; the flow state is corrupted at that point.')
     )
   }
+  await throwIfAppErrorShowing('The evidence camera failed')
 }
 
 /**
@@ -659,7 +697,8 @@ async function shootDocumentSide(image: string, barcodeMasks: readonly ImageMask
   // renders the PermissionDisabled fallback. Later entries still restart the capture session, so every
   // entry gets the camera budget rather than a screen-transition one.
   await reachEvidenceCamera()
-  if (isSauceLabs()) {
+  // Injection-free sessions (the send-video lane) shoot the rack feed — accepted like any capture.
+  if (canInjectImages()) {
     await injectPhoto(image, {}, barcodeMasks) // padding may need tuning to the document mask
   }
   await EvidenceCaptureScreen.tap('primary') // MaskedCamera shutter — NOT tapToNavigate (not idempotent)

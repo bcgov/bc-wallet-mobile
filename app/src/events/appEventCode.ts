@@ -110,6 +110,7 @@ export enum AppEventCode {
   ERR_210_UNAUTHORIZED = 'err_210_unauthorized',
   FORBIDDEN = 'forbidden',
   NOT_FOUND = 'not_found',
+  CONFLICT = 'conflict',
   ERR_212_RETRY_LATER = 'err_212_retry_later',
   ERR_211_SERVER_OUTAGE = 'err_211_server_outage',
   ERR_213_FAILED_CREATING_CLIENT_REGISTRATION = 'err_213_failed_creating_client_registration',

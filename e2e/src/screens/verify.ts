@@ -198,6 +198,10 @@ export const SelfieCaptureScreen = defineScreen({
  * Every arrival issues a fresh prompt set and `primary` (StartRecording) is disabled until it lands,
  * so enter through `tapWhenEnabled`. `promptsLoading` / `retryLoadPrompts` are BARE testIDs (no
  * `testIdWithKey`), hence not `bcsc()`-wrapped; the retry marks a failed fetch rather than a slow one.
+ *
+ * `scroll`: StartRecording sits at the BOTTOM of the scroll content, under the server-issued prompt
+ * list — over two viewports down on an iPhone SE — and the screen snaps to the top on every focus,
+ * so the target is only ever below the fold.
  */
 export const VideoInstructionsScreen = defineScreen({
   self: bcsc(v.videoInstructions.startRecording),
@@ -207,6 +211,7 @@ export const VideoInstructionsScreen = defineScreen({
     promptsLoading: v.videoInstructionsBare.promptsLoading,
     retryLoadPrompts: v.videoInstructionsBare.retryLoadPrompts,
   },
+  scroll: { directions: 'down', maxScrolls: 12 },
 })
 
 /**

@@ -1,10 +1,15 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useEvidenceUploadModel from '@/bcsc-theme/features/verify/send-video/useEvidenceUploadModel'
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info'
+import { AppError, ErrorCategory } from '@/errors'
+import { AppEventCode } from '@/events/appEventCode'
 import { BCDispatchAction, BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import * as Bifold from '@bifold/core'
+import * as Navigation from '@react-navigation/native'
 import { act, renderHook } from '@testing-library/react-native'
+import { AxiosError } from 'axios'
 import RNFS from 'react-native-fs'
 import { VerificationVideoCache } from './VideoReviewScreen'
 
@@ -51,10 +56,20 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
 }))
 
 const mockFileUploadErrorAlert = jest.fn()
+const mockAlreadyVerifiedAlert = jest.fn()
 jest.mock('@/hooks/useAlerts', () => ({
   useAlerts: () => ({
     fileUploadErrorAlert: mockFileUploadErrorAlert,
+    alreadyVerifiedAlert: mockAlreadyVerifiedAlert,
   }),
+}))
+
+// Left unmocked so the real useAlreadyVerifiedRecovery runs and its navigation is asserted here;
+// only the token exchange it depends on is stubbed.
+const mockCheckVerificationStatus = jest.fn()
+jest.mock('@/bcsc-theme/services/hooks/useTokenService', () => ({
+  __esModule: true,
+  useTokenService: () => ({ checkVerificationStatus: mockCheckVerificationStatus }),
 }))
 
 describe('useEvidenceUploadModel', () => {
@@ -481,6 +496,99 @@ describe('useEvidenceUploadModel', () => {
 
       expect(mockFileUploadErrorAlert).toHaveBeenCalled()
       expect(mockEvidenceApi.uploadPhotoEvidenceBinary).not.toHaveBeenCalled()
+    })
+
+    describe('when the evidence endpoint rejects the upload as already approved (409)', () => {
+      // IAS returns 409 "Registration Request already approved" once the registration request behind
+      // the device_code is approved, so the upload is redundant rather than failed.
+      const conflictError = new AppError(
+        'Conflict',
+        { category: ErrorCategory.VERIFICATION, appEvent: AppEventCode.ALREADY_VERIFIED, statusCode: 2410 },
+        {
+          cause: new AxiosError('Conflict', 'ERR_BAD_REQUEST', undefined, undefined, { status: 409 } as any),
+          track: false,
+        }
+      )
+
+      const arrangeReadySend = () => {
+        const bifoldMock = jest.mocked(Bifold)
+        bifoldMock.useStore.mockReturnValue([
+          {
+            ...baseStore,
+            bcsc: {
+              ...baseStore.bcsc,
+              photoPath: '/photo.jpg',
+              videoPath: '/video.mp4',
+              videoDuration: 10,
+              prompts: [{ text: 'smile' }],
+              photoMetadata: plausiblePhotoMetadata,
+            },
+            bcscSecure: {
+              ...baseStore.bcscSecure,
+              verificationRequestId: 'req-123',
+              verificationRequestSha: 'sha-456',
+              deviceCode: 'device-code',
+              userCode: 'user-code',
+              additionalEvidenceData: [],
+            },
+          } as BCState,
+          jest.fn(),
+        ])
+
+        jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
+        jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(Buffer.from([4, 5, 6]))
+        jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-01-01') } as any)
+        jest.mocked(getVideoMetadata).mockResolvedValue({ duration: 10 } as any)
+        mockEvidenceApi.uploadVideoEvidenceMetadata.mockResolvedValue({ upload_uri: 'video-uri' })
+        mockEvidenceApi.uploadPhotoEvidenceMetadata.mockRejectedValue(conflictError)
+      }
+
+      it('attempts recovery and returns early without the file upload error modal', async () => {
+        arrangeReadySend()
+        mockCheckVerificationStatus.mockResolvedValue(true)
+
+        const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+        await act(async () => {
+          await result.current.handleSend()
+        })
+
+        expect(mockCheckVerificationStatus).toHaveBeenCalledWith('device-code', 'user-code')
+        expect(mockFileUploadErrorAlert).not.toHaveBeenCalled()
+        expect(mockEvidenceApi.uploadPhotoEvidenceBinary).not.toHaveBeenCalled()
+        expect(mockEvidenceApi.sendVerificationRequest).not.toHaveBeenCalled()
+      })
+
+      it('navigates to VerificationSuccess when recovery succeeds', async () => {
+        arrangeReadySend()
+        mockCheckVerificationStatus.mockResolvedValue(true)
+
+        const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+        await act(async () => {
+          await result.current.handleSend()
+        })
+
+        expect(Navigation.CommonActions.reset).toHaveBeenCalledWith(
+          expect.objectContaining({ routes: [{ name: BCSCScreens.VerificationSuccess }] })
+        )
+        expect(mockAlreadyVerifiedAlert).not.toHaveBeenCalled()
+      })
+
+      it('emits alreadyVerifiedAlert with the original error when recovery fails', async () => {
+        arrangeReadySend()
+        mockCheckVerificationStatus.mockResolvedValue(false)
+
+        const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+        await act(async () => {
+          await result.current.handleSend()
+        })
+
+        expect(mockAlreadyVerifiedAlert).toHaveBeenCalledWith(conflictError)
+        expect(mockFileUploadErrorAlert).not.toHaveBeenCalled()
+        expect(Navigation.CommonActions.reset).not.toHaveBeenCalled()
+      })
     })
 
     it('should emit fileUploadErrorAlert when binary upload fails', async () => {

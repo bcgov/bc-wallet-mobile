@@ -31,6 +31,21 @@ export const TestIds = {
     help: 'HelpMenu',
   },
 
+  /**
+   * The app-wide error modal (`ErrorInfoCard` inside `BCSCErrorModal`) — an overlay ANY screen can
+   * raise, which is why its ids live here rather than under a feature.
+   *
+   * `close` is the only one that is always rendered, so it doubles as the "is it up" marker;
+   * `showDetails` needs the error to carry a message. `title`/`body` are bifold-generic ids that
+   * collide with other cards — read the screen instead of trusting them.
+   */
+  errorModal: {
+    close: 'CloseButton',
+    showDetails: 'ShowDetails',
+    title: 'HeaderText',
+    body: 'BodyText',
+  },
+
   onboarding: {
     intro: {
       continue: 'Continue',

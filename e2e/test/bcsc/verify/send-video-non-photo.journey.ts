@@ -32,9 +32,9 @@ const ADDITIONAL_ID_MATCH = 'Passport'
  *
  * CAMERA-DEPENDENT — both the document and the selfie use Sauce image injection.
  *
- * QUEUE HYGIENE: reviews claim the NEXT queued request blindly, so no other send-video journey may run
- * CONCURRENTLY (the suite is serial at the default `maxInstances: 1`). The script still refuses to review
- * a request that is not for this user.
+ * QUEUE HYGIENE: reviews claim the NEXT queued request blindly — a foreign head is CLOSED and the
+ * claim retried — so no other send-video journey may run CONCURRENTLY: its live request would be
+ * closed too (the suite is serial at the default `maxInstances: 1`).
  */
 describe('Verified journey: non-photo card, send video', () => {
   before(() => {
