@@ -4,6 +4,7 @@ import {
   getIssuerConfig,
   getIssuerStatus,
   revokeCredential,
+  sendBasicMessage,
   sendCredentialOffer,
   sendProofRequest,
   toWalletDeepLink,
@@ -13,9 +14,11 @@ import {
 } from '../../../src/api/index.js'
 import { Timeouts } from '../../../src/constants.js'
 import { skipToHome } from '../../../src/flows/onboarding.js'
+import { findByA11yLabel } from '../../../src/helpers/a11y.js'
 import { dispatchDeepLink, getCurrentAppId } from '../../../src/helpers/deep-link.js'
 import { NOTIFICATION_TITLES, tapNotificationCard } from '../../../src/helpers/notifications.js'
 import { describeCurrentScreen } from '../../../src/helpers/screens.js'
+import { BaseScreen } from '../../../src/screens/core/index.js'
 import {
   CredentialDetailsScreen,
   CredentialOfferAcceptModal,
@@ -26,10 +29,24 @@ import {
   RemoveCredentialModal,
   WalletCredentialCard,
 } from '../../../src/screens/credentials.js'
-import { HomeScreen, TabBar, WalletScreen } from '../../../src/screens/main.js'
+import {
+  ContactChatScreen,
+  ContactDetailScreen,
+  ContactsScreen,
+  EditContactNameScreen,
+  HomeScreen,
+  RemoveContactScreen,
+  SettingsScreen,
+  TabBar,
+  WalletScreen,
+} from '../../../src/screens/main.js'
 
 /** The invitation label — becomes the contact name and the "{{label}} is offering you…" copy. */
 const ISSUER_CONTACT_LABEL = 'BC Wallet E2E Issuer'
+/** The rename the contacts block applies — every later selector uses this (row labels ARE the name). */
+const RENAMED_CONTACT_NAME = 'E2E Renamed Issuer'
+/** Engine handle for label/text-level asserts (contact rows and chat bubbles carry no testIDs). */
+const engine = new BaseScreen()
 /** Attribute names must match the provisioned schema (api/issuer.ts ISSUER_SCHEMA_ATTRIBUTES). */
 const CREDENTIAL_ATTRIBUTES = {
   given_name: 'E2E',
@@ -43,9 +60,11 @@ const CREDENTIAL_ATTRIBUTES = {
  * accept, list/details, proof share with an ISSUER-SIDE cryptographic verification assert, second
  * offer declined, revocation notification, delete → empty again.
  *
- * Arrange is the cheap unverified `skipToHome()` — the Wallet tab and the Credo agent are NOT
- * verification-gated. (Contacts IS, so the contacts-populated checkpoints this connection would
- * enable ride the verified journey later, on this same issuer infra.)
+ * Arrange is the cheap unverified `skipToHome()` — the Wallet tab, the Credo agent, AND the Contacts
+ * feature are all reachable unverified (Main settings always wires the Contacts row), so the
+ * contacts-populated checkpoints ride THIS journey's connection, appended after the credential
+ * lifecycle: list/details → pin toggle → issuer-sent chat message → rename → remove (which destroys
+ * the connection, so it runs last).
  *
  * Journey-wide rules:
  *  - NEVER `driver.background()`: incoming DIDComm rides the mediator's live-pickup socket, which
@@ -102,9 +121,10 @@ describe('Wallet journey: DIDComm credential lifecycle', () => {
     ;({ credExId: acceptedCredExId } = await sendCredentialOffer(connectionId, CREDENTIAL_ATTRIBUTES))
     await CredentialOfferScreen.expectVisible(Timeouts.DIDCOMM_DELIVERY)
     await CredentialOfferScreen.tap('primary') // Accept (gated on NetInfo reaching the mediator)
-    await CredentialOfferAcceptModal.expectVisible(Timeouts.SCREEN_TRANSITION)
-    // Issuer-side wait first: it can unstick a non-auto-issuing instance (the client issues
-    // explicitly at request-received) and a stall names the cred-ex state. `added` = stored in wallet.
+    // The accept overlay's pending phase is NOT asserted: it is mutually exclusive with the added
+    // phase and a fast issuance swaps straight past it. The issuer-side wait is the better tap
+    // diagnostic anyway — a swallowed Accept leaves the exchange at offer-sent, which it names. It
+    // also unsticks a non-auto-issuing instance (the client issues at request-received).
     await waitForCredExState(acceptedCredExId, 'done')
     await CredentialOfferAcceptModal.waitFor('added', Timeouts.DIDCOMM_DELIVERY)
     // Modal confirms use tapToNavigate: RN Modals slide in from below and UiAutomator can hold the
@@ -195,5 +215,72 @@ describe('Wallet journey: DIDComm credential lifecycle', () => {
     // Full circle to the second checkpoint's precondition: the empty wallet.
     await TabBar.link('wallet')
     await WalletScreen.expectVisible(Timeouts.COLD_START)
+  })
+
+  // ---- Contacts, populated by this journey's connection (deleting the credential kept it) ----
+
+  it('opens the populated Contacts list and the issuer contact', async () => {
+    await TabBar.link('home')
+    await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await HomeScreen.tap('menu')
+    await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await SettingsScreen.link('contacts') // NOT verified-gated — Main settings always wires the row
+    // Populated proof: the search field renders ONLY with rows, the empty-state control only without
+    // (they are mutually exclusive); the agent gate re-runs on entry, so allow the big budget.
+    await ContactsScreen.waitFor('search', Timeouts.COLD_START)
+    assert.equal(await ContactsScreen.isVisible('whatAreContacts'), false, 'empty-state control must not render')
+    // Rows carry NO testID — the a11y label IS the contact name (the invitation label).
+    const row = findByA11yLabel(ISSUER_CONTACT_LABEL)
+    await row.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+    await row.click()
+    await ContactDetailScreen.expectVisible(Timeouts.COLD_START) // its own agent gate
+    assert.equal(await ContactDetailScreen.isVisible('viewJson'), false, 'ViewJSON is developer-mode-only')
+  })
+
+  it('pins and unpins the contact from its details', async () => {
+    // One button whose id flips with the state — waiting for the other id IS the toggle assert.
+    await ContactDetailScreen.link('pin')
+    await ContactDetailScreen.waitFor('unpin', Timeouts.SCREEN_TRANSITION)
+    await ContactDetailScreen.link('unpin')
+    await ContactDetailScreen.waitFor('pin', Timeouts.SCREEN_TRANSITION)
+  })
+
+  it('receives an issuer-sent chat message', async () => {
+    // Chat SEND is not automatable (the composer has no testID and an empty a11y label) — RECEIVE is:
+    // the issuer pushes a basic message over the still-open connection and the bubble is plain text.
+    const probe = `e2e chat probe ${Date.now()}`
+    await sendBasicMessage(connectionId, probe)
+    await ContactDetailScreen.link('message')
+    await engine.waitForText(probe, Timeouts.DIDCOMM_DELIVERY)
+    await ContactChatScreen.back.tap() // → contact details
+    await ContactDetailScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  })
+
+  it('renames the contact and the list row carries the new name', async () => {
+    await ContactDetailScreen.link('editName')
+    await EditContactNameScreen.expectVisible(Timeouts.COLD_START) // agent-gated like the details
+    await EditContactNameScreen.fill('name', RENAMED_CONTACT_NAME) // replaces the pre-filled label
+    await EditContactNameScreen.tap('primary') // Continue → dispatches the alternate name, pops back
+    await ContactDetailScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await ContactDetailScreen.back.tap() // → contacts list
+    // The persist assert: the row's label (its only handle) now IS the new name.
+    const renamedRow = findByA11yLabel(RENAMED_CONTACT_NAME)
+    await renamedRow.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+  })
+
+  it('removes the contact and returns to the empty list', async () => {
+    // LAST in the block: removal deletes the records AND the connection — nothing DIDComm can follow.
+    const row = findByA11yLabel(RENAMED_CONTACT_NAME)
+    await row.click()
+    await ContactDetailScreen.expectVisible(Timeouts.COLD_START)
+    await ContactDetailScreen.link('remove')
+    await RemoveContactScreen.expectVisible(Timeouts.COLD_START) // modal, agent-gated; no header back
+    await RemoveContactScreen.tap('primary') // ConfirmRemove → pops to the list on success
+    // Empty proof mirrors the populated proof: the empty-state control is back. NB success
+    // popToTop()s to the tab root BEFORE re-pushing Contacts — this list sits directly over Home,
+    // so its back skips Settings.
+    await ContactsScreen.expectVisible(Timeouts.COLD_START)
+    await ContactsScreen.back.tap() // → Home (not Settings — see above)
+    await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 })
