@@ -1,19 +1,35 @@
-# Summary of Changes
+Closes #
 
-Replace this text with a high-level summary of the changes included in this PR.
+<!--
+Put the issue number on the line above, e.g. "Closes #1234". This is what links
+the PR to the issue: it puts the PR on the issue's timeline and shows the work
+on the board. A plain "#1234" somewhere in the body does not do this.
 
-# Testing Instructions
+No issue? Say why in the description (a chore, a dependency bump, a release).
+-->
 
-Replace this text with detailed instructions on how to test the changes included in this PR.
+## What changed
 
-# Acceptance Criteria
+<!--
+A couple of hundred words at most. What a reviewer needs to understand the diff,
+not the full history of the problem — that belongs in the issue.
+-->
 
-Replace this text with the acceptance criteria that must be met for this PR to be approved.
+## What should the reviewer focus on
 
-# Screenshots, videos, or gifs
+<!--
+The section that does the work. Point reviewers at the part you are least sure
+about, or tell them there isn't one. All of these are good answers:
 
-Replace this text with embedded media for UI changes if they are included in this PR. If there are none, simply enter N/A
+  - "Nothing tricky — this is a copy change, a quick skim is fine."
+  - "The retry logic in useEvidenceUpload; I'm not certain the cancel path
+     clears the timer."
+  - "iOS only. Android is untouched, so no need to check it."
+-->
 
-# Related Issues
+## How to test
 
-Replace this text with tagged issue #'s that are relevant to this PR. If there are none, simply enter N/A
+<!--
+Enough for someone who has not touched this area to check it themselves.
+"Covered by unit tests" is a complete answer when it's true.
+-->
