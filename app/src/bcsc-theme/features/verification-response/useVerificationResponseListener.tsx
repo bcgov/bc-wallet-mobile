@@ -3,6 +3,7 @@ import {
   useVerificationResponseService,
   VerificationResponseNavigationEvent,
 } from '@/bcsc-theme/features/verification-response'
+import { useEvidenceService } from '@/bcsc-theme/services/hooks/useEvidenceService'
 import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback, useEffect } from 'react'
@@ -28,7 +29,8 @@ import { useCallback, useEffect } from 'react'
 export const useVerificationResponseListener = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store, dispatch] = useStore<BCState>()
-  const { evidence, token } = useApi()
+  const { token } = useApi()
+  const evidenceService = useEvidenceService()
   const verificationResponseService = useVerificationResponseService()
 
   /**
@@ -52,7 +54,7 @@ export const useVerificationResponseListener = () => {
 
       // Check the verification request status (same as Check Status button)
       logger.info('[useVerificationResponseListener] Checking verification request status')
-      const { status, status_message } = await evidence.getVerificationRequestStatus(verificationRequestId)
+      const { status, status_message } = await evidenceService.getVerificationRequestStatus(verificationRequestId)
       logger.info(`[useVerificationResponseListener] Verification request status: ${status}`)
 
       if (status === 'verified') {
@@ -84,7 +86,7 @@ export const useVerificationResponseListener = () => {
       const message = error instanceof Error ? error.message : String(error)
       logger.error(`[useVerificationResponseListener] Failed to handle request reviewed: ${message}`)
     }
-  }, [logger, store.bcscSecure, evidence, token, dispatch])
+  }, [logger, store.bcscSecure, evidenceService, token, dispatch])
 
   /**
    * Route the event to the appropriate handler based on event type.

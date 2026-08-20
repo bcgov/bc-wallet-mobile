@@ -1,10 +1,13 @@
-import { getGlobalAlertMap } from '@/bcsc-theme/api/clientErrorPolicies'
-import useApi from '@/bcsc-theme/api/hooks/useApi'
+import BCSCApiClient from '@/bcsc-theme/api/client'
+import useEvidenceApi, { VerificationStatusResponseData } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useSecureActions } from '@/bcsc-theme/hooks/useSecureActions'
+import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { isAppError, isAxiosAppError } from '@/errors/appError'
-import { useAlerts } from '@/hooks/useAlerts'
+import { AppEventCode } from '@/events/appEventCode'
+import { showErrorAlert, useAlerts } from '@/hooks/useAlerts'
 import { TOKENS, useServices } from '@bifold/core'
-import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
+import { CommonActions, NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native'
 import { useCallback, useMemo } from 'react'
 
 /**
@@ -14,33 +17,40 @@ import { useCallback, useMemo } from 'react'
  * @returns Evidence service
  */
 export const useEvidenceService = () => {
-  const { evidence: evidenceApi } = useApi()
+  const { client } = useBCSCApiClientState()
+  const evidenceApi = useEvidenceApi(client as BCSCApiClient)
   const { updateVerificationRequest } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<NavigationProp<ParamListBase>>()
   const alerts = useAlerts(navigation)
 
   /**
-   * Emits an alert for Evidence-related errors based on the appEvent code.
+   * Handles errors from evidence API calls and emits the appropriate actions
    *
-   * @param error - The error object to evaluate for alert emission.
+   * @param error - The error object
    * @returns void
    */
-  const emitEvidenceAlert = useCallback(
-    (error: unknown) => {
-      if (!isAppError(error)) {
-        return
+  const handleEvidenceApiError = useCallback(
+    (error: unknown): void => {
+      if (isAxiosAppError(error, 401)) {
+        return navigation.dispatch(
+          CommonActions.navigate({
+            name: BCSCModals.VerificationSessionExpired,
+          })
+        )
       }
 
-      const globalAlertMap = getGlobalAlertMap(alerts)
-      const alertHandler = globalAlertMap.get(error.appEvent)
-
-      if (alertHandler) {
-        // If the error matches a known global alert, show that specific alert
-        alertHandler(error)
+      if (isAppError(error, AppEventCode.IOS_APP_UPDATE_REQUIRED)) {
+        return alerts.appUpdateRequiredAlert()
       }
+
+      if (isAppError(error, AppEventCode.ANDROID_APP_UPDATE_REQUIRED)) {
+        return alerts.appUpdateRequiredAlert()
+      }
+
+      showErrorAlert(error, alerts)
     },
-    [alerts]
+    [alerts, navigation]
   )
 
   /**
@@ -70,19 +80,53 @@ export const useEvidenceService = () => {
           return
         }
 
-        // For other errors, emit an alert and rethrow the error
-        emitEvidenceAlert(error)
+        // For other errors, handle them using the evidence error handler and rethrow
+        handleEvidenceApiError(error)
         throw error
       }
     },
-    [emitEvidenceAlert, evidenceApi, logger, updateVerificationRequest]
+    [handleEvidenceApiError, evidenceApi, logger, updateVerificationRequest]
+  )
+
+  /**
+   * Fetches the status of a verification request by its ID and handles errors appropriately.
+   * @param verificationRequestId - The ID of the verification request to check.
+   * @returns Promise resolving to the verification status response data.
+   */
+  const getVerificationRequestStatus = useCallback(
+    async (verificationRequestId: string): Promise<VerificationStatusResponseData> => {
+      try {
+        // TODO (MD): Drop the `skipOnErrorHandler` option once useEvidenceApi.getVerificationRequestStatus applies this by default
+        return await evidenceApi.getVerificationRequestStatus(verificationRequestId, { skipOnErrorHandler: true })
+      } catch (error) {
+        if (isAxiosAppError(error, 404)) {
+          // If the verification request is not found, it means it has already been deleted or does not exist.
+          logger.info(
+            `[useEvidenceService] Verification request not found for ID: ${verificationRequestId}. Expected resource already deleted. Handling as cancelled.`
+          )
+
+          await updateVerificationRequest(undefined, null)
+          // Return a default response indicating the request is cancelled
+          return {
+            id: verificationRequestId,
+            status: 'cancelled',
+          }
+        }
+
+        // For other errors, handle them using the evidence error handler and rethrow
+        handleEvidenceApiError(error)
+        throw error
+      }
+    },
+    [evidenceApi, handleEvidenceApiError, logger, updateVerificationRequest]
   )
 
   return useMemo(
     () => ({
       ...evidenceApi, // Spread the base API to include all its methods
       cancelVerificationRequest,
+      getVerificationRequestStatus,
     }),
-    [cancelVerificationRequest, evidenceApi]
+    [cancelVerificationRequest, evidenceApi, getVerificationRequestStatus]
   )
 }
