@@ -54,7 +54,7 @@ describe('Auth journey: unlock', () => {
     // PINInput as displayed. We do NOT tap the webview back — AuthStack sets no headerBackTestID, so
     // that button is not addressable — the next checkpoint's relaunchApp() recovers to AccountLanding.
     await EnterPINScreen.link('getHelp')
-    await expectWebViewOpen(Timeouts.SCREEN_TRANSITION)
+    await expectWebViewOpen({ timeout: Timeouts.SCREEN_TRANSITION })
   })
 
   it('rejects a wrong PIN inline and unlocks on retry', async () => {
