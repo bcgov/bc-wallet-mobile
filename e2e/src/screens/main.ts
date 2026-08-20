@@ -50,6 +50,8 @@ export const HomeNotificationCard = defineScreen({
   elements: {
     title: bcsc(main.notification.headerText),
     body: bcsc(main.notification.bodyText),
+    // The CTA's label is the ONLY field that separates Start from Continue (their titles match).
+    button: bcsc(main.notification.view),
   },
 })
 
@@ -91,10 +93,14 @@ export const ServicesScreen = defineScreen({
   inputs: {
     search: bcsc(main.services.search),
   },
+  links: {
+    clearSearch: bcsc(main.services.clearSearch), // renders only while the query is non-empty
+  },
   elements: {
     loading: bcsc(main.services.loading),
   },
 })
+// Catalogue ROWS are name-derived and iOS-flattened — selectors live in helpers/services.ts, not here.
 
 /**
  * QRCore — the bottom-tab navigator the scan FAB opens (Scanner / [Display, dev-mode only] /
@@ -142,21 +148,33 @@ export const SettingsScreen = defineScreen({
     appSecurity: bcsc(main.settings.appSecurity),
     changePin: bcsc(main.settings.changePin),
     autoLock: bcsc(main.settings.autoLock),
+    notifications: bcsc(main.settings.notifications), // → NotificationSettings (ON/OFF adornment has no id)
     analytics: bcsc(main.settings.analyticsOptIn),
     removeAccount: bcsc(main.settings.removeAccount),
-    help: bcsc(main.settings.help),
-    contactUs: bcsc(main.settings.contactUs),
+    help: bcsc(main.settings.help), // → in-app MainWebView (help centre)
+    contactUs: bcsc(main.settings.contactUs), // → in-app MainWebView (help-centre contact page)
     privacy: bcsc(main.settings.privacy),
     editProfile: bcsc(main.settings.editProfile), // verified-only (nickname pencil in the ProfileCard)
     forgetPairings: bcsc(main.settings.forgetPairings), // verified-only (isVisible spans links → absence assert still works)
     addDevice: bcsc(main.settings.addDevice), // verified-only (transferer QR entry — Main-stack settings only)
     contacts: bcsc(main.settings.contacts), // verified-only (Features row → Contacts list)
     profile: bcsc(main.settings.profile), // verified-only → AccountDetails; isVisible spans links, so the unverified absence-assert still holds
+    feedback: bcsc(main.settings.feedback), // external browser (helpers/browser-handoff.ts)
+    accessibility: bcsc(main.settings.accessibility), // external browser
+    termsOfUse: bcsc(main.settings.termsOfUse), // external browser
     myDevices: bcsc(main.settings.myDevices), // verified-only → in-app WebView (server-rendered device list)
     resetWallet: bcsc(main.settings.resetWallet), // always present → shared DestructiveConfirmationScreen
     developerMode: bcsc(main.settings.developerMode), // absent until developer mode is enabled
   },
 })
+
+/** Raw ids of the Settings rows whose ON/OFF/"N min" endAdornments have no testID of their own —
+ *  for a11y-level reads (`helpers/a11y.ts` rowShowsWord), which need the row's full id string. */
+export const SettingsRowIds = {
+  analytics: bcsc(main.settings.analyticsOptIn),
+  notifications: bcsc(main.settings.notifications),
+  autoLock: bcsc(main.settings.autoLock),
+} as const
 
 /** App Security (`MainChangeSecurity` → SecurityMethodSelector). `self` is the always-present
  *  `ChoosePINButton`; return via header `back`. */
@@ -196,17 +214,29 @@ export const AutoLockScreen = defineScreen({
   },
 })
 
+/** Notification settings, UNSET branch — rendered until the push prompt has EVER run (the journeys'
+ *  onboarding arrange skips it, so this is the deterministic entry state). `primary` (`enable`, an id
+ *  shared with the onboarding screen's button — different mounts) runs the OS prompt and re-renders
+ *  the SAME mount into the managed branch. */
+export const NotificationSettingsUnsetScreen = defineScreen({
+  self: bcsc(main.notificationSettings.enable),
+  primary: bcsc(main.notificationSettings.enable),
+  back: bcsc(common.back),
+})
+
+/** Notification settings, OS-MANAGED branch (prompt has run). `primary` (`openDeviceSettings`) leaves
+ *  the app for the OS settings — don't tap it in checkpoints. The ON/OFF status word has no testID;
+ *  assert the status row's a11y label ("Notifications are: on"/"…off") via helpers/a11y.ts. */
+export const NotificationSettingsManagedScreen = defineScreen({
+  self: bcsc(main.notificationSettings.openDeviceSettings),
+  primary: bcsc(main.notificationSettings.openDeviceSettings),
+  back: bcsc(common.back),
+})
+
 /** Main privacy screen. `self`/`learnMore` is the Learn More CardButton — assert it, then `back`
  *  (tapping it would navigate onward to a webview). */
 export const MainPrivacyPolicyScreen = defineScreen({
   self: bcsc(main.privacyPolicy.learnMore),
-  back: bcsc(common.back),
-})
-
-/** Contact Us. `self` is the toll-free-number link (its testID is derived from the visible number);
- *  return via `back`. */
-export const MainContactUsScreen = defineScreen({
-  self: bcsc(main.contactUs.tollFree),
   back: bcsc(common.back),
 })
 
@@ -227,8 +257,9 @@ export const ResetWalletConfirmScreen = defineScreen({
   back: bcsc(common.back),
 })
 
-/** The Main-stack in-app WebView (`MainWebView`, opened by the Settings Help row). No content testID;
- *  pop via the header `back` (mirrors the other stacks' webview descriptors). */
+/** The Main-stack in-app WebView (`MainWebView` — the Settings Help and Contact Us rows, Manage Devices,
+ *  the ServiceLogin help link). No content testIDs: prove arrival with `helpers/webview.ts`
+ *  expectWebViewOpen (native WebView + header title), then pop via the header `back`. */
 export const MainWebViewScreen = defineScreen({
   self: bcsc(common.back),
   back: bcsc(common.back),
@@ -267,6 +298,10 @@ export const ManualPairingScreen = defineScreen({
   inputs: {
     code: bcsc(main.pairing.manualCodeInput),
   },
+  elements: {
+    // Inline error under the code cells; a rejected code ALSO raises a native alert first.
+    codeError: bcsc(main.pairing.codeError),
+  },
 })
 
 /** Pairing confirmation (`PairingConfirmation`) — the shared success screen for the manual-code and
@@ -283,14 +318,38 @@ export const PairingConfirmationScreen = defineScreen({
   },
 })
 
-/** Service-login screen (`ServiceLogin`) — where a login deep link lands. `primary` (Continue) →
- *  PairingConfirmation; `secondary` (Cancel) returns to Home (the reliable exit on a cold-start deep
- *  link, which has no back stack). */
+/** Service-login screen (`ServiceLogin`), DEFAULT view — where deep links, FCM challenges, and
+ *  catalogue rows with a quick-login URI land. `primary` (Continue) → PairingConfirmation on a pairing
+ *  code, or the EXTERNAL browser + a nav reset to Home on quick login (helpers/browser-handoff.ts);
+ *  `secondary` (Cancel) returns to Home (the reliable exit on a cold-start deep link, which has no
+ *  back stack). `privacy` renders only when the service carries a policy_uri; `reportSuspicious` is
+ *  the WRAPPER text — its inner Link is RN-flattened, so it is assert-only, never tapped. */
 export const ServiceLoginScreen = defineScreen({
   self: bcsc(main.serviceLogin.continue),
   primary: bcsc(main.serviceLogin.continue),
   secondary: bcsc(main.serviceLogin.cancel),
   back: bcsc(common.back),
+  links: {
+    help: bcsc(main.serviceLogin.help), // in-app "what info is shared" webview
+    privacy: bcsc(main.serviceLogin.readPrivacyPolicy), // external browser
+  },
+  elements: {
+    reportSuspicious: bcsc(main.serviceLogin.reportSuspicious),
+  },
+})
+
+/** Service-login UNAVAILABLE view — rendered for a catalogue service with NO quick-login URI and no
+ *  pairing code in hand. `primary` (GoToServiceClient) opens the service's site in the EXTERNAL
+ *  browser and leaves this screen mounted; `secondary` is this view's own bare `Cancel` (a goBack —
+ *  NOT the default view's ServiceLoginCancel). `serviceClientLink` renders only with a client_uri. */
+export const ServiceLoginUnavailableScreen = defineScreen({
+  self: bcsc(main.serviceLogin.goToService),
+  primary: bcsc(main.serviceLogin.goToService),
+  secondary: bcsc(main.serviceLogin.cancelUnavailable),
+  back: bcsc(common.back),
+  elements: {
+    serviceClientLink: bcsc(main.serviceLogin.serviceClientLink),
+  },
 })
 
 /** Transfer QR information (`TransferAccountQRInformation`, verified-only, reached via Settings →
@@ -323,7 +382,8 @@ export const ContactsScreen = defineScreen({
   },
   elements: {
     loading: bcsc(main.contacts.loading),
-    search: bcsc(main.contacts.search),
+    search: bcsc(main.contacts.search), // renders only POPULATED — with whatAreContacts absent, the populated proof
+    clearSearch: bcsc(main.contacts.clearSearch), // renders only while the query is non-empty
   },
 })
 
@@ -333,6 +393,53 @@ export const ContactsScreen = defineScreen({
  *  (`findByText`) and returns via the header `back` (a real element), not the inline "Contacts list" link. */
 export const WhatAreContactsScreen = defineScreen({
   back: bcsc(common.back),
+})
+
+/** Contact details (`ContactDetailsScreen`, agent-gated) — reached by tapping a POPULATED contacts-list
+ *  row, which carries NO testID (select by a11y label = the contact name, helpers/a11y.ts). `pin` and
+ *  `unpin` are ONE button whose id flips with the pinned state — waiting for the flipped id IS the
+ *  toggle assert. `viewJson` is developer-mode-only, so normal runs assert its ABSENCE. */
+export const ContactDetailScreen = defineScreen({
+  self: bcsc(main.contactDetails.message),
+  back: bcsc(common.back),
+  links: {
+    message: bcsc(main.contactDetails.message),
+    pin: bcsc(main.contactDetails.pin),
+    unpin: bcsc(main.contactDetails.unpin),
+    editName: bcsc(main.contactDetails.editName),
+    remove: bcsc(main.contactDetails.remove),
+  },
+  elements: {
+    viewJson: bcsc(main.contactDetails.viewJson),
+    loading: bcsc(main.contactDetails.loading),
+  },
+})
+
+/** Contact chat (`ContactChatScreen`). Its composer has NO testID and an EMPTY a11y label, so sending
+ *  from the app is not automatable — the journey only asserts RECEIVED copy (issuer-sent basic
+ *  messages, by visible text) and leaves via the header back. */
+export const ContactChatScreen = defineScreen({
+  back: bcsc(common.back),
+})
+
+/** Edit-contact-name form (agent-gated). `primary`/`secondary` are label-derived by ActionScreenLayout
+ *  (`Continue`/`Cancel` in en). Saving dispatches the alternate name and pops back to the details. */
+export const EditContactNameScreen = defineScreen({
+  self: bcsc(main.contactEditName.nameInput),
+  primary: bcsc(main.contactEditName.save),
+  secondary: bcsc(main.contactEditName.cancel),
+  inputs: {
+    name: bcsc(main.contactEditName.nameInput),
+  },
+})
+
+/** Remove-contact confirmation — a MODAL with no header back (`headerLeft: null`): `secondary`
+ *  (CancelRemove) is the only non-destructive exit. `primary` deletes the contact's records and the
+ *  connection, then pops to the contacts list; its failure branch is an untestID'd native alert. */
+export const RemoveContactScreen = defineScreen({
+  self: bcsc(main.contactRemove.confirm),
+  primary: bcsc(main.contactRemove.confirm),
+  secondary: bcsc(main.contactRemove.cancel),
 })
 
 /** Account Details (`AccountDetailsScreen`, verified-only; reached from Settings → `profile`). Renders a
