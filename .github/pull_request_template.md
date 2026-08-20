@@ -5,7 +5,9 @@ Closes #
 
 ## What changed
 
-<!-- Enough context to read the diff. The backstory lives in the issue. -->
+<!-- Enough context to read the diff. The backstory lives in the issue.
+     Drop in a screenshot or a short video if it shows what changed or how
+     it's meant to work — often quicker than describing it. -->
 
 ## What should the reviewer focus on
 
