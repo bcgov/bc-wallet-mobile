@@ -1,5 +1,6 @@
 name: Feature request
 description: Suggest a new feature or an improvement to BCSC / BC Wallet.
+type: Feature
 body:
   - type: markdown
     attributes:

@@ -1,5 +1,6 @@
 name: General issue
 description: Help, questions, and everything that is not a bug report or a feature request.
+type: Task
 body:
   - type: textarea
     id: details
