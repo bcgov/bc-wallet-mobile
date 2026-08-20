@@ -7,7 +7,6 @@ import {
   AutoLockScreen,
   ChangePinScreen,
   HomeScreen,
-  MainContactUsScreen,
   MainPrivacyPolicyScreen,
   MainWebViewScreen,
   RemoveAccountConfirmScreen,
@@ -31,7 +30,8 @@ import { OnboardingIntroScreen } from '../../../src/screens/onboarding.js'
  * ⚠️ First-run notes (confirm on Sauce):
  *   - Change-PIN sets the app PIN to `UPDATED_TEST_PIN`; the re-fill of the confirm field after the
  *     mismatch assumes `fill` replaces (PIN inputs may auto-submit at 6 digits — tune if it appends).
- *   - Contact Us anchors on the toll-free-number testID (i18n-derived); confirm it resolves on device.
+ *   - Contact Us now opens the in-app WebView (bare, no content testID) like Help; confirm the handoff
+ *     pause is long enough on device.
  *   - Remove-account confirm factory-resets to the onboarding Intro — confirm the post-reset landing.
  *   - Auto-lock inactivity expiry sits idle ~66s (1-min timeout + margin; newCommandTimeout is 180s),
  *     then re-unlocks with `UPDATED_TEST_PIN` — the slowest checkpoint. It assumes the inactivity
@@ -75,10 +75,10 @@ describe('Main journey: settings', () => {
     await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 
-  it('opens Contact Us and returns', async () => {
+  it('opens the Contact Us webview and returns', async () => {
     await SettingsScreen.link('contactUs')
-    await MainContactUsScreen.expectVisible(Timeouts.SCREEN_TRANSITION) // toll-free link testID
-    await MainContactUsScreen.back.tap()
+    await driver.pause(Timeouts.BROWSER_HANDOFF_PAUSE_MS) // bare WebView, no content testID
+    await MainWebViewScreen.back.tap()
     await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 

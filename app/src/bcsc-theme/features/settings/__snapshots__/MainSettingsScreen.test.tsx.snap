@@ -420,11 +420,33 @@ exports[`MainSettings renders correctly 1`] = `
                             },
                             {
                               "color": "#FFFFFF",
+                              "flex": 1,
                             },
                           ]
                         }
                       >
                         BCSC.Settings.GiveFeedback
+                      </Text>
+                      <Text
+                        allowFontScaling={false}
+                        selectable={false}
+                        style={
+                          [
+                            {
+                              "color": "#FFFFFF",
+                              "fontSize": 20,
+                            },
+                            undefined,
+                            {
+                              "fontFamily": "Material Design Icons",
+                              "fontStyle": "normal",
+                              "fontWeight": "normal",
+                            },
+                            {},
+                          ]
+                        }
+                      >
+                        󰏌
                       </Text>
                     </View>
                   </View>
@@ -666,11 +688,33 @@ exports[`MainSettings renders correctly 1`] = `
                             },
                             {
                               "color": "#FFFFFF",
+                              "flex": 1,
                             },
                           ]
                         }
                       >
                         BCSC.Settings.Accessibility
+                      </Text>
+                      <Text
+                        allowFontScaling={false}
+                        selectable={false}
+                        style={
+                          [
+                            {
+                              "color": "#FFFFFF",
+                              "fontSize": 20,
+                            },
+                            undefined,
+                            {
+                              "fontFamily": "Material Design Icons",
+                              "fontStyle": "normal",
+                              "fontWeight": "normal",
+                            },
+                            {},
+                          ]
+                        }
+                      >
+                        󰏌
                       </Text>
                     </View>
                   </View>
@@ -738,11 +782,33 @@ exports[`MainSettings renders correctly 1`] = `
                             },
                             {
                               "color": "#FFFFFF",
+                              "flex": 1,
                             },
                           ]
                         }
                       >
                         BCSC.Settings.TermsOfUse
+                      </Text>
+                      <Text
+                        allowFontScaling={false}
+                        selectable={false}
+                        style={
+                          [
+                            {
+                              "color": "#FFFFFF",
+                              "fontSize": 20,
+                            },
+                            undefined,
+                            {
+                              "fontFamily": "Material Design Icons",
+                              "fontStyle": "normal",
+                              "fontWeight": "normal",
+                            },
+                            {},
+                          ]
+                        }
+                      >
+                        󰏌
                       </Text>
                     </View>
                   </View>

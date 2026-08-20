@@ -1,4 +1,3 @@
-import { WALLET_LEARN_MORE_URL } from '@/constants'
 import { openLink } from '@/utils/links'
 import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
@@ -52,6 +51,6 @@ describe('EmptyWalletList', () => {
 
     fireEvent.press(learnMoreTile)
 
-    expect(openLink).toHaveBeenCalledWith(WALLET_LEARN_MORE_URL)
+    expect(openLink).toHaveBeenCalledWith('https://id.gov.bc.ca/static/help/topics.html')
   })
 })

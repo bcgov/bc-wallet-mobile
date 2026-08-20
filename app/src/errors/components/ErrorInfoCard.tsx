@@ -1,5 +1,5 @@
 import { PressableOpacity } from '@/components/PressableOpacity'
-import { CONTACT_US_GOVERNMENT_WEBSITE_URL, hitSlop } from '@/constants'
+import { CONTACT_US_HELP_URL, hitSlop } from '@/constants'
 import { testIdWithKey } from '@bifold/core'
 import Clipboard from '@react-native-clipboard/clipboard'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
@@ -205,7 +205,7 @@ export const ErrorInfoCard: React.FC<ErrorInfoCardProps> = ({
                 style={styles.noteLink}
                 accessibilityRole="link"
                 testID={testIdWithKey('SupportLink')}
-                onPress={() => Linking.openURL(CONTACT_US_GOVERNMENT_WEBSITE_URL)}
+                onPress={() => Linking.openURL(CONTACT_US_HELP_URL)}
               >
                 {t('Error.SupportLink')}
               </Text>
