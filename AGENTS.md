@@ -277,12 +277,12 @@ These files are sourced in shell contexts (e.g., GitHub Actions `source variant.
 
 When drafting a PR description, follow `.github/pull_request_template.md`:
 
-- Put `Closes #<issue>` on the first line. A bare `#123` elsewhere in the body does not create a link GitHub tracks. If there is no issue, say why in the description.
-- **What changed** — a couple of hundred words at most. Enough to understand the diff; the problem's history belongs in the issue.
-- **What should the reviewer focus on** — name the part you are least certain about, or state plainly that there isn't one. "Nothing tricky, this is a copy change" is a complete answer.
-- **How to test** — enough for someone who has not touched this area. "Covered by unit tests" is complete when true.
+- `Closes #<issue>` on the first line — that is what links the PR to the board. A bare `#123` further down does not.
+- **What changed** — enough context to read the diff. The backstory lives in the issue.
+- **What should the reviewer focus on** — point at the scary bit, or say there isn't one.
+- **How to test** — how someone else checks it. "Covered by unit tests" counts.
 
-Do not restate acceptance criteria from the issue, and do not pad a section to look thorough. A short PR description is a good one.
+Keep it short. Don't restate the issue's acceptance criteria, and don't pad a section to look thorough.
 
 ## Code Review Priorities
 
