@@ -1,0 +1,12 @@
+name: General issue
+description: Help, questions, and everything that is not a bug report or a feature request.
+body:
+  - type: textarea
+    id: details
+    attributes:
+      label: What would you like to raise?
+      description: >-
+        Tell us what is on your mind. If you are stuck on something, include
+        what you have already tried and any log output or screenshots.
+    validations:
+      required: true
