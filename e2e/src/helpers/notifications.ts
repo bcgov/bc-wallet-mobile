@@ -41,12 +41,20 @@ export const CUSTOM_CARD_COPY = {
     body: 'Complete the verification process at anytime.',
     button: 'Continue',
   },
+  /** SEND-VIDEO ONLY. `useCustomNotifications` renders this card on `verificationRequestStatus ===
+   *  'verified'`, which only the review path writes (the push listener, plus a system check gated on
+   *  NOT-yet-verified). In-person verification walks through VerificationSuccess inline and leaves
+   *  Home with NO custom card — see {@link EMPTY_NOTIFICATION_COPY}. */
   verified: {
     title: 'Your identity has been verified',
     body: 'Complete the verification process.',
     button: 'Finish up',
   },
 } as const
+
+/** Home's empty state (`Notification.EmptyNotification.Title`, en). `NotificationsList` renders it
+ *  only when BOTH the custom and credential lists are empty, so it is a positive "no cards" proof. */
+export const EMPTY_NOTIFICATION_COPY = 'You have no new notifications'
 
 const LIST_ITEM_TEST_ID = `${TESTID_PREFIX}${TestIds.main.notification.item}`
 
