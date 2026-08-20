@@ -6,6 +6,7 @@ import remoteConfigJSON from './prod-remote-config.json'
 
 const REMOTE_CONFIG_STORAGE_KEY = 'remoteConfigCache'
 const REMOTE_CONFIG_CACHE_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
+const REMOTE_CONFIG_TIMEOUT_MS = 5 * 1000 // 5 seconds
 const OBJECT_STORAGE_SERVER_ENDPOINT = 'https://idim.objectstore.gov.bc.ca'
 const OBJECT_STORAGE_REMOTE_CONFIG_BUCKET_NAME = 'bcsc-mobile-prod-remote-configuration'
 const OBJECT_STORAGE_REMOTE_CONFIG_FILE_NAME = 'prod-remote-config.json'
@@ -27,7 +28,7 @@ export const RemoteConfigSchema = z.looseObject({
   }),
 })
 
-// StrictRemoteConfigSchema is used to validate the bundled default remote config JSON file
+// StrictRemoteConfigSchema is used to validate the bundled JSON file (prod-remote-config.json)
 const StrictRemoteConfigSchema = z.strictObject({
   featureFlags: z.strictObject({
     'debug.testFeature': z.boolean(),
@@ -99,12 +100,12 @@ export async function getCachedRemoteConfig(logger: RemoteLogger): Promise<Remot
 export async function fetchRemoteConfig(logger: RemoteLogger): Promise<RemoteConfig | null> {
   try {
     logger.info('[RemoteConfig] Fetching remote config from object storage.', { url: OBJECT_STORAGE_REMOTE_CONFIG_URL })
-    const response = await axios.get(OBJECT_STORAGE_REMOTE_CONFIG_URL)
+    const response = await axios.get(OBJECT_STORAGE_REMOTE_CONFIG_URL, { timeout: REMOTE_CONFIG_TIMEOUT_MS })
 
     const result = RemoteConfigSchema.safeParse(response.data)
 
     if (!result.success) {
-      logger.error('[RemoteConfig] Object storage remote config is invalid.', { error: result.error.message })
+      logger.error('[RemoteConfig] Remote config is invalid.', { error: result.error.message })
       return null
     }
 
