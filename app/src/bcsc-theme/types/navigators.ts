@@ -105,7 +105,6 @@ export enum BCSCScreens {
   OnboardingSettings = `${BCSCStacks.Onboarding} In App Settings`,
   OnboardingSetupTypes = 'Setup Options',
   OnboardingIntro = 'Intro',
-  OnboardingContactUs = `${BCSCStacks.Onboarding} Contact Us`,
   OnboardingPrivacyPolicy = `${BCSCStacks.Onboarding} Privacy Information`,
   OnboardingPrivacyInformation = `${BCSCStacks.Onboarding} Settings Privacy Information`,
   OnboardingTermsOfUse = 'Terms of Use Screen',
@@ -121,7 +120,6 @@ export enum BCSCScreens {
   MainLoading = `${BCSCStacks.Main} Loading`,
   MainSettings = `${BCSCStacks.Main} In App Settings`,
   MainWebView = `${BCSCStacks.Main} Web view`,
-  MainContactUs = `${BCSCStacks.Main} Contact Us`,
   MainPrivacyPolicy = `${BCSCStacks.Main} Privacy Information`,
   MainDeveloper = `${BCSCStacks.Main} Developer`,
   MainAutoLock = 'BCSCMainAutoLock',
@@ -133,7 +131,6 @@ export enum BCSCScreens {
   VerifyAutoLock = 'BCSCVerifyAutoLock',
   VerifyNotificationSettings = 'BCSCVerifyNotificationSettings',
   VerifyAppSecurity = `${BCSCStacks.Verify} App Security Setting`,
-  VerifyContactUs = `${BCSCStacks.Verify} Contact Us`,
   VerifyPrivacyPolicy = `${BCSCStacks.Verify} Privacy Information`,
   VerifyDeveloper = `${BCSCStacks.Verify} Developer`,
   VerifyChangePIN = `${BCSCStacks.Verify} Change PIN`,
@@ -151,7 +148,6 @@ export enum BCSCScreens {
   DeviceAuthAppReset = 'App Reset for Security',
   AuthSettings = `${BCSCStacks.Auth} In App Settings`,
   AuthWebView = `${BCSCStacks.Auth} Web view`,
-  AuthContactUs = `${BCSCStacks.Auth} Contact Us`,
   AuthPrivacyPolicy = `${BCSCStacks.Auth} Privacy Information`,
   AuthDeveloper = `${BCSCStacks.Auth} Developer`,
   ConnectionLoading = 'BCSCConnectionLoading',
@@ -177,7 +173,6 @@ export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingWebView]: { url: string; title: string }
   [BCSCScreens.OnboardingSetupTypes]: undefined
   [BCSCScreens.OnboardingIntro]: undefined
-  [BCSCScreens.OnboardingContactUs]: undefined
   [BCSCScreens.OnboardingPrivacyPolicy]: undefined
   [BCSCScreens.OnboardingPrivacyInformation]: undefined
   [BCSCScreens.OnboardingTermsOfUse]: undefined
@@ -244,7 +239,6 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.ResidentialAddress]: undefined
   [BCSCScreens.VerifySettings]: undefined
   [BCSCScreens.VerifyPrivacyPolicy]: undefined
-  [BCSCScreens.VerifyContactUs]: undefined
   [BCSCScreens.VerifyDeveloper]: undefined
   [BCSCScreens.VerifyAutoLock]: undefined
   [BCSCScreens.VerifyNotificationSettings]: undefined
@@ -283,7 +277,6 @@ export type BCSCMainStackParams = {
   }
   [BCSCScreens.MainSettings]: undefined
   [BCSCScreens.MainPrivacyPolicy]: undefined
-  [BCSCScreens.MainContactUs]: undefined
   [BCSCScreens.ForgetAllPairings]: undefined
   [BCSCScreens.EditNickname]: undefined
   [BCSCScreens.AccountDetails]: undefined
@@ -333,7 +326,6 @@ export type BCSCAuthStackParams = {
   [BCSCScreens.DeviceAuthAppReset]: undefined
   [BCSCScreens.AuthSettings]: undefined
   [BCSCScreens.AuthWebView]: { url: string; title: string }
-  [BCSCScreens.AuthContactUs]: undefined
   [BCSCScreens.AuthPrivacyPolicy]: undefined
   [BCSCScreens.AuthDeveloper]: undefined
 

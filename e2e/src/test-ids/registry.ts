@@ -478,11 +478,6 @@ export const TestIds = {
     privacyPolicy: {
       learnMore: 'LearnMore',
     },
-    /** Contact Us — its `Link`s auto-derive testIDs from their visible text; the toll-free number is
-     *  the arrival marker (the running app uses the resolved i18n value). */
-    contactUs: {
-      tollFree: '1-888-356-2741',
-    },
     /** Remove-account confirmation (shared DestructiveConfirmationScreen; header Back = cancel).
      *  `ConfirmDestructiveAction` is also used by Reset Wallet, but is only reached via RemoveAccount here. */
     removeAccount: {

@@ -203,13 +203,6 @@ export const MainPrivacyPolicyScreen = defineScreen({
   back: bcsc(common.back),
 })
 
-/** Contact Us. `self` is the toll-free-number link (its testID is derived from the visible number);
- *  return via `back`. */
-export const MainContactUsScreen = defineScreen({
-  self: bcsc(main.contactUs.tollFree),
-  back: bcsc(common.back),
-})
-
 /** Remove-account confirmation (shared DestructiveConfirmationScreen). `primary`
  *  (`ConfirmDestructiveAction`) runs the factory reset; header `back` is the cancel affordance. */
 export const RemoveAccountConfirmScreen = defineScreen({
