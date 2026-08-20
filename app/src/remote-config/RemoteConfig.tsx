@@ -50,7 +50,7 @@ const RemoteConfigContext = createContext<RemoteConfigContextType | null>(null)
  */
 export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
   const [loading, setLoading] = useState(true)
-  const [remoteConfig, setRemoteConfigState] = useState<RemoteConfig>(REMOTE_CONFIG_CACHE)
+  const [remoteConfigState, setRemoteConfigState] = useState<RemoteConfig>(REMOTE_CONFIG_CACHE)
   const initializedRef = useRef(false)
 
   /**
@@ -74,9 +74,9 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
    */
   const getValue = useCallback(
     <T extends keyof RemoteConfig>(key: T): RemoteConfig[T] => {
-      return remoteConfig[key]
+      return remoteConfigState[key]
     },
-    [remoteConfig]
+    [remoteConfigState]
   )
 
   /**
@@ -89,11 +89,11 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
   const setValue = useCallback(
     <T extends keyof RemoteConfig>(key: T, value: RemoteConfig[T]) => {
       setRemoteConfig({
-        ...remoteConfig,
+        ...remoteConfigState,
         [key]: value,
       })
     },
-    [remoteConfig, setRemoteConfig]
+    [remoteConfigState, setRemoteConfig]
   )
 
   /**
