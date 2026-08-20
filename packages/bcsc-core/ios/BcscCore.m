@@ -40,6 +40,8 @@ RCT_EXTERN_METHOD(getDeviceId : (RCTPromiseResolveBlock)resolve reject : (RCTPro
 
 RCT_EXTERN_METHOD(removeAccount : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(clearAllKeychainData : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(getRefreshTokenRequestBody : (NSString *)issuer clientID : (NSString *)clientID refreshToken : (
     NSString *)refreshToken resolve : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 

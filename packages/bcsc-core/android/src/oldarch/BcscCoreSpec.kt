@@ -114,6 +114,8 @@ abstract class BcscCoreSpec internal constructor(
 
     abstract fun removeAccount(promise: Promise)
 
+    abstract fun clearAllKeychainData(promise: Promise)
+
     // PIN Authentication Methods
     abstract fun setPIN(
         pin: String,

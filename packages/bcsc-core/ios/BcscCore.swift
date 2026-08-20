@@ -288,24 +288,14 @@ class BcscCore: NSObject {
     }
   }
 
-  private func clearKeychain() {
-    let secItemClasses = [
-      kSecClassGenericPassword,
-      kSecClassInternetPassword,
-      kSecClassCertificate,
-      kSecClassKey,
-      kSecClassIdentity,
-    ]
-
-    for itemClass in secItemClasses {
-      let query: [String: Any] = [
-        kSecClass as String: itemClass,
-        kSecAttrSynchronizable as String: kSecAttrSynchronizableAny, // Important for iCloud Keychain items
-      ]
-      SecItemDelete(query as CFDictionary)
-    }
-
+  /// Deletes every Keychain item belonging to this app (all Sec item classes). Used by the
+  /// factory reset flow to ensure no stale tokens/keys/PIN secrets survive an app reinstall
+  func clearAllKeychainData(
+    _ resolve: @escaping RCTPromiseResolveBlock, reject _: @escaping RCTPromiseRejectBlock
+  ) {
+    KeychainClearingService().clearAll()
     logger.log("Keychain cleared for this app.")
+    resolve(nil)
   }
 
   // MARK: - Public Methods
@@ -1123,8 +1113,6 @@ class BcscCore: NSObject {
     let accountSecurityMethod: AccountSecurityMethod? = nil
     let keyPair: (public: SecKey, private: SecKey)
     let keyId: String
-
-    //    clearKeychain()
 
     if let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first {
       // Use existing latest key

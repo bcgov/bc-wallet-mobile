@@ -654,6 +654,14 @@ export const removeAccount = async (): Promise<void> => {
   return BcscCore.removeAccount();
 };
 
+/**
+ * Deletes all locally stored keychain data
+ * @returns A promise that resolves when the work is done
+ */
+export const clearAllKeychainData = async (): Promise<void> => {
+  return BcscCore.clearAllKeychainData();
+};
+
 // MARK: - Authentication Methods
 
 // Export authentication types

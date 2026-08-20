@@ -107,6 +107,7 @@ export const setAccount = jest.fn().mockResolvedValue(undefined)
 export const getAccount = jest.fn().mockResolvedValue(null)
 export const isAccountRegistered = jest.fn((account: { clientID?: string } | null) => Boolean(account?.clientID))
 export const removeAccount = jest.fn().mockResolvedValue(undefined)
+export const clearAllKeychainData = jest.fn().mockResolvedValue(undefined)
 export const getDeviceId = jest.fn().mockResolvedValue('mock-device-id')
 
 // Request Body Construction
