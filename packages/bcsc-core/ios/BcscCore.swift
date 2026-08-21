@@ -442,6 +442,79 @@ class BcscCore: NSObject {
     }
   }
 
+  /**
+   * Generate a new signing keypair under a freshly incremented alias and return its public
+   * RSA components, for the JS-side key-rotation flow (issue #3876).
+   *
+   * IMPORTANT side effect: iOS activation is implicitly newest-by-`kSecAttrCreationDate` (see
+   * `signJWT`/`getDynamicClientRegistrationBody`, both of which sort keys and pick the latest) —
+   * generating a key here switches signing to it immediately, before any server confirmation.
+   * The JS caller is responsible for registering the new key or rolling back via `deleteKey`.
+   *
+   * Reuses the same private `generateKeyPair()` alias-increment logic as the DCR self-heal
+   * path, and the same RSA-component derivation as `getAllKeysWithPublicInfo`.
+   */
+  @objc(createNewKeyPair:reject:)
+  func createNewKeyPair(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    let keyPairManager = KeyPairManager()
+    let newKeyId: String
+    do {
+      newKeyId = try generateKeyPair()
+    } catch let KeychainError.keychainUnavailable(status) {
+      reject(
+        "E_120_KEYCHAIN_UNAVAILABLE_ERROR",
+        "Keychain temporarily unavailable while generating new key pair (OSStatus \(status))",
+        KeychainError.keychainUnavailable(status)
+      )
+      return
+    } catch {
+      reject(
+        "E_120_KEYCHAIN_KEY_GENERATION_ERROR",
+        "Failed to generate new key pair: \(error.localizedDescription)",
+        error
+      )
+      return
+    }
+
+    do {
+      let keyPair = try keyPairManager.getKeyPair(with: newKeyId)
+      guard let keyData = RSAUtil.secKeyRefToData(inputKey: keyPair.public),
+            let (modulus, exponent) = RSAUtil.splitIntoComponents(keyData: keyData)
+      else {
+        reject(
+          "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
+          "Generated new key '\(newKeyId)' but could not extract its RSA components",
+          nil
+        )
+        return
+      }
+      let keys = try? keyPairManager.findAllPrivateKeys()
+      let created = keys?.first(where: { $0.tag == newKeyId })?.created.timeIntervalSince1970
+        ?? Date().timeIntervalSince1970
+      resolve([
+        "id": newKeyId,
+        "created": created,
+        "n": modulus.base64EncodedString(),
+        "e": exponent.base64EncodedString(),
+      ])
+    } catch let KeychainError.keychainUnavailable(status) {
+      reject(
+        "E_120_KEYCHAIN_UNAVAILABLE_ERROR",
+        "Keychain temporarily unavailable while retrieving newly generated key '\(newKeyId)' (OSStatus \(status))",
+        KeychainError.keychainUnavailable(status)
+      )
+    } catch {
+      reject(
+        "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
+        "Failed to retrieve newly generated key pair '\(newKeyId)': \(error.localizedDescription)",
+        error
+      )
+    }
+  }
+
   func getKeyPair(
     _ label: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock

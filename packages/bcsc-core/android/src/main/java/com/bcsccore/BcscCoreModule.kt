@@ -395,6 +395,48 @@ class BcscCoreModule(
         }
     }
 
+    /**
+     * Generate a new signing keypair under a freshly incremented alias and return its public
+     * RSA components, for the JS-side key-rotation flow (issue #3876).
+     *
+     * IMPORTANT side effect: [BcscKeyPairSource.getNewBcscKeyPair] stamps the new alias'
+     * `createdAt` to now, so [BcscKeyPairSource.getCurrentBcscKeyPair] (newest-by-`createdAt`)
+     * picks it up as the active signing key immediately — there is no separate "activate" step.
+     * The JS caller is responsible for registering the new key with the server or rolling back
+     * via [deleteKey].
+     *
+     * Reuses [BcscKeyPairSource.convertBcscKeyPairToJWK] so the n/e encoding matches what
+     * registration actually sends (Nimbus canonical unsigned base64url).
+     */
+    @ReactMethod
+    fun createNewKeyPair(promise: Promise) {
+        try {
+            if (!keyPairSource.isAvailable()) {
+                promise.reject("E_KEYSTORE_UNAVAILABLE", "Android KeyStore is not available on this device")
+                return
+            }
+            val bcscKeyPair = keyPairSource.getNewBcscKeyPair()
+            val jwk = keyPairSource.convertBcscKeyPairToJWK(bcscKeyPair)
+            if (jwk !is RSAKey) {
+                promise.reject(
+                    "E_KEYSTORE_ERROR",
+                    "Newly generated key '${bcscKeyPair.getKeyInfo().getAlias()}' is not an RSA key",
+                )
+                return
+            }
+            val entry: WritableMap = Arguments.createMap()
+            entry.putString("id", bcscKeyPair.getKeyInfo().getAlias())
+            entry.putDouble("created", bcscKeyPair.getKeyInfo().getCreatedAt().toDouble())
+            entry.putString("n", jwk.modulus.toString())
+            entry.putString("e", jwk.publicExponent.toString())
+            promise.resolve(entry)
+        } catch (e: BcscException) {
+            promise.reject("E_KEYSTORE_ERROR", "Error generating new key pair: ${e.devMessage}", e)
+        } catch (e: Exception) {
+            promise.reject("E_KEYSTORE_ERROR", "Unexpected error generating new key pair: ${e.message}", e)
+        }
+    }
+
     @ReactMethod
     override fun getToken(
         tokenType: Int,
