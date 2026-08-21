@@ -3,6 +3,9 @@ name: Code Quality
 on:
   push:
     branches: [main] # needed so codecov gets BASE coverage for comparison
+    paths-ignore:
+      - CHANGELOG.md
+      - .changes/**
   pull_request:
     branches: [main, 'release/**']
     types: [opened, synchronize, reopened, labeled]
@@ -173,3 +176,31 @@ jobs:
       - name: Run Android tests
         working-directory: packages/bcsc-core/android
         run: ./gradlew test
+
+  changelog-entry:
+    name: Changelog Entry
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    # Also runs on merge_group (required for ALLGREEN grouping in the merge
+    # queue) but short-circuits to success there: PR labels aren't queryable
+    # on merge_group, and a queued PR already passed this check as a
+    # pull_request run before it could be queued.
+    if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+    steps:
+      - uses: actions/checkout@v7
+        if: github.event_name == 'pull_request'
+        with:
+          fetch-depth: 0
+
+      - name: Verify a .changes/*.md file was added
+        if: >-
+          github.event_name == 'pull_request' &&
+          !contains(github.event.pull_request.labels.*.name, 'skip-changelog')
+        run: |
+          added=$(git diff --diff-filter=A --name-only "origin/${GITHUB_BASE_REF}"...HEAD -- '.changes/*.md')
+          if [ -z "$added" ]; then
+            echo "::error::No .changes/*.md file added in this PR. Add one describing your change for a non-technical reader (see CONTRIBUTING.md), or apply the 'skip-changelog' label if this PR doesn't need one."
+            exit 1
+          fi
+          echo "Found changelog entry: $added"
