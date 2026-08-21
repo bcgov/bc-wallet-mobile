@@ -196,11 +196,11 @@ jobs:
       - name: Verify a .changes/*.md file was added
         if: >-
           github.event_name == 'pull_request' &&
-          !contains(github.event.pull_request.labels.*.name, 'skip-changelog')
+          !contains(github.event.pull_request.labels.*.name, 'status/skip-changelog')
         run: |
           added=$(git diff --diff-filter=A --name-only "origin/${GITHUB_BASE_REF}"...HEAD -- '.changes/*.md')
           if [ -z "$added" ]; then
-            echo "::error::No .changes/*.md file added in this PR. Add one describing your change for a non-technical reader (see CONTRIBUTING.md), or apply the 'skip-changelog' label if this PR doesn't need one."
+            echo "::error::No .changes/*.md file added in this PR. Add one describing your change for a non-technical reader (see CONTRIBUTING.md), or apply the 'status/skip-changelog' label if this PR doesn't need one."
             exit 1
           fi
           echo "Found changelog entry: $added"

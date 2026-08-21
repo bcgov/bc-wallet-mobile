@@ -24,6 +24,6 @@ Fixed the card list scrolling past the last item on smaller screens.
 
 - `type` must be one of `added`, `changed`, `fixed`, `removed`. (This is a different, smaller vocabulary than the commit-message `type` enforced by `commitlint.config.js` — the two aren't related.)
 - The body is prose written for a non-technical reader — QA, product, support — not a commit-message-style one-liner. Describe what changed from a user's point of view, not which files moved.
-- CI fails a PR that adds no `.changes/*.md` file. If your PR genuinely doesn't need one (a dependency bump, a CI-only tweak), apply the `skip-changelog` label instead of writing a throwaway entry.
+- CI fails a PR that adds no `.changes/*.md` file. If your PR genuinely doesn't need one (a dependency bump, a CI-only tweak), apply the `status/skip-changelog` label instead of writing a throwaway entry.
 
 At release time, pending entries are folded into `CHANGELOG.md` and the consumed `.changes/*.md` files are deleted automatically — you don't need to touch `CHANGELOG.md` yourself.
