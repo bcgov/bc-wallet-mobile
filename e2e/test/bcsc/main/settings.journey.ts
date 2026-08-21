@@ -241,9 +241,9 @@ describe('Main journey: settings', () => {
     await TabBar.link('wallet')
     await WalletScreen.expectVisible(Timeouts.COLD_START)
     await TabBar.link('home')
-    await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-    await HomeScreen.tap('menu') // leave the journey where the terminal checkpoint expects it: Settings
-    await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    // Home's FAB `self` renders on the Wallet tab too, so it cannot prove the switch — tap THROUGH to
+    // Settings, leaving the journey where the terminal checkpoint expects it.
+    await HomeScreen.tapToReach('menu', SettingsScreen)
   })
 
   it('removes the account (terminal) and returns to onboarding', async () => {

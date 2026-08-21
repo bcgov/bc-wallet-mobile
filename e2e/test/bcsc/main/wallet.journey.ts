@@ -221,9 +221,9 @@ describe('Wallet journey: DIDComm credential lifecycle', () => {
 
   it('opens the populated Contacts list and the issuer contact', async () => {
     await TabBar.link('home')
-    await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-    await HomeScreen.tap('menu')
-    await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    // Home's FAB `self` renders on the Wallet tab too, so it cannot prove the switch — tap THROUGH
+    // to Settings, which waits on the Home-only menu button and re-fires a press the switch swallowed.
+    await HomeScreen.tapToReach('menu', SettingsScreen)
     await SettingsScreen.link('contacts') // NOT verified-gated — Main settings always wires the row
     // Populated proof: the search field renders ONLY with rows, the empty-state control only without
     // (they are mutually exclusive); the agent gate re-runs on entry, so allow the big budget.
