@@ -36,7 +36,7 @@ jobs:
             const fail = async (problems) => {
               const list = problems.map((p) => `- ${p}`).join('\n')
               await core.summary
-                .addRaw(`❌ **PR hygiene**\n\n${list}\n\n<sub>Escape hatches: the \`status/no-issue\` label, or a \`chore:\`/\`build:\`/\`docs:\`/\`release:\` title.</sub>`)
+                .addRaw(`❌ **PR hygiene**\n\n${list}\n\n<sub>No issue to link? Add the \`status/no-issue\` label.</sub>`)
                 .write()
               core.setFailed(problems.join(' | '))
             }
@@ -53,8 +53,10 @@ jobs:
               if (labels.includes(skip)) return pass(`\`${skip}\` label`)
             }
 
-            // Conventional-commit prefixes for work that legitimately has no issue.
-            if (/^(chore|build|docs|release)(\([^)]*\))?!?:/i.test(pr.title)) {
+            // Prefixes for work that structurally cannot have an issue. `chore:` is
+            // deliberately NOT here — it exempted ~19% of merged PRs on a self-declared
+            // title nobody verifies, so chores use the `status/no-issue` label instead.
+            if (/^(build|docs|release)(\([^)]*\))?!?:/i.test(pr.title)) {
               return pass('title prefix exempts it')
             }
 
