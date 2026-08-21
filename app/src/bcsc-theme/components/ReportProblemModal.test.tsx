@@ -36,6 +36,17 @@ describe('ReportProblemModal', () => {
     expect(tree.toJSON()).toMatchSnapshot()
   })
 
+  it('opens the contact-us help page when the Support link is pressed', () => {
+    const { getByText } = renderModal()
+    const { Linking } = jest.requireActual('react-native')
+    const spy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never)
+
+    fireEvent.press(getByText('BCSC.ReportProblem.SupportLink'))
+
+    expect(spy).toHaveBeenCalledWith('https://id.gov.bc.ca/static/help/contact-us.html')
+    spy.mockRestore()
+  })
+
   it('submits the report and shows the returned report ID when "Send report" is pressed', () => {
     const onClose = jest.fn()
     const { getByTestId, getByText } = renderModal(onClose)

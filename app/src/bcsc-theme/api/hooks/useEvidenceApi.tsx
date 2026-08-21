@@ -9,6 +9,10 @@ import { createPreVerificationJWT, EvidenceType } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
+export interface EvidenceApiOptions {
+  skipOnErrorHandler?: boolean
+}
+
 export interface VerificationPrompt {
   id: number
   prompt: string
@@ -265,8 +269,15 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
     [_getDeviceCode, apiClient]
   )
 
+  /**
+   * Fetches the status of a verification request by its ID and handles errors appropriately.
+   * TODO (MD): deprecate `options` once all callsites use `useEvidenceService` instead of `useEvidenceApi`.
+   * @param verificationRequestId - The ID of the verification request to check.
+   * @param options - Optional configuration for the API call.
+   * @returns Promise resolving to the verification status response data.
+   */
   const getVerificationRequestStatus = useCallback(
-    async (verificationRequestId: string): Promise<VerificationStatusResponseData> => {
+    async (verificationRequestId: string, options?: EvidenceApiOptions): Promise<VerificationStatusResponseData> => {
       return withAccount(async (account) => {
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.get<VerificationStatusResponseData>(
@@ -276,6 +287,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
+            skipOnErrorHandler: options?.skipOnErrorHandler,
           }
         )
         await cancelRemindersOnTerminalStatus(data)

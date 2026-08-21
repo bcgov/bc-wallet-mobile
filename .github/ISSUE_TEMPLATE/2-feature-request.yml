@@ -1,0 +1,55 @@
+name: Feature request
+description: Suggest a new feature or an improvement to BCSC / BC Wallet.
+type: Feature
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Thanks for suggesting something. The three fields below are short on
+        purpose — enough for the team to understand the ask and know when it is
+        done. The greyed-out text in each box is a worked example, not an
+        instruction.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What do you want to be able to do?
+      description: Describe the feature from the point of view of someone using the app.
+      placeholder: >-
+        From the credential list, let me search my credentials by name so I can
+        find one without scrolling past the others.
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why does this matter?
+      description: What is hard, slow, or impossible today without it?
+      placeholder: >-
+        Testers and long-time holders end up with a dozen or more credentials,
+        and finding the right one before a proof request means scrolling the
+        whole list. It is slow enough that people give up and re-scan.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: How will we know this is finished? A short list is fine.
+      placeholder: |
+        - A search field appears above the credential list.
+        - Typing filters the list by credential name as I type.
+        - Clearing the field restores the full list.
+        - The search field is reachable and announced by a screen reader.
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Wireframes, screenshots, or links
+      description: Optional. Drag images in, or link to a design.
+    validations:
+      required: false

@@ -21,7 +21,6 @@ import { ServiceOutage } from '../features/modal/ServiceOutage'
 import { OnboardingIntroScreen } from '../features/onboarding/OnboardingIntroScreen'
 import { AuthPrivacyPolicyScreen } from '../features/settings/AuthPrivacyPolicyScreen'
 import { AuthSettingsScreen } from '../features/settings/AuthSettingsScreen'
-import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { BCSCAuthStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
 
@@ -133,13 +132,6 @@ const AuthStack = (): React.ReactElement => {
         options={({ route }) => ({
           title: route.params.title,
         })}
-      />
-      <Stack.Screen
-        name={BCSCScreens.AuthContactUs}
-        component={ContactUsScreen}
-        options={{
-          title: t('BCSC.Screens.ContactUs'),
-        }}
       />
       <Stack.Screen
         name={BCSCScreens.AuthPrivacyPolicy}

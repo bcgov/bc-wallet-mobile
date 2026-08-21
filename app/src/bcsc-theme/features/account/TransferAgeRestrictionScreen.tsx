@@ -1,4 +1,4 @@
-import { ThemedText, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
@@ -17,7 +17,9 @@ const TransferAgeRestrictionScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <ThemedText variant={'headingTwo'}>{t('BCSC.AgeRestrictedTransfer.Title')}</ThemedText>
+      <ThemedText variant={'headingTwo'} testID={testIdWithKey('AgeRestrictedTransferTitle')}>
+        {t('BCSC.AgeRestrictedTransfer.Title')}
+      </ThemedText>
       <ThemedText>{t('BCSC.AgeRestrictedTransfer.Description')}</ThemedText>
     </SafeAreaView>
   )

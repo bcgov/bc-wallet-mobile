@@ -85,22 +85,34 @@ export const useFactoryReset = () => {
   const removeAccountArtifacts = useCallback(async () => {
     const account = await BcscCore.getAccount()
 
-    if (!account) {
+    if (account) {
+      // Delete IAS account registration
+      logger.info('FactoryReset: Deleting IAS account from server...')
+      await deleteRegistration(account.clientID)
+
+      // Delete secure data from native storage
+      logger.info('FactoryReset: Deleting secure data from native storage...')
+      await deleteSecureData()
+
+      // Remove local account file
+      logger.info('FactoryReset: Removing local account file...')
+      await BcscCore.removeAccount()
+    } else {
       logger.info('FactoryReset: No BCSC account found')
-      return
     }
 
-    // Delete IAS account registration
-    logger.info('FactoryReset: Deleting IAS account from server...')
-    await deleteRegistration(account.clientID)
-
-    // Delete secure data from native storage
-    logger.info('FactoryReset: Deleting secure data from native storage...')
-    await deleteSecureData()
-
-    // Remove local account file
-    logger.info('FactoryReset: Removing local account file...')
-    await BcscCore.removeAccount()
+    // Clear all remaining Keychain data
+    try {
+      logger.info('FactoryReset: Clearing all Keychain data...')
+      await BcscCore.clearAllKeychainData()
+    } catch (error) {
+      const err = error as { message?: string; code?: string; userInfo?: unknown } | undefined
+      logger.warn('FactoryReset: Failed to clear Keychain data', {
+        message: err?.message,
+        code: err?.code,
+        userInfo: err?.userInfo,
+      })
+    }
   }, [deleteRegistration, deleteSecureData, logger])
 
   /**

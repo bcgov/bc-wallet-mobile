@@ -55,12 +55,15 @@ const mockCheckDeviceCodeStatus = jest.fn().mockResolvedValue({
 jest.mock('@/bcsc-theme/api/hooks/useApi', () => ({
   __esModule: true,
   default: () => ({
-    evidence: {
-      getVerificationRequestStatus: mockGetVerificationRequestStatus,
-    },
     token: {
       checkDeviceCodeStatus: mockCheckDeviceCodeStatus,
     },
+  }),
+}))
+
+jest.mock('@/bcsc-theme/services/hooks/useEvidenceService', () => ({
+  useEvidenceService: () => ({
+    getVerificationRequestStatus: mockGetVerificationRequestStatus,
   }),
 }))
 

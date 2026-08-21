@@ -552,6 +552,11 @@ export const TestIds = {
       getQrCode: 'GetQRCodeButton',
       newQrCode: 'GetNewQRCode',
     },
+    /** Where `settings.addDevice` lands instead when the account holder is under 12. Static copy; the
+     *  title is its only testID (the description has none) and the header title is blank. */
+    transferAgeRestriction: {
+      title: 'AgeRestrictedTransferTitle',
+    },
     /** Contacts feature (`features/contacts/*`, Settings → `settings.contacts`). NOT verified-gated:
      *  Main-stack settings always passes `onContacts`, so the row renders for any authenticated user
      *  (the verified-only note that used to sit here predates the current `SettingsContent`). The list

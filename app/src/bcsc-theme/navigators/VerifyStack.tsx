@@ -30,7 +30,6 @@ import { VerificationSessionExpired } from '../features/modal/VerificationSessio
 import AccountSetupScreen from '../features/onboarding/AccountSetupScreen'
 import { VerifyPromptScreen } from '../features/onboarding/VerifyPromptScreen'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
-import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { NotificationSettingsScreen } from '../features/settings/NotificationSettingsScreen'
 import { VerifyPrivacyPolicyScreen } from '../features/settings/VerifyPrivacyPolicyScreen'
 import { VerifySettingsScreen } from '../features/settings/VerifySettingsScreen'
@@ -208,7 +207,6 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         options={{ headerLeft: () => null, gestureEnabled: false }}
       />
       <Stack.Screen name={BCSCScreens.VerifyPrivacyPolicy} component={VerifyPrivacyPolicyScreen} />
-      <Stack.Screen name={BCSCScreens.VerifyContactUs} component={ContactUsScreen} />
       <Stack.Screen name={BCSCScreens.VerifyDeveloper} component={Developer} />
       <Stack.Screen
         name={BCSCScreens.SerialInstructions}

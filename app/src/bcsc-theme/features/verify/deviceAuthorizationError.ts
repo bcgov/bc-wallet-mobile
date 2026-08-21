@@ -1,4 +1,4 @@
-import { CONTACT_US_GOVERNMENT_WEBSITE_URL, GET_BCSC_CARD_URL } from '@/constants'
+import { CONTACT_US_HELP_URL, GET_BCSC_CARD_URL } from '@/constants'
 
 /**
  * Device authorization (device/code) 400 error codes
@@ -40,7 +40,7 @@ export const DEVICE_AUTHORIZATION_ERROR_CONFIG: Record<DeviceAuthorizationError,
     headingKey: 'BCSC.DeviceAuthorizationError.CardInactive.Heading',
     descriptionKey: 'BCSC.DeviceAuthorizationError.CardInactive.Description',
     buttonTextKey: 'BCSC.DeviceAuthorizationError.CardInactive.ButtonText',
-    buttonUrl: CONTACT_US_GOVERNMENT_WEBSITE_URL,
+    buttonUrl: CONTACT_US_HELP_URL,
     buttonVisible: true,
   },
   [DeviceAuthorizationError.CardReplaced]: {
@@ -110,7 +110,7 @@ export const DEVICE_AUTHORIZATION_ERROR_CONFIG: Record<DeviceAuthorizationError,
     headingKey: 'BCSC.DeviceAuthorizationError.MismatchedSerial.Heading',
     descriptionKey: 'BCSC.DeviceAuthorizationError.MismatchedSerial.Description',
     buttonTextKey: 'BCSC.DeviceAuthorizationError.MismatchedSerial.ButtonText',
-    buttonUrl: CONTACT_US_GOVERNMENT_WEBSITE_URL,
+    buttonUrl: CONTACT_US_HELP_URL,
     buttonVisible: true,
   },
   [DeviceAuthorizationError.TooManyAttempts]: {

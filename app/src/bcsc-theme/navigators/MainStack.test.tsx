@@ -113,7 +113,6 @@ jest.mock('../features/pairing/ManualPairing', () => 'ManualPairingCode')
 jest.mock('../features/pairing/PairingConfirmation', () => 'PairingConfirmation')
 jest.mock('../features/services/ServiceLoginScreen', () => ({ ServiceLoginScreen: 'ServiceLoginScreen' }))
 jest.mock('../features/settings/AutoLockScreen', () => ({ AutoLockScreen: 'AutoLockScreen' }))
-jest.mock('../features/settings/ContactUsScreen', () => ({ ContactUsScreen: 'ContactUsScreen' }))
 jest.mock('../features/settings/ForgetAllPairingsScreen', () => ({
   ForgetAllPairingsScreen: 'ForgetAllPairingsScreen',
 }))

@@ -1,3 +1,4 @@
+import { getGlobalAlertMap } from '@/bcsc-theme/api/clientErrorPolicies'
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { useBCSCStack } from '@/bcsc-theme/contexts/BCSCStackContext'
 import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
@@ -411,4 +412,23 @@ export const useAlerts = (navigation: NavigationProp<any>) => {
       _createProblemWithAccountErrorModal,
     ]
   )
+}
+
+/**
+ * Shows an error alert based on the provided error.
+ * Falls back to a generic unknown error modal if not recognized.
+ * @param error - The error to handle.
+ * @param alerts - The AppAlerts object containing alert functions.
+ * @returns void
+ */
+export function showErrorAlert(error: unknown, alerts: AppAlerts) {
+  const alert = isAppError(error) && getGlobalAlertMap(alerts).get(error.appEvent)
+
+  if (alert) {
+    alert(error)
+    return
+  }
+
+  // If no specific alert is found for the error, show a generic unknown error modal.
+  alerts.unknownErrorModal(error)
 }

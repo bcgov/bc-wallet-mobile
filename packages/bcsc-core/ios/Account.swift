@@ -12,6 +12,7 @@ class Account: NSObject, NSCoding, NSSecureCoding {
   var issuer: String
   var clientID: String
   var securityMethod: AccountSecurityMethod
+  let clientIDMissingFromArchive: Bool
 
   /// User full name
   var displayName: String?
@@ -50,15 +51,25 @@ class Account: NSObject, NSCoding, NSSecureCoding {
     self.clientID = clientID
     self.issuer = issuer
     self.securityMethod = securityMethod
+    self.clientIDMissingFromArchive = false
     super.init()
   }
 
   required init?(coder decoder: NSCoder) {
-    self.id = decoder.decodeObject(forKey: .id) as! String
-    self.issuer = decoder.decodeObject(forKey: .issuer) as! String
-    self.clientID = decoder.decodeObject(forKey: .clientID) as! String
-    let securityMethodString = decoder.decodeObject(forKey: .securityMethod) as! String
-    self.securityMethod = AccountSecurityMethod(rawValue: securityMethodString)!
+    guard let id = decoder.decodeObject(forKey: .id) as? String,
+          let issuer = decoder.decodeObject(forKey: .issuer) as? String
+    else { return nil }
+
+    self.id = id
+    self.issuer = issuer
+
+    let decodedClientID = decoder.decodeObject(forKey: .clientID) as? String
+    self.clientID = decodedClientID ?? ""
+    self.clientIDMissingFromArchive = decodedClientID == nil
+
+    let securityMethodString = decoder.decodeObject(forKey: .securityMethod) as? String ?? ""
+    self.securityMethod = AccountSecurityMethod(rawValue: securityMethodString) ?? .pinNoDeviceAuth
+
     self.failedAttemptCount = decoder.decodeInteger(forKey: .failedAttemptCount)
     self.lastAttemptDate = decoder.decodeObject(forKey: .lastAttemptDate) as? Date
     self.displayName = decoder.decodeObject(forKey: .displayName) as? String
