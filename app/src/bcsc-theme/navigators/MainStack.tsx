@@ -9,9 +9,9 @@ import {
   useTheme,
   useTour,
 } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
+import { NavigationProp, useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
-import { useEffect, useMemo, useState } from 'react'
+import { ComponentProps, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import Developer from '../../screens/Developer'
@@ -43,6 +43,7 @@ import ContactsScreen from '../features/contacts/ContactsScreen'
 import EditContactNameScreen from '../features/contacts/EditContactNameScreen'
 import RemoveContactScreen from '../features/contacts/RemoveContactScreen'
 import WhatAreContactsScreen from '../features/contacts/WhatAreContactsScreen'
+import CredentialJSONDetailsScreen from '../features/credentials/CredentialJSONDetailsScreen'
 import { DeviceInvalidated } from '../features/modal/DeviceInvalidated'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
@@ -70,11 +71,30 @@ import QRCoreStack from './QRCoreStack'
 import { getDefaultModalOptions } from './stack-utils'
 import BCSCTabStack from './TabStack'
 
-const ScopedCredentialDetails: React.FC<React.ComponentProps<typeof CredentialDetails>> = (props) => (
-  <AgentReadyGate testID={testIdWithKey('CredentialDetails.Loading')}>
-    <CredentialDetails {...props} />
-  </AgentReadyGate>
-)
+const BIFOLD_CONTACTS_STACK = 'Contacts Stack'
+
+type CredentialDetailsProps = ComponentProps<typeof CredentialDetails>
+
+const ScopedCredentialDetails = (props: CredentialDetailsProps) => {
+  const navigation = {
+    ...props.navigation,
+    navigate: (name, params) => {
+      if (name === BIFOLD_CONTACTS_STACK && params?.screen === Screens.JSONDetails) {
+        // Intercept Bifold's JSONDetails navigation and route to our own CredentialJSONDetails screen instead
+        return (props.navigation as NavigationProp<any>).navigate(BCSCScreens.CredentialJSONDetails, {
+          jsonBlob: JSON.stringify(params.params?.jsonBlob, null, 2),
+        })
+      }
+      return props.navigation.navigate(name as any, params)
+    },
+  } as CredentialDetailsProps['navigation']
+
+  return (
+    <AgentReadyGate testID={testIdWithKey('CredentialDetails.Loading')}>
+      <CredentialDetails {...props} navigation={navigation} />
+    </AgentReadyGate>
+  )
+}
 
 const VerifyPromptScreenNoSkip = () => <VerifyPromptScreen showSkip={false} />
 
@@ -204,6 +224,14 @@ const MainStack: React.FC = () => {
               headerShown: true,
               title: route.params?.title ?? t('BCSC.Contacts.JSON.Title'),
             })}
+          />
+          <Stack.Screen
+            name={BCSCScreens.CredentialJSONDetails}
+            component={CredentialJSONDetailsScreen}
+            options={{
+              headerShown: true,
+              headerTitle: t('Credentials.JSONDetailsTitle'),
+            }}
           />
           <Stack.Screen
             name={BCSCScreens.ContactChat}
