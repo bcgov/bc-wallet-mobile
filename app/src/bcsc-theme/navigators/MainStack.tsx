@@ -11,7 +11,7 @@ import {
 } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
-import { useEffect, useMemo, useState } from 'react'
+import { ComponentProps, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import Developer from '../../screens/Developer'
@@ -43,6 +43,7 @@ import ContactsScreen from '../features/contacts/ContactsScreen'
 import EditContactNameScreen from '../features/contacts/EditContactNameScreen'
 import RemoveContactScreen from '../features/contacts/RemoveContactScreen'
 import WhatAreContactsScreen from '../features/contacts/WhatAreContactsScreen'
+import CredentialJSONDetailsScreen from '../features/credentials/CredentialJSONDetailsScreen'
 import { DeviceInvalidated } from '../features/modal/DeviceInvalidated'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
@@ -52,6 +53,7 @@ import { VerifyPromptScreen } from '../features/onboarding/VerifyPromptScreen'
 import { pairingPayloadToServiceLoginParams, usePairingService } from '../features/pairing'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
+import { createBifoldNavigationAdapter } from '../features/qr-core/BifoldNavigationAdapter'
 import ConnectionLoadingScreen from '../features/qr-core/ConnectionLoadingScreen'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
 import { AutoLockScreen } from '../features/settings/AutoLockScreen'
@@ -70,11 +72,16 @@ import QRCoreStack from './QRCoreStack'
 import { getDefaultModalOptions } from './stack-utils'
 import BCSCTabStack from './TabStack'
 
-const ScopedCredentialDetails: React.FC<React.ComponentProps<typeof CredentialDetails>> = (props) => (
-  <AgentReadyGate testID={testIdWithKey('CredentialDetails.Loading')}>
-    <CredentialDetails {...props} />
-  </AgentReadyGate>
-)
+type CredentialDetailsProps = ComponentProps<typeof CredentialDetails>
+
+const ScopedCredentialDetails = (props: CredentialDetailsProps) => {
+  const { t } = useTranslation()
+  return (
+    <AgentReadyGate testID={testIdWithKey('CredentialDetails.Loading')}>
+      <CredentialDetails {...props} navigation={createBifoldNavigationAdapter(props.navigation, { t })} />
+    </AgentReadyGate>
+  )
+}
 
 const VerifyPromptScreenNoSkip = () => <VerifyPromptScreen showSkip={false} />
 
@@ -204,6 +211,14 @@ const MainStack: React.FC = () => {
               headerShown: true,
               title: route.params?.title ?? t('BCSC.Contacts.JSON.Title'),
             })}
+          />
+          <Stack.Screen
+            name={BCSCScreens.CredentialJSONDetails}
+            component={CredentialJSONDetailsScreen}
+            options={{
+              headerShown: true,
+              headerTitle: t('Credentials.JSONDetailsTitle'),
+            }}
           />
           <Stack.Screen
             name={BCSCScreens.ContactChat}
