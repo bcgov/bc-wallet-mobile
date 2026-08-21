@@ -47,7 +47,7 @@ export async function listServiceRows(): Promise<ServiceRow[]> {
     throw new Error('listServiceRows is Android-only: iOS flattens ServiceButton ids out of the a11y tree')
   }
   // Java regex (UiSelector): escape the prefix's dots, then a lookahead drops the bookmark toggles.
-  const escapedPrefix = ROW_PREFIX.replaceAll('.', '\\.')
+  const escapedPrefix = ROW_PREFIX.replaceAll('.', String.raw`\.`)
   const elements = await $$(`android=new UiSelector().resourceIdMatches("${escapedPrefix}(?!Bookmark-).+")`)
   const rows: ServiceRow[] = []
   for (const el of elements) {

@@ -33,7 +33,7 @@ export async function rowShowsWord(rowTestId: string, word: string): Promise<boo
     const row = $(`~${rowTestId}`)
     try {
       const label = (await row.getAttribute('label')) ?? ''
-      return new RegExp(`\\b${word}\\b`).test(label)
+      return new RegExp(String.raw`\b${word}\b`).test(label)
     } catch {
       return false
     }
