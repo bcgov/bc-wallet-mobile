@@ -42,13 +42,7 @@ export interface IssuerConfig {
 
 // --- record shapes (the fields this client reads; ACA-Py returns much more) ----------------------
 
-export type CredExState =
-  | 'offer-sent'
-  | 'request-received'
-  | 'credential-issued'
-  | 'done'
-  | 'abandoned'
-  | (string & {})
+export type CredExState = 'offer-sent' | 'request-received' | 'credential-issued' | 'done' | 'abandoned' | (string & {})
 
 export interface CredExRecord {
   cred_ex_id: string
@@ -331,6 +325,18 @@ export async function sendCredentialOffer(
   return { credExId: record.cred_ex_id }
 }
 
+/**
+ * Send a DIDComm basic message over an established connection — it lands in the wallet's contact
+ * chat. The runner-side send is what makes chat RECEIVE assertable (the app's composer carries no
+ * testID and an empty a11y label, so sending FROM the app is not automatable).
+ */
+export async function sendBasicMessage(connectionId: string, content: string): Promise<void> {
+  await adminFetch(`/connections/${encodeURIComponent(connectionId)}/send-message`, {
+    method: 'POST',
+    body: { content },
+  })
+}
+
 /** By-id GET — note ACA-Py wraps the by-id response in a detail envelope. */
 export async function getCredExRecord(credExId: string): Promise<CredExRecord> {
   const detail = await adminFetch<{ cred_ex_record?: CredExRecord }>(
@@ -343,9 +349,20 @@ export async function getCredExRecord(credExId: string): Promise<CredExRecord> {
 }
 
 /**
+ * How long an exchange must SIT at `request-received` before the explicit-issue nudge fires.
+ *
+ * The offer already sets `auto_issue`, so the nudge is only ever a backstop for an instance that
+ * ignores it — and firing it merely because a poll CAUGHT the exchange mid-issuance issues the
+ * credential TWICE. ACA-Py rejects a duplicate issue with 400 only once the state has advanced; while
+ * its own issuance is still in flight the second one goes through, leaving two IssuerCredRevRecords
+ * on one exchange and a revoke that fails with "Multiple IssuerCredRevRecord records located".
+ */
+const ISSUE_NUDGE_GRACE_MS = 20_000
+
+/**
  * Wait for a credential exchange to reach `state`. Landing on `abandoned` while waiting for
- * anything else fails with the holder's problem report. When the exchange parks at
- * `request-received` (a non-auto-issuing instance), issues explicitly — once.
+ * anything else fails with the holder's problem report. When the exchange STAYS at `request-received`
+ * past {@link ISSUE_NUDGE_GRACE_MS} (a non-auto-issuing instance), issues explicitly — once.
  */
 export async function waitForCredExState(
   credExId: string,
@@ -354,6 +371,8 @@ export async function waitForCredExState(
 ): Promise<CredExRecord> {
   let lastState: string | undefined
   let nudged = false
+  /** When the exchange first parked at `request-received`; the grace window runs from here. */
+  let parkedAt: number | undefined
   return pollUntil(
     async () => {
       const record = await getCredExRecord(credExId)
@@ -363,7 +382,13 @@ export async function waitForCredExState(
         const reason = record.error_msg ? `: ${record.error_msg}` : ''
         throw new Error(`cred-ex ${credExId} was abandoned while waiting for "${state}"${reason}`)
       }
-      if (!nudged && record.state === 'request-received' && (state === 'done' || state === 'credential-issued')) {
+      if (record.state !== 'request-received') {
+        parkedAt = undefined
+        return undefined
+      }
+      parkedAt ??= Date.now()
+      const parkedFor = Date.now() - parkedAt
+      if (!nudged && parkedFor >= ISSUE_NUDGE_GRACE_MS && (state === 'done' || state === 'credential-issued')) {
         nudged = true
         try {
           await adminFetch(`/issue-credential-2.0/records/${encodeURIComponent(credExId)}/issue`, {
@@ -484,15 +509,26 @@ export async function revokeCredential(options: {
   connectionId: string
   comment?: string
 }): Promise<void> {
-  await adminFetch<unknown>('/revocation/revoke', {
-    method: 'POST',
-    body: {
-      cred_ex_id: options.credExId,
-      connection_id: options.connectionId,
-      publish: true,
-      notify: true,
-      notify_version: 'v1_0',
-      comment: options.comment ?? 'e2e revocation',
-    },
-  })
+  try {
+    await adminFetch<unknown>('/revocation/revoke', {
+      method: 'POST',
+      body: {
+        cred_ex_id: options.credExId,
+        connection_id: options.connectionId,
+        publish: true,
+        notify: true,
+        notify_version: 'v1_0',
+        comment: options.comment ?? 'e2e revocation',
+      },
+    })
+  } catch (error) {
+    // Name the one failure that is OUR bug rather than the ledger's: several revocation records on
+    // one exchange means the credential was issued twice (see ISSUE_NUDGE_GRACE_MS).
+    if (error instanceof ApiError && error.bodySnippet.includes('Multiple IssuerCredRevRecord')) {
+      throw new Error(
+        `cred-ex ${options.credExId} was issued more than once, so ACA-Py cannot tell which credential to revoke — an explicit issue raced auto_issue`
+      )
+    }
+    throw error
+  }
 }

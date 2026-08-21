@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict'
 import { TEST_PIN, TestUsers, Timeouts } from '../../../src/constants.js'
 import { unlockWithPin } from '../../../src/flows/auth.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
@@ -11,8 +12,14 @@ import {
   selectEvidenceType,
   startVerification,
 } from '../../../src/flows/verify.js'
+import { CUSTOM_CARD_COPY } from '../../../src/helpers/notifications.js'
 import { HomeNotificationCard, HomeScreen } from '../../../src/screens/main.js'
-import { AccountSetupScreen, EnterBirthdateScreen, IDPhotoInformationScreen } from '../../../src/screens/verify.js'
+import {
+  AccountSetupScreen,
+  EnterBirthdateScreen,
+  IdentitySelectionScreen,
+  IDPhotoInformationScreen,
+} from '../../../src/screens/verify.js'
 import { getTestUser, setTestUser } from '../../../src/support/context.js'
 
 /** The first-ID list row to select but never capture — the same slot the non-BCSC journey proves. */
@@ -59,6 +66,12 @@ describe('Verify journey: resume routing', () => {
     await leaveVerificationToHome()
     // Progress is kept, so Home offers the verification card; both variants re-enter the same way.
     await HomeNotificationCard.expectVisible(Timeouts.SCREEN_TRANSITION)
+    // Precedence boundary (runtime-confirmed): a SAVED-but-unsubmitted serial does NOT flip the card —
+    // the Continue variant needs the id step COMPLETED (authorize), so this still renders Start. The
+    // variants share their title; body/button are what tell them apart. (Continue itself is asserted
+    // post-authorize on the combined journey.)
+    assert.equal(await HomeNotificationCard.read('body'), CUSTOM_CARD_COPY.start.body)
+    assert.equal(await HomeNotificationCard.read('button'), CUSTOM_CARD_COPY.start.button)
   })
 
   it('resumes onto the birthdate step, since a serial is saved', async () => {
@@ -66,10 +79,13 @@ describe('Verify journey: resume routing', () => {
     await EnterBirthdateScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 
-  it('leaves again via the resumed step back button, which has nothing to pop', async () => {
-    // Resuming makes EnterBirthdate the stack's INITIAL route, so its back button has nothing to pop —
-    // it leaves the flow instead (`VerifyResumeHeaderBackButton`), the same exit as the help menu.
+  it('backs out of the resumed birthdate step via IdentitySelection', async () => {
+    // Resuming makes EnterBirthdate the stack's INITIAL route. Its back no longer leaves the flow:
+    // with nothing to pop it REPLACES to IdentitySelection — whose own back (now the initial route)
+    // is what leaves to Home, progress kept.
     await EnterBirthdateScreen.back.tap()
+    await IdentitySelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await IdentitySelectionScreen.back.tap()
     await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 
