@@ -7866,6 +7866,7 @@ __metadata:
     prettier: "npm:~3.4.2"
     prettier-plugin-organize-imports: "npm:^4.3.0"
     react-native-bcsc-core: "workspace:*"
+    yaml: "npm:^2.9.0"
   dependenciesMeta:
     "@2060.io/ffi-napi":
       built: false
@@ -19997,7 +19998,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yaml@npm:^2.2.1, yaml@npm:^2.6.1":
+"yaml@npm:^2.2.1, yaml@npm:^2.6.1, yaml@npm:^2.9.0":
   version: 2.9.0
   resolution: "yaml@npm:2.9.0"
   bin:
