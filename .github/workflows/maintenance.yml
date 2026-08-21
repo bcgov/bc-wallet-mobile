@@ -15,7 +15,7 @@ jobs:
     name: Issue and PR
     steps:
       - name: Prune stale issues
-        uses: actions/stale@v10
+        uses: actions/stale@v11
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           operations-per-run: 50
@@ -59,7 +59,7 @@ jobs:
 
       - name: Load SauceLabs secrets from 1Password
         id: op_saucelabs
-        uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           SAUCE_USERNAME: op://bcsc-mobile-app-cd/saucelabs/username
