@@ -395,6 +395,91 @@ class BcscCoreModule(
         }
     }
 
+    /**
+     * Generate a new signing keypair under a freshly incremented alias and return its public
+     * RSA components, for the JS-side key-rotation flow (issue #3876).
+     *
+     * IMPORTANT side effect: [BcscKeyPairSource.getNewBcscKeyPair] stamps the new alias'
+     * `createdAt` to now, so [BcscKeyPairSource.getCurrentBcscKeyPair] (newest-by-`createdAt`)
+     * picks it up as the active signing key immediately — there is no separate "activate" step.
+     * The JS caller is responsible for registering the new key with the server or rolling back
+     * via [deleteKey].
+     *
+     * Reuses [BcscKeyPairSource.convertBcscKeyPairToJWK] so the n/e encoding matches what
+     * registration actually sends (Nimbus canonical unsigned base64url).
+     */
+    @ReactMethod
+    fun createNewKeyPair(promise: Promise) {
+        // Captured once getNewBcscKeyPair() succeeds so a later failure in this method can
+        // best-effort delete it — see cleanUpUnregisteredKeyAfterGenerationFailure below.
+        var bcscKeyPair: BcscKeyPair? = null
+        try {
+            if (!keyPairSource.isAvailable()) {
+                promise.reject("E_KEYSTORE_UNAVAILABLE", "Android KeyStore is not available on this device")
+                return
+            }
+            bcscKeyPair = keyPairSource.getNewBcscKeyPair()
+            val jwk = keyPairSource.convertBcscKeyPairToJWK(bcscKeyPair)
+            if (jwk !is RSAKey) {
+                cleanUpUnregisteredKeyAfterGenerationFailure(bcscKeyPair.getKeyInfo().getAlias(), "not an RSA key")
+                promise.reject(
+                    "E_KEYSTORE_ERROR",
+                    "Newly generated key '${bcscKeyPair.getKeyInfo().getAlias()}' is not an RSA key",
+                )
+                return
+            }
+            val entry: WritableMap = Arguments.createMap()
+            entry.putString("id", bcscKeyPair.getKeyInfo().getAlias())
+            entry.putDouble("created", bcscKeyPair.getKeyInfo().getCreatedAt().toDouble())
+            entry.putString("n", jwk.modulus.toString())
+            entry.putString("e", jwk.publicExponent.toString())
+            promise.resolve(entry)
+        } catch (e: BcscException) {
+            bcscKeyPair?.let {
+                cleanUpUnregisteredKeyAfterGenerationFailure(
+                    it.getKeyInfo().getAlias(),
+                    "BcscException after generation",
+                )
+            }
+            promise.reject("E_KEYSTORE_ERROR", "Error generating new key pair: ${e.devMessage}", e)
+        } catch (e: Exception) {
+            bcscKeyPair?.let {
+                cleanUpUnregisteredKeyAfterGenerationFailure(
+                    it.getKeyInfo().getAlias(),
+                    "unexpected error after generation",
+                )
+            }
+            promise.reject("E_KEYSTORE_ERROR", "Unexpected error generating new key pair: ${e.message}", e)
+        }
+    }
+
+    /**
+     * Best-effort cleanup for [createNewKeyPair]'s post-generation failure paths.
+     *
+     * [BcscKeyPairSource.getNewBcscKeyPair] stamps the new alias' `createdAt` to now, so it
+     * becomes the active signing key (via [BcscKeyPairSource.getCurrentBcscKeyPair]'s
+     * newest-by-`createdAt` pick) the instant generation succeeds — before JS ever receives its
+     * alias. If anything after that point fails (JWK conversion, non-RSA key), JS gets a
+     * rejection with no alias and cannot roll back via [deleteKey], which would strand the
+     * device signing `private_key_jwt` client assertions with a key IAS has never registered
+     * (the #4166/2111 "Signature did not validate" failure mode). Deletion here is best-effort
+     * only: a cleanup failure is logged but never masks the original error the caller still
+     * rejects with.
+     */
+    private fun cleanUpUnregisteredKeyAfterGenerationFailure(
+        alias: String,
+        context: String,
+    ) {
+        try {
+            keyPairSource.deleteBcscKeyPair(alias)
+        } catch (e: Exception) {
+            Log.w(
+                NAME,
+                "createNewKeyPair: best-effort cleanup failed to delete unregistered key '$alias' after $context: ${e.message}",
+            )
+        }
+    }
+
     @ReactMethod
     override fun getToken(
         tokenType: Int,

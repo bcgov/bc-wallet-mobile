@@ -442,6 +442,115 @@ class BcscCore: NSObject {
     }
   }
 
+  /**
+   * Generate a new signing keypair under a freshly incremented alias and return its public
+   * RSA components, for the JS-side key-rotation flow (issue #3876).
+   *
+   * IMPORTANT side effect: iOS activation is implicitly newest-by-`kSecAttrCreationDate` (see
+   * `signJWT`/`getDynamicClientRegistrationBody`, both of which sort keys and pick the latest) —
+   * generating a key here switches signing to it immediately, before any server confirmation.
+   * The JS caller is responsible for registering the new key or rolling back via `deleteKey`.
+   *
+   * Reuses the same private `generateKeyPair()` alias-increment logic as the DCR self-heal
+   * path, and the same RSA-component derivation as `getAllKeysWithPublicInfo`.
+   */
+  @objc(createNewKeyPair:reject:)
+  func createNewKeyPair(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    let keyPairManager = KeyPairManager()
+    let newKeyId: String
+    do {
+      newKeyId = try generateKeyPair()
+    } catch let KeychainError.keychainUnavailable(status) {
+      reject(
+        "E_120_KEYCHAIN_UNAVAILABLE_ERROR",
+        "Keychain temporarily unavailable while generating new key pair (OSStatus \(status))",
+        KeychainError.keychainUnavailable(status)
+      )
+      return
+    } catch {
+      reject(
+        "E_120_KEYCHAIN_KEY_GENERATION_ERROR",
+        "Failed to generate new key pair: \(error.localizedDescription)",
+        error
+      )
+      return
+    }
+
+    do {
+      let keyPair = try keyPairManager.getKeyPair(with: newKeyId)
+      guard let keyData = RSAUtil.secKeyRefToData(inputKey: keyPair.public),
+            let (modulus, exponent) = RSAUtil.splitIntoComponents(keyData: keyData)
+      else {
+        cleanUpUnregisteredKeyAfterGenerationFailure(
+          newKeyId,
+          keyPairManager: keyPairManager,
+          context: "RSA component extraction failure"
+        )
+        reject(
+          "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
+          "Generated new key '\(newKeyId)' but could not extract its RSA components",
+          nil
+        )
+        return
+      }
+      let keys = try? keyPairManager.findAllPrivateKeys()
+      let created = keys?.first(where: { $0.tag == newKeyId })?.created.timeIntervalSince1970
+        ?? Date().timeIntervalSince1970
+      resolve([
+        "id": newKeyId,
+        "created": created,
+        "n": modulus.base64EncodedString(),
+        "e": exponent.base64EncodedString(),
+      ])
+    } catch let KeychainError.keychainUnavailable(status) {
+      cleanUpUnregisteredKeyAfterGenerationFailure(
+        newKeyId,
+        keyPairManager: keyPairManager,
+        context: "keychain-unavailable retrieval failure"
+      )
+      reject(
+        "E_120_KEYCHAIN_UNAVAILABLE_ERROR",
+        "Keychain temporarily unavailable while retrieving newly generated key '\(newKeyId)' (OSStatus \(status))",
+        KeychainError.keychainUnavailable(status)
+      )
+    } catch {
+      cleanUpUnregisteredKeyAfterGenerationFailure(
+        newKeyId,
+        keyPairManager: keyPairManager,
+        context: "retrieval failure"
+      )
+      reject(
+        "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
+        "Failed to retrieve newly generated key pair '\(newKeyId)': \(error.localizedDescription)",
+        error
+      )
+    }
+  }
+
+  /**
+   * Best-effort cleanup for `createNewKeyPair`'s post-generation failure paths.
+   *
+   * iOS activation is implicitly newest-by-`kSecAttrCreationDate`, so a key becomes the active
+   * signing key the INSTANT `generateKeyPair()` returns — before JS ever receives its alias.
+   * If anything after that point fails (RSA component extraction, re-retrieving the key pair),
+   * JS gets a rejection with no alias and cannot roll back via `deleteKey`, which would strand
+   * the device signing `private_key_jwt` client assertions with a key IAS has never registered
+   * (the #4166/2111 "Signature did not validate" failure mode). Deleting here is best-effort
+   * only: a cleanup failure is logged but never masks the original error the caller still
+   * rejects with — the caller is responsible for calling `reject` itself after this returns.
+   */
+  private func cleanUpUnregisteredKeyAfterGenerationFailure(
+    _ alias: String, keyPairManager: KeyPairManager, context: String
+  ) {
+    if !keyPairManager.deleteKey(withLabel: alias) {
+      logger
+        .warning("createNewKeyPair: best-effort cleanup failed to delete unregistered key '\(alias)' after \(context)")
+    }
+  }
+
   func getKeyPair(
     _ label: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
