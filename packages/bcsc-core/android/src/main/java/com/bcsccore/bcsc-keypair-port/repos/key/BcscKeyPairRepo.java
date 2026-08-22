@@ -209,7 +209,21 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
       // "active" key despite no keystore entry existing for it, and silently mint yet ANOTHER
       // unregistered key on the very next call — one the server has never seen, breaking every
       // client-assertion/token refresh until the next key-recovery pass. See issue #3876 review.
-      keyPairInfoSource.saveKeyPairInfo(newInfo);
+      try {
+        keyPairInfoSource.saveKeyPairInfo(newInfo);
+      } catch (BcscException saveError) {
+        // Best-effort cleanup: the keystore entry already exists at this point, so leaving it
+        // behind would leak an untracked alias — and worse, the NEXT rotation attempt would
+        // collide with it (generateKeyPair() rejects with KeyAlreadyExistsException for an
+        // alias already present in the keystore), permanently breaking rotation on this device.
+        // The cleanup failure itself must never mask the original error.
+        boolean cleanedUp = deleteKeyEntry(alias);
+        if (!cleanedUp) {
+          SimpleLog.e(TAG, "getNewBcscKeyPair: failed to clean up untracked keystore entry '"
+              + alias + "' after saveKeyPairInfo failure", saveError);
+        }
+        throw saveError;
+      }
 
       final KeyPair keyPair;
       try {
