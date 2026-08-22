@@ -21,7 +21,6 @@ describe('EvidenceCapture', () => {
 
   beforeEach(() => {
     mockNavigation = useNavigation()
-    jest.clearAllMocks()
   })
 
   it('renders correctly', async () => {
@@ -53,9 +52,10 @@ describe('EvidenceCapture', () => {
       </BasicAppContext>
     )
 
-    // Wait for useFocusEffect to complete and camera to be rendered
-    await waitFor(async () => {
-      expect(tree.queryAllByText('BCSC.CameraDisclosure.NoCameraAvailable')).toBeDefined()
+    // useFocusEffect resolves the camera asynchronously, so wait on the camera
+    // container itself; queryAllByText always returns an array and never settles anything.
+    await waitFor(() => {
+      expect(tree.getByTestId(testIdWithKey('EvidenceCaptureScreenMaskedCamera'))).toBeTruthy()
     })
 
     expect(tree).toMatchSnapshot()
