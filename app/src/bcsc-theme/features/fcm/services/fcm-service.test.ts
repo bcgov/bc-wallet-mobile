@@ -64,21 +64,30 @@ describe('FcmService', () => {
   })
 
   describe('subscribe', () => {
-    it('adds handler and returns unsubscribe function', () => {
+    it('adds handler and returns unsubscribe function', async () => {
       const handler = jest.fn()
 
       const unsubscribe = service.subscribe(handler)
+      await service.init()
 
       expect(typeof unsubscribe).toBe('function')
+
+      mockState.onMessageCallback?.({ data: { bcsc_challenge_request: 'jwt' }, notification: undefined })
+
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'challenge', data: { jwt: 'jwt' } }),
+        { source: 'foreground' }
+      )
     })
 
-    it('removes handler when unsubscribe is called', () => {
+    it('removes handler when unsubscribe is called', async () => {
       const handler = jest.fn()
       const unsubscribe = service.subscribe(handler)
+      await service.init()
 
       unsubscribe()
+      mockState.onMessageCallback?.({ data: { bcsc_challenge_request: 'jwt' }, notification: undefined })
 
-      // Handler should no longer be in the set (verified by destroy not calling it)
       expect(handler).not.toHaveBeenCalled()
     })
   })
@@ -264,20 +273,6 @@ describe('FcmService', () => {
       expect(handler2).toHaveBeenCalled()
     })
 
-    it('does not notify unsubscribed handlers', () => {
-      const handler = jest.fn()
-      const unsubscribe = service.subscribe(handler)
-      unsubscribe()
-
-      const remoteMessage = {
-        data: { bcsc_challenge_request: 'jwt' },
-        notification: undefined,
-      }
-
-      mockState.onMessageCallback?.(remoteMessage)
-
-      expect(handler).not.toHaveBeenCalled()
-    })
   })
 
   describe('notification opened from background', () => {

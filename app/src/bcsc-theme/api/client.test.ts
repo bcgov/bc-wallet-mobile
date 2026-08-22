@@ -18,104 +18,105 @@ jest.mock('jwt-decode', () => ({
 
 jest.mock('@/bcsc-theme/api/jwk-cache')
 
+const createMockLogger = () => ({ info: jest.fn(), warn: jest.fn(), error: jest.fn() })
+
 describe('BCSC Client', () => {
   beforeAll(() => {
     initLanguages(localization)
   })
 
+  // Several tests spy on BCSCApiClient.prototype.fetchTokens; without this the spy leaks
+  // into every later describe in the file.
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
   it('should set Content-Type default header to application/json with charset=utf-8', () => {
-    const mockLogger = { info: jest.fn(), error: jest.fn() }
+    const mockLogger = createMockLogger()
     const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
     expect(client.client.defaults.headers['Content-Type']).toBe('application/json; charset=utf-8')
   })
 
   it('should set User-Agent default header', () => {
-    const mockLogger = { info: jest.fn(), error: jest.fn() }
+    const mockLogger = createMockLogger()
     const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
     expect(client.client.defaults.headers['User-Agent']).toBeDefined()
   })
 
+  // Rejects every request with an AxiosError carrying the given status, so the response
+  // interceptor runs against a realistic error shape without a real HTTP call.
+  const rejectWithStatus = (status: number, statusText: string) => (config: any) =>
+    Promise.reject(
+      new AxiosError('Request failed', 'ERR_BAD_RESPONSE', config, null, {
+        status,
+        data: {},
+        statusText,
+        headers: {} as any,
+        config,
+      })
+    )
+
   it('should suppress logging for status codes if suppressStatusCodeLogs prop is set', async () => {
-    const mockLogger = { error: jest.fn(), info: jest.fn() }
+    const mockLogger = createMockLogger()
     const baseURL = 'https://example.com'
 
     const client = new BCSCApiClient(baseURL, mockLogger as any)
 
-    const axiosGetSpy = jest.spyOn(client.client, 'get').mockRejectedValue({
-      data: {
-        response: {
-          status: 404,
-        },
-      },
-    })
-
-    try {
-      await client.get('/endpoint', { suppressStatusCodeLogs: [404] })
-      expect(true).toBe(false) // Force fail if no error is thrown
-    } catch (error) {
-      expect(axiosGetSpy).toHaveBeenCalledWith(
-        '/endpoint',
-        expect.objectContaining({
-          suppressStatusCodeLogs: [404],
-        })
-      )
-
-      expect(mockLogger.error).not.toHaveBeenCalled()
-    }
-  })
-
-  it('should log error for status codes not in suppressStatusCodeLogs', async () => {
-    const mockLogger = { error: jest.fn(), info: jest.fn() }
-    const baseURL = 'https://example.com'
-
-    const client = new BCSCApiClient(baseURL, mockLogger as any)
-
-    // Mock adapter to produce a proper AxiosError so interceptors run but no real HTTP call is made
-    client.client.defaults.adapter = (config: any) => {
-      return Promise.reject(
-        new AxiosError('Request failed', 'ERR_BAD_RESPONSE', config, null, {
-          status: 500,
-          data: {},
-          statusText: 'Internal Server Error',
-          headers: {} as any,
-          config,
-        })
-      )
-    }
+    client.client.defaults.adapter = rejectWithStatus(404, 'Not Found')
 
     const axiosGetSpy = jest.spyOn(client.client, 'get')
 
-    try {
-      await client.get('/endpoint', { suppressStatusCodeLogs: [404], skipBearerAuth: true })
-      expect(true).toBe(false) // Force fail if no error is thrown
-    } catch (error) {
-      expect(axiosGetSpy).toHaveBeenCalledWith(
-        '/endpoint',
-        expect.objectContaining({
-          suppressStatusCodeLogs: [404],
-        })
-      )
+    await expect(
+      client.get('/endpoint', { suppressStatusCodeLogs: [404], skipBearerAuth: true })
+    ).rejects.toBeInstanceOf(AppError)
 
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('[BCSCApiClient]'),
-        expect.objectContaining({ code: expect.any(String) })
-      )
-    }
+    expect(axiosGetSpy).toHaveBeenCalledWith(
+      '/endpoint',
+      expect.objectContaining({
+        suppressStatusCodeLogs: [404],
+      })
+    )
+
+    expect(mockLogger.error).not.toHaveBeenCalled()
+  })
+
+  it('should log error for status codes not in suppressStatusCodeLogs', async () => {
+    const mockLogger = createMockLogger()
+    const baseURL = 'https://example.com'
+
+    const client = new BCSCApiClient(baseURL, mockLogger as any)
+
+    client.client.defaults.adapter = rejectWithStatus(500, 'Internal Server Error')
+
+    const axiosGetSpy = jest.spyOn(client.client, 'get')
+
+    await expect(
+      client.get('/endpoint', { suppressStatusCodeLogs: [404], skipBearerAuth: true })
+    ).rejects.toBeInstanceOf(AppError)
+
+    expect(axiosGetSpy).toHaveBeenCalledWith(
+      '/endpoint',
+      expect.objectContaining({
+        suppressStatusCodeLogs: [404],
+      })
+    )
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      expect.stringContaining('[BCSCApiClient]'),
+      expect.objectContaining({ code: expect.any(String) })
+    )
   })
 
   describe('getTokensForRefreshToken', () => {
     it('should return the promise if already exists', async () => {
-      const mockLogger = { info: jest.fn() }
+      const mockLogger = createMockLogger()
       const baseURL = 'https://example.com'
 
       const client = new BCSCApiClient(baseURL, mockLogger as any)
 
-      const mockPromise = new Promise((resolve) => {
-        setTimeout(() => resolve('tokens'), 100)
-      })
-      client.tokensPromise = mockPromise as any
+      client.tokensPromise = Promise.resolve('tokens') as any
 
       const tokensPromise1 = client.getTokensForRefreshToken('refreshToken1')
       const tokensPromise2 = client.getTokensForRefreshToken('refreshToken2')
@@ -125,7 +126,7 @@ describe('BCSC Client', () => {
     })
 
     it('should fetch new tokens if no existing promise', async () => {
-      const mockLogger = { info: jest.fn() }
+      const mockLogger = createMockLogger()
       const baseURL = 'https://example.com'
 
       const client = new BCSCApiClient(baseURL, mockLogger as any)
@@ -151,7 +152,7 @@ describe('BCSC Client', () => {
 
   describe('recoverTokens', () => {
     it('should return the in-memory tokens without reading storage when the cache is populated', async () => {
-      const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       const tokens = { access_token: 'a', refresh_token: 'r' }
       client.tokens = tokens as any
@@ -164,7 +165,7 @@ describe('BCSC Client', () => {
     })
 
     it('should rebuild the cache from the stored refresh token when empty', async () => {
-      const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = undefined
       ;(getTokenWithDiagnostics as jest.Mock).mockResolvedValue({
@@ -185,7 +186,7 @@ describe('BCSC Client', () => {
     })
 
     it('should emit TOKENS_REFRESHED after a successful rebuild', async () => {
-      const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = undefined
       ;(getTokenWithDiagnostics as jest.Mock).mockResolvedValue({
@@ -202,7 +203,7 @@ describe('BCSC Client', () => {
     })
 
     it('should not emit TOKENS_REFRESHED when the cache is already populated', async () => {
-      const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = { access_token: 'a', refresh_token: 'r' } as any
       const emitSpy = jest.spyOn(DeviceEventEmitter, 'emit').mockClear()
@@ -213,7 +214,7 @@ describe('BCSC Client', () => {
     })
 
     it('should not emit TOKENS_REFRESHED when the rebuild fails', async () => {
-      const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = undefined
       ;(getTokenWithDiagnostics as jest.Mock).mockResolvedValue({
@@ -229,7 +230,7 @@ describe('BCSC Client', () => {
     })
 
     it('should throw TOKEN_NULL when the cache is empty and no refresh token is stored', async () => {
-      const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = undefined
       ;(getTokenWithDiagnostics as jest.Mock).mockResolvedValue({
@@ -248,17 +249,8 @@ describe('BCSC Client', () => {
   describe('native error mapping', () => {
     const nativeError = (code: string) => Object.assign(new Error(`native ${code}`), { code })
 
-    beforeEach(() => {
-      // Earlier suites replace the prototype `fetchTokens` via jest.spyOn without restoring it;
-      // restore so these tests exercise the real method (and its native-error `.catch`).
-      const proto = BCSCApiClient.prototype as any
-      if (jest.isMockFunction(proto.fetchTokens)) {
-        proto.fetchTokens.mockRestore()
-      }
-    })
-
     it('maps a native getRefreshTokenRequestBody rejection during fetchTokens', async () => {
-      const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       ;(getAccount as jest.Mock).mockResolvedValueOnce({ clientID: 'c', issuer: 'https://issuer' })
       ;(getRefreshTokenRequestBody as jest.Mock).mockRejectedValueOnce(nativeError('E_NO_KEYS_FOUND'))
@@ -269,7 +261,7 @@ describe('BCSC Client', () => {
     })
 
     it('maps a native getToken rejection during recoverTokens', async () => {
-      const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = undefined
       ;(getTokenWithDiagnostics as jest.Mock).mockRejectedValueOnce(nativeError('E_KEYSTORE_UNAVAILABLE'))
@@ -281,7 +273,7 @@ describe('BCSC Client', () => {
   })
 
   it('should log error when initialized with empty URL', () => {
-    const mockLogger = { info: jest.fn(), error: jest.fn() }
+    const mockLogger = createMockLogger()
     const client = new BCSCApiClient('', mockLogger as any)
 
     expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('initialized with empty URL'))
@@ -290,7 +282,7 @@ describe('BCSC Client', () => {
 
   describe('clearTokens', () => {
     it('should clear tokens and tokensPromise', () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = { access_token: 'a', refresh_token: 'r' } as any
       client.tokensPromise = Promise.resolve({} as any)
@@ -304,7 +296,7 @@ describe('BCSC Client', () => {
 
   describe('setErrorHandler', () => {
     it('should set the onError callback', () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       const handler = jest.fn()
 
@@ -316,7 +308,7 @@ describe('BCSC Client', () => {
 
   describe('response interceptor', () => {
     it('should pass through AppError instances without re-wrapping', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
       const appError = new AppError('test error', {
@@ -333,7 +325,7 @@ describe('BCSC Client', () => {
     })
 
     it('should pass through non-AxiosError instances unchanged', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
       const genericError = new TypeError('something broke')
@@ -346,7 +338,7 @@ describe('BCSC Client', () => {
     })
 
     it('should call onError handler and log error on handled onError callback failure', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
       const handlerError = new Error('handler blew up')
@@ -394,7 +386,7 @@ describe('BCSC Client', () => {
       )
 
     it('should refresh tokens and retry once on a 401, then succeed', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = setupBearerClient(mockLogger)
 
       const forceRefreshSpy = jest
@@ -420,7 +412,7 @@ describe('BCSC Client', () => {
     })
 
     it('should not retry a 401 on a skipBearerAuth request', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
       const forceRefreshSpy = jest.spyOn(BCSCApiClient.prototype as any, 'forceRefreshTokens')
@@ -439,7 +431,7 @@ describe('BCSC Client', () => {
     })
 
     it('should retry a 401 only once, then surface the error', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = setupBearerClient(mockLogger)
 
       const forceRefreshSpy = jest
@@ -462,7 +454,7 @@ describe('BCSC Client', () => {
 
   describe('fetchEndpointsAndConfig', () => {
     it('should merge server config and endpoints into client', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
       jest.spyOn(client, 'get').mockResolvedValue({
@@ -507,7 +499,7 @@ describe('BCSC Client', () => {
 
   describe('isTokenExpired', () => {
     it('should return true when no token is provided', () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
       const result = (client as any).isTokenExpired(undefined)
@@ -516,7 +508,7 @@ describe('BCSC Client', () => {
     })
 
     it('should return false when token has not expired', () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
       // Token expires far in the future
@@ -528,7 +520,7 @@ describe('BCSC Client', () => {
     })
 
     it('should return true when token is within buffer of expiring', () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
       // Token expires in 20 seconds (within 30s buffer)
@@ -540,7 +532,7 @@ describe('BCSC Client', () => {
     })
 
     it('should return true when token has no exp claim', () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
       ;(jwtDecode as jest.Mock).mockReturnValue({})
@@ -553,7 +545,7 @@ describe('BCSC Client', () => {
 
   describe('ensureValidTokens', () => {
     it('should return existing promise if tokens are already being refreshed', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
       const mockTokens = { access_token: 'a', refresh_token: 'r' }
@@ -566,7 +558,7 @@ describe('BCSC Client', () => {
     })
 
     it('should throw TOKEN_NULL when tokens are missing and unrecoverable', async () => {
-      const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = undefined
       ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
@@ -578,7 +570,7 @@ describe('BCSC Client', () => {
     })
 
     it('should recover tokens from secure storage when the in-memory cache is empty', async () => {
-      const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = undefined
       ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
@@ -599,7 +591,7 @@ describe('BCSC Client', () => {
     })
 
     it('should throw when refresh token is expired', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = { access_token: 'a', refresh_token: 'r' } as any
       ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
@@ -611,7 +603,7 @@ describe('BCSC Client', () => {
     })
 
     it('should return tokens when access token is still valid', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       const mockTokens = { access_token: 'a', refresh_token: 'r' }
       client.tokens = mockTokens as any
@@ -626,7 +618,7 @@ describe('BCSC Client', () => {
     })
 
     it('should refresh tokens when access token is expired but refresh token is valid', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       const oldTokens = { access_token: 'old-access', refresh_token: 'valid-refresh' }
       const newTokens = { access_token: 'new-access', refresh_token: 'new-refresh' }
@@ -650,7 +642,7 @@ describe('BCSC Client', () => {
 
   describe('handleRequest', () => {
     it('should skip bearer auth when skipBearerAuth is set', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
       const config = {
@@ -667,7 +659,7 @@ describe('BCSC Client', () => {
     })
 
     it('should add bearer auth header when skipBearerAuth is not set', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       client.tokens = { access_token: 'my-token', refresh_token: 'r' } as any
       ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
@@ -689,7 +681,7 @@ describe('BCSC Client', () => {
 
   describe('HTTP methods', () => {
     it('should delegate post to client.post', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       const mockResponse = { data: 'ok' }
 
@@ -702,7 +694,7 @@ describe('BCSC Client', () => {
     })
 
     it('should delegate put to client.put', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       const mockResponse = { data: 'ok' }
 
@@ -715,7 +707,7 @@ describe('BCSC Client', () => {
     })
 
     it('should delegate delete to client.delete', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
       const mockResponse = { data: 'ok' }
 
@@ -738,7 +730,7 @@ describe('BCSC Client', () => {
     })
 
     it('should return the first JWK from the JWKS endpoint', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
       jest.spyOn(client, 'get').mockResolvedValue({
@@ -751,7 +743,7 @@ describe('BCSC Client', () => {
     })
 
     it('should return null when JWKS endpoint returns empty keys array', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
       jest.spyOn(client, 'get').mockResolvedValue({
@@ -764,7 +756,7 @@ describe('BCSC Client', () => {
     })
 
     it('should return null and log error when JWKS fetch fails', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
       // A plain Error (not AxiosError/AppError) is not retryable, so this exercises the
@@ -778,7 +770,7 @@ describe('BCSC Client', () => {
     })
 
     it('should return null when keys property is undefined', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
       jest.spyOn(client, 'get').mockResolvedValue({
@@ -791,7 +783,7 @@ describe('BCSC Client', () => {
     })
 
     it('should cache the JWK and not refetch while baseURL is unchanged', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
       const getSpy = jest.spyOn(client, 'get').mockResolvedValue({
@@ -807,7 +799,7 @@ describe('BCSC Client', () => {
     })
 
     it('should refetch the JWK when baseURL changes', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
       const getSpy = jest.spyOn(client, 'get').mockResolvedValue({
@@ -825,7 +817,7 @@ describe('BCSC Client', () => {
     })
 
     it('should request the JWKS endpoint with skipOnErrorHandler set', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
       const getSpy = jest.spyOn(client, 'get').mockResolvedValue({
@@ -850,7 +842,7 @@ describe('BCSC Client', () => {
       })
 
       it('retries a transient network error up to the max attempts, then returns the persisted key', async () => {
-        const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+        const mockLogger = createMockLogger()
         const client = new BCSCApiClient('https://example.com', mockLogger as any)
         const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
 
@@ -883,7 +875,7 @@ describe('BCSC Client', () => {
       })
 
       it('succeeds on a retry, caching and persisting the fresh key', async () => {
-        const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+        const mockLogger = createMockLogger()
         const client = new BCSCApiClient('https://example.com', mockLogger as any)
         const networkError = new AxiosError('Network Error', 'ERR_NETWORK')
         const getSpy = jest
@@ -901,7 +893,7 @@ describe('BCSC Client', () => {
       })
 
       it('does not retry a non-retryable 4xx error and falls back to the persisted key', async () => {
-        const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+        const mockLogger = createMockLogger()
         const client = new BCSCApiClient('https://example.com', mockLogger as any)
         const clientError = { cause: { response: { status: 400 } } } as any
         const getSpy = jest.spyOn(client, 'get').mockRejectedValue(clientError)
@@ -914,7 +906,7 @@ describe('BCSC Client', () => {
       })
 
       it('does not retry a well-formed empty keys response and falls back to the persisted key', async () => {
-        const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+        const mockLogger = createMockLogger()
         const client = new BCSCApiClient('https://example.com', mockLogger as any)
         const getSpy = jest.spyOn(client, 'get').mockResolvedValue({ data: { keys: [] } } as any)
         jest.mocked(loadPersistedJwk).mockResolvedValueOnce(mockJwk as any)
@@ -926,7 +918,7 @@ describe('BCSC Client', () => {
       })
 
       it('returns null when all retry attempts fail and nothing is persisted', async () => {
-        const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+        const mockLogger = createMockLogger()
         const client = new BCSCApiClient('https://example.com', mockLogger as any)
         const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
 
@@ -961,7 +953,7 @@ describe('BCSC Client', () => {
       })
 
       it('does not hydrate the in-memory cache from a persisted fallback', async () => {
-        const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+        const mockLogger = createMockLogger()
         const client = new BCSCApiClient('https://example.com', mockLogger as any)
         const clientError = { cause: { response: { status: 400 } } } as any
         const getSpy = jest.spyOn(client, 'get').mockRejectedValue(clientError)
@@ -987,7 +979,7 @@ describe('BCSC Client', () => {
       })
 
       it('joins a single in-flight fetch: two concurrent calls make exactly one request and resolve to the same key', async () => {
-        const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+        const mockLogger = createMockLogger()
         const client = new BCSCApiClient('https://example.com', mockLogger as any)
         const getSpy = jest.spyOn(client, 'get').mockResolvedValue({ data: { keys: [mockJwk] } } as any)
 
@@ -1002,7 +994,7 @@ describe('BCSC Client', () => {
       })
 
       it('joins a single in-flight retry loop: concurrent calls during a failing fetch share one set of attempts', async () => {
-        const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+        const mockLogger = createMockLogger()
         const client = new BCSCApiClient('https://example.com', mockLogger as any)
         const networkError = new AxiosError('Network Error', 'ERR_NETWORK')
         const getSpy = jest.spyOn(client, 'get').mockRejectedValue(networkError)
@@ -1023,7 +1015,7 @@ describe('BCSC Client', () => {
       })
 
       it('does not join an in-flight fetch started for a different baseURL', async () => {
-        const mockLogger = { info: jest.fn(), error: jest.fn(), warn: jest.fn() }
+        const mockLogger = createMockLogger()
         const client = new BCSCApiClient('https://example.com', mockLogger as any)
         const getSpy = jest.spyOn(client, 'get').mockResolvedValue({ data: { keys: [mockJwk] } } as any)
 
@@ -1044,12 +1036,22 @@ describe('BCSC Client', () => {
 
   describe('tokens race condition smoke test', () => {
     it('should never have stale tokens when multiple requests are made simultaneously', async () => {
-      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const mockLogger = createMockLogger()
       const baseURL = 'https://example.com'
 
       const client = new BCSCApiClient(baseURL, mockLogger as any)
 
-      jest.spyOn(client.client, 'get').mockResolvedValue({ data: 'response' })
+      // Requests go through the real adapter seam so handleRequest (and therefore
+      // ensureValidTokens) runs and we can observe the bearer each request actually carried.
+      const authorizationByUrl: Record<string, string | undefined> = {}
+      client.client.defaults.adapter = (config: any) => {
+        authorizationByUrl[String(config.url)] = config.headers?.get?.('Authorization')
+        return Promise.resolve({ status: 200, data: 'response', statusText: 'OK', headers: {} as any, config })
+      }
+      ;(getAccount as jest.Mock).mockResolvedValue({ issuer: 'iss', clientID: 'cid' })
+      // Neither token is near expiry, so ensureValidTokens never starts a refresh of its own —
+      // the only refresh is the explicit getTokensForRefreshToken call below.
+      ;(jwtDecode as jest.Mock).mockReturnValue({ exp: Math.floor(Date.now() / 1000) + 3600 })
 
       const mockInitialTokens = {
         access_token: 'accessToken',
@@ -1071,6 +1073,7 @@ describe('BCSC Client', () => {
       await client.get('/endpointA')
       expect(client.tokens).toBe(mockInitialTokens)
       expect(client.tokensPromise).toBeNull()
+      expect(authorizationByUrl['/endpointA']).toBe('Bearer accessToken')
 
       // Trigger refresh
       const tokenRefresh = client.getTokensForRefreshToken('newRefreshToken')
@@ -1089,6 +1092,11 @@ describe('BCSC Client', () => {
       const clientReqC = client.get('/endpointC')
 
       await Promise.all([clientReqB, clientReqC])
+
+      // B was issued while the refresh was in flight: it must have waited for the new
+      // access token rather than sending the stale one it saw at call time.
+      expect(authorizationByUrl['/endpointB']).toBe('Bearer newAccessToken')
+      expect(authorizationByUrl['/endpointC']).toBe('Bearer newAccessToken')
     })
   })
 })

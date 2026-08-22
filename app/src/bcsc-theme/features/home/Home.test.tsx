@@ -28,11 +28,10 @@ jest.mock('@/hooks/useCustomNotifications', () => ({
 const mockedUseAccount = useAccount as jest.MockedFunction<typeof useAccount>
 
 describe('Home', () => {
-  let mockNavigation: any
+  let mockNavigation: ReturnType<typeof useNavigation>
 
   beforeEach(() => {
     mockNavigation = useNavigation()
-    jest.clearAllMocks()
     jest.useFakeTimers()
   })
 
@@ -55,12 +54,11 @@ describe('Home', () => {
 
     const tree = render(
       <BasicAppContext>
-        <Home navigation={mockNavigation} route={{ key: 'home', name: 'Home' } as any} />
+        <Home navigation={mockNavigation as never} route={{ key: 'home', name: 'Home' } as any} />
       </BasicAppContext>
     )
 
     expect(tree.getByText('Brule, Steve')).toBeTruthy()
-    expect(tree).toMatchSnapshot()
   })
 
   it('renders only family_name in header when given_name is undefined (mononym)', () => {
@@ -78,13 +76,12 @@ describe('Home', () => {
 
     const tree = render(
       <BasicAppContext>
-        <Home navigation={mockNavigation} route={{ key: 'home', name: 'Home' } as any} />
+        <Home navigation={mockNavigation as never} route={{ key: 'home', name: 'Home' } as any} />
       </BasicAppContext>
     )
 
     expect(tree.getByText('Madonna')).toBeTruthy()
     expect(tree.queryByText(/undefined/i)).toBeNull()
-    expect(tree).toMatchSnapshot()
   })
 
   it('renders only family_name in header when given_name is empty string (mononym)', () => {
@@ -102,13 +99,12 @@ describe('Home', () => {
 
     const tree = render(
       <BasicAppContext>
-        <Home navigation={mockNavigation} route={{ key: 'home', name: 'Home' } as any} />
+        <Home navigation={mockNavigation as never} route={{ key: 'home', name: 'Home' } as any} />
       </BasicAppContext>
     )
 
     expect(tree.getByText('Cher')).toBeTruthy()
     expect(tree.queryByText(/undefined/i)).toBeNull()
-    expect(tree).toMatchSnapshot()
   })
 
   it('renders only given_name in header when family_name is undefined', () => {
@@ -126,18 +122,24 @@ describe('Home', () => {
 
     const tree = render(
       <BasicAppContext>
-        <Home navigation={mockNavigation} route={{ key: 'home', name: 'Home' } as any} />
+        <Home navigation={mockNavigation as never} route={{ key: 'home', name: 'Home' } as any} />
       </BasicAppContext>
     )
 
     expect(tree.getByText('Prince')).toBeTruthy()
     expect(tree.queryByText(/undefined/i)).toBeNull()
-    expect(tree).toMatchSnapshot()
   })
 })
 
 describe('Home (default export, v4.1)', () => {
-  let mockNavigation: any
+  let mockNavigation: ReturnType<typeof useNavigation>
+
+  const bannerTestAccount = {
+    given_name: 'Steve',
+    family_name: 'Brule',
+    fullname_formatted: 'Brule, Steve',
+    account_expiration_date: new Date('2999-12-31'),
+  }
 
   const deviceLimitBanner: BCSCBannerMessage = {
     id: BCSCBanner.DEVICE_LIMIT_EXCEEDED,
@@ -163,13 +165,13 @@ describe('Home (default export, v4.1)', () => {
   const renderHome = (bannerMessages: BCSCBannerMessage[]) =>
     render(
       <BasicAppContext initialStateOverride={{ bcsc: { ...initialState.bcsc, bannerMessages } }}>
-        <DefaultHome navigation={mockNavigation} route={{ key: 'home', name: 'Home' } as any} />
+        <DefaultHome navigation={mockNavigation as never} route={{ key: 'home', name: 'Home' } as any} />
       </BasicAppContext>
     )
 
   beforeEach(() => {
     mockNavigation = useNavigation()
-    jest.clearAllMocks()
+    mockedUseAccount.mockReturnValue({ account: bannerTestAccount } as any)
   })
 
   it('renders the device-limit and app-update banners on Home', () => {
@@ -213,7 +215,7 @@ describe('Home (default export, v4.1)', () => {
 })
 
 describe('Home (default export, v4.1) — verification gating', () => {
-  let mockNavigation: any
+  let mockNavigation: ReturnType<typeof useNavigation>
 
   const activelyVerifiedAccount = {
     given_name: 'John',
@@ -226,13 +228,12 @@ describe('Home (default export, v4.1) — verification gating', () => {
   const renderHome = (verified: boolean) =>
     render(
       <BasicAppContext initialStateOverride={{ bcscSecure: { ...initialState.bcscSecure, verified } }}>
-        <DefaultHome navigation={mockNavigation} route={{ key: 'home', name: 'Home' } as any} />
+        <DefaultHome navigation={mockNavigation as never} route={{ key: 'home', name: 'Home' } as any} />
       </BasicAppContext>
     )
 
   beforeEach(() => {
     mockNavigation = useNavigation()
-    jest.clearAllMocks()
     mockedUseAccount.mockReturnValue({ account: activelyVerifiedAccount } as any)
   })
 

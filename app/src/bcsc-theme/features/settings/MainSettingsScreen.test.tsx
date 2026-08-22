@@ -8,11 +8,10 @@ import React from 'react'
 import { MainSettingsScreen } from './MainSettingsScreen'
 
 describe('MainSettings', () => {
-  let mockNavigation: any
+  let mockNavigation: ReturnType<typeof useNavigation>
 
   beforeEach(() => {
     mockNavigation = useNavigation()
-    jest.clearAllMocks()
   })
 
   it('renders correctly', () => {

@@ -1,13 +1,10 @@
 import { BCComboCardBarcodeDecoder } from '@/bcsc-theme/utils/decoder-strategy/BCComboCardBarcodeDecoder'
 import { DriversLicenseBarcode, ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
-import { DriversLicenseBarcodeDecoder } from '@/bcsc-theme/utils/decoder-strategy/DriversLicenseBarcodeDecoder'
-
-const BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A =
-  "%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=240919700906=?_%0AV8W3Y8                     M185 95BRNBLU9123456789                E$''C(R2S6L?"
-const BC_COMBO_CARD_DL_BARCODE_NO_BCSC_B =
-  '%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=250419470429=?_%0AV8W3Y8                     X160 57WHIBLU9123456789                E$!(\\0CUPXD?'
-const BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C =
-  '%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=260119820104=?_%0AV8W3Y8                     M185 88BRNBLU                          00S00023254?'
+import {
+  BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A,
+  BC_COMBO_CARD_DL_BARCODE_NO_BCSC_B,
+  BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C,
+} from '@/bcsc-theme/utils/decoder-strategy/__fixtures__/barcodes'
 
 describe('BCComboCardBarcodeDecoder', () => {
   describe('canDecode', () => {
@@ -33,7 +30,7 @@ describe('BCComboCardBarcodeDecoder', () => {
     })
 
     it('should return false for a malformed PDF-417 barcode', () => {
-      const decoder = new DriversLicenseBarcodeDecoder()
+      const decoder = new BCComboCardBarcodeDecoder()
       const barcode: DriversLicenseBarcode = {
         type: 'pdf-417',
         value: 'MALFORMED_BARCODE_DATA',

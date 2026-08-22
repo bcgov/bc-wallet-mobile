@@ -15,6 +15,18 @@ jest.mock('react-native-bcsc-core')
 /** Build a fake native module rejection: an Error carrying a string `code` (and optional userInfo). */
 const nativeError = (code: string, message = 'native failure'): Error => Object.assign(new Error(message), { code })
 
+/** Run `fn` once and return what it threw, failing the test if it returns normally. */
+const captureThrown = (fn: () => unknown): AppError => {
+  try {
+    fn()
+  } catch (thrown) {
+    expect(thrown).toBeInstanceOf(AppError)
+    return thrown as AppError
+  }
+
+  throw new Error('Expected the function to throw, but it returned')
+}
+
 jest.mock('@/contexts/NavigationContainerContext', () => ({
   navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
 }))
@@ -62,7 +74,8 @@ describe('native-error-map', () => {
       const error = new Error('test')
       const result = toAppError(error, ErrorRegistry.DEVICE_AUTHORIZATION_ERROR)
 
-      expect(result.code).toContain('device')
+      // AppError has no `category` field — the category is the first segment of `code`.
+      expect(result.code.split('.')[0]).toBe(ErrorRegistry.DEVICE_AUTHORIZATION_ERROR.category)
     })
   })
 
@@ -70,15 +83,10 @@ describe('native-error-map', () => {
     it('throws an AppError with the given definition', () => {
       const error = new Error('native failure')
 
-      expect(() => throwAppError(error, ErrorRegistry.DECRYPT_JWE_ERROR)).toThrow(AppError)
+      const thrown = captureThrown(() => throwAppError(error, ErrorRegistry.DECRYPT_JWE_ERROR))
 
-      try {
-        throwAppError(error, ErrorRegistry.DECRYPT_JWE_ERROR)
-      } catch (thrown) {
-        expect(thrown).toBeInstanceOf(AppError)
-        expect((thrown as AppError).appEvent).toBe(ErrorRegistry.DECRYPT_JWE_ERROR.appEvent)
-        expect((thrown as AppError).cause).toBe(error)
-      }
+      expect(thrown.appEvent).toBe(ErrorRegistry.DECRYPT_JWE_ERROR.appEvent)
+      expect(thrown.cause).toBe(error)
     })
 
     it('throws an AppError for a non-Error value', () => {
@@ -160,13 +168,10 @@ describe('native-error-map', () => {
     it('throws the mapped AppError', () => {
       const error = nativeError('E_KEY_NOT_FOUND')
 
-      expect(() => throwNativeBcscError(error)).toThrow(AppError)
-      try {
-        throwNativeBcscError(error)
-      } catch (thrown) {
-        expect((thrown as AppError).appEvent).toBe(ErrorRegistry.KEYCHAIN_KEY_NOT_FOUND.appEvent)
-        expect((thrown as AppError).cause).toBe(error)
-      }
+      const thrown = captureThrown(() => throwNativeBcscError(error))
+
+      expect(thrown.appEvent).toBe(ErrorRegistry.KEYCHAIN_KEY_NOT_FOUND.appEvent)
+      expect(thrown.cause).toBe(error)
     })
   })
 })
