@@ -7,7 +7,6 @@ import {
 } from '@/bcsc-theme/utils/key-rotation'
 import { BCDispatchAction } from '@/store'
 import { getAllKeys } from 'react-native-bcsc-core'
-import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 type RotateFunction = () => Promise<KeyRotationResult>
@@ -20,9 +19,11 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000
  *
  * `runCheck` deliberately "passes" (skips rotation, returns true) in every case where rotation
  * cannot be safely determined or attempted:
- *   - the app version/build changed this launch — `UpdateDeviceRegistrationSystemCheck.onFail`
- *     (which runs earlier in the same MAIN_STACK batch, sequentially) will PUT the current key
- *     anyway; deferring here avoids two automatic registration PUTs racing in one launch.
+ *   - the app version/build changed since the LAST LAUNCH (a true per-launch marker — see
+ *     {@link KeyRotationSystemCheck.constructor}'s `deferForPendingRegistrationUpdate` doc) —
+ *     `UpdateDeviceRegistrationSystemCheck` (which runs earlier in the same MAIN_STACK batch)
+ *     will PUT the current key this same launch; deferring here avoids two automatic
+ *     registration PUTs racing in one launch.
  *   - a previous attempt is within the retry backoff window.
  *   - the newest local key's age can't be determined (keystore enumeration threw, is empty, or
  *     the newest entry has no `created`) — never rotate on "can't tell".
@@ -32,31 +33,41 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000
  * beyond the threshold.
  */
 export class KeyRotationSystemCheck implements SystemCheckStrategy {
-  private readonly lastAppVersion: string
-  private readonly lastAppBuildNumber: string
+  private readonly deferForPendingRegistrationUpdate: boolean
   private readonly lastRotationAttemptAt: string | undefined
   private readonly rotate: RotateFunction
   private readonly utils: SystemCheckUtils
 
+  /**
+   * @param deferForPendingRegistrationUpdate Whether the app's version/build changed since the
+   *   PREVIOUS launch (i.e. `UpdateDeviceRegistrationSystemCheck` will attempt its own PUT this
+   *   same launch). The caller MUST compute this from a marker stamped unconditionally on every
+   *   launch (e.g. `store.bcsc.lastSeenAppVersion`/`lastSeenAppBuildNumber`), NEVER from
+   *   `store.bcsc.appVersion`/`appBuildNumber` — those are written ONLY by
+   *   `UpdateDeviceRegistrationSystemCheck.onFail`, and only AFTER a successful PUT. Deriving
+   *   this signal from that check's own success state (directly, or by constructing it and
+   *   calling its `runCheck()`) re-introduces the exact bug this param exists to avoid: a
+   *   persistently failing PUT — or a user for whom that check is never even constructed (e.g.
+   *   no `selectedNickname` yet) — would leave the signal permanently "changed", latching key
+   *   rotation off forever (see the #3876 review that caught this).
+   */
   constructor(
-    lastAppVersion: string,
-    lastAppBuildNumber: string,
+    deferForPendingRegistrationUpdate: boolean,
     lastRotationAttemptAt: string | undefined,
     rotate: RotateFunction,
     utils: SystemCheckUtils
   ) {
-    this.lastAppVersion = lastAppVersion
-    this.lastAppBuildNumber = lastAppBuildNumber
+    this.deferForPendingRegistrationUpdate = deferForPendingRegistrationUpdate
     this.lastRotationAttemptAt = lastRotationAttemptAt
     this.rotate = rotate
     this.utils = utils
   }
 
   async runCheck(): Promise<boolean> {
-    // Defer on any launch where the app version/build changed — UpdateDeviceRegistrationSystemCheck
-    // (which runs earlier in the same MAIN_STACK batch) already PUTs the current key on this launch.
-    if (this.lastAppVersion !== getVersion() || this.lastAppBuildNumber !== getBuildNumber()) {
-      this.utils.logger.info('KeyRotationSystemCheck: skipping — app version/build changed this launch')
+    if (this.deferForPendingRegistrationUpdate) {
+      this.utils.logger.info(
+        'KeyRotationSystemCheck: skipping — app version/build changed since the last launch; UpdateDeviceRegistrationSystemCheck will PUT the current key this launch'
+      )
       return true
     }
 

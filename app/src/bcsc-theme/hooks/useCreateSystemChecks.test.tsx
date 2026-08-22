@@ -89,7 +89,24 @@ jest.mock('@/services/system-checks/UpdateDeviceRegistrationSystemCheck', () => 
 }))
 
 jest.mock('@/services/system-checks/KeyRotationSystemCheck', () => ({
-  KeyRotationSystemCheck: class KeyRotationSystemCheck {},
+  KeyRotationSystemCheck: class KeyRotationSystemCheck {
+    deferForPendingRegistrationUpdate: boolean
+    lastRotationAttemptAt: unknown
+    rotate: unknown
+    utils: unknown
+
+    constructor(
+      deferForPendingRegistrationUpdate: boolean,
+      lastRotationAttemptAt: unknown,
+      rotate: unknown,
+      utils: unknown
+    ) {
+      this.deferForPendingRegistrationUpdate = deferForPendingRegistrationUpdate
+      this.lastRotationAttemptAt = lastRotationAttemptAt
+      this.rotate = rotate
+      this.utils = utils
+    }
+  },
 }))
 
 jest.mock('@/services/system-checks/EventReasonAlertsSystemCheck', () => ({
@@ -154,6 +171,7 @@ jest.mock('@/store', () => ({
   BCDispatchAction: {
     REMOVE_BANNER_MESSAGE: 'bcsc/removeBannerMessage',
     SET_INSTALL_ID: 'bcsc/setInstallId',
+    RECORD_APP_LAUNCH_VERSION: 'bcsc/recordAppLaunchVersion',
   },
 }))
 
@@ -495,6 +513,138 @@ describe('useGetSystemChecks', () => {
         )
 
         expect(names).not.toContain('KeyRotationSystemCheck')
+      })
+
+      const findKeyRotationCheck = async () => {
+        const { result } = renderHook(() => useCreateSystemChecks())
+        const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+        return systemChecks.find((check) => check.constructor.name === 'KeyRotationSystemCheck') as any
+      }
+
+      describe('deferForPendingRegistrationUpdate (the app-version-changed signal)', () => {
+        it('is false when lastSeenAppVersion/lastSeenAppBuildNumber already match this launch', async () => {
+          jest.spyOn(DeviceInfo, 'getVersion').mockReturnValue('4.1.0')
+          jest.spyOn(DeviceInfo, 'getBuildNumber').mockReturnValue('1000')
+          mockStoreWith({})
+          mockUseStore.mockReturnValue([
+            {
+              stateLoaded: true,
+              developer: { environment: { analyticsAppId: 'test-app-id' } },
+              bcsc: {
+                analyticsOptIn: true,
+                selectedNickname: 'Test Device',
+                lastSeenAppVersion: '4.1.0',
+                lastSeenAppBuildNumber: '1000',
+              },
+              bcscSecure: { isHydrated: true, verified: true, registrationAccessToken: 'test-registration-token' },
+            },
+            jest.fn(),
+          ])
+
+          const check = await findKeyRotationCheck()
+
+          expect(check.deferForPendingRegistrationUpdate).toBe(false)
+        })
+
+        it('is true when lastSeenAppVersion differs from the current launch (first launch on a new version)', async () => {
+          jest.spyOn(DeviceInfo, 'getVersion').mockReturnValue('4.1.0')
+          jest.spyOn(DeviceInfo, 'getBuildNumber').mockReturnValue('1000')
+          mockStoreWith({})
+          mockUseStore.mockReturnValue([
+            {
+              stateLoaded: true,
+              developer: { environment: { analyticsAppId: 'test-app-id' } },
+              bcsc: {
+                analyticsOptIn: true,
+                selectedNickname: 'Test Device',
+                lastSeenAppVersion: '4.0.0',
+                lastSeenAppBuildNumber: '999',
+              },
+              bcscSecure: { isHydrated: true, verified: true, registrationAccessToken: 'test-registration-token' },
+            },
+            jest.fn(),
+          ])
+
+          const check = await findKeyRotationCheck()
+
+          expect(check.deferForPendingRegistrationUpdate).toBe(true)
+        })
+
+        // Population 1 (#3876 review): a verified user whose selectedNickname is falsy (never
+        // named the device, or lost to the #4258 AsyncStorage race) never gets
+        // UpdateDeviceRegistrationSystemCheck constructed at all. Under the old (buggy)
+        // implementation — which read store.bcsc.appVersion directly — this left appVersion
+        // permanently blank, deferring key rotation forever. It must NOT defer here.
+        it('still rotates when due for a verified user with no selectedNickname (population 1)', async () => {
+          jest.spyOn(DeviceInfo, 'getVersion').mockReturnValue('4.1.0')
+          jest.spyOn(DeviceInfo, 'getBuildNumber').mockReturnValue('1000')
+          jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
+          mockGetBundleId.mockReturnValue('ca.bc.gov.id.servicescard')
+          mockUseStore.mockReturnValue([
+            {
+              stateLoaded: true,
+              developer: { environment: { analyticsAppId: 'test-app-id' } },
+              bcsc: {
+                analyticsOptIn: true,
+                selectedNickname: undefined,
+                lastSeenAppVersion: '4.1.0',
+                lastSeenAppBuildNumber: '1000',
+              },
+              bcscSecure: { isHydrated: true, verified: true, registrationAccessToken: 'test-registration-token' },
+            },
+            jest.fn(),
+          ])
+          mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
+          mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
+          mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
+          jest.spyOn(React, 'useContext').mockReturnValue({ account: { account_expiration_date: new Date() } })
+          mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn() })
+          mockUseRegistrationApi.mockReturnValue({})
+          mockUseConfigApi.mockReturnValue({ getTermsOfUse: jest.fn() })
+
+          const { result } = renderHook(() => useCreateSystemChecks())
+          const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+          const names = systemChecks.map((check) => check.constructor.name)
+          const check = systemChecks.find((c) => c.constructor.name === 'KeyRotationSystemCheck') as any
+
+          expect(names).not.toContain('UpdateDeviceRegistrationSystemCheck')
+          expect(names).toContain('KeyRotationSystemCheck')
+          expect(check.deferForPendingRegistrationUpdate).toBe(false)
+        })
+
+        // Population 2 (#3876 review): UpdateDeviceRegistrationSystemCheck keeps being
+        // constructed and its own PUT keeps failing, so store.bcsc.appVersion/appBuildNumber
+        // (only advanced on a SUCCESSFUL PUT) stay stuck on an old value forever. Because
+        // lastSeenAppVersion/lastSeenAppBuildNumber are stamped unconditionally every launch
+        // (independent of registration success), key rotation must NOT defer here either.
+        it('still rotates when due even though appVersion is permanently stale from a persistently-failing PUT (population 2)', async () => {
+          jest.spyOn(DeviceInfo, 'getVersion').mockReturnValue('4.1.0')
+          jest.spyOn(DeviceInfo, 'getBuildNumber').mockReturnValue('1000')
+          mockStoreWith({})
+          mockUseStore.mockReturnValue([
+            {
+              stateLoaded: true,
+              developer: { environment: { analyticsAppId: 'test-app-id' } },
+              bcsc: {
+                analyticsOptIn: true,
+                selectedNickname: 'Test Device',
+                // Stuck on the OLD version — the registration PUT that would advance these via
+                // UPDATE_APP_VERSION keeps failing.
+                appVersion: '3.9.0',
+                appBuildNumber: '1',
+                // But the per-launch marker IS current, since it's stamped unconditionally.
+                lastSeenAppVersion: '4.1.0',
+                lastSeenAppBuildNumber: '1000',
+              },
+              bcscSecure: { isHydrated: true, verified: true, registrationAccessToken: 'test-registration-token' },
+            },
+            jest.fn(),
+          ])
+
+          const check = await findKeyRotationCheck()
+
+          expect(check.deferForPendingRegistrationUpdate).toBe(false)
+        })
       })
     })
 

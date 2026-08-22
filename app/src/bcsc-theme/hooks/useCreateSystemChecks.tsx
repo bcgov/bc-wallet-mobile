@@ -22,14 +22,14 @@ import {
   getPendingDeviceCodeExpiry,
   VerificationSessionExpiredSystemCheck,
 } from '@/services/system-checks/VerificationSessionExpiredSystemCheck'
-import { BCState } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getAccount, getMaxDevicesBannerLastDisplayedDate, getToken, TokenType } from 'react-native-bcsc-core'
-import { getBundleId } from 'react-native-device-info'
+import { getBuildNumber, getBundleId, getVersion } from 'react-native-device-info'
 import { SystemCheckStrategy } from '../../services/system-checks/system-checks'
 import useConfigApi from '../api/hooks/useConfigApi'
 import useTokenApi from '../api/hooks/useTokens'
@@ -257,18 +257,41 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     // the existing key material and doesn't need a nickname. Also requires isVerified: an
     // unverified user is still mid-setup and should never have its keys touched automatically.
     // Appended AFTER UpdateDeviceRegistrationSystemCheck so the two automatic PUTs never race:
-    // onFail handlers run sequentially in array order (see runSystemChecks), and this check's
-    // own runCheck additionally defers whenever the app version/build changed this launch.
+    // onFail handlers run sequentially in array order (see runSystemChecks).
+    //
+    // deferForPendingRegistrationUpdate is deliberately NOT "was UpdateDeviceRegistrationSystemCheck
+    // constructed and does IT think it needs an update" — that check's own signal
+    // (store.bcsc.appVersion/appBuildNumber) only advances on a SUCCESSFUL PUT, so a persistently
+    // failing PUT (or a user for whom that check is never even constructed, e.g. no
+    // selectedNickname yet) would make that signal permanently stale and latch key rotation off
+    // forever (see the #3876 review that caught this — the original implementation read those
+    // same store fields directly, with the identical bug). Instead this is a TRUE per-launch
+    // marker, stamped unconditionally every launch via RECORD_APP_LAUNCH_VERSION below,
+    // independent of whether registration itself ever succeeds.
+    const appVersionChangedSinceLastLaunch =
+      store.bcsc.lastSeenAppVersion !== getVersion() || store.bcsc.lastSeenAppBuildNumber !== getBuildNumber()
+
     if (isBCServicesCardBundle && store.bcscSecure.registrationAccessToken && isVerified) {
       systemChecks.push(
         new KeyRotationSystemCheck(
-          store.bcsc.appVersion,
-          store.bcsc.appBuildNumber,
+          appVersionChangedSinceLastLaunch,
           store.bcsc.lastKeyRotationAttemptAt,
           rotateKey,
           utils
         )
       )
+    }
+
+    // Stamp the per-launch version/build marker unconditionally, AFTER computing
+    // appVersionChangedSinceLastLaunch above (which needs the PREVIOUS launch's value) — this
+    // getMainSystemChecks callback runs exactly once per app session (guarded by
+    // useSystemChecks' ranSystemChecksRef), so dispatching here fires once per launch, not once
+    // per render.
+    if (appVersionChangedSinceLastLaunch) {
+      dispatch({
+        type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION,
+        payload: [{ version: getVersion(), buildNumber: getBuildNumber() }],
+      })
     }
 
     return systemChecks
@@ -281,6 +304,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     store.bcsc.appVersion,
     store.bcsc.appBuildNumber,
     store.bcsc.lastKeyRotationAttemptAt,
+    store.bcsc.lastSeenAppVersion,
+    store.bcsc.lastSeenAppBuildNumber,
     navigation,
     utils,
     isBCServicesCardBundle,
@@ -293,6 +318,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     client,
     logger,
     updateTokens,
+    dispatch,
   ])
 
   /**
