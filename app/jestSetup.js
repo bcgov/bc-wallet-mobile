@@ -21,10 +21,16 @@ const originalConsole = { log: console.log, warn: console.warn, error: console.e
 // Patterns to suppress (common expected log messages during tests)
 const suppressedPatterns = [/RefreshOrchestrator/, /\[Refresh\]/, /initialized ->/, /PIN set successfully/]
 
-// Patterns for React warnings that are expected in tests
+// React warnings we cannot act on, scoped as narrowly as possible.
+//
+// The act() entries name only Bifold's own ButtonImpl/PressableOpacity, whose
+// press-in/press-out animations schedule state updates we have no way to wrap
+// from a test. The filter deliberately does NOT swallow act() warnings from our
+// own components: those indicate a test that is asserting against a tree React
+// has not finished committing, and they should be fixed, not hidden.
 const expectedReactWarnings = [
-  /An update to .* inside a test was not wrapped in act/,
-  /Cannot update a component .* while rendering a different component/,
+  /An update to ButtonImpl inside a test was not wrapped in act/,
+  /An update to PressableOpacity inside a test was not wrapped in act/,
   /Function components cannot be given refs/,
   /The above error occurred in the <.*> component/,
   /Consider adding an error boundary to your tree/,
@@ -42,7 +48,18 @@ const createFilteredConsole = (method, patterns) => {
       return
     }
 
-    const message = args.map((arg) => (typeof arg === 'string' ? arg : JSON.stringify(arg))).join(' ')
+    // JSON.stringify throws on the circular structures console.error is routinely
+    // handed (React elements, axios errors), which would turn a logged error into
+    // a confusing TypeError from inside the filter itself.
+    const stringify = (arg) => {
+      if (typeof arg === 'string') return arg
+      try {
+        return JSON.stringify(arg)
+      } catch {
+        return String(arg)
+      }
+    }
+    const message = args.map(stringify).join(' ')
 
     // Check if message matches any suppressed pattern
     const shouldSuppress = patterns.some((pattern) => pattern.test(message))
