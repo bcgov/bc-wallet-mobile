@@ -8,6 +8,8 @@ import { PairingNavigationListener, PairingPayload } from '../features/pairing/t
 import { BCSCScreens } from '../types/navigators'
 import MainStack from './MainStack'
 
+jest.mock('@/bcsc-theme/contexts/BCSCAccountContext')
+
 let capturedNavigationListener: PairingNavigationListener | undefined
 
 const mockUnsubscribe = jest.fn()

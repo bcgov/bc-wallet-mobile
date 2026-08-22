@@ -7,6 +7,8 @@ import { render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import EvidenceCaptureScreen from './EvidenceCaptureScreen'
 
+jest.mock('@/bcsc-theme/api/hooks/useApi')
+
 // MaskedCamera reads appStateStatus from BCSCActivityContext, which BasicAppContext doesn't provide.
 jest.mock('@/bcsc-theme/contexts/BCSCActivityContext', () => ({
   useBCSCActivity: jest.fn().mockReturnValue({

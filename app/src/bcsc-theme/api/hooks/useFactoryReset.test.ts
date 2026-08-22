@@ -11,6 +11,10 @@ import { act, renderHook } from '@testing-library/react-native'
 import * as BcscCore from 'react-native-bcsc-core'
 import useRegistrationApi from './useRegistrationApi'
 
+jest.mock('@/bcsc-theme/hooks/useBCSCApiClient')
+
+// Other suites opt into __mocks__/useFactoryReset.tsx; this one tests the real
+// implementation, so opt back out.
 jest.unmock('@/bcsc-theme/api/hooks/useFactoryReset')
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
