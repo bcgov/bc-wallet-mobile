@@ -1,18 +1,3 @@
-/**
- * Unit tests for the client-side signing-key rotation flow (issue #3876).
- *
- * Covers:
- *   - keyCreatedAtMs: iOS (seconds) vs Android (ms) unit normalization, undefined -> null
- *   - rotateSigningKey happy path: generate -> PUT ok -> echo confirms modulus -> prune -> 'rotated'
- *   - rotated registration_access_token is persisted via native setToken BEFORE confirm/rollback
- *   - PUT failure -> rollback (delete the new key) -> 'rolled_back'
- *   - echo definitively missing the new modulus -> rollback -> 'rolled_back'
- *   - echo undecodable/empty -> key kept, NOT pruned, 'rotated' (event=rotated_unconfirmed_no_prune)
- *   - rollback delete throws -> 'failed', no crash
- *   - createNewKeyPair throws -> 'failed', no PUT attempted
- *   - prune failures are non-fatal and don't affect the 'rotated' outcome
- */
-
 jest.mock('react-native-bcsc-core', () => ({
   createNewKeyPair: jest.fn(),
   deleteKey: jest.fn(),

@@ -257,7 +257,10 @@ export type ReRegisterResult = {
  * registration). Rather than forcing the user through a full card re-setup, PUT a fresh
  * registration for the current newest local key using the existing registration_access_token
  * — the same request shape as `useRegistrationApi.updateRegistration`'s PUT, rebuilt here
- * without the hook since this runs from the key-recovery path, outside React.
+ * without the hook since every caller runs outside React.
+ *
+ * Also the registration step of the key-rotation flow (#3876), which calls this immediately
+ * after generating a new key and then confirms the result via `serverKeyNs`.
  *
  * Deliberately does NOT round-trip GET metadata into the PUT (only jwks + client_id are
  * echoed by the server; scopes/grants/etc. are server policy) and NEVER prunes local keys —

@@ -39,7 +39,7 @@ export function keyCreatedAtMs(created?: number): number | null {
   return Platform.OS === 'ios' ? created * 1000 : created
 }
 
-/** Age of a key, in whole days, given its normalized `created` (ms). */
+/** Age of a key in days (fractional), given its normalized `created` (ms). */
 export function keyAgeDays(createdAtMs: number, nowMs: number = Date.now()): number {
   return (nowMs - createdAtMs) / MS_PER_DAY
 }

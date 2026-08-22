@@ -173,8 +173,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
 
       const result = await rotateSigningKey(client as BCSCApiClient, clientId, registrationAccessToken, logger)
       if (result.newRegistrationAccessToken) {
-        // The native write already happened inside rotateSigningKey; this call is an idempotent
-        // sync of the same value into the in-memory store.
+        // Syncs the rotated token into the in-memory store; the repeated native write is
+        // idempotent and covers the case where rotateSigningKey's own setToken failed.
         await updateTokens({ registrationAccessToken: result.newRegistrationAccessToken })
       }
       return result
