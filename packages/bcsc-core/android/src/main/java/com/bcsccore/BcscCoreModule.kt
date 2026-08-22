@@ -422,9 +422,11 @@ class BcscCoreModule(
             val jwk = keyPairSource.convertBcscKeyPairToJWK(bcscKeyPair)
             if (jwk !is RSAKey) {
                 cleanUpUnregisteredKeyAfterGenerationFailure(bcscKeyPair.getKeyInfo().getAlias(), "not an RSA key")
+                // Redacted: this message surfaces via AppError.technicalMessage, analytics, and
+                // user-visible debug details — a channel that travels further than logs.
                 promise.reject(
                     "E_KEYSTORE_ERROR",
-                    "Newly generated key '${bcscKeyPair.getKeyInfo().getAlias()}' is not an RSA key",
+                    "Newly generated key '${redactAlias(bcscKeyPair.getKeyInfo().getAlias())}' is not an RSA key",
                 )
                 return
             }

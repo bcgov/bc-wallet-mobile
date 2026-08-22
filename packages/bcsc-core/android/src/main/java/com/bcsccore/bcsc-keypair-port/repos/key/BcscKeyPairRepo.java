@@ -248,9 +248,9 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
               + redactAlias(alias) + "' after key-pair retrieval failure", e);
         }
         throw new KeyNotFoundException(
-            "Failed to retrieve newly generated key pair for alias '" + alias + "': " + e.getMessage(), e);
+            "Failed to retrieve newly generated key pair for alias '" + redactAlias(alias) + "': " + e.getMessage(), e);
       }
-      SimpleLog.d(TAG, "Generated new key pair " + alias);
+      SimpleLog.d(TAG, "Generated new key pair " + redactAlias(alias));
       return new BcscKeyPair(keyPair, newInfo);
     } catch (KeypairGenerationException e) {
       throw e;
@@ -450,8 +450,11 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
     try {
       KeyStore keyStore = loadAndroidKeyStore();
       if (keyStore.containsAlias(alias)) {
+        // Redacted: this message can surface through createNewKeyPair's promise rejection
+        // (BcscCoreModule.kt forwards e.devMessage), which reaches AppError.technicalMessage,
+        // analytics, and user-visible debug details — a channel that travels further than logs.
         throw new KeyAlreadyExistsException(
-            "Key pair already exists for alias '" + alias + "'");
+            "Key pair already exists for alias '" + redactAlias(alias) + "'");
       }
 
       final KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(
@@ -483,10 +486,12 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
         | NoSuchAlgorithmException
         | NoSuchProviderException e) {
       SimpleLog.e(TAG, "Failed to generate key pair", e);
-      throw new KeypairGenerationException("Failed to generate key pair for alias '" + alias + "': " + e.getMessage(), e);
+      throw new KeypairGenerationException(
+          "Failed to generate key pair for alias '" + redactAlias(alias) + "': " + e.getMessage(), e);
     } catch (Exception e) {
       SimpleLog.e(TAG, "Failed to generate key pair", e);
-      throw new KeypairGenerationException("Failed to generate key pair for alias '" + alias + "': " + e.getMessage(), e);
+      throw new KeypairGenerationException(
+          "Failed to generate key pair for alias '" + redactAlias(alias) + "': " + e.getMessage(), e);
     }
   }
 

@@ -497,7 +497,7 @@ class BcscCore: NSObject {
         // recovery branch) keeps the surfaced error consistent with what actually failed.
         reject(
           "E_KEY_EXPORT_FAILED",
-          "Generated new key '\(newKeyId)' but could not extract its RSA components",
+          "Generated new key '\(redactedAlias(newKeyId))' but could not extract its RSA components",
           nil
         )
         return
@@ -519,7 +519,7 @@ class BcscCore: NSObject {
       )
       reject(
         "E_120_KEYCHAIN_UNAVAILABLE_ERROR",
-        "Keychain temporarily unavailable while retrieving newly generated key '\(newKeyId)' (OSStatus \(status))",
+        "Keychain temporarily unavailable while retrieving newly generated key '\(redactedAlias(newKeyId))' (OSStatus \(status))",
         KeychainError.keychainUnavailable(status)
       )
     } catch {
@@ -530,7 +530,7 @@ class BcscCore: NSObject {
       )
       reject(
         "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
-        "Failed to retrieve newly generated key pair '\(newKeyId)': \(error.localizedDescription)",
+        "Failed to retrieve newly generated key pair '\(redactedAlias(newKeyId))': \(error.localizedDescription)",
         error
       )
     }
@@ -560,11 +560,13 @@ class BcscCore: NSObject {
   }
 
   /**
-   * Redacts a keystore alias to its trailing 8 characters for logging. The alias is
-   * `<provider><UUID>/N` (see `generateKeyPair()`), so the full string embeds a stable
-   * per-device UUID component — logging it in full would leak that identifier into remote
-   * logs (this repo is public and logs ship to Loki). The trailing suffix still lets one
-   * device's log lines be correlated with each other without exposing the full identifier.
+   * Redacts a keystore alias to its trailing 8 characters. The alias is `<provider><UUID>/N`
+   * (see `generateKeyPair()`), so the full string embeds a stable per-device UUID component —
+   * exposing it in full would leak that identifier. Used both in log lines (which ship to Loki
+   * from this public repo) and in `reject()` messages (which surface via
+   * `AppError.technicalMessage`, analytics, and user-visible debug details — a channel that
+   * travels further than logs). The trailing suffix still lets one device's log lines/error
+   * reports be correlated with each other without exposing the full identifier.
    */
   private func redactedAlias(_ alias: String) -> String {
     alias.count <= 8 ? alias : "…" + String(alias.suffix(8))
