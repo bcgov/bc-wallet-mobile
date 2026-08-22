@@ -489,8 +489,14 @@ class BcscCore: NSObject {
           keyPairManager: keyPairManager,
           context: "RSA component extraction failure"
         )
+        // The key WAS generated (and retrieved) successfully — this is an export/derivation
+        // failure, not a "key doesn't exist" condition. E_KEY_EXPORT_FAILED is the existing code
+        // this file already uses for the equivalent failure in getKeyPair (export public/private
+        // key); reusing it here (rather than E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR, which maps to
+        // KEYCHAIN_KEY_NOT_FOUND in native-error-map.ts and would route JS into the wrong
+        // recovery branch) keeps the surfaced error consistent with what actually failed.
         reject(
-          "E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR",
+          "E_KEY_EXPORT_FAILED",
           "Generated new key '\(newKeyId)' but could not extract its RSA components",
           nil
         )
