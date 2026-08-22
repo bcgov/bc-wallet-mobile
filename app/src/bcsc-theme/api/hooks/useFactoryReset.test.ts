@@ -10,6 +10,8 @@ import { act, renderHook } from '@testing-library/react-native'
 import * as BcscCore from 'react-native-bcsc-core'
 import useRegistrationApi from './useRegistrationApi'
 
+jest.mock('@/bcsc-theme/hooks/useBCSCApiClient')
+
 // jestSetup.js globally mocks this hook for every other suite; undo that here so the real
 // implementation is under test.
 jest.unmock('@/bcsc-theme/api/hooks/useFactoryReset')

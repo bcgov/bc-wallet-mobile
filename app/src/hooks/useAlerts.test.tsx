@@ -8,6 +8,8 @@ import { renderHook } from '@testing-library/react-native'
 import RN, { Platform } from 'react-native'
 import { showErrorAlert, useAlerts } from './useAlerts'
 
+jest.mock('@/bcsc-theme/api/hooks/useFactoryReset')
+
 const mockUseStore = jest.fn()
 const mockUseServices = jest.fn()
 

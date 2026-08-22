@@ -12,6 +12,8 @@ import React from 'react'
 import { BCSCCardProcess, EvidenceMetadata, EvidenceType } from 'react-native-bcsc-core'
 import EvidenceTypeListScreen from './EvidenceTypeListScreen'
 
+jest.mock('@/bcsc-theme/api/hooks/useApi')
+
 jest.mock('@/bcsc-theme/hooks/useDataLoader')
 jest.mock('@/bcsc-theme/hooks/useSecureActions')
 
