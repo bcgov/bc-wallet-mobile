@@ -76,6 +76,16 @@ describe('reducer', () => {
 
     expect(result.bcsc.installId).toBe('new-install-id')
   })
+
+  it('KEY_ROTATION_ATTEMPTED sets and persists lastKeyRotationAttemptAt', () => {
+    const state = { ...initialState, bcsc: { ...initialState.bcsc, lastKeyRotationAttemptAt: undefined } }
+    const result = reducer(state, {
+      type: BCDispatchAction.KEY_ROTATION_ATTEMPTED,
+      payload: ['2026-01-01T00:00:00.000Z'],
+    })
+
+    expect(result.bcsc.lastKeyRotationAttemptAt).toBe('2026-01-01T00:00:00.000Z')
+  })
 })
 
 describe('migrateBCSCState', () => {

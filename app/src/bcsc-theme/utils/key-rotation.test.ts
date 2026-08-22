@@ -28,8 +28,14 @@ jest.mock('./key-recovery', () => ({
 
 import { Platform } from 'react-native'
 import { createNewKeyPair, deleteKey, getAllKeysWithPublicInfo, setToken, TokenType } from 'react-native-bcsc-core'
-import { keyAgeDays, keyCreatedAtMs, KEY_ROTATION_MAX_AGE_DAYS, KEY_ROTATION_RETRY_BACKOFF_DAYS, rotateSigningKey } from './key-rotation'
 import { reRegisterNewestKey } from './key-recovery'
+import {
+  KEY_ROTATION_MAX_AGE_DAYS,
+  KEY_ROTATION_RETRY_BACKOFF_DAYS,
+  keyAgeDays,
+  keyCreatedAtMs,
+  rotateSigningKey,
+} from './key-rotation'
 
 const mockedCreateNewKeyPair = createNewKeyPair as jest.MockedFunction<typeof createNewKeyPair>
 const mockedDeleteKey = deleteKey as jest.MockedFunction<typeof deleteKey>

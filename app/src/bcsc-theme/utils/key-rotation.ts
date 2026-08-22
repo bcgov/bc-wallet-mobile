@@ -2,7 +2,7 @@ import { BifoldLogger } from '@bifold/core'
 import { Platform } from 'react-native'
 import { createNewKeyPair, deleteKey, getAllKeysWithPublicInfo, setToken, TokenType } from 'react-native-bcsc-core'
 import BCSCApiClient from '../api/client'
-import { normalizeModulus, modulusInSet } from './jwk-modulus'
+import { modulusInSet, normalizeModulus } from './jwk-modulus'
 import { describeError, reRegisterNewestKey } from './key-recovery'
 
 /**
@@ -89,7 +89,9 @@ async function pruneOtherKeys(newKeyId: string, logger: BifoldLogger): Promise<v
       pruned++
     } catch (err) {
       failures++
-      logger.warn(`[rotateSigningKey] event=failed_prune_delete could not prune old key '${key.id}': ${describeError(err)}`)
+      logger.warn(
+        `[rotateSigningKey] event=failed_prune_delete could not prune old key '${key.id}': ${describeError(err)}`
+      )
     }
   }
   logger.info(`[rotateSigningKey] event=pruned active='${newKeyId}' pruned=${pruned} prune_failures=${failures}`)

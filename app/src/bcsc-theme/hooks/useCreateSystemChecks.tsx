@@ -1,6 +1,7 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
 
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { rotateSigningKey } from '@/bcsc-theme/utils/key-rotation'
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { AccountExpirySystemCheck } from '@/services/system-checks/AccountExpirySystemCheck'
@@ -9,6 +10,7 @@ import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCh
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReasonAlertsSystemCheck'
 import { InstallIdSystemCheck } from '@/services/system-checks/InstallIdSystemCheck'
+import { KeyRotationSystemCheck } from '@/services/system-checks/KeyRotationSystemCheck'
 import { PendingVerificationRecoverySystemCheck } from '@/services/system-checks/PendingVerificationRecoverySystemCheck'
 import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClockSkewSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
@@ -26,7 +28,7 @@ import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { getMaxDevicesBannerLastDisplayedDate } from 'react-native-bcsc-core'
+import { getAccount, getMaxDevicesBannerLastDisplayedDate, getToken, TokenType } from 'react-native-bcsc-core'
 import { getBundleId } from 'react-native-device-info'
 import { SystemCheckStrategy } from '../../services/system-checks/system-checks'
 import useConfigApi from '../api/hooks/useConfigApi'
@@ -35,6 +37,7 @@ import { BCSCAccountContext } from '../contexts/BCSCAccountContext'
 import { useEvidenceService } from '../services/hooks/useEvidenceService'
 import { useRegistrationService } from '../services/hooks/useRegistrationService'
 import { useTokenService } from '../services/hooks/useTokenService'
+import useSecureActions from './useSecureActions'
 import { SystemCheckScope } from './useSystemChecks'
 
 const BCSC_BUILD_SUFFIX = '.servicescard'
@@ -70,6 +73,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const tokenApi = useTokenApi(client as BCSCApiClient)
   const tokenService = useTokenService()
   const registrationService = useRegistrationService()
+  const { updateTokens } = useSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation()
   const { isNavigationReady } = useNavigationContainer()
@@ -151,6 +155,30 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
         // next launch (UPDATE_APP_VERSION only dispatches on success) — no modal.
         suppressTransientAlerts: true,
       })
+    const rotateKey = async () => {
+      // Read fresh at call time rather than closing over the store value: an earlier check in
+      // this same MAIN_STACK pass (UpdateDeviceRegistrationSystemCheck.onFail) may have PUT and
+      // rotated the registration_access_token before this check's onFail runs (onFail handlers
+      // run sequentially in array order — see runSystemChecks). Fall back to the captured store
+      // value only if the native read comes back empty (this check's own gate already required
+      // one to exist), never skip outright.
+      const [tokenInfo, account] = await Promise.all([getToken(TokenType.Registration), getAccount()])
+      const registrationAccessToken = tokenInfo?.token ?? store.bcscSecure.registrationAccessToken
+      const clientId = account?.clientID
+
+      if (!registrationAccessToken || !clientId) {
+        logger.warn('KeyRotationSystemCheck: missing registrationAccessToken or clientID; skipping rotation attempt')
+        return { status: 'failed' as const }
+      }
+
+      const result = await rotateSigningKey(client as BCSCApiClient, clientId, registrationAccessToken, logger)
+      if (result.newRegistrationAccessToken) {
+        // The native write already happened inside rotateSigningKey; this call is an idempotent
+        // sync of the same value into the in-memory store.
+        await updateTokens({ registrationAccessToken: result.newRegistrationAccessToken })
+      }
+      return result
+    }
 
     const systemChecks: SystemCheckStrategy[] = []
 
@@ -223,6 +251,26 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
         )
       )
     }
+
+    // Key rotation (issue #3876): gated like the update check above (BCSC builds, an existing
+    // registration), but deliberately does NOT require selectedNickname — rotation re-registers
+    // the existing key material and doesn't need a nickname. Also requires isVerified: an
+    // unverified user is still mid-setup and should never have its keys touched automatically.
+    // Appended AFTER UpdateDeviceRegistrationSystemCheck so the two automatic PUTs never race:
+    // onFail handlers run sequentially in array order (see runSystemChecks), and this check's
+    // own runCheck additionally defers whenever the app version/build changed this launch.
+    if (isBCServicesCardBundle && store.bcscSecure.registrationAccessToken && isVerified) {
+      systemChecks.push(
+        new KeyRotationSystemCheck(
+          store.bcsc.appVersion,
+          store.bcsc.appBuildNumber,
+          store.bcsc.lastKeyRotationAttemptAt,
+          rotateKey,
+          utils
+        )
+      )
+    }
+
     return systemChecks
   }, [
     isVerified,
@@ -232,6 +280,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     store.bcsc.selectedNickname,
     store.bcsc.appVersion,
     store.bcsc.appBuildNumber,
+    store.bcsc.lastKeyRotationAttemptAt,
     navigation,
     utils,
     isBCServicesCardBundle,
@@ -241,6 +290,9 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     evidenceService,
     tokenApi,
     configApi,
+    client,
+    logger,
+    updateTokens,
   ])
 
   /**

@@ -18,6 +18,7 @@ export const mockUseEvidenceService = jest.fn()
 export const mockUseNavigation = jest.fn()
 export const mockUseNavigationContainer = jest.fn()
 export const mockGetBundleId = jest.fn()
+export const mockUseSecureActions = jest.fn()
 
 // --------------------
 // External hooks
@@ -32,6 +33,11 @@ jest.mock('@bifold/core', () => ({
 
 jest.mock('@/bcsc-theme/hooks/useBCSCApiClient', () => ({
   useBCSCApiClientState: () => mockUseBCSCApiClientState(),
+}))
+
+jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
+  __esModule: true,
+  default: () => mockUseSecureActions(),
 }))
 
 jest.mock('@/bcsc-theme/api/hooks/useTokens', () => () => mockUseTokenApi())
@@ -80,6 +86,10 @@ jest.mock('@/services/system-checks/AccountRenewalSystemCheck', () => ({
 
 jest.mock('@/services/system-checks/UpdateDeviceRegistrationSystemCheck', () => ({
   UpdateDeviceRegistrationSystemCheck: class UpdateDeviceRegistrationSystemCheck {},
+}))
+
+jest.mock('@/services/system-checks/KeyRotationSystemCheck', () => ({
+  KeyRotationSystemCheck: class KeyRotationSystemCheck {},
 }))
 
 jest.mock('@/services/system-checks/EventReasonAlertsSystemCheck', () => ({
@@ -150,6 +160,7 @@ jest.mock('@/store', () => ({
 describe('useGetSystemChecks', () => {
   beforeEach(() => {
     jest.resetAllMocks()
+    mockUseSecureActions.mockReturnValue({ updateTokens: jest.fn() })
   })
 
   describe('STARTUP scope', () => {
@@ -364,11 +375,12 @@ describe('useGetSystemChecks', () => {
 
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
 
-        expect(systemChecks).toHaveLength(4)
+        expect(systemChecks).toHaveLength(5)
         expect(systemChecks[0].constructor.name).toBe('DeviceCountSystemCheck')
         expect(systemChecks[1].constructor.name).toBe('EventReasonAlertsSystemCheck')
         expect(systemChecks[2].constructor.name).toBe('TermsOfUseSystemCheck')
         expect(systemChecks[3].constructor.name).toBe('UpdateDeviceRegistrationSystemCheck')
+        expect(systemChecks[4].constructor.name).toBe('KeyRotationSystemCheck')
       })
 
       it('skips the id-token / account checks for an unverified user but still runs Terms of Use', async () => {
@@ -419,6 +431,70 @@ describe('useGetSystemChecks', () => {
         // No chosen nickname / registration token yet, so there's nothing to re-register — the
         // device-registration update check is skipped (otherwise it throws "No client name found").
         expect(names).not.toContain('UpdateDeviceRegistrationSystemCheck')
+        // Key rotation requires isVerified — an unverified user is still mid-setup and should
+        // never have its keys touched automatically.
+        expect(names).not.toContain('KeyRotationSystemCheck')
+      })
+    })
+
+    describe('KeyRotationSystemCheck', () => {
+      const mockStoreWith = (bcscSecureOverrides: Record<string, unknown>, bundleId = 'ca.bc.gov.id.servicescard') => {
+        jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue(bundleId)
+        mockGetBundleId.mockReturnValue(bundleId)
+        mockUseStore.mockReturnValue([
+          {
+            stateLoaded: true,
+            developer: { environment: { analyticsAppId: 'test-app-id' } },
+            bcsc: { analyticsOptIn: true, selectedNickname: 'Test Device' },
+            bcscSecure: {
+              isHydrated: true,
+              verified: true,
+              registrationAccessToken: 'test-registration-token',
+              ...bcscSecureOverrides,
+            },
+          },
+          jest.fn(),
+        ])
+        mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
+        mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
+        mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
+        jest.spyOn(React, 'useContext').mockReturnValue({ account: { account_expiration_date: new Date() } })
+        mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn() })
+        mockUseRegistrationApi.mockReturnValue({})
+        mockUseConfigApi.mockReturnValue({ getTermsOfUse: jest.fn() })
+      }
+
+      it('is included for a verified, registered BCSC-build user', async () => {
+        mockStoreWith({})
+
+        const { result } = renderHook(() => useCreateSystemChecks())
+        const names = (await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()).map(
+          (check) => check.constructor.name
+        )
+
+        expect(names).toContain('KeyRotationSystemCheck')
+      })
+
+      it('is not included without a registrationAccessToken', async () => {
+        mockStoreWith({ registrationAccessToken: undefined })
+
+        const { result } = renderHook(() => useCreateSystemChecks())
+        const names = (await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()).map(
+          (check) => check.constructor.name
+        )
+
+        expect(names).not.toContain('KeyRotationSystemCheck')
+      })
+
+      it('is not included for a non-BCSC bundle', async () => {
+        mockStoreWith({}, 'ca.bc.gov.BCWallet')
+
+        const { result } = renderHook(() => useCreateSystemChecks())
+        const names = (await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()).map(
+          (check) => check.constructor.name
+        )
+
+        expect(names).not.toContain('KeyRotationSystemCheck')
       })
     })
 
