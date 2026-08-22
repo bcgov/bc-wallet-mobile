@@ -42,7 +42,16 @@ const REG_TOKEN = 'rat-xyz'
 /** Distinct, decodable "modulus" values for test fixtures. */
 const n = (seed: number) => Buffer.from([0xaa, seed]).toString('base64')
 
-const makeApiClient = () => ({ endpoints: { registration: 'https://example.test/device/register' } }) as any
+// Shared (not per-call) mock so `makeApiClient()` results stay deep-equal to each other for
+// assertions like `toHaveBeenCalledWith(makeApiClient(), ...)` used throughout this file — a
+// fresh `jest.fn()` per call would break those, since two distinct mock functions never compare
+// equal.
+const mockedClearTokens = jest.fn()
+const makeApiClient = () =>
+  ({
+    endpoints: { registration: 'https://example.test/device/register' },
+    clearTokens: mockedClearTokens,
+  }) as any
 
 describe('keyCreatedAtMs', () => {
   const originalOS = Platform.OS
@@ -238,5 +247,76 @@ describe('rotateSigningKey', () => {
 
     expect(result.status).toBe('rotated')
     expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('event=failed_prune_enumerate'))
+  })
+
+  describe('clearTokens (rotation switches the JWE decryption key)', () => {
+    it('clears the token cache on a confirmed, pruned rotation', async () => {
+      mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
+      mockedReRegisterNewestKey.mockResolvedValue({ success: true, serverKeyNs: [n(2)] })
+      mockedGetAllKeysWithPublicInfo.mockResolvedValue([{ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 }])
+      const logger = makeLogger()
+
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
+
+      expect(result.status).toBe('rotated')
+      expect(mockedClearTokens).toHaveBeenCalledTimes(1)
+    })
+
+    it('clears the token cache on an unconfirmed (undecodable echo) rotation too', async () => {
+      mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
+      mockedReRegisterNewestKey.mockResolvedValue({ success: true, serverKeyNs: [] })
+      const logger = makeLogger()
+
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
+
+      expect(result.status).toBe('rotated')
+      expect(mockedClearTokens).toHaveBeenCalledTimes(1)
+    })
+
+    it('does NOT clear the token cache when rolled back (PUT failed) — the old key is still newest', async () => {
+      mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
+      mockedReRegisterNewestKey.mockResolvedValue({ success: false })
+      mockedDeleteKey.mockResolvedValue(undefined)
+      const logger = makeLogger()
+
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
+
+      expect(result.status).toBe('rolled_back')
+      expect(mockedClearTokens).not.toHaveBeenCalled()
+    })
+
+    it('does NOT clear the token cache when rolled back (echo definitively missing)', async () => {
+      mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
+      mockedReRegisterNewestKey.mockResolvedValue({ success: true, serverKeyNs: [n(1)] })
+      mockedDeleteKey.mockResolvedValue(undefined)
+      const logger = makeLogger()
+
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
+
+      expect(result.status).toBe('rolled_back')
+      expect(mockedClearTokens).not.toHaveBeenCalled()
+    })
+
+    it('does NOT clear the token cache on failed (createNewKeyPair throws)', async () => {
+      mockedCreateNewKeyPair.mockRejectedValue(new Error('keychain unavailable'))
+      const logger = makeLogger()
+
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
+
+      expect(result.status).toBe('failed')
+      expect(mockedClearTokens).not.toHaveBeenCalled()
+    })
+
+    it('does NOT clear the token cache on failed (rollback delete throws)', async () => {
+      mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
+      mockedReRegisterNewestKey.mockResolvedValue({ success: false })
+      mockedDeleteKey.mockRejectedValue(new Error('E_KEYSTORE_ERROR'))
+      const logger = makeLogger()
+
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
+
+      expect(result.status).toBe('failed')
+      expect(mockedClearTokens).not.toHaveBeenCalled()
+    })
   })
 })

@@ -151,6 +151,10 @@ async function rollback(
  *         NOT prune — pruning blind here could strand the device on an unconfirmed key. Logged
  *         distinctly as `event=rotated_unconfirmed_no_prune`. Returns 'rotated'.
  *       - confirmed present → prune every other local key (see {@link pruneOtherKeys}) → 'rotated'.
+ *     Both 'rotated' exits call `apiClient.clearTokens()` — rotation switches the JWE
+ *     decryption key, so any id_token cached before rotation ran is no longer decryptable and
+ *     must be dropped so the next read re-mints it under the new key. Never done on
+ *     'rolled_back' (the old key is newest again, cache still valid) or 'failed'.
  *
  * Deliberately omits the original stub's "check new keys work" step: an active post-rotation
  * token refresh would consume the refresh token outside the token service. The modulus confirm
@@ -202,6 +206,10 @@ export async function rotateSigningKey(
     logger.warn(
       `[rotateSigningKey] event=rotated_unconfirmed_no_prune server echo was undecodable/empty; keeping new key '${newKey.id}' without pruning previous keys`
     )
+    // The new key is newest-wins active regardless of whether we could confirm registration, so
+    // any cached id_token (a JWE encrypted to the OLD public key) can no longer be decrypted —
+    // see the clearTokens() comment below.
+    apiClient.clearTokens()
     return { status: 'rotated', newRegistrationAccessToken }
   }
 
@@ -211,6 +219,14 @@ export async function rotateSigningKey(
 
   logger.info(`[rotateSigningKey] event=confirmed new key '${newKey.id}' present in server jwks`)
   await pruneOtherKeys(newKey.id, logger)
+
+  // Rotation just switched the device's JWE DECRYPTION key (signing and decryption use the
+  // same newest-wins key on both platforms). Any id_token already cached in `apiClient.tokens`
+  // was encrypted by IAS to the OLD public key and can no longer be decrypted by decodePayload
+  // (which decrypts with the newest key only — no try-all-keys fallback on either platform).
+  // Clear the cache directly (never emit TOKENS_REFRESHED for this — that listener re-runs the
+  // system checks, a loop hazard) so the next read re-mints tokens under the new key.
+  apiClient.clearTokens()
 
   logger.info(`[rotateSigningKey] event=succeeded active='${newKey.id}'`)
   return { status: 'rotated', newRegistrationAccessToken }
