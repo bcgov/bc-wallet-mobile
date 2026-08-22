@@ -1,7 +1,7 @@
 import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { IASEnvironment } from '@utils/environment'
 import { act, fireEvent, render } from '@testing-library/react-native'
+import { IASEnvironment } from '@utils/environment'
 import React from 'react'
 import EnvironmentSelector from './EnvironmentSelector'
 

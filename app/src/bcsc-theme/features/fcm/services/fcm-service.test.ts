@@ -74,10 +74,9 @@ describe('FcmService', () => {
 
       mockState.onMessageCallback?.({ data: { bcsc_challenge_request: 'jwt' }, notification: undefined })
 
-      expect(handler).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'challenge', data: { jwt: 'jwt' } }),
-        { source: 'foreground' }
-      )
+      expect(handler).toHaveBeenCalledWith(expect.objectContaining({ type: 'challenge', data: { jwt: 'jwt' } }), {
+        source: 'foreground',
+      })
     })
 
     it('removes handler when unsubscribe is called', async () => {
@@ -272,7 +271,6 @@ describe('FcmService', () => {
       expect(handler1).toHaveBeenCalled()
       expect(handler2).toHaveBeenCalled()
     })
-
   })
 
   describe('notification opened from background', () => {

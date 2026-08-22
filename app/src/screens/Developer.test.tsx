@@ -29,6 +29,7 @@ describe('Developer Screen', () => {
   beforeEach(() => {
     // The mocked Switch logs "dispatchCommand was called with a ref ..." on every render here.
     // Suppress only that line so genuine React errors from these tests still surface.
+    // eslint-disable-next-line no-console -- captured so genuine errors still reach the console
     const passThrough = console.error
     jest.spyOn(console, 'error').mockImplementation((...args) => {
       if (/dispatchCommand was called with a ref/.test(args.map(String).join(' '))) {

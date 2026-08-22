@@ -1,8 +1,8 @@
 import { BCSCLoadingProvider } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { BasicAppContext } from '@mocks/helpers/app'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { setPIN } from 'react-native-bcsc-core'
-import { BasicAppContext } from '@mocks/helpers/app'
 import { PINEntryForm } from './PINEntryForm'
 
 jest.mock('react-native-bcsc-core', () => ({

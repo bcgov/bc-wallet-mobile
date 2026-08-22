@@ -4,8 +4,8 @@ import {
   decodeBarcodes,
   DecodedCode,
   DecodedCodeKind,
-  decodeScannedCode,
   DecoderStrategy,
+  decodeScannedCode,
   getDecoderStrategies,
   ScanableCode,
 } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'

@@ -459,11 +459,7 @@ describe('CodeScanningCamera', () => {
     it('processes codes when scanner detects barcodes', async () => {
       render(
         <BasicAppContext>
-          <CodeScanningCamera
-            {...defaultProps}
-            showBarcodeHighlight={true}
-            onScanStateChange={mockOnScanStateChange}
-          />
+          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} onScanStateChange={mockOnScanStateChange} />
         </BasicAppContext>
       )
 
@@ -494,11 +490,7 @@ describe('CodeScanningCamera', () => {
     it('handles empty codes array', async () => {
       render(
         <BasicAppContext>
-          <CodeScanningCamera
-            {...defaultProps}
-            showBarcodeHighlight={true}
-            onScanStateChange={mockOnScanStateChange}
-          />
+          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} onScanStateChange={mockOnScanStateChange} />
         </BasicAppContext>
       )
 
@@ -595,9 +587,7 @@ describe('CodeScanningCamera', () => {
       const styled = findStyledNodes(tree.toJSON(), (style) => style.backgroundColor === 'red')
       expect(styled).toHaveLength(1)
       // The custom style is merged over the component's own container style, not replacing it.
-      expect(StyleSheet.flatten(styled[0].props.style)).toEqual(
-        expect.objectContaining({ borderRadius: 10, flex: 1 })
-      )
+      expect(StyleSheet.flatten(styled[0].props.style)).toEqual(expect.objectContaining({ borderRadius: 10, flex: 1 }))
     })
   })
 
@@ -630,11 +620,7 @@ describe('CodeScanningCamera', () => {
     it('starts in scanning state', () => {
       render(
         <BasicAppContext>
-          <CodeScanningCamera
-            {...defaultProps}
-            showBarcodeHighlight={true}
-            onScanStateChange={mockOnScanStateChange}
-          />
+          <CodeScanningCamera {...defaultProps} showBarcodeHighlight={true} onScanStateChange={mockOnScanStateChange} />
         </BasicAppContext>
       )
 

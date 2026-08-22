@@ -1,5 +1,5 @@
-import { BasicAppContext } from '@mocks/helpers/app'
 import { testIdWithKey } from '@bifold/core'
+import { BasicAppContext } from '@mocks/helpers/app'
 import { act, fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import RemoteLogWarning from './RemoteLogWarning'

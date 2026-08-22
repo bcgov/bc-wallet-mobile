@@ -21,7 +21,7 @@ describe('BCServicesCardBarcodeDecoder', () => {
       ['', false, 'empty serial'],
       ['ABCDEFGH', false, 'only letters'],
       ['12345678', false, 'only digits'],
-    ] as const)('isBCSCSerial(%s) -> %s (%s)', (serial, expected) => {
+    ])('isBCSCSerial(%s) -> %s (%s)', (serial, expected) => {
       expect(isBCSCSerial(serial)).toBe(expected)
     })
   })
