@@ -474,8 +474,8 @@ class BcscCore: NSObject {
       }
 
       let result: [String: Any] = [
-        "public": publicKeyData.base64EncodedString(),
-        "private": privateKeyData.base64EncodedString(),
+        "publicKey": publicKeyData.base64EncodedString(),
+        "privateKey": privateKeyData.base64EncodedString(),
         "id": label,
       ]
 
