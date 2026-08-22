@@ -26,9 +26,10 @@ const modulusFingerprint = (n: string | null): string => {
 /**
  * Format a caught error for logging, surfacing the native error code (e.g. E_KEY_NOT_FOUND) when
  * present. Handles plain-object rejections ({ code, message }) as well as Error instances, so the
- * code is never lost to an "[object Object]" string.
+ * code is never lost to an "[object Object]" string. Exported for reuse by the key-rotation flow
+ * (#3876), which logs the same native-rejection shapes.
  */
-const describeError = (err: unknown): string => {
+export const describeError = (err: unknown): string => {
   if (err && typeof err === 'object') {
     const { code, message } = err as { code?: unknown; message?: unknown }
     const parts = [code, message].filter((part): part is string => typeof part === 'string')
@@ -241,6 +242,13 @@ export type ReRegisterResult = {
   success: boolean
   /** Rotated registration_access_token from the PUT response, if the server issued one. */
   newRegistrationAccessToken?: string
+  /**
+   * Raw (unnormalized) `n` values echoed back in the PUT response's `jwks.keys`, if present.
+   * Used by the key-rotation flow (#3876) to confirm the newly-registered key actually landed
+   * server-side — see modulusInSet() in jwk-modulus.ts. Undefined when the response carried no
+   * jwks (existing callers ignore this field entirely, so this is not a behavior change for them).
+   */
+  serverKeyNs?: Array<string | undefined>
 }
 
 /**
@@ -280,20 +288,23 @@ export async function reRegisterNewestKey(
     // useRegistrationApi.tsx's updateRegistration — keep all three in sync if it ever changes.
     payload.scope = 'openid profile email address offline_access'
 
-    const { data } = await apiClient.put<{ registration_access_token?: string }>(
-      `${apiClient.endpoints.registration}/${clientId}`,
-      payload,
-      {
-        skipBearerAuth: true,
-        // Same as the recovery GET: an unattended re-registration must fail silently (→ our catch
-        // → { success: false }), never surface a user-facing error via the global onError handler.
-        skipOnErrorHandler: true,
-        headers: { Authorization: `Bearer ${registrationAccessToken}` },
-      }
-    )
+    const { data } = await apiClient.put<{
+      registration_access_token?: string
+      jwks?: { keys?: ServerJwk[] }
+    }>(`${apiClient.endpoints.registration}/${clientId}`, payload, {
+      skipBearerAuth: true,
+      // Same as the recovery GET: an unattended re-registration must fail silently (→ our catch
+      // → { success: false }), never surface a user-facing error via the global onError handler.
+      skipOnErrorHandler: true,
+      headers: { Authorization: `Bearer ${registrationAccessToken}` },
+    })
 
     logger.info('[reRegisterNewestKey] event=succeeded re-registered newest local key with server')
-    return { success: true, newRegistrationAccessToken: data?.registration_access_token }
+    return {
+      success: true,
+      newRegistrationAccessToken: data?.registration_access_token,
+      serverKeyNs: data?.jwks?.keys?.map((k) => k?.n),
+    }
   } catch (error) {
     logger.error(`[reRegisterNewestKey] event=failed ${describeError(error)}`)
     return { success: false }
