@@ -199,9 +199,18 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
       final String alias = String.format(Locale.ROOT, "%s%d", RSA_ALIAS_PREFIX, id);
 
       final KeyPairInfo newInfo = new KeyPairInfo(alias, System.currentTimeMillis());
-      keyPairInfoSource.saveKeyPairInfo(newInfo);
 
       generateKeyPair(alias);
+
+      // Persist the new alias' metadata only AFTER native key generation has actually
+      // succeeded. Saving it first (as this used to) would leave an orphan KeyPairInfo row —
+      // newest by createdAt — if generateKeyPair() throws (keystore full/locked/StrongBox
+      // failure): getCurrentBcscKeyPair()'s newest-lookup would then pick that orphan as the
+      // "active" key despite no keystore entry existing for it, and silently mint yet ANOTHER
+      // unregistered key on the very next call — one the server has never seen, breaking every
+      // client-assertion/token refresh until the next key-recovery pass. See issue #3876 review.
+      keyPairInfoSource.saveKeyPairInfo(newInfo);
+
       final KeyPair keyPair;
       try {
         keyPair = getKeyPair(keyStore, alias);
