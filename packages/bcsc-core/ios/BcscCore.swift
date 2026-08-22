@@ -547,8 +547,21 @@ class BcscCore: NSObject {
   ) {
     if !keyPairManager.deleteKey(withLabel: alias) {
       logger
-        .warning("createNewKeyPair: best-effort cleanup failed to delete unregistered key '\(alias)' after \(context)")
+        .warning(
+          "createNewKeyPair: best-effort cleanup failed to delete unregistered key '\(redactedAlias(alias))' after \(context)"
+        )
     }
+  }
+
+  /**
+   * Redacts a keystore alias to its trailing 8 characters for logging. The alias is
+   * `<provider><UUID>/N` (see `generateKeyPair()`), so the full string embeds a stable
+   * per-device UUID component — logging it in full would leak that identifier into remote
+   * logs (this repo is public and logs ship to Loki). The trailing suffix still lets one
+   * device's log lines be correlated with each other without exposing the full identifier.
+   */
+  private func redactedAlias(_ alias: String) -> String {
+    alias.count <= 8 ? alias : "…" + String(alias.suffix(8))
   }
 
   func getKeyPair(

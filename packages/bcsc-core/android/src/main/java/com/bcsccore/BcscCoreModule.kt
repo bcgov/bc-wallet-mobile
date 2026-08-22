@@ -475,10 +475,21 @@ class BcscCoreModule(
         } catch (e: Exception) {
             Log.w(
                 NAME,
-                "createNewKeyPair: best-effort cleanup failed to delete unregistered key '$alias' after $context: ${e.message}",
+                "createNewKeyPair: best-effort cleanup failed to delete unregistered key '${redactAlias(
+                    alias,
+                )}' after $context: ${e.message}",
             )
         }
     }
+
+    /**
+     * Redacts a keystore alias to its trailing 8 characters for logging. Android aliases are
+     * low-cardinality (`rsa1`, `rsa2`, ...) rather than UUID-based like iOS, but this keeps
+     * the treatment of key aliases in logs consistent across platforms — these logs ship to
+     * Loki from a public repo, and the trailing suffix still lets one device's log lines be
+     * correlated with each other.
+     */
+    private fun redactAlias(alias: String): String = if (alias.length <= 8) alias else "…" + alias.takeLast(8)
 
     @ReactMethod
     override fun getToken(

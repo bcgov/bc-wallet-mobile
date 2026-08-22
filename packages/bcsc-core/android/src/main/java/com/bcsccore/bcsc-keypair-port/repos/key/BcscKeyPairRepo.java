@@ -220,7 +220,7 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
         boolean cleanedUp = deleteKeyEntry(alias);
         if (!cleanedUp) {
           SimpleLog.e(TAG, "getNewBcscKeyPair: failed to clean up untracked keystore entry '"
-              + alias + "' after saveKeyPairInfo failure", saveError);
+              + redactAlias(alias) + "' after saveKeyPairInfo failure", saveError);
         }
         throw saveError;
       }
@@ -465,6 +465,17 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
       SimpleLog.e(TAG, "Failed to generate key pair", e);
       throw new KeypairGenerationException("Failed to generate key pair for alias '" + alias + "': " + e.getMessage(), e);
     }
+  }
+
+  /**
+   * Redacts a keystore alias to its trailing 8 characters for logging. Android aliases here are
+   * low-cardinality ({@code rsa1}, {@code rsa2}, ...) rather than UUID-based like iOS, but this
+   * keeps the treatment of key aliases in logs consistent across platforms — these logs ship to
+   * Loki from a public repo, and the trailing suffix still lets one device's log lines be
+   * correlated with each other.
+   */
+  private static String redactAlias(String alias) {
+    return alias.length() <= 8 ? alias : "\u2026" + alias.substring(alias.length() - 8);
   }
 
   private boolean deleteKeyEntry(String alias) {
