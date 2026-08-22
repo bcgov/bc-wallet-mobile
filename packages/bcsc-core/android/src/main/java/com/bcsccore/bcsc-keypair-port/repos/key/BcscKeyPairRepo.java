@@ -199,17 +199,58 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
       final String alias = String.format(Locale.ROOT, "%s%d", RSA_ALIAS_PREFIX, id);
 
       final KeyPairInfo newInfo = new KeyPairInfo(alias, System.currentTimeMillis());
-      keyPairInfoSource.saveKeyPairInfo(newInfo);
 
       generateKeyPair(alias);
+
+      // Persist the new alias' metadata only AFTER native key generation has actually
+      // succeeded. Saving it first (as this used to) would leave an orphan KeyPairInfo row —
+      // newest by createdAt — if generateKeyPair() throws (keystore full/locked/StrongBox
+      // failure): getCurrentBcscKeyPair()'s newest-lookup would then pick that orphan as the
+      // "active" key despite no keystore entry existing for it, and silently mint yet ANOTHER
+      // unregistered key on the very next call — one the server has never seen, breaking every
+      // client-assertion/token refresh until the next key-recovery pass. See issue #3876 review.
+      try {
+        keyPairInfoSource.saveKeyPairInfo(newInfo);
+      } catch (BcscException saveError) {
+        // Best-effort cleanup: the keystore entry already exists at this point, so leaving it
+        // behind would leak an untracked alias — and worse, the NEXT rotation attempt would
+        // collide with it (generateKeyPair() rejects with KeyAlreadyExistsException for an
+        // alias already present in the keystore), permanently breaking rotation on this device.
+        // The cleanup failure itself must never mask the original error.
+        boolean cleanedUp = deleteKeyEntry(alias);
+        if (!cleanedUp) {
+          SimpleLog.e(TAG, "getNewBcscKeyPair: failed to clean up untracked keystore entry '"
+              + redactAlias(alias) + "' after saveKeyPairInfo failure", saveError);
+        }
+        throw saveError;
+      }
+
       final KeyPair keyPair;
       try {
         keyPair = getKeyPair(keyStore, alias);
       } catch (Exception e) {
+        // Best-effort cleanup: by this point BOTH the keystore entry (generateKeyPair) and the
+        // metadata row (saveKeyPairInfo, above) already exist for this alias — unlike the
+        // saveKeyPairInfo failure branch above, where only the keystore entry exists. Leaving
+        // either behind would strand the device signing with this alias (newest-by-createdAt)
+        // despite JS never receiving it (this whole call throws), and orphan metadata the next
+        // rotation attempt would collide with. Neither cleanup failure may mask the original
+        // retrieval error.
+        try {
+          keyPairInfoSource.deleteKeyPairInfo(alias);
+        } catch (Exception metaCleanupError) {
+          SimpleLog.e(TAG, "getNewBcscKeyPair: failed to clean up untracked metadata for '"
+              + redactAlias(alias) + "' after key-pair retrieval failure", metaCleanupError);
+        }
+        boolean cleanedUp = deleteKeyEntry(alias);
+        if (!cleanedUp) {
+          SimpleLog.e(TAG, "getNewBcscKeyPair: failed to clean up untracked keystore entry '"
+              + redactAlias(alias) + "' after key-pair retrieval failure", e);
+        }
         throw new KeyNotFoundException(
-            "Failed to retrieve newly generated key pair for alias '" + alias + "': " + e.getMessage(), e);
+            "Failed to retrieve newly generated key pair for alias '" + redactAlias(alias) + "': " + e.getMessage(), e);
       }
-      SimpleLog.d(TAG, "Generated new key pair " + alias);
+      SimpleLog.d(TAG, "Generated new key pair " + redactAlias(alias));
       return new BcscKeyPair(keyPair, newInfo);
     } catch (KeypairGenerationException e) {
       throw e;
@@ -276,8 +317,13 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
     return infoMap.get(alias);
   }
 
+  // protected (not private): Robolectric cannot exercise the real "AndroidKeyStore" provider
+  // (confirmed empirically — NoSuchAlgorithmException), so getNewBcscKeyPair()'s post-generation
+  // cleanup behavior (issue #3876 review) is tested via a package-private test subclass that
+  // overrides this and the two methods below with controllable fakes. Not otherwise overridden
+  // in production.
   @NonNull
-  private KeyStore loadAndroidKeyStore() throws Exception {
+  protected KeyStore loadAndroidKeyStore() throws Exception {
     KeyStore keyStore = KeyStore.getInstance(KEYSTORE_TYPE);
     keyStore.load(null);
     return keyStore;
@@ -400,12 +446,15 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
    * @param alias the alias to store the key pair under
    * @throws KeypairGenerationException if key generation fails
    */
-  private void generateKeyPair(String alias) throws KeypairGenerationException {
+  protected void generateKeyPair(String alias) throws KeypairGenerationException {
     try {
       KeyStore keyStore = loadAndroidKeyStore();
       if (keyStore.containsAlias(alias)) {
+        // Redacted: this message can surface through createNewKeyPair's promise rejection
+        // (BcscCoreModule.kt forwards e.devMessage), which reaches AppError.technicalMessage,
+        // analytics, and user-visible debug details — a channel that travels further than logs.
         throw new KeyAlreadyExistsException(
-            "Key pair already exists for alias '" + alias + "'");
+            "Key pair already exists for alias '" + redactAlias(alias) + "'");
       }
 
       final KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(
@@ -437,11 +486,24 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
         | NoSuchAlgorithmException
         | NoSuchProviderException e) {
       SimpleLog.e(TAG, "Failed to generate key pair", e);
-      throw new KeypairGenerationException("Failed to generate key pair for alias '" + alias + "': " + e.getMessage(), e);
+      throw new KeypairGenerationException(
+          "Failed to generate key pair for alias '" + redactAlias(alias) + "': " + e.getMessage(), e);
     } catch (Exception e) {
       SimpleLog.e(TAG, "Failed to generate key pair", e);
-      throw new KeypairGenerationException("Failed to generate key pair for alias '" + alias + "': " + e.getMessage(), e);
+      throw new KeypairGenerationException(
+          "Failed to generate key pair for alias '" + redactAlias(alias) + "': " + e.getMessage(), e);
     }
+  }
+
+  /**
+   * Redacts a keystore alias to its trailing 8 characters for logging. Android aliases here are
+   * low-cardinality ({@code rsa1}, {@code rsa2}, ...) rather than UUID-based like iOS, but this
+   * keeps the treatment of key aliases in logs consistent across platforms — these logs ship to
+   * Loki from a public repo, and the trailing suffix still lets one device's log lines be
+   * correlated with each other.
+   */
+  private static String redactAlias(String alias) {
+    return alias.length() <= 8 ? alias : "\u2026" + alias.substring(alias.length() - 8);
   }
 
   private boolean deleteKeyEntry(String alias) {
@@ -500,7 +562,7 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
   }
 
   @NonNull
-  private KeyPair getKeyPair(@NonNull KeyStore keyStore, @NonNull String kid)
+  protected KeyPair getKeyPair(@NonNull KeyStore keyStore, @NonNull String kid)
       throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException {
     if (Build.VERSION.SDK_INT <= VERSION_CODES.O_MR1) {
       final PrivateKey privateKey = (PrivateKey) keyStore.getKey(kid, null);
