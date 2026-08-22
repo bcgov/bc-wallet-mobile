@@ -23,6 +23,14 @@ export const KEY_ROTATION_RETRY_BACKOFF_DAYS = 7
 const MS_PER_DAY = 24 * 60 * 60 * 1000
 
 /**
+ * Redacts a `client_id` (a stable per-device registration identifier) to a short trailing
+ * suffix for log correlation, without exposing the full identifier — these logs ship to Loki
+ * and this repo is public. The suffix is still enough to tell one device's rotation attempts
+ * apart from another's across log lines.
+ */
+const redactClientId = (clientId: string): string => (clientId.length <= 8 ? clientId : `…${clientId.slice(-8)}`)
+
+/**
  * Normalize a native key `created` timestamp to epoch milliseconds. Platform units differ:
  * iOS reports SECONDS since epoch (`Date.timeIntervalSince1970`), Android reports MILLISECONDS
  * (`System.currentTimeMillis()`-based) — see `KeyPublicInfo.created`'s doc comment in
@@ -105,9 +113,13 @@ async function pruneOtherKeys(newKeyId: string, logger: BifoldLogger): Promise<v
  * If the delete itself fails, the orphan is left behind — the next startup's
  * `performKeyRecovery` (#4178) heals it: the orphan's modulus won't be in the server's jwks
  * (it was never successfully registered), so recovery's own membership-prune removes it once
- * a refresh-token failure triggers that flow.
+ * a refresh-token failure triggers that flow. In the meantime the orphan is still newest-wins
+ * active (JWE decryption included), so the token cache must be cleared here too — same
+ * reasoning as the 'rotated' paths in {@link rotateSigningKey}. Only the successful-delete exit
+ * skips the clear: there the OLD key is newest again, so the cache stays valid.
  */
 async function rollback(
+  apiClient: BCSCApiClient,
   newKeyId: string,
   eventLabel: string,
   newRegistrationAccessToken: string | undefined,
@@ -122,6 +134,9 @@ async function rollback(
     logger.error(
       `[rotateSigningKey] event=failed_rollback_delete could not delete unregistered key '${newKeyId}': ${describeError(err)}`
     )
+    // The new (unregistered) key survives and is still newest-wins active — same JWE
+    // decryption-key switch as a successful rotation, so the same cache clear applies.
+    apiClient.clearTokens()
     return { status: 'failed', newRegistrationAccessToken }
   }
 }
@@ -153,8 +168,11 @@ async function rollback(
  *       - confirmed present → prune every other local key (see {@link pruneOtherKeys}) → 'rotated'.
  *     Both 'rotated' exits call `apiClient.clearTokens()` — rotation switches the JWE
  *     decryption key, so any id_token cached before rotation ran is no longer decryptable and
- *     must be dropped so the next read re-mints it under the new key. Never done on
- *     'rolled_back' (the old key is newest again, cache still valid) or 'failed'.
+ *     must be dropped so the next read re-mints it under the new key. {@link rollback} also
+ *     clears the cache when its own `deleteKey` throws (the new, unregistered key survives and
+ *     is still newest-wins active in that case) — see its doc comment. The clear is skipped
+ *     only when the OLD key ends up newest again: a successful-delete `'rolled_back'`, or
+ *     `'failed'` from `createNewKeyPair()` itself throwing (no new key was ever created).
  *
  * Deliberately omits the original stub's "check new keys work" step: an active post-rotation
  * token refresh would consume the refresh token outside the token service. The modulus confirm
@@ -167,7 +185,7 @@ export async function rotateSigningKey(
   registrationAccessToken: string,
   logger: BifoldLogger
 ): Promise<KeyRotationResult> {
-  logger.info(`[rotateSigningKey] event=triggered client_id=${clientId}`)
+  logger.info(`[rotateSigningKey] event=triggered client_id=${redactClientId(clientId)}`)
 
   const newKey = await createNewKeyPair().catch((err) => {
     logger.error(`[rotateSigningKey] event=failed_generate could not generate a new key: ${describeError(err)}`)
@@ -196,7 +214,7 @@ export async function rotateSigningKey(
   }
 
   if (!putResult.success) {
-    return rollback(newKey.id, 'failed_put', newRegistrationAccessToken, logger)
+    return rollback(apiClient, newKey.id, 'failed_put', newRegistrationAccessToken, logger)
   }
 
   const serverKeyNs = putResult.serverKeyNs ?? []
@@ -214,7 +232,7 @@ export async function rotateSigningKey(
   }
 
   if (!modulusInSet(newKey.n, serverKeyNs)) {
-    return rollback(newKey.id, 'failed_echo_mismatch', newRegistrationAccessToken, logger)
+    return rollback(apiClient, newKey.id, 'failed_echo_mismatch', newRegistrationAccessToken, logger)
   }
 
   logger.info(`[rotateSigningKey] event=confirmed new key '${newKey.id}' present in server jwks`)

@@ -95,6 +95,22 @@ describe('rotateSigningKey', () => {
     jest.clearAllMocks()
   })
 
+  // Copilot review (#3876): the triggered-event log line embeds client_id, a stable per-device
+  // registration identifier — logs ship to Loki and this repo is public, so redact to a short
+  // suffix rather than logging it in full.
+  it('redacts client_id to a short suffix in the triggered-event log line', async () => {
+    mockedCreateNewKeyPair.mockRejectedValue(new Error('unused — only checking the trigger log'))
+    const logger = makeLogger()
+    const longClientId = 'client-abcdefgh12345678'
+
+    await rotateSigningKey(makeApiClient(), longClientId, REG_TOKEN, logger)
+
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringMatching(/^\[rotateSigningKey] event=triggered client_id=…\w{8}$/)
+    )
+    expect(logger.info).not.toHaveBeenCalledWith(expect.stringContaining(longClientId))
+  })
+
   it('happy path: generates, PUTs, confirms via modulus, prunes previous keys, and returns rotated', async () => {
     mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
     mockedReRegisterNewestKey.mockResolvedValue({ success: true, serverKeyNs: [n(1), n(2)] })
@@ -307,7 +323,11 @@ describe('rotateSigningKey', () => {
       expect(mockedClearTokens).not.toHaveBeenCalled()
     })
 
-    it('does NOT clear the token cache on failed (rollback delete throws)', async () => {
+    // Fix B (#3876 re-check): when the rollback delete ITSELF throws, the new (unregistered)
+    // key survives and is still newest-wins active — the same JWE decryption-key switch as a
+    // successful rotation — so the cache must be cleared here too, unlike the other 'failed'
+    // exit (createNewKeyPair throwing, where no new key ever existed).
+    it('DOES clear the token cache on failed (rollback delete throws) — the unregistered new key survives and is still newest', async () => {
       mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
       mockedReRegisterNewestKey.mockResolvedValue({ success: false })
       mockedDeleteKey.mockRejectedValue(new Error('E_KEYSTORE_ERROR'))
@@ -316,7 +336,7 @@ describe('rotateSigningKey', () => {
       const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
       expect(result.status).toBe('failed')
-      expect(mockedClearTokens).not.toHaveBeenCalled()
+      expect(mockedClearTokens).toHaveBeenCalledTimes(1)
     })
   })
 })
