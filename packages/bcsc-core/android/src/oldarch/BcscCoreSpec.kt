@@ -15,19 +15,19 @@ abstract class BcscCoreSpec internal constructor(
     abstract fun getAllKeys(promise: Promise)
 
     abstract fun getToken(
-        tokenType: Int,
+        tokenType: Double,
         promise: Promise,
     )
 
     abstract fun setToken(
-        tokenType: Int,
+        tokenType: Double,
         token: String,
-        expiry: Double?,
+        expiry: Double,
         promise: Promise,
     )
 
     abstract fun deleteToken(
-        tokenType: Int,
+        tokenType: Double,
         promise: Promise,
     )
 
@@ -233,7 +233,21 @@ abstract class BcscCoreSpec internal constructor(
 
     abstract fun isThirdPartyKeyboardActive(promise: Promise)
 
-    abstract fun openKeyboardSelector()
+    abstract fun openKeyboardSelector(promise: Promise)
+
+    abstract fun getAllKeysWithPublicInfo(promise: Promise)
+
+    abstract fun setActiveKeyAlias(
+        alias: String,
+        promise: Promise,
+    )
+
+    abstract fun deleteKey(
+        alias: String,
+        promise: Promise,
+    )
+
+    abstract fun getNativeFilesScan(promise: Promise)
 
     // Saved Services (Client Metadata) Storage Methods
     abstract fun getSavedServices(promise: Promise)

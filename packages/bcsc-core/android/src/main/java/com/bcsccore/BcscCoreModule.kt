@@ -209,7 +209,7 @@ class BcscCoreModule(
             val javaKeyPair = bcscKeyPair.getKeyPair()
             if (javaKeyPair?.public != null) {
                 javaKeyPair.public.encoded?.let { publicEncoded ->
-                    keyPair.putString("public", publicEncoded.toBase64String())
+                    keyPair.putString("publicKey", publicEncoded.toBase64String())
                 }
             }
 
@@ -278,7 +278,7 @@ class BcscCoreModule(
      * from seeing every OTHER key.
      */
     @ReactMethod
-    fun getAllKeysWithPublicInfo(promise: Promise) {
+    override fun getAllKeysWithPublicInfo(promise: Promise) {
         try {
             if (!keyPairSource.isAvailable()) {
                 promise.reject("E_KEYSTORE_UNAVAILABLE", "Android KeyStore is not available on this device")
@@ -330,7 +330,7 @@ class BcscCoreModule(
      * is not present in the keystore so the app never points at a missing key.
      */
     @ReactMethod
-    fun setActiveKeyAlias(
+    override fun setActiveKeyAlias(
         alias: String,
         promise: Promise,
     ) {
@@ -364,7 +364,7 @@ class BcscCoreModule(
      * cannot wipe the device's last private key. Mirrors the iOS guard.
      */
     @ReactMethod
-    fun deleteKey(
+    override fun deleteKey(
         alias: String,
         promise: Promise,
     ) {
@@ -397,9 +397,10 @@ class BcscCoreModule(
 
     @ReactMethod
     override fun getToken(
-        tokenType: Int,
+        tokenType: Double,
         promise: Promise,
     ) {
+        @Suppress("NAME_SHADOWING") val tokenType = tokenType.toInt()
         Log.d(NAME, "getToken called with tokenType: $tokenType")
 
         // First, get the account to obtain the account ID
@@ -693,11 +694,12 @@ class BcscCoreModule(
      */
     @ReactMethod
     override fun setToken(
-        tokenType: Int,
+        tokenType: Double,
         token: String,
-        expiry: Double?,
+        expiry: Double,
         promise: Promise,
     ) {
+        @Suppress("NAME_SHADOWING") val tokenType = tokenType.toInt()
         Log.d(NAME, "setToken called with tokenType: $tokenType")
 
         try {
@@ -727,7 +729,7 @@ class BcscCoreModule(
 
             // Create expiry date if provided
             val expiryDate =
-                if (expiry != null && expiry > 0) {
+                if (expiry > 0) {
                     Date((expiry * 1000).toLong())
                 } else {
                     null
@@ -798,9 +800,10 @@ class BcscCoreModule(
      */
     @ReactMethod
     override fun deleteToken(
-        tokenType: Int,
+        tokenType: Double,
         promise: Promise,
     ) {
+        @Suppress("NAME_SHADOWING") val tokenType = tokenType.toInt()
         Log.d(NAME, "deleteToken called with tokenType: $tokenType")
 
         try {
@@ -4828,9 +4831,10 @@ class BcscCoreModule(
     }
 
     @ReactMethod
-    override fun openKeyboardSelector() {
+    override fun openKeyboardSelector(promise: Promise) {
         val imm = reactApplicationContext.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
         imm?.showInputMethodPicker()
+        promise.resolve(null)
     }
 
     /**
@@ -4888,7 +4892,7 @@ class BcscCoreModule(
      *   - fileCount: Total count of files/directories
      */
     @ReactMethod
-    fun getNativeFilesScan(promise: Promise) {
+    override fun getNativeFilesScan(promise: Promise) {
         try {
             val packageName = reactApplicationContext.packageName
             val filesDir = reactApplicationContext.filesDir
