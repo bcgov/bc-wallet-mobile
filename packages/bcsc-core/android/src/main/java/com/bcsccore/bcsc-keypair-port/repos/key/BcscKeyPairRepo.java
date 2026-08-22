@@ -229,6 +229,24 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
       try {
         keyPair = getKeyPair(keyStore, alias);
       } catch (Exception e) {
+        // Best-effort cleanup: by this point BOTH the keystore entry (generateKeyPair) and the
+        // metadata row (saveKeyPairInfo, above) already exist for this alias — unlike the
+        // saveKeyPairInfo failure branch above, where only the keystore entry exists. Leaving
+        // either behind would strand the device signing with this alias (newest-by-createdAt)
+        // despite JS never receiving it (this whole call throws), and orphan metadata the next
+        // rotation attempt would collide with. Neither cleanup failure may mask the original
+        // retrieval error.
+        try {
+          keyPairInfoSource.deleteKeyPairInfo(alias);
+        } catch (Exception metaCleanupError) {
+          SimpleLog.e(TAG, "getNewBcscKeyPair: failed to clean up untracked metadata for '"
+              + redactAlias(alias) + "' after key-pair retrieval failure", metaCleanupError);
+        }
+        boolean cleanedUp = deleteKeyEntry(alias);
+        if (!cleanedUp) {
+          SimpleLog.e(TAG, "getNewBcscKeyPair: failed to clean up untracked keystore entry '"
+              + redactAlias(alias) + "' after key-pair retrieval failure", e);
+        }
         throw new KeyNotFoundException(
             "Failed to retrieve newly generated key pair for alias '" + alias + "': " + e.getMessage(), e);
       }
@@ -299,8 +317,13 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
     return infoMap.get(alias);
   }
 
+  // protected (not private): Robolectric cannot exercise the real "AndroidKeyStore" provider
+  // (confirmed empirically — NoSuchAlgorithmException), so getNewBcscKeyPair()'s post-generation
+  // cleanup behavior (issue #3876 review) is tested via a package-private test subclass that
+  // overrides this and the two methods below with controllable fakes. Not otherwise overridden
+  // in production.
   @NonNull
-  private KeyStore loadAndroidKeyStore() throws Exception {
+  protected KeyStore loadAndroidKeyStore() throws Exception {
     KeyStore keyStore = KeyStore.getInstance(KEYSTORE_TYPE);
     keyStore.load(null);
     return keyStore;
@@ -423,7 +446,7 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
    * @param alias the alias to store the key pair under
    * @throws KeypairGenerationException if key generation fails
    */
-  private void generateKeyPair(String alias) throws KeypairGenerationException {
+  protected void generateKeyPair(String alias) throws KeypairGenerationException {
     try {
       KeyStore keyStore = loadAndroidKeyStore();
       if (keyStore.containsAlias(alias)) {
@@ -534,7 +557,7 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
   }
 
   @NonNull
-  private KeyPair getKeyPair(@NonNull KeyStore keyStore, @NonNull String kid)
+  protected KeyPair getKeyPair(@NonNull KeyStore keyStore, @NonNull String kid)
       throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException {
     if (Build.VERSION.SDK_INT <= VERSION_CODES.O_MR1) {
       final PrivateKey privateKey = (PrivateKey) keyStore.getKey(kid, null);
