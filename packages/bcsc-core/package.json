@@ -165,14 +165,9 @@
     "name": "RNBcscCoreSpec",
     "type": "modules",
     "jsSrcsDir": "src",
-    "outputDir": {
-      "ios": "ios/generated",
-      "android": "android/generated"
-    },
     "android": {
       "javaPackageName": "com.bcsccore"
-    },
-    "includesGeneratedCode": true
+    }
   },
   "create-react-native-library": {
     "type": "turbo-module",
