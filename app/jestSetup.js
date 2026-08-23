@@ -52,7 +52,9 @@ const createFilteredConsole = (method, patterns) => {
     // handed (React elements, axios errors), which would turn a logged error into
     // a confusing TypeError from inside the filter itself.
     const stringify = (arg) => {
-      if (typeof arg === 'string') return arg
+      if (typeof arg === 'string') {
+        return arg
+      }
       try {
         return JSON.stringify(arg)
       } catch {
