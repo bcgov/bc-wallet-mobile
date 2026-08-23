@@ -10,7 +10,7 @@ on:
   pull_request:
     # `labeled`/`unlabeled` matter: the escape-hatch labels are usually added in
     # response to a red check, and without them nothing re-evaluates.
-    types: [opened, reopened, ready_for_review, edited, synchronize, labeled, unlabeled]
+    types: [opened, reopened, ready_for_review, converted_to_draft, edited, synchronize, labeled, unlabeled]
   merge_group:
 
 permissions:
