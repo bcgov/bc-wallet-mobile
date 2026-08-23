@@ -1,13 +1,8 @@
 Closes #
 
-<!-- Put the issue number after "Closes #" above, like "Closes #1234". That's
-     what links this PR to the issue and moves the card on the board. A bare
-     "#1234" further down in the description won't do it. Linking from the
-     Development panel on the right works just as well if you prefer.
-
-     No issue to link? That's completely fine — plenty of work doesn't have
-     one. Delete the "Closes #" line and add the `status/no-issue` label, and
-     the PR checks will be happy. -->
+<!-- Add the number above, like "Closes #1234", or link it in the Development
+     panel. A bare "#1234" lower down doesn't count.
+     No issue? Delete the line and add the `status/no-issue` label. -->
 
 ## What changed
 
