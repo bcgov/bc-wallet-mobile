@@ -41,9 +41,14 @@ jobs:
             --query ETag --output text 2>/dev/null | tr -d '"')
           LOCAL_MD5=$(md5sum app/src/remote-config/prod-remote-config.json | awk '{print $1}')
 
+          echo "S3 remote config ETag: ${REMOTE_ETAG}"
+          echo "Local remote config MD5: $LOCAL_MD5"
+
           if [ "$REMOTE_ETAG" = "$LOCAL_MD5" ]; then
+            echo "::notice::Remote config has not changed. Skipping upload."
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
+            echo "::notice::Remote config has changed. Proceeding with upload."
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
