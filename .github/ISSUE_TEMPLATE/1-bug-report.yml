@@ -53,7 +53,10 @@ body:
       description: Which environment were you using when the bug happened?
       options:
         - Production
-        - Development
+        - PREPROD
+        - TEST
+        - QA
+        - SIT
     validations:
       required: true
 
@@ -105,11 +108,3 @@ body:
       placeholder: "4.1.0-6892"
     validations:
       required: true
-
-  - type: checkboxes
-    id: confirm
-    attributes:
-      label: Before you submit
-      options:
-        - label: Someone who has never seen this screen could follow my steps to reproduce.
-          required: true
