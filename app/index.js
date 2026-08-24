@@ -1,5 +1,5 @@
 // organize-imports-ignore
-import 'fast-text-encoding' // polyfill for TextEncoder and TextDecoder
+import './src/polyfills/text-encoding' // spec-compliant TextEncoder/TextDecoder (must be first)
 import 'react-native-gesture-handler'
 import 'reflect-metadata'
 

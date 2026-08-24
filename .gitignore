@@ -94,6 +94,8 @@ coverage/
 .settings/
 tmp/
 
+.cxx/
+
 # fastlane
 app/fastlane/report.xml
 app/fastlane/Preview.html

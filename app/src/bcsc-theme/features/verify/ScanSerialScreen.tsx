@@ -375,7 +375,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
               torchActive={torchOn}
               onToggleTorch={toggleTorch}
               onError={onCameraError}
-              style={StyleSheet.absoluteFillObject}
+              style={StyleSheet.absoluteFill}
             />
 
             {/* Vertical ID-card framing guide (appearance of MaskType.ID_CARD) */}

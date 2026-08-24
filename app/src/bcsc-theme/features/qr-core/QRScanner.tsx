@@ -64,7 +64,7 @@ const QRScanner: React.FC = () => {
       color: torchActive ? ColorPalette.grayscale.black : ColorPalette.grayscale.white,
     },
     processingOverlay: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       backgroundColor: 'rgba(0,0,0,0.5)',
       justifyContent: 'center',
       alignItems: 'center',
