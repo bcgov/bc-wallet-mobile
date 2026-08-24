@@ -417,4 +417,27 @@ describe('reRegisterNewestKey', () => {
     expect(apiClient.put).not.toHaveBeenCalled()
     expect(mockedDeleteKey).not.toHaveBeenCalled()
   })
+
+  it('surfaces serverKeyNs from the PUT response jwks (used by key-rotation to confirm registration)', async () => {
+    mockedGetAccount.mockResolvedValue({ nickname: 'My Phone' } as any)
+    mockedGetDCRBody.mockResolvedValue(JSON.stringify({ client_name: 'My Phone' }))
+    const apiClient = makeApiClient(undefined)
+    apiClient.put.mockResolvedValue({
+      data: { registration_access_token: undefined, jwks: { keys: [{ n: n(1) }, { n: n(2) }] } },
+    })
+
+    const result = await reRegisterNewestKey(apiClient, CLIENT_ID, REG_TOKEN, makeLogger())
+
+    expect(result).toEqual({ success: true, newRegistrationAccessToken: undefined, serverKeyNs: [n(1), n(2)] })
+  })
+
+  it('serverKeyNs is undefined when the PUT response carries no jwks (no behavior change for existing callers)', async () => {
+    mockedGetAccount.mockResolvedValue({ nickname: 'My Phone' } as any)
+    mockedGetDCRBody.mockResolvedValue(JSON.stringify({ client_name: 'My Phone' }))
+    const apiClient = makeApiClient(undefined, { registrationAccessToken: 'rotated-put-token' })
+
+    const result = await reRegisterNewestKey(apiClient, CLIENT_ID, REG_TOKEN, makeLogger())
+
+    expect(result.serverKeyNs).toBeUndefined()
+  })
 })
