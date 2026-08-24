@@ -1,4 +1,6 @@
 name: Upload Remote Config
+permissions:
+  contents: read
 
 on:
   workflow_run:
