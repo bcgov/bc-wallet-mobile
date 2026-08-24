@@ -75,3 +75,5 @@ Issues are closed by people, not automation. This repo has GitHub's *auto-close
 issues with merged linked pull requests* setting turned **off**, so `Closes #`
 creates the link but closes nothing — a merged PR leaves its issue open awaiting
 verification. A `UAT` issue is closed by a UAT team member.
+
+PRs: see [pull-requests.md](pull-requests.md).

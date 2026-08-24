@@ -277,7 +277,7 @@ These files are sourced in shell contexts (e.g., GitHub Actions `source variant.
 
 Write for a PO or PM first. Say what changed for the user or the product, then the technical detail if it earns its place. Favour concision — a short description is a good one.
 
-**PRs** follow `.github/pull_request_template.md`:
+**PRs** follow `.github/pull_request_template.md`; `docs/pull-requests.md` has the detail:
 
 - `Closes #<issue>` on the first line. A bare `#123` further down creates no link GitHub tracks; linking from the Development panel works too.
 - **What changed** — enough to read the diff. The backstory lives in the issue. Screenshots and video go here.
@@ -288,7 +288,7 @@ Aim for a couple of hundred words across the whole body. Don't restate the issue
 
 **Issues** are created from the forms in `.github/ISSUE_TEMPLATE/`. Titles are plain text — the conventional-commit prefixes above are for commits and PR titles only.
 
-**Stacked PRs** each need their own link. Put the same `Closes #<issue>` on every PR in the stack — auto-close is off, so nothing races to close it — or split the work into sub-issues for a stack of four or more. Say which PR to merge first.
+**Stacked PRs** each need their own link — the same `Closes #<issue>` on each, or sub-issues for a stack of four or more. Say which PR to merge first.
 
 ## Code Review Priorities
 
