@@ -20,6 +20,10 @@
     "test:migration:sauce": "npm run test:android:migration:sauce && npm run test:ios:migration:sauce",
     "test:android:migration:device": "wdio configs/local/wdio.android.local.device.migration.conf.ts --suite migration",
     "test:ios:migration:device": "wdio configs/local/wdio.ios.local.device.migration.conf.ts --suite migration",
+    "test:android:upgrade:sauce": "wdio configs/sauce/wdio.android.sauce.upgrade.conf.ts --suite upgrade",
+    "test:ios:upgrade:sauce": "wdio configs/sauce/wdio.ios.sauce.upgrade.conf.ts --suite upgrade",
+    "test:android:upgrade:device": "wdio configs/local/wdio.android.local.device.upgrade.conf.ts --suite upgrade",
+    "test:ios:upgrade:device": "wdio configs/local/wdio.ios.local.device.upgrade.conf.ts --suite upgrade",
     "test:sauce": "npm run test:android:sauce && npm run test:ios:sauce"
   },
   "resolutions": {
