@@ -1,17 +1,15 @@
 name: Upload Remote Config
 
-# on:
-#   workflow_run:
-#     workflows: ["Code Quality"]
-#     types: [completed]
-#     branches: [main]
 on:
-  pull_request:               # TEMP: swap back to workflow_run once verified
+  workflow_run:
+    workflows: ["Code Quality"]
+    types: [completed]
     branches: [main]
 
 jobs:
   upload:
     runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
     env:
       AWS_REQUEST_CHECKSUM_CALCULATION: when_required
       REMOTE_CONFIG_SERVER_URL: idim.objectstore.gov.bc.ca
@@ -41,8 +39,8 @@ jobs:
             --query ETag --output text 2>/dev/null | tr -d '"')
           LOCAL_MD5=$(md5sum app/src/remote-config/prod-remote-config.json | awk '{print $1}')
 
-          echo "S3 remote config ETag: ${REMOTE_ETAG}"
-          echo "Local remote config MD5: $LOCAL_MD5"
+          echo "Remote hash: $REMOTE_ETAG"
+          echo " Local hash: $LOCAL_MD5"
 
           if [ "$REMOTE_ETAG" = "$LOCAL_MD5" ]; then
             echo "::notice::Remote config has not changed. Skipping upload."
