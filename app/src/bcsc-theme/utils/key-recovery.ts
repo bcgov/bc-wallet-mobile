@@ -26,8 +26,7 @@ const modulusFingerprint = (n: string | null): string => {
 /**
  * Format a caught error for logging, surfacing the native error code (e.g. E_KEY_NOT_FOUND) when
  * present. Handles plain-object rejections ({ code, message }) as well as Error instances, so the
- * code is never lost to an "[object Object]" string. Exported for reuse by the key-rotation flow
- * (#3876), which logs the same native-rejection shapes.
+ * code is never lost to an "[object Object]" string. Exported for reuse by the key-rotation flow (#3876).
  */
 export const describeError = (err: unknown): string => {
   if (err && typeof err === 'object') {
@@ -245,10 +244,7 @@ export type ReRegisterResult = {
   /**
    * Raw (unnormalized) `n` values echoed back in the PUT response's `jwks.keys`, if present.
    * Used by the key-rotation flow (#3876) to confirm the newly-registered key actually landed
-   * server-side — see modulusInSet() in jwk-modulus.ts. OMITTED entirely (not set to
-   * `undefined`) when the response carried no `jwks.keys`, so the result's shape is identical
-   * to before this field existed for existing callers that never asked for it — verified with
-   * `Object.keys`/`toStrictEqual`, not just `toEqual`, which would hide the difference.
+   * server-side — see modulusInSet() in jwk-modulus.ts.
    */
   serverKeyNs?: Array<string | undefined>
 }
@@ -309,10 +305,7 @@ export async function reRegisterNewestKey(
     return {
       success: true,
       newRegistrationAccessToken: data?.registration_access_token,
-      // Conditional spread rather than `serverKeyNs: serverKeyNs` — omits the property entirely
-      // when the server echoed no jwks, instead of setting it to `undefined`, so the result's
-      // shape for that case is byte-for-byte identical to before this field existed (matters for
-      // Object.keys()/toStrictEqual-style checks, not just toEqual).
+      // Omit rather than set `undefined`, so the result shape is unchanged for existing callers.
       ...(serverKeyNs !== undefined ? { serverKeyNs } : {}),
     }
   } catch (error) {

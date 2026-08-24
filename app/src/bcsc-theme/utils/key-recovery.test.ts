@@ -428,10 +428,8 @@ describe('reRegisterNewestKey', () => {
 
     const result = await reRegisterNewestKey(apiClient, CLIENT_ID, REG_TOKEN, makeLogger())
 
-    // toStrictEqual (not toEqual) so this also pins that serverKeyNs is actually PRESENT with
-    // the expected values — toEqual ignores undefined-valued properties and would pass even if
-    // the implementation always set (rather than omitted) the key, which defeats the point of
-    // the sibling "omits" test below.
+    // toStrictEqual, not toEqual — toEqual ignores undefined-valued properties and would pass
+    // even if the key were always set (never omitted), defeating the sibling "omits" test below.
     expect(result).toStrictEqual({ success: true, newRegistrationAccessToken: undefined, serverKeyNs: [n(1), n(2)] })
   })
 
@@ -442,9 +440,8 @@ describe('reRegisterNewestKey', () => {
 
     const result = await reRegisterNewestKey(apiClient, CLIENT_ID, REG_TOKEN, makeLogger())
 
-    // toStrictEqual (not toEqual) distinguishes "no serverKeyNs key at all" from "serverKeyNs:
-    // undefined" — the whole point of this test. Object.keys is a second, independent proof of
-    // the same thing, in case toStrictEqual's semantics ever change.
+    // toStrictEqual distinguishes "no serverKeyNs key" from "serverKeyNs: undefined"; Object.keys
+    // is a second, independent check of the same thing.
     expect(result).toStrictEqual({ success: true, newRegistrationAccessToken: 'rotated-put-token' })
     expect(Object.keys(result)).not.toContain('serverKeyNs')
   })
