@@ -619,8 +619,11 @@ jobs:
         uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          REMOTE_LOGGING_URL: op://bcsc-mobile-app-cd/remote-logging-url/prod
-          MEDIATOR_URL: op://bcsc-mobile-app-cd/mediator-url/prod
+          # Only PROD variants get the production endpoints; SIT/QA/TEST all
+          # share the test stack. An unset DEFAULT_ENVIRONMENT falls to test,
+          # so a misconfigured variant can never reach production.
+          REMOTE_LOGGING_URL: op://bcsc-mobile-app-cd/remote-logging-url/${{ env.DEFAULT_ENVIRONMENT == 'PROD' && 'prod' || 'test' }}
+          MEDIATOR_URL: op://bcsc-mobile-app-cd/mediator-url/${{ env.DEFAULT_ENVIRONMENT == 'PROD' && 'prod' || 'test' }}
 
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
@@ -932,8 +935,11 @@ jobs:
         uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          REMOTE_LOGGING_URL: op://bcsc-mobile-app-cd/remote-logging-url/prod
-          MEDIATOR_URL: op://bcsc-mobile-app-cd/mediator-url/prod
+          # Only PROD variants get the production endpoints; SIT/QA/TEST all
+          # share the test stack. An unset DEFAULT_ENVIRONMENT falls to test,
+          # so a misconfigured variant can never reach production.
+          REMOTE_LOGGING_URL: op://bcsc-mobile-app-cd/remote-logging-url/${{ env.DEFAULT_ENVIRONMENT == 'PROD' && 'prod' || 'test' }}
+          MEDIATOR_URL: op://bcsc-mobile-app-cd/mediator-url/${{ env.DEFAULT_ENVIRONMENT == 'PROD' && 'prod' || 'test' }}
 
       # Actual environment variables are not being picked up
       # by the build so they're put into an .env file.
