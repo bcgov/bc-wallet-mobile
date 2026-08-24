@@ -245,8 +245,10 @@ export type ReRegisterResult = {
   /**
    * Raw (unnormalized) `n` values echoed back in the PUT response's `jwks.keys`, if present.
    * Used by the key-rotation flow (#3876) to confirm the newly-registered key actually landed
-   * server-side — see modulusInSet() in jwk-modulus.ts. Undefined when the response carried no
-   * jwks (existing callers ignore this field entirely, so this is not a behavior change for them).
+   * server-side — see modulusInSet() in jwk-modulus.ts. OMITTED entirely (not set to
+   * `undefined`) when the response carried no `jwks.keys`, so the result's shape is identical
+   * to before this field existed for existing callers that never asked for it — verified with
+   * `Object.keys`/`toStrictEqual`, not just `toEqual`, which would hide the difference.
    */
   serverKeyNs?: Array<string | undefined>
 }
@@ -303,10 +305,15 @@ export async function reRegisterNewestKey(
     })
 
     logger.info('[reRegisterNewestKey] event=succeeded re-registered newest local key with server')
+    const serverKeyNs = data?.jwks?.keys?.map((k) => k?.n)
     return {
       success: true,
       newRegistrationAccessToken: data?.registration_access_token,
-      serverKeyNs: data?.jwks?.keys?.map((k) => k?.n),
+      // Conditional spread rather than `serverKeyNs: serverKeyNs` — omits the property entirely
+      // when the server echoed no jwks, instead of setting it to `undefined`, so the result's
+      // shape for that case is byte-for-byte identical to before this field existed (matters for
+      // Object.keys()/toStrictEqual-style checks, not just toEqual).
+      ...(serverKeyNs !== undefined ? { serverKeyNs } : {}),
     }
   } catch (error) {
     logger.error(`[reRegisterNewestKey] event=failed ${describeError(error)}`)
