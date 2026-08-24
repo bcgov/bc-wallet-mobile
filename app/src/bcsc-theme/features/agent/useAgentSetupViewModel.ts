@@ -232,7 +232,42 @@ const useAgentSetupViewModel = (): AgentSetupResult => {
         err instanceof AppError
           ? err
           : AppError.fromErrorDefinition(ErrorRegistry.AGENT_INITIALIZATION_ERROR, { cause: err })
-      logger.error(`[${appError.appEvent}] Agent init failed: ${appError.message}`)
+      // appError.message is a fixed registry string, and Credo nests its own wrappers
+      // (e.g. onInitializeContext -> ...), so walk the whole cause chain. Without this
+      // every agent init failure logs identically and the real error is never visible.
+      const describeCauseChain = (root: unknown): string => {
+        const lines: string[] = []
+        let current: unknown = root
+        let depth = 0
+        while (current !== undefined && current !== null && depth < 10) {
+          if (current instanceof Error) {
+            lines.push(`${'  '.repeat(depth)}${depth ? '└─ ' : ''}${current.name}: ${current.message}`)
+            current = (current as { cause?: unknown }).cause
+          } else {
+            lines.push(`${'  '.repeat(depth)}${depth ? '└─ ' : ''}${String(current)}`)
+            current = undefined
+          }
+          depth++
+        }
+        return lines.length ? lines.join('\n') : 'none'
+      }
+      const deepest = (root: unknown): Error | undefined => {
+        let current: unknown = root
+        let last: Error | undefined
+        let depth = 0
+        while (current instanceof Error && depth < 10) {
+          last = current
+          current = (current as { cause?: unknown }).cause
+          depth++
+        }
+        return last
+      }
+      const rootCause = deepest(appError.cause)
+      logger.error(
+        `[${appError.appEvent}] Agent init failed: ${appError.message}\n` +
+          `cause chain:\n${describeCauseChain(appError.cause)}\n` +
+          `root cause stack: ${rootCause?.stack ?? 'none'}`
+      )
       if (agentRef.current) {
         await shutdownAgent(agentRef.current, logger)
         agentRef.current = null

@@ -6,38 +6,29 @@ import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactHost
 import com.facebook.react.ReactNativeApplicationEntryPoint.loadReactNative
-import com.facebook.react.ReactNativeHost
-import com.facebook.react.ReactPackage
-import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
-import com.facebook.react.defaults.DefaultReactNativeHost
 import expo.modules.ApplicationLifecycleDispatcher
-import expo.modules.ReactNativeHostWrapper
+import expo.modules.ExpoReactHostFactory.getDefaultReactHost
 import org.wonday.orientation.OrientationActivityLifecycle
 
 class MainApplication :
     Application(),
     ReactApplication {
-    override val reactNativeHost: ReactNativeHost =
-        ReactNativeHostWrapper(
-            this,
-            object : DefaultReactNativeHost(this) {
-                override fun getPackages(): List<ReactPackage> =
-                    PackageList(this).packages.apply {
-                        // Packages that cannot be autolinked yet can be added manually here, for example:
-                        // add(MyReactNativePackage())
-                    }
-
-                override fun getJSMainModuleName(): String = "index"
-
-                override fun getUseDeveloperSupport(): Boolean = BuildConfig.DEBUG
-
-                override val isNewArchEnabled: Boolean = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED
-                override val isHermesEnabled: Boolean = BuildConfig.IS_HERMES_ENABLED
-            },
+    // RN 0.86 is bridgeless-only: ReactNativeHost/DefaultReactNativeHost are gone, and Expo's
+    // ReactNativeHostWrapper went with them. ExpoReactHostFactory is the SDK 57 replacement —
+    // it applies the ReactNativeHostHandlers contributed by installed Expo modules, which is
+    // what the wrapper used to do.
+    override val reactHost: ReactHost by lazy {
+        getDefaultReactHost(
+            context = applicationContext,
+            packageList =
+                PackageList(this).packages.apply {
+                    // Packages that cannot be autolinked yet can be added manually here, for example:
+                    // add(MyReactNativePackage())
+                },
+            // Expo defaults this to ".expo/.virtual-metro-entry"; this app uses a plain RN entry.
+            jsMainModulePath = "index",
         )
-
-    override val reactHost: ReactHost
-        get() = getDefaultReactHost(applicationContext, reactNativeHost)
+    }
 
     override fun onCreate() {
         registerActivityLifecycleCallbacks(OrientationActivityLifecycle.getInstance())
