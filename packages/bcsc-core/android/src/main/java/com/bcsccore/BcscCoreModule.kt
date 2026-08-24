@@ -395,23 +395,10 @@ class BcscCoreModule(
         }
     }
 
-    /**
-     * Generate a new signing keypair under a freshly incremented alias and return its public
-     * RSA components, for the JS-side key-rotation flow (issue #3876).
-     *
-     * IMPORTANT side effect: [BcscKeyPairSource.getNewBcscKeyPair] stamps the new alias'
-     * `createdAt` to now, so [BcscKeyPairSource.getCurrentBcscKeyPair] (newest-by-`createdAt`)
-     * picks it up as the active signing key immediately — there is no separate "activate" step.
-     * The JS caller is responsible for registering the new key with the server or rolling back
-     * via [deleteKey].
-     *
-     * Reuses [BcscKeyPairSource.convertBcscKeyPairToJWK] so the n/e encoding matches what
-     * registration actually sends (Nimbus canonical unsigned base64url).
-     */
+    /** Generates a new signing keypair; activation is implicit on generation — see the JS wrapper's warning. */
     @ReactMethod
     fun createNewKeyPair(promise: Promise) {
-        // Captured once getNewBcscKeyPair() succeeds so a later failure in this method can
-        // best-effort delete it — see cleanUpUnregisteredKeyAfterGenerationFailure below.
+        // Captured once generated so a failure below can best-effort delete it (see cleanup fun).
         var bcscKeyPair: BcscKeyPair? = null
         try {
             if (!keyPairSource.isAvailable()) {
@@ -422,8 +409,7 @@ class BcscCoreModule(
             val jwk = keyPairSource.convertBcscKeyPairToJWK(bcscKeyPair)
             if (jwk !is RSAKey) {
                 cleanUpUnregisteredKeyAfterGenerationFailure(bcscKeyPair.getKeyInfo().getAlias(), "not an RSA key")
-                // Redacted: this message surfaces via AppError.technicalMessage, analytics, and
-                // user-visible debug details — a channel that travels further than logs.
+                // Redacted: surfaces via AppError.technicalMessage/analytics, which travel further than logs.
                 promise.reject(
                     "E_KEYSTORE_ERROR",
                     "Newly generated key '${redactAlias(bcscKeyPair.getKeyInfo().getAlias())}' is not an RSA key",
@@ -456,17 +442,9 @@ class BcscCoreModule(
     }
 
     /**
-     * Best-effort cleanup for [createNewKeyPair]'s post-generation failure paths.
-     *
-     * [BcscKeyPairSource.getNewBcscKeyPair] stamps the new alias' `createdAt` to now, so it
-     * becomes the active signing key (via [BcscKeyPairSource.getCurrentBcscKeyPair]'s
-     * newest-by-`createdAt` pick) the instant generation succeeds — before JS ever receives its
-     * alias. If anything after that point fails (JWK conversion, non-RSA key), JS gets a
-     * rejection with no alias and cannot roll back via [deleteKey], which would strand the
-     * device signing `private_key_jwt` client assertions with a key IAS has never registered
-     * (the #4166/2111 "Signature did not validate" failure mode). Deletion here is best-effort
-     * only: a cleanup failure is logged but never masks the original error the caller still
-     * rejects with.
+     * A key activates the instant generation succeeds, before JS gets its alias — so a failure
+     * after that point must delete it here or strand signing on an unregistered key (#4166/2111).
+     * Best-effort only: a cleanup failure is logged but never masks the caller's error.
      */
     private fun cleanUpUnregisteredKeyAfterGenerationFailure(
         alias: String,
@@ -484,13 +462,7 @@ class BcscCoreModule(
         }
     }
 
-    /**
-     * Redacts a keystore alias to its trailing 8 characters for logging. Android aliases are
-     * low-cardinality (`rsa1`, `rsa2`, ...) rather than UUID-based like iOS, but this keeps
-     * the treatment of key aliases in logs consistent across platforms — these logs ship to
-     * Loki from a public repo, and the trailing suffix still lets one device's log lines be
-     * correlated with each other.
-     */
+    /** Truncates for logging, matching iOS's redaction even though Android aliases (`rsa1`, `rsa2`, ...) aren't UUID-based. */
     private fun redactAlias(alias: String): String = if (alias.length <= 8) alias else "…" + alias.takeLast(8)
 
     @ReactMethod

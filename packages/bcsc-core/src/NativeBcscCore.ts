@@ -291,16 +291,7 @@ export interface Spec extends TurboModule {
    * E_KEY_DELETE_REFUSED_LAST if deleting would leave zero private keys.
    */
   deleteKey(alias: string): Promise<void>;
-  /**
-   * Generates a new signing keypair under a freshly incremented alias (`rsa1` -> `rsa2` -> ...)
-   * and returns its public RSA components, for the key-rotation flow (issue #3876).
-   *
-   * IMPORTANT side effect: generating a key implicitly makes it the active signing key on both
-   * platforms (iOS: newest-by-`kSecAttrCreationDate` wins at sign time; Android:
-   * `getCurrentBcscKeyPair` picks newest-by-`createdAt`). There is no separate "activate"
-   * step — callers MUST either register the new key with the server or delete it
-   * (`deleteKey`) to roll back, never leave it dangling as an unregistered active key.
-   */
+  /** Generates a new signing keypair; see the {@link createNewKeyPair} wrapper for the activation side effect. */
   createNewKeyPair(): Promise<KeyPublicInfo>;
   getKeyPair(label: string): Promise<KeyPair>;
   getToken(tokenType: number): Promise<NativeToken | null>;

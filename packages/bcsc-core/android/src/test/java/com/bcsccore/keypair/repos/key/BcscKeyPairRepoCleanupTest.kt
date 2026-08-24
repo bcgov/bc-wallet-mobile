@@ -20,18 +20,9 @@ import java.security.KeyStoreException
 import java.util.HashMap
 
 /**
- * Verifies the post-generation cleanup safety behavior in
- * [BcscKeyPairRepo.getNewBcscKeyPair] (issue #3876 review): if anything fails AFTER
- * `generateKeyPair()` has actually created a keystore entry, that entry (and any metadata row
- * already persisted for it) must be best-effort deleted before the original exception
- * propagates — otherwise the orphaned/untracked alias would strand the device signing with an
- * unregistered key, or collide with the next rotation attempt.
- *
- * Robolectric cannot exercise the real "AndroidKeyStore" provider (confirmed empirically —
- * `KeyPairGenerator.getInstance(..., "AndroidKeyStore")` throws `NoSuchAlgorithmException` under
- * this project's Robolectric setup), so [TestableBcscKeyPairRepo] substitutes a mocked
- * [KeyStore] and controllable fakes for `generateKeyPair`/`getKeyPair` — the three methods were
- * widened from `private` to `protected` specifically to allow this.
+ * Verifies [BcscKeyPairRepo.getNewBcscKeyPair]'s post-generation cleanup: a failure after the
+ * keystore entry exists must best-effort delete it (and any persisted metadata row) before
+ * rethrowing, or the orphaned alias strands signing or collides with the next rotation.
  */
 @RunWith(RobolectricTestRunner::class)
 class BcscKeyPairRepoCleanupTest {
@@ -94,10 +85,9 @@ class BcscKeyPairRepoCleanupTest {
     }
 
     /**
-     * Test subclass substituting Robolectric-incompatible native Android Keystore calls with
-     * controllable fakes. [generateKeyPair] is a no-op (pretends generation succeeded — the
-     * behavior under test starts AFTER generation), and [getKeyPair] delegates to
-     * [getKeyPairResult] so each test can choose success or failure.
+     * Robolectric can't exercise the real "AndroidKeyStore" provider (`NoSuchAlgorithmException`),
+     * so this substitutes controllable fakes: [generateKeyPair] is a no-op (behavior under test
+     * starts after generation) and [getKeyPair] delegates to [getKeyPairResult].
      */
     private class TestableBcscKeyPairRepo(
         infoSource: KeyPairInfoSource,
@@ -107,10 +97,7 @@ class BcscKeyPairRepoCleanupTest {
         override fun loadAndroidKeyStore(): KeyStore = fakeKeyStore
 
         override fun generateKeyPair(alias: String) {
-            // No-op: pretends the native key was generated. The real method's own failure modes
-            // (before any keystore entry exists) are out of scope here — see BcscCore.swift's
-            // and BcscCoreModule.kt's equivalent pre-generation paths, which correctly have no
-            // cleanup because nothing exists yet to clean up.
+            // No-op: pretends generation succeeded. Pre-generation failures are out of scope here.
         }
 
         override fun getKeyPair(
@@ -120,10 +107,6 @@ class BcscKeyPairRepoCleanupTest {
     }
 
     private fun mockKeyStore(): KeyStore = mockk(relaxed = true)
-
-    // -----------------------------------------------------------------------
-    // saveKeyPairInfo throws -> keystore entry deleted -> original exception propagates
-    // -----------------------------------------------------------------------
 
     @Test
     fun `saveKeyPairInfo failure deletes the just-generated keystore entry and rethrows the original exception`() {
@@ -184,10 +167,6 @@ class BcscKeyPairRepoCleanupTest {
         )
     }
 
-    // -----------------------------------------------------------------------
-    // getKeyPair throws post-save -> keystore entry AND metadata row both cleaned up
-    // -----------------------------------------------------------------------
-
     @Test
     fun `getKeyPair failure after a successful save deletes both the keystore entry and the metadata row`() {
         val infoSource =
@@ -215,10 +194,8 @@ class BcscKeyPairRepoCleanupTest {
             causeChainContains(thrown, retrievalError),
         )
 
-        // Both the keystore entry AND the now-orphaned metadata row must be cleaned up — this is
-        // the fix (#3876 review, comment 2): the saveKeyPairInfo-failure branch only has a
-        // keystore entry to clean up, but by the time getKeyPair runs, saveKeyPairInfo already
-        // succeeded, so BOTH must go.
+        // Unlike the saveKeyPairInfo-failure case, saveKeyPairInfo already succeeded by the time
+        // getKeyPair runs here, so both the keystore entry AND the metadata row must be cleaned up.
         verify(exactly = 1) { keyStore.deleteEntry("rsa2") }
         assertFalse(
             "the orphaned metadata row for the unretrievable key must be deleted",

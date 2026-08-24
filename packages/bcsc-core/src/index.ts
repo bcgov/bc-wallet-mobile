@@ -329,13 +329,9 @@ export const deleteKey = (alias: string): Promise<void> => {
 };
 
 /**
- * Generates a new signing keypair under a freshly incremented alias and returns its public
- * RSA components. Used by the key-rotation flow (issue #3876).
- *
- * IMPORTANT: generating a key implicitly makes it the active signing key on both platforms —
- * there is no separate "activate" step. Callers MUST either register the new key with the
- * server (PUT /register) or delete it via {@link deleteKey} to roll back; never leave a
- * generated key dangling as an unregistered active key.
+ * Generates a new signing keypair. Generating implicitly makes it the active signing key on
+ * both platforms — there is no separate "activate" step — so callers MUST register it with
+ * the server or roll back via {@link deleteKey}; never leave it dangling as unregistered.
  */
 export const createNewKeyPair = (): Promise<KeyPublicInfo> => {
   return BcscCore.createNewKeyPair();

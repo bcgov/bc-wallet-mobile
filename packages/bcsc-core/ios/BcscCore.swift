@@ -442,18 +442,7 @@ class BcscCore: NSObject {
     }
   }
 
-  /**
-   * Generate a new signing keypair under a freshly incremented alias and return its public
-   * RSA components, for the JS-side key-rotation flow (issue #3876).
-   *
-   * IMPORTANT side effect: iOS activation is implicitly newest-by-`kSecAttrCreationDate` (see
-   * `signJWT`/`getDynamicClientRegistrationBody`, both of which sort keys and pick the latest) —
-   * generating a key here switches signing to it immediately, before any server confirmation.
-   * The JS caller is responsible for registering the new key or rolling back via `deleteKey`.
-   *
-   * Reuses the same private `generateKeyPair()` alias-increment logic as the DCR self-heal
-   * path, and the same RSA-component derivation as `getAllKeysWithPublicInfo`.
-   */
+  /// Generates a new signing keypair; activation is implicit on generation — see the JS wrapper's warning.
   @objc(createNewKeyPair:reject:)
   func createNewKeyPair(
     _ resolve: @escaping RCTPromiseResolveBlock,
@@ -489,12 +478,9 @@ class BcscCore: NSObject {
           keyPairManager: keyPairManager,
           context: "RSA component extraction failure"
         )
-        // The key WAS generated (and retrieved) successfully — this is an export/derivation
-        // failure, not a "key doesn't exist" condition. E_KEY_EXPORT_FAILED is the existing code
-        // this file already uses for the equivalent failure in getKeyPair (export public/private
-        // key); reusing it here (rather than E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR, which maps to
-        // KEYCHAIN_KEY_NOT_FOUND in native-error-map.ts and would route JS into the wrong
-        // recovery branch) keeps the surfaced error consistent with what actually failed.
+        // Reuse E_KEY_EXPORT_FAILED (same as getKeyPair's export failure) rather than
+        // E_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR — the key exists, this is an export failure,
+        // and that other code maps to KEYCHAIN_KEY_NOT_FOUND, which would misroute JS recovery.
         reject(
           "E_KEY_EXPORT_FAILED",
           "Generated new key '\(redactedAlias(newKeyId))' but could not extract its RSA components",
@@ -537,16 +523,9 @@ class BcscCore: NSObject {
   }
 
   /**
-   * Best-effort cleanup for `createNewKeyPair`'s post-generation failure paths.
-   *
-   * iOS activation is implicitly newest-by-`kSecAttrCreationDate`, so a key becomes the active
-   * signing key the INSTANT `generateKeyPair()` returns — before JS ever receives its alias.
-   * If anything after that point fails (RSA component extraction, re-retrieving the key pair),
-   * JS gets a rejection with no alias and cannot roll back via `deleteKey`, which would strand
-   * the device signing `private_key_jwt` client assertions with a key IAS has never registered
-   * (the #4166/2111 "Signature did not validate" failure mode). Deleting here is best-effort
-   * only: a cleanup failure is logged but never masks the original error the caller still
-   * rejects with — the caller is responsible for calling `reject` itself after this returns.
+   * A key activates the instant `generateKeyPair()` returns, before JS gets its alias — so a
+   * failure after that point must delete it here or strand signing on an unregistered key
+   * (#4166/2111). Best-effort only: a cleanup failure is logged but never masks the caller's error.
    */
   private func cleanUpUnregisteredKeyAfterGenerationFailure(
     _ alias: String, keyPairManager: KeyPairManager, context: String
@@ -559,15 +538,8 @@ class BcscCore: NSObject {
     }
   }
 
-  /**
-   * Redacts a keystore alias to its trailing 8 characters. The alias is `<provider><UUID>/N`
-   * (see `generateKeyPair()`), so the full string embeds a stable per-device UUID component —
-   * exposing it in full would leak that identifier. Used both in log lines (which ship to Loki
-   * from this public repo) and in `reject()` messages (which surface via
-   * `AppError.technicalMessage`, analytics, and user-visible debug details — a channel that
-   * travels further than logs). The trailing suffix still lets one device's log lines/error
-   * reports be correlated with each other without exposing the full identifier.
-   */
+  /// Truncates the alias (`<provider><UUID>/N`) to avoid leaking the embedded per-device UUID
+  /// in logs and reject() messages, while keeping enough to correlate a device's own entries.
   private func redactedAlias(_ alias: String) -> String {
     alias.count <= 8 ? alias : "…" + String(alias.suffix(8))
   }
