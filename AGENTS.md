@@ -288,6 +288,8 @@ Aim for a couple of hundred words across the whole body. Don't restate the issue
 
 **Issues** are created from the forms in `.github/ISSUE_TEMPLATE/`. Titles are plain text — the conventional-commit prefixes above are for commits and PR titles only.
 
+**Stacked PRs** each need their own link. Put the same `Closes #<issue>` on every PR in the stack — auto-close is off, so nothing races to close it — or split the work into sub-issues for a stack of four or more. Say which PR to merge first.
+
 ## Code Review Priorities
 
 When reviewing a pull request in this repository, prioritise these, roughly in order:
