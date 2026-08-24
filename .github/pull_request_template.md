@@ -1,7 +1,8 @@
 Closes #
 
-<!-- The issue number goes above, e.g. "Closes #1234" — that's what links the PR
-     to the board. A bare "#1234" further down doesn't. No issue? Say why. -->
+<!-- Add the number above, like "Closes #1234", or link it in the Development
+     panel. A bare "#1234" lower down doesn't count.
+     No issue? Delete the line and add the `status/no-issue` label. -->
 
 ## What changed
 
