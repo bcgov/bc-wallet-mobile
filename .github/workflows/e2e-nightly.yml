@@ -54,6 +54,7 @@ on:
           - main
           - verify
           - migration
+          - upgrade
         default: regression
       device_matrix:
         description: 'JSON array of {platform, device, os_version} objects'

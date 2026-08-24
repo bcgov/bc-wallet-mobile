@@ -11,6 +11,7 @@
 #   verify       — verify entry + verified card-type journeys (uses SM_* creds)
 #   regression   — every per-area journey (nightly default)
 #   migration    — v3 → v4 app upgrade flow (Sauce RDC only; separate v3 build)
+#   upgrade      — previous released build → current in-place upgrade (Sauce RDC Android; iOS runtime-skips)
 #
 # All suites require the single OP_SERVICE_ACCOUNT_TOKEN secret: SAUCE_USERNAME,
 # SAUCE_ACCESS_KEY, SM_USER, and SM_PASSWORD are all loaded from the
@@ -38,13 +39,21 @@ on:
   workflow_call:
     inputs:
       suite:
-        description: 'Test suite (smoke, onboarding, auth, main, verify, regression, migration)'
+        description: 'Test suite (smoke, onboarding, auth, main, verify, regression, migration, upgrade)'
         type: string
         required: true
       build_number:
         description: 'Build number for SauceLabs artifact lookup'
         type: string
         required: true
+      prev_build_number:
+        description: >
+          Upgrade suite only: run number of an older build still in Sauce storage
+          (empty = rolling BCSC-prev.*). Must be older than build_number — Android
+          forbids downgrade installs.
+        type: string
+        required: false
+        default: ''
       device_matrix:
         description: 'JSON array of {platform, device, os_version} objects'
         type: string
@@ -80,11 +89,17 @@ on:
           - verify
           - regression
           - migration
+          - upgrade
         default: smoke
       build_number:
         description: 'Build number (run_number from the build workflow)'
         type: string
         required: true
+      prev_build_number:
+        description: 'Upgrade suite only: older build run number still in Sauce storage (empty = rolling BCSC-prev.*)'
+        type: string
+        required: false
+        default: ''
       device_matrix:
         description: 'JSON array of {platform, device, os_version} objects'
         type: string
@@ -99,11 +114,12 @@ jobs:
   # Single unified job for all suites. Config file paths are selected at
   # runtime via a case statement on $SUITE:
   #   migration                → configs/sauce/wdio.{ios,android}.sauce.migration.conf.ts
+  #   upgrade                  → configs/sauce/wdio.{ios,android}.sauce.upgrade.conf.ts
   #   everything else (smoke,  → configs/sauce/wdio.{ios,android}.sauce.rdc.conf.ts
   #    onboarding, auth, main,
   #    verify, regression)
   #
-  # Non-blocking suites (migration): failures are reported but
+  # Non-blocking suites (migration, upgrade): failures are reported but
   # do not gate the pipeline.
   e2e-tests:
     name: '${{ inputs.suite }} - ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
@@ -112,7 +128,7 @@ jobs:
       contents: read
     # regression runs every journey serially (~90m per platform and growing); other suites (merge-queue smoke) stay tight
     timeout-minutes: ${{ inputs.suite == 'regression' && 120 || 45 }}
-    continue-on-error: ${{ inputs.suite == 'migration' }}
+    continue-on-error: ${{ contains(fromJSON('["migration","upgrade"]'), inputs.suite) }}
     strategy:
       max-parallel: 2
       fail-fast: false
@@ -205,6 +221,7 @@ jobs:
           ANDROID_DEVICE_NAME: ${{ matrix.device.platform == 'Android' && matrix.device.device || '' }}
           ANDROID_PLATFORM_VERSION: ${{ matrix.device.platform == 'Android' && matrix.device.os_version || '' }}
           BUILD_NUMBER: ${{ inputs.build_number }}
+          PREV_BUILD_NUMBER: ${{ inputs.prev_build_number }}
           SUITE: ${{ inputs.suite }}
           BUILD_NAME: 'build-${{ inputs.build_number }}'
           TEST_NAME: 'E2E ${{ inputs.suite }} - ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
@@ -224,11 +241,20 @@ jobs:
               IOS_CONF="configs/sauce/wdio.ios.sauce.migration.conf.ts"
               ANDROID_CONF="configs/sauce/wdio.android.sauce.migration.conf.ts"
               ;;
+            upgrade)
+              IOS_CONF="configs/sauce/wdio.ios.sauce.upgrade.conf.ts"
+              ANDROID_CONF="configs/sauce/wdio.android.sauce.upgrade.conf.ts"
+              ;;
             *)
               IOS_CONF="configs/sauce/wdio.ios.sauce.rdc.conf.ts"
               ANDROID_CONF="configs/sauce/wdio.android.sauce.rdc.conf.ts"
               ;;
           esac
+          # Upgrade suite: optional override of the rolling previous build (BCSC-prev.*).
+          if [ "$SUITE" = "upgrade" ] && [ -n "$PREV_BUILD_NUMBER" ]; then
+            export PREV_ANDROID_APP="${SAUCE_LABS_PREFIX}-${PREV_BUILD_NUMBER}.apk"
+            export PREV_IOS_APP="${SAUCE_LABS_PREFIX}-${PREV_BUILD_NUMBER}.ipa"
+          fi
           if [ "$PLATFORM" = "iOS" ]; then
             IOS_APP_FILENAME="${SAUCE_LABS_PREFIX}-${BUILD_NUMBER}.ipa" \
               yarn wdio "$IOS_CONF" --suite "${SUITE}"

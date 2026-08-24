@@ -1,19 +1,18 @@
-# Refresh V3 Builds in SauceLabs
+# Refresh E2E Sauce Builds
 #
-# Sauce Labs app storage deletes files after 60 days of inactivity.
-# The v3 BC Services Card builds (ias-ios / ias-android) are frozen —
-# this workflow re-uploads them on a schedule to keep them available
-# for migration tests (v3 → v4).
-#
-# The v3 .ipa and .apk are stored as GitHub Release assets on the
-# `bcsc-v3` tag in this repo. Update the RELEASE_TAG variable below
-# if you move them to a different release.
+# Sauce Labs app storage deletes files after 60 days of inactivity. This
+# workflow re-uploads the e2e base builds on a schedule to keep them available:
+#   - the frozen v3 BC Services Card builds (ias-ios / ias-android) used by the
+#     migration suite (v3 → v4) — GitHub Release assets on the `bcsc-v3` tag
+#   - the previous released bcsc-dev builds used by the upgrade suite (previous
+#     release → current) — assets on the rolling `bcsc-latest-release` tag,
+#     published by "Publish Previous Release Builds" after each release ships
 #
 # Sauce Storage behaviour: uploading with the same `name` creates a new
 # version in the same app group, resetting the retention clock.
-# `storage:filename=BCSC-v3.ipa` always resolves to the newest
-# upload of that filename, so migration configs need no changes.
-name: Refresh V3 Sauce Builds
+# `storage:filename=<name>` always resolves to the newest upload of that
+# filename, so the migration/upgrade configs need no changes.
+name: Refresh E2E Sauce Builds
 
 on:
   schedule:
@@ -25,6 +24,9 @@ env:
   RELEASE_TAG: bcsc-v3
   V3_IOS_FILENAME: BCSC-v3.ipa
   V3_ANDROID_FILENAME: BCSC-v3.apk
+  PREV_RELEASE_TAG: bcsc-latest-release
+  PREV_IOS_FILENAME: BCSC-prev.ipa
+  PREV_ANDROID_FILENAME: BCSC-prev.apk
 
 jobs:
   upload-v3-builds:
@@ -99,3 +101,93 @@ jobs:
             exit 1
           fi
           echo "✓ Uploaded $V3_ANDROID_FILENAME (HTTP $http_code)"
+
+  refresh-prev-builds:
+    name: Upload previous-release builds to SauceLabs
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    steps:
+      - name: Check the rolling release exists
+        id: probe
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "$PREV_RELEASE_TAG" --repo "${{ github.repository }}" > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::$PREV_RELEASE_TAG not found — 'Publish Previous Release Builds' has not run yet; skipping"
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download previous-release iOS build from GitHub Releases
+        if: steps.probe.outputs.exists == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download "$PREV_RELEASE_TAG" \
+            --repo "${{ github.repository }}" \
+            --pattern "$PREV_IOS_FILENAME" \
+            --dir .
+
+      - name: Download previous-release Android build from GitHub Releases
+        if: steps.probe.outputs.exists == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download "$PREV_RELEASE_TAG" \
+            --repo "${{ github.repository }}" \
+            --pattern "$PREV_ANDROID_FILENAME" \
+            --dir .
+
+      - name: Load SauceLabs secrets from 1Password
+        if: steps.probe.outputs.exists == 'true'
+        id: op_saucelabs
+        uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          SAUCE_USERNAME: op://bcsc-mobile-app-cd/saucelabs/username
+          SAUCE_ACCESS_KEY: op://bcsc-mobile-app-cd/saucelabs/credential
+
+      - name: Upload previous-release iOS build to SauceLabs
+        if: steps.probe.outputs.exists == 'true'
+        env:
+          SAUCE_USERNAME: ${{ steps.op_saucelabs.outputs.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ steps.op_saucelabs.outputs.SAUCE_ACCESS_KEY }}
+        run: |
+          response=$(curl -s -w "\n%{http_code}" \
+            -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
+            --location --request POST \
+            'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
+            --form "payload=@\"$PREV_IOS_FILENAME\"" \
+            --form "name=\"$PREV_IOS_FILENAME\"")
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | sed '$d')
+          echo "$body"
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "::error::SauceLabs upload failed with HTTP $http_code"
+            exit 1
+          fi
+          echo "✓ Uploaded $PREV_IOS_FILENAME (HTTP $http_code)"
+
+      - name: Upload previous-release Android build to SauceLabs
+        if: steps.probe.outputs.exists == 'true'
+        env:
+          SAUCE_USERNAME: ${{ steps.op_saucelabs.outputs.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ steps.op_saucelabs.outputs.SAUCE_ACCESS_KEY }}
+        run: |
+          response=$(curl -s -w "\n%{http_code}" \
+            -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
+            --location --request POST \
+            'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
+            --form "payload=@\"$PREV_ANDROID_FILENAME\"" \
+            --form "name=\"$PREV_ANDROID_FILENAME\"")
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | sed '$d')
+          echo "$body"
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "::error::SauceLabs upload failed with HTTP $http_code"
+            exit 1
+          fi
+          echo "✓ Uploaded $PREV_ANDROID_FILENAME (HTTP $http_code)"
