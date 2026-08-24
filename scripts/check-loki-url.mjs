@@ -120,14 +120,10 @@ const response = await fetch(transportTarget, {
   process.exit(1)
 })
 
-// The body is echoed for diagnostics. Strip control characters -- newlines and
-// ANSI escapes are what make echoing a remote response to a terminal unsafe --
-// and cap the length. Printable symbols are kept so HTML error pages stay legible.
-const body = (await response.text()).replace(/\p{C}/gu, ' ').trim().slice(0, 200)
+// The response body is deliberately not echoed. It is attacker-influenced data
+// and printing it is a log-injection sink; the status code plus the fixed
+// guidance below covers every case worth diagnosing here.
 console.log(`HTTP ${response.status}`)
-if (body) {
-  console.log(body)
-}
 
 // Only 204 means the line was stored. A 200 is the nginx health check
 // swallowing the payload -- see the missing-path case above.
@@ -141,6 +137,7 @@ if (response.status === 401 || response.status === 403) {
 }
 if (response.status === 400) {
   console.log('\nFAIL - Loki rejected the payload (often a timestamp too old or out of order)')
+  console.log("       Re-run the same request with curl -i to see Loki's reason.")
   process.exit(1)
 }
 console.log(`\nFAIL - expected 204, got ${response.status}; the line was not stored`)
