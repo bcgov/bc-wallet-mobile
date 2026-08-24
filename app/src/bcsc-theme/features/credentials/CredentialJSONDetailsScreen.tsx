@@ -14,7 +14,7 @@ interface CredentialJSONDetailsScreenProps {
 /**
  * CredentialJSONDetailsScreen is a React component that displays a JSON blob in a styled container.
  * TODO (MD): Refactor ContactJSONDetailsScreen to use a shared component with this screen.
- * @params route - The route prop containing the JSON blob to display.
+ * @param route - The route prop containing the JSON blob to display.
  * @returns a React element that renders the CredentialJSONDetailsScreen component.
  */
 const CredentialJSONDetailsScreen = ({ route }: CredentialJSONDetailsScreenProps) => {
