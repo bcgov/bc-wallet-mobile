@@ -96,7 +96,7 @@ const isCredentialJSONDetailsNavigation = (
     params: z.object({
       screen: z.literal(Screens.JSONDetails),
       params: z.object({
-        jsonBlob: z.unknown(),
+        jsonBlob: z.object(),
       }),
     }),
   })
