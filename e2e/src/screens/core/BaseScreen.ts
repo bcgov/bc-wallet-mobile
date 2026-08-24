@@ -174,18 +174,17 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
 
   /**
    * Get the visible text content of an element identified by test ID.
-   * On iOS, falls back to the `label` attribute when `getText()` returns empty
-   * (common for styled ThemedText / accessibility-labelled elements).
+   * Falls back to the accessibility label when `getText()` returns empty: styled ThemedText on iOS,
+   * and on both platforms an `accessible` container whose text lives in an id-less child (bifold's
+   * `Button` puts the testID on the touchable, its title on a nested Text).
    */
   public async getTextByTestId(testId: string, timeout: number = Timeouts.ELEMENT_VISIBLE): Promise<string> {
     const el = await this.findByTestId(testId)
     await el.waitForDisplayed({ timeout })
     const text = await el.getText()
     if (text) return text
-    if (driver.isIOS) {
-      const label = await el.getAttribute('label')
-      if (label) return label
-    }
+    const label = await el.getAttribute(driver.isIOS ? 'label' : 'content-desc')
+    if (label) return label
     return ''
   }
 

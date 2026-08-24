@@ -365,7 +365,15 @@ export const TestIds = {
      *  the always-present sticky-header catalogue search field — the "Services opened, not gated" marker. */
     services: {
       search: 'search',
+      // Renders only while the query is non-empty (tapping it clears the search).
+      clearSearch: 'clearSearch',
       loading: 'ServicesLoading',
+      // Per-row ids are NAME-DERIVED: `ServiceButton-<title minus whitespace>` on the row title text and
+      // `ServiceButton-Bookmark-<...>` on its bookmark toggle (`ServiceButton.tsx`). Compose them via
+      // `helpers/services.ts` — and note the row is a `ListButton` (`accessible`), so iOS flattens these
+      // descendants out of the a11y tree: they are Android-only selectors (iOS drives rows by label).
+      serviceRowPrefix: 'ServiceButton-',
+      serviceBookmarkPrefix: 'ServiceButton-Bookmark-',
     },
     /** Header settings (menu) button on the Home/Services tab headers. */
     header: {
@@ -426,8 +434,9 @@ export const TestIds = {
     },
     /** Main settings (minimal — the full screen is modeled later). `profile` is verified-gated. */
     /** Main settings menu (`SettingsContent.tsx`). The `AuthenticatedSection` rows render once
-     *  `didAuthenticate`; the `isVerified`-gated rows (profile/editProfile/contacts/addDevice/
-     *  myDevices/forgetPairings) are ABSENT unverified. The Help + MoreInfo section rows always render. */
+     *  `didAuthenticate`; the `isVerified`-gated rows (profile/editProfile/addDevice/myDevices/
+     *  forgetPairings) are ABSENT unverified. `contacts` is NOT gated — Main settings always wires it.
+     *  The Help + MoreInfo section rows always render. */
     settings: {
       appSecurity: 'AppSecurity',
       changePin: 'ChangePIN',
@@ -436,8 +445,8 @@ export const TestIds = {
       analyticsOptIn: 'AnalyticsOptIn',
       removeAccount: 'RemoveAccount',
       resetWallet: 'ResetWallet', // distinct destructive row; shared DestructiveConfirmationScreen (confirm = ConfirmDestructiveAction)
-      help: 'Help',
-      contactUs: 'ContactUs',
+      help: 'Help', // → in-app MainWebView (help centre)
+      contactUs: 'ContactUs', // → in-app MainWebView (help-centre contact page); no native Contact Us screen
       feedback: 'Feedback',
       accessibility: 'Accessibility',
       termsOfUse: 'TermsOfUse',
@@ -447,7 +456,7 @@ export const TestIds = {
       // verified-only (isVerified-gated): absence-assert unverified, presence when verified
       profile: 'Profile',
       editProfile: 'EditProfile',
-      contacts: 'Contacts',
+      contacts: 'Contacts', // NOT verified-gated (the Features row renders whenever Main settings wires it)
       addDevice: 'AddDevice',
       myDevices: 'MyDevices',
       forgetPairings: 'ForgetPairings',
@@ -466,6 +475,14 @@ export const TestIds = {
       confirm: 'ReenterNewPIN',
       understand: 'IUnderstand',
       submit: 'ChangePIN',
+    },
+    /** Notification settings (Settings → `settings.notifications`). TWO render branches on "has the
+     *  push prompt ever run": UNSET shows `enable` (same id as the ONBOARDING enable button — different
+     *  mounts); once prompted it shows the OS-managed view with `openDeviceSettings` (leaves the app).
+     *  The ON/OFF status word has no testID — assert the row's a11y label "Notifications are: on/off". */
+    notificationSettings: {
+      enable: 'EnableNotifications',
+      openDeviceSettings: 'OpenNotificationSettings',
     },
     /** AutoLock options — `auto-lock-time-<minutes>`; tapping a row saves immediately (no confirm). */
     autoLock: {
@@ -503,13 +520,30 @@ export const TestIds = {
     pairing: {
       logInFromComputer: 'LogInFromComputer',
       manualCodeInput: 'ManualPairingCodeInput',
+      // CodeInput renders its inline error as `<input testID>-subtext`. A rejected code (HTTP 404,
+      // e.g. a made-up value) ALSO raises a native "Could not verify pairing code" alert.
+      codeError: 'ManualPairingCodeInput-subtext',
       confirmationClose: 'Close',
       bookmark: 'BookmarkService',
     },
-    /** Service-login screen (reached when a login deep link opens the app). */
+    /** Service-login screen (`ServiceLogin`) — reached by login deep links, FCM challenges, and
+     *  catalogue row taps. Renders ONE of two views: the default (quick-login or pairing-code)
+     *  view with `continue`/`cancel`, or the UNAVAILABLE view (`!initiate_login_uri` and no pairing
+     *  code) with `goToService`/`cancelUnavailable`/`serviceClientLink`. NB the unavailable cancel is
+     *  the bare `Cancel`, a DIFFERENT id from the default view's `ServiceLoginCancel`. */
     serviceLogin: {
       continue: 'ServiceLoginContinue',
       cancel: 'ServiceLoginCancel',
+      // Default view extras: in-app "what info is shared" webview; privacy policy (external browser,
+      // renders only when the service carries a `policy_uri`); report-suspicious wrapper text (its
+      // inner Link is RN-flattened, so the wrapper is assert-only, not tappable).
+      help: 'HelpButton',
+      readPrivacyPolicy: 'ReadPrivacyPolicy',
+      reportSuspicious: 'ReportSuspiciousLink',
+      // Unavailable view: external service site (opens the browser); renders only with a `client_uri`.
+      goToService: 'GoToServiceClient',
+      cancelUnavailable: 'Cancel',
+      serviceClientLink: 'ServiceClientLink',
     },
     /** Transferer "show a QR to add a device" flow — reached via Settings → `settings.addDevice`
      *  (verified-only, wired only in the Main stack). QR-info (`getQrCode`) → QR-display (`newQrCode`
@@ -523,18 +557,46 @@ export const TestIds = {
     transferAgeRestriction: {
       title: 'AgeRestrictedTransferTitle',
     },
-    /** Contacts feature (`features/contacts/*`, verified-only via Settings → `settings.contacts`). The
-     *  list (`ContactsScreen`) is `withAgentReadyGate`-wrapped — a `loading` spinner shows until the
-     *  Credo agent is ready — and resolves to its EMPTY state for a verification-only account: the list
-     *  shows only filtered DIDComm connections (non-mediator, Completed) and neither identity
-     *  verification nor BCSC service-login create one. So CI covers the empty state → WhatAreContacts
-     *  info → back. `whatAreContacts` (the empty-state button) is that info screen's ONLY entry point;
-     *  `search` renders only in the POPULATED list (its absence ⇒ empty). Seeding a real contact needs
-     *  an out-of-band credential connection — out of CI, same constraint as QR scanning. */
+    /** Contacts feature (`features/contacts/*`, Settings → `settings.contacts`). NOT verified-gated:
+     *  Main-stack settings always passes `onContacts`, so the row renders for any authenticated user
+     *  (the verified-only note that used to sit here predates the current `SettingsContent`). The list
+     *  (`ContactsScreen`) is `withAgentReadyGate`-wrapped — a `loading` spinner shows until the Credo
+     *  agent is ready — and holds only filtered DIDComm connections (non-mediator, Completed): empty
+     *  for a verification-only account, populated once the issuer-driven wallet journey connects.
+     *  `whatAreContacts` (the empty-state button) is the info screen's only entry point and does NOT
+     *  render populated — so `search` present + `whatAreContacts` absent ⇒ populated, and vice versa.
+     *  `clearSearch` renders only while the query is non-empty. Rows (`ContactRow`) carry NO testID —
+     *  select by a11y label = the contact name (`helpers/a11y.ts`). */
     contacts: {
       loading: 'Contacts.Loading',
       whatAreContacts: 'WhatAreContacts',
       search: 'SearchContacts',
+      clearSearch: 'clearSearch',
+    },
+    /** Contact details (`ContactDetailsScreen`, agent-gated like the list). `pin`/`unpin` are the SAME
+     *  button — its id flips with the pinned state, so waiting for the other id IS the toggle assert.
+     *  `viewJson` renders only in developer mode (absence-assert in normal runs). */
+    contactDetails: {
+      loading: 'ContactDetails.Loading',
+      message: 'MessageContact',
+      pin: 'PinContact',
+      unpin: 'UnpinContact',
+      editName: 'EditContactName',
+      viewJson: 'ViewJSON',
+      remove: 'RemoveContact',
+    },
+    /** Edit-contact-name form. `save`/`cancel` are label-derived by `ActionScreenLayout`
+     *  (`testIdWithKey(t('Global.Continue'))` etc.), so they break under a locale change — en-only. */
+    contactEditName: {
+      nameInput: 'NameInput',
+      save: 'Continue',
+      cancel: 'Cancel',
+    },
+    /** Remove-contact confirmation — a modal with NO header back (`headerLeft: null`); `cancel` is the
+     *  only non-destructive exit. The failure branch is an untestID'd native alert. */
+    contactRemove: {
+      confirm: 'ConfirmRemove',
+      cancel: 'CancelRemove',
     },
     // NB: the WhatAreContacts info screen has NO usable testID — its only one (`ContactsList`) is on an
     // inline <Link> nested in a <ThemedText>, which RN flattens into the paragraph so it is not a
@@ -570,7 +632,10 @@ export const TestIds = {
       decline: 'DeclineCredentialOffer',
       header: 'HeaderText',
     },
-    /** `CredentialOfferAccept` full-screen modal. `done` resets to the Wallet tab; `backToHome` to Home. */
+    /** `CredentialOfferAccept` full-screen modal, in two mutually exclusive phases: pending
+     *  (`onTheWay` + `backToHome`) then completed (`added` + `done`). Only the completed pair is a
+     *  reliable marker — pending is skipped outright when issuance is fast. `done` resets to the
+     *  Wallet tab; `backToHome` to Home. */
     offerAccept: {
       onTheWay: 'CredentialOnTheWay',
       added: 'CredentialAddedToYourWallet',
@@ -620,7 +685,8 @@ export const TestIds = {
       cancel: 'Cancel',
       loading: 'ProofRequestLoading',
     },
-    /** `ProofRequestAccept` full-screen modal. */
+    /** `ProofRequestAccept` full-screen modal — two mutually exclusive phases like the credential
+     *  one: `sending` then `sent`; only `sent` is a reliable marker. */
     accept: {
       sending: 'SendingProofRequest',
       sent: 'SentProofRequest',

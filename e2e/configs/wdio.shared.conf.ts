@@ -4,6 +4,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { browser } from '@wdio/globals'
+import type { Frameworks } from '@wdio/types'
 import dotenv from 'dotenv'
 import { getE2EConfig } from '../src/e2eConfig.js'
 import { acceptSystemAlert } from '../src/helpers/alerts.js'
@@ -40,6 +41,15 @@ const ALL_SPEC_FILES = readdirSync(TEST_ROOT, { recursive: true })
 const isSendVideoSpec = (path: string) => /\/verify\/send-video-[^/]+\.journey\.ts$/.test(path)
 export const SEND_VIDEO_SPECS = ALL_SPEC_FILES.filter(isSendVideoSpec)
 export const NON_SEND_VIDEO_SPECS = ALL_SPEC_FILES.filter((path) => !isSendVideoSpec(path))
+
+/**
+ * Did the test end in a runtime `this.skip()`? WDIO reports a skip as `{ passed: false, skipped: true }`
+ * — a shape that reads as a FAILURE to anything checking `passed` alone — and `@wdio/types` does not
+ * declare `skipped` yet.
+ */
+export function wasSkipped(result: Frameworks.TestResult): boolean {
+  return (result as Frameworks.TestResult & { skipped?: boolean }).skipped === true
+}
 
 /**
  * Save a screenshot named after the failing test. The webdriver screenshot command also attaches
@@ -158,6 +168,7 @@ export const config: WebdriverIO.Config = {
   },
 
   afterTest: async (test, _context, result) => {
+    if (wasSkipped(result)) return // a skip has no failure to capture
     await captureFailureScreenshot(test, result)
   },
 }

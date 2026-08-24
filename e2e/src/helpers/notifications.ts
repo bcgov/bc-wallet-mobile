@@ -25,6 +25,53 @@ export const NOTIFICATION_TITLES = {
 
 export type NotificationTitle = (typeof NOTIFICATION_TITLES)[keyof typeof NOTIFICATION_TITLES]
 
+/**
+ * The CUSTOM action cards' copy (`Notification.*` in `app/src/localization/en`), verbatim. All seven
+ * variants share one testID set (`NotificationActionCard`), so copy is the ONLY discriminator — and
+ * Start vs Continue share their TITLE, so telling those apart takes the body or the button label.
+ */
+export const CUSTOM_CARD_COPY = {
+  start: {
+    title: "You're not verified",
+    body: 'You can continue the verification process at anytime.',
+    button: 'Start verification',
+  },
+  continueVerification: {
+    title: "You're not verified",
+    body: 'Complete the verification process at anytime.',
+    button: 'Continue',
+  },
+  /** SEND-VIDEO ONLY. `useCustomNotifications` renders this card on `verificationRequestStatus ===
+   *  'verified'`, which only the review path writes (the push listener, plus a system check gated on
+   *  NOT-yet-verified). In-person verification walks through VerificationSuccess inline and leaves
+   *  Home with NO custom card — see {@link EMPTY_NOTIFICATION_COPY}. */
+  verified: {
+    title: 'Your identity has been verified',
+    body: 'Complete the verification process.',
+    button: 'Finish up',
+  },
+} as const
+
+/** Home's empty state (`Notification.EmptyNotification.Title`, en). `NotificationsList` renders it
+ *  only when BOTH the custom and credential lists are empty, so it is a positive "no cards" proof. */
+export const EMPTY_NOTIFICATION_COPY = 'You have no new notifications'
+
+const LIST_ITEM_TEST_ID = `${TESTID_PREFIX}${TestIds.main.notification.item}`
+
+/**
+ * How many notification CARDS are on screen — `NotificationListItem` is shared by exactly the custom
+ * action cards and the credential cards (the empty state has no testID), so on a session with no
+ * DIDComm traffic this counts custom cards alone, and `useCustomNotifications` guarantees at most one
+ * of those. Counts only what is currently rendered; the Home list is short enough not to virtualize.
+ */
+export async function countNotificationListItems(): Promise<number> {
+  const selector = driver.isIOS
+    ? `~${LIST_ITEM_TEST_ID}`
+    : `android=new UiSelector().resourceId("${LIST_ITEM_TEST_ID}")`
+  const items = await $$(selector)
+  return items.length
+}
+
 const HEADER_TEST_ID = `${TESTID_PREFIX}${TestIds.main.notificationCard.headerText}`
 const POLL_INTERVAL_MS = 2_000
 
@@ -51,10 +98,7 @@ export async function findNotificationCard(title: NotificationTitle) {
  * Poll until a card titled `title` is on screen. One scroll pass at half budget (cards can sit
  * below the unverified verification action card); on timeout the error names what WAS on screen.
  */
-export async function waitForNotificationCard(
-  title: NotificationTitle,
-  timeoutMs: number = Timeouts.DIDCOMM_DELIVERY
-) {
+export async function waitForNotificationCard(title: NotificationTitle, timeoutMs: number = Timeouts.DIDCOMM_DELIVERY) {
   const deadline = Date.now() + timeoutMs
   const scrollAfter = Date.now() + timeoutMs / 2
   let scrolled = false

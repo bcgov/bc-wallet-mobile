@@ -26,17 +26,21 @@ export const CredentialOfferScreen = defineScreen({
 })
 
 /**
- * `CredentialOfferAccept` overlay. Shows `self` (CredentialOnTheWay) while issuance is in flight,
- * swaps to `added` when the credential lands — wait for `added` with the DIDComm budget, then
- * `primary` (Done) RESETS to the Wallet tab (adapter-translated from Bifold's credential stack).
- * A stall on `self` means the issuance leg, not the tap.
+ * `CredentialOfferAccept` overlay — two MUTUALLY EXCLUSIVE phases: pending (`onTheWay` + `backToHome`)
+ * swaps to completed (`self`/`added` + Done) the moment the credential is stored. `self` is the
+ * COMPLETED phase deliberately: pending is transient and a fast issuance skips it outright, so it is
+ * never an arrival marker. Wait for `added` with the DIDComm budget; `primary` (Done) then RESETS to
+ * the Wallet tab (adapter-translated from Bifold's credential stack). A stall on `added` is the
+ * issuance leg, not the tap. Nothing here scrolls, so a miss fails fast naming the phase on screen.
  */
 export const CredentialOfferAcceptModal = defineScreen({
-  self: bcsc(credential.offerAccept.onTheWay),
+  self: bcsc(credential.offerAccept.added),
   primary: bcsc(credential.offerAccept.done),
+  scroll: { maxScrolls: 0 },
   elements: {
     added: bcsc(credential.offerAccept.added),
-    backToHome: bcsc(credential.offerAccept.backToHome),
+    onTheWay: bcsc(credential.offerAccept.onTheWay), // pending phase — transient, diagnostics only
+    backToHome: bcsc(credential.offerAccept.backToHome), // pending-phase button
   },
 })
 
@@ -57,14 +61,17 @@ export const ProofRequestScreen = defineScreen({
 })
 
 /**
- * `ProofRequestAccept` overlay. `self` (SendingProofRequest) while the presentation is in flight,
- * `sent` on success; `primary` (BackToHome) resets to Home.
+ * `ProofRequestAccept` overlay — the same two-phase shape as {@link CredentialOfferAcceptModal}:
+ * `sending` swaps to `self`/`sent` when the presentation lands, and `self` is the SENT phase for the
+ * same reason (sending is transient). `primary` (BackToHome) resets to Home.
  */
 export const ProofSentModal = defineScreen({
-  self: bcsc(proof.accept.sending),
+  self: bcsc(proof.accept.sent),
   primary: bcsc(proof.accept.backToHome),
+  scroll: { maxScrolls: 0 },
   elements: {
     sent: bcsc(proof.accept.sent),
+    sending: bcsc(proof.accept.sending), // in-flight phase — transient, diagnostics only
   },
 })
 

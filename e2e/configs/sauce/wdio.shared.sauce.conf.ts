@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 
 import type { Options } from '@wdio/types'
 import dotenv from 'dotenv'
-import { captureFailureScreenshot, config as baseConfig } from '../wdio.shared.conf.js'
+import { config as baseConfig, captureFailureScreenshot, wasSkipped } from '../wdio.shared.conf.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: resolve(__dirname, '../../.env.saucelabs') })
@@ -96,7 +96,23 @@ const sauceRdcOptions = {
   imageInjection: true,
 }
 
+/**
+ * Report each checkpoint to Sauce — and stop a SKIPPED one from failing the whole job.
+ *
+ * A runtime `this.skip()` arrives as `{ passed: false, skipped: true }`, and `@wdio/sauce-service`
+ * forgives only JASMINE's pending marker — ours lands in its failure counter, so its end-of-session
+ * `sauce:job-result` write (the LAST one to reach Sauce) marks a green run red. That is exactly how
+ * the runner exits 0 while the dashboard says failed.
+ *
+ * Clearing the flag here is the only lever that works: config hooks are invoked before service hooks,
+ * synchronously and in registration order, so this is what the service goes on to count. Writing the
+ * result from a later hook does NOT work — an extra `after` races the service's own inside one
+ * `Promise.all`, and `afterSession` runs after the session is deleted.
+ */
 config.afterTest = async function (test, _context, result) {
+  if (wasSkipped(result)) {
+    result.passed = true
+  }
   await captureFailureScreenshot(test, result)
   await browser.execute(`sauce:job-result=${result.passed ? 'passed' : 'failed'}`)
 }

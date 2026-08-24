@@ -126,7 +126,7 @@ export class RawElement {
     await this.engine.enterText(this.id, value, options)
   }
 
-  /** Read the element's visible text (falls back to the iOS `label` attribute). */
+  /** Read the element's visible text (falls back to the accessibility label when there is none). */
   async read(timeout?: number): Promise<string> {
     return this.engine.getTextByTestId(this.id, timeout)
   }
