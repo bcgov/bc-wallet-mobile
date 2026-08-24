@@ -273,16 +273,20 @@ IOS_PRODUCT_NAME="$(TARGET_NAME)"
 
 These files are sourced in shell contexts (e.g., GitHub Actions `source variant.env`). Double-quoted strings containing `$`, backticks, or `!` will be interpreted by the shell, leading to unexpected behaviour. Single quotes ensure values are loaded exactly as written.
 
-## Pull Request Descriptions
+## Issues and Pull Requests
 
-When drafting a PR description, follow `.github/pull_request_template.md`:
+Write for a PO or PM first. Say what changed for the user or the product, then the technical detail if it earns its place. Favour concision — a short description is a good one.
 
-- `Closes #<issue>` on the first line — that is what links the PR to the board. A bare `#123` further down does not.
-- **What changed** — enough context to read the diff. The backstory lives in the issue.
-- **What should the reviewer focus on** — point at the scary bit, or say there isn't one.
+**PRs** follow `.github/pull_request_template.md`:
+
+- `Closes #<issue>` on the first line. A bare `#123` further down creates no link GitHub tracks; linking from the Development panel works too.
+- **What changed** — enough to read the diff. The backstory lives in the issue. Screenshots and video go here.
+- **What should the reviewer focus on** — the part you are least sure about, or say there isn't one.
 - **How to test** — how someone else checks it. "Covered by unit tests" counts.
 
-Keep it short. Don't restate the issue's acceptance criteria, and don't pad a section to look thorough.
+Aim for a couple of hundred words across the whole body. Don't restate the issue's acceptance criteria or pad a section to look thorough. No issue to link? Omit the `Closes` line and add the `status/no-issue` label — a `chore:` title does **not** exempt a PR from the hygiene check.
+
+**Issues** are created from the forms in `.github/ISSUE_TEMPLATE/`. Titles are plain text — the conventional-commit prefixes above are for commits and PR titles only.
 
 ## Code Review Priorities
 
@@ -303,4 +307,4 @@ Do not comment on:
 
 ## Labels
 
-See `docs/labels.md` for the label set and when to use each one. Pick at most one `component/` and one `work/`; `status/` flags go on only while true. Workflow state, priority, and Bug/Feature/Task/Epic live in board fields, not labels.
+See `docs/labels.md`. At most one `component/` and one `work/`; `status/` flags only while true. Workflow state, priority, and Bug/Feature/Task/Epic are board fields, not labels.
