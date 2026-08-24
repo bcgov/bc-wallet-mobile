@@ -53,9 +53,8 @@ body:
       description: Which environment were you using when the bug happened?
       options:
         - Production
-        - PREPROD
-        - TEST
         - QA
+        - Test
         - SIT
     validations:
       required: true
