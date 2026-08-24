@@ -300,3 +300,7 @@ Do not comment on:
 - Naming preferences, or restructuring that does not change behaviour, unless the current form is genuinely ambiguous.
 - Test coverage percentages as a number, or missing tests for code that is not new.
 - Generated files, lockfiles, and dependency bumps.
+
+## Labels
+
+See `docs/labels.md` for the label set and when to use each one. Pick at most one `component/` and one `work/`; `status/` flags go on only while true. Workflow state, priority, and Bug/Feature/Task/Epic live in board fields, not labels.
