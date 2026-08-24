@@ -150,8 +150,6 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
   // Detect an expired in-progress verification session (device_code) and route to the restart screen.
   useSystemChecks(SystemCheckScope.VERIFY)
 
-  console.log({ evidence: store.bcscSecure.additionalEvidenceData })
-
   return (
     <Stack.Navigator
       // Users resume their verification journey directly at the step they are on.
