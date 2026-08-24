@@ -1,25 +1,52 @@
-# TODO (MD): This should only run if the TS test suite passes
-
 name: Upload Remote Config
 
+# on:
+#   workflow_run:
+#     workflows: ["Code Quality"]
+#     types: [completed]
+#     branches: [main]
 on:
-  push:
+  pull_request:               # TEMP: swap back to workflow_run once verified
     branches: [main]
-    paths:
-      - app/src/remote-config/prod-remote-config.json
 
 jobs:
   upload:
     runs-on: ubuntu-latest
+    # if: github.event.workflow_run.conclusion == 'success'
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
-      - name: Upload to ObjectStore
+      # Secrets are being consolidated into the bcsc-mobile-app-cd 1Password vault;
+      # OP_SERVICE_ACCOUNT_TOKEN is the single bootstrap secret that stays in GitHub.
+      - name: Load secrets from 1Password
+        uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
+        with:
+          export-env: true
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.OBJECTSTORE_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.OBJECTSTORE_SECRET_KEY }}
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          AWS_ACCESS_KEY_ID: op://bcsc-mobile-app-cd/remote-config-object-storage/access_key_id
+          AWS_SECRET_ACCESS_KEY: op://bcsc-mobile-app-cd/remote-config-object-storage/secret_access_key
           AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          REMOTE_CONFIG_SERVER_URL: op://bcsc-mobile-app-cd/remote-config-object-storage/server
+          REMOTE_CONFIG_BUCKET_NAME: op://bcsc-mobile-app-cd/remote-config-object-storage/bucket_name
+          REMOTE_CONFIG_FILE_NAME: op://bcsc-mobile-app-cd/remote-config-object-storage/remote_config_file_name
+
+      - name: Upload to ObjectStore if changed
         run: |
+          REMOTE_ETAG=$(aws s3api head-object \
+            --bucket "${{ env.REMOTE_CONFIG_BUCKET_NAME }}" \
+            --key "${{ env.REMOTE_CONFIG_FILE_NAME }}" \
+            --endpoint-url https://${{ env.REMOTE_CONFIG_SERVER_URL }} \
+            --query ETag --output text 2>/dev/null | tr -d '"')
+          LOCAL_MD5=$(md5sum app/src/remote-config/prod-remote-config.json | awk '{print $1}')
+
+          if [ "$REMOTE_ETAG" = "$LOCAL_MD5" ]; then
+            echo "No change, skipping upload"
+            exit 0
+          fi
+
           aws s3 cp ./app/src/remote-config/prod-remote-config.json \
-          s3://bcsc-mobile-prod-remote-configuration/prod-remote-config.json \
-          --endpoint-url https://idim.objectstore.gov.bc.ca
+          s3://${{ env.REMOTE_CONFIG_BUCKET_NAME }}/${{ env.REMOTE_CONFIG_FILE_NAME }} \
+          --endpoint-url https://${{ env.REMOTE_CONFIG_SERVER_URL }}
