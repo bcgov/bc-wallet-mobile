@@ -118,6 +118,7 @@ const _getIasErrorAlertMap = (alerts?: AppAlerts) => {
     [AppEventCode.ERR_210_UNAUTHORIZED, alerts?.unauthorizedAlert],
     [AppEventCode.FORBIDDEN, alerts?.forbiddenAlert],
     [AppEventCode.NOT_FOUND, alerts?.notFoundAlert],
+    [AppEventCode.CONFLICT, alerts?.badRequestAlert],
     [AppEventCode.ERR_211_SERVER_OUTAGE, alerts?.serverOutageAlert],
     [AppEventCode.ERR_212_RETRY_LATER, alerts?.retryLaterAlert],
     [AppEventCode.ERR_213_FAILED_CREATING_CLIENT_REGISTRATION, alerts?.creatingClientRegistrationFailedAlert],
@@ -308,6 +309,24 @@ export const emailVerificationCodeErrorPolicy: ErrorHandlingPolicy = {
   handle: (_error, context) => {
     context.logger.info(
       '[EmailVerificationCodeErrorPolicy] Suppressing global alert — confirmation screen will show inline error for invalid code'
+    )
+  },
+}
+
+// Error policy for the evidence uploads — backend answers 409 when the verification has already been approved,
+// so rather than show and error we should suppress and route to
+// VerificationSuccess
+//
+// V3 reads the same 409s this way (ias-android DocumentUploadViewModel ->
+// CreateSessionAlreadyVerifiedError)
+const EVIDENCE_UPLOAD_PATH_PATTERN = /\/v1\/(photos|videos|documents|uploads)\b/
+export const evidenceAlreadyApprovedErrorPolicy: ErrorHandlingPolicy = {
+  matches: (_, context) => {
+    return context.statusCode === 409 && EVIDENCE_UPLOAD_PATH_PATTERN.test(context.endpoint)
+  },
+  handle: (_error, context) => {
+    context.logger.info(
+      '[EvidenceAlreadyApprovedErrorPolicy] Suppressing global alert — the upload catch block completes the verification'
     )
   },
 }
@@ -609,6 +628,7 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   videoSessionErrorPolicy,
   attestationPollingErrorPolicy,
   emailVerificationCodeErrorPolicy,
+  evidenceAlreadyApprovedErrorPolicy,
   pairingCodeErrorPolicy,
   invalidClientMetadataErrorPolicy,
   iasErrorPolicy,

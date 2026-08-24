@@ -4,6 +4,7 @@ import {
   VerificationPrompt,
   VerificationVideoUploadPayload,
 } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import useAlreadyVerifiedRecovery from '@/bcsc-theme/hooks/useAlreadyVerifiedRecovery'
 import useEvidenceUpload from '@/bcsc-theme/hooks/useEvidenceUpload'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
@@ -11,6 +12,7 @@ import { withPlausibleCaptureDate } from '@/bcsc-theme/utils/capture-date'
 import { getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
 import { AppError, ErrorRegistry } from '@/errors'
+import { isAxiosAppError } from '@/errors/appError'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCDispatchAction, BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
@@ -35,7 +37,8 @@ const useEvidenceUploadModel = (
   const [isUploading, setIsUploading] = useState(false)
   const [isCancelling, setIsCancelling] = useState(false)
   const [uploadMessage, setUploadMessage] = useState<string | null>(null)
-  const { fileUploadErrorAlert } = useAlerts(navigation)
+  const { fileUploadErrorAlert, alreadyVerifiedAlert } = useAlerts(navigation)
+  const { recoverFromAlreadyVerified } = useAlreadyVerifiedRecovery()
 
   const { photoPath, videoPath, videoThumbnailPath, videoDuration, prompts, photoMetadata } = store.bcsc
   const { verificationRequestId, verificationRequestSha } = store.bcscSecure
@@ -137,7 +140,7 @@ const useEvidenceUploadModel = (
         logger.warn(
           '[useEvidenceUploadModel] Missing verification request data at submit; routing back to Verification Method Selection so prompts can be refreshed and video re-recorded'
         )
-        await updateVerificationRequest(null, null)
+        await updateVerificationRequest(undefined, null)
         dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [undefined] })
         dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
         navigation.dispatch(
@@ -219,6 +222,16 @@ const useEvidenceUploadModel = (
       if (isCancelledRef.current) {
         return
       }
+
+      // 409 on the evidence endpoints means the registration request is already approved
+      if (isAxiosAppError(error, 409)) {
+        const recovered = await recoverFromAlreadyVerified()
+        if (!recovered) {
+          alreadyVerifiedAlert(error)
+        }
+        return
+      }
+
       /**
        * Dev note: evidence_upload_server_error + evidence_upload_unkown_error are both deprecated in the IAS documentation.
        * So all errors during the upload process will be categorized as FILE_UPLOAD_ERROR.
@@ -231,10 +244,12 @@ const useEvidenceUploadModel = (
       setUploadMessage(null)
     }
   }, [
+    alreadyVerifiedAlert,
     dispatch,
     fileUploadErrorAlert,
     finalizeVerification,
     logger,
+    recoverFromAlreadyVerified,
     navigation,
     photoMetadata,
     photoPath,

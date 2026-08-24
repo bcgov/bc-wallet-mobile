@@ -223,9 +223,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   useEffect(() => {
     if (flowState === VideoCallFlowState.IDLE) {
       startVideoCall()
-      // Clear the forced-speaker override before start() so that start()
-      // does not force audio to the speaker on Android. This allows audio
-      // to route to Bluetooth/wired headsets
+      // No-op: start() re-initialises audio routing immediately after. Removal tracked in #4471.
       InCallManager.setForceSpeakerphoneOn(false)
       InCallManager.start({ media: 'video', auto: true })
     }

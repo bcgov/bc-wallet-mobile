@@ -27,6 +27,15 @@ export const createVideoCallError = (type: VideoCallErrorType, technicalDetails?
         retryable: true,
         technicalDetails,
       }
+    // Evidence rejected as already received, pending approval
+    case VideoCallErrorType.ALREADY_VERIFIED:
+      return {
+        type,
+        title: 'Problem Checking Status',
+        message: 'We could not confirm your verification status. Please fully close the app and open it again.',
+        retryable: false,
+        technicalDetails,
+      }
     // API call to create call failed
     case VideoCallErrorType.CALL_FAILED:
       return {

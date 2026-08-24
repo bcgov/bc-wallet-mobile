@@ -54,18 +54,14 @@ export const BCThemeNames = {
 export const BCSC_EMAIL_NOT_PROVIDED = 'Not provided'
 export const BCSC_APPLE_STORE_URL = 'https://apps.apple.com/us/app/id1234298467'
 export const BCSC_GOOGLE_PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=ca.bc.gov.id.servicescard'
-export const ACCOUNT_SERVICES_URL = 'https://id.gov.bc.ca/account/services'
 export const TERMS_OF_USE_URL = 'https://id.gov.bc.ca/static/termsOfUse.html'
 export const FEEDBACK_URL = 'https://id.gov.bc.ca/static/feedback.html'
 export const ACCESSIBILITY_URL =
-  'https://www2.gov.bc.ca/gov/content/governments/government-id/bcservicescardapp/accessibility'
+  'https://www2.gov.bc.ca/gov/content/governments/government-id/bcservicescardapp#accessibility'
 // appending param fromapp=1 to certain id.gov urls automatically removes header and footer and such
-export const HELP_URL = 'https://id.gov.bc.ca/static/help/topics.html?fromapp=1'
-export const BC_LOGIN_PRIVACY_URL = 'https://id.gov.bc.ca/static/privacy.html'
+export const BC_LOGIN_PRIVACY_URL = 'https://id.gov.bc.ca/static/privacy.html?fromapp=1'
 export const SECURE_APP_LEARN_MORE_URL = 'https://id.gov.bc.ca/static/help/secure_app.html?fromapp=1'
-export const WHERE_TO_USE_URL = ACCOUNT_SERVICES_URL
-export const CONTACT_US_GOVERNMENT_WEBSITE_URL =
-  'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-services-card/contact-us'
+export const CONTACT_US_HELP_URL = 'https://id.gov.bc.ca/static/help/contact-us.html'
 export const GET_BCSC_CARD_URL =
   'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-services-card/your-card/get-a-card'
 export const ANALYTICS_URL =
@@ -73,7 +69,7 @@ export const ANALYTICS_URL =
 export const BC_SERVICE_LOCATION_URL = 'https://www2.gov.bc.ca/gov/content?id=FD6DB5BA2A5248038EEF54D9F9F37C4D'
 export const REPORT_SUSPICIOUS_URL =
   'https://www2.gov.bc.ca/gov/content/governments/government-id/bcservicescardapp/help'
-export const WALLET_LEARN_MORE_URL = 'https://digital.gov.bc.ca/design/digital-trust/'
+export const WALLET_LEARN_MORE_URL = 'https://id.gov.bc.ca/static/help/topics.html'
 
 //TODO: replace hardcoded values with enums
 export enum VerificationRequestStatus {
@@ -84,6 +80,7 @@ export enum VerificationRequestStatus {
 
 export enum HelpCentreUrl {
   HOME = 'https://id.gov.bc.ca/static/help/topics.html?fromapp=1',
+  CONTACT_US = 'https://id.gov.bc.ca/static/help/contact-us.html?fromapp=1',
   HOW_TO_SETUP = 'https://id.gov.bc.ca/static/help/setup_app.html?fromapp=1',
   ACCEPTED_IDENTITY_DOCUMENTS = 'https://id.gov.bc.ca/static/help/accepted-id.html?fromapp=1',
   VERIFICATION_METHODS = 'https://id.gov.bc.ca/static/help/verify_why.html?fromapp=1#section-options-app',

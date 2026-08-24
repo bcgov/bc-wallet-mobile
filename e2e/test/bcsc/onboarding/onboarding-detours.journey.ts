@@ -123,8 +123,18 @@ describe('Onboarding journey: detours', () => {
   it('re-entering Notifications after the refusal shows the permission-disabled variant', async () => {
     // The screen re-reads the live OS status on mount, so navigating BACK is what swaps the body.
     // OpenSettings hands off to the OS settings app — assert it, never tap it.
-    await OnboardingSecureAppScreen.back.tap()
-    await OnboardingNotificationsDisabledScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    //
+    // `tapToReach`, not `tap`: SecureApp is freshly pushed and can still be swallowing taps, and both
+    // screens carry the same header-back id — so only the destination can tell a swallowed tap apart
+    // from a slow one.
+    //
+    // Re-tapping Back is the one retry that is not free — a tap that DID land, answered too early,
+    // walks backwards through onboarding instead. So give the pop a long settle (Notifications only
+    // shows this variant once its live permission check resolves) and cap the retries at one.
+    await OnboardingSecureAppScreen.back.tapToReach(OnboardingNotificationsDisabledScreen, {
+      attempts: 2,
+      settleMs: 10_000,
+    })
     assert.ok(
       await OnboardingNotificationsDisabledScreen.isVisible('openSettings'),
       'PermissionDisabled should offer OpenSettings alongside ContinueWithoutNotifications'

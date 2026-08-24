@@ -7,6 +7,8 @@
   "scripts": {
     "setup": "node scripts/setup-drivers.mjs",
     "emulator:android": "node scripts/start-android-emulator.mjs",
+    "issuer:provision": "tsx scripts/issuer-provision.ts",
+    "issuer:smoke": "tsx scripts/issuer-smoke.ts",
     "test:android:local": "wdio configs/local/wdio.android.local.emu.conf.ts",
     "test:android:device": "wdio configs/local/wdio.android.local.device.conf.ts",
     "test:ios:local": "wdio configs/local/wdio.ios.local.sim.conf.ts",
@@ -44,6 +46,7 @@
     "appium": "^2.13.1",
     "appium-uiautomator2-driver": "^3.9.6",
     "appium-xcuitest-driver": "^7.35.0",
+    "bwip-js": "^4.11.2",
     "cheerio": "^1.2.0",
     "dotenv": "^16.3.1",
     "eslint-plugin-wdio": "^9.27.0",

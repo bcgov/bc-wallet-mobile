@@ -4,7 +4,7 @@ import { ThemedText, useTheme } from '@bifold/core'
 import { PropsWithChildren, useCallback, useImperativeHandle, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Animated, Easing, Modal, StyleSheet, TouchableWithoutFeedback, useWindowDimensions, View } from 'react-native'
-import { getVersion } from 'react-native-device-info'
+import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
@@ -148,7 +148,9 @@ const FloatingHelpMenu = (props: FloatingHelpMenuProps) => {
                 </View>
                 <View style={styles.childrenContainer}>{props.children}</View>
                 <View style={styles.versionContainer}>
-                  <ThemedText>{t('BCSC.HelpMenu.Version', { version: getVersion() })}</ThemedText>
+                  <ThemedText>
+                    {t('BCSC.HelpMenu.Version', { version: getVersion(), build: getBuildNumber() })}
+                  </ThemedText>
                 </View>
               </Animated.View>
             </TouchableWithoutFeedback>

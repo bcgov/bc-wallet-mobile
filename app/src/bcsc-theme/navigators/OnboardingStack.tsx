@@ -19,7 +19,6 @@ import { OnboardingOptInAnalyticsScreen } from '../features/onboarding/Onboardin
 import { OnboardingPrivacyPolicyScreen } from '../features/onboarding/OnboardingPrivacyPolicyScreen'
 import { SecureAppScreen } from '../features/onboarding/SecureAppScreen'
 import { TermsOfUseScreen } from '../features/onboarding/TermsOfUseScreen'
-import { ContactUsScreen } from '../features/settings/ContactUsScreen'
 import { OnboardingPrivacyInformationScreen } from '../features/settings/OnboardingPrivacyInformationScreen'
 import { OnboardingSettingsScreen } from '../features/settings/OnboardingSettingsScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
@@ -150,14 +149,6 @@ const OnboardingStack = (): React.ReactElement => {
           headerShown: true,
           title: route.params.title,
         })}
-      />
-      <Stack.Screen
-        name={BCSCScreens.OnboardingContactUs}
-        component={ContactUsScreen}
-        options={{
-          headerShown: true,
-          title: t('BCSC.Screens.ContactUs'),
-        }}
       />
       <Stack.Screen
         name={BCSCScreens.OnboardingRemoveAccountConfirmation}

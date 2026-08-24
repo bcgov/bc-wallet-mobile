@@ -351,6 +351,11 @@ export interface Spec extends TurboModule {
   removeAccount(): Promise<void>;
   createSignedJWT(claims: JWTClaims): Promise<string>;
 
+  /**
+   * Deletes all Keychain data
+   */
+  clearAllKeychainData(): Promise<void>;
+
   // PIN Authentication Methods
   setPIN(pin: string): Promise<PINSetupResult>;
   verifyPIN(pin: string): Promise<PINVerificationResult>;

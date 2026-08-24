@@ -66,4 +66,21 @@ describe('VerifySettings', () => {
 
     expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerifyRemoveAccountConfirmation)
   })
+
+  it('navigates to the Contact us WebView when Contact us is pressed', () => {
+    const { getByTestId } = render(
+      <BasicAppContext>
+        <BCSCLoadingProvider>
+          <VerifySettingsScreen navigation={mockNavigation as never} />
+        </BCSCLoadingProvider>
+      </BasicAppContext>
+    )
+
+    fireEvent.press(getByTestId(testIdWithKey('ContactUs')))
+
+    expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerifyWebView, {
+      url: 'https://id.gov.bc.ca/static/help/contact-us.html?fromapp=1',
+      title: 'BCSC.Screens.ContactUs',
+    })
+  })
 })

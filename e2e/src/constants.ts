@@ -23,12 +23,28 @@ export enum Timeouts {
    *  app does around that request, camera-device enumeration, and the capture session warming up —
    *  all slower on Sauce real devices than a simulator. */
   CAMERA_READY = 45_000,
+  /** A recorded selfie video uploading and its confirmation landing — a real media upload off the
+   *  device, so nothing like a screen transition. */
+  VIDEO_UPLOAD = 90_000,
   /** First checkpoint of a journey file: the run's FIRST session may also pay simulator/device
    *  boot + WebDriverAgent install + first-ever app launch, all competing for CPU. */
   COLD_START = 60_000,
   /** A timed lockout releasing itself. The first native tier is 1 minute (5 wrong PINs); the extra
    *  headroom covers a slow mount reading the remaining time late. */
   LOCKOUT_AUTO_UNLOCK = 120_000,
+  /** Dwell on a live document camera after injecting, so the scanner behind the shutter can read the
+   *  card BEFORE the photo is taken. There is no on-screen signal for a successful read, and the app
+   *  only acts on codes captured before the shutter — so this is a blind wait by necessity. */
+  CARD_SCAN_DWELL = 10_000,
+  /** A card barcode being read off injected frames, end to end (decode → backend → navigation).
+   *  Generous on purpose: recorded Sauce runs range from seconds to well over a minute, because the
+   *  serial screen opens at 2× zoom and locks on only after several consistent readings. */
+  CARD_SCAN = 180_000,
+  /** One DIDComm leg landing in the UI (or in an issuer-side record): issuer → mediator → WSS live
+   *  pickup → wallet processing (ledger reads for cred-def/rev-reg) → re-render. The mediator flush
+   *  after a live-pickup restart is the known slow seam, and Sauce real devices pay it all on CPU.
+   *  Also the default budget for issuer-API polls (src/api). */
+  DIDCOMM_DELIVERY = 90_000,
   /** Per-test timeout (Mocha) */
   TEST_TIMEOUT = 300_000,
   /** Browser handoff pause (ms) */
@@ -50,13 +66,23 @@ export const BACKGROUND_LOCK_SECONDS = 70
  */
 export const BACKGROUND_NO_LOCK_SECONDS = 5
 
+/**
+ * `cardScanImage` is a photo of the card, for EVIDENCE capture. `cardScanTarget` is a generated
+ * combo-card back carrying that persona's own serial (code-39) and birthdate (PDF-417) — the pair
+ * `ScanSerial` needs — built by `scripts/generate-scan-assets.mjs`. Fred has neither: the non-BCSC
+ * persona has no card serial.
+ */
 export const TestUsers = {
   photo: {
-    username: 'e2e_shaggy',
-    cardSerial: 'C74455103',
-    dob: '19690913',
-    documentNumber: 'WG12345678',
+    username: 'e2e_shaggy_2',
+    cardSerial: 'C42606379',
+    dob: '19981114',
+    documentNumber: '3836365133',
+    documentTypeId: '113',
+    primaryDocumentNumber: '4124657708',
+    primaryDocumentTypeId: '18',
     cardScanImage: 'images/dl_shaggy.jpg',
+    cardScanTarget: 'images/scan/card_shaggy.png',
     selfieImage: 'images/id_shaggy.jpg',
     firstName: 'Shaggy',
     lastName: 'Rogers',
@@ -68,6 +94,7 @@ export const TestUsers = {
     dob: '19951217',
     documentNumber: 'WG12345678',
     cardScanImage: 'images/dl_velma.jpg',
+    cardScanTarget: 'images/scan/card_velma.png',
     selfieImage: 'images/id_velma.jpg',
     firstName: 'Velma',
     lastName: 'Dinkley',
@@ -80,6 +107,7 @@ export const TestUsers = {
     documentNumber: 'WG12345678',
     documentTypeId: '12',
     cardScanImage: 'images/dl_daphne.jpg',
+    cardScanTarget: 'images/scan/card_daphne.png',
     selfieImage: 'images/id_daphne.jpg',
     firstName: 'Daphne',
     lastName: 'Blake',
@@ -98,6 +126,20 @@ export const TestUsers = {
     firstName: 'Fred',
     lastName: 'Jones',
     flow: 'non-bcsc' as const,
+  },
+  u12: {
+    username: 'e2e_scrappy',
+    cardSerial: 'C30397560',
+    dob: '20200101',
+    documentNumber: '8786036764',
+    documentTypeId: '110',
+    primaryDocumentNumber: '7557153621',
+    primaryDocumentTypeId: '113',
+    cardScanImage: 'images/dl_fred.jpg',
+    selfieImage: 'images/id_fred.jpg',
+    firstName: 'Scrappy',
+    lastName: 'Doo',
+    flow: 'photo' as const,
   },
 }
 

@@ -1,9 +1,10 @@
 // wdio.shared.conf.ts
-import { mkdirSync } from 'node:fs'
+import { mkdirSync, readdirSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { browser } from '@wdio/globals'
+import type { Frameworks } from '@wdio/types'
 import dotenv from 'dotenv'
 import { getE2EConfig } from '../src/e2eConfig.js'
 import { acceptSystemAlert } from '../src/helpers/alerts.js'
@@ -17,6 +18,38 @@ const { variant } = getE2EConfig()
 
 /** All reporter + screenshot output lands here (gitignored; uploaded as CI artifacts). */
 const REPORTS_DIR = resolve(__dirname, '../reports')
+
+/**
+ * Card-barcode scanning journeys — ANDROID ONLY. Android reads codes off the frame buffer with MLKit,
+ * which Sauce's injection replaces wholesale; iOS scans via `AVCaptureMetadataOutput`, which Sauce
+ * feeds for QR alone. Every iOS config sets `exclude` to this, so a run never spends a session just to
+ * reach the in-test skip.
+ */
+export const ANDROID_ONLY_SPECS = [resolve(__dirname, `../test/${variant}/scan/*.journey.ts`)]
+
+/**
+ * Send-video journeys vs everything else, partitioned from ONE scan of the test tree so the two sets
+ * are complementary by construction (a new spec file lands in the default lane automatically). On
+ * Sauce Android they run in separate capability lanes: send-video WITHOUT the camera-injection
+ * instrumentation (it rides the whole camera pipeline and wrecks the recorder's stop/finalize),
+ * the rest with it (see sauce/wdio.android.sauce.rdc.conf.ts).
+ */
+const TEST_ROOT = resolve(__dirname, `../test/${variant}`)
+const ALL_SPEC_FILES = readdirSync(TEST_ROOT, { recursive: true })
+  .map((entry) => join(TEST_ROOT, String(entry)))
+  .filter((path) => /\.(journey|spec)\.ts$/.test(path))
+const isSendVideoSpec = (path: string) => /\/verify\/send-video-[^/]+\.journey\.ts$/.test(path)
+export const SEND_VIDEO_SPECS = ALL_SPEC_FILES.filter(isSendVideoSpec)
+export const NON_SEND_VIDEO_SPECS = ALL_SPEC_FILES.filter((path) => !isSendVideoSpec(path))
+
+/**
+ * Did the test end in a runtime `this.skip()`? WDIO reports a skip as `{ passed: false, skipped: true }`
+ * — a shape that reads as a FAILURE to anything checking `passed` alone — and `@wdio/types` does not
+ * declare `skipped` yet.
+ */
+export function wasSkipped(result: Frameworks.TestResult): boolean {
+  return (result as Frameworks.TestResult & { skipped?: boolean }).skipped === true
+}
 
 /**
  * Save a screenshot named after the failing test. The webdriver screenshot command also attaches
@@ -54,6 +87,9 @@ export const config: WebdriverIO.Config = {
     auth: [resolve(__dirname, `../test/${variant}/auth/*.journey.ts`)],
     verify: [resolve(__dirname, `../test/${variant}/verify/*.journey.ts`)],
     main: [resolve(__dirname, `../test/${variant}/main/*.journey.ts`)],
+    // Card-barcode scanning: Sauce + Android only (see ANDROID_ONLY_SPECS). Its own suite for targeted
+    // runs, and part of `regression` — the iOS configs exclude it rather than schedule and skip it.
+    scan: ANDROID_ONLY_SPECS,
     // Nightly full run: every per-area journey.
     // Excludes `migration` — that suite boots the v3 app via the separate migration config, so it
     // cannot share this run's v4 RDC build (it stays its own suite + workflow path).
@@ -62,6 +98,7 @@ export const config: WebdriverIO.Config = {
       resolve(__dirname, `../test/${variant}/auth/*.journey.ts`),
       resolve(__dirname, `../test/${variant}/verify/*.journey.ts`),
       resolve(__dirname, `../test/${variant}/main/*.journey.ts`),
+      ...ANDROID_ONLY_SPECS,
     ],
     migration: [resolve(__dirname, `../test/${variant}/migration/migration.spec.ts`)],
   },
@@ -131,6 +168,7 @@ export const config: WebdriverIO.Config = {
   },
 
   afterTest: async (test, _context, result) => {
+    if (wasSkipped(result)) return // a skip has no failure to capture
     await captureFailureScreenshot(test, result)
   },
 }

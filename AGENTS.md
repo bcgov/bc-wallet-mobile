@@ -272,3 +272,31 @@ IOS_PRODUCT_NAME="$(TARGET_NAME)"
 ### Rationale
 
 These files are sourced in shell contexts (e.g., GitHub Actions `source variant.env`). Double-quoted strings containing `$`, backticks, or `!` will be interpreted by the shell, leading to unexpected behaviour. Single quotes ensure values are loaded exactly as written.
+
+## Pull Request Descriptions
+
+When drafting a PR description, follow `.github/pull_request_template.md`:
+
+- `Closes #<issue>` on the first line — that is what links the PR to the board. A bare `#123` further down does not.
+- **What changed** — enough context to read the diff. The backstory lives in the issue.
+- **What should the reviewer focus on** — point at the scary bit, or say there isn't one.
+- **How to test** — how someone else checks it. "Covered by unit tests" counts.
+
+Keep it short. Don't restate the issue's acceptance criteria, and don't pad a section to look thorough.
+
+## Code Review Priorities
+
+When reviewing a pull request in this repository, prioritise these, roughly in order:
+
+- **Credential and wallet state.** Anything that creates, stores, mutates, or deletes a credential, or that changes onboarding, PIN, or biometric state. Corrupt wallet state is not recoverable for a holder in the field.
+- **PII in logs and errors.** Personal data, tokens, credential attributes, and full request or response bodies must not reach a log line, an analytics event, or a user-visible error string.
+- **iOS/Android divergence.** Flag changes that alter behaviour on one platform without the other, especially in native modules, permissions, and camera or biometric flows.
+- **Accessibility.** `TouchableOpacity` and `Pressable` require `accessibilityLabel`, `accessibilityRole`, `hitSlop`, and `testID`. New user-facing text must be localised, and localised strings must not carry layout characters such as `\n`.
+- **Error handling.** Errors should surface, not be swallowed. API hooks throw; service and UI hooks catch and surface. Prefer idempotency — deleting something absent should succeed, not throw.
+
+Do not comment on:
+
+- Formatting, import order, or anything Prettier and ESLint already enforce.
+- Naming preferences, or restructuring that does not change behaviour, unless the current form is genuinely ambiguous.
+- Test coverage percentages as a number, or missing tests for code that is not new.
+- Generated files, lockfiles, and dependency bumps.

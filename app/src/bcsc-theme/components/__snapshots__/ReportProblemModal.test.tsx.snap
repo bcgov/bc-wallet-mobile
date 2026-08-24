@@ -318,6 +318,30 @@ exports[`ReportProblemModal renders correctly 1`] = `
               >
                 BCSC.ReportProblem.SupportLink
               </Text>
+               
+              <Text
+                accessibilityElementsHidden={true}
+                allowFontScaling={false}
+                importantForAccessibility="no"
+                selectable={false}
+                style={
+                  [
+                    {
+                      "color": "#1A5A96",
+                      "fontSize": 16,
+                    },
+                    undefined,
+                    {
+                      "fontFamily": "Material Design Icons",
+                      "fontStyle": "normal",
+                      "fontWeight": "normal",
+                    },
+                    {},
+                  ]
+                }
+              >
+                󰏌
+              </Text>
             </Text>
             <View
               accessibilityLabel="BCSC.ReportProblem.Submit"

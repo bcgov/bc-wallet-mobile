@@ -218,29 +218,6 @@ exports[`AuthPrivacyPolicyScreen renders correctly 1`] = `
               >
                 BCSC.Onboarding.LearnMore
               </Text>
-              <Text
-                allowFontScaling={false}
-                selectable={false}
-                style={
-                  [
-                    {
-                      "color": undefined,
-                      "fontSize": 32,
-                    },
-                    {
-                      "color": "#313132",
-                    },
-                    {
-                      "fontFamily": "Material Icons",
-                      "fontStyle": "normal",
-                      "fontWeight": "normal",
-                    },
-                    {},
-                  ]
-                }
-              >
-                
-              </Text>
             </View>
           </View>
         </View>

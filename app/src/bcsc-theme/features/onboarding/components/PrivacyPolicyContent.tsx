@@ -45,12 +45,7 @@ export const PrivacyPolicyContent: React.FC<PrivacyPolicyContentProps> = ({
         <ThemedText variant="headingFour">{t('BCSC.Onboarding.PrivacyPolicyHeaderSecuringApp')}</ThemedText>
         <ThemedText>{t('BCSC.Onboarding.PrivacyPolicyContentC')}</ThemedText>
       </View>
-      <CardButton
-        title={t('BCSC.Onboarding.LearnMore')}
-        testID={testIdWithKey('LearnMore')}
-        onPress={onLearnMore}
-        endIcon="open-in-new"
-      />
+      <CardButton title={t('BCSC.Onboarding.LearnMore')} testID={testIdWithKey('LearnMore')} onPress={onLearnMore} />
     </ScreenWrapper>
   )
 }

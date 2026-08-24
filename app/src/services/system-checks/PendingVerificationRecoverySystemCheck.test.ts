@@ -5,7 +5,7 @@ import { BCDispatchAction } from '@/store'
 const makeUtils = (): SystemCheckUtils => ({
   dispatch: jest.fn(),
   translation: jest.fn() as any,
-  logger: {} as any,
+  logger: { error: jest.fn() } as any,
 })
 
 describe('PendingVerificationRecoverySystemCheck', () => {
@@ -24,11 +24,11 @@ describe('PendingVerificationRecoverySystemCheck', () => {
       await expect(check.runCheck()).resolves.toBe(false)
     })
 
-    it('propagates an unexpected exchange failure', async () => {
+    it('treats an exchange failure as unverified rather than propagating it', async () => {
       const checkVerificationStatus = jest.fn().mockRejectedValue(new Error('exchange failed'))
       const check = new PendingVerificationRecoverySystemCheck(checkVerificationStatus, makeUtils())
 
-      await expect(check.runCheck()).rejects.toThrow('exchange failed')
+      await expect(check.runCheck()).resolves.toBe(false)
     })
   })
 

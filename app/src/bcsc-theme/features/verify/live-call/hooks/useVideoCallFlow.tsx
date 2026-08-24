@@ -1,7 +1,9 @@
 import { KEEP_ALIVE_INTERVAL_MS } from '@/constants'
+import { isAxiosAppError } from '@/errors/appError'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import useApi from '@bcsc-theme/api/hooks/useApi'
 import { VideoCall, VideoSession } from '@bcsc-theme/api/hooks/useVideoCallApi'
+import useAlreadyVerifiedRecovery from '@bcsc-theme/hooks/useAlreadyVerifiedRecovery'
 import useEvidenceUpload from '@bcsc-theme/hooks/useEvidenceUpload'
 import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -25,6 +27,7 @@ import createVideoCallError from '../utils/createVideoCallError'
 // so analytics are consistent across both platforms
 const AnalyticsErrorCodeMap: Record<VideoCallErrorType, string> = {
   [VideoCallErrorType.DOCUMENT_UPLOAD_FAILED]: 'file_upload_error',
+  [VideoCallErrorType.ALREADY_VERIFIED]: 'already_verified',
   [VideoCallErrorType.SESSION_FAILED]: 'server_error',
   [VideoCallErrorType.CONNECTION_FAILED]: 'problem_with_connection',
   [VideoCallErrorType.CALL_FAILED]: 'problem_with_connection',
@@ -64,6 +67,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { video } = useApi()
   const { uploadSelfiePhoto, processAdditionalEvidence, uploadEvidenceBinaries } = useEvidenceUpload()
+  const { recoverFromAlreadyVerified } = useAlreadyVerifiedRecovery()
   const { t } = useTranslation()
 
   // this value is watched to determine which background-related action to take
@@ -222,11 +226,20 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
       const additionalEvidence = await processAdditionalEvidence()
       await uploadEvidenceBinaries(additionalEvidence)
     } catch (error) {
+      // 409 on the evidence endpoints means the registration request is already approved
+      if (isAxiosAppError(error, 409)) {
+        const recovered = await recoverFromAlreadyVerified()
+        if (!recovered) {
+          handleError(VideoCallErrorType.ALREADY_VERIFIED, error as Error)
+        }
+        return false
+      }
+
       handleError(VideoCallErrorType.DOCUMENT_UPLOAD_FAILED, error as Error)
       return false
     }
     return true
-  }, [uploadSelfiePhoto, processAdditionalEvidence, uploadEvidenceBinaries, handleError])
+  }, [uploadSelfiePhoto, processAdditionalEvidence, uploadEvidenceBinaries, handleError, recoverFromAlreadyVerified])
 
   // 1. a session must be created before call can begin
   const createSession = useCallback(async (): Promise<VideoSession | null> => {

@@ -1,5 +1,5 @@
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { HELP_URL } from '@/constants'
+import { HelpCentreUrl } from '@/constants'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -17,12 +17,15 @@ export const AuthSettingsScreen: React.FC<AuthSettingsScreenProps> = ({ navigati
   const { t } = useTranslation()
 
   const onContactUs = () => {
-    navigation.navigate(BCSCScreens.AuthContactUs)
+    navigation.navigate(BCSCScreens.AuthWebView, {
+      url: HelpCentreUrl.CONTACT_US,
+      title: t('BCSC.Screens.ContactUs'),
+    })
   }
 
   const onHelp = () => {
     navigation.navigate(BCSCScreens.AuthWebView, {
-      url: HELP_URL,
+      url: HelpCentreUrl.HOME,
       title: t('BCSC.Screens.HelpCentre'),
     })
   }

@@ -31,6 +31,10 @@ export const BasicAppContext: React.FC<BasicAppContextProps> = ({ children, init
         ...initialState.bcsc,
         ...initialStateOverride?.bcsc,
       },
+      developer: {
+        ...initialState.developer,
+        ...initialStateOverride?.developer,
+      },
     }),
     [initialStateOverride]
   )

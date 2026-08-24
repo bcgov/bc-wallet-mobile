@@ -1,19 +1,21 @@
-# Summary of Changes
+Closes #
 
-Replace this text with a high-level summary of the changes included in this PR.
+<!-- The issue number goes above, e.g. "Closes #1234" — that's what links the PR
+     to the board. A bare "#1234" further down doesn't. No issue? Say why. -->
 
-# Testing Instructions
+## What changed
 
-Replace this text with detailed instructions on how to test the changes included in this PR.
+<!-- Enough context to read the diff. The backstory lives in the issue.
+     Drop in a screenshot or a short video if it shows what changed or how
+     it's meant to work — often quicker than describing it. -->
 
-# Acceptance Criteria
+## What should the reviewer focus on
 
-Replace this text with the acceptance criteria that must be met for this PR to be approved.
+<!-- Point at the scary bit — or say there isn't one:
+     "Copy change, quick skim is fine."
+     "The cancel path in useEvidenceUpload — not sure it clears the timer."
+     "iOS only, Android untouched." -->
 
-# Screenshots, videos, or gifs
+## How to test
 
-Replace this text with embedded media for UI changes if they are included in this PR. If there are none, simply enter N/A
-
-# Related Issues
-
-Replace this text with tagged issue #'s that are relevant to this PR. If there are none, simply enter N/A
+<!-- How someone else checks it. "Covered by unit tests" counts. -->

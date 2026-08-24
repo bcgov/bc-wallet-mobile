@@ -3139,6 +3139,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"bwip-js@npm:^4.11.2":
+  version: 4.11.2
+  resolution: "bwip-js@npm:4.11.2"
+  bin:
+    bwip-js: bin/bwip-js.js
+  checksum: 10c0/e2c97aabd527d8a80459762c9649e636c04b0f5aa5608862a6e0ff12984a0178a7e829ae9276a9e85d61ba90048835a4ecc4d2da5ec951951fc77b58fe1536bc
+  languageName: node
+  linkType: hard
+
 "bytes@npm:3.1.2":
   version: 3.1.2
   resolution: "bytes@npm:3.1.2"
@@ -4068,6 +4077,7 @@ __metadata:
     appium: "npm:^2.13.1"
     appium-uiautomator2-driver: "npm:^3.9.6"
     appium-xcuitest-driver: "npm:^7.35.0"
+    bwip-js: "npm:^4.11.2"
     cheerio: "npm:^1.2.0"
     dotenv: "npm:^16.3.1"
     eslint-plugin-wdio: "npm:^9.27.0"

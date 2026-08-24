@@ -7,10 +7,9 @@ import remoteConfigJSON from './prod-remote-config.json'
 const REMOTE_CONFIG_STORAGE_KEY = 'remoteConfigCache'
 const REMOTE_CONFIG_CACHE_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
 const REMOTE_CONFIG_TIMEOUT_MS = 5 * 1000 // 5 seconds
-const OBJECT_STORAGE_SERVER_ENDPOINT = 'https://idim.objectstore.gov.bc.ca'
-const OBJECT_STORAGE_REMOTE_CONFIG_BUCKET_NAME = 'bcsc-mobile-prod-remote-configuration'
-const OBJECT_STORAGE_REMOTE_CONFIG_FILE_NAME = 'prod-remote-config.json'
-const OBJECT_STORAGE_REMOTE_CONFIG_URL = `${OBJECT_STORAGE_SERVER_ENDPOINT}/${OBJECT_STORAGE_REMOTE_CONFIG_BUCKET_NAME}/${OBJECT_STORAGE_REMOTE_CONFIG_FILE_NAME}`
+// TODO (MD): Move to ENV
+const REMOTE_CONFIG_URL =
+  'https://idim.objectstore.gov.bc.ca/bcsc-mobile-prod-remote-configuration/prod-remote-config.json'
 
 /**
  * RemoteConfigSchema defines the expected structure of the remote configuration object.
@@ -99,8 +98,8 @@ export async function getCachedRemoteConfig(logger: RemoteLogger): Promise<Remot
  */
 export async function fetchRemoteConfig(logger: RemoteLogger): Promise<RemoteConfig | null> {
   try {
-    logger.info('[RemoteConfig] Fetching remote config from object storage.', { url: OBJECT_STORAGE_REMOTE_CONFIG_URL })
-    const response = await axios.get(OBJECT_STORAGE_REMOTE_CONFIG_URL, { timeout: REMOTE_CONFIG_TIMEOUT_MS })
+    logger.info('[RemoteConfig] Fetching remote config from object storage.', { url: REMOTE_CONFIG_URL })
+    const response = await axios.get(REMOTE_CONFIG_URL, { timeout: REMOTE_CONFIG_TIMEOUT_MS })
 
     const result = RemoteConfigSchema.safeParse(response.data)
 

@@ -1,5 +1,6 @@
 import { Timeouts } from '../../constants.js'
 import { swipeDownBy, swipeUpBy } from '../../helpers/gestures.js'
+import { describeCurrentScreen } from '../../helpers/screens.js'
 
 /**
  * How long to keep re-sampling an element's position before giving up and tapping anyway.
@@ -52,6 +53,28 @@ function escapeSelectorValue(value: string): string {
  */
 interface PositionedElement {
   getLocation(): Promise<{ x: number; y: number }>
+}
+
+/** The bit of an element {@link BaseScreen.settleAndClick} needs, on top of {@link PositionedElement}. */
+interface ClickableElement extends PositionedElement {
+  click(): Promise<void>
+}
+
+/**
+ * A click that landed on a handle the app had already re-rendered away. WebdriverIO reports this two
+ * ways depending on how far the element got — an explicit stale reference, or a re-find that missed.
+ */
+const STALE_HANDLE_MESSAGE = /stale element|element wasn't found|no such element/i
+
+/**
+ * Per-call override for the scroll hunt a missed find falls back to. The default budget reaches
+ * about one viewport of content — declare more (via `ScreenSpec.scroll`) on screens whose content is
+ * known to run long, and `'down'` where the target only ever sits below the fold, which also skips
+ * the pointless reverse pass.
+ */
+export interface ScrollHint {
+  readonly maxScrolls?: number
+  readonly directions?: 'down' | 'both'
 }
 
 /** Options for text entry. Use for inputs that need special handling (e.g. PIN, secure text). */
@@ -134,33 +157,34 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * Each subclass defines its own "screen loaded" selector.
    * @param timeout - timeout in milliseconds
    * @param testId - test ID of the element to wait for
+   * @param scroll - scroll-hunt budget for a miss (screen-declared; defaults to 4/'both')
    * @returns void
    */
-  async waitForDisplayed(testId: string, timeout: number = Timeouts.ELEMENT_VISIBLE) {
-    const el = await this.findByTestId(testId)
+  async waitForDisplayed(testId: string, timeout: number = Timeouts.ELEMENT_VISIBLE, scroll?: ScrollHint) {
+    let el = await this.findByTestId(testId)
     try {
       await el.waitForDisplayed({ timeout })
     } catch {
       console.warn(`Element "${testId}" not visible after ${timeout}ms; scrolling then retrying`)
-      await this.scrollToTestId(testId, 4, 'both')
+      await this.scrollToTestId(testId, scroll?.maxScrolls ?? 4, scroll?.directions ?? 'both')
+      el = await this.findByTestId(testId) // scrolling can invalidate the cached handle — re-query
       await el.waitForDisplayed({ timeout })
     }
   }
 
   /**
    * Get the visible text content of an element identified by test ID.
-   * On iOS, falls back to the `label` attribute when `getText()` returns empty
-   * (common for styled ThemedText / accessibility-labelled elements).
+   * Falls back to the accessibility label when `getText()` returns empty: styled ThemedText on iOS,
+   * and on both platforms an `accessible` container whose text lives in an id-less child (bifold's
+   * `Button` puts the testID on the touchable, its title on a nested Text).
    */
   public async getTextByTestId(testId: string, timeout: number = Timeouts.ELEMENT_VISIBLE): Promise<string> {
     const el = await this.findByTestId(testId)
     await el.waitForDisplayed({ timeout })
     const text = await el.getText()
     if (text) return text
-    if (driver.isIOS) {
-      const label = await el.getAttribute('label')
-      if (label) return label
-    }
+    const label = await el.getAttribute(driver.isIOS ? 'label' : 'content-desc')
+    if (label) return label
     return ''
   }
 
@@ -254,6 +278,51 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
   }
 
   /**
+   * iOS counterpart of {@link waitForSteadyPosition} — the other way a "found" tap silently misses.
+   * XCUITest reports an element as displayed from its first straddling pixel (and the scroll hunt
+   * stops right there), but WDA taps a non-hittable element at its full-frame CENTER — for a control
+   * straddling the fold that point is outside the viewport (or in the home-indicator gesture zone)
+   * and the click lands on nothing (Sauce iOS: a credential-offer footer straddled the fold, Accept
+   * "clicked" fine, app never saw it). Android is immune: UiAutomator clicks the center of the
+   * VISIBLE bounds. So on iOS, nudge-scroll until the tap point sits safely inside the viewport.
+   * Best-effort like its sibling: a screen that will not scroll stops making progress and we tap anyway.
+   *
+   * @returns whether a nudge swipe was issued — the caller's element handle may then be stale
+   */
+  private async nudgeTapPointIntoView(testId: string): Promise<boolean> {
+    if (!driver.isIOS) return false
+
+    const safeEdgePt = 24 // band the tap point must land in; fixed bottom controls (tab-bar items center ~40pt up) never trigger it
+    const overshootPt = 60 // scroll to comfortably inside the band, not onto its boundary
+    const maxNudges = 3
+
+    const { height: windowHeight } = await driver.getWindowSize()
+    let nudged = false
+    let previousCenter = Number.NaN
+    for (let attempt = 0; attempt <= maxNudges; attempt++) {
+      const el = await this.findByTestId(testId)
+      const [{ y }, { height }] = await Promise.all([el.getLocation(), el.getSize()])
+      const center = y + height / 2
+      const pastBottom = center - (windowHeight - safeEdgePt)
+      const pastTop = safeEdgePt - center
+      if (pastBottom <= 0 && pastTop <= 0) return nudged
+      if (attempt === maxNudges || Math.abs(center - previousCenter) < 4) break // <4pt moved = not scrolling
+      previousCenter = center
+
+      const fraction = Math.min(0.35, (Math.max(pastBottom, pastTop) + overshootPt) / windowHeight)
+      if (pastBottom > 0) {
+        await swipeUpBy(fraction)
+      } else {
+        await swipeDownBy(fraction)
+      }
+      await driver.pause(150)
+      nudged = true
+    }
+    console.warn(`Tap point for "${testId}" is still at the screen edge after nudging; tapping anyway`)
+    return nudged
+  }
+
+  /**
    * Tap an element by test ID.
    *
    * Waits the full `timeout` for the element rather than a token 500ms: screens that swap their whole
@@ -264,38 +333,73 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    *
    * @param testId - test ID to tap
    * @param timeout - how long to wait for the element before falling back to a scroll hunt
+   * @param scroll - scroll-hunt budget for a miss (screen-declared; defaults to 6/'both')
    */
-  public async tapByTestId(testId: string, timeout: number = Timeouts.ELEMENT_VISIBLE) {
+  public async tapByTestId(testId: string, timeout: number = Timeouts.ELEMENT_VISIBLE, scroll?: ScrollHint) {
     let el = await this.findByTestId(testId)
     try {
       await el.waitForDisplayed({ timeout })
     } catch {
       console.warn(`Element "${testId}" not visible after ${timeout}ms; scrolling then retrying`)
-      await this.scrollToTestId(testId, 6, 'both')
+      await this.scrollToTestId(testId, scroll?.maxScrolls ?? 6, scroll?.directions ?? 'both')
       el = await this.findByTestId(testId) // scrolling can invalidate the cached handle — re-query
       await el.waitForDisplayed({ timeout })
     }
+    await this.settleAndClick(el, testId)
+  }
+
+  /**
+   * Let the view settle, keep the tap point inside the viewport, and click — re-querying once if the
+   * handle died on the way.
+   *
+   * `waitForDisplayed` proving an element is there says nothing about a round-trip later: a re-render
+   * on the seam (a DIDComm state advancing, a form revalidating) invalidates the handle, and
+   * WebdriverIO surfaces that as a hard "element wasn't found" rather than re-finding it. Re-querying
+   * is the whole fix — the element is still on screen, only its handle is gone.
+   */
+  private async settleAndClick(el: ClickableElement, testId: string): Promise<void> {
     await this.waitForSteadyPosition(el)
-    await el.click()
+    let target = el
+    if (await this.nudgeTapPointIntoView(testId)) {
+      target = await this.findByTestId(testId) // the nudge scrolled — re-query
+    }
+    try {
+      await target.click()
+    } catch (err) {
+      if (!STALE_HANDLE_MESSAGE.test(String(err))) throw err
+      console.warn(`Element "${testId}" went stale before the tap; re-querying and retrying`)
+      const fresh = await this.findByTestId(testId)
+      await fresh.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+      await this.waitForSteadyPosition(fresh)
+      await fresh.click()
+    }
   }
 
   /**
    * Tap a control that must take us OFF the current screen, and confirm it did.
    *
-   * The tap is re-issued only while the tapped control is still on screen — proof the previous tap was
-   * swallowed rather than slow — so a navigation that already happened is never double-fired. Once the
-   * control is gone we stop retrying and return, whatever rendered next (including an OS permission
-   * dialog); asserting the destination is the caller's job.
+   * The tap is re-issued only while the navigation has not happened — proof the previous tap was
+   * swallowed rather than slow — so a navigation that already happened is never double-fired. By
+   * default that proof is the tapped control leaving the screen, whatever rendered next (including an
+   * OS permission dialog); asserting the destination is then the caller's job.
+   *
+   * Pass `arrivedAt` when the control's id SURVIVES the push and departure cannot be read — a header
+   * Back exists on both the screen you leave and the one you land on, so the default probe would call
+   * a swallowed tap a success. It also proves arrival rather than departure, which is strictly
+   * stronger: react-navigation renders a pushed screen before it makes it interactive, so a control
+   * can be visible, steady, and still discard the tap.
    *
    * Use for pushes off animated screens; do NOT use for non-idempotent actions like a camera shutter.
    *
    * @param testId - test ID of the control to tap
    * @param attempts - how many taps to try before failing
    * @param timeout - how long to wait for the control itself before each tap
-   * @param settleMs - how long a tap gets to visibly leave the screen. Deliberately short: a stack push
+   * @param settleMs - how long a tap gets to visibly navigate. Deliberately short: a stack push
    *   that has not even started after this long did not happen, and a generous value would just add
    *   dead time to every swallowed tap. Kept well above a normal transition so a camera mount stalling
    *   the JS thread is not mistaken for a missed tap.
+   * @param arrivedAt - cheap, non-throwing "did we get there" probe; defaults to the control leaving
+   * @param scroll - scroll-hunt budget for a miss (screen-declared), same as every other find
    */
   public async tapToNavigate(
     testId: string,
@@ -303,19 +407,32 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
       attempts = 3,
       timeout = Timeouts.SCREEN_TRANSITION,
       settleMs = 5_000,
-    }: { attempts?: number; timeout?: number; settleMs?: number } = {}
+      arrivedAt,
+      scroll,
+    }: {
+      attempts?: number
+      timeout?: number
+      settleMs?: number
+      arrivedAt?: () => Promise<boolean>
+      scroll?: ScrollHint
+    } = {}
   ): Promise<void> {
+    const navigated = arrivedAt ?? (async () => !(await this.isTestIdDisplayed(testId)))
+    const unmoved = arrivedAt ? 'the destination never appeared' : `"${testId}" never left the screen`
+
     for (let attempt = 1; attempt <= attempts; attempt++) {
-      await this.tapByTestId(testId, timeout)
+      await this.tapByTestId(testId, timeout, scroll)
 
       const deadline = Date.now() + settleMs
       while (Date.now() < deadline) {
-        if (!(await this.isTestIdDisplayed(testId))) return
+        if (await navigated()) return
         await driver.pause(250)
       }
-      console.warn(`Tap on "${testId}" did not leave the screen (attempt ${attempt}/${attempts}); re-tapping`)
+      console.warn(`Tap on "${testId}" did not navigate (attempt ${attempt}/${attempts}); re-tapping`)
     }
-    throw new Error(`Tapped "${testId}" ${attempts} time(s) but "${testId}" never left the screen`)
+    throw new Error(
+      `Tapped "${testId}" ${attempts} time(s) but ${unmoved}. On screen: ${await describeCurrentScreen()}`
+    )
   }
 
   /** True if an element (by raw test ID) is currently displayed; never throws. */
@@ -334,20 +451,20 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    *
    * @param testId - test ID of the element
    * @param timeout - max time to wait for the element to become enabled (default 20s)
+   * @param scroll - scroll-hunt budget for a miss (screen-declared; defaults to 4/'both')
    */
-  public async waitForEnabledAndTap(testId: string, timeout: number = Timeouts.SCREEN_TRANSITION) {
+  public async waitForEnabledAndTap(testId: string, timeout: number = Timeouts.SCREEN_TRANSITION, scroll?: ScrollHint) {
     let el = await this.findByTestId(testId)
     try {
       await el.waitForDisplayed({ timeout })
     } catch {
       console.warn(`Element "${testId}" not visible after ${timeout}ms; scrolling then retrying`)
-      await this.scrollToTestId(testId, 4, 'both')
+      await this.scrollToTestId(testId, scroll?.maxScrolls ?? 4, scroll?.directions ?? 'both')
       el = await this.findByTestId(testId) // scrolling can invalidate the cached handle — re-query
       await el.waitForDisplayed({ timeout })
     }
     await el.waitForEnabled({ timeout })
-    await this.waitForSteadyPosition(el)
-    await el.click()
+    await this.settleAndClick(el, testId)
   }
 
   /**
@@ -590,9 +707,12 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
       }
     }
 
+    // Name what IS on screen: a scroll hunt fails the same way whether the target is below the fold or
+    // the app never got to this screen at all, and only the second is worth debugging.
     throw new Error(
       `${description} not visible after ${maxScrolls} scroll attempt(s)` +
-        (directions === 'both' ? ' in each direction' : '')
+        (directions === 'both' ? ' in each direction' : '') +
+        `. On screen: ${await describeCurrentScreen()}`
     )
   }
 

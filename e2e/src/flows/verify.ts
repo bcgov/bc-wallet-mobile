@@ -1,9 +1,10 @@
 import type { TestUser } from '../constants.js'
 import { COMBO_CARD_BARCODE_MASKS, Timeouts } from '../constants.js'
 import { tapAlertButton } from '../helpers/alerts.js'
+import { isAppErrorShowing, throwIfAppErrorShowing } from '../helpers/app-error.js'
 import { ApproveInPersonInput, approveInPersonRequest } from '../helpers/approval.js'
 import type { ImageMaskRegion } from '../helpers/camera.js'
-import { injectPhoto } from '../helpers/camera.js'
+import { canInjectImages, injectPhoto, injectScanTarget } from '../helpers/camera.js'
 import { getEmailConfirmationCode, getLatestMailId, getTempEmailAddress } from '../helpers/email.js'
 import { swipeUpBy } from '../helpers/gestures.js'
 import {
@@ -13,7 +14,6 @@ import {
   RestartVerificationAlert,
   tapHelpMenuRow,
 } from '../helpers/help-menu.js'
-import { isSauceLabs } from '../helpers/sauce.js'
 import { describeCurrentScreen, reachCameraScreen } from '../helpers/screens.js'
 import { BaseScreen } from '../screens/core/BaseScreen.js'
 import { HomeNotificationCard, HomeScreen } from '../screens/main.js'
@@ -21,6 +21,7 @@ import { VerifyPromptScreen } from '../screens/onboarding.js'
 import {
   AccountSetupScreen,
   AdditionalIdentificationRequiredScreen,
+  CancelledReviewScreen,
   DualIdentificationRequiredScreen,
   EmailConfirmationScreen,
   EmailVerifiedScreen,
@@ -31,12 +32,20 @@ import {
   IdentitySelectionScreen,
   IDPhotoInformationScreen,
   ManualSerialScreen,
+  PendingReviewScreen,
+  PhotoInstructionsScreen,
   PhotoReviewScreen,
   ResidentialAddressScreen,
   ScanSerialScreen,
+  SelfieCaptureScreen,
+  SuccessfullySentScreen,
+  TakeVideoScreen,
   VerificationMethodSelectionScreen,
   VerificationSuccessScreen,
   VerifyInPersonScreen,
+  VideoInstructionsScreen,
+  VideoReviewScreen,
+  VideoTooLongScreen,
 } from '../screens/verify.js'
 
 /**
@@ -52,18 +61,22 @@ const engine = new BaseScreen()
 /** Confirming action on EnterEmail's skip alert — copy-matched, as its buttons carry no testIDs. */
 const EMAIL_SKIP_CONFIRM = 'Skip'
 
-/** VerifyPrompt `Continue` → the AccountSetup add-or-transfer choice. */
+/**
+ * VerifyPrompt `Continue` → the AccountSetup add-or-transfer choice.
+ *
+ * `tapToReach`, not `tap`: this pair sits on a freshly pushed screen, and react-navigation renders a
+ * screen before it makes it interactive — the control is visible and steady, and the tap is discarded
+ * anyway. Confirming the destination is what turns that into a re-tap instead of a failed journey.
+ */
 export async function startVerification(): Promise<void> {
   await VerifyPromptScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-  await VerifyPromptScreen.tap('primary')
-  await AccountSetupScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await VerifyPromptScreen.tapToReach('primary', AccountSetupScreen)
 }
 
-/** AccountSetup `AddAccount` → IdentitySelection. */
+/** AccountSetup `AddAccount` → IdentitySelection. Confirm-and-retry, for the reason above. */
 export async function chooseAddAccount(): Promise<void> {
   await AccountSetupScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-  await AccountSetupScreen.tap('primary')
-  await IdentitySelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await AccountSetupScreen.tapToReach('primary', IdentitySelectionScreen)
 }
 
 /**
@@ -203,6 +216,271 @@ export async function completeVerification(user: TestUser): Promise<void> {
   await VerificationSuccessScreen.tap('primary') // Continue → exits verify stack to Home
 
   await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+}
+
+/**
+ * Upper bound on prompts to answer before calling the recording stuck. The set is server-issued (three
+ * today), and each prompt costs at least MIN_PROMPT_DURATION_SECONDS, so this also has to stay well
+ * inside the app's 30s recording ceiling.
+ */
+const MAX_VIDEO_PROMPTS = 8
+
+/**
+ * Budget for a prompt's button to enable. Generous against the app's per-prompt minimum, but short
+ * enough that the finalizing-recording window (where it never enables again) is not a long stall.
+ */
+const PROMPT_ENABLE_TIMEOUT_MS = 10_000
+
+/** Just past the app's 30s recording cap — long enough to trip it, short enough not to idle a session. */
+const OVER_LONG_RECORDING_MS = 32_000
+
+/** How long to keep re-entering PendingReview before giving up on the agent's decision. */
+const REVIEW_DECISION_TIMEOUT_MS = 180_000
+
+/** Gap between those re-entries. Each one is a fresh status check, not a retry of a stuck request. */
+const REVIEW_DECISION_POLL_MS = 5_000
+
+/**
+ * Submit a send-video verification: selfie photo, the prompted recording, upload, and out to Home —
+ * the state in which an agent decision can be scripted (`reviewSendVideoRequest`) and then awaited
+ * with {@link waitForSendVideoDecision}.
+ *
+ * CAMERA-ONLY. On Sauce the selfie is injected; the RECORDING is not — there is no video injection, so
+ * the recorder captures whatever the rack camera sees. That does not matter: the scripted reviewer
+ * never watches it, and the flow only needs a recording to upload.
+ */
+export async function submitSendVideoVerification(user: TestUser): Promise<void> {
+  await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await VerificationMethodSelectionScreen.link('sendVideo')
+
+  await PhotoInstructionsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  // Plain tap, NOT tapToNavigate: the camera's shutter carries the same testID as this CTA, so a
+  // confirm-and-retry would read the push as a miss and fire the shutter.
+  await PhotoInstructionsScreen.tap('primary')
+  await captureSelfie(user)
+  await recordPromptedVideo()
+
+  await VideoReviewScreen.tapWhenEnabled('primary') // UseVideo → RESETS to EvidenceUploading, which uploads on mount
+  await SuccessfullySentScreen.expectVisible(Timeouts.VIDEO_UPLOAD)
+  await SuccessfullySentScreen.tapToNavigate('primary') // Go to home — the screen's only way out
+
+  await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+}
+
+/** The selfie half: enter the front camera, inject when the session can, shoot, accept. Ends on VideoInstructions. */
+async function captureSelfie(user: TestUser): Promise<void> {
+  await reachCameraScreen('TakePhoto (selfie)', () => SelfieCaptureScreen.isPresent(1_000))
+  // The send-video lane runs without injection (it breaks the recorder) — the rack feed is fine
+  // here, since the scripted reviewer never looks at the content.
+  if (canInjectImages()) {
+    // No masks: the selfie template carries no barcode, unlike the card-back images.
+    await injectPhoto(user.selfieImage, {})
+  }
+  await SelfieCaptureScreen.tap('primary') // shutter — NOT tapToNavigate (not idempotent)
+  await PhotoReviewScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await PhotoReviewScreen.tapToNavigate('primary') // UsePhoto → RESETS to VideoInstructions
+}
+
+/**
+ * The recording half: start, answer the prompts, land on the review. How many prompts there are is
+ * server-issued, so this never counts them — the last one ends the recording by itself.
+ */
+async function recordPromptedVideo(): Promise<void> {
+  await startVideoRecording()
+  await answerVideoPrompts()
+
+  // The device's own recorder failing is not a test failure to reason about — report the app's error
+  // rather than the symptom, so a rack-camera flake is never mistaken for a broken journey. Probed
+  // BEFORE the review, whose full transition budget would otherwise be spent on a screen that is
+  // never coming.
+  await throwIfAppErrorShowing('The recording failed')
+
+  // Finalizing the file takes a moment after the recording stops, so the review is a transition wait.
+  if (await VideoReviewScreen.isPresent(Timeouts.SCREEN_TRANSITION)) {
+    return
+  }
+  // Probed only now that the recorder is gone: VideoTooLong's marker is a BARE `Cancel`, and TakeVideo's
+  // own cancel control carries "Cancel" as its accessibility label — which iOS reports as the element
+  // name when no identifier is set, so the same selector matches it while that screen is up.
+  if (await VideoTooLongScreen.isPresent(1_000)) {
+    throw new Error(
+      'The recording ran past the 30s limit and landed on VideoTooLong. Each prompt is held for a minimum ' +
+        'duration before its button enables, so this means the run answered them too slowly.'
+    )
+  }
+  throw new Error(
+    `The recording did not reach the review after ${MAX_VIDEO_PROMPTS} prompts. On screen: ${await describeCurrentScreen()}`
+  )
+}
+
+/** VideoInstructions → an armed recorder, with the prompt set the recording will be judged against. */
+async function startVideoRecording(): Promise<void> {
+  await VideoInstructionsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  // Disabled until a fresh prompt set lands — the wait for it IS the wait for the fetch.
+  await VideoInstructionsScreen.tapWhenEnabled('primary')
+
+  // No start button: recording arms itself after a 3-2-1 countdown, behind camera AND microphone
+  // dialogs, so the first prompt button gets a camera budget rather than a transition one.
+  //
+  // The error modal counts as "we got somewhere": iOS drops the covered recorder out of the
+  // accessibility tree, so a recording that fails on arm would otherwise spend the whole camera budget
+  // waiting for a screen that is already there and unreachable. Ending the wait on either outcome lets
+  // the assert below name the app's error instead of a 45s timeout.
+  await reachCameraScreen(
+    'TakeVideo',
+    async () => (await TakeVideoScreen.isPresent(1_000)) || (await isAppErrorShowing())
+  )
+  await throwIfAppErrorShowing('The recording failed to start')
+}
+
+/**
+ * Answer prompts until the recorder is done with us. Callers assert where that left them — this only
+ * gets the recording stopped, and both of its endings (review, too-long) go through here.
+ */
+async function answerVideoPrompts(): Promise<void> {
+  for (let prompt = 0; prompt < MAX_VIDEO_PROMPTS; prompt++) {
+    if (!(await TakeVideoScreen.isPresent(1_000))) {
+      return
+    }
+    // Android keeps the covered recorder in a second window, so its controls stay findable and
+    // enabled under the error modal — without this, a failed recording spends every remaining prompt
+    // driving a screen nothing is listening to.
+    if (await isAppErrorShowing()) {
+      return
+    }
+    try {
+      await TakeVideoScreen.tapWhenEnabled('primary', PROMPT_ENABLE_TIMEOUT_MS)
+    } catch {
+      // The button stops enabling once the last prompt has stopped the recording, while the screen is
+      // still up finalizing the file. Nothing is swallowed: the caller asserts what we landed on.
+      return
+    }
+  }
+}
+
+/**
+ * Record past the app's length cap and finish the take, which the app rejects with VideoTooLong instead
+ * of the review — then take that screen's Cancel back to method selection.
+ *
+ * Uploads nothing, so it leaves no submission in the agent queue and can precede a real one.
+ */
+export async function recordOverLongVideoDetour(user: TestUser): Promise<void> {
+  await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await VerificationMethodSelectionScreen.link('sendVideo')
+
+  await PhotoInstructionsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await PhotoInstructionsScreen.tap('primary')
+  await captureSelfie(user)
+  await startVideoRecording()
+
+  // Hold BEFORE answering anything: the length is only judged when the recording ends, so the overrun
+  // has to happen while it is still running. A client-side pause, so no single command is left hanging.
+  await driver.pause(OVER_LONG_RECORDING_MS)
+  await answerVideoPrompts()
+
+  // Same reason as the review path: a recorder that errored never reaches the length check, and the
+  // app's own error says so where "Cancel not visible" does not.
+  await throwIfAppErrorShowing('The over-long recording failed')
+  await VideoTooLongScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  // Cancel, the screen's only addressable control — Retake has no testID at all.
+  await VideoTooLongScreen.tap('secondary')
+  await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+}
+
+type ReviewSettleStatus = 'verified' | 'cancelled' | 'pending'
+
+/**
+ * Polls the three post-resume outcomes until one is present, returning 'pending' for a still-queued
+ * request so the caller can decide whether to keep polling or give up.
+ */
+async function waitForReviewSettleStatus(): Promise<ReviewSettleStatus> {
+  const settleBy = Date.now() + Timeouts.SCREEN_TRANSITION
+  for (;;) {
+    if (await VerificationSuccessScreen.isPresent(1_000)) {
+      return 'verified'
+    }
+    if (await CancelledReviewScreen.isPresent(1_000)) {
+      return 'cancelled'
+    }
+    if (await PendingReviewScreen.isPresent(1_000)) {
+      return 'pending' // still pending — leave and come back for another status check
+    }
+    if (Date.now() > settleBy) {
+      throw new Error(
+        `Re-entering verification reached none of PendingReview / VerificationSuccess / CancelledReview. On screen: ${await describeCurrentScreen()}`
+      )
+    }
+  }
+}
+
+/** Throws when the settled decision does not match what this journey scripted. */
+function assertExpectedDecision(actual: 'verified' | 'cancelled', expected: 'verified' | 'cancelled'): void {
+  if (actual === expected) {
+    return
+  }
+  throw actual === 'verified'
+    ? new Error('The request was APPROVED, but this journey scripted a rejection')
+    : new Error('The request was REJECTED, but this journey scripted an approval')
+}
+
+/**
+ * Wait for the agent's decision to reach the app, and assert it is the expected one.
+ *
+ * Re-entering PendingReview is the poll: it re-checks the request status on every mount and navigates
+ * on by itself, so this loops Home → verification card → decision-or-back-out. Backgrounding and
+ * foregrounding would NOT do — the Home-side status check runs once per stack mount, not per resume.
+ * The push notification is advisory and never navigates, so it is not waited on either.
+ */
+export async function waitForSendVideoDecision(expected: 'verified' | 'cancelled'): Promise<void> {
+  const deadline = Date.now() + REVIEW_DECISION_TIMEOUT_MS
+  for (;;) {
+    await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+    await resumeVerification()
+
+    const status = await waitForReviewSettleStatus()
+    if (status !== 'pending') {
+      assertExpectedDecision(status, expected)
+      return
+    }
+
+    if (Date.now() + REVIEW_DECISION_POLL_MS >= deadline) {
+      throw new Error(
+        `The agent decision (${expected}) did not reach the app within ${REVIEW_DECISION_TIMEOUT_MS}ms of re-checking. ` +
+          'The scripted review reported success, so suspect the status endpoint or a submission other than this one.'
+      )
+    }
+    // Back does not pop here: it marks the account unverified, which swaps the stack back to Home.
+    await PendingReviewScreen.back.tap()
+    await driver.pause(REVIEW_DECISION_POLL_MS)
+  }
+}
+
+/**
+ * Escapes a string for embedding inside a double-quoted literal in an iOS predicate string or an
+ * Android UiSelector expression. Backslashes are escaped first so a reason containing one is not
+ * later mistaken for an escape sequence introduced by this function.
+ */
+function escapeForSelectorLiteral(value: string): string {
+  return value.replaceAll('\\', String.raw`\\`).replaceAll('"', String.raw`\"`)
+}
+
+/**
+ * Assert the cancelled-review modal is showing the agent's reason — the text the rejecting script sent
+ * as `verificationComment`. Matched as a SUBSTRING: the app renders it inside a longer "Details from
+ * Service BC agent:" sentence, in one text node.
+ */
+export async function expectCancelledReviewReason(reason: string): Promise<void> {
+  await CancelledReviewScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  const escapedReason = escapeForSelectorLiteral(reason)
+  const selector = driver.isIOS
+    ? `-ios predicate string:label CONTAINS "${escapedReason}"`
+    : `android=new UiSelector().textContains("${escapedReason}")`
+  const detail = $(selector)
+  if (!(await detail.isDisplayed().catch(() => false))) {
+    throw new Error(
+      `CancelledReview does not show the agent reason "${reason}". On screen: ${await describeCurrentScreen()}`
+    )
+  }
 }
 
 /**
@@ -351,10 +629,17 @@ export async function selectEvidenceType(match: string): Promise<void> {
  * Wait for EvidenceCapture's shutter, naming which of two causes a timeout was. The shutter renders only
  * once `useCameraDevice` resolves, so a miss means either the push never landed (container absent) or no
  * camera came up (container present) — indistinguishable from the timeout alone.
+ *
+ * The error modal ends the wait early, same as the recorder's arm (see {@link startVideoRecording}):
+ * a camera that failed to open — seen on RE-entries, e.g. a retake — reports the app's own error in
+ * seconds instead of spending the whole camera budget on a screen that is never coming.
  */
 async function reachEvidenceCamera(): Promise<void> {
   try {
-    await reachCameraScreen('EvidenceCapture', () => EvidenceCaptureScreen.isPresent(1_000))
+    await reachCameraScreen(
+      'EvidenceCapture',
+      async () => (await EvidenceCaptureScreen.isPresent(1_000)) || (await isAppErrorShowing())
+    )
   } catch (err) {
     const containerMounted = await EvidenceCaptureScreen.isVisible('maskedCamera')
     throw new Error(
@@ -367,6 +652,7 @@ async function reachEvidenceCamera(): Promise<void> {
             '(see COMBO_CARD_BARCODE_MASKS) instead of re-tapping through; the flow state is corrupted at that point.')
     )
   }
+  await throwIfAppErrorShowing('The evidence camera failed')
 }
 
 /**
@@ -411,11 +697,81 @@ async function shootDocumentSide(image: string, barcodeMasks: readonly ImageMask
   // renders the PermissionDisabled fallback. Later entries still restart the capture session, so every
   // entry gets the camera budget rather than a screen-transition one.
   await reachEvidenceCamera()
-  if (isSauceLabs()) {
+  // Injection-free sessions (the send-video lane) shoot the rack feed — accepted like any capture.
+  if (canInjectImages()) {
     await injectPhoto(image, {}, barcodeMasks) // padding may need tuning to the document mask
   }
   await EvidenceCaptureScreen.tap('primary') // MaskedCamera shutter — NOT tapToNavigate (not idempotent)
   await PhotoReviewScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+}
+
+/**
+ * IdentitySelection → ScanSerial, with the camera live (the OS permission dialog is accepted on the
+ * way). The scan path's entry point; the typed path is {@link enterSerialManually}.
+ */
+export async function openSerialScanner(): Promise<void> {
+  await IdentitySelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await IdentitySelectionScreen.tapToNavigate('primary') // Scan → ScanSerial
+  await reachCameraScreen('ScanSerial', () => ScanSerialScreen.isPresent(1_000))
+}
+
+/**
+ * Photograph a REAL BC Services Card during non-BCSC evidence capture — the reroute arrange.
+ *
+ * The exact inverse of {@link capturePhotoIdDocument}: NO barcode masks, so the card's codes decode for
+ * real. On UsePhoto the app asks `/device/barcodes`, the backend matches the card, and the app resets
+ * into THAT card's own setup flow, discarding the evidence. Where it lands depends on the card process
+ * the backend returns, so the caller asserts it.
+ *
+ * ANDROID ONLY: iOS cannot fire code-39/PDF-417 from injection at all, so the reroute can never happen
+ * there. Sauce-only for the same reason injection is.
+ *
+ * Stops at the UsePhoto tap — a second side never comes, because the reroute replaces the whole stack.
+ */
+export async function presentBcscCardAsEvidence(scanTarget: string): Promise<void> {
+  await IDPhotoInformationScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await IDPhotoInformationScreen.tapToNavigate('primary')
+  await reachEvidenceCamera()
+  await injectScanTarget(scanTarget)
+  // The scanner must read the card BEFORE the shutter: UsePhoto only asks the backend when a serial
+  // AND a licence were already captured off the live frame stream. Nothing on screen reports a read,
+  // so the dwell is blind — see Timeouts.CARD_SCAN_DWELL.
+  await driver.pause(Timeouts.CARD_SCAN_DWELL)
+  await EvidenceCaptureScreen.tap('primary') // MaskedCamera shutter — NOT tapToNavigate (not idempotent)
+  await PhotoReviewScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  // UsePhoto fires the /device/barcodes round trip. Plain tap, never tapToNavigate — its retry would
+  // re-submit the authorization while the first is still in flight.
+  await PhotoReviewScreen.tap('primary')
+}
+
+/**
+ * Wait out the `/device/barcodes` round trip that {@link presentBcscCardAsEvidence}'s UsePhoto starts,
+ * until `hasRerouted` reports the card's own setup flow on screen.
+ *
+ * Where the reroute lands depends on the card process the backend returns, so the caller supplies the
+ * probe. Dropping back into the capture flow is called out separately from a timeout: it means the
+ * live scanner never read the card, so the app never asked about it — a different fault entirely from
+ * a slow or mismatched backend.
+ */
+export async function expectEvidenceReroute(hasRerouted: () => Promise<boolean>): Promise<void> {
+  const deadline = Date.now() + Timeouts.CARD_SCAN
+  for (;;) {
+    if (await hasRerouted()) return
+    if ((await EvidenceCaptureScreen.isPresent(500)) || (await EvidenceIDCollectionScreen.isPresent(500))) {
+      throw new Error(
+        'The injected card was captured as ordinary evidence: its barcodes were never read off the live ' +
+          'frame stream, so the app never asked /device/barcodes about them. Card barcodes only scan from ' +
+          'injection on Android; check the asset still carries a decodable serial + AAMVA pair.'
+      )
+    }
+    if (Date.now() > deadline) {
+      throw new Error(
+        `No reroute out of evidence capture within ${Timeouts.CARD_SCAN / 1000}s. ` +
+          `On screen: ${await describeCurrentScreen()}`
+      )
+    }
+    await driver.pause(1_000)
+  }
 }
 
 /**
@@ -424,13 +780,25 @@ async function shootDocumentSide(image: string, barcodeMasks: readonly ImageMask
  * lands here again.
  */
 export async function reachAdditionalPhotoIdList(): Promise<void> {
-  // This screen's only testID is the generic `Continue` (shared by ~10 screens), so wait for its unique
-  // heading — otherwise a lingering `Continue` from the previous screen gets tapped mid-transition.
-  const headingSelector = driver.isIOS
+  // Wait for the unique heading first — otherwise a lingering `Continue` from the previous screen gets
+  // tapped mid-transition.
+  await $(additionalIdHeadingSelector()).waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+  await AdditionalIdentificationRequiredScreen.tapToNavigate('primary') // Continue → EvidenceTypeList
+}
+
+/** AdditionalIdentificationRequired's heading. Its only testID is the generic `Continue` (shared by
+ *  ~10 screens), so the copy is the only thing that identifies the screen. */
+function additionalIdHeadingSelector(): string {
+  return driver.isIOS
     ? '-ios predicate string:label CONTAINS "provide additional ID"'
     : 'android=new UiSelector().textContains("provide additional ID")'
-  await $(headingSelector).waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
-  await AdditionalIdentificationRequiredScreen.tapToNavigate('primary') // Continue → EvidenceTypeList
+}
+
+/** Non-throwing probe for AdditionalIdentificationRequired — for callers choosing between landings. */
+export async function isAdditionalIdentificationRequired(): Promise<boolean> {
+  return $(additionalIdHeadingSelector())
+    .isDisplayed()
+    .catch(() => false)
 }
 
 /**
@@ -479,14 +847,24 @@ export async function chooseOtherIdPath(): Promise<void> {
   await IdentitySelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   await IdentitySelectionScreen.tapToNavigate('secondary') // OtherID → DualIdentificationRequired
 
-  // DualIdentificationRequired's only CTA is the generic `Continue`; confirm by heading before tapping.
-  const dualHeadingSelector = driver.isIOS
-    ? '-ios predicate string:label CONTAINS "two government"'
-    : 'android=new UiSelector().textContains("two government")'
-  await $(dualHeadingSelector).waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
+  await expectDualIdentificationRequired()
   // Confirm-and-retry is safe on the generic `Continue` here: EvidenceTypeList renders no Continue of
   // its own, so the button going away means the push landed.
   await DualIdentificationRequiredScreen.tapToNavigate('primary') // Continue → EvidenceTypeList (first ID)
+}
+
+/**
+ * Assert arrival on DualIdentificationRequired — reached by choosing OtherID, and also by the serial
+ * scanner reading a code it cannot resolve to a BC Services Card.
+ *
+ * The screen's only CTA is the generic `Continue` (shared by ~10 screens), so its heading copy is the
+ * only distinguishing marker.
+ */
+export async function expectDualIdentificationRequired(timeoutMs: number = Timeouts.SCREEN_TRANSITION): Promise<void> {
+  const selector = driver.isIOS
+    ? '-ios predicate string:label CONTAINS "two government"'
+    : 'android=new UiSelector().textContains("two government")'
+  await $(selector).waitForDisplayed({ timeout: timeoutMs })
 }
 
 /**

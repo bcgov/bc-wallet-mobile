@@ -92,6 +92,7 @@ describe('useFactoryReset', () => {
     expect(deleteRegistrationMock).toHaveBeenCalledWith('token', 'test-client-id')
     expect(deleteSecureDataMock).toHaveBeenCalledWith()
     expect(bcscCoreMock.removeAccount).toHaveBeenCalledWith()
+    expect(bcscCoreMock.clearAllKeychainData).toHaveBeenCalledWith()
     expect(clearSecureStateMock).toHaveBeenCalledWith()
     expect(dispatchMock.mock.calls[0]).toStrictEqual([{ type: BCDispatchAction.CLEAR_BCSC, payload: undefined }])
     expect(dispatchMock.mock.calls[1]).toStrictEqual([{ type: DispatchAction.DID_AUTHENTICATE, payload: [false] }])
@@ -420,6 +421,51 @@ describe('useFactoryReset', () => {
     expect(warnMock).not.toHaveBeenCalled()
     expect(infoMock).toHaveBeenCalled()
     expect(deleteRegistrationMock).not.toHaveBeenCalled()
+    // Keychain data can outlive an app reinstall even when no local account file
+    // remains, so the wipe must still run in this branch.
+    expect(bcscCoreMock.clearAllKeychainData).toHaveBeenCalledWith()
+  })
+
+  it('does not fail the reset if clearing Keychain data throws', async () => {
+    const bcscCoreMock = jest.mocked(BcscCore)
+    const useSecureActionsMock = jest.mocked(useSecureActions)
+    const bifoldMock = jest.mocked(Bifold)
+    const useRegistrationApiMock = jest.mocked(useRegistrationApi)
+    const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
+    const warnLogMock = jest.fn()
+
+    useBCSCApiClientStateMock.mockReturnValue({
+      client: { clearTokens: jest.fn() },
+      isClientReady: true,
+    } as any)
+    useRegistrationApiMock.mockReturnValue({
+      deleteRegistration: jest.fn().mockResolvedValue({ success: true }),
+      register: jest.fn(),
+    } as any)
+    bcscCoreMock.getAccount.mockResolvedValue({ clientID: 'test-client-id' } as any)
+    bcscCoreMock.removeAccount.mockResolvedValue(undefined)
+    bcscCoreMock.clearAllKeychainData.mockRejectedValue(new Error('keychain boom'))
+    useSecureActionsMock.mockReturnValue({
+      clearSecureState: jest.fn(),
+      deleteSecureData: jest.fn().mockResolvedValue(undefined),
+    } as any)
+    bifoldMock.useStore.mockReturnValue([
+      { bcscSecure: { registrationAccessToken: 'token', additionalEvidenceData: [] } } as any,
+      jest.fn(),
+    ])
+    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), warn: warnLogMock, error: jest.fn() }] as any)
+
+    const hook = renderHook(() => useFactoryReset())
+
+    await act(async () => {
+      const result = await hook.result.current()
+      expect(result.success).toBe(true)
+    })
+
+    expect(warnLogMock).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to clear Keychain data'),
+      expect.objectContaining({ message: 'keychain boom' })
+    )
   })
 
   it('should log a warning if IAS account deletion fails', async () => {

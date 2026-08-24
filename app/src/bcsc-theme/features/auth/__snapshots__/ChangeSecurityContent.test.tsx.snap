@@ -79,7 +79,7 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
             BCSC.Onboarding.SecureAppOnboardingContent
           </Text>
           <View
-            accessibilityLabel="BCSC.Settings.AppSecurity.CurrentMethod. Face id"
+            accessibilityLabel="BCSC.Settings.AppSecurity.CurrentMethod. BCSC.Settings.AppSecurity.DeviceAuth"
             accessibilityState={
               {
                 "selected": true,
@@ -132,7 +132,7 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
                   ]
                 }
               >
-                
+                
               </Text>
               <View
                 style={
@@ -187,7 +187,7 @@ exports[`ChangeSecurityContent when current method is Device Auth shows Device A
                     ]
                   }
                 >
-                  Face id
+                  BCSC.Settings.AppSecurity.DeviceAuth
                 </Text>
               </View>
               <Text
@@ -791,7 +791,7 @@ exports[`ChangeSecurityContent when current method is PIN and device auth is ava
                   ]
                 }
               >
-                
+                
               </Text>
               <View
                 style={

@@ -15,10 +15,10 @@ inputs:
     description: |
       The private key for the App Store Connect API.
     required: true
-  provisioning_profile:
+  provisioning_profile_file:
     description: |
-      The Base64 encoded provisioning profile to use for 
-      signing the archive. This should be in mobileprovision format.
+      Path to the provisioning profile file to use for signing the
+      archive. This should be in mobileprovision format.
     required: true
 runs:
   using: composite
@@ -42,6 +42,6 @@ runs:
     - name: Create Provisioning Profile
       shell: bash
       env:
-        PROVISIONING_PROFILE: ${{ inputs.provisioning_profile }}
+        PROVISIONING_PROFILE_FILE: ${{ inputs.provisioning_profile_file }}
       run: |
         scripts/makepp.sh
