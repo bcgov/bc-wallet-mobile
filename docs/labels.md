@@ -71,4 +71,7 @@ Unprefixed because automation writes them by exact name: the stale bot sets
 | PR awaiting review | **Linked pull requests** (automatic) |
 | Target release | **Milestone** |
 
-Issues are closed by people, not automation — a merged PR leaves its issue open.
+Issues are closed by people, not automation. This repo has GitHub's *auto-close
+issues with merged linked pull requests* setting turned **off**, so `Closes #`
+creates the link but closes nothing — a merged PR leaves its issue open awaiting
+verification. A `UAT` issue is closed by a UAT team member.
