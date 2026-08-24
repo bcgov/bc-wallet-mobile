@@ -43,6 +43,7 @@ _Tests are organized into named suites. Use the_ `--suite` _flag to select which
 | `verify`     | _Verification journeys — the four card types + entry spine/detours (`verify/*.journey.ts`)_ |
 | `main`       | _Main-stack journeys — unverified gating + settings + wallet credential lifecycle (`main/*.journey.ts`)_ |
 | `migration`  | _V3→V4 upgrade: v3 onboarding + verification, upgrade to v4, unlock with the v3 PIN_                 |
+| `upgrade`    | _Previous released build → current: onboard on the previous release, in-place upgrade, unlock with the old PIN + settings persistence. **Sauce = Android only** (iOS runtime-skips; run it locally)_ |
 | `scan`       | _Card-barcode scanning — non-BCSC→BCSC reroutes + the serial scanner (`scan/*.journey.ts`). **Android + Sauce only**, and also part of `regression`; the iOS configs `exclude` it_ |
 
 ```bash
@@ -206,7 +207,30 @@ yarn test:ios:migration:sauce
 yarn wdio configs/sauce/wdio.ios.sauce.migration.conf.ts --suite migration
 ```
 
-_The migration configs start with the v3 app as the initial install. During the test, `driver.installApp()` upgrades to v4 mid-session. Both apps share the same bundle/package ID (eg. `ca.bc.gov.id.servicescard.dev`), so the upgrade preserves app data._
+_The migration configs start with the v3 app as the initial install. During the test, the shared install helper (`src/helpers/app-install.ts`) upgrades to v4 mid-session — on Sauce via the storage-based `mobile: installApp` script (the plain installApp endpoint only accepts http/https), locally via `driver.installApp()`. Both apps share the same bundle/package ID (eg. `ca.bc.gov.id.servicescard.dev`), so the upgrade preserves app data._
+
+### _Upgrade Tests (previous release → current)_
+
+_The upgrade suite tests upgrading from the **previous released build** to the current build under test — the check an RC needs release after release. It onboards on the previous release (driven with the current screen DSL — a release that renames testIDs or reshapes onboarding will surface here, which is signal), sets auto-lock, installs the current build over it mid-session, then verifies the app unlocks with the pre-upgrade PIN, the setting persisted, and the Settings version footer changed (the binary really swapped)._
+
+**_Prerequisites:_**
+
+1. _The rolling previous-release builds in Sauce Labs storage: `BCSC-prev.apk` / `BCSC-prev.ipa`. They track the newest **full** (non-prerelease) `bcsc-v*` GitHub release: the **Publish Release E2E Builds** workflow attaches `BCSC-Dev-e2e.*` assets to a version's release and pushes them to Sauce when a full release ships (see `RELEASE.md`); the monthly **Refresh E2E Sauce Builds** workflow keeps them inside Sauce's 60-day retention. To upgrade from any other build still in storage, override `PREV_ANDROID_APP` / `PREV_IOS_APP` (or pass the `prev_build_number` input when dispatching `e2e.yml`)._
+2. _The current build under test via the standard vars: `ANDROID_APP_FILENAME` / `IOS_APP_FILENAME`._
+
+```bash
+# Android on Sauce (the CI path)
+yarn test:android:upgrade:sauce
+
+# Upgrade from a specific older build instead of the rolling BCSC-prev
+PREV_ANDROID_APP=BCSC-Dev-4550.apk ANDROID_APP_FILENAME=BCSC-Dev-4700.apk \
+  yarn test:android:upgrade:sauce
+
+# iOS runs locally on a real device — Sauce public RDC runtime-skips (installApp bypasses resigning)
+PREV_IOS_APP=BCSC-prev.ipa IOS_APP_DEVICE=BCSC.ipa yarn test:ios:upgrade:device
+```
+
+_Android installs only go old → new: versionCode = the build run number, so the previous build must be an **older** run number than the current one (Android refuses downgrade installs). No SiteMinder credentials are needed — the journey stays unverified._
 
 ### _Variant Selection_
 
@@ -260,6 +284,8 @@ _Two env files split general e2e config (including SiteMinder credentials) from 
 | `TEST_NAME`                | `E2E Tests`           | _SauceLabs test name_                                                         |
 | `V3_ANDROID_APP`           | `BCSC-v3.apk`         | _V3 Android app for migration tests (local file or Sauce storage filename)_   |
 | `V3_IOS_APP`               | `BCSC-v3.ipa`         | _V3 iOS app for migration tests (local file or Sauce storage filename)_       |
+| `PREV_ANDROID_APP`         | `BCSC-prev.apk`       | _Previous released Android app for upgrade tests (local file or Sauce storage filename)_ |
+| `PREV_IOS_APP`             | `BCSC-prev.ipa`       | _Previous released iOS app for upgrade tests (local file or Sauce storage filename)_ |
 
 ### _SiteMinder (in_ `.env.e2e`_)_
 
@@ -293,7 +319,9 @@ wdio.shared.conf.ts                         ← base (specs, suites, framework, 
       ├── sauce/wdio.android.sauce.rdc.conf.ts    ← + Android real device caps
       ├── sauce/wdio.ios.sauce.rdc.conf.ts         ← + iOS real device caps
       ├── sauce/wdio.android.sauce.migration.conf.ts ← + Android migration (v3 app)
-      └── sauce/wdio.ios.sauce.migration.conf.ts     ← + iOS migration (v3 app)
+      ├── sauce/wdio.ios.sauce.migration.conf.ts     ← + iOS migration (v3 app)
+      ├── sauce/wdio.android.sauce.upgrade.conf.ts   ← + Android upgrade (previous release)
+      └── sauce/wdio.ios.sauce.upgrade.conf.ts       ← + iOS upgrade (previous release)
 ```
 
 _Each leaf config only contains **capabilities** (device name, platform version, app path). Everything else is inherited. Each platform config reads its own env vars (_`IOS_DEVICE_NAME`_,_ `IOS_PLATFORM_VERSION`_,_ `ANDROID_DEVICE_NAME`_,_ `ANDROID_PLATFORM_VERSION`_) to allow CI to control device targeting without config changes._
@@ -515,7 +543,7 @@ _Tests run automatically in GitHub Actions via a device matrix that controls whi
 | _PR_                 | `smoke`      | _1 iOS (18) + 1 Android (15)_       | `bcsc-dev` | _No_         |
 | _Nightly (schedule)_ | `regression` | _3 iOS (16–18) + 3 Android (13–15)_ | `bcsc-dev` | _—_          |
 
-> _The nightly `regression` suite (all per-area journeys) replaces the retired `happy-path` / `full-regression` suites. It is the default suite in_ `e2e-nightly.yml` _and selectable from_ `e2e.yml` _(alongside the per-area suites); `migration` stays a separate suite because it boots the v3 app via its own config. `scan` is inside `regression` but Android-only — the iOS configs list it in_ `exclude` _(`ANDROID_ONLY_SPECS`), so those specs are dropped before scheduling instead of costing an iOS session each to reach a skip._
+> _The nightly `regression` suite (all per-area journeys) replaces the retired `happy-path` / `full-regression` suites. It is the default suite in_ `e2e-nightly.yml` _and selectable from_ `e2e.yml` _(alongside the per-area suites); `migration` and `upgrade` stay separate suites because each boots an OLD build via its own config — `upgrade` starts on the rolling previous-release build (`BCSC-prev.*`, or any stored build via the `prev_build_number` dispatch input) and installs the current build mid-session. `scan` is inside `regression` but Android-only — the iOS configs list it in_ `exclude` _(`ANDROID_ONLY_SPECS`), so those specs are dropped before scheduling instead of costing an iOS session each to reach a skip._
 
 _The device matrix is passed as a JSON array of_ `{platform, device, os_version}` _objects to_ `e2e.yml`_. Each entry spawns a separate SauceLabs session with its own logs and pass/fail status. (Biometric CI wiring — its Sauce configs, dev scripts, and workflow job — has been removed pending re-implementation as a journey; the_ `biometrics` _helper is retained for that future work.)_
 
@@ -619,6 +647,9 @@ e2e/
 │       ├── main/
 │       │   ├── unverified-main.journey.ts   # unverified tab / QRCore gating
 │       │   └── settings.journey.ts          # settings rows, change-PIN, auto-lock, reset/remove account
+│       │
+│       ├── upgrade/                         # previous release → current in-place upgrade (--suite upgrade)
+│       │   └── upgrade.spec.ts              # onboard on prev build → installApp current → unlock + settings persist
 │       │
 │       └── migration/                       # v3 → v4 upgrade (--suite migration; deprioritized). v3 phase uses v3TestIDs.ts
 │           ├── migration.spec.ts            # orchestrator: v3 onboarding → upgrade → v4 unlock

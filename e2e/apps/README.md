@@ -155,5 +155,22 @@ The WDIO configs look for these by default (override via env var):
 | iOS Sauce RDC                | `BCSC-Dev-latest.ipa` | `IOS_APP_FILENAME`  | the **Sauce Storage** name, not a local path       |
 | Android (emu/device, local)  | `BCWallet.apk`        | `ANDROID_APP`       | set to `BCSC.apk`                                  |
 | Android Sauce RDC            | —                     | `ANDROID_APP_FILENAME` | the Sauce Storage name                          |
+| Previous release — Android   | `BCSC-prev.apk`       | `PREV_ANDROID_APP`  | upgrade suite's initial app (see below)            |
+| Previous release — iOS       | `BCSC-prev.ipa`       | `PREV_IOS_APP`      | upgrade suite's initial app (see below)            |
 
 Set the overrides in `e2e/.env.saucelabs` (Sauce) or your shell (local).
+
+## Previous-release binaries (upgrade suite)
+
+The upgrade suite boots the **previous released build** first, then installs the current build over it. The binaries live as `BCSC-Dev-e2e.apk` / `BCSC-Dev-e2e.ipa` assets on each version's GitHub release (attached by the "Publish Release E2E Builds" workflow). Locally, fetch them from the newest full release into this directory:
+
+```bash
+# resolve the newest full (non-prerelease) bcsc release and download its e2e builds
+tag=$(gh release list --limit 30 --json tagName,isPrerelease,isDraft \
+  --jq '[.[] | select((.isPrerelease or .isDraft) | not) | select(.tagName | startswith("bcsc-v"))][0].tagName')
+gh release download "$tag" --pattern 'BCSC-Dev-e2e.*' --dir e2e/apps
+mv e2e/apps/BCSC-Dev-e2e.apk e2e/apps/BCSC-prev.apk
+mv e2e/apps/BCSC-Dev-e2e.ipa e2e/apps/BCSC-prev.ipa
+```
+
+(Or build the released tag from source per the sections above.) On Sauce the suite resolves `BCSC-prev.*` from **Sauce Storage** — "Publish Release E2E Builds" uploads them when a full release ships and "Refresh E2E Sauce Builds" re-uploads monthly (Sauce deletes storage files after 60 days of inactivity). To seed or fix them by hand, upload with the same curl pattern as above using `name=BCSC-prev.apk` / `name=BCSC-prev.ipa`.

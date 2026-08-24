@@ -1,3 +1,24 @@
+## After shipping a release: publish the e2e builds
+
+Once a version's GitHub release exists (the usual release ritual), publish its e2e builds so the
+upgrade suite (previous release → current) can test future builds against it:
+
+1. Dispatch **Actions → Publish Release E2E Builds** with the release tag (e.g. `bcsc-v4.1.0`).
+   It resolves the `Native Build & Test` (`main.yaml`) run for the tag's commit (override with
+   `run_id` if they differ), attaches the bcsc-dev `.apk`/`.ipa` to that release as
+   `BCSC-Dev-e2e.*` assets (release notes are untouched), and — for a full release, not a
+   pre-release RC — uploads them to Sauce Labs storage as `BCSC-prev.apk` / `BCSC-prev.ipa`.
+2. Nothing else afterwards — the monthly **Refresh E2E Sauce Builds** workflow re-uploads the
+   newest full release's `BCSC-Dev-e2e.*` assets, keeping the Sauce copies inside the 60-day
+   retention window.
+
+GitHub build artifacts expire after **7 days**. If the run's artifacts are already gone, attach
+the binaries to the version's release by hand as `BCSC-Dev-e2e.apk` / `BCSC-Dev-e2e.ipa` (build
+them per `e2e/apps/README.md`), then dispatch **Refresh E2E Sauce Builds**. See the "Upgrade
+Tests" section in `e2e/README.md` for how the suite consumes these builds.
+
+---
+
 ## v1.0.3
 
 Build 40x
