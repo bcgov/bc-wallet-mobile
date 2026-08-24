@@ -4,7 +4,7 @@ import Toast from 'react-native-toast-message'
 
 import { Screens } from '@bifold/core'
 import type { TFunction } from 'i18next'
-import z from 'zod'
+import { z } from 'zod'
 
 /**
  * Bifold's Connection / CredentialOffer / ProofRequest screens, when reused
