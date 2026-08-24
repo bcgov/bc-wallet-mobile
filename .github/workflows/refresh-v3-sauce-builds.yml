@@ -5,8 +5,9 @@
 #   - the frozen v3 BC Services Card builds (ias-ios / ias-android) used by the
 #     migration suite (v3 → v4) — GitHub Release assets on the `bcsc-v3` tag
 #   - the previous released bcsc-dev builds used by the upgrade suite (previous
-#     release → current) — assets on the rolling `bcsc-latest-release` tag,
-#     published by "Publish Previous Release Builds" after each release ships
+#     release → current) — the `BCSC-Dev-e2e.*` assets on the newest FULL
+#     (non-prerelease) `bcsc-v*` GitHub release, attached there by
+#     "Publish Release E2E Builds" after each release ships
 #
 # Sauce Storage behaviour: uploading with the same `name` creates a new
 # version in the same app group, resetting the retention clock.
@@ -24,7 +25,8 @@ env:
   RELEASE_TAG: bcsc-v3
   V3_IOS_FILENAME: BCSC-v3.ipa
   V3_ANDROID_FILENAME: BCSC-v3.apk
-  PREV_RELEASE_TAG: bcsc-latest-release
+  E2E_ANDROID_ASSET: BCSC-Dev-e2e.apk
+  E2E_IOS_ASSET: BCSC-Dev-e2e.ipa
   PREV_IOS_FILENAME: BCSC-prev.ipa
   PREV_ANDROID_FILENAME: BCSC-prev.apk
 
@@ -109,36 +111,36 @@ jobs:
       contents: read
     timeout-minutes: 10
     steps:
-      - name: Check the rolling release exists
+      - name: Resolve the newest full release with e2e builds
         id: probe
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if gh release view "$PREV_RELEASE_TAG" --repo "${{ github.repository }}" > /dev/null 2>&1; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::notice::$PREV_RELEASE_TAG not found — 'Publish Previous Release Builds' has not run yet; skipping"
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
+          tags=$(gh release list --repo "${{ github.repository }}" --limit 30 \
+            --json tagName,isPrerelease,isDraft \
+            --jq '.[] | select((.isPrerelease or .isDraft) | not) | .tagName')
+          for tag in $tags; do
+            case "$tag" in bcsc-v*) ;; *) continue ;; esac
+            assets=$(gh release view "$tag" --repo "${{ github.repository }}" --json assets --jq '[.assets[].name]')
+            if echo "$assets" | grep -q "$E2E_ANDROID_ASSET" && echo "$assets" | grep -q "$E2E_IOS_ASSET"; then
+              echo "Previous release: $tag"
+              echo "tag=$tag" >> "$GITHUB_OUTPUT"
+              echo "exists=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done
+          echo "::notice::No full bcsc-v* release carries $E2E_ANDROID_ASSET/$E2E_IOS_ASSET yet — run 'Publish Release E2E Builds' first; skipping"
+          echo "exists=false" >> "$GITHUB_OUTPUT"
 
-      - name: Download previous-release iOS build from GitHub Releases
+      - name: Download previous-release builds from the GitHub release
         if: steps.probe.outputs.exists == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release download "$PREV_RELEASE_TAG" \
+          gh release download "${{ steps.probe.outputs.tag }}" \
             --repo "${{ github.repository }}" \
-            --pattern "$PREV_IOS_FILENAME" \
-            --dir .
-
-      - name: Download previous-release Android build from GitHub Releases
-        if: steps.probe.outputs.exists == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release download "$PREV_RELEASE_TAG" \
-            --repo "${{ github.repository }}" \
-            --pattern "$PREV_ANDROID_FILENAME" \
+            --pattern "$E2E_IOS_ASSET" \
+            --pattern "$E2E_ANDROID_ASSET" \
             --dir .
 
       - name: Load SauceLabs secrets from 1Password
@@ -160,7 +162,7 @@ jobs:
             -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
             --location --request POST \
             'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
-            --form "payload=@\"$PREV_IOS_FILENAME\"" \
+            --form "payload=@\"$E2E_IOS_ASSET\"" \
             --form "name=\"$PREV_IOS_FILENAME\"")
           http_code=$(echo "$response" | tail -1)
           body=$(echo "$response" | sed '$d')
@@ -181,7 +183,7 @@ jobs:
             -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
             --location --request POST \
             'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
-            --form "payload=@\"$PREV_ANDROID_FILENAME\"" \
+            --form "payload=@\"$E2E_ANDROID_ASSET\"" \
             --form "name=\"$PREV_ANDROID_FILENAME\"")
           http_code=$(echo "$response" | tail -1)
           body=$(echo "$response" | sed '$d')

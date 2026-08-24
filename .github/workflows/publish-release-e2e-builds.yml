@@ -1,0 +1,161 @@
+# Publish Release E2E Builds
+#
+# Run MANUALLY after a version's GitHub release exists (the usual release ritual):
+# pass the release tag (e.g. bcsc-v4.1.0). The e2e upgrade suite (previous release
+# → current) consumes what this publishes.
+#
+# What it does:
+#   1. Resolves the main.yaml ("Native Build & Test") run that built the release
+#      commit (override with run_id if the tag's commit isn't the build commit)
+#      and downloads its bcsc-dev artifacts. GitHub artifacts expire after 7
+#      DAYS — if they are gone, attach the binaries to the release by hand
+#      (see e2e/apps/README.md), then dispatch "Refresh E2E Sauce Builds".
+#   2. Attaches them to that version's release as BCSC-Dev-e2e.apk /
+#      BCSC-Dev-e2e.ipa (assets only — release notes are never touched).
+#   3. For a FULL release (not a pre-release RC), also uploads both to Sauce
+#      Labs storage as BCSC-prev.apk / BCSC-prev.ipa, UNTAGGED (the PR-prune
+#      maintenance job only deletes pr-tagged files). Sauce deletes storage
+#      files after 60 days of inactivity; the monthly "Refresh E2E Sauce
+#      Builds" workflow re-uploads from the newest full release's assets to
+#      keep them alive between releases.
+#
+# Android versionCode = build run number, so "previous" must always be an older
+# run than the build under test (Android refuses downgrade installs).
+name: Publish Release E2E Builds
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Tag of the shipped release (e.g. bcsc-v4.1.0)'
+        required: true
+        type: string
+      run_id:
+        description: 'Override: main.yaml run ID that built the shipped binaries (default: resolved from the tag commit)'
+        required: false
+        type: string
+        default: ''
+
+env:
+  E2E_ANDROID_ASSET: BCSC-Dev-e2e.apk
+  E2E_IOS_ASSET: BCSC-Dev-e2e.ipa
+  PREV_ANDROID_FILENAME: BCSC-prev.apk
+  PREV_IOS_FILENAME: BCSC-prev.ipa
+
+jobs:
+  publish-release-e2e-builds:
+    name: Publish e2e builds for a release
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write # upload assets to the release
+      actions: read # resolve + download artifacts from the build run
+    timeout-minutes: 15
+    steps:
+      - name: Resolve the release and its build run
+        id: resolve
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          RUN_ID_OVERRIDE: ${{ inputs.run_id }}
+        run: |
+          release_json=$(gh api "repos/${{ github.repository }}/releases/tags/${RELEASE_TAG}")
+          is_prerelease=$(echo "$release_json" | jq -r '.prerelease')
+          echo "prerelease=$is_prerelease" >> "$GITHUB_OUTPUT"
+
+          if [ -n "$RUN_ID_OVERRIDE" ]; then
+            RUN_ID="$RUN_ID_OVERRIDE"
+          else
+            sha=$(gh api "repos/${{ github.repository }}/commits/${RELEASE_TAG}" --jq '.sha')
+            RUN_ID=$(gh api "repos/${{ github.repository }}/actions/workflows/main.yaml/runs?head_sha=${sha}&per_page=20" \
+              --jq '[.workflow_runs[] | select(.conclusion=="success")][0].id // empty')
+            if [ -z "$RUN_ID" ]; then
+              echo "::error::No successful main.yaml run found for ${RELEASE_TAG} (${sha}) — pass run_id explicitly"
+              exit 1
+            fi
+          fi
+          run_json=$(gh api "repos/${{ github.repository }}/actions/runs/${RUN_ID}")
+          workflow_path=$(echo "$run_json" | jq -r '.path')
+          if [ "$workflow_path" != ".github/workflows/main.yaml" ]; then
+            echo "::error::Run $RUN_ID is from $workflow_path, not main.yaml"
+            exit 1
+          fi
+          {
+            echo "RUN_ID=$RUN_ID"
+            echo "RUN_NUMBER=$(echo "$run_json" | jq -r '.run_number')"
+            echo "RUN_URL=$(echo "$run_json" | jq -r '.html_url')"
+          } >> "$GITHUB_ENV"
+          echo "Using main.yaml run $RUN_ID (build $(echo "$run_json" | jq -r '.run_number')) for $RELEASE_TAG (prerelease: $is_prerelease)"
+
+      - name: Download bcsc-dev artifacts from the build run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh run download "$RUN_ID" --repo "${{ github.repository }}" --name android-bcsc-dev.apk --dir dl/android
+          gh run download "$RUN_ID" --repo "${{ github.repository }}" --name ios-bcsc-dev.ipa --dir dl/ios
+          mv dl/android/app-release.apk "$E2E_ANDROID_ASSET"
+          mv dl/ios/BCWallet.ipa "$E2E_IOS_ASSET"
+          ls -la "$E2E_ANDROID_ASSET" "$E2E_IOS_ASSET"
+
+      - name: Attach e2e builds to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          gh release upload "$RELEASE_TAG" "$E2E_ANDROID_ASSET" "$E2E_IOS_ASSET" \
+            --repo "${{ github.repository }}" --clobber
+          echo "✓ Attached $E2E_ANDROID_ASSET + $E2E_IOS_ASSET (build $RUN_NUMBER, $RUN_URL) to $RELEASE_TAG"
+
+      - name: Skip Sauce refresh for a pre-release
+        if: steps.resolve.outputs.prerelease == 'true'
+        run: echo "::notice::${{ inputs.release_tag }} is a pre-release — Sauce BCSC-prev.* keeps tracking the newest FULL release"
+
+      - name: Load SauceLabs secrets from 1Password
+        if: steps.resolve.outputs.prerelease == 'false'
+        id: op_saucelabs
+        uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          SAUCE_USERNAME: op://bcsc-mobile-app-cd/saucelabs/username
+          SAUCE_ACCESS_KEY: op://bcsc-mobile-app-cd/saucelabs/credential
+
+      - name: Upload previous Android build to SauceLabs
+        if: steps.resolve.outputs.prerelease == 'false'
+        env:
+          SAUCE_USERNAME: ${{ steps.op_saucelabs.outputs.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ steps.op_saucelabs.outputs.SAUCE_ACCESS_KEY }}
+        run: |
+          response=$(curl -s -w "\n%{http_code}" \
+            -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
+            --location --request POST \
+            'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
+            --form "payload=@\"$E2E_ANDROID_ASSET\"" \
+            --form "name=\"$PREV_ANDROID_FILENAME\"")
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | sed '$d')
+          echo "$body"
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "::error::SauceLabs upload failed with HTTP $http_code"
+            exit 1
+          fi
+          echo "✓ Uploaded $PREV_ANDROID_FILENAME (HTTP $http_code)"
+
+      - name: Upload previous iOS build to SauceLabs
+        if: steps.resolve.outputs.prerelease == 'false'
+        env:
+          SAUCE_USERNAME: ${{ steps.op_saucelabs.outputs.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ steps.op_saucelabs.outputs.SAUCE_ACCESS_KEY }}
+        run: |
+          response=$(curl -s -w "\n%{http_code}" \
+            -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
+            --location --request POST \
+            'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
+            --form "payload=@\"$E2E_IOS_ASSET\"" \
+            --form "name=\"$PREV_IOS_FILENAME\"")
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | sed '$d')
+          echo "$body"
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "::error::SauceLabs upload failed with HTTP $http_code"
+            exit 1
+          fi
+          echo "✓ Uploaded $PREV_IOS_FILENAME (HTTP $http_code)"
