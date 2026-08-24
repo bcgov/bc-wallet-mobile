@@ -16,11 +16,10 @@
  *
  * Env (with --push): JOB, LEVEL, MESSAGE, APP, TIMEOUT
  *
- * Passwords are never printed -- only their length and a short hash.
+ * The password is never printed, hashed, or otherwise echoed -- only whether
+ * the transport's parse of it matches the real one.
  * Exit 0 = usable (and pushed, with --push), 1 = the app would fail, 2 = bad input.
  */
-
-import crypto from 'node:crypto'
 
 const PUSH_PATH = '/loki/api/v1/push'
 
@@ -48,9 +47,6 @@ const trueUser = decodeURIComponent(url.username)
 const truePass = decodeURIComponent(url.password)
 const trueTarget = `${url.protocol}//${url.host}${url.pathname}`
 
-const mask = (s) =>
-  s ? `len=${s.length} sha=${crypto.createHash('sha256').update(s).digest('hex').slice(0, 8)}` : '(empty)'
-
 // WHATWG URL always yields a '/' pathname; the transport's string split does not.
 // Normalise it so a bare host is reported as a missing path, not a mangled host.
 const stripSlash = (s) => s.replace(/\/$/, '')
@@ -63,7 +59,7 @@ const targetOk = stripSlash(transportTarget) === stripSlash(trueTarget)
 const hasPushPath = url.pathname.endsWith(PUSH_PATH)
 
 console.log('transport username   :', username, userOk ? 'OK' : `MISMATCH (real: ${trueUser})`)
-console.log('transport password   :', mask(password), passOk ? 'OK' : 'MISMATCH -- truncated or mangled')
+console.log('transport password   :', passOk ? 'OK' : 'MISMATCH -- truncated or mangled')
 console.log('transport POST target:', transportTarget || '(empty)', targetOk ? 'OK' : `MISMATCH (real: ${trueTarget})`)
 console.log('push path present    :', hasPushPath ? `OK (${url.pathname})` : `MISSING -- expected ${PUSH_PATH}`)
 
@@ -124,10 +120,13 @@ const response = await fetch(transportTarget, {
   process.exit(1)
 })
 
-const body = await response.text()
+// The body is echoed for diagnostics. Strip control characters -- newlines and
+// ANSI escapes are what make echoing a remote response to a terminal unsafe --
+// and cap the length. Printable symbols are kept so HTML error pages stay legible.
+const body = (await response.text()).replace(/\p{C}/gu, ' ').trim().slice(0, 200)
 console.log(`HTTP ${response.status}`)
-if (body.trim()) {
-  console.log(body.trim())
+if (body) {
+  console.log(body)
 }
 
 // Only 204 means the line was stored. A 200 is the nginx health check
