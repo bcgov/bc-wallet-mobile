@@ -15,8 +15,8 @@ jobs:
     # if: github.event.workflow_run.conclusion == 'success'
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+        # with:
+        #   ref: ${{ github.event.workflow_run.head_sha }}
 
       # Secrets are being consolidated into the bcsc-mobile-app-cd 1Password vault;
       # OP_SERVICE_ACCOUNT_TOKEN is the single bootstrap secret that stays in GitHub.
