@@ -6,7 +6,7 @@ import { skipToHome } from '../../../src/flows/onboarding.js'
 import { rowShowsWord } from '../../../src/helpers/a11y.js'
 import { installCurrentBuildOverRunningApp, relaunchAfterInstall } from '../../../src/helpers/app-install.js'
 import { readSettingsVersionFooter } from '../../../src/helpers/developer.js'
-import { annotate, isSauceLabs } from '../../../src/helpers/sauce.js'
+import { annotate } from '../../../src/helpers/sauce.js'
 import { AutoLockScreen, SettingsRowIds, SettingsScreen, TabBar } from '../../../src/screens/main.js'
 
 /**
@@ -22,20 +22,13 @@ import { AutoLockScreen, SettingsRowIds, SettingsScreen, TabBar } from '../../..
  * reshapes onboarding, this suite fails on the old binary — that is upgrade signal, not flake.
  * Android installs only go old → new (versionCode = build run number; downgrades refuse).
  *
- * NOTE: iOS is skipped on Sauce public RDC — mid-session installs have historically bypassed
- * Sauce's resigning there (Apple rejects unsigned IPAs) and the storage-based install path is
- * unvalidated on iOS. Run iOS locally instead: `yarn test:ios:upgrade:device` (see e2e/README.md).
+ * iOS on Sauce works: the storage-based `mobile: installApp` goes through Sauce's resigning
+ * (validated 2026-08-25, 7/7 on a public RDC iPhone) — the historical mid-session-install skip
+ * is gone. A local real-device run remains available: `yarn test:ios:upgrade:device`.
  */
 describe('Upgrade from previous release', () => {
   let appId: string | undefined
   let previousVersionFooter: string | undefined
-
-  before(function () {
-    if (isSauceLabs() && driver.isIOS) {
-      console.log('[upgrade] Skipping iOS on Sauce — mid-test installApp bypasses resigning (see spec header)')
-      this.skip()
-    }
-  })
 
   it('onboards on the previous release and reaches Home', async () => {
     await annotate('Upgrade: onboarding on the previous release')

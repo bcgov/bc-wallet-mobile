@@ -102,6 +102,8 @@ export const config: WebdriverIO.Config = {
     ],
     migration: [resolve(__dirname, `../test/${variant}/migration/migration.spec.ts`)],
     upgrade: [resolve(__dirname, `../test/${variant}/upgrade/upgrade.spec.ts`)],
+    // Upgrade from the shipped 4.0.3 specifically — its pre-rework onboarding needs the frozen walk.
+    upgrade403: [resolve(__dirname, `../test/${variant}/upgrade/upgrade-from-v403.spec.ts`)],
   },
   exclude: [],
   capabilities: [],

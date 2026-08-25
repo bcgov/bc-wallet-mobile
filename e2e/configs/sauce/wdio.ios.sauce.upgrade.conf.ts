@@ -6,9 +6,9 @@
  * rolling Sauce storage name refreshed by the publish/refresh workflows). The upgrade suite
  * installs the current build over it mid-test using `driver.installApp()`.
  *
- * The suite runtime-skips on Sauce public RDC (mid-test installApp bypasses Sauce resigning) —
- * this config exists for completeness/private devices; the run reports green via the skip.
- * Run the iOS upgrade locally instead: configs/local/wdio.ios.local.device.upgrade.conf.ts.
+ * Mid-test installs use the storage-based `mobile: installApp`, which passes through Sauce
+ * resigning on public RDC (validated 2026-08-25, 7/7). A local real-device alternative remains:
+ * configs/local/wdio.ios.local.device.upgrade.conf.ts.
  *
  * Key differences from the standard iOS sauce config:
  * - `appium:app` points to the previous release (PREV_IOS_APP)
