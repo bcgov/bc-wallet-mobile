@@ -2,8 +2,9 @@
 # it takes the artifacts produced by a `Native Build & Test` run on main and
 # uploads those, so what UAT receives is byte-for-byte what CI produced.
 #
-# Firebase App Distribution and SauceLabs still happen automatically at build
-# time — only the app stores are gated behind this manual step.
+# Merging to main builds artifacts and publishes nothing. Every destination —
+# App Store Connect, Google Play and Firebase App Distribution — is reached
+# only from here.
 name: Publish
 
 on:
@@ -23,6 +24,7 @@ on:
           - app-store-upload
           - google-play
           - testflight
+          - firebase
       variants:
         description: 'Comma-separated variants to publish. Leave blank for every variant in the build.'
         required: false
@@ -245,3 +247,134 @@ jobs:
           version_code: ${{ needs.resolve-build.outputs.run_number }}
           version_name: ${{ env.APP_VERSION }}
           beta_groups: ${{ env.TESTFLIGHT_BETA_GROUPS }}
+
+  # ─── Firebase App Distribution ──────────────────────────────────────
+  firebase-ios:
+    name: 'Firebase iOS - ${{ matrix.variant }}'
+    needs: resolve-build
+    if: ${{ inputs.targets == 'all' || inputs.targets == 'firebase' }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(needs.resolve-build.outputs.variants) }}
+    steps:
+      - name: Download IPA
+        id: probe
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: ios-${{ matrix.variant }}.ipa
+          path: ${{ runner.temp }}/firebase-artifact
+          run-id: ${{ needs.resolve-build.outputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - uses: actions/checkout@v7
+        if: steps.probe.outcome == 'success'
+
+      - name: Use the build's variant config
+        if: steps.probe.outcome == 'success'
+        uses: ./.github/workflows/actions/use-build-variant-config
+        with:
+          head_sha: ${{ needs.resolve-build.outputs.head_sha }}
+
+      - name: Load variant config
+        if: steps.probe.outcome == 'success'
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      - name: Install 1Password CLI
+        if: steps.probe.outcome == 'success'
+        uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
+
+      - name: Fetch Firebase credentials
+        if: steps.probe.outcome == 'success'
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          # `op read` to stdout appends a trailing newline; --out-file writes
+          # the document byte-for-byte instead.
+          op read "op://bcsc-mobile-app-cd/google-services-ios-${{ matrix.variant }}/GoogleService-Info.plist" --out-file "${RUNNER_TEMP}/google-services-source" --force
+          op read "${FIREBASE_IOS_SA_REF}" --out-file "${RUNNER_TEMP}/firebase-service-account.json" --force
+
+      - name: Distribute to Firebase App Distribution
+        if: steps.probe.outcome == 'success'
+        uses: ./.github/workflows/actions/distribute-firebase
+        with:
+          platform: ios
+          app_identifier: ${{ env.IOS_BUNDLE_ID }}
+          google_services_file: ${{ runner.temp }}/google-services-source
+          service_account_file: ${{ runner.temp }}/firebase-service-account.json
+          artifact_path: ${{ runner.temp }}/firebase-artifact/BCWallet.ipa
+          groups: ${{ env.FIREBASE_IOS_TESTER_GROUPS }}
+          version_name: ${{ env.APP_VERSION }}
+          version_code: ${{ needs.resolve-build.outputs.run_number }}
+
+  firebase-android:
+    name: 'Firebase Android - ${{ matrix.variant }}'
+    needs: resolve-build
+    if: ${{ inputs.targets == 'all' || inputs.targets == 'firebase' }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(needs.resolve-build.outputs.variants) }}
+    steps:
+      - name: Download APK
+        id: probe
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: android-${{ matrix.variant }}.apk
+          path: ${{ runner.temp }}/firebase-artifact
+          run-id: ${{ needs.resolve-build.outputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - uses: actions/checkout@v7
+        if: steps.probe.outcome == 'success'
+
+      - name: Use the build's variant config
+        if: steps.probe.outcome == 'success'
+        uses: ./.github/workflows/actions/use-build-variant-config
+        with:
+          head_sha: ${{ needs.resolve-build.outputs.head_sha }}
+
+      - name: Load variant config
+        if: steps.probe.outcome == 'success'
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      - name: Install 1Password CLI
+        if: steps.probe.outcome == 'success'
+        uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
+
+      - name: Fetch Firebase credentials
+        if: steps.probe.outcome == 'success'
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          # `op read` to stdout appends a trailing newline; --out-file writes
+          # the document byte-for-byte instead.
+          op read "op://bcsc-mobile-app-cd/google-services-android-${{ matrix.variant }}/google-services.json" --out-file "${RUNNER_TEMP}/google-services-source" --force
+          op read "${FIREBASE_ANDROID_SA_REF}" --out-file "${RUNNER_TEMP}/firebase-service-account.json" --force
+
+      - name: Distribute to Firebase App Distribution
+        if: steps.probe.outcome == 'success'
+        uses: ./.github/workflows/actions/distribute-firebase
+        with:
+          platform: android
+          app_identifier: ${{ env.ANDROID_PACKAGE_NAME }}
+          google_services_file: ${{ runner.temp }}/google-services-source
+          service_account_file: ${{ runner.temp }}/firebase-service-account.json
+          artifact_path: ${{ runner.temp }}/firebase-artifact/app-release.apk
+          groups: ${{ env.FIREBASE_ANDROID_TESTER_GROUPS }}
+          version_name: ${{ env.APP_VERSION }}
+          version_code: ${{ needs.resolve-build.outputs.run_number }}
