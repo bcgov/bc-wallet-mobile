@@ -4,16 +4,14 @@ import { annotate } from '../../../src/helpers/sauce.js'
 /**
  * Upgrade from v3 (BC Services Card) to v4 (BC Wallet / BCSC v4).
  *
- * Uses `driver.installApp()` to install the v4 build over the existing v3 app. Both apps share
- * the same application/bundle id per variant, so this is an in-place upgrade — app data
- * (keychain, shared preferences, secure storage) is preserved across the install. The id is
- * captured from the RUNNING v3 app before the install (the platform kills the process on package
- * replace). Build refs and the install/relaunch mechanics live in `src/helpers/app-install.ts`,
- * shared with the previous-release upgrade suite.
+ * Installs the v4 build over the existing v3 app. Both apps share the same application/bundle id
+ * per variant, so this is an in-place upgrade — app data (keychain, shared preferences, secure
+ * storage) is preserved across the install. The id is captured from the RUNNING v3 app before the
+ * install (the platform kills the process on package replace). Build refs and the install/relaunch
+ * mechanics live in `src/helpers/app-install.ts`, shared with the previous-release upgrade suite.
  *
- * NOTE: iOS upgrade is skipped on Sauce public RDC because mid-test `installApp()` bypasses
- * Sauce's resigning pipeline, and Apple rejects unsigned IPAs on public devices. Run the iOS
- * migration suite locally, or on Sauce private devices with pre-signed IPAs.
+ * Runs on Sauce for both platforms — the storage-based mid-session install passes Sauce resigning
+ * (iOS validated 2026-08-25).
  */
 describe('Upgrade v3 → v4', () => {
   let appId: string | undefined

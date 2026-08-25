@@ -15,8 +15,6 @@ import { migrationContext } from './migration-context.js'
  * v4 is a SINGLE-account unlock — one `Unlock` on AccountLanding, no account-selector / per-nickname
  * card — so the old `CardButton-<nickname>` step is gone (it referenced a v3 concept that no longer
  * exists in v4).
- *
- * NOTE: skipped on Sauce iOS because the upgrade spec it depends on is skipped there (see upgrade.spec.ts).
  */
 describe('V4 Unlock After Migration', () => {
   it('unlocks the migrated account and enters the v3 PIN', async () => {

@@ -176,7 +176,7 @@ jobs:
   # (or the regression itself) goes red — every lane is advisory via
   # continue-on-error in e2e.yml. They run only when the main call is the full
   # regression (schedule, or a dispatch left on the default suite). The
-  # migration lane stays Android-only (its v3 phase is Android-validated only);
+  # migration lane stays Android-only (iOS went green on Sauce 2026-08-25, not yet repeatably);
   # the upgrade lanes run both platforms — the storage-based mid-session
   # install passes Sauce resigning (validated 2026-08-25).
   e2e-migration:
