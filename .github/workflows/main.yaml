@@ -1116,6 +1116,19 @@ jobs:
           echo "Debug: build-android.result=$ANDROID_RESULT"
           echo "Debug: build-ios.result=$IOS_RESULT"
 
+          # These jobs aren't gated by check-secrets and run even when
+          # should_skip_build is true, so check them first — a real failure
+          # here must not slip past the skip/skipped-build tolerance below.
+          upstream_checks="early-exit-check=$EARLY_EXIT_RESULT check-vars=$CHECK_VARS_RESULT compute-variants=$COMPUTE_VARIANTS_RESULT prepare-ios=$PREPARE_IOS_RESULT prepare-android=$PREPARE_ANDROID_RESULT"
+          for entry in $upstream_checks; do
+            job="${entry%%=*}"
+            result="${entry#*=}"
+            if [ "$result" != "success" ] && [ "$result" != "skipped" ]; then
+              echo "❌ $job failed with result: $result"
+              exit 1
+            fi
+          done
+
           # If builds were intentionally skipped, that's okay
           if [ "$SHOULD_SKIP" == "true" ]; then
             echo "✅ No relevant file changes. Build skipped intentionally."
@@ -1132,20 +1145,6 @@ jobs:
             echo "❌ iOS build(s) failed with result: $IOS_RESULT"
             exit 1
           fi
-
-          # These jobs aren't gated by check-secrets, so a real failure in
-          # any of them would still show build-android/build-ios as
-          # "skipped" and slip past the checks above. check-secrets itself
-          # is excluded — it's legitimately skipped below on this path.
-          upstream_checks="early-exit-check=$EARLY_EXIT_RESULT check-vars=$CHECK_VARS_RESULT compute-variants=$COMPUTE_VARIANTS_RESULT prepare-ios=$PREPARE_IOS_RESULT prepare-android=$PREPARE_ANDROID_RESULT"
-          for entry in $upstream_checks; do
-            job="${entry%%=*}"
-            result="${entry#*=}"
-            if [ "$result" != "success" ] && [ "$result" != "skipped" ]; then
-              echo "❌ $job failed with result: $result"
-              exit 1
-            fi
-          done
 
           # check-secrets was skipped (fork or Dependabot run): secrets are
           # unavailable, so build-ios/build-android skipping is the intended outcome.
