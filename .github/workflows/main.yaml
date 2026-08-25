@@ -28,7 +28,15 @@ jobs:
     # confusing red "failed" check, without changing that downstream
     # outcome (a skipped `needs:` job still fails the default success()
     # gate on build-ios/build-android, same as a failed one did).
-    if: github.event.pull_request.head.repo.fork != true
+    #
+    # Dependabot runs are treated the same way: they read GitHub's
+    # separate Dependabot secrets store, so OP_SERVICE_ACCOUNT_TOKEN etc.
+    # arrive empty exactly like a fork PR, and the same downstream skip
+    # cascade applies. `github.actor` (not the PR author) is checked
+    # because it tracks who triggered the run — it flips to a human, and
+    # secrets become available, as soon as someone pushes to the branch,
+    # and it's defined on push/merge_group where event.pull_request isn't.
+    if: github.event.pull_request.head.repo.fork != true && github.actor != 'dependabot[bot]'
     runs-on: ubuntu-22.04
     permissions: {}
     steps:
@@ -1078,6 +1086,7 @@ jobs:
     permissions: {}
     needs:
       - early-exit-check
+      - check-secrets
       - build-android
       - build-ios
     if: always()
@@ -1085,10 +1094,12 @@ jobs:
       - name: Check matrix results
         env:
           SHOULD_SKIP: ${{ needs.early-exit-check.outputs.should_skip_build }}
+          SECRETS_RESULT: ${{ needs.check-secrets.result }}
           ANDROID_RESULT: ${{ needs.build-android.result }}
           IOS_RESULT: ${{ needs.build-ios.result }}
         run: |
           echo "Debug: should_skip_build=$SHOULD_SKIP"
+          echo "Debug: check-secrets.result=$SECRETS_RESULT"
           echo "Debug: build-android.result=$ANDROID_RESULT"
           echo "Debug: build-ios.result=$IOS_RESULT"
 
@@ -1107,6 +1118,13 @@ jobs:
           if [ "$IOS_RESULT" != "success" ] && [ "$IOS_RESULT" != "skipped" ]; then
             echo "❌ iOS build(s) failed with result: $IOS_RESULT"
             exit 1
+          fi
+
+          # check-secrets was skipped (fork or Dependabot run): secrets are
+          # unavailable, so build-ios/build-android skipping is the intended outcome.
+          if [ "$SECRETS_RESULT" == "skipped" ]; then
+            echo "✅ Builds skipped: secrets unavailable (fork or Dependabot run)."
+            exit 0
           fi
 
           # If we didn't skip but builds didn't run, that's an error
