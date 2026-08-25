@@ -225,6 +225,23 @@ describe('rotateSigningKey', () => {
     expect(mockedGetAllKeysWithPublicInfo).not.toHaveBeenCalled()
   })
 
+  it('undecodable local newKey.n with a decodable server echo -> rotated, unconfirmed, no prune (not a rollback)', async () => {
+    // newKey.n itself fails to decode — a parsing surprise on our side, not evidence the server
+    // rejected the key. This must NOT roll back: confirmModulusRegistered treats it as 'unknown',
+    // same as an undecodable server echo.
+    mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: 'not-valid-base64!!!', e: 'AQAB', created: 2000 })
+    mockedReRegisterNewestKey.mockResolvedValue({ success: true, serverKeyNs: [n(1)] })
+    const logger = makeLogger()
+
+    const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
+
+    expect(result).toEqual({ status: 'rotated', confirmed: false, newRegistrationAccessToken: undefined })
+    expect(mockedDeleteKey).not.toHaveBeenCalled()
+    expect(mockedGetAllKeysWithPublicInfo).not.toHaveBeenCalled()
+    expect(mockedClearTokens).toHaveBeenCalledTimes(1)
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('event=rotated_unconfirmed_no_prune'))
+  })
+
   it('rollback delete throws -> failed, unconfirmed, no crash', async () => {
     mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
     mockedReRegisterNewestKey.mockResolvedValue({ success: false })

@@ -2,7 +2,7 @@ import { BifoldLogger } from '@bifold/core'
 import { Platform } from 'react-native'
 import { createNewKeyPair, deleteKey, getAllKeysWithPublicInfo, setToken, TokenType } from 'react-native-bcsc-core'
 import BCSCApiClient from '../api/client'
-import { modulusInSet, normalizeModulus } from './jwk-modulus'
+import { confirmModulusRegistered } from './jwk-modulus'
 import { describeError, reRegisterNewestKey } from './key-recovery'
 
 // NIST SP 800-57 Pt 1 Rev 5 §5.3 puts signing-key cryptoperiods at 1-3 years; 365 days keeps at
@@ -152,11 +152,11 @@ export async function rotateSigningKey(
   }
 
   const serverKeyNs = putResult.serverKeyNs ?? []
-  const echoIsDecodable = serverKeyNs.some((n) => normalizeModulus(n) !== null)
+  const verdict = confirmModulusRegistered(newKey.n, serverKeyNs)
 
-  if (!echoIsDecodable) {
+  if (verdict === 'unknown') {
     logger.warn(
-      `[rotateSigningKey] event=rotated_unconfirmed_no_prune server echo was undecodable/empty; keeping new key '${newKey.id}' without pruning previous keys`
+      `[rotateSigningKey] event=rotated_unconfirmed_no_prune sent or echoed modulus undecodable/empty; keeping new key '${newKey.id}' without pruning previous keys`
     )
     // Can't prove registration either way, but the new key is already newest-wins active, so we
     // keep it rather than roll back blind — and clear the cache since it's now the decryption key.
@@ -164,7 +164,7 @@ export async function rotateSigningKey(
     return { status: 'rotated', confirmed: false, newRegistrationAccessToken }
   }
 
-  if (!modulusInSet(newKey.n, serverKeyNs)) {
+  if (verdict === 'mismatch') {
     return rollback(apiClient, newKey.id, 'failed_echo_mismatch', newRegistrationAccessToken, logger)
   }
 
