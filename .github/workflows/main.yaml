@@ -34,9 +34,23 @@ jobs:
     # arrive empty exactly like a fork PR, and the same downstream skip
     # cascade applies. `github.actor` (not the PR author) is checked
     # because it tracks who triggered the run — it flips to a human, and
-    # secrets become available, as soon as someone pushes to the branch,
-    # and it's defined on push/merge_group where event.pull_request isn't.
-    if: github.event.pull_request.head.repo.fork != true && github.actor != 'dependabot[bot]'
+    # secrets become available, as soon as someone pushes to the branch.
+    #
+    # The Dependabot skip is scoped to `github.event_name == 'pull_request'`
+    # deliberately: it's only ever correct on the PR-validation run, where
+    # skipping the native builds is safe because nothing merges on their
+    # say-so. With the merge queue enabled, a Dependabot PR can be enqueued
+    # via `@dependabot merge`, and that `merge_group` run's actor IS
+    # `dependabot[bot]` — so without this clause it would skip here too,
+    # letting build-summary pass with no native build having run on the
+    # code actually reaching main. The event-name clause closes that:
+    # on merge_group (and on push) this job always runs, so a Dependabot
+    # merge_group run fails loudly here (empty secrets) instead of
+    # skipping, and build-summary's unexpected-skip check catches it.
+    if: >-
+      github.event.pull_request.head.repo.fork != true &&
+      !(github.event_name == 'pull_request' &&
+        github.actor == 'dependabot[bot]')
     runs-on: ubuntu-22.04
     permissions: {}
     steps:
@@ -1087,6 +1101,8 @@ jobs:
     needs:
       - early-exit-check
       - check-secrets
+      - prepare-ios
+      - prepare-android
       - build-android
       - build-ios
     if: always()
@@ -1094,12 +1110,18 @@ jobs:
       - name: Check matrix results
         env:
           SHOULD_SKIP: ${{ needs.early-exit-check.outputs.should_skip_build }}
+          EARLY_EXIT_RESULT: ${{ needs.early-exit-check.result }}
           SECRETS_RESULT: ${{ needs.check-secrets.result }}
+          PREPARE_IOS_RESULT: ${{ needs.prepare-ios.result }}
+          PREPARE_ANDROID_RESULT: ${{ needs.prepare-android.result }}
           ANDROID_RESULT: ${{ needs.build-android.result }}
           IOS_RESULT: ${{ needs.build-ios.result }}
         run: |
           echo "Debug: should_skip_build=$SHOULD_SKIP"
+          echo "Debug: early-exit-check.result=$EARLY_EXIT_RESULT"
           echo "Debug: check-secrets.result=$SECRETS_RESULT"
+          echo "Debug: prepare-ios.result=$PREPARE_IOS_RESULT"
+          echo "Debug: prepare-android.result=$PREPARE_ANDROID_RESULT"
           echo "Debug: build-android.result=$ANDROID_RESULT"
           echo "Debug: build-ios.result=$IOS_RESULT"
 
@@ -1117,6 +1139,20 @@ jobs:
 
           if [ "$IOS_RESULT" != "success" ] && [ "$IOS_RESULT" != "skipped" ]; then
             echo "❌ iOS build(s) failed with result: $IOS_RESULT"
+            exit 1
+          fi
+
+          # A skipped check-secrets (fork or Dependabot PR run) below is only
+          # ever a valid pass if nothing it gates on actually failed. Because
+          # build-ios/build-android also report "skipped" whenever an
+          # upstream `needs:` job fails (their `if:` implicitly requires
+          # success() of every job they need), a real failure in
+          # early-exit-check or either prepare job would otherwise be
+          # invisible to the checks above and get waved through by the
+          # secrets-skip branch next. Catch that here, before the skip is
+          # ever treated as a pass.
+          if [ "$EARLY_EXIT_RESULT" == "failure" ] || [ "$PREPARE_IOS_RESULT" == "failure" ] || [ "$PREPARE_ANDROID_RESULT" == "failure" ]; then
+            echo "❌ Upstream job failed: early-exit-check=$EARLY_EXIT_RESULT, prepare-ios=$PREPARE_IOS_RESULT, prepare-android=$PREPARE_ANDROID_RESULT"
             exit 1
           fi
 
