@@ -5,7 +5,7 @@ import Clipboard from '@react-native-clipboard/clipboard'
 import { RouteProp } from '@react-navigation/native'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { Platform, StyleSheet, View } from 'react-native'
 
 interface CredentialJSONDetailsScreenProps {
   route: RouteProp<BCSCMainStackParams, BCSCScreens.CredentialJSONDetails>
@@ -34,7 +34,7 @@ const CredentialJSONDetailsScreen = ({ route }: CredentialJSONDetailsScreenProps
       marginBottom: Spacing.md,
     },
     code: {
-      fontFamily: 'Courier',
+      fontFamily: Platform.select({ ios: 'Courier', android: 'monospace' }),
       fontSize: 12,
       color: ColorPalette.grayscale.black,
     },

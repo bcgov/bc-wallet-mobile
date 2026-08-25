@@ -76,9 +76,10 @@ type CredentialDetailsProps = ComponentProps<typeof CredentialDetails>
 
 const ScopedCredentialDetails = (props: CredentialDetailsProps) => {
   const { t } = useTranslation()
+  const navigation = useMemo(() => createBifoldNavigationAdapter(props.navigation, { t }), [props.navigation, t])
   return (
     <AgentReadyGate testID={testIdWithKey('CredentialDetails.Loading')}>
-      <CredentialDetails {...props} navigation={createBifoldNavigationAdapter(props.navigation, { t })} />
+      <CredentialDetails {...props} navigation={navigation} />
     </AgentReadyGate>
   )
 }
