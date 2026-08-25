@@ -71,7 +71,7 @@ jobs:
         run: |
           response=$(curl -s -w "\n%{http_code}" \
             -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
-            --location --request POST \
+            --proto "=https" --location --request POST \
             'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
             --form "payload=@\"$V3_IOS_FILENAME\"" \
             --form "name=\"$V3_IOS_FILENAME\"")
@@ -91,7 +91,7 @@ jobs:
         run: |
           response=$(curl -s -w "\n%{http_code}" \
             -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
-            --location --request POST \
+            --proto "=https" --location --request POST \
             'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
             --form "payload=@\"$V3_ANDROID_FILENAME\"" \
             --form "name=\"$V3_ANDROID_FILENAME\"")
@@ -158,7 +158,7 @@ jobs:
         run: |
           response=$(curl -s -w "\n%{http_code}" \
             -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
-            --location --request POST \
+            --proto "=https" --location --request POST \
             'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
             --form "payload=@\"$E2E_IOS_ASSET\"" \
             --form "name=\"$PREV_IOS_FILENAME\"")
@@ -179,7 +179,7 @@ jobs:
         run: |
           response=$(curl -s -w "\n%{http_code}" \
             -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
-            --location --request POST \
+            --proto "=https" --location --request POST \
             'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
             --form "payload=@\"$E2E_ANDROID_ASSET\"" \
             --form "name=\"$PREV_ANDROID_FILENAME\"")

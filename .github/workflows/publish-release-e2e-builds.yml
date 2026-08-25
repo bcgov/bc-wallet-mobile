@@ -107,7 +107,9 @@ jobs:
 
       - name: Skip Sauce refresh for a pre-release
         if: steps.resolve.outputs.prerelease == 'true'
-        run: echo "::notice::${{ inputs.release_tag }} is a pre-release — Sauce BCSC-prev.* keeps tracking the newest FULL release"
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: echo "::notice::$RELEASE_TAG is a pre-release — Sauce BCSC-prev.* keeps tracking the newest FULL release"
 
       - name: Load SauceLabs secrets from 1Password
         if: steps.resolve.outputs.prerelease == 'false'
@@ -126,7 +128,7 @@ jobs:
         run: |
           response=$(curl -s -w "\n%{http_code}" \
             -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
-            --location --request POST \
+            --proto "=https" --location --request POST \
             'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
             --form "payload=@\"$E2E_ANDROID_ASSET\"" \
             --form "name=\"$PREV_ANDROID_FILENAME\"")
@@ -147,7 +149,7 @@ jobs:
         run: |
           response=$(curl -s -w "\n%{http_code}" \
             -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
-            --location --request POST \
+            --proto "=https" --location --request POST \
             'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
             --form "payload=@\"$E2E_IOS_ASSET\"" \
             --form "name=\"$PREV_IOS_FILENAME\"")
