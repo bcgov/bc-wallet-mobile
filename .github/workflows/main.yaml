@@ -800,13 +800,6 @@ jobs:
           export_options: export-options.plist
           output_artifact_ref: ios-${{ matrix.variant }}
 
-      - name: Ship to Apple App Store
-        if: github.ref_name == 'main'
-        uses: ./.github/workflows/actions/ship-to-itunes
-        with:
-          app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          app_store_connect_key_identifier: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
-
   build-android:
     name: Build Android - ${{ matrix.variant }}
     needs: [check-secrets, check-vars, early-exit-check, prepare-android, compute-variants]
@@ -1044,7 +1037,7 @@ jobs:
           name: android-${{ matrix.variant }}.aab
           path: app/android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 30
 
       - name: Upload Android APK artifact
         uses: actions/upload-artifact@v7
@@ -1052,25 +1045,7 @@ jobs:
           name: android-${{ matrix.variant }}.apk
           path: app/android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
-          retention-days: 7
-
-      - name: Fetch Google Play publisher credentials
-        if: github.ref_name == 'main'
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-        run: |
-          # `op read` to stdout appends a trailing newline, which would corrupt
-          # this JSON credentials file. --out-file writes the bytes as-is.
-          op read "op://bcsc-mobile-app-cd/google-play-publisher/service-account.json" --out-file "${RUNNER_TEMP}/play-service-account.json" --force
-
-      - name: Ship to Google Play
-        if: github.ref_name == 'main'
-        uses: ./.github/workflows/actions/ship-to-play
-        with:
-          service_account_file: ${{ runner.temp }}/play-service-account.json
-          version_name: ${{ env.APP_VERSION }}
-          build_number: ${{ env.APP_BUILD_NUMBER }}
-          bundle_path: app/android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
 
   build-summary:
     runs-on: ubuntu-latest
@@ -1116,52 +1091,6 @@ jobs:
           fi
 
           echo "✅ All builds passed!"
-
-  # ─── TestFlight Distribution ────────────────────────────────────────
-  # Runs on ubuntu (cheap) AFTER builds complete. Waits for Apple's
-  # server-side processing then distributes to beta groups.
-  # Decoupled from build-ios so the upload→process wait no longer
-  # blocks the iOS build critical path.
-  distribute-testflight:
-    name: 'Distribute TestFlight - ${{ matrix.variant }}'
-    if: ${{ always() && !cancelled() && github.ref_name == 'main' }}
-    needs: [build-ios, compute-variants]
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        variant: ${{ fromJSON(needs.compute-variants.outputs.variants) }}
-    steps:
-      - name: Check iOS build artifact exists
-        id: probe
-        continue-on-error: true
-        uses: actions/download-artifact@v8
-        with:
-          name: ios-${{ matrix.variant }}.ipa
-          path: ${{ runner.temp }}/probe
-
-      - uses: actions/checkout@v7
-        if: steps.probe.outcome == 'success'
-
-      - name: Load variant config
-        if: steps.probe.outcome == 'success'
-        uses: ./.github/workflows/actions/load-variant-config
-        with:
-          variant: ${{ matrix.variant }}
-
-      - name: Distribute to TestFlight
-        if: steps.probe.outcome == 'success'
-        uses: ./.github/workflows/actions/distribute-testflight
-        with:
-          app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          app_store_connect_key_identifier: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
-          app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
-          bundle_id: ${{ env.IOS_BUNDLE_ID }}
-          version_code: ${{ github.run_number }}
-          version_name: ${{ env.APP_VERSION }}
-          beta_groups: ${{ env.TESTFLIGHT_BETA_GROUPS }}
 
   # ─── Firebase App Distribution ──────────────────────────────────────
   distribute-firebase-ios:

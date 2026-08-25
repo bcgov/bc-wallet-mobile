@@ -1,0 +1,247 @@
+# Publishes an EXISTING build to the app stores. This workflow never builds:
+# it takes the artifacts produced by a `Native Build & Test` run on main and
+# uploads those, so what UAT receives is byte-for-byte what CI produced.
+#
+# Firebase App Distribution and SauceLabs still happen automatically at build
+# time — only the app stores are gated behind this manual step.
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: 'Build number to publish. Leave blank for the most recent publishable main build.'
+        required: false
+        type: string
+      targets:
+        description: 'Which publish steps to run. Use a single target to retry one leg after a partial failure.'
+        required: false
+        default: all
+        type: choice
+        options:
+          - all
+          - app-store-upload
+          - google-play
+          - testflight
+      variants:
+        description: 'Comma-separated variants to publish. Leave blank for every variant in the build.'
+        required: false
+        type: string
+
+# Never cancel a publish part-way through: the stores are not transactional.
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  # ─── Resolve which build to publish ─────────────────────────────────
+  # A run being green is not enough. When a push's final commit touches
+  # nothing relevant, early-exit-check skips the builds and the run still
+  # reports success — with no artifacts to publish. So candidate runs are
+  # filtered on actually having unexpired artifacts.
+  resolve-build:
+    name: Resolve build
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      run_id: ${{ steps.resolve.outputs.run_id }}
+      run_number: ${{ steps.resolve.outputs.run_number }}
+      head_sha: ${{ steps.resolve.outputs.head_sha }}
+      variants: ${{ steps.resolve.outputs.variants }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Resolve build
+        id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          REQUESTED_BUILD: ${{ inputs.build_number }}
+          REQUESTED_VARIANTS: ${{ inputs.variants }}
+        run: python3 .github/scripts/resolve_publishable_build.py
+
+  # ─── App Store Connect upload ───────────────────────────────────────
+  app-store-upload:
+    name: 'App Store upload - ${{ matrix.variant }}'
+    needs: resolve-build
+    if: ${{ inputs.targets == 'all' || inputs.targets == 'app-store-upload' }}
+    runs-on: macos-26
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(needs.resolve-build.outputs.variants) }}
+    steps:
+      - name: Download IPA
+        id: probe
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: ios-${{ matrix.variant }}.ipa
+          path: ${{ runner.temp }}/artifact
+          run-id: ${{ needs.resolve-build.outputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - uses: actions/checkout@v7
+        if: steps.probe.outcome == 'success'
+
+      - name: Use the build's variant config
+        if: steps.probe.outcome == 'success'
+        uses: ./.github/workflows/actions/use-build-variant-config
+        with:
+          head_sha: ${{ needs.resolve-build.outputs.head_sha }}
+
+      - name: Load variant config
+        if: steps.probe.outcome == 'success'
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      # Only the API key is needed. Uploading does not sign anything, so the
+      # keychain and provisioning profile that a build requires are not built.
+      - name: Create App Store Connect auth key
+        if: steps.probe.outcome == 'success'
+        shell: bash
+        env:
+          AUTHKEY_P8: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
+        run: scripts/makeauthkey.sh
+
+      - name: Ship to Apple App Store
+        if: steps.probe.outcome == 'success'
+        uses: ./.github/workflows/actions/ship-to-itunes
+        with:
+          app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          app_store_connect_key_identifier: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
+          ipa_path: ${{ runner.temp }}/artifact/BCWallet.ipa
+
+  # ─── Google Play ────────────────────────────────────────────────────
+  google-play:
+    name: 'Google Play - ${{ matrix.variant }}'
+    needs: resolve-build
+    if: ${{ inputs.targets == 'all' || inputs.targets == 'google-play' }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(needs.resolve-build.outputs.variants) }}
+    steps:
+      - name: Download AAB
+        id: probe
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: android-${{ matrix.variant }}.aab
+          path: ${{ runner.temp }}/artifact
+          run-id: ${{ needs.resolve-build.outputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - uses: actions/checkout@v7
+        if: steps.probe.outcome == 'success'
+
+      - name: Use the build's variant config
+        if: steps.probe.outcome == 'success'
+        uses: ./.github/workflows/actions/use-build-variant-config
+        with:
+          head_sha: ${{ needs.resolve-build.outputs.head_sha }}
+
+      - name: Load variant config
+        if: steps.probe.outcome == 'success'
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      # bundletool validates the AAB before upload, and it needs a JRE.
+      - name: Set up Java
+        if: steps.probe.outcome == 'success'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install 1Password CLI
+        if: steps.probe.outcome == 'success'
+        uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
+
+      - name: Fetch Google Play publisher credentials
+        if: steps.probe.outcome == 'success'
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          # `op read` to stdout appends a trailing newline, which would corrupt
+          # this JSON credentials file. --out-file writes the bytes as-is.
+          op read "op://bcsc-mobile-app-cd/google-play-publisher/service-account.json" --out-file "${RUNNER_TEMP}/play-service-account.json" --force
+
+      - name: Ship to Google Play
+        if: steps.probe.outcome == 'success'
+        uses: ./.github/workflows/actions/ship-to-play
+        with:
+          service_account_file: ${{ runner.temp }}/play-service-account.json
+          version_name: ${{ env.APP_VERSION }}
+          build_number: ${{ needs.resolve-build.outputs.run_number }}
+          bundle_path: ${{ runner.temp }}/artifact/app-release.aab
+
+  # ─── TestFlight ─────────────────────────────────────────────────────
+  # always() so one variant's failed upload cannot skip the other variants.
+  # It also disables the implicit success() the other jobs rely on, so the
+  # check on resolve-build has to be spelled out here.
+  testflight:
+    name: 'TestFlight - ${{ matrix.variant }}'
+    needs: [resolve-build, app-store-upload]
+    if: >-
+      always() && !cancelled() &&
+      needs.resolve-build.result == 'success' &&
+      (inputs.targets == 'all' || inputs.targets == 'testflight')
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(needs.resolve-build.outputs.variants) }}
+    steps:
+      - name: Check the build has an IPA
+        id: probe
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: ios-${{ matrix.variant }}.ipa
+          path: ${{ runner.temp }}/probe
+          run-id: ${{ needs.resolve-build.outputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - uses: actions/checkout@v7
+        if: steps.probe.outcome == 'success'
+
+      - name: Use the build's variant config
+        if: steps.probe.outcome == 'success'
+        uses: ./.github/workflows/actions/use-build-variant-config
+        with:
+          head_sha: ${{ needs.resolve-build.outputs.head_sha }}
+
+      - name: Load variant config
+        if: steps.probe.outcome == 'success'
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      - name: Distribute to TestFlight
+        if: steps.probe.outcome == 'success'
+        uses: ./.github/workflows/actions/distribute-testflight
+        with:
+          app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          app_store_connect_key_identifier: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
+          app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
+          bundle_id: ${{ env.IOS_BUNDLE_ID }}
+          version_code: ${{ needs.resolve-build.outputs.run_number }}
+          version_name: ${{ env.APP_VERSION }}
+          beta_groups: ${{ env.TESTFLIGHT_BETA_GROUPS }}
