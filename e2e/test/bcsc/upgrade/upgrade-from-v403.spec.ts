@@ -40,7 +40,10 @@ describe('Upgrade from the 4.0.3 release', () => {
     await AutoLockScreen.link('time3') // saved immediately on tap
     await AutoLockScreen.back.tap()
     await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-    assert.ok(await rowShowsWord(SettingsRowIds.autoLock, '3 min'), 'Auto Lock row should show "3 min"')
+    // 4.0.3's iOS row exposes no readable "3 min" label; the post-upgrade check still proves the save survived.
+    if (driver.isAndroid) {
+      assert.ok(await rowShowsWord(SettingsRowIds.autoLock, '3 min'), 'Auto Lock row should show "3 min"')
+    }
     // Pre-upgrade footer — the post-upgrade compare proves installApp actually swapped the binary.
     previousVersionFooter = await readSettingsVersionFooter()
   })

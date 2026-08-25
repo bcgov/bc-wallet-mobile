@@ -44,7 +44,7 @@ _Tests are organized into named suites. Use the_ `--suite` _flag to select which
 | `main`       | _Main-stack journeys — unverified gating + settings + wallet credential lifecycle (`main/*.journey.ts`)_ |
 | `migration`  | _V3→V4 upgrade: v3 onboarding + verification, upgrade to v4, unlock with the v3 PIN_                 |
 | `upgrade`    | _Previous released build → current: onboard on the previous release, in-place upgrade, unlock with the old PIN + settings persistence. Runs on Sauce on **both platforms** (mid-session install passes Sauce resigning)_ |
-| `upgrade403` | _Upgrade from the shipped **4.0.3** release specifically — its pre-rework onboarding runs via a frozen walk (`flows/onboarding-v403.ts`). **Sauce = Android only**; retire once 4.1.0 is the previous release_ |
+| `upgrade403` | _Upgrade from the shipped **4.0.3** release specifically — its pre-rework onboarding runs via a frozen walk (`flows/onboarding-v403.ts`). Runs on Sauce on **both platforms**; retire once 4.1.0 is the previous release_ |
 | `scan`       | _Card-barcode scanning — non-BCSC→BCSC reroutes + the serial scanner (`scan/*.journey.ts`). **Android + Sauce only**, and also part of `regression`; the iOS configs `exclude` it_ |
 
 ```bash
@@ -236,10 +236,11 @@ PREV_IOS_APP=BCSC-prev.ipa IOS_APP_DEVICE=BCSC.ipa yarn test:ios:upgrade:device
 
 _Android installs only go old → new: versionCode = the build run number, so the previous build must be an **older** run number than the current one (Android refuses downgrade installs). No SiteMinder credentials are needed — the journey stays unverified._
 
-_The previous build must also carry the **current onboarding shape** — the spec drives it with today's screen DSL, so the first eligible release is **4.1.0**; older builds fail phase 1 by design. The one shipped release before that boundary gets its own spec: `upgrade403` onboards the **4.0.3** binary via a frozen copy of its pre-rework walk (`src/flows/onboarding-v403.ts`, previous binary preserved in Sauce storage as `BCSC-v4.0.3.*`), then reuses the standard install + post-upgrade assertions. Android on Sauce only; retire it once 4.1.0 becomes the previous release:_
+_The previous build must also carry the **current onboarding shape** — the spec drives it with today's screen DSL, so the first eligible release is **4.1.0**; older builds fail phase 1 by design. The one shipped release before that boundary gets its own spec: `upgrade403` onboards the **4.0.3** binary via a frozen copy of its pre-rework walk (`src/flows/onboarding-v403.ts`, previous binary preserved in Sauce storage as `BCSC-v4.0.3.*`), then reuses the standard install + post-upgrade assertions. Runs on Sauce on both platforms; retire it once 4.1.0 becomes the previous release:_
 
 ```bash
 ANDROID_APP_FILENAME=BCSC-Dev-<current> yarn test:android:upgrade403:sauce
+IOS_APP_FILENAME=BCSC-Dev-<current> yarn test:ios:upgrade403:sauce
 ```
 
 ### _Variant Selection_

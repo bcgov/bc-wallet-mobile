@@ -208,6 +208,6 @@ jobs:
     with:
       suite: upgrade403
       build_number: ${{ needs.resolve-build.outputs.build_number }}
-      device_matrix: '[{"platform":"Android","device":"Google.*","os_version":"15"}]'
+      device_matrix: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
