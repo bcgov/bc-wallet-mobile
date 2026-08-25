@@ -11,7 +11,8 @@
 #   verify       — verify entry + verified card-type journeys (uses SM_* creds)
 #   regression   — every per-area journey (nightly default)
 #   migration    — v3 → v4 app upgrade flow (Sauce RDC only; separate v3 build)
-#   upgrade      — previous released build → current in-place upgrade (Sauce RDC Android; iOS runtime-skips)
+#   upgrade      — previous released build → current in-place upgrade (Sauce RDC, both platforms)
+#   upgrade403   — the shipped 4.0.3 release → current, via its frozen pre-rework onboarding walk
 #
 # All suites require the single OP_SERVICE_ACCOUNT_TOKEN secret: SAUCE_USERNAME,
 # SAUCE_ACCESS_KEY, SM_USER, and SM_PASSWORD are all loaded from the
@@ -39,7 +40,7 @@ on:
   workflow_call:
     inputs:
       suite:
-        description: 'Test suite (smoke, onboarding, auth, main, verify, regression, migration, upgrade)'
+        description: 'Test suite (smoke, onboarding, auth, main, verify, regression, migration, upgrade, upgrade403)'
         type: string
         required: true
       build_number:
@@ -90,6 +91,7 @@ on:
           - regression
           - migration
           - upgrade
+          - upgrade403
         default: smoke
       build_number:
         description: 'Build number (run_number from the build workflow)'
@@ -114,12 +116,12 @@ jobs:
   # Single unified job for all suites. Config file paths are selected at
   # runtime via a case statement on $SUITE:
   #   migration                → configs/sauce/wdio.{ios,android}.sauce.migration.conf.ts
-  #   upgrade                  → configs/sauce/wdio.{ios,android}.sauce.upgrade.conf.ts
+  #   upgrade / upgrade403     → configs/sauce/wdio.{ios,android}.sauce.upgrade.conf.ts
   #   everything else (smoke,  → configs/sauce/wdio.{ios,android}.sauce.rdc.conf.ts
   #    onboarding, auth, main,
   #    verify, regression)
   #
-  # Non-blocking suites (migration, upgrade): failures are reported but
+  # Non-blocking suites (migration, upgrade, upgrade403): failures are reported but
   # do not gate the pipeline.
   e2e-tests:
     name: '${{ inputs.suite }} - ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
@@ -128,7 +130,7 @@ jobs:
       contents: read
     # regression runs every journey serially (~90m per platform and growing); other suites (merge-queue smoke) stay tight
     timeout-minutes: ${{ inputs.suite == 'regression' && 120 || 45 }}
-    continue-on-error: ${{ contains(fromJSON('["migration","upgrade"]'), inputs.suite) }}
+    continue-on-error: ${{ contains(fromJSON('["migration","upgrade","upgrade403"]'), inputs.suite) }}
     strategy:
       max-parallel: 2
       fail-fast: false
@@ -241,7 +243,7 @@ jobs:
               IOS_CONF="configs/sauce/wdio.ios.sauce.migration.conf.ts"
               ANDROID_CONF="configs/sauce/wdio.android.sauce.migration.conf.ts"
               ;;
-            upgrade)
+            upgrade | upgrade403)
               IOS_CONF="configs/sauce/wdio.ios.sauce.upgrade.conf.ts"
               ANDROID_CONF="configs/sauce/wdio.android.sauce.upgrade.conf.ts"
               ;;
@@ -254,6 +256,21 @@ jobs:
           if [ "$SUITE" = "upgrade" ] && [ -n "$PREV_BUILD_NUMBER" ]; then
             export PREV_ANDROID_APP="${SAUCE_LABS_PREFIX}-${PREV_BUILD_NUMBER}.apk"
             export PREV_IOS_APP="${SAUCE_LABS_PREFIX}-${PREV_BUILD_NUMBER}.ipa"
+          fi
+          # The rolling BCSC-prev.* first exists once a full release publishes its e2e builds —
+          # until then a default upgrade run cannot start a session; skip with a notice, not a failure.
+          if [ "$SUITE" = "upgrade" ] && [ -z "$PREV_BUILD_NUMBER" ]; then
+            total=$(curl -su "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
+              "https://api.us-west-1.saucelabs.com/v1/storage/files?q=BCSC-prev.apk&per_page=1" | jq -r '.total_items')
+            if [ "$total" = "0" ]; then
+              echo "::notice::BCSC-prev.* not in Sauce storage yet (no full release has published e2e builds) — skipping the upgrade suite"
+              exit 0
+            fi
+          fi
+          # upgrade403 pins its previous build to the preserved 4.0.3 binaries.
+          if [ "$SUITE" = "upgrade403" ]; then
+            export PREV_ANDROID_APP="BCSC-v4.0.3.apk"
+            export PREV_IOS_APP="BCSC-v4.0.3.ipa"
           fi
           if [ "$PLATFORM" = "iOS" ]; then
             IOS_APP_FILENAME="${SAUCE_LABS_PREFIX}-${BUILD_NUMBER}.ipa" \
