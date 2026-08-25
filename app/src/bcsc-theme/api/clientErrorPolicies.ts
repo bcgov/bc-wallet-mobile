@@ -7,7 +7,6 @@ import { CommonActions, NavigationProp, ParamListBase } from '@react-navigation/
 import { AxiosError } from 'axios'
 import { TFunction } from 'i18next'
 import { Linking } from 'react-native'
-import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { BCSCModals, BCSCScreens } from '../types/navigators'
 import { getDigitalServiceCardAccountProblem } from '../utils/getDigitalServiceCardAccountProblem'
 import { ResumeStepRoute } from '../utils/resume-step-route'
@@ -478,47 +477,6 @@ export const alreadyVerifiedErrorPolicy: ErrorHandlingPolicy = {
 }
 
 /**
- * Error policy for an expired identity document detected during the Non-BCSC barcode check.
- *
- * `POST /device/barcodes` (see `authorizeDeviceWithBarcodes`) is queried to check whether a
- * scanned card is a real BC Services Card; a non-match normally 404s and the caller falls
- * through to evidence capture. A 400 with an `error_description` mentioning "expired" is a
- * different, legitimate case — the scanned document itself is expired — so route to the
- * CardExpired screen instead of silently treating it as "not a BCSC".
- *
- * @returns ErrorHandlingPolicy
- */
-export const cardExpiredOnBarcodesErrorPolicy: ErrorHandlingPolicy = {
-  matches: (error, context) => {
-    const description = (error.cause.response?.data as { error_description?: unknown } | undefined)?.error_description
-    return (
-      context.statusCode === 400 &&
-      context.endpoint.includes(context.apiEndpoints.barcodes) &&
-      typeof description === 'string' &&
-      description.toLowerCase().includes('expired')
-    )
-  },
-  handle: (error, context) => {
-    const description = (error.cause.response?.data as { error_description?: string }).error_description
-    context.logger.info('[DocumentExpiredOnBarcodesErrorPolicy] Document expired per /device/barcodes response', {
-      description,
-    })
-    // Scanned card was a BCSC card and expired
-    // display error and navigate back to evidence list so the user isn't stuck
-    context.navigation.dispatch(
-      CommonActions.reset({
-        index: 1,
-        routes: [
-          { name: BCSCScreens.IdentitySelection },
-          { name: BCSCScreens.EvidenceTypeList, params: { cardProcess: BCSCCardProcess.NonBCSC } },
-        ],
-      })
-    )
-    context.alerts.documentExpiredAlert()
-  },
-}
-
-/**
  * Digital Service Card creation is rejected with HTTP 400
  * `{error: "unauthorized_client", error_description: "suspended"|"deactivated"}` when the BCSC
  * account is suspended or deactivated. Show the generic
@@ -608,7 +566,7 @@ export const invalidRegistrationRequestErrorPolicy: ErrorHandlingPolicy = {
 // Aggregate of all client error handling policies
 export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   alreadyRegisteredErrorPolicy,
-  cardExpiredOnBarcodesErrorPolicy,
+  // cardExpiredOnBarcodesErrorPolicy,
   digitalServiceCardAccountUnavailableErrorPolicy,
   verificationSessionExpiredErrorPolicy,
   birthdateLockoutErrorPolicy,
