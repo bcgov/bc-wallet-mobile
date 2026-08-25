@@ -6,7 +6,6 @@
 //  Copyright © 2021 Facebook. All rights reserved.
 //
 
-import Expo
 import Firebase
 import React
 import React_RCTAppDelegate
@@ -19,7 +18,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
   var window: UIWindow?
 
   var reactNativeDelegate: ReactNativeDelegate?
-  var reactNativeFactory: ExpoReactNativeFactory?
+  var reactNativeFactory: RCTReactNativeFactory?
 
   func application(
     _: UIApplication,
@@ -37,7 +36,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     UNUserNotificationCenter.current().delegate = self
 
     let delegate = ReactNativeDelegate()
-    let factory = ExpoReactNativeFactory(delegate: delegate)
+    let factory = RCTReactNativeFactory(delegate: delegate)
     delegate.dependencyProvider = RCTAppDependencyProvider()
 
     reactNativeDelegate = delegate
@@ -108,34 +107,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
   }
 }
 
-extension AppDelegate: ReactNativeFactoryProvider {
-  var factory: ExpoReactNativeFactory? {
-    return reactNativeFactory
-  }
-
-  func recreateRootView(
-    withBundleURL bundleURL: URL?,
-    moduleName: String?,
-    initialProps: [AnyHashable: Any]?,
-    launchOptions: [AnyHashable: Any]?
-  ) -> UIView {
-    guard let factory = reactNativeFactory else {
-      fatalError("reactNativeFactory is nil")
-    }
-    return factory.recreateRootView(
-      withBundleURL: bundleURL,
-      moduleName: moduleName,
-      initialProps: initialProps,
-      launchOptions: launchOptions
-    )
-  }
-}
-
-class ReactNativeDelegate: ExpoReactNativeFactoryDelegate {
-  override func sourceURL(for _: RCTBridge) -> URL? {
-    self.bundleURL()
-  }
-
+class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {
   override func bundleURL() -> URL? {
     #if DEBUG
       RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")

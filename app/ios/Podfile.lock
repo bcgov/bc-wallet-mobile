@@ -30,87 +30,6 @@ PODS:
     - ReactNativeDependencies
     - Yoga
   - CocoaAsyncSocket (7.6.5)
-  - EXConstants (57.0.13):
-    - ExpoModulesCore
-  - Expo (57.0.15):
-    - ExpoModulesCore
-    - ExpoModulesJSI
-    - hermes-engine
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-Core-prebuilt
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTAppDelegate
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactAppDependencyProvider
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - ReactNativeDependencies
-    - Yoga
-  - ExpoAppIntegrity (57.0.1):
-    - ExpoModulesCore
-  - ExpoAsset (57.0.13):
-    - ExpoModulesCore
-  - ExpoCrypto (57.0.1):
-    - ExpoModulesCore
-  - ExpoDomWebView (57.0.1):
-    - ExpoModulesCore
-  - ExpoFileSystem (57.0.5):
-    - ExpoModulesCore
-  - ExpoFont (57.0.1):
-    - ExpoModulesCore
-  - ExpoKeepAwake (57.0.1):
-    - ExpoModulesCore
-  - ExpoLogBox (57.0.3):
-    - React-Core
-  - ExpoModulesCore (57.0.12):
-    - ExpoModulesJSI
-    - hermes-engine
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-Core-prebuilt
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-jsi
-    - React-jsinspector
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - ReactNativeDependencies
-    - Yoga
-  - ExpoModulesJSI (57.0.5):
-    - React-Core
-    - ReactCommon
-  - ExpoModulesWorklets (57.0.12):
-    - ExpoModulesCore
-    - ExpoModulesJSI
-  - ExpoModulesWorkletsAdapter (57.0.12):
-    - ExpoModulesCore
-    - ExpoModulesJSI
-    - ExpoModulesWorklets
-    - RNWorklets
-  - ExpoSecureStore (57.0.1):
-    - ExpoModulesCore
   - FBLazyVector (0.86.2)
   - Firebase (12.10.0):
     - Firebase/Core (= 12.10.0)
@@ -2831,21 +2750,6 @@ DEPENDENCIES:
   - "anoncreds (from `../node_modules/@hyperledger/anoncreds-react-native`)"
   - "askar (from `../node_modules/@openwallet-foundation/askar-react-native`)"
   - BcscCore (from `../node_modules/react-native-bcsc-core`)
-  - EXConstants (from `../node_modules/expo-constants/ios`)
-  - Expo (from `../node_modules/expo`)
-  - "ExpoAppIntegrity (from `../node_modules/@expo/app-integrity/ios`)"
-  - ExpoAsset (from `../node_modules/expo-asset/ios`)
-  - ExpoCrypto (from `../node_modules/expo-crypto/ios`)
-  - "ExpoDomWebView (from `../node_modules/@expo/dom-webview/ios`)"
-  - ExpoFileSystem (from `../node_modules/expo-file-system/ios`)
-  - ExpoFont (from `../node_modules/expo-font/ios`)
-  - ExpoKeepAwake (from `../node_modules/expo-keep-awake/ios`)
-  - "ExpoLogBox (from `../node_modules/@expo/log-box`)"
-  - ExpoModulesCore (from `../node_modules/expo-modules-core`)
-  - ExpoModulesJSI (from `../node_modules/expo-modules-jsi/apple`)
-  - ExpoModulesWorklets (from `../node_modules/expo-modules-core`)
-  - ExpoModulesWorkletsAdapter (from `../node_modules/expo-modules-core`)
-  - ExpoSecureStore (from `../node_modules/expo-secure-store/ios`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - Firebase
   - FirebaseCore
@@ -2989,36 +2893,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@openwallet-foundation/askar-react-native"
   BcscCore:
     :path: "../node_modules/react-native-bcsc-core"
-  EXConstants:
-    :path: "../node_modules/expo-constants/ios"
-  Expo:
-    :path: "../node_modules/expo"
-  ExpoAppIntegrity:
-    :path: "../node_modules/@expo/app-integrity/ios"
-  ExpoAsset:
-    :path: "../node_modules/expo-asset/ios"
-  ExpoCrypto:
-    :path: "../node_modules/expo-crypto/ios"
-  ExpoDomWebView:
-    :path: "../node_modules/@expo/dom-webview/ios"
-  ExpoFileSystem:
-    :path: "../node_modules/expo-file-system/ios"
-  ExpoFont:
-    :path: "../node_modules/expo-font/ios"
-  ExpoKeepAwake:
-    :path: "../node_modules/expo-keep-awake/ios"
-  ExpoLogBox:
-    :path: "../node_modules/@expo/log-box"
-  ExpoModulesCore:
-    :path: "../node_modules/expo-modules-core"
-  ExpoModulesJSI:
-    :path: "../node_modules/expo-modules-jsi/apple"
-  ExpoModulesWorklets:
-    :path: "../node_modules/expo-modules-core"
-  ExpoModulesWorkletsAdapter:
-    :path: "../node_modules/expo-modules-core"
-  ExpoSecureStore:
-    :path: "../node_modules/expo-secure-store/ios"
   FBLazyVector:
     :path: "../node_modules/react-native/Libraries/FBLazyVector"
   hermes-engine:
@@ -3246,21 +3120,6 @@ SPEC CHECKSUMS:
   askar: 7251a41080ee698f73c244eb0c4ae56eb4fd5141
   BcscCore: 4f7a70d12e3587fcf4e62c3ec791aab4b4a89d90
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
-  EXConstants: 1b9bb962f72de86540a5314f4bec2eb3fdeff515
-  Expo: 429d926f6dd4edcaab10ff1bac5e5bc63321c700
-  ExpoAppIntegrity: c4f6d2065674ec9744881f8c04d52ade9b6cacd8
-  ExpoAsset: 2b03d46bfa5827ac7b11e22f812cf99995f2ed4b
-  ExpoCrypto: 366380ffafeb22cc9795438cddcbfa299e1aaf42
-  ExpoDomWebView: beaec034e51bd028428b98bb1f2633ab79c6d095
-  ExpoFileSystem: 0e74ed1536e1643f4a352d84ed55d311d795828d
-  ExpoFont: 59e1faf66ba9bcd232ae1e2ce58d202a48b6f65e
-  ExpoKeepAwake: c26f14275017370cc8a4b7b43a0e23361f2053a5
-  ExpoLogBox: 2c4225a62f1cfb943e6b2df4fa4fe2d136e06fb6
-  ExpoModulesCore: 1e094f20237ec1e79d3687d9666c102a31895e62
-  ExpoModulesJSI: ea64813990c7650f3a2d469f176a54c3c7b2c66a
-  ExpoModulesWorklets: 539791c19ac17aaa37632c7fa396ec17d91b3ad6
-  ExpoModulesWorkletsAdapter: 970a0961ae66725e0adef3756ac12f0ba4122b57
-  ExpoSecureStore: 94793113049a2d7478dfe1a13aa15081e9f61755
   FBLazyVector: 3c3be9a019176b5699455f7f66c5444b78a411c6
   Firebase: 99f203d3a114c6ba591f3b32263a9626e450af65
   FirebaseAnalytics: ef2970f65f3a2807e8f47a49cf3b8719d53e9fce
@@ -3388,6 +3247,6 @@ SPEC CHECKSUMS:
   VisionCamera: b51af005669c6642dd1b4fca434eda4c1778de87
   Yoga: 9891cfb1c680f64de9c41b09e7453dea33454d2b
 
-PODFILE CHECKSUM: b66a66bdd1ad1448a167f0c6cc9216e6e726a009
+PODFILE CHECKSUM: 568280a40c1318c44012de0e99325f3a1abfb9f1
 
 COCOAPODS: 1.14.3

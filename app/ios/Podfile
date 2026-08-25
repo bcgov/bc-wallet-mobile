@@ -1,6 +1,5 @@
 source 'https://cdn.cocoapods.org'
 require_relative '../node_modules/react-native/scripts/react_native_pods'
-require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
 
 # prevents location usage from react-native-vision-camera
 $VCEnableLocation = false
@@ -18,9 +17,7 @@ end
 node_require('react-native/scripts/react_native_pods.rb')
 node_require('react-native-permissions/scripts/setup.rb')
 
-# Expo SDK 57 requires iOS 16.4 (raised in SDK 56); RN 0.86's min_ios_version_supported
-# is still 15.1, which is below Expo's floor.
-platform :ios, '16.4'
+platform :ios, min_ios_version_supported
 prepare_react_native_project!
 
 # uncomment wanted permissions (also from RNP docs linked above)
@@ -55,7 +52,6 @@ end
 
 target 'BCWallet' do
   config = use_native_modules!
-  use_expo_modules!
 
   pod 'Firebase', :modular_headers => true
   pod 'FirebaseCore', :modular_headers => true
@@ -75,7 +71,6 @@ target 'BCWallet' do
       config[:reactNativePath],
       :mac_catalyst_enabled => false
     )
-    expo_patch_react_imports!(installer)
 
     # Enable ccache for all pod targets to speed up C/C++/ObjC compilation.
     # The wrapper scripts fall through to plain clang when ccache is not installed,

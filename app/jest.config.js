@@ -3,7 +3,10 @@ const os = require('os')
 const cpus = os.availableParallelism?.() ?? os.cpus().length
 
 module.exports = {
-  preset: 'react-native',
+  preset: '@react-native/jest-preset',
+  // react-native-worklets resolves NativeWorklets.native.ts under jest, which needs a
+  // TurboModule that does not exist there. This resolver drops the .native variants.
+  resolver: '<rootDir>/node_modules/react-native-worklets/jest/resolver.js',
   // Never resolve to 1: at maxWorkers <= 1 Jest runs in-band, holding all ~260 suites in a single
   // process whose heap only grows (~2.2GB under --coverage). CI's 3-core macOS runners made '50%'
   // resolve to exactly 1, so the run was one long-lived process. workerIdleMemoryLimit additionally
@@ -20,6 +23,7 @@ module.exports = {
       '<rootDir>/__mocks__/file.js',
     '\\.(css|less)$': '<rootDir>/__mocks__/style.js',
     '^axios$': require.resolve('axios'),
+    '^@verifiables/request-converter$': '<rootDir>/node_modules/@verifiables/request-converter/dist/index.js',
     'react-i18next': '<rootDir>/__mocks__/react-i18next.ts',
     '^uuid$': require.resolve('uuid'),
     '@bifold/core': require.resolve('@bifold/core'),
@@ -29,7 +33,7 @@ module.exports = {
     '^.+\\.(js|jsx|ts|tsx|mjs)$': 'babel-jest',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(.*react-native.*|@credo-ts|credo-ts-indy-vdr-proxy-client|@openid4vc|@noble|@stablelib|@digitalcredentials|dcql|valibot|query-string|decode-uri-component|filter-obj|split-on-first|uuid|@bifold|@pexip|@expo/app-integrity|expo-modules-core)/)',
+    'node_modules/(?!(.*react-native.*|@credo-ts|credo-ts-indy-vdr-proxy-client|@openid4vc|@scure|@owf|cbor-x|cbor-extract|@verifiables|@noble|@stablelib|@digitalcredentials|dcql|valibot|query-string|decode-uri-component|filter-obj|split-on-first|uuid|@bifold|@pexip)/)',
   ],
   testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.[jt]sx?$',
   testPathIgnorePatterns: ['\\.snap$', '<rootDir>/node_modules/', '<rootDir>/lib', '<rootDir>/__tests__/contexts/'],
