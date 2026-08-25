@@ -222,6 +222,7 @@ describe('rotateSigningKey', () => {
     expect(result.status).toBe('rotated')
     expect(result.confirmed).toBe(false)
     expect(mockedDeleteKey).not.toHaveBeenCalled()
+    expect(mockedGetAllKeysWithPublicInfo).not.toHaveBeenCalled()
   })
 
   it('rollback delete throws -> failed, unconfirmed, no crash', async () => {
