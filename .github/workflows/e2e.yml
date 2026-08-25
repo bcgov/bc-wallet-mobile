@@ -259,11 +259,13 @@ jobs:
           fi
           # The rolling BCSC-prev.* first exists once a full release publishes its e2e builds —
           # until then a default upgrade run cannot start a session; skip with a notice, not a failure.
+          # Each matrix job is one platform, so probe that platform's file.
           if [ "$SUITE" = "upgrade" ] && [ -z "$PREV_BUILD_NUMBER" ]; then
+            if [ "$PLATFORM" = "iOS" ]; then PREV_FILE="BCSC-prev.ipa"; else PREV_FILE="BCSC-prev.apk"; fi
             total=$(curl -su "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
-              "https://api.us-west-1.saucelabs.com/v1/storage/files?q=BCSC-prev.apk&per_page=1" | jq -r '.total_items')
+              "https://api.us-west-1.saucelabs.com/v1/storage/files?q=${PREV_FILE}&per_page=1" | jq -r '.total_items')
             if [ "$total" = "0" ]; then
-              echo "::notice::BCSC-prev.* not in Sauce storage yet (no full release has published e2e builds) — skipping the upgrade suite"
+              echo "::notice::${PREV_FILE} not in Sauce storage yet (no full release has published e2e builds) — skipping the upgrade suite"
               exit 0
             fi
           fi

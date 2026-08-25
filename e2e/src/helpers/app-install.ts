@@ -48,7 +48,7 @@ export async function installCurrentBuildOverRunningApp(): Promise<string> {
   const appId = await getCurrentAppId()
   const appRef = resolveCurrentBuildRef()
   if (isSauceLabs()) {
-    await driver.execute('mobile:installApp', { appPath: appRef })
+    await driver.execute('mobile: installApp', { appPath: appRef })
   } else {
     await driver.installApp(appRef)
   }

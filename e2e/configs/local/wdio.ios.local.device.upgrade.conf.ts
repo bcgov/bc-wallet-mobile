@@ -2,7 +2,7 @@
 /**
  * Starts with the previous released IPA on a USB-connected iOS device.
  * The upgrade suite installs the current IPA mid-test via `driver.installApp()`.
- * This is the supported iOS upgrade path — the suite runtime-skips on Sauce public RDC.
+ * Local real-device alternative to the Sauce lane (configs/sauce/wdio.ios.sauce.upgrade.conf.ts).
  *
  * Required env vars / defaults:
  *   PREV_IOS_APP — filename of the previous release IPA in e2e/apps/ (default: BCSC-prev.ipa)
