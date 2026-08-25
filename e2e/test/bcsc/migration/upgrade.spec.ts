@@ -1,5 +1,5 @@
 import { installCurrentBuildOverRunningApp, relaunchAfterInstall } from '../../../src/helpers/app-install.js'
-import { annotate, isSauceLabs } from '../../../src/helpers/sauce.js'
+import { annotate } from '../../../src/helpers/sauce.js'
 
 /**
  * Upgrade from v3 (BC Services Card) to v4 (BC Wallet / BCSC v4).
@@ -17,13 +17,6 @@ import { annotate, isSauceLabs } from '../../../src/helpers/sauce.js'
  */
 describe('Upgrade v3 → v4', () => {
   let appId: string | undefined
-
-  before(function () {
-    if (isSauceLabs() && driver.isIOS) {
-      console.log('[migration] Skipping iOS upgrade on Sauce — see spec header for details')
-      this.skip()
-    }
-  })
 
   it('should install the v4 app over v3', async () => {
     await annotate('Migration: Upgrading v3 → v4')
