@@ -137,6 +137,26 @@ describe('BifoldNavigationAdapter', () => {
     )
   })
 
+  it('translates a Bifold chat-path reset dispatch that only references "Chat" (no "Tab Stack" route)', () => {
+    const { nav } = mkNav()
+    const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    adapted.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'Chat', params: { connectionId: 'c-2' } }],
+      })
+    )
+    expect(nav.dispatch).toHaveBeenCalledWith(
+      CommonActions.reset({
+        index: 1,
+        routes: [
+          { name: BCSCStacks.Tab, state: { routes: [{ name: BCSCScreens.Home }] } },
+          { name: BCSCScreens.ContactChat, params: { connectionId: 'c-2' } },
+        ],
+      })
+    )
+  })
+
   it('falls back to a Home reset for a chat-path reset that carries no connectionId', () => {
     const { nav } = mkNav()
     const adapted = createBifoldNavigationAdapter(nav as any, { t })
@@ -152,6 +172,14 @@ describe('BifoldNavigationAdapter', () => {
         routes: [{ name: BCSCStacks.Tab, state: { routes: [{ name: BCSCScreens.Home }] } }],
       })
     )
+  })
+
+  it('treats a RESET action with no payload/routes as unmatched (defensive `?? []` fallback)', () => {
+    const { nav } = mkNav()
+    const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    const action = { type: 'RESET' } as any
+    adapted.dispatch(action)
+    expect(nav.dispatch).toHaveBeenCalledWith(action)
   })
 
   it('lets non-chat dispatch actions pass through unchanged', () => {
@@ -170,6 +198,21 @@ describe('BifoldNavigationAdapter', () => {
     const action = CommonActions.navigate('Chat')
     adapted.dispatch(action)
     expect(nav.dispatch).toHaveBeenCalledWith(action)
+  })
+
+  it('lets a RESET dispatch action pass through unchanged when its routes reference no Bifold names', () => {
+    const { nav } = mkNav()
+    const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    const action = CommonActions.reset({ index: 0, routes: [{ name: 'SomeBcscRoute' }] })
+    adapted.dispatch(action)
+    expect(nav.dispatch).toHaveBeenCalledWith(action)
+  })
+
+  it('passes through property access for anything other than navigate/dispatch/getParent', () => {
+    const isFocused = jest.fn(() => true)
+    const nav = { navigate: jest.fn(), dispatch: jest.fn(), getParent: jest.fn(), isFocused }
+    const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    expect((adapted as any).isFocused).toBe(isFocused)
   })
 
   // The following cases mirror the exact navigate payloads Bifold's
@@ -212,5 +255,22 @@ describe('BifoldNavigationAdapter', () => {
     adapted.navigate('Contacts Stack' as never, { screen: 'JSON Details' } as never)
     expect(Toast.show).toHaveBeenCalledWith({ type: 'info', text1: 'BCSC.Scan.FeatureUnavailable' })
     expect(nav.navigate).not.toHaveBeenCalled()
+  })
+
+  it('retargets CredentialDetails "View JSON" to BCSC CredentialJSONDetailsScreen', () => {
+    // CredentialDetails.js: navigation.navigate('Contacts Stack', { screen: 'JSON Details', params: { jsonBlob: credential } })
+    const { nav } = mkNav()
+    const adapted = createBifoldNavigationAdapter(nav as any, { t })
+    adapted.navigate(
+      'Contacts Stack' as never,
+      {
+        screen: 'JSON Details',
+        params: { jsonBlob: { foo: 'bar' } },
+      } as never
+    )
+    expect(nav.navigate).toHaveBeenCalledWith(BCSCScreens.CredentialJSONDetails, {
+      jsonBlob: JSON.stringify({ foo: 'bar' }, null, 2),
+    })
+    expect(Toast.show).not.toHaveBeenCalled()
   })
 })

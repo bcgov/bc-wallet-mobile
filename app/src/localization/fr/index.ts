@@ -70,6 +70,7 @@ const translation = {
     "AddFirstCredential": "Ajouter votre premier identifiant",
     "NotAnIDInfoTitle": "This does not replace your physical ID (FR)",
     "NotAnIDInfoDescription": "Do not share this screen as ID. This credential is used for digital interactions via the BC Services Card app only. (FR)",
+    "JSONDetailsTitle": "Credential JSON Details (FR)",
   },
   "Onboarding": {
     "DifferentWalletHeading": "Un portefeuille intelligent unique",

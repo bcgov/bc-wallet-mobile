@@ -477,7 +477,7 @@ jobs:
         with:
           variant: ${{ matrix.variant }}
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
@@ -616,11 +616,14 @@ jobs:
       - name: Load .env secrets from 1Password
         id: op_remote_logging
         if: github.event.pull_request.head.repo.fork != true
-        uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          REMOTE_LOGGING_URL: op://bcsc-mobile-app-cd/remote-logging-url/prod
-          MEDIATOR_URL: op://bcsc-mobile-app-cd/mediator-url/prod
+          # Only PROD variants get the production endpoints; SIT/QA/TEST all
+          # share the test stack. An unset DEFAULT_ENVIRONMENT falls to test,
+          # so a misconfigured variant can never reach production.
+          REMOTE_LOGGING_URL: op://bcsc-mobile-app-cd/remote-logging-url/${{ env.DEFAULT_ENVIRONMENT == 'PROD' && 'prod' || 'test' }}
+          MEDIATOR_URL: op://bcsc-mobile-app-cd/mediator-url/${{ env.DEFAULT_ENVIRONMENT == 'PROD' && 'prod' || 'test' }}
 
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
@@ -840,7 +843,7 @@ jobs:
           sudo docker image prune --all --force 2>/dev/null || true
           sudo apt-get clean 2>/dev/null || true
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
@@ -929,11 +932,14 @@ jobs:
       - name: Load .env secrets from 1Password
         id: op_remote_logging
         if: github.event.pull_request.head.repo.fork != true
-        uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          REMOTE_LOGGING_URL: op://bcsc-mobile-app-cd/remote-logging-url/prod
-          MEDIATOR_URL: op://bcsc-mobile-app-cd/mediator-url/prod
+          # Only PROD variants get the production endpoints; SIT/QA/TEST all
+          # share the test stack. An unset DEFAULT_ENVIRONMENT falls to test,
+          # so a misconfigured variant can never reach production.
+          REMOTE_LOGGING_URL: op://bcsc-mobile-app-cd/remote-logging-url/${{ env.DEFAULT_ENVIRONMENT == 'PROD' && 'prod' || 'test' }}
+          MEDIATOR_URL: op://bcsc-mobile-app-cd/mediator-url/${{ env.DEFAULT_ENVIRONMENT == 'PROD' && 'prod' || 'test' }}
 
       # Actual environment variables are not being picked up
       # by the build so they're put into an .env file.
@@ -972,7 +978,7 @@ jobs:
       - name: Load Android signing secrets from 1Password
         id: op_android_signing
         if: github.event.pull_request.head.repo.fork != true
-        uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           PLAY_STORE_JKS_ALIAS: op://bcsc-mobile-app-cd/android-signing-${{ matrix.variant }}/key-alias
@@ -1326,7 +1332,7 @@ jobs:
       - name: Load SauceLabs secrets from 1Password
         id: op_saucelabs
         if: steps.probe.outcome == 'success'
-        uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           SAUCE_USERNAME: op://bcsc-mobile-app-cd/saucelabs/username
