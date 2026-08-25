@@ -1101,6 +1101,8 @@ jobs:
     needs:
       - early-exit-check
       - check-secrets
+      - check-vars
+      - compute-variants
       - prepare-ios
       - prepare-android
       - build-android
@@ -1112,6 +1114,8 @@ jobs:
           SHOULD_SKIP: ${{ needs.early-exit-check.outputs.should_skip_build }}
           EARLY_EXIT_RESULT: ${{ needs.early-exit-check.result }}
           SECRETS_RESULT: ${{ needs.check-secrets.result }}
+          CHECK_VARS_RESULT: ${{ needs.check-vars.result }}
+          COMPUTE_VARIANTS_RESULT: ${{ needs.compute-variants.result }}
           PREPARE_IOS_RESULT: ${{ needs.prepare-ios.result }}
           PREPARE_ANDROID_RESULT: ${{ needs.prepare-android.result }}
           ANDROID_RESULT: ${{ needs.build-android.result }}
@@ -1120,6 +1124,8 @@ jobs:
           echo "Debug: should_skip_build=$SHOULD_SKIP"
           echo "Debug: early-exit-check.result=$EARLY_EXIT_RESULT"
           echo "Debug: check-secrets.result=$SECRETS_RESULT"
+          echo "Debug: check-vars.result=$CHECK_VARS_RESULT"
+          echo "Debug: compute-variants.result=$COMPUTE_VARIANTS_RESULT"
           echo "Debug: prepare-ios.result=$PREPARE_IOS_RESULT"
           echo "Debug: prepare-android.result=$PREPARE_ANDROID_RESULT"
           echo "Debug: build-android.result=$ANDROID_RESULT"
@@ -1143,18 +1149,28 @@ jobs:
           fi
 
           # A skipped check-secrets (fork or Dependabot PR run) below is only
-          # ever a valid pass if nothing it gates on actually failed. Because
-          # build-ios/build-android also report "skipped" whenever an
-          # upstream `needs:` job fails (their `if:` implicitly requires
-          # success() of every job they need), a real failure in
-          # early-exit-check or either prepare job would otherwise be
-          # invisible to the checks above and get waved through by the
-          # secrets-skip branch next. Catch that here, before the skip is
-          # ever treated as a pass.
-          if [ "$EARLY_EXIT_RESULT" == "failure" ] || [ "$PREPARE_IOS_RESULT" == "failure" ] || [ "$PREPARE_ANDROID_RESULT" == "failure" ]; then
-            echo "❌ Upstream job failed: early-exit-check=$EARLY_EXIT_RESULT, prepare-ios=$PREPARE_IOS_RESULT, prepare-android=$PREPARE_ANDROID_RESULT"
-            exit 1
-          fi
+          # ever a valid pass if every other job the builds depend on
+          # actually succeeded. early-exit-check, check-vars,
+          # compute-variants, prepare-ios, and prepare-android aren't gated
+          # by check-secrets, so a real failure in any of them would still
+          # show build-android/build-ios as "skipped" (their `needs:` gate
+          # skips them too) and slip past the checks above. check-secrets
+          # itself is deliberately excluded from this loop — it is
+          # legitimately skipped on this path, which is exactly what the
+          # branch below handles. Same success-or-skipped tolerance as the
+          # Android/iOS checks above: each of these jobs can also be
+          # legitimately skipped (the should_skip_build path already
+          # returned above, so "skipped" here only happens on this
+          # fork/Dependabot path via a cancelled or upstream-skipped run).
+          upstream_checks="early-exit-check=$EARLY_EXIT_RESULT check-vars=$CHECK_VARS_RESULT compute-variants=$COMPUTE_VARIANTS_RESULT prepare-ios=$PREPARE_IOS_RESULT prepare-android=$PREPARE_ANDROID_RESULT"
+          for entry in $upstream_checks; do
+            job="${entry%%=*}"
+            result="${entry#*=}"
+            if [ "$result" != "success" ] && [ "$result" != "skipped" ]; then
+              echo "❌ $job failed with result: $result"
+              exit 1
+            fi
+          done
 
           # check-secrets was skipped (fork or Dependabot run): secrets are
           # unavailable, so build-ios/build-android skipping is the intended outcome.
