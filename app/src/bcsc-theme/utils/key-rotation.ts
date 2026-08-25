@@ -37,6 +37,8 @@ export type KeyRotationStatus = 'rotated' | 'rolled_back' | 'failed'
 
 export type KeyRotationResult = {
   status: KeyRotationStatus
+  /** True only when the server's echoed jwks proved the new key registered — never inferred from a 2xx alone. */
+  confirmed: boolean
   /** Set whenever the PUT rotated the registration_access_token, even on 'failed'/'rolled_back'. */
   newRegistrationAccessToken?: string
 }
@@ -93,14 +95,14 @@ async function rollback(
   try {
     await deleteKey(newKeyId)
     logger.info(`[rotateSigningKey] event=rolled_back deleted unregistered key '${newKeyId}'`)
-    return { status: 'rolled_back', newRegistrationAccessToken }
+    return { status: 'rolled_back', confirmed: false, newRegistrationAccessToken }
   } catch (err) {
     logger.error(
       `[rotateSigningKey] event=failed_rollback_delete could not delete unregistered key '${newKeyId}': ${describeError(err)}`
     )
     // Surviving new key is still newest-wins active, so it needs the same cache clear as a rotation.
     apiClient.clearTokens()
-    return { status: 'failed', newRegistrationAccessToken }
+    return { status: 'failed', confirmed: false, newRegistrationAccessToken }
   }
 }
 
@@ -122,7 +124,7 @@ export async function rotateSigningKey(
   })
 
   if (!newKey) {
-    return { status: 'failed' }
+    return { status: 'failed', confirmed: false }
   }
 
   logger.info(`[rotateSigningKey] generated new key '${newKey.id}'; re-registering with server`)
@@ -144,6 +146,8 @@ export async function rotateSigningKey(
   }
 
   if (!putResult.success) {
+    // A network drop after the server accepted the PUT looks identical to a rejection here; rolling
+    // back is still the conservative choice since IAS's last-N merge and #4178 recovery cover it.
     return rollback(apiClient, newKey.id, 'failed_put', newRegistrationAccessToken, logger)
   }
 
@@ -157,7 +161,7 @@ export async function rotateSigningKey(
     // Can't prove registration either way, but the new key is already newest-wins active, so we
     // keep it rather than roll back blind — and clear the cache since it's now the decryption key.
     apiClient.clearTokens()
-    return { status: 'rotated', newRegistrationAccessToken }
+    return { status: 'rotated', confirmed: false, newRegistrationAccessToken }
   }
 
   if (!modulusInSet(newKey.n, serverKeyNs)) {
@@ -172,5 +176,5 @@ export async function rotateSigningKey(
   apiClient.clearTokens()
 
   logger.info(`[rotateSigningKey] event=succeeded active='${newKey.id}'`)
-  return { status: 'rotated', newRegistrationAccessToken }
+  return { status: 'rotated', confirmed: true, newRegistrationAccessToken }
 }
