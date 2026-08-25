@@ -566,7 +566,6 @@ export const invalidRegistrationRequestErrorPolicy: ErrorHandlingPolicy = {
 // Aggregate of all client error handling policies
 export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   alreadyRegisteredErrorPolicy,
-  // cardExpiredOnBarcodesErrorPolicy,
   digitalServiceCardAccountUnavailableErrorPolicy,
   verificationSessionExpiredErrorPolicy,
   birthdateLockoutErrorPolicy,
