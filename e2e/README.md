@@ -43,7 +43,8 @@ _Tests are organized into named suites. Use the_ `--suite` _flag to select which
 | `verify`     | _Verification journeys — the four card types + entry spine/detours (`verify/*.journey.ts`)_ |
 | `main`       | _Main-stack journeys — unverified gating + settings + wallet credential lifecycle (`main/*.journey.ts`)_ |
 | `migration`  | _V3→V4 upgrade: v3 onboarding + verification, upgrade to v4, unlock with the v3 PIN_                 |
-| `upgrade`    | _Previous released build → current: onboard on the previous release, in-place upgrade, unlock with the old PIN + settings persistence. **Sauce = Android only** (iOS runtime-skips; run it locally)_ |
+| `upgrade`    | _Previous released build → current: onboard on the previous release, in-place upgrade, unlock with the old PIN + settings persistence. Runs on Sauce on **both platforms** (mid-session install passes Sauce resigning)_ |
+| `upgrade403` | _Upgrade from the shipped **4.0.3** release specifically — its pre-rework onboarding runs via a frozen walk (`flows/onboarding-v403.ts`). **Sauce = Android only**; retire once 4.1.0 is the previous release_ |
 | `scan`       | _Card-barcode scanning — non-BCSC→BCSC reroutes + the serial scanner (`scan/*.journey.ts`). **Android + Sauce only**, and also part of `regression`; the iOS configs `exclude` it_ |
 
 ```bash
@@ -226,11 +227,20 @@ yarn test:android:upgrade:sauce
 PREV_ANDROID_APP=BCSC-Dev-4550.apk ANDROID_APP_FILENAME=BCSC-Dev-4700.apk \
   yarn test:android:upgrade:sauce
 
-# iOS runs locally on a real device — Sauce public RDC runtime-skips (installApp bypasses resigning)
+# iOS on Sauce (storage-based mid-session install passes Sauce resigning; validated 2026-08-25)
+yarn test:ios:upgrade:sauce
+
+# or iOS locally on a USB device
 PREV_IOS_APP=BCSC-prev.ipa IOS_APP_DEVICE=BCSC.ipa yarn test:ios:upgrade:device
 ```
 
 _Android installs only go old → new: versionCode = the build run number, so the previous build must be an **older** run number than the current one (Android refuses downgrade installs). No SiteMinder credentials are needed — the journey stays unverified._
+
+_The previous build must also carry the **current onboarding shape** — the spec drives it with today's screen DSL, so the first eligible release is **4.1.0**; older builds fail phase 1 by design. The one shipped release before that boundary gets its own spec: `upgrade403` onboards the **4.0.3** binary via a frozen copy of its pre-rework walk (`src/flows/onboarding-v403.ts`, previous binary preserved in Sauce storage as `BCSC-v4.0.3.*`), then reuses the standard install + post-upgrade assertions. Android on Sauce only; retire it once 4.1.0 becomes the previous release:_
+
+```bash
+ANDROID_APP_FILENAME=BCSC-Dev-<current> yarn test:android:upgrade403:sauce
+```
 
 ### _Variant Selection_
 
@@ -543,7 +553,7 @@ _Tests run automatically in GitHub Actions via a device matrix that controls whi
 | _PR_                 | `smoke`      | _1 iOS (18) + 1 Android (15)_       | `bcsc-dev` | _No_         |
 | _Nightly (schedule)_ | `regression` | _3 iOS (16–18) + 3 Android (13–15)_ | `bcsc-dev` | _—_          |
 
-> _The nightly `regression` suite (all per-area journeys) replaces the retired `happy-path` / `full-regression` suites. It is the default suite in_ `e2e-nightly.yml` _and selectable from_ `e2e.yml` _(alongside the per-area suites); `migration` and `upgrade` stay separate suites because each boots an OLD build via its own config — `upgrade` starts on the rolling previous-release build (`BCSC-prev.*`, or any stored build via the `prev_build_number` dispatch input) and installs the current build mid-session. `scan` is inside `regression` but Android-only — the iOS configs list it in_ `exclude` _(`ANDROID_ONLY_SPECS`), so those specs are dropped before scheduling instead of costing an iOS session each to reach a skip._
+> _The nightly `regression` suite (all per-area journeys) replaces the retired `happy-path` / `full-regression` suites. It is the default suite in_ `e2e-nightly.yml` _and selectable from_ `e2e.yml` _(alongside the per-area suites); `migration`, `upgrade`, and `upgrade403` are separate suites because each boots an OLD build via its own config, and the nightly runs them as chained advisory lanes after the regression (Android matrices) — `upgrade` starts on the rolling previous-release build (`BCSC-prev.*`, or any stored build via the `prev_build_number` dispatch input; until the first full release publishes its e2e builds the lane skips with a notice) and installs the current build mid-session, while `upgrade403` pins the preserved `BCSC-v4.0.3.*`. `scan` is inside `regression` but Android-only — the iOS configs list it in_ `exclude` _(`ANDROID_ONLY_SPECS`), so those specs are dropped before scheduling instead of costing an iOS session each to reach a skip._
 
 _The device matrix is passed as a JSON array of_ `{platform, device, os_version}` _objects to_ `e2e.yml`_. Each entry spawns a separate SauceLabs session with its own logs and pass/fail status. (Biometric CI wiring — its Sauce configs, dev scripts, and workflow job — has been removed pending re-implementation as a journey; the_ `biometrics` _helper is retained for that future work.)_
 

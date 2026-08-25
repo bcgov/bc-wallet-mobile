@@ -24,6 +24,8 @@
     "test:ios:upgrade:sauce": "wdio configs/sauce/wdio.ios.sauce.upgrade.conf.ts --suite upgrade",
     "test:android:upgrade:device": "wdio configs/local/wdio.android.local.device.upgrade.conf.ts --suite upgrade",
     "test:ios:upgrade:device": "wdio configs/local/wdio.ios.local.device.upgrade.conf.ts --suite upgrade",
+    "test:android:upgrade403:sauce": "PREV_ANDROID_APP=${PREV_ANDROID_APP:-BCSC-v4.0.3.apk} wdio configs/sauce/wdio.android.sauce.upgrade.conf.ts --suite upgrade403",
+    "test:ios:upgrade403:sauce": "PREV_IOS_APP=${PREV_IOS_APP:-BCSC-v4.0.3.ipa} wdio configs/sauce/wdio.ios.sauce.upgrade.conf.ts --suite upgrade403",
     "test:sauce": "npm run test:android:sauce && npm run test:ios:sauce"
   },
   "resolutions": {
