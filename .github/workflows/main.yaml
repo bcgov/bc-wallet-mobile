@@ -1054,24 +1054,23 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      - name: Ship to Google Play
+      - name: Fetch Google Play publisher credentials
         if: github.ref_name == 'main'
-        # working-directory: app/android
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          GOOGLE_API_CREDENTIALS_FILE: 'api_keys.json'
-          ANDROID_BUNDLE_PATH: 'app/android/app/build/outputs/bundle/release/app-release.aab'
-          ANDROID_PACKAGE_NAME: ${{ env.ANDROID_PACKAGE_NAME }}
-          VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
-          VERSION_NAME: ${{ env.APP_VERSION }}
         run: |
-          # when we updated to yarn we started getting an error with paths
-          # and had to add `/android` to the path.
-          #
           # `op read` to stdout appends a trailing newline, which would corrupt
           # this JSON credentials file. --out-file writes the bytes as-is.
-          op read "op://bcsc-mobile-app-cd/google-play-publisher/service-account.json" --out-file "${GOOGLE_API_CREDENTIALS_FILE}" --force && \
-          GOOGLE_API_CREDENTIALS="$PWD/${GOOGLE_API_CREDENTIALS_FILE}" npx @bcgov/gpublish
+          op read "op://bcsc-mobile-app-cd/google-play-publisher/service-account.json" --out-file "${RUNNER_TEMP}/play-service-account.json" --force
+
+      - name: Ship to Google Play
+        if: github.ref_name == 'main'
+        uses: ./.github/workflows/actions/ship-to-play
+        with:
+          service_account_file: ${{ runner.temp }}/play-service-account.json
+          package_name: ${{ env.ANDROID_PACKAGE_NAME }}
+          version_name: ${{ env.APP_VERSION }}
+          bundle_path: app/android/app/build/outputs/bundle/release/app-release.aab
 
   build-summary:
     runs-on: ubuntu-latest

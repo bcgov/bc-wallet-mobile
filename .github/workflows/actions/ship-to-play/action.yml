@@ -1,0 +1,53 @@
+name: Ship to Google Play
+description: |
+  Upload an already-built, signed AAB to the Google Play internal track via
+  @bcgov/gpublish. This action only uploads — it does NOT promote the release
+  to any other track.
+
+inputs:
+  service_account_file:
+    description: |
+      Path to the Google Play publisher service-account JSON
+      (`op://bcsc-mobile-app-cd/google-play-publisher/service-account.json`).
+    required: true
+  package_name:
+    description: 'Android application ID to publish under (e.g. ca.bc.gov.id.servicescard).'
+    required: true
+  version_name:
+    description: 'Marketing version, used in the Play release name (e.g. 4.1.0).'
+    required: true
+  bundle_path:
+    description: |
+      Path to the .aab to upload.
+      Defaults to the Gradle release bundle output.
+    required: false
+    default: 'app/android/app/build/outputs/bundle/release/app-release.aab'
+
+runs:
+  using: composite
+  steps:
+    - name: Upload to Google Play internal track
+      shell: bash
+      env:
+        GOOGLE_API_CREDENTIALS: ${{ inputs.service_account_file }}
+        ANDROID_PACKAGE_NAME: ${{ inputs.package_name }}
+        VERSION_NAME: ${{ inputs.version_name }}
+        ANDROID_BUNDLE_PATH: ${{ inputs.bundle_path }}
+      run: |
+        set -euo pipefail
+
+        if [ ! -f "${GOOGLE_API_CREDENTIALS}" ]; then
+          echo "::error::No Google Play service-account file at ${GOOGLE_API_CREDENTIALS}"
+          exit 1
+        fi
+
+        if [ ! -f "${ANDROID_BUNDLE_PATH}" ]; then
+          echo "::error::No Android bundle at ${ANDROID_BUNDLE_PATH}"
+          exit 1
+        fi
+
+        echo "Uploading ${ANDROID_BUNDLE_PATH} to the Play internal track..."
+
+        # gpublish takes the Play version code from GITHUB_RUN_NUMBER, which
+        # Actions sets automatically — there is deliberately no input for it.
+        npx @bcgov/gpublish
