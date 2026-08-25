@@ -273,6 +273,12 @@ IOS_PRODUCT_NAME="$(TARGET_NAME)"
 
 These files are sourced in shell contexts (e.g., GitHub Actions `source variant.env`). Double-quoted strings containing `$`, backticks, or `!` will be interpreted by the shell, leading to unexpected behaviour. Single quotes ensure values are loaded exactly as written.
 
+## CI/CD
+
+Merging to `main` builds artifacts and publishes nothing. App Store Connect, Google Play, and Firebase App Distribution are all reached from the manual **Publish** workflow, which uploads an existing build's artifacts and never rebuilds.
+
+See `docs/ci-cd.md` for the pipeline overview, the publish inputs, and the ring model.
+
 ## Issues and Pull Requests
 
 Write for a PO or PM first. Say what changed for the user or the product, then the technical detail if it earns its place. Favour concision — a short description is a good one.
