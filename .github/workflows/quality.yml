@@ -17,13 +17,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # Dependabot runs read GitHub's separate Dependabot secrets store,
-      # so OP_SERVICE_ACCOUNT_TOKEN (and fork PRs, which never get repo
-      # secrets at all) arrive empty here. The `secrets` context isn't
-      # readable in job-level `if:`, so availability is computed in a step
-      # and used to gate only the secret-dependent steps below — build,
-      # typecheck and test stay unconditional so this job still gates the
-      # merge on the real validation.
+      # Dependabot/fork runs get no repo secrets, so gate only the
+      # secret-dependent steps below on this — build/typecheck/test stay
+      # unconditional (job-level `if:` can't read `secrets`).
       - name: Check secret availability
         id: secrets-check
         if: always()

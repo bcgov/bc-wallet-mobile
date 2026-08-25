@@ -29,24 +29,9 @@ jobs:
     # outcome (a skipped `needs:` job still fails the default success()
     # gate on build-ios/build-android, same as a failed one did).
     #
-    # Dependabot runs are treated the same way: they read GitHub's
-    # separate Dependabot secrets store, so OP_SERVICE_ACCOUNT_TOKEN etc.
-    # arrive empty exactly like a fork PR, and the same downstream skip
-    # cascade applies. `github.actor` (not the PR author) is checked
-    # because it tracks who triggered the run — it flips to a human, and
-    # secrets become available, as soon as someone pushes to the branch.
-    #
-    # The Dependabot skip is scoped to `github.event_name == 'pull_request'`
-    # deliberately: it's only ever correct on the PR-validation run, where
-    # skipping the native builds is safe because nothing merges on their
-    # say-so. With the merge queue enabled, a Dependabot PR can be enqueued
-    # via `@dependabot merge`, and that `merge_group` run's actor IS
-    # `dependabot[bot]` — so without this clause it would skip here too,
-    # letting build-summary pass with no native build having run on the
-    # code actually reaching main. The event-name clause closes that:
-    # on merge_group (and on push) this job always runs, so a Dependabot
-    # merge_group run fails loudly here (empty secrets) instead of
-    # skipping, and build-summary's unexpected-skip check catches it.
+    # Dependabot gets no repo secrets either (separate secrets store), so
+    # the same skip applies — scoped to pull_request only: a Dependabot
+    # merge_group run (queue merge) must still run this job for real.
     if: >-
       github.event.pull_request.head.repo.fork != true &&
       !(github.event_name == 'pull_request' &&
@@ -1148,20 +1133,10 @@ jobs:
             exit 1
           fi
 
-          # A skipped check-secrets (fork or Dependabot PR run) below is only
-          # ever a valid pass if every other job the builds depend on
-          # actually succeeded. early-exit-check, check-vars,
-          # compute-variants, prepare-ios, and prepare-android aren't gated
-          # by check-secrets, so a real failure in any of them would still
-          # show build-android/build-ios as "skipped" (their `needs:` gate
-          # skips them too) and slip past the checks above. check-secrets
-          # itself is deliberately excluded from this loop — it is
-          # legitimately skipped on this path, which is exactly what the
-          # branch below handles. Same success-or-skipped tolerance as the
-          # Android/iOS checks above: each of these jobs can also be
-          # legitimately skipped (the should_skip_build path already
-          # returned above, so "skipped" here only happens on this
-          # fork/Dependabot path via a cancelled or upstream-skipped run).
+          # These jobs aren't gated by check-secrets, so a real failure in
+          # any of them would still show build-android/build-ios as
+          # "skipped" and slip past the checks above. check-secrets itself
+          # is excluded — it's legitimately skipped below on this path.
           upstream_checks="early-exit-check=$EARLY_EXIT_RESULT check-vars=$CHECK_VARS_RESULT compute-variants=$COMPUTE_VARIANTS_RESULT prepare-ios=$PREPARE_IOS_RESULT prepare-android=$PREPARE_ANDROID_RESULT"
           for entry in $upstream_checks; do
             job="${entry%%=*}"
