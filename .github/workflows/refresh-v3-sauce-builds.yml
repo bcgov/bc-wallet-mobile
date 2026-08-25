@@ -116,21 +116,19 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          tags=$(gh release list --repo "${{ github.repository }}" --limit 30 \
-            --json tagName,isPrerelease,isDraft \
-            --jq '.[] | select((.isPrerelease or .isDraft) | not) | .tagName')
-          for tag in $tags; do
-            case "$tag" in bcsc-v*) ;; *) continue ;; esac
-            assets=$(gh release view "$tag" --repo "${{ github.repository }}" --json assets --jq '[.assets[].name]')
-            if echo "$assets" | grep -q "$E2E_ANDROID_ASSET" && echo "$assets" | grep -q "$E2E_IOS_ASSET"; then
-              echo "Previous release: $tag"
-              echo "tag=$tag" >> "$GITHUB_OUTPUT"
-              echo "exists=true" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-          done
-          echo "::notice::No full bcsc-v* release carries $E2E_ANDROID_ASSET/$E2E_IOS_ASSET yet — run 'Publish Release E2E Builds' first; skipping"
-          echo "exists=false" >> "$GITHUB_OUTPUT"
+          tag=$(gh api "repos/${{ github.repository }}/releases?per_page=30" --jq \
+            '[.[] | select((.prerelease or .draft) | not)
+                  | select(.tag_name | startswith("bcsc-v"))
+                  | select([.assets[].name] | index(env.E2E_ANDROID_ASSET))
+                  | select([.assets[].name] | index(env.E2E_IOS_ASSET))][0].tag_name // empty')
+          if [ -n "$tag" ]; then
+            echo "Previous release: $tag"
+            echo "tag=$tag" >> "$GITHUB_OUTPUT"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::No full bcsc-v* release carries $E2E_ANDROID_ASSET/$E2E_IOS_ASSET yet — run 'Publish Release E2E Builds' first; skipping"
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Download previous-release builds from the GitHub release
         if: steps.probe.outputs.exists == 'true'
