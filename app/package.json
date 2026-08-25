@@ -41,7 +41,6 @@
     "snowplow:stop": "docker ps -a -q --filter ancestor=snowplow/snowplow-micro:3.0.1 | xargs -r docker rm -f && echo 'Snowplow Micro analytics container stopped and removed'"
   },
   "dependencies": {
-    "@animo-id/expo-secure-environment": "0.1.5",
     "@bifold/core": "3.0.21",
     "@bifold/oca": "3.0.21",
     "@bifold/react-hooks": "3.0.21",
@@ -59,7 +58,6 @@
     "@credo-ts/question-answer": "0.7.0",
     "@credo-ts/react-native": "0.7.0",
     "@credo-ts/webvh": "0.7.0",
-    "@expo/app-integrity": "~57.0.1",
     "@formatjs/intl-datetimeformat": "~6.18.2",
     "@formatjs/intl-displaynames": "~6.8.13",
     "@formatjs/intl-getcanonicallocales": "~2.5.6",
@@ -91,9 +89,6 @@
     "buffer": "~6.0.3",
     "credo-ts-indy-vdr-proxy-client": "0.2.8",
     "dotenv": "^17.4.2",
-    "expo": "~57.0.15",
-    "expo-crypto": "~57.0.1",
-    "expo-secure-store": "~57.0.1",
     "i18next": "~25.8.0",
     "jwt-decode": "~4.0.0",
     "lodash.merge": "~4.6.2",
@@ -163,6 +158,7 @@
     "@react-native/babel-preset": "~0.86.2",
     "@react-native/eslint-config": "~0.86.2",
     "@react-native/eslint-plugin": "~0.86.2",
+    "@react-native/jest-preset": "0.86.2",
     "@react-native/metro-config": "~0.86.2",
     "@react-native/typescript-config": "~0.86.2",
     "@testing-library/jest-native": "~5.4.3",
@@ -194,12 +190,5 @@
     "react-test-renderer": "19.2.3",
     "typescript": "~5.9.2",
     "typescript-eslint": "~7.18.0"
-  },
-  "expo": {
-    "autolinking": {
-      "exclude": [
-        "@animo-id/expo-secure-environment"
-      ]
-    }
   }
 }

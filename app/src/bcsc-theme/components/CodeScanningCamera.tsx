@@ -219,7 +219,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const [detectedCodes, setDetectedCodes] = useState<EnhancedCode[]>([])
   const highlightFadeAnim = useRef(new Animated.Value(0)).current
 
-  const clearHighlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const clearHighlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Prevents initialZoom from being reapplied on every screen re-focus or camera re-init
   const hasInitializedRef = useRef(false)
@@ -819,7 +819,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   // focus and mount, not scanState) rather than being restarted on every scan-state
   // flip — see the effect below.
   const focusCycleIndex = useRef(0)
-  const focusCycleTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const focusCycleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const FOCUS_CYCLE_INTERVAL_MS = 2500 // Idle-nudge tick interval
 
   const startFocusCycling = useCallback(() => {

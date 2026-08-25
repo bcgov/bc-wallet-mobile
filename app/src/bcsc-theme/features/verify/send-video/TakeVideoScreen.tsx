@@ -79,7 +79,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   const [promptTimestamp, setPromptTimestamp] = useState(0)
   const [exceedsMaxDuration, setExceedsMaxDuration] = useState(false)
   const cameraRef = useRef<Camera>(null)
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const exceedsMaxDurationRef = useRef(false)
   const elapsedTimeRef = useRef(0)
   const promptOpacity = useRef(new Animated.Value(1)).current

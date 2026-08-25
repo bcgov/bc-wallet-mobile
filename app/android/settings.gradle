@@ -1,22 +1,14 @@
 pluginManagement {
-    // Expo SDK 57 replaced `expo/scripts/autolinking.gradle` with real Gradle plugins
-    // shipped by expo-modules-autolinking.
-    includeBuild('../node_modules/expo-modules-autolinking/android/expo-gradle-plugin')
     includeBuild('../node_modules/@react-native/gradle-plugin')
 }
 
 plugins {
     id('com.facebook.react.settings')
-    id('expo-autolinking-settings')
 }
 
-// Let Expo supply the React Native autolinking command so Expo modules and RN modules
-// are discovered by a single pass.
 extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
-    ex.autolinkLibrariesFromCommand(expoAutolinking.rnConfigCommand)
+    ex.autolinkLibrariesFromCommand()
 }
-
-expoAutolinking.useExpoModules()
 
 rootProject.name = 'BCWallet'
 

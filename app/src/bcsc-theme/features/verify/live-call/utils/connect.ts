@@ -59,7 +59,7 @@ export const connect = async (
   let connectionEstablished = false
   let remoteStreamReceived = false
   let disconnectHandled = false
-  let disconnectTimeout: NodeJS.Timeout | null = null
+  let disconnectTimeout: ReturnType<typeof setTimeout> | null = null
   let appInitiatedDisconnect = false
 
   const handleDisconnect = () => {
