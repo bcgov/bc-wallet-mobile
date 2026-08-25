@@ -1068,7 +1068,6 @@ jobs:
         uses: ./.github/workflows/actions/ship-to-play
         with:
           service_account_file: ${{ runner.temp }}/play-service-account.json
-          package_name: ${{ env.ANDROID_PACKAGE_NAME }}
           version_name: ${{ env.APP_VERSION }}
           bundle_path: app/android/app/build/outputs/bundle/release/app-release.aab
 
