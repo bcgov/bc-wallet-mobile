@@ -273,7 +273,8 @@ const BCSCTabStack: React.FC = () => {
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: 'Wallet',
             tabBarTestID: testIdWithKey('Wallet'),
-            headerShown: false,
+            headerLeft: createMainSettingsHeaderButton(),
+            headerShown: true,
           }}
         />
       </Tab.Navigator>
