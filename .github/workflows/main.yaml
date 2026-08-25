@@ -1116,9 +1116,9 @@ jobs:
           echo "Debug: build-android.result=$ANDROID_RESULT"
           echo "Debug: build-ios.result=$IOS_RESULT"
 
-          # These jobs aren't gated by check-secrets and run even when
-          # should_skip_build is true, so check them first — a real failure
-          # here must not slip past the skip/skipped-build tolerance below.
+          # check-vars and compute-variants run even when should_skip_build is
+          # true, so check all five upstream jobs before the skip branches
+          # below — a real failure must not slip past their "skipped" tolerance.
           upstream_checks="early-exit-check=$EARLY_EXIT_RESULT check-vars=$CHECK_VARS_RESULT compute-variants=$COMPUTE_VARIANTS_RESULT prepare-ios=$PREPARE_IOS_RESULT prepare-android=$PREPARE_ANDROID_RESULT"
           for entry in $upstream_checks; do
             job="${entry%%=*}"
