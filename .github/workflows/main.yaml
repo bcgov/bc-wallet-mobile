@@ -1069,6 +1069,7 @@ jobs:
         with:
           service_account_file: ${{ runner.temp }}/play-service-account.json
           version_name: ${{ env.APP_VERSION }}
+          build_number: ${{ env.APP_BUILD_NUMBER }}
           bundle_path: app/android/app/build/outputs/bundle/release/app-release.aab
 
   build-summary:
