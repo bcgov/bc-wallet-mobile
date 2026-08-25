@@ -160,8 +160,6 @@ export const useCardScanner = () => {
         '[CardScanner] Non-BCSC flow: querying /device/barcodes to check if the scanned card is a BC Services Card'
       )
 
-      // short cutting the error handling in authorizationService because
-      // the scan flow pushes non matches into the non-bcsc flow
       const deviceAuth = await authorizationService.authorizeDeviceWithBarcodes(
         buildBarcodePayload(bcscSerial, license),
         { skipErrorHandling: true }
