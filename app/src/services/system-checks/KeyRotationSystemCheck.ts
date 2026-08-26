@@ -96,9 +96,8 @@ export class KeyRotationSystemCheck implements SystemCheckStrategy {
     }))
     const isUsable = (normalizedKey: { createdAtMs: number | null }): normalizedKey is NormalizedKey =>
       normalizedKey.createdAtMs !== null && normalizedKey.createdAtMs > 0
-    // An unusable timestamp anywhere means "newest" can't be determined, and this check never
-    // rotates on a guess. Non-positive covers Android metadata deserializing createdAt as 0,
-    // which would otherwise read as an epoch-1970 key and force immediate rotation.
+    // Any unusable timestamp means "newest" can't be determined — never rotate on a guess.
+    // Non-positive catches Android's createdAt: 0, which would read as a 1970 key and force rotation.
     const unusable = normalized.find((normalizedKey) => !isUsable(normalizedKey))
     if (unusable) {
       this.utils.logger.warn(
