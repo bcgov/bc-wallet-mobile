@@ -187,7 +187,6 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     if (onMute) {
       return { type: 'error', title: t('BCSC.VideoCall.Banners.AgentCantHearYou') }
     }
-    // the voice call stream only reports a meaningful level once call audio is live
     if (systemVolume < 0.2) {
       return { type: 'warning', title: t('BCSC.VideoCall.Banners.VolumeLow') }
     }
