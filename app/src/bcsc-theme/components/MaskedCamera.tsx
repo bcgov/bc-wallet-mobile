@@ -1,7 +1,6 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
-import { useAlerts } from '@/hooks/useAlerts'
 import {
   MaskType,
   SVGOverlay,
@@ -20,21 +19,19 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import {
   Camera,
-  CameraCaptureError,
-  CodeScanner,
-  FormatFilter,
-  PhotoFile,
+  CameraOutput,
+  CameraRef,
+  CommonResolutions,
   useCameraDevice,
-  useCameraFormat,
+  usePhotoOutput,
 } from 'react-native-vision-camera'
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
 import { isBackgroundedAppState } from '../utils/app-state'
-import { getCameraMetadata } from './utils/camera'
 
 type MaskedCameraProps = {
   navigation: NavigationProp<ParamListBase>
   cameraFace: 'front' | 'back'
-  cameraFormatFilter?: FormatFilter[]
+  cameraFormatFilter?: any[]
   cameraInstructions?: string
   cameraLabel?: string
   maskType?: MaskType
@@ -42,7 +39,7 @@ type MaskedCameraProps = {
   maskLineWidth?: number
   maskOverlayOpacity?: number
   customPath?: string
-  codeScanner?: CodeScanner
+  codeScanner?: CameraOutput
   photoQualityBalance?: 'speed' | 'balanced' | 'quality'
   onPhotoTaken: (path: string) => void
 }
@@ -67,17 +64,24 @@ const MaskedCamera = ({
   const safeAreaInsets = useSafeAreaInsets()
   const { Spacing, ColorPalette } = useTheme()
   const [torchOn, setTorchOn] = useState(false)
-  const cameraRef = useRef<Camera>(null)
+  const cameraRef = useRef<CameraRef>(null)
+  const controller = cameraRef.current?.controller
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const isFocused = useIsFocused()
-  const format = useCameraFormat(device, cameraFormatFilter)
-  const { failedToWriteToLocalStorageAlert } = useAlerts(navigation)
+  // const format = useCameraFormat(device, cameraFormatFilter)
+  // const { failedToWriteToLocalStorageAlert } = useAlerts(navigation)
   const { emitErrorModal } = useErrorAlert()
   const { preventDoublePress } = usePreventDoublePress()
   const { appStateStatus } = useBCSCActivity()
   const hasTorch = device?.hasTorch ?? false
 
-  const cameraMetadata = useMemo(() => getCameraMetadata(device, format), [device, format])
+  const photoOutput = usePhotoOutput({
+    quality: 0.9,
+    qualityPrioritization: photoQualityBalance,
+    targetResolution: CommonResolutions.FHD_16_9, // 1080p
+  })
+  // TODO (MD VisionCamera): Replace with actual metadata
+  const cameraMetadata = useMemo(() => ({}), []) //useMemo(() => getCameraMetadata(device, format), [device, format])
 
   const styles = StyleSheet.create({
     container: {
@@ -120,7 +124,17 @@ const MaskedCamera = ({
     },
   })
 
-  const toggleTorch = () => setTorchOn((prev: boolean) => !prev)
+  const handleTorchChange = useCallback(
+    (newTorchMode: 'on' | 'off') => {
+      setTorchOn(newTorchMode === 'on')
+      controller?.setTorchMode(newTorchMode)
+    },
+    [controller]
+  )
+
+  const toggleTorch = () => {
+    handleTorchChange(torchOn ? 'off' : 'on')
+  }
 
   useEffect(() => {
     if (!device) {
@@ -133,9 +147,9 @@ const MaskedCamera = ({
 
   useEffect(() => {
     if (!isFocused) {
-      setTorchOn(false)
+      handleTorchChange('off')
     }
-  }, [isFocused])
+  }, [handleTorchChange, isFocused])
 
   const getCameraError = useCallback(
     (error: unknown) => {
@@ -184,28 +198,36 @@ const MaskedCamera = ({
     }
 
     try {
-      let photo: PhotoFile
-      if (cameraFace === 'back') {
-        // Use `takeSnapshot` on back camera: significantly faster read/write
-        photo = await cameraRef.current.takeSnapshot({ quality: 90 })
-      } else {
-        // Use `takePhoto` on front camera: `takeSnapshot` flips image vertically (front camera bug)
-        photo = await cameraRef.current.takePhoto({
-          flash: 'off',
-          enableShutterSound: false,
-        })
-      }
+      // let photo: PhotoFile
+      // if (cameraFace === 'back') {
+      //   // Use `takeSnapshot` on back camera: significantly faster read/write
+      //   photo = await cameraRef.current.takeSnapshot({ quality: 90 })
+      // } else {
+      //   // Use `takePhoto` on front camera: `takeSnapshot` flips image vertically (front camera bug)
+      //   photo = await cameraRef.current.takePhoto({
+      //     flash: 'off',
+      //     enableShutterSound: false,
+      //   })
+      // }
 
-      onPhotoTaken(photo.path)
-      logger.info(`Photo taken and saved temporarily: ${photo.path}`)
+      const photo = await photoOutput.capturePhotoToFile(
+        {
+          flashMode: 'off',
+          enableShutterSound: false,
+        },
+        {}
+      )
+
+      onPhotoTaken(photo.filePath)
+      logger.info(`Photo taken and saved temporarily: ${photo.filePath}`)
     } catch (error) {
       logger.error(`Error taking photo: ${error}`)
 
       // Handle file I/O errors separately to provide a specific alert
-      if (error instanceof CameraCaptureError && error.code === 'capture/file-io-error') {
-        failedToWriteToLocalStorageAlert(error)
-        return
-      }
+      // if (error instanceof CameraCaptureError && error.code === 'capture/file-io-error') {
+      //   failedToWriteToLocalStorageAlert(error)
+      //   return
+      // }
 
       const appError = getCameraError(error)
 
@@ -219,18 +241,20 @@ const MaskedCamera = ({
         ref={cameraRef}
         style={styles.camera}
         device={device}
-        format={format}
+        // TODO (MD VisionCamera): Audit these commented props
+        // format={format}
         isActive={isFocused && !isBackgroundedAppState(appStateStatus)}
-        photo={true}
-        video={true}
-        photoQualityBalance={photoQualityBalance}
-        isMirrored={false}
-        onInitialized={() => logger.debug('MaskedCamera initialized', cameraMetadata)}
+        // photo={true}
+        // video={true}
+        // photoQualityBalance={photoQualityBalance}
+        // isMirrored={false}
+        // onInitialized={() => logger.debug('MaskedCamera initialized', cameraMetadata)}
         onError={onError}
-        codeScanner={codeScanner}
-        torch={torchOn ? 'on' : 'off'}
+        // codeScanner={codeScanner}
+        // torch={torchOn ? 'on' : 'off'}
         // Set fps to max supported by the selected format for smoother preview
-        fps={format?.maxFps}
+        // fps={format?.maxFps}
+        outputs={[photoOutput, codeScanner].filter(Boolean) as CameraOutput[]}
       />
       {maskType && (
         <SVGOverlay

@@ -18,7 +18,8 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useRef, useState } from 'react'
 import { StyleSheet, useWindowDimensions, View } from 'react-native'
 import { BCSCCardProcess, EvidenceType, PhotoMetadata } from 'react-native-bcsc-core'
-import { useCameraPermission, useCodeScanner } from 'react-native-vision-camera'
+import { useCameraPermission } from 'react-native-vision-camera'
+import { useBarcodeScannerOutput } from 'react-native-vision-camera-barcode-scanner'
 
 /**
  * Builds the barcodes array for the evidence upload payload, matching the
@@ -76,9 +77,9 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const barcodesCheckedRef = useRef(false)
   const { isLoading: isCameraLoading } = useAutoRequestPermission(hasPermission, requestPermission)
   const { failedToReadFromLocalStorageAlert } = useAlerts(navigation)
-  const codeScanner = useCodeScanner({
-    codeTypes: scanner.codeTypes,
-    onCodeScanned: async (codes) => {
+  const codeScanner = useBarcodeScannerOutput({
+    barcodeFormats: scanner.codeTypes,
+    onBarcodeScanned: async (codes) => {
       if (!codes.length) {
         return
       }
@@ -88,7 +89,12 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
         return
       }
 
-      await scanner.scanCard(codes, async (bcscSerial, license) => {
+      const scannableCodes = codes.map((code) => ({
+        type: code.format,
+        value: code.displayValue,
+      }))
+
+      await scanner.scanCard(scannableCodes, async (bcscSerial, license) => {
         if (bcscSerial) {
           bcscSerialRef.current = bcscSerial
         }
@@ -97,6 +103,9 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
           licenseRef.current = license
         }
       })
+    },
+    onError: () => {
+      // TODO (MD VisionCamera): Handle errors
     },
   })
 
