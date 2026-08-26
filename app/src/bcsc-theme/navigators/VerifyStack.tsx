@@ -398,7 +398,14 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         }
         options={{
           header: createProgressHeader(2, 60),
-          headerLeft: createVerifyHeaderBackButton(),
+          headerLeft: createVerifyHeaderBackButton((navigation) => {
+            if (navigation.canGoBack()) {
+              return navigation.goBack()
+            }
+
+            clearAdditionalEvidence()
+            navigation.replace(BCSCScreens.IdentitySelection)
+          }),
         }}
       />
       <Stack.Screen
