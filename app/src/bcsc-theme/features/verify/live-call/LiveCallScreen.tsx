@@ -30,9 +30,6 @@ type LiveCallScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.LiveCall>
 }
 
-// Android exposes a volume per audio stream and reports `volume` as the music
-// stream, but the agent is heard through the voice call stream. iOS has no
-// per-stream API; `volume` there already follows the active audio session.
 const getCallVolume = (result: VolumeResult) =>
   Platform.OS === 'android' ? (result.call ?? result.volume) : result.volume
 
@@ -191,12 +188,12 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       return { type: 'error', title: t('BCSC.VideoCall.Banners.AgentCantHearYou') }
     }
     // the voice call stream only reports a meaningful level once call audio is live
-    if (flowState === VideoCallFlowState.IN_CALL && systemVolume < 0.2) {
+    if (systemVolume < 0.2) {
       return { type: 'warning', title: t('BCSC.VideoCall.Banners.VolumeLow') }
     }
 
     return null
-  }, [isInBackground, onMute, videoHidden, systemVolume, flowState, t])
+  }, [isInBackground, onMute, videoHidden, systemVolume, t])
 
   // whenever mute choice changes, update the audio tracks accordingly
   useEffect(() => {
