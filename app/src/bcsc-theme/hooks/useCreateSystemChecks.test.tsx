@@ -536,7 +536,7 @@ describe('useGetSystemChecks', () => {
         // RECORD_APP_LAUNCH_VERSION is the only thing keeping lastSeenApp* current; losing it
         // would latch rotation off forever. Every test here asserts the dispatch too, not just
         // the boolean passed to the constructor.
-        it('does NOT dispatch RECORD_APP_LAUNCH_VERSION, and defers, when lastSeen already matches this launch', async () => {
+        it('does NOT dispatch RECORD_APP_LAUNCH_VERSION, and does not defer, when lastSeen already matches this launch', async () => {
           jest.spyOn(DeviceInfo, 'getVersion').mockReturnValue('4.1.0')
           jest.spyOn(DeviceInfo, 'getBuildNumber').mockReturnValue('1000')
           mockStoreWith({})

@@ -163,7 +163,10 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       const clientId = account?.clientID
 
       if (!registrationAccessToken || !clientId) {
-        logger.warn('KeyRotationSystemCheck: missing registrationAccessToken or clientID; skipping rotation attempt')
+        // Recorded as a failed attempt (not a skip) — this path returns status='failed' below.
+        logger.warn(
+          'KeyRotationSystemCheck: missing registrationAccessToken or clientID; recording a failed rotation attempt'
+        )
         return { status: 'failed' as const, confirmed: false }
       }
 
