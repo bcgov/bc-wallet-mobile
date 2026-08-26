@@ -57,7 +57,13 @@ export class KeyRotationSystemCheck implements SystemCheckStrategy {
       const lastAttemptMs = Date.parse(this.lastRotationAttemptAt)
       if (!Number.isNaN(lastAttemptMs)) {
         const daysSinceLastAttempt = (Date.now() - lastAttemptMs) / MS_PER_DAY
-        if (daysSinceLastAttempt < KEY_ROTATION_RETRY_BACKOFF_DAYS) {
+        if (daysSinceLastAttempt < 0) {
+          // Future-dated stamp (clock jumped forward, then corrected): negative elapsed time
+          // satisfies the backoff forever, latching rotation off — ignore it and proceed.
+          this.utils.logger.warn(
+            `KeyRotationSystemCheck: last rotation attempt '${this.lastRotationAttemptAt}' is in the future; ignoring backoff`
+          )
+        } else if (daysSinceLastAttempt < KEY_ROTATION_RETRY_BACKOFF_DAYS) {
           this.utils.logger.info(
             `KeyRotationSystemCheck: skipping — last attempt was ${daysSinceLastAttempt.toFixed(1)} day(s) ago (backoff=${KEY_ROTATION_RETRY_BACKOFF_DAYS}d)`
           )
@@ -83,26 +89,40 @@ export class KeyRotationSystemCheck implements SystemCheckStrategy {
       return true
     }
 
-    const newest = keys.slice().sort((a, b) => (b.created ?? 0) - (a.created ?? 0))[0]
-    const createdAtMs = keyCreatedAtMs(newest.created)
-    if (createdAtMs === null) {
-      this.utils.logger.warn(`KeyRotationSystemCheck: skipping — newest key '${newest.id}' has no created timestamp`)
+    type NormalizedKey = { key: (typeof keys)[number]; createdAtMs: number }
+    const normalized: Array<{ key: (typeof keys)[number]; createdAtMs: number | null }> = keys.map((key) => ({
+      key,
+      createdAtMs: keyCreatedAtMs(key.created),
+    }))
+    const isUsable = (normalizedKey: { createdAtMs: number | null }): normalizedKey is NormalizedKey =>
+      normalizedKey.createdAtMs !== null && normalizedKey.createdAtMs > 0
+    // An unusable timestamp anywhere means "newest" can't be determined, and this check never
+    // rotates on a guess. Non-positive covers Android metadata deserializing createdAt as 0,
+    // which would otherwise read as an epoch-1970 key and force immediate rotation.
+    const unusable = normalized.find((normalizedKey) => !isUsable(normalizedKey))
+    if (unusable) {
+      this.utils.logger.warn(
+        `KeyRotationSystemCheck: skipping — key '${unusable.key.id}' has no usable created timestamp`
+      )
       return true
     }
 
-    const ageDays = keyAgeDays(createdAtMs)
+    const usable = normalized.filter(isUsable)
+    const newest = usable.reduce((a, b) => (b.createdAtMs > a.createdAtMs ? b : a))
+    const ageDays = keyAgeDays(newest.createdAtMs)
     if (ageDays < KEY_ROTATION_MAX_AGE_DAYS) {
       return true
     }
 
     this.utils.logger.info(
-      `KeyRotationSystemCheck: newest key '${newest.id}' is ${ageDays.toFixed(1)} day(s) old (threshold=${KEY_ROTATION_MAX_AGE_DAYS}d) — rotation due`
+      `KeyRotationSystemCheck: newest key '${newest.key.id}' is ${ageDays.toFixed(1)} day(s) old (threshold=${KEY_ROTATION_MAX_AGE_DAYS}d) — rotation due`
     )
     return false
   }
 
   async onFail(): Promise<void> {
-    // Dispatched before rotate() so the backoff throttle survives a crash mid-rotation.
+    // Dispatched before rotate() so the attempt stamp is queued first — best-effort ordering, not
+    // a durable write barrier.
     this.utils.dispatch({
       type: BCDispatchAction.KEY_ROTATION_ATTEMPTED,
       payload: [new Date().toISOString()],

@@ -17,6 +17,7 @@ const makeUtils = () => ({
 })
 
 const NOW = Date.parse('2026-08-21T00:00:00.000Z')
+const originalOS = Platform.OS
 
 describe('KeyRotationSystemCheck', () => {
   beforeEach(() => {
@@ -27,6 +28,8 @@ describe('KeyRotationSystemCheck', () => {
   afterEach(() => {
     jest.useRealTimers()
     jest.restoreAllMocks()
+    // jest.restoreAllMocks() does not undo Object.defineProperty overrides of Platform.OS.
+    Object.defineProperty(Platform, 'OS', { get: () => originalOS })
   })
 
   describe('runCheck', () => {
@@ -102,7 +105,6 @@ describe('KeyRotationSystemCheck', () => {
     })
 
     it('passes at 364 days old (iOS, seconds)', async () => {
-      const originalOS = Platform.OS
       Object.defineProperty(Platform, 'OS', { get: () => 'ios' })
       const createdSeconds = (NOW - 364 * 24 * 60 * 60 * 1000) / 1000
       mockedGetAllKeys.mockResolvedValue([{ id: 'rsa1', created: createdSeconds } as any])
@@ -110,11 +112,9 @@ describe('KeyRotationSystemCheck', () => {
       const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
 
       expect(await check.runCheck()).toBe(true)
-      Object.defineProperty(Platform, 'OS', { get: () => originalOS })
     })
 
     it('fails at 366 days old (iOS, seconds)', async () => {
-      const originalOS = Platform.OS
       Object.defineProperty(Platform, 'OS', { get: () => 'ios' })
       const createdSeconds = (NOW - 366 * 24 * 60 * 60 * 1000) / 1000
       mockedGetAllKeys.mockResolvedValue([{ id: 'rsa1', created: createdSeconds } as any])
@@ -122,11 +122,9 @@ describe('KeyRotationSystemCheck', () => {
       const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
 
       expect(await check.runCheck()).toBe(false)
-      Object.defineProperty(Platform, 'OS', { get: () => originalOS })
     })
 
     it('passes at 364 days old (Android, ms)', async () => {
-      const originalOS = Platform.OS
       Object.defineProperty(Platform, 'OS', { get: () => 'android' })
       const createdMs = NOW - 364 * 24 * 60 * 60 * 1000
       mockedGetAllKeys.mockResolvedValue([{ id: 'rsa1', created: createdMs } as any])
@@ -134,11 +132,9 @@ describe('KeyRotationSystemCheck', () => {
       const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
 
       expect(await check.runCheck()).toBe(true)
-      Object.defineProperty(Platform, 'OS', { get: () => originalOS })
     })
 
     it('fails at 366 days old (Android, ms)', async () => {
-      const originalOS = Platform.OS
       Object.defineProperty(Platform, 'OS', { get: () => 'android' })
       const createdMs = NOW - 366 * 24 * 60 * 60 * 1000
       mockedGetAllKeys.mockResolvedValue([{ id: 'rsa1', created: createdMs } as any])
@@ -146,11 +142,19 @@ describe('KeyRotationSystemCheck', () => {
       const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
 
       expect(await check.runCheck()).toBe(false)
-      Object.defineProperty(Platform, 'OS', { get: () => originalOS })
+    })
+
+    it('locks the strict-less-than semantics at the exact 365.0-day boundary (Android, ms)', async () => {
+      Object.defineProperty(Platform, 'OS', { get: () => 'android' })
+      const createdMs = NOW - 365 * 24 * 60 * 60 * 1000
+      mockedGetAllKeys.mockResolvedValue([{ id: 'rsa1', created: createdMs } as any])
+      const utils = makeUtils()
+      const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
+
+      expect(await check.runCheck()).toBe(false)
     })
 
     it('picks the newest key among several when computing age', async () => {
-      const originalOS = Platform.OS
       Object.defineProperty(Platform, 'OS', { get: () => 'android' })
       mockedGetAllKeys.mockResolvedValue([
         { id: 'rsa1', created: NOW - 500 * 24 * 60 * 60 * 1000 } as any, // old, but not newest
@@ -160,7 +164,40 @@ describe('KeyRotationSystemCheck', () => {
       const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
 
       expect(await check.runCheck()).toBe(true)
-      Object.defineProperty(Platform, 'OS', { get: () => originalOS })
+    })
+
+    it('does not latch rotation off when the last attempt is future-dated', async () => {
+      Object.defineProperty(Platform, 'OS', { get: () => 'android' })
+      const lastAttempt = new Date(NOW + 3 * 24 * 60 * 60 * 1000).toISOString()
+      mockedGetAllKeys.mockResolvedValue([{ id: 'rsa1', created: NOW - 400 * 24 * 60 * 60 * 1000 } as any])
+      const utils = makeUtils()
+      const check = new KeyRotationSystemCheck(false, lastAttempt, jest.fn(), utils)
+
+      expect(await check.runCheck()).toBe(false)
+      expect(mockedGetAllKeys).toHaveBeenCalled()
+      expect(utils.logger.warn).toHaveBeenCalled()
+    })
+
+    it('skips instead of rotating on a sibling when the newest key lacks a created timestamp', async () => {
+      Object.defineProperty(Platform, 'OS', { get: () => 'android' })
+      mockedGetAllKeys.mockResolvedValue([
+        { id: 'old', created: NOW - 400 * 24 * 60 * 60 * 1000 } as any,
+        { id: 'newest-no-ts' } as any,
+      ])
+      const utils = makeUtils()
+      const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
+
+      expect(await check.runCheck()).toBe(true)
+      expect(utils.logger.warn).toHaveBeenCalled()
+    })
+
+    it('skips when a key has created: 0 rather than reading it as an epoch-1970 key', async () => {
+      mockedGetAllKeys.mockResolvedValue([{ id: 'rsa1', created: 0 } as any])
+      const utils = makeUtils()
+      const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
+
+      expect(await check.runCheck()).toBe(true)
+      expect(utils.logger.warn).toHaveBeenCalled()
     })
   })
 
