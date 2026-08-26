@@ -150,10 +150,7 @@ describe('EvidenceCapture', () => {
     render(
       <BasicAppContext initialStateOverride={stateOverride as never}>
         <BCSCLoadingProvider>
-          <EvidenceCaptureScreen
-            navigation={mockNavigation as never}
-            route={{ params: { cardType } } as never}
-          />
+          <EvidenceCaptureScreen navigation={mockNavigation as never} route={{ params: { cardType } } as never} />
         </BCSCLoadingProvider>
       </BasicAppContext>
     )
@@ -180,9 +177,7 @@ describe('EvidenceCapture', () => {
   it('renders the capture view once camera permission is available', async () => {
     const tree = renderScreen(buildEvidenceType([frontSide]))
 
-    await waitFor(() =>
-      expect(tree.getByTestId(testIdWithKey('EvidenceCaptureScreenMaskedCamera'))).toBeTruthy()
-    )
+    await waitFor(() => expect(tree.getByTestId(testIdWithKey('EvidenceCaptureScreenMaskedCamera'))).toBeTruthy())
     expect(maskedCameraProps.cameraLabel).toBe(frontSide.image_side_label)
   })
 
