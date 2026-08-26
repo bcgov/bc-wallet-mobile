@@ -445,4 +445,97 @@ describe('reRegisterNewestKey', () => {
     expect(result).toStrictEqual({ success: true, newRegistrationAccessToken: 'rotated-put-token' })
     expect(Object.keys(result)).not.toContain('serverKeyNs')
   })
+
+  it('tolerates a truthy non-array jwks.keys: preserves success, omits serverKeyNs, logs a malformed-echo warning (not an error)', async () => {
+    mockedGetAccount.mockResolvedValue({ nickname: 'My Phone' } as any)
+    mockedGetDCRBody.mockResolvedValue(JSON.stringify({ client_name: 'My Phone' }))
+    const apiClient = makeApiClient(undefined)
+    apiClient.put.mockResolvedValue({
+      data: { registration_access_token: undefined, jwks: { keys: { kid: 'x', n: n(1) } } },
+    })
+    const logger = makeLogger()
+
+    const result = await reRegisterNewestKey(apiClient, CLIENT_ID, REG_TOKEN, logger)
+
+    expect(result).toStrictEqual({ success: true, newRegistrationAccessToken: undefined })
+    expect(Object.keys(result)).not.toContain('serverKeyNs')
+    expect(logger.error).not.toHaveBeenCalled()
+    expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('event=succeeded'))
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('event=malformed_jwks_echo'))
+  })
+
+  it('reports serverKeyNs as [] (not omitted) when jwks.keys is an empty array', async () => {
+    mockedGetAccount.mockResolvedValue({ nickname: 'My Phone' } as any)
+    mockedGetDCRBody.mockResolvedValue(JSON.stringify({ client_name: 'My Phone' }))
+    const apiClient = makeApiClient(undefined)
+    apiClient.put.mockResolvedValue({ data: { registration_access_token: undefined, jwks: { keys: [] } } })
+
+    const result = await reRegisterNewestKey(apiClient, CLIENT_ID, REG_TOKEN, makeLogger())
+
+    expect(result).toStrictEqual({ success: true, newRegistrationAccessToken: undefined, serverKeyNs: [] })
+  })
+
+  it('omits serverKeyNs when jwks is present but keys is absent', async () => {
+    mockedGetAccount.mockResolvedValue({ nickname: 'My Phone' } as any)
+    mockedGetDCRBody.mockResolvedValue(JSON.stringify({ client_name: 'My Phone' }))
+    const apiClient = makeApiClient(undefined)
+    apiClient.put.mockResolvedValue({ data: { registration_access_token: undefined, jwks: {} } })
+
+    const result = await reRegisterNewestKey(apiClient, CLIENT_ID, REG_TOKEN, makeLogger())
+
+    expect(result).toStrictEqual({ success: true, newRegistrationAccessToken: undefined })
+    expect(Object.keys(result)).not.toContain('serverKeyNs')
+  })
+
+  it('preserves array position (undefined) for echoed keys missing n, without throwing', async () => {
+    mockedGetAccount.mockResolvedValue({ nickname: 'My Phone' } as any)
+    mockedGetDCRBody.mockResolvedValue(JSON.stringify({ client_name: 'My Phone' }))
+    const apiClient = makeApiClient(undefined)
+    apiClient.put.mockResolvedValue({
+      data: { registration_access_token: undefined, jwks: { keys: [{ kid: 'no-n' }, { n: n(2) }] } },
+    })
+
+    const result = await reRegisterNewestKey(apiClient, CLIENT_ID, REG_TOKEN, makeLogger())
+
+    expect(result.success).toBe(true)
+    expect(result.serverKeyNs).toStrictEqual([undefined, n(2)])
+  })
+
+  it('logs an echoed_jwks line with fingerprints only — never a middle substring of the raw modulus', async () => {
+    mockedGetAccount.mockResolvedValue({ nickname: 'My Phone' } as any)
+    mockedGetDCRBody.mockResolvedValue(JSON.stringify({ client_name: 'My Phone' }))
+    const LONG_N = Buffer.from(Array.from({ length: 64 }, (_, i) => i)).toString('base64')
+    const apiClient = makeApiClient(undefined)
+    apiClient.put.mockResolvedValue({
+      data: { registration_access_token: undefined, jwks: { keys: [{ n: LONG_N }] } },
+    })
+    const logger = makeLogger()
+
+    await reRegisterNewestKey(apiClient, CLIENT_ID, REG_TOKEN, logger)
+
+    expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('event=echoed_jwks'))
+    // A middle substring proves truncation; an edge one could coincide with the kept first/last 8.
+    const middleSubstring = LONG_N.slice(10, 30)
+    const allLoggedStrings = [...logger.info.mock.calls, ...logger.warn.mock.calls, ...logger.error.mock.calls].map(
+      (call) => call[0]
+    )
+    expect(allLoggedStrings.some((msg) => msg.includes(middleSubstring))).toBe(false)
+  })
+
+  it('coerces a non-string echoed n to undefined instead of throwing into the failure path', async () => {
+    mockedGetAccount.mockResolvedValue({ nickname: 'My Phone' } as any)
+    mockedGetDCRBody.mockResolvedValue(JSON.stringify({ client_name: 'My Phone' }))
+    const apiClient = makeApiClient(undefined)
+    apiClient.put.mockResolvedValue({
+      data: { registration_access_token: undefined, jwks: { keys: [{ kid: 'x', n: 123 }, { n: n(2) }] } },
+    })
+    const logger = makeLogger()
+
+    const result = await reRegisterNewestKey(apiClient, CLIENT_ID, REG_TOKEN, logger)
+
+    expect(result.success).toBe(true)
+    expect(result.serverKeyNs).toStrictEqual([undefined, n(2)])
+    expect(logger.error).not.toHaveBeenCalled()
+    expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('event=echoed_jwks'))
+  })
 })
