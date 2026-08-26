@@ -106,8 +106,10 @@ export class KeyRotationSystemCheck implements SystemCheckStrategy {
       return true
     }
 
-    const usable = normalized.filter(isUsable)
-    const newest = usable.reduce((a, b) => (b.createdAtMs > a.createdAtMs ? b : a))
+    // unusable is undefined here, so every element passed isUsable and usable has >= 1 entry —
+    // destructuring the head makes that non-emptiness structural instead of assumed by reduce().
+    const [head, ...tail] = normalized.filter(isUsable)
+    const newest = tail.reduce((a, b) => (b.createdAtMs > a.createdAtMs ? b : a), head)
     const ageDays = keyAgeDays(newest.createdAtMs)
     if (ageDays < KEY_ROTATION_MAX_AGE_DAYS) {
       return true
