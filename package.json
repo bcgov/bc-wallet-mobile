@@ -44,7 +44,8 @@
     "setup": "yarn build && cd app && yarn setup",
     "clean": "echo '🧹 Cleaning project directories...' && rm -rf .yarn/cache node_modules app/node_modules app/.jest app/.metro-cache app/android/.gradle app/android/.idea app/android/app/build app/ios/build app/ios/Pods packages/bcsc-core/node_modules packages/bcsc-core/lib e2e/node_modules e2e/.appium e2e/.yarn && echo '✅ Clean complete'",
     "convert": "node scripts/apply-variant.mjs bcwallet-prod && node scripts/apply-version.mjs 1.0.28 2801",
-    "link:bifold": "cd ../bifold && yarn install && yarn build && cd ../bc-wallet-mobile && yarn link ../bifold --all --relative && yarn install"
+    "link:bifold:external": "(cd ../bifold && yarn install && yarn build) && yarn link ../bifold --all --relative && yarn unlink ../bifold/packages/expo-attestation && yarn install",
+    "link:bifold:internal": "(cd ./bifold && yarn install && yarn build) && yarn link ./bifold --all --relative && yarn unlink ./bifold/packages/expo-attestation && yarn install"
   },
   "resolutions": {
     "tsyringe": "4.8.0",
@@ -76,13 +77,13 @@
     "shell-quote": "1.8.4",
     "@credo-ts/anoncreds@npm:0.7.0": "patch:@credo-ts/anoncreds@npm%3A0.7.0#~/.yarn/patches/@credo-ts-anoncreds-npm-0.7.0-757752e5ca.patch",
     "@credo-ts/anoncreds@npm:^0.6.1": "patch:@credo-ts/anoncreds@npm%3A0.7.0#~/.yarn/patches/@credo-ts-anoncreds-npm-0.7.0-757752e5ca.patch",
+    "@credo-ts/core@npm:^0.6.1": "0.7.0",
     "@bifold/core": "portal:../bifold/packages/core",
     "@bifold/oca": "portal:../bifold/packages/oca",
     "@bifold/react-hooks": "portal:../bifold/packages/react-hooks",
     "@bifold/react-native-attestation": "portal:../bifold/packages/react-native-attestation",
     "@bifold/remote-logs": "portal:../bifold/packages/remote-logs",
-    "@bifold/verifier": "portal:../bifold/packages/verifier",
-    "@credo-ts/core@npm:^0.6.1": "0.7.0"
+    "@bifold/verifier": "portal:../bifold/packages/verifier"
   },
   "dependencies": {
     "react-native-bcsc-core": "workspace:*"
