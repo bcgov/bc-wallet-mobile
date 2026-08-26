@@ -91,8 +91,8 @@ export const config: WebdriverIO.Config = {
     // runs, and part of `regression` — the iOS configs exclude it rather than schedule and skip it.
     scan: ANDROID_ONLY_SPECS,
     // Nightly full run: every per-area journey.
-    // Excludes `migration` — that suite boots the v3 app via the separate migration config, so it
-    // cannot share this run's v4 RDC build (it stays its own suite + workflow path).
+    // Excludes `migration` and `upgrade` — those suites boot an OLD build via their own configs, so
+    // they cannot share this run's v4 RDC build (each stays its own suite + workflow path).
     regression: [
       resolve(__dirname, `../test/${variant}/onboarding/*.journey.ts`),
       resolve(__dirname, `../test/${variant}/auth/*.journey.ts`),
@@ -101,6 +101,9 @@ export const config: WebdriverIO.Config = {
       ...ANDROID_ONLY_SPECS,
     ],
     migration: [resolve(__dirname, `../test/${variant}/migration/migration.spec.ts`)],
+    upgrade: [resolve(__dirname, `../test/${variant}/upgrade/upgrade.spec.ts`)],
+    // Upgrade from the shipped 4.0.3 specifically — its pre-rework onboarding needs the frozen walk.
+    upgrade403: [resolve(__dirname, `../test/${variant}/upgrade/upgrade-from-v403.spec.ts`)],
   },
   exclude: [],
   capabilities: [],

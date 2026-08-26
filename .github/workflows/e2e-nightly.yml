@@ -1,7 +1,10 @@
 # E2E Nightly Full Regression
 #
 # Runs the `regression` E2E suite (every per-area journey) against the
-# latest successful main build's SauceLabs artifacts.
+# latest successful main build's SauceLabs artifacts, then the upgrade
+# lanes (migration v3→v4, previous release → current, 4.0.3 → current) as
+# chained advisory jobs — each boots an OLD build via its own config, so
+# they cannot live inside the regression wdio suite itself.
 #
 # Default device matrix: 1 iOS + 1 Android device (one modern OS major each).
 # os_version stays PINNED: unpinned, Sauce hands out iOS 15-era devices, where
@@ -54,6 +57,8 @@ on:
           - main
           - verify
           - migration
+          - upgrade
+          - upgrade403
         default: regression
       device_matrix:
         description: 'JSON array of {platform, device, os_version} objects'
@@ -162,5 +167,47 @@ jobs:
       suite: ${{ inputs.suite || 'regression' }}
       build_number: ${{ needs.resolve-build.outputs.build_number }}
       device_matrix: ${{ inputs.device_matrix || '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]' }}
+    secrets:
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
+  # ─── Upgrade lanes: ride the nightly regression ─────────────────
+  # Chained serially after the regression to stay inside the Sauce real-device
+  # session budget; `!cancelled()` keeps each lane running when an earlier one
+  # (or the regression itself) goes red — every lane is advisory via
+  # continue-on-error in e2e.yml. They run only when the main call is the full
+  # regression (schedule, or a dispatch left on the default suite). The
+  # migration lane stays Android-only (iOS went green on Sauce 2026-08-25, not yet repeatably);
+  # the upgrade lanes run both platforms — the storage-based mid-session
+  # install passes Sauce resigning (validated 2026-08-25).
+  e2e-migration:
+    needs: [check-for-merges, resolve-build, e2e]
+    if: ${{ !cancelled() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' && (inputs.suite || 'regression') == 'regression' }}
+    uses: ./.github/workflows/e2e.yml
+    with:
+      suite: migration
+      build_number: ${{ needs.resolve-build.outputs.build_number }}
+      device_matrix: '[{"platform":"Android","device":"Google.*","os_version":"15"}]'
+    secrets:
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
+  e2e-upgrade:
+    needs: [check-for-merges, resolve-build, e2e-migration]
+    if: ${{ !cancelled() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' && (inputs.suite || 'regression') == 'regression' }}
+    uses: ./.github/workflows/e2e.yml
+    with:
+      suite: upgrade
+      build_number: ${{ needs.resolve-build.outputs.build_number }}
+      device_matrix: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
+    secrets:
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
+  e2e-upgrade403:
+    needs: [check-for-merges, resolve-build, e2e-upgrade]
+    if: ${{ !cancelled() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' && (inputs.suite || 'regression') == 'regression' }}
+    uses: ./.github/workflows/e2e.yml
+    with:
+      suite: upgrade403
+      build_number: ${{ needs.resolve-build.outputs.build_number }}
+      device_matrix: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}

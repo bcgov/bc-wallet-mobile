@@ -1,6 +1,6 @@
 import { Timeouts } from '../../../src/constants.js'
 import { selectAccountLandingIfPresent } from '../../../src/flows/auth.js'
-import { annotate, isSauceLabs } from '../../../src/helpers/sauce.js'
+import { annotate } from '../../../src/helpers/sauce.js'
 import { AccountLandingScreen, EnterPINScreen } from '../../../src/screens/auth.js'
 import { HomeScreen, TabBar } from '../../../src/screens/main.js'
 import { migrationContext } from './migration-context.js'
@@ -15,17 +15,8 @@ import { migrationContext } from './migration-context.js'
  * v4 is a SINGLE-account unlock — one `Unlock` on AccountLanding, no account-selector / per-nickname
  * card — so the old `CardButton-<nickname>` step is gone (it referenced a v3 concept that no longer
  * exists in v4).
- *
- * NOTE: skipped on Sauce iOS because the upgrade spec it depends on is skipped there (see upgrade.spec.ts).
  */
 describe('V4 Unlock After Migration', () => {
-  before(function () {
-    if (isSauceLabs() && driver.isIOS) {
-      console.log('[migration] Skipping iOS v4 unlock on Sauce — depends on upgrade spec')
-      this.skip()
-    }
-  })
-
   it('unlocks the migrated account and enters the v3 PIN', async () => {
     await annotate('Migration: V4 unlock')
     await selectAccountLandingIfPresent()

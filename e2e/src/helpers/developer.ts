@@ -43,6 +43,12 @@ export async function scrollToSettingsVersionFooter(): Promise<void> {
   await footer.waitForDisplayed({ timeout: Timeouts.ELEMENT_VISIBLE })
 }
 
+/** Read the footer's `Version <version> (<build>)` line, scrolling it into view first. */
+export async function readSettingsVersionFooter(): Promise<string> {
+  await scrollToSettingsVersionFooter()
+  return (await versionFooter()).getText()
+}
+
 /**
  * Open the Developer menu from whichever Settings surface is on screen (pre-auth `AuthSettings` /
  * `OnboardingSettings` as well as `MainSettings`), leaving it on top for the caller.
