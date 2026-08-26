@@ -14,10 +14,10 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
+import { Platform, StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 import InCallManager from 'react-native-incall-manager'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { VolumeManager } from 'react-native-volume-manager'
+import { VolumeManager, VolumeResult } from 'react-native-volume-manager'
 import { MediaStreamTrack, RTCView } from 'react-native-webrtc'
 import CallErrorView from './components/CallErrorView'
 import CallIconButton from './components/CallIconButton'
@@ -29,6 +29,12 @@ import { formatCallTime } from './utils/formatCallTime'
 type LiveCallScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.LiveCall>
 }
+
+// Android exposes a volume per audio stream and reports `volume` as the music
+// stream, but the agent is heard through the voice call stream. iOS has no
+// per-stream API; `volume` there already follows the active audio session.
+const getCallVolume = (result: VolumeResult) =>
+  Platform.OS === 'android' ? (result.call ?? result.volume) : result.volume
 
 const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const { width } = useWindowDimensions()
@@ -156,14 +162,14 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     const getInitialVolume = async () => {
       try {
         const volume = await VolumeManager.getVolume()
-        setSystemVolume(volume.volume)
+        setSystemVolume(getCallVolume(volume))
       } catch (error) {
         logger.warn('Failed to get initial volume', { error: error as Error })
       }
     }
 
     const volumeListener = VolumeManager.addVolumeListener((result) => {
-      setSystemVolume(result.volume)
+      setSystemVolume(getCallVolume(result))
     })
 
     getInitialVolume()
@@ -184,12 +190,13 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     if (onMute) {
       return { type: 'error', title: t('BCSC.VideoCall.Banners.AgentCantHearYou') }
     }
-    if (systemVolume < 0.2) {
+    // the voice call stream only reports a meaningful level once call audio is live
+    if (flowState === VideoCallFlowState.IN_CALL && systemVolume < 0.2) {
       return { type: 'warning', title: t('BCSC.VideoCall.Banners.VolumeLow') }
     }
 
     return null
-  }, [isInBackground, onMute, videoHidden, systemVolume, t])
+  }, [isInBackground, onMute, videoHidden, systemVolume, flowState, t])
 
   // whenever mute choice changes, update the audio tracks accordingly
   useEffect(() => {
