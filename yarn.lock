@@ -7444,7 +7444,7 @@ __metadata:
     react-native-url-polyfill: "npm:^3.0.0"
     react-native-uuid: "npm:~2.0.4"
     react-native-vector-icons: "npm:~10.3.0"
-    react-native-video: "npm:~6.18.0"
+    react-native-video: "npm:~6.19.2"
     react-native-vision-camera: "patch:react-native-vision-camera@npm%3A4.7.3#~/.yarn/patches/react-native-vision-camera-npm-4.7.3-dc361fe55c.patch"
     react-native-volume-manager: "npm:~1.10.0"
     react-native-webrtc: "npm:~124.0.6"
@@ -15884,13 +15884,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-video@npm:~6.18.0":
-  version: 6.18.0
-  resolution: "react-native-video@npm:6.18.0"
+"react-native-video@npm:~6.19.2":
+  version: 6.19.2
+  resolution: "react-native-video@npm:6.19.2"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10c0/4810181cb99753a78db2081da0b3d5a73c5eab60cd59f72cac7b7eb026378c353cea749ee8ab9ebcd5b12a0ad01818155b7cbba1c2674818034a353ab581a03c
+  checksum: 10c0/f5e06d4b38ebdbe082e344659deeb64f11e42567f5b89f48b9c6013118643b21687cea7b3f89f593ea77f3b32307423fcdfc26830d399eaa3335dafc16c4be5a
   languageName: node
   linkType: hard
 

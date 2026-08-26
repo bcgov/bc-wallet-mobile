@@ -1785,7 +1785,7 @@ PODS:
   - react-native-tcp-socket (6.0.6):
     - CocoaAsyncSocket
     - React-Core
-  - react-native-video (6.18.0):
+  - react-native-video (6.19.2):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1797,7 +1797,7 @@ PODS:
     - React-graphics
     - React-ImageManager
     - React-jsi
-    - react-native-video/Video (= 6.18.0)
+    - react-native-video/Video (= 6.19.2)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-renderercss
@@ -1808,7 +1808,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-video/Fabric (6.18.0):
+  - react-native-video/Fabric (6.19.2):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1830,7 +1830,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-video/Video (6.18.0):
+  - react-native-video/Video (6.19.2):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -3186,7 +3186,7 @@ SPEC CHECKSUMS:
   react-native-screenguard: 6be60c4564e883f1a5a4c348fec4000f020df5c4
   react-native-splash-screen: 95994222cc95c236bd3cdc59fe45ed5f27969594
   react-native-tcp-socket: ae8abcfebc071216302a09d9ed1e375d4e877484
-  react-native-video: b95d2e9183e8c0a0430ef6b0bfc89664c4f87844
+  react-native-video: db3a70efc9fa0c00f5499d7798283bf0585cbd37
   react-native-volume-manager: d9d2863a2374420af89c89662333ea6adf506988
   react-native-webrtc: e8f0ce746353adc2744a2b933645e1aeb41eaa74
   react-native-webview: 2da09bdea1aeb6c46e27dd94632e21059cade6c1
