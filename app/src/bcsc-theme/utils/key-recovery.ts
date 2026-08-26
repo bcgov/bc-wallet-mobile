@@ -245,6 +245,9 @@ export type ReRegisterResult = {
    * Raw (unnormalized) `n` values echoed back in the PUT response's `jwks.keys`, if present.
    * Used by the key-rotation flow (#3876) to confirm the newly-registered key actually landed
    * server-side — see modulusInSet() in jwk-modulus.ts.
+   *
+   * Absent ≡ empty ≡ unconfirmed: an absent (or malformed) echo must NEVER be read as
+   * confirmation that a key registered.
    */
   serverKeyNs?: Array<string | undefined>
 }
@@ -291,7 +294,9 @@ export async function reRegisterNewestKey(
 
     const { data } = await apiClient.put<{
       registration_access_token?: string
-      jwks?: { keys?: ServerJwk[] }
+      // Unvalidated server response — `keys` is checked with Array.isArray below rather than
+      // trusted as ServerJwk[], so a malformed echo degrades to "unconfirmed" instead of throwing.
+      jwks?: { keys?: unknown }
     }>(`${apiClient.endpoints.registration}/${clientId}`, payload, {
       skipBearerAuth: true,
       // Same as the recovery GET: an unattended re-registration must fail silently (→ our catch
@@ -301,7 +306,24 @@ export async function reRegisterNewestKey(
     })
 
     logger.info('[reRegisterNewestKey] event=succeeded re-registered newest local key with server')
-    const serverKeyNs = data?.jwks?.keys?.map((k) => k?.n)
+
+    const rawKeys = data?.jwks?.keys
+    let serverKeyNs: Array<string | undefined> | undefined
+    if (Array.isArray(rawKeys)) {
+      // Coerce a non-string `n` to undefined: normalizeModulus() would throw on it, flipping an
+      // accepted registration into a failure — the same bug the Array.isArray guard above fixes.
+      serverKeyNs = rawKeys.map((k: ServerJwk | undefined) => (typeof k?.n === 'string' ? k.n : undefined))
+      logger.info(
+        `[reRegisterNewestKey] event=echoed_jwks server echoed ${serverKeyNs.length} key(s) [${serverKeyNs
+          .map((n) => modulusFingerprint(normalizeModulus(n)))
+          .join(', ')}]`
+      )
+    } else if (rawKeys != null) {
+      logger.warn(
+        '[reRegisterNewestKey] event=malformed_jwks_echo jwks.keys is not an array; treating echo as unconfirmed'
+      )
+    }
+
     return {
       success: true,
       newRegistrationAccessToken: data?.registration_access_token,
