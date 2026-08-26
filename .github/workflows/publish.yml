@@ -43,6 +43,11 @@ jobs:
   # nothing relevant, early-exit-check skips the builds and the run still
   # reports success — with no artifacts to publish. So candidate runs are
   # filtered on actually having unexpired artifacts.
+  #
+  # iOS and Android build independently, so the resolver reports a separate
+  # variant list per artifact kind and each job below runs only for the
+  # variants whose artifact actually exists. A destination with nothing to
+  # upload is skipped visibly rather than reported as a successful publish.
   resolve-build:
     name: Resolve build
     runs-on: ubuntu-22.04
@@ -53,8 +58,14 @@ jobs:
       run_id: ${{ steps.resolve.outputs.run_id }}
       run_number: ${{ steps.resolve.outputs.run_number }}
       head_sha: ${{ steps.resolve.outputs.head_sha }}
-      variants: ${{ steps.resolve.outputs.variants }}
+      ipa_variants: ${{ steps.resolve.outputs.ipa_variants }}
+      aab_variants: ${{ steps.resolve.outputs.aab_variants }}
+      apk_variants: ${{ steps.resolve.outputs.apk_variants }}
     steps:
+      # Deliberately the dispatched ref, not the default branch: the scripts
+      # and composite actions have to match the workflow file being run, and
+      # dispatching from a branch is the only way to test a change to this
+      # workflow. Normal use dispatches from main.
       - uses: actions/checkout@v7
 
       - name: Resolve build
@@ -70,7 +81,9 @@ jobs:
   app-store-upload:
     name: 'App Store upload - ${{ matrix.variant }}'
     needs: resolve-build
-    if: ${{ inputs.targets == 'all' || inputs.targets == 'app-store-upload' }}
+    if: >-
+      (inputs.targets == 'all' || inputs.targets == 'app-store-upload') &&
+      needs.resolve-build.outputs.ipa_variants != '[]'
     runs-on: macos-26
     permissions:
       contents: read
@@ -78,11 +91,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: ${{ fromJSON(needs.resolve-build.outputs.variants) }}
+        variant: ${{ fromJSON(needs.resolve-build.outputs.ipa_variants) }}
     steps:
       - name: Download IPA
-        id: probe
-        continue-on-error: true
         uses: actions/download-artifact@v8
         with:
           name: ios-${{ matrix.variant }}.ipa
@@ -91,16 +102,13 @@ jobs:
           github-token: ${{ github.token }}
 
       - uses: actions/checkout@v7
-        if: steps.probe.outcome == 'success'
 
       - name: Use the build's variant config
-        if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/use-build-variant-config
         with:
           head_sha: ${{ needs.resolve-build.outputs.head_sha }}
 
       - name: Load variant config
-        if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/load-variant-config
         with:
           variant: ${{ matrix.variant }}
@@ -108,14 +116,12 @@ jobs:
       # Only the API key is needed. Uploading does not sign anything, so the
       # keychain and provisioning profile that a build requires are not built.
       - name: Create App Store Connect auth key
-        if: steps.probe.outcome == 'success'
         shell: bash
         env:
           AUTHKEY_P8: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
         run: scripts/makeauthkey.sh
 
       - name: Ship to Apple App Store
-        if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/ship-to-itunes
         with:
           app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -126,7 +132,9 @@ jobs:
   google-play:
     name: 'Google Play - ${{ matrix.variant }}'
     needs: resolve-build
-    if: ${{ inputs.targets == 'all' || inputs.targets == 'google-play' }}
+    if: >-
+      (inputs.targets == 'all' || inputs.targets == 'google-play') &&
+      needs.resolve-build.outputs.aab_variants != '[]'
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -134,11 +142,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: ${{ fromJSON(needs.resolve-build.outputs.variants) }}
+        variant: ${{ fromJSON(needs.resolve-build.outputs.aab_variants) }}
     steps:
       - name: Download AAB
-        id: probe
-        continue-on-error: true
         uses: actions/download-artifact@v8
         with:
           name: android-${{ matrix.variant }}.aab
@@ -147,34 +153,28 @@ jobs:
           github-token: ${{ github.token }}
 
       - uses: actions/checkout@v7
-        if: steps.probe.outcome == 'success'
 
       - name: Use the build's variant config
-        if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/use-build-variant-config
         with:
           head_sha: ${{ needs.resolve-build.outputs.head_sha }}
 
       - name: Load variant config
-        if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/load-variant-config
         with:
           variant: ${{ matrix.variant }}
 
       # bundletool validates the AAB before upload, and it needs a JRE.
       - name: Set up Java
-        if: steps.probe.outcome == 'success'
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
 
       - name: Install 1Password CLI
-        if: steps.probe.outcome == 'success'
         uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
 
       - name: Fetch Google Play publisher credentials
-        if: steps.probe.outcome == 'success'
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
         run: |
@@ -183,7 +183,6 @@ jobs:
           op read "op://bcsc-mobile-app-cd/google-play-publisher/service-account.json" --out-file "${RUNNER_TEMP}/play-service-account.json" --force
 
       - name: Ship to Google Play
-        if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/ship-to-play
         with:
           service_account_file: ${{ runner.temp }}/play-service-account.json
@@ -201,6 +200,7 @@ jobs:
     if: >-
       always() && !cancelled() &&
       needs.resolve-build.result == 'success' &&
+      needs.resolve-build.outputs.ipa_variants != '[]' &&
       (inputs.targets == 'all' || inputs.targets == 'testflight')
     runs-on: ubuntu-22.04
     permissions:
@@ -209,35 +209,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: ${{ fromJSON(needs.resolve-build.outputs.variants) }}
+        variant: ${{ fromJSON(needs.resolve-build.outputs.ipa_variants) }}
     steps:
-      - name: Check the build has an IPA
-        id: probe
-        continue-on-error: true
-        uses: actions/download-artifact@v8
-        with:
-          name: ios-${{ matrix.variant }}.ipa
-          path: ${{ runner.temp }}/probe
-          run-id: ${{ needs.resolve-build.outputs.run_id }}
-          github-token: ${{ github.token }}
-
       - uses: actions/checkout@v7
-        if: steps.probe.outcome == 'success'
 
       - name: Use the build's variant config
-        if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/use-build-variant-config
         with:
           head_sha: ${{ needs.resolve-build.outputs.head_sha }}
 
       - name: Load variant config
-        if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/load-variant-config
         with:
           variant: ${{ matrix.variant }}
 
       - name: Distribute to TestFlight
-        if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/distribute-testflight
         with:
           app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -252,7 +238,9 @@ jobs:
   firebase-ios:
     name: 'Firebase iOS - ${{ matrix.variant }}'
     needs: resolve-build
-    if: ${{ inputs.targets == 'all' || inputs.targets == 'firebase' }}
+    if: >-
+      (inputs.targets == 'all' || inputs.targets == 'firebase') &&
+      needs.resolve-build.outputs.ipa_variants != '[]'
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -260,11 +248,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: ${{ fromJSON(needs.resolve-build.outputs.variants) }}
+        variant: ${{ fromJSON(needs.resolve-build.outputs.ipa_variants) }}
     steps:
       - name: Download IPA
-        id: probe
-        continue-on-error: true
         uses: actions/download-artifact@v8
         with:
           name: ios-${{ matrix.variant }}.ipa
@@ -273,26 +259,21 @@ jobs:
           github-token: ${{ github.token }}
 
       - uses: actions/checkout@v7
-        if: steps.probe.outcome == 'success'
 
       - name: Use the build's variant config
-        if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/use-build-variant-config
         with:
           head_sha: ${{ needs.resolve-build.outputs.head_sha }}
 
       - name: Load variant config
-        if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/load-variant-config
         with:
           variant: ${{ matrix.variant }}
 
       - name: Install 1Password CLI
-        if: steps.probe.outcome == 'success'
         uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
 
       - name: Fetch Firebase credentials
-        if: steps.probe.outcome == 'success'
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
         run: |
@@ -302,7 +283,6 @@ jobs:
           op read "${FIREBASE_IOS_SA_REF}" --out-file "${RUNNER_TEMP}/firebase-service-account.json" --force
 
       - name: Distribute to Firebase App Distribution
-        if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/distribute-firebase
         with:
           platform: ios
@@ -317,7 +297,9 @@ jobs:
   firebase-android:
     name: 'Firebase Android - ${{ matrix.variant }}'
     needs: resolve-build
-    if: ${{ inputs.targets == 'all' || inputs.targets == 'firebase' }}
+    if: >-
+      (inputs.targets == 'all' || inputs.targets == 'firebase') &&
+      needs.resolve-build.outputs.apk_variants != '[]'
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -325,11 +307,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: ${{ fromJSON(needs.resolve-build.outputs.variants) }}
+        variant: ${{ fromJSON(needs.resolve-build.outputs.apk_variants) }}
     steps:
       - name: Download APK
-        id: probe
-        continue-on-error: true
         uses: actions/download-artifact@v8
         with:
           name: android-${{ matrix.variant }}.apk
@@ -338,26 +318,21 @@ jobs:
           github-token: ${{ github.token }}
 
       - uses: actions/checkout@v7
-        if: steps.probe.outcome == 'success'
 
       - name: Use the build's variant config
-        if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/use-build-variant-config
         with:
           head_sha: ${{ needs.resolve-build.outputs.head_sha }}
 
       - name: Load variant config
-        if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/load-variant-config
         with:
           variant: ${{ matrix.variant }}
 
       - name: Install 1Password CLI
-        if: steps.probe.outcome == 'success'
         uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
 
       - name: Fetch Firebase credentials
-        if: steps.probe.outcome == 'success'
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
         run: |
@@ -367,7 +342,6 @@ jobs:
           op read "${FIREBASE_ANDROID_SA_REF}" --out-file "${RUNNER_TEMP}/firebase-service-account.json" --force
 
       - name: Distribute to Firebase App Distribution
-        if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/distribute-firebase
         with:
           platform: android

@@ -3,7 +3,11 @@
 A run reporting success is not sufficient. When a push's final commit touches
 no build-relevant path, early-exit-check skips the build jobs and the run still
 concludes successfully — with nothing to publish. Artifacts also expire. So a
-run only qualifies if it still holds unexpired IPA or AAB artifacts.
+run only qualifies if it still holds unexpired artifacts.
+
+iOS and Android build in independent jobs, so a run can hold artifacts for one
+platform and not the other. Each artifact kind gets its own variant list so
+publish.yml only runs the jobs that have something to upload.
 """
 
 import json
@@ -14,8 +18,11 @@ import sys
 
 WORKFLOW = "main.yaml"
 RUN_PAGE_SIZE = 100
-IPA = re.compile(r"^ios-(?P<variant>.+)\.ipa$")
-AAB = re.compile(r"^android-(?P<variant>.+)\.aab$")
+KINDS = {
+    "ipa": re.compile(r"^ios-(?P<variant>.+)\.ipa$"),
+    "aab": re.compile(r"^android-(?P<variant>.+)\.aab$"),
+    "apk": re.compile(r"^android-(?P<variant>.+)\.apk$"),
+}
 
 
 def gh_api(path):
@@ -26,17 +33,22 @@ def gh_api(path):
 
 
 def publishable_variants(run_id):
-    """Variants in this run that still have an artifact we can publish."""
+    """Per artifact kind, the variants in this run we can still publish."""
     artifacts = gh_api(
         f"repos/{REPO}/actions/runs/{run_id}/artifacts?per_page=100"
     )["artifacts"]
     names = [a["name"] for a in artifacts if not a["expired"]]
-    variants = set()
+    found = {kind: set() for kind in KINDS}
     for name in names:
-        match = IPA.match(name) or AAB.match(name)
-        if match:
-            variants.add(match.group("variant"))
-    return sorted(variants)
+        for kind, pattern in KINDS.items():
+            match = pattern.match(name)
+            if match:
+                found[kind].add(match.group("variant"))
+    return {kind: sorted(variants) for kind, variants in found.items()}
+
+
+def all_variants(by_kind):
+    return sorted({v for variants in by_kind.values() for v in variants})
 
 
 def fail(message):
@@ -65,20 +77,20 @@ if requested_build:
     run = matches[0]
     if run["conclusion"] != "success":
         fail(f"Build {requested_build} concluded '{run['conclusion']}', not success.")
-    variants = publishable_variants(run["id"])
-    if not variants:
+    by_kind = publishable_variants(run["id"])
+    if not all_variants(by_kind):
         fail(
             f"Build {requested_build} has no publishable artifacts. "
             "They have expired, or that run skipped the build jobs."
         )
 else:
-    run, variants = None, []
+    run, by_kind = None, {}
     for candidate in runs:
         if candidate["conclusion"] != "success":
             continue
         found = publishable_variants(candidate["id"])
-        if found:
-            run, variants = candidate, found
+        if all_variants(found):
+            run, by_kind = candidate, found
             break
     if run is None:
         fail(
@@ -87,22 +99,32 @@ else:
         )
 
 if requested_variants:
-    unknown = sorted(set(requested_variants) - set(variants))
+    unknown = sorted(set(requested_variants) - set(all_variants(by_kind)))
     if unknown:
         fail(
             f"Build {run['run_number']} has no artifacts for: {', '.join(unknown)}. "
-            f"Available: {', '.join(variants)}."
+            f"Available: {', '.join(all_variants(by_kind))}."
         )
-    variants = [v for v in variants if v in requested_variants]
+    by_kind = {
+        kind: [v for v in variants if v in requested_variants]
+        for kind, variants in by_kind.items()
+    }
 
 print(f"Publishing build {run['run_number']} (run {run['id']})")
-print(f"  commit:   {run['head_sha']}")
-print(f"  variants: {', '.join(variants)}")
+print(f"  commit: {run['head_sha']}")
 if not requested_build:
     print("  chosen as the most recent main build with publishable artifacts")
+for kind, variants in by_kind.items():
+    if variants:
+        print(f"  {kind}: {', '.join(variants)}")
+    else:
+        # Named explicitly so a half-published build is obvious in the log
+        # rather than showing up as a quietly skipped job.
+        print(f"  {kind}: none — those destinations will be skipped")
 
 with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
     output.write(f"run_id={run['id']}\n")
     output.write(f"run_number={run['run_number']}\n")
     output.write(f"head_sha={run['head_sha']}\n")
-    output.write(f"variants={json.dumps(variants)}\n")
+    for kind, variants in by_kind.items():
+        output.write(f"{kind}_variants={json.dumps(variants)}\n")

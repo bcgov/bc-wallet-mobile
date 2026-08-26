@@ -57,6 +57,13 @@ still has its artifacts. A run can be green with nothing to publish — if a
 push's last commit touches no build-relevant files, the build jobs skip and the
 run still reports success.
 
+iOS and Android build independently, so a run can hold artifacts for one
+platform and not the other. Each destination runs only for the variants whose
+artifact is actually there; anything with nothing to upload is listed as
+skipped in the **Resolve build** log and shows as a skipped job. A missing
+artifact for a variant that was expected fails that job rather than passing
+quietly.
+
 ## Where a published build goes
 
 | Destination | Who sees it |
