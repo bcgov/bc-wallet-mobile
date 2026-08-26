@@ -146,6 +146,25 @@ describe('rotateSigningKey', () => {
     )
   })
 
+  it('setToken throws while persisting the rotated registration_access_token -> logs failure but still returns the token and continues rotation', async () => {
+    mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
+    mockedReRegisterNewestKey.mockResolvedValue({
+      success: true,
+      newRegistrationAccessToken: 'rotated-token',
+      serverKeyNs: [n(2)],
+    })
+    mockedGetAllKeysWithPublicInfo.mockResolvedValue([{ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 }])
+    mockedSetToken.mockRejectedValue(new Error('keystore unavailable'))
+    const logger = makeLogger()
+
+    const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
+
+    // The best-effort native persist failed, but the caller-side fallback still carries the token,
+    // and the failure doesn't abort confirm/prune — rotation completes normally.
+    expect(result).toEqual({ status: 'rotated', confirmed: true, newRegistrationAccessToken: 'rotated-token' })
+    expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('event=failed_persist_reg_token'))
+  })
+
   it('persists a rotated registration_access_token even when the PUT itself failed (rollback)', async () => {
     mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
     mockedReRegisterNewestKey.mockResolvedValue({ success: false, newRegistrationAccessToken: 'rotated-token' })
