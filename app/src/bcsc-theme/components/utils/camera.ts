@@ -1,14 +1,6 @@
 import { Platform } from 'react-native'
-import {
-  AutoFocusSystem,
-  CameraDevice,
-  CameraDeviceFormat,
-  Code,
-  FormatFilter,
-  VideoStabilizationMode,
-} from 'react-native-vision-camera'
-
-import { PHOTO_RESOLUTION_1080P } from '@/constants'
+// import { FormatFilter } from 'react-native-vision-camera'
+import { Barcode } from 'react-native-vision-camera-barcode-scanner'
 
 // ─── Shared Types ─────────────────────────────────────────────────────────────
 
@@ -18,7 +10,7 @@ export type Rect = { x: number; y: number; width: number; height: number }
 /**
  * Extended Code interface with position and orientation metadata
  */
-export interface EnhancedCode extends Code {
+export interface EnhancedCode extends Barcode {
   /** Position of the barcode in the camera frame */
   position?: Rect
   /** Orientation of the barcode (horizontal or vertical) */
@@ -45,99 +37,99 @@ export interface ScanZone {
 /** Collective scan state: scanning → aligned → locked */
 export type ScanState = 'scanning' | 'aligned' | 'locked'
 
-// ─── Camera Format Configurations ─────────────────────────────────────────────
-
-/**
- * Pre-defined camera format filters for different scanning scenarios.
- *
- * @see {@link node_modules/react-native-vision-camera/src/devices/getCameraFormat.ts} for the underlying format selection logic.
- */
-export const CameraFormat = {
-  /**
-   * Format optimized for barcode scanning (back camera, no selfie).
-   * Prioritizes high resolution and moderate frame rate for accurate detection
-   *
-   * Ideal format: 1080p + 30 FPS + non-HDR + stabilization
-   * Usecase: Scanning barcodes on ID cards.
-   */
-  CodeScanningFormat: [
-    // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
-    // pixel format (e.g. "btp2") is incompatible with VisionCamera's pipeline.
-    {
-      videoHdr: false,
-    },
-    // High resolution for better barcode detection
-    {
-      videoResolution: PHOTO_RESOLUTION_1080P,
-    },
-    // Moderate FPS for smooth preview without excessive processing load
-    {
-      fps: 30,
-    },
-    // Enable video stabilization for steadier scanning
-    {
-      videoStabilizationMode: 'auto',
-    },
-  ] satisfies FormatFilter[],
-  /**
-   * Format optimized for masked camera with barcode detection.
-   *
-   * Ideal format: 1080p + 60 FPS + non-HDR + stabilization
-   * Usecase: Capturing ID cards AND detecting barcodes in real-time.
-   */
-  MaskedWithBarcodeDetection: [
-    // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
-    // pixel format (e.g. "btp2") is incompatible with VisionCamera's pipeline.
-    {
-      videoHdr: false,
-    },
-    // Use phase-detection autofocus for faster and more accurate focusing on barcodes
-    {
-      autoFocusSystem: 'phase-detection',
-    },
-    // High resolution for better barcode detection
-    {
-      videoResolution: PHOTO_RESOLUTION_1080P,
-    },
-    // High resolution for better photo quality when capturing the ID card
-    {
-      photoResolution: PHOTO_RESOLUTION_1080P,
-    },
-    // Moderate FPS for smooth preview without excessive processing load
-    {
-      fps: 60,
-    },
-    // Enable video stabilization for steadier scanning
-    {
-      videoStabilizationMode: 'auto',
-    },
-  ] satisfies FormatFilter[],
-
-  /**
-   * Format optimized for capturing a still selfie (front camera, no barcode detection).
-   * Prioritizes photo resolution and quality over preview frame rate, since the output
-   * is a single still image that gets displayed full-screen and uploaded — unlike the
-   * barcode formats, there is no live scanning that needs high FPS.
-   *
-   * Ideal format: 1080p + 30 FPS + non-HDR
-   * Usecase: Capturing a selfie for identity verification or profile picture.
-   */
-  SelfiePhoto: [
-    // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
-    // pixel format (e.g. "btp2") is incompatible with VisionCamera's pipeline.
-    {
-      videoHdr: false,
-    },
-    // High resolution for better selfie quality
-    {
-      photoResolution: PHOTO_RESOLUTION_1080P,
-    },
-    // Moderate FPS for smooth preview without excessive processing load
-    {
-      fps: 30,
-    },
-  ] satisfies FormatFilter[],
-}
+// // ─── Camera Format Configurations ─────────────────────────────────────────────
+//
+// /**
+//  * Pre-defined camera format filters for different scanning scenarios.
+//  *
+//  * @see {@link node_modules/react-native-vision-camera/src/devices/getCameraFormat.ts} for the underlying format selection logic.
+//  */
+// export const CameraFormat = {
+//   /**
+//    * Format optimized for barcode scanning (back camera, no selfie).
+//    * Prioritizes high resolution and moderate frame rate for accurate detection
+//    *
+//    * Ideal format: 1080p + 30 FPS + non-HDR + stabilization
+//    * Usecase: Scanning barcodes on ID cards.
+//    */
+//   CodeScanningFormat: [
+//     // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
+//     // pixel format (e.g. "btp2") is incompatible with VisionCamera's pipeline.
+//     {
+//       videoHdr: false,
+//     },
+//     // High resolution for better barcode detection
+//     {
+//       videoResolution: PHOTO_RESOLUTION_1080P,
+//     },
+//     // Moderate FPS for smooth preview without excessive processing load
+//     {
+//       fps: 30,
+//     },
+//     // Enable video stabilization for steadier scanning
+//     {
+//       videoStabilizationMode: 'auto',
+//     },
+//   ] satisfies FormatFilter[],
+//   /**
+//    * Format optimized for masked camera with barcode detection.
+//    *
+//    * Ideal format: 1080p + 60 FPS + non-HDR + stabilization
+//    * Usecase: Capturing ID cards AND detecting barcodes in real-time.
+//    */
+//   MaskedWithBarcodeDetection: [
+//     // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
+//     // pixel format (e.g. "btp2") is incompatible with VisionCamera's pipeline.
+//     {
+//       videoHdr: false,
+//     },
+//     // Use phase-detection autofocus for faster and more accurate focusing on barcodes
+//     {
+//       autoFocusSystem: 'phase-detection',
+//     },
+//     // High resolution for better barcode detection
+//     {
+//       videoResolution: PHOTO_RESOLUTION_1080P,
+//     },
+//     // High resolution for better photo quality when capturing the ID card
+//     {
+//       photoResolution: PHOTO_RESOLUTION_1080P,
+//     },
+//     // Moderate FPS for smooth preview without excessive processing load
+//     {
+//       fps: 60,
+//     },
+//     // Enable video stabilization for steadier scanning
+//     {
+//       videoStabilizationMode: 'auto',
+//     },
+//   ] satisfies FormatFilter[],
+//
+//   /**
+//    * Format optimized for capturing a still selfie (front camera, no barcode detection).
+//    * Prioritizes photo resolution and quality over preview frame rate, since the output
+//    * is a single still image that gets displayed full-screen and uploaded — unlike the
+//    * barcode formats, there is no live scanning that needs high FPS.
+//    *
+//    * Ideal format: 1080p + 30 FPS + non-HDR
+//    * Usecase: Capturing a selfie for identity verification or profile picture.
+//    */
+//   SelfiePhoto: [
+//     // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
+//     // pixel format (e.g. "btp2") is incompatible with VisionCamera's pipeline.
+//     {
+//       videoHdr: false,
+//     },
+//     // High resolution for better selfie quality
+//     {
+//       photoResolution: PHOTO_RESOLUTION_1080P,
+//     },
+//     // Moderate FPS for smooth preview without excessive processing load
+//     {
+//       fps: 30,
+//     },
+//   ] satisfies FormatFilter[],
+// }
 
 // ─── Pure Utility Functions ───────────────────────────────────────────────────
 
@@ -472,94 +464,94 @@ export const mergeLockedCodesWithAccumulated = (
   return [...accumulatedExtras, ...currentFrameCodes]
 }
 
-/**
- * Get camera metadata including the selected device and format, with deduplicated formats.
- * Mostly used for logging and debugging purposes.
- *
- * @param device The CameraDevice to get metadata for
- * @param format The CameraDeviceFormat to get metadata for
- * @returns An object containing the selected device and format, with deduplicated formats
- */
-export const getCameraMetadata = (device?: CameraDevice, format?: CameraDeviceFormat) => {
-  const cameraDevice = _removeDuplicateCameraFormats(device)
+// /**
+//  * Get camera metadata including the selected device and format, with deduplicated formats.
+//  * Mostly used for logging and debugging purposes.
+//  *
+//  * @param device The CameraDevice to get metadata for
+//  * @param format The CameraDeviceFormat to get metadata for
+//  * @returns An object containing the selected device and format, with deduplicated formats
+//  */
+// export const getCameraMetadata = (device?: CameraDevice, format?: CameraDeviceFormat) => {
+//   const cameraDevice = _removeDuplicateCameraFormats(device)
+//
+//   return {
+//     selectedFormat: format ? _summarizeCameraFormat(format) : null,
+//     selectedDevice: cameraDevice
+//       ? {
+//           ...cameraDevice,
+//           formats: cameraDevice?.formats.map((format) => _summarizeCameraFormat(format)),
+//         }
+//       : null,
+//   }
+// }
 
-  return {
-    selectedFormat: format ? _summarizeCameraFormat(format) : null,
-    selectedDevice: cameraDevice
-      ? {
-          ...cameraDevice,
-          formats: cameraDevice?.formats.map((format) => _summarizeCameraFormat(format)),
-        }
-      : null,
-  }
-}
+// /**
+//  * Summarize a CameraDeviceFormat into a concise string for logging or debugging.
+//  *
+//  * @param format The CameraDeviceFormat to summarize
+//  * @returns A string summarizing the format's key properties
+//  */
+// const _summarizeCameraFormat = (format: CameraDeviceFormat): string => {
+//   // Maps the enumerated values to short strings for logging purposes
+//   const autoFocusSystemMap: Record<AutoFocusSystem, string> = {
+//     'contrast-detection': 'contrast',
+//     'phase-detection': 'phase',
+//     none: 'none',
+//   }
+//
+//   const stabilizationMap: Record<VideoStabilizationMode, string> = {
+//     auto: 'auto',
+//     standard: 'std',
+//     cinematic: 'cin',
+//     off: 'off',
+//     'cinematic-extended': 'cin-ext',
+//   }
+//
+//   let hdr = [format.supportsVideoHdr ? 'vid' : null, format.supportsPhotoHdr ? 'photo' : null].filter(Boolean).join(',')
+//
+//   if (!hdr.length) {
+//     hdr = 'none'
+//   }
+//
+//   return [
+//     `video:${format.videoWidth}x${format.videoHeight}`,
+//     `photo:${format.photoWidth}x${format.photoHeight}`,
+//     `fps:${format.maxFps}`,
+//     `focus:${autoFocusSystemMap[format.autoFocusSystem]}`,
+//     `stab:${format.videoStabilizationModes?.map((mode) => stabilizationMap[mode]).join(',')}`,
+//     `hdr:${hdr}`,
+//   ].join(' ')
+// }
 
-/**
- * Summarize a CameraDeviceFormat into a concise string for logging or debugging.
- *
- * @param format The CameraDeviceFormat to summarize
- * @returns A string summarizing the format's key properties
- */
-const _summarizeCameraFormat = (format: CameraDeviceFormat): string => {
-  // Maps the enumerated values to short strings for logging purposes
-  const autoFocusSystemMap: Record<AutoFocusSystem, string> = {
-    'contrast-detection': 'contrast',
-    'phase-detection': 'phase',
-    none: 'none',
-  }
-
-  const stabilizationMap: Record<VideoStabilizationMode, string> = {
-    auto: 'auto',
-    standard: 'std',
-    cinematic: 'cin',
-    off: 'off',
-    'cinematic-extended': 'cin-ext',
-  }
-
-  let hdr = [format.supportsVideoHdr ? 'vid' : null, format.supportsPhotoHdr ? 'photo' : null].filter(Boolean).join(',')
-
-  if (!hdr.length) {
-    hdr = 'none'
-  }
-
-  return [
-    `video:${format.videoWidth}x${format.videoHeight}`,
-    `photo:${format.photoWidth}x${format.photoHeight}`,
-    `fps:${format.maxFps}`,
-    `focus:${autoFocusSystemMap[format.autoFocusSystem]}`,
-    `stab:${format.videoStabilizationModes?.map((mode) => stabilizationMap[mode]).join(',')}`,
-    `hdr:${hdr}`,
-  ].join(' ')
-}
-
-/**
- * Remove duplicate formats from a CameraDevice's formats array, preserving the first occurrence of each unique format.
- *
- * @param device The CameraDevice to deduplicate formats for
- * @returns A new CameraDevice with deduplicated formats, or undefined if the input device is undefined
- */
-const _removeDuplicateCameraFormats = (device?: CameraDevice): CameraDevice | undefined => {
-  if (!device) {
-    return
-  }
-
-  const seenFormats = new Map<string, CameraDeviceFormat>()
-
-  for (const format of device?.formats ?? []) {
-    // Ensures that formats with the same properties but in different orders are considered duplicates
-    const sortedFormat = Object.keys(format)
-      .sort((a, b) => a.localeCompare(b))
-      .map((key) => [key, format[key as keyof CameraDeviceFormat]])
-
-    const formatKey = JSON.stringify(sortedFormat)
-
-    if (!seenFormats.has(formatKey)) {
-      seenFormats.set(formatKey, format)
-    }
-  }
-
-  return { ...device, formats: Array.from(seenFormats.values()) }
-}
+// /**
+//  * Remove duplicate formats from a CameraDevice's formats array, preserving the first occurrence of each unique format.
+//  *
+//  * @param device The CameraDevice to deduplicate formats for
+//  * @returns A new CameraDevice with deduplicated formats, or undefined if the input device is undefined
+//  */
+// const _removeDuplicateCameraFormats = (device?: CameraDevice): CameraDevice | undefined => {
+//   if (!device) {
+//     return
+//   }
+//
+//   const seenFormats = new Map<string, CameraDeviceFormat>()
+//
+//   for (const format of device?.formats ?? []) {
+//     // Ensures that formats with the same properties but in different orders are considered duplicates
+//     const sortedFormat = Object.keys(format)
+//       .sort((a, b) => a.localeCompare(b))
+//       .map((key) => [key, format[key as keyof CameraDeviceFormat]])
+//
+//     const formatKey = JSON.stringify(sortedFormat)
+//
+//     if (!seenFormats.has(formatKey)) {
+//       seenFormats.set(formatKey, format)
+//     }
+//   }
+//
+//   return { ...device, formats: Array.from(seenFormats.values()) }
+// }
 
 /**
  * Scan zone for the BC Services Card / Driver's License serial number scan screen.
