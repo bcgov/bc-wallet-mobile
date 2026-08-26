@@ -65,6 +65,7 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
   private static final String KEYSTORE_TYPE = "AndroidKeyStore";
   private static final String TAG = "BcscKeyPairRepo";
   private static final Pattern RSA_ALIAS_PATTERN = Pattern.compile("^" + RSA_ALIAS_PREFIX + "(\\d+)$");
+  private static final int MAX_ALIAS_ATTEMPTS = 5;
 
   @NonNull
   private final KeyPairInfoSource keyPairInfoSource;
@@ -185,22 +186,26 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
       // alias rather than colliding with a leftover v3 keystore entry.
       reconcileKeyPairInfoWithKeyStore(keyStore);
 
-      KeyPairInfo info = getNewestKeyPairInfo(keyPairInfoSource.getKeyPairInfo());
-
-      if (info == null) {
-        info = new KeyPairInfo(ALIAS_RSA, System.currentTimeMillis());
-        keyPairInfoSource.saveKeyPairInfo(info);
+      final int firstId = nextRsaAliasId(keyStore);
+      String alias = null;
+      KeyAlreadyExistsException lastCollision = null;
+      for (int attempt = 0; attempt < MAX_ALIAS_ATTEMPTS && alias == null; attempt++) {
+        final String candidate = String.format(Locale.ROOT, "%s%d", RSA_ALIAS_PREFIX, firstId + attempt);
+        try {
+          generateKeyPair(candidate);
+          alias = candidate;
+        } catch (KeyAlreadyExistsException e) {
+          // findRsaAliasesInKeyStore swallows KeyStoreException, which can undercount the
+          // keystore scan; bump and retry rather than looping forever on the same alias.
+          lastCollision = e;
+          SimpleLog.e(TAG, "getNewBcscKeyPair: alias collision at '" + redactAlias(candidate) + "', bumping", e);
+        }
+      }
+      if (alias == null) {
+        throw lastCollision;
       }
 
-      int id = Integer.parseInt(info.getAlias().replaceAll("\\D+", ""));
-
-      id += 1;
-
-      final String alias = String.format(Locale.ROOT, "%s%d", RSA_ALIAS_PREFIX, id);
-
       final KeyPairInfo newInfo = new KeyPairInfo(alias, System.currentTimeMillis());
-
-      generateKeyPair(alias);
 
       // Persist metadata only after generation succeeds — saving first would leave an orphan
       // row that getCurrentBcscKeyPair()'s newest-lookup treats as active, silently minting
@@ -424,6 +429,27 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
       SimpleLog.e(TAG, "Failed to enumerate keystore aliases for reconciliation", e);
     }
     return result;
+  }
+
+  /**
+   * Compute the next rsa\d+ alias id to try, one past the highest id seen across BOTH metadata
+   * and the keystore. Scanning metadata in full (not just the newest-by-createdAt row) avoids a
+   * livelock where markActiveBcscKeyPair() stamps an older alias as newest while a higher-id
+   * alias still exists in both metadata and the keystore — see issue #3876.
+   */
+  private int nextRsaAliasId(@NonNull KeyStore keyStore) throws BcscException {
+    int maxId = 0;
+    for (String alias : keyPairInfoSource.getKeyPairInfo().keySet()) {
+      Matcher m = RSA_ALIAS_PATTERN.matcher(alias);
+      if (m.matches()) {
+        maxId = Math.max(maxId, Integer.parseInt(m.group(1)));
+      }
+    }
+    java.util.TreeMap<Integer, String> keystoreAliases = findRsaAliasesInKeyStore(keyStore);
+    if (!keystoreAliases.isEmpty()) {
+      maxId = Math.max(maxId, keystoreAliases.lastKey());
+    }
+    return maxId + 1;
   }
 
   /**
