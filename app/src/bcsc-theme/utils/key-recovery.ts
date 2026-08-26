@@ -310,7 +310,9 @@ export async function reRegisterNewestKey(
     const rawKeys = data?.jwks?.keys
     let serverKeyNs: Array<string | undefined> | undefined
     if (Array.isArray(rawKeys)) {
-      serverKeyNs = rawKeys.map((k: ServerJwk | undefined) => k?.n)
+      // Coerce a non-string `n` to undefined: normalizeModulus() would throw on it, flipping an
+      // accepted registration into a failure — the same bug the Array.isArray guard above fixes.
+      serverKeyNs = rawKeys.map((k: ServerJwk | undefined) => (typeof k?.n === 'string' ? k.n : undefined))
       logger.info(
         `[reRegisterNewestKey] event=echoed_jwks server echoed ${serverKeyNs.length} key(s) [${serverKeyNs
           .map((n) => modulusFingerprint(normalizeModulus(n)))

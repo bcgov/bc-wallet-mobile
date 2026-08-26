@@ -514,13 +514,28 @@ describe('reRegisterNewestKey', () => {
     await reRegisterNewestKey(apiClient, CLIENT_ID, REG_TOKEN, logger)
 
     expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('event=echoed_jwks'))
-    // the fingerprint keeps only the first/last 8 chars of the *normalized* modulus, so a middle
-    // substring of the raw n must never appear in any logged string — edge substrings can
-    // legitimately coincide and wouldn't prove truncation.
+    // A middle substring proves truncation; an edge one could coincide with the kept first/last 8.
     const middleSubstring = LONG_N.slice(10, 30)
     const allLoggedStrings = [...logger.info.mock.calls, ...logger.warn.mock.calls, ...logger.error.mock.calls].map(
       (call) => call[0]
     )
     expect(allLoggedStrings.some((msg) => msg.includes(middleSubstring))).toBe(false)
+  })
+
+  it('coerces a non-string echoed n to undefined instead of throwing into the failure path', async () => {
+    mockedGetAccount.mockResolvedValue({ nickname: 'My Phone' } as any)
+    mockedGetDCRBody.mockResolvedValue(JSON.stringify({ client_name: 'My Phone' }))
+    const apiClient = makeApiClient(undefined)
+    apiClient.put.mockResolvedValue({
+      data: { registration_access_token: undefined, jwks: { keys: [{ kid: 'x', n: 123 }, { n: n(2) }] } },
+    })
+    const logger = makeLogger()
+
+    const result = await reRegisterNewestKey(apiClient, CLIENT_ID, REG_TOKEN, logger)
+
+    expect(result.success).toBe(true)
+    expect(result.serverKeyNs).toStrictEqual([undefined, n(2)])
+    expect(logger.error).not.toHaveBeenCalled()
+    expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('event=echoed_jwks'))
   })
 })
