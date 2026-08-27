@@ -218,12 +218,13 @@ runs:
         ALL_GROUPS=$(asc_get "${API}/apps/${APP_ID}/betaGroups?limit=50") \
           || ALL_GROUPS='{"data":[]}'
 
-        # Build the list of group IDs that match requested names
-        GROUP_IDS=$(echo "$ALL_GROUPS" | python3 -c "
-        import sys, json
+        # Group names reach python through the environment, not by being
+        # pasted into the source: a name containing a quote would otherwise
+        # change the program rather than the data.
+        GROUP_IDS=$(echo "$ALL_GROUPS" | BETA_GROUPS="${BETA_GROUPS}" python3 -c "
+        import os, sys, json
         groups = json.load(sys.stdin).get('data', [])
-        requested = set('''${BETA_GROUPS}'''.strip().split('\n'))
-        requested = {g.strip() for g in requested if g.strip()}
+        requested = {g.strip() for g in os.environ['BETA_GROUPS'].split('\n') if g.strip()}
         ids = []
         for g in groups:
             name = g['attributes'].get('name', '')

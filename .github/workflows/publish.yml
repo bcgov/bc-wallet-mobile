@@ -413,11 +413,28 @@ jobs:
   # below waits here; ring-0 above has already gone out, and still goes out
   # if this is rejected.
   #
+  # It waits on the ring-0 jobs so the prompt only appears once the team
+  # has the build — an approver deciding whether to go wider should be able
+  # to see that ring-0 landed. A failed ring-0 leg does not block approval,
+  # because each widen job separately requires its own ring-0 counterpart;
+  # a broken iOS upload should not hold up widening on Android.
+  #
   # An environment with no protection rules approves instantly, so this gate
   # is open until required reviewers are configured in Settings.
   approval:
     name: 'Approve ${{ inputs.ring }}'
-    needs: resolve-build
+    needs:
+      [
+        resolve-build,
+        apple-upload,
+        testflight,
+        google-upload,
+        firebase-ios,
+        firebase-android,
+      ]
+    if: >-
+      always() && !cancelled() &&
+      needs.resolve-build.result == 'success'
     runs-on: ubuntu-22.04
     environment:
       name: ${{ inputs.ring }}
