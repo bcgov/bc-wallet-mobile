@@ -641,20 +641,20 @@ export async function exerciseInCallControls(): Promise<void> {
 }
 
 /**
- * Leave the live call from either settle outcome — Cancel on the loading/waiting view, EndCall once
- * connected — and ride the app's own exit: the CALL_ENDED processing view, a verification-status
- * re-check, then the stack reset to [VerificationMethodSelection, VerifyNotComplete] for an account
- * that is (as expected in CI) not verified.
+ * Leave the live call — Cancel on the loading/waiting view, EndCall once connected — and ride the
+ * app's own exit: the CALL_ENDED processing view, a verification-status re-check, then the stack
+ * reset to [VerificationMethodSelection, VerifyNotComplete] for an account that is (as expected in
+ * CI) not verified.
  */
 export async function leaveLiveCall(outcome: LiveCallOutcome): Promise<void> {
-  if (outcome === 'connected') {
-    // The far side owns the call too: if the harness agent hung up first, the app is already on its
-    // way out through the same reset this waits on — only tap EndCall while the call is still up.
-    if (await LiveCallScreen.isPresent(1_000)) {
-      await LiveCallScreen.tap('primary') // EndCall
-    }
-  } else {
-    await LiveCallLoadingScreen.tap('primary') // Cancel
+  // WHICH face is up is read here, not taken from `outcome`: the agent can answer (or hang up) in the
+  // gap since the settle. Neither up means the call is already leaving through the reset waited on below.
+  const [expected, other] =
+    outcome === 'connected' ? [LiveCallScreen, LiveCallLoadingScreen] : [LiveCallLoadingScreen, LiveCallScreen]
+  if (await expected.isPresent(1_000)) {
+    await expected.tap('primary') // EndCall / Cancel
+  } else if (await other.isPresent(1_000)) {
+    await other.tap('primary')
   }
   // Pexip disconnect + two session-status calls + the verification re-check run behind the processing
   // view before the reset lands, so the exit gets a launch-sized budget rather than a transition one.
