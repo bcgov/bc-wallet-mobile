@@ -39,7 +39,7 @@ ring-0 up to ring-2 later works fine: the ring-0 steps see it is already there
 and skip.
 
 On Google Play specifically, a re-publish never re-uploads and never touches
-the internal track — if a newer build has since replaced it there, the newer
+the internal track. If a newer build has since replaced it there, the newer
 build is left in place. Widening puts the older build's version code directly
 onto the ring tracks being widened to, replacing whatever they held. That's
 deliberate: widening is explicit operator intent, so it's the one case where a
@@ -85,6 +85,16 @@ what a tester installs is exactly what CI made.
 | Google Play | Internal testing | That ring's closed track |
 | Firebase | `ring-0` group | That ring's group |
 
+On iOS, `ring-0` is a TestFlight **internal** group, so the team has the build
+within minutes of it being uploaded. The wider rings are **external** groups,
+and Apple runs a Beta App Review on the first build of each version before
+external testers can install it. That usually takes about a day. Later builds
+of the same version normally clear in minutes.
+
+So approving a ring does not always mean testers have it straight away. On
+Android and Firebase they do; on iOS the first build of a new version waits for
+Apple.
+
 ### Which branch
 
 Publish only runs from `main` or a `release/*` branch. Anywhere else it stops
@@ -95,8 +105,8 @@ the version comes from the variant files, not the branch name.
 
 Publishes queue rather than run together. Waiting publishes queue in the
 order they started, so more than one can be waiting at once. A run holding
-the approval gate holds the whole queue until it's approved or rejected —
-approve or reject promptly; rejecting frees the queue.
+the approval gate holds the whole queue until it's approved or rejected, so
+do one or the other promptly.
 
 ## Version numbers
 
@@ -142,6 +152,8 @@ For each variant:
   created through the API. Use a Google Group for testers so membership changes
   don't need a Play Console edit.
 - **App Store Connect**: five TestFlight beta groups, `ring-0` to `ring-4`.
+  `ring-0` is an internal group (up to 100 App Store Connect users, no Apple
+  review). The rest are external groups.
 - **Firebase App Distribution**: five tester groups, `ring-0` to `ring-4`.
 
 The repository side is done. The `ring-1` to `ring-4` environments exist under
