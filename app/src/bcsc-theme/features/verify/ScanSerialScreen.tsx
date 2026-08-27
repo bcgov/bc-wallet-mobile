@@ -12,10 +12,9 @@ import { useTranslation } from 'react-i18next'
 import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Svg, { Defs, Mask, Rect } from 'react-native-svg'
-import { useCameraPermission } from 'react-native-vision-camera'
-import CodeScanningCamera from '../../components/CodeScanningCamera'
-import TorchButton from '../../components/TorchButton'
-import { BCSC_SN_SCAN_ZONES, ScanState } from '../../components/utils/camera'
+import { Camera, useCameraPermission } from 'react-native-vision-camera'
+import { useBarcodeScannerOutput } from 'react-native-vision-camera-barcode-scanner'
+import { ScanState } from '../../components/utils/camera'
 
 /**
  * How long the initial "Scan your card" guidance shows before falling back to
@@ -191,7 +190,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const { hasPermission, requestPermission } = useCameraPermission()
   const scanner = useCardScanner()
   const { isLoading } = useAutoRequestPermission(hasPermission, requestPermission)
-  const [torchOn, setTorchOn] = useState(false)
+  // const [torchOn, setTorchOn] = useState(false)
   const [size, setSize] = useState<{ width: number; height: number } | null>(null)
   const [scanState, setScanState] = useState<ScanState>('scanning')
   // Starts on mount; after the timeout we swap the initial guidance for the
@@ -205,6 +204,20 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const bcscSerialRef = useRef<string | null>(null)
   const birthDateRef = useRef<Date | null>(null)
 
+  const barcodeScannerOutput = useBarcodeScannerOutput({
+    barcodeFormats: scanner.codeTypes,
+    onBarcodeScanned: async (barcodes) => {
+      const scannableCodes = barcodes.map((barcode) => ({
+        type: barcode.format,
+        value: barcode.rawValue,
+      }))
+      await onCodeScanned(scannableCodes)
+    },
+    onError: (error) => {
+      logger.error('Barcode scanner error', { error })
+    },
+  })
+
   useEffect(() => {
     const timer = setTimeout(() => setShowHelp(true), SCAN_HELP_TIMEOUT_MS)
     return () => clearTimeout(timer)
@@ -215,12 +228,12 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     setSize({ width, height })
   }
 
-  const toggleTorch = () => setTorchOn((prev) => !prev)
+  // const toggleTorch = () => setTorchOn((prev) => !prev)
 
   const goToManualEntry = useCallback(() => navigation.navigate(BCSCScreens.ManualSerial), [navigation])
 
   const onCameraError = useCallback(() => {
-    setTorchOn(false)
+    // setTorchOn(false)
     setCameraFailed(true)
   }, [])
 
@@ -362,21 +375,29 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
           </View>
         ) : (
           <>
-            {/* Camera fills the entire screen */}
-            <CodeScanningCamera
+            <Camera
               key={cameraKey}
-              onCodeScanned={onCodeScanned}
-              cameraType={'back'}
-              initialZoom={2}
-              scanZones={BCSC_SN_SCAN_ZONES}
-              showScanZoneOverlay={false}
-              showZoomIndicator={false}
-              hideTorchButton
-              torchActive={torchOn}
-              onToggleTorch={toggleTorch}
-              onError={onCameraError}
               style={StyleSheet.absoluteFill}
+              isActive={true}
+              device={'back'}
+              onError={onCameraError}
+              outputs={[barcodeScannerOutput]}
             />
+            {/* Camera fills the entire screen */}
+            {/* <CodeScanningCamera */}
+            {/*   key={cameraKey} */}
+            {/*   onCodeScanned={onCodeScanned} */}
+            {/*   cameraType={'back'} */}
+            {/*   initialZoom={2} */}
+            {/*   scanZones={BCSC_SN_SCAN_ZONES} */}
+            {/*   showScanZoneOverlay={false} */}
+            {/*   showZoomIndicator={false} */}
+            {/*   hideTorchButton */}
+            {/*   torchActive={torchOn} */}
+            {/*   onToggleTorch={toggleTorch} */}
+            {/*   onError={onCameraError} */}
+            {/*   style={StyleSheet.absoluteFill} */}
+            {/* /> */}
 
             {/* Vertical ID-card framing guide (appearance of MaskType.ID_CARD) */}
             {size ? <IdCardMaskOverlay width={size.width} height={size.height} strokeColor={frameStrokeColor} /> : null}
@@ -399,7 +420,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
         <View style={styles.bottomBar} pointerEvents="box-none">
           {cameraFailed ? null : (
             <View style={styles.torchRow} pointerEvents="box-none">
-              <TorchButton active={torchOn} onPress={toggleTorch} />
+              {/* <TorchButton active={torchOn} onPress={toggleTorch} /> */}
             </View>
           )}
           <View style={[styles.buttonBlock, { paddingBottom: insets.bottom + Spacing.lg }]}>
