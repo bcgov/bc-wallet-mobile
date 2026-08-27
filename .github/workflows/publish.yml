@@ -45,10 +45,13 @@ on:
 
 # Never cancel a publish part-way through: the stores are not transactional.
 # A run waiting for approval holds this group, so approvers should approve or
-# reject promptly — rejecting frees the queue for the next publish.
+# reject promptly — rejecting frees the queue for the next publish. `queue:
+# max` lets multiple runs wait their turn (in start order) instead of a new
+# pending run silently cancelling whatever was already queued.
 concurrency:
   group: publish
   cancel-in-progress: false
+  queue: max
 
 permissions: {}
 
