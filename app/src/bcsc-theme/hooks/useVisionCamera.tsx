@@ -1,43 +1,52 @@
-import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { ensureAppError } from '@/errors/errorHandler'
-import { AppEventCode } from '@/events/appEventCode'
 import { TOKENS, useServices } from '@bifold/core'
 import { useIsFocused } from '@react-navigation/native'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import {
   CameraRef,
   CommonResolutions,
   QualityPrioritization,
   Recorder,
+  RecordingFinishedReason,
   Size,
   TargetCameraPosition,
   useCameraDevice,
   usePhotoOutput,
   useVideoOutput,
 } from 'react-native-vision-camera'
-import { getCameraMetadata } from '../components/utils/camera'
+
+// NOTE: Pull any of these values into VisionCameraOptions if external customization needed
+const DEFAULT_QUALITY_COMPRESSION = 0.9
+const DEFAULT_VIDEO_FILE_TYPE = 'mp4'
+const DEFAULT_VIDEO_CODEC = 'h264'
+
+interface StartRecordingCallbacks {
+  onRecordingFinished: (recording: {
+    filePath: string
+    reason: RecordingFinishedReason
+    duration: number
+    fileSize: number
+  }) => void
+  onRecordingError: (error: Error) => void
+}
 
 interface VisionCameraOptions {
   position?: TargetCameraPosition
-  quality?: number
   qualityPrioritization?: QualityPrioritization
-  targetResolution?: Size
+  targetVideoResolution?: Size
+  targetPhotoResolution?: Size
 }
 
 const DEFAULT_OPTIONS: Required<VisionCameraOptions> = {
   position: 'back',
-  quality: 0.9,
   qualityPrioritization: 'quality',
-  targetResolution: CommonResolutions.FHD_16_9, // 1080p
+  targetPhotoResolution: CommonResolutions.FHD_16_9, // 1080p
+  targetVideoResolution: CommonResolutions.VGA_16_9, // 480p
 }
 
 export const useVisionCamera = (visionCameraOptions: VisionCameraOptions) => {
   const options = { ...DEFAULT_OPTIONS, ...visionCameraOptions }
 
   // Utility Hooks
-  const { t } = useTranslation()
-  const { emitErrorModal } = useErrorAlert()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const isFocused = useIsFocused()
 
@@ -45,59 +54,51 @@ export const useVisionCamera = (visionCameraOptions: VisionCameraOptions) => {
   const cameraRef = useRef<CameraRef>(null)
   const device = useCameraDevice(options.position)
   const photoOutput = usePhotoOutput({
-    quality: options.quality,
+    quality: DEFAULT_QUALITY_COMPRESSION,
     qualityPrioritization: options.qualityPrioritization,
-    targetResolution: options.targetResolution,
+    targetResolution: options.targetPhotoResolution,
   })
   const videoOutput = useVideoOutput({
-    targetResolution: options.targetResolution,
+    targetResolution: options.targetVideoResolution,
     enableAudio: true,
+    fileType: DEFAULT_VIDEO_FILE_TYPE,
   })
   const [isTorchOn, setIsTorchOn] = useState(cameraRef.current?.controller?.torchMode === 'on')
   const recorderRef = useRef<Recorder>(null)
 
   const hasTorch = device?.hasTorch ?? false
 
-  const emitCameraError = useCallback(
-    (error: unknown) => {
-      const appError = ensureAppError(error, AppEventCode.CAMERA_ERROR)
+  const takePhoto = useCallback(async () => {
+    logger.debug('[Camera] Capturing photo to file')
+    return photoOutput.capturePhotoToFile({ flashMode: 'off', enableShutterSound: false }, {})
+  }, [logger, photoOutput])
 
-      appError.addContext(getCameraMetadata(device))
-
-      emitErrorModal(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorMessage'), appError)
-      return appError
-    },
-    [device, emitErrorModal, t]
-  )
-
-  const takeAndSavePhoto = useCallback(async () => {
-    try {
-      const photo = await photoOutput.capturePhotoToFile({ flashMode: 'off', enableShutterSound: false }, {})
-      return photo
-    } catch (error) {
-      logger.error('[Camera] Error capturing photo to file', error as Error)
-      throw emitCameraError(error)
-    }
-  }, [emitCameraError, logger, photoOutput])
-
-  const startRecordingVideo = useCallback(async () => {
-    try {
+  const startRecordingVideo = useCallback(
+    async (options: StartRecordingCallbacks) => {
       if (recorderRef.current?.isRecording) {
         logger.warn('[Camera] Recording already in progress')
         return
       }
 
+      logger.debug('[Camera] Starting video recording')
+
+      // Note: Video output settings must be set before creating the recorder
+      videoOutput.setOutputSettings({ codec: DEFAULT_VIDEO_CODEC })
       recorderRef.current = await videoOutput.createRecorder({})
 
       await recorderRef.current.startRecording(
-        () => {},
-        () => {}
+        (filePath, reason) =>
+          options.onRecordingFinished({
+            filePath,
+            reason,
+            duration: recorderRef.current?.recordedDuration ?? -1,
+            fileSize: recorderRef.current?.recordedFileSize ?? -1,
+          }),
+        options.onRecordingError
       )
-    } catch (error) {
-      logger.error('[Camera] Error starting video recording', error as Error)
-      throw emitCameraError(error)
-    }
-  }, [emitCameraError, logger, videoOutput])
+    },
+    [logger, videoOutput]
+  )
 
   const stopRecordingVideo = useCallback(async () => {
     try {
@@ -106,14 +107,22 @@ export const useVisionCamera = (visionCameraOptions: VisionCameraOptions) => {
         return
       }
 
+      logger.debug('[Camera] Stopping video recording')
+
       await recorderRef.current.stopRecording()
-    } catch (error) {
-      logger.error('[Camera] Error stopping video recording', error as Error)
-      throw emitCameraError(error)
     } finally {
       recorderRef.current = null
     }
-  }, [emitCameraError, logger])
+  }, [logger])
+
+  const cancelRecordingVideo = useCallback(async () => {
+    if (!recorderRef.current?.isRecording) {
+      logger.warn('[Camera] No recording in progress to cancel')
+      return
+    }
+
+    await recorderRef.current.cancelRecording()
+  }, [logger])
 
   const enableTorch = useCallback((enabled: boolean) => {
     setIsTorchOn(enabled)
@@ -130,26 +139,26 @@ export const useVisionCamera = (visionCameraOptions: VisionCameraOptions) => {
     () => ({
       cameraRef,
       device,
-      takeAndSavePhoto,
+      takePhoto,
       startRecordingVideo,
       stopRecordingVideo,
+      cancelRecordingVideo,
       hasTorch,
       isTorchOn,
       enableTorch,
-      emitCameraError,
       photoOutput,
       videoOutput,
     }),
     [
+      cancelRecordingVideo,
       device,
-      emitCameraError,
       enableTorch,
       hasTorch,
       isTorchOn,
       photoOutput,
       startRecordingVideo,
       stopRecordingVideo,
-      takeAndSavePhoto,
+      takePhoto,
       videoOutput,
     ]
   )

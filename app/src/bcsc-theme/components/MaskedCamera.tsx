@@ -1,3 +1,6 @@
+import { useErrorAlert } from '@/contexts/ErrorAlertContext'
+import { ensureAppError } from '@/errors/errorHandler'
+import { AppEventCode } from '@/events/appEventCode'
 import {
   MaskType,
   SVGOverlay,
@@ -9,7 +12,7 @@ import {
   useTheme,
 } from '@bifold/core'
 import { NavigationProp, ParamListBase, useIsFocused } from '@react-navigation/native'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -18,6 +21,7 @@ import { Camera, CameraOutput, CommonResolutions } from 'react-native-vision-cam
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
 import { useVisionCamera } from '../hooks/useVisionCamera'
 import { isBackgroundedAppState } from '../utils/app-state'
+import { getCameraMetadata } from './utils/camera'
 
 type MaskedCameraProps = {
   navigation: NavigationProp<ParamListBase>
@@ -48,12 +52,11 @@ const MaskedCamera = ({
   cameraFace = 'back',
   onPhotoTaken,
 }: MaskedCameraProps) => {
-  const { cameraRef, device, takeAndSavePhoto, hasTorch, isTorchOn, enableTorch, photoOutput, emitCameraError } =
-    useVisionCamera({
-      position: cameraFace,
-      qualityPrioritization: photoQualityBalance,
-      targetResolution: CommonResolutions.FHD_16_9, // 1080p
-    })
+  const { cameraRef, device, takePhoto, hasTorch, isTorchOn, enableTorch, photoOutput } = useVisionCamera({
+    position: cameraFace,
+    qualityPrioritization: photoQualityBalance,
+    targetPhotoResolution: CommonResolutions.FHD_16_9, // 1080p
+  })
   // const device = useCameraDevice(cameraFace)
   const { t } = useTranslation()
   const safeAreaInsets = useSafeAreaInsets()
@@ -65,7 +68,7 @@ const MaskedCamera = ({
   const isFocused = useIsFocused()
   // const format = useCameraFormat(device, cameraFormatFilter)
   // const { failedToWriteToLocalStorageAlert } = useAlerts(navigation)
-  // const { emitErrorModal } = useErrorAlert()
+  const { emitErrorModal } = useErrorAlert()
   const { preventDoublePress } = usePreventDoublePress()
   const { appStateStatus } = useBCSCActivity()
   //const hasTorch = device?.hasTorch ?? false
@@ -76,7 +79,7 @@ const MaskedCamera = ({
   //   targetResolution: CommonResolutions.FHD_16_9, // 1080p
   // })
   // TODO (MD VisionCamera): Replace with actual metadata
-  // const cameraMetadata = useMemo(() => ({}), []) //useMemo(() => getCameraMetadata(device, format), [device, format])
+  const cameraMetadata = useMemo(() => getCameraMetadata(device), [device])
 
   const styles = StyleSheet.create({
     container: {
@@ -146,7 +149,7 @@ const MaskedCamera = ({
   //   }
   // }, [handleTorchChange, isFocused])
 
-  // const getCameraError = useCallback(
+  // const emitCameraError = useCallback(
   //   (error: unknown) => {
   //     const appError = ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
   //
@@ -155,9 +158,9 @@ const MaskedCamera = ({
   //
   //     logger.error('[MaskedCamera] runtime error', appError.toJSON())
   //
-  //     return appError
+  //     emitErrorModal(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorMessage'), appError)
   //   },
-  //   [cameraMetadata, logger]
+  //   [cameraMetadata, emitErrorModal, logger, t]
   // )
 
   const onError = useCallback(
@@ -169,9 +172,14 @@ const MaskedCamera = ({
         return
       }
 
-      emitCameraError(error)
+      const appError = ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
+
+      // Add camera device and format info to the error context for better debugging
+      appError.addContext(cameraMetadata)
+
+      emitErrorModal(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorMessage'), appError)
     },
-    [appStateStatus, emitCameraError, logger]
+    [appStateStatus, cameraMetadata, emitErrorModal, logger, t]
   )
   if (!device) {
     return (
@@ -187,17 +195,18 @@ const MaskedCamera = ({
     navigation.goBack()
   }
 
-  const takePhoto = async () => {
+  const takeAndSavePhoto = async () => {
     if (!cameraRef.current || !isFocused) {
       return
     }
 
     try {
-      const photo = await takeAndSavePhoto()
+      const photo = await takePhoto()
       onPhotoTaken(photo.filePath)
-      logger.info(`Photo taken and saved temporarily: ${photo.filePath}`)
+      logger.info(`[MaskedCamera] Photo taken and saved temporarily: ${photo.filePath}`)
     } catch (error) {
       logger.error('[MaskedCamera] Error taking photo', error as Error)
+      onError(error)
     }
   }
 
@@ -221,6 +230,7 @@ const MaskedCamera = ({
         // Set fps to max supported by the selected format for smoother preview
         // fps={format?.maxFps}
         outputs={[photoOutput, codeScanner].filter(Boolean) as CameraOutput[]}
+        onConfigured={() => logger.debug('MaskedCamera initialized', cameraMetadata)}
       />
       {maskType && (
         <SVGOverlay
@@ -261,7 +271,7 @@ const MaskedCamera = ({
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.captureButton}
-          onPress={preventDoublePress(takePhoto)}
+          onPress={preventDoublePress(takeAndSavePhoto)}
           accessibilityLabel={t('BCSC.CameraDisclosure.TakePhoto')}
           accessibilityRole="button"
           testID={testIdWithKey('TakePhoto')}

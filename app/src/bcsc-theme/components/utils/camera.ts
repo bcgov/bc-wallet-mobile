@@ -476,8 +476,6 @@ export const getCameraMetadata = (device?: CameraDevice) => {
   if (!device) {
     return {
       selectedDevice: null,
-      /** @deprecated formats don't exist in V5 */
-      selectedFormat: null,
     }
   }
 
