@@ -100,6 +100,7 @@ runs:
         MAX_SECONDS=$((MAX_WAIT * 60))
         NOT_FOUND_THRESHOLD=180  # seconds — bail early if build never appears
         BUILD_ID=""
+        STATE=""
 
         while [ $ELAPSED -lt $MAX_SECONDS ]; do
           RESPONSE=$(asc_get \
@@ -140,8 +141,8 @@ runs:
           ELAPSED=$((ELAPSED + INTERVAL))
         done
 
-        if [ -z "$BUILD_ID" ]; then
-          echo "❌ Timed out waiting for build ${VERSION_CODE} after ${MAX_WAIT} minutes"
+        if [ "$STATE" != "VALID" ]; then
+          echo "❌ Timed out after ${MAX_WAIT} minutes waiting for build ${VERSION_CODE} to finish processing (last state: ${STATE:-unknown})"
           exit 1
         fi
 
