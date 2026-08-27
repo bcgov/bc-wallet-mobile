@@ -1,7 +1,6 @@
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import PhotoReview from '@/bcsc-theme/components/PhotoReview'
-import { CameraFormat } from '@/bcsc-theme/components/utils/camera'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
@@ -245,7 +244,6 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
             maskLineColor={ColorPalette.brand.primary}
             onPhotoTaken={handlePhotoTaken}
             codeScanner={codeScanner}
-            cameraFormatFilter={CameraFormat.MaskedWithBarcodeDetection}
           />
         </View>
       ) : (
