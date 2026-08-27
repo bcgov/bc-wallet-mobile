@@ -215,45 +215,59 @@ runs:
           exit 0
         fi
 
-        # Fetch all beta groups for the app (APP_ID was resolved above)
-        ALL_GROUPS=$(asc_get "${API}/apps/${APP_ID}/betaGroups?limit=50") \
-          || ALL_GROUPS='{"data":[]}'
+        # Fetch every page of beta groups for the app (APP_ID was resolved
+        # above). A single page (the API defaults to far fewer than most
+        # apps' group count) would silently miss groups added after the
+        # first 50-ish — so page through `links.next` until it's absent. A
+        # failed page fetch is a hard failure: silently treating it as "no
+        # groups" would misreport a real API error as "group missing".
+        ALL_GROUPS_FILE=$(mktemp)
+        echo '[]' > "$ALL_GROUPS_FILE"
+        PAGE_URL="${API}/apps/${APP_ID}/betaGroups?limit=200"
+        while [ -n "$PAGE_URL" ]; do
+          PAGE_RESPONSE=$(asc_get "$PAGE_URL") || {
+            echo "❌ Failed to fetch beta groups (GET ${PAGE_URL})" >&2
+            exit 1
+          }
+          PAGE_URL=$(PAGE="$PAGE_RESPONSE" GROUPS_FILE="$ALL_GROUPS_FILE" python3 -c "
+        import json, os
+        page = json.loads(os.environ['PAGE'])
+        groups_file = os.environ['GROUPS_FILE']
+        with open(groups_file) as f:
+            acc = json.load(f)
+        acc.extend(page.get('data', []))
+        with open(groups_file, 'w') as f:
+            json.dump(acc, f)
+        print(page.get('links', {}).get('next') or '')
+        ")
+        done
 
         # Group names reach python through the environment, not by being
         # pasted into the source: a name containing a quote would otherwise
-        # change the program rather than the data.
-        GROUP_IDS=$(echo "$ALL_GROUPS" | BETA_GROUPS="${BETA_GROUPS}" python3 -c "
+        # change the program rather than the data. Matching is done as name
+        # sets (not a bash line count vs. a python-deduplicated ID count) so
+        # duplicate requested names or duplicate matches can't disagree.
+        ID_LIST=$(GROUPS_FILE="$ALL_GROUPS_FILE" BETA_GROUPS="${BETA_GROUPS}" python3 -c "
         import os, sys, json
-        groups = json.load(sys.stdin).get('data', [])
+        with open(os.environ['GROUPS_FILE']) as f:
+            groups = json.load(f)
         requested = {g.strip() for g in os.environ['BETA_GROUPS'].split('\n') if g.strip()}
-        ids = []
+        matched = {}
         for g in groups:
             name = g['attributes'].get('name', '')
             if name in requested:
-                ids.append(g['id'])
-                print(f'  Matched group: {name} -> {g[\"id\"]}', file=sys.stderr)
-        for gid in ids:
+                matched[name] = g['id']
+        missing = requested - matched.keys()
+        if missing:
+            print(f'❌ Beta group(s) not found: {\", \".join(sorted(missing))}', file=sys.stderr)
+            print('Available groups:', file=sys.stderr)
+            for g in groups:
+                print(f'  - {g[\"attributes\"].get(\"name\", \"unknown\")}', file=sys.stderr)
+            sys.exit(1)
+        for gid in dict.fromkeys(matched.values()):
             print(gid)
-        " 2>&1)
-
-        # Separate stderr (info) from stdout (IDs)
-        echo "$GROUP_IDS" | grep '^ ' || true
-        ID_LIST=$(echo "$GROUP_IDS" | grep -v '^ ' || true)
-
-        # Every requested group must exist. Distributing to only the groups
-        # that happened to match would report success while some ring never
-        # received the build.
-        MATCHED=$(echo "$ID_LIST" | grep -c . || true)
-        if [ "$MATCHED" -ne "${#GROUPS[@]}" ]; then
-          echo "❌ Expected ${#GROUPS[@]} beta group(s) — ${GROUPS[*]} — but matched ${MATCHED}."
-          echo "Available groups in response:"
-          echo "$ALL_GROUPS" | python3 -c "
-        import sys, json
-        for g in json.load(sys.stdin).get('data', []):
-            print(f'  - {g[\"attributes\"].get(\"name\", \"unknown\")}')
-        " 2>/dev/null || true
-          exit 1
-        fi
+        ")
+        MATCHED_COUNT=$(echo "$ID_LIST" | grep -c . || true)
 
         # Add build to each beta group
         PAYLOAD=$(echo "$ID_LIST" | python3 -c "
@@ -277,7 +291,7 @@ runs:
         fi
 
         echo ""
-        echo "✅ Build ${VERSION_CODE} distributed to ${#GROUPS[@]} beta group(s)"
+        echo "✅ Build ${VERSION_CODE} distributed to ${MATCHED_COUNT} beta group(s)"
 
         # Add release notes (what's new)
         # First, get the build's betaBuildLocalizations
