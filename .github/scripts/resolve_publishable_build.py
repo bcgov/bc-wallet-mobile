@@ -18,6 +18,8 @@ import sys
 
 WORKFLOW = "main.yaml"
 RUN_PAGE_SIZE = 100
+# ring-0 always publishes; the input picks how much further to go.
+RINGS = ["ring-0", "ring-1", "ring-2", "ring-3", "ring-4"]
 KINDS = {
     "ipa": re.compile(r"^ios-(?P<variant>.+)\.ipa$"),
     "aab": re.compile(r"^android-(?P<variant>.+)\.aab$"),
@@ -57,6 +59,11 @@ def fail(message):
 
 
 REPO = os.environ["REPO"]
+BRANCH = os.environ["BRANCH"]
+RING = os.environ["RING"]
+if RING not in RINGS:
+    print(f"::error::Unknown ring '{RING}'. Expected one of: {', '.join(RINGS)}.")
+    sys.exit(1)
 requested_build = os.environ.get("REQUESTED_BUILD", "").strip()
 requested_variants = [
     v.strip() for v in os.environ.get("REQUESTED_VARIANTS", "").split(",") if v.strip()
@@ -64,14 +71,14 @@ requested_variants = [
 
 runs = gh_api(
     f"repos/{REPO}/actions/workflows/{WORKFLOW}/runs"
-    f"?branch=main&per_page={RUN_PAGE_SIZE}"
+    f"?branch={BRANCH}&per_page={RUN_PAGE_SIZE}"
 )["workflow_runs"]
 
 if requested_build:
     matches = [r for r in runs if str(r["run_number"]) == requested_build]
     if not matches:
         fail(
-            f"No main build {requested_build} in the last {RUN_PAGE_SIZE} runs. "
+            f"No {BRANCH} build {requested_build} in the last {RUN_PAGE_SIZE} runs. "
             "It may be older than the artifact retention window."
         )
     run = matches[0]
@@ -94,7 +101,7 @@ else:
             break
     if run is None:
         fail(
-            f"No main build in the last {RUN_PAGE_SIZE} runs both succeeded and "
+            f"No {BRANCH} build in the last {RUN_PAGE_SIZE} runs both succeeded and "
             "still has artifacts to publish."
         )
 
@@ -113,7 +120,7 @@ if requested_variants:
 print(f"Publishing build {run['run_number']} (run {run['id']})")
 print(f"  commit: {run['head_sha']}")
 if not requested_build:
-    print("  chosen as the most recent main build with publishable artifacts")
+    print(f"  chosen as the most recent {BRANCH} build with publishable artifacts")
 for kind, variants in by_kind.items():
     if variants:
         print(f"  {kind}: {', '.join(variants)}")
@@ -122,7 +129,24 @@ for kind, variants in by_kind.items():
         # rather than showing up as a quietly skipped job.
         print(f"  {kind}: none — those destinations will be skipped")
 
+# Publishing to a ring publishes every ring below it too, so ring-2 means
+# ring-0, ring-1 and ring-2. ring-0 is the upload; the rest only widen who
+# can see it, because Apple rejects a duplicate binary and Play rejects a
+# duplicate version code.
+widen_rings = RINGS[1 : RINGS.index(RING) + 1]
+
+print(f"  ring:   {RING}")
+print(f"  reaches: {', '.join(RINGS[: RINGS.index(RING) + 1])}")
+print("  ring-0 publishes now, without approval")
+if widen_rings:
+    print(f"  after {RING} is approved: {', '.join(widen_rings)}")
+
 with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+    output.write(f"widen_rings_csv={','.join(widen_rings)}\n")
+    # TestFlight takes one group per line, so this one needs the heredoc form.
+    output.write("widen_rings_lines<<__RINGS_EOF__\n")
+    output.write("\n".join(widen_rings) + "\n")
+    output.write("__RINGS_EOF__\n")
     output.write(f"run_id={run['id']}\n")
     output.write(f"run_number={run['run_number']}\n")
     output.write(f"head_sha={run['head_sha']}\n")
