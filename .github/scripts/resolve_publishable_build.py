@@ -18,6 +18,7 @@ import sys
 
 WORKFLOW = "main.yaml"
 RUN_PAGE_SIZE = 100
+FIRST_RING = "ring-0"
 KINDS = {
     "ipa": re.compile(r"^ios-(?P<variant>.+)\.ipa$"),
     "aab": re.compile(r"^android-(?P<variant>.+)\.aab$"),
@@ -57,6 +58,8 @@ def fail(message):
 
 
 REPO = os.environ["REPO"]
+BRANCH = os.environ["BRANCH"]
+RING = os.environ["RING"]
 requested_build = os.environ.get("REQUESTED_BUILD", "").strip()
 requested_variants = [
     v.strip() for v in os.environ.get("REQUESTED_VARIANTS", "").split(",") if v.strip()
@@ -64,14 +67,14 @@ requested_variants = [
 
 runs = gh_api(
     f"repos/{REPO}/actions/workflows/{WORKFLOW}/runs"
-    f"?branch=main&per_page={RUN_PAGE_SIZE}"
+    f"?branch={BRANCH}&per_page={RUN_PAGE_SIZE}"
 )["workflow_runs"]
 
 if requested_build:
     matches = [r for r in runs if str(r["run_number"]) == requested_build]
     if not matches:
         fail(
-            f"No main build {requested_build} in the last {RUN_PAGE_SIZE} runs. "
+            f"No {BRANCH} build {requested_build} in the last {RUN_PAGE_SIZE} runs. "
             "It may be older than the artifact retention window."
         )
     run = matches[0]
@@ -94,7 +97,7 @@ else:
             break
     if run is None:
         fail(
-            f"No main build in the last {RUN_PAGE_SIZE} runs both succeeded and "
+            f"No {BRANCH} build in the last {RUN_PAGE_SIZE} runs both succeeded and "
             "still has artifacts to publish."
         )
 
@@ -113,7 +116,7 @@ if requested_variants:
 print(f"Publishing build {run['run_number']} (run {run['id']})")
 print(f"  commit: {run['head_sha']}")
 if not requested_build:
-    print("  chosen as the most recent main build with publishable artifacts")
+    print(f"  chosen as the most recent {BRANCH} build with publishable artifacts")
 for kind, variants in by_kind.items():
     if variants:
         print(f"  {kind}: {', '.join(variants)}")
@@ -122,7 +125,19 @@ for kind, variants in by_kind.items():
         # rather than showing up as a quietly skipped job.
         print(f"  {kind}: none — those destinations will be skipped")
 
+# Only the first ring uploads. Apple rejects a duplicate binary and Play
+# rejects a duplicate version code, so a higher ring can only widen who can
+# see the build that ring-0 already put there.
+uploads = RING == FIRST_RING
+
+print(f"  ring:   {RING}")
+if uploads:
+    print("  stores: uploading to App Store Connect and Google Play (internal)")
+else:
+    print(f"  stores: not uploading — {RING} widens the build {FIRST_RING} published")
+
 with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+    output.write(f"uploads={'true' if uploads else 'false'}\n")
     output.write(f"run_id={run['id']}\n")
     output.write(f"run_number={run['run_number']}\n")
     output.write(f"head_sha={run['head_sha']}\n")

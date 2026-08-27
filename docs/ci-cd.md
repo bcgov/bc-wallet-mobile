@@ -17,8 +17,8 @@ flowchart TD
     A --> R
     R --> ASC[App Store Connect]
     R --> GP[Google Play - internal track]
-    R --> FB[Firebase App Distribution]
-    ASC --> TF[TestFlight beta groups]
+    R --> FB[Firebase App Distribution - chosen ring]
+    ASC --> TF[TestFlight - chosen ring]
 ```
 
 ## On a pull request
@@ -39,23 +39,19 @@ That's the end of it. No store, no testers, no notifications.
 
 ## Publishing
 
-Go to **Actions → Publish → Run workflow**. Anyone with write access can run it.
-
-Three optional inputs, all of which can be left alone:
-
-| Input | Leave blank to | Use it to |
-|---|---|---|
-| `build_number` | Publish the most recent usable main build | Publish an older build |
-| `targets` | Publish everywhere | Retry one destination after a partial failure |
-| `variants` | Publish every variant in the build | Publish a subset |
+Go to **Actions → Publish → Run workflow**, pick a ring, run it. Anyone with
+write access can. Publish runs from `main` or a `release/*` branch only.
 
 The workflow picks a build, downloads that build's artifacts, and uploads them.
 It never rebuilds, so what testers install is exactly what CI produced.
 
-"Most recent usable" means the newest `main` run that both succeeded **and**
-still has its artifacts. A run can be green with nothing to publish — if a
-push's last commit touches no build-relevant files, the build jobs skip and the
-run still reports success.
+Full details — rings, inputs, versioning, release branches — are in
+[releases.md](releases.md).
+
+"Most recent usable" means the newest run on that branch which both succeeded
+**and** still has its artifacts. A run can be green with nothing to publish —
+if a push's last commit touches no build-relevant files, the build jobs skip
+and the run still reports success.
 
 iOS and Android build independently, so a run can hold artifacts for one
 platform and not the other. Each destination runs only for the variants whose
@@ -64,20 +60,11 @@ skipped in the **Resolve build** log and shows as a skipped job. A missing
 artifact for a variant that was expected fails that job rather than passing
 quietly.
 
-## Where a published build goes
-
-| Destination | Who sees it |
-|---|---|
-| App Store Connect | Nobody until it's assigned to a TestFlight group |
-| TestFlight beta groups | Testers on those groups |
-| Google Play internal track | Internal testers |
-| Firebase App Distribution | Testers on the configured groups |
-
 ## Variants
 
 Each build target — BC Wallet, and BC Services Card across its environments —
 is a **variant**, configured in `variants/<name>/variant.env`. That file owns
-the app version, bundle IDs, signing references and tester groups.
+the app version, bundle IDs and signing references.
 
 Publishing reads a variant's config from the commit that produced the build, not
 from current `main`, so an older build carries the version it was actually built
@@ -85,12 +72,12 @@ with.
 
 ## Rings
 
-Distribution groups are moving to a shared ring model across all three stores:
-ring 1 for QA, ring 2 for UAT and release candidates, ring 3 for early adopters,
-ring 4 for full release. A build is uploaded once and later rings are added to
-the existing release rather than re-uploading it.
+A ring is an audience, and the same ring names are used on Firebase, TestFlight
+and Google Play. `ring-0` is the team and is the default; each ring after it is
+wider. A build is uploaded once at ring-0, and later rings widen who can see
+that same build rather than uploading it again.
 
-Not built yet — see #4522.
+See [releases.md](releases.md).
 
 ## The other workflows
 

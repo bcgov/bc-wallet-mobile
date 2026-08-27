@@ -1,17 +1,32 @@
 # Publishes an EXISTING build to the app stores. This workflow never builds:
-# it takes the artifacts produced by a `Native Build & Test` run on main and
+# it takes the artifacts produced by an earlier `Native Build & Test` run and
 # uploads those, so what UAT receives is byte-for-byte what CI produced.
 #
-# Merging to main builds artifacts and publishes nothing. Every destination —
+# Merging builds artifacts and publishes nothing. Every destination —
 # App Store Connect, Google Play and Firebase App Distribution — is reached
 # only from here.
+#
+# `ring` chooses the audience. ring-0 is the team and is the only ring that
+# uploads; each higher ring widens who can see the build ring-0 published.
+# See docs/releases.md.
 name: Publish
 
 on:
   workflow_dispatch:
     inputs:
+      ring:
+        description: 'Who gets the build. ring-0 is the team; each ring after it widens the audience.'
+        required: false
+        default: ring-0
+        type: choice
+        options:
+          - ring-0
+          - ring-1
+          - ring-2
+          - ring-3
+          - ring-4
       build_number:
-        description: 'Build number to publish. Leave blank for the most recent publishable main build.'
+        description: 'Build number to publish. Leave blank for the most recent publishable build on this branch.'
         required: false
         type: string
       targets:
@@ -29,7 +44,6 @@ on:
         description: 'Comma-separated variants to publish. Leave blank for every variant in the build.'
         required: false
         type: string
-
 # Never cancel a publish part-way through: the stores are not transactional.
 concurrency:
   group: publish
@@ -58,14 +72,28 @@ jobs:
       run_id: ${{ steps.resolve.outputs.run_id }}
       run_number: ${{ steps.resolve.outputs.run_number }}
       head_sha: ${{ steps.resolve.outputs.head_sha }}
+      uploads: ${{ steps.resolve.outputs.uploads }}
       ipa_variants: ${{ steps.resolve.outputs.ipa_variants }}
       aab_variants: ${{ steps.resolve.outputs.aab_variants }}
       apk_variants: ${{ steps.resolve.outputs.apk_variants }}
     steps:
+      # A feature branch can produce a perfectly good build, but shipping one
+      # to real testers is almost always a mistake. Releases come off main or
+      # a release branch; nothing else is publishable.
+      - name: Check the branch is publishable
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          if [ "${BRANCH}" != "main" ] && [[ "${BRANCH}" != release/* ]]; then
+            echo "::error::Publish can only run from 'main' or a 'release/*' branch. You ran it from '${BRANCH}'. Re-run it from main, or cut a release branch (e.g. release/v4.1.x) first — see docs/releases.md."
+            exit 1
+          fi
+          echo "Publishing from ${BRANCH}"
+
       # Deliberately the dispatched ref, not the default branch: the scripts
       # and composite actions have to match the workflow file being run, and
       # dispatching from a branch is the only way to test a change to this
-      # workflow. Normal use dispatches from main.
+      # workflow.
       - uses: actions/checkout@v7
 
       - name: Resolve build
@@ -73,6 +101,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          RING: ${{ inputs.ring }}
           REQUESTED_BUILD: ${{ inputs.build_number }}
           REQUESTED_VARIANTS: ${{ inputs.variants }}
         run: python3 .github/scripts/resolve_publishable_build.py
@@ -83,6 +113,7 @@ jobs:
     needs: resolve-build
     if: >-
       (inputs.targets == 'all' || inputs.targets == 'app-store-upload') &&
+      needs.resolve-build.outputs.uploads == 'true' &&
       needs.resolve-build.outputs.ipa_variants != '[]'
     runs-on: macos-26
     permissions:
@@ -134,6 +165,7 @@ jobs:
     needs: resolve-build
     if: >-
       (inputs.targets == 'all' || inputs.targets == 'google-play') &&
+      needs.resolve-build.outputs.uploads == 'true' &&
       needs.resolve-build.outputs.aab_variants != '[]'
     runs-on: ubuntu-22.04
     permissions:
@@ -232,7 +264,7 @@ jobs:
           bundle_id: ${{ env.IOS_BUNDLE_ID }}
           version_code: ${{ needs.resolve-build.outputs.run_number }}
           version_name: ${{ env.APP_VERSION }}
-          beta_groups: ${{ env.TESTFLIGHT_BETA_GROUPS }}
+          beta_groups: ${{ inputs.ring }}
 
   # ─── Firebase App Distribution ──────────────────────────────────────
   firebase-ios:
@@ -290,7 +322,7 @@ jobs:
           google_services_file: ${{ runner.temp }}/google-services-source
           service_account_file: ${{ runner.temp }}/firebase-service-account.json
           artifact_path: ${{ runner.temp }}/firebase-artifact/BCWallet.ipa
-          groups: ${{ env.FIREBASE_IOS_TESTER_GROUPS }}
+          groups: ${{ inputs.ring }}
           version_name: ${{ env.APP_VERSION }}
           version_code: ${{ needs.resolve-build.outputs.run_number }}
 
@@ -349,6 +381,6 @@ jobs:
           google_services_file: ${{ runner.temp }}/google-services-source
           service_account_file: ${{ runner.temp }}/firebase-service-account.json
           artifact_path: ${{ runner.temp }}/firebase-artifact/app-release.apk
-          groups: ${{ env.FIREBASE_ANDROID_TESTER_GROUPS }}
+          groups: ${{ inputs.ring }}
           version_name: ${{ env.APP_VERSION }}
           version_code: ${{ needs.resolve-build.outputs.run_number }}
