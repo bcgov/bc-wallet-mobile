@@ -78,22 +78,21 @@ what a tester installs is exactly what CI made.
 
 ### Where a build goes
 
-| | ring-0 | ring-1 to ring-4 |
+| | ring-0 (the team) | ring-1 to ring-4 |
 |---|---|---|
 | App Store Connect | Uploaded | |
-| TestFlight | `ring-0` group | That ring's group |
-| Google Play | Internal testing | That ring's closed track |
-| Firebase | `ring-0` group | That ring's group |
+| TestFlight | Internal testing, the `ring-0` group | External testing, that ring's group |
+| Google Play | Internal testing | Closed testing, that ring's track |
+| Firebase | The `ring-0` group | That ring's group |
 
-On iOS, `ring-0` is a TestFlight **internal** group, so the team has the build
-within minutes of it being uploaded. The wider rings are **external** groups,
-and Apple runs a Beta App Review on the first build of each version before
-external testers can install it. That usually takes about a day. Later builds
-of the same version normally clear in minutes.
+Each service has its own name for "the team", and ring-0 uses whatever that
+service already provides. Only TestFlight needs a `ring-0` group created by
+hand; Play's Internal testing track is built in.
 
-So approving a ring does not always mean testers have it straight away. On
-Android and Firebase they do; on iOS the first build of a new version waits for
-Apple.
+Approving a ring does not always mean iOS testers have it straight away. Apple
+runs a Beta App Review on the first build of each version before external
+testers can install it, which usually takes about a day. Later builds of the
+same version normally clear in minutes. Play and Firebase have no such wait.
 
 ### Which branch
 
