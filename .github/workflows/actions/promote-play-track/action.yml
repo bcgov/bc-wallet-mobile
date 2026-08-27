@@ -4,7 +4,7 @@ description: |
   second upload of the same version code, so widening re-releases that
   version code directly onto each target track with `tracks set-release` —
   there is no source track involved. This is deliberately asymmetric with
-  ship-to-play: `set-release` on a ring track wholesale-replaces whatever
+  ship-to-google-store: `set-release` on a ring track wholesale-replaces whatever
   that track currently holds (widening is explicit operator intent), whereas
   a re-publish never touches the internal track.
 
@@ -37,7 +37,7 @@ inputs:
 runs:
   using: composite
   steps:
-    # Pinned to match ship-to-play: an unpinned install would let an upstream
+    # Pinned to match ship-to-google-store: an unpinned install would let an upstream
     # release change what the release pipeline runs with no PR here.
     - name: Install codemagic-cli-tools
       shell: bash

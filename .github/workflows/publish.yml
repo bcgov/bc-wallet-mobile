@@ -181,7 +181,7 @@ jobs:
 
       - name: Ship to Apple App Store
         if: steps.existing.outputs.exists != 'true'
-        uses: ./.github/workflows/actions/ship-to-itunes
+        uses: ./.github/workflows/actions/ship-to-apple-store
         with:
           app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           app_store_connect_key_identifier: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
@@ -284,7 +284,7 @@ jobs:
           op read "op://bcsc-mobile-app-cd/google-play-publisher/service-account.json" --out-file "${RUNNER_TEMP}/play-service-account.json" --force
 
       - name: Ship to Google Play
-        uses: ./.github/workflows/actions/ship-to-play
+        uses: ./.github/workflows/actions/ship-to-google-store
         with:
           service_account_file: ${{ runner.temp }}/play-service-account.json
           package_name: ${{ env.ANDROID_PACKAGE_NAME }}
