@@ -5,6 +5,11 @@
 # Merging to main builds artifacts and publishes nothing. Every destination —
 # App Store Connect, Google Play and Firebase App Distribution — is reached
 # only from here.
+#
+# `assemble-changelog` commits any changesets found in changes/ into CHANGELOG.md,
+# tags the release, before any release runs. It's the only job here with repo write
+# access (via a bypass GitHub App), scoped as tightly as
+# the rest of this workflow — see that job for why.
 name: Publish
 
 on:
@@ -29,6 +34,11 @@ on:
         description: 'Comma-separated variants to publish. Leave blank for every variant in the build.'
         required: false
         type: string
+      allow_empty_changes:
+        description: 'Allow the changelog step to proceed even with no pending .changes/ entries'
+        required: false
+        default: false
+        type: boolean
 
 # Never cancel a publish part-way through: the stores are not transactional.
 concurrency:
@@ -77,10 +87,125 @@ jobs:
           REQUESTED_VARIANTS: ${{ inputs.variants }}
         run: python3 .github/scripts/resolve_publishable_build.py
 
+  # ─── Assemble & commit the changelog ────────────────────────────────
+  # The only job in this workflow that writes to the repo. Folds the
+  # .changes/*.md entries that existed as of the resolved build's commit
+  # into CHANGELOG.md, deletes them, and pushes + tags via a GitHub App
+  # bypass actor.
+  #
+  # Scoped to head_sha, because `build_number` can
+  # point at an older build (see the resolver above)
+  # so we don't want to re add any entries
+  #
+  # Guarded to only run when head_sha IS main's current tip. If it isn't,
+  # it assumes this is an older build or being republished so the change
+  # logs should already be added. Skipping is a clean no-op:
+  # the job still reports success, so the rest of the workflow continues.
+  assemble-changelog:
+    name: Assemble changelog
+    needs: resolve-build
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    outputs:
+      committed: ${{ steps.commit.outputs.committed }}
+    steps:
+      - name: Only proceed if this build is main's current tip
+        id: guard
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ needs.resolve-build.outputs.head_sha }}
+        run: |
+          current_main=$(gh api "repos/${{ github.repository }}/git/ref/heads/main" --jq .object.sha)
+          if [ "$HEAD_SHA" != "$current_main" ]; then
+            echo "::notice::Publishing build ${{ needs.resolve-build.outputs.run_number }} (${HEAD_SHA}), which is behind main's current tip (${current_main}). Treating this as a retry/re-publish of an already-published build and skipping changelog assembly."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v7
+        if: steps.guard.outputs.skip == 'false'
+
+      - uses: ./.github/workflows/actions/setup-node
+        if: steps.guard.outputs.skip == 'false'
+
+      - name: Install dependencies
+        if: steps.guard.outputs.skip == 'false'
+        run: yarn install --immutable
+
+      - name: Install 1Password CLI
+        if: steps.guard.outputs.skip == 'false'
+        uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
+
+      - name: Load release-bot App credentials from 1Password
+        if: steps.guard.outputs.skip == 'false'
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          RELEASE_BOT_APP_ID: op://bcsc-mobile-app-cd/release-bot-app/app-id
+          RELEASE_BOT_APP_PRIVATE_KEY: op://bcsc-mobile-app-cd/release-bot-app/private-key
+
+      - name: Mint release-bot installation token
+        if: steps.guard.outputs.skip == 'false'
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ env.RELEASE_BOT_APP_ID }}
+          private-key: ${{ env.RELEASE_BOT_APP_PRIVATE_KEY }}
+
+      - name: Assemble changelog
+        if: steps.guard.outputs.skip == 'false'
+        run: |
+          node scripts/changelog/index.mjs assemble ${{ needs.resolve-build.outputs.run_number }} \
+            --variant bcsc-prod \
+            ${{ inputs.allow_empty_changes && '--allow-empty' || '' }}
+
+      # Re-authenticate the existing checkout with the App token rather than
+      # re-checking out with it from the start: assemble already wrote and
+      # deleted files in this working tree, and a second checkout would wipe
+      # that.
+      - name: Commit, push and tag
+        id: commit
+        if: steps.guard.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          git config user.name "${{ steps.app-token.outputs.app-slug }}[bot]"
+          git config user.email "${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
+          git add CHANGELOG.md .changes
+          if git diff --cached --quiet; then
+            echo "Nothing to commit (empty release)."
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git commit -s -m "chore: release build ${{ needs.resolve-build.outputs.run_number }}"
+          for attempt in 1 2 3 4 5; do
+            if git push origin HEAD:main; then
+              echo "pushed on attempt ${attempt}"
+              break
+            fi
+            if [ "$attempt" -eq 5 ]; then
+              echo "::error::could not push release commit after 5 attempts"
+              exit 1
+            fi
+            echo "push rejected, rebasing onto latest main"
+            git fetch origin main
+            git rebase origin/main
+          done
+          version=$(grep '^APP_VERSION=' variants/bcsc-prod/variant.env | cut -d= -f2 | tr -d "'\"")
+          tag="bcsc-v${version}+${{ needs.resolve-build.outputs.run_number }}"
+          git tag "$tag"
+          git push origin "$tag"
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+
   # ─── App Store Connect upload ───────────────────────────────────────
   app-store-upload:
     name: 'App Store upload - ${{ matrix.variant }}'
-    needs: resolve-build
+    needs: [resolve-build, assemble-changelog]
     if: >-
       (inputs.targets == 'all' || inputs.targets == 'app-store-upload') &&
       needs.resolve-build.outputs.ipa_variants != '[]'
@@ -131,7 +256,7 @@ jobs:
   # ─── Google Play ────────────────────────────────────────────────────
   google-play:
     name: 'Google Play - ${{ matrix.variant }}'
-    needs: resolve-build
+    needs: [resolve-build, assemble-changelog]
     if: >-
       (inputs.targets == 'all' || inputs.targets == 'google-play') &&
       needs.resolve-build.outputs.aab_variants != '[]'
@@ -193,13 +318,15 @@ jobs:
   # ─── TestFlight ─────────────────────────────────────────────────────
   # always() so one variant's failed upload cannot skip the other variants.
   # It also disables the implicit success() the other jobs rely on, so the
-  # check on resolve-build has to be spelled out here.
+  # checks on resolve-build and assemble-changelog have to be spelled out
+  # here.
   testflight:
     name: 'TestFlight - ${{ matrix.variant }}'
-    needs: [resolve-build, app-store-upload]
+    needs: [resolve-build, assemble-changelog, app-store-upload]
     if: >-
       always() && !cancelled() &&
       needs.resolve-build.result == 'success' &&
+      needs.assemble-changelog.result == 'success' &&
       needs.resolve-build.outputs.ipa_variants != '[]' &&
       (inputs.targets == 'all' || inputs.targets == 'testflight')
     runs-on: ubuntu-22.04
@@ -237,7 +364,7 @@ jobs:
   # ─── Firebase App Distribution ──────────────────────────────────────
   firebase-ios:
     name: 'Firebase iOS - ${{ matrix.variant }}'
-    needs: resolve-build
+    needs: [resolve-build, assemble-changelog]
     if: >-
       (inputs.targets == 'all' || inputs.targets == 'firebase') &&
       needs.resolve-build.outputs.ipa_variants != '[]'
@@ -296,7 +423,7 @@ jobs:
 
   firebase-android:
     name: 'Firebase Android - ${{ matrix.variant }}'
-    needs: resolve-build
+    needs: [resolve-build, assemble-changelog]
     if: >-
       (inputs.targets == 'all' || inputs.targets == 'firebase') &&
       needs.resolve-build.outputs.apk_variants != '[]'
