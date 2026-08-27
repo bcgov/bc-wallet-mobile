@@ -1,6 +1,3 @@
-import { useErrorAlert } from '@/contexts/ErrorAlertContext'
-import { ensureAppError } from '@/errors/errorHandler'
-import { AppEventCode } from '@/events/appEventCode'
 import {
   MaskType,
   SVGOverlay,
@@ -12,26 +9,19 @@ import {
   useTheme,
 } from '@bifold/core'
 import { NavigationProp, ParamListBase, useIsFocused } from '@react-navigation/native'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import {
-  Camera,
-  CameraOutput,
-  CameraRef,
-  CommonResolutions,
-  useCameraDevice,
-  usePhotoOutput,
-} from 'react-native-vision-camera'
+import { Camera, CameraOutput, CommonResolutions } from 'react-native-vision-camera'
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
+import { useVisionCamera } from '../hooks/useVisionCamera'
 import { isBackgroundedAppState } from '../utils/app-state'
 
 type MaskedCameraProps = {
   navigation: NavigationProp<ParamListBase>
   cameraFace: 'front' | 'back'
-  cameraFormatFilter?: any[]
   cameraInstructions?: string
   cameraLabel?: string
   maskType?: MaskType
@@ -56,32 +46,37 @@ const MaskedCamera = ({
   codeScanner,
   photoQualityBalance = 'speed',
   cameraFace = 'back',
-  cameraFormatFilter = [],
   onPhotoTaken,
 }: MaskedCameraProps) => {
-  const device = useCameraDevice(cameraFace)
+  const { cameraRef, device, takeAndSavePhoto, hasTorch, isTorchOn, enableTorch, photoOutput, emitCameraError } =
+    useVisionCamera({
+      position: cameraFace,
+      qualityPrioritization: photoQualityBalance,
+      targetResolution: CommonResolutions.FHD_16_9, // 1080p
+    })
+  // const device = useCameraDevice(cameraFace)
   const { t } = useTranslation()
   const safeAreaInsets = useSafeAreaInsets()
   const { Spacing, ColorPalette } = useTheme()
-  const [torchOn, setTorchOn] = useState(false)
-  const cameraRef = useRef<CameraRef>(null)
-  const controller = cameraRef.current?.controller
+  // const [torchOn, setTorchOn] = useState(false)
+  // const cameraRef = useRef<CameraRef>(null)
+  // const controller = cameraRef.current?.controller
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const isFocused = useIsFocused()
   // const format = useCameraFormat(device, cameraFormatFilter)
   // const { failedToWriteToLocalStorageAlert } = useAlerts(navigation)
-  const { emitErrorModal } = useErrorAlert()
+  // const { emitErrorModal } = useErrorAlert()
   const { preventDoublePress } = usePreventDoublePress()
   const { appStateStatus } = useBCSCActivity()
-  const hasTorch = device?.hasTorch ?? false
+  //const hasTorch = device?.hasTorch ?? false
 
-  const photoOutput = usePhotoOutput({
-    quality: 0.9,
-    qualityPrioritization: photoQualityBalance,
-    targetResolution: CommonResolutions.FHD_16_9, // 1080p
-  })
+  // const photoOutput = usePhotoOutput({
+  //   quality: 0.9,
+  //   qualityPrioritization: photoQualityBalance,
+  //   targetResolution: CommonResolutions.FHD_16_9, // 1080p
+  // })
   // TODO (MD VisionCamera): Replace with actual metadata
-  const cameraMetadata = useMemo(() => ({}), []) //useMemo(() => getCameraMetadata(device, format), [device, format])
+  // const cameraMetadata = useMemo(() => ({}), []) //useMemo(() => getCameraMetadata(device, format), [device, format])
 
   const styles = StyleSheet.create({
     container: {
@@ -124,17 +119,17 @@ const MaskedCamera = ({
     },
   })
 
-  const handleTorchChange = useCallback(
-    (newTorchMode: 'on' | 'off') => {
-      setTorchOn(newTorchMode === 'on')
-      controller?.setTorchMode(newTorchMode)
-    },
-    [controller]
-  )
+  // const handleTorchChange = useCallback(
+  //   (newTorchMode: 'on' | 'off') => {
+  //     setTorchOn(newTorchMode === 'on')
+  //     controller?.setTorchMode(newTorchMode)
+  //   },
+  //   [controller]
+  // )
 
-  const toggleTorch = () => {
-    handleTorchChange(torchOn ? 'off' : 'on')
-  }
+  // const toggleTorch = () => {
+  //   handleTorchChange(torchOn ? 'off' : 'on')
+  // }
 
   useEffect(() => {
     if (!device) {
@@ -145,25 +140,25 @@ const MaskedCamera = ({
     }
   }, [device, navigation])
 
-  useEffect(() => {
-    if (!isFocused) {
-      handleTorchChange('off')
-    }
-  }, [handleTorchChange, isFocused])
+  // useEffect(() => {
+  //   if (!isFocused) {
+  //     handleTorchChange('off')
+  //   }
+  // }, [handleTorchChange, isFocused])
 
-  const getCameraError = useCallback(
-    (error: unknown) => {
-      const appError = ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
-
-      // Add camera device and format info to the error context for better debugging
-      appError.addContext(cameraMetadata)
-
-      logger.error('[MaskedCamera] runtime error', appError.toJSON())
-
-      return appError
-    },
-    [cameraMetadata, logger]
-  )
+  // const getCameraError = useCallback(
+  //   (error: unknown) => {
+  //     const appError = ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
+  //
+  //     // Add camera device and format info to the error context for better debugging
+  //     appError.addContext(cameraMetadata)
+  //
+  //     logger.error('[MaskedCamera] runtime error', appError.toJSON())
+  //
+  //     return appError
+  //   },
+  //   [cameraMetadata, logger]
+  // )
 
   const onError = useCallback(
     (error: unknown) => {
@@ -174,9 +169,9 @@ const MaskedCamera = ({
         return
       }
 
-      emitErrorModal(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorMessage'), getCameraError(error))
+      emitCameraError(error)
     },
-    [appStateStatus, getCameraError, emitErrorModal, t, logger]
+    [appStateStatus, emitCameraError, logger]
   )
   if (!device) {
     return (
@@ -198,40 +193,11 @@ const MaskedCamera = ({
     }
 
     try {
-      // let photo: PhotoFile
-      // if (cameraFace === 'back') {
-      //   // Use `takeSnapshot` on back camera: significantly faster read/write
-      //   photo = await cameraRef.current.takeSnapshot({ quality: 90 })
-      // } else {
-      //   // Use `takePhoto` on front camera: `takeSnapshot` flips image vertically (front camera bug)
-      //   photo = await cameraRef.current.takePhoto({
-      //     flash: 'off',
-      //     enableShutterSound: false,
-      //   })
-      // }
-
-      const photo = await photoOutput.capturePhotoToFile(
-        {
-          flashMode: 'off',
-          enableShutterSound: false,
-        },
-        {}
-      )
-
+      const photo = await takeAndSavePhoto()
       onPhotoTaken(photo.filePath)
       logger.info(`Photo taken and saved temporarily: ${photo.filePath}`)
     } catch (error) {
-      logger.error(`Error taking photo: ${error}`)
-
-      // Handle file I/O errors separately to provide a specific alert
-      // if (error instanceof CameraCaptureError && error.code === 'capture/file-io-error') {
-      //   failedToWriteToLocalStorageAlert(error)
-      //   return
-      // }
-
-      const appError = getCameraError(error)
-
-      emitErrorModal(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorTakingPhoto'), appError)
+      logger.error('[MaskedCamera] Error taking photo', error as Error)
     }
   }
 
@@ -303,12 +269,12 @@ const MaskedCamera = ({
         {hasTorch ? (
           <TouchableOpacity
             style={{ flex: 1, alignItems: 'flex-end' }}
-            onPress={toggleTorch}
+            onPress={() => enableTorch(!isTorchOn)}
             accessibilityLabel={t('BCSC.CameraDisclosure.ToggleFlash')}
             accessibilityRole="button"
             testID={testIdWithKey('ToggleFlash')}
           >
-            <Icon size={24} name={torchOn ? 'flash' : 'flash-off'} color={ColorPalette.grayscale.white} />
+            <Icon size={24} name={isTorchOn ? 'flash' : 'flash-off'} color={ColorPalette.grayscale.white} />
           </TouchableOpacity>
         ) : (
           <View style={{ flex: 1 }} />

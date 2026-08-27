@@ -1,6 +1,5 @@
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
-import { CameraFormat } from '@/bcsc-theme/components/utils/camera'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { Spacing } from '@/bcwallet-theme/theme'
@@ -47,7 +46,6 @@ const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) =>
         maskType={MaskType.OVAL}
         maskLineColor={ColorPalette.brand.highlight}
         onPhotoTaken={handlePhotoTaken}
-        cameraFormatFilter={CameraFormat.SelfiePhoto}
         photoQualityBalance="quality"
         maskLineWidth={Spacing.xs}
         maskOverlayOpacity={0.6}

@@ -1,4 +1,5 @@
 import { Platform } from 'react-native'
+import { CameraDevice } from 'react-native-vision-camera'
 // import { FormatFilter } from 'react-native-vision-camera'
 import { Barcode } from 'react-native-vision-camera-barcode-scanner'
 
@@ -464,27 +465,47 @@ export const mergeLockedCodesWithAccumulated = (
   return [...accumulatedExtras, ...currentFrameCodes]
 }
 
-// /**
-//  * Get camera metadata including the selected device and format, with deduplicated formats.
-//  * Mostly used for logging and debugging purposes.
-//  *
-//  * @param device The CameraDevice to get metadata for
-//  * @param format The CameraDeviceFormat to get metadata for
-//  * @returns An object containing the selected device and format, with deduplicated formats
-//  */
-// export const getCameraMetadata = (device?: CameraDevice, format?: CameraDeviceFormat) => {
-//   const cameraDevice = _removeDuplicateCameraFormats(device)
-//
-//   return {
-//     selectedFormat: format ? _summarizeCameraFormat(format) : null,
-//     selectedDevice: cameraDevice
-//       ? {
-//           ...cameraDevice,
-//           formats: cameraDevice?.formats.map((format) => _summarizeCameraFormat(format)),
-//         }
-//       : null,
-//   }
-// }
+/**
+ * Get camera metadata including the selected device and format, with deduplicated formats.
+ * Mostly used for logging and debugging purposes.
+ *
+ * @param device The CameraDevice to get metadata for
+ * @returns An object containing the selected device and format, with deduplicated formats
+ */
+export const getCameraMetadata = (device?: CameraDevice) => {
+  if (!device) {
+    return {
+      selectedDevice: null,
+      /** @deprecated formats don't exist in V5 */
+      selectedFormat: null,
+    }
+  }
+
+  return {
+    selectedDevice: {
+      id: device.id,
+      name: device.name,
+      position: device.position,
+      hasFlash: device.hasFlash,
+      hasTorch: device.hasTorch,
+      supportsLowLightBoost: device.supportsLowLightBoost,
+      minZoom: device.minZoom,
+      maxZoom: device.maxZoom,
+      photoHDR: device.supportsPhotoHDR,
+    },
+  }
+  // const cameraDevice = _removeDuplicateCameraFormats(device)
+  //
+  // return {
+  //   selectedFormat: format ? _summarizeCameraFormat(format) : null,
+  //   selectedDevice: cameraDevice
+  //     ? {
+  //         ...cameraDevice,
+  //         formats: cameraDevice?.formats.map((format) => _summarizeCameraFormat(format)),
+  //       }
+  //     : null,
+  // }
+}
 
 // /**
 //  * Summarize a CameraDeviceFormat into a concise string for logging or debugging.
@@ -523,7 +544,7 @@ export const mergeLockedCodesWithAccumulated = (
 //     `hdr:${hdr}`,
 //   ].join(' ')
 // }
-
+//
 // /**
 //  * Remove duplicate formats from a CameraDevice's formats array, preserving the first occurrence of each unique format.
 //  *
