@@ -329,6 +329,15 @@ export const deleteKey = (alias: string): Promise<void> => {
 };
 
 /**
+ * Generates a new signing keypair. Generating implicitly makes it the active signing key on
+ * both platforms — there is no separate "activate" step — so callers MUST register it with
+ * the server or roll back via {@link deleteKey}; never leave it dangling as unregistered.
+ */
+export const createNewKeyPair = (): Promise<KeyPublicInfo> => {
+  return BcscCore.createNewKeyPair();
+};
+
+/**
  * Retrieves a key pair (public and optionally private) for a given label.
  * @param label The identifier for the key pair.
  * @returns A promise that resolves to a KeyPair object.
