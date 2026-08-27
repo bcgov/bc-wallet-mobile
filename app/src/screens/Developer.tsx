@@ -590,13 +590,6 @@ const Developer: React.FC = () => {
             accessibilityLabel={t('Developer.SwitchTheme')}
             testID={testIdWithKey('ToggleTheme')}
           />
-          <ToggleRow
-            title={t('Developer.SwitchMode')}
-            value={BCSCMode}
-            onToggle={toggleMode}
-            accessibilityLabel={t('Developer.SwitchMode')}
-            testID={testIdWithKey('ToggleMode')}
-          />
         </ListButtonGroup>
       </View>
 

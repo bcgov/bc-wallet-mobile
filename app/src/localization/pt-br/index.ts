@@ -212,7 +212,6 @@ const translation = {
     "Toggle": "Toggle Developer Mode (PT-BR)",
     "EnableProxy": "Enable proxy (PT-BR)",
     "EnableAppToAppPersonFlow": "App-to-app Person flow (PT-BR)",
-    "SwitchMode": "Switch mode (PT-BR)",
     "SwitchTheme": "Switch theme (PT-BR)",
     "AppSection": "App (PT-BR)",
     "Testing": "Testing (PT-BR)",
