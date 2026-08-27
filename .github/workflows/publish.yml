@@ -541,7 +541,8 @@ jobs:
           service_account_file: ${{ runner.temp }}/play-service-account.json
           package_name: ${{ env.ANDROID_PACKAGE_NAME }}
           version_code: ${{ needs.resolve-build.outputs.run_number }}
-          source_track: internal
+          version_name: ${{ env.APP_VERSION }}
+          build_number: ${{ needs.resolve-build.outputs.run_number }}
           target_tracks: ${{ needs.resolve-build.outputs.widen_rings_csv }}
 
   firebase-ios-widen:

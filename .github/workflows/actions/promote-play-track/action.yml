@@ -1,8 +1,12 @@
 name: Promote a Google Play release to another track
 description: |
-  Put an already-uploaded build on a closed testing track. Play rejects a
-  second upload of the same version code, so widening the audience is a
-  promotion from the internal track, not another upload.
+  Widen an already-uploaded build onto more Play tracks. Play rejects a
+  second upload of the same version code, so widening re-releases that
+  version code directly onto each target track with `tracks set-release` —
+  there is no source track involved. This is deliberately asymmetric with
+  ship-to-play: `set-release` on a ring track wholesale-replaces whatever
+  that track currently holds (widening is explicit operator intent), whereas
+  a re-publish never touches the internal track.
 
   Idempotent: a version code already on the target track is left alone.
 
@@ -16,10 +20,16 @@ inputs:
   version_code:
     description: Version code of the build to promote
     required: true
-  source_track:
-    description: Track the build was uploaded to
+  version_name:
+    description: 'Marketing version, used in the Play release name (e.g. 4.1.0).'
+    required: true
+  build_number:
+    description: Build number of the run that produced the AAB, used in the Play release name.
+    required: true
+  release_notes:
+    description: "Tester-facing \"what to test\" note, published as en-CA."
     required: false
-    default: internal
+    default: 'This is what to test.'
   target_tracks:
     description: Comma-separated tracks to promote onto, e.g. 'ring-1,ring-2'
     required: true
@@ -44,7 +54,9 @@ runs:
         CREDENTIALS_FILE: ${{ inputs.service_account_file }}
         PACKAGE_NAME: ${{ inputs.package_name }}
         VERSION_CODE: ${{ inputs.version_code }}
-        SOURCE_TRACK: ${{ inputs.source_track }}
+        VERSION_NAME: ${{ inputs.version_name }}
+        BUILD_NUMBER: ${{ inputs.build_number }}
+        RELEASE_NOTES: ${{ inputs.release_notes }}
         TARGET_TRACKS: ${{ inputs.target_tracks }}
       run: |
         set -euo pipefail
@@ -85,13 +97,16 @@ runs:
             continue
           fi
 
-          echo "Promoting ${VERSION_CODE} from ${SOURCE_TRACK} to ${TARGET}..."
-          "${GP}" tracks promote-release \
+          NOTES_JSON=$(RELEASE_NOTES="${RELEASE_NOTES}" python3 -c \
+            'import json, os; print(json.dumps([{"language": "en-CA", "text": os.environ["RELEASE_NOTES"]}]))')
+
+          echo "Releasing ${VERSION_CODE} to ${TARGET}..."
+          "${GP}" tracks set-release \
             --credentials "@file:${CREDENTIALS_FILE}" \
             --package-name "${PACKAGE_NAME}" \
-            --source-track "${SOURCE_TRACK}" \
-            --target-track "${TARGET}" \
-            --version-code-filter "${VERSION_CODE}" \
-            --release-status completed
-          echo "✅ ${VERSION_CODE} promoted to ${TARGET}"
+            --track "${TARGET}" \
+            --version-code "${VERSION_CODE}" \
+            --release-name "v${VERSION_NAME}-${BUILD_NUMBER}" \
+            --release-notes "${NOTES_JSON}"
+          echo "✅ ${VERSION_CODE} released to ${TARGET}"
         done
