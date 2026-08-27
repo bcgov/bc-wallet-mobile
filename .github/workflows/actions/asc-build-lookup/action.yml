@@ -39,18 +39,24 @@ runs:
         API="https://api.appstoreconnect.apple.com/v1"
         AUTH="Authorization: Bearer ${ASC_TOKEN}"
 
-        APP_ID=$(curl -sfg -H "$AUTH" \
-          "${API}/apps?filter[bundleId]=${BUNDLE_ID}&limit=1" |
-          python3 -c "import sys,json; d=json.load(sys.stdin)['data']; print(d[0]['id'] if d else '')")
+        # Responses land in a file rather than being piped straight into
+        # python3: the pipe reads as the curl-into-an-interpreter pattern
+        # even though the script is fixed and the download is only data.
+        RESPONSE=$(mktemp)
+
+        curl -sfg -H "$AUTH" \
+          "${API}/apps?filter[bundleId]=${BUNDLE_ID}&limit=1" -o "$RESPONSE"
+        APP_ID=$(python3 -c "import sys,json; d=json.load(sys.stdin)['data']; print(d[0]['id'] if d else '')" < "$RESPONSE")
 
         if [ -z "$APP_ID" ]; then
           echo "::error::No App Store Connect app for bundle ID ${BUNDLE_ID}"
           exit 1
         fi
 
-        COUNT=$(curl -sfg -H "$AUTH" \
-          "${API}/builds?filter[app]=${APP_ID}&filter[version]=${VERSION_CODE}&filter[preReleaseVersion.version]=${VERSION_NAME}&limit=1" |
-          python3 -c "import sys,json; print(len(json.load(sys.stdin)['data']))")
+        curl -sfg -H "$AUTH" \
+          "${API}/builds?filter[app]=${APP_ID}&filter[version]=${VERSION_CODE}&filter[preReleaseVersion.version]=${VERSION_NAME}&limit=1" -o "$RESPONSE"
+        COUNT=$(python3 -c "import sys,json; print(len(json.load(sys.stdin)['data']))" < "$RESPONSE")
+        rm -f "$RESPONSE"
 
         if [ "$COUNT" -gt 0 ]; then
           echo "Build ${VERSION_NAME} (${VERSION_CODE}) is already in App Store Connect."
