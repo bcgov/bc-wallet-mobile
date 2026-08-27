@@ -1,0 +1,97 @@
+name: Promote a Google Play release to another track
+description: |
+  Put an already-uploaded build on a closed testing track. Play rejects a
+  second upload of the same version code, so widening the audience is a
+  promotion from the internal track, not another upload.
+
+  Idempotent: a version code already on the target track is left alone.
+
+inputs:
+  service_account_file:
+    description: Path to the Google Play publisher service-account JSON
+    required: true
+  package_name:
+    description: 'Play package name, e.g. ca.bc.gov.id.servicescard.test'
+    required: true
+  version_code:
+    description: Version code of the build to promote
+    required: true
+  source_track:
+    description: Track the build was uploaded to
+    required: false
+    default: internal
+  target_tracks:
+    description: Comma-separated tracks to promote onto, e.g. 'ring-1,ring-2'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    # Pinned to match ship-to-play: an unpinned install would let an upstream
+    # release change what the release pipeline runs with no PR here.
+    - name: Install codemagic-cli-tools
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [ ! -x "${RUNNER_TEMP}/codemagic-venv/bin/google-play" ]; then
+          python3 -m venv "${RUNNER_TEMP}/codemagic-venv"
+          "${RUNNER_TEMP}/codemagic-venv/bin/pip" install --quiet codemagic-cli-tools==0.69.0
+        fi
+
+    - name: Promote to each track
+      shell: bash
+      env:
+        CREDENTIALS_FILE: ${{ inputs.service_account_file }}
+        PACKAGE_NAME: ${{ inputs.package_name }}
+        VERSION_CODE: ${{ inputs.version_code }}
+        SOURCE_TRACK: ${{ inputs.source_track }}
+        TARGET_TRACKS: ${{ inputs.target_tracks }}
+      run: |
+        set -euo pipefail
+        GP="${RUNNER_TEMP}/codemagic-venv/bin/google-play"
+
+        if [ ! -f "${CREDENTIALS_FILE}" ]; then
+          echo "::error::No Google Play service-account file at ${CREDENTIALS_FILE}"
+          exit 1
+        fi
+
+        # One listing answers "is this version code already on that track?"
+        # for every track, so a re-run costs a single API call.
+        TRACKS_JSON=$("${GP}" tracks list \
+          --credentials "@file:${CREDENTIALS_FILE}" \
+          --package-name "${PACKAGE_NAME}" --json)
+
+        IFS=',' read -ra TARGETS <<< "${TARGET_TRACKS}"
+        for TARGET in "${TARGETS[@]}"; do
+          TARGET="$(echo "${TARGET}" | xargs)"
+          [ -n "${TARGET}" ] || continue
+
+          ALREADY=$(TRACK="${TARGET}" VC="${VERSION_CODE}" python3 -c '
+        import json, os, sys
+        track, vc = os.environ["TRACK"], os.environ["VC"]
+        tracks = json.loads(sys.stdin.read())
+        for t in tracks:
+            if t.get("track") != track:
+                continue
+            for release in t.get("releases") or []:
+                if vc in [str(c) for c in (release.get("version_codes") or release.get("versionCodes") or [])]:
+                    print("yes")
+                    sys.exit(0)
+        print("no")
+        ' <<< "${TRACKS_JSON}")
+
+          if [ "${ALREADY}" = "yes" ]; then
+            echo "✅ ${VERSION_CODE} is already on ${TARGET} — nothing to do"
+            continue
+          fi
+
+          echo "Promoting ${VERSION_CODE} from ${SOURCE_TRACK} to ${TARGET}..."
+          "${GP}" tracks promote-release \
+            --credentials "@file:${CREDENTIALS_FILE}" \
+            --package-name "${PACKAGE_NAME}" \
+            --source-track "${SOURCE_TRACK}" \
+            --target-track "${TARGET}" \
+            --version-code-filter "${VERSION_CODE}" \
+            --release-status completed
+          echo "✅ ${VERSION_CODE} promoted to ${TARGET}"
+        done

@@ -28,6 +28,15 @@ inputs:
       Defaults to the Gradle release bundle output.
     required: false
     default: 'app/android/app/build/outputs/bundle/release/app-release.aab'
+  package_name:
+    description: |
+      Play package name, used to check whether this build is already on the
+      track. Publishing it a second time would fail — Play rejects a repeated
+      version code — so the upload is skipped instead.
+    required: true
+  version_code:
+    description: Version code of the build being uploaded.
+    required: true
   track:
     description: 'Google Play track to release to.'
     required: false
@@ -55,6 +64,8 @@ runs:
         CREDENTIALS_FILE: ${{ inputs.service_account_file }}
         BUNDLE_PATH: ${{ inputs.bundle_path }}
         TRACK: ${{ inputs.track }}
+        PACKAGE_NAME: ${{ inputs.package_name }}
+        VERSION_CODE: ${{ inputs.version_code }}
         VERSION_NAME: ${{ inputs.version_name }}
         BUILD_NUMBER: ${{ inputs.build_number }}
         RELEASE_NOTES: ${{ inputs.release_notes }}
@@ -69,6 +80,27 @@ runs:
         if [ ! -f "${BUNDLE_PATH}" ]; then
           echo "::error::No Android bundle at ${BUNDLE_PATH}"
           exit 1
+        fi
+
+        ALREADY=$("${RUNNER_TEMP}/codemagic-venv/bin/google-play" tracks list \
+          --credentials "@file:${CREDENTIALS_FILE}" \
+          --package-name "${PACKAGE_NAME}" --json |
+          TRACK="${TRACK}" VC="${VERSION_CODE}" python3 -c '
+        import json, os, sys
+        track, vc = os.environ["TRACK"], os.environ["VC"]
+        for t in json.loads(sys.stdin.read()):
+            if t.get("track") != track:
+                continue
+            for release in t.get("releases") or []:
+                if vc in [str(c) for c in (release.get("version_codes") or release.get("versionCodes") or [])]:
+                    print("yes")
+                    sys.exit(0)
+        print("no")
+        ')
+
+        if [ "${ALREADY}" = "yes" ]; then
+          echo "✅ ${VERSION_CODE} is already on the ${TRACK} track — nothing to upload"
+          exit 0
         fi
 
         NOTES_JSON=$(RELEASE_NOTES="${RELEASE_NOTES}" python3 -c \

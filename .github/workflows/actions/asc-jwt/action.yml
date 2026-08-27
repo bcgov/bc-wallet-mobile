@@ -1,0 +1,60 @@
+name: App Store Connect JWT
+description: |
+  Mint a short-lived App Store Connect API token. The token is masked in
+  logs and expires after 20 minutes.
+
+inputs:
+  app_store_connect_issuer_id:
+    description: The App Store Connect API issuer ID
+    required: true
+  app_store_connect_key_identifier:
+    description: The App Store Connect API key identifier
+    required: true
+  app_store_connect_private_key:
+    description: The App Store Connect API private key (.p8 contents)
+    required: true
+
+outputs:
+  token:
+    description: Bearer token for the App Store Connect API
+    value: ${{ steps.jwt.outputs.token }}
+
+runs:
+  using: composite
+  steps:
+    - name: Generate JWT for App Store Connect API
+      id: jwt
+      shell: bash
+      env:
+        ASC_KEY_ID: ${{ inputs.app_store_connect_key_identifier }}
+        ASC_ISSUER_ID: ${{ inputs.app_store_connect_issuer_id }}
+        ASC_PRIVATE_KEY: ${{ inputs.app_store_connect_private_key }}
+      run: |
+        set -euo pipefail
+        HEADER=$(printf '{"alg":"ES256","kid":"%s","typ":"JWT"}' "$ASC_KEY_ID" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
+        NOW=$(date +%s)
+        EXP=$((NOW + 1200))
+        PAYLOAD=$(printf '{"iss":"%s","iat":%d,"exp":%d,"aud":"appstoreconnect-v1"}' "$ASC_ISSUER_ID" "$NOW" "$EXP" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
+
+        KEY_FILE=$(mktemp)
+        echo "$ASC_PRIVATE_KEY" > "$KEY_FILE"
+
+        # openssl dgst outputs DER-encoded ECDSA signatures, but JWT ES256
+        # requires raw R||S format (64 bytes for P-256). Convert via python3.
+        SIGNATURE=$(printf '%s.%s' "$HEADER" "$PAYLOAD" | \
+          openssl dgst -sha256 -sign "$KEY_FILE" -binary | \
+          python3 -c "
+        import sys
+        d = sys.stdin.buffer.read()
+        # Parse DER: SEQUENCE(INTEGER(r), INTEGER(s))
+        i = 2
+        rl = d[i+1]; r = d[i+2:i+2+rl]; i += 2 + rl
+        sl = d[i+1]; s = d[i+2:i+2+sl]
+        # Pad/trim each to 32 bytes for P-256 curve
+        sys.stdout.buffer.write(r[-32:].rjust(32, b'\x00') + s[-32:].rjust(32, b'\x00'))
+        " | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
+        rm -f "$KEY_FILE"
+
+        JWT="${HEADER}.${PAYLOAD}.${SIGNATURE}"
+        echo "::add-mask::${JWT}"
+        echo "token=${JWT}" >> "$GITHUB_OUTPUT"

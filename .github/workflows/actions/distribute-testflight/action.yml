@@ -40,41 +40,11 @@ runs:
   steps:
     - name: Generate JWT for App Store Connect API
       id: jwt
-      shell: bash
-      env:
-        ASC_KEY_ID: ${{ inputs.app_store_connect_key_identifier }}
-        ASC_ISSUER_ID: ${{ inputs.app_store_connect_issuer_id }}
-        ASC_PRIVATE_KEY: ${{ inputs.app_store_connect_private_key }}
-      run: |
-        # Build a JWT for App Store Connect API using only openssl + base64
-        HEADER=$(printf '{"alg":"ES256","kid":"%s","typ":"JWT"}' "$ASC_KEY_ID" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
-        NOW=$(date +%s)
-        EXP=$((NOW + 1200))
-        PAYLOAD=$(printf '{"iss":"%s","iat":%d,"exp":%d,"aud":"appstoreconnect-v1"}' "$ASC_ISSUER_ID" "$NOW" "$EXP" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
-
-        # Write the private key to a temp file
-        KEY_FILE=$(mktemp)
-        echo "$ASC_PRIVATE_KEY" > "$KEY_FILE"
-
-        # openssl dgst outputs DER-encoded ECDSA signatures, but JWT ES256
-        # requires raw R||S format (64 bytes for P-256). Convert via python3.
-        SIGNATURE=$(printf '%s.%s' "$HEADER" "$PAYLOAD" | \
-          openssl dgst -sha256 -sign "$KEY_FILE" -binary | \
-          python3 -c "
-        import sys
-        d = sys.stdin.buffer.read()
-        # Parse DER: SEQUENCE(INTEGER(r), INTEGER(s))
-        i = 2
-        rl = d[i+1]; r = d[i+2:i+2+rl]; i += 2 + rl
-        sl = d[i+1]; s = d[i+2:i+2+sl]
-        # Pad/trim each to 32 bytes for P-256 curve
-        sys.stdout.buffer.write(r[-32:].rjust(32, b'\x00') + s[-32:].rjust(32, b'\x00'))
-        " | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
-        rm -f "$KEY_FILE"
-
-        JWT="${HEADER}.${PAYLOAD}.${SIGNATURE}"
-        echo "::add-mask::${JWT}"
-        echo "token=${JWT}" >> "$GITHUB_OUTPUT"
+      uses: ./.github/workflows/actions/asc-jwt
+      with:
+        app_store_connect_issuer_id: ${{ inputs.app_store_connect_issuer_id }}
+        app_store_connect_key_identifier: ${{ inputs.app_store_connect_key_identifier }}
+        app_store_connect_private_key: ${{ inputs.app_store_connect_private_key }}
 
     - name: Wait for build processing & distribute
       shell: bash
@@ -268,8 +238,12 @@ runs:
         echo "$GROUP_IDS" | grep '^ ' || true
         ID_LIST=$(echo "$GROUP_IDS" | grep -v '^ ' || true)
 
-        if [ -z "$ID_LIST" ]; then
-          echo "⚠️ No matching beta groups found for: ${GROUPS[*]}"
+        # Every requested group must exist. Distributing to only the groups
+        # that happened to match would report success while some ring never
+        # received the build.
+        MATCHED=$(echo "$ID_LIST" | grep -c . || true)
+        if [ "$MATCHED" -ne "${#GROUPS[@]}" ]; then
+          echo "❌ Expected ${#GROUPS[@]} beta group(s) — ${GROUPS[*]} — but matched ${MATCHED}."
           echo "Available groups in response:"
           echo "$ALL_GROUPS" | python3 -c "
         import sys, json

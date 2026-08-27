@@ -15,10 +15,10 @@ flowchart TD
 
     H([Someone runs Publish]) --> R[Pick a build]
     A --> R
-    R --> ASC[App Store Connect]
-    R --> GP[Google Play - internal track]
-    R --> FB[Firebase App Distribution - chosen ring]
-    ASC --> TF[TestFlight - chosen ring]
+    R --> R0[ring-0 - the team, no approval]
+    R0 --> AP{Approve the chosen ring?}
+    AP -->|yes| W[Widen to rings 1 to 4]
+    AP -->|no| S[Stops at ring-0]
 ```
 
 ## On a pull request
@@ -39,8 +39,9 @@ That's the end of it. No store, no testers, no notifications.
 
 ## Publishing
 
-Go to **Actions → Publish → Run workflow**, pick a ring, run it. Anyone with
-write access can. Publish runs from `main` or a `release/*` branch only.
+Go to **Actions → Publish → Run workflow**, pick how far it should go, run it.
+Anyone with write access can start one; only an approver can take it past
+ring-0. Publish runs from `main` or a `release/*` branch only.
 
 The workflow picks a build, downloads that build's artifacts, and uploads them.
 It never rebuilds, so what testers install is exactly what CI produced.
@@ -73,9 +74,12 @@ with.
 ## Rings
 
 A ring is an audience, and the same ring names are used on Firebase, TestFlight
-and Google Play. `ring-0` is the team and is the default; each ring after it is
-wider. A build is uploaded once at ring-0, and later rings widen who can see
-that same build rather than uploading it again.
+and Google Play. `ring-0` is the team and always publishes; each ring after it
+is wider and needs an approval. Publishing to a ring publishes every ring below
+it too.
+
+A build is uploaded once at ring-0. Later rings widen who can see that same
+build rather than uploading it again, so publishing is safe to repeat.
 
 See [releases.md](releases.md).
 

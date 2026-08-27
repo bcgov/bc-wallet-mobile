@@ -1,0 +1,61 @@
+name: Look up an App Store Connect build
+description: |
+  Report whether a build already exists in App Store Connect. Publishing a
+  build that is already there would fail — Apple rejects a duplicate binary —
+  so the upload step is skipped instead.
+
+inputs:
+  asc_token:
+    description: Bearer token from the asc-jwt action
+    required: true
+  bundle_id:
+    description: The iOS bundle identifier (e.g. ca.bc.gov.BCWallet)
+    required: true
+  version_name:
+    description: 'Marketing version, e.g. 4.1.0'
+    required: true
+  version_code:
+    description: 'Build number, e.g. 8171'
+    required: true
+
+outputs:
+  exists:
+    description: '"true" when the build is already in App Store Connect'
+    value: ${{ steps.lookup.outputs.exists }}
+
+runs:
+  using: composite
+  steps:
+    - name: Look up the build
+      id: lookup
+      shell: bash
+      env:
+        ASC_TOKEN: ${{ inputs.asc_token }}
+        BUNDLE_ID: ${{ inputs.bundle_id }}
+        VERSION_NAME: ${{ inputs.version_name }}
+        VERSION_CODE: ${{ inputs.version_code }}
+      run: |
+        set -euo pipefail
+        API="https://api.appstoreconnect.apple.com/v1"
+        AUTH="Authorization: Bearer ${ASC_TOKEN}"
+
+        APP_ID=$(curl -sfg -H "$AUTH" \
+          "${API}/apps?filter[bundleId]=${BUNDLE_ID}&limit=1" |
+          python3 -c "import sys,json; d=json.load(sys.stdin)['data']; print(d[0]['id'] if d else '')")
+
+        if [ -z "$APP_ID" ]; then
+          echo "::error::No App Store Connect app for bundle ID ${BUNDLE_ID}"
+          exit 1
+        fi
+
+        COUNT=$(curl -sfg -H "$AUTH" \
+          "${API}/builds?filter[app]=${APP_ID}&filter[version]=${VERSION_CODE}&filter[preReleaseVersion.version]=${VERSION_NAME}&limit=1" |
+          python3 -c "import sys,json; print(len(json.load(sys.stdin)['data']))")
+
+        if [ "$COUNT" -gt 0 ]; then
+          echo "Build ${VERSION_NAME} (${VERSION_CODE}) is already in App Store Connect."
+          echo "exists=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "Build ${VERSION_NAME} (${VERSION_CODE}) is not in App Store Connect yet."
+          echo "exists=false" >> "$GITHUB_OUTPUT"
+        fi

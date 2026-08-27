@@ -18,7 +18,8 @@ import sys
 
 WORKFLOW = "main.yaml"
 RUN_PAGE_SIZE = 100
-FIRST_RING = "ring-0"
+# ring-0 always publishes; the input picks how much further to go.
+RINGS = ["ring-0", "ring-1", "ring-2", "ring-3", "ring-4"]
 KINDS = {
     "ipa": re.compile(r"^ios-(?P<variant>.+)\.ipa$"),
     "aab": re.compile(r"^android-(?P<variant>.+)\.aab$"),
@@ -60,6 +61,9 @@ def fail(message):
 REPO = os.environ["REPO"]
 BRANCH = os.environ["BRANCH"]
 RING = os.environ["RING"]
+if RING not in RINGS:
+    print(f"::error::Unknown ring '{RING}'. Expected one of: {', '.join(RINGS)}.")
+    sys.exit(1)
 requested_build = os.environ.get("REQUESTED_BUILD", "").strip()
 requested_variants = [
     v.strip() for v in os.environ.get("REQUESTED_VARIANTS", "").split(",") if v.strip()
@@ -125,19 +129,24 @@ for kind, variants in by_kind.items():
         # rather than showing up as a quietly skipped job.
         print(f"  {kind}: none — those destinations will be skipped")
 
-# Only the first ring uploads. Apple rejects a duplicate binary and Play
-# rejects a duplicate version code, so a higher ring can only widen who can
-# see the build that ring-0 already put there.
-uploads = RING == FIRST_RING
+# Publishing to a ring publishes every ring below it too, so ring-2 means
+# ring-0, ring-1 and ring-2. ring-0 is the upload; the rest only widen who
+# can see it, because Apple rejects a duplicate binary and Play rejects a
+# duplicate version code.
+widen_rings = RINGS[1 : RINGS.index(RING) + 1]
 
 print(f"  ring:   {RING}")
-if uploads:
-    print("  stores: uploading to App Store Connect and Google Play (internal)")
-else:
-    print(f"  stores: not uploading — {RING} widens the build {FIRST_RING} published")
+print(f"  reaches: {', '.join(RINGS[: RINGS.index(RING) + 1])}")
+print("  ring-0 publishes now, without approval")
+if widen_rings:
+    print(f"  after {RING} is approved: {', '.join(widen_rings)}")
 
 with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
-    output.write(f"uploads={'true' if uploads else 'false'}\n")
+    output.write(f"widen_rings_csv={','.join(widen_rings)}\n")
+    # TestFlight takes one group per line, so this one needs the heredoc form.
+    output.write("widen_rings_lines<<__RINGS_EOF__\n")
+    output.write("\n".join(widen_rings) + "\n")
+    output.write("__RINGS_EOF__\n")
     output.write(f"run_id={run['id']}\n")
     output.write(f"run_number={run['run_number']}\n")
     output.write(f"head_sha={run['head_sha']}\n")
