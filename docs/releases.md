@@ -38,6 +38,13 @@ Publishing is therefore safe to repeat. Taking a build that already went to
 ring-0 up to ring-2 later works fine: the ring-0 steps see it is already there
 and skip.
 
+On Google Play specifically, a re-publish never re-uploads and never touches
+the internal track — if a newer build has since replaced it there, the newer
+build is left in place. Widening puts the older build's version code directly
+onto the ring tracks being widened to, replacing whatever they held. That's
+deliberate: widening is explicit operator intent, so it's the one case where a
+build can knock another off a track.
+
 ## Who approves
 
 Two teams, so signing off on a QA build doesn't also let you release to
@@ -86,8 +93,10 @@ the version comes from the variant files, not the branch name.
 
 ### One publish at a time
 
-Publishes queue rather than run together, and a run waiting for approval holds
-the queue. Approve or reject promptly; rejecting frees the queue.
+Publishes queue rather than run together. Waiting publishes queue in the
+order they started, so more than one can be waiting at once. A run holding
+the approval gate holds the whole queue until it's approved or rejected —
+approve or reject promptly; rejecting frees the queue.
 
 ## Version numbers
 
