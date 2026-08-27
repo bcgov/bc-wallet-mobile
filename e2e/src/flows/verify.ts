@@ -1,6 +1,6 @@
 import type { TestUser } from '../constants.js'
 import { COMBO_CARD_BARCODE_MASKS, Timeouts } from '../constants.js'
-import { tapAlertButton } from '../helpers/alerts.js'
+import { acceptSystemAlertsUntil, tapAlertButton } from '../helpers/alerts.js'
 import { isAppErrorShowing, throwIfAppErrorShowing } from '../helpers/app-error.js'
 import { ApproveInPersonInput, approveInPersonRequest } from '../helpers/approval.js'
 import type { ImageMaskRegion } from '../helpers/camera.js'
@@ -21,6 +21,7 @@ import { VerifyPromptScreen } from '../screens/onboarding.js'
 import {
   AccountSetupScreen,
   AdditionalIdentificationRequiredScreen,
+  CallBusyOrClosedScreen,
   CancelledReviewScreen,
   DualIdentificationRequiredScreen,
   EmailConfirmationScreen,
@@ -31,6 +32,9 @@ import {
   EvidenceIDCollectionScreen,
   IdentitySelectionScreen,
   IDPhotoInformationScreen,
+  LiveCallErrorScreen,
+  LiveCallLoadingScreen,
+  LiveCallScreen,
   ManualSerialScreen,
   PendingReviewScreen,
   PhotoInstructionsScreen,
@@ -38,11 +42,13 @@ import {
   ResidentialAddressScreen,
   ScanSerialScreen,
   SelfieCaptureScreen,
+  StartCallScreen,
   SuccessfullySentScreen,
   TakeVideoScreen,
   VerificationMethodSelectionScreen,
   VerificationSuccessScreen,
   VerifyInPersonScreen,
+  VerifyNotCompleteScreen,
   VideoInstructionsScreen,
   VideoReviewScreen,
   VideoTooLongScreen,
@@ -267,7 +273,11 @@ export async function submitSendVideoVerification(user: TestUser): Promise<void>
   await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
 }
 
-/** The selfie half: enter the front camera, inject when the session can, shoot, accept. Ends on VideoInstructions. */
+/**
+ * The selfie half: enter the front camera, inject when the session can, shoot, accept. UsePhoto RESETS
+ * to where the branch goes next — VideoInstructions (send-video) or StartCall (live-call) — so the
+ * caller asserts the destination.
+ */
 async function captureSelfie(user: TestUser): Promise<void> {
   await reachCameraScreen('TakePhoto (selfie)', () => SelfieCaptureScreen.isPresent(1_000))
   // The send-video lane runs without injection (it breaks the recorder) — the rack feed is fine
@@ -278,7 +288,7 @@ async function captureSelfie(user: TestUser): Promise<void> {
   }
   await SelfieCaptureScreen.tap('primary') // shutter — NOT tapToNavigate (not idempotent)
   await PhotoReviewScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-  await PhotoReviewScreen.tapToNavigate('primary') // UsePhoto → RESETS to VideoInstructions
+  await PhotoReviewScreen.tapToNavigate('primary') // UsePhoto — its id is not on either reset destination
 }
 
 /**
@@ -480,6 +490,191 @@ export async function expectCancelledReviewReason(reason: string): Promise<void>
     throw new Error(
       `CancelledReview does not show the agent reason "${reason}". On screen: ${await describeCurrentScreen()}`
     )
+  }
+}
+
+/** Where the Video Call method button landed: open service hours → the selfie primer; otherwise the status screen. */
+export type LiveCallEntry = 'open' | 'busyOrClosed'
+
+/**
+ * Method selection → Video Call. The app routes on the agent-queue destinations and service hours:
+ * open lands on the shared PhotoInstructions (live-call flavour), busy/closed on CallBusyOrClosed.
+ * Which one is SIT's answer at this moment, so the branch is returned for the journey to dispatch on —
+ * both are legitimate outcomes for a suite that runs day and night.
+ */
+export async function chooseVideoCallMethod(): Promise<LiveCallEntry> {
+  await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await VerificationMethodSelectionScreen.link('videoCall')
+  const deadline = Date.now() + Timeouts.SCREEN_TRANSITION
+  for (;;) {
+    if (await CallBusyOrClosedScreen.isPresent(1_000)) {
+      return 'busyOrClosed'
+    }
+    if (await PhotoInstructionsScreen.isPresent(1_000)) {
+      return 'open'
+    }
+    if (Date.now() > deadline) {
+      throw new Error(
+        `Video Call led to neither PhotoInstructions nor CallBusyOrClosed. On screen: ${await describeCurrentScreen()}`
+      )
+    }
+  }
+}
+
+/** The two CallBusyOrClosed title variants, keyed by the `busy` route param that selects them. */
+const CALL_STATUS_TITLES = {
+  busy: 'All agents are busy', // BCSC.VideoCall.CallBusyOrClosed.AllAgentsBusy
+  closed: 'Call us later', // BCSC.VideoCall.CallBusyOrClosed.CallUsLater
+} as const
+
+/**
+ * Assert CallBusyOrClosed is showing one of its two variants IN FULL — a status title matching a known
+ * variant, the hours-of-service block, and the add-your-card-again reminder — and return which.
+ *
+ * 'busy' means the destination list offered no usable queue (a config state, not live agent load);
+ * 'closed' covers outside-service-hours and the hours-fetch-failed fallback. SIT keeps a Test Harness
+ * queue destination, so 'closed' is what a night run deterministically gets.
+ */
+export async function expectCallBusyOrClosedVariant(): Promise<'busy' | 'closed'> {
+  await CallBusyOrClosedScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  const title = await CallBusyOrClosedScreen.read('callStatusTitle')
+  const variant = (Object.keys(CALL_STATUS_TITLES) as ('busy' | 'closed')[]).find(
+    (key) => CALL_STATUS_TITLES[key] === title
+  )
+  if (!variant) {
+    throw new Error(`CallBusyOrClosed shows an unknown status title: "${title}"`)
+  }
+  await CallBusyOrClosedScreen.waitFor('hoursOfServiceTitle', Timeouts.SCREEN_TRANSITION)
+  await CallBusyOrClosedScreen.waitFor('reminderTitle', Timeouts.SCREEN_TRANSITION)
+  return variant
+}
+
+/**
+ * The open-hours live-call arrange: PhotoInstructions → selfie capture (injected on Sauce, the rack or
+ * device camera otherwise) → StartCall. The UsePhoto accept RESETS the stack to [PhotoInstructions,
+ * StartCall], so backing out of StartCall returns to the instructions, not the review.
+ */
+export async function reachStartCallViaSelfie(user: TestUser): Promise<void> {
+  await PhotoInstructionsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  // Plain tap, NOT tapToNavigate: the camera's shutter carries the same testID as this CTA, so a
+  // confirm-and-retry would read the push as a miss and fire the shutter.
+  await PhotoInstructionsScreen.tap('primary')
+  await captureSelfie(user)
+  await StartCallScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+}
+
+/** How the live-call setup settled: queued at the human boundary, or actually answered by an agent. */
+export type LiveCallOutcome = 'waiting' | 'connected'
+
+/** BCSC.VideoCall.CallStates.WaitingForAgent — the loading state that proves the queue was reached. */
+const WAITING_FOR_AGENT_COPY = 'Waiting for an agent to join...'
+
+/** Budget for the whole call setup: selfie upload, session mint, Pexip WebRTC connect, queue entry. */
+const LIVE_CALL_SETUP_TIMEOUT_MS = 90_000
+
+/**
+ * StartCall → LiveCall → the agent queue. The Start press requests microphone permission (Android adds
+ * Bluetooth on 12+, and WebRTC can raise iOS's local-network prompt mid-connect), so the whole wait
+ * accepts system dialogs until the call settles on one of three outcomes:
+ *
+ * - 'waiting' — evidence uploaded, session minted, WebRTC connected as the Pexip guest, queued until
+ *   a host (agent) joins. The human boundary — where a run stops when nobody answers.
+ * - 'connected' — an agent ANSWERED (the in-call controls are up). SIT's Test Harness queue does this
+ *   (observed 2026-08-27: it auto-answers within seconds), so on SIT this is the common outcome; it
+ *   converges on the same exit (`leaveLiveCall` handles both) and does NOT approve the verification.
+ * - CallErrorView → throws, surfacing the app's own error where a bare wait would report a timeout.
+ */
+export async function startLiveCall(): Promise<LiveCallOutcome> {
+  await StartCallScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await StartCallScreen.tapWhenEnabled('primary')
+
+  let outcome: LiveCallOutcome | 'error' | null = null
+  const settled = await acceptSystemAlertsUntil(
+    async () => {
+      if (await LiveCallScreen.isPresent(500)) {
+        outcome = 'connected'
+        return true
+      }
+      if (await engine.isTextDisplayed(WAITING_FOR_AGENT_COPY)) {
+        outcome = 'waiting'
+        return true
+      }
+      if (await LiveCallErrorScreen.isPresent(500)) {
+        outcome = 'error'
+        return true
+      }
+      return false
+    },
+    { timeoutMs: LIVE_CALL_SETUP_TIMEOUT_MS }
+  )
+
+  if (!settled || outcome === null) {
+    throw new Error(
+      `The live call did not reach the agent queue within ${LIVE_CALL_SETUP_TIMEOUT_MS}ms. ` +
+        `On screen: ${await describeCurrentScreen()}`
+    )
+  }
+  if (outcome === 'error') {
+    throw new Error(
+      `The live-call setup failed — CallErrorView is showing. On screen: ${await describeCurrentScreen()}`
+    )
+  }
+  console.log(`[live-call] Settled: ${outcome === 'waiting' ? 'queued, waiting for an agent' : 'an agent ANSWERED'}`)
+  return outcome
+}
+
+/**
+ * In-call checkpoint, reachable whenever the Test Harness agent answers: the control row is usable.
+ * Mute and video each get a there-and-back toggle (each tap flips the local track state), and the
+ * having-trouble affordance must be offered. Kept SHORT on purpose — the far side owns the call's
+ * lifetime, so this must not dwell in it.
+ */
+export async function exerciseInCallControls(): Promise<void> {
+  await LiveCallScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await LiveCallScreen.link('mute')
+  await LiveCallScreen.link('mute')
+  await LiveCallScreen.link('video')
+  await LiveCallScreen.link('video')
+  if (!(await LiveCallScreen.isVisible('havingTrouble'))) {
+    throw new Error('The in-call HavingTrouble control is missing')
+  }
+}
+
+/**
+ * Leave the live call from either settle outcome — Cancel on the loading/waiting view, EndCall once
+ * connected — and ride the app's own exit: the CALL_ENDED processing view, a verification-status
+ * re-check, then the stack reset to [VerificationMethodSelection, VerifyNotComplete] for an account
+ * that is (as expected in CI) not verified.
+ */
+export async function leaveLiveCall(outcome: LiveCallOutcome): Promise<void> {
+  if (outcome === 'connected') {
+    // The far side owns the call too: if the harness agent hung up first, the app is already on its
+    // way out through the same reset this waits on — only tap EndCall while the call is still up.
+    if (await LiveCallScreen.isPresent(1_000)) {
+      await LiveCallScreen.tap('primary') // EndCall
+    }
+  } else {
+    await LiveCallLoadingScreen.tap('primary') // Cancel
+  }
+  // Pexip disconnect + two session-status calls + the verification re-check run behind the processing
+  // view before the reset lands, so the exit gets a launch-sized budget rather than a transition one.
+  const deadline = Date.now() + Timeouts.APP_LAUNCH
+  for (;;) {
+    if (await VerifyNotCompleteScreen.isPresent(1_000)) {
+      return
+    }
+    if (await VerificationSuccessScreen.isPresent(1_000)) {
+      throw new Error(
+        'The live call ended VERIFIED (VerificationSuccess) — an SIT agent approved the request. ' +
+          'Record the Test Harness queue behavior in the UAT-3 notes and extend the journey to full completion.'
+      )
+    }
+    if (Date.now() > deadline) {
+      throw new Error(
+        `Leaving the live call reached neither VerifyNotComplete nor VerificationSuccess. ` +
+          `On screen: ${await describeCurrentScreen()}`
+      )
+    }
   }
 }
 
