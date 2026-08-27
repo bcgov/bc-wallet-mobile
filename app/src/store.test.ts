@@ -1,5 +1,5 @@
 import { InstallIdSystemCheck } from './services/system-checks/InstallIdSystemCheck'
-import { BCDispatchAction, initialState, migrateBCSCState, reducer } from './store'
+import { BCDispatchAction, BCLocalStorageKeys, initialState, migrateBCSCState, reducer } from './store'
 
 jest.mock('react-native-config', () => ({
   BUILD_TARGET: 'bcsc',
@@ -24,7 +24,15 @@ jest.mock('@bifold/core', () => ({
   PersistentStorage: { storeValueForKey: jest.fn() },
 }))
 
+import { PersistentStorage } from '@bifold/core'
+
+const mockedStoreValueForKey = PersistentStorage.storeValueForKey as jest.Mock
+
 describe('reducer', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
   it('UPDATE_APP_VERSION sets appVersion and appBuildNumber', () => {
     const state = { ...initialState, bcsc: { ...initialState.bcsc, appVersion: '', appBuildNumber: '' } }
     const result = reducer(state, { type: BCDispatchAction.UPDATE_APP_VERSION })
@@ -75,6 +83,41 @@ describe('reducer', () => {
     const result = reducer(state, { type: BCDispatchAction.SET_INSTALL_ID, payload: ['new-install-id'] })
 
     expect(result.bcsc.installId).toBe('new-install-id')
+  })
+
+  it('KEY_ROTATION_ATTEMPTED sets and persists lastKeyRotationAttemptAt', () => {
+    const state = { ...initialState, bcsc: { ...initialState.bcsc, lastKeyRotationAttemptAt: undefined } }
+    const result = reducer(state, {
+      type: BCDispatchAction.KEY_ROTATION_ATTEMPTED,
+      payload: ['2026-01-01T00:00:00.000Z'],
+    })
+
+    expect(result.bcsc.lastKeyRotationAttemptAt).toBe('2026-01-01T00:00:00.000Z')
+    // Losing this persistence call means the throttle timestamp resets every launch, which
+    // re-fires generate/PUT/rollback-delete on every launch during a persistent outage —
+    // exactly the churn the 7-day backoff exists to prevent.
+    expect(mockedStoreValueForKey).toHaveBeenCalledWith(
+      BCLocalStorageKeys.BCSC,
+      expect.objectContaining({ lastKeyRotationAttemptAt: '2026-01-01T00:00:00.000Z' })
+    )
+  })
+
+  it('RECORD_APP_LAUNCH_VERSION sets and persists lastSeenAppVersion/lastSeenAppBuildNumber', () => {
+    const state = {
+      ...initialState,
+      bcsc: { ...initialState.bcsc, lastSeenAppVersion: undefined, lastSeenAppBuildNumber: undefined },
+    }
+    const result = reducer(state, {
+      type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION,
+      payload: [{ version: '4.1.0', buildNumber: '1234' }],
+    })
+
+    expect(result.bcsc.lastSeenAppVersion).toBe('4.1.0')
+    expect(result.bcsc.lastSeenAppBuildNumber).toBe('1234')
+    expect(mockedStoreValueForKey).toHaveBeenCalledWith(
+      BCLocalStorageKeys.BCSC,
+      expect.objectContaining({ lastSeenAppVersion: '4.1.0', lastSeenAppBuildNumber: '1234' })
+    )
   })
 })
 

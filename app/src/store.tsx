@@ -96,6 +96,19 @@ export interface BCSCState {
   showCardRenewalNotification?: boolean
   acceptedTermsOfUseVersion?: string
   installId?: string // Unique identifier for this app install (not a per-report id); preserved across CLEAR_BCSC
+  /** ISO timestamp of the last automatic key-rotation attempt (success or failure), used to
+   * throttle retries — see KeyRotationSystemCheck. Not PII. */
+  lastKeyRotationAttemptAt?: string
+  /**
+   * App version/build seen on the MOST RECENT launch, stamped unconditionally every launch —
+   * deliberately distinct from `appVersion`/`appBuildNumber` above, which only advance on a
+   * SUCCESSFUL device-registration PUT. KeyRotationSystemCheck uses this pair (never
+   * `appVersion`/`appBuildNumber`) to detect "did the app version change since last launch",
+   * so a persistently failing registration PUT can never latch key rotation off forever. See
+   * the #3876 review.
+   */
+  lastSeenAppVersion?: string
+  lastSeenAppBuildNumber?: string
 }
 
 export enum VerificationStatus {
@@ -283,6 +296,8 @@ enum BCSCDispatchAction {
   SET_ACCOUNT_EXPIRY_NOTIFICATION = 'bcsc/setAccountExpiryNotification',
   SET_CARD_RENEWAL_NOTIFICATION = 'bcsc/setCardRenewalNotification',
   SET_INSTALL_ID = 'bcsc/setInstallId',
+  KEY_ROTATION_ATTEMPTED = 'bcsc/keyRotationAttempted',
+  RECORD_APP_LAUNCH_VERSION = 'bcsc/recordAppLaunchVersion',
 }
 
 enum ModeDispatchAction {
@@ -781,6 +796,22 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.SET_INSTALL_ID: {
       const installId = (action?.payload || []).pop()
       const bcsc = { ...state.bcsc, installId }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.KEY_ROTATION_ATTEMPTED: {
+      const lastKeyRotationAttemptAt = (action?.payload || []).pop()
+      const bcsc = { ...state.bcsc, lastKeyRotationAttemptAt }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.RECORD_APP_LAUNCH_VERSION: {
+      const { version: lastSeenAppVersion, buildNumber: lastSeenAppBuildNumber } = (action?.payload || []).pop() ?? {}
+      const bcsc = { ...state.bcsc, lastSeenAppVersion, lastSeenAppBuildNumber }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
