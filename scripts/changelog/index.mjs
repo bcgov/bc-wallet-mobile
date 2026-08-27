@@ -1,31 +1,22 @@
 #!/usr/bin/env node
 
 /**
- * TODO: read through and reword comments
- * changelog/index.mjs
+ * Folds pending `.changes/*.md` entries into CHANGELOG.md when publishing a new build
  *
- * Folds pending `.changes/*.md` entries into CHANGELOG.md at release time.
- *
- * Each `.changes/*.md` file carries YAML frontmatter with a `type`
- * (added/changed/fixed/removed) and a plain-language body written for
- * non-technical readers. `assemble` compares the current release variant's
- * APP_VERSION against the most recent heading in CHANGELOG.md: a version
- * change opens a new heading, a match appends a new build section under the
- * existing one. Consumed `.changes/*.md` files are deleted after assembly.
+ * Each entry has YAML frontmatter with a `type` (added/changed/fixed/removed)
+ * and a plain-language body. `assemble` matches the variant's APP_VERSION
+ * against the newest CHANGELOG.md heading: a new version opens a new heading,
+ * a match appends a build section under it. Consumed entries are deleted.
  *
  * Usage:
  *   node scripts/changelog/index.mjs assemble <build> [--variant <name>] [--allow-empty]
  *   node scripts/changelog/index.mjs preview  <build> [--variant <name>]
  *
- * Examples:
- *   node scripts/changelog/index.mjs assemble 2801
- *   node scripts/changelog/index.mjs preview 2801 --variant bcsc-prod
- *
  * Exit codes:
  *   0  success
- *   1  bad invocation (usage error)
- *   2  a .changes/*.md file has missing/unknown `type` or bad frontmatter
- *   3  .changes/ has no entries and --allow-empty was not passed (assemble only)
+ *   1  usage error
+ *   2  an entry has missing/unknown `type` or bad frontmatter
+ *   3  no entries and --allow-empty not passed (assemble only)
  */
 
 import { existsSync, readFileSync, readdirSync, unlinkSync, writeFileSync } from 'fs'
@@ -34,9 +25,7 @@ import { parse as parseYaml } from 'yaml'
 
 // ─── Constants ──────────────────────────────────────────────────
 
-// Resolved from the working directory (not this file's location) so the
-// tool can be pointed at a fixture root in tests via `cwd`. In real usage
-// it's always invoked from the repo root, so this is equivalent.
+// From cwd, not this file's location, so tests can point it at a fixture root.
 const ROOT_DIR = process.cwd()
 const CHANGES_DIR = join(ROOT_DIR, '.changes')
 const DEFAULT_VARIANT = 'bcsc-prod'
@@ -48,10 +37,7 @@ const VERSION_HEADING_PATTERN = /^## (.+)$/gm
 
 // ─── variant.env parsing ────────────────────────────────────────
 
-/**
- * Parse a variant.env file into a key-value object.
- * Mirrors scripts/apply-variant.mjs's parseVariantEnv.
- */
+/** Parse a variant.env file into a key-value object */
 function parseVariantEnv(envPath) {
   const content = readFileSync(envPath, 'utf-8')
   const env = {}
@@ -109,9 +95,8 @@ function parseChangeFile(filePath) {
 }
 
 /**
- * Reads and validates every .changes/*.md file. Exits loudly (code 2) if
- * any entry has missing or unknown `type` — a typo should break CI, not
- * silently drop an entry.
+ * Reads and validates every .changes/*.md file. Exits with code 2 on any
+ * bad entry so a typo breaks CI rather than silently dropping the entry.
  */
 function readChangeFiles(changesDir) {
   if (!existsSync(changesDir)) return []
@@ -179,7 +164,7 @@ For the pre-4.x release history, see [RELEASE.md](./RELEASE.md).
 
 /**
  * Splits CHANGELOG.md into its intro header and an ordered list of
- * { version, body } sections, one per existing "## <version>" heading.
+ * { version, body } sections, one per "## <version>" heading.
  */
 function parseChangelog(content) {
   const matches = [...content.matchAll(VERSION_HEADING_PATTERN)]
@@ -208,10 +193,9 @@ function stringifyChangelog({ header, versions }) {
 }
 
 /**
- * Pure function: given the current CHANGELOG.md content (or null if the
- * file doesn't exist yet), returns the updated content with a new build
- * section folded in. A version change opens a new "## <version>" heading;
- * a match appends the new build under the existing one.
+ * Takes the current CHANGELOG.md content and
+ * returns it with the new build section folded in. A new version opens a
+ * "## <version>" heading; a match appends the build under the existing one.
  */
 function buildUpdatedChangelog({ existingContent, version, buildNumber, entries }) {
   const parsed = parseChangelog(existingContent ?? initialChangelogContent())
@@ -326,6 +310,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 }
 
 export {
+  TYPE_LABELS,
+  VALID_TYPES,
   assembleChangelog,
   buildUpdatedChangelog,
   previewChangelog,

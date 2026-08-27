@@ -7865,6 +7865,7 @@ __metadata:
   dependencies:
     prettier: "npm:~3.4.2"
     prettier-plugin-organize-imports: "npm:^4.3.0"
+    prompts: "npm:^2.4.2"
     react-native-bcsc-core: "workspace:*"
     yaml: "npm:^2.9.0"
   dependenciesMeta:

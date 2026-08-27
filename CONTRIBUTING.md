@@ -8,11 +8,11 @@ Pull requests will be evaluated by the repository guardians on a schedule and if
 
 All contributors retain the original copyright to their stuff, but by contributing to this project, you grant a world-wide, royalty-free, perpetual, irrevocable, non-exclusive, transferable license to all users **under the terms of the license under which this project is distributed.**
 
-<!-- TODO: I don't know if this should be heres -->
-
 ## Changelog entries
 
-Every PR that changes behaviour a user or QA would notice needs a changelog entry: a markdown file under `.changes/`, named `<kebab-case-slug>.md` (e.g. `.changes/fix-biometrics-crash.md`) — any short, unique, descriptive name works.
+Every PR that changes behaviour a user or QA would notice needs a changelog entry: a markdown file under `.changes/`, named `<kebab-case-slug>.md` (e.g. `.changes/fix-biometrics-crash.md`). The filename doesn't matter — it's deleted once its content lands in `CHANGELOG.md` — it just needs to be unique, so any short name works.
+
+Run `yarn changeset` to create one — it prompts for the `type` and a description, and picks a random filename for you.
 
 ```markdown
 ---

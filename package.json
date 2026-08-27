@@ -39,7 +39,8 @@
     "typecheck": "yarn typecheck:app && yarn typecheck:core",
     "test": "cd app && yarn test",
     "coverage": "cd app && yarn test:coverage",
-    "changelog:test": "node --test scripts/changelog/index.test.mjs",
+    "changeset": "node scripts/changelog/create.mjs",
+    "changelog:test": "node --test scripts/changelog/*.test.mjs",
     "check": "echo '🥁 Running all checks...' && yarn typecheck && yarn lint && yarn format:check && yarn test && yarn changelog:test && echo '✅ All checks passed!'",
     "build": "cd packages/bcsc-core && yarn build",
     "setup": "yarn build && cd app && yarn setup",
@@ -85,6 +86,7 @@
   "devDependencies": {
     "prettier": "~3.4.2",
     "prettier-plugin-organize-imports": "^4.3.0",
+    "prompts": "^2.4.2",
     "yaml": "^2.9.0"
   },
   "//": "ffi-napi and ref-napi are unused by React Native and incompatible with Node 24, so we skip building them.",
