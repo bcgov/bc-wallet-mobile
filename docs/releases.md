@@ -11,13 +11,13 @@ This page covers how a release is put together. For what CI runs and when, see
 
 A ring is an audience. Each ring is wider than the one before it.
 
-| Ring | Who | Approval |
+| Ring | Who gets the build | Who approves it |
 |---|---|---|
-| `ring-0` | The team | None — always publishes |
-| `ring-1` | QA | Yes |
-| `ring-2` | UAT | Yes |
-| `ring-3` | Early adopters | Yes |
-| `ring-4` | Everyone | Yes |
+| `ring-0` | The team | Nobody — always publishes |
+| `ring-1` | QA | `bcsc-approvers-ring-1` |
+| `ring-2` | UAT | `bcsc-approvers-ring-2-plus` |
+| `ring-3` | Early adopters | `bcsc-approvers-ring-2-plus` |
+| `ring-4` | Everyone | `bcsc-approvers-ring-2-plus` |
 
 Publishing to a ring publishes every ring below it too. Choosing `ring-2` sends
 the build to ring-0, ring-1 and ring-2.
@@ -25,6 +25,8 @@ the build to ring-0, ring-1 and ring-2.
 `ring-0` always goes out, straight away, with no approval. Everything above it
 waits for someone to approve the ring you picked. One approval covers the
 whole run — approving a ring-3 publish releases rings 1, 2 and 3 together.
+
+Rejecting stops the widening, but ring-0 has already gone to the team by then.
 
 The same ring names are used on Firebase, TestFlight and Google Play, so
 "ring-2 has it" means the same thing wherever a tester happens to be.
@@ -38,6 +40,23 @@ binary and Google Play rejects a repeated version code.
 That also makes publishing safe to repeat. Taking a build that already went to
 ring-0 up to ring-2 later works fine: the ring-0 steps notice the build is
 already there and skip.
+
+## Who approves
+
+Two teams, so letting QA sign off on a QA build doesn't also let them release
+to everyone.
+
+| Team | Approves | Members |
+|---|---|---|
+| `bcsc-approvers-ring-1` | ring-1 | UAT, the PO and the dev team |
+| `bcsc-approvers-ring-2-plus` | ring-2, ring-3, ring-4 | The PO and the dev team |
+
+Anyone in the team can approve — being a team maintainer is not required.
+Membership is managed in the team, so nothing in this repo changes when
+someone joins or leaves.
+
+Whoever starts a publish cannot approve their own run, so a ring-1 publish
+needs a second person.
 
 ## Publishing
 
@@ -130,12 +149,13 @@ For each variant:
 - **App Store Connect** — five TestFlight beta groups, `ring-0` to `ring-4`.
 - **Firebase App Distribution** — five tester groups, `ring-0` to `ring-4`.
 
-And once for the repository:
+The repository side is already done: the `ring-1` to `ring-4` environments
+exist under Settings → Environments, each with its approver team as a required
+reviewer and self-review prevented.
 
-- **Environments** — `ring-1` to `ring-4` under Settings → Environments, each
-  with **Required reviewers** set. Until a ring has reviewers, its gate
-  approves instantly and that ring publishes without anyone signing off.
-  "Prevent self-review" stops the person who started the run approving it.
+If a ring is ever added, give its environment a required reviewer straight
+away — an environment with no reviewers approves instantly, so the ring would
+publish with nobody signing off.
 
 A missing TestFlight or Firebase group fails the run rather than quietly
 distributing to the groups that do exist.

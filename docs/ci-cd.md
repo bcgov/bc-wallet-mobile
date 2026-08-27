@@ -81,6 +81,9 @@ it too.
 A build is uploaded once at ring-0. Later rings widen who can see that same
 build rather than uploading it again, so publishing is safe to repeat.
 
+Approvals come from two teams: `bcsc-approvers-ring-1` for QA builds, and
+`bcsc-approvers-ring-2-plus` for anything wider.
+
 See [releases.md](releases.md).
 
 ## The other workflows
