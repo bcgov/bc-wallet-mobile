@@ -1,10 +1,10 @@
 # CI/CD
 
-Two separate things happen to your code. It gets **built and checked**
-automatically, and it gets **published** only when a person asks for it.
+Two things happen to your code. It gets **built and checked** automatically, and
+it gets **published** only when a person asks for it.
 
-Nothing reaches testers or the app stores on its own. Merging to `main` produces
-build artifacts and stops there.
+Merging to `main` produces build artifacts and stops there. Nothing reaches
+testers or the app stores on its own.
 
 ```mermaid
 flowchart TD
@@ -23,60 +23,36 @@ flowchart TD
 
 ## On a pull request
 
-`main.yaml` builds iOS and Android for a fast subset of variants, and the
-quality workflows run unit tests, linting, type checks and coverage. E2E tests
-run on SauceLabs. Nothing is published from a PR.
+`main.yaml` builds iOS and Android for a fast subset of variants. The quality
+workflows run unit tests, linting, type checks and coverage, and E2E tests run
+on SauceLabs. Nothing is published from a PR.
 
-Only some of these are required to merge — the rest are informational. The
-branch ruleset is the source of truth for which.
+Only some of these are required to merge. The branch ruleset is the source of
+truth for which.
 
 ## On merge to main
 
-The same build workflow runs, this time for **all** variants. It uploads the
-IPA, AAB and APK for each one as workflow artifacts, kept for 30 days.
+The same build workflow runs, this time for **all** variants, and uploads the
+IPA, AAB and APK for each one as workflow artifacts kept for 30 days.
 
 That's the end of it. No store, no testers, no notifications.
 
 ## Publishing
 
-Go to **Actions → Publish → Run workflow**, pick how far it should go, run it.
-Anyone with write access can start one; only an approver can take it past
+Go to **Actions → Publish → Run workflow**, pick how far it should go, and run
+it. Anyone with write access can start one; only an approver can take it past
 ring-0. Publish runs from `main` or a `release/*` branch only.
 
-The workflow picks a build, downloads that build's artifacts, and uploads them.
-It never rebuilds, so what testers install is exactly what CI produced.
+Publish never builds. It uploads the artifacts an earlier run produced, so what
+a tester installs is exactly what CI made.
 
-Full details — rings, inputs, versioning, release branches — are in
-[releases.md](releases.md).
-
-"Most recent usable" means the newest run on that branch which both succeeded
-**and** still has its artifacts. A run can be green with nothing to publish —
-if a push's last commit touches no build-relevant files, the build jobs skip
-and the run still reports success.
-
-iOS and Android build independently, so a run can hold artifacts for one
-platform and not the other. Each destination runs only for the variants whose
-artifact is actually there; anything with nothing to upload is listed as
-skipped in the **Resolve build** log and shows as a skipped job. A missing
-artifact for a variant that was expected fails that job rather than passing
-quietly.
-
-## Variants
-
-Each build target — BC Wallet, and BC Services Card across its environments —
-is a **variant**, configured in `variants/<name>/variant.env`. That file owns
-the app version, bundle IDs and signing references.
-
-Publishing reads a variant's config from the commit that produced the build, not
-from current `main`, so an older build carries the version it was actually built
-with.
+Full details are in [releases.md](releases.md).
 
 ## Rings
 
-A ring is an audience, and the same ring names are used on Firebase, TestFlight
-and Google Play. `ring-0` is the team and always publishes; each ring after it
-is wider and needs an approval. Publishing to a ring publishes every ring below
-it too.
+A ring is an audience, and the same names are used on Firebase, TestFlight and
+Google Play. `ring-0` is the team and always publishes; each ring after it is
+wider and needs an approval. Publishing to a ring publishes every ring below it.
 
 A build is uploaded once at ring-0. Later rings widen who can see that same
 build rather than uploading it again, so publishing is safe to repeat.
@@ -84,7 +60,27 @@ build rather than uploading it again, so publishing is safe to repeat.
 Approvals come from two teams: `bcsc-approvers-ring-1` for QA builds, and
 `bcsc-approvers-ring-2-plus` for anything wider.
 
-See [releases.md](releases.md).
+## Variants
+
+Each build target, meaning BC Wallet and BC Services Card across its
+environments, is a **variant** configured in `variants/<name>/variant.env`. That
+file owns the app version, bundle IDs and signing references.
+
+Publishing reads a variant's config from the commit that produced the build, so
+an older build carries the version it was actually built with.
+
+## Picking a build to publish
+
+Publish takes the newest run on the branch that both succeeded **and** still has
+its artifacts. A run can be green with nothing to publish: if a push's last
+commit touches no build-relevant files, the build jobs skip and the run still
+reports success.
+
+iOS and Android build independently, so a run can hold artifacts for one
+platform and not the other. Each destination runs only for the variants whose
+artifact is there. Anything with nothing to upload is listed in the **Resolve
+build** log and shows as a skipped job. A missing artifact for a variant that
+was expected fails that job rather than passing quietly.
 
 ## The other workflows
 
