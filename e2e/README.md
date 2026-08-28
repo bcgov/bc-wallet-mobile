@@ -46,6 +46,7 @@ _Tests are organized into named suites. Use the_ `--suite` _flag to select which
 | `upgrade`    | _Previous released build → current: onboard on the previous release, in-place upgrade, unlock with the old PIN + settings persistence. Runs on Sauce on **both platforms** (mid-session install passes Sauce resigning)_ |
 | `upgrade403` | _Upgrade from the shipped **4.0.3** release specifically — its pre-rework onboarding runs via a frozen walk (`flows/onboarding-v403.ts`). Runs on Sauce on **both platforms**; retire once 4.1.0 is the previous release_ |
 | `scan`       | _Card-barcode scanning — non-BCSC→BCSC reroutes + the serial scanner (`scan/*.journey.ts`). **Android + Sauce only**, and also part of `regression`; the iOS configs `exclude` it_ |
+| `a11y`       | _Automated accessibility audits over the core unverified screens (`a11y/*.journey.ts`): iOS runs Apple's XCTest audit engine, Android the page-source/screenshot heuristics — see **[Accessibility audits](#accessibility-audits)**. Also part of `regression`_ |
 
 ```bash
 # Run by suite name (per-area journey suites)
@@ -441,6 +442,43 @@ Run just the file you are iterating on:
 yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/bcsc/verify/verified-photo.journey.ts
 ```
 
+<a id="accessibility-audits"></a>
+
+### Accessibility audits
+
+`src/helpers/a11y-audit.ts` audits the screen on display and records what it finds — it never fails the checkpoint that calls it. Call it right after a screen's `expectVisible()`, with no transition or keyboard in flight:
+
+```typescript
+import { auditScreen, reportA11ySummary } from '../../../src/helpers/a11y-audit.js'
+
+it('audits Settings', async () => {
+  await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await auditScreen('Settings') // findings → Allure attachment + reports/a11y/<platform>/*.json
+})
+
+it('reports the accessibility audit roll-up', async () => {
+  await reportA11ySummary() // terminal checkpoint: fails only if NO audit could run (or under A11Y_AUDIT_STRICT=1)
+})
+```
+
+What each platform can see is very different, and the report says which engine produced it:
+
+| Platform | Engine | Checks | Blind spots |
+| --- | --- | --- | --- |
+| iOS 17+ | Apple's audit engine via `mobile: performAccessibilityAudit` (XCTest) | contrast, hit region, element description, traits, clipped text, dynamic type, parent/child, actions | screen-reader announcements and order |
+| Android | page-source + screenshot heuristics (`src/helpers/a11y-android.ts`) | tappable elements with no accessible name, unlabeled text fields, touch targets under 44dp (error under 24dp), text contrast under 4.5:1 sampled from the screenshot (regions the pushed screen covers are skipped, not flagged) | roles/traits, focus order, live regions, anything semantic — there is no Appium-native audit engine for Android (Google's ATF is in-process only) |
+
+Findings carry a `severity` (`error` = the engine calls it a defect; `warning` = a heuristic that needs a human look) and a `signature` (rule + element identity) intended for a future fail-on-new baseline. Neither engine can assert VoiceOver/TalkBack behaviour — that is the manual pass in [`docs/accessibility-manual-pass.md`](docs/accessibility-manual-pass.md), which is the UAT item of record.
+
+```bash
+# The whole lane locally (one cheap unverified session, ~20 screens)
+yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite a11y
+yarn wdio configs/local/wdio.android.local.emu.conf.ts --suite a11y
+
+A11Y_AUDIT_TYPES=contrast,hitRegion   # iOS: narrow the audit types (default: all)
+A11Y_AUDIT_STRICT=1                    # fail the roll-up on error-severity findings
+```
+
 ### _Camera Image Injection_
 
 _The_ `camera` _helper simulates camera input on Sauce Labs RDC via image injection. The injected image replaces the live camera feed for both still capture and video frame output, so the same call works for photo capture, QR/barcode scanning, and video recording._
@@ -554,7 +592,7 @@ _Tests run automatically in GitHub Actions via a device matrix that controls whi
 | _PR_                 | `smoke`      | _1 iOS (18) + 1 Android (15)_       | `bcsc-dev` | _No_         |
 | _Nightly (schedule)_ | `regression` | _3 iOS (16–18) + 3 Android (13–15)_ | `bcsc-dev` | _—_          |
 
-> _The nightly `regression` suite (all per-area journeys) replaces the retired `happy-path` / `full-regression` suites. It is the default suite in_ `e2e-nightly.yml` _and selectable from_ `e2e.yml` _(alongside the per-area suites); `migration`, `upgrade`, and `upgrade403` are separate suites because each boots an OLD build via its own config, and the nightly runs them as chained advisory lanes after the regression (migration on Android 15; `upgrade` / `upgrade403` on iOS 18 + Android 15) — `upgrade` starts on the rolling previous-release build (`BCSC-prev.*`, or any stored build via the `prev_build_number` dispatch input; until the first full release publishes its e2e builds the lane skips with a notice) and installs the current build mid-session, while `upgrade403` pins the preserved `BCSC-v4.0.3.*`. `scan` is inside `regression` but Android-only — the iOS configs list it in_ `exclude` _(`ANDROID_ONLY_SPECS`), so those specs are dropped before scheduling instead of costing an iOS session each to reach a skip._
+> _The nightly `regression` suite (all per-area journeys) replaces the retired `happy-path` / `full-regression` suites. It is the default suite in_ `e2e-nightly.yml` _and selectable from_ `e2e.yml` _(alongside the per-area suites); `migration`, `upgrade`, and `upgrade403` are separate suites because each boots an OLD build via its own config, and the nightly runs them as chained advisory lanes after the regression (migration on Android 15; `upgrade` / `upgrade403` on iOS 18 + Android 15) — `upgrade` starts on the rolling previous-release build (`BCSC-prev.*`, or any stored build via the `prev_build_number` dispatch input; until the first full release publishes its e2e builds the lane skips with a notice) and installs the current build mid-session, while `upgrade403` pins the preserved `BCSC-v4.0.3.*`. `a11y` rides inside `regression` on both platforms as an advisory lane — its findings are reports, not failures. `scan` is inside `regression` but Android-only — the iOS configs list it in_ `exclude` _(`ANDROID_ONLY_SPECS`), so those specs are dropped before scheduling instead of costing an iOS session each to reach a skip._
 
 _The device matrix is passed as a JSON array of_ `{platform, device, os_version}` _objects to_ `e2e.yml`_. Each entry spawns a separate SauceLabs session with its own logs and pass/fail status. (Biometric CI wiring — its Sauce configs, dev scripts, and workflow job — has been removed pending re-implementation as a journey; the_ `biometrics` _helper is retained for that future work.)_
 
@@ -611,6 +649,8 @@ e2e/
 │   │   └── context.ts                       # per-journey TestUser context (setTestUser / getTestUser)
 │   │
 │   ├── helpers/
+│   │   ├── a11y-audit.ts                    # auditScreen(): iOS XCTest audit engine + report/roll-up (non-blocking)
+│   │   ├── a11y-android.ts                  # Android heuristics: unlabeled controls, touch targets, screenshot contrast
 │   │   ├── alerts.ts                        # iOS system alert acceptance (permissions, dialogs)
 │   │   ├── approval.ts                      # in-person verification approval via SiteMinder
 │   │   ├── biometrics.ts                    # biometric simulation (Sauce Labs RDC)
@@ -658,6 +698,8 @@ e2e/
 │       ├── main/
 │       │   ├── unverified-main.journey.ts   # unverified tab / QRCore gating
 │       │   └── settings.journey.ts          # settings rows, change-PIN, auto-lock, reset/remove account
+│       ├── a11y/
+│       │   └── accessibility.journey.ts     # audits ~20 unverified screens (--suite a11y; also in regression)
 │       │
 │       ├── upgrade/                         # previous release → current in-place upgrade (--suite upgrade)
 │       │   └── upgrade.spec.ts              # onboard on prev build → installApp current → unlock + settings persist
@@ -668,6 +710,9 @@ e2e/
 │           ├── v3-onboarding.spec.ts        # v3 native app onboarding + card verification (v3TestIDs)
 │           ├── upgrade.spec.ts              # install v4 over v3 via driver.installApp()
 │           └── v4-unlock.spec.ts            # unlock v4 with the v3 PIN (DSL: AccountLanding → EnterPIN → Home)
+│
+├── docs/
+│   └── accessibility-manual-pass.md         # VoiceOver/TalkBack script — the UAT accessibility item of record
 │
 ├── assets/                                  # test images for camera injection
 │   ├── README.md
