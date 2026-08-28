@@ -288,7 +288,10 @@ describe('BCSCRootStack', () => {
   })
 
   describe('verificationSkipped routing', () => {
-    const authedUnverified = (verificationSkipped: boolean | undefined, verifiedStatus = VerificationStatus.UNVERIFIED) =>
+    const authedUnverified = (
+      verificationSkipped: boolean | undefined,
+      verifiedStatus = VerificationStatus.UNVERIFIED
+    ) =>
       mockStore({
         bcsc: { hasAccount: true, verificationSkipped },
         authentication: { didAuthenticate: true },
