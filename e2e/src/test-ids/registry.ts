@@ -263,6 +263,33 @@ export const TestIds = {
       reminderTitle: 'ReminderTitle',
       sendVideo: 'SendVideo',
     },
+    /** `StartCall` — the live-call primer after the selfie (open hours only): user photo, call tips,
+     *  the hours list, and the Start button, which requests mic permission and pushes LiveCall. */
+    startCall: {
+      start: 'StartCall',
+      hoursOfServiceTitle: 'HoursOfServiceTitle',
+    },
+    /** `LiveCall` (headerless) — one route, three faces. CallLoadingView through every pre-connect
+     *  state (`cancel` is its only control; WHICH state is copy-only), the in-call controls once an
+     *  agent answers, and CallErrorView's pair on a failed setup. The "Call ended" processing view
+     *  has no ids. */
+    liveCall: {
+      cancel: 'Cancel',
+      mute: 'Mute',
+      video: 'Video',
+      endCall: 'EndCall',
+      havingTrouble: 'HavingTrouble',
+      errorTryAgain: 'TryAgain',
+      errorGoBack: 'GoBack',
+    },
+    /** `VerifyNotComplete` — where an ended-but-unverified live call lands. `sendVideo` and `tryAgain`
+     *  BOTH reset to method selection; `trouble` (external help centre) is the screen's only unique id —
+     *  `SendVideo` also renders on method selection and CallBusyOrClosed, `TryAgain` on CallErrorView. */
+    verifyNotComplete: {
+      sendVideo: 'SendVideo',
+      tryAgain: 'TryAgain',
+      trouble: 'Trouble',
+    },
     /** Email confirmation (`'Email Verification'`) — the 6-digit code emailed to the entered address.
      *  A correct `continue` RESETS the stack to EmailVerified. (`ResendCodeLink` / `GoToMyEmailLink`
      *  are BARE testIDs — add them as raw strings, not `bcsc()`-wrapped, if a resend detour needs
