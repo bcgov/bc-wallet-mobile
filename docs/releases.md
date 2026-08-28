@@ -86,8 +86,15 @@ what a tester installs is exactly what CI made.
 | Firebase | The `ring-0` group | That ring's group |
 
 Each service has its own name for "the team", and ring-0 uses whatever that
-service already provides. Only TestFlight needs a `ring-0` group created by
+service already provides. Only TestFlight needs a `ring 0` group created by
 hand; Play's Internal testing track is built in.
+
+The rings are spelled differently on each service, so create them carefully.
+TestFlight groups and Play tracks are named with a space (`ring 1`). Firebase
+matches on a group alias, which cannot contain a space, so its groups are
+`ring-1`. Firebase generates that alias from the display name, so a group shown
+as "ring 1" there is still addressed as `ring-1`. Publish sends each service
+the form it expects.
 
 Approving a ring does not always mean iOS testers have it straight away. Apple
 runs a Beta App Review on the first build of each version before external
@@ -146,14 +153,15 @@ hand, and there is one app per variant.
 
 For each variant:
 
-- **Google Play**: four closed testing tracks named `ring-1` to `ring-4` (Test
+- **Google Play**: four closed testing tracks named `ring 1` to `ring 4` (Test
   and release → Testing → Closed testing → Create track). Tracks cannot be
   created through the API. Use a Google Group for testers so membership changes
   don't need a Play Console edit.
-- **App Store Connect**: five TestFlight beta groups, `ring-0` to `ring-4`.
-  `ring-0` is an internal group (up to 100 App Store Connect users, no Apple
+- **App Store Connect**: five TestFlight beta groups, `ring 0` to `ring 4`.
+  `ring 0` is an internal group (up to 100 App Store Connect users, no Apple
   review). The rest are external groups.
-- **Firebase App Distribution**: five tester groups, `ring-0` to `ring-4`.
+- **Firebase App Distribution**: five tester groups with the aliases `ring-0`
+  to `ring-4`.
 
 The repository side is done. The `ring-1` to `ring-4` environments exist under
 Settings → Environments with their approver team set. If a ring is ever added,

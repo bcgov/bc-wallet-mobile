@@ -79,7 +79,8 @@ jobs:
       aab_variants: ${{ steps.resolve.outputs.aab_variants }}
       apk_variants: ${{ steps.resolve.outputs.apk_variants }}
       widen_rings_csv: ${{ steps.resolve.outputs.widen_rings_csv }}
-      widen_rings_lines: ${{ steps.resolve.outputs.widen_rings_lines }}
+      widen_tracks_csv: ${{ steps.resolve.outputs.widen_tracks_csv }}
+      widen_groups_lines: ${{ steps.resolve.outputs.widen_groups_lines }}
     steps:
       # A feature branch can produce a perfectly good build, but shipping one
       # to real testers is almost always a mistake. Releases come off main or
@@ -228,7 +229,7 @@ jobs:
           bundle_id: ${{ env.IOS_BUNDLE_ID }}
           version_code: ${{ needs.resolve-build.outputs.run_number }}
           version_name: ${{ env.APP_VERSION }}
-          beta_groups: ring-0
+          beta_groups: ring 0
 
   google-upload:
     name: 'Google Play internal - ${{ matrix.variant }}'
@@ -498,7 +499,7 @@ jobs:
           bundle_id: ${{ env.IOS_BUNDLE_ID }}
           version_code: ${{ needs.resolve-build.outputs.run_number }}
           version_name: ${{ env.APP_VERSION }}
-          beta_groups: ${{ needs.resolve-build.outputs.widen_rings_lines }}
+          beta_groups: ${{ needs.resolve-build.outputs.widen_groups_lines }}
 
   google-promote:
     name: 'Google Play closed - ${{ matrix.variant }}'
@@ -549,7 +550,7 @@ jobs:
           version_code: ${{ needs.resolve-build.outputs.run_number }}
           version_name: ${{ env.APP_VERSION }}
           build_number: ${{ needs.resolve-build.outputs.run_number }}
-          target_tracks: ${{ needs.resolve-build.outputs.widen_rings_csv }}
+          target_tracks: ${{ needs.resolve-build.outputs.widen_tracks_csv }}
 
   firebase-ios-widen:
     name: 'Firebase iOS widen - ${{ matrix.variant }}'

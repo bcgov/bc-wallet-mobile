@@ -20,6 +20,17 @@ WORKFLOW = "main.yaml"
 RUN_PAGE_SIZE = 100
 # ring-0 always publishes; the input picks how much further to go.
 RINGS = ["ring-0", "ring-1", "ring-2", "ring-3", "ring-4"]
+
+
+def spaced(ring):
+    """The name TestFlight and Play know a ring by.
+
+    Firebase matches on a group alias, which cannot contain spaces, so it keeps
+    the hyphen. TestFlight matches on the group's display name and Play on the
+    track name, and both of those are written with a space. Same ring, three
+    services, two spellings.
+    """
+    return ring.replace("-", " ")
 KINDS = {
     "ipa": re.compile(r"^ios-(?P<variant>.+)\.ipa$"),
     "aab": re.compile(r"^android-(?P<variant>.+)\.aab$"),
@@ -142,10 +153,13 @@ if widen_rings:
     print(f"  after {RING} is approved: {', '.join(widen_rings)}")
 
 with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+    # Firebase group aliases keep the hyphen.
     output.write(f"widen_rings_csv={','.join(widen_rings)}\n")
-    # TestFlight takes one group per line, so this one needs the heredoc form.
-    output.write("widen_rings_lines<<__RINGS_EOF__\n")
-    output.write("\n".join(widen_rings) + "\n")
+    # Play track names use the spaced form.
+    output.write(f"widen_tracks_csv={','.join(spaced(r) for r in widen_rings)}\n")
+    # TestFlight takes one group per line, spaced, so it needs the heredoc form.
+    output.write("widen_groups_lines<<__RINGS_EOF__\n")
+    output.write("\n".join(spaced(r) for r in widen_rings) + "\n")
     output.write("__RINGS_EOF__\n")
     output.write(f"run_id={run['id']}\n")
     output.write(f"run_number={run['run_number']}\n")
