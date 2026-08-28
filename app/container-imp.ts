@@ -427,7 +427,7 @@ export class AppContainer implements Container {
         // after the scrub above so this one-shot write persists the scrubbed blob, not the transient
         // fields that were just nulled out. Failure is non-fatal - the same mapping re-runs next launch.
         PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc).catch((error) => {
-          this.logger.error('Failed to write back migrated BCSC state (reportUUID -> installId)', error)
+          this.logger.error('Failed to write back migrated BCSC state', error)
         })
       }
 

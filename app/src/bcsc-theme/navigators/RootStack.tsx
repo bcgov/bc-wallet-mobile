@@ -1,7 +1,7 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { useNavigationContainer } from '@/contexts/NavigationContainerContext'
 import { ErrorRegistry } from '@/errors'
-import { BCState } from '@/store'
+import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -46,8 +46,8 @@ const BCSCRootStack: React.FC = () => {
   const { isNavigationReady } = useNavigationContainer()
   const { initializingAccount } = useInitializeAccountStatus()
   const { needsVerification, isVerified, isVerificationInProgress } = useVerificationStatus()
-  const onboardedThisSession = useRef(false)
   const [verifyPromptAnswered, setVerifyPromptAnswered] = useState(false)
+  const resumeEvaluated = useRef(false)
   useSystemChecks(SystemCheckScope.STARTUP)
   useThirdPartyKeyboardWarning()
 
@@ -71,13 +71,48 @@ const BCSCRootStack: React.FC = () => {
     }
   }, [dispatch, loadState, store.stateLoaded, emitErrorModal, t])
 
+  // A user who chose "Skip" verification during onboarding and is not verified
+  // will be routed to continue verification where they left off
+  // Runs exactly once per session so the user isn't stuck in verification
+  useEffect(() => {
+    if (resumeEvaluated.current) {
+      return
+    }
+    if (!store.stateLoaded || !isClientReady || initializingAccount || !isNavigationReady) {
+      return
+    }
+    if (!store.bcsc.hasAccount || store.authentication.didAuthenticate === false) {
+      return
+    }
+    if (store.bcscSecure.sessionRecoveryRequired === true) {
+      return
+    }
+
+    resumeEvaluated.current = true
+
+    if (store.bcsc.verificationSkipped === false && !isVerified && !isVerificationInProgress) {
+      dispatch({ type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS, payload: [VerificationStatus.IN_PROGRESS] })
+    }
+  }, [
+    dispatch,
+    store.stateLoaded,
+    isClientReady,
+    initializingAccount,
+    isNavigationReady,
+    store.bcsc.hasAccount,
+    store.bcsc.verificationSkipped,
+    store.authentication.didAuthenticate,
+    store.bcscSecure.sessionRecoveryRequired,
+    isVerified,
+    isVerificationInProgress,
+  ])
+
   // Show loading screen if state, API client or navigation is not ready
   if (!store.stateLoaded || !isClientReady || initializingAccount || !isNavigationReady) {
     return <LoadingScreen message={t('BCSC.Loading.AppStartup')} />
   }
 
   if (store.bcsc.hasAccount === false) {
-    onboardedThisSession.current = true
     return <OnboardingStack />
   }
 
@@ -93,10 +128,9 @@ const BCSCRootStack: React.FC = () => {
     )
   }
 
-  // The prompt is a one-time hand-off from onboarding into verification: offer it only to a user who
-  // just finished onboarding, has yet to answer it, and has no verification to finish or resume.
-  // Everyone else reaches verification from the MainStack, which resumes them at their current step.
-  const showVerifyPrompt = onboardedThisSession.current && !verifyPromptAnswered && needsVerification
+  // This prompt controls if the user is sent back into the verification stack or can cotinue into the main app
+  // the value is only set when the user interacts with the prompt and is reset on a factory reset
+  const showVerifyPrompt = store.bcsc.verificationSkipped === undefined && !verifyPromptAnswered && needsVerification
 
   // Render the verify journey when the prompt is due, OR whenever verification is actively in
   // progress. Combining both into a single VerifyStack render keeps it mounted across the prompt →
