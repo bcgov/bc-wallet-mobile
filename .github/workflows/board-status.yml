@@ -30,10 +30,17 @@ on:
 permissions:
   contents: read
 
+# One board update at a time. Keyed on the repository rather than the PR
+# because two PRs closing the same issue would otherwise race: each can see
+# the other still open and neither promotes, leaving the issue behind until
+# some later PR event corrects it. The issue number is not known until the
+# job runs, so the repository is the narrowest key available here.
 concurrency:
   # Never cancel: a dropped run means an issue silently stays in the wrong column.
-  group: board-status-${{ github.event.pull_request.number }}
+  group: board-status
   cancel-in-progress: false
+  # Runs are seconds long, so let them queue instead of evicting one another.
+  queue: max
 
 jobs:
   sync:
@@ -93,7 +100,7 @@ jobs:
                   `query($owner:String!, $repo:String!, $number:Int!) {
                      repository(owner:$owner, name:$repo) {
                        pullRequest(number:$number) {
-                         closingIssuesReferences(first: 10) { nodes { number } }
+                         closingIssuesReferences(first: 100) { nodes { number } }
                        }
                      }
                    }`,
@@ -149,10 +156,10 @@ jobs:
                   `query($owner:String!, $repo:String!, $number:Int!, $field:String!) {
                      repository(owner:$owner, name:$repo) {
                        issue(number:$number) {
-                         closedByPullRequestsReferences(first: 50, includeClosedPrs: true) {
+                         closedByPullRequestsReferences(first: 100, includeClosedPrs: true) {
                            nodes { number state }
                          }
-                         projectItems(first: 20) {
+                         projectItems(first: 100) {
                            nodes {
                              id
                              project { id }
