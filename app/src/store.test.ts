@@ -1,5 +1,12 @@
 import { InstallIdSystemCheck } from './services/system-checks/InstallIdSystemCheck'
-import { BCDispatchAction, BCLocalStorageKeys, initialState, migrateBCSCState, reducer, VerificationStatus } from './store'
+import {
+  BCDispatchAction,
+  BCLocalStorageKeys,
+  initialState,
+  migrateBCSCState,
+  reducer,
+  VerificationStatus,
+} from './store'
 
 jest.mock('react-native-config', () => ({
   BUILD_TARGET: 'bcsc',
@@ -135,24 +142,12 @@ describe('reducer', () => {
     )
   })
 
-  it('UPDATE_SECURE_VERIFIED with true also latches verificationSkipped and persists BCSC', () => {
+  it('UPDATE_SECURE_VERIFIED only touches secure state, leaving verificationSkipped to its own action', () => {
     const state = { ...initialState, bcsc: { ...initialState.bcsc, verificationSkipped: false } }
     const result = reducer(state, { type: BCDispatchAction.UPDATE_SECURE_VERIFIED, payload: [true] })
 
     expect(result.bcscSecure.verified).toBe(true)
     expect(result.bcscSecure.verifiedStatus).toBe(VerificationStatus.VERIFIED)
-    expect(result.bcsc.verificationSkipped).toBe(true)
-    expect(mockedStoreValueForKey).toHaveBeenCalledWith(
-      BCLocalStorageKeys.BCSC,
-      expect.objectContaining({ verificationSkipped: true })
-    )
-  })
-
-  it('UPDATE_SECURE_VERIFIED with false leaves verificationSkipped untouched and does not persist BCSC', () => {
-    const state = { ...initialState, bcsc: { ...initialState.bcsc, verificationSkipped: false } }
-    const result = reducer(state, { type: BCDispatchAction.UPDATE_SECURE_VERIFIED, payload: [false] })
-
-    expect(result.bcscSecure.verified).toBe(false)
     expect(result.bcsc.verificationSkipped).toBe(false)
     expect(mockedStoreValueForKey).not.toHaveBeenCalledWith(BCLocalStorageKeys.BCSC, expect.anything())
   })

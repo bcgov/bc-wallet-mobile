@@ -746,6 +746,46 @@ describe('useSecureActions', () => {
     })
   })
 
+  describe('updateVerified', () => {
+    // Short-circuit after the dispatches; the credential-persistence branch is covered elsewhere.
+    beforeEach(() => {
+      jest.mocked(getAccount).mockResolvedValue(null as any)
+    })
+
+    it('dispatches UPDATE_SECURE_VERIFIED and latches SET_VERIFICATION_SKIPPED=true when verified', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.updateVerified(true)
+      })
+
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_VERIFIED,
+        payload: [true],
+      })
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.SET_VERIFICATION_SKIPPED,
+        payload: [true],
+      })
+    })
+
+    it('leaves SET_VERIFICATION_SKIPPED alone when marking unverified', async () => {
+      const { result } = renderHook(() => useSecureActions())
+
+      await act(async () => {
+        await result.current.updateVerified(false)
+      })
+
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_VERIFIED,
+        payload: [false],
+      })
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED })
+      )
+    })
+  })
+
   describe('updateUserInfo', () => {
     beforeEach(() => {
       jest.mocked(getAuthorizationRequest).mockResolvedValue(null as any)

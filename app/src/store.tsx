@@ -683,16 +683,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         // QUESTION (MD): Should we handle DEACTIVATED here?
         verifiedStatus: verified ? VerificationStatus.VERIFIED : VerificationStatus.UNVERIFIED,
       }
-      // Becoming verified retires the "resume verification on next launch" state: from here on the
-      // user belongs on the home stack, same as if they'd skipped the post-onboarding prompt. This
-      // is the single choke point every verification method funnels through (updateVerified(true) in
-      // useVerificationResponseViewModel). Leave the flag untouched when verified is false so a
-      // transient unverify doesn't discard an in-progress "false" choice.
-      if (verified && state.bcsc.verificationSkipped !== true) {
-        const bcsc = { ...state.bcsc, verificationSkipped: true }
-        PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-        return { ...state, bcsc, bcscSecure }
-      }
       return { ...state, bcscSecure }
     }
     case BCSCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS: {

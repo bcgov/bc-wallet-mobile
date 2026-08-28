@@ -71,7 +71,7 @@ const BCSCRootStack: React.FC = () => {
     }
   }, [dispatch, loadState, store.stateLoaded, emitErrorModal, t])
 
-  // A user who chose "Skip" verification during onboarding and is not verified
+  // A user who chose to start verification during onboarding and is not verified
   // will be routed to continue verification where they left off
   // Runs exactly once per session so the user isn't stuck in verification
   useEffect(() => {
