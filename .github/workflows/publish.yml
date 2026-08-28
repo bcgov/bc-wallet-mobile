@@ -38,10 +38,6 @@ on:
           - apple-store
           - google-store
           - firebase
-      variants:
-        description: 'Comma-separated variants to publish. Leave blank for every variant in the build.'
-        required: false
-        type: string
 
 # Never cancel a publish part-way through: the stores are not transactional.
 # A run waiting for approval holds this group, so approvers should approve or
@@ -112,7 +108,6 @@ jobs:
           BRANCH: ${{ github.ref_name }}
           RING: ${{ inputs.ring }}
           REQUESTED_BUILD: ${{ inputs.build_number }}
-          REQUESTED_VARIANTS: ${{ inputs.variants }}
         run: python3 .github/scripts/resolve_publishable_build.py
 
   # ─── ring-0: the team ───────────────────────────────────────────────

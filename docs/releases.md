@@ -76,7 +76,6 @@ one; only an approver can take it past ring-0.
 | `ring` | Publish to QA | Go further |
 | `build_number` | Publish the newest usable build | Publish an older build |
 | `targets` | Publish to all three stores | Retry one store after a failure |
-| `variants` | Publish every variant | Publish a subset |
 
 Publish never builds. It uploads the artifacts an earlier CI run produced, so
 what a tester installs is exactly what CI made.
