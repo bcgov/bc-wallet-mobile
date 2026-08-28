@@ -6,6 +6,8 @@ import React from 'react'
 import { useCameraPermission } from 'react-native-vision-camera'
 import ScanSerialScreen from './ScanSerialScreen'
 
+jest.mock('@/bcsc-theme/api/hooks/useApi')
+
 /** testID on the mocked Camera host element, so tests can drive its props directly. */
 const VISION_CAMERA_TEST_ID = 'vision-camera'
 

@@ -3,6 +3,8 @@ import { render } from '@testing-library/react-native'
 import React from 'react'
 import { ResidentialAddressScreen } from './ResidentialAddressScreen'
 
+jest.mock('@/bcsc-theme/api/hooks/useApi')
+
 describe('ResidentialAddress', () => {
   let mockNavigation: any
   let mockRoute: any
