@@ -95,32 +95,48 @@ jobs:
               const mode = merged ? 'promote' : 'demote'
 
               // Ask for links GitHub actually tracks — a bare "#123" in prose creates none.
+              // `Closes owner/other-repo#1` is a tracked link too, so ask which repository
+              // each issue belongs to: the lookup below is by number in this repository,
+              // and an upstream reference would otherwise move our issue of that number.
               const linkedIssues = async () => {
                 const { repository } = await github.graphql(
                   `query($owner:String!, $repo:String!, $number:Int!) {
                      repository(owner:$owner, name:$repo) {
                        pullRequest(number:$number) {
-                         closingIssuesReferences(first: 100) { nodes { number } }
+                         closingIssuesReferences(first: 100) {
+                           nodes { number repository { nameWithOwner } }
+                         }
                        }
                      }
                    }`,
                   { owner, repo, number: pr.number }
                 )
-                return repository.pullRequest.closingIssuesReferences.nodes.map((n) => n.number)
+                return repository.pullRequest.closingIssuesReferences.nodes
               }
 
               // GitHub resolves `Closes #123` into a tracked link a few seconds after the
               // webhook fires, so an empty first result may just be this job outrunning it.
               const RETRY_DELAY_MS = 7000
               const RETRIES = 3
-              let issues = await linkedIssues()
-              for (let attempt = 1; issues.length === 0 && attempt <= RETRIES; attempt++) {
+              // Retry on no links at all. A link that exists but points elsewhere is a
+              // real answer, so waiting on it would only delay the run by 21 seconds.
+              let links = await linkedIssues()
+              for (let attempt = 1; links.length === 0 && attempt <= RETRIES; attempt++) {
                 core.info(`No linked issue yet — retrying in ${RETRY_DELAY_MS / 1000}s (${attempt}/${RETRIES})`)
                 await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS))
-                issues = await linkedIssues()
+                links = await linkedIssues()
               }
+
+              const here = `${owner}/${repo}`
+              for (const n of links.filter((n) => n.repository.nameWithOwner !== here)) {
+                core.info(`Ignoring ${n.repository.nameWithOwner}#${n.number} — this board only tracks ${here}`)
+              }
+              const issues = links
+                .filter((n) => n.repository.nameWithOwner === here)
+                .map((n) => n.number)
+
               if (issues.length === 0) {
-                core.info(`PR #${pr.number} closes no issue — nothing to do`)
+                core.info(`PR #${pr.number} closes no issue in ${here} — nothing to do`)
                 return []
               }
 
@@ -156,6 +172,7 @@ jobs:
                   `query($owner:String!, $repo:String!, $number:Int!, $field:String!) {
                      repository(owner:$owner, name:$repo) {
                        issue(number:$number) {
+                         state
                          closedByPullRequestsReferences(first: 100, includeClosedPrs: true) {
                            nodes { number state }
                          }
@@ -179,6 +196,17 @@ jobs:
               const moved = []
               for (const number of issues) {
                 const issue = await issueState(number)
+                // Deleted or transferred between the link being made and this run.
+                if (!issue) {
+                  core.info(`#${number} no longer exists in ${owner}/${repo} — skipping`)
+                  continue
+                }
+                // A closed issue is finished, whatever column it was parked in. Promoting
+                // it to UAT & QA would ask someone to test work that was never done.
+                if (issue.state === 'CLOSED') {
+                  core.info(`#${number} is closed — leaving it alone`)
+                  continue
+                }
                 const item = issue.projectItems.nodes.find((n) => n.project.id === project.id)
                 if (!item) {
                   core.info(`#${number} is not on project ${PROJECT_NUMBER} — skipping`)
