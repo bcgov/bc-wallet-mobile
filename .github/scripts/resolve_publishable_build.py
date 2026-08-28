@@ -80,9 +80,6 @@ if RING not in RINGS:
     print(f"::error::Unknown ring '{RING}'. Expected one of: {', '.join(RINGS)}.")
     sys.exit(1)
 requested_build = os.environ.get("REQUESTED_BUILD", "").strip()
-requested_variants = [
-    v.strip() for v in os.environ.get("REQUESTED_VARIANTS", "").split(",") if v.strip()
-]
 
 runs = gh_api(
     f"repos/{REPO}/actions/workflows/{WORKFLOW}/runs"
@@ -119,18 +116,6 @@ else:
             f"No {BRANCH} build in the last {RUN_PAGE_SIZE} runs both succeeded and "
             "still has artifacts to publish."
         )
-
-if requested_variants:
-    unknown = sorted(set(requested_variants) - set(all_variants(by_kind)))
-    if unknown:
-        fail(
-            f"Build {run['run_number']} has no artifacts for: {', '.join(unknown)}. "
-            f"Available: {', '.join(all_variants(by_kind))}."
-        )
-    by_kind = {
-        kind: [v for v in variants if v in requested_variants]
-        for kind, variants in by_kind.items()
-    }
 
 print(f"Publishing build {run['run_number']} (run {run['id']})")
 print(f"  commit: {run['head_sha']}")
