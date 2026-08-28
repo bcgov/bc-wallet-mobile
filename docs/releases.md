@@ -86,13 +86,17 @@ what a tester installs is exactly what CI made.
 | | ring-0 (the team) | ring-1 to ring-4 |
 |---|---|---|
 | App Store Connect | Uploaded | |
-| TestFlight | Internal testing, the `ring-0` group | External testing, that ring's group |
+| TestFlight | Internal testing, the `ring 0` group | External testing, that ring's group |
 | Google Play | Internal testing | Closed testing, that ring's track |
 | Firebase | The `ring-0` group | That ring's group |
 
 Each service has its own name for "the team", and ring-0 uses whatever that
 service already provides. Only TestFlight needs a `ring 0` group created by
 hand; Play's Internal testing track is built in.
+
+Throughout this page, `ring-0` written with a hyphen is the ring itself, which
+is what you pick when running Publish. A name in backticks next to a service is
+what that service calls the group or track.
 
 The rings are spelled differently on each service, so create them carefully.
 TestFlight groups and Play tracks are named with a space (`ring 1`). Firebase
