@@ -18,6 +18,11 @@ A ring is an audience. Each one is wider than the last.
 | `ring-3` | Early adopters | `bcsc-approvers-ring-2-plus` |
 | `ring-4` | Everyone | `bcsc-approvers-ring-2-plus` |
 
+BC Wallet is the exception. It is being retired after v4.1, so its ring groups
+and tracks were never created past ring-0. It still publishes to the team on
+every run, and is left out of the wider rings rather than failing them on a
+missing group. The **Resolve build** log says so when it applies.
+
 Publishing to a ring publishes every ring below it. Choosing `ring-2` sends the
 build to ring-0, ring-1 and ring-2.
 

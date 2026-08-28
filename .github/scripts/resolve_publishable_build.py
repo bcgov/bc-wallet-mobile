@@ -20,6 +20,10 @@ WORKFLOW = "main.yaml"
 RUN_PAGE_SIZE = 100
 # ring-0 always publishes; the input picks how much further to go.
 RINGS = ["ring-0", "ring-1", "ring-2", "ring-3", "ring-4"]
+# BC Wallet is being retired after v4.1, so its ring groups and tracks were
+# never created past ring-0. It still publishes to the team; it is left out of
+# everything above that rather than failing the run on a missing group.
+RING_0_ONLY = {"bcwallet-prod"}
 
 
 def spaced(ring):
@@ -149,10 +153,16 @@ widen_rings = RINGS[1 : RINGS.index(RING) + 1]
 print(f"  ring:   {RING}")
 print(f"  reaches: {', '.join(RINGS[: RINGS.index(RING) + 1])}")
 print("  ring-0 publishes now, without approval")
+held_back = sorted(set(all_variants(by_kind)) & RING_0_ONLY)
+if held_back and widen_rings:
+    print(f"  ring-0 only for: {', '.join(held_back)}")
 if widen_rings:
     print(f"  after {RING} is approved: {', '.join(widen_rings)}")
 
 with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+    for kind, variants in by_kind.items():
+        widening = [v for v in variants if v not in RING_0_ONLY]
+        output.write(f"widen_{kind}_variants={json.dumps(widening)}\n")
     # Firebase group aliases keep the hyphen.
     output.write(f"widen_rings_csv={','.join(widen_rings)}\n")
     # Play track names use the spaced form.

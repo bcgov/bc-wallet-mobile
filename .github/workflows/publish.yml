@@ -78,6 +78,9 @@ jobs:
       ipa_variants: ${{ steps.resolve.outputs.ipa_variants }}
       aab_variants: ${{ steps.resolve.outputs.aab_variants }}
       apk_variants: ${{ steps.resolve.outputs.apk_variants }}
+      widen_ipa_variants: ${{ steps.resolve.outputs.widen_ipa_variants }}
+      widen_aab_variants: ${{ steps.resolve.outputs.widen_aab_variants }}
+      widen_apk_variants: ${{ steps.resolve.outputs.widen_apk_variants }}
       widen_rings_csv: ${{ steps.resolve.outputs.widen_rings_csv }}
       widen_tracks_csv: ${{ steps.resolve.outputs.widen_tracks_csv }}
       widen_groups_lines: ${{ steps.resolve.outputs.widen_groups_lines }}
@@ -467,7 +470,7 @@ jobs:
       always() && !cancelled() &&
       needs.resolve-build.result == 'success' &&
       needs.approval.result == 'success' &&
-      needs.resolve-build.outputs.ipa_variants != '[]' &&
+      needs.resolve-build.outputs.widen_ipa_variants != '[]' &&
       (inputs.targets == 'all' || inputs.targets == 'apple-store')
     runs-on: ubuntu-22.04
     permissions:
@@ -476,7 +479,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: ${{ fromJSON(needs.resolve-build.outputs.ipa_variants) }}
+        variant: ${{ fromJSON(needs.resolve-build.outputs.widen_ipa_variants) }}
     steps:
       - uses: actions/checkout@v7
 
@@ -508,7 +511,7 @@ jobs:
       always() && !cancelled() &&
       needs.resolve-build.result == 'success' &&
       needs.approval.result == 'success' &&
-      needs.resolve-build.outputs.aab_variants != '[]' &&
+      needs.resolve-build.outputs.widen_aab_variants != '[]' &&
       (inputs.targets == 'all' || inputs.targets == 'google-store')
     runs-on: ubuntu-22.04
     permissions:
@@ -517,7 +520,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: ${{ fromJSON(needs.resolve-build.outputs.aab_variants) }}
+        variant: ${{ fromJSON(needs.resolve-build.outputs.widen_aab_variants) }}
     steps:
       - uses: actions/checkout@v7
 
@@ -559,7 +562,7 @@ jobs:
       always() && !cancelled() &&
       needs.resolve-build.result == 'success' &&
       needs.approval.result == 'success' &&
-      needs.resolve-build.outputs.ipa_variants != '[]' &&
+      needs.resolve-build.outputs.widen_ipa_variants != '[]' &&
       (inputs.targets == 'all' || inputs.targets == 'firebase')
     runs-on: ubuntu-22.04
     permissions:
@@ -568,7 +571,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: ${{ fromJSON(needs.resolve-build.outputs.ipa_variants) }}
+        variant: ${{ fromJSON(needs.resolve-build.outputs.widen_ipa_variants) }}
     steps:
       - name: Download IPA
         uses: actions/download-artifact@v8
@@ -621,7 +624,7 @@ jobs:
       always() && !cancelled() &&
       needs.resolve-build.result == 'success' &&
       needs.approval.result == 'success' &&
-      needs.resolve-build.outputs.apk_variants != '[]' &&
+      needs.resolve-build.outputs.widen_apk_variants != '[]' &&
       (inputs.targets == 'all' || inputs.targets == 'firebase')
     runs-on: ubuntu-22.04
     permissions:
@@ -630,7 +633,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: ${{ fromJSON(needs.resolve-build.outputs.apk_variants) }}
+        variant: ${{ fromJSON(needs.resolve-build.outputs.widen_apk_variants) }}
     steps:
       - name: Download APK
         uses: actions/download-artifact@v8
