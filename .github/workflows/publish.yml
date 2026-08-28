@@ -78,8 +78,12 @@ jobs:
       ipa_variants: ${{ steps.resolve.outputs.ipa_variants }}
       aab_variants: ${{ steps.resolve.outputs.aab_variants }}
       apk_variants: ${{ steps.resolve.outputs.apk_variants }}
+      widen_ipa_variants: ${{ steps.resolve.outputs.widen_ipa_variants }}
+      widen_aab_variants: ${{ steps.resolve.outputs.widen_aab_variants }}
+      widen_apk_variants: ${{ steps.resolve.outputs.widen_apk_variants }}
       widen_rings_csv: ${{ steps.resolve.outputs.widen_rings_csv }}
-      widen_rings_lines: ${{ steps.resolve.outputs.widen_rings_lines }}
+      widen_tracks_csv: ${{ steps.resolve.outputs.widen_tracks_csv }}
+      widen_groups_lines: ${{ steps.resolve.outputs.widen_groups_lines }}
     steps:
       # A feature branch can produce a perfectly good build, but shipping one
       # to real testers is almost always a mistake. Releases come off main or
@@ -228,7 +232,7 @@ jobs:
           bundle_id: ${{ env.IOS_BUNDLE_ID }}
           version_code: ${{ needs.resolve-build.outputs.run_number }}
           version_name: ${{ env.APP_VERSION }}
-          beta_groups: ring-0
+          beta_groups: ring 0
 
   google-upload:
     name: 'Google Play internal - ${{ matrix.variant }}'
@@ -466,7 +470,7 @@ jobs:
       always() && !cancelled() &&
       needs.resolve-build.result == 'success' &&
       needs.approval.result == 'success' &&
-      needs.resolve-build.outputs.ipa_variants != '[]' &&
+      needs.resolve-build.outputs.widen_ipa_variants != '[]' &&
       (inputs.targets == 'all' || inputs.targets == 'apple-store')
     runs-on: ubuntu-22.04
     permissions:
@@ -475,7 +479,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: ${{ fromJSON(needs.resolve-build.outputs.ipa_variants) }}
+        variant: ${{ fromJSON(needs.resolve-build.outputs.widen_ipa_variants) }}
     steps:
       - uses: actions/checkout@v7
 
@@ -498,7 +502,7 @@ jobs:
           bundle_id: ${{ env.IOS_BUNDLE_ID }}
           version_code: ${{ needs.resolve-build.outputs.run_number }}
           version_name: ${{ env.APP_VERSION }}
-          beta_groups: ${{ needs.resolve-build.outputs.widen_rings_lines }}
+          beta_groups: ${{ needs.resolve-build.outputs.widen_groups_lines }}
 
   google-promote:
     name: 'Google Play closed - ${{ matrix.variant }}'
@@ -507,7 +511,7 @@ jobs:
       always() && !cancelled() &&
       needs.resolve-build.result == 'success' &&
       needs.approval.result == 'success' &&
-      needs.resolve-build.outputs.aab_variants != '[]' &&
+      needs.resolve-build.outputs.widen_aab_variants != '[]' &&
       (inputs.targets == 'all' || inputs.targets == 'google-store')
     runs-on: ubuntu-22.04
     permissions:
@@ -516,7 +520,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: ${{ fromJSON(needs.resolve-build.outputs.aab_variants) }}
+        variant: ${{ fromJSON(needs.resolve-build.outputs.widen_aab_variants) }}
     steps:
       - uses: actions/checkout@v7
 
@@ -549,7 +553,7 @@ jobs:
           version_code: ${{ needs.resolve-build.outputs.run_number }}
           version_name: ${{ env.APP_VERSION }}
           build_number: ${{ needs.resolve-build.outputs.run_number }}
-          target_tracks: ${{ needs.resolve-build.outputs.widen_rings_csv }}
+          target_tracks: ${{ needs.resolve-build.outputs.widen_tracks_csv }}
 
   firebase-ios-widen:
     name: 'Firebase iOS widen - ${{ matrix.variant }}'
@@ -558,7 +562,7 @@ jobs:
       always() && !cancelled() &&
       needs.resolve-build.result == 'success' &&
       needs.approval.result == 'success' &&
-      needs.resolve-build.outputs.ipa_variants != '[]' &&
+      needs.resolve-build.outputs.widen_ipa_variants != '[]' &&
       (inputs.targets == 'all' || inputs.targets == 'firebase')
     runs-on: ubuntu-22.04
     permissions:
@@ -567,7 +571,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: ${{ fromJSON(needs.resolve-build.outputs.ipa_variants) }}
+        variant: ${{ fromJSON(needs.resolve-build.outputs.widen_ipa_variants) }}
     steps:
       - name: Download IPA
         uses: actions/download-artifact@v8
@@ -620,7 +624,7 @@ jobs:
       always() && !cancelled() &&
       needs.resolve-build.result == 'success' &&
       needs.approval.result == 'success' &&
-      needs.resolve-build.outputs.apk_variants != '[]' &&
+      needs.resolve-build.outputs.widen_apk_variants != '[]' &&
       (inputs.targets == 'all' || inputs.targets == 'firebase')
     runs-on: ubuntu-22.04
     permissions:
@@ -629,7 +633,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: ${{ fromJSON(needs.resolve-build.outputs.apk_variants) }}
+        variant: ${{ fromJSON(needs.resolve-build.outputs.widen_apk_variants) }}
     steps:
       - name: Download APK
         uses: actions/download-artifact@v8
