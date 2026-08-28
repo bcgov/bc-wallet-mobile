@@ -703,6 +703,142 @@ describe('useGetSystemChecks', () => {
             payload: [{ version: '4.1.0', buildNumber: '1000' }],
           })
         })
+
+        // findKeyRotationCheck does its own renderHook per call, which would mask the regression
+        // this guards against — a single hook instance must be kept alive across the store update.
+        it('keeps deferring after a later store rebuild reflects the just-dispatched marker (regression guard)', async () => {
+          jest.spyOn(DeviceInfo, 'getVersion').mockReturnValue('4.1.0')
+          jest.spyOn(DeviceInfo, 'getBuildNumber').mockReturnValue('1000')
+          mockStoreWith({})
+          const dispatch = jest.fn()
+          const staleBcsc = {
+            analyticsOptIn: true,
+            selectedNickname: 'Test Device',
+            lastSeenAppVersion: '4.0.0',
+            lastSeenAppBuildNumber: '999',
+          }
+          const bcscSecure = { isHydrated: true, verified: true, registrationAccessToken: 'test-registration-token' }
+          mockUseStore.mockReturnValue([
+            {
+              stateLoaded: true,
+              developer: { environment: { analyticsAppId: 'test-app-id' } },
+              bcsc: staleBcsc,
+              bcscSecure,
+            },
+            dispatch,
+          ])
+
+          const { result, rerender } = renderHook(() => useCreateSystemChecks())
+          const firstChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+          const firstCheck = firstChecks.find((c) => c.constructor.name === 'KeyRotationSystemCheck') as any
+
+          expect(firstCheck.deferForPendingRegistrationUpdate).toBe(true)
+          expect(dispatch).toHaveBeenCalledWith({
+            type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION,
+            payload: [{ version: '4.1.0', buildNumber: '1000' }],
+          })
+
+          // Simulate the reducer having applied the dispatched marker: lastSeen now matches.
+          mockUseStore.mockReturnValue([
+            {
+              stateLoaded: true,
+              developer: { environment: { analyticsAppId: 'test-app-id' } },
+              bcsc: { ...staleBcsc, lastSeenAppVersion: '4.1.0', lastSeenAppBuildNumber: '1000' },
+              bcscSecure,
+            },
+            dispatch,
+          ])
+          rerender(undefined)
+
+          const secondChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+          const secondCheck = secondChecks.find((c) => c.constructor.name === 'KeyRotationSystemCheck') as any
+
+          expect(secondCheck.deferForPendingRegistrationUpdate).toBe(true)
+        })
+
+        it('dispatches RECORD_APP_LAUNCH_VERSION at most once per mount, even across repeated and post-update batch builds', async () => {
+          jest.spyOn(DeviceInfo, 'getVersion').mockReturnValue('4.1.0')
+          jest.spyOn(DeviceInfo, 'getBuildNumber').mockReturnValue('1000')
+          mockStoreWith({})
+          const dispatch = jest.fn()
+          const staleBcsc = {
+            analyticsOptIn: true,
+            selectedNickname: 'Test Device',
+            lastSeenAppVersion: '4.0.0',
+            lastSeenAppBuildNumber: '999',
+          }
+          const bcscSecure = { isHydrated: true, verified: true, registrationAccessToken: 'test-registration-token' }
+          mockUseStore.mockReturnValue([
+            {
+              stateLoaded: true,
+              developer: { environment: { analyticsAppId: 'test-app-id' } },
+              bcsc: staleBcsc,
+              bcscSecure,
+            },
+            dispatch,
+          ])
+
+          const { result, rerender } = renderHook(() => useCreateSystemChecks())
+          await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+          await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+
+          mockUseStore.mockReturnValue([
+            {
+              stateLoaded: true,
+              developer: { environment: { analyticsAppId: 'test-app-id' } },
+              bcsc: { ...staleBcsc, lastSeenAppVersion: '4.1.0', lastSeenAppBuildNumber: '1000' },
+              bcscSecure,
+            },
+            dispatch,
+          ])
+          rerender(undefined)
+          await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+
+          const recordCalls = dispatch.mock.calls.filter(
+            ([action]) => action.type === BCDispatchAction.RECORD_APP_LAUNCH_VERSION
+          )
+          expect(recordCalls).toEqual([
+            [
+              {
+                type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION,
+                payload: [{ version: '4.1.0', buildNumber: '1000' }],
+              },
+            ],
+          ])
+        })
+
+        it('does not dispatch RECORD_APP_LAUNCH_VERSION merely from mounting the hook, only once getSystemChecks is awaited', async () => {
+          jest.spyOn(DeviceInfo, 'getVersion').mockReturnValue('4.1.0')
+          jest.spyOn(DeviceInfo, 'getBuildNumber').mockReturnValue('1000')
+          mockStoreWith({})
+          const dispatch = jest.fn()
+          mockUseStore.mockReturnValue([
+            {
+              stateLoaded: true,
+              developer: { environment: { analyticsAppId: 'test-app-id' } },
+              bcsc: {
+                analyticsOptIn: true,
+                selectedNickname: 'Test Device',
+                lastSeenAppVersion: '4.0.0',
+                lastSeenAppBuildNumber: '999',
+              },
+              bcscSecure: { isHydrated: true, verified: true, registrationAccessToken: 'test-registration-token' },
+            },
+            dispatch,
+          ])
+
+          const { result } = renderHook(() => useCreateSystemChecks())
+
+          expect(dispatch).not.toHaveBeenCalledWith(
+            expect.objectContaining({ type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION })
+          )
+
+          await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
+
+          expect(dispatch).toHaveBeenCalledWith(
+            expect.objectContaining({ type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION })
+          )
+        })
       })
 
       it('passes store.bcsc.lastKeyRotationAttemptAt through to the constructor unchanged', async () => {

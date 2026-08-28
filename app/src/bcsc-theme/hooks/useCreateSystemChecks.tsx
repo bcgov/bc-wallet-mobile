@@ -81,6 +81,10 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const { emitAlert } = useErrorAlert()
   const credentialMetadataRef = useRef(store.bcsc.credentialMetadata)
   const utils = useMemo(() => ({ dispatch, translation: t, logger }), [dispatch, logger, t])
+  const appVersion = getVersion()
+  const appBuildNumber = getBuildNumber()
+  const appVersionChangedSinceLastLaunchRef = useRef<boolean | null>(null)
+  const launchVersionRecordedRef = useRef(false)
 
   const defaultReadiness = isNavigationReady && client && isClientReady
   const accountExpirationDate = accountContext?.account?.card_expiry
@@ -254,8 +258,9 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     // Key rotation (#3876): gated like the update check above but deliberately skips
     // selectedNickname (rotation doesn't need one). Must stay appended AFTER
     // UpdateDeviceRegistrationSystemCheck so their onFail PUTs never race (sequential order).
-    const appVersionChangedSinceLastLaunch =
-      store.bcsc.lastSeenAppVersion !== getVersion() || store.bcsc.lastSeenAppBuildNumber !== getBuildNumber()
+    appVersionChangedSinceLastLaunchRef.current ??=
+      store.bcsc.lastSeenAppVersion !== appVersion || store.bcsc.lastSeenAppBuildNumber !== appBuildNumber
+    const appVersionChangedSinceLastLaunch = appVersionChangedSinceLastLaunchRef.current
 
     if (isBCServicesCardBundle && store.bcscSecure.registrationAccessToken && isVerified) {
       systemChecks.push(
@@ -268,12 +273,13 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       )
     }
 
-    // Dispatched AFTER capturing appVersionChangedSinceLastLaunch above (which needs the
-    // PREVIOUS launch's value) — reversing this order disables the deferral entirely.
-    if (appVersionChangedSinceLastLaunch) {
+    // The ref freezes the previous-launch answer for this mount, so later dispatch/recompute
+    // ordering can no longer disable the deferral.
+    if (appVersionChangedSinceLastLaunch && !launchVersionRecordedRef.current) {
+      launchVersionRecordedRef.current = true
       dispatch({
         type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION,
-        payload: [{ version: getVersion(), buildNumber: getBuildNumber() }],
+        payload: [{ version: appVersion, buildNumber: appBuildNumber }],
       })
     }
 
@@ -289,6 +295,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
     store.bcsc.lastKeyRotationAttemptAt,
     store.bcsc.lastSeenAppVersion,
     store.bcsc.lastSeenAppBuildNumber,
+    appVersion,
+    appBuildNumber,
     navigation,
     utils,
     isBCServicesCardBundle,
