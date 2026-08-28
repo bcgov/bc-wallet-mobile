@@ -499,7 +499,7 @@ jobs:
       - name: What XCode are we using?
         run: |
           find /Applications -type d -maxdepth 1 -iname 'xcode*.app'
-          sudo xcode-select --switch /Applications/Xcode_26.2.app
+          sudo xcode-select --switch /Applications/Xcode_26.6.app
           sudo xcode-select -p
 
       - name: Install ccache

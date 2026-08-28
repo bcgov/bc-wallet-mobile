@@ -64,24 +64,24 @@ const baseOptions: RemoteLoggerOptions = {
  */
 const parseEnvLogLevel = (value?: string): LogLevel => {
   if (!value) {
-    return LogLevel.debug
+    return LogLevel.Debug
   }
   switch (value.toLowerCase()) {
     case 'fatal':
-      return LogLevel.fatal
+      return LogLevel.Fatal
     case 'error':
-      return LogLevel.error
+      return LogLevel.Error
     case 'warn':
     case 'warning':
-      return LogLevel.warn
+      return LogLevel.Warn
     case 'info':
-      return LogLevel.info
+      return LogLevel.Info
     case 'trace':
     case 'test':
     case 'debug':
-      return LogLevel.debug
+      return LogLevel.Debug
     default:
-      return LogLevel.debug
+      return LogLevel.Debug
   }
 }
 
