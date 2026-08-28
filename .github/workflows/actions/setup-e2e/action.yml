@@ -1,0 +1,22 @@
+name: Setup E2E
+description: Node + Yarn, the cached e2e dependencies, and `yarn install --immutable` in e2e/
+
+runs:
+  using: composite
+  steps:
+    - name: Setup NodeJS
+      uses: ./.github/workflows/actions/setup-node
+
+    - name: Cache E2E dependencies
+      uses: actions/cache@v6
+      with:
+        path: |
+          e2e/.yarn/cache
+          e2e/node_modules
+        key: e2e-deps-${{ hashFiles('e2e/yarn.lock') }}
+        restore-keys: e2e-deps-
+
+    - name: Install E2E dependencies
+      shell: bash
+      working-directory: e2e
+      run: yarn install --immutable

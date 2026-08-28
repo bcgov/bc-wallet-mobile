@@ -212,3 +212,62 @@ jobs:
       device_matrix: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
+  # ─── Nightly brief ──────────────────────────────────────────────
+  # The page for the night: the UAT checklist per platform across every lane above, every failure,
+  # and the accessibility findings vs e2e/a11y-baseline.json. Runs whatever the lanes did (always()),
+  # reads the e2e-reports-* artifacts they uploaded, and writes the run summary + e2e-nightly-brief.
+  brief:
+    name: Nightly brief
+    needs: [check-for-merges, resolve-build, e2e, e2e-migration, e2e-upgrade, e2e-upgrade403]
+    if: ${{ always() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup E2E
+        uses: ./.github/workflows/actions/setup-e2e
+
+      # A lane that uploaded nothing (upgrade skipping on a missing BCSC-prev.*) is normal — the page
+      # shows it as "no reports" rather than the job failing here.
+      - name: Download E2E reports
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          pattern: e2e-reports-*
+          path: e2e/artifacts
+
+      - name: Check the coverage map
+        working-directory: e2e
+        run: ./node_modules/.bin/tsx scripts/brief-check.ts
+
+      - name: Render the brief
+        working-directory: e2e
+        env:
+          BUILD_NUMBER: ${{ needs.resolve-build.outputs.build_number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          LANE_REGRESSION: ${{ needs.e2e.result }}
+          LANE_MIGRATION: ${{ needs.e2e-migration.result }}
+          LANE_UPGRADE: ${{ needs.e2e-upgrade.result }}
+          LANE_UPGRADE403: ${{ needs.e2e-upgrade403.result }}
+        run: |
+          ./node_modules/.bin/tsx scripts/brief.ts --reports artifacts \
+            --title "E2E nightly — build ${BUILD_NUMBER}" --run-url "$RUN_URL" \
+            --lane "regression=${LANE_REGRESSION}" --lane "migration=${LANE_MIGRATION}" \
+            --lane "upgrade=${LANE_UPGRADE}" --lane "upgrade403=${LANE_UPGRADE403}" \
+            --out brief.md --json brief.json
+          cat brief.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload brief
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-nightly-brief
+          path: |
+            e2e/brief.md
+            e2e/brief.json
+          if-no-files-found: warn
+          retention-days: 14
