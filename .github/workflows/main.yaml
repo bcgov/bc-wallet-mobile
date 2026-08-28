@@ -15,7 +15,11 @@ on:
       - variants/**
       - scripts/**
       - patch/**
+      - e2e/**
       - .yarn/**
+      - package.json
+      - yarn.lock
+      - .yarnrc.yml
       - .github/workflows/main.yaml
       - .github/workflows/e2e.yml
       - .github/workflows/actions/**
@@ -218,16 +222,25 @@ jobs:
           # affect a native build, and rebuilding five variants for it is waste.
           build_relevant() {
             local file="$1"
-            # Source, native modules, dependencies, variant config, build scripts.
-            if [[ "$file" =~ ^(app|packages|variants|scripts|patch|\.yarn)/ ]]; then
+            # Source, native modules, variant config, build scripts, and the
+            # E2E specs, which the smoke run exercises against this build.
+            if [[ "$file" =~ ^(app|packages|variants|scripts|patch|e2e|\.yarn)/ ]]; then
               return 0
             fi
-            # This workflow, and the E2E suite it calls.
+            # Dependency truth. resolutions in the root manifest pin the React
+            # Native version and bind the yarn patches, so a change here can
+            # alter the binary without touching a line of app source.
+            if [[ "$file" =~ ^(package\.json|yarn\.lock|\.yarnrc\.yml)$ ]]; then
+              return 0
+            fi
+            # This workflow, and the E2E workflow it calls.
             if [[ "$file" =~ ^\.github/workflows/(main\.yaml|e2e\.yml)$ ]]; then
               return 0
             fi
-            # A composite action counts only if the build actually uses it, so
-            # this needs no upkeep when actions are added on either side.
+            # A composite action counts only if the build actually references
+            # it, so adding actions on either side needs no upkeep here. The
+            # match is one level deep: no build-side action nests another
+            # today, and one that did would need adding by hand.
             if [[ "$file" =~ ^\.github/workflows/actions/([^/]+)/ ]]; then
               grep -qR "actions/${BASH_REMATCH[1]}\b" \
                 .github/workflows/main.yaml .github/workflows/e2e.yml 2>/dev/null && return 0
