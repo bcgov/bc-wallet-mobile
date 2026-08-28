@@ -174,7 +174,16 @@ For each variant:
   Connect users, no Apple review, and it receives builds automatically), plus
   `ring 1` to `ring 4` as external groups.
 - **Firebase App Distribution**: five tester groups with the aliases `ring-0`
-  to `ring-4`.
+  to `ring-4`, in **both** Firebase projects. iOS and Android are separate
+  projects, so a group added to one is invisible to the other. The project
+  number is in the platform's `google-services` document, not in the variant
+  file, and it also appears as the middle number of `FIREBASE_APP_ID` in the
+  publish log. Adding a group to only one project is the easy mistake: the
+  matching platform succeeds and the other fails on a group that isn't there.
+
+  Firebase generates a group's alias from its display name and will not reuse
+  one that is taken, so a second group named "ring 1" becomes `ring-1-1` and
+  will never receive a build. Check the alias after creating a group.
 
 The repository side is done. The `ring-1` to `ring-4` environments exist under
 Settings → Environments with their approver team set. If a ring is ever added,
