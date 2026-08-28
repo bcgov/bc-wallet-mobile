@@ -1,6 +1,6 @@
+import { addAttachment } from '@wdio/allure-reporter'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { addAttachment } from '@wdio/allure-reporter'
 import { ANDROID_CHECKS, auditAndroidScreen } from './a11y-android.js'
 
 /**
