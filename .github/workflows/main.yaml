@@ -241,8 +241,13 @@ jobs:
             # it, so adding actions on either side needs no upkeep here. The
             # match is one level deep: no build-side action nests another
             # today, and one that did would need adding by hand.
+            #
+            # The trailing group is a word boundary spelled out in plain ERE,
+            # so it does not depend on \b being a GNU extension. Without it,
+            # "setup" would match "setup-node" and count an action the build
+            # does not use.
             if [[ "$file" =~ ^\.github/workflows/actions/([^/]+)/ ]]; then
-              grep -qR "actions/${BASH_REMATCH[1]}\b" \
+              grep -qER "actions/${BASH_REMATCH[1]}([^A-Za-z0-9_-]|$)" \
                 .github/workflows/main.yaml .github/workflows/e2e.yml 2>/dev/null && return 0
             fi
             return 1
