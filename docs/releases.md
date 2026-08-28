@@ -18,37 +18,26 @@ A ring is an audience. Each one is wider than the last.
 | `ring-3` | Early adopters | `bcsc-approvers-ring-2-plus` |
 | `ring-4` | Everyone | `bcsc-approvers-ring-2-plus` |
 
-BC Wallet is the exception. It is being retired after v4.1, so its ring groups
-and tracks were never created past ring-0. It still publishes to the team on
-every run, and is left out of the wider rings rather than failing them on a
-missing group. The **Resolve build** log says so when it applies.
+Publishing to a ring publishes every ring below it, so `ring-2` sends the build
+to ring-0, ring-1 and ring-2. The team gets it straight away; everything above
+ring-0 waits on one approval covering the whole run. Rejecting stops the
+widening, but the team already has it.
 
-Publishing to a ring publishes every ring below it. Choosing `ring-2` sends the
-build to ring-0, ring-1 and ring-2.
-
-The team always gets the build straight away. Everything above ring-0 waits for
-one approval, which covers the whole run. Rejecting stops the widening, but the
-team already has it.
-
-The same ring names are used on Firebase, TestFlight and Google Play, so
-"ring-2 has it" means the same thing wherever a tester is.
+BC Wallet is the exception. It is being retired after v4.1, so it publishes to
+the team and is left out of the wider rings rather than failing on groups that
+were never created. The **Resolve build** log says so when it applies.
 
 ### Only ring-0 uploads
 
-Ring-0 puts the build in the stores. Higher rings widen who can see that same
-build; it is never uploaded twice, because Apple and Google both reject a
-repeated upload.
+Ring-0 puts the build in the stores. Higher rings only widen who can see it,
+because Apple and Google both reject a repeated upload. Every step checks
+first, so publishing is safe to repeat: taking a ring-0 build up to ring-2 a
+week later skips what is already done.
 
-Publishing is therefore safe to repeat. Taking a build that already went to
-ring-0 up to ring-2 later works fine: the ring-0 steps see it is already there
-and skip.
-
-On Google Play specifically, a re-publish never re-uploads and never touches
-the internal track. If a newer build has since replaced it there, the newer
-build is left in place. Widening puts the older build's version code directly
-onto the ring tracks being widened to, replacing whatever they held. That's
-deliberate: widening is explicit operator intent, so it's the one case where a
-build can knock another off a track.
+One asymmetry on Google Play. A re-publish never touches the internal track, so
+a newer build there is left alone. Widening does replace whatever the target
+ring track held, which is deliberate: widening is an explicit decision, so it
+is the one case where a build can knock another off a track.
 
 ## Who approves
 
@@ -60,11 +49,9 @@ everyone.
 | `bcsc-approvers-ring-1` | ring-1 | UAT, the PO and the dev team |
 | `bcsc-approvers-ring-2-plus` | ring-2 to ring-4 | The PO and the dev team |
 
-Anyone in the team can approve. Membership is managed in the team, so nothing
-in this repo changes when someone joins or leaves.
-
-Whoever starts a publish cannot approve their own run, so a publish always
-needs a second person.
+Anyone in the team can approve, and membership is managed in the team, so
+nothing here changes when someone joins or leaves. You cannot approve your own
+run, so a publish always needs a second person.
 
 ## Publishing
 
@@ -89,43 +76,34 @@ what a tester installs is exactly what CI made.
 | Google Play | Internal testing | Closed testing, that ring's track |
 | Firebase | The `ring-0` group | That ring's group |
 
-Each service has its own name for "the team", and ring-0 uses whatever that
-service already provides. Only TestFlight needs a `ring 0` group created by
-hand; Play's Internal testing track is built in.
+`ring-0` with a hyphen means the ring you pick when running Publish. Each
+service spells its own groups differently, and Publish sends each the form it
+expects:
 
-Throughout this page, `ring-0` written with a hyphen is the ring itself, which
-is what you pick when running Publish. A name in backticks next to a service is
-what that service calls the group or track.
+| Service | Matches on | Spelling |
+|---|---|---|
+| TestFlight | Group display name | `ring 1` |
+| Google Play | Track name | `ring 1` |
+| Firebase | Group alias, which cannot contain a space | `ring-1` |
 
-On TestFlight, ring-0 needs nothing from Publish. Apple gives internal testers
-every build as soon as it finishes processing, and it refuses a request to
-assign a build to an internal group at all. So the `ring 0` group exists for
-the people in it, not for the workflow, and Publish never touches it.
-
-The rings are spelled differently on each service, so create them carefully.
-TestFlight groups and Play tracks are named with a space (`ring 1`). Firebase
-matches on a group alias, which cannot contain a space, so its groups are
-`ring-1`. Firebase generates that alias from the display name, so a group shown
-as "ring 1" there is still addressed as `ring-1`. Publish sends each service
-the form it expects.
-
-Approving a ring does not always mean iOS testers have it straight away. Apple
-runs a Beta App Review on the first build of each version before external
-testers can install it, which usually takes about a day. Later builds of the
-same version normally clear in minutes. Play and Firebase have no such wait.
+Two things that surprise people. TestFlight's ring-0 needs nothing from
+Publish: Apple gives internal testers every build automatically and refuses to
+assign one, so that group exists for the people in it. And approving a ring
+does not always reach iOS testers at once, because Apple reviews the first
+build of each version before external testers can install it, usually about a
+day. Play and Firebase have no such wait.
 
 ### Which branch
 
-Publish only runs from `main` or a `release/*` branch. Anywhere else it stops
-and says why. This is a guard against shipping a feature branch by accident;
-the version comes from the variant files, not the branch name.
+Publish only runs from `main` or a `release/*` branch, and stops with a reason
+anywhere else. It is a guard against shipping a feature branch by accident; the
+version comes from the variant files, not the branch name.
 
 ### One publish at a time
 
-Publishes queue rather than run together. Waiting publishes queue in the
-order they started, so more than one can be waiting at once. A run holding
-the approval gate holds the whole queue until it's approved or rejected, so
-do one or the other promptly.
+Publishes queue in the order they started rather than running together, so more
+than one can be waiting. A run sitting at the approval gate holds the queue, so
+approve or reject promptly.
 
 ## Version numbers
 
@@ -161,37 +139,29 @@ Both are on the list to automate. Neither blocks a release today.
 
 ## One-time setup
 
-The rings have to exist before a build can reach them. They are created by
-hand, and there is one app per variant.
+Rings are created by hand, per variant, and a missing group fails the run
+rather than skipping that ring quietly.
 
-For each variant:
-
-- **Google Play**: four closed testing tracks named `ring 1` to `ring 4` (Test
-  and release → Testing → Closed testing → Create track). Tracks cannot be
-  created through the API. Use a Google Group for testers so membership changes
-  don't need a Play Console edit.
+- **Google Play**: closed tracks `ring 1` to `ring 4` (Test and release →
+  Testing → Closed testing → Create track). Tracks cannot be created through
+  the API. Use a Google Group for testers so membership changes need no Console
+  edit.
 - **App Store Connect**: `ring 0` as an internal group (up to 100 App Store
-  Connect users, no Apple review, and it receives builds automatically), plus
-  `ring 1` to `ring 4` as external groups.
-- **Firebase App Distribution**: five tester groups with the aliases `ring-0`
-  to `ring-4`, in **both** Firebase projects. iOS and Android are separate
-  projects, so a group added to one is invisible to the other. The project
-  number is in the platform's `google-services` document, not in the variant
-  file, and it also appears as the middle number of `FIREBASE_APP_ID` in the
-  publish log. Adding a group to only one project is the easy mistake: the
-  matching platform succeeds and the other fails on a group that isn't there.
+  Connect users, no Apple review, builds arrive automatically), `ring 1` to
+  `ring 4` as external groups.
+- **Firebase App Distribution**: aliases `ring-0` to `ring-4` in **both**
+  projects. iOS and Android are separate projects, so a group added to one is
+  invisible to the other, and the platform that has it succeeds while the other
+  fails. The project number is in that platform's `google-services` document,
+  and in `FIREBASE_APP_ID` in the publish log.
 
-  Firebase generates a group's alias from its display name and will not reuse
-  one that is taken, so a second group named "ring 1" becomes `ring-1-1` and
-  will never receive a build. Check the alias after creating a group.
+Check a Firebase group's alias after creating it. Firebase derives the alias
+from the display name and will not reuse one that is taken, so a second group
+called "ring 1" becomes `ring-1-1` and never receives a build.
 
-The repository side is done. The `ring-1` to `ring-4` environments exist under
-Settings → Environments with their approver team set. If a ring is ever added,
-give its environment a reviewer straight away, or that ring will publish with
-nobody signing off.
-
-A missing TestFlight or Firebase group fails the run rather than quietly
-skipping that ring.
+The repository side is done: the `ring-1` to `ring-4` environments exist with
+their approver teams. A new ring needs a reviewer on its environment straight
+away, or it publishes with nobody signing off.
 
 ## When something goes wrong
 
