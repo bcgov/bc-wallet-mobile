@@ -86,7 +86,7 @@ what a tester installs is exactly what CI made.
 | | ring-0 (the team) | ring-1 to ring-4 |
 |---|---|---|
 | App Store Connect | Uploaded | |
-| TestFlight | Internal testing, the `ring 0` group | External testing, that ring's group |
+| TestFlight | Internal testing, automatic | External testing, that ring's group |
 | Google Play | Internal testing | Closed testing, that ring's track |
 | Firebase | The `ring-0` group | That ring's group |
 
@@ -97,6 +97,11 @@ hand; Play's Internal testing track is built in.
 Throughout this page, `ring-0` written with a hyphen is the ring itself, which
 is what you pick when running Publish. A name in backticks next to a service is
 what that service calls the group or track.
+
+On TestFlight, ring-0 needs nothing from Publish. Apple gives internal testers
+every build as soon as it finishes processing, and it refuses a request to
+assign a build to an internal group at all. So the `ring 0` group exists for
+the people in it, not for the workflow, and Publish never touches it.
 
 The rings are spelled differently on each service, so create them carefully.
 TestFlight groups and Play tracks are named with a space (`ring 1`). Firebase
@@ -166,9 +171,9 @@ For each variant:
   and release → Testing → Closed testing → Create track). Tracks cannot be
   created through the API. Use a Google Group for testers so membership changes
   don't need a Play Console edit.
-- **App Store Connect**: five TestFlight beta groups, `ring 0` to `ring 4`.
-  `ring 0` is an internal group (up to 100 App Store Connect users, no Apple
-  review). The rest are external groups.
+- **App Store Connect**: `ring 0` as an internal group (up to 100 App Store
+  Connect users, no Apple review, and it receives builds automatically), plus
+  `ring 1` to `ring 4` as external groups.
 - **Firebase App Distribution**: five tester groups with the aliases `ring-0`
   to `ring-4`.
 

@@ -119,6 +119,11 @@ jobs:
   # These run without approval. ring-0 is also the only upload: Apple rejects
   # a duplicate binary and Play rejects a duplicate version code, so every
   # higher ring can only widen who sees what these jobs put there.
+  #
+  # There is no TestFlight job for ring-0. `ring 0` is an internal group, and
+  # Apple hands internal testers every build once it finishes processing, so
+  # assigning one is rejected outright: "Cannot add internal group to a
+  # build". Export compliance comes from Info.plist, so nothing is left to do.
 
   apple-upload:
     name: 'Apple upload - ${{ matrix.variant }}'
@@ -190,49 +195,6 @@ jobs:
           app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           app_store_connect_key_identifier: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
           ipa_path: ${{ runner.temp }}/artifact/BCWallet.ipa
-
-  # always() so one variant's failed upload cannot skip the other variants.
-  # It also disables the implicit success() the other jobs rely on, so the
-  # check on resolve-build has to be spelled out here.
-  testflight:
-    name: 'TestFlight ring-0 - ${{ matrix.variant }}'
-    needs: [resolve-build, apple-upload]
-    if: >-
-      always() && !cancelled() &&
-      needs.resolve-build.result == 'success' &&
-      needs.resolve-build.outputs.ipa_variants != '[]' &&
-      (inputs.targets == 'all' || inputs.targets == 'apple-store')
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-      actions: read
-    strategy:
-      fail-fast: false
-      matrix:
-        variant: ${{ fromJSON(needs.resolve-build.outputs.ipa_variants) }}
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Use the build's variant config
-        uses: ./.github/workflows/actions/use-build-variant-config
-        with:
-          head_sha: ${{ needs.resolve-build.outputs.head_sha }}
-
-      - name: Load variant config
-        uses: ./.github/workflows/actions/load-variant-config
-        with:
-          variant: ${{ matrix.variant }}
-
-      - name: Distribute to TestFlight
-        uses: ./.github/workflows/actions/distribute-testflight
-        with:
-          app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          app_store_connect_key_identifier: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
-          app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
-          bundle_id: ${{ env.IOS_BUNDLE_ID }}
-          version_code: ${{ needs.resolve-build.outputs.run_number }}
-          version_name: ${{ env.APP_VERSION }}
-          beta_groups: ring 0
 
   google-upload:
     name: 'Google Play internal - ${{ matrix.variant }}'
@@ -439,7 +401,6 @@ jobs:
       [
         resolve-build,
         apple-upload,
-        testflight,
         google-upload,
         firebase-ios,
         firebase-android,
@@ -465,7 +426,7 @@ jobs:
 
   testflight-widen:
     name: 'TestFlight widen - ${{ matrix.variant }}'
-    needs: [resolve-build, approval, testflight]
+    needs: [resolve-build, approval, apple-upload]
     if: >-
       always() && !cancelled() &&
       needs.resolve-build.result == 'success' &&
