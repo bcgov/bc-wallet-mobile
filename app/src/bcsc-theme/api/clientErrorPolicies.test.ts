@@ -1,7 +1,6 @@
 import { AppError, ErrorCategory, ErrorRegistry } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { AxiosError } from 'axios'
-import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { BCSCModals, BCSCScreens } from '../types/navigators'
 import {
   alreadyRegisteredErrorPolicy,
@@ -9,7 +8,6 @@ import {
   attestationPollingErrorPolicy,
   AxiosAppError,
   birthdateLockoutErrorPolicy,
-  cardExpiredOnBarcodesErrorPolicy,
   ClientErrorHandlingPolicies,
   digitalServiceCardAccountUnavailableErrorPolicy,
   emailVerificationCodeErrorPolicy,
@@ -568,122 +566,6 @@ describe('clientErrorPolicies', () => {
         expect(dispatchArgs.type).toBe('RESET')
         expect(dispatchArgs.payload.index).toBe(1)
         expect(dispatchArgs.payload.routes).toEqual([resumeRoute, { name: BCSCScreens.BirthdateLockout }])
-      })
-    })
-  })
-
-  describe('cardExpiredOnBarcodesErrorPolicy', () => {
-    const barcodesBase = 'https://idsit.gov.bc.ca/device/barcodes'
-
-    const errorWithDescription = (description?: unknown): AxiosAppError => {
-      const error = newError('unknown_server_error')
-      error.cause = {
-        response: { data: description === undefined ? {} : { error_description: description } },
-      } as AxiosError
-      return error
-    }
-
-    describe('matches', () => {
-      it('should match a 400 on the barcodes endpoint with an "expired" error_description', () => {
-        const error = errorWithDescription('The document has expired')
-        const context = {
-          statusCode: 400,
-          endpoint: barcodesBase,
-          apiEndpoints: { barcodes: barcodesBase },
-        }
-        expect(cardExpiredOnBarcodesErrorPolicy.matches(error, context as any)).toBeTruthy()
-      })
-
-      it('should match case-insensitively', () => {
-        const error = errorWithDescription('Document EXPIRED')
-        const context = {
-          statusCode: 400,
-          endpoint: barcodesBase,
-          apiEndpoints: { barcodes: barcodesBase },
-        }
-        expect(cardExpiredOnBarcodesErrorPolicy.matches(error, context as any)).toBeTruthy()
-      })
-
-      it('should NOT match a non-400 status code', () => {
-        const error = errorWithDescription('The document has expired')
-        const context = {
-          statusCode: 404,
-          endpoint: barcodesBase,
-          apiEndpoints: { barcodes: barcodesBase },
-        }
-        expect(cardExpiredOnBarcodesErrorPolicy.matches(error, context as any)).toBeFalsy()
-      })
-
-      it('should NOT match a 400 on a different endpoint', () => {
-        const error = errorWithDescription('The document has expired')
-        const context = {
-          statusCode: 400,
-          endpoint: 'https://idsit.gov.bc.ca/device/other',
-          apiEndpoints: { barcodes: barcodesBase },
-        }
-        expect(cardExpiredOnBarcodesErrorPolicy.matches(error, context as any)).toBeFalsy()
-      })
-
-      it('should NOT match when error_description does not mention "expired"', () => {
-        const error = errorWithDescription('not a match')
-        const context = {
-          statusCode: 400,
-          endpoint: barcodesBase,
-          apiEndpoints: { barcodes: barcodesBase },
-        }
-        expect(cardExpiredOnBarcodesErrorPolicy.matches(error, context as any)).toBeFalsy()
-      })
-
-      it('should NOT match when error_description is missing', () => {
-        const error = errorWithDescription()
-        const context = {
-          statusCode: 400,
-          endpoint: barcodesBase,
-          apiEndpoints: { barcodes: barcodesBase },
-        }
-        expect(cardExpiredOnBarcodesErrorPolicy.matches(error, context as any)).toBeFalsy()
-      })
-
-      it('should NOT match when error_description is not a string', () => {
-        const error = errorWithDescription({ nested: 'expired' })
-        const context = {
-          statusCode: 400,
-          endpoint: barcodesBase,
-          apiEndpoints: { barcodes: barcodesBase },
-        }
-        expect(cardExpiredOnBarcodesErrorPolicy.matches(error, context as any)).toBeFalsy()
-      })
-    })
-
-    describe('handle', () => {
-      it('logs, resets navigation to IdentitySelection -> EvidenceTypeList (NonBCSC), and shows the alert', () => {
-        const error = errorWithDescription('The document has expired')
-        const dispatchMock = jest.fn()
-        const loggerMock = { info: jest.fn() }
-        const alertMock = jest.fn()
-        const context = {
-          navigation: { dispatch: dispatchMock },
-          logger: loggerMock,
-          alerts: { documentExpiredAlert: alertMock },
-        }
-
-        cardExpiredOnBarcodesErrorPolicy.handle(error, context as any)
-
-        expect(loggerMock.info).toHaveBeenCalledWith(
-          '[DocumentExpiredOnBarcodesErrorPolicy] Document expired per /device/barcodes response',
-          { description: 'The document has expired' }
-        )
-
-        expect(dispatchMock).toHaveBeenCalledTimes(1)
-        const dispatchArgs = dispatchMock.mock.calls[0][0]
-        expect(dispatchArgs.type).toBe('RESET')
-        expect(dispatchArgs.payload.index).toBe(1)
-        expect(dispatchArgs.payload.routes).toEqual([
-          { name: BCSCScreens.IdentitySelection },
-          { name: BCSCScreens.EvidenceTypeList, params: { cardProcess: BCSCCardProcess.NonBCSC } },
-        ])
-
-        expect(alertMock).toHaveBeenCalledTimes(1)
       })
     })
   })
