@@ -1,4 +1,5 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
+import { MediaFormat, MediaKind, sniffMediaFormat } from '@/bcsc-theme/utils/media-format'
 import { VIDEO_MP4_MIME_TYPE } from '@/constants'
 import { cancelVerificationReminders } from '@/services/notifications/verificationReminders'
 import { BCState } from '@/store'
@@ -185,7 +186,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
   }, [_getDeviceCode, apiClient])
 
   const uploadPhotoEvidenceMetadata = useCallback(
-    async (payload: VerificationPhotoUploadPayload): Promise<UploadEvidenceResponseData> => {
+    async (payload: VerificationPhotoUploadPayload, mediaFormat?: MediaFormat): Promise<UploadEvidenceResponseData> => {
       return withAccount(async (account) => {
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.post<UploadEvidenceResponseData>(
@@ -196,6 +197,12 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
+            uploadLogContext: {
+              media_kind: 'image',
+              media_stage: 'metadata',
+              media_bytes: payload.content_length,
+              ...(mediaFormat && { media_format: mediaFormat }),
+            },
           }
         )
         return data
@@ -204,7 +211,7 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
     [_getDeviceCode, apiClient]
   )
   const uploadVideoEvidenceMetadata = useCallback(
-    async (payload: VerificationVideoUploadPayload): Promise<UploadEvidenceResponseData> => {
+    async (payload: VerificationVideoUploadPayload, mediaFormat?: MediaFormat): Promise<UploadEvidenceResponseData> => {
       return withAccount(async (account) => {
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.post<UploadEvidenceResponseData>(
@@ -215,6 +222,12 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
+            uploadLogContext: {
+              media_kind: 'video',
+              media_stage: 'metadata',
+              media_bytes: payload.content_length,
+              ...(mediaFormat && { media_format: mediaFormat }),
+            },
           }
         )
         return data
@@ -365,9 +378,10 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
   )
 
   const uploadPhotoEvidenceBinary = useCallback(
-    async (url: string, binaryData: any): Promise<any> => {
+    async (url: string, binaryData: Buffer, mediaKind: Extract<MediaKind, 'image' | 'document'>): Promise<any> => {
       return withAccount(async (account) => {
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
+        const mediaFormat = sniffMediaFormat(binaryData)
         const { data } = await apiClient.put<any>(url, binaryData, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -375,6 +389,12 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
             Accept: 'image/jpeg',
           },
           skipBearerAuth: true,
+          uploadLogContext: {
+            media_kind: mediaKind,
+            media_stage: 'binary',
+            media_bytes: binaryData.byteLength,
+            ...(mediaFormat && { media_format: mediaFormat }),
+          },
         })
         return data
       })
@@ -383,9 +403,10 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
   )
 
   const uploadVideoEvidenceBinary = useCallback(
-    async (url: string, binaryData: any): Promise<any> => {
+    async (url: string, binaryData: Buffer): Promise<any> => {
       return withAccount(async (account) => {
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
+        const mediaFormat = sniffMediaFormat(binaryData)
         const { data } = await apiClient.put<any>(url, binaryData, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -393,6 +414,12 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
             Accept: VIDEO_MP4_MIME_TYPE,
           },
           skipBearerAuth: true,
+          uploadLogContext: {
+            media_kind: 'video',
+            media_stage: 'binary',
+            media_bytes: binaryData.byteLength,
+            ...(mediaFormat && { media_format: mediaFormat }),
+          },
         })
         return data
       })
@@ -412,6 +439,12 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
               Authorization: `Bearer ${token}`,
             },
             skipBearerAuth: true,
+            uploadLogContext: {
+              media_kind: 'document',
+              media_stage: 'metadata',
+              // Multiple images per request — no single honest media_format value, so it's omitted.
+              media_bytes: payload.images.reduce((sum, image) => sum + image.content_length, 0),
+            },
           }
         )
         return data

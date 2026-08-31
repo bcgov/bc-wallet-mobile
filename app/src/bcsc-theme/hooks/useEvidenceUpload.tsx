@@ -2,6 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { EvidenceMetadataPayload, UploadEvidenceResponseData } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { withPlausibleCaptureDate } from '@/bcsc-theme/utils/capture-date'
 import { clampEvidenceImagesToSides, normalizeEvidenceImageLabel } from '@/bcsc-theme/utils/card-utils'
+import { sniffMediaFormat } from '@/bcsc-theme/utils/media-format'
 import { BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import { TOKENS, useServices, useStore } from '@bifold/core'
@@ -32,9 +33,11 @@ const useEvidenceUpload = () => {
     const metadataToUpload = await withPlausibleCaptureDate(photoMetadata, logger)
 
     logger.info('Uploading selfie photo...')
-    const metadataResponse = await evidence.uploadPhotoEvidenceMetadata(metadataToUpload)
+    // Read the file before posting metadata: an unreadable file fails fast here instead of
+    // leaving orphan metadata behind on the server.
     const photoBytes = await readFileInChunks(photoPath, logger)
-    await evidence.uploadPhotoEvidenceBinary(metadataResponse.upload_uri, photoBytes)
+    const metadataResponse = await evidence.uploadPhotoEvidenceMetadata(metadataToUpload, sniffMediaFormat(photoBytes))
+    await evidence.uploadPhotoEvidenceBinary(metadataResponse.upload_uri, photoBytes, 'image')
     logger.info(`Selfie photo uploaded: ${photoBytes.length} bytes`)
   }, [evidence, logger, store.bcsc])
 
@@ -123,7 +126,7 @@ const useEvidenceUpload = () => {
   const uploadEvidenceBinaries = useCallback(
     async (items: EvidenceUploadItem[]) => {
       for (const { uploadUri, imageBytes } of items) {
-        await evidence.uploadPhotoEvidenceBinary(uploadUri, imageBytes)
+        await evidence.uploadPhotoEvidenceBinary(uploadUri, imageBytes, 'document')
       }
       if (items.length > 0) {
         logger.info(`All additional evidence uploaded (${items.length} file(s))`)

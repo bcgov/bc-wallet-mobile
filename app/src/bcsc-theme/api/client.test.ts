@@ -105,6 +105,86 @@ describe('BCSC Client', () => {
     }
   })
 
+  describe('uploadLogContext', () => {
+    const uploadLogContext = {
+      media_kind: 'image' as const,
+      media_stage: 'binary' as const,
+      media_bytes: 1234,
+      media_format: 'image/jpeg' as const,
+    }
+
+    it('spreads uploadLogContext into the top-level error log data on a 4xx/5xx failure', async () => {
+      const mockLogger = { error: jest.fn(), info: jest.fn() }
+      const client = new BCSCApiClient('https://example.com', mockLogger as any)
+
+      client.client.defaults.adapter = (config: any) => {
+        return Promise.reject(
+          new AxiosError('Request failed', 'ERR_BAD_RESPONSE', config, null, {
+            status: 500,
+            data: {},
+            statusText: 'Internal Server Error',
+            headers: {} as any,
+            config,
+          })
+        )
+      }
+
+      try {
+        await client.get('/endpoint', { skipBearerAuth: true, uploadLogContext })
+        expect(true).toBe(false) // Force fail if no error is thrown
+      } catch (error) {
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('[BCSCApiClient]'),
+          expect.objectContaining(uploadLogContext)
+        )
+      }
+    })
+
+    it('still carries the fields on a network-style failure with no response', async () => {
+      const mockLogger = { error: jest.fn(), info: jest.fn() }
+      const client = new BCSCApiClient('https://example.com', mockLogger as any)
+
+      client.client.defaults.adapter = (config: any) => {
+        return Promise.reject(new AxiosError('Network Error', 'ERR_NETWORK', config, null, undefined))
+      }
+
+      try {
+        await client.get('/endpoint', { skipBearerAuth: true, uploadLogContext })
+        expect(true).toBe(false) // Force fail if no error is thrown
+      } catch (error) {
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('[BCSCApiClient]'),
+          expect.objectContaining(uploadLogContext)
+        )
+      }
+    })
+
+    it('logs no media_* keys for a failing request with no uploadLogContext', async () => {
+      const mockLogger = { error: jest.fn(), info: jest.fn() }
+      const client = new BCSCApiClient('https://example.com', mockLogger as any)
+
+      client.client.defaults.adapter = (config: any) => {
+        return Promise.reject(
+          new AxiosError('Request failed', 'ERR_BAD_RESPONSE', config, null, {
+            status: 500,
+            data: {},
+            statusText: 'Internal Server Error',
+            headers: {} as any,
+            config,
+          })
+        )
+      }
+
+      try {
+        await client.get('/endpoint', { skipBearerAuth: true })
+        expect(true).toBe(false) // Force fail if no error is thrown
+      } catch (error) {
+        const loggedData = mockLogger.error.mock.calls[0][1]
+        expect(Object.keys(loggedData).some((key) => key.startsWith('media_'))).toBe(false)
+      }
+    })
+  })
+
   describe('getTokensForRefreshToken', () => {
     it('should return the promise if already exists', async () => {
       const mockLogger = { info: jest.fn() }

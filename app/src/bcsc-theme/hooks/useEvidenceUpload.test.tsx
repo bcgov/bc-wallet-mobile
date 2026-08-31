@@ -285,7 +285,8 @@ describe('useEvidenceUpload', () => {
 
       expect(RNFS.stat).toHaveBeenCalledWith('/permanent/selfie.jpg')
       expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalledWith(
-        expect.objectContaining({ date: Math.floor(mtimeMs / 1000) })
+        expect.objectContaining({ date: Math.floor(mtimeMs / 1000) }),
+        undefined
       )
       // Exactly one warn for the substitution — see #4373.
       expect(mockLogger.warn).toHaveBeenCalledTimes(1)
@@ -317,10 +318,68 @@ describe('useEvidenceUpload', () => {
       })
 
       expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalledWith(
-        expect.objectContaining({ date: plausibleDate })
+        expect.objectContaining({ date: plausibleDate }),
+        undefined
       )
       expect(RNFS.stat).not.toHaveBeenCalled()
       expect(mockLogger.warn).not.toHaveBeenCalled()
+    })
+
+    it('uploads the binary as "image" and forwards the sniffed format to the metadata call', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([
+        {
+          ...baseStore,
+          bcsc: {
+            photoPath: '/selfie.jpg',
+            photoMetadata: photo('front', 'selfie'),
+          },
+        } as unknown as BCState,
+        jest.fn(),
+      ])
+
+      const jpegBytes = Buffer.from([0xff, 0xd8, 0xff, 0xe0])
+      jest.mocked(readFileInChunks).mockResolvedValue(jpegBytes)
+      mockEvidenceApi.uploadPhotoEvidenceMetadata.mockResolvedValue({ upload_uri: 'selfie-uri' })
+
+      const { result } = renderHook(() => useEvidenceUpload())
+
+      await act(async () => {
+        await result.current.uploadSelfiePhoto()
+      })
+
+      expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalledWith(
+        expect.objectContaining({ date: plausibleDate }),
+        'image/jpeg'
+      )
+      expect(mockEvidenceApi.uploadPhotoEvidenceBinary).toHaveBeenCalledWith('selfie-uri', jpegBytes, 'image')
+    })
+  })
+
+  describe('uploadEvidenceBinaries', () => {
+    it('uploads each item as "document"', async () => {
+      const { result } = renderHook(() => useEvidenceUpload())
+      const items = [
+        { uploadUri: 'uri-1', imageBytes: Buffer.from([1, 2, 3]) },
+        { uploadUri: 'uri-2', imageBytes: Buffer.from([4, 5, 6]) },
+      ]
+
+      await act(async () => {
+        await result.current.uploadEvidenceBinaries(items)
+      })
+
+      expect(mockEvidenceApi.uploadPhotoEvidenceBinary).toHaveBeenNthCalledWith(
+        1,
+        'uri-1',
+        items[0].imageBytes,
+        'document'
+      )
+      expect(mockEvidenceApi.uploadPhotoEvidenceBinary).toHaveBeenNthCalledWith(
+        2,
+        'uri-2',
+        items[1].imageBytes,
+        'document'
+      )
     })
   })
 })

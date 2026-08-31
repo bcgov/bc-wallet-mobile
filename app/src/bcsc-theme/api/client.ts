@@ -1,3 +1,4 @@
+import { UploadLogContext } from '@/bcsc-theme/utils/media-format'
 import { throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
@@ -51,6 +52,9 @@ declare module 'axios' {
     suppressStatusCodeLogs?: number[]
     // Internal: marks a request already retried once after a 401, to prevent refresh/retry loops
     _retriedAfter401?: boolean
+    // Structured evidence-upload metadata (kind/stage/bytes/format) spread into the error log
+    // below — see app/src/bcsc-theme/utils/media-format.ts.
+    uploadLogContext?: UploadLogContext
   }
 }
 
@@ -199,6 +203,7 @@ class BCSCApiClient {
         const { message, ...details } = simpleAppError
         this.logger.error(`[BCSCApiClient] ${message}`, {
           ...details,
+          ...error.config?.uploadLogContext,
           cause: formatIASAxiosErrorForLogger({ error: error, suppressStackTrace: true }),
         })
       }

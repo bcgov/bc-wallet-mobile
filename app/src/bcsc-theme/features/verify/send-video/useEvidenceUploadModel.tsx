@@ -10,6 +10,7 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { withPlausibleCaptureDate } from '@/bcsc-theme/utils/capture-date'
 import { getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info'
+import { MediaFormat, sniffMediaFormat } from '@/bcsc-theme/utils/media-format'
 import { getResumeStepRoute } from '@/bcsc-theme/utils/resume-step-route'
 import { AppError, ErrorRegistry } from '@/errors'
 import { isAxiosAppError } from '@/errors/appError'
@@ -72,10 +73,14 @@ const useEvidenceUploadModel = (
   )
 
   const uploadEvidenceMetadata = useCallback(
-    async (photoMetadata: VerificationPhotoUploadPayload, videoMetadata: VerificationVideoUploadPayload) => {
+    async (
+      photoMetadata: VerificationPhotoUploadPayload,
+      videoMetadata: VerificationVideoUploadPayload,
+      formats: { photo?: MediaFormat; video?: MediaFormat }
+    ) => {
       const [photoMetadataResponse, videoMetadataResponse] = await Promise.all([
-        evidence.uploadPhotoEvidenceMetadata(photoMetadata),
-        evidence.uploadVideoEvidenceMetadata(videoMetadata),
+        evidence.uploadPhotoEvidenceMetadata(photoMetadata, formats.photo),
+        evidence.uploadVideoEvidenceMetadata(videoMetadata, formats.video),
       ])
 
       logger.debug('Photo/Video metadata responded')
@@ -94,10 +99,10 @@ const useEvidenceUploadModel = (
       additionalUploads: { uploadUri: string; imageBytes: Buffer }[]
     ) => {
       await Promise.all([
-        evidence.uploadPhotoEvidenceBinary(photoUploadUri, photoBytes),
+        evidence.uploadPhotoEvidenceBinary(photoUploadUri, photoBytes, 'image'),
         evidence.uploadVideoEvidenceBinary(videoUploadUri, videoBytes),
         ...additionalUploads.map(({ uploadUri, imageBytes }) =>
-          evidence.uploadPhotoEvidenceBinary(uploadUri, imageBytes)
+          evidence.uploadPhotoEvidenceBinary(uploadUri, imageBytes, 'document')
         ),
       ])
       logger.debug('Uploaded all evidence files')
@@ -174,7 +179,10 @@ const useEvidenceUploadModel = (
       // is busy or closed, so it needs its own.
       const selfieMetadata = await withPlausibleCaptureDate(photoMetadata, logger)
 
-      const evidenceMetadata = await uploadEvidenceMetadata(selfieMetadata, localFiles.videoMetadata)
+      const evidenceMetadata = await uploadEvidenceMetadata(selfieMetadata, localFiles.videoMetadata, {
+        photo: sniffMediaFormat(localFiles.photoBytes),
+        video: sniffMediaFormat(localFiles.videoBytes),
+      })
       if (isCancelledRef.current) {
         return
       }

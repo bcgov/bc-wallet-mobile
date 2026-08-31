@@ -357,7 +357,7 @@ describe('useEvidenceUploadModel', () => {
 
       expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalled()
       expect(mockEvidenceApi.uploadVideoEvidenceMetadata).toHaveBeenCalled()
-      expect(mockEvidenceApi.uploadPhotoEvidenceBinary).toHaveBeenCalledWith('photo-uri', expect.anything())
+      expect(mockEvidenceApi.uploadPhotoEvidenceBinary).toHaveBeenCalledWith('photo-uri', expect.anything(), 'image')
       expect(mockEvidenceApi.uploadVideoEvidenceBinary).toHaveBeenCalledWith('video-uri', expect.anything())
       expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledWith('req-123', {
         upload_uris: ['photo-uri', 'video-uri'],
@@ -737,7 +737,11 @@ describe('useEvidenceUploadModel', () => {
         number: 'DL123',
         images: [{ label: 'FRONT_SIDE', side: 'front', file_path: undefined, date: 1_782_000_000 }],
       })
-      expect(mockEvidenceApi.uploadPhotoEvidenceBinary).toHaveBeenCalledWith('evidence-uri-front', expect.anything())
+      expect(mockEvidenceApi.uploadPhotoEvidenceBinary).toHaveBeenCalledWith(
+        'evidence-uri-front',
+        expect.anything(),
+        'document'
+      )
       expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledWith('req-123', {
         upload_uris: ['photo-uri', 'video-uri', 'evidence-uri-front'],
         sha256: 'sha-456',
@@ -794,7 +798,8 @@ describe('useEvidenceUploadModel', () => {
 
         expect(RNFS.stat).toHaveBeenCalledWith(plausiblePhotoMetadata.file_path)
         expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalledWith(
-          expect.objectContaining({ date: Math.floor(mtimeMs / 1000) })
+          expect.objectContaining({ date: Math.floor(mtimeMs / 1000) }),
+          undefined
         )
       })
 
@@ -813,7 +818,8 @@ describe('useEvidenceUploadModel', () => {
 
         expect(RNFS.stat).not.toHaveBeenCalledWith(plausiblePhotoMetadata.file_path)
         expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalledWith(
-          expect.objectContaining({ date: plausiblePhotoMetadata.date })
+          expect.objectContaining({ date: plausiblePhotoMetadata.date }),
+          undefined
         )
       })
     })
