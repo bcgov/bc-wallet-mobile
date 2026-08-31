@@ -41,8 +41,6 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
 
   const handleVerifyNow = useCallback(() => {
     onAnswered?.()
-    // `false` = started verification, persisted until the user is verified.
-    // This will route the user into verification process until it is complete or the device is reset
     dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [false] })
     dispatch({
       type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS,
@@ -55,7 +53,6 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
 
   const handleLater = useCallback(() => {
     onAnswered?.()
-    // `true` = verification is skipped, persisted, so subsequent launches go straight to the home stack
     dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [true] })
   }, [dispatch, onAnswered])
 

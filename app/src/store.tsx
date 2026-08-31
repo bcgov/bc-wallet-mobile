@@ -382,7 +382,7 @@ export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: s
   }
 
   if (bcsc.hasAccount === true && bcsc.verificationSkipped === undefined) {
-    bcsc = { ...bcsc, verificationSkipped: true }
+    bcsc = { ...bcsc, verificationSkipped: false }
     migrated = true
   }
 
