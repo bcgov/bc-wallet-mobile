@@ -822,6 +822,42 @@ describe('useEvidenceUploadModel', () => {
           undefined
         )
       })
+
+      it('derives media_format from the real photo/video bytes and forwards them to the metadata calls', async () => {
+        // Real magic bytes (not the suite-default [1,2,3]/[4,5,6] placeholders) so the sniffer
+        // actually has something to detect — see #4184 adversarial review finding.
+        const jpegBytes = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10])
+        const mp4Bytes = Buffer.from([
+          0,
+          0,
+          0,
+          16,
+          ...'ftyp'.split('').map((c) => c.charCodeAt(0)),
+          ...'isom'.split('').map((c) => c.charCodeAt(0)),
+          0,
+          0,
+          0,
+          0,
+        ])
+        jest.mocked(readFileInChunks).mockResolvedValue(jpegBytes)
+        jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(mp4Bytes)
+        jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-01-01') } as any)
+
+        const bifoldMock = jest.mocked(Bifold)
+        bifoldMock.useStore.mockReturnValue([storeWithSha(plausiblePhotoMetadata) as BCState, jest.fn()])
+
+        const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+        await act(async () => {
+          await result.current.handleSend()
+        })
+
+        expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalledWith(
+          expect.objectContaining({ date: plausiblePhotoMetadata.date }),
+          'image/jpeg'
+        )
+        expect(mockEvidenceApi.uploadVideoEvidenceMetadata).toHaveBeenCalledWith(expect.anything(), 'video/mp4')
+      })
     })
   })
 
