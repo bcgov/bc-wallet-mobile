@@ -52,7 +52,7 @@ export interface LoadedA11y {
 
 const SUMMARY_SUFFIX = '-summary.json'
 /** Report files are `<stamp>-<Screen>.json`, the stamp an ISO time with `:`/`.` swapped for `-`. */
-const STAMP_LENGTH = '2026-08-28T21-20-18-607Z'.length
+const STAMP_LENGTH = new Date(0).toISOString().replaceAll(/[:.]/g, '-').length
 
 const stampOf = (name: string): string => name.slice(0, STAMP_LENGTH)
 const screenFileOf = (name: string): string => name.slice(STAMP_LENGTH + 1)

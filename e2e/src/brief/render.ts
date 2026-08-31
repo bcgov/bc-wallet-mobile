@@ -58,14 +58,14 @@ function formatDuration(sec: number): string {
   return `${s}s`
 }
 
-/** `✅ 4/5 ⏭1` — the fraction and tallies only when not every listed checkpoint passed. */
+/** `✅ 4/5 ⏭️1` — the fraction and tallies only when not every listed checkpoint passed. */
 function formatAuto(result: CellResult): string {
   let text = SYMBOL[result.status]
   if (result.status === 'not-run') return text
   if (result.passed !== result.listed) {
     text += ` ${result.passed}/${result.listed}`
     if (result.blocked) text += ` ⛔${result.blocked}`
-    if (result.skipped) text += ` ⏭${result.skipped}`
+    if (result.skipped) text += ` ⏭️${result.skipped}`
     if (result.notRun) text += ` ⬜${result.notRun}`
   }
   return text
