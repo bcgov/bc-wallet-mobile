@@ -53,8 +53,12 @@ describe('sniffMediaFormat', () => {
   })
 
   it('falls back to the compatible-brands list when the major brand is unrecognized', () => {
-    const bytes = buildFtypBox('mif1', ['msf1', 'heic'])
+    const bytes = buildFtypBox('wxyz', ['zzzz', 'heic'])
     expect(sniffMediaFormat(bytes)).toBe('image/heic')
+  })
+
+  it('returns undefined when neither the major brand nor any compatible brand is recognized', () => {
+    expect(sniffMediaFormat(buildFtypBox('wxyz', ['zzzz', 'yyyy']))).toBeUndefined()
   })
 
   it('returns undefined for garbage bytes', () => {

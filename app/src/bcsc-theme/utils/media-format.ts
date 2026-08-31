@@ -44,10 +44,8 @@ const classifyFtypBox = (bytes: Uint8Array): MediaFormat | undefined => {
     return fromMajorBrand
   }
 
-  // Some encoders declare a generic major brand (e.g. 'mif1') and only list the real format
-  // (e.g. 'heic') in the compatible-brands list — fall back to scanning it, bounded by the
-  // box's own declared size (unsigned big-endian uint32), capped so a bogus size can't run us
-  // past the bytes we actually have in memory.
+  // Some encoders name the real format only in the compatible-brands list, so scan it — bounded by
+  // the box's declared size (big-endian uint32) and capped, since a bogus size must not overrun us.
   const declaredSize = ((bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3]) >>> 0
   const scanEnd = Math.min(bytes.length, declaredSize > 0 ? declaredSize : bytes.length, FTYP_SCAN_CAP_BYTES)
 
