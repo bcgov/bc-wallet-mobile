@@ -43,7 +43,9 @@ const FAILURES_SHOWN = 30
 
 /** Markdown table cells cannot hold `|` or newlines. */
 function cell(text: string): string {
-  return text.replaceAll('|', String.raw`\|`).replaceAll(/[^\S\n]*\n\s*/g, ' ')
+  const escaped = text.replaceAll('\\', String.raw`\\`).replaceAll('|', String.raw`\|`)
+  // each whitespace run holding a newline becomes one space; split on plain \s+ cannot backtrack super-linearly
+  return escaped.split(/(\s+)/).map((part) => (part.includes('\n') ? ' ' : part)).join('')
 }
 
 function formatDuration(sec: number): string {
