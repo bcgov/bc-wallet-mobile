@@ -467,6 +467,13 @@ export const useSecureActions = () => {
         type: BCDispatchAction.UPDATE_SECURE_VERIFIED,
         payload: [verified],
       })
+      if (verified) {
+        // set flag as "skipped" so the user isn't routed to reverify
+        dispatch({
+          type: BCDispatchAction.SET_VERIFICATION_SKIPPED,
+          payload: [true],
+        })
+      }
 
       const account = await getAccount()
       if (!account) {
