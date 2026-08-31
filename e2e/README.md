@@ -694,7 +694,13 @@ e2e/
 │       │   ├── verified-photo.journey.ts    # photo card + send-video/live-call detours
 │       │   ├── verified-non-photo.journey.ts # non-photo card (+ additional photo ID)
 │       │   ├── verified-combined.journey.ts # combined card + login/deep-link/transfer/contacts/account
-│       │   └── verified-non-bcsc.journey.ts # non-BCSC (two IDs + address + email)
+│       │   ├── verified-non-bcsc.journey.ts # non-BCSC (two IDs + address + email)
+│       │   ├── send-video-approved.journey.ts # send-video end-to-end: record → upload → scripted approve → verified
+│       │   ├── send-video-cancelled.journey.ts # scripted reject + agent-reason round-trip (+ over-long recording)
+│       │   ├── send-video-non-photo.journey.ts # send-video from the card type that adds a photo ID first
+│       │   ├── send-video-non-bcsc.journey.ts # cardless send-video through the identity-match step (inbox-dependent)
+│       │   ├── video-call.journey.ts        # live call: WebRTC connect → answered by the SIT test harness (or queue-wait) → end → VerifyNotComplete (or busy/closed asserts)
+│       │   └── under-12.journey.ts          # under-12 persona: restricted method set + transfer age gate
 │       ├── main/
 │       │   ├── unverified-main.journey.ts   # unverified tab / QRCore gating
 │       │   └── settings.journey.ts          # settings rows, change-PIN, auto-lock, reset/remove account

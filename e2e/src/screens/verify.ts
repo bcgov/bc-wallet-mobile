@@ -322,6 +322,74 @@ export const CallBusyOrClosedScreen = defineScreen({
 })
 
 /**
+ * `StartCall` — the live-call primer reached after the selfie (open hours only). `primary` (Start call)
+ * requests microphone permission and pushes LiveCall, so drive it through `startLiveCall`, which
+ * accepts the permission dialogs on the way. The post-selfie stack is [PhotoInstructions, StartCall],
+ * so `back` returns to the instructions.
+ */
+export const StartCallScreen = defineScreen({
+  self: bcsc(v.startCall.start),
+  primary: bcsc(v.startCall.start),
+  back: bcsc(common.back),
+  elements: {
+    hoursOfServiceTitle: bcsc(v.startCall.hoursOfServiceTitle),
+  },
+})
+
+/**
+ * LiveCall's pre-connect face (`CallLoadingView`) — up through the evidence upload, session mint,
+ * WebRTC connect, and the wait for an agent. `self`/`primary` (Cancel) is its only control; WHICH
+ * state it is in is copy-only, so the waiting state is matched by text (see `startLiveCall`).
+ */
+export const LiveCallLoadingScreen = defineScreen({
+  self: bcsc(v.liveCall.cancel),
+  primary: bcsc(v.liveCall.cancel),
+})
+
+/**
+ * LiveCall's connected face — rendered only once an agent (the Pexip chair host) joins. `self`/
+ * `primary` is EndCall; `mute`/`video` toggle the local tracks; `havingTrouble` raises a confirm alert.
+ */
+export const LiveCallScreen = defineScreen({
+  self: bcsc(v.liveCall.endCall),
+  primary: bcsc(v.liveCall.endCall),
+  links: {
+    mute: bcsc(v.liveCall.mute),
+    video: bcsc(v.liveCall.video),
+    havingTrouble: bcsc(v.liveCall.havingTrouble),
+  },
+})
+
+/**
+ * LiveCall's failed face (`CallErrorView`). `self`/`secondary` (GoBack, pops to StartCall) is the
+ * marker — its TryAgain renders only for retryable errors, and the id also belongs to
+ * VerifyNotComplete. Probed by `startLiveCall` so a failed setup reports the app's error, not a timeout.
+ */
+export const LiveCallErrorScreen = defineScreen({
+  self: bcsc(v.liveCall.errorGoBack),
+  primary: bcsc(v.liveCall.errorTryAgain),
+  secondary: bcsc(v.liveCall.errorGoBack),
+})
+
+/**
+ * `VerifyNotComplete` — where an ended call that did not verify lands (the LiveCall exit resets the
+ * stack to [VerificationMethodSelection, this]). `self` is the having-trouble link, the only id UNIQUE
+ * to this screen; it opens the external help centre, so it is asserted but never tapped. `primary`
+ * (SendVideo) and `secondary` (TryAgain) BOTH reset to method selection — confirm-and-retry only
+ * TryAgain: the SendVideo id is also method selection's own send-video button, so a retry after the
+ * reset would enter the send-video flow.
+ */
+export const VerifyNotCompleteScreen = defineScreen({
+  self: bcsc(v.verifyNotComplete.trouble),
+  primary: bcsc(v.verifyNotComplete.sendVideo),
+  secondary: bcsc(v.verifyNotComplete.tryAgain),
+  elements: {
+    sendVideo: bcsc(v.verifyNotComplete.sendVideo),
+    tryAgain: bcsc(v.verifyNotComplete.tryAgain),
+  },
+})
+
+/**
  * Email confirmation (`'Email Verification'`) — enter the 6-digit code emailed to the address from
  * EnterEmail. `self`/`code` is the OTP field; `primary` (Continue) validates the code and RESETS the
  * stack to EmailVerified (a wrong code keeps the screen with an inline error).
