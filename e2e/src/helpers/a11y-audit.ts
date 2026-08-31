@@ -99,7 +99,7 @@ function requestedIosAuditTypes(override?: IosAuditType[]): IosAuditType[] {
 
 /** `XCUIAccessibilityAuditTypeHitRegion` → `hitRegion`; values without the prefix pass through. */
 function shortIosName(value: unknown, prefix: string): string {
-  const name = String(value ?? '')
+  const name = typeof value === 'string' || typeof value === 'number' ? String(value) : ''
   if (!name.startsWith(prefix)) return name
   const rest = name.slice(prefix.length)
   return rest.charAt(0).toLowerCase() + rest.slice(1)
