@@ -20,8 +20,14 @@ const QUICKTIME_BRAND = 'qt  '
 // regardless of what the box itself claims its size is.
 const FTYP_SCAN_CAP_BYTES = 64
 
-const readAscii4 = (bytes: Uint8Array, offset: number): string =>
-  String.fromCharCode(bytes[offset], bytes[offset + 1], bytes[offset + 2], bytes[offset + 3])
+const readAscii4 = (bytes: Uint8Array, offset: number): string => {
+  // Runs inside the failed-upload error-logging path — must never throw, so an out-of-range
+  // read (should a caller's bounds guard ever weaken) yields "no match" instead of a crash.
+  if (offset < 0 || offset + 4 > bytes.length) {
+    return ''
+  }
+  return String.fromCodePoint(bytes[offset], bytes[offset + 1], bytes[offset + 2], bytes[offset + 3])
+}
 
 const brandToFormat = (brand: string): MediaFormat | undefined => {
   if (HEIC_BRANDS.has(brand)) {
