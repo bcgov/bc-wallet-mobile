@@ -17,7 +17,7 @@ on:
       ring:
         description: 'How far to publish. ring-0 (the team) always goes; this picks how much further, and needs approval.'
         required: false
-        default: ring-1
+        default: ring-2
         type: choice
         options:
           - ring-1

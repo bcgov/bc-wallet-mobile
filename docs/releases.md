@@ -60,7 +60,7 @@ one; only an approver can take it past ring-0.
 
 | Input | Leave it alone to | Use it to |
 |---|---|---|
-| `ring` | Publish to QA | Go further |
+| `ring` | Publish to UAT | Stop at QA, or go further |
 | `build_number` | Publish the newest usable build | Publish an older build |
 | `targets` | Publish to all three stores | Retry one store after a failure |
 
