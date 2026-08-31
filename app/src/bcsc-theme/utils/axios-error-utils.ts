@@ -258,6 +258,9 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
       // Use a dummy base so relative paths parse correctly
       url: error.config?.url ? new URL(error.config.url, 'https://example.com').pathname : undefined,
       method: error.config?.method?.toUpperCase(),
+      // Evidence-upload media fields ride in `context` (not just the interceptor's log line) so they
+      // reach the "Report this problem" payload too, via AppError.toJSON().
+      ...error.config?.uploadLogContext,
     },
   }
 

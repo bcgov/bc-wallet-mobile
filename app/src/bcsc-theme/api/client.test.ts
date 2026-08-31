@@ -113,7 +113,7 @@ describe('BCSC Client', () => {
       media_format: 'image/jpeg' as const,
     }
 
-    it('spreads uploadLogContext into the top-level error log data on a 4xx/5xx failure', async () => {
+    it('carries uploadLogContext in the error context on a 4xx/5xx failure', async () => {
       const mockLogger = { error: jest.fn(), info: jest.fn() }
       const client = new BCSCApiClient('https://example.com', mockLogger as any)
 
@@ -135,8 +135,10 @@ describe('BCSC Client', () => {
       } catch (error) {
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('[BCSCApiClient]'),
-          expect.objectContaining(uploadLogContext)
+          expect.objectContaining({ context: expect.objectContaining(uploadLogContext) })
         )
+        // The same fields must reach the "Report this problem" payload, which serializes via toJSON().
+        expect((error as AppError).toJSON().context).toEqual(expect.objectContaining(uploadLogContext))
       }
     })
 
@@ -154,8 +156,10 @@ describe('BCSC Client', () => {
       } catch (error) {
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('[BCSCApiClient]'),
-          expect.objectContaining(uploadLogContext)
+          expect.objectContaining({ context: expect.objectContaining(uploadLogContext) })
         )
+        // The same fields must reach the "Report this problem" payload, which serializes via toJSON().
+        expect((error as AppError).toJSON().context).toEqual(expect.objectContaining(uploadLogContext))
       }
     })
 
@@ -179,8 +183,8 @@ describe('BCSC Client', () => {
         await client.get('/endpoint', { skipBearerAuth: true })
         expect(true).toBe(false) // Force fail if no error is thrown
       } catch (error) {
-        const loggedData = mockLogger.error.mock.calls[0][1]
-        expect(Object.keys(loggedData).some((key) => key.startsWith('media_'))).toBe(false)
+        const loggedContext = mockLogger.error.mock.calls[0][1].context
+        expect(Object.keys(loggedContext).some((key) => key.startsWith('media_'))).toBe(false)
       }
     })
   })

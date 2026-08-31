@@ -203,7 +203,6 @@ class BCSCApiClient {
         const { message, ...details } = simpleAppError
         this.logger.error(`[BCSCApiClient] ${message}`, {
           ...details,
-          ...error.config?.uploadLogContext,
           cause: formatIASAxiosErrorForLogger({ error: error, suppressStackTrace: true }),
         })
       }
