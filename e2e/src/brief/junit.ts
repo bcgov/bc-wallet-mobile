@@ -156,7 +156,7 @@ export function loadJunitReports(reportDirs: ReportDir[]): LoadedJunit {
     const junitDir = join(dir.path, 'junit')
     if (!existsSync(junitDir)) continue
     const hint = platformFromDirName(dir.name)
-    for (const entry of readdirSync(junitDir).filter((name) => name.endsWith('.xml')).sort()) {
+    for (const entry of readdirSync(junitDir).filter((name) => name.endsWith('.xml')).sort((a, b) => a.localeCompare(b))) {
       const parsed = parseJunitXml(readFileSync(join(junitDir, entry), 'utf8'), dir.name, hint)
       runnerErrors.push(...parsed.runnerErrors)
       for (const suite of parsed.suites) {
@@ -177,7 +177,7 @@ export function loadJunitReports(reportDirs: ReportDir[]): LoadedJunit {
   }
   for (const [platform, names] of sources) {
     const run = results[platform]
-    if (run) run.sources = [...names].sort()
+    if (run) run.sources = [...names].sort((a, b) => a.localeCompare(b))
   }
   return { results, runnerErrors }
 }

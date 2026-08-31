@@ -61,7 +61,7 @@ const screenFileOf = (name: string): string => name.slice(STAMP_LENGTH + 1)
 function loadPlatformDir(dir: string, source: string): LoadedA11y | undefined {
   const names = readdirSync(dir)
     .filter((name) => name.endsWith('.json'))
-    .sort()
+    .sort((a, b) => a.localeCompare(b))
   const summaries = names.filter((name) => name.endsWith(SUMMARY_SUFFIX))
   if (summaries.length) {
     const name = summaries[summaries.length - 1]
@@ -72,7 +72,7 @@ function loadPlatformDir(dir: string, source: string): LoadedA11y | undefined {
   for (const name of names) latestPerScreen.set(screenFileOf(name), name)
   if (!latestPerScreen.size) return undefined
   const reports = [...latestPerScreen.values()].map((name) => JSON.parse(readFileSync(join(dir, name), 'utf8')) as A11yAuditReport)
-  return { reports, source, stamp: stampOf([...latestPerScreen.values()].sort().pop() ?? '') }
+  return { reports, source, stamp: stampOf([...latestPerScreen.values()].sort((a, b) => a.localeCompare(b)).pop() ?? '') }
 }
 
 /** The latest audit output per platform across the report dirs. */
@@ -108,7 +108,7 @@ export function buildBaseline(loaded: Partial<Record<Platform, LoadedA11y>>): A1
     if (!reports) continue
     const screens: Record<string, string[]> = {}
     for (const report of [...reports].sort((a, b) => a.screen.localeCompare(b.screen))) {
-      screens[report.screen] = [...new Set(report.issues.map((issue) => issue.signature))].sort()
+      screens[report.screen] = [...new Set(report.issues.map((issue) => issue.signature))].sort((a, b) => a.localeCompare(b))
     }
     baseline[platform] = screens
   }

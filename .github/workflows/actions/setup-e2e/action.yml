@@ -1,5 +1,5 @@
 name: Setup E2E
-description: Node + Yarn, the cached e2e dependencies, and `yarn install --immutable` in e2e/
+description: Node + Yarn, the cached e2e dependencies, and a scripts-off `yarn install` in e2e/
 
 runs:
   using: composite
@@ -19,4 +19,5 @@ runs:
     - name: Install E2E dependencies
       shell: bash
       working-directory: e2e
-      run: yarn install --immutable
+      # skip-build: no dependency lifecycle scripts on CI — native binaries (sharp, esbuild) come from platform packages
+      run: yarn install --immutable --mode=skip-build
