@@ -57,8 +57,9 @@ wider and needs an approval. Publishing to a ring publishes every ring below it.
 A build is uploaded once at ring-0. Later rings widen who can see that same
 build rather than uploading it again, so publishing is safe to repeat.
 
-Approvals come from two teams: `bcsc-approvers-ring-1` for QA builds, and
-`bcsc-approvers-ring-2-plus` for anything wider.
+QA (ring-1) and UAT (ring-2) are separate rings with separate gates. Approvals
+come from three teams: `bcsc-approvers-ring-1` for QA, `bcsc-approvers-ring-2`
+for UAT, and `bcsc-approvers-ring-3-plus` beyond that.
 
 ## Variants
 

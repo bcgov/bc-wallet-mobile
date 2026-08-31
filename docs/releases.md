@@ -13,10 +13,10 @@ A ring is an audience. Each one is wider than the last.
 | Ring | Who gets the build | Who approves it |
 |---|---|---|
 | `ring-0` | The team | Nobody, it always publishes |
-| `ring-1` | QA | `bcsc-approvers-ring-1` |
-| `ring-2` | UAT | `bcsc-approvers-ring-2-plus` |
-| `ring-3` | Early adopters | `bcsc-approvers-ring-2-plus` |
-| `ring-4` | Everyone | `bcsc-approvers-ring-2-plus` |
+| `ring-1` | QA testers | `bcsc-approvers-ring-1` |
+| `ring-2` | UAT testers | `bcsc-approvers-ring-2` |
+| `ring-3` | Early adopters | `bcsc-approvers-ring-3-plus` |
+| `ring-4` | Everyone | `bcsc-approvers-ring-3-plus` |
 
 Publishing to a ring publishes every ring below it, so `ring-2` sends the build
 to ring-0, ring-1 and ring-2. The team gets it straight away; everything above
@@ -41,13 +41,18 @@ is the one case where a build can knock another off a track.
 
 ## Who approves
 
-Two teams, so signing off on a QA build doesn't also let you release to
-everyone.
+QA and UAT are separate rings with separate gates. ring-1 goes to QA testers,
+ring-2 to UAT testers, and each has its own approval even though the same
+people sit on both teams today.
 
-| Team | Approves | Members |
+| Team | Approves | Who is on it |
 |---|---|---|
-| `bcsc-approvers-ring-1` | ring-1 | UAT, the PO and the dev team |
-| `bcsc-approvers-ring-2-plus` | ring-2 to ring-4 | The PO and the dev team |
+| `bcsc-approvers-ring-1` | ring-1 | The QA team, the PO and the dev team |
+| `bcsc-approvers-ring-2` | ring-2 | The UAT team, the PO and the dev team |
+| `bcsc-approvers-ring-3-plus` | ring-3 and ring-4 | The PO and the dev team |
+
+Approving is separate from receiving: being on an approver team does not put
+you in that ring's tester group, and vice versa.
 
 Anyone in the team can approve, and membership is managed in the team, so
 nothing here changes when someone joins or leaves. You cannot approve your own
@@ -60,7 +65,7 @@ one; only an approver can take it past ring-0.
 
 | Input | Leave it alone to | Use it to |
 |---|---|---|
-| `ring` | Publish to QA | Go further |
+| `ring` | Publish to UAT | Stop at QA, or go further |
 | `build_number` | Publish the newest usable build | Publish an older build |
 | `targets` | Publish to all three stores | Retry one store after a failure |
 
