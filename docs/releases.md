@@ -14,9 +14,9 @@ A ring is an audience. Each one is wider than the last.
 |---|---|---|
 | `ring-0` | The team | Nobody, it always publishes |
 | `ring-1` | QA | `bcsc-approvers-ring-1` |
-| `ring-2` | UAT | `bcsc-approvers-ring-2-plus` |
-| `ring-3` | Early adopters | `bcsc-approvers-ring-2-plus` |
-| `ring-4` | Everyone | `bcsc-approvers-ring-2-plus` |
+| `ring-2` | UAT | `bcsc-approvers-ring-2` |
+| `ring-3` | Early adopters | `bcsc-approvers-ring-3-plus` |
+| `ring-4` | Everyone | `bcsc-approvers-ring-3-plus` |
 
 Publishing to a ring publishes every ring below it, so `ring-2` sends the build
 to ring-0, ring-1 and ring-2. The team gets it straight away; everything above
@@ -41,13 +41,14 @@ is the one case where a build can knock another off a track.
 
 ## Who approves
 
-Two teams, so signing off on a QA build doesn't also let you release to
-everyone.
+Three teams, so signing off on a QA or UAT build doesn't also let you release
+to everyone.
 
 | Team | Approves | Members |
 |---|---|---|
 | `bcsc-approvers-ring-1` | ring-1 | UAT, the PO and the dev team |
-| `bcsc-approvers-ring-2-plus` | ring-2 to ring-4 | The PO and the dev team |
+| `bcsc-approvers-ring-2` | ring-2 | UAT, the PO and the dev team |
+| `bcsc-approvers-ring-3-plus` | ring-3 and ring-4 | The PO and the dev team |
 
 Anyone in the team can approve, and membership is managed in the team, so
 nothing here changes when someone joins or leaves. You cannot approve your own
