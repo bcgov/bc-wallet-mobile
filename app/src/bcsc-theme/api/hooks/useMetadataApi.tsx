@@ -25,6 +25,7 @@ export interface ClientMetadata {
   initiate_login_uri?: string
   client_description?: string
   policy_uri?: string
+  /** If omitted, the service should not be shown unless it is already bookmarked */
   service_listing_sort_order?: number
 }
 
