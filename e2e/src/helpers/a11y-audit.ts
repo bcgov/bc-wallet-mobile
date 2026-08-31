@@ -157,16 +157,15 @@ function normalizeIosIssue(raw: RawIosIssue): A11yIssue {
 }
 
 async function auditIos(types: IosAuditType[]): Promise<A11yEngineResult> {
-  let raw: RawIosIssue[]
   try {
-    raw = (await driver.execute('mobile: performAccessibilityAudit', {
+    const raw = (await driver.execute('mobile: performAccessibilityAudit', {
       auditTypes: types.map((type) => IOS_AUDIT_TYPES[type]),
     })) as RawIosIssue[]
+    return { engine: 'xcuitest-audit', issues: (Array.isArray(raw) ? raw : []).map(normalizeIosIssue) }
   } catch (err) {
-    // iOS < 17, a WebDriverAgent without the route, or a grid that blocks it — reported, never thrown.
+    // iOS < 17, a WDA without the route, a blocked grid, or a payload the normalizer rejects — reported, never thrown.
     return { engine: 'unavailable', reason: (err as Error).message ?? String(err), issues: [] }
   }
-  return { engine: 'xcuitest-audit', issues: (Array.isArray(raw) ? raw : []).map(normalizeIosIssue) }
 }
 
 /**
