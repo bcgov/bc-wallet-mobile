@@ -666,7 +666,7 @@ export async function leaveLiveCall(outcome: LiveCallOutcome): Promise<void> {
     if (await VerificationSuccessScreen.isPresent(1_000)) {
       throw new Error(
         'The live call ended VERIFIED (VerificationSuccess) — an SIT agent approved the request. ' +
-          'Record the Test Harness queue behavior in the UAT-3 notes and extend the journey to full completion.'
+          'Record the changed Test Harness queue behavior and extend the journey to full completion.'
       )
     }
     if (Date.now() > deadline) {

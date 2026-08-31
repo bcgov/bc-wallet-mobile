@@ -225,7 +225,7 @@ export const UAT_CHECKLIST: CoverageSection[] = [
         label: 'Re-route to general queue',
         platforms: manual,
         proof: [],
-        note: 'no journey asserts a general-queue landing (UAT-5)',
+        note: 'no journey asserts a general-queue landing — portal behaviour undiscovered',
       },
     ],
   },
@@ -259,7 +259,7 @@ export const UAT_CHECKLIST: CoverageSection[] = [
         label: 'Scan BCSC barcode: card serial',
         platforms: androidOnly,
         proof: [{ file: spec('scan/serial-scanner.journey.ts') }],
-        note: 'unrecognised-code path only; happy path manual (UAT-7)',
+        note: 'unrecognised-code path only; happy path stays manual — the scanner reroutes on any value-less detection',
       },
       {
         id: 'feat-change-nickname',
@@ -277,7 +277,7 @@ export const UAT_CHECKLIST: CoverageSection[] = [
         label: 'Change security method (biometrics)',
         platforms: { ios: 'skipped', android: 'skipped' },
         proof: [],
-        note: 'skipped for e2e 2026-08-28, UAT-owned (UAT-8)',
+        note: 'skipped for e2e 2026-08-28 — device biometrics owned by the UAT team',
       },
       {
         id: 'feat-change-pin',
@@ -356,7 +356,7 @@ export const UAT_CHECKLIST: CoverageSection[] = [
             tests: ['locks on return from a long background and re-unlocks with the PIN (terminal)'],
           },
         ],
-        note: 'no such feature in v4; lock is inactivity/background driven (UAT-10) — nearest checkpoints shown',
+        note: 'no such feature in v4; lock is inactivity/background driven — nearest checkpoints shown',
       },
       {
         id: 'feat-login-tile',
