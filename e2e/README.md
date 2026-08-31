@@ -468,7 +468,7 @@ What each platform can see is very different, and the report says which engine p
 | iOS 17+ | Apple's audit engine via `mobile: performAccessibilityAudit` (XCTest) | contrast, hit region, element description, traits, clipped text, dynamic type, parent/child, actions | screen-reader announcements and order |
 | Android | page-source + screenshot heuristics (`src/helpers/a11y-android.ts`) | tappable elements with no accessible name, unlabeled text fields, touch targets under 44dp (error under 24dp), text contrast under 4.5:1 sampled from the screenshot (regions the pushed screen covers are skipped, not flagged) | roles/traits, focus order, live regions, anything semantic — there is no Appium-native audit engine for Android (Google's ATF is in-process only) |
 
-Findings carry a `severity` (`error` = the engine calls it a defect; `warning` = a heuristic that needs a human look) and a `signature` (rule + element identity) that `a11y-baseline.json` is keyed on — the nightly brief tags findings missing from it as NEW (see **Nightly brief** under CI/CD). Neither engine can assert VoiceOver/TalkBack behaviour — that is the manual pass in [`docs/accessibility-manual-pass.md`](docs/accessibility-manual-pass.md), which is the UAT item of record.
+Findings carry a `severity` (`error` = the engine calls it a defect; `warning` = a heuristic that needs a human look) and a `signature` (rule + element identity) that `a11y-baseline.json` is keyed on — the nightly brief tags findings missing from it as NEW (see **Nightly brief** under CI/CD). Neither engine can assert VoiceOver/TalkBack behaviour — that pass stays manual with the UAT team.
 
 ```bash
 # The whole lane locally (one cheap unverified session, ~20 screens)
@@ -768,9 +768,6 @@ e2e/
 │           ├── v3-onboarding.spec.ts        # v3 native app onboarding + card verification (v3TestIDs)
 │           ├── upgrade.spec.ts              # install v4 over v3 via driver.installApp()
 │           └── v4-unlock.spec.ts            # unlock v4 with the v3 PIN (DSL: AccountLanding → EnterPIN → Home)
-│
-├── docs/
-│   └── accessibility-manual-pass.md         # VoiceOver/TalkBack script — the UAT accessibility item of record
 │
 ├── assets/                                  # test images for camera injection
 │   ├── README.md

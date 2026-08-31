@@ -56,7 +56,7 @@ import { TestIds } from '../../../src/test-ids/registry.js'
  * approval each, and belong as audit calls on the verified journeys once this lane has a baseline. The
  * in-app webviews (privacy Learn More, Help Centre) are skipped on purpose: their content is the website's,
  * and auditing it only buries the app's own findings under web ones (bullets flagged as tiny hit regions).
- * VoiceOver/TalkBack behaviour is not automatable at all: `docs/accessibility-manual-pass.md`.
+ * VoiceOver/TalkBack behaviour is not automatable at all — that pass stays manual with the UAT team.
  */
 
 /** Engine handle for the testID-free surfaces (help-menu title, the terms button's enabled state). */

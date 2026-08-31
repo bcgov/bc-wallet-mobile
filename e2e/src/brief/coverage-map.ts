@@ -47,7 +47,6 @@ const androidOnly: Record<Platform, PlatformMode> = { ios: 'na', android: 'auto'
 
 const IN_PERSON_COMPLETE = 'completes verification in person and lands on verified Home'
 const SEND_VIDEO_APPROVED = 'is approved by the agent (scripted against the SIT review portal)'
-const MANUAL_PASS_DOC = 'docs/accessibility-manual-pass.md'
 
 /** The UAT checklist, row for row. */
 export const UAT_CHECKLIST: CoverageSection[] = [
@@ -459,10 +458,9 @@ export const UAT_CHECKLIST: CoverageSection[] = [
       },
       {
         id: 'a11y-screen-reader',
-        label: 'Screen-reader pass (VoiceOver / TalkBack) — item of record',
+        label: 'Screen-reader pass (VoiceOver / TalkBack)',
         platforms: manual,
         proof: [],
-        link: MANUAL_PASS_DOC,
       },
     ],
   },
