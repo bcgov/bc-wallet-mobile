@@ -47,7 +47,7 @@ people sit on both teams today.
 
 | Team | Approves | Who is on it |
 |---|---|---|
-| `bcsc-approvers-ring-1` | ring-1 | The UAT team, the PO and the dev team |
+| `bcsc-approvers-ring-1` | ring-1 | The QA team, the PO and the dev team |
 | `bcsc-approvers-ring-2` | ring-2 | The UAT team, the PO and the dev team |
 | `bcsc-approvers-ring-3-plus` | ring-3 and ring-4 | The PO and the dev team |
 
