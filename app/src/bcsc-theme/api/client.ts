@@ -1,4 +1,4 @@
-import { UploadLogContext } from '@/bcsc-theme/utils/media-format'
+import type { UploadLogContext } from '@/bcsc-theme/utils/media-format'
 import { throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'

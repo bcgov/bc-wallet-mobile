@@ -1,5 +1,6 @@
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
-import { MediaFormat, MediaKind, sniffMediaFormat } from '@/bcsc-theme/utils/media-format'
+import type { MediaFormat, MediaKind } from '@/bcsc-theme/utils/media-format'
+import { sniffMediaFormat } from '@/bcsc-theme/utils/media-format'
 import { VIDEO_MP4_MIME_TYPE } from '@/constants'
 import { cancelVerificationReminders } from '@/services/notifications/verificationReminders'
 import { BCState } from '@/store'
