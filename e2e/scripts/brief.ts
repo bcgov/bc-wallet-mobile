@@ -86,7 +86,8 @@ const markdown = renderMarkdown(model)
 if (args.json) writeFileSync(args.json, JSON.stringify(model, null, 2))
 if (args.out) {
   writeFileSync(args.out, markdown)
-  console.error(`[brief] wrote ${args.out}${args.json ? ` and ${args.json}` : ''}`)
+  const alsoJson = args.json ? ` and ${args.json}` : ''
+  console.error(`[brief] wrote ${args.out}${alsoJson}`)
 } else {
   process.stdout.write(markdown)
 }

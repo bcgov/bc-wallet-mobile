@@ -147,6 +147,28 @@ export interface LoadedJunit {
  * Read every `junit/*.xml` under the report dirs. The same suite can appear twice (a retried spec, or
  * two artifacts of one platform): the latest `timestamp` wins.
  */
+function noteSuite(latest: Map<string, SuiteResult>, sources: Map<Platform, Set<string>>, suite: SuiteResult, dirName: string): void {
+  const key = `${suite.platform}|${suite.file}|${sanitizeTitle(suite.title)}`
+  const seen = latest.get(key)
+  if (!seen || suite.timestamp >= seen.timestamp) latest.set(key, suite)
+  if (!sources.has(suite.platform)) sources.set(suite.platform, new Set())
+  sources.get(suite.platform)?.add(dirName)
+}
+
+function collectResults(latest: Map<string, SuiteResult>, sources: Map<Platform, Set<string>>): RunResults {
+  const results: RunResults = {}
+  for (const suite of latest.values()) {
+    const run = results[suite.platform] ?? { platform: suite.platform, suites: [], sources: [] }
+    run.suites.push(suite)
+    results[suite.platform] = run
+  }
+  for (const [platform, names] of sources) {
+    const run = results[platform]
+    if (run) run.sources = [...names].sort((a, b) => a.localeCompare(b))
+  }
+  return results
+}
+
 export function loadJunitReports(reportDirs: ReportDir[]): LoadedJunit {
   const latest = new Map<string, SuiteResult>()
   const runnerErrors: RunnerError[] = []
@@ -159,25 +181,9 @@ export function loadJunitReports(reportDirs: ReportDir[]): LoadedJunit {
     for (const entry of readdirSync(junitDir).filter((name) => name.endsWith('.xml')).sort((a, b) => a.localeCompare(b))) {
       const parsed = parseJunitXml(readFileSync(join(junitDir, entry), 'utf8'), dir.name, hint)
       runnerErrors.push(...parsed.runnerErrors)
-      for (const suite of parsed.suites) {
-        const key = `${suite.platform}|${suite.file}|${sanitizeTitle(suite.title)}`
-        const seen = latest.get(key)
-        if (!seen || suite.timestamp >= seen.timestamp) latest.set(key, suite)
-        if (!sources.has(suite.platform)) sources.set(suite.platform, new Set())
-        sources.get(suite.platform)?.add(dir.name)
-      }
+      for (const suite of parsed.suites) noteSuite(latest, sources, suite, dir.name)
     }
   }
 
-  const results: RunResults = {}
-  for (const suite of latest.values()) {
-    const run = results[suite.platform] ?? { platform: suite.platform, suites: [], sources: [] }
-    run.suites.push(suite)
-    results[suite.platform] = run
-  }
-  for (const [platform, names] of sources) {
-    const run = results[platform]
-    if (run) run.sources = [...names].sort((a, b) => a.localeCompare(b))
-  }
-  return { results, runnerErrors }
+  return { results: collectResults(latest, sources), runnerErrors }
 }

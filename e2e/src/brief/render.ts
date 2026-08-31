@@ -43,7 +43,7 @@ const FAILURES_SHOWN = 30
 
 /** Markdown table cells cannot hold `|` or newlines. */
 function cell(text: string): string {
-  return text.replace(/\|/g, '\\|').replace(/\s*\n\s*/g, ' ')
+  return text.replaceAll('|', String.raw`\|`).replaceAll(/[^\S\n]*\n\s*/g, ' ')
 }
 
 function formatDuration(sec: number): string {
@@ -70,10 +70,11 @@ function formatAuto(result: CellResult): string {
 }
 
 function formatCell(result: CellResult, mode: 'auto' | 'manual' | 'na' | 'skipped'): string {
-  if (result.status === 'na') return `➖ n/a${result.auto ? ` (auto ${formatAuto(result.auto)})` : ''}`
+  const auto = result.auto ? ` (auto ${formatAuto(result.auto)})` : ''
+  if (result.status === 'na') return `➖ n/a${auto}`
   if (result.status === 'manual') {
     const label = mode === 'skipped' ? '📝 manual (skipped for e2e)' : '📝 manual'
-    return `${label}${result.auto ? ` (auto ${formatAuto(result.auto)})` : ''}`
+    return `${label}${auto}`
   }
   return formatAuto(result)
 }
@@ -106,7 +107,8 @@ function renderA11yPlatform(summary: A11yPlatformSummary): string[] {
   if (summary.errorScreens.length) {
     lines.push('', '| Screen | Errors | New | Warnings | Rules |', '| --- | --- | --- | --- | --- |')
     for (const screen of summary.errorScreens) {
-      const isNew = screen.newErrors ? `${screen.newErrors}${screen.inBaseline ? '' : ' (screen not in baseline)'}` : '0'
+      const baselineNote = screen.inBaseline ? '' : ' (screen not in baseline)'
+      const isNew = screen.newErrors ? `${screen.newErrors}${baselineNote}` : '0'
       const rules = screen.rules.map(({ rule, n }) => (n > 1 ? `${rule} ×${n}` : rule)).join(', ')
       lines.push(`| ${cell(screen.screen)} | ${screen.errors} | ${isNew} | ${screen.warnings} | ${cell(rules)} |`)
     }
@@ -114,41 +116,44 @@ function renderA11yPlatform(summary: A11yPlatformSummary): string[] {
   return lines
 }
 
-export function renderMarkdown(model: BriefModel): string {
-  const out: string[] = []
+function renderHeader(model: BriefModel): string[] {
   const runLink = model.runUrl ? ` · [run](${model.runUrl})` : ''
-  out.push(`## ${model.title} · ${model.generatedAt}${runLink}`, '')
-
+  const out = [`## ${model.title} · ${model.generatedAt}${runLink}`, '']
   if (model.lanes.length) {
     const lanes = model.lanes.map((lane) => `${lane.name} ${LANE_SYMBOL[lane.result] ?? lane.result}${lane.hasReports ? '' : ' (no reports)'}`)
     out.push(`Lanes: ${lanes.join(' · ')}`, '')
   }
+  return out
+}
 
+function renderPlatformTable(model: BriefModel): string[] {
   const platforms = PLATFORMS.filter((platform) => model.platforms[platform])
-  if (platforms.length) {
-    out.push('| Platform | Suites | Checkpoints | ✅ | ❌ | ⛔ | ⏭️ | Time |', '| --- | --- | --- | --- | --- | --- | --- | --- |')
-    for (const platform of platforms) {
-      const totals = model.platforms[platform]
-      if (!totals) continue
-      out.push(
-        `| ${totals.label} | ${totals.suites} | ${totals.checkpoints} | ${totals.passed} | ${totals.failed} | ${totals.blocked} | ${totals.skipped} | ${formatDuration(totals.timeSec)} |`
-      )
-    }
-    out.push('')
+  if (!platforms.length) return []
+  const out = ['| Platform | Suites | Checkpoints | ✅ | ❌ | ⛔ | ⏭️ | Time |', '| --- | --- | --- | --- | --- | --- | --- | --- |']
+  for (const platform of platforms) {
+    const totals = model.platforms[platform]
+    if (!totals) continue
+    out.push(
+      `| ${totals.label} | ${totals.suites} | ${totals.checkpoints} | ${totals.passed} | ${totals.failed} | ${totals.blocked} | ${totals.skipped} | ${formatDuration(totals.timeSec)} |`
+    )
   }
+  out.push('')
+  return out
+}
+
+function renderWarnings(model: BriefModel): string[] {
+  const out: string[] = []
   for (const error of model.runnerErrors) {
     const where = error.platform ? PLATFORM_LABEL[error.platform] : error.source
     out.push(`⚠️ A worker never got a session on ${where}: ${cell(error.message)} (the specs it would have run show ⬜)`)
   }
   for (const warning of model.warnings) out.push(`⚠️ ${warning}`)
-  if (model.runnerErrors.length || model.warnings.length) out.push('')
+  if (out.length) out.push('')
+  return out
+}
 
-  out.push('### UAT checklist', '', ...renderSectionTable(model.uat, 'Area'), '')
-
-  const journeyCount = model.other.reduce((n, section) => n + section.rows.length, 0)
-  out.push('<details>', `<summary>Other coverage (${journeyCount} journeys)</summary>`, '', ...renderSectionTable(model.other, 'Group'), '', '</details>', '')
-
-  out.push(`### Failures (${model.failures.length})`, '')
+function renderFailures(model: BriefModel): string[] {
+  const out = [`### Failures (${model.failures.length})`, '']
   if (!model.failures.length) out.push('None.', '')
   for (const failure of model.failures.slice(0, FAILURES_SHOWN)) {
     const blocked = failure.blockedAfter ? ` (${failure.blockedAfter} later checkpoints blocked)` : ''
@@ -157,24 +162,53 @@ export function renderMarkdown(model: BriefModel): string {
   }
   if (model.failures.length > FAILURES_SHOWN) out.push(`- …and ${model.failures.length - FAILURES_SHOWN} more in brief.json`)
   if (model.failures.length) out.push('')
+  return out
+}
 
-  out.push('### Accessibility', '')
+function renderA11ySection(model: BriefModel): string[] {
+  const out = ['### Accessibility', '']
   if (!model.a11y.length) out.push('No audit output in these reports.', '')
   for (const summary of model.a11y) out.push(...renderA11yPlatform(summary), '')
   if (model.a11y.length) {
     const baseline = model.baselineGeneratedAt ? `generated ${model.baselineGeneratedAt}` : 'not found — every finding reads as NEW'
     out.push(`_Baseline: e2e/a11y-baseline.json (${baseline}). Regenerate with \`yarn a11y:baseline --reports <dir>\` once the findings are triaged._`, '')
   }
+  return out
+}
 
-  out.push(
+function renderLegend(model: BriefModel): string[] {
+  const sources = model.sources.length ? model.sources.map((source) => `\`${source}\``).join(', ') : 'none'
+  return [
     '### Legend',
     '',
     '✅ pass · ❌ fail · ⛔ blocked (an earlier checkpoint in the file failed — mochaOpts.bail) · ⏭️ skipped at runtime (env/data gate) · ⬜ not run (no result in these reports) · ➖ n/a on this platform · 📝 manual (UAT-owned)',
     '',
     'Cells show `passed/listed` and tallies when not everything listed passed. The map behind the rows is `e2e/src/brief/coverage-map.ts`.',
     '',
-    `Sources: ${model.sources.length ? model.sources.map((source) => `\`${source}\``).join(', ') : 'none'}. Repro: \`gh run download <run-id> -p 'e2e-reports-*' -D e2e/artifacts && cd e2e && yarn brief --reports artifacts\``,
-    ''
-  )
-  return out.join('\n')
+    `Sources: ${sources}. Repro: \`gh run download <run-id> -p 'e2e-reports-*' -D e2e/artifacts && cd e2e && yarn brief --reports artifacts\``,
+    '',
+  ]
+}
+
+export function renderMarkdown(model: BriefModel): string {
+  const journeyCount = model.other.reduce((n, section) => n + section.rows.length, 0)
+  return [
+    ...renderHeader(model),
+    ...renderPlatformTable(model),
+    ...renderWarnings(model),
+    '### UAT checklist',
+    '',
+    ...renderSectionTable(model.uat, 'Area'),
+    '',
+    '<details>',
+    `<summary>Other coverage (${journeyCount} journeys)</summary>`,
+    '',
+    ...renderSectionTable(model.other, 'Group'),
+    '',
+    '</details>',
+    '',
+    ...renderFailures(model),
+    ...renderA11ySection(model),
+    ...renderLegend(model),
+  ].join('\n')
 }

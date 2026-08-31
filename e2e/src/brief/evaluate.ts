@@ -80,40 +80,44 @@ function rollUp(cell: CellResult, hookFailed: boolean): CellStatus {
   return 'not-run'
 }
 
+/** Tally the listed titles by name; a title with no result counts as not run. */
+function tallyNamed(cell: CellResult, titles: string[], tests: SuiteResult['tests']): void {
+  for (const title of titles) {
+    const wanted = sanitizeTitle(title)
+    const test = tests.find((candidate) => sanitizeTitle(candidate.name) === wanted)
+    if (test) tally(cell, test.status)
+    else {
+      cell.listed++
+      cell.notRun++
+    }
+  }
+}
+
+/** One proof's contribution to the cell; true when a hook failure taints the roll-up. */
+function applyProof(cell: CellResult, proof: Proof, run: PlatformRun | undefined): boolean {
+  const suites = matchSuites(proof, run)
+  if (suites.length === 0) {
+    const units = proof.tests?.length ?? 1
+    cell.listed += units
+    cell.notRun += units
+    return false
+  }
+  const tests = suites.flatMap((suite) => suite.tests)
+  const hookFailed = suites.some((suite) => suite.hookFailures.length)
+  if (hookFailed && tests.length === 0) {
+    // A hook that failed before any checkpoint ran is the failed unit.
+    cell.listed++
+    cell.failed++
+  }
+  if (proof.tests) tallyNamed(cell, proof.tests, tests)
+  else for (const test of tests) tally(cell, test.status)
+  return hookFailed
+}
+
 function evaluateAuto(row: CoverageRow, run: PlatformRun | undefined): CellResult {
   const cell = emptyCell('not-run')
   let hookFailed = false
-  for (const proof of row.proof) {
-    const suites = matchSuites(proof, run)
-    if (suites.length === 0) {
-      const units = proof.tests?.length ?? 1
-      cell.listed += units
-      cell.notRun += units
-      continue
-    }
-    const tests = suites.flatMap((suite) => suite.tests)
-    if (suites.some((suite) => suite.hookFailures.length)) {
-      hookFailed = true
-      // A hook that failed before any checkpoint ran is the failed unit.
-      if (tests.length === 0) {
-        cell.listed++
-        cell.failed++
-      }
-    }
-    if (proof.tests) {
-      for (const title of proof.tests) {
-        const wanted = sanitizeTitle(title)
-        const test = tests.find((candidate) => sanitizeTitle(candidate.name) === wanted)
-        if (test) tally(cell, test.status)
-        else {
-          cell.listed++
-          cell.notRun++
-        }
-      }
-    } else {
-      for (const test of tests) tally(cell, test.status)
-    }
-  }
+  for (const proof of row.proof) hookFailed = applyProof(cell, proof, run) || hookFailed
   cell.status = rollUp(cell, hookFailed)
   return cell
 }

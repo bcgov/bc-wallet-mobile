@@ -42,8 +42,8 @@ export function resolveReportDirs(paths: string[]): ReportDir[] {
 /** `e2e-reports-regression-iOS-18` → `iOS 18`; otherwise the bare platform name. */
 function platformLabel(platform: Platform, sources: string[]): string {
   for (const source of sources) {
-    const match = /-(ios|android)-([^/]*)$/i.exec(source)
-    if (match && match[1].toLowerCase() === platform) return `${PLATFORM_LABEL[platform]} ${match[2]}`.trim()
+    const [, os, version = ''] = /-(ios|android)-([^/]*)$/i.exec(source) ?? []
+    if (os?.toLowerCase() === platform) return `${PLATFORM_LABEL[platform]} ${version}`.trim()
   }
   return PLATFORM_LABEL[platform]
 }
