@@ -492,6 +492,7 @@ export const OTHER_COVERAGE: CoverageSection[] = [
       { id: 'j-send-video-cancelled', label: 'Send video: rejected', platforms: both, proof: [{ file: spec('verify/send-video-cancelled.journey.ts') }] },
       { id: 'j-send-video-non-photo', label: 'Send video: non-photo card', platforms: both, proof: [{ file: spec('verify/send-video-non-photo.journey.ts') }] },
       { id: 'j-send-video-non-bcsc', label: 'Send video: non-BCSC', platforms: both, proof: [{ file: spec('verify/send-video-non-bcsc.journey.ts') }] },
+      { id: 'j-video-call', label: 'Verify: video call to the approval boundary', platforms: both, proof: [{ file: spec('verify/video-call.journey.ts') }] },
       { id: 'j-unverified-main', label: 'Main: unverified gating', platforms: both, proof: [{ file: spec('main/unverified-main.journey.ts') }] },
       { id: 'j-settings', label: 'Main: settings', platforms: both, proof: [{ file: spec('main/settings.journey.ts') }] },
       { id: 'j-wallet', label: 'Wallet: DIDComm credential lifecycle', platforms: both, proof: [{ file: spec('main/wallet.journey.ts') }] },
