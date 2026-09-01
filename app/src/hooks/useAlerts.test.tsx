@@ -9,6 +9,8 @@ import { renderHook } from '@testing-library/react-native'
 import RN, { Platform } from 'react-native'
 import { showErrorAlert, useAlerts } from './useAlerts'
 
+jest.mock('@/bcsc-theme/api/hooks/useFactoryReset')
+
 jest.mock('@bifold/core', () => ({
   useStore: () => mockUseStore(),
   useServices: () => mockUseServices(),

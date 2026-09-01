@@ -395,6 +395,76 @@ class BcscCoreModule(
         }
     }
 
+    /** Generates a new signing keypair; activation is implicit on generation — see the JS wrapper's warning. */
+    @ReactMethod
+    fun createNewKeyPair(promise: Promise) {
+        // Captured once generated so a failure below can best-effort delete it (see cleanup fun).
+        var bcscKeyPair: BcscKeyPair? = null
+        try {
+            if (!keyPairSource.isAvailable()) {
+                promise.reject("E_KEYSTORE_UNAVAILABLE", "Android KeyStore is not available on this device")
+                return
+            }
+            bcscKeyPair = keyPairSource.getNewBcscKeyPair()
+            val jwk = keyPairSource.convertBcscKeyPairToJWK(bcscKeyPair)
+            if (jwk !is RSAKey) {
+                cleanUpUnregisteredKeyAfterGenerationFailure(bcscKeyPair.getKeyInfo().getAlias(), "not an RSA key")
+                // Redacted: surfaces via AppError.technicalMessage/analytics, which travel further than logs.
+                promise.reject(
+                    "E_KEYSTORE_ERROR",
+                    "Newly generated key '${redactAlias(bcscKeyPair.getKeyInfo().getAlias())}' is not an RSA key",
+                )
+                return
+            }
+            val entry: WritableMap = Arguments.createMap()
+            entry.putString("id", bcscKeyPair.getKeyInfo().getAlias())
+            entry.putDouble("created", bcscKeyPair.getKeyInfo().getCreatedAt().toDouble())
+            entry.putString("n", jwk.modulus.toString())
+            entry.putString("e", jwk.publicExponent.toString())
+            promise.resolve(entry)
+        } catch (e: BcscException) {
+            bcscKeyPair?.let {
+                cleanUpUnregisteredKeyAfterGenerationFailure(
+                    it.getKeyInfo().getAlias(),
+                    "BcscException after generation",
+                )
+            }
+            promise.reject("E_KEYSTORE_ERROR", "Error generating new key pair: ${e.devMessage}", e)
+        } catch (e: Exception) {
+            bcscKeyPair?.let {
+                cleanUpUnregisteredKeyAfterGenerationFailure(
+                    it.getKeyInfo().getAlias(),
+                    "unexpected error after generation",
+                )
+            }
+            promise.reject("E_KEYSTORE_ERROR", "Unexpected error generating new key pair: ${e.message}", e)
+        }
+    }
+
+    /**
+     * A key activates the instant generation succeeds, before JS gets its alias — so a failure
+     * after that point must delete it here or strand signing on an unregistered key (#4166/2111).
+     * Best-effort only: a cleanup failure is logged but never masks the caller's error.
+     */
+    private fun cleanUpUnregisteredKeyAfterGenerationFailure(
+        alias: String,
+        context: String,
+    ) {
+        try {
+            keyPairSource.deleteBcscKeyPair(alias)
+        } catch (e: Exception) {
+            Log.w(
+                NAME,
+                "createNewKeyPair: best-effort cleanup failed to delete unregistered key '${redactAlias(
+                    alias,
+                )}' after $context: ${e.message}",
+            )
+        }
+    }
+
+    /** Truncates for logging, matching iOS's redaction even though Android aliases (`rsa1`, `rsa2`, ...) aren't UUID-based. */
+    private fun redactAlias(alias: String): String = if (alias.length <= 8) alias else "…" + alias.takeLast(8)
+
     @ReactMethod
     override fun getToken(
         tokenType: Int,

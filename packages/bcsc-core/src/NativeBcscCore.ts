@@ -291,6 +291,8 @@ export interface Spec extends TurboModule {
    * E_KEY_DELETE_REFUSED_LAST if deleting would leave zero private keys.
    */
   deleteKey(alias: string): Promise<void>;
+  /** Generates a new signing keypair; see the {@link createNewKeyPair} wrapper for the activation side effect. */
+  createNewKeyPair(): Promise<KeyPublicInfo>;
   getKeyPair(label: string): Promise<KeyPair>;
   getToken(tokenType: number): Promise<NativeToken | null>;
 

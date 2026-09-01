@@ -3,6 +3,8 @@ import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import { WebViewScreen } from './WebViewScreen'
 
+jest.mock('@/bcsc-theme/hooks/useBCSCApiClient')
+
 describe('WebViewScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks()

@@ -226,7 +226,9 @@ describe('BCSCRootStack', () => {
     const mockDispatch = jest.fn()
     jest.mocked(Bifold.useStore).mockReturnValue([
       mockStore({
-        bcsc: { hasAccount: true },
+        // verificationSkipped:true is what the load-time migration stamps on every already-onboarded
+        // install, so this "returning user" case never hits the undefined-means-show-the-prompt gate.
+        bcsc: { hasAccount: true, verificationSkipped: true },
         authentication: { didAuthenticate: true },
         bcscSecure: { verified: undefined },
       }),
@@ -268,11 +270,12 @@ describe('BCSCRootStack', () => {
 
   it('renders MainStack when an existing unverified account unlocks', () => {
     const mockDispatch = jest.fn()
-    // No OnboardingStack render this session — the user is returning, so the one-time prompt has
-    // passed them by. They start verification from the MainStack instead.
+    // The user is returning: the load-time migration stamped verificationSkipped:true on their
+    // already-onboarded state, so the prompt has passed them by. They start verification from the
+    // MainStack instead.
     jest.mocked(Bifold.useStore).mockReturnValue([
       mockStore({
-        bcsc: { hasAccount: true },
+        bcsc: { hasAccount: true, verificationSkipped: true },
         authentication: { didAuthenticate: true },
         bcscSecure: { verified: false },
       }),
@@ -282,6 +285,77 @@ describe('BCSCRootStack', () => {
     const { toJSON } = render(<BCSCRootStack />)
 
     expect(toJSON()).toBe('MainStack')
+  })
+
+  describe('verificationSkipped routing', () => {
+    const authedUnverified = (
+      verificationSkipped: boolean | undefined,
+      verifiedStatus = VerificationStatus.UNVERIFIED
+    ) =>
+      mockStore({
+        bcsc: { hasAccount: true, verificationSkipped },
+        authentication: { didAuthenticate: true },
+        bcscSecure: { verified: false, verifiedStatus },
+      })
+
+    it('shows the verify prompt (VerifyStack) when verificationSkipped is undefined', () => {
+      const mockDispatch = jest.fn()
+      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(undefined), mockDispatch] as any)
+
+      const { toJSON } = render(<BCSCRootStack />)
+
+      expect(toJSON()).toBe('VerifyStack')
+      // "not answered yet" — the prompt records the choice; no resume dispatch here.
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'bcsc/updateSecureVerifiedStatus' })
+      )
+    })
+
+    it('routes a skipped (true) unverified user straight to MainStack', () => {
+      const mockDispatch = jest.fn()
+      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(true), mockDispatch] as any)
+
+      const { toJSON } = render(<BCSCRootStack />)
+
+      expect(toJSON()).toBe('MainStack')
+      expect(mockDispatch).not.toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'bcsc/updateSecureVerifiedStatus' })
+      )
+    })
+
+    it('re-enters verification on a cold start when verificationSkipped is false and unfinished', () => {
+      const mockDispatch = jest.fn()
+      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(false), mockDispatch] as any)
+
+      const { toJSON, rerender } = render(<BCSCRootStack />)
+
+      // The one-shot effect restores IN_PROGRESS so VerifyStack takes over.
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: 'bcsc/updateSecureVerifiedStatus',
+        payload: [VerificationStatus.IN_PROGRESS],
+      })
+
+      // Simulate that dispatch landing in the store.
+      jest
+        .mocked(Bifold.useStore)
+        .mockReturnValue([authedUnverified(false, VerificationStatus.IN_PROGRESS), mockDispatch] as any)
+      rerender(<BCSCRootStack />)
+
+      expect(toJSON()).toBe('VerifyStack')
+    })
+
+    it('only re-enters verification once per session (a later re-render does not re-dispatch)', () => {
+      const mockDispatch = jest.fn()
+      jest.mocked(Bifold.useStore).mockReturnValue([authedUnverified(false), mockDispatch] as any)
+
+      const { rerender } = render(<BCSCRootStack />)
+      expect(mockDispatch).toHaveBeenCalledTimes(1)
+
+      // useLeaveVerification has moved status back out of IN_PROGRESS to show Home for the rest of
+      // the session; re-rendering in that state must not pull the user back into VerifyStack.
+      rerender(<BCSCRootStack />)
+      expect(mockDispatch).toHaveBeenCalledTimes(1)
+    })
   })
 
   it('calls loadState when stateLoaded is false', () => {

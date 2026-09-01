@@ -105,3 +105,24 @@ export function modulusInSet(n: string | undefined, set: Array<string | undefine
   }
   return set.some((candidate) => normalizeModulus(candidate) === normalized)
 }
+
+export type ModulusConfirmation = 'confirmed' | 'mismatch' | 'unknown'
+
+/**
+ * Verdict for whether `sentN` is present in `serverNs`. `'unknown'` means either side failed to
+ * decode — we can't tell, so callers must not treat it as either success or failure; `'mismatch'`
+ * only fires once both sides decode and `sentN` is definitively absent.
+ */
+export function confirmModulusRegistered(
+  sentN: string | undefined,
+  serverNs: Array<string | undefined>
+): ModulusConfirmation {
+  const sentModulus = normalizeModulus(sentN)
+  const hasDecodableServerModulus = serverNs.some((candidate) => normalizeModulus(candidate) !== null)
+
+  if (!sentModulus || !hasDecodableServerModulus) {
+    return 'unknown'
+  }
+
+  return modulusInSet(sentN, serverNs) ? 'confirmed' : 'mismatch'
+}

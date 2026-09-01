@@ -4,6 +4,8 @@ import * as DeviceInfo from 'react-native-device-info'
 import { useCreateSystemChecks } from './useCreateSystemChecks'
 import { SystemCheckScope } from './useSystemChecks'
 
+jest.mock('@/bcsc-theme/api/hooks/useFactoryReset')
+
 // --------------------
 // Mock functions
 // --------------------

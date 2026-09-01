@@ -9,6 +9,7 @@
 #   auth         — auth/unlock journey
 #   main         — main navigation + settings + wallet credential journeys (issuer creds from 1Password)
 #   verify       — verify entry + verified card-type journeys (uses SM_* creds)
+#   a11y         — automated accessibility audits over the core screens (iOS: Apple's audit engine; Android: heuristics)
 #   regression   — every per-area journey (nightly default)
 #   migration    — v3 → v4 app upgrade flow (Sauce RDC only; separate v3 build)
 #   upgrade      — previous released build → current in-place upgrade (Sauce RDC, both platforms)
@@ -40,7 +41,7 @@ on:
   workflow_call:
     inputs:
       suite:
-        description: 'Test suite (smoke, onboarding, auth, main, verify, regression, migration, upgrade, upgrade403)'
+        description: 'Test suite (smoke, onboarding, auth, main, verify, a11y, regression, migration, upgrade, upgrade403)'
         type: string
         required: true
       build_number:
@@ -88,6 +89,7 @@ on:
           - auth
           - main
           - verify
+          - a11y
           - regression
           - migration
           - upgrade

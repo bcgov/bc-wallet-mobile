@@ -12,6 +12,8 @@ RCT_EXTERN_METHOD(setActiveKeyAlias : (NSString *)alias resolve : (RCTPromiseRes
 RCT_EXTERN_METHOD(deleteKey : (NSString *)alias resolve : (RCTPromiseResolveBlock)
                       resolve reject : (RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(createNewKeyPair : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(getKeyPair : (NSString *)label resolve : (RCTPromiseResolveBlock)
                       resolve reject : (RCTPromiseRejectBlock)reject)
 

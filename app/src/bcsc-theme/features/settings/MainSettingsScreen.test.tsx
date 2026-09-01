@@ -7,6 +7,9 @@ import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import { MainSettingsScreen } from './MainSettingsScreen'
 
+jest.mock('@/bcsc-theme/hooks/useBCSCApiClient')
+jest.mock('@/bcsc-theme/contexts/BCSCAccountContext')
+
 describe('MainSettings', () => {
   let mockNavigation: any
 

@@ -18,6 +18,23 @@ import sys
 
 WORKFLOW = "main.yaml"
 RUN_PAGE_SIZE = 100
+# ring-0 always publishes; the input picks how much further to go.
+RINGS = ["ring-0", "ring-1", "ring-2", "ring-3", "ring-4"]
+# BC Wallet is being retired after v4.1, so its ring groups and tracks were
+# never created past ring-0. It still publishes to the team; it is left out of
+# everything above that rather than failing the run on a missing group.
+RING_0_ONLY = {"bcwallet-prod"}
+
+
+def spaced(ring):
+    """The name TestFlight and Play know a ring by.
+
+    Firebase matches on a group alias, which cannot contain spaces, so it keeps
+    the hyphen. TestFlight matches on the group's display name and Play on the
+    track name, and both of those are written with a space. Same ring, three
+    services, two spellings.
+    """
+    return ring.replace("-", " ")
 KINDS = {
     "ipa": re.compile(r"^ios-(?P<variant>.+)\.ipa$"),
     "aab": re.compile(r"^android-(?P<variant>.+)\.aab$"),
@@ -57,21 +74,23 @@ def fail(message):
 
 
 REPO = os.environ["REPO"]
+BRANCH = os.environ["BRANCH"]
+RING = os.environ["RING"]
+if RING not in RINGS:
+    print(f"::error::Unknown ring '{RING}'. Expected one of: {', '.join(RINGS)}.")
+    sys.exit(1)
 requested_build = os.environ.get("REQUESTED_BUILD", "").strip()
-requested_variants = [
-    v.strip() for v in os.environ.get("REQUESTED_VARIANTS", "").split(",") if v.strip()
-]
 
 runs = gh_api(
     f"repos/{REPO}/actions/workflows/{WORKFLOW}/runs"
-    f"?branch=main&per_page={RUN_PAGE_SIZE}"
+    f"?branch={BRANCH}&per_page={RUN_PAGE_SIZE}"
 )["workflow_runs"]
 
 if requested_build:
     matches = [r for r in runs if str(r["run_number"]) == requested_build]
     if not matches:
         fail(
-            f"No main build {requested_build} in the last {RUN_PAGE_SIZE} runs. "
+            f"No {BRANCH} build {requested_build} in the last {RUN_PAGE_SIZE} runs. "
             "It may be older than the artifact retention window."
         )
     run = matches[0]
@@ -94,26 +113,14 @@ else:
             break
     if run is None:
         fail(
-            f"No main build in the last {RUN_PAGE_SIZE} runs both succeeded and "
+            f"No {BRANCH} build in the last {RUN_PAGE_SIZE} runs both succeeded and "
             "still has artifacts to publish."
         )
-
-if requested_variants:
-    unknown = sorted(set(requested_variants) - set(all_variants(by_kind)))
-    if unknown:
-        fail(
-            f"Build {run['run_number']} has no artifacts for: {', '.join(unknown)}. "
-            f"Available: {', '.join(all_variants(by_kind))}."
-        )
-    by_kind = {
-        kind: [v for v in variants if v in requested_variants]
-        for kind, variants in by_kind.items()
-    }
 
 print(f"Publishing build {run['run_number']} (run {run['id']})")
 print(f"  commit: {run['head_sha']}")
 if not requested_build:
-    print("  chosen as the most recent main build with publishable artifacts")
+    print(f"  chosen as the most recent {BRANCH} build with publishable artifacts")
 for kind, variants in by_kind.items():
     if variants:
         print(f"  {kind}: {', '.join(variants)}")
@@ -122,7 +129,33 @@ for kind, variants in by_kind.items():
         # rather than showing up as a quietly skipped job.
         print(f"  {kind}: none — those destinations will be skipped")
 
+# Publishing to a ring publishes every ring below it too, so ring-2 means
+# ring-0, ring-1 and ring-2. ring-0 is the upload; the rest only widen who
+# can see it, because Apple rejects a duplicate binary and Play rejects a
+# duplicate version code.
+widen_rings = RINGS[1 : RINGS.index(RING) + 1]
+
+print(f"  ring:   {RING}")
+print(f"  reaches: {', '.join(RINGS[: RINGS.index(RING) + 1])}")
+print("  ring-0 publishes now, without approval")
+held_back = sorted(set(all_variants(by_kind)) & RING_0_ONLY)
+if held_back and widen_rings:
+    print(f"  ring-0 only for: {', '.join(held_back)}")
+if widen_rings:
+    print(f"  after {RING} is approved: {', '.join(widen_rings)}")
+
 with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+    for kind, variants in by_kind.items():
+        widening = [v for v in variants if v not in RING_0_ONLY]
+        output.write(f"widen_{kind}_variants={json.dumps(widening)}\n")
+    # Firebase group aliases keep the hyphen.
+    output.write(f"widen_rings_csv={','.join(widen_rings)}\n")
+    # Play track names use the spaced form.
+    output.write(f"widen_tracks_csv={','.join(spaced(r) for r in widen_rings)}\n")
+    # TestFlight takes one group per line, spaced, so it needs the heredoc form.
+    output.write("widen_groups_lines<<__RINGS_EOF__\n")
+    output.write("\n".join(spaced(r) for r in widen_rings) + "\n")
+    output.write("__RINGS_EOF__\n")
     output.write(f"run_id={run['id']}\n")
     output.write(f"run_number={run['run_number']}\n")
     output.write(f"head_sha={run['head_sha']}\n")
