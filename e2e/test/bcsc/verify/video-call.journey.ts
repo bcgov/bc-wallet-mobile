@@ -30,7 +30,7 @@ import { getTestUser, setTestUser } from '../../../src/support/context.js'
  * host (observed 2026-08-27 — within seconds), which puts a genuine two-way call in CI reach: remote
  * stream up, in-call controls live. What it does NOT do is approve — the verification stays pending,
  * so ending the call lands on VerifyNotComplete (an ending that reaches VerificationSuccess fails
- * loudly: an auto-approving agent would mean extending this journey to full completion — see UAT-3).
+ * loudly: an auto-approving agent would mean extending this journey to full completion).
  * SIT's service hours decide at runtime which half runs; the other half's checkpoints skip.
  *
  * - OPEN: selfie → StartCall → the real setup chain (evidence upload → session mint → WebRTC guest
