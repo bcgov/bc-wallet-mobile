@@ -138,9 +138,12 @@ private enum class AccountFileName(
  * for BC Services Card integration in React Native applications.
  */
 @ReactModule(name = BcscCoreModule.NAME)
-class BcscCoreModule(
+class BcscCoreModule internal constructor(
     reactContext: ReactApplicationContext,
+    private val keyPairSourceOverride: BcscKeyPairSource?,
 ) : BcscCoreSpec(reactContext) {
+    constructor(reactContext: ReactApplicationContext) : this(reactContext, null)
+
     companion object {
         const val NAME = "BcscCore"
 
@@ -174,8 +177,10 @@ class BcscCoreModule(
 
     // Initialize the BC Services Card KeyPair functionality
     private val keyPairSource: BcscKeyPairSource by lazy {
-        val keyPairInfoSource = SimpleKeyPairInfoSource(reactApplicationContext)
-        BcscKeyPairRepo(keyPairInfoSource)
+        keyPairSourceOverride ?: run {
+            val keyPairInfoSource = SimpleKeyPairInfoSource(reactApplicationContext)
+            BcscKeyPairRepo(keyPairInfoSource)
+        }
     }
 
     // Initialize native-compatible storage for rollback support
@@ -1790,6 +1795,21 @@ class BcscCoreModule(
     }
 
     /**
+     * Local key aliases, newest first. Swallowed to an empty list on failure — this feeds
+     * diagnostics only; a real keystore error still surfaces via getCurrentBcscKeyPair()/
+     * getBcscKeyPair() on the decrypt path.
+     */
+    private fun localAliasesNewestFirst(): List<String> =
+        try {
+            keyPairSource
+                .getAllBcscKeyPairInfos()
+                .sortedByDescending { it.getCreatedAt() }
+                .map { it.getAlias() }
+        } catch (e: Exception) {
+            emptyList()
+        }
+
+    /**
      * Compact decrypt diagnostics for reject MESSAGE strings (the problem-report view
      * surfaces only the message text). Carries the alias inventory plus the incoming JWE
      * header and whether its kid matches a local key — enough to tell "no key" / "wrong
@@ -1800,18 +1820,11 @@ class BcscCoreModule(
      * included), so a failure while gathering diagnostics must never break decoding —
      * the whole body is guarded and degrades to a fallback string.
      */
-    private fun decodeDiagnosticsSummary(jweString: String): String =
+    private fun decodeDiagnosticsSummary(
+        header: JweHeaderInfo,
+        aliases: List<String>,
+    ): String =
         try {
-            val header = incomingJWEHeader(jweString)
-            val aliases: List<String> =
-                try {
-                    keyPairSource
-                        .getAllBcscKeyPairInfos()
-                        .sortedByDescending { it.getCreatedAt() }
-                        .map { it.getAlias() }
-                } catch (e: Exception) {
-                    emptyList()
-                }
             val newest = aliases.firstOrNull() ?: "none"
             val kidMatchesLocal = header.kid.isNotEmpty() && aliases.contains(header.kid)
             val jweKid = if (header.kid.isEmpty()) "none" else header.kid
@@ -1830,12 +1843,24 @@ class BcscCoreModule(
     ) {
         // Built once up front so every failure path reports the same picture, which is what
         // makes 2507 reports self-classifying in the field.
-        val diagnostics = decodeDiagnosticsSummary(jweString)
+        val header = incomingJWEHeader(jweString)
+        val aliases = localAliasesNewestFirst()
+        val kidIsLocal = header.kid.isNotEmpty() && aliases.contains(header.kid)
+        val diagnostics = decodeDiagnosticsSummary(header, aliases)
         try {
-            // Get the current (latest) key pair for decryption
-            val currentKeyPair = keyPairSource.getCurrentBcscKeyPair()
+            // During rotation the server still encrypts to the previous key until it sees the
+            // new one, so the label on the response wins over "newest" when we hold that key.
+            val decryptKeyPair =
+                if (kidIsLocal) {
+                    keyPairSource.getBcscKeyPair(header.kid)
+                        ?: throw KeyNotFoundException(
+                            "Key '${header.kid}' is in the keystore but could not be read",
+                        )
+                } else {
+                    keyPairSource.getCurrentBcscKeyPair()
+                }
 
-            if (currentKeyPair.getKeyPair()?.private == null) {
+            if (decryptKeyPair.getKeyPair()?.private == null) {
                 promise.reject("E_NO_KEYS_FOUND", "No private key available for decryption $diagnostics")
                 return
             }
@@ -1844,7 +1869,7 @@ class BcscCoreModule(
             val jweObject = JWEObject.parse(jweString)
 
             // Create RSA decrypter with the private key
-            val rsaDecrypter = RSADecrypter(currentKeyPair.getKeyPair()!!.private)
+            val rsaDecrypter = RSADecrypter(decryptKeyPair.getKeyPair()!!.private)
 
             // Decrypt the JWE to get the inner JWT (compact JWS)
             jweObject.decrypt(rsaDecrypter)
@@ -1894,7 +1919,7 @@ class BcscCoreModule(
                     putString("claims", decodedPayload)
                 }
 
-            Log.d(NAME, "decodePayload: decoded JWE payload, verified=$verified")
+            Log.d(NAME, "decodePayload: decoded JWE payload, verified=$verified $diagnostics")
             promise.resolve(result)
         } catch (e: BcscException) {
             // Key retrieval / keystore problem (key unavailable, OEM keystore error, invalidation).
