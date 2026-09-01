@@ -1,0 +1,23 @@
+name: Setup E2E
+description: Node + Yarn, the cached e2e dependencies, and a scripts-off `yarn install` in e2e/
+
+runs:
+  using: composite
+  steps:
+    - name: Setup NodeJS
+      uses: ./.github/workflows/actions/setup-node
+
+    - name: Cache E2E dependencies
+      uses: actions/cache@v6
+      with:
+        path: |
+          e2e/.yarn/cache
+          e2e/node_modules
+        key: e2e-deps-${{ hashFiles('e2e/yarn.lock') }}
+        restore-keys: e2e-deps-
+
+    - name: Install E2E dependencies
+      shell: bash
+      working-directory: e2e
+      # skip-build: no dependency lifecycle scripts on CI — native binaries (sharp, esbuild) come from platform packages
+      run: yarn install --immutable --mode=skip-build

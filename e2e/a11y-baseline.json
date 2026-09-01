@@ -1,0 +1,191 @@
+{
+  "$comment": "Known accessibility findings (platform → screen → issue signatures). Regenerate from a report dir: cd e2e && yarn a11y:baseline --reports <dir>. Report-only: the brief tags findings missing here as NEW.",
+  "generatedAt": "2026-08-31T20:14:12.614Z",
+  "ios": {
+    "AccountLanding": [
+      "sufficientElementDescription|StaticText|Element has no description"
+    ],
+    "AccountSetup": [
+      "sufficientElementDescription|StaticText|Element has no description"
+    ],
+    "AppSecurity": [],
+    "AutoLock": [],
+    "ChangePIN": [
+      "sufficientElementDescription|SecureTextField|com.ariesbifold:id/EnterCurrentPIN",
+      "sufficientElementDescription|SecureTextField|com.ariesbifold:id/EnterNewPIN",
+      "sufficientElementDescription|SecureTextField|com.ariesbifold:id/ReenterNewPIN"
+    ],
+    "EnterBirthdate": [],
+    "EnterPIN": [
+      "sufficientElementDescription|SecureTextField|com.ariesbifold:id/PINInput"
+    ],
+    "HelpMenu": [
+      "elementDetection||Potentially inaccessible text"
+    ],
+    "Home": [],
+    "IdentitySelection": [],
+    "MainVerifyPrompt": [
+      "sufficientElementDescription|StaticText|Element has no description"
+    ],
+    "ManualSerial": [],
+    "NotificationSettings": [],
+    "OnboardingCreatePIN": [
+      "sufficientElementDescription|Other|com.ariesbifold:id/IUnderstand"
+    ],
+    "OnboardingIntro": [
+      "sufficientElementDescription|StaticText|Element has no description"
+    ],
+    "OnboardingNotifications": [],
+    "OnboardingOptInAnalytics": [],
+    "OnboardingPrivacyPolicy": [],
+    "OnboardingSecureApp": [
+      "sufficientElementDescription|StaticText|Element has no description"
+    ],
+    "OnboardingSettings": [],
+    "OnboardingTermsOfUse": [],
+    "PrivacyPolicy": [],
+    "QRScanner": [],
+    "RemoveAccountConfirm": [],
+    "ScanSerial": [],
+    "Settings": [],
+    "VerifyPrompt": [
+      "sufficientElementDescription|StaticText|Element has no description"
+    ],
+    "Wallet": []
+  },
+  "android": {
+    "AccountLanding": [
+      "touch-target|Button|com.ariesbifold:id/HelpMenu",
+      "touch-target|Button|com.ariesbifold:id/SettingsMenuButton"
+    ],
+    "AccountSetup": [
+      "touch-target|Button|com.ariesbifold:id/Back",
+      "touch-target|Button|com.ariesbifold:id/HelpMenu",
+      "unlabeled-control|ViewGroup|com.ariesbifold:id/DeveloperCounter"
+    ],
+    "AppSecurity": [
+      "touch-target|Button|com.ariesbifold:id/Back",
+      "touch-target|Button|com.ariesbifold:id/HelpMenu"
+    ],
+    "AutoLock": [
+      "touch-target|Button|com.ariesbifold:id/Back",
+      "touch-target|Button|com.ariesbifold:id/HelpMenu",
+      "touch-target|CheckBox|com.ariesbifold:id/auto-lock-time-1",
+      "touch-target|CheckBox|com.ariesbifold:id/auto-lock-time-3",
+      "touch-target|CheckBox|com.ariesbifold:id/auto-lock-time-5",
+      "touch-target|ViewGroup|1",
+      "touch-target|ViewGroup|3",
+      "touch-target|ViewGroup|5"
+    ],
+    "ChangePIN": [
+      "touch-target|Button|com.ariesbifold:id/Back",
+      "touch-target|Button|com.ariesbifold:id/HelpMenu",
+      "touch-target|CheckBox|com.ariesbifold:id/IUnderstand",
+      "unlabeled-text-field|EditText|com.ariesbifold:id/EnterCurrentPIN",
+      "unlabeled-text-field|EditText|com.ariesbifold:id/EnterNewPIN",
+      "unlabeled-text-field|EditText|com.ariesbifold:id/ReenterNewPIN"
+    ],
+    "EnterBirthdate": [
+      "touch-target|Button|com.ariesbifold:id/Back",
+      "touch-target|Button|com.ariesbifold:id/HelpMenu",
+      "touch-target|EditText|com.ariesbifold:id/birthDate-input"
+    ],
+    "EnterPIN": [
+      "touch-target|Button|com.ariesbifold:id/HelpMenu",
+      "touch-target|Button|undefined",
+      "unlabeled-text-field|EditText|com.ariesbifold:id/PINInput"
+    ],
+    "HelpMenu": [
+      "touch-target|Button|Close",
+      "unlabeled-control|ViewGroup|"
+    ],
+    "Home": [
+      "touch-target|Button|com.ariesbifold:id/HelpMenu",
+      "touch-target|Button|com.ariesbifold:id/SettingsMenuButton"
+    ],
+    "IdentitySelection": [
+      "touch-target|Button|com.ariesbifold:id/Back",
+      "touch-target|Button|com.ariesbifold:id/HelpMenu"
+    ],
+    "MainVerifyPrompt": [
+      "touch-target|Button|com.ariesbifold:id/Back",
+      "touch-target|Button|com.ariesbifold:id/HelpMenu"
+    ],
+    "ManualSerial": [
+      "touch-target|Button|com.ariesbifold:id/Back",
+      "touch-target|Button|com.ariesbifold:id/HelpMenu",
+      "touch-target|EditText|com.ariesbifold:id/serial-input"
+    ],
+    "NotificationSettings": [
+      "touch-target|Button|com.ariesbifold:id/Back",
+      "touch-target|Button|com.ariesbifold:id/HelpMenu"
+    ],
+    "OnboardingCreatePIN": [
+      "touch-target|Button|com.ariesbifold:id/Back",
+      "touch-target|Button|com.ariesbifold:id/HelpMenu",
+      "touch-target|CheckBox|com.ariesbifold:id/IUnderstand"
+    ],
+    "OnboardingIntro": [
+      "touch-target|Button|com.ariesbifold:id/HelpMenu",
+      "touch-target|Button|com.ariesbifold:id/SettingsMenuButton",
+      "unlabeled-control|ViewGroup|com.ariesbifold:id/DeveloperCounter"
+    ],
+    "OnboardingNotifications": [
+      "touch-target|Button|com.ariesbifold:id/Back",
+      "touch-target|Button|com.ariesbifold:id/HelpMenu"
+    ],
+    "OnboardingOptInAnalytics": [
+      "touch-target|Button|com.ariesbifold:id/Back",
+      "touch-target|Button|com.ariesbifold:id/HelpMenu"
+    ],
+    "OnboardingPrivacyPolicy": [
+      "touch-target|Button|com.ariesbifold:id/Back",
+      "touch-target|Button|com.ariesbifold:id/HelpMenu"
+    ],
+    "OnboardingSecureApp": [
+      "touch-target|Button|com.ariesbifold:id/Back",
+      "touch-target|Button|com.ariesbifold:id/HelpMenu"
+    ],
+    "OnboardingSettings": [
+      "touch-target|Button|com.ariesbifold:id/Back",
+      "touch-target|Button|com.ariesbifold:id/HelpMenu",
+      "touch-target|Button|com.ariesbifold:id/SectionHeaderChevron",
+      "touch-target|ViewGroup|BC Services Card, Version 4.1.0 (8204)"
+    ],
+    "OnboardingTermsOfUse": [
+      "touch-target|Button|com.ariesbifold:id/Back",
+      "touch-target|Button|com.ariesbifold:id/HelpMenu"
+    ],
+    "PrivacyPolicy": [
+      "touch-target|Button|com.ariesbifold:id/Back",
+      "touch-target|Button|com.ariesbifold:id/HelpMenu"
+    ],
+    "QRScanner": [
+      "touch-target|Button|com.ariesbifold:id/Back",
+      "touch-target|Button|com.ariesbifold:id/HelpMenu",
+      "unlabeled-control|ViewGroup|com.ariesbifold:id/ScanCameraTapArea"
+    ],
+    "RemoveAccountConfirm": [
+      "touch-target|Button|com.ariesbifold:id/Back",
+      "touch-target|Button|com.ariesbifold:id/HelpMenu"
+    ],
+    "ScanSerial": [
+      "touch-target|Button|com.ariesbifold:id/Back",
+      "touch-target|Button|com.ariesbifold:id/HelpMenu",
+      "touch-target|Button|com.ariesbifold:id/ScanTorch"
+    ],
+    "Settings": [
+      "touch-target|Button|com.ariesbifold:id/Back",
+      "touch-target|Button|com.ariesbifold:id/ContactUs",
+      "touch-target|Button|com.ariesbifold:id/HelpMenu",
+      "touch-target|Button|com.ariesbifold:id/SectionHeaderChevron"
+    ],
+    "VerifyPrompt": [
+      "touch-target|Button|com.ariesbifold:id/HelpMenu"
+    ],
+    "Wallet": [
+      "touch-target|Button|com.ariesbifold:id/HelpMenu",
+      "touch-target|Button|com.ariesbifold:id/SettingsMenuButton"
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="2" failures="0" errors="0" skipped="0">
+  <testsuite name="Scan journey non BCSC reroutes to a photo card" timestamp="2026-08-28T05:25:57" time="199.310" tests="2" failures="0" errors="0" skipped="0">
+    <properties>
+      <property name="specId" value="0"/>
+      <property name="suiteName" value="Scan journey: non-BCSC reroutes to a photo card"/>
+      <property name="capabilities" value="android.2b291fdh2008n8"/>
+      <property name="file" value="file://./test/bcsc/scan/reroute-photo-card.journey.ts"/>
+    </properties>
+    <testcase classname="android.2b291fdh2008n8.Scan_journey:_non-BCSC_reroutes_to_a_photo_card" name="reaches the first non BCSC document capture" time="122.480"/>
+    <testcase classname="android.2b291fdh2008n8.Scan_journey:_non-BCSC_reroutes_to_a_photo_card" name="reroutes to the method choice when the photographed ID is a real photo card" time="55.617"/>
+  </testsuite>
+</testsuites>

@@ -72,7 +72,7 @@ describe('VideoInstructions', () => {
   it('renders correctly', async () => {
     const tree = renderScreen()
 
-    await waitFor(() => expect(tree.queryByTestId('PromptsLoading')).toBeNull())
+    await waitFor(() => expect(tree.queryByTestId(testIdWithKey('PromptsLoading'))).toBeNull())
 
     expect(tree).toMatchSnapshot()
   })
@@ -123,7 +123,7 @@ describe('VideoInstructions', () => {
     const tree = renderScreen()
 
     // Showing the cached set here would tell the user to expect prompts they won't be asked.
-    expect(tree.queryByTestId('PromptsLoading')).not.toBeNull()
+    expect(tree.queryByTestId(testIdWithKey('PromptsLoading'))).not.toBeNull()
     expect(tree.queryByText('Say your name')).toBeNull()
     expect(tree.getByTestId(testIdWithKey('StartRecording'))).toBeDisabled()
 
@@ -155,22 +155,22 @@ describe('VideoInstructions', () => {
 
     const tree = renderScreen()
 
-    await waitFor(() => expect(tree.queryByTestId('RetryLoadPrompts')).not.toBeNull())
-    expect(tree.queryByTestId('PromptsLoading')).toBeNull()
+    await waitFor(() => expect(tree.queryByTestId(testIdWithKey('RetryLoadPrompts'))).not.toBeNull())
+    expect(tree.queryByTestId(testIdWithKey('PromptsLoading'))).toBeNull()
   })
 
   it('recovers when the retry succeeds', async () => {
     mockRefreshPrompts.mockResolvedValue(false)
 
     const tree = renderScreen()
-    await waitFor(() => expect(tree.queryByTestId('RetryLoadPrompts')).not.toBeNull())
+    await waitFor(() => expect(tree.queryByTestId(testIdWithKey('RetryLoadPrompts'))).not.toBeNull())
 
     mockRefreshPrompts.mockResolvedValue(true)
-    fireEvent.press(tree.getByTestId('RetryLoadPrompts'))
+    fireEvent.press(tree.getByTestId(testIdWithKey('RetryLoadPrompts')))
 
     await waitFor(() => expect(tree.getByTestId(testIdWithKey('StartRecording'))).toBeEnabled())
     expect(mockRefreshPrompts).toHaveBeenCalledTimes(2)
     expect(tree.queryByText('Say your name')).not.toBeNull()
-    expect(tree.queryByTestId('RetryLoadPrompts')).toBeNull()
+    expect(tree.queryByTestId(testIdWithKey('RetryLoadPrompts'))).toBeNull()
   })
 })

@@ -33,7 +33,7 @@ const VerificationSuccessScreen = () => {
   const controls = (
     <ControlContainer>
       <Button
-        testID={testIdWithKey(t('BCSC.Verification.ButtonText'))}
+        testID={testIdWithKey('Continue')}
         accessibilityLabel={t('BCSC.Verification.ButtonText')}
         title={t('BCSC.Verification.ButtonText')}
         buttonType={ButtonType.Primary}

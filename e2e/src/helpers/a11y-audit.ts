@@ -1,6 +1,6 @@
+import { addAttachment } from '@wdio/allure-reporter'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { addAttachment } from '@wdio/allure-reporter'
 import { ANDROID_CHECKS, auditAndroidScreen } from './a11y-android.js'
 
 /**
@@ -14,8 +14,7 @@ import { ANDROID_CHECKS, auditAndroidScreen } from './a11y-android.js'
  * An audit NEVER fails the checkpoint that runs it: findings go to Allure and `reports/a11y/`, and the
  * journey's last checkpoint reports the roll-up (`reportA11ySummary`), which fails only when the engine
  * could not run at all or when A11Y_AUDIT_STRICT=1 and error-severity findings exist. Screen readers
- * (VoiceOver/TalkBack) cannot be asserted by automation — that pass stays manual
- * (`docs/accessibility-manual-pass.md`).
+ * (VoiceOver/TalkBack) cannot be asserted by automation — that pass stays manual with the UAT team.
  */
 
 export type A11yPlatform = 'ios' | 'android'

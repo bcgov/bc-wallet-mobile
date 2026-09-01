@@ -186,7 +186,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
           onPress={loading ? undefined : preventDoublePress(handleResendCode)}
           accessibilityRole={'link'}
           accessibilityLabel={t('BCSC.EmailConfirmation.SendNewCode')}
-          testID={'ResendCodeLink'}
+          testID={testIdWithKey('ResendCodeLink')}
         >
           {t('BCSC.EmailConfirmation.SendNewCode')}
         </ThemedText>
@@ -197,7 +197,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
         onPress={handleGoToEmail}
         accessibilityRole={'link'}
         accessibilityLabel={t('BCSC.EmailConfirmation.GoToMyEmail')}
-        testID={'GoToMyEmailLink'}
+        testID={testIdWithKey('GoToMyEmailLink')}
       >
         {t('BCSC.EmailConfirmation.GoToMyEmail')}
       </ThemedText>
