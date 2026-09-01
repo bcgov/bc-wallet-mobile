@@ -458,6 +458,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
               <TouchableOpacity
                 onPress={handleCancel}
                 hitSlop={hitSlop}
+                testID={testIdWithKey('CancelRecording')}
                 accessibilityLabel={t('Global.Cancel')}
                 accessibilityRole="button"
                 style={{ flexDirection: 'row', alignItems: 'center' }}
