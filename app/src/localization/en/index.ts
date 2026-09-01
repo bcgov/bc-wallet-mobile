@@ -823,7 +823,7 @@ const translation = {
       "CheckYourIDBullet3": "Is not expired",
       "LimitedAccess": "Limited access to services",
       "LimitedAccessDescription": "Some services only accept the app when it's set up with a BC Services Card with a photo.",
-      "OpenAccountServices": "Open account services",
+      "WhichServices": "Which services?",
     },
     "AccountSetup": {
       "Title": "Have you verified before?",
