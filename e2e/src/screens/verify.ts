@@ -196,8 +196,8 @@ export const SelfieCaptureScreen = defineScreen({
  * `VideoInstructions` ('Selfie Video Tips') — lists the prompts about to be asked on camera.
  *
  * Every arrival issues a fresh prompt set and `primary` (StartRecording) is disabled until it lands,
- * so enter through `tapWhenEnabled`. `promptsLoading` / `retryLoadPrompts` are BARE testIDs (no
- * `testIdWithKey`), hence not `bcsc()`-wrapped; the retry marks a failed fetch rather than a slow one.
+ * so enter through `tapWhenEnabled`. `retryLoadPrompts` marks a failed fetch rather than a slow one
+ * (`promptsLoading`).
  *
  * `scroll`: StartRecording sits at the BOTTOM of the scroll content, under the server-issued prompt
  * list — over two viewports down on an iPhone SE — and the screen snaps to the top on every focus,
@@ -208,8 +208,8 @@ export const VideoInstructionsScreen = defineScreen({
   primary: bcsc(v.videoInstructions.startRecording),
   back: bcsc(common.back),
   elements: {
-    promptsLoading: v.videoInstructionsBare.promptsLoading,
-    retryLoadPrompts: v.videoInstructionsBare.retryLoadPrompts,
+    promptsLoading: bcsc(v.videoInstructions.promptsLoading),
+    retryLoadPrompts: bcsc(v.videoInstructions.retryLoadPrompts),
   },
   scroll: { directions: 'down', maxScrolls: 12 },
 })
@@ -219,13 +219,13 @@ export const VideoInstructionsScreen = defineScreen({
  * after a 3-2-1 countdown, and the screen wants camera AND microphone permission, so reach it with
  * `reachCameraScreen`.
  *
- * `primary` (NextPrompt) is the only control with a testID and it is disabled for the first 2 seconds
- * of each prompt; its last press stops the recording. The Cancel control has an accessibility label
- * only — model it here if a cancel detour is ever covered.
+ * `primary` (NextPrompt) is disabled for the first 2 seconds of each prompt; its last press stops the
+ * recording. `secondary` (CancelRecording) abandons the recording.
  */
 export const TakeVideoScreen = defineScreen({
   self: bcsc(v.takeVideo.nextPrompt),
   primary: bcsc(v.takeVideo.nextPrompt),
+  secondary: bcsc(v.takeVideo.cancel),
 })
 
 /**
@@ -246,16 +246,14 @@ export const VideoReviewScreen = defineScreen({
 /**
  * `VideoTooLong` — where a recording over 30s lands instead of VideoReview.
  *
- * `secondary` (Cancel, a BARE testID) resets to method selection and is the only addressable control:
- * the primary Retake button has no testID, so re-recording from here cannot be driven.
- *
- * That marker is not unique while TakeVideo is up: its cancel control has no testID but carries
- * "Cancel" as its accessibility label, which iOS reports as the element name — the same thing `~Cancel`
- * matches. Probe this screen only once the recorder is gone.
+ * `primary` (retake) refreshes the prompt set and returns to the camera; `secondary` (cancel) resets
+ * to method selection. Both keys are screen-prefixed, so neither collides with VideoReview's pair or
+ * the recorder's own cancel.
  */
 export const VideoTooLongScreen = defineScreen({
-  self: v.videoTooLongBare.cancel,
-  secondary: v.videoTooLongBare.cancel,
+  self: bcsc(v.videoTooLong.cancel),
+  primary: bcsc(v.videoTooLong.retake),
+  secondary: bcsc(v.videoTooLong.cancel),
 })
 
 /**
@@ -268,9 +266,8 @@ export const EvidenceUploadingScreen = defineScreen({
 })
 
 /**
- * `SuccessfullySent` — the post-upload confirmation. `primary` leaves the verify stack for Home and is
- * the ONLY way out (hardware back is disabled); its id is the button's own visible title, so a copy
- * change to `BCSC.SendVideo.SuccessfullySent.ButtonText` renames the testID with it.
+ * `SuccessfullySent` — the post-upload confirmation. `primary` (GoToHome) leaves the verify stack for
+ * Home and is the ONLY way out (hardware back is disabled).
  */
 export const SuccessfullySentScreen = defineScreen({
   self: bcsc(v.successfullySent.goToHome),
@@ -402,8 +399,8 @@ export const EmailConfirmationScreen = defineScreen({
     code: bcsc(v.emailConfirmation.codeInput),
   },
   links: {
-    // BARE testID — no `testIdWithKey` prefix, so it is NOT `bcsc()`-wrapped.
-    resendCode: v.emailConfirmationBare.resendCode,
+    // Sits on a nested ThemedText that iOS flattens — flows/verify.ts falls back to the label.
+    resendCode: bcsc(v.emailConfirmation.resendCode),
   },
   elements: {
     // Rendered only while the code is rejected; its text separates "not six digits" (client-side) from

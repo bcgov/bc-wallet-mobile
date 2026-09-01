@@ -391,6 +391,7 @@ export const ContactsScreen = defineScreen({
     loading: bcsc(main.contacts.loading),
     search: bcsc(main.contacts.search), // renders only POPULATED — with whatAreContacts absent, the populated proof
     clearSearch: bcsc(main.contacts.clearSearch), // renders only while the query is non-empty
+    row: bcsc(main.contacts.row), // SHARED by every row — a specific contact is picked by name label (helpers/a11y.ts)
   },
 })
 
@@ -403,9 +404,10 @@ export const WhatAreContactsScreen = defineScreen({
 })
 
 /** Contact details (`ContactDetailsScreen`, agent-gated) — reached by tapping a POPULATED contacts-list
- *  row, which carries NO testID (select by a11y label = the contact name, helpers/a11y.ts). `pin` and
- *  `unpin` are ONE button whose id flips with the pinned state — waiting for the flipped id IS the
- *  toggle assert. `viewJson` is developer-mode-only, so normal runs assert its ABSENCE. */
+ *  row (the row id is shared, so a specific contact is selected by a11y label = the contact name,
+ *  helpers/a11y.ts). `pin` and `unpin` are ONE button whose id flips with the pinned state — waiting
+ *  for the flipped id IS the toggle assert. `viewJson` is developer-mode-only, so normal runs assert
+ *  its ABSENCE. */
 export const ContactDetailScreen = defineScreen({
   self: bcsc(main.contactDetails.message),
   back: bcsc(common.back),
@@ -422,11 +424,17 @@ export const ContactDetailScreen = defineScreen({
   },
 })
 
-/** Contact chat (`ContactChatScreen`). Its composer has NO testID and an EMPTY a11y label, so sending
- *  from the app is not automatable — the journey only asserts RECEIVED copy (issuer-sent basic
- *  messages, by visible text) and leaves via the header back. */
+/** Contact chat (`ContactChatScreen`). `message` (the composer) is editable only once the Credo agent
+ *  is ready; `send` submits it. Received copy (issuer-sent basic messages) is still asserted by
+ *  visible text — bubbles carry no ids. Leaves via the header back. */
 export const ContactChatScreen = defineScreen({
   back: bcsc(common.back),
+  inputs: {
+    message: bcsc(main.contactChat.composer),
+  },
+  links: {
+    send: bcsc(main.contactChat.send),
+  },
 })
 
 /** Edit-contact-name form (agent-gated). `primary`/`secondary` are label-derived by ActionScreenLayout
