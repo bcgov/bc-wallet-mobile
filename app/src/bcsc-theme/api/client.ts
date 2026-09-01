@@ -1,3 +1,4 @@
+import type { UploadLogContext } from '@/bcsc-theme/utils/media-format'
 import { throwNativeBcscError } from '@/bcsc-theme/utils/native-error-map'
 import { AppError } from '@/errors/appError'
 import { ErrorRegistry } from '@/errors/errorRegistry'
@@ -51,6 +52,8 @@ declare module 'axios' {
     suppressStatusCodeLogs?: number[]
     // Internal: marks a request already retried once after a 401, to prevent refresh/retry loops
     _retriedAfter401?: boolean
+    // Evidence-upload media fields; getAppErrorFromAxiosError copies them into AppError.context.
+    uploadLogContext?: UploadLogContext
   }
 }
 
