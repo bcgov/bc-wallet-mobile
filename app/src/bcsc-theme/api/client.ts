@@ -52,8 +52,7 @@ declare module 'axios' {
     suppressStatusCodeLogs?: number[]
     // Internal: marks a request already retried once after a 401, to prevent refresh/retry loops
     _retriedAfter401?: boolean
-    // Structured evidence-upload metadata (kind/stage/bytes/format) spread into the error log
-    // below — see app/src/bcsc-theme/utils/media-format.ts.
+    // Evidence-upload media fields; getAppErrorFromAxiosError copies them into AppError.context.
     uploadLogContext?: UploadLogContext
   }
 }
