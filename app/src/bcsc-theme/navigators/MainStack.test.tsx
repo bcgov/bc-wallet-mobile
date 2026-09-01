@@ -1,10 +1,12 @@
+import { SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS } from '@/constants'
 import * as Bifold from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
-import { render } from '@testing-library/react-native'
+import { act, render } from '@testing-library/react-native'
 import React from 'react'
 import { useAccount } from '../contexts/BCSCAccountContext'
 import * as PairingModule from '../features/pairing'
 import { PairingNavigationListener, PairingPayload } from '../features/pairing/types'
+import { useSystemChecks } from '../hooks/useSystemChecks'
 import { BCSCScreens } from '../types/navigators'
 import MainStack from './MainStack'
 
@@ -46,6 +48,7 @@ jest.mock('@/constants', () => ({
   DEFAULT_HEADER_TITLE_CONTAINER_STYLE: {},
   HelpCentreUrl: { COMPUTER_LOGIN: 'https://example.com' },
   Mode: { BCWallet: 'bcwallet', BCSC: 'bcsc' },
+  SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS: 10000,
 }))
 jest.mock('../contexts/BCSCStackContext', () => ({
   useBCSCStack: jest.fn(),
@@ -54,8 +57,8 @@ jest.mock('../contexts/BCSCLoadingContext', () => ({
   LoadingScreen: 'LoadingScreen',
 }))
 jest.mock('../hooks/useSystemChecks', () => ({
-  SystemCheckScope: { MAIN_STACK: 'MAIN_STACK' },
-  useSystemChecks: jest.fn(),
+  SystemCheckScope: { MAIN_STACK: 'MAIN_STACK', ACCOUNT: 'ACCOUNT' },
+  useSystemChecks: jest.fn(() => ({ hasSettled: true })),
 }))
 jest.mock('../features/pairing', () => ({
   usePairingService: jest.fn(),
@@ -139,7 +142,10 @@ describe('MainStack', () => {
     jest.mocked(Bifold.testIdWithKey).mockImplementation((key: string) => key)
     jest.mocked(PairingModule.usePairingService).mockReturnValue(makePairingService() as any)
     jest.mocked(PairingModule.pairingPayloadToServiceLoginParams).mockReturnValue({ pairingCode: 'code' } as any)
+    jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: true })
   })
+
+  const queryLoadingScreens = (view: ReturnType<typeof render>) => view.UNSAFE_queryAllByType('LoadingScreen' as any)
 
   it('renders correctly', () => {
     const { toJSON } = render(<MainStack />)
@@ -210,5 +216,33 @@ describe('MainStack', () => {
     const { toJSON } = render(<MainStack />)
 
     expect(toJSON()).toMatchObject({ type: 'LoadingScreen' })
+  })
+
+  it('holds the loading screen over the stack while system checks are still settling', () => {
+    jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false })
+
+    expect(queryLoadingScreens(render(<MainStack />))).toHaveLength(1)
+  })
+
+  it('drops the loading screen once the system checks have settled', () => {
+    expect(queryLoadingScreens(render(<MainStack />))).toHaveLength(0)
+  })
+
+  it('releases the loading screen when the system checks never settle', () => {
+    jest.useFakeTimers()
+    jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false })
+
+    try {
+      const view = render(<MainStack />)
+      expect(queryLoadingScreens(view)).toHaveLength(1)
+
+      act(() => {
+        jest.advanceTimersByTime(SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS)
+      })
+
+      expect(queryLoadingScreens(view)).toHaveLength(0)
+    } finally {
+      jest.useRealTimers()
+    }
   })
 })
