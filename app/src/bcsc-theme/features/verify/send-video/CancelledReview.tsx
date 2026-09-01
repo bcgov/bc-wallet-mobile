@@ -14,7 +14,8 @@ import {
 import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import CommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
+import MaterialIcon from 'react-native-vector-icons/MaterialIcons'
 import useCancelledReviewViewModel from './CancelledReviewViewModel'
 
 interface CancelledReviewProps {
@@ -74,7 +75,7 @@ const CancelledReview = ({ route }: CancelledReviewProps) => {
         accessibilityLabel={t('BCSC.CancelledVerification.RetryButton')}
         testID={testIdWithKey('RetryWithNewVideo')}
       >
-        <Icon name={'video-outline'} size={24} color={ColorPalette.brand.primary} style={styles.buttonIcon} />
+        <MaterialIcon name={'sensor-occupied'} size={24} color={ColorPalette.brand.primary} style={styles.buttonIcon} />
       </Button>
       <Button
         title={t('BCSC.CancelledVerification.RestartButton')}
@@ -84,7 +85,7 @@ const CancelledReview = ({ route }: CancelledReviewProps) => {
         accessibilityLabel={t('BCSC.CancelledVerification.RestartButton')}
         testID={testIdWithKey('RestartVerification')}
       >
-        <Icon name={'restore'} size={24} color={ColorPalette.brand.primary} style={styles.buttonIcon} />
+        <CommunityIcon name={'restore'} size={24} color={ColorPalette.brand.primary} style={styles.buttonIcon} />
       </Button>
     </ControlContainer>
   )
