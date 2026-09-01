@@ -173,6 +173,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
           )
           navigation.navigate(BCSCScreens.EvidenceTypeList, { cardProcess: BCSCCardProcess.NonBCSC })
           documentExpiredAlert()
+          return
         }
 
         // Note: Card not found is a valid error - continue with the evidence capture flow

@@ -1200,8 +1200,8 @@ const translation = {
     "CancelledVerification": {
       "Title": "Your identity couldn't be verified",
       "Label": "Details from Service BC agent: \n{{reason}}",
-      "RetryButton": "Retry with a new video",
-      "RestartButton": "Restart verification",
+      "RetryButton": "Try again",
+      "RestartButton": "Restart from beginning",
       "NoReason": "No reason provided"
     },
     "DualNonBCSCEvidence": {
