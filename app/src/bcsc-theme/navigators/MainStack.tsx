@@ -1,4 +1,8 @@
-import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
+import {
+  DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
+  HelpCentreUrl,
+  SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS,
+} from '@/constants'
 import {
   CredentialDetails,
   Screens,
@@ -96,6 +100,31 @@ const ScopedContactDetails = withAgentReadyGate(ContactDetailsScreen, testIdWith
 const ScopedEditContactName = withAgentReadyGate(EditContactNameScreen, testIdWithKey('EditContactName.Loading'))
 const ScopedRemoveContact = withAgentReadyGate(RemoveContactScreen, testIdWithKey('RemoveContact.Loading'))
 
+/**
+ * Holds the startup loading screen until the system checks that decide the Home notification card
+ * have settled. Home renders that card straight out of the store, so a check resolving after paint
+ * swaps the card in front of the user (e.g. "Start verification" flipping to "Verified"). Capped by
+ * {@link SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS} so a hung request can't strand the app.
+ *
+ * @param hasSettled - Whether every tracked system check scope has finished running.
+ * @returns Whether the loading screen should still be shown.
+ */
+const useSystemCheckLoadingGate = (hasSettled: boolean) => {
+  const [waitedTooLong, setWaitedTooLong] = useState(false)
+
+  useEffect(() => {
+    if (hasSettled) {
+      return
+    }
+
+    const timeoutId = setTimeout(() => setWaitedTooLong(true), SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS)
+
+    return () => clearTimeout(timeoutId)
+  }, [hasSettled])
+
+  return !hasSettled && !waitedTooLong
+}
+
 const MainStack: React.FC = () => {
   const { currentStep } = useTour()
   const { isLoadingAccount } = useAccount()
@@ -130,8 +159,9 @@ const MainStack: React.FC = () => {
 
   const initialRouteName = pairingInitialParams ? BCSCScreens.ServiceLogin : BCSCStacks.Tab
 
-  useSystemChecks(SystemCheckScope.MAIN_STACK)
-  useSystemChecks(SystemCheckScope.ACCOUNT)
+  const mainStackChecks = useSystemChecks(SystemCheckScope.MAIN_STACK)
+  const accountChecks = useSystemChecks(SystemCheckScope.ACCOUNT)
+  const isAwaitingSystemChecks = useSystemCheckLoadingGate(mainStackChecks.hasSettled && accountChecks.hasSettled)
   useBCSCStack(BCSCStacks.Main)
 
   // Accept connection-invitation deep links (e.g. from the showcase) once the
@@ -156,6 +186,9 @@ const MainStack: React.FC = () => {
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
+      {/* Overlays rather than replaces the stack: the checks themselves navigate to screens
+          registered below (terms of use, service outage), so the navigator has to stay mounted. */}
+      {isAwaitingSystemChecks ? <LoadingScreen message={t('BCSC.Loading.AppStartup')} /> : null}
       <BifoldScope>
         <Stack.Navigator
           initialRouteName={initialRouteName}

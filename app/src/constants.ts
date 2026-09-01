@@ -112,6 +112,12 @@ export const ACCOUNT_EXPIRATION_DATE_FORMAT = 'MMMM D, YYYY'
 export const ACCOUNT_EXPIRATION_WARNING_DAYS = 30
 export const FIVE_MINUTES_IN_SECONDS = 5 * 60
 export const SERVER_STATUS_RECHECK_INTERVAL_MS = 60 * 1000
+/**
+ * Ceiling on how long the main stack holds its startup loading screen waiting for system checks to
+ * complete. An unreachable or hung endpoint must not be able to strand the app behind the loading
+ * screen indefinitely.
+ */
+export const SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS = 3 * 1000
 
 // Notification constants
 /**
