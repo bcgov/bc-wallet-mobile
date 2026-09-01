@@ -12,9 +12,76 @@ on:
   merge_group:
 
 jobs:
+  # Mirrors main.yaml's early-exit-check: Build/Typecheck/Test/Coverage,
+  # Lint & Format, and both Native Tests jobs are required checks, and a
+  # workflow skipped entirely by a paths filter never reports them.
+  # So the trigger stays unfiltered and this job decides
+  # instead, letting the four heavy jobs report a fast "skipped" (which
+  # satisfies a required check) rather than never running at all.
+  detect-relevant-changes:
+    name: Detect Relevant Changes
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    outputs:
+      should_skip: ${{ steps.check.outputs.should_skip }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Check if only CHANGELOG.md / .changes/** changed
+        id: check
+        shell: bash
+        run: |
+          set -x
+
+          if [ "${GITHUB_EVENT_NAME}" = "merge_group" ]; then
+            parent_ref="${{ github.event.merge_group.base_sha }}"
+            child_ref="${{ github.event.merge_group.head_sha }}"
+          elif [ "${GITHUB_EVENT_NAME}" = "push" ]; then
+            parent_ref="${GITHUB_SHA}^"
+            child_ref="${GITHUB_SHA}"
+          else
+            parent_ref="origin/${GITHUB_BASE_REF:-main}"
+            child_ref="HEAD"
+          fi
+
+          echo "Comparing ${parent_ref} with ${child_ref}"
+
+          diff_output=$(git diff --name-only "${parent_ref}".."${child_ref}")
+
+          # A file is ignorable if it can only affect the generated
+          # changelog, never behaviour a build, lint, or test pass would catch.
+          ignorable() {
+            local file="$1"
+            [ "$file" = "CHANGELOG.md" ] && return 0
+            [[ "$file" == .changes/* ]] && return 0
+            return 1
+          }
+
+          relevant_count=0
+          while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            if ! ignorable "$file"; then
+              echo "  relevant: $file"
+              relevant_count=$((relevant_count + 1))
+            fi
+          done <<< "$diff_output"
+
+          echo "$relevant_count relevant file(s) changed"
+
+          if [ "$relevant_count" -eq 0 ]; then
+            echo "should_skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
   typecheck-test:
     runs-on: macos-26
     name: Build, Typecheck, Test & Coverage
+    needs: detect-relevant-changes
+    if: needs.detect-relevant-changes.outputs.should_skip != 'true'
     permissions:
       contents: read
     steps:
@@ -91,6 +158,8 @@ jobs:
   lint-format:
     runs-on: macos-26
     name: Lint & Format
+    needs: detect-relevant-changes
+    if: needs.detect-relevant-changes.outputs.should_skip != 'true'
     permissions:
       contents: read
     steps:
@@ -124,6 +193,8 @@ jobs:
   test-ios:
     runs-on: macos-26
     name: Native Tests (iOS)
+    needs: detect-relevant-changes
+    if: needs.detect-relevant-changes.outputs.should_skip != 'true'
     permissions:
       contents: read
     steps:
@@ -154,6 +225,8 @@ jobs:
   test-android:
     runs-on: macos-26
     name: Native Tests (Android)
+    needs: detect-relevant-changes
+    if: needs.detect-relevant-changes.outputs.should_skip != 'true'
     permissions:
       contents: read
     steps:
