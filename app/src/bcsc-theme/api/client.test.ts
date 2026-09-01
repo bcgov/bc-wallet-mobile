@@ -46,10 +46,13 @@ describe('BCSC Client', () => {
   })
 
   // Rejects every request with an AxiosError carrying the given status, so the response
-  // interceptor runs against a realistic error shape without a real HTTP call.
+  // interceptor runs against a realistic error shape without a real HTTP call. The code
+  // has to track the status the way axios' settle.js does — axios-error-utils routes
+  // ERR_BAD_REQUEST through the per-status client mapping and ERR_BAD_RESPONSE straight
+  // to SERVER_ERROR, so a hardcoded code silently mis-maps every 4xx.
   const rejectWithStatus = (status: number, statusText: string) => (config: any) =>
     Promise.reject(
-      new AxiosError('Request failed', 'ERR_BAD_RESPONSE', config, null, {
+      new AxiosError('Request failed', status >= 500 ? 'ERR_BAD_RESPONSE' : 'ERR_BAD_REQUEST', config, null, {
         status,
         data: {},
         statusText,
@@ -407,8 +410,6 @@ describe('BCSC Client', () => {
       expect(callCount).toBe(2) // original + one retry
       expect(response.status).toBe(200)
       expect(response.data).toEqual({ ok: true })
-
-      forceRefreshSpy.mockRestore()
     })
 
     it('should not retry a 401 on a skipBearerAuth request', async () => {
@@ -426,8 +427,6 @@ describe('BCSC Client', () => {
       await expect(client.get('/token', { skipBearerAuth: true })).rejects.toBeInstanceOf(AppError)
       expect(forceRefreshSpy).not.toHaveBeenCalled()
       expect(callCount).toBe(1)
-
-      forceRefreshSpy.mockRestore()
     })
 
     it('should retry a 401 only once, then surface the error', async () => {
@@ -447,8 +446,6 @@ describe('BCSC Client', () => {
       await expect(client.get('/protected')).rejects.toBeInstanceOf(AppError)
       expect(forceRefreshSpy).toHaveBeenCalledTimes(1)
       expect(callCount).toBe(2) // original + one retry, then surfaced
-
-      forceRefreshSpy.mockRestore()
     })
   })
 
@@ -1063,10 +1060,19 @@ describe('BCSC Client', () => {
         refresh_token: 'newRefreshToken',
       }
 
+      // The second refresh is held open deliberately. With an already-resolved promise
+      // the refresh settles before axios runs the request interceptor for B, so B never
+      // reaches the `if (this.tokensPromise)` join in ensureValidTokens and the
+      // assertion below would pass even with that guard deleted.
+      let releaseRefresh: (tokens: typeof mockRefreshedTokens) => void = () => {}
+      const heldRefresh = new Promise<typeof mockRefreshedTokens>((resolve) => {
+        releaseRefresh = resolve
+      })
+
       jest
         .spyOn(BCSCApiClient.prototype as any, 'fetchTokens')
         .mockResolvedValueOnce(mockInitialTokens)
-        .mockResolvedValueOnce(mockRefreshedTokens)
+        .mockReturnValueOnce(heldRefresh)
 
       // Initialize tokens
       await client.getTokensForRefreshToken('initialRefreshToken')
@@ -1080,8 +1086,12 @@ describe('BCSC Client', () => {
       expect(client.tokens).toBe(mockInitialTokens)
       expect(client.tokensPromise).toBeInstanceOf(Promise)
 
-      // Parallel request during refresh
+      // Parallel request during refresh: issued, then given a macrotask to reach the
+      // interceptor, all while the refresh is still pending.
       const clientReqB = client.get('/endpointB')
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      releaseRefresh(mockRefreshedTokens)
 
       // Wait for refresh completion
       await tokenRefresh

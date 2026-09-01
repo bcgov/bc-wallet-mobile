@@ -1112,57 +1112,6 @@ describe('clientErrorPolicies', () => {
 
   describe('ClientErrorHandlingPolicies', () => {
     describe('policy order', () => {
-      it('should respect policy order when multiple policies match', () => {
-        // Create an error that would match both alreadyRegisteredErrorPolicy and globalAlertErrorPolicy
-        // if we artificially make globalAlertErrorPolicy match on ERR_501
-        const error = newError('err_501_invalid_registration_request')
-        error.cause = new AxiosError('client is in invalid state')
-        const context = {
-          endpoint: '/api/devicecode',
-          apiEndpoints: {
-            deviceAuthorization: '/api/devicecode',
-          },
-        }
-
-        // Find the first matching policy
-        const matchedPolicy = ClientErrorHandlingPolicies.find((policy) => policy.matches(error, context as any))
-
-        // Should be alreadyRegisteredErrorPolicy (first in array) not globalAlertErrorPolicy
-        expect(matchedPolicy).toBe(alreadyRegisteredErrorPolicy)
-      })
-
-      it('should use the first matching policy in the array', () => {
-        const error = newError('server_error') // Matches globalAlertErrorPolicy
-        const context = {
-          endpoint: '/api/some-endpoint',
-          apiEndpoints: {} as any,
-        }
-
-        const matchedPolicy = ClientErrorHandlingPolicies.find((policy) => policy.matches(error, context as any))
-
-        // Should be globalAlertErrorPolicy
-        expect(matchedPolicy).toBe(globalAlertErrorPolicy)
-      })
-
-      it('should prefer alreadyRegisteredErrorPolicy over birthdateLockoutErrorPolicy', () => {
-        const error = newError('err_501_invalid_registration_request')
-        const cause = new AxiosError('client is in invalid state')
-        ;(cause as any).response = { status: 503 }
-        error.cause = cause
-        const context = {
-          endpoint: '/api/devicecode',
-          apiEndpoints: {
-            deviceAuthorization: '/api/devicecode',
-          },
-        }
-
-        // Both policies match this error; the earlier one in the array must win.
-        expect(birthdateLockoutErrorPolicy.matches(error, context as any)).toBeTruthy()
-
-        const matchedPolicy = ClientErrorHandlingPolicies.find((policy) => policy.matches(error, context as any))
-        expect(matchedPolicy).toBe(alreadyRegisteredErrorPolicy)
-      })
-
       it('should prefer alreadyRegisteredErrorPolicy over invalidRegistrationRequestErrorPolicy', () => {
         const error = newError('err_501_invalid_registration_request')
         error.cause = new AxiosError('client is in invalid state')

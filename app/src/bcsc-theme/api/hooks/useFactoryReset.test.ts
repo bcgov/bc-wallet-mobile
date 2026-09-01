@@ -31,16 +31,11 @@ jest.mock('@/bcsc-theme/features/agent/services/agent-service', () => ({
 }))
 jest.mock('react-native-config', () => ({ Config: { INDY_VDR_PROXY_URL: '' } }))
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 type MockLogger = { info: jest.Mock; warn: jest.Mock; error: jest.Mock }
 
 type FactoryResetSetup = {
   account?: any
   store?: any
-  logger?: MockLogger
-  /** What `useServices` returns; defaults to `[logger]`, the wallet-purge path also needs ledgers. */
-  services?: any[]
   client?: any
   deleteRegistration?: jest.Mock
   dispatch?: jest.Mock
@@ -49,11 +44,10 @@ type FactoryResetSetup = {
 }
 
 const setupFactoryReset = (overrides: FactoryResetSetup = {}) => {
-  const logger: MockLogger = overrides.logger ?? { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+  const logger: MockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
   const {
     account = { clientID: 'test-client-id' },
     store = { bcscSecure: { registrationAccessToken: 'token', additionalEvidenceData: [] } },
-    services = [logger],
     client = { clearTokens: jest.fn() },
     deleteRegistration = jest.fn().mockResolvedValue({ success: true }),
     dispatch = jest.fn(),
@@ -70,7 +64,7 @@ const setupFactoryReset = (overrides: FactoryResetSetup = {}) => {
   bcscCore.getAccount.mockResolvedValue(account)
   bcscCore.removeAccount.mockResolvedValue(undefined)
   bifold.useStore.mockReturnValue([store, dispatch])
-  bifold.useServices.mockReturnValue(services as any)
+  bifold.useServices.mockReturnValue([logger] as any)
 
   return { bcscCore, logger, deleteRegistration, dispatch, clearSecureState, deleteSecureData }
 }
@@ -223,9 +217,7 @@ describe('useFactoryReset', () => {
     // interrupted init may have written an on-disk store keyed with the wallet
     // key that account removal is about to make underivable. Factory reset must
     // delete it via the throwaway-agent path or it orphans the store forever.
-    const logger: MockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
-    // useServices returns [logger, ledgers] for the build options.
-    const { bcscCore } = setupFactoryReset({ store: walletPurgeStore, logger, services: [logger, []] })
+    const { bcscCore } = setupFactoryReset({ store: walletPurgeStore })
 
     const hook = renderHook(() => useFactoryReset())
 
@@ -246,8 +238,7 @@ describe('useFactoryReset', () => {
   it('does not fail the reset if the orphaned-store purge throws', async () => {
     jest.mocked(purgeWalletStore).mockRejectedValue(new Error('build boom'))
 
-    const logger: MockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
-    setupFactoryReset({ store: walletPurgeStore, logger, services: [logger, []] })
+    const { logger } = setupFactoryReset({ store: walletPurgeStore })
 
     const hook = renderHook(() => useFactoryReset())
 
@@ -268,13 +259,13 @@ describe('useFactoryReset', () => {
     const { bcscCore, logger, deleteRegistration } = setupFactoryReset({
       account: null,
       store: { bcscSecure: { additionalEvidenceData: [] } },
-      client: {},
     })
 
     const hook = renderHook(() => useFactoryReset())
 
     await act(async () => {
-      await hook.result.current()
+      const result = await hook.result.current()
+      expect(result.success).toBe(true)
     })
 
     expect(bcscCore.getAccount).toHaveBeenCalled()
@@ -305,22 +296,43 @@ describe('useFactoryReset', () => {
 
   it('should log a warning if IAS account deletion fails', async () => {
     const { bcscCore, logger } = setupFactoryReset({
-      client: {},
       deleteRegistration: jest.fn().mockResolvedValue({ success: false }),
     })
 
     const hook = renderHook(() => useFactoryReset())
 
     await act(async () => {
-      await hook.result.current()
+      const result = await hook.result.current()
+      expect(result.success).toBe(true)
     })
 
     expect(bcscCore.getAccount).toHaveBeenCalled()
     expect(logger.warn).toHaveBeenCalledWith('FactoryReset: Failed to delete IAS account from server')
   })
 
+  // Deleting the IAS registration is documented as non-blocking: a throw here must be
+  // logged and the rest of the reset must still run.
+  it('should warn but still complete the reset when deleting the registration throws', async () => {
+    const { logger, clearSecureState } = setupFactoryReset({
+      deleteRegistration: jest.fn().mockRejectedValue(new Error('boom')),
+    })
+
+    const hook = renderHook(() => useFactoryReset())
+
+    await act(async () => {
+      const result = await hook.result.current()
+      expect(result.success).toBe(true)
+    })
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      'FactoryReset: Error occurred while deleting registration',
+      expect.objectContaining({ error: expect.any(Error) })
+    )
+    expect(clearSecureState).toHaveBeenCalled()
+  })
+
   it('should return an error if local account file deletion fails', async () => {
-    const { bcscCore, deleteRegistration } = setupFactoryReset({ client: {} })
+    const { bcscCore, deleteRegistration } = setupFactoryReset()
     bcscCore.removeAccount.mockRejectedValue(new Error('Failed to remove account'))
 
     const hook = renderHook(() => useFactoryReset())
