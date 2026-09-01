@@ -141,8 +141,8 @@ jobs:
     runs-on: ${{ inputs.runner_label }}
     permissions:
       contents: read
-    # regression runs every journey serially (~90m per platform and growing); other suites (merge-queue smoke) stay tight
-    timeout-minutes: ${{ inputs.suite == 'regression' && 120 || 45 }}
+    # regression runs every journey serially (~2h per platform with retries and growing); other suites (merge-queue smoke) stay tight
+    timeout-minutes: ${{ inputs.suite == 'regression' && 180 || 45 }}
     continue-on-error: ${{ contains(fromJSON('["migration","upgrade","upgrade403"]'), inputs.suite) }}
     strategy:
       max-parallel: 2
