@@ -117,7 +117,7 @@ export const SERVER_STATUS_RECHECK_INTERVAL_MS = 60 * 1000
  * complete. An unreachable or hung endpoint must not be able to strand the app behind the loading
  * screen indefinitely.
  */
-export const SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS = 3 * 1000
+export const SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS = 4 * 1000
 
 // Notification constants
 /**
