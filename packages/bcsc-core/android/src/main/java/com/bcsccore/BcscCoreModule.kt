@@ -1795,9 +1795,8 @@ class BcscCoreModule internal constructor(
     }
 
     /**
-     * Local key aliases, newest first. Swallowed to an empty list on failure — this feeds
-     * diagnostics only; a real keystore error still surfaces via getCurrentBcscKeyPair()/
-     * getBcscKeyPair() on the decrypt path.
+     * Local key aliases, newest first; gates kid matching and feeds diagnostics. Degrades to
+     * empty on failure — a real keystore fault still surfaces via getCurrentBcscKeyPair().
      */
     private fun localAliasesNewestFirst(): List<String> =
         try {

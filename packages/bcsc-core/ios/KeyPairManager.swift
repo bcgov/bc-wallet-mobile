@@ -245,12 +245,8 @@ class KeyPairManager: KeyPairManagerProtocol {
   }
 
   /**
-   The key a JWE was encrypted to: the local key whose tag equals `kid` when the device holds
-   it, otherwise the newest key (no `kid`, or a `kid` this device doesn't hold). nil iff `keys`
-   is empty.
-
-   During key rotation the server still encrypts to the previous key until it sees the new
-   one, so the label on the response — not "newest" — decides which local key to use.
+   During rotation the server still encrypts to the previous key until it sees the new one, so
+   the JWE's own label beats "newest" when we hold that key. Returns nil only for empty `keys`.
    */
   static func decryptKeyInfo(matching kid: String, in keys: [PrivateKeyInfo]) -> PrivateKeyInfo? {
     if !kid.isEmpty, let match = keys.first(where: { $0.tag == kid }) {
