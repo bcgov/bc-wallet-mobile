@@ -340,8 +340,10 @@ describe('useFactoryReset', () => {
     await act(async () => {
       const result = await hook.result.current()
 
-      expect(result.success).toBe(false)
-      expect(result.success === false && result.error.message).toContain('Failed to remove account')
+      expect(result).toMatchObject({
+        success: false,
+        error: { message: expect.stringContaining('Failed to remove account') },
+      })
     })
 
     expect(bcscCore.getAccount).toHaveBeenCalled()

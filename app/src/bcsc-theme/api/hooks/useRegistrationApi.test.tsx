@@ -103,9 +103,17 @@ const toBase64UrlUnpadded = (bytes: number[]) =>
 const SENT_N_IOS_SHAPE = toStdBase64([0x00, ...REAL_MODULUS_BYTES])
 const SERVER_N_ANDROID_SHAPE = toBase64UrlUnpadded(REAL_MODULUS_BYTES)
 
-/** Asserts a promise rejects with an AppError carrying `appEvent`, keeping the class check. */
+/** Asserts a promise rejects with an AppError carrying `appEvent`. Fails if it resolves. */
 const expectAppErrorRejection = async (promise: Promise<unknown>, appEvent: AppEventCode) => {
-  const error: unknown = await promise.catch((e) => e)
+  // The resolve path has to fail loudly: `.catch((e) => e)` passes the resolved value
+  // straight through, so an implementation that *returns* an AppError instead of
+  // throwing one would satisfy the assertions below.
+  const error: unknown = await promise.then(
+    (value) => {
+      throw new Error(`Expected a rejection, but the promise resolved with: ${String(value)}`)
+    },
+    (reason: unknown) => reason
+  )
   expect(error).toBeInstanceOf(AppError)
   expect((error as AppError).appEvent).toBe(appEvent)
 }
