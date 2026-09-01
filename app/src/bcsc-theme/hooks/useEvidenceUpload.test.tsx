@@ -285,8 +285,7 @@ describe('useEvidenceUpload', () => {
 
       expect(RNFS.stat).toHaveBeenCalledWith('/permanent/selfie.jpg')
       expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalledWith(
-        expect.objectContaining({ date: Math.floor(mtimeMs / 1000) }),
-        undefined
+        expect.objectContaining({ date: Math.floor(mtimeMs / 1000) })
       )
       // Exactly one warn for the substitution — see #4373.
       expect(mockLogger.warn).toHaveBeenCalledTimes(1)
@@ -318,14 +317,13 @@ describe('useEvidenceUpload', () => {
       })
 
       expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalledWith(
-        expect.objectContaining({ date: plausibleDate }),
-        undefined
+        expect.objectContaining({ date: plausibleDate })
       )
       expect(RNFS.stat).not.toHaveBeenCalled()
       expect(mockLogger.warn).not.toHaveBeenCalled()
     })
 
-    it('uploads the binary as "image" and forwards the sniffed format to the metadata call', async () => {
+    it('uploads the selfie binary as "image"', async () => {
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([
         {
@@ -348,11 +346,28 @@ describe('useEvidenceUpload', () => {
         await result.current.uploadSelfiePhoto()
       })
 
-      expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalledWith(
-        expect.objectContaining({ date: plausibleDate }),
-        'image/jpeg'
-      )
       expect(mockEvidenceApi.uploadPhotoEvidenceBinary).toHaveBeenCalledWith('selfie-uri', jpegBytes, 'image')
+    })
+
+    it('posts metadata before reading the file so a server rejection wins over a missing file', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      bifoldMock.useStore.mockReturnValue([
+        {
+          ...baseStore,
+          bcsc: {
+            photoPath: '/selfie.jpg',
+            photoMetadata: photo('front', 'selfie'),
+          },
+        } as unknown as BCState,
+        jest.fn(),
+      ])
+
+      mockEvidenceApi.uploadPhotoEvidenceMetadata.mockRejectedValue(new Error('Conflict'))
+
+      const { result } = renderHook(() => useEvidenceUpload())
+
+      await expect(result.current.uploadSelfiePhoto()).rejects.toThrow('Conflict')
+      expect(readFileInChunks).not.toHaveBeenCalled()
     })
   })
 
