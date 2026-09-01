@@ -21,8 +21,8 @@ const QUICKTIME_BRAND = 'qt  '
 const FTYP_SCAN_CAP_BYTES = 64
 
 const readAscii4 = (bytes: Uint8Array, offset: number): string => {
-  // Runs before every upload request is sent — a throw here would fail the upload itself, so an
-  // out-of-range read yields "no match" instead.
+  // Runs on the upload request path (before the binary PUTs), not in the error path — a throw here
+  // would fail the upload itself, so an out-of-range read yields "no match" instead.
   if (offset < 0 || offset + 4 > bytes.length) {
     return ''
   }
