@@ -1,4 +1,3 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { useBCSCAgentSafe } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { purgeWalletStore } from '@/bcsc-theme/features/agent/services/agent-service'
@@ -17,7 +16,6 @@ jest.mock('@/bcsc-theme/hooks/useBCSCApiClient')
 // implementation, so opt back out.
 jest.unmock('@/bcsc-theme/api/hooks/useFactoryReset')
 
-jest.mock('@/bcsc-theme/api/hooks/useApi')
 jest.mock('@bifold/core')
 jest.mock('@/bcsc-theme/hooks/useSecureActions')
 jest.mock('./useRegistrationApi')
@@ -33,54 +31,64 @@ jest.mock('@/bcsc-theme/features/agent/services/agent-service', () => ({
 }))
 jest.mock('react-native-config', () => ({ Config: { INDY_VDR_PROXY_URL: '' } }))
 
-const warnMock = jest.fn()
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+type MockLogger = { info: jest.Mock; warn: jest.Mock; error: jest.Mock }
+
+type FactoryResetSetup = {
+  account?: any
+  store?: any
+  logger?: MockLogger
+  /** What `useServices` returns; defaults to `[logger]`, the wallet-purge path also needs ledgers. */
+  services?: any[]
+  client?: any
+  deleteRegistration?: jest.Mock
+  dispatch?: jest.Mock
+  clearSecureState?: jest.Mock
+  deleteSecureData?: jest.Mock
+}
+
+const setupFactoryReset = (overrides: FactoryResetSetup = {}) => {
+  const logger: MockLogger = overrides.logger ?? { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+  const {
+    account = { clientID: 'test-client-id' },
+    store = { bcscSecure: { registrationAccessToken: 'token', additionalEvidenceData: [] } },
+    services = [logger],
+    client = { clearTokens: jest.fn() },
+    deleteRegistration = jest.fn().mockResolvedValue({ success: true }),
+    dispatch = jest.fn(),
+    clearSecureState = jest.fn(),
+    deleteSecureData = jest.fn().mockResolvedValue(undefined),
+  } = overrides
+
+  const bcscCore = jest.mocked(BcscCore)
+  const bifold = jest.mocked(Bifold)
+
+  jest.mocked(useBCSCApiClientState).mockReturnValue({ client, isClientReady: true } as any)
+  jest.mocked(useRegistrationApi).mockReturnValue({ deleteRegistration, register: jest.fn() } as any)
+  jest.mocked(useSecureActions).mockReturnValue({ clearSecureState, deleteSecureData } as any)
+  bcscCore.getAccount.mockResolvedValue(account)
+  bcscCore.removeAccount.mockResolvedValue(undefined)
+  bifold.useStore.mockReturnValue([store, dispatch])
+  bifold.useServices.mockReturnValue(services as any)
+
+  return { bcscCore, logger, deleteRegistration, dispatch, clearSecureState, deleteSecureData }
+}
+
+const walletPurgeStore = {
+  bcscSecure: { registrationAccessToken: 'token', additionalEvidenceData: [], walletKey: 'stale-wallet-key' },
+  preferences: { selectedMediator: 'https://mediator.example', walletName: 'BC Wallet' },
+  developer: { enableProxy: false },
+}
 
 describe('useFactoryReset', () => {
   beforeEach(() => {
     jest.resetAllMocks()
-
-    const useSecureActionsMock = jest.mocked(useSecureActions)
-    useSecureActionsMock.mockReturnValue({
-      clearSecureState: jest.fn(),
-      deleteSecureData: jest.fn().mockResolvedValue(undefined),
-    } as any)
     jest.mocked(useBCSCAgentSafe).mockReturnValue(null)
   })
 
   it('should factory reset the device when successful', async () => {
-    const bcscCoreMock = jest.mocked(BcscCore)
-    const useSecureActionsMock = jest.mocked(useSecureActions)
-    const bifoldMock = jest.mocked(Bifold)
-    const useRegistrationApiMock = jest.mocked(useRegistrationApi)
-    const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
-
-    const deleteRegistrationMock = jest.fn().mockResolvedValue({ success: true })
-    const registerMock = jest.fn()
-    const dispatchMock = jest.fn()
-    const clearSecureStateMock = jest.fn()
-    const deleteSecureDataMock = jest.fn().mockResolvedValue(undefined)
-
-    useBCSCApiClientStateMock.mockReturnValue({
-      client: {
-        clearTokens: jest.fn().mockResolvedValue(undefined),
-      },
-      isClientReady: true,
-    } as any)
-    useRegistrationApiMock.mockReturnValue({
-      deleteRegistration: deleteRegistrationMock,
-      register: registerMock,
-    } as any)
-    bcscCoreMock.getAccount.mockResolvedValue({ clientID: 'test-client-id' } as any)
-    bcscCoreMock.removeAccount.mockResolvedValue(undefined)
-    useSecureActionsMock.mockReturnValue({
-      clearSecureState: clearSecureStateMock,
-      deleteSecureData: deleteSecureDataMock,
-    } as any)
-    bifoldMock.useStore.mockReturnValue([
-      { bcscSecure: { registrationAccessToken: 'token', additionalEvidenceData: [] } } as any,
-      dispatchMock,
-    ])
-    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
+    const { bcscCore, deleteRegistration, dispatch, clearSecureState, deleteSecureData } = setupFactoryReset()
 
     const hook = renderHook(() => useFactoryReset())
 
@@ -92,48 +100,21 @@ describe('useFactoryReset', () => {
       expect(result.success).toBe(true)
     })
 
-    expect(bcscCoreMock.getAccount).toHaveBeenCalledWith()
-    expect(deleteRegistrationMock).toHaveBeenCalledWith('token', 'test-client-id')
-    expect(deleteSecureDataMock).toHaveBeenCalledWith()
-    expect(bcscCoreMock.removeAccount).toHaveBeenCalledWith()
-    expect(bcscCoreMock.clearAllKeychainData).toHaveBeenCalledWith()
-    expect(clearSecureStateMock).toHaveBeenCalledWith()
-    expect(dispatchMock.mock.calls[0]).toStrictEqual([{ type: BCDispatchAction.CLEAR_BCSC, payload: undefined }])
-    expect(dispatchMock.mock.calls[1]).toStrictEqual([{ type: DispatchAction.DID_AUTHENTICATE, payload: [false] }])
+    expect(bcscCore.getAccount).toHaveBeenCalledWith()
+    expect(deleteRegistration).toHaveBeenCalledWith('token', 'test-client-id')
+    expect(deleteSecureData).toHaveBeenCalledWith()
+    expect(bcscCore.removeAccount).toHaveBeenCalledWith()
+    expect(bcscCore.clearAllKeychainData).toHaveBeenCalledWith()
+    expect(clearSecureState).toHaveBeenCalledWith()
+    expect(dispatch.mock.calls[0]).toStrictEqual([{ type: BCDispatchAction.CLEAR_BCSC, payload: undefined }])
+    expect(dispatch.mock.calls[1]).toStrictEqual([{ type: DispatchAction.DID_AUTHENTICATE, payload: [false] }])
   })
 
   it('should call getToken when registrationAccessToken is missing from store', async () => {
-    const bcscCoreMock = jest.mocked(BcscCore)
-    const useSecureActionsMock = jest.mocked(useSecureActions)
-    const bifoldMock = jest.mocked(Bifold)
-    const useRegistrationApiMock = jest.mocked(useRegistrationApi)
-    const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
-
-    const deleteRegistrationMock = jest.fn().mockResolvedValue({ success: true })
-    const dispatchMock = jest.fn()
-    const clearSecureStateMock = jest.fn()
-    const deleteSecureDataMock = jest.fn().mockResolvedValue(undefined)
-
-    useBCSCApiClientStateMock.mockReturnValue({
-      client: { clearTokens: jest.fn() },
-      isClientReady: true,
-    } as any)
-    useRegistrationApiMock.mockReturnValue({
-      deleteRegistration: deleteRegistrationMock,
-      register: jest.fn(),
-    } as any)
-    bcscCoreMock.getAccount.mockResolvedValue({ clientID: 'test-client-id' } as any)
-    bcscCoreMock.removeAccount.mockResolvedValue(undefined)
-    bcscCoreMock.getToken.mockResolvedValue({ token: 'native-token' } as any)
-    useSecureActionsMock.mockReturnValue({
-      clearSecureState: clearSecureStateMock,
-      deleteSecureData: deleteSecureDataMock,
-    } as any)
-    bifoldMock.useStore.mockReturnValue([
-      { bcscSecure: { registrationAccessToken: undefined, additionalEvidenceData: [] } } as any,
-      dispatchMock,
-    ])
-    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }] as any)
+    const { bcscCore, deleteRegistration } = setupFactoryReset({
+      store: { bcscSecure: { registrationAccessToken: undefined, additionalEvidenceData: [] } },
+    })
+    bcscCore.getToken.mockResolvedValue({ token: 'native-token' } as any)
 
     const hook = renderHook(() => useFactoryReset())
 
@@ -142,20 +123,11 @@ describe('useFactoryReset', () => {
       expect(result.success).toBe(true)
     })
 
-    expect(bcscCoreMock.getToken).toHaveBeenCalledWith(BcscCore.TokenType.Registration)
-    expect(deleteRegistrationMock).toHaveBeenCalledWith('native-token', 'test-client-id')
+    expect(bcscCore.getToken).toHaveBeenCalledWith(BcscCore.TokenType.Registration)
+    expect(deleteRegistration).toHaveBeenCalledWith('native-token', 'test-client-id')
   })
 
   it('awaits agentCtx.teardownAgent before clearing state when a live agent exists', async () => {
-    const bcscCoreMock = jest.mocked(BcscCore)
-    const useSecureActionsMock = jest.mocked(useSecureActions)
-    const bifoldMock = jest.mocked(Bifold)
-    const useRegistrationApiMock = jest.mocked(useRegistrationApi)
-    const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
-
-    const clearSecureStateMock = jest.fn()
-    const deleteSecureDataMock = jest.fn().mockResolvedValue(undefined)
-
     // A manually-resolved deferred promise, rather than a callOrder array pushed to
     // from inside async mock bodies. Timing-based approaches (an internal `await
     // Promise.resolve()`, or even a macrotask `await new Promise(setTimeout)`) are
@@ -184,25 +156,7 @@ describe('useFactoryReset', () => {
       waitForAgent: jest.fn().mockResolvedValue(agent),
     })
 
-    useBCSCApiClientStateMock.mockReturnValue({
-      client: { clearTokens: jest.fn() },
-      isClientReady: true,
-    } as any)
-    useRegistrationApiMock.mockReturnValue({
-      deleteRegistration: jest.fn().mockResolvedValue({ success: true }),
-      register: jest.fn(),
-    } as any)
-    bcscCoreMock.getAccount.mockResolvedValue({ clientID: 'test-client-id' } as any)
-    bcscCoreMock.removeAccount.mockResolvedValue(undefined)
-    useSecureActionsMock.mockReturnValue({
-      clearSecureState: clearSecureStateMock,
-      deleteSecureData: deleteSecureDataMock,
-    } as any)
-    bifoldMock.useStore.mockReturnValue([
-      { bcscSecure: { registrationAccessToken: 'token', additionalEvidenceData: [] } } as any,
-      jest.fn(),
-    ])
-    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), warn: jest.fn(), error: jest.fn() }] as any)
+    const { bcscCore, clearSecureState } = setupFactoryReset()
 
     const hook = renderHook(() => useFactoryReset())
 
@@ -221,8 +175,8 @@ describe('useFactoryReset', () => {
       }
     })
 
-    expect(bcscCoreMock.getAccount).not.toHaveBeenCalled()
-    expect(clearSecureStateMock).not.toHaveBeenCalled()
+    expect(bcscCore.getAccount).not.toHaveBeenCalled()
+    expect(clearSecureState).not.toHaveBeenCalled()
 
     resolveTeardown()
 
@@ -230,23 +184,16 @@ describe('useFactoryReset', () => {
 
     expect(result.success).toBe(true)
     expect(teardownAgentMock).toHaveBeenCalledTimes(1)
-    expect(bcscCoreMock.getAccount).toHaveBeenCalled()
-    expect(clearSecureStateMock).toHaveBeenCalled()
+    expect(bcscCore.getAccount).toHaveBeenCalled()
+    expect(clearSecureState).toHaveBeenCalled()
   })
 
   it('dispatches CLEAR_BCSC, then clearSecureState, then DID_AUTHENTICATE(false)', async () => {
-    const bcscCoreMock = jest.mocked(BcscCore)
-    const useSecureActionsMock = jest.mocked(useSecureActions)
-    const bifoldMock = jest.mocked(Bifold)
-    const useRegistrationApiMock = jest.mocked(useRegistrationApi)
-    const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
-
     const callOrder: string[] = []
-    const clearSecureStateMock = jest.fn(() => {
+    const clearSecureState = jest.fn(() => {
       callOrder.push('clearSecureState')
     })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const dispatchMock = jest.fn((action: any) => {
+    const dispatch = jest.fn((action: any) => {
       if (action.type === BCDispatchAction.CLEAR_BCSC) {
         callOrder.push('CLEAR_BCSC')
       }
@@ -255,25 +202,7 @@ describe('useFactoryReset', () => {
       }
     })
 
-    useBCSCApiClientStateMock.mockReturnValue({
-      client: { clearTokens: jest.fn() },
-      isClientReady: true,
-    } as any)
-    useRegistrationApiMock.mockReturnValue({
-      deleteRegistration: jest.fn().mockResolvedValue({ success: true }),
-      register: jest.fn(),
-    } as any)
-    bcscCoreMock.getAccount.mockResolvedValue({ clientID: 'test-client-id' } as any)
-    bcscCoreMock.removeAccount.mockResolvedValue(undefined)
-    useSecureActionsMock.mockReturnValue({
-      clearSecureState: clearSecureStateMock,
-      deleteSecureData: jest.fn().mockResolvedValue(undefined),
-    } as any)
-    bifoldMock.useStore.mockReturnValue([
-      { bcscSecure: { registrationAccessToken: 'token', additionalEvidenceData: [] } } as any,
-      dispatchMock,
-    ])
-    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), warn: jest.fn(), error: jest.fn() }] as any)
+    setupFactoryReset({ clearSecureState, dispatch })
 
     const hook = renderHook(() => useFactoryReset())
 
@@ -294,40 +223,9 @@ describe('useFactoryReset', () => {
     // interrupted init may have written an on-disk store keyed with the wallet
     // key that account removal is about to make underivable. Factory reset must
     // delete it via the throwaway-agent path or it orphans the store forever.
-    const bcscCoreMock = jest.mocked(BcscCore)
-    const useSecureActionsMock = jest.mocked(useSecureActions)
-    const bifoldMock = jest.mocked(Bifold)
-    const useRegistrationApiMock = jest.mocked(useRegistrationApi)
-    const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
-
-    // No live agent (mid-reinitialization), so the agentCtx.teardownAgent path
-    // is unavailable.
-    jest.mocked(useBCSCAgentSafe).mockReturnValue(null)
-
-    useBCSCApiClientStateMock.mockReturnValue({
-      client: { clearTokens: jest.fn() },
-      isClientReady: true,
-    } as any)
-    useRegistrationApiMock.mockReturnValue({
-      deleteRegistration: jest.fn().mockResolvedValue({ success: true }),
-      register: jest.fn(),
-    } as any)
-    bcscCoreMock.getAccount.mockResolvedValue({ clientID: 'test-client-id' } as any)
-    bcscCoreMock.removeAccount.mockResolvedValue(undefined)
-    useSecureActionsMock.mockReturnValue({
-      clearSecureState: jest.fn(),
-      deleteSecureData: jest.fn().mockResolvedValue(undefined),
-    } as any)
-    bifoldMock.useStore.mockReturnValue([
-      {
-        bcscSecure: { registrationAccessToken: 'token', additionalEvidenceData: [], walletKey: 'stale-wallet-key' },
-        preferences: { selectedMediator: 'https://mediator.example', walletName: 'BC Wallet' },
-        developer: { enableProxy: false },
-      } as any,
-      jest.fn(),
-    ])
+    const logger: MockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
     // useServices returns [logger, ledgers] for the build options.
-    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), warn: jest.fn(), error: jest.fn() }, []] as any)
+    const { bcscCore } = setupFactoryReset({ store: walletPurgeStore, logger, services: [logger, []] })
 
     const hook = renderHook(() => useFactoryReset())
 
@@ -342,43 +240,14 @@ describe('useFactoryReset', () => {
     expect(purgeWalletStore).toHaveBeenCalledWith(
       expect.objectContaining({ walletSecret: expect.objectContaining({ key: 'stale-wallet-key' }) })
     )
-    expect(bcscCoreMock.removeAccount).toHaveBeenCalledWith()
+    expect(bcscCore.removeAccount).toHaveBeenCalledWith()
   })
 
   it('does not fail the reset if the orphaned-store purge throws', async () => {
-    const bcscCoreMock = jest.mocked(BcscCore)
-    const useSecureActionsMock = jest.mocked(useSecureActions)
-    const bifoldMock = jest.mocked(Bifold)
-    const useRegistrationApiMock = jest.mocked(useRegistrationApi)
-    const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
-    const warnLogMock = jest.fn()
-
-    jest.mocked(useBCSCAgentSafe).mockReturnValue(null)
     jest.mocked(purgeWalletStore).mockRejectedValue(new Error('build boom'))
 
-    useBCSCApiClientStateMock.mockReturnValue({
-      client: { clearTokens: jest.fn() },
-      isClientReady: true,
-    } as any)
-    useRegistrationApiMock.mockReturnValue({
-      deleteRegistration: jest.fn().mockResolvedValue({ success: true }),
-      register: jest.fn(),
-    } as any)
-    bcscCoreMock.getAccount.mockResolvedValue({ clientID: 'test-client-id' } as any)
-    bcscCoreMock.removeAccount.mockResolvedValue(undefined)
-    useSecureActionsMock.mockReturnValue({
-      clearSecureState: jest.fn(),
-      deleteSecureData: jest.fn().mockResolvedValue(undefined),
-    } as any)
-    bifoldMock.useStore.mockReturnValue([
-      {
-        bcscSecure: { registrationAccessToken: 'token', additionalEvidenceData: [], walletKey: 'stale-wallet-key' },
-        preferences: { selectedMediator: 'https://mediator.example', walletName: 'BC Wallet' },
-        developer: { enableProxy: false },
-      } as any,
-      jest.fn(),
-    ])
-    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), warn: warnLogMock, error: jest.fn() }, []] as any)
+    const logger: MockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() }
+    setupFactoryReset({ store: walletPurgeStore, logger, services: [logger, []] })
 
     const hook = renderHook(() => useFactoryReset())
 
@@ -387,7 +256,7 @@ describe('useFactoryReset', () => {
       expect(result.success).toBe(true)
     })
 
-    expect(warnLogMock).toHaveBeenCalledWith(
+    expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('orphaned wallet store purge failed'),
       expect.objectContaining({ error: expect.any(Error) })
     )
@@ -395,25 +264,12 @@ describe('useFactoryReset', () => {
 
   it.todo('should factory reset with custom state when provided')
 
-  it('should log a warning if account is null', async () => {
-    const bcscCoreMock = jest.mocked(BcscCore)
-    const useApiMock = jest.mocked(useApi)
-    const useSecureActionsMock = jest.mocked(useSecureActions)
-    const bifoldMock = jest.mocked(Bifold)
-    const infoMock = jest.fn()
-    const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
-
-    const deleteRegistrationMock = jest.fn()
-
-    useBCSCApiClientStateMock.mockReturnValue({ client: {}, isClientReady: true } as any)
-    bcscCoreMock.getAccount.mockResolvedValue(null)
-    useApiMock.mockImplementation(() => ({ registration: { deleteRegistration: deleteRegistrationMock } }) as any)
-    useSecureActionsMock.mockReturnValue({
-      clearSecureState: jest.fn(),
-      deleteSecureData: jest.fn().mockResolvedValue(undefined),
-    } as any)
-    bifoldMock.useStore.mockReturnValue([{ bcscSecure: { additionalEvidenceData: [] } } as any, jest.fn()])
-    bifoldMock.useServices.mockReturnValue([{ info: infoMock, error: jest.fn() }] as any)
+  it('should not warn or delete the registration when the account is null', async () => {
+    const { bcscCore, logger, deleteRegistration } = setupFactoryReset({
+      account: null,
+      store: { bcscSecure: { additionalEvidenceData: [] } },
+      client: {},
+    })
 
     const hook = renderHook(() => useFactoryReset())
 
@@ -421,43 +277,18 @@ describe('useFactoryReset', () => {
       await hook.result.current()
     })
 
-    expect(bcscCoreMock.getAccount).toHaveBeenCalled()
-    expect(warnMock).not.toHaveBeenCalled()
-    expect(infoMock).toHaveBeenCalled()
-    expect(deleteRegistrationMock).not.toHaveBeenCalled()
+    expect(bcscCore.getAccount).toHaveBeenCalled()
+    expect(logger.warn).not.toHaveBeenCalled()
+    expect(logger.info).toHaveBeenCalledWith('FactoryReset: No BCSC account found')
+    expect(deleteRegistration).not.toHaveBeenCalled()
     // Keychain data can outlive an app reinstall even when no local account file
     // remains, so the wipe must still run in this branch.
-    expect(bcscCoreMock.clearAllKeychainData).toHaveBeenCalledWith()
+    expect(bcscCore.clearAllKeychainData).toHaveBeenCalledWith()
   })
 
   it('does not fail the reset if clearing Keychain data throws', async () => {
-    const bcscCoreMock = jest.mocked(BcscCore)
-    const useSecureActionsMock = jest.mocked(useSecureActions)
-    const bifoldMock = jest.mocked(Bifold)
-    const useRegistrationApiMock = jest.mocked(useRegistrationApi)
-    const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
-    const warnLogMock = jest.fn()
-
-    useBCSCApiClientStateMock.mockReturnValue({
-      client: { clearTokens: jest.fn() },
-      isClientReady: true,
-    } as any)
-    useRegistrationApiMock.mockReturnValue({
-      deleteRegistration: jest.fn().mockResolvedValue({ success: true }),
-      register: jest.fn(),
-    } as any)
-    bcscCoreMock.getAccount.mockResolvedValue({ clientID: 'test-client-id' } as any)
-    bcscCoreMock.removeAccount.mockResolvedValue(undefined)
-    bcscCoreMock.clearAllKeychainData.mockRejectedValue(new Error('keychain boom'))
-    useSecureActionsMock.mockReturnValue({
-      clearSecureState: jest.fn(),
-      deleteSecureData: jest.fn().mockResolvedValue(undefined),
-    } as any)
-    bifoldMock.useStore.mockReturnValue([
-      { bcscSecure: { registrationAccessToken: 'token', additionalEvidenceData: [] } } as any,
-      jest.fn(),
-    ])
-    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), warn: warnLogMock, error: jest.fn() }] as any)
+    const { bcscCore, logger } = setupFactoryReset()
+    bcscCore.clearAllKeychainData.mockRejectedValue(new Error('keychain boom'))
 
     const hook = renderHook(() => useFactoryReset())
 
@@ -466,29 +297,17 @@ describe('useFactoryReset', () => {
       expect(result.success).toBe(true)
     })
 
-    expect(warnLogMock).toHaveBeenCalledWith(
+    expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('Failed to clear Keychain data'),
       expect.objectContaining({ message: 'keychain boom' })
     )
   })
 
   it('should log a warning if IAS account deletion fails', async () => {
-    const bcscCoreMock = jest.mocked(BcscCore)
-    const useSecureActionsMock = jest.mocked(useSecureActions)
-    const bifoldMock = jest.mocked(Bifold)
-    const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
-
-    useBCSCApiClientStateMock.mockReturnValue({ client: {}, isClientReady: true } as any)
-    bcscCoreMock.getAccount.mockResolvedValue({ clientID: 'test-client-id' } as any)
-    useSecureActionsMock.mockReturnValue({
-      clearSecureState: jest.fn(),
-      deleteSecureData: jest.fn().mockResolvedValue(undefined),
-    } as any)
-    bifoldMock.useStore.mockReturnValue([
-      { bcscSecure: { registrationAccessToken: 'token', additionalEvidenceData: [] } } as any,
-      jest.fn(),
-    ])
-    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), error: jest.fn(), warn: warnMock }] as any)
+    const { bcscCore, logger } = setupFactoryReset({
+      client: {},
+      deleteRegistration: jest.fn().mockResolvedValue({ success: false }),
+    })
 
     const hook = renderHook(() => useFactoryReset())
 
@@ -496,49 +315,25 @@ describe('useFactoryReset', () => {
       await hook.result.current()
     })
 
-    expect(bcscCoreMock.getAccount).toHaveBeenCalled()
-    expect(warnMock).toHaveBeenCalled()
+    expect(bcscCore.getAccount).toHaveBeenCalled()
+    expect(logger.warn).toHaveBeenCalledWith('FactoryReset: Failed to delete IAS account from server')
   })
 
   it('should return an error if local account file deletion fails', async () => {
-    const bcscCoreMock = jest.mocked(BcscCore)
-    const useSecureActionsMock = jest.mocked(useSecureActions)
-    const bifoldMock = jest.mocked(Bifold)
-    const useRegistrationApiMock = jest.mocked(useRegistrationApi)
-    const useBCSCApiClientStateMock = jest.mocked(useBCSCApiClientState)
-
-    const deleteRegistrationMock = jest.fn().mockResolvedValue({ success: true })
-
-    useBCSCApiClientStateMock.mockReturnValue({ client: {}, isClientReady: true } as any)
-    useRegistrationApiMock.mockReturnValue({
-      deleteRegistration: deleteRegistrationMock,
-    } as any)
-    bcscCoreMock.getAccount.mockResolvedValue({ clientID: 'test-client-id' } as any)
-    bcscCoreMock.removeAccount.mockRejectedValue(new Error('Failed to remove account'))
-    useSecureActionsMock.mockReturnValue({
-      clearSecureState: jest.fn(),
-      deleteSecureData: jest.fn().mockResolvedValue(undefined),
-    } as any)
-    bifoldMock.useStore.mockReturnValue([
-      { bcscSecure: { registrationAccessToken: 'token', additionalEvidenceData: [] } } as any,
-      jest.fn(),
-    ])
-    bifoldMock.useServices.mockReturnValue([{ info: jest.fn(), error: jest.fn(), warn: warnMock }] as any)
+    const { bcscCore, deleteRegistration } = setupFactoryReset({ client: {} })
+    bcscCore.removeAccount.mockRejectedValue(new Error('Failed to remove account'))
 
     const hook = renderHook(() => useFactoryReset())
 
     await act(async () => {
       const result = await hook.result.current()
-      if (result.success) {
-        expect(true).toBe(false) // Force fail if success is true
-      } else {
-        expect(result.success).toBe(false)
-        expect(result.error.message).toContain('Failed to remove account')
-      }
+
+      expect(result.success).toBe(false)
+      expect(result.success === false && result.error.message).toContain('Failed to remove account')
     })
 
-    expect(bcscCoreMock.getAccount).toHaveBeenCalled()
-    expect(deleteRegistrationMock).toHaveBeenCalledWith('token', 'test-client-id')
-    expect(bcscCoreMock.removeAccount).toHaveBeenCalled()
+    expect(bcscCore.getAccount).toHaveBeenCalled()
+    expect(deleteRegistration).toHaveBeenCalledWith('token', 'test-client-id')
+    expect(bcscCore.removeAccount).toHaveBeenCalled()
   })
 })

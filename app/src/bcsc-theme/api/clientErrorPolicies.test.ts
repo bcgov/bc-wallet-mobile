@@ -1144,44 +1144,26 @@ describe('clientErrorPolicies', () => {
         expect(matchedPolicy).toBe(globalAlertErrorPolicy)
       })
 
-      it('should have alreadyRegisteredErrorPolicy before other policies', () => {
-        const indexOfAlreadyRegistered = ClientErrorHandlingPolicies.indexOf(alreadyRegisteredErrorPolicy)
-        const indexOfBirthdateLockout = ClientErrorHandlingPolicies.indexOf(birthdateLockoutErrorPolicy)
-        const indexOfGlobalAlert = ClientErrorHandlingPolicies.indexOf(globalAlertErrorPolicy)
+      it('should prefer alreadyRegisteredErrorPolicy over birthdateLockoutErrorPolicy', () => {
+        const error = newError('err_501_invalid_registration_request')
+        const cause = new AxiosError('client is in invalid state')
+        ;(cause as any).response = { status: 503 }
+        error.cause = cause
+        const context = {
+          endpoint: '/api/devicecode',
+          apiEndpoints: {
+            deviceAuthorization: '/api/devicecode',
+          },
+        }
 
-        // alreadyRegisteredErrorPolicy should come before birthdateLockoutErrorPolicy
-        expect(indexOfAlreadyRegistered).toBeLessThan(indexOfBirthdateLockout)
+        // Both policies match this error; the earlier one in the array must win.
+        expect(birthdateLockoutErrorPolicy.matches(error, context as any)).toBeTruthy()
 
-        // alreadyRegisteredErrorPolicy should come before globalAlertErrorPolicy
-        expect(indexOfAlreadyRegistered).toBeLessThan(indexOfGlobalAlert)
+        const matchedPolicy = ClientErrorHandlingPolicies.find((policy) => policy.matches(error, context as any))
+        expect(matchedPolicy).toBe(alreadyRegisteredErrorPolicy)
       })
 
-      it('should have alreadyRegisteredErrorPolicy before invalidRegistrationRequestErrorPolicy', () => {
-        const indexOfAlreadyRegistered = ClientErrorHandlingPolicies.indexOf(alreadyRegisteredErrorPolicy)
-        const indexOfInvalidRegistration = ClientErrorHandlingPolicies.indexOf(invalidRegistrationRequestErrorPolicy)
-
-        expect(indexOfAlreadyRegistered).toBeLessThan(indexOfInvalidRegistration)
-      })
-
-      it('should have new IAS error policies before globalAlertErrorPolicy', () => {
-        const indexOfStringResource = ClientErrorHandlingPolicies.indexOf(failedToRetrieveStringResourceErrorPolicy)
-        const indexOfInvalidUrl = ClientErrorHandlingPolicies.indexOf(invalidUrlErrorPolicy)
-        const indexOfInvalidRegistration = ClientErrorHandlingPolicies.indexOf(invalidRegistrationRequestErrorPolicy)
-        const indexOfGlobalAlert = ClientErrorHandlingPolicies.indexOf(globalAlertErrorPolicy)
-
-        expect(indexOfStringResource).toBeLessThan(indexOfGlobalAlert)
-        expect(indexOfInvalidUrl).toBeLessThan(indexOfGlobalAlert)
-        expect(indexOfInvalidRegistration).toBeLessThan(indexOfGlobalAlert)
-      })
-
-      it('should have emailVerificationCodeErrorPolicy before iasErrorPolicy so 400/404 do not route to the err_209 alert', () => {
-        const indexOfEmailVerification = ClientErrorHandlingPolicies.indexOf(emailVerificationCodeErrorPolicy)
-        const indexOfIas = ClientErrorHandlingPolicies.indexOf(iasErrorPolicy)
-
-        expect(indexOfEmailVerification).toBeLessThan(indexOfIas)
-      })
-
-      it('should prefer alreadyRegisteredErrorPolicy for ERR_501 with "client is in invalid" on deviceAuthorization', () => {
+      it('should prefer alreadyRegisteredErrorPolicy over invalidRegistrationRequestErrorPolicy', () => {
         const error = newError('err_501_invalid_registration_request')
         error.cause = new AxiosError('client is in invalid state')
         const context = {
@@ -1191,8 +1173,40 @@ describe('clientErrorPolicies', () => {
           },
         }
 
+        expect(invalidRegistrationRequestErrorPolicy.matches(error, context as any)).toBeTruthy()
+
         const matchedPolicy = ClientErrorHandlingPolicies.find((policy) => policy.matches(error, context as any))
         expect(matchedPolicy).toBe(alreadyRegisteredErrorPolicy)
+      })
+
+      it.each([
+        ['err_400_failed_to_retrieve_string_resource', failedToRetrieveStringResourceErrorPolicy],
+        ['err_500_invalid_url', invalidUrlErrorPolicy],
+        ['err_501_invalid_registration_request', invalidRegistrationRequestErrorPolicy],
+      ])('should resolve %s to its own policy rather than a global fallback', (appEvent, expectedPolicy) => {
+        const error = newError(appEvent as string)
+        const context = { endpoint: '/api/some-endpoint', apiEndpoints: {} as any }
+
+        const matchedPolicy = ClientErrorHandlingPolicies.find((policy) => policy.matches(error, context as any))
+
+        expect(matchedPolicy).toBe(expectedPolicy)
+        expect(matchedPolicy).not.toBe(globalAlertErrorPolicy)
+      })
+
+      it('should prefer emailVerificationCodeErrorPolicy over iasErrorPolicy on a 404 email verification endpoint', () => {
+        const error = newError('err_209_bad_request')
+        const context = {
+          endpoint: 'https://example.com/v1/emails/abc123',
+          statusCode: 404,
+          apiEndpoints: {} as any,
+        }
+
+        // err_209 is in the IAS alert map, so both policies match — the email-specific policy is
+        // earlier and suppresses the generic err_209 alert.
+        expect(iasErrorPolicy.matches(error, context as any)).toBeTruthy()
+
+        const matchedPolicy = ClientErrorHandlingPolicies.find((policy) => policy.matches(error, context as any))
+        expect(matchedPolicy).toBe(emailVerificationCodeErrorPolicy)
       })
 
       it('should fall through to invalidRegistrationRequestErrorPolicy for ERR_501 without "client is in invalid"', () => {
@@ -1229,9 +1243,8 @@ describe('clientErrorPolicies', () => {
     })
 
     describe('handle', () => {
-      it('should emit the alert', () => {
-        const originalError = AppError.fromErrorDefinition(ErrorRegistry.GENERAL_ERROR) as AxiosAppError
-        const error = AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR, { cause: originalError })
+      it('should emit the alert with the error it was handed', () => {
+        const error = AppError.fromErrorDefinition(ErrorRegistry.SERVER_ERROR) as AxiosAppError
 
         const mockAlert = jest.fn()
         const context = {
@@ -1239,50 +1252,21 @@ describe('clientErrorPolicies', () => {
             serverErrorAlert: mockAlert,
           },
         }
-        unexpectedServerErrorPolicy.handle(originalError, context as any)
-        expect(mockAlert).toHaveBeenCalled()
-        expect(error.cause).toBe(originalError)
+        unexpectedServerErrorPolicy.handle(error, context as any)
+        expect(mockAlert).toHaveBeenCalledWith(error)
       })
     })
   })
 
   describe('verifyDeviceAssertionPolicy', () => {
     describe('matches', () => {
-      it('should match LOGIN_SERVER_ERROR on verify device endpoint', () => {
-        const error = newError('login_server_error')
-        const context = {
-          endpoint: '/api/cardTap/v3/mobile/assertion',
-          apiEndpoints: {
-            cardTap: '/api/cardTap',
-          },
-        }
-        expect(verifyDeviceAssertionErrorPolicy.matches(error, context as any)).toBeTruthy()
-      })
-
-      it('should match LOGIN_PARSE_URI on verify device endpoint', () => {
-        const error = newError('login_parse_uri')
-        const context = {
-          endpoint: '/api/cardTap/v3/mobile/assertion',
-          apiEndpoints: {
-            cardTap: '/api/cardTap',
-          },
-        }
-        expect(verifyDeviceAssertionErrorPolicy.matches(error, context as any)).toBeTruthy()
-      })
-
-      it('should match INVALID_PAIRING_CODE on verify device endpoint', () => {
-        const error = newError('invalid_pairing_code')
-        const context = {
-          endpoint: '/api/cardTap/v3/mobile/assertion',
-          apiEndpoints: {
-            cardTap: '/api/cardTap',
-          },
-        }
-        expect(verifyDeviceAssertionErrorPolicy.matches(error, context as any)).toBeTruthy()
-      })
-
-      it('should match LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE on verify device endpoint', () => {
-        const error = newError('login_same_device_invalid_pairing_code')
+      it.each([
+        ['LOGIN_SERVER_ERROR', 'login_server_error'],
+        ['LOGIN_PARSE_URI', 'login_parse_uri'],
+        ['INVALID_PAIRING_CODE', 'invalid_pairing_code'],
+        ['LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE', 'login_same_device_invalid_pairing_code'],
+      ])('should match %s on verify device endpoint', (_name, appEvent) => {
+        const error = newError(appEvent)
         const context = {
           endpoint: '/api/cardTap/v3/mobile/assertion',
           apiEndpoints: {
@@ -1313,141 +1297,109 @@ describe('clientErrorPolicies', () => {
         }
         expect(verifyDeviceAssertionErrorPolicy.matches(error, context as any)).toBeFalsy()
       })
+    })
 
-      describe('handle', () => {
-        it('should emit the login server error alert', () => {
-          const error = newError('login_server_error')
-          const mockAlert = jest.fn()
-          const context = {
-            alerts: { loginServerErrorAlert: mockAlert },
-          }
-          verifyDeviceAssertionErrorPolicy.handle(error, context as any)
-          expect(mockAlert).toHaveBeenCalled()
-        })
+    describe('handle', () => {
+      it.each([
+        ['login_server_error', 'loginServerErrorAlert'],
+        ['login_parse_uri', 'problemWithLoginAlert'],
+        ['invalid_pairing_code', 'invalidPairingCodeAlert'],
+        ['login_remembered_device_invalid_pairing_code', 'invalidPairingCodeAlert'],
+        ['login_same_device_invalid_pairing_code', 'loginSameDeviceInvalidPairingCodeAlert'],
+      ])('should emit %s via %s', (appEvent, alertMethod) => {
+        const error = newError(appEvent)
+        const mockAlert = jest.fn()
+        const context = {
+          alerts: { [alertMethod]: mockAlert },
+        }
+        verifyDeviceAssertionErrorPolicy.handle(error, context as any)
+        expect(mockAlert).toHaveBeenCalled()
+      })
+    })
+  })
 
-        it('should emit the problem with account alert', () => {
-          const error = newError('login_parse_uri')
-          const mockAlert = jest.fn()
-          const context = {
-            alerts: { problemWithLoginAlert: mockAlert },
-          }
-          verifyDeviceAssertionErrorPolicy.handle(error, context as any)
-          expect(mockAlert).toHaveBeenCalled()
-        })
+  describe('verifyNotCompletedErrorPolicy', () => {
+    describe('matches', () => {
+      it('should match VERIFY_NOT_COMPLETE on token endpoint', () => {
+        const error = newError('verify_not_complete')
+        const context = {
+          endpoint: '/api/token',
+          apiEndpoints: {
+            token: '/api/token',
+          },
+        }
+        expect(verifyNotCompletedErrorPolicy.matches(error, context as any)).toBeTruthy()
+      })
 
-        it('should emit the invalid pairing code alert', () => {
-          const error = newError('invalid_pairing_code')
-          const mockAlert = jest.fn()
-          const context = {
-            alerts: { invalidPairingCodeAlert: mockAlert },
-          }
-          verifyDeviceAssertionErrorPolicy.handle(error, context as any)
-          expect(mockAlert).toHaveBeenCalled()
-        })
+      it('should NOT match USER_INPUT_EXPIRED_VERIFY_REQUEST on other endpoint', () => {
+        const error = newError('verify_not_complete')
+        const context = {
+          endpoint: '/api/other',
+          apiEndpoints: {
+            token: '/api/token',
+          },
+        }
+        expect(verifyNotCompletedErrorPolicy.matches(error, context as any)).toBeFalsy()
+      })
 
-        it('should emit the login remembered pairing code code alert', () => {
-          const error = newError('login_remembered_device_invalid_pairing_code')
-          const mockAlert = jest.fn()
-          const context = {
-            alerts: { invalidPairingCodeAlert: mockAlert },
-          }
-          verifyDeviceAssertionErrorPolicy.handle(error, context as any)
-          expect(mockAlert).toHaveBeenCalled()
-        })
-
-        it('should emit the login remembered device invalid pairing code alert', () => {
-          const error = newError('login_same_device_invalid_pairing_code')
-          const mockAlert = jest.fn()
-          const context = {
-            alerts: { loginSameDeviceInvalidPairingCodeAlert: mockAlert },
-          }
-          verifyDeviceAssertionErrorPolicy.handle(error, context as any)
-          expect(mockAlert).toHaveBeenCalled()
-        })
+      it('should NOT match other error codes', () => {
+        const error = newError('some_other_error')
+        const context = {
+          endpoint: '/api/token',
+          apiEndpoints: {
+            token: '/api/token',
+          },
+        }
+        expect(verifyNotCompletedErrorPolicy.matches(error, context as any)).toBeFalsy()
       })
     })
 
-    describe('verifyNotCompletedErrorPolicy', () => {
-      describe('matches', () => {
-        it('should match VERIFY_NOT_COMPLETE on token endpoint', () => {
-          const error = newError('verify_not_complete')
-          const context = {
-            endpoint: '/api/token',
-            apiEndpoints: {
-              token: '/api/token',
-            },
-          }
-          expect(verifyNotCompletedErrorPolicy.matches(error, context as any)).toBeTruthy()
-        })
+    describe('handle', () => {
+      it('should emit the alert', () => {
+        const error = newError('verify_not_complete')
+        const mockAlert = jest.fn()
+        const context = {
+          alerts: { verificationNotCompleteAlert: mockAlert },
+        }
+        verifyNotCompletedErrorPolicy.handle(error, context as any)
+        expect(mockAlert).toHaveBeenCalled()
+      })
+    })
+  })
 
-        it('should NOT match USER_INPUT_EXPIRED_VERIFY_REQUEST on other endpoint', () => {
-          const error = newError('verify_not_complete')
-          const context = {
-            endpoint: '/api/other',
-            apiEndpoints: {
-              token: '/api/token',
-            },
-          }
-          expect(verifyNotCompletedErrorPolicy.matches(error, context as any)).toBeFalsy()
-        })
-
-        it('should NOT match other error codes', () => {
-          const error = newError('some_other_error')
-          const context = {
-            endpoint: '/api/token',
-            apiEndpoints: {
-              token: '/api/token',
-            },
-          }
-          expect(verifyNotCompletedErrorPolicy.matches(error, context as any)).toBeFalsy()
-        })
+  describe('alreadyVerifiedErrorPolicy', () => {
+    describe('matches', () => {
+      it('should match ALREADY_VERIFIED on token endpoint', () => {
+        const error = newError('already_verified')
+        const context = {
+          endpoint: '/api/token',
+          apiEndpoints: {
+            token: '/api/token',
+          },
+        }
+        expect(alreadyVerifiedErrorPolicy.matches(error, context as any)).toBeTruthy()
       })
 
-      describe('alreadyVerifiedErrorPolicy', () => {
-        it('should match ALREADY_VERIFIED on token endpoint', () => {
-          const error = newError('already_verified')
-          const context = {
-            endpoint: '/api/token',
-            apiEndpoints: {
-              token: '/api/token',
-            },
-          }
-          expect(alreadyVerifiedErrorPolicy.matches(error, context as any)).toBeTruthy()
-        })
-
-        it('should NOT match ALREADY_VERIFIED on other endpoint', () => {
-          const error = newError('already_verified')
-          const context = {
-            endpoint: '/api/other',
-            apiEndpoints: {
-              token: '/api/token',
-            },
-          }
-          expect(alreadyVerifiedErrorPolicy.matches(error, context as any)).toBeFalsy()
-        })
-
-        it('should NOT match other error codes', () => {
-          const error = newError('some_other_error')
-          const context = {
-            endpoint: '/api/token',
-            apiEndpoints: {
-              token: '/api/token',
-            },
-          }
-          expect(alreadyVerifiedErrorPolicy.matches(error, context as any)).toBeFalsy()
-        })
+      it('should NOT match ALREADY_VERIFIED on other endpoint', () => {
+        const error = newError('already_verified')
+        const context = {
+          endpoint: '/api/other',
+          apiEndpoints: {
+            token: '/api/token',
+          },
+        }
+        expect(alreadyVerifiedErrorPolicy.matches(error, context as any)).toBeFalsy()
       })
 
-      describe('handle', () => {
-        it('should emit the alert', () => {
-          const error = newError('verify_not_complete')
-          const mockAlert = jest.fn()
-          const context = {
-            alerts: { verificationNotCompleteAlert: mockAlert },
-          }
-          verifyNotCompletedErrorPolicy.handle(error, context as any)
-          expect(mockAlert).toHaveBeenCalled()
-        })
+      it('should NOT match other error codes', () => {
+        const error = newError('some_other_error')
+        const context = {
+          endpoint: '/api/token',
+          apiEndpoints: {
+            token: '/api/token',
+          },
+        }
+        expect(alreadyVerifiedErrorPolicy.matches(error, context as any)).toBeFalsy()
       })
     })
   })
