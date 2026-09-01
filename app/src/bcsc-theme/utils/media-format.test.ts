@@ -61,6 +61,10 @@ describe('sniffMediaFormat', () => {
     expect(sniffMediaFormat(buildFtypBox('wxyz', ['zzzz', 'yyyy']))).toBeUndefined()
   })
 
+  it('does not label a non-HEVC HEIF (e.g. AVIF) as HEIC via the structural brands', () => {
+    expect(sniffMediaFormat(buildFtypBox('avif', ['mif1', 'miaf']))).toBeUndefined()
+  })
+
   it('returns undefined for garbage bytes', () => {
     const bytes = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c])
     expect(sniffMediaFormat(bytes)).toBeUndefined()

@@ -12,7 +12,7 @@ export interface UploadLogContext {
 }
 
 // ISO-BMFF (MP4/HEIC/QuickTime) major/compatible brands, mapped to the format they identify.
-const HEIC_BRANDS = new Set(['heic', 'heix', 'hevc', 'hevx', 'heim', 'heis', 'hevm', 'hevs', 'mif1', 'msf1'])
+const HEIC_BRANDS = new Set(['heic', 'heix', 'hevc', 'hevx', 'heim', 'heis', 'hevm', 'hevs'])
 const MP4_BRANDS = new Set(['isom', 'iso2', 'iso4', 'iso5', 'iso6', 'mp41', 'mp42', 'avc1'])
 const QUICKTIME_BRAND = 'qt  '
 
@@ -21,8 +21,8 @@ const QUICKTIME_BRAND = 'qt  '
 const FTYP_SCAN_CAP_BYTES = 64
 
 const readAscii4 = (bytes: Uint8Array, offset: number): string => {
-  // Runs inside the failed-upload error-logging path — must never throw, so an out-of-range
-  // read (should a caller's bounds guard ever weaken) yields "no match" instead of a crash.
+  // Runs before every upload request is sent — a throw here would fail the upload itself, so an
+  // out-of-range read yields "no match" instead.
   if (offset < 0 || offset + 4 > bytes.length) {
     return ''
   }
