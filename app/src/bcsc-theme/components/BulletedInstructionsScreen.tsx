@@ -122,7 +122,6 @@ const SectionLinkView = ({ link }: { link: SectionLink }) => {
     },
     externalButtonText: {
       ...Buttons.secondaryText,
-      flexWrap: 'wrap',
       flexShrink: 1,
     },
   })

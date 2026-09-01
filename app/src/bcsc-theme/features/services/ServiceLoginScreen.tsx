@@ -339,7 +339,6 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     },
     externalButtonText: {
       ...Buttons.primaryText,
-      flexWrap: 'wrap',
       flexShrink: 1,
     },
   })

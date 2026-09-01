@@ -483,7 +483,6 @@ exports[`DualIdentificationRequired renders correctly 1`] = `
                     {
                       "color": "#003366",
                       "flexShrink": 1,
-                      "flexWrap": "wrap",
                       "fontFamily": "BCSans-Regular",
                       "fontSize": 18,
                       "fontWeight": "bold",
