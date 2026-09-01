@@ -137,7 +137,7 @@ describe('BCSC Client', () => {
           expect.stringContaining('[BCSCApiClient]'),
           expect.objectContaining({ context: expect.objectContaining(uploadLogContext) })
         )
-        // The same fields must reach the "Report this problem" payload, which serializes via toJSON().
+        // context is what downstream log/report consumers serialize via toJSON().
         expect((error as AppError).toJSON().context).toEqual(expect.objectContaining(uploadLogContext))
       }
     })
@@ -158,7 +158,7 @@ describe('BCSC Client', () => {
           expect.stringContaining('[BCSCApiClient]'),
           expect.objectContaining({ context: expect.objectContaining(uploadLogContext) })
         )
-        // The same fields must reach the "Report this problem" payload, which serializes via toJSON().
+        // context is what downstream log/report consumers serialize via toJSON().
         expect((error as AppError).toJSON().context).toEqual(expect.objectContaining(uploadLogContext))
       }
     })

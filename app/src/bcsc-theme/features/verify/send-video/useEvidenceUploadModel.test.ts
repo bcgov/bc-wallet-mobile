@@ -621,7 +621,14 @@ describe('useEvidenceUploadModel', () => {
 
       mockEvidenceApi.uploadPhotoEvidenceMetadata.mockResolvedValue({ upload_uri: 'photo-uri' })
       mockEvidenceApi.uploadVideoEvidenceMetadata.mockResolvedValue({ upload_uri: 'video-uri' })
-      mockEvidenceApi.uploadPhotoEvidenceBinary.mockRejectedValue(new Error('Upload failed'))
+
+      const uploadContext = { media_kind: 'image', media_stage: 'binary', media_bytes: 3, media_format: 'image/jpeg' }
+      const innerError = new AppError(
+        'Network Error',
+        { category: ErrorCategory.NETWORK, appEvent: AppEventCode.NO_INTERNET, statusCode: 2100 },
+        { cause: new AxiosError('Network Error', 'ERR_NETWORK'), context: uploadContext, track: false }
+      )
+      mockEvidenceApi.uploadPhotoEvidenceBinary.mockRejectedValue(innerError)
 
       const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 
@@ -630,6 +637,9 @@ describe('useEvidenceUploadModel', () => {
       })
 
       expect(mockFileUploadErrorAlert).toHaveBeenCalled()
+      expect((mockFileUploadErrorAlert.mock.calls[0][0] as AppError).toJSON().context).toEqual(
+        expect.objectContaining(uploadContext)
+      )
       expect(mockEvidenceApi.sendVerificationRequest).not.toHaveBeenCalled()
     })
 
