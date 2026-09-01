@@ -6,6 +6,8 @@ import * as DeviceInfo from 'react-native-device-info'
 import { useCreateSystemChecks } from './useCreateSystemChecks'
 import { SystemCheckScope } from './useSystemChecks'
 
+jest.mock('@/bcsc-theme/api/hooks/useFactoryReset')
+
 // --------------------
 // Mock functions
 // --------------------
@@ -1075,6 +1077,19 @@ describe('useGetSystemChecks', () => {
       mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
       jest.spyOn(React, 'useContext').mockReturnValue({ account: {} })
     }
+
+    it('should be applicable only once the account has loaded', () => {
+      jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
+      mockHydratedStore()
+
+      const { result: withAccount } = renderHook(() => useCreateSystemChecks())
+      expect(withAccount.current[SystemCheckScope.ACCOUNT].isApplicable).toBe(true)
+
+      jest.spyOn(React, 'useContext').mockReturnValue({ account: null })
+
+      const { result: withoutAccount } = renderHook(() => useCreateSystemChecks())
+      expect(withoutAccount.current[SystemCheckScope.ACCOUNT].isApplicable).toBe(false)
+    })
 
     it('should return no AccountSystemChecks with no accountExpirationDate', async () => {
       jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')

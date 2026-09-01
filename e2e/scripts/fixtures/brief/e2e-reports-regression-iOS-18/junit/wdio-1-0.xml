@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="3" failures="0" errors="0" skipped="0">
+  <testsuite name="Auth journey returning user intro" timestamp="2026-08-28T05:20:31" time="188.933" tests="3" failures="0" errors="0" skipped="0">
+    <properties>
+      <property name="specId" value="0"/>
+      <property name="suiteName" value="Auth journey: returning-user intro"/>
+      <property name="capabilities" value="ios.5fc23a1b909c4d"/>
+      <property name="file" value="file://./test/bcsc/auth/auth-intro.journey.ts"/>
+    </properties>
+    <testcase classname="ios.5fc23a1b909c4d.Auth_journey:_returning-user_intro" name="onboards and skips to unverified Home" time="40.152"/>
+    <testcase classname="ios.5fc23a1b909c4d.Auth_journey:_returning-user_intro" name="unlocks to Home" time="16.881"/>
+    <testcase classname="ios.5fc23a1b909c4d.Auth_journey:_returning-user_intro" name="leaves the developer menu row exposed in settings" time="12.400"/>
+  </testsuite>
+</testsuites>

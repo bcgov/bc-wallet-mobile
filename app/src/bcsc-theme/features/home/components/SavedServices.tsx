@@ -23,6 +23,7 @@ const SavedServices: React.FC = () => {
 
   const { serviceClients } = useFilterServiceClients({
     serviceClientIdsFilter: store.bcscSecure.savedServices,
+    savedServiceClientIds: store.bcscSecure.savedServices,
   })
 
   const styles = StyleSheet.create({

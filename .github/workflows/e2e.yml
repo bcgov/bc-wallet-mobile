@@ -9,6 +9,7 @@
 #   auth         — auth/unlock journey
 #   main         — main navigation + settings + wallet credential journeys (issuer creds from 1Password)
 #   verify       — verify entry + verified card-type journeys (uses SM_* creds)
+#   a11y         — automated accessibility audits over the core screens (iOS: Apple's audit engine; Android: heuristics)
 #   regression   — every per-area journey (nightly default)
 #   migration    — v3 → v4 app upgrade flow (Sauce RDC only; separate v3 build)
 #   upgrade      — previous released build → current in-place upgrade (Sauce RDC, both platforms)
@@ -40,7 +41,7 @@ on:
   workflow_call:
     inputs:
       suite:
-        description: 'Test suite (smoke, onboarding, auth, main, verify, regression, migration, upgrade, upgrade403)'
+        description: 'Test suite (smoke, onboarding, auth, main, verify, a11y, regression, migration, upgrade, upgrade403)'
         type: string
         required: true
       build_number:
@@ -64,6 +65,13 @@ on:
         type: string
         required: false
         default: 'ubuntu-latest-m'
+      brief:
+        description: >
+          Render the run brief (UAT coverage per platform, failures, accessibility findings) into the
+          run summary after the matrix. Off for callers — the nightly renders its own aggregate.
+        type: boolean
+        required: false
+        default: false
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN:
         required: true
@@ -88,6 +96,7 @@ on:
           - auth
           - main
           - verify
+          - a11y
           - regression
           - migration
           - upgrade
@@ -110,6 +119,10 @@ on:
         description: 'Label of the large runner with whitelisted egress IPs'
         type: string
         default: 'ubuntu-latest-m'
+      brief:
+        description: 'Render the run brief into the run summary'
+        type: boolean
+        default: true
 
 jobs:
   # ─── E2E Tests ─────────────────────────────────────────────────────
@@ -128,8 +141,8 @@ jobs:
     runs-on: ${{ inputs.runner_label }}
     permissions:
       contents: read
-    # regression runs every journey serially (~90m per platform and growing); other suites (merge-queue smoke) stay tight
-    timeout-minutes: ${{ inputs.suite == 'regression' && 120 || 45 }}
+    # regression runs every journey serially (~2h per platform with retries and growing); other suites (merge-queue smoke) stay tight
+    timeout-minutes: ${{ inputs.suite == 'regression' && 180 || 45 }}
     continue-on-error: ${{ contains(fromJSON('["migration","upgrade","upgrade403"]'), inputs.suite) }}
     strategy:
       max-parallel: 2
@@ -144,21 +157,8 @@ jobs:
         with:
           variant: bcsc-dev
 
-      - name: Setup NodeJS
-        uses: ./.github/workflows/actions/setup-node
-
-      - name: Cache E2E dependencies
-        uses: actions/cache@v6
-        with:
-          path: |
-            e2e/.yarn/cache
-            e2e/node_modules
-          key: e2e-deps-${{ hashFiles('e2e/yarn.lock') }}
-          restore-keys: e2e-deps-
-
-      - name: Install E2E dependencies
-        working-directory: e2e
-        run: yarn install --immutable
+      - name: Setup E2E
+        uses: ./.github/workflows/actions/setup-e2e
 
       # The wallet journey (main + regression suites) drives the e2e issuer — a Traction dev tenant
       # (e2e/issuer/README.md) — over its admin API. This preflight runs the idempotent provisioning
@@ -291,5 +291,58 @@ jobs:
         with:
           name: e2e-reports-${{ inputs.suite }}-${{ matrix.device.platform }}-${{ matrix.device.os_version }}
           path: e2e/reports/
+          if-no-files-found: warn
+          retention-days: 14
+
+  # ─── Brief ─────────────────────────────────────────────────────────
+  # One page for the run: the UAT checklist per platform, every failure, and the accessibility
+  # findings vs e2e/a11y-baseline.json — rendered from the e2e-reports-* artifacts above into the
+  # run summary, and saved as an artifact. Report-only: it never fails the run on findings.
+  brief:
+    name: 'brief - ${{ inputs.suite }}'
+    needs: [e2e-tests]
+    if: ${{ always() && inputs.brief }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup E2E
+        uses: ./.github/workflows/actions/setup-e2e
+
+      # A pattern that matches nothing must not kill the summary — the page says so instead.
+      - name: Download E2E reports
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          pattern: e2e-reports-${{ inputs.suite }}-*
+          path: e2e/artifacts
+
+      - name: Check the coverage map
+        working-directory: e2e
+        run: ./node_modules/.bin/tsx scripts/brief-check.ts
+
+      - name: Render the brief
+        working-directory: e2e
+        env: # via env, never inline in run — inputs are attacker-controlled
+          SUITE: ${{ inputs.suite }}
+          BUILD_NUMBER: ${{ inputs.build_number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          ./node_modules/.bin/tsx scripts/brief.ts --reports artifacts \
+            --title "E2E ${SUITE} — build ${BUILD_NUMBER}" --run-url "$RUN_URL" \
+            --out brief.md --json brief.json
+          cat brief.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload brief
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-brief-${{ inputs.suite }}
+          path: |
+            e2e/brief.md
+            e2e/brief.json
           if-no-files-found: warn
           retention-days: 14

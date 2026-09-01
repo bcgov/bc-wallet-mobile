@@ -6,13 +6,27 @@ env:
 on:
   workflow_dispatch:
   push:
+    # A coarse pre-filter only. early-exit-check decides for real, and this
+    # list has to stay a superset of it or a build would be missed entirely.
     branches: [main, 'release/**']
     paths:
       - app/**
-      - .yarn/**
+      - packages/**
       - variants/**
       - scripts/**
-      - .github/workflows/**
+      - patch/**
+      - e2e/**
+      - .yarn/**
+      - package.json
+      - yarn.lock
+      - .yarnrc.yml
+      - .github/workflows/main.yaml
+      - .github/workflows/e2e.yml
+      - .github/workflows/actions/**
+  # Deliberately unfiltered. Native Tests and build-summary are required
+  # checks, and a workflow skipped by a paths filter never reports them, so
+  # the PR could not merge. early-exit-check skips the expensive jobs instead,
+  # which still lets those checks report.
   pull_request:
     branches: [main, 'release/**']
   merge_group:
@@ -201,9 +215,54 @@ jobs:
           echo "Comparing ${parent_ref} with ${child_ref}"
 
           diff_output=$(git diff --name-only ${parent_ref}..${child_ref})
-          change_count=$(echo "$diff_output" | (grep -E '^(app/.*)|(.yarn/.*)|(variants/.*)|(scripts/.*)|(patch/.*)|(.github/workflows/.*)' || true) | wc -l | awk '{$1=$1};1')
 
-          echo "$change_count files changed in app, .yarn, or .github/workflows"
+          # A file matters if it can change what the app is built from, or how.
+          # Everything under .github/workflows is deliberately NOT enough on its
+          # own: editing publish.yml or a publish-only composite action cannot
+          # affect a native build, and rebuilding five variants for it is waste.
+          build_relevant() {
+            local file="$1"
+            # Source, native modules, variant config, build scripts, and the
+            # E2E specs, which the smoke run exercises against this build.
+            if [[ "$file" =~ ^(app|packages|variants|scripts|patch|e2e|\.yarn)/ ]]; then
+              return 0
+            fi
+            # Dependency truth. resolutions in the root manifest pin the React
+            # Native version and bind the yarn patches, so a change here can
+            # alter the binary without touching a line of app source.
+            if [[ "$file" =~ ^(package\.json|yarn\.lock|\.yarnrc\.yml)$ ]]; then
+              return 0
+            fi
+            # This workflow, and the E2E workflow it calls.
+            if [[ "$file" =~ ^\.github/workflows/(main\.yaml|e2e\.yml)$ ]]; then
+              return 0
+            fi
+            # A composite action counts only if the build actually references
+            # it, so adding actions on either side needs no upkeep here. The
+            # match is one level deep: no build-side action nests another
+            # today, and one that did would need adding by hand.
+            #
+            # The trailing group is a word boundary spelled out in plain ERE,
+            # so it does not depend on \b being a GNU extension. Without it,
+            # "setup" would match "setup-node" and count an action the build
+            # does not use.
+            if [[ "$file" =~ ^\.github/workflows/actions/([^/]+)/ ]]; then
+              grep -qER "actions/${BASH_REMATCH[1]}([^A-Za-z0-9_-]|$)" \
+                .github/workflows/main.yaml .github/workflows/e2e.yml 2>/dev/null && return 0
+            fi
+            return 1
+          }
+
+          change_count=0
+          while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            if build_relevant "$file"; then
+              echo "  build-relevant: $file"
+              change_count=$((change_count + 1))
+            fi
+          done <<< "$diff_output"
+
+          echo "$change_count build-relevant file(s) changed"
 
           if [ $change_count -gt 0 ]; then
             # A result greater than 0 means there are changes
@@ -331,7 +390,7 @@ jobs:
         uses: ./.github/workflows/actions/setup-node
 
       - name: Setup Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'zulu'
           java-version: 17
@@ -851,7 +910,7 @@ jobs:
         uses: ./.github/workflows/actions/setup-node
 
       - name: Setup Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'zulu'
           java-version: 17

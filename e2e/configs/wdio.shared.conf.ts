@@ -90,6 +90,8 @@ export const config: WebdriverIO.Config = {
     // Card-barcode scanning: Sauce + Android only (see ANDROID_ONLY_SPECS). Its own suite for targeted
     // runs, and part of `regression` — the iOS configs exclude it rather than schedule and skip it.
     scan: ANDROID_ONLY_SPECS,
+    // Automated accessibility audits over the core unverified screens (src/helpers/a11y-audit.ts).
+    a11y: [resolve(__dirname, `../test/${variant}/a11y/*.journey.ts`)],
     // Nightly full run: every per-area journey.
     // Excludes `migration` and `upgrade` — those suites boot an OLD build via their own configs, so
     // they cannot share this run's v4 RDC build (each stays its own suite + workflow path).
@@ -98,6 +100,7 @@ export const config: WebdriverIO.Config = {
       resolve(__dirname, `../test/${variant}/auth/*.journey.ts`),
       resolve(__dirname, `../test/${variant}/verify/*.journey.ts`),
       resolve(__dirname, `../test/${variant}/main/*.journey.ts`),
+      resolve(__dirname, `../test/${variant}/a11y/*.journey.ts`),
       ...ANDROID_ONLY_SPECS,
     ],
     migration: [resolve(__dirname, `../test/${variant}/migration/migration.spec.ts`)],

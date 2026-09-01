@@ -357,7 +357,7 @@ describe('useEvidenceUploadModel', () => {
 
       expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalled()
       expect(mockEvidenceApi.uploadVideoEvidenceMetadata).toHaveBeenCalled()
-      expect(mockEvidenceApi.uploadPhotoEvidenceBinary).toHaveBeenCalledWith('photo-uri', expect.anything())
+      expect(mockEvidenceApi.uploadPhotoEvidenceBinary).toHaveBeenCalledWith('photo-uri', expect.anything(), 'image')
       expect(mockEvidenceApi.uploadVideoEvidenceBinary).toHaveBeenCalledWith('video-uri', expect.anything())
       expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledWith('req-123', {
         upload_uris: ['photo-uri', 'video-uri'],
@@ -621,7 +621,14 @@ describe('useEvidenceUploadModel', () => {
 
       mockEvidenceApi.uploadPhotoEvidenceMetadata.mockResolvedValue({ upload_uri: 'photo-uri' })
       mockEvidenceApi.uploadVideoEvidenceMetadata.mockResolvedValue({ upload_uri: 'video-uri' })
-      mockEvidenceApi.uploadPhotoEvidenceBinary.mockRejectedValue(new Error('Upload failed'))
+
+      const uploadContext = { media_kind: 'image', media_stage: 'binary', media_bytes: 3, media_format: 'image/jpeg' }
+      const innerError = new AppError(
+        'Network Error',
+        { category: ErrorCategory.NETWORK, appEvent: AppEventCode.NO_INTERNET, statusCode: 2100 },
+        { cause: new AxiosError('Network Error', 'ERR_NETWORK'), context: uploadContext, track: false }
+      )
+      mockEvidenceApi.uploadPhotoEvidenceBinary.mockRejectedValue(innerError)
 
       const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 
@@ -630,6 +637,9 @@ describe('useEvidenceUploadModel', () => {
       })
 
       expect(mockFileUploadErrorAlert).toHaveBeenCalled()
+      expect((mockFileUploadErrorAlert.mock.calls[0][0] as AppError).toJSON().context).toEqual(
+        expect.objectContaining(uploadContext)
+      )
       expect(mockEvidenceApi.sendVerificationRequest).not.toHaveBeenCalled()
     })
 
@@ -737,7 +747,11 @@ describe('useEvidenceUploadModel', () => {
         number: 'DL123',
         images: [{ label: 'FRONT_SIDE', side: 'front', file_path: undefined, date: 1_782_000_000 }],
       })
-      expect(mockEvidenceApi.uploadPhotoEvidenceBinary).toHaveBeenCalledWith('evidence-uri-front', expect.anything())
+      expect(mockEvidenceApi.uploadPhotoEvidenceBinary).toHaveBeenCalledWith(
+        'evidence-uri-front',
+        expect.anything(),
+        'document'
+      )
       expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledWith('req-123', {
         upload_uris: ['photo-uri', 'video-uri', 'evidence-uri-front'],
         sha256: 'sha-456',
@@ -794,7 +808,8 @@ describe('useEvidenceUploadModel', () => {
 
         expect(RNFS.stat).toHaveBeenCalledWith(plausiblePhotoMetadata.file_path)
         expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalledWith(
-          expect.objectContaining({ date: Math.floor(mtimeMs / 1000) })
+          expect.objectContaining({ date: Math.floor(mtimeMs / 1000) }),
+          undefined
         )
       })
 
@@ -813,8 +828,45 @@ describe('useEvidenceUploadModel', () => {
 
         expect(RNFS.stat).not.toHaveBeenCalledWith(plausiblePhotoMetadata.file_path)
         expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalledWith(
-          expect.objectContaining({ date: plausiblePhotoMetadata.date })
+          expect.objectContaining({ date: plausiblePhotoMetadata.date }),
+          undefined
         )
+      })
+
+      it('derives media_format from the real photo/video bytes and forwards them to the metadata calls', async () => {
+        // Real magic bytes (not the suite-default [1,2,3]/[4,5,6] placeholders) so the sniffer
+        // actually has something to detect — see #4184 adversarial review finding.
+        const jpegBytes = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10])
+        const mp4Bytes = Buffer.from([
+          0,
+          0,
+          0,
+          16,
+          ...'ftyp'.split('').map((c) => c.charCodeAt(0)),
+          ...'isom'.split('').map((c) => c.charCodeAt(0)),
+          0,
+          0,
+          0,
+          0,
+        ])
+        jest.mocked(readFileInChunks).mockResolvedValue(jpegBytes)
+        jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(mp4Bytes)
+        jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-01-01') } as any)
+
+        const bifoldMock = jest.mocked(Bifold)
+        bifoldMock.useStore.mockReturnValue([storeWithSha(plausiblePhotoMetadata) as BCState, jest.fn()])
+
+        const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+        await act(async () => {
+          await result.current.handleSend()
+        })
+
+        expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalledWith(
+          expect.objectContaining({ date: plausiblePhotoMetadata.date }),
+          'image/jpeg'
+        )
+        expect(mockEvidenceApi.uploadVideoEvidenceMetadata).toHaveBeenCalledWith(expect.anything(), 'video/mp4')
       })
     })
   })

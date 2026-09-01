@@ -1,5 +1,12 @@
 import { InstallIdSystemCheck } from './services/system-checks/InstallIdSystemCheck'
-import { BCDispatchAction, BCLocalStorageKeys, initialState, migrateBCSCState, reducer } from './store'
+import {
+  BCDispatchAction,
+  BCLocalStorageKeys,
+  initialState,
+  migrateBCSCState,
+  reducer,
+  VerificationStatus,
+} from './store'
 
 jest.mock('react-native-config', () => ({
   BUILD_TARGET: 'bcsc',
@@ -119,6 +126,38 @@ describe('reducer', () => {
       expect.objectContaining({ lastSeenAppVersion: '4.1.0', lastSeenAppBuildNumber: '1234' })
     )
   })
+
+  it.each([
+    ['true (skipped)', true],
+    ['false (opted in, unfinished)', false],
+    ['undefined (reset)', undefined],
+  ])('SET_VERIFICATION_SKIPPED stores and persists %s', (_label, value) => {
+    const state = { ...initialState, bcsc: { ...initialState.bcsc, verificationSkipped: undefined } }
+    const result = reducer(state, { type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [value] })
+
+    expect(result.bcsc.verificationSkipped).toBe(value)
+    expect(mockedStoreValueForKey).toHaveBeenCalledWith(
+      BCLocalStorageKeys.BCSC,
+      expect.objectContaining({ verificationSkipped: value })
+    )
+  })
+
+  it('UPDATE_SECURE_VERIFIED only touches secure state, leaving verificationSkipped to its own action', () => {
+    const state = { ...initialState, bcsc: { ...initialState.bcsc, verificationSkipped: false } }
+    const result = reducer(state, { type: BCDispatchAction.UPDATE_SECURE_VERIFIED, payload: [true] })
+
+    expect(result.bcscSecure.verified).toBe(true)
+    expect(result.bcscSecure.verifiedStatus).toBe(VerificationStatus.VERIFIED)
+    expect(result.bcsc.verificationSkipped).toBe(false)
+    expect(mockedStoreValueForKey).not.toHaveBeenCalledWith(BCLocalStorageKeys.BCSC, expect.anything())
+  })
+
+  it('CLEAR_BCSC resets verificationSkipped to undefined', () => {
+    const state = { ...initialState, bcsc: { ...initialState.bcsc, verificationSkipped: false } }
+    const result = reducer(state, { type: BCDispatchAction.CLEAR_BCSC })
+
+    expect(result.bcsc.verificationSkipped).toBeUndefined()
+  })
 })
 
 describe('migrateBCSCState', () => {
@@ -146,6 +185,34 @@ describe('migrateBCSCState', () => {
     const result = migrateBCSCState({})
 
     expect(result).toEqual({ bcsc: {}, migrated: false })
+  })
+
+  it('stamps verificationSkipped:true on an onboarded blob that predates the field', () => {
+    const result = migrateBCSCState({ hasAccount: true })
+
+    expect(result).toEqual({ bcsc: { hasAccount: true, verificationSkipped: false }, migrated: true })
+  })
+
+  it.each([true, false])('leaves an existing verificationSkipped (%s) untouched', (verificationSkipped) => {
+    const result = migrateBCSCState({ hasAccount: true, verificationSkipped })
+
+    expect(result).toEqual({ bcsc: { hasAccount: true, verificationSkipped }, migrated: false })
+  })
+
+  it('does not stamp verificationSkipped when there is no account yet (fresh install)', () => {
+    const result = migrateBCSCState({ hasAccount: false })
+
+    expect(result).toEqual({ bcsc: { hasAccount: false }, migrated: false })
+  })
+
+  it('applies both the reportUUID and verificationSkipped migrations together', () => {
+    const result = migrateBCSCState({ hasAccount: true, reportUUID: 'x' })
+
+    expect(result).toEqual({
+      bcsc: { hasAccount: true, installId: 'x', verificationSkipped: false },
+      migrated: true,
+    })
+    expect(result.bcsc).not.toHaveProperty('reportUUID')
   })
 
   it('composes with InstallIdSystemCheck so a migrated legacy id passes runCheck', () => {

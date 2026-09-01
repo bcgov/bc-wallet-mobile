@@ -109,6 +109,20 @@ export interface BCSCState {
    */
   lastSeenAppVersion?: string
   lastSeenAppBuildNumber?: string
+  /**
+   * The user's answer to the post-onboarding "verify your account now?" prompt, persisted so the
+   * choice survives an app restart:
+   * - `undefined` — not answered yet (fresh install, or after a factory reset). RootStack shows the
+   *   prompt.
+   * - `false` — the user chose to start verification but has not finished. RootStack routes straight
+   *   into VerifyStack on every launch until they verify.
+   * - `true` — the user chose to skip, OR verification completed. RootStack routes to the home stack.
+   *
+   * Set `true` automatically when `bcscSecure.verified` flips true (see UPDATE_SECURE_VERIFIED), and
+   * reset to `undefined` by CLEAR_BCSC. Intentionally on plain (AsyncStorage) state, not secure
+   * state, so an app uninstall clears it — iOS Keychain-backed secure state would survive a reinstall.
+   */
+  verificationSkipped?: boolean
 }
 
 export enum VerificationStatus {
@@ -298,6 +312,7 @@ enum BCSCDispatchAction {
   SET_INSTALL_ID = 'bcsc/setInstallId',
   KEY_ROTATION_ATTEMPTED = 'bcsc/keyRotationAttempted',
   RECORD_APP_LAUNCH_VERSION = 'bcsc/recordAppLaunchVersion',
+  SET_VERIFICATION_SKIPPED = 'bcsc/setVerificationSkipped',
 }
 
 enum ModeDispatchAction {
@@ -345,19 +360,33 @@ export const initialBCSCState: BCSCState = {
 }
 
 /**
- * Migrates a persisted BCSC state blob that may still carry the legacy `reportUUID` field
- * (added bcsc-v4.0.2, #4060). Safe to remove once all installs have launched on >= v4.1.
+ * Migrates a persisted BCSC state blob on load. Two idempotent, read-side migrations:
+ * - Legacy `reportUUID` (added bcsc-v4.0.2, #4060) → `installId`. Safe to remove once all installs
+ *   have launched on >= v4.1.
+ * - Onboarded installs that predate `verificationSkipped`: a missing value is treated as "skipped"
+ *   (`true`) so they keep landing on the home screen rather than the post-onboarding verify prompt.
  */
 export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: string }>(
   persisted: T
-  // `& { installId?: string }` keeps installId in the return type even when T is inferred from a
-  // narrow literal that never mentions it (e.g. `{ reportUUID: 'x' }` in tests).
-): { bcsc: Omit<T, 'reportUUID'> & { installId?: string }; migrated: boolean } => {
+  // `& { installId?: string; verificationSkipped?: boolean }` keeps these fields in the return type
+  // even when T is inferred from a narrow literal that never mentions them (e.g. `{ reportUUID: 'x' }`
+  // in tests).
+): { bcsc: Omit<T, 'reportUUID'> & { installId?: string; verificationSkipped?: boolean }; migrated: boolean } => {
   const { reportUUID, ...rest } = persisted
-  if (reportUUID === undefined) {
-    return { bcsc: rest, migrated: false }
+  let bcsc: Omit<T, 'reportUUID'> & { installId?: string; verificationSkipped?: boolean } = rest
+  let migrated = false
+
+  if (reportUUID !== undefined) {
+    bcsc = { ...bcsc, installId: bcsc.installId ?? reportUUID }
+    migrated = true
   }
-  return { bcsc: { ...rest, installId: rest.installId ?? reportUUID }, migrated: true }
+
+  if (bcsc.hasAccount === true && bcsc.verificationSkipped === undefined) {
+    bcsc = { ...bcsc, verificationSkipped: false }
+    migrated = true
+  }
+
+  return { bcsc, migrated }
 }
 
 export enum BCLocalStorageKeys {
@@ -812,6 +841,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.RECORD_APP_LAUNCH_VERSION: {
       const { version: lastSeenAppVersion, buildNumber: lastSeenAppBuildNumber } = (action?.payload || []).pop() ?? {}
       const bcsc = { ...state.bcsc, lastSeenAppVersion, lastSeenAppBuildNumber }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.SET_VERIFICATION_SKIPPED: {
+      const verificationSkipped: boolean | undefined = (action?.payload || []).pop()
+      const bcsc = { ...state.bcsc, verificationSkipped }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

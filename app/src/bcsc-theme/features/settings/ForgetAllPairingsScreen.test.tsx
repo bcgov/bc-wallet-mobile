@@ -4,6 +4,8 @@ import { render } from '@testing-library/react-native'
 import React from 'react'
 import { ForgetAllPairingsScreen } from './ForgetAllPairingsScreen'
 
+jest.mock('@/bcsc-theme/api/hooks/useApi')
+
 describe('ForgetAllPairings', () => {
   let mockNavigation: any
 
