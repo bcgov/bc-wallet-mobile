@@ -309,9 +309,7 @@ async function recordPromptedVideo(): Promise<void> {
   if (await VideoReviewScreen.isPresent(Timeouts.SCREEN_TRANSITION)) {
     return
   }
-  // Probed only now that the recorder is gone: VideoTooLong's marker is a BARE `Cancel`, and TakeVideo's
-  // own cancel control carries "Cancel" as its accessibility label — which iOS reports as the element
-  // name when no identifier is set, so the same selector matches it while that screen is up.
+  // Probed second: the review is the expected outcome, VideoTooLong the diagnosable failure.
   if (await VideoTooLongScreen.isPresent(1_000)) {
     throw new Error(
       'The recording ran past the 30s limit and landed on VideoTooLong. Each prompt is held for a minimum ' +
@@ -392,7 +390,7 @@ export async function recordOverLongVideoDetour(user: TestUser): Promise<void> {
   // app's own error says so where "Cancel not visible" does not.
   await throwIfAppErrorShowing('The over-long recording failed')
   await VideoTooLongScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-  // Cancel, the screen's only addressable control — Retake has no testID at all.
+  // Cancel rather than Retake: the detour's point is landing here, not re-recording.
   await VideoTooLongScreen.tap('secondary')
   await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
 }

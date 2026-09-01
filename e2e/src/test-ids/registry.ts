@@ -15,6 +15,12 @@
  *
  * Keep `TESTID_PREFIX` equal to bifold's `testIdPrefix`; a guard test on the app side
  * (`testIdWithKey('x') === TESTID_PREFIX + 'x'`) will catch drift once the app consumes this.
+ *
+ * Two deliberate exceptions to fixed per-element keys:
+ *   - SERVER-DERIVED ids (`EvidenceTypeListItem-<type>`, `ServiceButton-<title>`) stay derived —
+ *     specs select those rows by their visible label/substring.
+ *   - SHARED ids (the notification cards, `ContactRow`) repeat per instance — specs disambiguate by
+ *     the card's copy or the row's accessibility label, not by minting per-item keys.
  */
 
 /** Matches bifold's `testIdPrefix` (`@bifold/core` constants). React Native maps a component's
@@ -131,10 +137,12 @@ export const TestIds = {
     },
     /** Camera scan screen; `EnterManually` is the CI path around the live camera and renders in BOTH
      *  bodies. `openSettings` marks the refused-permission `PermissionDisabled` fallback — asserted,
-     *  never tapped (it exits to the OS settings app). */
+     *  never tapped (it exits to the OS settings app). `scanTorch` is the shared `TorchButton`
+     *  component's key (hidden while the camera itself failed). */
     scanSerial: {
       enterManually: 'EnterManually',
       openSettings: 'OpenSettings',
+      scanTorch: 'ScanTorch',
     },
     /** Manual serial form (`InputWithValidation id='serial'` → derived ids). `serialSubtext` is the
      *  shared error slot: no static subtext here, so it exists only while a validation error shows,
@@ -186,9 +194,8 @@ export const TestIds = {
       complete: 'Complete',
       serviceBcLink: 'ServiceBCLink',
     },
-    /** Verification success (`'Setup Complete'`, no header). NOTE: the continue button's key is the
-     *  translation-resolved `Continue` (i18n-derived — a candidate for a future stable key); tapping
-     *  it exits the verify stack to Home. */
+    /** Verification success (`'Setup Complete'`, no header). Tapping `continue` exits the verify
+     *  stack to Home. */
     verificationSuccess: {
       continue: 'Continue',
     },
@@ -206,22 +213,20 @@ export const TestIds = {
     },
     /** `VideoInstructions` ('Selfie Video Tips') — issues a FRESH prompt set on every focus, and
      *  `startRecording` stays disabled until that lands (a recording is only accepted against the set
-     *  the server issued for it). */
+     *  the server issued for it). `promptsLoading` is up while the set is being issued;
+     *  `retryLoadPrompts` replaces it when that fetch failed. */
     videoInstructions: {
       startRecording: 'StartRecording',
-    },
-    /** BARE testIDs on VideoInstructions — no `testIdWithKey`, so no prefix. `promptsLoading` is up
-     *  while the set is being issued; `retryLoadPrompts` replaces it when that fetch failed. */
-    videoInstructionsBare: {
       promptsLoading: 'PromptsLoading',
       retryLoadPrompts: 'RetryLoadPrompts',
     },
     /** `TakeVideo` — recording ARMS ITSELF on focus after a 3-2-1 countdown; there is no start button,
      *  and the screen needs camera AND microphone permission (two sequential dialogs). `nextPrompt` is
-     *  disabled for the first 2s of each prompt and its LAST press stops the recording. The Cancel
-     *  control carries only an accessibility label — no testID. */
+     *  disabled for the first 2s of each prompt and its LAST press stops the recording; `cancel`
+     *  abandons the recording. */
     takeVideo: {
       nextPrompt: 'NextPrompt',
+      cancel: 'CancelRecording',
     },
     /** `VideoReview` — accept or retake the recording. `useVideo` resets the stack to EvidenceUploading. */
     videoReview: {
@@ -229,19 +234,20 @@ export const TestIds = {
       retakeVideo: 'RetakeVideo',
       togglePlayPause: 'TogglePlayPause',
     },
-    /** `VideoTooLong` — a recording over 30s lands here instead of VideoReview. BARE `Cancel`; its
-     *  Retake button has no testID at all. */
-    videoTooLongBare: {
-      cancel: 'Cancel',
+    /** `VideoTooLong` — a recording over 30s lands here instead of VideoReview. Screen-prefixed keys
+     *  so neither collides with VideoReview's pair (the two are alternates after a recording stops). */
+    videoTooLong: {
+      retake: 'VideoTooLongRetake',
+      cancel: 'VideoTooLongCancel',
     },
     /** `EvidenceUploading` — uploads on mount with no confirm step; `cancelUpload` is its only control. */
     evidenceUploading: {
       cancelUpload: 'CancelUpload',
     },
-    /** `SuccessfullySent` — the post-upload confirmation. Its button id is i18n-DERIVED (the visible
-     *  title, spaces and all) and it is the screen's ONLY way out: hardware back is disabled. */
+    /** `SuccessfullySent` — the post-upload confirmation. `goToHome` is the screen's ONLY way out:
+     *  hardware back is disabled. */
     successfullySent: {
-      goToHome: 'Go to home',
+      goToHome: 'GoToHome',
     },
     /** `PendingReview` — re-checks the request status on EVERY mount, which is what makes re-entering
      *  it the app's own poll for the agent's decision. `chooseAnotherWay` cancels the request
@@ -291,19 +297,15 @@ export const TestIds = {
       trouble: 'Trouble',
     },
     /** Email confirmation (`'Email Verification'`) — the 6-digit code emailed to the entered address.
-     *  A correct `continue` RESETS the stack to EmailVerified. (`ResendCodeLink` / `GoToMyEmailLink`
-     *  are BARE testIDs — add them as raw strings, not `bcsc()`-wrapped, if a resend detour needs
-     *  them.) */
+     *  A correct `continue` RESETS the stack to EmailVerified. `resendCode` sits on a ThemedText nested
+     *  inside another, which RN flattens into the parent paragraph on iOS — see the label fallback in
+     *  `flows/verify.ts`. */
     emailConfirmation: {
       codeInput: 'EmailConfirmationCodeInput',
       // `CodeInput` appends `-subtext` to the input's already-prefixed testID, which puts the suffix at
-      // the END — so this stays a normal key and IS `bcsc()`-wrapped, unlike the bare ids below.
+      // the END — so this stays a normal key and IS `bcsc()`-wrapped.
       codeError: 'EmailConfirmationCodeInput-subtext',
       continue: 'Continue',
-    },
-    /** BARE testIDs on EmailConfirmation — no `testIdWithKey`, so no prefix. Pass them as raw strings;
-     *  `bcsc()` would produce an id that does not exist. */
-    emailConfirmationBare: {
       resendCode: 'ResendCodeLink',
       goToMyEmail: 'GoToMyEmailLink',
     },
@@ -592,13 +594,14 @@ export const TestIds = {
      *  for a verification-only account, populated once the issuer-driven wallet journey connects.
      *  `whatAreContacts` (the empty-state button) is the info screen's only entry point and does NOT
      *  render populated — so `search` present + `whatAreContacts` absent ⇒ populated, and vice versa.
-     *  `clearSearch` renders only while the query is non-empty. Rows (`ContactRow`) carry NO testID —
-     *  select by a11y label = the contact name (`helpers/a11y.ts`). */
+     *  `clearSearch` renders only while the query is non-empty. `row` is SHARED by every list row —
+     *  select a specific contact by a11y label = the contact name (`helpers/a11y.ts`). */
     contacts: {
       loading: 'Contacts.Loading',
       whatAreContacts: 'WhatAreContacts',
       search: 'SearchContacts',
       clearSearch: 'clearSearch',
+      row: 'ContactRow',
     },
     /** Contact details (`ContactDetailsScreen`, agent-gated like the list). `pin`/`unpin` are the SAME
      *  button — its id flips with the pinned state, so waiting for the other id IS the toggle assert.
@@ -611,6 +614,14 @@ export const TestIds = {
       editName: 'EditContactName',
       viewJson: 'ViewJSON',
       remove: 'RemoveContact',
+    },
+    /** Contact chat (`ContactChatScreen`, GiftedChat). `composer` is the message TextInput (editable
+     *  only once the Credo agent is ready) and `send` its send button; `viewRequest` renders on
+     *  credential/proof event cards that carry an action. */
+    contactChat: {
+      composer: 'ChatComposer',
+      send: 'SendMessage',
+      viewRequest: 'ViewRequest',
     },
     /** Edit-contact-name form. `save`/`cancel` are label-derived by `ActionScreenLayout`
      *  (`testIdWithKey(t('Global.Continue'))` etc.), so they break under a locale change — en-only. */
