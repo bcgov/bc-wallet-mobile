@@ -234,11 +234,12 @@ class BcscCore: NSObject {
   /// apart from a field report alone.
   ///
   /// Non-throwing by construction: `decodePayload` builds this up front on every call
-  /// (success path included), so it must never break decoding. It leans only on crash-safe
-  /// helpers (`incomingJWEHeader`, `base64URLDecodeSafely`) and never force-unwraps — keep
+  /// (success path included), so it must never break decoding. Never force-unwraps — keep
   /// it that way. (The Android twin can throw, so there the whole body is guarded.)
-  private func decodeDiagnosticsSummary(keys: [PrivateKeyInfo], jweString: String) -> String {
-    let header = incomingJWEHeader(jweString)
+  private func decodeDiagnosticsSummary(
+    keys: [PrivateKeyInfo],
+    header: (alg: String, enc: String, kid: String, parts: Int)
+  ) -> String {
     let newest = keys.sorted(by: { $0.created > $1.created }).first?.tag ?? "none"
     let kidMatchesLocal = !header.kid.isEmpty && keys.contains { $0.tag == header.kid }
     let jweKid = header.kid.isEmpty ? "none" : header.kid
@@ -1512,12 +1513,15 @@ class BcscCore: NSObject {
       reject("E_KEYSTORE_ERROR", "Failed to enumerate decrypt keys: \(error.localizedDescription)", error)
       return
     }
+    // Never `jwe.header.kid` — JWEHeader.parse overwrites `kid` with the server's own
+    // public-key id (see PublicServerKeyState.serverPublicKeyId in JOSEHeader.swift).
+    let header = incomingJWEHeader(jweString)
     // Built once up front so every failure path reports the same picture: key
     // inventory + the incoming JWE's alg/enc/kid + whether that kid matches a local
     // key. This is what makes 2507 reports self-classifying in the field.
-    let diagnostics = decodeDiagnosticsSummary(keys: keys, jweString: jweString)
+    let diagnostics = decodeDiagnosticsSummary(keys: keys, header: header)
 
-    guard let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first else {
+    guard let decryptKeyInfo = KeyPairManager.decryptKeyInfo(matching: header.kid, in: keys) else {
       reject(
         "E_NO_KEYS_FOUND",
         "No keys available to decrypt JWE \(diagnostics)",
@@ -1528,7 +1532,7 @@ class BcscCore: NSObject {
 
     let keyPair: (public: SecKey, private: SecKey)
     do {
-      keyPair = try keyPairManager.getKeyPair(with: latestKeyInfo.tag)
+      keyPair = try keyPairManager.getKeyPair(with: decryptKeyInfo.tag)
     } catch let KeychainError.keychainUnavailable(status) {
       // The key likely exists but can't be read right now (device locked, auth
       // failure, or launched in the background before first unlock). Distinct,
