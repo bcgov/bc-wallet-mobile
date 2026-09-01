@@ -463,26 +463,34 @@ describe('useGetSystemChecks', () => {
     })
 
     describe('KeyRotationSystemCheck', () => {
-      const mockStoreWith = (
-        bcscSecureOverrides: Record<string, unknown>,
+      // Builds a verified, registered BCSC-build store; returns the dispatch spy so tests can
+      // assert on it. Pass the same `dispatch` back in to rebuild the store across a rerender.
+      const mockStoreWith = ({
+        bcscSecure = {},
+        bcsc = {},
         bundleId = 'ca.bc.gov.id.servicescard',
-        bcscOverrides: Record<string, unknown> = {}
-      ) => {
+        dispatch = jest.fn(),
+      }: {
+        bcscSecure?: Record<string, unknown>
+        bcsc?: Record<string, unknown>
+        bundleId?: string
+        dispatch?: jest.Mock
+      } = {}) => {
         jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue(bundleId)
         mockGetBundleId.mockReturnValue(bundleId)
         mockUseStore.mockReturnValue([
           {
             stateLoaded: true,
             developer: { environment: { analyticsAppId: 'test-app-id' } },
-            bcsc: { analyticsOptIn: true, selectedNickname: 'Test Device', ...bcscOverrides },
+            bcsc: { analyticsOptIn: true, selectedNickname: 'Test Device', ...bcsc },
             bcscSecure: {
               isHydrated: true,
               verified: true,
               registrationAccessToken: 'test-registration-token',
-              ...bcscSecureOverrides,
+              ...bcscSecure,
             },
           },
-          jest.fn(),
+          dispatch,
         ])
         mockUseServices.mockReturnValue([{ info: jest.fn(), warn: jest.fn(), error: jest.fn() }])
         mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
@@ -491,10 +499,11 @@ describe('useGetSystemChecks', () => {
         mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn() })
         mockUseRegistrationApi.mockReturnValue({})
         mockUseConfigApi.mockReturnValue({ getTermsOfUse: jest.fn() })
+        return dispatch
       }
 
       it('is included for a verified, registered BCSC-build user', async () => {
-        mockStoreWith({})
+        mockStoreWith()
 
         const { result } = renderHook(() => useCreateSystemChecks())
         const names = (await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()).map(
@@ -505,7 +514,7 @@ describe('useGetSystemChecks', () => {
       })
 
       it('is not included without a registrationAccessToken', async () => {
-        mockStoreWith({ registrationAccessToken: undefined })
+        mockStoreWith({ bcscSecure: { registrationAccessToken: undefined } })
 
         const { result } = renderHook(() => useCreateSystemChecks())
         const names = (await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()).map(
@@ -516,7 +525,7 @@ describe('useGetSystemChecks', () => {
       })
 
       it('is not included for a non-BCSC bundle', async () => {
-        mockStoreWith({}, 'ca.bc.gov.BCWallet')
+        mockStoreWith({ bundleId: 'ca.bc.gov.BCWallet' })
 
         const { result } = renderHook(() => useCreateSystemChecks())
         const names = (await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()).map(
@@ -533,96 +542,45 @@ describe('useGetSystemChecks', () => {
       }
 
       describe('deferForPendingRegistrationUpdate (the app-version-changed signal)', () => {
+        const currentLaunch = { lastSeenAppVersion: '4.1.0', lastSeenAppBuildNumber: '1000' }
+        const previousLaunch = { lastSeenAppVersion: '4.0.0', lastSeenAppBuildNumber: '999' }
+        const recordLaunchAction = {
+          type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION,
+          payload: [{ version: '4.1.0', buildNumber: '1000' }],
+        }
+        const anyRecordLaunchAction = expect.objectContaining({ type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION })
+
+        beforeEach(() => {
+          jest.spyOn(DeviceInfo, 'getVersion').mockReturnValue('4.1.0')
+          jest.spyOn(DeviceInfo, 'getBuildNumber').mockReturnValue('1000')
+        })
+
         // RECORD_APP_LAUNCH_VERSION is the only thing keeping lastSeenApp* current; losing it
         // would latch rotation off forever. Every test here asserts the dispatch too, not just
         // the boolean passed to the constructor.
         it('does NOT dispatch RECORD_APP_LAUNCH_VERSION, and does not defer, when lastSeen already matches this launch', async () => {
-          jest.spyOn(DeviceInfo, 'getVersion').mockReturnValue('4.1.0')
-          jest.spyOn(DeviceInfo, 'getBuildNumber').mockReturnValue('1000')
-          mockStoreWith({})
-          const dispatch = jest.fn()
-          mockUseStore.mockReturnValue([
-            {
-              stateLoaded: true,
-              developer: { environment: { analyticsAppId: 'test-app-id' } },
-              bcsc: {
-                analyticsOptIn: true,
-                selectedNickname: 'Test Device',
-                lastSeenAppVersion: '4.1.0',
-                lastSeenAppBuildNumber: '1000',
-              },
-              bcscSecure: { isHydrated: true, verified: true, registrationAccessToken: 'test-registration-token' },
-            },
-            dispatch,
-          ])
+          const dispatch = mockStoreWith({ bcsc: currentLaunch })
 
           const check = await findKeyRotationCheck()
 
           expect(check.deferForPendingRegistrationUpdate).toBe(false)
-          expect(dispatch).not.toHaveBeenCalledWith(
-            expect.objectContaining({ type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION })
-          )
+          expect(dispatch).not.toHaveBeenCalledWith(anyRecordLaunchAction)
         })
 
         it('DISPATCHES RECORD_APP_LAUNCH_VERSION with the current version/build, and defers, on the first launch of a new version', async () => {
-          jest.spyOn(DeviceInfo, 'getVersion').mockReturnValue('4.1.0')
-          jest.spyOn(DeviceInfo, 'getBuildNumber').mockReturnValue('1000')
-          mockStoreWith({})
-          const dispatch = jest.fn()
-          mockUseStore.mockReturnValue([
-            {
-              stateLoaded: true,
-              developer: { environment: { analyticsAppId: 'test-app-id' } },
-              bcsc: {
-                analyticsOptIn: true,
-                selectedNickname: 'Test Device',
-                lastSeenAppVersion: '4.0.0',
-                lastSeenAppBuildNumber: '999',
-              },
-              bcscSecure: { isHydrated: true, verified: true, registrationAccessToken: 'test-registration-token' },
-            },
-            dispatch,
-          ])
+          const dispatch = mockStoreWith({ bcsc: previousLaunch })
 
           const check = await findKeyRotationCheck()
 
           expect(check.deferForPendingRegistrationUpdate).toBe(true)
-          expect(dispatch).toHaveBeenCalledWith({
-            type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION,
-            payload: [{ version: '4.1.0', buildNumber: '1000' }],
-          })
+          expect(dispatch).toHaveBeenCalledWith(recordLaunchAction)
         })
 
         // Population 1: no selectedNickname means UpdateDeviceRegistrationSystemCheck is never
         // constructed, so reading its signal directly (the old, buggy approach) would defer
         // rotation forever. The per-launch marker must not be fooled by this.
         it('does not defer, and needs no RECORD_APP_LAUNCH_VERSION dispatch, for a verified user with no selectedNickname (population 1)', async () => {
-          jest.spyOn(DeviceInfo, 'getVersion').mockReturnValue('4.1.0')
-          jest.spyOn(DeviceInfo, 'getBuildNumber').mockReturnValue('1000')
-          jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
-          mockGetBundleId.mockReturnValue('ca.bc.gov.id.servicescard')
-          const dispatch = jest.fn()
-          mockUseStore.mockReturnValue([
-            {
-              stateLoaded: true,
-              developer: { environment: { analyticsAppId: 'test-app-id' } },
-              bcsc: {
-                analyticsOptIn: true,
-                selectedNickname: undefined,
-                lastSeenAppVersion: '4.1.0',
-                lastSeenAppBuildNumber: '1000',
-              },
-              bcscSecure: { isHydrated: true, verified: true, registrationAccessToken: 'test-registration-token' },
-            },
-            dispatch,
-          ])
-          mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn() }])
-          mockUseBCSCApiClientState.mockReturnValue({ client: {}, isClientReady: true })
-          mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
-          jest.spyOn(React, 'useContext').mockReturnValue({ account: { account_expiration_date: new Date() } })
-          mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn() })
-          mockUseRegistrationApi.mockReturnValue({})
-          mockUseConfigApi.mockReturnValue({ getTermsOfUse: jest.fn() })
+          const dispatch = mockStoreWith({ bcsc: { ...currentLaunch, selectedNickname: undefined } })
 
           const { result } = renderHook(() => useCreateSystemChecks())
           const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
@@ -632,122 +590,46 @@ describe('useGetSystemChecks', () => {
           expect(names).not.toContain('UpdateDeviceRegistrationSystemCheck')
           expect(names).toContain('KeyRotationSystemCheck')
           expect(check.deferForPendingRegistrationUpdate).toBe(false)
-          expect(dispatch).not.toHaveBeenCalledWith(
-            expect.objectContaining({ type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION })
-          )
+          expect(dispatch).not.toHaveBeenCalledWith(anyRecordLaunchAction)
         })
 
         // Population 2: appVersion is stuck (its owning PUT keeps failing), but lastSeenApp* is
         // stamped independent of that success, so rotation must still not defer here.
         it('does not defer, and needs no RECORD_APP_LAUNCH_VERSION dispatch, even though appVersion is permanently stale from a persistently-failing PUT (population 2)', async () => {
-          jest.spyOn(DeviceInfo, 'getVersion').mockReturnValue('4.1.0')
-          jest.spyOn(DeviceInfo, 'getBuildNumber').mockReturnValue('1000')
-          mockStoreWith({})
-          const dispatch = jest.fn()
-          mockUseStore.mockReturnValue([
-            {
-              stateLoaded: true,
-              developer: { environment: { analyticsAppId: 'test-app-id' } },
-              bcsc: {
-                analyticsOptIn: true,
-                selectedNickname: 'Test Device',
-                // Stuck on the OLD version — the registration PUT that would advance these via
-                // UPDATE_APP_VERSION keeps failing.
-                appVersion: '3.9.0',
-                appBuildNumber: '1',
-                // But the per-launch marker IS current, since it's stamped unconditionally.
-                lastSeenAppVersion: '4.1.0',
-                lastSeenAppBuildNumber: '1000',
-              },
-              bcscSecure: { isHydrated: true, verified: true, registrationAccessToken: 'test-registration-token' },
-            },
-            dispatch,
-          ])
+          // appVersion is stuck on the OLD version (the registration PUT that would advance it via
+          // UPDATE_APP_VERSION keeps failing) but the per-launch marker IS current.
+          const dispatch = mockStoreWith({ bcsc: { ...currentLaunch, appVersion: '3.9.0', appBuildNumber: '1' } })
 
           const check = await findKeyRotationCheck()
 
           expect(check.deferForPendingRegistrationUpdate).toBe(false)
-          expect(dispatch).not.toHaveBeenCalledWith(
-            expect.objectContaining({ type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION })
-          )
+          expect(dispatch).not.toHaveBeenCalledWith(anyRecordLaunchAction)
         })
 
         // Same population 2 setup, but lastSeen itself is stale — the dispatch must still fire.
         it('DISPATCHES RECORD_APP_LAUNCH_VERSION even with a stale appVersion from a persistently-failing PUT, when lastSeen itself is stale', async () => {
-          jest.spyOn(DeviceInfo, 'getVersion').mockReturnValue('4.1.0')
-          jest.spyOn(DeviceInfo, 'getBuildNumber').mockReturnValue('1000')
-          mockStoreWith({})
-          const dispatch = jest.fn()
-          mockUseStore.mockReturnValue([
-            {
-              stateLoaded: true,
-              developer: { environment: { analyticsAppId: 'test-app-id' } },
-              bcsc: {
-                analyticsOptIn: true,
-                selectedNickname: 'Test Device',
-                appVersion: '3.9.0',
-                appBuildNumber: '1',
-                lastSeenAppVersion: '4.0.0',
-                lastSeenAppBuildNumber: '999',
-              },
-              bcscSecure: { isHydrated: true, verified: true, registrationAccessToken: 'test-registration-token' },
-            },
-            dispatch,
-          ])
+          const dispatch = mockStoreWith({ bcsc: { ...previousLaunch, appVersion: '3.9.0', appBuildNumber: '1' } })
 
           const check = await findKeyRotationCheck()
 
           expect(check.deferForPendingRegistrationUpdate).toBe(true)
-          expect(dispatch).toHaveBeenCalledWith({
-            type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION,
-            payload: [{ version: '4.1.0', buildNumber: '1000' }],
-          })
+          expect(dispatch).toHaveBeenCalledWith(recordLaunchAction)
         })
 
         // findKeyRotationCheck does its own renderHook per call, which would mask the regression
         // this guards against — a single hook instance must be kept alive across the store update.
         it('keeps deferring after a later store rebuild reflects the just-dispatched marker (regression guard)', async () => {
-          jest.spyOn(DeviceInfo, 'getVersion').mockReturnValue('4.1.0')
-          jest.spyOn(DeviceInfo, 'getBuildNumber').mockReturnValue('1000')
-          mockStoreWith({})
-          const dispatch = jest.fn()
-          const staleBcsc = {
-            analyticsOptIn: true,
-            selectedNickname: 'Test Device',
-            lastSeenAppVersion: '4.0.0',
-            lastSeenAppBuildNumber: '999',
-          }
-          const bcscSecure = { isHydrated: true, verified: true, registrationAccessToken: 'test-registration-token' }
-          mockUseStore.mockReturnValue([
-            {
-              stateLoaded: true,
-              developer: { environment: { analyticsAppId: 'test-app-id' } },
-              bcsc: staleBcsc,
-              bcscSecure,
-            },
-            dispatch,
-          ])
+          const dispatch = mockStoreWith({ bcsc: previousLaunch })
 
           const { result, rerender } = renderHook(() => useCreateSystemChecks())
           const firstChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
           const firstCheck = firstChecks.find((c) => c.constructor.name === 'KeyRotationSystemCheck') as any
 
           expect(firstCheck.deferForPendingRegistrationUpdate).toBe(true)
-          expect(dispatch).toHaveBeenCalledWith({
-            type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION,
-            payload: [{ version: '4.1.0', buildNumber: '1000' }],
-          })
+          expect(dispatch).toHaveBeenCalledWith(recordLaunchAction)
 
           // Simulate the reducer having applied the dispatched marker: lastSeen now matches.
-          mockUseStore.mockReturnValue([
-            {
-              stateLoaded: true,
-              developer: { environment: { analyticsAppId: 'test-app-id' } },
-              bcsc: { ...staleBcsc, lastSeenAppVersion: '4.1.0', lastSeenAppBuildNumber: '1000' },
-              bcscSecure,
-            },
-            dispatch,
-          ])
+          mockStoreWith({ bcsc: currentLaunch, dispatch })
           rerender(undefined)
 
           const secondChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
@@ -757,92 +639,37 @@ describe('useGetSystemChecks', () => {
         })
 
         it('dispatches RECORD_APP_LAUNCH_VERSION at most once per mount, even across repeated and post-update batch builds', async () => {
-          jest.spyOn(DeviceInfo, 'getVersion').mockReturnValue('4.1.0')
-          jest.spyOn(DeviceInfo, 'getBuildNumber').mockReturnValue('1000')
-          mockStoreWith({})
-          const dispatch = jest.fn()
-          const staleBcsc = {
-            analyticsOptIn: true,
-            selectedNickname: 'Test Device',
-            lastSeenAppVersion: '4.0.0',
-            lastSeenAppBuildNumber: '999',
-          }
-          const bcscSecure = { isHydrated: true, verified: true, registrationAccessToken: 'test-registration-token' }
-          mockUseStore.mockReturnValue([
-            {
-              stateLoaded: true,
-              developer: { environment: { analyticsAppId: 'test-app-id' } },
-              bcsc: staleBcsc,
-              bcscSecure,
-            },
-            dispatch,
-          ])
+          const dispatch = mockStoreWith({ bcsc: previousLaunch })
 
           const { result, rerender } = renderHook(() => useCreateSystemChecks())
           await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
           await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
 
-          mockUseStore.mockReturnValue([
-            {
-              stateLoaded: true,
-              developer: { environment: { analyticsAppId: 'test-app-id' } },
-              bcsc: { ...staleBcsc, lastSeenAppVersion: '4.1.0', lastSeenAppBuildNumber: '1000' },
-              bcscSecure,
-            },
-            dispatch,
-          ])
+          mockStoreWith({ bcsc: currentLaunch, dispatch })
           rerender(undefined)
           await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
 
           const recordCalls = dispatch.mock.calls.filter(
             ([action]) => action.type === BCDispatchAction.RECORD_APP_LAUNCH_VERSION
           )
-          expect(recordCalls).toEqual([
-            [
-              {
-                type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION,
-                payload: [{ version: '4.1.0', buildNumber: '1000' }],
-              },
-            ],
-          ])
+          expect(recordCalls).toEqual([[recordLaunchAction]])
         })
 
         it('does not dispatch RECORD_APP_LAUNCH_VERSION merely from mounting the hook, only once getSystemChecks is awaited', async () => {
-          jest.spyOn(DeviceInfo, 'getVersion').mockReturnValue('4.1.0')
-          jest.spyOn(DeviceInfo, 'getBuildNumber').mockReturnValue('1000')
-          mockStoreWith({})
-          const dispatch = jest.fn()
-          mockUseStore.mockReturnValue([
-            {
-              stateLoaded: true,
-              developer: { environment: { analyticsAppId: 'test-app-id' } },
-              bcsc: {
-                analyticsOptIn: true,
-                selectedNickname: 'Test Device',
-                lastSeenAppVersion: '4.0.0',
-                lastSeenAppBuildNumber: '999',
-              },
-              bcscSecure: { isHydrated: true, verified: true, registrationAccessToken: 'test-registration-token' },
-            },
-            dispatch,
-          ])
+          const dispatch = mockStoreWith({ bcsc: previousLaunch })
 
           const { result } = renderHook(() => useCreateSystemChecks())
 
-          expect(dispatch).not.toHaveBeenCalledWith(
-            expect.objectContaining({ type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION })
-          )
+          expect(dispatch).not.toHaveBeenCalledWith(anyRecordLaunchAction)
 
           await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
 
-          expect(dispatch).toHaveBeenCalledWith(
-            expect.objectContaining({ type: BCDispatchAction.RECORD_APP_LAUNCH_VERSION })
-          )
+          expect(dispatch).toHaveBeenCalledWith(anyRecordLaunchAction)
         })
       })
 
       it('passes store.bcsc.lastKeyRotationAttemptAt through to the constructor unchanged', async () => {
-        mockStoreWith({}, 'ca.bc.gov.id.servicescard', { lastKeyRotationAttemptAt: '2026-01-01T00:00:00.000Z' })
+        mockStoreWith({ bcsc: { lastKeyRotationAttemptAt: '2026-01-01T00:00:00.000Z' } })
 
         const check = await findKeyRotationCheck()
 
@@ -861,7 +688,7 @@ describe('useGetSystemChecks', () => {
         })
 
         it('prefers a freshly-read native registration token over the render-time store value', async () => {
-          mockStoreWith({ registrationAccessToken: 'store-registration-token' })
+          mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
           jest.mocked(getToken).mockResolvedValue({
             id: 'tok-1',
             type: TokenType.Registration,
@@ -883,7 +710,7 @@ describe('useGetSystemChecks', () => {
         })
 
         it('falls back to the store registration token when the native read comes back empty', async () => {
-          mockStoreWith({ registrationAccessToken: 'store-registration-token' })
+          mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
           jest.mocked(getToken).mockResolvedValue(null)
           jest.mocked(getAccount).mockResolvedValue({ clientID: 'client-abc' } as any)
 
@@ -898,8 +725,38 @@ describe('useGetSystemChecks', () => {
           )
         })
 
+        // Both native reads reject (not resolve null) on a missing account or an unavailable
+        // keychain; the closure must degrade to the store fallback instead of throwing.
+        it('falls back to the store registration token when the native token read rejects', async () => {
+          mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
+          jest.mocked(getToken).mockRejectedValue(new Error('E_ACCOUNT_NOT_FOUND'))
+          jest.mocked(getAccount).mockResolvedValue({ clientID: 'client-abc' } as any)
+
+          const check = await findKeyRotationCheck()
+          await check.rotate()
+
+          expect(mockRotateSigningKey).toHaveBeenCalledWith(
+            expect.anything(),
+            'client-abc',
+            'store-registration-token',
+            expect.anything()
+          )
+        })
+
+        it('returns a failed, unconfirmed result instead of throwing when the native account read rejects', async () => {
+          mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
+          jest.mocked(getToken).mockResolvedValue(null)
+          jest.mocked(getAccount).mockRejectedValue(new Error('E_ACCOUNT_NOT_FOUND'))
+
+          const check = await findKeyRotationCheck()
+          const result = await check.rotate()
+
+          expect(result).toEqual({ status: 'failed', confirmed: false })
+          expect(mockRotateSigningKey).not.toHaveBeenCalled()
+        })
+
         it('skips rotateSigningKey and returns a failed, unconfirmed result when the client ID is missing', async () => {
-          mockStoreWith({ registrationAccessToken: 'store-registration-token' })
+          mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
           jest.mocked(getToken).mockResolvedValue(null)
           jest.mocked(getAccount).mockResolvedValue(null)
 
@@ -911,7 +768,7 @@ describe('useGetSystemChecks', () => {
         })
 
         it('syncs the rotated registration token into the store when rotateSigningKey returns one', async () => {
-          mockStoreWith({ registrationAccessToken: 'store-registration-token' })
+          mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
           jest.mocked(getToken).mockResolvedValue({
             id: 'tok-1',
             type: TokenType.Registration,
@@ -932,7 +789,7 @@ describe('useGetSystemChecks', () => {
         })
 
         it('does not touch the store when rotateSigningKey returns no rotated token', async () => {
-          mockStoreWith({ registrationAccessToken: 'store-registration-token' })
+          mockStoreWith({ bcscSecure: { registrationAccessToken: 'store-registration-token' } })
           jest.mocked(getToken).mockResolvedValue({
             id: 'tok-1',
             type: TokenType.Registration,

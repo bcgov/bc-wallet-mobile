@@ -161,8 +161,12 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       })
     const rotateKey = async () => {
       // Read fresh, not from the store closure: UpdateDeviceRegistrationSystemCheck's onFail may
-      // have already rotated this token earlier in the same (sequential) onFail pass.
-      const [tokenInfo, account] = await Promise.all([getToken(TokenType.Registration), getAccount()])
+      // have already rotated this token earlier in the same (sequential) onFail pass. Both native
+      // reads reject (not resolve null) on failure, so degrade to null or the fallback is unreachable.
+      const [tokenInfo, account] = await Promise.all([
+        getToken(TokenType.Registration).catch(() => null),
+        getAccount().catch(() => null),
+      ])
       const registrationAccessToken = tokenInfo?.token ?? store.bcscSecure.registrationAccessToken
       const clientId = account?.clientID
 
@@ -273,8 +277,8 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       )
     }
 
-    // The ref freezes the previous-launch answer for this mount, so later dispatch/recompute
-    // ordering can no longer disable the deferral.
+    // Defensive only: useSystemChecks calls getSystemChecks once per mount, but the ref keeps the
+    // deferral from flipping off if a future caller invokes it again after this dispatch lands.
     if (appVersionChangedSinceLastLaunch && !launchVersionRecordedRef.current) {
       launchVersionRecordedRef.current = true
       dispatch({
