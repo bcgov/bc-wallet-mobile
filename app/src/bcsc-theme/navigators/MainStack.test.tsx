@@ -4,9 +4,9 @@ import { useNavigation } from '@react-navigation/native'
 import { act, render } from '@testing-library/react-native'
 import React from 'react'
 import { useAccount } from '../contexts/BCSCAccountContext'
-import { useSystemChecks } from '../hooks/useSystemChecks'
 import * as PairingModule from '../features/pairing'
 import { PairingNavigationListener, PairingPayload } from '../features/pairing/types'
+import { useSystemChecks } from '../hooks/useSystemChecks'
 import { BCSCScreens } from '../types/navigators'
 import MainStack from './MainStack'
 
@@ -145,8 +145,7 @@ describe('MainStack', () => {
     jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: true })
   })
 
-  const queryLoadingScreens = (view: ReturnType<typeof render>) =>
-    view.UNSAFE_queryAllByType('LoadingScreen' as any)
+  const queryLoadingScreens = (view: ReturnType<typeof render>) => view.UNSAFE_queryAllByType('LoadingScreen' as any)
 
   it('renders correctly', () => {
     const { toJSON } = render(<MainStack />)

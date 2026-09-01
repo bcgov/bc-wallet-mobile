@@ -1,8 +1,4 @@
-import {
-  DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
-  HelpCentreUrl,
-  SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS,
-} from '@/constants'
+import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl, SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS } from '@/constants'
 import {
   CredentialDetails,
   Screens,
