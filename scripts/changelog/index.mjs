@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 
 /**
- * Folds pending `.changes/*.md` entries into CHANGELOG.md when publishing a new build
+ * Folds pending `.changes/*.md` entries into CHANGELOG.md.
  *
  * Each entry has YAML frontmatter with a `type` (added/changed/fixed/removed)
- * and a plain-language body. `assemble` matches the variant's APP_VERSION
- * against the newest CHANGELOG.md heading: a new version opens a new heading,
- * a match appends a build section under it. Consumed entries are deleted.
+ * and a plain-language body. `assemble` always opens a fresh dated heading
+ * for whatever's pending — meant to run once, right before a release
+ * candidate is cut, not on every build. Consumed entries are deleted.
  *
  * Usage:
- *   node scripts/changelog/index.mjs assemble <build> [--variant <name>] [--allow-empty]
- *   node scripts/changelog/index.mjs preview  <build> [--variant <name>]
+ *   node scripts/changelog/index.mjs assemble [--allow-empty]
+ *   node scripts/changelog/index.mjs preview
  *
  * Exit codes:
  *   0  success
@@ -28,46 +28,11 @@ import { parse as parseYaml } from 'yaml'
 // From cwd, not this file's location, so tests can point it at a fixture root.
 const ROOT_DIR = process.cwd()
 const CHANGES_DIR = join(ROOT_DIR, '.changes')
-const DEFAULT_VARIANT = 'bcsc-prod'
 
 const VALID_TYPES = ['added', 'changed', 'fixed', 'removed']
 const TYPE_LABELS = { added: 'Added', changed: 'Changed', fixed: 'Fixed', removed: 'Removed' }
 const FRONTMATTER_PATTERN = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/
-const VERSION_HEADING_PATTERN = /^## (.+)$/gm
-
-// ─── variant.env parsing ────────────────────────────────────────
-
-/** Parse a variant.env file into a key-value object */
-function parseVariantEnv(envPath) {
-  const content = readFileSync(envPath, 'utf-8')
-  const env = {}
-  for (const line of content.split('\n')) {
-    const trimmed = line.trim()
-    if (!trimmed || trimmed.startsWith('#')) continue
-    const match = trimmed.match(/^([A-Z_]+)=(.*)$/)
-    if (match) {
-      let value = match[2].trim()
-      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-        value = value.slice(1, -1)
-      }
-      env[match[1]] = value
-    }
-  }
-  return env
-}
-
-function readVariantVersion(variantEnvPath) {
-  if (!existsSync(variantEnvPath)) {
-    console.error(`variant.env not found: ${variantEnvPath}`)
-    process.exit(1)
-  }
-  const env = parseVariantEnv(variantEnvPath)
-  if (!env.APP_VERSION) {
-    console.error(`APP_VERSION not set in ${variantEnvPath}`)
-    process.exit(1)
-  }
-  return env.APP_VERSION
-}
+const DATE_HEADING_PATTERN = /^## (.+)$/gm
 
 // ─── .changes/*.md parsing ──────────────────────────────────────
 
@@ -131,8 +96,8 @@ function readChangeFiles(changesDir) {
 
 // ─── CHANGELOG.md rendering ─────────────────────────────────────
 
-function renderChangelogSection(entries, buildNumber) {
-  const lines = [`### Build ${buildNumber}`, '']
+function renderChangelogSection(entries) {
+  const lines = []
 
   for (const type of VALID_TYPES) {
     const group = entries.filter((e) => e.type === type)
@@ -162,58 +127,56 @@ For the pre-4.x release history, see [RELEASE.md](./RELEASE.md).
 `
 }
 
+function todayDate() {
+  return new Date().toISOString().slice(0, 10)
+}
+
 /**
  * Splits CHANGELOG.md into its intro header and an ordered list of
- * { version, body } sections, one per "## <version>" heading.
+ * { date, body } sections, one per "## <date>" heading.
  */
 function parseChangelog(content) {
-  const matches = [...content.matchAll(VERSION_HEADING_PATTERN)]
+  const matches = [...content.matchAll(DATE_HEADING_PATTERN)]
   if (matches.length === 0) {
-    return { header: content, versions: [] }
+    return { header: content, sections: [] }
   }
 
   const header = content.slice(0, matches[0].index)
-  const versions = matches.map((m, i) => {
-    const version = m[1].trim()
+  const sections = matches.map((m, i) => {
+    const date = m[1].trim()
     const start = m.index + m[0].length
     const end = i + 1 < matches.length ? matches[i + 1].index : content.length
-    return { version, body: content.slice(start, end) }
+    return { date, body: content.slice(start, end) }
   })
 
-  return { header, versions }
+  return { header, sections }
 }
 
-function stringifyChangelog({ header, versions }) {
+function stringifyChangelog({ header, sections }) {
   let out = header.trimEnd() + '\n'
-  for (const v of versions) {
-    const body = v.body.replace(/^\n*/, '\n').trimEnd()
-    out += `\n## ${v.version}\n${body}\n`
+  for (const s of sections) {
+    const body = s.body.replace(/^\n*/, '\n').trimEnd()
+    out += `\n## ${s.date}\n${body}\n`
   }
   return out.trimEnd() + '\n'
 }
 
 /**
- * Takes the current CHANGELOG.md content and
- * returns it with the new build section folded in. A new version opens a
- * "## <version>" heading; a match appends the build under the existing one.
+ * Takes the current CHANGELOG.md content and returns it with a fresh dated
+ * "## <date>" section prepended for the given entries. Always a new
+ * section — this is meant to run once per release candidate, not once per
+ * build, so there's nothing to detect or merge.
  */
-function buildUpdatedChangelog({ existingContent, version, buildNumber, entries }) {
+function buildUpdatedChangelog({ existingContent, entries, date = todayDate() }) {
   const parsed = parseChangelog(existingContent ?? initialChangelogContent())
-  const section = renderChangelogSection(entries, buildNumber)
-  const top = parsed.versions[0]
-
-  if (!top || top.version !== version) {
-    parsed.versions.unshift({ version, body: `\n${section}` })
-  } else {
-    top.body = `\n${section}\n${top.body.replace(/^\n+/, '')}`
-  }
-
+  const section = renderChangelogSection(entries)
+  parsed.sections.unshift({ date, body: `\n${section}` })
   return stringifyChangelog(parsed)
 }
 
 // ─── Commands ───────────────────────────────────────────────────
 
-function assembleChangelog({ changesDir, changelogPath, variantEnvPath, buildNumber, allowEmpty }) {
+function assembleChangelog({ changesDir, changelogPath, allowEmpty }) {
   const entries = readChangeFiles(changesDir)
 
   if (entries.length === 0) {
@@ -225,9 +188,8 @@ function assembleChangelog({ changesDir, changelogPath, variantEnvPath, buildNum
     return
   }
 
-  const version = readVariantVersion(variantEnvPath)
   const existingContent = existsSync(changelogPath) ? readFileSync(changelogPath, 'utf-8') : null
-  const updated = buildUpdatedChangelog({ existingContent, version, buildNumber, entries })
+  const updated = buildUpdatedChangelog({ existingContent, entries })
 
   writeFileSync(changelogPath, updated)
   for (const entry of entries) {
@@ -235,11 +197,11 @@ function assembleChangelog({ changesDir, changelogPath, variantEnvPath, buildNum
   }
 
   console.log(
-    `\n✓ Assembled ${entries.length} entr${entries.length === 1 ? 'y' : 'ies'} into CHANGELOG.md under ${version} / Build ${buildNumber}`
+    `\n✓ Assembled ${entries.length} entr${entries.length === 1 ? 'y' : 'ies'} into CHANGELOG.md under ${todayDate()}`
   )
 }
 
-function previewChangelog({ changesDir, changelogPath, variantEnvPath, buildNumber }) {
+function previewChangelog({ changesDir, changelogPath }) {
   const entries = readChangeFiles(changesDir)
 
   if (entries.length === 0) {
@@ -247,9 +209,8 @@ function previewChangelog({ changesDir, changelogPath, variantEnvPath, buildNumb
     return
   }
 
-  const version = readVariantVersion(variantEnvPath)
   const existingContent = existsSync(changelogPath) ? readFileSync(changelogPath, 'utf-8') : null
-  console.log(buildUpdatedChangelog({ existingContent, version, buildNumber, entries }))
+  console.log(buildUpdatedChangelog({ existingContent, entries }))
 }
 
 // ─── CLI Entry Point ────────────────────────────────────────────
@@ -258,50 +219,39 @@ function printUsageAndExit(message) {
   if (message) console.error(message)
   console.error('')
   console.error('Usage:')
-  console.error('  node scripts/changelog/index.mjs assemble <build> [--variant <name>] [--allow-empty]')
-  console.error('  node scripts/changelog/index.mjs preview  <build> [--variant <name>]')
-  console.error('')
-  console.error('Examples:')
-  console.error('  node scripts/changelog/index.mjs assemble 2801')
-  console.error('  node scripts/changelog/index.mjs preview 2801 --variant bcsc-prod')
+  console.error('  node scripts/changelog/index.mjs assemble [--allow-empty]')
+  console.error('  node scripts/changelog/index.mjs preview')
   process.exit(1)
 }
 
 function parseCliArgs(args) {
-  const [command, buildNumber, ...rest] = args
+  const [command, ...rest] = args
 
   if (command !== 'assemble' && command !== 'preview') {
     printUsageAndExit(`Unknown command: ${command ?? '(none)'}`)
   }
-  if (!buildNumber || !/^\d+$/.test(buildNumber)) {
-    printUsageAndExit(`Invalid build number: ${buildNumber ?? '(none)'} (expected a positive integer)`)
-  }
 
-  let variant = DEFAULT_VARIANT
   let allowEmpty = false
 
-  for (let i = 0; i < rest.length; i++) {
-    if (rest[i] === '--variant') {
-      variant = rest[++i]
-    } else if (rest[i] === '--allow-empty') {
+  for (const arg of rest) {
+    if (arg === '--allow-empty') {
       allowEmpty = true
     } else {
-      printUsageAndExit(`Unknown option: ${rest[i]}`)
+      printUsageAndExit(`Unknown option: ${arg}`)
     }
   }
 
-  return { command, buildNumber, variant, allowEmpty }
+  return { command, allowEmpty }
 }
 
 function main() {
-  const { command, buildNumber, variant, allowEmpty } = parseCliArgs(process.argv.slice(2))
+  const { command, allowEmpty } = parseCliArgs(process.argv.slice(2))
   const changelogPath = join(ROOT_DIR, 'CHANGELOG.md')
-  const variantEnvPath = join(ROOT_DIR, 'variants', variant, 'variant.env')
 
   if (command === 'assemble') {
-    assembleChangelog({ changesDir: CHANGES_DIR, changelogPath, variantEnvPath, buildNumber, allowEmpty })
+    assembleChangelog({ changesDir: CHANGES_DIR, changelogPath, allowEmpty })
   } else {
-    previewChangelog({ changesDir: CHANGES_DIR, changelogPath, variantEnvPath, buildNumber })
+    previewChangelog({ changesDir: CHANGES_DIR, changelogPath })
   }
 }
 
@@ -316,6 +266,5 @@ export {
   buildUpdatedChangelog,
   previewChangelog,
   readChangeFiles,
-  readVariantVersion,
   renderChangelogSection,
 }

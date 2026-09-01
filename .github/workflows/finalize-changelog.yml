@@ -1,11 +1,10 @@
 # Adds any entries from .changes/*.md into CHANGELOG.md and opens a PR with
-# the result. A human merges it through
-# the normal ruleset-protected path, same as any other change.
+# the result.
 #
-# No build to resolve: this only reads .changes/*.md as of the dispatched
-# ref (main, or a release branch), so it just checks that out directly.
-# "Build N" in the changelog is this workflow's own run number — a plain
-# incrementing label, not tied to any specific app build or artifact.
+# No build or version to resolve: this only reads .changes/*.md as of the
+# dispatched ref (main, or a release branch), so it just checks that out
+# directly. Each run gets its own dated heading — meant to run once, right
+# before a release candidate is cut
 name: Finalize Changelog
 
 on:
@@ -41,10 +40,7 @@ jobs:
       # failure: this workflow runs on a schedule/whim, not in response to
       # a specific change, so an empty .changes/ is the expected common case.
       - name: Assemble changelog
-        run: |
-          node scripts/changelog/index.mjs assemble ${{ github.run_number }} \
-            --variant bcsc-prod \
-            --allow-empty
+        run: node scripts/changelog/index.mjs assemble --allow-empty
 
       - name: Open the PR
         env:
