@@ -1,8 +1,13 @@
 import type { TestUser } from '../constants.js'
 import { COMBO_CARD_BARCODE_MASKS, Timeouts } from '../constants.js'
-import { acceptSystemAlertsUntil, tapAlertButton } from '../helpers/alerts.js'
-import { isAppErrorShowing, throwIfAppErrorShowing } from '../helpers/app-error.js'
-import { ApproveInPersonInput, approveInPersonRequest } from '../helpers/approval.js'
+import { acceptAppAlert, acceptSystemAlert, acceptSystemAlertsUntil, tapAlertButton } from '../helpers/alerts.js'
+import { describeAppError, isAppErrorShowing, throwIfAppErrorShowing } from '../helpers/app-error.js'
+import {
+  ApproveInPersonInput,
+  approveInPersonRequest,
+  type ClaimedRequestSummary,
+  drainSendVideoQueue,
+} from '../helpers/approval.js'
 import type { ImageMaskRegion } from '../helpers/camera.js'
 import { canInjectImages, injectPhoto, injectScanTarget } from '../helpers/camera.js'
 import { getEmailConfirmationCode, getLatestMailId, getTempEmailAddress } from '../helpers/email.js'
@@ -14,8 +19,10 @@ import {
   RestartVerificationAlert,
   tapHelpMenuRow,
 } from '../helpers/help-menu.js'
-import { describeCurrentScreen, reachCameraScreen } from '../helpers/screens.js'
+import { describeCurrentScreen, reachCameraScreen, type ScreenProbe, waitForAnyScreen } from '../helpers/screens.js'
 import { BaseScreen } from '../screens/core/BaseScreen.js'
+import type { ScreenPresence } from '../screens/core/defineScreen.js'
+import { AppErrorModal } from '../screens/errors.js'
 import { HomeNotificationCard, HomeScreen } from '../screens/main.js'
 import { VerifyPromptScreen } from '../screens/onboarding.js'
 import {
@@ -53,6 +60,7 @@ import {
   VideoReviewScreen,
   VideoTooLongScreen,
 } from '../screens/verify.js'
+import { hasQueuedSubmission, markSubmissionQueued } from '../support/send-video-queue.js'
 
 /**
  * Verify-stack arranges: the entry spine plus the per-step arranges that mirror the app's
@@ -96,13 +104,24 @@ export async function leaveVerificationToHome(): Promise<void> {
 }
 
 /**
- * Re-enter an interrupted verification from Home's verification card — the only route back in, since
- * the in-progress flag is in-memory. The stack mounts at `getResumeStepRoute`; which screen that is,
- * is the caller's assertion.
+ * Re-enter an interrupted verification. In-session, Home's verification card is the only route back
+ * in (the in-progress flag is in-memory); across a relaunch the app resumes a user who chose to
+ * verify straight onto their step, so pass `resumedOnto` to accept that landing too. Either way the
+ * stack mounts at `getResumeStepRoute`; which screen that is stays the caller's assertion.
  */
-export async function resumeVerification(): Promise<void> {
-  await HomeNotificationCard.expectVisible(Timeouts.SCREEN_TRANSITION)
-  await HomeNotificationCard.tapToNavigate('primary')
+export async function resumeVerification(
+  resumedOnto?: ScreenPresence,
+  timeoutMs: number = Timeouts.SCREEN_TRANSITION
+): Promise<void> {
+  const candidates: Record<string, ScreenProbe> = { card: HomeNotificationCard }
+  if (resumedOnto) {
+    candidates.resumed = resumedOnto
+  }
+  if ((await waitForAnyScreen(candidates, timeoutMs)) === 'card') {
+    await HomeNotificationCard.tapToNavigate('primary')
+    return
+  }
+  console.log('[verify] Already inside verification — the app resumed onto the step itself')
 }
 
 /**
@@ -268,6 +287,7 @@ export async function submitSendVideoVerification(user: TestUser): Promise<void>
 
   await VideoReviewScreen.tapWhenEnabled('primary') // UseVideo → RESETS to EvidenceUploading, which uploads on mount
   await SuccessfullySentScreen.expectVisible(Timeouts.VIDEO_UPLOAD)
+  markSubmissionQueued() // from here until the scripted review claims it, a failure leaves an orphan behind
   await SuccessfullySentScreen.tapToNavigate('primary') // Go to home — the screen's only way out
 
   await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
@@ -321,24 +341,100 @@ async function recordPromptedVideo(): Promise<void> {
   )
 }
 
-/** VideoInstructions → an armed recorder, with the prompt set the recording will be judged against. */
+/** Attempts at arming the recorder before the journey gives up on the device's camera stack. */
+const RECORDING_START_ATTEMPTS = 3
+
+/** How long StartRecording gets to leave the screen after its tap before the tap is called swallowed. */
+const RECORDING_START_LEAVE_MS = 5_000
+
+type RecorderArmOutcome = 'armed' | 'error' | 'bounced'
+
+/**
+ * VideoInstructions → an armed recorder, with the prompt set the recording will be judged against.
+ *
+ * Arming fails transiently on rack devices — the recorder errors at 00:00 behind the app's
+ * "Recording error" modal, or the thumbnail snapshot fails and the app bounces back to the
+ * instructions — so it is retried from VideoInstructions, whose StartRecording issues a fresh prompt
+ * set each time. The final failure carries the modal's details rather than a timeout.
+ */
 async function startVideoRecording(): Promise<void> {
+  let lastFailure = ''
+  for (let attempt = 1; attempt <= RECORDING_START_ATTEMPTS; attempt++) {
+    const outcome = await armRecorder()
+    if (outcome === 'armed') {
+      return
+    }
+    lastFailure = outcome === 'error' ? await recoverFromRecordingError() : await recoverFromRecorderBounce()
+    console.warn(`[verify] The recorder did not arm (attempt ${attempt}/${RECORDING_START_ATTEMPTS}): ${lastFailure}`)
+  }
+  throw new Error(`The recording failed to start after ${RECORDING_START_ATTEMPTS} attempts. Last: ${lastFailure}`)
+}
+
+/** Tap StartRecording and wait for the recorder to arm, the app to error, or the instructions to come back. */
+async function armRecorder(): Promise<RecorderArmOutcome> {
   await VideoInstructionsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   // Disabled until a fresh prompt set lands — the wait for it IS the wait for the fetch.
   await VideoInstructionsScreen.tapWhenEnabled('primary')
+  // A swallowed tap leaves the instructions up — the same recovery as a bounce.
+  if (!(await waitForInstructionsToLeave())) {
+    return 'bounced'
+  }
 
   // No start button: recording arms itself after a 3-2-1 countdown, behind camera AND microphone
   // dialogs, so the first prompt button gets a camera budget rather than a transition one.
   //
   // The error modal counts as "we got somewhere": iOS drops the covered recorder out of the
   // accessibility tree, so a recording that fails on arm would otherwise spend the whole camera budget
-  // waiting for a screen that is already there and unreachable. Ending the wait on either outcome lets
-  // the assert below name the app's error instead of a 45s timeout.
-  await reachCameraScreen(
-    'TakeVideo',
-    async () => (await TakeVideoScreen.isPresent(1_000)) || (await isAppErrorShowing())
-  )
-  await throwIfAppErrorShowing('The recording failed to start')
+  // waiting for a screen that is already there and unreachable. The instructions coming back is the
+  // snapshot-failure path (a native alert, then goBack).
+  const arm: { outcome: RecorderArmOutcome | null } = { outcome: null }
+  await reachCameraScreen('TakeVideo', async () => {
+    if (await TakeVideoScreen.isPresent(1_000)) {
+      arm.outcome = 'armed'
+    } else if (await isAppErrorShowing()) {
+      arm.outcome = 'error'
+    } else if (await VideoInstructionsScreen.isPresent(500)) {
+      arm.outcome = 'bounced'
+    }
+    return arm.outcome !== null
+  })
+  return arm.outcome ?? 'bounced'
+}
+
+async function waitForInstructionsToLeave(): Promise<boolean> {
+  const deadline = Date.now() + RECORDING_START_LEAVE_MS
+  while (Date.now() < deadline) {
+    if (!(await VideoInstructionsScreen.isPresent(500))) {
+      return true
+    }
+  }
+  return false
+}
+
+/** Close the app's error modal and back out of the dead recorder to VideoInstructions; returns what it said. */
+async function recoverFromRecordingError(): Promise<string> {
+  const failure = await describeAppError()
+  await AppErrorModal.tap('primary') // close
+  // Cancel is TakeVideo's only way back; it pops to VideoInstructions, which refetches prompts on focus.
+  if (await TakeVideoScreen.isPresent(Timeouts.ELEMENT_VISIBLE)) {
+    await TakeVideoScreen.tap('secondary')
+  }
+  await VideoInstructionsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  return failure
+}
+
+/** The app came back to VideoInstructions on its own (snapshot failure → native alert → goBack): clear the alert. */
+async function recoverFromRecorderBounce(): Promise<string> {
+  const failure = `bounced back to VideoInstructions. On screen: ${await describeCurrentScreen()}`
+  // The RN Alert is an app dialog on Android (never matched by the permission probe) and a system-style
+  // alert on iOS; both are best-effort here — a swallowed tap raised none.
+  if (driver.isAndroid) {
+    await acceptAppAlert(1_000).catch(() => undefined)
+  } else {
+    await acceptSystemAlert(1_000).catch(() => undefined)
+  }
+  await VideoInstructionsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  return failure
 }
 
 /**
@@ -439,7 +535,10 @@ function assertExpectedDecision(actual: 'verified' | 'cancelled', expected: 'ver
  * foregrounding would NOT do — the Home-side status check runs once per stack mount, not per resume.
  * The push notification is advisory and never navigates, so it is not waited on either.
  */
-export async function waitForSendVideoDecision(expected: 'verified' | 'cancelled'): Promise<void> {
+export async function waitForSendVideoDecision(
+  expected: 'verified' | 'cancelled',
+  options: { reviewed?: ClaimedRequestSummary } = {}
+): Promise<void> {
   const deadline = Date.now() + REVIEW_DECISION_TIMEOUT_MS
   for (;;) {
     await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
@@ -452,14 +551,36 @@ export async function waitForSendVideoDecision(expected: 'verified' | 'cancelled
     }
 
     if (Date.now() + REVIEW_DECISION_POLL_MS >= deadline) {
+      const reviewed = options.reviewed
+        ? `The scripted review decided ${options.reviewed.queue} request ${options.reviewed.requestIdentifier} ` +
+          `(${options.reviewed.claimedName}, serial ${options.reviewed.claimedSerial}, ${options.reviewed.claimedOs || 'os unknown'})`
+        : 'The scripted review reported success'
       throw new Error(
         `The agent decision (${expected}) did not reach the app within ${REVIEW_DECISION_TIMEOUT_MS}ms of re-checking. ` +
-          'The scripted review reported success, so suspect the status endpoint or a submission other than this one.'
+          `${reviewed}, so suspect the status endpoint or a submission other than this one — ` +
+          'a stale same-persona upload at the head of the queue is the usual cause.'
       )
     }
     // Back does not pop here: it marks the account unverified, which swaps the stack back to Home.
     await PendingReviewScreen.back.tap()
     await driver.pause(REVIEW_DECISION_POLL_MS)
+  }
+}
+
+/**
+ * Journey teardown: drain the review queue when this session's upload was never claimed — a failure
+ * between the upload and the scripted review would otherwise leave it for the next run, or the
+ * morning. Best-effort by design: a hook that throws is reported as a failure of its own.
+ */
+export async function cleanUpQueuedSubmission(): Promise<void> {
+  if (!hasQueuedSubmission()) {
+    return
+  }
+  console.warn('[verify] This journey left its send-video upload in the review queue — draining it')
+  try {
+    await drainSendVideoQueue({ maxClaims: 5, timeoutMs: 120_000 })
+  } catch (err) {
+    console.warn(`[verify] The post-journey queue drain failed: ${(err as Error).message ?? err}`)
   }
 }
 
