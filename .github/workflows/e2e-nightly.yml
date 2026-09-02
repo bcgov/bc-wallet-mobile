@@ -186,7 +186,8 @@ jobs:
   # two platforms at once would review (or drain) each other's uploads. So they leave the concurrent
   # regression matrix (exclude_send_video above) and run here iOS-then-Android at max_parallel 1 —
   # alongside the Android-only migration lane, which keeps both Sauce sessions busy. Blocking, like
-  # the regression it belongs to; every e2e.yml call drains the queue behind itself.
+  # the regression it belongs to; the journeys drain the review queue around their own uploads, and
+  # queue-hygiene below is the end-of-night double check.
   e2e-send-video:
     needs: [check-for-merges, resolve-build, e2e]
     if: ${{ !cancelled() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' && (inputs.suite || 'regression') == 'regression' }}
@@ -250,8 +251,9 @@ jobs:
       OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
   # ─── Queue hygiene: the last word on the SIT review queue ───────
-  # Every lane that ran send-video journeys drained the queue behind itself (e2e.yml); this is the
-  # end-of-night double check, whatever the lanes did (always()).
+  # The send-video journeys drain the queue before each upload and again in their teardown; this is
+  # the end-of-night double check, whatever the lanes did (always()) — so a run that died mid-journey
+  # never leaves a submission for the UAT team to clear in the morning.
   queue-hygiene:
     needs: [check-for-merges, resolve-build, e2e, e2e-send-video, e2e-migration, e2e-upgrade, e2e-upgrade403]
     if: ${{ always() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' }}

@@ -35,6 +35,13 @@
 # Constraint: the SauceLabs account allows 2 concurrent real-device sessions, shared across every
 # job AND every wdio worker inside them. max-parallel caps the jobs; SAUCE_MAX_INSTANCES (computed
 # in the run step) divides the session budget among the jobs running in parallel.
+#
+# This workflow only runs tests and uploads reports. The brief (UAT coverage per platform, failures,
+# accessibility findings) is rendered ONCE per run by the caller — e2e-nightly.yml, whose dispatch
+# takes the same suite choice and resolves the build itself. For a brief over the reports of any
+# other run: `gh run download <id> -p 'e2e-reports-*' -D e2e/artifacts && cd e2e && yarn brief
+# --reports artifacts`. The send-video review queue is drained by the journeys themselves and by
+# e2e-nightly.yml's queue-hygiene job (manual: the "Drain send-video queue" workflow).
 name: E2E Tests
 
 permissions:
@@ -68,13 +75,6 @@ on:
         type: string
         required: false
         default: 'ubuntu-latest-m'
-      brief:
-        description: >
-          Render the run brief (UAT coverage per platform, failures, accessibility findings) into the
-          run summary after the matrix. Off for callers — the nightly renders its own aggregate.
-        type: boolean
-        required: false
-        default: false
       exclude_send_video:
         description: >
           Drop the send-video journeys from the suite. They review a shared blind-FIFO agent queue with
@@ -136,10 +136,6 @@ on:
         description: 'Label of the large runner with whitelisted egress IPs'
         type: string
         default: 'ubuntu-latest-m'
-      brief:
-        description: 'Render the run brief into the run summary'
-        type: boolean
-        default: true
       exclude_send_video:
         description: 'Drop the send-video journeys (auto for verify/regression with parallel platforms)'
         type: boolean
@@ -338,73 +334,3 @@ jobs:
           path: e2e/reports/
           if-no-files-found: warn
           retention-days: 14
-
-  # ─── Brief ─────────────────────────────────────────────────────────
-  # One page for the run: the UAT checklist per platform, every failure, and the accessibility
-  # findings vs e2e/a11y-baseline.json — rendered from the e2e-reports-* artifacts above into the
-  # run summary, and saved as an artifact. Report-only: it never fails the run on findings.
-  brief:
-    name: 'brief - ${{ inputs.suite }}'
-    needs: [e2e-tests]
-    if: ${{ always() && inputs.brief }}
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Setup E2E
-        uses: ./.github/workflows/actions/setup-e2e
-
-      # A pattern that matches nothing must not kill the summary — the page says so instead.
-      - name: Download E2E reports
-        uses: actions/download-artifact@v8
-        continue-on-error: true
-        with:
-          pattern: e2e-reports-${{ inputs.suite }}-*
-          path: e2e/artifacts
-
-      - name: Check the coverage map
-        working-directory: e2e
-        run: ./node_modules/.bin/tsx scripts/brief-check.ts
-
-      - name: Render the brief
-        working-directory: e2e
-        env: # via env, never inline in run — inputs are attacker-controlled
-          SUITE: ${{ inputs.suite }}
-          BUILD_NUMBER: ${{ inputs.build_number }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          ./node_modules/.bin/tsx scripts/brief.ts --reports artifacts \
-            --title "E2E ${SUITE} — build ${BUILD_NUMBER}" --run-url "$RUN_URL" \
-            --out brief.md --json brief.json
-          cat brief.md >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload brief
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: e2e-brief-${{ inputs.suite }}
-          path: |
-            e2e/brief.md
-            e2e/brief.json
-          if-no-files-found: warn
-          retention-days: 14
-
-  # ─── Queue hygiene ─────────────────────────────────────────────────
-  # The send-video journeys review a shared SIT agent queue; a journey that died between its upload
-  # and the scripted review leaves a submission there. Drain it after any suite that ran them —
-  # whatever the matrix did (always()).
-  queue-hygiene:
-    name: 'queue hygiene - ${{ inputs.suite }}'
-    needs: [e2e-tests]
-    if: ${{ always() && !inputs.exclude_send_video && contains(fromJSON('["verify","regression","send-video"]'), inputs.suite) }}
-    uses: ./.github/workflows/e2e-send-video-queue.yml
-    permissions:
-      contents: read
-    with:
-      scope: all
-      runner_label: ${{ inputs.runner_label }}
-    secrets:
-      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
