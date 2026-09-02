@@ -186,7 +186,7 @@ class BcscCore: NSObject {
    * structured userInfo, so the essentials must ride in the message itself.
    */
   private func keyInventorySummary(_ keys: [PrivateKeyInfo]) -> String {
-    guard let newest = keys.sorted(by: { $0.created > $1.created }).first else {
+    guard let newest = KeyPairManager.newestKey(in: keys) else {
       return "[keys=0]"
     }
     return "[keys=\(keys.count), newest=\(newest.tag)]"
@@ -268,7 +268,7 @@ class BcscCore: NSObject {
     }
     let signer: RSASigner
 
-    guard let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first else {
+    guard let latestKeyInfo = KeyPairManager.newestKey(in: keys) else {
       reject("E_NO_KEYS_FOUND", "No keys available to sign the JWT.", nil)
       return nil
     }
@@ -606,7 +606,7 @@ class BcscCore: NSObject {
     let keys = try keyPairManager.findAllPrivateKeys()
     let initialKeyId = "\(BcscCore.provider)\(UUID().uuidString)/1"
 
-    if let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first {
+    if let latestKeyInfo = KeyPairManager.newestKey(in: keys) {
       let existingTag = latestKeyInfo.tag
       var components = existingTag.split(separator: "/").map(String.init)
 
@@ -1228,7 +1228,7 @@ class BcscCore: NSObject {
     let keyPair: (public: SecKey, private: SecKey)
     let keyId: String
 
-    if let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first {
+    if let latestKeyInfo = KeyPairManager.newestKey(in: keys) {
       // Use existing latest key
       do {
         keyPair = try keyPairManager.getKeyPair(with: latestKeyInfo.tag)
