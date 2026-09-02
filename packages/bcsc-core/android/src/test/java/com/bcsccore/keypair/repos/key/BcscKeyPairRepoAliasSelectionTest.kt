@@ -12,11 +12,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.security.KeyPair
-import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.KeyStoreException
 import java.util.Collections
-import java.util.HashMap
 
 /**
  * Verifies [BcscKeyPairRepo.getNewBcscKeyPair]'s alias selection: the next rsa\d+ alias must be
@@ -25,32 +23,6 @@ import java.util.HashMap
  */
 @RunWith(RobolectricTestRunner::class)
 class BcscKeyPairRepoAliasSelectionTest {
-    companion object {
-        private val FAKE_KEY_PAIR: KeyPair by lazy {
-            KeyPairGenerator.getInstance("RSA").also { it.initialize(2048) }.generateKeyPair()
-        }
-    }
-
-    // Lightweight in-memory stand-in for SharedPreferences-backed KeyPairInfoSource, matching
-    // the pattern in BcscKeyPairRepoCleanupTest / BcscKeyPairRepoSeedingTest.
-    private class InMemoryKeyPairInfoSource(
-        initial: Map<String, KeyPairInfo> = emptyMap(),
-    ) : KeyPairInfoSource {
-        val store = HashMap<String, KeyPairInfo>(initial)
-
-        override fun getKeyPairInfo(kid: String): KeyPairInfo? = store[kid]
-
-        override fun getKeyPairInfo(): HashMap<String, KeyPairInfo> = HashMap(store)
-
-        override fun saveKeyPairInfo(info: KeyPairInfo) {
-            store[info.alias] = info
-        }
-
-        override fun deleteKeyPairInfo(alias: String) {
-            store.remove(alias)
-        }
-    }
-
     /**
      * Robolectric can't exercise the real "AndroidKeyStore" provider, so [loadAndroidKeyStore] is
      * substituted with a controllable mock and [getKeyPair] with a shared fake key pair.
@@ -80,7 +52,7 @@ class BcscKeyPairRepoAliasSelectionTest {
         override fun getKeyPair(
             keyStore: KeyStore,
             kid: String,
-        ): KeyPair = FAKE_KEY_PAIR
+        ): KeyPair = KeyPairRepoTestFixtures.RSA_KEY_PAIR
     }
 
     /**

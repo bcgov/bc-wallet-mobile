@@ -1,7 +1,6 @@
 package com.bcsccore.keypair.repos.key
 
 import com.bcsccore.keypair.core.exceptions.BcscException
-import com.bcsccore.keypair.core.interfaces.KeyPairInfoSource
 import com.bcsccore.keypair.core.models.BcscKeyPair
 import com.bcsccore.keypair.core.models.KeyPairInfo
 import com.nimbusds.jose.crypto.RSASSAVerifier
@@ -18,7 +17,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.interfaces.RSAPublicKey
 import java.util.Collections
@@ -39,33 +37,6 @@ import java.util.HashMap
  */
 @RunWith(RobolectricTestRunner::class)
 class BcscKeyPairRepoSeedingTest {
-    companion object {
-        // One 2048-bit key pair shared across all signing tests — key size does
-        // not affect kid logic and avoids per-test generation overhead.
-        private val TEST_KEY_PAIR: java.security.KeyPair by lazy {
-            KeyPairGenerator.getInstance("RSA").also { it.initialize(2048) }.generateKeyPair()
-        }
-    }
-
-    // Lightweight in-memory stand-in for SharedPreferences-backed KeyPairInfoSource.
-    private class InMemoryKeyPairInfoSource(
-        initial: Map<String, KeyPairInfo> = emptyMap(),
-    ) : KeyPairInfoSource {
-        val store = HashMap<String, KeyPairInfo>(initial)
-
-        override fun getKeyPairInfo(kid: String): KeyPairInfo? = store[kid]
-
-        override fun getKeyPairInfo(): HashMap<String, KeyPairInfo> = HashMap(store)
-
-        override fun saveKeyPairInfo(info: KeyPairInfo) {
-            store[info.alias] = info
-        }
-
-        override fun deleteKeyPairInfo(alias: String) {
-            store.remove(alias)
-        }
-    }
-
     // Reflective helpers so we can reach the private seeding methods directly
     // without going through the full Android KeyStore stack.
 
@@ -269,12 +240,13 @@ class BcscKeyPairRepoSeedingTest {
     //     the alias identifies the key that actually produced the signature.
     // -----------------------------------------------------------------------
 
-    // Returns a spy whose getCurrentBcscKeyPair() is stubbed to return a
-    // BcscKeyPair backed by TEST_KEY_PAIR under the given alias, so the signing
-    // path runs against a real JVM RSA key without touching AndroidKeyStore.
+    // Returns a spy whose getCurrentBcscKeyPair() is stubbed to return a BcscKeyPair backed by
+    // the shared fixture key pair under the given alias, so the signing path runs against a
+    // real JVM RSA key without touching AndroidKeyStore.
     private fun repoSigningAs(alias: String): BcscKeyPairRepo {
         val spy = spyk(BcscKeyPairRepo(InMemoryKeyPairInfoSource()))
-        val bcscKeyPair = BcscKeyPair(TEST_KEY_PAIR, KeyPairInfo(alias, System.currentTimeMillis()))
+        val bcscKeyPair =
+            BcscKeyPair(KeyPairRepoTestFixtures.RSA_KEY_PAIR, KeyPairInfo(alias, System.currentTimeMillis()))
         every { spy.getCurrentBcscKeyPair() } returns bcscKeyPair
         return spy
     }
@@ -300,9 +272,9 @@ class BcscKeyPairRepoSeedingTest {
             repoSigningAs(alias)
                 .signClaimsSet(JWTClaimsSet.Builder().subject("test-subject").build())
 
-        // Verify with the public half of TEST_KEY_PAIR — if kid lied about which
-        // key signed, this would fail and the server would reject the token.
-        val verifier = RSASSAVerifier(TEST_KEY_PAIR.public as RSAPublicKey)
+        // Verify with the public half of the fixture key pair — if kid lied about which key
+        // signed, this would fail and the server would reject the token.
+        val verifier = RSASSAVerifier(KeyPairRepoTestFixtures.RSA_KEY_PAIR.public as RSAPublicKey)
         assertTrue(
             "JWT must be verifiable with the public key whose alias appears as kid",
             jwt.verify(verifier),

@@ -14,10 +14,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.security.KeyPair
-import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.KeyStoreException
-import java.util.HashMap
 
 /**
  * Verifies [BcscKeyPairRepo.getNewBcscKeyPair]'s post-generation cleanup: a failure after the
@@ -27,10 +25,6 @@ import java.util.HashMap
 @RunWith(RobolectricTestRunner::class)
 class BcscKeyPairRepoCleanupTest {
     companion object {
-        private val FAKE_KEY_PAIR: KeyPair by lazy {
-            KeyPairGenerator.getInstance("RSA").also { it.initialize(2048) }.generateKeyPair()
-        }
-
         /** True if [target] appears anywhere in [thrown]'s cause chain (including itself). */
         private fun causeChainContains(
             thrown: Throwable?,
@@ -42,27 +36,6 @@ class BcscKeyPairRepoCleanupTest {
                 cause = cause.cause
             }
             return false
-        }
-    }
-
-    // Lightweight in-memory stand-in for SharedPreferences-backed KeyPairInfoSource, matching
-    // the one in BcscKeyPairRepoSeedingTest (duplicated locally to keep this file self-contained
-    // and focused on cleanup behavior rather than seeding).
-    private open class InMemoryKeyPairInfoSource(
-        initial: Map<String, KeyPairInfo> = emptyMap(),
-    ) : KeyPairInfoSource {
-        val store = HashMap<String, KeyPairInfo>(initial)
-
-        override fun getKeyPairInfo(kid: String): KeyPairInfo? = store[kid]
-
-        override fun getKeyPairInfo(): HashMap<String, KeyPairInfo> = HashMap(store)
-
-        override fun saveKeyPairInfo(info: KeyPairInfo) {
-            store[info.alias] = info
-        }
-
-        override fun deleteKeyPairInfo(alias: String) {
-            store.remove(alias)
         }
     }
 
@@ -118,7 +91,7 @@ class BcscKeyPairRepoCleanupTest {
                 throwOnSaveAlias = "rsa2",
             )
         val keyStore = mockKeyStore()
-        val repo = TestableBcscKeyPairRepo(infoSource, keyStore) { FAKE_KEY_PAIR }
+        val repo = TestableBcscKeyPairRepo(infoSource, keyStore) { KeyPairRepoTestFixtures.RSA_KEY_PAIR }
 
         val thrown =
             try {
@@ -150,7 +123,7 @@ class BcscKeyPairRepoCleanupTest {
             )
         val keyStore = mockKeyStore()
         every { keyStore.deleteEntry(any()) } throws KeyStoreException("delete also failed")
-        val repo = TestableBcscKeyPairRepo(infoSource, keyStore) { FAKE_KEY_PAIR }
+        val repo = TestableBcscKeyPairRepo(infoSource, keyStore) { KeyPairRepoTestFixtures.RSA_KEY_PAIR }
 
         val thrown =
             try {

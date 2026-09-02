@@ -16,12 +16,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.security.KeyPair
-import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.KeyStoreException
 import java.security.UnrecoverableEntryException
 import java.util.Collections
-import java.util.HashMap
 
 /**
  * Pins [BcscKeyPairRepo.getBcscKeyPair]'s read-only contract (issue #4595 F1/F3): a read must
@@ -31,31 +29,6 @@ import java.util.HashMap
  */
 @RunWith(RobolectricTestRunner::class)
 class BcscKeyPairRepoGetBcscKeyPairTest {
-    companion object {
-        private val FAKE_KEY_PAIR: KeyPair by lazy {
-            KeyPairGenerator.getInstance("RSA").also { it.initialize(2048) }.generateKeyPair()
-        }
-    }
-
-    // Matches the pattern in BcscKeyPairRepoAliasSelectionTest / *CleanupTest / *SeedingTest.
-    private class InMemoryKeyPairInfoSource(
-        initial: Map<String, KeyPairInfo> = emptyMap(),
-    ) : KeyPairInfoSource {
-        val store = HashMap<String, KeyPairInfo>(initial)
-
-        override fun getKeyPairInfo(kid: String): KeyPairInfo? = store[kid]
-
-        override fun getKeyPairInfo(): HashMap<String, KeyPairInfo> = HashMap(store)
-
-        override fun saveKeyPairInfo(info: KeyPairInfo) {
-            store[info.alias] = info
-        }
-
-        override fun deleteKeyPairInfo(alias: String) {
-            store.remove(alias)
-        }
-    }
-
     /**
      * [loadAndroidKeyStore] is substituted (Robolectric has no real "AndroidKeyStore" provider).
      * [getKeyPair] either returns the shared fake pair or throws for aliases listed in
@@ -82,7 +55,7 @@ class BcscKeyPairRepoGetBcscKeyPairTest {
             if (kid in unreadableAliases) {
                 throw UnrecoverableEntryException("simulated OEM keystore failure for '$kid'")
             }
-            return FAKE_KEY_PAIR
+            return KeyPairRepoTestFixtures.RSA_KEY_PAIR
         }
     }
 
@@ -171,7 +144,10 @@ class BcscKeyPairRepoGetBcscKeyPairTest {
                 e
             }
 
-        assertFalse("a keystore load fault must not be reported as KeyNotFoundException", thrown is KeyNotFoundException)
+        assertFalse(
+            "a keystore load fault must not be reported as KeyNotFoundException",
+            thrown is KeyNotFoundException,
+        )
         assertTrue(
             "the real underlying failure must be preserved as the cause",
             thrown!!.cause is KeyStoreException,
@@ -194,7 +170,10 @@ class BcscKeyPairRepoGetBcscKeyPairTest {
                 e
             }
 
-        assertFalse("a containsAlias fault must not be reported as KeyNotFoundException", thrown is KeyNotFoundException)
+        assertFalse(
+            "a containsAlias fault must not be reported as KeyNotFoundException",
+            thrown is KeyNotFoundException,
+        )
         assertTrue(
             "the real underlying failure must be preserved as the cause",
             thrown!!.cause is KeyStoreException,
