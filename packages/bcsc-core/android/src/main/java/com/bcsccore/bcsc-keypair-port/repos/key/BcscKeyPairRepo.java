@@ -165,8 +165,9 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
 
       KeyPairInfo info = keyPairInfoSource.getKeyPairInfo(kid);
       if (info == null) {
-        info = new KeyPairInfo(kid, System.currentTimeMillis());
-        keyPairInfoSource.saveKeyPairInfo(info);
+        // Untracked alias: createdAt 0, same as getAllBcscKeyPairInfos(). Never persisted here —
+        // a bare read must not promote an orphan to "newest" and derail signing/rotation (#4595).
+        info = new KeyPairInfo(kid, 0L);
       }
 
       final KeyPair keyPair = getKeyPair(keyStore, kid);
