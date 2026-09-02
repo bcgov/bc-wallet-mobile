@@ -15,6 +15,11 @@ interface RadioListRowProps extends RadioListOption {
   onPress: (value: number) => void
 }
 
+function CheckedRadioIcon() {
+  const { ColorPalette } = useTheme()
+  return <Icon name="circle" size={18} color={ColorPalette.brand.primary} />
+}
+
 function RadioListRow({ title, value, selected, testID, onPress }: RadioListRowProps) {
   const { ColorPalette, SettingsTheme, Spacing } = useTheme()
 
@@ -50,7 +55,7 @@ function RadioListRow({ title, value, selected, testID, onPress }: RadioListRowP
           unfillColor={ColorPalette.brand.secondaryBackground}
           size={36}
           innerIconStyle={{ borderColor: ColorPalette.brand.primary, borderWidth: 2 }}
-          ImageComponent={<Icon name="circle" size={18} color={ColorPalette.brand.primary} />}
+          ImageComponent={CheckedRadioIcon}
           onPress={() => onPress(value)}
           isChecked={selected}
           disableBuiltInState
