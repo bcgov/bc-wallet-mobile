@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { test } from 'node:test'
@@ -8,13 +8,17 @@ import { test } from 'node:test'
 import { buildUpdatedChangelog, renderChangelogSection } from './index.mjs'
 
 const SCRIPT_PATH = resolve(import.meta.dirname, 'index.mjs')
-const FIXTURES_DIR = resolve(import.meta.dirname, '__fixtures__')
 const TODAY = new Date().toISOString().slice(0, 10)
 
-function useFixture(name) {
-  const dir = mkdtempSync(join(tmpdir(), `changelog-${name}-`))
-  cpSync(join(FIXTURES_DIR, name), dir, { recursive: true })
+/** A throwaway repo root with an empty .changes/ dir, for CLI tests to build on. */
+function makeTempRepo() {
+  const dir = mkdtempSync(join(tmpdir(), 'changelog-'))
+  mkdirSync(join(dir, '.changes'), { recursive: true })
   return dir
+}
+
+function writeChangeFile(dir, name, content) {
+  writeFileSync(join(dir, '.changes', name), content)
 }
 
 function runCli(cwd, args) {
@@ -87,7 +91,7 @@ test('buildUpdatedChangelog opens a separate new heading even for the same date'
 // ─── CLI / assemble integration tests ───────────────────────────
 
 test('assemble: empty .changes/ without --allow-empty exits 3 and writes nothing', () => {
-  const dir = useFixture('empty')
+  const dir = makeTempRepo()
   try {
     const result = runCli(dir, ['assemble'])
     assert.equal(result.status, 3)
@@ -98,7 +102,7 @@ test('assemble: empty .changes/ without --allow-empty exits 3 and writes nothing
 })
 
 test('assemble: empty .changes/ with --allow-empty exits 0 and writes nothing', () => {
-  const dir = useFixture('empty')
+  const dir = makeTempRepo()
   try {
     const result = runCli(dir, ['assemble', '--allow-empty'])
     assert.equal(result.status, 0)
@@ -108,9 +112,19 @@ test('assemble: empty .changes/ with --allow-empty exits 0 and writes nothing', 
   }
 })
 
-test('assemble: with-history fixture opens a new dated heading above the old one and consumes the entry', () => {
-  const dir = useFixture('with-history')
+test('assemble: opens a new dated heading above existing history and consumes the entry', () => {
+  const dir = makeTempRepo()
   try {
+    writeChangeFile(
+      dir,
+      'fix-example.md',
+      '---\ntype: fixed\n---\n\nFixed the card list scrolling past the last item on smaller screens.\n'
+    )
+    writeFileSync(
+      join(dir, 'CHANGELOG.md'),
+      '# Changelog\n\nFor the pre-4.x release history, see [RELEASE.md](./RELEASE.md).\n\n## 2026-08-01\n\n**Fixed**\n- Fixed an old bug from a prior release.\n'
+    )
+
     const result = runCli(dir, ['assemble'])
     assert.equal(result.status, 0, result.stderr)
 
@@ -118,6 +132,7 @@ test('assemble: with-history fixture opens a new dated heading above the old one
     const headings = [...changelog.matchAll(/^## (.+)$/gm)].map((m) => m[1])
     assert.deepEqual(headings, [TODAY, '2026-08-01'])
     assert.match(changelog, new RegExp(`## ${TODAY}[\\s\\S]*Fixed the card list scrolling`))
+    assert.match(changelog, /## 2026-08-01[\s\S]*Fixed an old bug/, 'old section preserved untouched')
 
     const remaining = readdirSync(join(dir, '.changes')).filter((f) => f.endsWith('.md'))
     assert.deepEqual(remaining, [], 'consumed .changes/*.md files should be deleted')
@@ -127,8 +142,14 @@ test('assemble: with-history fixture opens a new dated heading above the old one
 })
 
 test('assemble: malformed type exits 2 and leaves CHANGELOG.md and .changes/ untouched', () => {
-  const dir = useFixture('malformed')
+  const dir = makeTempRepo()
   try {
+    writeChangeFile(
+      dir,
+      'bad.md',
+      '---\ntype: bogus\n---\n\nThis entry has an invalid type and should fail the gate.\n'
+    )
+
     const result = runCli(dir, ['assemble'])
     assert.equal(result.status, 2)
     assert.match(result.stderr, /bad\.md/)
