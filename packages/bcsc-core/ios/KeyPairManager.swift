@@ -244,6 +244,15 @@ class KeyPairManager: KeyPairManagerProtocol {
     }
   }
 
+  /// During rotation the server keeps encrypting to the previous key until it sees the new
+  /// one, so the JWE's own `kid` beats "newest" when we hold that key. Nil only for empty `keys`.
+  static func decryptKeyInfo(matching kid: String, in keys: [PrivateKeyInfo]) -> PrivateKeyInfo? {
+    if !kid.isEmpty, let match = keys.first(where: { $0.tag == kid }) {
+      return match
+    }
+    return keys.sorted(by: { $0.created > $1.created }).first
+  }
+
   func generateKeyPair(
     withLabel label: String,
     keyType: KeyType = KeyType.RSA,

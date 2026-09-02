@@ -208,9 +208,9 @@ class BcscCore: NSObject {
     return Data(base64Encoded: base64)
   }
 
-  /// Best-effort read of the *incoming* JWE protected header for diagnostics. Reads the
-  /// real `kid` straight off the wire — NOT `JWEHeader.kid`, which the parser overwrites
-  /// with the server's own public-key id. Unreadable fields come back as "?".
+  /// Best-effort read of the *incoming* JWE protected header for diagnostics and decrypt-key
+  /// selection. Reads the real `kid` straight off the wire — NOT `JWEHeader.kid`, which the
+  /// parser overwrites with the server's own public-key id. Unreadable fields come back as "?".
   private func incomingJWEHeader(_ jweString: String) -> (alg: String, enc: String, kid: String, parts: Int) {
     let parts = jweString.components(separatedBy: ".")
     guard parts.count == 5, let headerSegment = parts.first,
@@ -1517,7 +1517,8 @@ class BcscCore: NSObject {
     // key. This is what makes 2507 reports self-classifying in the field.
     let diagnostics = decodeDiagnosticsSummary(keys: keys, jweString: jweString)
 
-    guard let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first else {
+    guard let decryptKeyInfo = KeyPairManager.decryptKeyInfo(matching: incomingJWEHeader(jweString).kid, in: keys)
+    else {
       reject(
         "E_NO_KEYS_FOUND",
         "No keys available to decrypt JWE \(diagnostics)",
@@ -1528,7 +1529,7 @@ class BcscCore: NSObject {
 
     let keyPair: (public: SecKey, private: SecKey)
     do {
-      keyPair = try keyPairManager.getKeyPair(with: latestKeyInfo.tag)
+      keyPair = try keyPairManager.getKeyPair(with: decryptKeyInfo.tag)
     } catch let KeychainError.keychainUnavailable(status) {
       // The key likely exists but can't be read right now (device locked, auth
       // failure, or launched in the background before first unlock). Distinct,

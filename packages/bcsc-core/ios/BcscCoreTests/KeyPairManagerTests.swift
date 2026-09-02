@@ -76,6 +76,39 @@ final class KeyPairManagerEnumerationClassifierTests: XCTestCase {
   }
 }
 
+/// Pins the decrypt-key selection rule behind issue #4595. Pure and synchronous — fixtures
+/// only, no keychain — so these run in the entitlement-less SPM runner.
+final class KeyPairManagerDecryptKeySelectionTests: XCTestCase {
+  private func key(_ tag: String, createdSecondsAgo: TimeInterval) -> PrivateKeyInfo {
+    PrivateKeyInfo(keyType: KeyType.RSA, keySize: 2048, tag: tag, created: Date(timeIntervalSinceNow: -createdSecondsAgo))
+  }
+
+  func testKidNamingThePreviousKeySelectsItOverNewest() {
+    let previous = key("rsa1", createdSecondsAgo: 100)
+    let newest = key("rsa2", createdSecondsAgo: 0)
+    let result = KeyPairManager.decryptKeyInfo(matching: "rsa1", in: [previous, newest])
+    XCTAssertEqual(result?.tag, "rsa1")
+  }
+
+  func testEmptyKidFallsBackToNewest() {
+    let previous = key("rsa1", createdSecondsAgo: 100)
+    let newest = key("rsa2", createdSecondsAgo: 0)
+    let result = KeyPairManager.decryptKeyInfo(matching: "", in: [previous, newest])
+    XCTAssertEqual(result?.tag, "rsa2")
+  }
+
+  func testKidHeldByNoLocalKeyFallsBackToNewest() {
+    let previous = key("rsa1", createdSecondsAgo: 100)
+    let newest = key("rsa2", createdSecondsAgo: 0)
+    let result = KeyPairManager.decryptKeyInfo(matching: "rsa9", in: [previous, newest])
+    XCTAssertEqual(result?.tag, "rsa2")
+  }
+
+  func testEmptyKeysReturnsNil() {
+    XCTAssertNil(KeyPairManager.decryptKeyInfo(matching: "rsa1", in: []))
+  }
+}
+
 /// Exercises the real simulator keychain. Covers the key lifecycle relied on by
 /// dynamic client registration (issue #4032 / error 2603): generation, discovery
 /// via `findAllPrivateKeys`, and retrieval via `getKeyPair`.
