@@ -48,6 +48,7 @@ export const TestIds = {
   errorModal: {
     close: 'CloseButton',
     showDetails: 'ShowDetails',
+    details: 'DetailsText', // "Error code N - message", rendered only once ShowDetails is pressed
     title: 'HeaderText',
     body: 'BodyText',
   },
