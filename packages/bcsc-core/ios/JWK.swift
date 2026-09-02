@@ -43,12 +43,19 @@ class JWK: NSObject, NSCoding {
   }
 
   required init?(coder decoder: NSCoder) {
-    let rawKty = decoder.decodeObject(forKey: .keyType) as! String
-    kty = KeyType(rawValue: rawKty)!
-    alg = decoder.decodeObject(forKey: .algorithm) as! String
-    kid = decoder.decodeObject(forKey: .keyID) as! String
-    e = decoder.decodeObject(forKey: .exponent) as! String
-    n = decoder.decodeObject(forKey: .modulus) as! String
+    guard let rawKty = decoder.decodeObject(forKey: .keyType) as? String,
+          let kty = KeyType(rawValue: rawKty),
+          let alg = decoder.decodeObject(forKey: .algorithm) as? String,
+          let kid = decoder.decodeObject(forKey: .keyID) as? String,
+          let e = decoder.decodeObject(forKey: .exponent) as? String,
+          let n = decoder.decodeObject(forKey: .modulus) as? String
+    else { return nil }
+
+    self.kty = kty
+    self.alg = alg
+    self.kid = kid
+    self.e = e
+    self.n = n
   }
 
   init(kid: String, kty: KeyType, alg: String, e: String, n: String) {

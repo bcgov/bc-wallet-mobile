@@ -1,4 +1,4 @@
-import { formatTime, getConnectionName, ThemedText, useStore, useTheme } from '@bifold/core'
+import { formatTime, getConnectionName, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { DidCommConnectionRecord } from '@credo-ts/didcomm'
 import React, { useMemo } from 'react'
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native'
@@ -82,6 +82,8 @@ const ContactRow: React.FC<ContactRowProps> = ({ contact, pinned, onPress, onLon
       onPress={onPress}
       onLongPress={onLongPress}
       delayLongPress={350}
+      // Shared by every row — a specific contact is selected by its name (the accessibility label).
+      testID={testIdWithKey('ContactRow')}
       accessibilityRole="button"
       accessibilityLabel={name}
       accessibilityState={{ selected: !!pinned }}

@@ -15,6 +15,7 @@ import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizatio
 import { VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
+import { appLogger } from './utils/logger'
 
 export type RemoteDebuggingState = {
   enabledAt?: Date
@@ -95,6 +96,33 @@ export interface BCSCState {
   showCardRenewalNotification?: boolean
   acceptedTermsOfUseVersion?: string
   installId?: string // Unique identifier for this app install (not a per-report id); preserved across CLEAR_BCSC
+  /** ISO timestamp of the last automatic key-rotation attempt (success or failure), used to
+   * throttle retries — see KeyRotationSystemCheck. Not PII. */
+  lastKeyRotationAttemptAt?: string
+  /**
+   * App version/build seen on the MOST RECENT launch, stamped unconditionally every launch —
+   * deliberately distinct from `appVersion`/`appBuildNumber` above, which only advance on a
+   * SUCCESSFUL device-registration PUT. KeyRotationSystemCheck uses this pair (never
+   * `appVersion`/`appBuildNumber`) to detect "did the app version change since last launch",
+   * so a persistently failing registration PUT can never latch key rotation off forever. See
+   * the #3876 review.
+   */
+  lastSeenAppVersion?: string
+  lastSeenAppBuildNumber?: string
+  /**
+   * The user's answer to the post-onboarding "verify your account now?" prompt, persisted so the
+   * choice survives an app restart:
+   * - `undefined` — not answered yet (fresh install, or after a factory reset). RootStack shows the
+   *   prompt.
+   * - `false` — the user chose to start verification but has not finished. RootStack routes straight
+   *   into VerifyStack on every launch until they verify.
+   * - `true` — the user chose to skip, OR verification completed. RootStack routes to the home stack.
+   *
+   * Set `true` automatically when `bcscSecure.verified` flips true (see UPDATE_SECURE_VERIFIED), and
+   * reset to `undefined` by CLEAR_BCSC. Intentionally on plain (AsyncStorage) state, not secure
+   * state, so an app uninstall clears it — iOS Keychain-backed secure state would survive a reinstall.
+   */
+  verificationSkipped?: boolean
 }
 
 export enum VerificationStatus {
@@ -282,6 +310,9 @@ enum BCSCDispatchAction {
   SET_ACCOUNT_EXPIRY_NOTIFICATION = 'bcsc/setAccountExpiryNotification',
   SET_CARD_RENEWAL_NOTIFICATION = 'bcsc/setCardRenewalNotification',
   SET_INSTALL_ID = 'bcsc/setInstallId',
+  KEY_ROTATION_ATTEMPTED = 'bcsc/keyRotationAttempted',
+  RECORD_APP_LAUNCH_VERSION = 'bcsc/recordAppLaunchVersion',
+  SET_VERIFICATION_SKIPPED = 'bcsc/setVerificationSkipped',
 }
 
 enum ModeDispatchAction {
@@ -329,19 +360,33 @@ export const initialBCSCState: BCSCState = {
 }
 
 /**
- * Migrates a persisted BCSC state blob that may still carry the legacy `reportUUID` field
- * (added bcsc-v4.0.2, #4060). Safe to remove once all installs have launched on >= v4.1.
+ * Migrates a persisted BCSC state blob on load. Two idempotent, read-side migrations:
+ * - Legacy `reportUUID` (added bcsc-v4.0.2, #4060) → `installId`. Safe to remove once all installs
+ *   have launched on >= v4.1.
+ * - Onboarded installs that predate `verificationSkipped`: a missing value is treated as "skipped"
+ *   (`true`) so they keep landing on the home screen rather than the post-onboarding verify prompt.
  */
 export const migrateBCSCState = <T extends Partial<BCSCState> & { reportUUID?: string }>(
   persisted: T
-  // `& { installId?: string }` keeps installId in the return type even when T is inferred from a
-  // narrow literal that never mentions it (e.g. `{ reportUUID: 'x' }` in tests).
-): { bcsc: Omit<T, 'reportUUID'> & { installId?: string }; migrated: boolean } => {
+  // `& { installId?: string; verificationSkipped?: boolean }` keeps these fields in the return type
+  // even when T is inferred from a narrow literal that never mentions them (e.g. `{ reportUUID: 'x' }`
+  // in tests).
+): { bcsc: Omit<T, 'reportUUID'> & { installId?: string; verificationSkipped?: boolean }; migrated: boolean } => {
   const { reportUUID, ...rest } = persisted
-  if (reportUUID === undefined) {
-    return { bcsc: rest, migrated: false }
+  let bcsc: Omit<T, 'reportUUID'> & { installId?: string; verificationSkipped?: boolean } = rest
+  let migrated = false
+
+  if (reportUUID !== undefined) {
+    bcsc = { ...bcsc, installId: bcsc.installId ?? reportUUID }
+    migrated = true
   }
-  return { bcsc: { ...rest, installId: rest.installId ?? reportUUID }, migrated: true }
+
+  if (bcsc.hasAccount === true && bcsc.verificationSkipped === undefined) {
+    bcsc = { ...bcsc, verificationSkipped: false }
+    migrated = true
+  }
+
+  return { bcsc, migrated }
 }
 
 export enum BCLocalStorageKeys {
@@ -785,7 +830,35 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return newState
     }
 
+    case BCSCDispatchAction.KEY_ROTATION_ATTEMPTED: {
+      const lastKeyRotationAttemptAt = (action?.payload || []).pop()
+      const bcsc = { ...state.bcsc, lastKeyRotationAttemptAt }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.RECORD_APP_LAUNCH_VERSION: {
+      const { version: lastSeenAppVersion, buildNumber: lastSeenAppBuildNumber } = (action?.payload || []).pop() ?? {}
+      const bcsc = { ...state.bcsc, lastSeenAppVersion, lastSeenAppBuildNumber }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.SET_VERIFICATION_SKIPPED: {
+      const verificationSkipped: boolean | undefined = (action?.payload || []).pop()
+      const bcsc = { ...state.bcsc, verificationSkipped }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
     default:
+      // log any BDDispatch actions that are not handled by the reducer
+      if (Object.values(BCDispatchAction).includes(action.type)) {
+        appLogger.error('Unhandled reducer action', { actionType: action.type })
+      }
       return state
   }
 }

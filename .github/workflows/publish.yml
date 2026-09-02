@@ -1,0 +1,636 @@
+# Publishes an EXISTING build to the app stores. This workflow never builds:
+# it takes the artifacts produced by an earlier `Native Build & Test` run and
+# uploads those, so what a tester installs is byte-for-byte what CI produced.
+#
+# Merging builds artifacts and publishes nothing. Every destination —
+# App Store Connect, Google Play and Firebase App Distribution — is reached
+# only from here.
+#
+# `ring` is the audience. ring-0 is the team and always publishes, without
+# approval. Picking a higher ring publishes every ring up to it, and those
+# wait on the chosen ring's environment approval. See docs/releases.md.
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      ring:
+        description: 'How far to publish. ring-0 (the team) always goes; this picks how much further, and needs approval.'
+        required: false
+        default: ring-2
+        type: choice
+        options:
+          - ring-1
+          - ring-2
+          - ring-3
+          - ring-4
+      build_number:
+        description: 'Build number to publish. Leave blank for the most recent publishable build on this branch.'
+        required: false
+        type: string
+      targets:
+        description: 'Which stores to publish to. Use one to retry a single store after a partial failure.'
+        required: false
+        default: all
+        type: choice
+        options:
+          - all
+          - apple-store
+          - google-store
+          - firebase
+
+# Never cancel a publish part-way through: the stores are not transactional.
+# A run waiting for approval holds this group, so approvers should approve or
+# reject promptly — rejecting frees the queue for the next publish. `queue:
+# max` lets multiple runs wait their turn (in start order) instead of a new
+# pending run silently cancelling whatever was already queued.
+concurrency:
+  group: publish
+  cancel-in-progress: false
+  queue: max
+
+permissions: {}
+
+jobs:
+  # ─── Resolve which build to publish ─────────────────────────────────
+  # A run being green is not enough. When a push's final commit touches
+  # nothing relevant, early-exit-check skips the builds and the run still
+  # reports success — with no artifacts to publish. So candidate runs are
+  # filtered on actually having unexpired artifacts.
+  #
+  # iOS and Android build independently, so the resolver reports a separate
+  # variant list per artifact kind and each job below runs only for the
+  # variants whose artifact actually exists.
+  resolve-build:
+    name: Resolve build
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      run_id: ${{ steps.resolve.outputs.run_id }}
+      run_number: ${{ steps.resolve.outputs.run_number }}
+      head_sha: ${{ steps.resolve.outputs.head_sha }}
+      ipa_variants: ${{ steps.resolve.outputs.ipa_variants }}
+      aab_variants: ${{ steps.resolve.outputs.aab_variants }}
+      apk_variants: ${{ steps.resolve.outputs.apk_variants }}
+      widen_ipa_variants: ${{ steps.resolve.outputs.widen_ipa_variants }}
+      widen_aab_variants: ${{ steps.resolve.outputs.widen_aab_variants }}
+      widen_apk_variants: ${{ steps.resolve.outputs.widen_apk_variants }}
+      widen_rings_csv: ${{ steps.resolve.outputs.widen_rings_csv }}
+      widen_tracks_csv: ${{ steps.resolve.outputs.widen_tracks_csv }}
+      widen_groups_lines: ${{ steps.resolve.outputs.widen_groups_lines }}
+    steps:
+      # A feature branch can produce a perfectly good build, but shipping one
+      # to real testers is almost always a mistake. Releases come off main or
+      # a release branch; nothing else is publishable.
+      - name: Check the branch is publishable
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          if [ "${BRANCH}" != "main" ] && [[ "${BRANCH}" != release/* ]]; then
+            echo "::error::Publish can only run from 'main' or a 'release/*' branch. You ran it from '${BRANCH}'. Re-run it from main, or cut a release branch (e.g. release/v4.1.x) first — see docs/releases.md."
+            exit 1
+          fi
+          echo "Publishing from ${BRANCH}"
+
+      # Deliberately the dispatched ref, not the default branch: the scripts
+      # and composite actions have to match the workflow file being run, and
+      # dispatching from a branch is the only way to test a change to this
+      # workflow.
+      - uses: actions/checkout@v7
+
+      - name: Resolve build
+        id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          RING: ${{ inputs.ring }}
+          REQUESTED_BUILD: ${{ inputs.build_number }}
+        run: python3 .github/scripts/resolve_publishable_build.py
+
+  # ─── ring-0: the team ───────────────────────────────────────────────
+  # These run without approval. ring-0 is also the only upload: Apple rejects
+  # a duplicate binary and Play rejects a duplicate version code, so every
+  # higher ring can only widen who sees what these jobs put there.
+  #
+  # There is no TestFlight job for ring-0. `ring 0` is an internal group, and
+  # Apple hands internal testers every build once it finishes processing, so
+  # assigning one is rejected outright: "Cannot add internal group to a
+  # build". Export compliance comes from Info.plist, so nothing is left to do.
+
+  apple-upload:
+    name: 'Apple upload - ${{ matrix.variant }}'
+    needs: resolve-build
+    if: >-
+      (inputs.targets == 'all' || inputs.targets == 'apple-store') &&
+      needs.resolve-build.outputs.ipa_variants != '[]'
+    runs-on: macos-26
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(needs.resolve-build.outputs.ipa_variants) }}
+    steps:
+      - name: Download IPA
+        uses: actions/download-artifact@v8
+        with:
+          name: ios-${{ matrix.variant }}.ipa
+          path: ${{ runner.temp }}/artifact
+          run-id: ${{ needs.resolve-build.outputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - uses: actions/checkout@v7
+
+      - name: Use the build's variant config
+        uses: ./.github/workflows/actions/use-build-variant-config
+        with:
+          head_sha: ${{ needs.resolve-build.outputs.head_sha }}
+
+      - name: Load variant config
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      - name: Generate App Store Connect token
+        id: jwt
+        uses: ./.github/workflows/actions/asc-jwt
+        with:
+          app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          app_store_connect_key_identifier: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
+          app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
+
+      # Publishing a build that is already there must be a no-op, so a run
+      # that only widens the audience does not fail on the upload.
+      - name: Is the build already in App Store Connect?
+        id: existing
+        uses: ./.github/workflows/actions/asc-build-lookup
+        with:
+          asc_token: ${{ steps.jwt.outputs.token }}
+          bundle_id: ${{ env.IOS_BUNDLE_ID }}
+          version_name: ${{ env.APP_VERSION }}
+          version_code: ${{ needs.resolve-build.outputs.run_number }}
+
+      # Only the API key is needed. Uploading does not sign anything, so the
+      # keychain and provisioning profile that a build requires are not built.
+      - name: Create App Store Connect auth key
+        if: steps.existing.outputs.exists != 'true'
+        shell: bash
+        env:
+          AUTHKEY_P8: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
+        run: scripts/makeauthkey.sh
+
+      - name: Ship to Apple App Store
+        if: steps.existing.outputs.exists != 'true'
+        uses: ./.github/workflows/actions/ship-to-apple-store
+        with:
+          app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          app_store_connect_key_identifier: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
+          ipa_path: ${{ runner.temp }}/artifact/BCWallet.ipa
+
+  google-upload:
+    name: 'Google Play internal - ${{ matrix.variant }}'
+    needs: resolve-build
+    if: >-
+      (inputs.targets == 'all' || inputs.targets == 'google-store') &&
+      needs.resolve-build.outputs.aab_variants != '[]'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(needs.resolve-build.outputs.aab_variants) }}
+    steps:
+      - name: Download AAB
+        uses: actions/download-artifact@v8
+        with:
+          name: android-${{ matrix.variant }}.aab
+          path: ${{ runner.temp }}/artifact
+          run-id: ${{ needs.resolve-build.outputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - uses: actions/checkout@v7
+
+      - name: Use the build's variant config
+        uses: ./.github/workflows/actions/use-build-variant-config
+        with:
+          head_sha: ${{ needs.resolve-build.outputs.head_sha }}
+
+      - name: Load variant config
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      # bundletool validates the AAB before upload, and it needs a JRE.
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install 1Password CLI
+        uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
+
+      - name: Fetch Google Play publisher credentials
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          # `op read` to stdout appends a trailing newline, which would corrupt
+          # this JSON credentials file. --out-file writes the bytes as-is.
+          op read "op://bcsc-mobile-app-cd/google-play-publisher/service-account.json" --out-file "${RUNNER_TEMP}/play-service-account.json" --force
+
+      - name: Ship to Google Play
+        uses: ./.github/workflows/actions/ship-to-google-store
+        with:
+          service_account_file: ${{ runner.temp }}/play-service-account.json
+          package_name: ${{ env.ANDROID_PACKAGE_NAME }}
+          version_code: ${{ needs.resolve-build.outputs.run_number }}
+          version_name: ${{ env.APP_VERSION }}
+          build_number: ${{ needs.resolve-build.outputs.run_number }}
+          bundle_path: ${{ runner.temp }}/artifact/app-release.aab
+          track: internal
+
+  firebase-ios:
+    name: 'Firebase iOS ring-0 - ${{ matrix.variant }}'
+    needs: resolve-build
+    if: >-
+      (inputs.targets == 'all' || inputs.targets == 'firebase') &&
+      needs.resolve-build.outputs.ipa_variants != '[]'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(needs.resolve-build.outputs.ipa_variants) }}
+    steps:
+      - name: Download IPA
+        uses: actions/download-artifact@v8
+        with:
+          name: ios-${{ matrix.variant }}.ipa
+          path: ${{ runner.temp }}/firebase-artifact
+          run-id: ${{ needs.resolve-build.outputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - uses: actions/checkout@v7
+
+      - name: Use the build's variant config
+        uses: ./.github/workflows/actions/use-build-variant-config
+        with:
+          head_sha: ${{ needs.resolve-build.outputs.head_sha }}
+
+      - name: Load variant config
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      - name: Install 1Password CLI
+        uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
+
+      - name: Fetch Firebase credentials
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          # `op read` to stdout appends a trailing newline; --out-file writes
+          # the document byte-for-byte instead.
+          op read "op://bcsc-mobile-app-cd/google-services-ios-${{ matrix.variant }}/GoogleService-Info.plist" --out-file "${RUNNER_TEMP}/google-services-source" --force
+          op read "${FIREBASE_IOS_SA_REF}" --out-file "${RUNNER_TEMP}/firebase-service-account.json" --force
+
+      - name: Distribute to Firebase App Distribution
+        uses: ./.github/workflows/actions/distribute-firebase
+        with:
+          platform: ios
+          app_identifier: ${{ env.IOS_BUNDLE_ID }}
+          google_services_file: ${{ runner.temp }}/google-services-source
+          service_account_file: ${{ runner.temp }}/firebase-service-account.json
+          artifact_path: ${{ runner.temp }}/firebase-artifact/BCWallet.ipa
+          groups: ring-0
+          version_name: ${{ env.APP_VERSION }}
+          version_code: ${{ needs.resolve-build.outputs.run_number }}
+
+  firebase-android:
+    name: 'Firebase Android ring-0 - ${{ matrix.variant }}'
+    needs: resolve-build
+    if: >-
+      (inputs.targets == 'all' || inputs.targets == 'firebase') &&
+      needs.resolve-build.outputs.apk_variants != '[]'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(needs.resolve-build.outputs.apk_variants) }}
+    steps:
+      - name: Download APK
+        uses: actions/download-artifact@v8
+        with:
+          name: android-${{ matrix.variant }}.apk
+          path: ${{ runner.temp }}/firebase-artifact
+          run-id: ${{ needs.resolve-build.outputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - uses: actions/checkout@v7
+
+      - name: Use the build's variant config
+        uses: ./.github/workflows/actions/use-build-variant-config
+        with:
+          head_sha: ${{ needs.resolve-build.outputs.head_sha }}
+
+      - name: Load variant config
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      - name: Install 1Password CLI
+        uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
+
+      - name: Fetch Firebase credentials
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          # `op read` to stdout appends a trailing newline; --out-file writes
+          # the document byte-for-byte instead.
+          op read "op://bcsc-mobile-app-cd/google-services-android-${{ matrix.variant }}/google-services.json" --out-file "${RUNNER_TEMP}/google-services-source" --force
+          op read "${FIREBASE_ANDROID_SA_REF}" --out-file "${RUNNER_TEMP}/firebase-service-account.json" --force
+
+      - name: Distribute to Firebase App Distribution
+        uses: ./.github/workflows/actions/distribute-firebase
+        with:
+          platform: android
+          app_identifier: ${{ env.ANDROID_PACKAGE_NAME }}
+          google_services_file: ${{ runner.temp }}/google-services-source
+          service_account_file: ${{ runner.temp }}/firebase-service-account.json
+          artifact_path: ${{ runner.temp }}/firebase-artifact/app-release.apk
+          groups: ring-0
+          version_name: ${{ env.APP_VERSION }}
+          version_code: ${{ needs.resolve-build.outputs.run_number }}
+
+  # ─── The approval gate ──────────────────────────────────────────────
+  # The environment is named after the chosen ring, so who may approve
+  # ring-4 is configured separately from who may approve ring-1. Everything
+  # below waits here; ring-0 above has already gone out, and still goes out
+  # if this is rejected.
+  #
+  # It waits on the ring-0 jobs so the prompt only appears once the team
+  # has the build — an approver deciding whether to go wider should be able
+  # to see that ring-0 landed. A failed ring-0 leg does not block approval —
+  # a broken iOS upload should not hold up widening on Android — and each
+  # widen job fails on its own if its variant's build never made it out:
+  # TestFlight bails NOT_FOUND after 180s, `tracks set-release` errors on a
+  # version code that was never uploaded, and Firebase widen re-distributes
+  # its own artifact.
+  #
+  # An environment with no protection rules approves instantly, so this gate
+  # is open until required reviewers are configured in Settings.
+  approval:
+    name: 'Approve ${{ inputs.ring }}'
+    needs:
+      [
+        resolve-build,
+        apple-upload,
+        google-upload,
+        firebase-ios,
+        firebase-android,
+      ]
+    if: >-
+      always() && !cancelled() &&
+      needs.resolve-build.result == 'success'
+    runs-on: ubuntu-22.04
+    environment:
+      name: ${{ inputs.ring }}
+    permissions: {}
+    steps:
+      - name: Approved
+        env:
+          RING: ${{ inputs.ring }}
+          RINGS: ${{ needs.resolve-build.outputs.widen_rings_csv }}
+          BUILD: ${{ needs.resolve-build.outputs.run_number }}
+        run: echo "Build ${BUILD} approved for ${RING} — publishing ${RINGS}"
+
+  # ─── Widening: every ring above ring-0 ──────────────────────────────
+  # Nothing here uploads. The build is already in the stores; these jobs
+  # only add rings to the audience that can see it.
+
+  testflight-widen:
+    name: 'TestFlight widen - ${{ matrix.variant }}'
+    needs: [resolve-build, approval, apple-upload]
+    if: >-
+      always() && !cancelled() &&
+      needs.resolve-build.result == 'success' &&
+      needs.approval.result == 'success' &&
+      needs.resolve-build.outputs.widen_ipa_variants != '[]' &&
+      (inputs.targets == 'all' || inputs.targets == 'apple-store')
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(needs.resolve-build.outputs.widen_ipa_variants) }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Use the build's variant config
+        uses: ./.github/workflows/actions/use-build-variant-config
+        with:
+          head_sha: ${{ needs.resolve-build.outputs.head_sha }}
+
+      - name: Load variant config
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      - name: Add the higher rings to TestFlight
+        uses: ./.github/workflows/actions/distribute-testflight
+        with:
+          app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          app_store_connect_key_identifier: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
+          app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
+          bundle_id: ${{ env.IOS_BUNDLE_ID }}
+          version_code: ${{ needs.resolve-build.outputs.run_number }}
+          version_name: ${{ env.APP_VERSION }}
+          beta_groups: ${{ needs.resolve-build.outputs.widen_groups_lines }}
+
+  google-promote:
+    name: 'Google Play closed - ${{ matrix.variant }}'
+    needs: [resolve-build, approval, google-upload]
+    if: >-
+      always() && !cancelled() &&
+      needs.resolve-build.result == 'success' &&
+      needs.approval.result == 'success' &&
+      needs.resolve-build.outputs.widen_aab_variants != '[]' &&
+      (inputs.targets == 'all' || inputs.targets == 'google-store')
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(needs.resolve-build.outputs.widen_aab_variants) }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Use the build's variant config
+        uses: ./.github/workflows/actions/use-build-variant-config
+        with:
+          head_sha: ${{ needs.resolve-build.outputs.head_sha }}
+
+      - name: Load variant config
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      - name: Install 1Password CLI
+        uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
+
+      - name: Fetch Google Play publisher credentials
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          # `op read` to stdout appends a trailing newline, which would corrupt
+          # this JSON credentials file. --out-file writes the bytes as-is.
+          op read "op://bcsc-mobile-app-cd/google-play-publisher/service-account.json" --out-file "${RUNNER_TEMP}/play-service-account.json" --force
+
+      - name: Promote onto the ring's closed track
+        uses: ./.github/workflows/actions/promote-play-track
+        with:
+          service_account_file: ${{ runner.temp }}/play-service-account.json
+          package_name: ${{ env.ANDROID_PACKAGE_NAME }}
+          version_code: ${{ needs.resolve-build.outputs.run_number }}
+          version_name: ${{ env.APP_VERSION }}
+          build_number: ${{ needs.resolve-build.outputs.run_number }}
+          target_tracks: ${{ needs.resolve-build.outputs.widen_tracks_csv }}
+
+  firebase-ios-widen:
+    name: 'Firebase iOS widen - ${{ matrix.variant }}'
+    needs: [resolve-build, approval, firebase-ios]
+    if: >-
+      always() && !cancelled() &&
+      needs.resolve-build.result == 'success' &&
+      needs.approval.result == 'success' &&
+      needs.resolve-build.outputs.widen_ipa_variants != '[]' &&
+      (inputs.targets == 'all' || inputs.targets == 'firebase')
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(needs.resolve-build.outputs.widen_ipa_variants) }}
+    steps:
+      - name: Download IPA
+        uses: actions/download-artifact@v8
+        with:
+          name: ios-${{ matrix.variant }}.ipa
+          path: ${{ runner.temp }}/firebase-artifact
+          run-id: ${{ needs.resolve-build.outputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - uses: actions/checkout@v7
+
+      - name: Use the build's variant config
+        uses: ./.github/workflows/actions/use-build-variant-config
+        with:
+          head_sha: ${{ needs.resolve-build.outputs.head_sha }}
+
+      - name: Load variant config
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      - name: Install 1Password CLI
+        uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
+
+      - name: Fetch Firebase credentials
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          # `op read` to stdout appends a trailing newline; --out-file writes
+          # the document byte-for-byte instead.
+          op read "op://bcsc-mobile-app-cd/google-services-ios-${{ matrix.variant }}/GoogleService-Info.plist" --out-file "${RUNNER_TEMP}/google-services-source" --force
+          op read "${FIREBASE_IOS_SA_REF}" --out-file "${RUNNER_TEMP}/firebase-service-account.json" --force
+
+      - name: Add the higher rings to Firebase
+        uses: ./.github/workflows/actions/distribute-firebase
+        with:
+          platform: ios
+          app_identifier: ${{ env.IOS_BUNDLE_ID }}
+          google_services_file: ${{ runner.temp }}/google-services-source
+          service_account_file: ${{ runner.temp }}/firebase-service-account.json
+          artifact_path: ${{ runner.temp }}/firebase-artifact/BCWallet.ipa
+          groups: ${{ needs.resolve-build.outputs.widen_rings_csv }}
+          version_name: ${{ env.APP_VERSION }}
+          version_code: ${{ needs.resolve-build.outputs.run_number }}
+
+  firebase-android-widen:
+    name: 'Firebase Android widen - ${{ matrix.variant }}'
+    needs: [resolve-build, approval, firebase-android]
+    if: >-
+      always() && !cancelled() &&
+      needs.resolve-build.result == 'success' &&
+      needs.approval.result == 'success' &&
+      needs.resolve-build.outputs.widen_apk_variants != '[]' &&
+      (inputs.targets == 'all' || inputs.targets == 'firebase')
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(needs.resolve-build.outputs.widen_apk_variants) }}
+    steps:
+      - name: Download APK
+        uses: actions/download-artifact@v8
+        with:
+          name: android-${{ matrix.variant }}.apk
+          path: ${{ runner.temp }}/firebase-artifact
+          run-id: ${{ needs.resolve-build.outputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - uses: actions/checkout@v7
+
+      - name: Use the build's variant config
+        uses: ./.github/workflows/actions/use-build-variant-config
+        with:
+          head_sha: ${{ needs.resolve-build.outputs.head_sha }}
+
+      - name: Load variant config
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      - name: Install 1Password CLI
+        uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
+
+      - name: Fetch Firebase credentials
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          # `op read` to stdout appends a trailing newline; --out-file writes
+          # the document byte-for-byte instead.
+          op read "op://bcsc-mobile-app-cd/google-services-android-${{ matrix.variant }}/google-services.json" --out-file "${RUNNER_TEMP}/google-services-source" --force
+          op read "${FIREBASE_ANDROID_SA_REF}" --out-file "${RUNNER_TEMP}/firebase-service-account.json" --force
+
+      - name: Add the higher rings to Firebase
+        uses: ./.github/workflows/actions/distribute-firebase
+        with:
+          platform: android
+          app_identifier: ${{ env.ANDROID_PACKAGE_NAME }}
+          google_services_file: ${{ runner.temp }}/google-services-source
+          service_account_file: ${{ runner.temp }}/firebase-service-account.json
+          artifact_path: ${{ runner.temp }}/firebase-artifact/app-release.apk
+          groups: ${{ needs.resolve-build.outputs.widen_rings_csv }}
+          version_name: ${{ env.APP_VERSION }}
+          version_code: ${{ needs.resolve-build.outputs.run_number }}

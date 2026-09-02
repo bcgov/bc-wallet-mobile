@@ -3,10 +3,13 @@ import { mockUseServices, mockUseStore } from '@/bcsc-theme/hooks/useCreateSyste
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import * as ErrorAlertContext from '@/contexts/ErrorAlertContext'
 import { AppEventCode } from '@/events/appEventCode'
+import { mockAppError } from '@mocks/helpers/error'
 import { CommonActions } from '@react-navigation/native'
 import { renderHook } from '@testing-library/react-native'
 import RN, { Platform } from 'react-native'
-import { useAlerts } from './useAlerts'
+import { showErrorAlert, useAlerts } from './useAlerts'
+
+jest.mock('@/bcsc-theme/api/hooks/useFactoryReset')
 
 jest.mock('@bifold/core', () => ({
   useStore: () => mockUseStore(),
@@ -1887,6 +1890,63 @@ describe('useAlerts', () => {
           expect.objectContaining({ appEvent: AppEventCode.DEVICE_AUTHENTICATION_ERROR })
         )
       })
+    })
+  })
+
+  describe('showErrorAlert', () => {
+    it('should call the mapped alert for an app event in the HTTP alert map', () => {
+      const mockServerErrorAlert = jest.fn()
+      const mockUnknownErrorModal = jest.fn()
+      const alerts = { serverErrorAlert: mockServerErrorAlert, unknownErrorModal: mockUnknownErrorModal } as any
+      const error = mockAppError(AppEventCode.SERVER_ERROR)
+
+      showErrorAlert(error, alerts)
+
+      expect(mockServerErrorAlert).toHaveBeenCalledWith(error)
+      expect(mockUnknownErrorModal).not.toHaveBeenCalled()
+    })
+
+    it('should call the mapped alert for an app event in the IAS alert map', () => {
+      const mockForbiddenAlert = jest.fn()
+      const mockUnknownErrorModal = jest.fn()
+      const alerts = { forbiddenAlert: mockForbiddenAlert, unknownErrorModal: mockUnknownErrorModal } as any
+      const error = mockAppError(AppEventCode.FORBIDDEN)
+
+      showErrorAlert(error, alerts)
+
+      expect(mockForbiddenAlert).toHaveBeenCalledWith(error)
+      expect(mockUnknownErrorModal).not.toHaveBeenCalled()
+    })
+
+    it('should fall back to the unknown error modal for a non-AppError', () => {
+      const mockUnknownErrorModal = jest.fn()
+      const alerts = { unknownErrorModal: mockUnknownErrorModal } as any
+      const error = new Error('Unexpected failure')
+
+      showErrorAlert(error, alerts)
+
+      expect(mockUnknownErrorModal).toHaveBeenCalledWith(error)
+    })
+
+    it('should fall back to the unknown error modal for an AppError whose app event is not in either alert map', () => {
+      const mockUnknownErrorModal = jest.fn()
+      const alerts = { unknownErrorModal: mockUnknownErrorModal } as any
+      const error = mockAppError(AppEventCode.GENERAL)
+
+      showErrorAlert(error, alerts)
+
+      expect(mockUnknownErrorModal).toHaveBeenCalledWith(error)
+    })
+
+    it('should fall back to the unknown error modal when the mapped alert is not defined on the given alerts object', () => {
+      const mockUnknownErrorModal = jest.fn()
+      // serverErrorAlert intentionally omitted, even though SERVER_ERROR is a recognized app event
+      const alerts = { unknownErrorModal: mockUnknownErrorModal } as any
+      const error = mockAppError(AppEventCode.SERVER_ERROR)
+
+      showErrorAlert(error, alerts)
+
+      expect(mockUnknownErrorModal).toHaveBeenCalledWith(error)
     })
   })
 })

@@ -12,7 +12,7 @@ import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import NetInfo from '@react-native-community/netinfo'
 import { useNavigation } from '@react-navigation/native'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppState, DeviceEventEmitter } from 'react-native'
 import { useTokenService } from '../services/hooks/useTokenService'
@@ -35,9 +35,10 @@ export enum SystemCheckScope {
  *   - VERIFY: Checks that run within the verification flow (VerifyStack) for an unverified, authenticated user ie: expired verification session
  *
  * @param {SystemCheckScope} scope - The scope of the system checks to run
- * @returns {*} {void}
+ * @returns Whether the scope has settled, i.e. its checks have finished running (or will never run).
+ *   Callers that paint state the checks can change (see MainStack's loading gate) wait on this.
  */
-export const useSystemChecks = (scope: SystemCheckScope) => {
+export const useSystemChecks = (scope: SystemCheckScope): { hasSettled: boolean } => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const { client, isClientReady } = useBCSCApiClientState()
@@ -46,6 +47,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation()
   const ranSystemChecksRef = useRef(false)
+  const [hasRun, setHasRun] = useState(false)
   const systemChecks = useCreateSystemChecks()
   const appStateRef = useRef(AppState.currentState)
   const credentialMetadataRef = useRef(store.bcsc.credentialMetadata)
@@ -182,9 +184,16 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
         )
       } catch (error) {
         logger.error(`[useSystemChecks]: Error running system checks for scope: ${scope}:`, error as Error)
+      } finally {
+        setHasRun(true)
       }
     }
 
     runSystemChecksByScope()
   }, [logger, scope, scopeSystemCheck])
+
+  return useMemo(
+    () => ({ hasSettled: hasRun || !scopeSystemCheck.isApplicable }),
+    [hasRun, scopeSystemCheck.isApplicable]
+  )
 }

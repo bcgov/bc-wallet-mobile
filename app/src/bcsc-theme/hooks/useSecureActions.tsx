@@ -402,14 +402,14 @@ export const useSecureActions = () => {
    * Process value determines which verification flow to use (e.g., 'IDIM L3 Remote BCSC Photo Identity Verification').
    */
   const updateCardProcess = useCallback(
-    async (cardProcess: BCSCCardProcess | undefined) => {
+    async (cardProcess: BCSCCardProcess | undefined | null) => {
       dispatch({
         type: BCDispatchAction.UPDATE_SECURE_CARD_PROCESS,
         payload: [cardProcess],
       })
 
       if (cardProcess !== undefined) {
-        await persistAuthorizationRequest({ cardProcess })
+        await persistAuthorizationRequest({ cardProcess: cardProcess ?? undefined })
       }
     },
     [dispatch, persistAuthorizationRequest]
@@ -467,6 +467,13 @@ export const useSecureActions = () => {
         type: BCDispatchAction.UPDATE_SECURE_VERIFIED,
         payload: [verified],
       })
+      if (verified) {
+        // set flag as "skipped" so the user isn't routed to reverify
+        dispatch({
+          type: BCDispatchAction.SET_VERIFICATION_SKIPPED,
+          payload: [true],
+        })
+      }
 
       const account = await getAccount()
       if (!account) {
@@ -600,7 +607,7 @@ export const useSecureActions = () => {
    * The SHA is kept in memory only (not persisted, matching v3 behavior).
    */
   const updateVerificationRequest = useCallback(
-    async (verificationRequestId: string | null, verificationRequestSha: string | null) => {
+    async (verificationRequestId: string | undefined, verificationRequestSha: string | null) => {
       dispatch({
         type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID,
         payload: [verificationRequestId],
@@ -611,12 +618,18 @@ export const useSecureActions = () => {
         payload: [verificationRequestSha],
       })
 
-      // Persist ID to authorization request (SHA is not persisted in v3)
-      if (verificationRequestId !== null) {
+      try {
+        // Persist ID to authorization request (SHA is not persisted in v3)
         await persistAuthorizationRequest({ backCheckVerificationId: verificationRequestId })
+      } catch (error) {
+        logger.warn(
+          `[updateVerificationRequest] Failed to persist verification request id: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        )
       }
     },
-    [dispatch, persistAuthorizationRequest]
+    [dispatch, persistAuthorizationRequest, logger]
   )
 
   /**

@@ -178,6 +178,131 @@ export const PhotoInstructionsScreen = defineScreen({
 })
 
 /**
+ * Selfie camera (`TakePhoto`) — the front-facing MaskedCamera the send-video and live-call branches
+ * both enter from PhotoInstructions. Reach it with `reachCameraScreen`, like every camera screen.
+ *
+ * `self` is the CANCEL button, not the shutter: PhotoInstructions' own CTA carries the same
+ * `TakePhoto` id, so anchoring on the shutter cannot tell "the camera opened" from "we are still on
+ * the instructions". For the same reason the instructions CTA must never be tapped with
+ * `tapToNavigate` — the id survives the push, so the confirm-and-retry would fire the shutter.
+ */
+export const SelfieCaptureScreen = defineScreen({
+  self: bcsc(v.selfieCapture.cancel),
+  primary: bcsc(v.selfieCapture.takePhoto),
+  secondary: bcsc(v.selfieCapture.cancel),
+})
+
+/**
+ * `VideoInstructions` ('Selfie Video Tips') — lists the prompts about to be asked on camera.
+ *
+ * Every arrival issues a fresh prompt set and `primary` (StartRecording) is disabled until it lands,
+ * so enter through `tapWhenEnabled`. `retryLoadPrompts` marks a failed fetch rather than a slow one
+ * (`promptsLoading`).
+ *
+ * `scroll`: StartRecording sits at the BOTTOM of the scroll content, under the server-issued prompt
+ * list — over two viewports down on an iPhone SE — and the screen snaps to the top on every focus,
+ * so the target is only ever below the fold.
+ */
+export const VideoInstructionsScreen = defineScreen({
+  self: bcsc(v.videoInstructions.startRecording),
+  primary: bcsc(v.videoInstructions.startRecording),
+  back: bcsc(common.back),
+  elements: {
+    promptsLoading: bcsc(v.videoInstructions.promptsLoading),
+    retryLoadPrompts: bcsc(v.videoInstructions.retryLoadPrompts),
+  },
+  scroll: { directions: 'down', maxScrolls: 12 },
+})
+
+/**
+ * `TakeVideo` — the prompted recording. There is no start button: recording arms itself on focus
+ * after a 3-2-1 countdown, and the screen wants camera AND microphone permission, so reach it with
+ * `reachCameraScreen`.
+ *
+ * `primary` (NextPrompt) is disabled for the first 2 seconds of each prompt; its last press stops the
+ * recording. `secondary` (CancelRecording) abandons the recording.
+ */
+export const TakeVideoScreen = defineScreen({
+  self: bcsc(v.takeVideo.nextPrompt),
+  primary: bcsc(v.takeVideo.nextPrompt),
+  secondary: bcsc(v.takeVideo.cancel),
+})
+
+/**
+ * `VideoReview` — accept or retake the recording. `primary` (UseVideo) RESETS the stack to
+ * EvidenceUploading; `secondary` (RetakeVideo) returns to the camera with a fresh prompt set. Both are
+ * disabled while that refresh is in flight, so tap them enabled-aware.
+ */
+export const VideoReviewScreen = defineScreen({
+  self: bcsc(v.videoReview.useVideo),
+  primary: bcsc(v.videoReview.useVideo),
+  secondary: bcsc(v.videoReview.retakeVideo),
+  back: bcsc(common.back),
+  links: {
+    togglePlayPause: bcsc(v.videoReview.togglePlayPause),
+  },
+})
+
+/**
+ * `VideoTooLong` — where a recording over 30s lands instead of VideoReview.
+ *
+ * `primary` (retake) refreshes the prompt set and returns to the camera; `secondary` (cancel) resets
+ * to method selection. Both keys are screen-prefixed, so neither collides with VideoReview's pair or
+ * the recorder's own cancel.
+ */
+export const VideoTooLongScreen = defineScreen({
+  self: bcsc(v.videoTooLong.cancel),
+  primary: bcsc(v.videoTooLong.retake),
+  secondary: bcsc(v.videoTooLong.cancel),
+})
+
+/**
+ * `EvidenceUploading` — uploads the selfie and video on mount, with no confirm step. `primary`
+ * (CancelUpload) aborts; the happy path just waits for SuccessfullySent.
+ */
+export const EvidenceUploadingScreen = defineScreen({
+  self: bcsc(v.evidenceUploading.cancelUpload),
+  primary: bcsc(v.evidenceUploading.cancelUpload),
+})
+
+/**
+ * `SuccessfullySent` — the post-upload confirmation. `primary` (GoToHome) leaves the verify stack for
+ * Home and is the ONLY way out (hardware back is disabled).
+ */
+export const SuccessfullySentScreen = defineScreen({
+  self: bcsc(v.successfullySent.goToHome),
+  primary: bcsc(v.successfullySent.goToHome),
+})
+
+/**
+ * `PendingReview` ('Send Video Check Status') — where a submitted request waits for its agent
+ * decision. The mount re-checks the status and navigates on to VerificationSuccess or CancelledReview
+ * when one has landed, so LEAVING AND RE-ENTERING this screen is the app's own poll (see
+ * `waitForSendVideoDecision`).
+ *
+ * `back` does not pop: it marks the account unverified, which swaps the whole stack back to Home.
+ * `primary` (ChooseAnotherWayToVerify) cancels the request behind a confirmation alert.
+ */
+export const PendingReviewScreen = defineScreen({
+  self: bcsc(v.pendingReview.chooseAnotherWay),
+  primary: bcsc(v.pendingReview.chooseAnotherWay),
+  back: bcsc(common.back),
+})
+
+/**
+ * `CancelledReview` — the rejected-request modal, reached from PendingReview's status check or (via
+ * the Home card) as its MainStack twin; both render the same SystemModal, which is why `self` is that
+ * component's generic button key rather than anything screen-specific.
+ *
+ * The agent's reason is body copy with no testID — assert it with `expectCancelledReviewReason`.
+ * `primary` ('Retry verification') RESETS the device registration and re-enters verification.
+ */
+export const CancelledReviewScreen = defineScreen({
+  self: bcsc(v.cancelledReview.button),
+  primary: bcsc(v.cancelledReview.button),
+})
+
+/**
  * Live-call busy/closed (`'Video Verify Closed'`) — the live-call branch when no agent queue is free
  * or it is outside service hours. `self` is the status title; `primary` (SendVideo) resets to method
  * selection, and `back` returns there too.
@@ -194,6 +319,74 @@ export const CallBusyOrClosedScreen = defineScreen({
 })
 
 /**
+ * `StartCall` — the live-call primer reached after the selfie (open hours only). `primary` (Start call)
+ * requests microphone permission and pushes LiveCall, so drive it through `startLiveCall`, which
+ * accepts the permission dialogs on the way. The post-selfie stack is [PhotoInstructions, StartCall],
+ * so `back` returns to the instructions.
+ */
+export const StartCallScreen = defineScreen({
+  self: bcsc(v.startCall.start),
+  primary: bcsc(v.startCall.start),
+  back: bcsc(common.back),
+  elements: {
+    hoursOfServiceTitle: bcsc(v.startCall.hoursOfServiceTitle),
+  },
+})
+
+/**
+ * LiveCall's pre-connect face (`CallLoadingView`) — up through the evidence upload, session mint,
+ * WebRTC connect, and the wait for an agent. `self`/`primary` (Cancel) is its only control; WHICH
+ * state it is in is copy-only, so the waiting state is matched by text (see `startLiveCall`).
+ */
+export const LiveCallLoadingScreen = defineScreen({
+  self: bcsc(v.liveCall.cancel),
+  primary: bcsc(v.liveCall.cancel),
+})
+
+/**
+ * LiveCall's connected face — rendered only once an agent (the Pexip chair host) joins. `self`/
+ * `primary` is EndCall; `mute`/`video` toggle the local tracks; `havingTrouble` raises a confirm alert.
+ */
+export const LiveCallScreen = defineScreen({
+  self: bcsc(v.liveCall.endCall),
+  primary: bcsc(v.liveCall.endCall),
+  links: {
+    mute: bcsc(v.liveCall.mute),
+    video: bcsc(v.liveCall.video),
+    havingTrouble: bcsc(v.liveCall.havingTrouble),
+  },
+})
+
+/**
+ * LiveCall's failed face (`CallErrorView`). `self`/`secondary` (GoBack, pops to StartCall) is the
+ * marker — its TryAgain renders only for retryable errors, and the id also belongs to
+ * VerifyNotComplete. Probed by `startLiveCall` so a failed setup reports the app's error, not a timeout.
+ */
+export const LiveCallErrorScreen = defineScreen({
+  self: bcsc(v.liveCall.errorGoBack),
+  primary: bcsc(v.liveCall.errorTryAgain),
+  secondary: bcsc(v.liveCall.errorGoBack),
+})
+
+/**
+ * `VerifyNotComplete` — where an ended call that did not verify lands (the LiveCall exit resets the
+ * stack to [VerificationMethodSelection, this]). `self` is the having-trouble link, the only id UNIQUE
+ * to this screen; it opens the external help centre, so it is asserted but never tapped. `primary`
+ * (SendVideo) and `secondary` (TryAgain) BOTH reset to method selection — confirm-and-retry only
+ * TryAgain: the SendVideo id is also method selection's own send-video button, so a retry after the
+ * reset would enter the send-video flow.
+ */
+export const VerifyNotCompleteScreen = defineScreen({
+  self: bcsc(v.verifyNotComplete.trouble),
+  primary: bcsc(v.verifyNotComplete.sendVideo),
+  secondary: bcsc(v.verifyNotComplete.tryAgain),
+  elements: {
+    sendVideo: bcsc(v.verifyNotComplete.sendVideo),
+    tryAgain: bcsc(v.verifyNotComplete.tryAgain),
+  },
+})
+
+/**
  * Email confirmation (`'Email Verification'`) — enter the 6-digit code emailed to the address from
  * EnterEmail. `self`/`code` is the OTP field; `primary` (Continue) validates the code and RESETS the
  * stack to EmailVerified (a wrong code keeps the screen with an inline error).
@@ -206,8 +399,8 @@ export const EmailConfirmationScreen = defineScreen({
     code: bcsc(v.emailConfirmation.codeInput),
   },
   links: {
-    // BARE testID — no `testIdWithKey` prefix, so it is NOT `bcsc()`-wrapped.
-    resendCode: v.emailConfirmationBare.resendCode,
+    // Sits on a nested ThemedText that iOS flattens — flows/verify.ts falls back to the label.
+    resendCode: bcsc(v.emailConfirmation.resendCode),
   },
   elements: {
     // Rendered only while the code is rejected; its text separates "not six digits" (client-side) from

@@ -1,10 +1,15 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useEvidenceUploadModel from '@/bcsc-theme/features/verify/send-video/useEvidenceUploadModel'
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { getVideoMetadata, removeFileSafely } from '@/bcsc-theme/utils/file-info'
+import { AppError, ErrorCategory } from '@/errors'
+import { AppEventCode } from '@/events/appEventCode'
 import { BCDispatchAction, BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import * as Bifold from '@bifold/core'
+import * as Navigation from '@react-navigation/native'
 import { act, renderHook } from '@testing-library/react-native'
+import { AxiosError } from 'axios'
 import RNFS from 'react-native-fs'
 import { VerificationVideoCache } from './VideoReviewScreen'
 
@@ -51,10 +56,20 @@ jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
 }))
 
 const mockFileUploadErrorAlert = jest.fn()
+const mockAlreadyVerifiedAlert = jest.fn()
 jest.mock('@/hooks/useAlerts', () => ({
   useAlerts: () => ({
     fileUploadErrorAlert: mockFileUploadErrorAlert,
+    alreadyVerifiedAlert: mockAlreadyVerifiedAlert,
   }),
+}))
+
+// Left unmocked so the real useAlreadyVerifiedRecovery runs and its navigation is asserted here;
+// only the token exchange it depends on is stubbed.
+const mockCheckVerificationStatus = jest.fn()
+jest.mock('@/bcsc-theme/services/hooks/useTokenService', () => ({
+  __esModule: true,
+  useTokenService: () => ({ checkVerificationStatus: mockCheckVerificationStatus }),
 }))
 
 describe('useEvidenceUploadModel', () => {
@@ -242,7 +257,7 @@ describe('useEvidenceUploadModel', () => {
       // Local state cleared: id + sha both nulled so the next handlePressSendVideo
       // calls createVerificationRequest and gets a fresh, valid request to record
       // against. The orphaned server-side id is TTL'd by IAS.
-      expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(null, null)
+      expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(undefined, null)
       expect(mockDispatch).toHaveBeenCalledWith(
         expect.objectContaining({ type: expect.stringContaining('updateVideoPrompts') })
       )
@@ -284,7 +299,7 @@ describe('useEvidenceUploadModel', () => {
 
       expect(mockEvidenceApi.getVerificationRequestPrompts).not.toHaveBeenCalled()
       expect(mockEvidenceApi.createVerificationRequest).not.toHaveBeenCalled()
-      expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(null, null)
+      expect(mockUpdateVerificationRequest).toHaveBeenCalledWith(undefined, null)
       expect(mockNavigation.dispatch).toHaveBeenCalled()
       expect(mockFileUploadErrorAlert).toHaveBeenCalled()
     })
@@ -342,7 +357,7 @@ describe('useEvidenceUploadModel', () => {
 
       expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalled()
       expect(mockEvidenceApi.uploadVideoEvidenceMetadata).toHaveBeenCalled()
-      expect(mockEvidenceApi.uploadPhotoEvidenceBinary).toHaveBeenCalledWith('photo-uri', expect.anything())
+      expect(mockEvidenceApi.uploadPhotoEvidenceBinary).toHaveBeenCalledWith('photo-uri', expect.anything(), 'image')
       expect(mockEvidenceApi.uploadVideoEvidenceBinary).toHaveBeenCalledWith('video-uri', expect.anything())
       expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledWith('req-123', {
         upload_uris: ['photo-uri', 'video-uri'],
@@ -483,6 +498,99 @@ describe('useEvidenceUploadModel', () => {
       expect(mockEvidenceApi.uploadPhotoEvidenceBinary).not.toHaveBeenCalled()
     })
 
+    describe('when the evidence endpoint rejects the upload as already approved (409)', () => {
+      // IAS returns 409 "Registration Request already approved" once the registration request behind
+      // the device_code is approved, so the upload is redundant rather than failed.
+      const conflictError = new AppError(
+        'Conflict',
+        { category: ErrorCategory.VERIFICATION, appEvent: AppEventCode.ALREADY_VERIFIED, statusCode: 2410 },
+        {
+          cause: new AxiosError('Conflict', 'ERR_BAD_REQUEST', undefined, undefined, { status: 409 } as any),
+          track: false,
+        }
+      )
+
+      const arrangeReadySend = () => {
+        const bifoldMock = jest.mocked(Bifold)
+        bifoldMock.useStore.mockReturnValue([
+          {
+            ...baseStore,
+            bcsc: {
+              ...baseStore.bcsc,
+              photoPath: '/photo.jpg',
+              videoPath: '/video.mp4',
+              videoDuration: 10,
+              prompts: [{ text: 'smile' }],
+              photoMetadata: plausiblePhotoMetadata,
+            },
+            bcscSecure: {
+              ...baseStore.bcscSecure,
+              verificationRequestId: 'req-123',
+              verificationRequestSha: 'sha-456',
+              deviceCode: 'device-code',
+              userCode: 'user-code',
+              additionalEvidenceData: [],
+            },
+          } as BCState,
+          jest.fn(),
+        ])
+
+        jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
+        jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(Buffer.from([4, 5, 6]))
+        jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-01-01') } as any)
+        jest.mocked(getVideoMetadata).mockResolvedValue({ duration: 10 } as any)
+        mockEvidenceApi.uploadVideoEvidenceMetadata.mockResolvedValue({ upload_uri: 'video-uri' })
+        mockEvidenceApi.uploadPhotoEvidenceMetadata.mockRejectedValue(conflictError)
+      }
+
+      it('attempts recovery and returns early without the file upload error modal', async () => {
+        arrangeReadySend()
+        mockCheckVerificationStatus.mockResolvedValue(true)
+
+        const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+        await act(async () => {
+          await result.current.handleSend()
+        })
+
+        expect(mockCheckVerificationStatus).toHaveBeenCalledWith('device-code', 'user-code')
+        expect(mockFileUploadErrorAlert).not.toHaveBeenCalled()
+        expect(mockEvidenceApi.uploadPhotoEvidenceBinary).not.toHaveBeenCalled()
+        expect(mockEvidenceApi.sendVerificationRequest).not.toHaveBeenCalled()
+      })
+
+      it('navigates to VerificationSuccess when recovery succeeds', async () => {
+        arrangeReadySend()
+        mockCheckVerificationStatus.mockResolvedValue(true)
+
+        const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+        await act(async () => {
+          await result.current.handleSend()
+        })
+
+        expect(Navigation.CommonActions.reset).toHaveBeenCalledWith(
+          expect.objectContaining({ routes: [{ name: BCSCScreens.VerificationSuccess }] })
+        )
+        expect(mockAlreadyVerifiedAlert).not.toHaveBeenCalled()
+      })
+
+      it('emits alreadyVerifiedAlert with the original error when recovery fails', async () => {
+        arrangeReadySend()
+        mockCheckVerificationStatus.mockResolvedValue(false)
+
+        const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+        await act(async () => {
+          await result.current.handleSend()
+        })
+
+        expect(mockAlreadyVerifiedAlert).toHaveBeenCalledWith(conflictError)
+        expect(mockFileUploadErrorAlert).not.toHaveBeenCalled()
+        expect(Navigation.CommonActions.reset).not.toHaveBeenCalled()
+      })
+    })
+
     it('should emit fileUploadErrorAlert when binary upload fails', async () => {
       const bifoldMock = jest.mocked(Bifold)
       bifoldMock.useStore.mockReturnValue([
@@ -513,7 +621,14 @@ describe('useEvidenceUploadModel', () => {
 
       mockEvidenceApi.uploadPhotoEvidenceMetadata.mockResolvedValue({ upload_uri: 'photo-uri' })
       mockEvidenceApi.uploadVideoEvidenceMetadata.mockResolvedValue({ upload_uri: 'video-uri' })
-      mockEvidenceApi.uploadPhotoEvidenceBinary.mockRejectedValue(new Error('Upload failed'))
+
+      const uploadContext = { media_kind: 'image', media_stage: 'binary', media_bytes: 3, media_format: 'image/jpeg' }
+      const innerError = new AppError(
+        'Network Error',
+        { category: ErrorCategory.NETWORK, appEvent: AppEventCode.NO_INTERNET, statusCode: 2100 },
+        { cause: new AxiosError('Network Error', 'ERR_NETWORK'), context: uploadContext, track: false }
+      )
+      mockEvidenceApi.uploadPhotoEvidenceBinary.mockRejectedValue(innerError)
 
       const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 
@@ -522,6 +637,9 @@ describe('useEvidenceUploadModel', () => {
       })
 
       expect(mockFileUploadErrorAlert).toHaveBeenCalled()
+      expect((mockFileUploadErrorAlert.mock.calls[0][0] as AppError).toJSON().context).toEqual(
+        expect.objectContaining(uploadContext)
+      )
       expect(mockEvidenceApi.sendVerificationRequest).not.toHaveBeenCalled()
     })
 
@@ -629,7 +747,11 @@ describe('useEvidenceUploadModel', () => {
         number: 'DL123',
         images: [{ label: 'FRONT_SIDE', side: 'front', file_path: undefined, date: 1_782_000_000 }],
       })
-      expect(mockEvidenceApi.uploadPhotoEvidenceBinary).toHaveBeenCalledWith('evidence-uri-front', expect.anything())
+      expect(mockEvidenceApi.uploadPhotoEvidenceBinary).toHaveBeenCalledWith(
+        'evidence-uri-front',
+        expect.anything(),
+        'document'
+      )
       expect(mockEvidenceApi.sendVerificationRequest).toHaveBeenCalledWith('req-123', {
         upload_uris: ['photo-uri', 'video-uri', 'evidence-uri-front'],
         sha256: 'sha-456',
@@ -686,7 +808,8 @@ describe('useEvidenceUploadModel', () => {
 
         expect(RNFS.stat).toHaveBeenCalledWith(plausiblePhotoMetadata.file_path)
         expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalledWith(
-          expect.objectContaining({ date: Math.floor(mtimeMs / 1000) })
+          expect.objectContaining({ date: Math.floor(mtimeMs / 1000) }),
+          undefined
         )
       })
 
@@ -705,8 +828,45 @@ describe('useEvidenceUploadModel', () => {
 
         expect(RNFS.stat).not.toHaveBeenCalledWith(plausiblePhotoMetadata.file_path)
         expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalledWith(
-          expect.objectContaining({ date: plausiblePhotoMetadata.date })
+          expect.objectContaining({ date: plausiblePhotoMetadata.date }),
+          undefined
         )
+      })
+
+      it('derives media_format from the real photo/video bytes and forwards them to the metadata calls', async () => {
+        // Real magic bytes (not the suite-default [1,2,3]/[4,5,6] placeholders) so the sniffer
+        // actually has something to detect — see #4184 adversarial review finding.
+        const jpegBytes = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10])
+        const mp4Bytes = Buffer.from([
+          0,
+          0,
+          0,
+          16,
+          ...'ftyp'.split('').map((c) => c.charCodeAt(0)),
+          ...'isom'.split('').map((c) => c.charCodeAt(0)),
+          0,
+          0,
+          0,
+          0,
+        ])
+        jest.mocked(readFileInChunks).mockResolvedValue(jpegBytes)
+        jest.mocked(VerificationVideoCache.getCache).mockResolvedValue(mp4Bytes)
+        jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-01-01') } as any)
+
+        const bifoldMock = jest.mocked(Bifold)
+        bifoldMock.useStore.mockReturnValue([storeWithSha(plausiblePhotoMetadata) as BCState, jest.fn()])
+
+        const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+
+        await act(async () => {
+          await result.current.handleSend()
+        })
+
+        expect(mockEvidenceApi.uploadPhotoEvidenceMetadata).toHaveBeenCalledWith(
+          expect.objectContaining({ date: plausiblePhotoMetadata.date }),
+          'image/jpeg'
+        )
+        expect(mockEvidenceApi.uploadVideoEvidenceMetadata).toHaveBeenCalledWith(expect.anything(), 'video/mp4')
       })
     })
   })

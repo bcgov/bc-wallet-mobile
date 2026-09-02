@@ -40,6 +40,9 @@ describe('BCSCApiClientProvider', () => {
         environment: {
           iasApiBaseUrl: 'https://example.com',
         },
+        remoteDebugging: {
+          sessionId: undefined,
+        },
       },
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
@@ -86,6 +89,9 @@ describe('BCSCApiClientProvider', () => {
       developer: {
         environment: {
           iasApiBaseUrl: 'https://example.com',
+        },
+        remoteDebugging: {
+          sessionId: undefined,
         },
       },
       bcscSecure: {
@@ -136,7 +142,7 @@ describe('BCSCApiClientProvider', () => {
 
     const mockStore: any = {
       stateLoaded: false,
-      developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
+      developer: { environment: { iasApiBaseUrl: 'https://example.com' }, remoteDebugging: { sessionId: undefined } },
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
         additionalEvidenceData: [],
@@ -175,7 +181,7 @@ describe('BCSCApiClientProvider', () => {
 
     const mockStore: any = {
       stateLoaded: true,
-      developer: { environment: { iasApiBaseUrl: '' } },
+      developer: { environment: { iasApiBaseUrl: '' }, remoteDebugging: { sessionId: undefined } },
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
         additionalEvidenceData: [],
@@ -212,7 +218,7 @@ describe('BCSCApiClientProvider', () => {
 
     const mockStore: any = {
       stateLoaded: true,
-      developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
+      developer: { environment: { iasApiBaseUrl: 'https://example.com' }, remoteDebugging: { sessionId: undefined } },
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
         additionalEvidenceData: [],
@@ -265,7 +271,7 @@ describe('BCSCApiClientProvider', () => {
 
     const mockStore: any = {
       stateLoaded: true,
-      developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
+      developer: { environment: { iasApiBaseUrl: 'https://example.com' }, remoteDebugging: { sessionId: undefined } },
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
         additionalEvidenceData: [],
@@ -308,7 +314,7 @@ describe('BCSCApiClientProvider', () => {
 
     const mockStore: any = {
       stateLoaded: true,
-      developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
+      developer: { environment: { iasApiBaseUrl: 'https://example.com' }, remoteDebugging: { sessionId: undefined } },
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
         additionalEvidenceData: [],
@@ -352,7 +358,7 @@ describe('BCSCApiClientProvider', () => {
 
     let store: any = {
       stateLoaded: true,
-      developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
+      developer: { environment: { iasApiBaseUrl: 'https://example.com' }, remoteDebugging: { sessionId: undefined } },
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
         additionalEvidenceData: [],
@@ -393,7 +399,7 @@ describe('BCSCApiClientProvider', () => {
     // replace store with new object before rerender
     store = {
       stateLoaded: true,
-      developer: { environment: { iasApiBaseUrl: 'https://new.com' } },
+      developer: { environment: { iasApiBaseUrl: 'https://new.com' }, remoteDebugging: { sessionId: undefined } },
       bcscSecure: {
         refreshToken: 'mockRefreshToken',
         additionalEvidenceData: [],

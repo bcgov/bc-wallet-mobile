@@ -7,6 +7,7 @@ updates:
   #  - Group all updates into a single PR
   - package-ecosystem: "github-actions"
     directory: "/"
+    labels: ["dependencies"]
     schedule:
       interval: "weekly"
     groups:
@@ -16,18 +17,7 @@ updates:
   # Maintain dependencies for TypeScript and JavaScript
   - package-ecosystem: "npm"
     directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "04:00"
-      timezone: "Canada/Pacific"
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major", "version-update:semver-minor"]
-
-  # Maintain dependencies for TypeScript and JavaScript
-  - package-ecosystem: "npm"
-    directory: "/scripts/gpublish"
+    labels: ["dependencies"]
     schedule:
       interval: "weekly"
       day: "monday"
@@ -40,6 +30,7 @@ updates:
   # Maintain dependencies for Gradle
   - package-ecosystem: "gradle"
     directory: "/app/android"
+    labels: ["dependencies"]
     schedule:
       interval: "weekly"
       day: "monday"
@@ -52,6 +43,7 @@ updates:
   # Maintain dependencies for Gradle
   - package-ecosystem: "gradle"
     directory: "/app/android/app"
+    labels: ["dependencies"]
     schedule:
       interval: "weekly"
       day: "monday"
@@ -64,6 +56,7 @@ updates:
   # Maintain dependencies for Ruby
   - package-ecosystem: "bundler"
     directory: "/app"
+    labels: ["dependencies"]
     schedule:
       interval: "weekly"
       day: "monday"
@@ -76,6 +69,7 @@ updates:
   # Maintain dependencies for docker images inside manifests
   - package-ecosystem: "docker"
     directory: "/devops/charts/loki-logstack"
+    labels: ["dependencies"]
     schedule:
       interval: "weekly"
       day: "monday"
@@ -84,6 +78,7 @@ updates:
       
   - package-ecosystem: "docker"
     directory: "devops/charts/loki-logstack/templates"
+    labels: ["dependencies"]
     schedule:
       interval: "weekly"
       day: "monday"

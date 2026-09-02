@@ -46,12 +46,16 @@ class Token: NSObject, NSCoding {
 
   required init?(coder decoder: NSCoder) {
     // id was added in 0.9.2 so need to default
-    let optionalId = decoder.decodeObject(forKey: .id) as? String
-    id = optionalId != nil ? optionalId! : ""
-    let rawType = decoder.decodeInteger(forKey: .type)
-    type = TokenType(rawValue: rawType)!
-    token = decoder.decodeObject(forKey: .token) as! String
-    created = decoder.decodeObject(forKey: .created) as! Date
+    id = decoder.decodeObject(forKey: .id) as? String ?? ""
+    type = TokenType(rawValue: decoder.decodeInteger(forKey: .type)) ?? .Access
+
+    // A token without its value or issue date is unusable; there is no sensible default.
+    guard let token = decoder.decodeObject(forKey: .token) as? String,
+          let created = decoder.decodeObject(forKey: .created) as? Date
+    else { return nil }
+    self.token = token
+    self.created = created
+
     expiry = decoder.decodeObject(forKey: .expiry) as? Date
   }
 }

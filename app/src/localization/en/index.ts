@@ -70,6 +70,7 @@ const translation = {
     "AddFirstCredential": "Add your first credential",
     "NotAnIDInfoTitle": "This does not replace your physical ID",
     "NotAnIDInfoDescription": "Do not share this screen as ID. This credential is used for digital interactions via the BC Services Card app only.",
+    "JSONDetailsTitle": "Credential JSON Details",
   },
   "Onboarding": {
     "DifferentWalletHeading": "A different smart wallet",
@@ -211,7 +212,6 @@ const translation = {
     "Toggle": "Toggle Developer Mode",
     "EnableProxy": "Enable proxy",
     "EnableAppToAppPersonFlow": "App-to-app Person flow",
-    "SwitchMode": "Switch mode",
     "SwitchTheme": "Switch theme",
     "ProofRequestExpirationTimes": {
       "TwoMinutes": "2 minutes",
@@ -286,7 +286,7 @@ const translation = {
     "HelpMenu": {
       "Title": "Need help?",
       "AccessibilityLabel": "Help menu",
-      "Version": "App version: {{ version }}",
+      "Version": "App version: {{ version }} ({{ build }})",
       "LearnMore": "Learn more",
       "GiveFeedback": "Give feedback",
       "ReportProblem": "Report a problem",
@@ -488,7 +488,7 @@ const translation = {
         "Description": "Choose how you want to secure this app and access your credentials. You can switch between using your device's biometric authentication or a PIN.",
         "CurrentMethod": "Current security method",
         "ChooseMethod": "Switch to",
-        "DeviceAuth": "Device Authentication",
+        "DeviceAuth": "Device unlock",
         "PIN": "PIN",
         "UseDeviceAuth": "Use {{method}}",
         "DeviceAuthSubtext": "Use your {{platform}}'s built-in security to unlock the app.",
@@ -689,24 +689,6 @@ const translation = {
       "ButtonTitle": "Forget all pairings",
       "ScreenTitle": "Forget pairings"
     },
-    "ContactUs": {
-      "Title": "Service BC Help Desk",
-      "HoursOfServiceTitle": "Hours of service",
-      "HoursOfServiceDescription1": "Monday to Friday (except statutory holidays)",
-      "HoursOfServiceDescription2": "7:30 am - 5 pm Pacific time",
-      "TollFreeLabel": "Canada and USA toll free",
-      "TollFreeNumber": "1-888-356-2741",
-      "LowerMainlandLabel": "Within lower mainland or outside Canada and USA",
-      "LowerMainlandNumber": "604-660-2355",
-      "OtherContactsTitle": "Other contacts",
-      "VisitThe": "Visit the",
-      "GovernmentWebsiteText": "B.C. government website",
-      "ToFindWhoToContact": "to find who to contact for:",
-      "BulletPoint1": "General information about the card",
-      "BulletPoint2": "Privacy-related questions",
-      "BulletPoint3": "Reporting a lost or stolen card",
-      "BulletPoint4": "Changing personal information",
-    },
     "AccountDetails": {
       "Title": "Account information",
       "AccountNickname": "Account nickname",
@@ -729,7 +711,7 @@ const translation = {
     "ManualPairing": {
       "EnterPairingCodeTitle": "Enter your pairing code",
       "PairingCodeLabel": "Pairing code",
-      "EnterPairingCodeMessage": "Enter the 6 digit pairing code on your other device. Please enter the code within 5 minutes.",
+      "EnterPairingCodeMessage": "To get a 6-digit code, start signing in to a service on your computer or other device. Enter the code in this app.",
       "InvalidPairingCodeMessage": "Pairing code must be six characters long",
       "EmptyPairingCodeMessage": "Pairing code cannot be empty",
       "FailedToSubmitPairingCodeMessage": "Failed to submit pairing code",
@@ -771,7 +753,7 @@ const translation = {
       "SecureAppOnboardingHeader": "How to secure this app",
       "SecureAppOnboardingContent": "Your privacy is important. Securing the app helps to prevent others from accessing it.",
       "SecureAppDeviceAuthTitle": "Use {{deviceAuthMethodName}}",
-      "SecureAppOnboardingDeviceAuthTitle": "Use device authentication",
+      "SecureAppOnboardingDeviceAuthTitle": "Use device unlock",
       "SecureAppDeviceAuthSubtext": "It's already set up on this {{platform}}. It never leaves this device or is shared with us.",
       "SecureAppOnboardingDeviceAuthSubtext": "It's already set up on this phone or tablet. It never leaves this device or is shared with us.",
       "SecureAppPINTitle": "Create a PIN",
@@ -849,7 +831,7 @@ const translation = {
       "CheckYourIDBullet3": "Is not expired",
       "LimitedAccess": "Limited access to services",
       "LimitedAccessDescription": "Some services only accept the app when it's set up with a BC Services Card with a photo.",
-      "OpenAccountServices": "Open account services",
+      "WhichServices": "Which services?",
     },
     "AccountSetup": {
       "Title": "Have you verified before?",
@@ -1225,7 +1207,8 @@ const translation = {
     "CancelledVerification": {
       "Title": "Your identity couldn't be verified",
       "Label": "Details from Service BC agent: \n{{reason}}",
-      "Button": "Retry verification",
+      "RetryButton": "Try again",
+      "RestartButton": "Restart from beginning",
       "NoReason": "No reason provided"
     },
     "DualNonBCSCEvidence": {

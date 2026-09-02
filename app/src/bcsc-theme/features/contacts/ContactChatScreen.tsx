@@ -271,6 +271,7 @@ const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
         {...props}
         textInputProps={{
           ...props.textInputProps,
+          testID: testIdWithKey('ChatComposer'),
           accessibilityLabel: '',
           maxFontSizeMultiplier: 1.2,
           editable: isAgentReady,
@@ -285,7 +286,12 @@ const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
 
   const renderSend = useCallback(
     (props: SendProps<IMessage>) => (
-      <Send {...props} isSendButtonAlwaysVisible containerStyle={styles.sendContainer}>
+      <Send
+        {...props}
+        isSendButtonAlwaysVisible
+        containerStyle={styles.sendContainer}
+        sendButtonProps={{ testID: testIdWithKey('SendMessage') }}
+      >
         <Icon
           name="send"
           size={28}

@@ -14,10 +14,10 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { a11yLabel } from '@utils/accessibility'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
+import { Platform, StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 import InCallManager from 'react-native-incall-manager'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { VolumeManager } from 'react-native-volume-manager'
+import { VolumeManager, VolumeResult } from 'react-native-volume-manager'
 import { MediaStreamTrack, RTCView } from 'react-native-webrtc'
 import CallErrorView from './components/CallErrorView'
 import CallIconButton from './components/CallIconButton'
@@ -29,6 +29,9 @@ import { formatCallTime } from './utils/formatCallTime'
 type LiveCallScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.LiveCall>
 }
+
+const getCallVolume = (result: VolumeResult) =>
+  Platform.OS === 'android' ? (result.call ?? result.volume) : result.volume
 
 const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const { width } = useWindowDimensions()
@@ -156,14 +159,14 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     const getInitialVolume = async () => {
       try {
         const volume = await VolumeManager.getVolume()
-        setSystemVolume(volume.volume)
+        setSystemVolume(getCallVolume(volume))
       } catch (error) {
         logger.warn('Failed to get initial volume', { error: error as Error })
       }
     }
 
     const volumeListener = VolumeManager.addVolumeListener((result) => {
-      setSystemVolume(result.volume)
+      setSystemVolume(getCallVolume(result))
     })
 
     getInitialVolume()
@@ -223,9 +226,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   useEffect(() => {
     if (flowState === VideoCallFlowState.IDLE) {
       startVideoCall()
-      // Clear the forced-speaker override before start() so that start()
-      // does not force audio to the speaker on Android. This allows audio
-      // to route to Bluetooth/wired headsets
+      // No-op: start() re-initialises audio routing immediately after. Removal tracked in #4471.
       InCallManager.setForceSpeakerphoneOn(false)
       InCallManager.start({ media: 'video', auto: true })
     }

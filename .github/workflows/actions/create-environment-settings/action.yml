@@ -1,7 +1,6 @@
 name: Create Environment Settings
 description: |
-  Create the .env file with environment settings and write
-  Firebase/Google Services credentials to the file system.
+  Create the .env file with environment settings.
 
 inputs:
   build_target:
@@ -12,9 +11,6 @@ inputs:
     required: true
   mediator_url:
     description: 'The mediator URL'
-    required: true
-  ias_agent_invite_url:
-    description: 'The IAS agent invite URL'
     required: true
   oca_url:
     description: 'The OCA URL'
@@ -30,12 +26,6 @@ inputs:
     required: true
   indy_vdr_proxy_url:
     description: 'The Indy VDR proxy URL'
-    required: true
-  google_services_credentials_base64:
-    description: 'Base64 encoded Google Services credentials file'
-    required: true
-  platform:
-    description: 'The platform (ios or android)'
     required: true
   snowplow_collector_url:
     description: 'The Snowplow collector URL'
@@ -54,7 +44,6 @@ runs:
         BUILD_TARGET: ${{ inputs.build_target }}
         MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ inputs.mediator_use_push_notifications }}
         MEDIATOR_URL: ${{ inputs.mediator_url }}
-        IAS_AGENT_INVITE_URL: ${{ inputs.ias_agent_invite_url }}
         OCA_URL: ${{ inputs.oca_url }}
         PROOF_TEMPLATE_URL: ${{ inputs.proof_template_url }}
         LEDGER_AUTO_UPDATE: ${{ inputs.ledger_auto_update }}
@@ -66,7 +55,6 @@ runs:
         echo "BUILD_TARGET=${BUILD_TARGET}" >.env
         echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >>.env
         echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env
-        echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env
         echo "OCA_URL=${OCA_URL}" >>.env
         echo "PROOF_TEMPLATE_URL=${PROOF_TEMPLATE_URL}" >>.env
         echo "LEDGER_AUTO_UPDATE=${LEDGER_AUTO_UPDATE}" >>.env
@@ -74,18 +62,3 @@ runs:
         echo "INDY_VDR_PROXY_URL=${INDY_VDR_PROXY_URL}" >>.env
         echo "SNOWPLOW_COLLECTOR_URL=${SNOWPLOW_COLLECTOR_URL}" >>.env
         echo "DEFAULT_ENVIRONMENT=${DEFAULT_ENVIRONMENT}" >>.env
-
-    - name: Write Google Services credentials
-      shell: bash
-      env:
-        GOOGLE_SERVICES_CREDENTIALS_BASE64: ${{ inputs.google_services_credentials_base64 }}
-        PLATFORM: ${{ inputs.platform }}
-      run: |
-        if [ "${PLATFORM}" = "ios" ]; then
-          echo "${GOOGLE_SERVICES_CREDENTIALS_BASE64}" | base64 --decode > app/ios/GoogleService-Info.plist
-        elif [ "${PLATFORM}" = "android" ]; then
-          echo "${GOOGLE_SERVICES_CREDENTIALS_BASE64}" | base64 --decode > app/android/app/google-services.json
-        else
-          echo "error: Unknown platform '${PLATFORM}'"
-          exit 1
-        fi

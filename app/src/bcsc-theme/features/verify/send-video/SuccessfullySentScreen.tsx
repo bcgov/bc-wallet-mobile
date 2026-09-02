@@ -43,7 +43,7 @@ const SuccessfullySentScreen = ({ route }: SuccessfullySentScreenProps) => {
   const controls = (
     <ControlContainer>
       <Button
-        testID={testIdWithKey(t('BCSC.SendVideo.SuccessfullySent.ButtonText'))}
+        testID={testIdWithKey('GoToHome')}
         accessibilityLabel={t('BCSC.SendVideo.SuccessfullySent.ButtonText')}
         title={t('BCSC.SendVideo.SuccessfullySent.ButtonText')}
         buttonType={ButtonType.Primary}

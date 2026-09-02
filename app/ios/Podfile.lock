@@ -1993,7 +1993,7 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - SocketRocket
-  - react-native-attestation (3.0.20):
+  - react-native-attestation (3.0.21):
     - boost
     - DoubleConversion
     - fast_float
@@ -2836,7 +2836,7 @@ PODS:
     - React-perflogger (= 0.81.5)
     - React-utils (= 0.81.5)
     - SocketRocket
-  - ReactNativeIncallManager (4.2.1):
+  - ReactNativeIncallManager (4.2.2):
     - React-Core
   - RNCAsyncStorage (2.2.0):
     - boost
@@ -3813,7 +3813,7 @@ SPEC CHECKSUMS:
   React-logger: a913317214a26565cd4c045347edf1bcacb80a3f
   React-Mapbuffer: 94f4264de2cb156960cd82b338a403f4653f2fd9
   React-microtasksnativemodule: 6c4ee39a36958c39c97b074d28f360246a335e84
-  react-native-attestation: 6ec5c0badd439bfbe81764fbb6bae5135175d3fc
+  react-native-attestation: 075ee28acedd146574ee261007cc400f02702811
   react-native-config: eae2b928a919c9743d710bbff3b7592882268fe8
   react-native-drop-shadow: aeb76e4b46c09924b4a8ee3d454dd00fdb5c62d9
   react-native-get-random-values: d16467cf726c618e9c7a8c3c39c31faa2244bbba
@@ -3858,7 +3858,7 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: 1bcd3527ac0390a1c898c114f81ff954be35ed79
   ReactCodegen: 6c26f8c25d0b5ae66f86a1cce1777076ac8bcbd8
   ReactCommon: 5f0e5c09a64a2717215dd84380e1a747810406f2
-  ReactNativeIncallManager: dccd3e7499caa3bb73d3acfedf4fb0360f1a87d5
+  ReactNativeIncallManager: c6e08cc005da0f73d5a1ecbd58ad33bc61d5d79f
   RNCAsyncStorage: 29f0230e1a25f36c20b05f65e2eb8958d6526e82
   RNCClipboard: 4b58c780f63676367640f23c8e114e9bd0cf86ac
   RNDeviceInfo: d3e91ffb33ee97a7982108476edb68cb3672efa6

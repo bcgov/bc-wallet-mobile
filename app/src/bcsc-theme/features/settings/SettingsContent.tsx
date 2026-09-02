@@ -5,6 +5,7 @@ import { PressableOpacity } from '@/components/PressableOpacity'
 import { ACCESSIBILITY_URL, DEFAULT_AUTO_LOCK_TIME_MIN, FEEDBACK_URL, hitSlop, TERMS_OF_USE_URL } from '@/constants'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { BCDispatchAction, BCState } from '@/store'
+import { a11yLabel } from '@/utils/accessibility'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import * as PushNotifications from '@/utils/PushNotificationsHelper'
 import {
@@ -581,9 +582,13 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
             <ListButton
               onPress={onPressFeedback}
               testID={testIdWithKey('Feedback')}
+              accessibilityLabel={a11yLabel(t('BCSC.Settings.GiveFeedback'))}
               accessibilityHint={t('Global.A11y.OpensInBrowser')}
             >
-              {t('BCSC.Settings.GiveFeedback')}
+              <ThemedText style={{ flex: 1, color: ColorPalette.brand.headerText }}>
+                {t('BCSC.Settings.GiveFeedback')}
+              </ThemedText>
+              <Icon name="open-in-new" size={20} color={ColorPalette.brand.headerText} />
             </ListButton>
           </ListButtonGroup>
         </View>
@@ -595,16 +600,24 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
             <ListButton
               onPress={onPressAccessibility}
               testID={testIdWithKey('Accessibility')}
+              accessibilityLabel={a11yLabel(t('BCSC.Settings.Accessibility'))}
               accessibilityHint={t('Global.A11y.OpensInBrowser')}
             >
-              {t('BCSC.Settings.Accessibility')}
+              <ThemedText style={{ flex: 1, color: ColorPalette.brand.headerText }}>
+                {t('BCSC.Settings.Accessibility')}
+              </ThemedText>
+              <Icon name="open-in-new" size={20} color={ColorPalette.brand.headerText} />
             </ListButton>
             <ListButton
               onPress={onPressTermsOfUse}
               testID={testIdWithKey('TermsOfUse')}
+              accessibilityLabel={a11yLabel(t('BCSC.Settings.TermsOfUse'))}
               accessibilityHint={t('Global.A11y.OpensInBrowser')}
             >
-              {t('BCSC.Settings.TermsOfUse')}
+              <ThemedText style={{ flex: 1, color: ColorPalette.brand.headerText }}>
+                {t('BCSC.Settings.TermsOfUse')}
+              </ThemedText>
+              <Icon name="open-in-new" size={20} color={ColorPalette.brand.headerText} />
             </ListButton>
             <ListButton onPress={onPrivacy} testID={testIdWithKey('Privacy')}>
               {t('BCSC.Settings.Privacy')}

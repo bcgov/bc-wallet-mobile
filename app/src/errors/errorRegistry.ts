@@ -237,6 +237,13 @@ export const ErrorRegistry = {
     category: ErrorCategory.NETWORK,
     message: 'Server returned 404 — requested resource or endpoint was not found',
   },
+  CONFLICT: {
+    statusCode: 2114,
+    appEvent: AppEventCode.CONFLICT,
+    severity: ErrorSeverity.ERROR,
+    category: ErrorCategory.NETWORK,
+    message: 'Server returned 409 — request conflicts with the current state of the resource',
+  },
 
   // ============================================
   // Authentication/Login Errors (2200-2299)
@@ -514,7 +521,7 @@ export const ErrorRegistry = {
     appEvent: AppEventCode.ALREADY_VERIFIED,
     severity: ErrorSeverity.INFO,
     category: ErrorCategory.VERIFICATION,
-    message: 'Verification request was already completed in a previous session',
+    message: 'Registration request already approved — verification completed outside this session',
   },
   AUTHORIZATION_PENDING: {
     statusCode: 2411,

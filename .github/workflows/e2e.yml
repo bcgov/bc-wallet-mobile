@@ -7,10 +7,18 @@
 #   smoke        — basic launch + first navigation
 #   onboarding   — onboarding journeys
 #   auth         — auth/unlock journey
-#   main         — main navigation + settings journeys
-#   verify       — verify entry + verified card-type journeys (needs SM_* creds)
+#   main         — main navigation + settings + wallet credential journeys (issuer creds from 1Password)
+#   verify       — verify entry + verified card-type journeys (uses SM_* creds)
+#   a11y         — automated accessibility audits over the core screens (iOS: Apple's audit engine; Android: heuristics)
 #   regression   — every per-area journey (nightly default)
 #   migration    — v3 → v4 app upgrade flow (Sauce RDC only; separate v3 build)
+#   upgrade      — previous released build → current in-place upgrade (Sauce RDC, both platforms)
+#   upgrade403   — the shipped 4.0.3 release → current, via its frozen pre-rework onboarding walk
+#
+# All suites require the single OP_SERVICE_ACCOUNT_TOKEN secret: SAUCE_USERNAME,
+# SAUCE_ACCESS_KEY, SM_USER, and SM_PASSWORD are all loaded from the
+# bcsc-mobile-app-cd 1Password vault unconditionally, even for suites (smoke,
+# onboarding, auth) that don't use the SM_* values.
 #
 # Device matrix:
 #   Callers pass a device_matrix JSON array of {platform, device, os_version}
@@ -33,13 +41,21 @@ on:
   workflow_call:
     inputs:
       suite:
-        description: 'Test suite (smoke, onboarding, auth, main, verify, regression, migration)'
+        description: 'Test suite (smoke, onboarding, auth, main, verify, a11y, regression, migration, upgrade, upgrade403)'
         type: string
         required: true
       build_number:
         description: 'Build number for SauceLabs artifact lookup'
         type: string
         required: true
+      prev_build_number:
+        description: >
+          Upgrade suite only: run number of an older build still in Sauce storage
+          (empty = rolling BCSC-prev.*). Must be older than build_number — Android
+          forbids downgrade installs.
+        type: string
+        required: false
+        default: ''
       device_matrix:
         description: 'JSON array of {platform, device, os_version} objects'
         type: string
@@ -49,17 +65,26 @@ on:
         type: string
         required: false
         default: 'ubuntu-latest-m'
+      brief:
+        description: >
+          Render the run brief (UAT coverage per platform, failures, accessibility findings) into the
+          run summary after the matrix. Off for callers — the nightly renders its own aggregate.
+        type: boolean
+        required: false
+        default: false
     secrets:
-      SAUCE_USERNAME:
+      OP_SERVICE_ACCOUNT_TOKEN:
         required: true
-      SAUCE_ACCESS_KEY:
-        required: true
-      SM_USER:
-        required: false
-        description: 'SiteMinder username for in-person verification auto-approval (required for verify/regression/migration; omit for smoke/onboarding/auth/main)'
-      SM_PASSWORD:
-        required: false
-        description: 'SiteMinder password for in-person verification auto-approval'
+        description: >
+          1Password service account token. This job loads SAUCE_USERNAME,
+          SAUCE_ACCESS_KEY, SM_USER, and SM_PASSWORD from the
+          bcsc-mobile-app-cd vault itself (in addition to the traction issuer
+          credentials it already loaded — see e2e/issuer/README.md), so
+          callers only need to pass this one bootstrap secret through. SM_*
+          were previously optional (only required for verify/regression/
+          migration suites); since all four values now come from the vault
+          unconditionally, SM_* are always present, even for suites that
+          don't use them.
   workflow_dispatch:
     inputs:
       suite:
@@ -71,13 +96,21 @@ on:
           - auth
           - main
           - verify
+          - a11y
           - regression
           - migration
+          - upgrade
+          - upgrade403
         default: smoke
       build_number:
         description: 'Build number (run_number from the build workflow)'
         type: string
         required: true
+      prev_build_number:
+        description: 'Upgrade suite only: older build run number still in Sauce storage (empty = rolling BCSC-prev.*)'
+        type: string
+        required: false
+        default: ''
       device_matrix:
         description: 'JSON array of {platform, device, os_version} objects'
         type: string
@@ -86,25 +119,31 @@ on:
         description: 'Label of the large runner with whitelisted egress IPs'
         type: string
         default: 'ubuntu-latest-m'
+      brief:
+        description: 'Render the run brief into the run summary'
+        type: boolean
+        default: true
 
 jobs:
   # ─── E2E Tests ─────────────────────────────────────────────────────
   # Single unified job for all suites. Config file paths are selected at
   # runtime via a case statement on $SUITE:
   #   migration                → configs/sauce/wdio.{ios,android}.sauce.migration.conf.ts
+  #   upgrade / upgrade403     → configs/sauce/wdio.{ios,android}.sauce.upgrade.conf.ts
   #   everything else (smoke,  → configs/sauce/wdio.{ios,android}.sauce.rdc.conf.ts
   #    onboarding, auth, main,
   #    verify, regression)
   #
-  # Non-blocking suites (migration): failures are reported but
+  # Non-blocking suites (migration, upgrade, upgrade403): failures are reported but
   # do not gate the pipeline.
   e2e-tests:
     name: '${{ inputs.suite }} - ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
     runs-on: ${{ inputs.runner_label }}
     permissions:
       contents: read
-    timeout-minutes: 45
-    continue-on-error: ${{ inputs.suite == 'migration' }}
+    # regression runs every journey serially (~2h per platform with retries and growing); other suites (merge-queue smoke) stay tight
+    timeout-minutes: ${{ inputs.suite == 'regression' && 180 || 45 }}
+    continue-on-error: ${{ contains(fromJSON('["migration","upgrade","upgrade403"]'), inputs.suite) }}
     strategy:
       max-parallel: 2
       fail-fast: false
@@ -118,29 +157,61 @@ jobs:
         with:
           variant: bcsc-dev
 
-      - name: Setup NodeJS
-        uses: ./.github/workflows/actions/setup-node
+      - name: Setup E2E
+        uses: ./.github/workflows/actions/setup-e2e
 
-      - name: Cache E2E dependencies
-        uses: actions/cache@v6
+      # The wallet journey (main + regression suites) drives the e2e issuer — a Traction dev tenant
+      # (e2e/issuer/README.md) — over its admin API. This preflight runs the idempotent provisioning
+      # script against it: validates tenant + creds, ensures schema/cred def, and resolves their ids.
+      # The script logs to stderr and prints ONLY dotenv id lines on stdout — no secrets — so its
+      # output feeds $GITHUB_ENV directly. A missing or unreachable issuer fails HERE, with a named
+      # cause, before any Sauce session is paid for.
+      # The issuer credentials live in the bcsc-mobile-app-cd 1Password vault ("traction" item:
+      # username = tenant id, credential = API key); OP_SERVICE_ACCOUNT_TOKEN is the single
+      # bootstrap secret that stays in GitHub. export-env feeds them to every step below, so the
+      # Run step needs no ISSUER_* env of its own and the script never has to echo them.
+      - name: Load issuer credentials from 1Password
+        if: contains(fromJSON('["main","regression"]'), inputs.suite)
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
         with:
-          path: |
-            e2e/.yarn/cache
-            e2e/node_modules
-          key: e2e-deps-${{ hashFiles('e2e/yarn.lock') }}
-          restore-keys: e2e-deps-
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          ISSUER_TENANT_ID: op://bcsc-mobile-app-cd/traction/username
+          ISSUER_API_KEY: op://bcsc-mobile-app-cd/traction/credential
 
-      - name: Install E2E dependencies
+      - name: Issuer preflight (wallet journey)
+        if: contains(fromJSON('["main","regression"]'), inputs.suite)
         working-directory: e2e
-        run: yarn install --immutable
+        env:
+          SUITE: ${{ inputs.suite }} # via env, never inline in run — inputs are attacker-controlled
+        run: |
+          if [ -z "$ISSUER_TENANT_ID" ] || [ -z "$ISSUER_API_KEY" ]; then
+            echo "::error::Suite '$SUITE' includes the wallet journey, but the 1Password issuer credentials are empty (op://bcsc-mobile-app-cd/traction — see e2e/issuer/README.md)"
+            exit 1
+          fi
+          # tsx binary directly — yarn's own stdout banners would corrupt GITHUB_ENV
+          ./node_modules/.bin/tsx scripts/issuer-provision.ts >> "$GITHUB_ENV"
+
+      # Outputs (not export-env) keep these four values scoped to only the
+      # step below that references them.
+      - name: Load SauceLabs and SiteMinder secrets from 1Password
+        id: op_e2e
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          SAUCE_USERNAME: op://bcsc-mobile-app-cd/saucelabs/username
+          SAUCE_ACCESS_KEY: op://bcsc-mobile-app-cd/saucelabs/credential
+          SM_USER: op://bcsc-mobile-app-cd/bcsc-e2e-test-account/username
+          SM_PASSWORD: op://bcsc-mobile-app-cd/bcsc-e2e-test-account/password
 
       - name: Run WDIO tests
         working-directory: e2e
         env:
-          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-          SM_USER: ${{ secrets.SM_USER }}
-          SM_PASSWORD: ${{ secrets.SM_PASSWORD }}
+          SAUCE_USERNAME: ${{ steps.op_e2e.outputs.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ steps.op_e2e.outputs.SAUCE_ACCESS_KEY }}
+          SM_USER: ${{ steps.op_e2e.outputs.SM_USER }}
+          SM_PASSWORD: ${{ steps.op_e2e.outputs.SM_PASSWORD }}
           SAUCE_REGION: us
           VARIANT: bcsc-dev
           DEVICE_MATRIX: ${{ inputs.device_matrix }}
@@ -152,6 +223,7 @@ jobs:
           ANDROID_DEVICE_NAME: ${{ matrix.device.platform == 'Android' && matrix.device.device || '' }}
           ANDROID_PLATFORM_VERSION: ${{ matrix.device.platform == 'Android' && matrix.device.os_version || '' }}
           BUILD_NUMBER: ${{ inputs.build_number }}
+          PREV_BUILD_NUMBER: ${{ inputs.prev_build_number }}
           SUITE: ${{ inputs.suite }}
           BUILD_NAME: 'build-${{ inputs.build_number }}'
           TEST_NAME: 'E2E ${{ inputs.suite }} - ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
@@ -171,11 +243,37 @@ jobs:
               IOS_CONF="configs/sauce/wdio.ios.sauce.migration.conf.ts"
               ANDROID_CONF="configs/sauce/wdio.android.sauce.migration.conf.ts"
               ;;
+            upgrade | upgrade403)
+              IOS_CONF="configs/sauce/wdio.ios.sauce.upgrade.conf.ts"
+              ANDROID_CONF="configs/sauce/wdio.android.sauce.upgrade.conf.ts"
+              ;;
             *)
               IOS_CONF="configs/sauce/wdio.ios.sauce.rdc.conf.ts"
               ANDROID_CONF="configs/sauce/wdio.android.sauce.rdc.conf.ts"
               ;;
           esac
+          # Upgrade suite: optional override of the rolling previous build (BCSC-prev.*).
+          if [ "$SUITE" = "upgrade" ] && [ -n "$PREV_BUILD_NUMBER" ]; then
+            export PREV_ANDROID_APP="${SAUCE_LABS_PREFIX}-${PREV_BUILD_NUMBER}.apk"
+            export PREV_IOS_APP="${SAUCE_LABS_PREFIX}-${PREV_BUILD_NUMBER}.ipa"
+          fi
+          # The rolling BCSC-prev.* first exists once a full release publishes its e2e builds —
+          # until then a default upgrade run cannot start a session; skip with a notice, not a failure.
+          # Each matrix job is one platform, so probe that platform's file.
+          if [ "$SUITE" = "upgrade" ] && [ -z "$PREV_BUILD_NUMBER" ]; then
+            if [ "$PLATFORM" = "iOS" ]; then PREV_FILE="BCSC-prev.ipa"; else PREV_FILE="BCSC-prev.apk"; fi
+            total=$(curl -su "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
+              "https://api.us-west-1.saucelabs.com/v1/storage/files?q=${PREV_FILE}&per_page=1" | jq -r '.total_items')
+            if [ "$total" = "0" ]; then
+              echo "::notice::${PREV_FILE} not in Sauce storage yet (no full release has published e2e builds) — skipping the upgrade suite"
+              exit 0
+            fi
+          fi
+          # upgrade403 pins its previous build to the preserved 4.0.3 binaries.
+          if [ "$SUITE" = "upgrade403" ]; then
+            export PREV_ANDROID_APP="BCSC-v4.0.3.apk"
+            export PREV_IOS_APP="BCSC-v4.0.3.ipa"
+          fi
           if [ "$PLATFORM" = "iOS" ]; then
             IOS_APP_FILENAME="${SAUCE_LABS_PREFIX}-${BUILD_NUMBER}.ipa" \
               yarn wdio "$IOS_CONF" --suite "${SUITE}"
@@ -193,5 +291,58 @@ jobs:
         with:
           name: e2e-reports-${{ inputs.suite }}-${{ matrix.device.platform }}-${{ matrix.device.os_version }}
           path: e2e/reports/
+          if-no-files-found: warn
+          retention-days: 14
+
+  # ─── Brief ─────────────────────────────────────────────────────────
+  # One page for the run: the UAT checklist per platform, every failure, and the accessibility
+  # findings vs e2e/a11y-baseline.json — rendered from the e2e-reports-* artifacts above into the
+  # run summary, and saved as an artifact. Report-only: it never fails the run on findings.
+  brief:
+    name: 'brief - ${{ inputs.suite }}'
+    needs: [e2e-tests]
+    if: ${{ always() && inputs.brief }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup E2E
+        uses: ./.github/workflows/actions/setup-e2e
+
+      # A pattern that matches nothing must not kill the summary — the page says so instead.
+      - name: Download E2E reports
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          pattern: e2e-reports-${{ inputs.suite }}-*
+          path: e2e/artifacts
+
+      - name: Check the coverage map
+        working-directory: e2e
+        run: ./node_modules/.bin/tsx scripts/brief-check.ts
+
+      - name: Render the brief
+        working-directory: e2e
+        env: # via env, never inline in run — inputs are attacker-controlled
+          SUITE: ${{ inputs.suite }}
+          BUILD_NUMBER: ${{ inputs.build_number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          ./node_modules/.bin/tsx scripts/brief.ts --reports artifacts \
+            --title "E2E ${SUITE} — build ${BUILD_NUMBER}" --run-url "$RUN_URL" \
+            --out brief.md --json brief.json
+          cat brief.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload brief
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-brief-${{ inputs.suite }}
+          path: |
+            e2e/brief.md
+            e2e/brief.json
           if-no-files-found: warn
           retention-days: 14

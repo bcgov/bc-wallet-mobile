@@ -6,19 +6,50 @@ env:
 on:
   workflow_dispatch:
   push:
+    # A coarse pre-filter only. early-exit-check decides for real, and this
+    # list has to stay a superset of it or a build would be missed entirely.
     branches: [main, 'release/**']
     paths:
       - app/**
-      - .yarn/**
+      - packages/**
       - variants/**
       - scripts/**
-      - .github/workflows/**
+      - patch/**
+      - e2e/**
+      - .yarn/**
+      - package.json
+      - yarn.lock
+      - .yarnrc.yml
+      - .github/workflows/main.yaml
+      - .github/workflows/e2e.yml
+      - .github/workflows/actions/**
+  # Deliberately unfiltered. Native Tests and build-summary are required
+  # checks, and a workflow skipped by a paths filter never reports them, so
+  # the PR could not merge. early-exit-check skips the expensive jobs instead,
+  # which still lets those checks report.
   pull_request:
     branches: [main, 'release/**']
   merge_group:
 
 jobs:
   check-secrets:
+    # Fork PRs never have access to repo/org secrets (including
+    # OP_SERVICE_ACCOUNT_TOKEN), so this job would otherwise always fail
+    # for external contributors. Downstream jobs (build-ios, build-android)
+    # already implicitly require this job to succeed via `needs:`, and
+    # today already skip entirely on fork PRs because this job fails —
+    # skipping it cleanly here reports that as "skipped" instead of a
+    # confusing red "failed" check, without changing that downstream
+    # outcome (a skipped `needs:` job still fails the default success()
+    # gate on build-ios/build-android, same as a failed one did).
+    #
+    # Dependabot gets no repo secrets either (separate secrets store), so
+    # the same skip applies — scoped to pull_request only: a Dependabot
+    # merge_group run (queue merge) must still run this job for real.
+    if: >-
+      github.event.pull_request.head.repo.fork != true &&
+      !(github.event_name == 'pull_request' &&
+        github.actor == 'dependabot[bot]')
     runs-on: ubuntu-22.04
     permissions: {}
     steps:
@@ -28,39 +59,7 @@ jobs:
           required_env_vars=(
             "CERTIFICATE"
             "KEYCHIAN_PASSWD"
-            "PROVISIONING_PROFILE"
-            "PROVISIONING_PROFILE_SADEV"
-            "PROVISIONING_PROFILE_SAQA"
-            "PROVISIONING_PROFILE_SATEST"
-            "PROVISIONING_PROFILE_SAPROD"
-            "PLAY_STORE_JKS_BASE64"
-            "PLAY_STORE_JKS_ALIAS"
-            "PLAY_STORE_JKS_PASSWD"
-            "PLAY_STORE_JKS_BASE64_SADEV"
-            "PLAY_STORE_JKS_ALIAS_SADEV"
-            "PLAY_STORE_JKS_PASSWD_SADEV"
-            "PLAY_STORE_JKS_BASE64_SAQA"
-            "PLAY_STORE_JKS_ALIAS_SAQA"
-            "PLAY_STORE_JKS_PASSWD_SAQA"
-            "PLAY_STORE_JKS_BASE64_SATEST"
-            "PLAY_STORE_JKS_ALIAS_SATEST"
-            "PLAY_STORE_JKS_PASSWD_SATEST"
-            "PLAY_STORE_JKS_BASE64_SAPROD"
-            "PLAY_STORE_JKS_ALIAS_SAPROD"
-            "PLAY_STORE_JKS_PASSWD_SAPROD"
-            "GOOGLE_SERVICES_CREDENTIALS_ANDROID"
-            "GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV"
-            "GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAQA"
-            "GOOGLE_SERVICES_CREDENTIALS_ANDROID_SATEST"
-            "GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAPROD"
-            "GOOGLE_SERVICES_CREDENTIALS_IOS"
-            "GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV"
-            "GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA"
-            "GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST"
-            "GOOGLE_SERVICES_CREDENTIALS_IOS_SAPROD"
-            "FIREBASE_SERVICE_ACCOUNT_BCWALLET"
-            "FIREBASE_SERVICE_ACCOUNT_BCSC_IOS"
-            "FIREBASE_SERVICE_ACCOUNT_BCSC_ANDROID"
+            "OP_SERVICE_ACCOUNT_TOKEN"
           )
           for var in "${required_env_vars[@]}"; do
             if [ -z "${!var}" ]; then
@@ -71,39 +70,7 @@ jobs:
         env:
           CERTIFICATE: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
           KEYCHIAN_PASSWD: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
-          PROVISIONING_PROFILE: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
-          PROVISIONING_PROFILE_SADEV: ${{ secrets.BUILD_PROVISION_PROFILE_SADEV_BASE64 }}
-          PROVISIONING_PROFILE_SAQA: ${{ secrets.BUILD_PROVISION_PROFILE_SAQA_BASE64 }}
-          PROVISIONING_PROFILE_SATEST: ${{ secrets.BUILD_PROVISION_PROFILE_SATEST_BASE64 }}
-          PROVISIONING_PROFILE_SAPROD: ${{ secrets.BUILD_PROVISION_PROFILE_SAPROD_BASE64 }}
-          PLAY_STORE_JKS_BASE64: ${{ secrets.PLAY_STORE_JKS_BASE64 }}
-          PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
-          PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
-          PLAY_STORE_JKS_BASE64_SADEV: ${{ secrets.PLAY_STORE_JKS_BASE64_SADEV }}
-          PLAY_STORE_JKS_ALIAS_SADEV: ${{ secrets.PLAY_STORE_JKS_ALIAS_SADEV }}
-          PLAY_STORE_JKS_PASSWD_SADEV: ${{ secrets.PLAY_STORE_JKS_PASSWD_SADEV }}
-          PLAY_STORE_JKS_BASE64_SAQA: ${{ secrets.PLAY_STORE_JKS_BASE64_SAQA }}
-          PLAY_STORE_JKS_ALIAS_SAQA: ${{ secrets.PLAY_STORE_JKS_ALIAS_SAQA }}
-          PLAY_STORE_JKS_PASSWD_SAQA: ${{ secrets.PLAY_STORE_JKS_PASSWD_SAQA }}
-          PLAY_STORE_JKS_BASE64_SATEST: ${{ secrets.PLAY_STORE_JKS_BASE64_SATEST }}
-          PLAY_STORE_JKS_ALIAS_SATEST: ${{ secrets.PLAY_STORE_JKS_ALIAS_SATEST }}
-          PLAY_STORE_JKS_PASSWD_SATEST: ${{ secrets.PLAY_STORE_JKS_PASSWD_SATEST }}
-          PLAY_STORE_JKS_BASE64_SAPROD: ${{ secrets.PLAY_STORE_JKS_BASE64_SAPROD }}
-          PLAY_STORE_JKS_ALIAS_SAPROD: ${{ secrets.PLAY_STORE_JKS_ALIAS_SAPROD }}
-          PLAY_STORE_JKS_PASSWD_SAPROD: ${{ secrets.PLAY_STORE_JKS_PASSWD_SAPROD }}
-          GOOGLE_SERVICES_CREDENTIALS_ANDROID: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_BASE64 }}
-          GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SADEV_BASE64 }}
-          GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAQA: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAQA_BASE64 }}
-          GOOGLE_SERVICES_CREDENTIALS_ANDROID_SATEST: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SATEST_BASE64 }}
-          GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAPROD: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_ANDROID_SAPROD_BASE64 }}
-          GOOGLE_SERVICES_CREDENTIALS_IOS: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_BASE64 }}
-          GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SADEV_BASE64 }}
-          GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SAQA_BASE64 }}
-          GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SATEST_BASE64 }}
-          GOOGLE_SERVICES_CREDENTIALS_IOS_SAPROD: ${{ secrets.GOOGLE_SERVICES_CREDENTIALS_IOS_SAPROD_BASE64 }}
-          FIREBASE_SERVICE_ACCOUNT_BCWALLET: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BCWALLET_BASE64 }}
-          FIREBASE_SERVICE_ACCOUNT_BCSC_IOS: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BCSC_IOS_BASE64 }}
-          FIREBASE_SERVICE_ACCOUNT_BCSC_ANDROID: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BCSC_ANDROID_BASE64 }}
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
   check-vars:
     runs-on: ubuntu-22.04
     permissions: {}
@@ -116,6 +83,7 @@ jobs:
             "PROOF_TEMPLATE_URL"
             "MEDIATOR_USE_PUSH_NOTIFICATIONS"
             "INDY_VDR_PROXY_URL"
+            "SNOWPLOW_COLLECTOR_URL"
           )
           for var in "${required_env_vars[@]}"; do
             if [ -z "${!var}" ]; then
@@ -128,6 +96,7 @@ jobs:
           PROOF_TEMPLATE_URL: ${{ vars.PROOF_TEMPLATE_URL }}
           MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           INDY_VDR_PROXY_URL: ${{ vars.INDY_VDR_PROXY_URL }}
+          SNOWPLOW_COLLECTOR_URL: ${{ vars.SNOWPLOW_COLLECTOR_URL }}
 
   # ─── Dynamic Variant Matrix ──────────────────────────────────────────
   # Determine variant matrix
@@ -246,9 +215,54 @@ jobs:
           echo "Comparing ${parent_ref} with ${child_ref}"
 
           diff_output=$(git diff --name-only ${parent_ref}..${child_ref})
-          change_count=$(echo "$diff_output" | (grep -E '^(app/.*)|(.yarn/.*)|(variants/.*)|(scripts/.*)|(patch/.*)|(.github/workflows/.*)' || true) | wc -l | awk '{$1=$1};1')
 
-          echo "$change_count files changed in app, .yarn, or .github/workflows"
+          # A file matters if it can change what the app is built from, or how.
+          # Everything under .github/workflows is deliberately NOT enough on its
+          # own: editing publish.yml or a publish-only composite action cannot
+          # affect a native build, and rebuilding five variants for it is waste.
+          build_relevant() {
+            local file="$1"
+            # Source, native modules, variant config, build scripts, and the
+            # E2E specs, which the smoke run exercises against this build.
+            if [[ "$file" =~ ^(app|packages|variants|scripts|patch|e2e|\.yarn)/ ]]; then
+              return 0
+            fi
+            # Dependency truth. resolutions in the root manifest pin the React
+            # Native version and bind the yarn patches, so a change here can
+            # alter the binary without touching a line of app source.
+            if [[ "$file" =~ ^(package\.json|yarn\.lock|\.yarnrc\.yml)$ ]]; then
+              return 0
+            fi
+            # This workflow, and the E2E workflow it calls.
+            if [[ "$file" =~ ^\.github/workflows/(main\.yaml|e2e\.yml)$ ]]; then
+              return 0
+            fi
+            # A composite action counts only if the build actually references
+            # it, so adding actions on either side needs no upkeep here. The
+            # match is one level deep: no build-side action nests another
+            # today, and one that did would need adding by hand.
+            #
+            # The trailing group is a word boundary spelled out in plain ERE,
+            # so it does not depend on \b being a GNU extension. Without it,
+            # "setup" would match "setup-node" and count an action the build
+            # does not use.
+            if [[ "$file" =~ ^\.github/workflows/actions/([^/]+)/ ]]; then
+              grep -qER "actions/${BASH_REMATCH[1]}([^A-Za-z0-9_-]|$)" \
+                .github/workflows/main.yaml .github/workflows/e2e.yml 2>/dev/null && return 0
+            fi
+            return 1
+          }
+
+          change_count=0
+          while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            if build_relevant "$file"; then
+              echo "  build-relevant: $file"
+              change_count=$((change_count + 1))
+            fi
+          done <<< "$diff_output"
+
+          echo "$change_count build-relevant file(s) changed"
 
           if [ $change_count -gt 0 ]; then
             # A result greater than 0 means there are changes
@@ -376,7 +390,7 @@ jobs:
         uses: ./.github/workflows/actions/setup-node
 
       - name: Setup Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'zulu'
           java-version: 17
@@ -529,7 +543,7 @@ jobs:
         with:
           variant: ${{ matrix.variant }}
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
@@ -660,6 +674,23 @@ jobs:
           agvtool new-version ${CURRENT_PROJECT_VERSION} && \
           agvtool new-marketing-version ${MARKETING_VERSION}
 
+      # Secrets are being consolidated into the bcsc-mobile-app-cd 1Password vault;
+      # OP_SERVICE_ACCOUNT_TOKEN is the single bootstrap secret that stays in GitHub.
+      # This step is fork-guarded because fork PRs cannot read that secret; when
+      # skipped, both outputs are empty, so .env gets the same empty values on
+      # forks as it did before these moved to 1Password.
+      - name: Load .env secrets from 1Password
+        id: op_remote_logging
+        if: github.event.pull_request.head.repo.fork != true
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          # Only PROD variants get the production endpoints; SIT/QA/TEST all
+          # share the test stack. An unset DEFAULT_ENVIRONMENT falls to test,
+          # so a misconfigured variant can never reach production.
+          REMOTE_LOGGING_URL: op://bcsc-mobile-app-cd/remote-logging-url/${{ env.DEFAULT_ENVIRONMENT == 'PROD' && 'prod' || 'test' }}
+          MEDIATOR_URL: op://bcsc-mobile-app-cd/mediator-url/${{ env.DEFAULT_ENVIRONMENT == 'PROD' && 'prod' || 'test' }}
+
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
@@ -667,22 +698,44 @@ jobs:
         with:
           build_target: ${{ env.BUILD_TARGET }}
           mediator_use_push_notifications: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
-          mediator_url: ${{ secrets.MEDIATOR_URL }}
-          ias_agent_invite_url: ${{ secrets.IAS_AGENT_INVITE_URL }}
+          mediator_url: ${{ steps.op_remote_logging.outputs.MEDIATOR_URL }}
           oca_url: ${{ vars.OCA_URL }}
           proof_template_url: ${{ vars.PROOF_TEMPLATE_URL }}
           ledger_auto_update: ${{ vars.LEDGER_AUTO_UPDATE }}
-          remote_logging_url: ${{ secrets.REMOTE_LOGGING_URL }}
+          remote_logging_url: ${{ steps.op_remote_logging.outputs.REMOTE_LOGGING_URL }}
           indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
-          google_services_credentials_base64: ${{ secrets[env.IOS_GOOGLE_SERVICES_SECRET] }}
-          platform: ios
           snowplow_collector_url: ${{ vars.SNOWPLOW_COLLECTOR_URL }}
           default_environment: ${{ env.DEFAULT_ENVIRONMENT }}
+
+      # Secrets are being consolidated into the bcsc-mobile-app-cd 1Password vault;
+      # OP_SERVICE_ACCOUNT_TOKEN is the single bootstrap secret that stays in GitHub.
+      # These steps are fork-guarded because fork PRs cannot read that secret.
+      - name: Install 1Password CLI
+        if: github.event.pull_request.head.repo.fork != true
+        uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
+
+      - name: Fetch Google Services config
+        if: github.event.pull_request.head.repo.fork != true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          # `op read` to stdout appends a trailing newline; --out-file writes
+          # the document byte-for-byte instead.
+          op read "op://bcsc-mobile-app-cd/google-services-ios-${{ matrix.variant }}/GoogleService-Info.plist" --out-file app/ios/GoogleService-Info.plist --force
 
       - name: Update APS environment
         run: |
           plutil -replace aps-environment -string production app/ios/BCWallet/BCWallet.entitlements
           plutil -p app/ios/BCWallet/BCWallet.entitlements
+
+      - name: Fetch iOS provisioning profile
+        if: github.event.pull_request.head.repo.fork != true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          # `op read` to stdout appends a trailing newline, which would corrupt
+          # this binary provisioning profile. --out-file writes the bytes as-is.
+          op read "op://bcsc-mobile-app-cd/ios-provisioning-${{ matrix.variant }}/${{ matrix.variant }}.mobileprovision" --out-file "${{ matrix.variant }}.mobileprovision" --force
 
       - name: Create prod signing credentials
         # This step will not work in a `fork` because it will not have access
@@ -693,18 +746,18 @@ jobs:
           certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
           certificate_password: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
           app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
-          provisioning_profile: ${{ secrets[env.IOS_PROVISIONING_PROFILE_SECRET] }}
+          provisioning_profile_file: ${{ matrix.variant }}.mobileprovision
 
       - name: Generate iOS signing config
         # This step will not work in a `fork` because it will not have access
         # to org and repo secrets.
         if: github.event.pull_request.head.repo.fork != true
         env:
-          PROVISIONING_PROFILE: ${{ secrets[env.IOS_PROVISIONING_PROFILE_SECRET] }}
+          PROVISIONING_PROFILE_FILE: ${{ matrix.variant }}.mobileprovision
         run: |
           # Extract the UUID from the provisioning profile
           PP_UUID=$(/usr/libexec/plistbuddy -c Print:UUID /dev/stdin <<< \
-            "$(echo "${PROVISIONING_PROFILE}" | base64 -d | security cms -D)")
+            "$(security cms -D -i "${PROVISIONING_PROFILE_FILE}")")
           echo "Provisioning profile UUID: ${PP_UUID}"
 
           cat > export-options.plist <<EOF
@@ -813,23 +866,6 @@ jobs:
           export_options: export-options.plist
           output_artifact_ref: ios-${{ matrix.variant }}
 
-      - name: Ship to Apple App Store
-        if: github.ref_name == 'main'
-        uses: ./.github/workflows/actions/ship-to-itunes
-        with:
-          app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          app_store_connect_key_identifier: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
-
-      # TODO: Change this to a Teams integration
-      # - name: Send notification for iOS failure
-      #   if: failure() && github.ref_name == 'main' && github.event.pull_request.head.repo.fork != true
-      #   uses: ./.github/workflows/actions/send-rocketchat-notification
-      #   with:
-      #     job_title: "iOS Build (${{ matrix.variant }}) - Run number ${{ github.run_number }}"
-      #     job_status: ${{ job.status }}
-      #     webhook_url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
-
   build-android:
     name: Build Android - ${{ matrix.variant }}
     needs: [check-secrets, check-vars, early-exit-check, prepare-android, compute-variants]
@@ -866,7 +902,7 @@ jobs:
           sudo docker image prune --all --force 2>/dev/null || true
           sudo apt-get clean 2>/dev/null || true
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
@@ -874,7 +910,7 @@ jobs:
         uses: ./.github/workflows/actions/setup-node
 
       - name: Setup Java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'zulu'
           java-version: 17
@@ -947,6 +983,23 @@ jobs:
       - name: Apply variant configuration
         run: node scripts/apply-variant.mjs ${{ matrix.variant }}
 
+      # Secrets are being consolidated into the bcsc-mobile-app-cd 1Password vault;
+      # OP_SERVICE_ACCOUNT_TOKEN is the single bootstrap secret that stays in GitHub.
+      # This step is fork-guarded because fork PRs cannot read that secret; when
+      # skipped, both outputs are empty, so .env gets the same empty values on
+      # forks as it did before these moved to 1Password.
+      - name: Load .env secrets from 1Password
+        id: op_remote_logging
+        if: github.event.pull_request.head.repo.fork != true
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          # Only PROD variants get the production endpoints; SIT/QA/TEST all
+          # share the test stack. An unset DEFAULT_ENVIRONMENT falls to test,
+          # so a misconfigured variant can never reach production.
+          REMOTE_LOGGING_URL: op://bcsc-mobile-app-cd/remote-logging-url/${{ env.DEFAULT_ENVIRONMENT == 'PROD' && 'prod' || 'test' }}
+          MEDIATOR_URL: op://bcsc-mobile-app-cd/mediator-url/${{ env.DEFAULT_ENVIRONMENT == 'PROD' && 'prod' || 'test' }}
+
       # Actual environment variables are not being picked up
       # by the build so they're put into an .env file.
       - name: Create environment settings
@@ -954,17 +1007,41 @@ jobs:
         with:
           build_target: ${{ env.BUILD_TARGET }}
           mediator_use_push_notifications: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
-          mediator_url: ${{ secrets.MEDIATOR_URL }}
-          ias_agent_invite_url: ${{ secrets.IAS_AGENT_INVITE_URL }}
+          mediator_url: ${{ steps.op_remote_logging.outputs.MEDIATOR_URL }}
           oca_url: ${{ vars.OCA_URL }}
           proof_template_url: ${{ vars.PROOF_TEMPLATE_URL }}
           ledger_auto_update: ${{ vars.LEDGER_AUTO_UPDATE }}
-          remote_logging_url: ${{ secrets.REMOTE_LOGGING_URL }}
+          remote_logging_url: ${{ steps.op_remote_logging.outputs.REMOTE_LOGGING_URL }}
           indy_vdr_proxy_url: ${{ vars.INDY_VDR_PROXY_URL }}
-          google_services_credentials_base64: ${{ secrets[env.ANDROID_GOOGLE_SERVICES_SECRET] }}
-          platform: android
           snowplow_collector_url: ${{ vars.SNOWPLOW_COLLECTOR_URL }}
           default_environment: ${{ env.DEFAULT_ENVIRONMENT }}
+
+      # Secrets are being consolidated into the bcsc-mobile-app-cd 1Password vault;
+      # OP_SERVICE_ACCOUNT_TOKEN is the single bootstrap secret that stays in GitHub.
+      # These steps are fork-guarded because fork PRs cannot read that secret.
+      - name: Install 1Password CLI
+        if: github.event.pull_request.head.repo.fork != true
+        uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
+
+      - name: Fetch Google Services config
+        if: github.event.pull_request.head.repo.fork != true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          # `op read` to stdout appends a trailing newline; --out-file writes
+          # the document byte-for-byte instead.
+          op read "op://bcsc-mobile-app-cd/google-services-android-${{ matrix.variant }}/google-services.json" --out-file app/android/app/google-services.json --force
+
+      # Outputs (not export-env) keep these two values scoped to only the
+      # steps that reference them, matching the pre-migration scoping.
+      - name: Load Android signing secrets from 1Password
+        id: op_android_signing
+        if: github.event.pull_request.head.repo.fork != true
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          PLAY_STORE_JKS_ALIAS: op://bcsc-mobile-app-cd/android-signing-${{ matrix.variant }}/key-alias
+          PLAY_STORE_JKS_PASSWD: op://bcsc-mobile-app-cd/android-signing-${{ matrix.variant }}/store-password
 
       - name: Create release keystore
         # This step will not work in a `fork` because it will not have access
@@ -972,20 +1049,22 @@ jobs:
         if: github.event.pull_request.head.repo.fork != true
         working-directory: app/android/app
         env:
-          PLAY_STORE_JKS_BASE64: ${{ secrets[env.ANDROID_JKS_BASE64_SECRET] }}
-          PLAY_STORE_JKS_ALIAS: ${{ secrets[env.ANDROID_JKS_ALIAS_SECRET] }}
-          PLAY_STORE_JKS_PASSWD: ${{ secrets[env.ANDROID_JKS_PASSWD_SECRET] }}
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          PLAY_STORE_JKS_ALIAS: ${{ steps.op_android_signing.outputs.PLAY_STORE_JKS_ALIAS }}
+          PLAY_STORE_JKS_PASSWD: ${{ steps.op_android_signing.outputs.PLAY_STORE_JKS_PASSWD }}
         run: |
-          echo "${PLAY_STORE_JKS_BASE64}" | base64 -d >release.keystore && \
-          keytool -list -v -keystore release.keystore -alias ${PLAY_STORE_JKS_ALIAS} -storepass:env PLAY_STORE_JKS_PASSWD | \
+          # `op read` to stdout appends a trailing newline, which would corrupt
+          # this binary keystore. --out-file writes the bytes as-is.
+          op read "op://bcsc-mobile-app-cd/android-signing-${{ matrix.variant }}/release.keystore" --out-file release.keystore --force
+          keytool -list -v -keystore release.keystore -alias "${PLAY_STORE_JKS_ALIAS}" -storepass:env PLAY_STORE_JKS_PASSWD | \
           grep "SHA1"
 
       - name: Android release build
         if: github.event.pull_request.head.repo.fork != true
         working-directory: app/android
         env:
-          PLAY_STORE_JKS_ALIAS: ${{ secrets[env.ANDROID_JKS_ALIAS_SECRET] }}
-          PLAY_STORE_JKS_PASSWD: ${{ secrets[env.ANDROID_JKS_PASSWD_SECRET] }}
+          PLAY_STORE_JKS_ALIAS: ${{ steps.op_android_signing.outputs.PLAY_STORE_JKS_ALIAS }}
+          PLAY_STORE_JKS_PASSWD: ${{ steps.op_android_signing.outputs.PLAY_STORE_JKS_PASSWD }}
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}
           # Skip Metro bundling: use the pre-built JS bundle from the
@@ -1024,7 +1103,7 @@ jobs:
           name: android-${{ matrix.variant }}.aab
           path: app/android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 30
 
       - name: Upload Android APK artifact
         uses: actions/upload-artifact@v7
@@ -1032,39 +1111,18 @@ jobs:
           name: android-${{ matrix.variant }}.apk
           path: app/android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
-          retention-days: 7
-
-      - name: Ship to Google Play
-        if: github.ref_name == 'main'
-        # working-directory: app/android
-        env:
-          GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
-          GOOGLE_API_CREDENTIALS_FILE: 'api_keys.json'
-          ANDROID_BUNDLE_PATH: 'app/android/app/build/outputs/bundle/release/app-release.aab'
-          ANDROID_PACKAGE_NAME: ${{ env.ANDROID_PACKAGE_NAME }}
-          VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
-          VERSION_NAME: ${{ env.APP_VERSION }}
-        run: |
-          # when we updated to yarn we started getting an error with paths
-          # and had to add `/android` to the path.
-          echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS_FILE} && \
-          GOOGLE_API_CREDENTIALS="$PWD/${GOOGLE_API_CREDENTIALS_FILE}" npx @bcgov/gpublish
-
-      # TODO: Change this to a Teams integration
-      # - name: Send notification for Android failure
-      #   if: failure() && github.ref_name == 'main' && github.event.pull_request.head.repo.fork != true
-      #   uses: ./.github/workflows/actions/send-rocketchat-notification
-      #   with:
-      #     job_title: "Android Build (${{ matrix.variant }}) - Run number ${{ github.run_number }}"
-      #     job_status: ${{ job.status }}
-      #     webhook_url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+          retention-days: 30
 
   build-summary:
     runs-on: ubuntu-latest
     permissions: {}
     needs:
       - early-exit-check
+      - check-secrets
+      - check-vars
+      - compute-variants
+      - prepare-ios
+      - prepare-android
       - build-android
       - build-ios
     if: always()
@@ -1072,12 +1130,37 @@ jobs:
       - name: Check matrix results
         env:
           SHOULD_SKIP: ${{ needs.early-exit-check.outputs.should_skip_build }}
+          EARLY_EXIT_RESULT: ${{ needs.early-exit-check.result }}
+          SECRETS_RESULT: ${{ needs.check-secrets.result }}
+          CHECK_VARS_RESULT: ${{ needs.check-vars.result }}
+          COMPUTE_VARIANTS_RESULT: ${{ needs.compute-variants.result }}
+          PREPARE_IOS_RESULT: ${{ needs.prepare-ios.result }}
+          PREPARE_ANDROID_RESULT: ${{ needs.prepare-android.result }}
           ANDROID_RESULT: ${{ needs.build-android.result }}
           IOS_RESULT: ${{ needs.build-ios.result }}
         run: |
           echo "Debug: should_skip_build=$SHOULD_SKIP"
+          echo "Debug: early-exit-check.result=$EARLY_EXIT_RESULT"
+          echo "Debug: check-secrets.result=$SECRETS_RESULT"
+          echo "Debug: check-vars.result=$CHECK_VARS_RESULT"
+          echo "Debug: compute-variants.result=$COMPUTE_VARIANTS_RESULT"
+          echo "Debug: prepare-ios.result=$PREPARE_IOS_RESULT"
+          echo "Debug: prepare-android.result=$PREPARE_ANDROID_RESULT"
           echo "Debug: build-android.result=$ANDROID_RESULT"
           echo "Debug: build-ios.result=$IOS_RESULT"
+
+          # check-vars and compute-variants run even when should_skip_build is
+          # true, so check all five upstream jobs before the skip branches
+          # below — a real failure must not slip past their "skipped" tolerance.
+          upstream_checks="early-exit-check=$EARLY_EXIT_RESULT check-vars=$CHECK_VARS_RESULT compute-variants=$COMPUTE_VARIANTS_RESULT prepare-ios=$PREPARE_IOS_RESULT prepare-android=$PREPARE_ANDROID_RESULT"
+          for entry in $upstream_checks; do
+            job="${entry%%=*}"
+            result="${entry#*=}"
+            if [ "$result" != "success" ] && [ "$result" != "skipped" ]; then
+              echo "❌ $job failed with result: $result"
+              exit 1
+            fi
+          done
 
           # If builds were intentionally skipped, that's okay
           if [ "$SHOULD_SKIP" == "true" ]; then
@@ -1096,6 +1179,13 @@ jobs:
             exit 1
           fi
 
+          # check-secrets was skipped (fork or Dependabot run): secrets are
+          # unavailable, so build-ios/build-android skipping is the intended outcome.
+          if [ "$SECRETS_RESULT" == "skipped" ]; then
+            echo "✅ Builds skipped: secrets unavailable (fork or Dependabot run)."
+            exit 0
+          fi
+
           # If we didn't skip but builds didn't run, that's an error
           if [ "$ANDROID_RESULT" == "skipped" ] || [ "$IOS_RESULT" == "skipped" ]; then
             echo "⚠️ Warning: Builds were skipped unexpectedly"
@@ -1104,137 +1194,6 @@ jobs:
           fi
 
           echo "✅ All builds passed!"
-
-  # ─── TestFlight Distribution ────────────────────────────────────────
-  # Runs on ubuntu (cheap) AFTER builds complete. Waits for Apple's
-  # server-side processing then distributes to beta groups.
-  # Decoupled from build-ios so the upload→process wait no longer
-  # blocks the iOS build critical path.
-  distribute-testflight:
-    name: 'Distribute TestFlight - ${{ matrix.variant }}'
-    if: ${{ always() && !cancelled() && github.ref_name == 'main' }}
-    needs: [build-ios, compute-variants]
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        variant: ${{ fromJSON(needs.compute-variants.outputs.variants) }}
-    steps:
-      - name: Check iOS build artifact exists
-        id: probe
-        continue-on-error: true
-        uses: actions/download-artifact@v8
-        with:
-          name: ios-${{ matrix.variant }}.ipa
-          path: ${{ runner.temp }}/probe
-
-      - uses: actions/checkout@v7
-        if: steps.probe.outcome == 'success'
-
-      - name: Load variant config
-        if: steps.probe.outcome == 'success'
-        uses: ./.github/workflows/actions/load-variant-config
-        with:
-          variant: ${{ matrix.variant }}
-
-      - name: Distribute to TestFlight
-        if: steps.probe.outcome == 'success'
-        uses: ./.github/workflows/actions/distribute-testflight
-        with:
-          app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          app_store_connect_key_identifier: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
-          app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
-          bundle_id: ${{ env.IOS_BUNDLE_ID }}
-          version_code: ${{ github.run_number }}
-          version_name: ${{ env.APP_VERSION }}
-          beta_groups: ${{ env.TESTFLIGHT_BETA_GROUPS }}
-
-  # ─── Firebase App Distribution ──────────────────────────────────────
-  distribute-firebase-ios:
-    name: 'Distribute Firebase iOS - ${{ matrix.variant }}'
-    if: ${{ always() && !cancelled() && github.ref_name == 'main' }}
-    needs: [build-ios, compute-variants]
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        variant: ${{ fromJSON(needs.compute-variants.outputs.variants) }}
-    steps:
-      - name: Check iOS build artifact exists
-        id: probe
-        continue-on-error: true
-        uses: actions/download-artifact@v8
-        with:
-          name: ios-${{ matrix.variant }}.ipa
-          path: ${{ runner.temp }}/firebase-artifact
-
-      - uses: actions/checkout@v7
-        if: steps.probe.outcome == 'success'
-
-      - name: Load variant config
-        if: steps.probe.outcome == 'success'
-        uses: ./.github/workflows/actions/load-variant-config
-        with:
-          variant: ${{ matrix.variant }}
-
-      - name: Distribute to Firebase App Distribution
-        if: steps.probe.outcome == 'success'
-        uses: ./.github/workflows/actions/distribute-firebase
-        with:
-          platform: ios
-          app_identifier: ${{ env.IOS_BUNDLE_ID }}
-          google_services_base64: ${{ secrets[env.IOS_GOOGLE_SERVICES_SECRET] }}
-          service_account_base64: ${{ secrets[env.FIREBASE_IOS_SERVICE_ACCOUNT_SECRET] }}
-          artifact_path: ${{ runner.temp }}/firebase-artifact/BCWallet.ipa
-          groups: ${{ env.FIREBASE_IOS_TESTER_GROUPS }}
-          version_name: ${{ env.APP_VERSION }}
-          version_code: ${{ github.run_number }}
-
-  distribute-firebase-android:
-    name: 'Distribute Firebase Android - ${{ matrix.variant }}'
-    if: ${{ always() && !cancelled() && github.ref_name == 'main' }}
-    needs: [build-android, compute-variants]
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        variant: ${{ fromJSON(needs.compute-variants.outputs.variants) }}
-    steps:
-      - name: Check Android build artifact exists
-        id: probe
-        continue-on-error: true
-        uses: actions/download-artifact@v8
-        with:
-          name: android-${{ matrix.variant }}.apk
-          path: ${{ runner.temp }}/firebase-artifact
-
-      - uses: actions/checkout@v7
-        if: steps.probe.outcome == 'success'
-
-      - name: Load variant config
-        if: steps.probe.outcome == 'success'
-        uses: ./.github/workflows/actions/load-variant-config
-        with:
-          variant: ${{ matrix.variant }}
-
-      - name: Distribute to Firebase App Distribution
-        if: steps.probe.outcome == 'success'
-        uses: ./.github/workflows/actions/distribute-firebase
-        with:
-          platform: android
-          app_identifier: ${{ env.ANDROID_PACKAGE_NAME }}
-          google_services_base64: ${{ secrets[env.ANDROID_GOOGLE_SERVICES_SECRET] }}
-          service_account_base64: ${{ secrets[env.FIREBASE_ANDROID_SERVICE_ACCOUNT_SECRET] }}
-          artifact_path: ${{ runner.temp }}/firebase-artifact/app-release.apk
-          groups: ${{ env.FIREBASE_ANDROID_TESTER_GROUPS }}
-          version_name: ${{ env.APP_VERSION }}
-          version_code: ${{ github.run_number }}
 
   ship-to-saucelabs:
     name: 'Ship to SauceLabs - ${{ matrix.variant }} - ${{ matrix.platform }}'
@@ -1288,12 +1247,21 @@ jobs:
           ARTIFACT_INNER_NAME=${INNER_FILENAME}
           EOF
 
+      - name: Load SauceLabs secrets from 1Password
+        id: op_saucelabs
+        if: steps.probe.outcome == 'success'
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          SAUCE_USERNAME: op://bcsc-mobile-app-cd/saucelabs/username
+          SAUCE_ACCESS_KEY: op://bcsc-mobile-app-cd/saucelabs/credential
+
       - name: Ship Artifact to SauceLabs
         if: steps.probe.outcome == 'success'
         uses: ./.github/workflows/actions/ship-to-saucelabs
         with:
-          sauce_labs_username: ${{ secrets.SAUCE_USERNAME }}
-          sauce_labs_password: ${{ secrets.SAUCE_ACCESS_KEY }}
+          sauce_labs_username: ${{ steps.op_saucelabs.outputs.SAUCE_USERNAME }}
+          sauce_labs_password: ${{ steps.op_saucelabs.outputs.SAUCE_ACCESS_KEY }}
           sauce_labs_name: ${{ env.SAUCE_LABS_NAME }}
           sauce_labs_description: ${{ env.SAUCE_LABS_DESCRIPTION }}
           artifact_ref: ${{ env.ARTIFACT_REF }}
@@ -1334,7 +1302,4 @@ jobs:
       build_number: ${{ github.run_number }}
       device_matrix: '[{"platform":"iOS","device":"iPhone.*","os_version":""},{"platform":"Android","device":"Google.*","os_version":""}]'
     secrets:
-      SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-      SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-      SM_USER: ${{ secrets.SM_USER }}
-      SM_PASSWORD: ${{ secrets.SM_PASSWORD }}
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}

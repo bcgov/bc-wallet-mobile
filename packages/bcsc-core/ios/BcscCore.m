@@ -12,6 +12,8 @@ RCT_EXTERN_METHOD(setActiveKeyAlias : (NSString *)alias resolve : (RCTPromiseRes
 RCT_EXTERN_METHOD(deleteKey : (NSString *)alias resolve : (RCTPromiseResolveBlock)
                       resolve reject : (RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(createNewKeyPair : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(getKeyPair : (NSString *)label resolve : (RCTPromiseResolveBlock)
                       resolve reject : (RCTPromiseRejectBlock)reject)
 
@@ -39,6 +41,8 @@ RCT_EXTERN_METHOD(getAccount : (RCTPromiseResolveBlock)resolve reject : (RCTProm
 RCT_EXTERN_METHOD(getDeviceId : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(removeAccount : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(clearAllKeychainData : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(getRefreshTokenRequestBody : (NSString *)issuer clientID : (NSString *)clientID refreshToken : (
     NSString *)refreshToken resolve : (RCTPromiseResolveBlock)resolve reject : (RCTPromiseRejectBlock)reject)

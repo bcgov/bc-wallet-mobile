@@ -4,6 +4,8 @@ import * as DeviceInfo from 'react-native-device-info'
 import { useCreateSystemChecks } from './useCreateSystemChecks'
 import { SystemCheckScope } from './useSystemChecks'
 
+jest.mock('@/bcsc-theme/api/hooks/useFactoryReset')
+
 // --------------------
 // Mock functions
 // --------------------
@@ -14,7 +16,7 @@ export const mockUseBCSCApiClientState = jest.fn()
 export const mockUseTokenApi = jest.fn()
 export const mockUseConfigApi = jest.fn()
 export const mockUseRegistrationApi = jest.fn()
-export const mockUseEvidenceApi = jest.fn()
+export const mockUseEvidenceService = jest.fn()
 export const mockUseNavigation = jest.fn()
 export const mockUseNavigationContainer = jest.fn()
 export const mockGetBundleId = jest.fn()
@@ -37,7 +39,9 @@ jest.mock('@/bcsc-theme/hooks/useBCSCApiClient', () => ({
 jest.mock('@/bcsc-theme/api/hooks/useTokens', () => () => mockUseTokenApi())
 jest.mock('../api/hooks/useConfigApi', () => () => mockUseConfigApi())
 jest.mock('../api/hooks/useRegistrationApi', () => () => mockUseRegistrationApi())
-jest.mock('../api/hooks/useEvidenceApi', () => () => mockUseEvidenceApi())
+jest.mock('../services/hooks/useEvidenceService', () => ({
+  useEvidenceService: () => mockUseEvidenceService(),
+}))
 
 jest.mock('@react-navigation/native', () => ({
   ...jest.requireActual('@react-navigation/native'),
@@ -444,7 +448,7 @@ describe('useGetSystemChecks', () => {
       it('is not added when there is no verificationRequestId', async () => {
         mockStoreWith({ verificationRequestId: undefined })
         mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn() })
-        mockUseEvidenceApi.mockReturnValue({ getVerificationRequestStatus: jest.fn() })
+        mockUseEvidenceService.mockReturnValue({ getVerificationRequestStatus: jest.fn() })
 
         const { result } = renderHook(() => useCreateSystemChecks())
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
@@ -455,7 +459,7 @@ describe('useGetSystemChecks', () => {
       it('is not added once the user is verified, even with a verificationRequestId', async () => {
         mockStoreWith({ verified: true, verificationRequestId: 'req-1' })
         mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn() })
-        mockUseEvidenceApi.mockReturnValue({ getVerificationRequestStatus: jest.fn() })
+        mockUseEvidenceService.mockReturnValue({ getVerificationRequestStatus: jest.fn() })
 
         const { result } = renderHook(() => useCreateSystemChecks())
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
@@ -466,7 +470,7 @@ describe('useGetSystemChecks', () => {
       it('is added when unverified with a pending verificationRequestId', async () => {
         mockStoreWith({ verificationRequestId: 'req-1', deviceCode: 'device-1', userCode: 'user-1' })
         mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn(), checkDeviceCodeStatus: jest.fn() })
-        mockUseEvidenceApi.mockReturnValue({ getVerificationRequestStatus: jest.fn() })
+        mockUseEvidenceService.mockReturnValue({ getVerificationRequestStatus: jest.fn() })
 
         const { result } = renderHook(() => useCreateSystemChecks())
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
@@ -478,7 +482,7 @@ describe('useGetSystemChecks', () => {
         mockStoreWith({ verificationRequestId: 'req-1', deviceCode: 'device-1', userCode: 'user-1' })
         mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn(), checkDeviceCodeStatus: jest.fn() })
         const getVerificationRequestStatus = jest.fn().mockResolvedValue({ status: 'pending' })
-        mockUseEvidenceApi.mockReturnValue({ getVerificationRequestStatus })
+        mockUseEvidenceService.mockReturnValue({ getVerificationRequestStatus })
 
         const { result } = renderHook(() => useCreateSystemChecks())
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
@@ -493,7 +497,7 @@ describe('useGetSystemChecks', () => {
         mockStoreWith({ verificationRequestId: 'req-1', deviceCode: undefined, userCode: undefined })
         const checkDeviceCodeStatus = jest.fn()
         mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn(), checkDeviceCodeStatus })
-        mockUseEvidenceApi.mockReturnValue({ getVerificationRequestStatus: jest.fn() })
+        mockUseEvidenceService.mockReturnValue({ getVerificationRequestStatus: jest.fn() })
 
         const { result } = renderHook(() => useCreateSystemChecks())
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
@@ -509,7 +513,7 @@ describe('useGetSystemChecks', () => {
         mockStoreWith({ verificationRequestId: 'req-1', deviceCode: 'device-1', userCode: 'user-1' })
         const checkDeviceCodeStatus = jest.fn().mockResolvedValue(undefined)
         mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn(), checkDeviceCodeStatus })
-        mockUseEvidenceApi.mockReturnValue({ getVerificationRequestStatus: jest.fn() })
+        mockUseEvidenceService.mockReturnValue({ getVerificationRequestStatus: jest.fn() })
 
         const { result } = renderHook(() => useCreateSystemChecks())
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
@@ -529,7 +533,7 @@ describe('useGetSystemChecks', () => {
         })
         const checkDeviceCodeStatus = jest.fn()
         mockUseTokenApi.mockReturnValue({ getCachedIdTokenMetadata: jest.fn(), checkDeviceCodeStatus })
-        mockUseEvidenceApi.mockReturnValue({ getVerificationRequestStatus: jest.fn() })
+        mockUseEvidenceService.mockReturnValue({ getVerificationRequestStatus: jest.fn() })
 
         const { result } = renderHook(() => useCreateSystemChecks())
         const systemChecks = await result.current[SystemCheckScope.MAIN_STACK].getSystemChecks()
@@ -559,7 +563,7 @@ describe('useGetSystemChecks', () => {
         jest.spyOn(React, 'useContext').mockReturnValue({ account: null })
         mockUseConfigApi.mockReturnValue({ getTermsOfUse: jest.fn() })
         mockUseRegistrationApi.mockReturnValue({})
-        mockUseEvidenceApi.mockReturnValue({ getVerificationRequestStatus: jest.fn() })
+        mockUseEvidenceService.mockReturnValue({ getVerificationRequestStatus: jest.fn() })
       }
 
       it('is not added when there is no pending deviceCode/userCode', async () => {
@@ -688,6 +692,19 @@ describe('useGetSystemChecks', () => {
       mockUseNavigationContainer.mockReturnValue({ isNavigationReady: true })
       jest.spyOn(React, 'useContext').mockReturnValue({ account: {} })
     }
+
+    it('should be applicable only once the account has loaded', () => {
+      jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')
+      mockHydratedStore()
+
+      const { result: withAccount } = renderHook(() => useCreateSystemChecks())
+      expect(withAccount.current[SystemCheckScope.ACCOUNT].isApplicable).toBe(true)
+
+      jest.spyOn(React, 'useContext').mockReturnValue({ account: null })
+
+      const { result: withoutAccount } = renderHook(() => useCreateSystemChecks())
+      expect(withoutAccount.current[SystemCheckScope.ACCOUNT].isApplicable).toBe(false)
+    })
 
     it('should return no AccountSystemChecks with no accountExpirationDate', async () => {
       jest.spyOn(DeviceInfo, 'getBundleId').mockReturnValue('ca.bc.gov.id.servicescard')

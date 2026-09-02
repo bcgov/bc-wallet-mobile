@@ -1,3 +1,4 @@
+import bwipjs from 'bwip-js'
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
@@ -168,4 +169,128 @@ export async function injectPhoto(
   const source = masks.length > 0 ? await maskImageRegions(resolved, masks) : resolved
   const padded = await padImage(source, padding)
   await injectCameraImage(padded)
+}
+
+/**
+ * Whether THIS session's camera stack is injection-instrumented — i.e. its requested `sauce:options`
+ * carried `sauceLabsImageInjectionEnabled`. The Android send-video lane deliberately drops that
+ * capability (the instrumentation rides the whole pipeline and wrecks the recorder's stop/finalize),
+ * so capture flows that can degrade to the rack feed gate on this instead of {@link isSauceLabs}.
+ */
+export function canInjectImages(): boolean {
+  if (!isSauceLabs()) return false
+  const sauceOptions = (driver.requestedCapabilities as Record<string, unknown>)['sauce:options'] as
+    | { sauceLabsImageInjectionEnabled?: boolean }
+    | undefined
+  return sauceOptions?.sauceLabsImageInjectionEnabled === true
+}
+
+/**
+ * Whether this session can drive a CARD barcode (code-39 / PDF-417) from an injected image.
+ *
+ * Sauce-only because injection is, and Android-only because iOS decodes in the OS from metadata Sauce
+ * synthesizes for QR alone — no injected image can ever fire a 1D or PDF-417 scan there. QR scanning
+ * has no such limit and needs only {@link isSauceLabs}.
+ */
+export function canInjectCardBarcodes(): boolean {
+  return isSauceLabs() && driver.isAndroid
+}
+
+/** Options for {@link composeScanTarget}: canvas defaults to a 1080p landscape frame. */
+export interface ScanTargetOptions {
+  /** Resize the asset to this fraction of canvas width (nearest-neighbor — 2D codes only; 1D assets
+   *  are generated at final pixel size and must be composited as-is, so leave this unset for them). */
+  widthFraction?: number
+  canvasWidth?: number
+  canvasHeight?: number
+}
+
+/**
+ * Center a barcode/QR asset on a white canvas matching the camera-frame aspect and return base64 PNG.
+ *
+ * Sauce scales the injected image to FILL the landscape sensor frame, center-cropping the overflow —
+ * a canvas already at the frame's aspect maps ~1:1, so the code's on-sensor size is predictable and
+ * nothing is cropped away. The white surround doubles as an oversized quiet zone.
+ *
+ * @param source Asset filename under `e2e/assets/`, an absolute path, or a rendered image buffer.
+ */
+export async function composeScanTarget(source: string | Buffer, options: ScanTargetOptions = {}): Promise<string> {
+  const { widthFraction, canvasWidth = 1920, canvasHeight = 1080 } = options
+  const input = typeof source === 'string' ? resolveAssetPath(source) : source
+  const asset = sharp(input)
+  const { width, height } = await asset.metadata()
+  if (!width || !height) {
+    throw new Error(`composeScanTarget: could not read dimensions of ${typeof source === 'string' ? input : 'buffer'}`)
+  }
+
+  const scaled = widthFraction
+    ? await asset.resize({ width: Math.round(widthFraction * canvasWidth), kernel: 'nearest' }).toBuffer()
+    : await asset.toBuffer()
+  const { width: w = width, height: h = height } = widthFraction ? await sharp(scaled).metadata() : { width, height }
+  if (w > canvasWidth || h > canvasHeight) {
+    throw new Error(`composeScanTarget: asset ${w}x${h} does not fit the ${canvasWidth}x${canvasHeight} canvas`)
+  }
+
+  const composed = await sharp({
+    create: { width: canvasWidth, height: canvasHeight, channels: 3, background: { r: 255, g: 255, b: 255 } },
+  })
+    .composite([{ input: scaled, gravity: 'center' }])
+    .png()
+    .toBuffer()
+  return composed.toString('base64')
+}
+
+/** Compose a scan target ({@link composeScanTarget}) and inject it — the scanning counterpart to
+ *  {@link injectPhoto}. */
+export async function injectScanTarget(source: string | Buffer, options: ScanTargetOptions = {}): Promise<void> {
+  await injectCameraImage(await composeScanTarget(source, options))
+}
+
+/** On-canvas size of a rendered QR — the size proven to decode on both platforms. */
+const QR_TARGET_PX = 800
+/**
+ * On-canvas WIDTH of a rendered 1D code. Deliberately about a third of the frame: the serial screen
+ * opens at 2× zoom, so a code much wider than this is center-cropped out of the analysed frame, and a
+ * narrower one runs out of module width. ~4px/module here reads as ~8px/module after the zoom.
+ */
+const CODE39_TARGET_PX = 660
+
+/**
+ * Render a barcode at the INTEGER bwip-js scale that lands closest to `targetPx`.
+ *
+ * Never resized afterwards: a smoothing kernel blurs bar edges, and a merged narrow bar in a
+ * checksum-free symbology like code-39 decodes as a SHORTER string with no error. Scaling at render
+ * time keeps modules exactly square, and measuring first absorbs the payload-length variation that a
+ * fixed scale would leave over- or undersized.
+ */
+async function renderCode(opts: { bcid: string; text: string; height?: number }, targetPx: number): Promise<Buffer> {
+  const render = (scale: number): Promise<Buffer> => bwipjs.toBuffer({ backgroundcolor: 'FFFFFF', scale, ...opts })
+  const { width = targetPx } = await sharp(await render(1)).metadata()
+  return render(Math.max(1, Math.round(targetPx / width)))
+}
+
+/**
+ * Render a QR for `text` and inject it — for codes minted at runtime (a live pairing code), which no
+ * committed asset can carry.
+ *
+ * Inject BEFORE opening the scanner: swapping the image into a live camera leaves transition frames
+ * where only part of it has landed, which the scanner reads as a malformed code.
+ */
+export async function injectQrCode(text: string, options: ScanTargetOptions = {}): Promise<void> {
+  await injectScanTarget(await renderCode({ bcid: 'qrcode', text }, QR_TARGET_PX), options)
+}
+
+/**
+ * Render `text` as a code-39 and inject it — the 1D counterpart to {@link injectQrCode}, for driving
+ * the card-serial scanner with a value chosen by the test.
+ *
+ * ANDROID ONLY in effect: iOS decodes in the OS and Sauce synthesizes QR metadata only, so no injected
+ * 1D code can ever fire there.
+ *
+ * UNLIKE {@link injectQrCode}, inject once the scanner is already up: the serial screen navigates on
+ * the first frame it cannot resolve to a BC Services Card, so a code waiting in the feed leaves the
+ * screen before a test can assert it ever opened.
+ */
+export async function injectCode39(text: string, options: ScanTargetOptions = {}): Promise<void> {
+  await injectScanTarget(await renderCode({ bcid: 'code39', text, height: 12 }, CODE39_TARGET_PX), options)
 }

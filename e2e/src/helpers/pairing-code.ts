@@ -95,6 +95,16 @@ interface CardtapTransactionContext {
   userAgent: string
 }
 
+/**
+ * The URL a pairing QR encodes, for a code minted by {@link fetchPairingCode}.
+ *
+ * The app's `PairingCodeStrategy` anchors on the path + fragment shape, not the host, so this is the
+ * SIT URL purely for realism.
+ */
+export function pairingQrUri(pairingCode: string): string {
+  return `${SIT_BASE}/static/pairingqrcode.html#${pairingCode}`
+}
+
 export async function fetchPairingCode(options: FetchPairingCodeOptions = {}): Promise<PairingSession> {
   const { timeoutMs = DEFAULT_TIMEOUT_MS } = options
   const controller = new AbortController()

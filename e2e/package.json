@@ -7,6 +7,12 @@
   "scripts": {
     "setup": "node scripts/setup-drivers.mjs",
     "emulator:android": "node scripts/start-android-emulator.mjs",
+    "issuer:provision": "tsx scripts/issuer-provision.ts",
+    "issuer:smoke": "tsx scripts/issuer-smoke.ts",
+    "brief": "tsx scripts/brief.ts",
+    "brief:check": "tsx scripts/brief-check.ts",
+    "a11y:baseline": "tsx scripts/a11y-baseline.ts",
+    "typecheck": "tsc --noEmit --skipLibCheck",
     "test:android:local": "wdio configs/local/wdio.android.local.emu.conf.ts",
     "test:android:device": "wdio configs/local/wdio.android.local.device.conf.ts",
     "test:ios:local": "wdio configs/local/wdio.ios.local.sim.conf.ts",
@@ -18,6 +24,12 @@
     "test:migration:sauce": "npm run test:android:migration:sauce && npm run test:ios:migration:sauce",
     "test:android:migration:device": "wdio configs/local/wdio.android.local.device.migration.conf.ts --suite migration",
     "test:ios:migration:device": "wdio configs/local/wdio.ios.local.device.migration.conf.ts --suite migration",
+    "test:android:upgrade:sauce": "wdio configs/sauce/wdio.android.sauce.upgrade.conf.ts --suite upgrade",
+    "test:ios:upgrade:sauce": "wdio configs/sauce/wdio.ios.sauce.upgrade.conf.ts --suite upgrade",
+    "test:android:upgrade:device": "wdio configs/local/wdio.android.local.device.upgrade.conf.ts --suite upgrade",
+    "test:ios:upgrade:device": "wdio configs/local/wdio.ios.local.device.upgrade.conf.ts --suite upgrade",
+    "test:android:upgrade403:sauce": "PREV_ANDROID_APP=${PREV_ANDROID_APP:-BCSC-v4.0.3.apk} wdio configs/sauce/wdio.android.sauce.upgrade.conf.ts --suite upgrade403",
+    "test:ios:upgrade403:sauce": "PREV_IOS_APP=${PREV_IOS_APP:-BCSC-v4.0.3.ipa} wdio configs/sauce/wdio.ios.sauce.upgrade.conf.ts --suite upgrade403",
     "test:sauce": "npm run test:android:sauce && npm run test:ios:sauce"
   },
   "resolutions": {
@@ -44,6 +56,7 @@
     "appium": "^2.13.1",
     "appium-uiautomator2-driver": "^3.9.6",
     "appium-xcuitest-driver": "^7.35.0",
+    "bwip-js": "^4.11.2",
     "cheerio": "^1.2.0",
     "dotenv": "^16.3.1",
     "eslint-plugin-wdio": "^9.27.0",

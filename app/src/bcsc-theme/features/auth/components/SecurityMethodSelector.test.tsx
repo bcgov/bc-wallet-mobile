@@ -288,10 +288,10 @@ describe('SecurityMethodSelector', () => {
       // Device auth shows the current-method label; creating a PIN becomes the actionable option.
       expect(tree.getByText('BCSC.Onboarding.SecureAppPINTitle')).toBeTruthy()
 
-      // Accessibility: the biometric name (subtext) is part of the current-method card's label and
+      // Accessibility: the device auth name (subtext) is part of the current-method card's label and
       // the card is marked selected rather than disabled.
       const deviceAuthCard = tree.getByTestId(testIdWithKey('ChooseDeviceAuthButton'))
-      expect(deviceAuthCard.props.accessibilityLabel).toMatch(/Face/)
+      expect(deviceAuthCard.props.accessibilityLabel).toContain('BCSC.Settings.AppSecurity.DeviceAuth')
       expect(deviceAuthCard.props.accessibilityState).toMatchObject({ selected: true })
       expect(deviceAuthCard.props.accessibilityState.disabled).toBeFalsy()
 

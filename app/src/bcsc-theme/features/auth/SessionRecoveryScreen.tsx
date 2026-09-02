@@ -1,4 +1,5 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
+import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useAlerts } from '@/hooks/useAlerts'
 import {
   Button,
@@ -41,17 +42,23 @@ export const SessionRecoveryScreen = (): React.ReactElement => {
   }, [loadingScreen, t, factoryReset, factoryResetAlert, logger])
 
   const controls = (
-    <Button
-      title={t('BCSC.SessionRecovery.PrimaryAction')}
-      buttonType={ButtonType.Primary}
-      testID={testIdWithKey('SessionRecoveryReset')}
-      accessibilityLabel={t('BCSC.SessionRecovery.PrimaryAction')}
-      onPress={onPressPrimaryAction}
-    />
+    <ControlContainer>
+      <Button
+        title={t('BCSC.SessionRecovery.PrimaryAction')}
+        buttonType={ButtonType.Primary}
+        testID={testIdWithKey('SessionRecoveryReset')}
+        accessibilityLabel={t('BCSC.SessionRecovery.PrimaryAction')}
+        onPress={onPressPrimaryAction}
+      />
+    </ControlContainer>
   )
 
   return (
-    <ScreenWrapper controls={controls} scrollViewContainerStyle={{ gap: Spacing.md }}>
+    <ScreenWrapper
+      padded={false}
+      controls={controls}
+      scrollViewContainerStyle={{ gap: Spacing.md, padding: Spacing.lg }}
+    >
       <ThemedText variant="headingThree">{t('BCSC.SessionRecovery.Header')}</ThemedText>
       <ThemedText>{t('BCSC.SessionRecovery.Body')}</ThemedText>
       <ThemedText>{t('BCSC.SessionRecovery.BodyAction')}</ThemedText>

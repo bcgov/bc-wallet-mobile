@@ -85,10 +85,11 @@ export const ErrorAlertProvider = ({ children, enableReport = true }: ErrorAlert
         description,
         error,
         installId: store.bcsc.installId,
+        sessionId: store.developer.remoteDebugging.sessionId,
       })
       setErrorKey((prev) => prev + 1)
     },
-    [store.bcsc.installId]
+    [store.bcsc.installId, store.developer.remoteDebugging.sessionId]
   )
 
   /**

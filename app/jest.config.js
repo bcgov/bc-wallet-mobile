@@ -11,6 +11,11 @@ module.exports = {
   maxWorkers: Math.max(2, Math.floor(cpus * 0.5)),
   workerIdleMemoryLimit: '512MB',
   testTimeout: 10000,
+  // Clears call history before each test so suites no longer hand-roll a
+  // `jest.clearAllMocks()` beforeEach. Deliberately NOT resetMocks/restoreMocks:
+  // those strip implementations, which would wipe the preset mockResolvedValues
+  // in the auto-applied __mocks__/react-native-bcsc-core.ts and the jestSetup factories.
+  clearMocks: true,
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   setupFiles: ['<rootDir>/jestSetup.js'],
   setupFilesAfterEnv: ['@testing-library/jest-native/extend-expect', '<rootDir>/jestSetupAfterEnv.js'],
@@ -20,9 +25,9 @@ module.exports = {
       '<rootDir>/__mocks__/file.js',
     '\\.(css|less)$': '<rootDir>/__mocks__/style.js',
     '^axios$': require.resolve('axios'),
-    'react-i18next': '<rootDir>/__mocks__/react-i18next.ts',
+    '^react-i18next$': '<rootDir>/__mocks__/react-i18next.ts',
     '^uuid$': require.resolve('uuid'),
-    '@bifold/core': require.resolve('@bifold/core'),
+    '^@bifold/core$': require.resolve('@bifold/core'),
     '@openwallet-foundation/askar-react-native': require.resolve('@openwallet-foundation/askar-react-native'),
   },
   transform: {
@@ -31,8 +36,8 @@ module.exports = {
   transformIgnorePatterns: [
     'node_modules/(?!(.*react-native.*|@credo-ts|credo-ts-indy-vdr-proxy-client|@openid4vc|@noble|@stablelib|@digitalcredentials|dcql|valibot|query-string|decode-uri-component|filter-obj|split-on-first|uuid|@bifold|@pexip|@expo/app-integrity|expo-modules-core)/)',
   ],
-  testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.[jt]sx?$',
-  testPathIgnorePatterns: ['\\.snap$', '<rootDir>/node_modules/', '<rootDir>/lib', '<rootDir>/__tests__/contexts/'],
+  testRegex: '(\\.|/)(test|spec)\\.[jt]sx?$',
+  testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/lib'],
   cacheDirectory: '.jest/cache',
   collectCoverageFrom: [
     'src/**/*.{ts,tsx,js,jsx}',

@@ -1,5 +1,5 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { HELP_URL } from '@/constants'
+import { HelpCentreUrl } from '@/constants'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -17,12 +17,15 @@ export const OnboardingSettingsScreen: React.FC<OnboardingSettingsScreenProps> =
   const { t } = useTranslation()
 
   const onContactUs = () => {
-    navigation.navigate(BCSCScreens.OnboardingContactUs)
+    navigation.navigate(BCSCScreens.OnboardingWebView, {
+      url: HelpCentreUrl.CONTACT_US,
+      title: t('BCSC.Screens.ContactUs'),
+    })
   }
 
   const onHelp = () => {
     navigation.navigate(BCSCScreens.OnboardingWebView, {
-      url: HELP_URL,
+      url: HelpCentreUrl.HOME,
       title: t('BCSC.Screens.HelpCentre'),
     })
   }

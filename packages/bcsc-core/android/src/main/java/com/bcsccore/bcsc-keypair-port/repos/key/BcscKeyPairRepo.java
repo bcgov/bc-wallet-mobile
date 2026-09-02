@@ -65,6 +65,7 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
   private static final String KEYSTORE_TYPE = "AndroidKeyStore";
   private static final String TAG = "BcscKeyPairRepo";
   private static final Pattern RSA_ALIAS_PATTERN = Pattern.compile("^" + RSA_ALIAS_PREFIX + "(\\d+)$");
+  private static final int MAX_ALIAS_ATTEMPTS = 5;
 
   @NonNull
   private final KeyPairInfoSource keyPairInfoSource;
@@ -185,31 +186,65 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
       // alias rather than colliding with a leftover v3 keystore entry.
       reconcileKeyPairInfoWithKeyStore(keyStore);
 
-      KeyPairInfo info = getNewestKeyPairInfo(keyPairInfoSource.getKeyPairInfo());
-
-      if (info == null) {
-        info = new KeyPairInfo(ALIAS_RSA, System.currentTimeMillis());
-        keyPairInfoSource.saveKeyPairInfo(info);
+      final int firstId = nextRsaAliasId(keyStore);
+      String alias = null;
+      KeyAlreadyExistsException lastCollision = null;
+      for (int attempt = 0; attempt < MAX_ALIAS_ATTEMPTS && alias == null; attempt++) {
+        final String candidate = String.format(Locale.ROOT, "%s%d", RSA_ALIAS_PREFIX, firstId + attempt);
+        try {
+          generateKeyPair(candidate);
+          alias = candidate;
+        } catch (KeyAlreadyExistsException e) {
+          // findRsaAliasesInKeyStore swallows KeyStoreException, which can undercount the
+          // keystore scan; bump and retry rather than looping forever on the same alias.
+          lastCollision = e;
+          SimpleLog.e(TAG, "getNewBcscKeyPair: alias collision at '" + redactAlias(candidate) + "', bumping", e);
+        }
+      }
+      if (alias == null) {
+        throw lastCollision;
       }
 
-      int id = Integer.parseInt(info.getAlias().replaceAll("\\D+", ""));
-
-      id += 1;
-
-      final String alias = String.format(Locale.ROOT, "%s%d", RSA_ALIAS_PREFIX, id);
-
       final KeyPairInfo newInfo = new KeyPairInfo(alias, System.currentTimeMillis());
-      keyPairInfoSource.saveKeyPairInfo(newInfo);
 
-      generateKeyPair(alias);
+      // Persist metadata only after generation succeeds — saving first would leave an orphan
+      // row that getCurrentBcscKeyPair()'s newest-lookup treats as active, silently minting
+      // another unregistered key next call. See issue #3876 review.
+      try {
+        keyPairInfoSource.saveKeyPairInfo(newInfo);
+      } catch (BcscException saveError) {
+        // Best-effort: delete the keystore entry already created, or the next rotation attempt
+        // collides with it (KeyAlreadyExistsException). Must never mask the original error.
+        boolean cleanedUp = deleteKeyEntry(alias);
+        if (!cleanedUp) {
+          SimpleLog.e(TAG, "getNewBcscKeyPair: failed to clean up untracked keystore entry '"
+              + redactAlias(alias) + "' after saveKeyPairInfo failure", saveError);
+        }
+        throw saveError;
+      }
+
       final KeyPair keyPair;
       try {
         keyPair = getKeyPair(keyStore, alias);
       } catch (Exception e) {
+        // Best-effort: unlike the save failure above, metadata was already persisted too — clean
+        // up both, or the alias strands signing (newest-by-createdAt) despite JS never receiving
+        // it. Neither cleanup failure may mask the original retrieval error.
+        try {
+          keyPairInfoSource.deleteKeyPairInfo(alias);
+        } catch (Exception metaCleanupError) {
+          SimpleLog.e(TAG, "getNewBcscKeyPair: failed to clean up untracked metadata for '"
+              + redactAlias(alias) + "' after key-pair retrieval failure", metaCleanupError);
+        }
+        boolean cleanedUp = deleteKeyEntry(alias);
+        if (!cleanedUp) {
+          SimpleLog.e(TAG, "getNewBcscKeyPair: failed to clean up untracked keystore entry '"
+              + redactAlias(alias) + "' after key-pair retrieval failure", e);
+        }
         throw new KeyNotFoundException(
-            "Failed to retrieve newly generated key pair for alias '" + alias + "': " + e.getMessage(), e);
+            "Failed to retrieve newly generated key pair for alias '" + redactAlias(alias) + "': " + e.getMessage(), e);
       }
-      SimpleLog.d(TAG, "Generated new key pair " + alias);
+      SimpleLog.d(TAG, "Generated new key pair " + redactAlias(alias));
       return new BcscKeyPair(keyPair, newInfo);
     } catch (KeypairGenerationException e) {
       throw e;
@@ -276,8 +311,11 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
     return infoMap.get(alias);
   }
 
+  // protected (not private): Robolectric can't exercise the real "AndroidKeyStore" provider
+  // (NoSuchAlgorithmException), so this and the two methods below are overridden with
+  // controllable fakes by a test subclass. Not otherwise overridden in production.
   @NonNull
-  private KeyStore loadAndroidKeyStore() throws Exception {
+  protected KeyStore loadAndroidKeyStore() throws Exception {
     KeyStore keyStore = KeyStore.getInstance(KEYSTORE_TYPE);
     keyStore.load(null);
     return keyStore;
@@ -394,18 +432,40 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
   }
 
   /**
+   * Compute the next rsa\d+ alias id to try, one past the highest id seen across BOTH metadata
+   * and the keystore. Scanning metadata in full (not just the newest-by-createdAt row) avoids a
+   * livelock where markActiveBcscKeyPair() stamps an older alias as newest while a higher-id
+   * alias still exists in both metadata and the keystore — see issue #3876.
+   */
+  private int nextRsaAliasId(@NonNull KeyStore keyStore) throws BcscException {
+    int maxId = 0;
+    for (String alias : keyPairInfoSource.getKeyPairInfo().keySet()) {
+      Matcher m = RSA_ALIAS_PATTERN.matcher(alias);
+      if (m.matches()) {
+        maxId = Math.max(maxId, Integer.parseInt(m.group(1)));
+      }
+    }
+    java.util.TreeMap<Integer, String> keystoreAliases = findRsaAliasesInKeyStore(keyStore);
+    if (!keystoreAliases.isEmpty()) {
+      maxId = Math.max(maxId, keystoreAliases.lastKey());
+    }
+    return maxId + 1;
+  }
+
+  /**
    * Generate a new RSA key pair in Android KeyStore.
    * Creates a 4096-bit RSA key with SHA-512 digest for signing.
    * 
    * @param alias the alias to store the key pair under
    * @throws KeypairGenerationException if key generation fails
    */
-  private void generateKeyPair(String alias) throws KeypairGenerationException {
+  protected void generateKeyPair(String alias) throws KeypairGenerationException {
     try {
       KeyStore keyStore = loadAndroidKeyStore();
       if (keyStore.containsAlias(alias)) {
+        // Redacted: surfaces via createNewKeyPair's rejection into AppError.technicalMessage/analytics.
         throw new KeyAlreadyExistsException(
-            "Key pair already exists for alias '" + alias + "'");
+            "Key pair already exists for alias '" + redactAlias(alias) + "'");
       }
 
       final KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(
@@ -437,11 +497,18 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
         | NoSuchAlgorithmException
         | NoSuchProviderException e) {
       SimpleLog.e(TAG, "Failed to generate key pair", e);
-      throw new KeypairGenerationException("Failed to generate key pair for alias '" + alias + "': " + e.getMessage(), e);
+      throw new KeypairGenerationException(
+          "Failed to generate key pair for alias '" + redactAlias(alias) + "': " + e.getMessage(), e);
     } catch (Exception e) {
       SimpleLog.e(TAG, "Failed to generate key pair", e);
-      throw new KeypairGenerationException("Failed to generate key pair for alias '" + alias + "': " + e.getMessage(), e);
+      throw new KeypairGenerationException(
+          "Failed to generate key pair for alias '" + redactAlias(alias) + "': " + e.getMessage(), e);
     }
+  }
+
+  /** Truncates for logging, matching iOS's redaction even though these aliases aren't UUID-based. */
+  private static String redactAlias(String alias) {
+    return alias.length() <= 8 ? alias : "\u2026" + alias.substring(alias.length() - 8);
   }
 
   private boolean deleteKeyEntry(String alias) {
@@ -500,7 +567,7 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
   }
 
   @NonNull
-  private KeyPair getKeyPair(@NonNull KeyStore keyStore, @NonNull String kid)
+  protected KeyPair getKeyPair(@NonNull KeyStore keyStore, @NonNull String kid)
       throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException {
     if (Build.VERSION.SDK_INT <= VERSION_CODES.O_MR1) {
       final PrivateKey privateKey = (PrivateKey) keyStore.getKey(kid, null);

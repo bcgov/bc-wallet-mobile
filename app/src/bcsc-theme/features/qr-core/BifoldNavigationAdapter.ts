@@ -2,7 +2,9 @@ import { BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { CommonActions, NavigationProp } from '@react-navigation/native'
 import Toast from 'react-native-toast-message'
 
+import { Screens } from '@bifold/core'
 import type { TFunction } from 'i18next'
+import { z } from 'zod'
 
 /**
  * Bifold's Connection / CredentialOffer / ProofRequest screens, when reused
@@ -81,6 +83,27 @@ const resetToBCSCContactChat = (navigation: NavigationProp<any>, connectionId: s
   )
 }
 
+// Detect Bifold's navigation to JSONDetails
+const isCredentialJSONDetailsNavigation = (
+  name: string,
+  params: unknown
+): params is {
+  screen: string
+  params: { jsonBlob: unknown }
+} => {
+  const jsonDetailsNavigationSchema = z.object({
+    name: z.literal(BIFOLD_CONTACTS_STACK),
+    params: z.object({
+      screen: z.literal(Screens.JSONDetails),
+      params: z.object({
+        jsonBlob: z.object(),
+      }),
+    }),
+  })
+
+  return jsonDetailsNavigationSchema.safeParse({ name, params }).success
+}
+
 // Detect Bifold's `reset({ … TabStack … Chat … })` action, dispatched by
 // Connection.tsx on the enableChat=true completion path. The reset routes
 // reference Bifold's nav graph, which BCSC doesn't register; if the Chat route
@@ -123,10 +146,12 @@ export const createBifoldNavigationAdapter = <T extends NavigationProp<any>>(
             resetToBCSCHome(target)
             return
           }
+
           if (name === BIFOLD_TAB_CREDENTIAL_STACK) {
             resetToBCSCWallet(target)
             return
           }
+
           if (name === BIFOLD_CHAT) {
             const connectionId = (params as { connectionId?: string } | undefined)?.connectionId
             if (connectionId) {
@@ -138,6 +163,13 @@ export const createBifoldNavigationAdapter = <T extends NavigationProp<any>>(
             Toast.show({ type: 'info', text1: t('BCSC.Scan.FeatureUnavailable') })
             return
           }
+
+          if (isCredentialJSONDetailsNavigation(name, params)) {
+            return navigation.navigate(BCSCScreens.CredentialJSONDetails, {
+              jsonBlob: JSON.stringify(params.params.jsonBlob, null, 2),
+            })
+          }
+
           if (name === BIFOLD_CONTACTS_STACK || name === BIFOLD_PROOF_REQUESTS_STACK) {
             Toast.show({ type: 'info', text1: t('BCSC.Scan.FeatureUnavailable') })
             return

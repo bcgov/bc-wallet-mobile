@@ -47,6 +47,9 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import java.util.UUID
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.RejectedExecutionException
 import javax.crypto.SecretKey
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -91,7 +94,11 @@ import com.bcsccore.authentication.device.DeviceAuthenticationServiceImpl
 import com.bcsccore.authentication.device.DeviceAuthenticationResult
 import com.bcsccore.authentication.PinService
 
+// Utility imports
+import com.bcsccore.util.GuardedPromise
+
 // Native-compatible storage imports
+import com.bcsccore.storage.KeychainClearingService
 import com.bcsccore.storage.NativeCompatibleStorage
 import com.bcsccore.storage.NativeAccount
 import com.bcsccore.storage.NativeAccountSecurityType
@@ -151,6 +158,12 @@ class BcscCoreModule(
         // Notification channel constants
         private const val NOTIFICATION_CHANNEL_ID = "bcsc_foreground_notifications"
         private const val NOTIFICATION_CHANNEL_NAME = "BCSC Notifications"
+
+        // Auto-generated device-security PIN constants
+        private const val AUTO_GENERATED_PIN_LENGTH = 6
+
+        // Exclusive upper bound passed to SecureRandom.nextInt() to produce a single decimal digit (0-9)
+        private const val DECIMAL_DIGIT_BOUND = 10
     }
 
     override fun getName(): String = NAME
@@ -168,6 +181,10 @@ class BcscCoreModule(
     // Initialize native-compatible storage for rollback support
     private val nativeStorage: NativeCompatibleStorage by lazy {
         NativeCompatibleStorage(reactApplicationContext)
+    }
+
+    private val keychainClearingService: KeychainClearingService by lazy {
+        KeychainClearingService(reactApplicationContext)
     }
 
     @ReactMethod
@@ -377,6 +394,76 @@ class BcscCoreModule(
             promise.reject("E_KEYSTORE_ERROR", "Unexpected error deleting key: ${e.message}", e)
         }
     }
+
+    /** Generates a new signing keypair; activation is implicit on generation — see the JS wrapper's warning. */
+    @ReactMethod
+    fun createNewKeyPair(promise: Promise) {
+        // Captured once generated so a failure below can best-effort delete it (see cleanup fun).
+        var bcscKeyPair: BcscKeyPair? = null
+        try {
+            if (!keyPairSource.isAvailable()) {
+                promise.reject("E_KEYSTORE_UNAVAILABLE", "Android KeyStore is not available on this device")
+                return
+            }
+            bcscKeyPair = keyPairSource.getNewBcscKeyPair()
+            val jwk = keyPairSource.convertBcscKeyPairToJWK(bcscKeyPair)
+            if (jwk !is RSAKey) {
+                cleanUpUnregisteredKeyAfterGenerationFailure(bcscKeyPair.getKeyInfo().getAlias(), "not an RSA key")
+                // Redacted: surfaces via AppError.technicalMessage/analytics, which travel further than logs.
+                promise.reject(
+                    "E_KEYSTORE_ERROR",
+                    "Newly generated key '${redactAlias(bcscKeyPair.getKeyInfo().getAlias())}' is not an RSA key",
+                )
+                return
+            }
+            val entry: WritableMap = Arguments.createMap()
+            entry.putString("id", bcscKeyPair.getKeyInfo().getAlias())
+            entry.putDouble("created", bcscKeyPair.getKeyInfo().getCreatedAt().toDouble())
+            entry.putString("n", jwk.modulus.toString())
+            entry.putString("e", jwk.publicExponent.toString())
+            promise.resolve(entry)
+        } catch (e: BcscException) {
+            bcscKeyPair?.let {
+                cleanUpUnregisteredKeyAfterGenerationFailure(
+                    it.getKeyInfo().getAlias(),
+                    "BcscException after generation",
+                )
+            }
+            promise.reject("E_KEYSTORE_ERROR", "Error generating new key pair: ${e.devMessage}", e)
+        } catch (e: Exception) {
+            bcscKeyPair?.let {
+                cleanUpUnregisteredKeyAfterGenerationFailure(
+                    it.getKeyInfo().getAlias(),
+                    "unexpected error after generation",
+                )
+            }
+            promise.reject("E_KEYSTORE_ERROR", "Unexpected error generating new key pair: ${e.message}", e)
+        }
+    }
+
+    /**
+     * A key activates the instant generation succeeds, before JS gets its alias — so a failure
+     * after that point must delete it here or strand signing on an unregistered key (#4166/2111).
+     * Best-effort only: a cleanup failure is logged but never masks the caller's error.
+     */
+    private fun cleanUpUnregisteredKeyAfterGenerationFailure(
+        alias: String,
+        context: String,
+    ) {
+        try {
+            keyPairSource.deleteBcscKeyPair(alias)
+        } catch (e: Exception) {
+            Log.w(
+                NAME,
+                "createNewKeyPair: best-effort cleanup failed to delete unregistered key '${redactAlias(
+                    alias,
+                )}' after $context: ${e.message}",
+            )
+        }
+    }
+
+    /** Truncates for logging, matching iOS's redaction even though Android aliases (`rsa1`, `rsa2`, ...) aren't UUID-based. */
+    private fun redactAlias(alias: String): String = if (alias.length <= 8) alias else "…" + alias.takeLast(8)
 
     @ReactMethod
     override fun getToken(
@@ -2164,6 +2251,15 @@ class BcscCoreModule(
         }
     }
 
+    /**
+     * Wipes all AndroidKeyStore-backed secrets and known key-material prefs files for this app
+     */
+    @ReactMethod
+    override fun clearAllKeychainData(promise: Promise) {
+        keychainClearingService.clearAll()
+        promise.resolve(null)
+    }
+
     // MARK: - Account management methods
 
     /**
@@ -2771,11 +2867,11 @@ class BcscCoreModule(
 
             val accountID = account.uuid
 
-            // Generate a cryptographically secure random 6-digit PIN
+            // Generate a cryptographically secure random PIN
             val secureRandom = java.security.SecureRandom()
             val pinDigits = StringBuilder()
-            for (i in 0 until 6) {
-                val digit = secureRandom.nextInt(10)
+            for (i in 0 until AUTO_GENERATED_PIN_LENGTH) {
+                val digit = secureRandom.nextInt(DECIMAL_DIGIT_BOUND)
                 pinDigits.append(digit)
             }
             val pin = pinDigits.toString()
@@ -2806,10 +2902,14 @@ class BcscCoreModule(
         reason: String?,
         promise: Promise,
     ) {
+        // The biometric callback fires on the main thread, so the SUCCESS branch's keystore work
+        // runs on backgroundExecutor; async settling means every path must go through GuardedPromise.
+        val guarded = GuardedPromise(promise)
+
         try {
             val account = resolveFirstAccount()
             if (account == null) {
-                promise.reject("E_ACCOUNT_NOT_FOUND", "No account found")
+                guarded.reject("E_ACCOUNT_NOT_FOUND", "No account found")
                 return
             }
 
@@ -2817,7 +2917,7 @@ class BcscCoreModule(
 
             val activity = reactApplicationContext.currentActivity
             if (activity == null || activity !is FragmentActivity) {
-                promise.reject("E_NO_ACTIVITY", "No FragmentActivity available for authentication")
+                guarded.reject("E_NO_ACTIVITY", "No FragmentActivity available for authentication")
                 return
             }
 
@@ -2833,41 +2933,56 @@ class BcscCoreModule(
                 when (authResult) {
                     DeviceAuthenticationResult.SUCCESS -> {
                         try {
-                            // Get the stored PIN hash
-                            val hashResult = pinService.getPINHash(accountID)
+                            backgroundExecutor.execute {
+                                try {
+                                    val hashResult = pinService.getPINHash(accountID)
 
-                            if (hashResult != null) {
-                                val result = Arguments.createMap()
-                                result.putBoolean("success", true)
-                                result.putString("walletKey", hashResult.first)
-                                promise.resolve(result)
-                            } else {
-                                // No PIN hash found - this is a v3 migration scenario
-                                // User had device security but no random PIN. Generate one now.
-                                val secureRandom = java.security.SecureRandom()
-                                val pinDigits = StringBuilder()
-                                for (i in 0 until 6) {
-                                    pinDigits.append(secureRandom.nextInt(10))
+                                    if (hashResult != null) {
+                                        val result = Arguments.createMap()
+                                        result.putBoolean("success", true)
+                                        result.putString("walletKey", hashResult.first)
+                                        guarded.resolve(result)
+                                    } else {
+                                        // No PIN hash found - this is a v3 migration scenario
+                                        // User had device security but no random PIN. Generate one now.
+                                        val secureRandom = java.security.SecureRandom()
+                                        val pinDigits = StringBuilder()
+                                        for (i in 0 until AUTO_GENERATED_PIN_LENGTH) {
+                                            pinDigits.append(secureRandom.nextInt(DECIMAL_DIGIT_BOUND))
+                                        }
+                                        val pin = pinDigits.toString()
+
+                                        val hash = pinService.setupDeviceSecurityPIN(accountID, pin)
+
+                                        val result = Arguments.createMap()
+                                        result.putBoolean("success", true)
+                                        result.putString("walletKey", hash)
+                                        result.putBoolean("migrated", true)
+                                        guarded.resolve(result)
+                                    }
+                                } catch (e: Exception) {
+                                    guarded.reject(
+                                        "E_UNLOCK_DEVICE_SECURITY_ERROR",
+                                        "Error during unlock: ${e.message}",
+                                        e,
+                                    )
                                 }
-                                val pin = pinDigits.toString()
-
-                                val hash = pinService.setupDeviceSecurityPIN(accountID, pin)
-
-                                val result = Arguments.createMap()
-                                result.putBoolean("success", true)
-                                result.putString("walletKey", hash)
-                                result.putBoolean("migrated", true)
-                                promise.resolve(result)
                             }
-                        } catch (e: Exception) {
-                            promise.reject("E_UNLOCK_DEVICE_SECURITY_ERROR", "Error during unlock: ${e.message}", e)
+                        } catch (e: RejectedExecutionException) {
+                            // Executor shut down while the prompt was open; settle so JS is not left pending.
+                            Log.w(NAME, "unlockWithDeviceSecurity: background executor unavailable, rejecting", e)
+                            guarded.reject(
+                                "E_UNLOCK_DEVICE_SECURITY_ERROR",
+                                "Unable to complete unlock: module is shutting down",
+                                e,
+                            )
                         }
                     }
 
                     DeviceAuthenticationResult.CANCELLED -> {
                         val result = Arguments.createMap()
                         result.putBoolean("success", false)
-                        promise.resolve(result)
+                        guarded.resolve(result)
                     }
 
                     DeviceAuthenticationResult.FAILED -> {
@@ -2879,13 +2994,13 @@ class BcscCoreModule(
                     DeviceAuthenticationResult.ERROR -> {
                         val result = Arguments.createMap()
                         result.putBoolean("success", false)
-                        promise.resolve(result)
+                        guarded.resolve(result)
                     }
                 }
             }
         } catch (e: Exception) {
             Log.e(NAME, "unlockWithDeviceSecurity error: ${e.message}", e)
-            promise.reject("E_UNLOCK_DEVICE_SECURITY_ERROR", "Error unlocking with device security: ${e.message}", e)
+            guarded.reject("E_UNLOCK_DEVICE_SECURITY_ERROR", "Error unlocking with device security: ${e.message}", e)
         }
     }
 
@@ -4109,6 +4224,25 @@ class BcscCoreModule(
 
     private val pinService: PinService by lazy {
         PinService(reactApplicationContext, nativeStorage)
+    }
+
+    // Serialized off-main thread for keystore/PIN work reached from biometric callbacks.
+    // A plain executor, not coroutines: bcsc-core declares no coroutines dependency.
+    private val backgroundExecutorDelegate =
+        lazy {
+            Executors.newSingleThreadExecutor { r -> Thread(r, "BcscCoreBackground") }
+        }
+    private val backgroundExecutor: ExecutorService by backgroundExecutorDelegate
+
+    /**
+     * Shuts the background executor down on teardown, without initializing one that was never used.
+     * shutdown(), not shutdownNow(): an in-flight migration must never be interrupted mid-keystore-write.
+     */
+    override fun invalidate() {
+        if (backgroundExecutorDelegate.isInitialized()) {
+            backgroundExecutorDelegate.value.shutdown()
+        }
+        super.invalidate()
     }
 
     // MARK: - JSON Conversion Helpers

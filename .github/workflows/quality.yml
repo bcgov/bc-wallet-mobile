@@ -17,7 +17,23 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v6
+      # Dependabot/fork runs get no repo secrets, so gate only the
+      # secret-dependent steps below on this — build/typecheck/test stay
+      # unconditional (job-level `if:` can't read `secrets`).
+      - name: Check secret availability
+        id: secrets-check
+        if: always()
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          if [ -n "$OP_SERVICE_ACCOUNT_TOKEN" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "OP_SERVICE_ACCOUNT_TOKEN unavailable (Dependabot or fork run); skipping 1Password load and codecov upload."
+          fi
+
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
@@ -51,12 +67,23 @@ jobs:
       - name: Run tests and generate coverage report
         run: yarn coverage
 
+      # Secrets are being consolidated into the bcsc-mobile-app-cd 1Password vault;
+      # OP_SERVICE_ACCOUNT_TOKEN is the single bootstrap secret that stays in GitHub.
+      - name: Load secrets from 1Password
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          CODECOV_TOKEN: op://bcsc-mobile-app-cd/codecov/credential
+        if: always() && steps.secrets-check.outputs.available == 'true' && !startsWith(github.base_ref, 'release/') && !startsWith(github.ref_name, 'release/')
+
       - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # (v7.0.0) pinning for SonarQube
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          token: ${{ env.CODECOV_TOKEN }}
           fail_ci_if_error: true
           verbose: true
-        if: always() && !startsWith(github.base_ref, 'release/') && !startsWith(github.ref_name, 'release/')
+        if: always() && steps.secrets-check.outputs.available == 'true' && !startsWith(github.base_ref, 'release/') && !startsWith(github.ref_name, 'release/')
 
   lint-format:
     runs-on: macos-26
@@ -66,7 +93,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.11'
 
@@ -129,7 +156,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: zulu
           java-version: 17

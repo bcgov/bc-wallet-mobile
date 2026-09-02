@@ -198,6 +198,8 @@ const getClientErrorDefinitionFromStatus = (status?: number): ErrorDefinition =>
       return ErrorRegistry.FORBIDDEN
     case 404:
       return ErrorRegistry.NOT_FOUND
+    case 409:
+      return ErrorRegistry.CONFLICT
     case 429:
       return ErrorRegistry.RETRY_LATER
     default:
@@ -256,6 +258,9 @@ export const getAppErrorFromAxiosError = (error: AxiosError): AppError => {
       // Use a dummy base so relative paths parse correctly
       url: error.config?.url ? new URL(error.config.url, 'https://example.com').pathname : undefined,
       method: error.config?.method?.toUpperCase(),
+      // Evidence-upload media fields live in context so they serialize with the AppError (toJSON)
+      // wherever it is logged or reported.
+      ...error.config?.uploadLogContext,
     },
   }
 

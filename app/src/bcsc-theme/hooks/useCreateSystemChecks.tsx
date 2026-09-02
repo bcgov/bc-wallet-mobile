@@ -30,9 +30,9 @@ import { getMaxDevicesBannerLastDisplayedDate } from 'react-native-bcsc-core'
 import { getBundleId } from 'react-native-device-info'
 import { SystemCheckStrategy } from '../../services/system-checks/system-checks'
 import useConfigApi from '../api/hooks/useConfigApi'
-import useEvidenceApi from '../api/hooks/useEvidenceApi'
 import useTokenApi from '../api/hooks/useTokens'
 import { BCSCAccountContext } from '../contexts/BCSCAccountContext'
+import { useEvidenceService } from '../services/hooks/useEvidenceService'
 import { useRegistrationService } from '../services/hooks/useRegistrationService'
 import { useTokenService } from '../services/hooks/useTokenService'
 import { SystemCheckScope } from './useSystemChecks'
@@ -51,6 +51,11 @@ type UseGetSystemChecksReturn = Record<
      * Indicates if the system checks for the scope are ready to be run
      */
     isReady: boolean
+    /**
+     * Indicates if the scope will ever run in the current app state. False means callers waiting on
+     * the scope (see the loading gate in MainStack) should stop waiting — `isReady` will never flip.
+     */
+    isApplicable: boolean
   }
 >
 
@@ -66,7 +71,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   const [store, dispatch] = useStore<BCState>()
   const { client, isClientReady } = useBCSCApiClientState()
   const configApi = useConfigApi(client as BCSCApiClient)
-  const evidenceApi = useEvidenceApi(client as BCSCApiClient)
+  const evidenceService = useEvidenceService()
   const tokenApi = useTokenApi(client as BCSCApiClient)
   const tokenService = useTokenService()
   const registrationService = useRegistrationService()
@@ -172,7 +177,7 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       const { deviceCode, userCode } = store.bcscSecure
       systemChecks.push(
         new VerificationRequestStatusSystemCheck(
-          () => evidenceApi.getVerificationRequestStatus(verificationRequestId),
+          () => evidenceService.getVerificationRequestStatus(verificationRequestId),
           () => {
             if (!deviceCode || !userCode) {
               return Promise.reject(new Error('Missing deviceCode or userCode for verification token exchange'))
@@ -227,20 +232,20 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
   }, [
     isVerified,
     verificationRequestId,
-    evidenceApi,
-    tokenApi,
-    utils,
-    emitAlert,
-    navigation,
-    isBCServicesCardBundle,
-    tokenService,
-    registrationService,
-    configApi,
     store.bcscSecure,
+    store.bcsc.acceptedTermsOfUseVersion,
     store.bcsc.selectedNickname,
     store.bcsc.appVersion,
     store.bcsc.appBuildNumber,
-    store.bcsc.acceptedTermsOfUseVersion,
+    navigation,
+    utils,
+    isBCServicesCardBundle,
+    tokenService,
+    registrationService,
+    emitAlert,
+    evidenceService,
+    tokenApi,
+    configApi,
   ])
 
   /**
@@ -273,18 +278,24 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       [SystemCheckScope.STARTUP]: {
         getSystemChecks: getStartupSystemChecks,
         isReady: Boolean(defaultReadiness && store.stateLoaded),
+        isApplicable: true,
       },
       [SystemCheckScope.MAIN_STACK]: {
         getSystemChecks: getMainSystemChecks,
         isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated),
+        isApplicable: true,
       },
       [SystemCheckScope.VERIFY]: {
         getSystemChecks: getVerifySystemChecks,
         isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated),
+        isApplicable: true,
       },
       [SystemCheckScope.ACCOUNT]: {
         getSystemChecks: getAccountSystemChecks,
         isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated && !!accountContext?.account),
+        // Account metadata is only fetched for verified users, and a failed fetch leaves `account`
+        // null for good — so without an account in hand this scope has nothing to wait for.
+        isApplicable: Boolean(accountContext?.account),
       },
     }
   }, [

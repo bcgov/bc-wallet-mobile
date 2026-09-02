@@ -272,3 +272,47 @@ IOS_PRODUCT_NAME="$(TARGET_NAME)"
 ### Rationale
 
 These files are sourced in shell contexts (e.g., GitHub Actions `source variant.env`). Double-quoted strings containing `$`, backticks, or `!` will be interpreted by the shell, leading to unexpected behaviour. Single quotes ensure values are loaded exactly as written.
+
+## CI/CD
+
+Merging to `main` builds artifacts and publishes nothing. App Store Connect, Google Play, and Firebase App Distribution are all reached from the manual **Publish** workflow, which uploads an existing build's artifacts and never rebuilds.
+
+See `docs/ci-cd.md` for the pipeline overview, the publish inputs, and the ring model.
+
+## Issues and Pull Requests
+
+Write for a PO or PM first. Say what changed for the user or the product, then the technical detail if it earns its place. Favour concision — a short description is a good one.
+
+**PRs** follow `.github/pull_request_template.md`; `docs/pull-requests.md` has the detail:
+
+- `Closes #<issue>` on the first line. A bare `#123` further down creates no link GitHub tracks; linking from the Development panel works too.
+- **What changed** — enough to read the diff. The backstory lives in the issue. Screenshots and video go here.
+- **What should the reviewer focus on** — the part you are least sure about, or say there isn't one.
+- **How to test** — how someone else checks it. "Covered by unit tests" counts.
+
+Aim for a couple of hundred words across the whole body. Don't restate the issue's acceptance criteria or pad a section to look thorough. No issue to link? Omit the `Closes` line and add the `status/no-issue` label — a `chore:` title does **not** exempt a PR from the hygiene check.
+
+**Issues** are created from the forms in `.github/ISSUE_TEMPLATE/`. Titles are plain text — the conventional-commit prefixes above are for commits and PR titles only.
+
+**Stacked PRs** each need their own link — the same `Closes #<issue>` on each, or sub-issues for a stack of four or more. Say which PR to merge first.
+
+## Code Review Priorities
+
+When reviewing a pull request in this repository, prioritise these, roughly in order:
+
+- **Credential and wallet state.** Anything that creates, stores, mutates, or deletes a credential, or that changes onboarding, PIN, or biometric state. Corrupt wallet state is not recoverable for a holder in the field.
+- **PII in logs and errors.** Personal data, tokens, credential attributes, and full request or response bodies must not reach a log line, an analytics event, or a user-visible error string.
+- **iOS/Android divergence.** Flag changes that alter behaviour on one platform without the other, especially in native modules, permissions, and camera or biometric flows.
+- **Accessibility.** `TouchableOpacity` and `Pressable` require `accessibilityLabel`, `accessibilityRole`, `hitSlop`, and `testID`. New user-facing text must be localised, and localised strings must not carry layout characters such as `\n`.
+- **Error handling.** Errors should surface, not be swallowed. API hooks throw; service and UI hooks catch and surface. Prefer idempotency — deleting something absent should succeed, not throw.
+
+Do not comment on:
+
+- Formatting, import order, or anything Prettier and ESLint already enforce.
+- Naming preferences, or restructuring that does not change behaviour, unless the current form is genuinely ambiguous.
+- Test coverage percentages as a number, or missing tests for code that is not new.
+- Generated files, lockfiles, and dependency bumps.
+
+## Labels
+
+See `docs/labels.md`. At most one `component/` and one `work/`; `status/` flags only while true. Workflow state, priority, and Bug/Feature/Task/Epic are board fields, not labels.

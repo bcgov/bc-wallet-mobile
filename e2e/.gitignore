@@ -19,8 +19,16 @@ logs/
 # Test reports (JUnit / Allure / failure screenshots)
 reports/
 
+# Downloaded CI artifacts + the rendered brief (yarn brief)
+artifacts/
+brief.md
+brief.json
+
 # Notes
 .notes/
 
 # Local environment variables
 local.env
+
+# Issuer provisioning output (ids only, no secrets)
+issuer/.issuer-env

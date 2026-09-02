@@ -1,5 +1,5 @@
 import { PressableOpacity } from '@/components/PressableOpacity'
-import { CONTACT_US_GOVERNMENT_WEBSITE_URL, hitSlop, USER_REPORT_ERROR_CODE } from '@/constants'
+import { CONTACT_US_HELP_URL, hitSlop, USER_REPORT_ERROR_CODE } from '@/constants'
 import { BCState } from '@/store'
 import { reportProblem } from '@/utils/logger'
 import { Button, ButtonType, Link, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
@@ -86,11 +86,12 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
       title: t('BCSC.ReportProblem.Title'),
       description: description.trim(),
       code: USER_REPORT_ERROR_CODE,
-      installId: store.bcsc.installId,
+      installId: store.bcsc.installId, // App install ID
+      sessionId: store.developer.remoteDebugging.sessionId, // Remote logging session ID
     })
 
     setReportId(reportId)
-  }, [description, t, store.bcsc.installId])
+  }, [description, t, store.bcsc.installId, store.developer.remoteDebugging.sessionId])
 
   const handleCopy = useCallback(() => {
     if (!reportId) {
@@ -205,7 +206,14 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
         {t('BCSC.ReportProblem.NoteBody')}
         <Link
           linkText={t('BCSC.ReportProblem.SupportLink')}
-          onPress={() => Linking.openURL(CONTACT_US_GOVERNMENT_WEBSITE_URL)}
+          onPress={() => Linking.openURL(CONTACT_US_HELP_URL)}
+        />{' '}
+        <CommunityIcon
+          name="open-in-new"
+          size={16}
+          color={ColorPalette.brand.link}
+          accessibilityElementsHidden
+          importantForAccessibility="no"
         />
       </ThemedText>
 

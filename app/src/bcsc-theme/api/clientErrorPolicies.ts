@@ -7,7 +7,6 @@ import { CommonActions, NavigationProp, ParamListBase } from '@react-navigation/
 import { AxiosError } from 'axios'
 import { TFunction } from 'i18next'
 import { Linking } from 'react-native'
-import { BCSCCardProcess } from 'react-native-bcsc-core'
 import { BCSCModals, BCSCScreens } from '../types/navigators'
 import { getDigitalServiceCardAccountProblem } from '../utils/getDigitalServiceCardAccountProblem'
 import { ResumeStepRoute } from '../utils/resume-step-route'
@@ -118,6 +117,7 @@ const _getIasErrorAlertMap = (alerts?: AppAlerts) => {
     [AppEventCode.ERR_210_UNAUTHORIZED, alerts?.unauthorizedAlert],
     [AppEventCode.FORBIDDEN, alerts?.forbiddenAlert],
     [AppEventCode.NOT_FOUND, alerts?.notFoundAlert],
+    [AppEventCode.CONFLICT, alerts?.badRequestAlert],
     [AppEventCode.ERR_211_SERVER_OUTAGE, alerts?.serverOutageAlert],
     [AppEventCode.ERR_212_RETRY_LATER, alerts?.retryLaterAlert],
     [AppEventCode.ERR_213_FAILED_CREATING_CLIENT_REGISTRATION, alerts?.creatingClientRegistrationFailedAlert],
@@ -312,6 +312,24 @@ export const emailVerificationCodeErrorPolicy: ErrorHandlingPolicy = {
   },
 }
 
+// Error policy for the evidence uploads — backend answers 409 when the verification has already been approved,
+// so rather than show and error we should suppress and route to
+// VerificationSuccess
+//
+// V3 reads the same 409s this way (ias-android DocumentUploadViewModel ->
+// CreateSessionAlreadyVerifiedError)
+const EVIDENCE_UPLOAD_PATH_PATTERN = /\/v1\/(photos|videos|documents|uploads)\b/
+export const evidenceAlreadyApprovedErrorPolicy: ErrorHandlingPolicy = {
+  matches: (_, context) => {
+    return context.statusCode === 409 && EVIDENCE_UPLOAD_PATH_PATTERN.test(context.endpoint)
+  },
+  handle: (_error, context) => {
+    context.logger.info(
+      '[EvidenceAlreadyApprovedErrorPolicy] Suppressing global alert — the upload catch block completes the verification'
+    )
+  },
+}
+
 // Error policy for pairing code submission — 404 indicates a wrong or
 // expired code, which is a user-input error. Suppress the global modal so the
 // ManualPairing screen can show its own alert error instead of the misleading
@@ -459,47 +477,6 @@ export const alreadyVerifiedErrorPolicy: ErrorHandlingPolicy = {
 }
 
 /**
- * Error policy for an expired identity document detected during the Non-BCSC barcode check.
- *
- * `POST /device/barcodes` (see `authorizeDeviceWithBarcodes`) is queried to check whether a
- * scanned card is a real BC Services Card; a non-match normally 404s and the caller falls
- * through to evidence capture. A 400 with an `error_description` mentioning "expired" is a
- * different, legitimate case — the scanned document itself is expired — so route to the
- * CardExpired screen instead of silently treating it as "not a BCSC".
- *
- * @returns ErrorHandlingPolicy
- */
-export const cardExpiredOnBarcodesErrorPolicy: ErrorHandlingPolicy = {
-  matches: (error, context) => {
-    const description = (error.cause.response?.data as { error_description?: unknown } | undefined)?.error_description
-    return (
-      context.statusCode === 400 &&
-      context.endpoint.includes(context.apiEndpoints.barcodes) &&
-      typeof description === 'string' &&
-      description.toLowerCase().includes('expired')
-    )
-  },
-  handle: (error, context) => {
-    const description = (error.cause.response?.data as { error_description?: string }).error_description
-    context.logger.info('[DocumentExpiredOnBarcodesErrorPolicy] Document expired per /device/barcodes response', {
-      description,
-    })
-    // Scanned card was a BCSC card and expired
-    // display error and navigate back to evidence list so the user isn't stuck
-    context.navigation.dispatch(
-      CommonActions.reset({
-        index: 1,
-        routes: [
-          { name: BCSCScreens.IdentitySelection },
-          { name: BCSCScreens.EvidenceTypeList, params: { cardProcess: BCSCCardProcess.NonBCSC } },
-        ],
-      })
-    )
-    context.alerts.documentExpiredAlert()
-  },
-}
-
-/**
  * Digital Service Card creation is rejected with HTTP 400
  * `{error: "unauthorized_client", error_description: "suspended"|"deactivated"}` when the BCSC
  * account is suspended or deactivated. Show the generic
@@ -589,7 +566,6 @@ export const invalidRegistrationRequestErrorPolicy: ErrorHandlingPolicy = {
 // Aggregate of all client error handling policies
 export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   alreadyRegisteredErrorPolicy,
-  cardExpiredOnBarcodesErrorPolicy,
   digitalServiceCardAccountUnavailableErrorPolicy,
   verificationSessionExpiredErrorPolicy,
   birthdateLockoutErrorPolicy,
@@ -609,6 +585,7 @@ export const ClientErrorHandlingPolicies: ErrorHandlingPolicy[] = [
   videoSessionErrorPolicy,
   attestationPollingErrorPolicy,
   emailVerificationCodeErrorPolicy,
+  evidenceAlreadyApprovedErrorPolicy,
   pairingCodeErrorPolicy,
   invalidClientMetadataErrorPolicy,
   iasErrorPolicy,

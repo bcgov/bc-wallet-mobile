@@ -15,6 +15,12 @@
  *
  * Keep `TESTID_PREFIX` equal to bifold's `testIdPrefix`; a guard test on the app side
  * (`testIdWithKey('x') === TESTID_PREFIX + 'x'`) will catch drift once the app consumes this.
+ *
+ * Two deliberate exceptions to fixed per-element keys:
+ *   - SERVER-DERIVED ids (`EvidenceTypeListItem-<type>`, `ServiceButton-<title>`) stay derived —
+ *     specs select those rows by their visible label/substring.
+ *   - SHARED ids (the notification cards, `ContactRow`) repeat per instance — specs disambiguate by
+ *     the card's copy or the row's accessibility label, not by minting per-item keys.
  */
 
 /** Matches bifold's `testIdPrefix` (`@bifold/core` constants). React Native maps a component's
@@ -29,6 +35,21 @@ export const TestIds = {
     back: 'Back',
     /** Floating help menu button (headerRight on the onboarding/verify stacks). */
     help: 'HelpMenu',
+  },
+
+  /**
+   * The app-wide error modal (`ErrorInfoCard` inside `BCSCErrorModal`) — an overlay ANY screen can
+   * raise, which is why its ids live here rather than under a feature.
+   *
+   * `close` is the only one that is always rendered, so it doubles as the "is it up" marker;
+   * `showDetails` needs the error to carry a message. `title`/`body` are bifold-generic ids that
+   * collide with other cards — read the screen instead of trusting them.
+   */
+  errorModal: {
+    close: 'CloseButton',
+    showDetails: 'ShowDetails',
+    title: 'HeaderText',
+    body: 'BodyText',
   },
 
   onboarding: {
@@ -116,10 +137,12 @@ export const TestIds = {
     },
     /** Camera scan screen; `EnterManually` is the CI path around the live camera and renders in BOTH
      *  bodies. `openSettings` marks the refused-permission `PermissionDisabled` fallback — asserted,
-     *  never tapped (it exits to the OS settings app). */
+     *  never tapped (it exits to the OS settings app). `scanTorch` is the shared `TorchButton`
+     *  component's key (hidden while the camera itself failed). */
     scanSerial: {
       enterManually: 'EnterManually',
       openSettings: 'OpenSettings',
+      scanTorch: 'ScanTorch',
     },
     /** Manual serial form (`InputWithValidation id='serial'` → derived ids). `serialSubtext` is the
      *  shared error slot: no static subtext here, so it exists only while a validation error shows,
@@ -171,9 +194,8 @@ export const TestIds = {
       complete: 'Complete',
       serviceBcLink: 'ServiceBCLink',
     },
-    /** Verification success (`'Setup Complete'`, no header). NOTE: the continue button's key is the
-     *  translation-resolved `Continue` (i18n-derived — a candidate for a future stable key); tapping
-     *  it exits the verify stack to Home. */
+    /** Verification success (`'Setup Complete'`, no header). Tapping `continue` exits the verify
+     *  stack to Home. */
     verificationSuccess: {
       continue: 'Continue',
     },
@@ -181,6 +203,62 @@ export const TestIds = {
      *  live-call (open-hours) branches; `takePhoto` enters the camera (out of CI). */
     photoInstructions: {
       takePhoto: 'TakePhoto',
+    },
+    /** Selfie camera (`TakePhoto`) — the shared bifold MaskedCamera, front-facing and oval-masked.
+     *  CAMERA-ONLY (Sauce injection). NB the shutter key is the SAME `TakePhoto` that PhotoInstructions
+     *  uses for its CTA, so `cancel` is the only thing that tells the two screens apart. */
+    selfieCapture: {
+      takePhoto: 'TakePhoto',
+      cancel: 'CancelCamera',
+    },
+    /** `VideoInstructions` ('Selfie Video Tips') — issues a FRESH prompt set on every focus, and
+     *  `startRecording` stays disabled until that lands (a recording is only accepted against the set
+     *  the server issued for it). `promptsLoading` is up while the set is being issued;
+     *  `retryLoadPrompts` replaces it when that fetch failed. */
+    videoInstructions: {
+      startRecording: 'StartRecording',
+      promptsLoading: 'PromptsLoading',
+      retryLoadPrompts: 'RetryLoadPrompts',
+    },
+    /** `TakeVideo` — recording ARMS ITSELF on focus after a 3-2-1 countdown; there is no start button,
+     *  and the screen needs camera AND microphone permission (two sequential dialogs). `nextPrompt` is
+     *  disabled for the first 2s of each prompt and its LAST press stops the recording; `cancel`
+     *  abandons the recording. */
+    takeVideo: {
+      nextPrompt: 'NextPrompt',
+      cancel: 'CancelRecording',
+    },
+    /** `VideoReview` — accept or retake the recording. `useVideo` resets the stack to EvidenceUploading. */
+    videoReview: {
+      useVideo: 'UseVideo',
+      retakeVideo: 'RetakeVideo',
+      togglePlayPause: 'TogglePlayPause',
+    },
+    /** `VideoTooLong` — a recording over 30s lands here instead of VideoReview. Screen-prefixed keys
+     *  so neither collides with VideoReview's pair (the two are alternates after a recording stops). */
+    videoTooLong: {
+      retake: 'VideoTooLongRetake',
+      cancel: 'VideoTooLongCancel',
+    },
+    /** `EvidenceUploading` — uploads on mount with no confirm step; `cancelUpload` is its only control. */
+    evidenceUploading: {
+      cancelUpload: 'CancelUpload',
+    },
+    /** `SuccessfullySent` — the post-upload confirmation. `goToHome` is the screen's ONLY way out:
+     *  hardware back is disabled. */
+    successfullySent: {
+      goToHome: 'GoToHome',
+    },
+    /** `PendingReview` — re-checks the request status on EVERY mount, which is what makes re-entering
+     *  it the app's own poll for the agent's decision. `chooseAnotherWay` cancels the request
+     *  (confirm-gated) and returns to method selection. */
+    pendingReview: {
+      chooseAnotherWay: 'ChooseAnotherWayToVerify',
+    },
+    /** `CancelledReview` and its MainStack twin — both render the shared SystemModal, so the button is
+     *  that component's generic key. The agent's reason is body COPY (no testID): assert it by text. */
+    cancelledReview: {
+      button: 'SystemModalButton',
     },
     /** Live-call busy/closed (`'Video Verify Closed'`) — the live-call branch when no agent queue is
      *  free or outside service hours. `callStatusTitle` is the marker; `sendVideo` resets to method
@@ -191,20 +269,43 @@ export const TestIds = {
       reminderTitle: 'ReminderTitle',
       sendVideo: 'SendVideo',
     },
+    /** `StartCall` — the live-call primer after the selfie (open hours only): user photo, call tips,
+     *  the hours list, and the Start button, which requests mic permission and pushes LiveCall. */
+    startCall: {
+      start: 'StartCall',
+      hoursOfServiceTitle: 'HoursOfServiceTitle',
+    },
+    /** `LiveCall` (headerless) — one route, three faces. CallLoadingView through every pre-connect
+     *  state (`cancel` is its only control; WHICH state is copy-only), the in-call controls once an
+     *  agent answers, and CallErrorView's pair on a failed setup. The "Call ended" processing view
+     *  has no ids. */
+    liveCall: {
+      cancel: 'Cancel',
+      mute: 'Mute',
+      video: 'Video',
+      endCall: 'EndCall',
+      havingTrouble: 'HavingTrouble',
+      errorTryAgain: 'TryAgain',
+      errorGoBack: 'GoBack',
+    },
+    /** `VerifyNotComplete` — where an ended-but-unverified live call lands. `sendVideo` and `tryAgain`
+     *  BOTH reset to method selection; `trouble` (external help centre) is the screen's only unique id —
+     *  `SendVideo` also renders on method selection and CallBusyOrClosed, `TryAgain` on CallErrorView. */
+    verifyNotComplete: {
+      sendVideo: 'SendVideo',
+      tryAgain: 'TryAgain',
+      trouble: 'Trouble',
+    },
     /** Email confirmation (`'Email Verification'`) — the 6-digit code emailed to the entered address.
-     *  A correct `continue` RESETS the stack to EmailVerified. (`ResendCodeLink` / `GoToMyEmailLink`
-     *  are BARE testIDs — add them as raw strings, not `bcsc()`-wrapped, if a resend detour needs
-     *  them.) */
+     *  A correct `continue` RESETS the stack to EmailVerified. `resendCode` sits on a ThemedText nested
+     *  inside another, which RN flattens into the parent paragraph on iOS — see the label fallback in
+     *  `flows/verify.ts`. */
     emailConfirmation: {
       codeInput: 'EmailConfirmationCodeInput',
       // `CodeInput` appends `-subtext` to the input's already-prefixed testID, which puts the suffix at
-      // the END — so this stays a normal key and IS `bcsc()`-wrapped, unlike the bare ids below.
+      // the END — so this stays a normal key and IS `bcsc()`-wrapped.
       codeError: 'EmailConfirmationCodeInput-subtext',
       continue: 'Continue',
-    },
-    /** BARE testIDs on EmailConfirmation — no `testIdWithKey`, so no prefix. Pass them as raw strings;
-     *  `bcsc()` would produce an id that does not exist. */
-    emailConfirmationBare: {
       resendCode: 'ResendCodeLink',
       goToMyEmail: 'GoToMyEmailLink',
     },
@@ -293,7 +394,15 @@ export const TestIds = {
      *  the always-present sticky-header catalogue search field — the "Services opened, not gated" marker. */
     services: {
       search: 'search',
+      // Renders only while the query is non-empty (tapping it clears the search).
+      clearSearch: 'clearSearch',
       loading: 'ServicesLoading',
+      // Per-row ids are NAME-DERIVED: `ServiceButton-<title minus whitespace>` on the row title text and
+      // `ServiceButton-Bookmark-<...>` on its bookmark toggle (`ServiceButton.tsx`). Compose them via
+      // `helpers/services.ts` — and note the row is a `ListButton` (`accessible`), so iOS flattens these
+      // descendants out of the a11y tree: they are Android-only selectors (iOS drives rows by label).
+      serviceRowPrefix: 'ServiceButton-',
+      serviceBookmarkPrefix: 'ServiceButton-Bookmark-',
     },
     /** Header settings (menu) button on the Home/Services tab headers. */
     header: {
@@ -308,6 +417,19 @@ export const TestIds = {
       headerText: 'HeaderText',
       bodyText: 'BodyText',
       view: 'ViewNotification',
+    },
+    /** Home's credential/proof/revocation/message card (`NotificationCard.tsx`) — a DIFFERENT
+     *  component from `notification` above (no `ViewNotification`; the whole card is the pressable).
+     *  All four card types share these keys, so select by `headerText` COPY ("Credential offer" /
+     *  "Proof request" / "Credential revoked") via `helpers/notifications.ts`. NB the ✕ (`dismiss`)
+     *  is a REAL decline for offers and pending proofs, not a mere dismiss. */
+    notificationCard: {
+      pressable: 'NotificationCardPressable',
+      item: 'NotificationListItem',
+      headerText: 'HeaderText',
+      bodyText: 'BodyText',
+      timestamp: 'TimestampText',
+      dismiss: 'DismissNotification',
     },
     /** Floating scan FAB (rendered on the Home + Wallet tabs, not verification-gated) → QRCore. */
     scan: {
@@ -331,10 +453,19 @@ export const TestIds = {
       pairingCodeTab: 'PairingCode',
       torchToggle: 'TorchToggle',
     },
+    /** The QR scanner's failed-scan popup (bifold `DismissiblePopupModal`). `okay` is its CTA
+     *  (labelled "Dismiss"); `header`/`body` are bifold-generic ids shared with the Home notification
+     *  card, so only assert them while the scanner is up. */
+    scanError: {
+      header: 'HeaderText',
+      body: 'BodyText',
+      okay: 'Okay',
+    },
     /** Main settings (minimal — the full screen is modeled later). `profile` is verified-gated. */
     /** Main settings menu (`SettingsContent.tsx`). The `AuthenticatedSection` rows render once
-     *  `didAuthenticate`; the `isVerified`-gated rows (profile/editProfile/contacts/addDevice/
-     *  myDevices/forgetPairings) are ABSENT unverified. The Help + MoreInfo section rows always render. */
+     *  `didAuthenticate`; the `isVerified`-gated rows (profile/editProfile/addDevice/myDevices/
+     *  forgetPairings) are ABSENT unverified. `contacts` is NOT gated — Main settings always wires it.
+     *  The Help + MoreInfo section rows always render. */
     settings: {
       appSecurity: 'AppSecurity',
       changePin: 'ChangePIN',
@@ -343,8 +474,8 @@ export const TestIds = {
       analyticsOptIn: 'AnalyticsOptIn',
       removeAccount: 'RemoveAccount',
       resetWallet: 'ResetWallet', // distinct destructive row; shared DestructiveConfirmationScreen (confirm = ConfirmDestructiveAction)
-      help: 'Help',
-      contactUs: 'ContactUs',
+      help: 'Help', // → in-app MainWebView (help centre)
+      contactUs: 'ContactUs', // → in-app MainWebView (help-centre contact page); no native Contact Us screen
       feedback: 'Feedback',
       accessibility: 'Accessibility',
       termsOfUse: 'TermsOfUse',
@@ -354,7 +485,7 @@ export const TestIds = {
       // verified-only (isVerified-gated): absence-assert unverified, presence when verified
       profile: 'Profile',
       editProfile: 'EditProfile',
-      contacts: 'Contacts',
+      contacts: 'Contacts', // NOT verified-gated (the Features row renders whenever Main settings wires it)
       addDevice: 'AddDevice',
       myDevices: 'MyDevices',
       forgetPairings: 'ForgetPairings',
@@ -374,6 +505,14 @@ export const TestIds = {
       understand: 'IUnderstand',
       submit: 'ChangePIN',
     },
+    /** Notification settings (Settings → `settings.notifications`). TWO render branches on "has the
+     *  push prompt ever run": UNSET shows `enable` (same id as the ONBOARDING enable button — different
+     *  mounts); once prompted it shows the OS-managed view with `openDeviceSettings` (leaves the app).
+     *  The ON/OFF status word has no testID — assert the row's a11y label "Notifications are: on/off". */
+    notificationSettings: {
+      enable: 'EnableNotifications',
+      openDeviceSettings: 'OpenNotificationSettings',
+    },
     /** AutoLock options — `auto-lock-time-<minutes>`; tapping a row saves immediately (no confirm). */
     autoLock: {
       time5: 'auto-lock-time-5',
@@ -384,11 +523,6 @@ export const TestIds = {
      *  a back-out detour just asserts it and hits Back). */
     privacyPolicy: {
       learnMore: 'LearnMore',
-    },
-    /** Contact Us — its `Link`s auto-derive testIDs from their visible text; the toll-free number is
-     *  the arrival marker (the running app uses the resolved i18n value). */
-    contactUs: {
-      tollFree: '1-888-356-2741',
     },
     /** Remove-account confirmation (shared DestructiveConfirmationScreen; header Back = cancel).
      *  `ConfirmDestructiveAction` is also used by Reset Wallet, but is only reached via RemoveAccount here. */
@@ -415,13 +549,30 @@ export const TestIds = {
     pairing: {
       logInFromComputer: 'LogInFromComputer',
       manualCodeInput: 'ManualPairingCodeInput',
+      // CodeInput renders its inline error as `<input testID>-subtext`. A rejected code (HTTP 404,
+      // e.g. a made-up value) ALSO raises a native "Could not verify pairing code" alert.
+      codeError: 'ManualPairingCodeInput-subtext',
       confirmationClose: 'Close',
       bookmark: 'BookmarkService',
     },
-    /** Service-login screen (reached when a login deep link opens the app). */
+    /** Service-login screen (`ServiceLogin`) — reached by login deep links, FCM challenges, and
+     *  catalogue row taps. Renders ONE of two views: the default (quick-login or pairing-code)
+     *  view with `continue`/`cancel`, or the UNAVAILABLE view (`!initiate_login_uri` and no pairing
+     *  code) with `goToService`/`cancelUnavailable`/`serviceClientLink`. NB the unavailable cancel is
+     *  the bare `Cancel`, a DIFFERENT id from the default view's `ServiceLoginCancel`. */
     serviceLogin: {
       continue: 'ServiceLoginContinue',
       cancel: 'ServiceLoginCancel',
+      // Default view extras: in-app "what info is shared" webview; privacy policy (external browser,
+      // renders only when the service carries a `policy_uri`); report-suspicious wrapper text (its
+      // inner Link is RN-flattened, so the wrapper is assert-only, not tappable).
+      help: 'HelpButton',
+      readPrivacyPolicy: 'ReadPrivacyPolicy',
+      reportSuspicious: 'ReportSuspiciousLink',
+      // Unavailable view: external service site (opens the browser); renders only with a `client_uri`.
+      goToService: 'GoToServiceClient',
+      cancelUnavailable: 'Cancel',
+      serviceClientLink: 'ServiceClientLink',
     },
     /** Transferer "show a QR to add a device" flow — reached via Settings → `settings.addDevice`
      *  (verified-only, wired only in the Main stack). QR-info (`getQrCode`) → QR-display (`newQrCode`
@@ -430,18 +581,60 @@ export const TestIds = {
       getQrCode: 'GetQRCodeButton',
       newQrCode: 'GetNewQRCode',
     },
-    /** Contacts feature (`features/contacts/*`, verified-only via Settings → `settings.contacts`). The
-     *  list (`ContactsScreen`) is `withAgentReadyGate`-wrapped — a `loading` spinner shows until the
-     *  Credo agent is ready — and resolves to its EMPTY state for a verification-only account: the list
-     *  shows only filtered DIDComm connections (non-mediator, Completed) and neither identity
-     *  verification nor BCSC service-login create one. So CI covers the empty state → WhatAreContacts
-     *  info → back. `whatAreContacts` (the empty-state button) is that info screen's ONLY entry point;
-     *  `search` renders only in the POPULATED list (its absence ⇒ empty). Seeding a real contact needs
-     *  an out-of-band credential connection — out of CI, same constraint as QR scanning. */
+    /** Where `settings.addDevice` lands instead when the account holder is under 12. Static copy; the
+     *  title is its only testID (the description has none) and the header title is blank. */
+    transferAgeRestriction: {
+      title: 'AgeRestrictedTransferTitle',
+    },
+    /** Contacts feature (`features/contacts/*`, Settings → `settings.contacts`). NOT verified-gated:
+     *  Main-stack settings always passes `onContacts`, so the row renders for any authenticated user
+     *  (the verified-only note that used to sit here predates the current `SettingsContent`). The list
+     *  (`ContactsScreen`) is `withAgentReadyGate`-wrapped — a `loading` spinner shows until the Credo
+     *  agent is ready — and holds only filtered DIDComm connections (non-mediator, Completed): empty
+     *  for a verification-only account, populated once the issuer-driven wallet journey connects.
+     *  `whatAreContacts` (the empty-state button) is the info screen's only entry point and does NOT
+     *  render populated — so `search` present + `whatAreContacts` absent ⇒ populated, and vice versa.
+     *  `clearSearch` renders only while the query is non-empty. `row` is SHARED by every list row —
+     *  select a specific contact by a11y label = the contact name (`helpers/a11y.ts`). */
     contacts: {
       loading: 'Contacts.Loading',
       whatAreContacts: 'WhatAreContacts',
       search: 'SearchContacts',
+      clearSearch: 'clearSearch',
+      row: 'ContactRow',
+    },
+    /** Contact details (`ContactDetailsScreen`, agent-gated like the list). `pin`/`unpin` are the SAME
+     *  button — its id flips with the pinned state, so waiting for the other id IS the toggle assert.
+     *  `viewJson` renders only in developer mode (absence-assert in normal runs). */
+    contactDetails: {
+      loading: 'ContactDetails.Loading',
+      message: 'MessageContact',
+      pin: 'PinContact',
+      unpin: 'UnpinContact',
+      editName: 'EditContactName',
+      viewJson: 'ViewJSON',
+      remove: 'RemoveContact',
+    },
+    /** Contact chat (`ContactChatScreen`, GiftedChat). `composer` is the message TextInput (editable
+     *  only once the Credo agent is ready) and `send` its send button; `viewRequest` renders on
+     *  credential/proof event cards that carry an action. */
+    contactChat: {
+      composer: 'ChatComposer',
+      send: 'SendMessage',
+      viewRequest: 'ViewRequest',
+    },
+    /** Edit-contact-name form. `save`/`cancel` are label-derived by `ActionScreenLayout`
+     *  (`testIdWithKey(t('Global.Continue'))` etc.), so they break under a locale change — en-only. */
+    contactEditName: {
+      nameInput: 'NameInput',
+      save: 'Continue',
+      cancel: 'Cancel',
+    },
+    /** Remove-contact confirmation — a modal with NO header back (`headerLeft: null`); `cancel` is the
+     *  only non-destructive exit. The failure branch is an untestID'd native alert. */
+    contactRemove: {
+      confirm: 'ConfirmRemove',
+      cancel: 'CancelRemove',
     },
     // NB: the WhatAreContacts info screen has NO usable testID — its only one (`ContactsList`) is on an
     // inline <Link> nested in a <ThemedText>, which RN flattens into the paragraph so it is not a
@@ -462,6 +655,80 @@ export const TestIds = {
       addressFieldEdit: 'AddressField-edit',
       dateOfBirthField: 'DateOfBirthField',
       emailField: 'EmailAddressField',
+    },
+  },
+
+  /**
+   * Credential lifecycle screens — Bifold's, hosted inside the BCSC Main stack (offer/proof render
+   * inside `ConnectionLoading`; details/list under the Wallet tab). Kept as a top-level namespace
+   * (like `bcwallet`) because the keys are Bifold's, not BCSC's.
+   */
+  credential: {
+    /** `CredentialOffer` (rendered inline by the connection screen). */
+    offer: {
+      accept: 'AcceptCredentialOffer',
+      decline: 'DeclineCredentialOffer',
+      header: 'HeaderText',
+    },
+    /** `CredentialOfferAccept` full-screen modal, in two mutually exclusive phases: pending
+     *  (`onTheWay` + `backToHome`) then completed (`added` + `done`). Only the completed pair is a
+     *  reliable marker — pending is skipped outright when issuance is fast. `done` resets to the
+     *  Wallet tab; `backToHome` to Home. */
+    offerAccept: {
+      onTheWay: 'CredentialOnTheWay',
+      added: 'CredentialAddedToYourWallet',
+      done: 'Done',
+      backToHome: 'BackToHome',
+    },
+    /** A wallet-list credential card (`Card11Pure`). NOT unique per credential — with >1 stored
+     *  credential, disambiguate by `name` text. `revoked` renders only on a revoked card. */
+    card: {
+      card: 'CredentialCard',
+      name: 'CredentialName',
+      issuer: 'CredentialIssuer',
+      revoked: 'RevokedOrNotAvailable',
+      showDetails: 'ShowCredentialDetails',
+    },
+    /** `CredentialDetails` — behind an agent gate (`loading`, not in the shared registry pattern of
+     *  Wallet.Loading). `issuedDate` is DEVELOPER-MODE-ONLY (dev builds hide it otherwise);
+     *  `revokedDate`/`revocationMessage` render only when the issuer revoked WITH a notification.
+     *  `remove` sits at the bottom (scroll to it). */
+    details: {
+      loading: 'CredentialDetails.Loading',
+      issuerName: 'IssuerName',
+      issuedDate: 'IssuedDate',
+      revokedDate: 'RevokedDate',
+      revocationMessage: 'RevocationMessage',
+      remove: 'RemoveFromWallet',
+    },
+    /** `CommonRemoveModal` in its remove-credential usage. */
+    removeModal: {
+      confirm: 'ConfirmRemoveButton',
+      cancel: 'CancelRemoveButton',
+    },
+    /** `CommonRemoveModal` in its decline-offer usage (confirm → declineOffer + problem report → Home). */
+    declineModal: {
+      confirm: 'ConfirmDeclineButton',
+      cancel: 'CancelDeclineButton',
+    },
+  },
+
+  /** Proof-request screens (Bifold's, same hosting as `credential`). */
+  proof: {
+    /** `ProofRequest`. NB `share` is REPLACED by `cancel` when no stored credential satisfies the
+     *  request — assert `share` presence before tapping (its absence means a cred-def mismatch). */
+    request: {
+      share: 'Share',
+      decline: 'Decline',
+      cancel: 'Cancel',
+      loading: 'ProofRequestLoading',
+    },
+    /** `ProofRequestAccept` full-screen modal — two mutually exclusive phases like the credential
+     *  one: `sending` then `sent`; only `sent` is a reliable marker. */
+    accept: {
+      sending: 'SendingProofRequest',
+      sent: 'SentProofRequest',
+      backToHome: 'BackToHome',
     },
   },
 

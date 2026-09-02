@@ -1,0 +1,112 @@
+name: Promote a Google Play release to another track
+description: |
+  Widen an already-uploaded build onto more Play tracks. Play rejects a
+  second upload of the same version code, so widening re-releases that
+  version code directly onto each target track with `tracks set-release` —
+  there is no source track involved. This is deliberately asymmetric with
+  ship-to-google-store: `set-release` on a ring track wholesale-replaces whatever
+  that track currently holds (widening is explicit operator intent), whereas
+  a re-publish never touches the internal track.
+
+  Idempotent: a version code already on the target track is left alone.
+
+inputs:
+  service_account_file:
+    description: Path to the Google Play publisher service-account JSON
+    required: true
+  package_name:
+    description: 'Play package name, e.g. ca.bc.gov.id.servicescard.test'
+    required: true
+  version_code:
+    description: Version code of the build to promote
+    required: true
+  version_name:
+    description: 'Marketing version, used in the Play release name (e.g. 4.1.0).'
+    required: true
+  build_number:
+    description: Build number of the run that produced the AAB, used in the Play release name.
+    required: true
+  release_notes:
+    description: "Tester-facing \"what to test\" note, published as en-CA."
+    required: false
+    default: 'This is what to test.'
+  target_tracks:
+    description: Comma-separated tracks to promote onto, e.g. 'ring-1,ring-2'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    # Pinned to match ship-to-google-store: an unpinned install would let an upstream
+    # release change what the release pipeline runs with no PR here.
+    - name: Install codemagic-cli-tools
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [ ! -x "${RUNNER_TEMP}/codemagic-venv/bin/google-play" ]; then
+          python3 -m venv "${RUNNER_TEMP}/codemagic-venv"
+          "${RUNNER_TEMP}/codemagic-venv/bin/pip" install --quiet codemagic-cli-tools==0.69.0
+        fi
+
+    - name: Promote to each track
+      shell: bash
+      env:
+        CREDENTIALS_FILE: ${{ inputs.service_account_file }}
+        PACKAGE_NAME: ${{ inputs.package_name }}
+        VERSION_CODE: ${{ inputs.version_code }}
+        VERSION_NAME: ${{ inputs.version_name }}
+        BUILD_NUMBER: ${{ inputs.build_number }}
+        RELEASE_NOTES: ${{ inputs.release_notes }}
+        TARGET_TRACKS: ${{ inputs.target_tracks }}
+      run: |
+        set -euo pipefail
+        GP="${RUNNER_TEMP}/codemagic-venv/bin/google-play"
+
+        if [ ! -f "${CREDENTIALS_FILE}" ]; then
+          echo "::error::No Google Play service-account file at ${CREDENTIALS_FILE}"
+          exit 1
+        fi
+
+        # One listing answers "is this version code already on that track?"
+        # for every track, so a re-run costs a single API call.
+        TRACKS_JSON=$("${GP}" tracks list \
+          --credentials "@file:${CREDENTIALS_FILE}" \
+          --package-name "${PACKAGE_NAME}" --json)
+
+        IFS=',' read -ra TARGETS <<< "${TARGET_TRACKS}"
+        for TARGET in "${TARGETS[@]}"; do
+          TARGET="$(echo "${TARGET}" | xargs)"
+          [ -n "${TARGET}" ] || continue
+
+          ALREADY=$(TRACK="${TARGET}" VC="${VERSION_CODE}" python3 -c '
+        import json, os, sys
+        track, vc = os.environ["TRACK"], os.environ["VC"]
+        tracks = json.loads(sys.stdin.read())
+        for t in tracks:
+            if t.get("track") != track:
+                continue
+            for release in t.get("releases") or []:
+                if vc in [str(c) for c in (release.get("version_codes") or release.get("versionCodes") or [])]:
+                    print("yes")
+                    sys.exit(0)
+        print("no")
+        ' <<< "${TRACKS_JSON}")
+
+          if [ "${ALREADY}" = "yes" ]; then
+            echo "✅ ${VERSION_CODE} is already on ${TARGET} — nothing to do"
+            continue
+          fi
+
+          NOTES_JSON=$(RELEASE_NOTES="${RELEASE_NOTES}" python3 -c \
+            'import json, os; print(json.dumps([{"language": "en-CA", "text": os.environ["RELEASE_NOTES"]}]))')
+
+          echo "Releasing ${VERSION_CODE} to ${TARGET}..."
+          "${GP}" tracks set-release \
+            --credentials "@file:${CREDENTIALS_FILE}" \
+            --package-name "${PACKAGE_NAME}" \
+            --track "${TARGET}" \
+            --version-code "${VERSION_CODE}" \
+            --release-name "v${VERSION_NAME}-${BUILD_NUMBER}" \
+            --release-notes "${NOTES_JSON}"
+          echo "✅ ${VERSION_CODE} released to ${TARGET}"
+        done

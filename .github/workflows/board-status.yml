@@ -1,0 +1,291 @@
+# Moves an issue on project 108 (BC Wallet) in step with its pull requests:
+# every linked PR resolved and at least one merged sends it to UAT & QA, and a
+# new PR opened against an issue already in UAT & QA pulls it back to In Progress.
+#
+# Deliberately event-driven only. A human who drags an issue out of UAT & QA
+# stays in charge, because nothing re-evaluates until the next PR event. Never
+# add a scheduled sweep in the promote direction — it would silently undo those
+# manual moves. A demote-only sweep would be safe if the sidebar gap below ever
+# starts to hurt.
+#
+# Known gap: linking a PR through the Development sidebar emits no webhook, so
+# the demote misses it until some other PR event fires.
+#
+# `pull_request_target` because fork PRs get no secrets on plain `pull_request`.
+# Safe here — this workflow never checks out or runs PR code.
+#
+# ROTATION: the project token is a fine-grained PAT, and bcgov caps those at 90
+# days. Expiry is otherwise invisible (the board just stops moving), so the job
+# turns a 401 into a red run with rotation instructions. Rotating it means
+# replacing op://bcsc-mobile-app-cd/github-projects/credential and nothing else —
+# no GitHub secret holds the PAT. Scopes: org Projects read/write, repo Issues
+# and Pull requests read.
+name: Board Status
+
+on:
+  pull_request_target:
+    # `edited` catches a `Closes #` added to the body after the PR was opened.
+    types: [closed, opened, reopened, ready_for_review, edited]
+
+permissions:
+  contents: read
+
+# One board update at a time. Keyed on the repository rather than the PR
+# because two PRs closing the same issue would otherwise race: each can see
+# the other still open and neither promotes, leaving the issue behind until
+# some later PR event corrects it. The issue number is not known until the
+# job runs, so the repository is the narrowest key available here.
+concurrency:
+  # Never cancel: a dropped run means an issue silently stays in the wrong column.
+  group: board-status
+  cancel-in-progress: false
+  # Runs are seconds long, so let them queue instead of evicting one another.
+  queue: max
+
+jobs:
+  sync:
+    name: Sync project status
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check secrets are available
+        id: secrets-check
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          if [ -n "${OP_SERVICE_ACCOUNT_TOKEN}" ]; then
+            echo "available=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "available=false" >> "${GITHUB_OUTPUT}"
+            echo "::notice::No 1Password token available — skipping board sync."
+          fi
+
+      - name: Load project token
+        if: steps.secrets-check.outputs.available == 'true'
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          PROJECTS_TOKEN: op://bcsc-mobile-app-cd/github-projects/credential
+
+      - name: Sync
+        if: steps.secrets-check.outputs.available == 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          github-token: ${{ env.PROJECTS_TOKEN }}
+          script: |
+            const PROJECT_NUMBER = 108
+            const STATUS_FIELD = 'Status'
+            const IN_PROGRESS = 'In Progress'
+            const UAT = 'UAT & QA'
+            // An issue past UAT is finished; a late PR event must not drag it backwards.
+            const TERMINAL = ['Done']
+            const TOKEN_PATH = 'op://bcsc-mobile-app-cd/github-projects/credential'
+
+            const pr = context.payload.pull_request
+            const { owner, repo } = context.repo
+
+            const sync = async () => {
+              const merged = context.payload.action === 'closed' && pr.merged
+              // A closed-unmerged PR is not "a new PR added" — it means nothing here.
+              if (!merged && pr.state !== 'open') {
+                core.info(`PR #${pr.number} is ${pr.state} and unmerged — nothing to do`)
+                return []
+              }
+              const mode = merged ? 'promote' : 'demote'
+
+              // Ask for links GitHub actually tracks — a bare "#123" in prose creates none.
+              // `Closes owner/other-repo#1` is a tracked link too, so ask which repository
+              // each issue belongs to: the lookup below is by number in this repository,
+              // and an upstream reference would otherwise move our issue of that number.
+              const linkedIssues = async () => {
+                const { repository } = await github.graphql(
+                  `query($owner:String!, $repo:String!, $number:Int!) {
+                     repository(owner:$owner, name:$repo) {
+                       pullRequest(number:$number) {
+                         closingIssuesReferences(first: 100) {
+                           nodes { number repository { nameWithOwner } }
+                         }
+                       }
+                     }
+                   }`,
+                  { owner, repo, number: pr.number }
+                )
+                return repository.pullRequest.closingIssuesReferences.nodes
+              }
+
+              // GitHub resolves `Closes #123` into a tracked link a few seconds after the
+              // webhook fires, so an empty first result may just be this job outrunning it.
+              const RETRY_DELAY_MS = 7000
+              const RETRIES = 3
+              // Retry on no links at all. A link that exists but points elsewhere is a
+              // real answer, so waiting on it would only delay the run by 21 seconds.
+              let links = await linkedIssues()
+              for (let attempt = 1; links.length === 0 && attempt <= RETRIES; attempt++) {
+                core.info(`No linked issue yet — retrying in ${RETRY_DELAY_MS / 1000}s (${attempt}/${RETRIES})`)
+                await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS))
+                links = await linkedIssues()
+              }
+
+              const here = `${owner}/${repo}`
+              for (const n of links.filter((n) => n.repository.nameWithOwner !== here)) {
+                core.info(`Ignoring ${n.repository.nameWithOwner}#${n.number} — this board only tracks ${here}`)
+              }
+              const issues = links
+                .filter((n) => n.repository.nameWithOwner === here)
+                .map((n) => n.number)
+
+              if (issues.length === 0) {
+                core.info(`PR #${pr.number} closes no issue in ${here} — nothing to do`)
+                return []
+              }
+
+              // Resolve the field and option IDs by name so renaming a column on the board
+              // surfaces as a clear failure here rather than writing to a stale option ID.
+              const { organization } = await github.graphql(
+                `query($org:String!, $number:Int!, $field:String!) {
+                   organization(login:$org) {
+                     projectV2(number:$number) {
+                       id
+                       field(name:$field) {
+                         ... on ProjectV2SingleSelectField { id options { id name } }
+                       }
+                     }
+                   }
+                 }`,
+                { org: owner, number: PROJECT_NUMBER, field: STATUS_FIELD }
+              )
+              const project = organization.projectV2
+              const field = project?.field
+              if (!field) throw new Error(`Project ${PROJECT_NUMBER} has no single-select field "${STATUS_FIELD}"`)
+
+              const optionId = (name) => {
+                const option = field.options.find((o) => o.name === name)
+                if (!option) throw new Error(`"${STATUS_FIELD}" has no option named "${name}"`)
+                return option.id
+              }
+              const target = mode === 'promote' ? UAT : IN_PROGRESS
+              const targetOptionId = optionId(target)
+
+              const issueState = async (number) => {
+                const { repository } = await github.graphql(
+                  `query($owner:String!, $repo:String!, $number:Int!, $field:String!) {
+                     repository(owner:$owner, name:$repo) {
+                       issue(number:$number) {
+                         state
+                         closedByPullRequestsReferences(first: 100, includeClosedPrs: true) {
+                           nodes { number state }
+                         }
+                         projectItems(first: 100) {
+                           nodes {
+                             id
+                             project { id }
+                             fieldValueByName(name: $field) {
+                               ... on ProjectV2ItemFieldSingleSelectValue { name }
+                             }
+                           }
+                         }
+                       }
+                     }
+                   }`,
+                  { owner, repo, number, field: STATUS_FIELD }
+                )
+                return repository.issue
+              }
+
+              const moved = []
+              for (const number of issues) {
+                const issue = await issueState(number)
+                // Deleted or transferred between the link being made and this run.
+                if (!issue) {
+                  core.info(`#${number} no longer exists in ${owner}/${repo} — skipping`)
+                  continue
+                }
+                // A closed issue is finished, whatever column it was parked in. Promoting
+                // it to UAT & QA would ask someone to test work that was never done.
+                if (issue.state === 'CLOSED') {
+                  core.info(`#${number} is closed — leaving it alone`)
+                  continue
+                }
+                const item = issue.projectItems.nodes.find((n) => n.project.id === project.id)
+                if (!item) {
+                  core.info(`#${number} is not on project ${PROJECT_NUMBER} — skipping`)
+                  continue
+                }
+
+                const current = item.fieldValueByName?.name ?? '(none)'
+                if (TERMINAL.includes(current)) {
+                  core.info(`#${number} is ${current} — leaving it alone`)
+                  continue
+                }
+                if (current === target) {
+                  core.info(`#${number} is already ${target}`)
+                  continue
+                }
+
+                if (mode === 'promote') {
+                  // An abandoned PR must not park the issue forever, so only a PR still
+                  // open counts as outstanding work — closed-unmerged ones are dropped.
+                  const open = issue.closedByPullRequestsReferences.nodes.filter((p) => p.state === 'OPEN')
+                  if (open.length > 0) {
+                    core.info(`#${number} still has open PR(s): ${open.map((p) => `#${p.number}`).join(', ')}`)
+                    continue
+                  }
+                } else if (current !== UAT) {
+                  // Only UAT & QA demotes. Anything else is where someone deliberately put it.
+                  core.info(`#${number} is ${current}, not ${UAT} — leaving it alone`)
+                  continue
+                }
+
+                await github.graphql(
+                  `mutation($project:ID!, $item:ID!, $field:ID!, $option:String!) {
+                     updateProjectV2ItemFieldValue(input: {
+                       projectId: $project, itemId: $item, fieldId: $field,
+                       value: { singleSelectOptionId: $option }
+                     }) { projectV2Item { id } }
+                   }`,
+                  { project: project.id, item: item.id, field: field.id, option: targetOptionId }
+                )
+                core.info(`#${number}: ${current} → ${target}`)
+                moved.push(`#${number} (${current} → ${target})`)
+              }
+
+              core.info(moved.length ? `Moved ${moved.join(', ')}` : `Nothing needed moving (${mode})`)
+              return moved
+            }
+
+            // The PAT expires every 90 days and nothing else announces it, so translate a
+            // rejected token into instructions instead of a stack trace nobody reads.
+            const explain = (error) => {
+              const status = error.status ?? 0
+              const types = (error.errors ?? []).map((e) => e.type)
+              const message = error.message ?? String(error)
+
+              if (status === 401 || /bad credentials|requires authentication/i.test(message)) {
+                return [
+                  'Project token rejected (401) — the fine-grained PAT has almost certainly expired.',
+                  `Mint a replacement and update ${TOKEN_PATH}. No GitHub secret needs changing.`,
+                  'Scopes: organization Projects read/write, repository Issues and Pull requests read.',
+                ]
+              }
+              if (status === 403 || types.includes('FORBIDDEN')) {
+                return [
+                  'Project token was accepted but refused the write (403).',
+                  'Check the PAT still grants organization Projects read/write, and that its owner has write access to project 108.',
+                  `Token lives at ${TOKEN_PATH}.`,
+                ]
+              }
+              return [`Board sync failed: ${message}`]
+            }
+
+            try {
+              const moved = await sync()
+              const summary = moved.length
+                ? `📋 Moved ${moved.join(', ')}`
+                : `📋 No issues needed moving (PR #${pr.number})`
+              await core.summary.addRaw(summary).write()
+            } catch (error) {
+              const lines = explain(error)
+              await core.summary.addRaw(`⚠️ **Board status sync failed**\n\n${lines.map((l) => `- ${l}`).join('\n')}`).write()
+              core.setFailed(lines.join(' '))
+            }

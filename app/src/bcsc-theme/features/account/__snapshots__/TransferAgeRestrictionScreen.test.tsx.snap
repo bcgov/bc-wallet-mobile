@@ -30,6 +30,7 @@ exports[`TransferAgeRestrictionScreen renders correctly 1`] = `
         undefined,
       ]
     }
+    testID="com.ariesbifold:id/AgeRestrictedTransferTitle"
   >
     BCSC.AgeRestrictedTransfer.Title
   </Text>

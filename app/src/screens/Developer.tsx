@@ -7,14 +7,12 @@ import { BCDispatchAction, BCState } from '@/store'
 import {
   CredentialProvisioningEventTypes,
   DispatchAction,
-  LockoutReason,
   SafeAreaModal,
   Screens,
   ScreenWrapper,
   testIdWithKey,
   ThemedText,
   TOKENS,
-  useAuth,
   useServices,
   useStore,
   useTheme,
@@ -132,7 +130,6 @@ const RowDetail: React.FC<{ label: string; value: string }> = ({ label, value })
 const Developer: React.FC = () => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
-  const { lockOutUser } = useAuth()
   const { client: apiClient } = useBCSCApiClientState()
   const { ColorPalette, Spacing, setTheme, themeName } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER]) as [RemoteLogger]
@@ -394,19 +391,6 @@ const Developer: React.FC = () => {
     }
   }
 
-  const toggleMode = () => {
-    lockOutUser(LockoutReason.Logout)
-
-    const newMode = BCSCMode ? Mode.BCWallet : Mode.BCSC
-    const newTheme = BCSCMode ? BCThemeNames.BCWallet : BCThemeNames.Light
-
-    setTheme(newTheme)
-    dispatch({
-      type: BCDispatchAction.UPDATE_MODE,
-      payload: [newMode],
-    })
-  }
-
   return (
     <ScreenWrapper padded={false} scrollViewContainerStyle={styles.container}>
       <SafeAreaModal
@@ -589,13 +573,6 @@ const Developer: React.FC = () => {
             onToggle={toggleTheme}
             accessibilityLabel={t('Developer.SwitchTheme')}
             testID={testIdWithKey('ToggleTheme')}
-          />
-          <ToggleRow
-            title={t('Developer.SwitchMode')}
-            value={BCSCMode}
-            onToggle={toggleMode}
-            accessibilityLabel={t('Developer.SwitchMode')}
-            testID={testIdWithKey('ToggleMode')}
           />
         </ListButtonGroup>
       </View>
