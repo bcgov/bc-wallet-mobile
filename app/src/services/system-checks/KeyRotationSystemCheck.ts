@@ -72,8 +72,8 @@ export class KeyRotationSystemCheck implements SystemCheckStrategy {
       }
     }
 
-    // Never rotate on "can't tell": enumeration failure, an empty keystore, and a missing
-    // `created` all skip rather than risk rotating (or not) based on a guess.
+    // Never rotate on "can't tell": enumeration failure and an empty keystore skip. A key with
+    // no usable `created` is ignored below rather than blocking the check on its own.
     let keys
     try {
       keys = await getAllKeys()
@@ -96,19 +96,20 @@ export class KeyRotationSystemCheck implements SystemCheckStrategy {
     }))
     const isUsable = (normalizedKey: { createdAtMs: number | null }): normalizedKey is NormalizedKey =>
       normalizedKey.createdAtMs !== null && normalizedKey.createdAtMs > 0
-    // Any unusable timestamp means "newest" can't be determined — never rotate on a guess.
-    // Non-positive catches Android's createdAt: 0, which would read as a 1970 key and force rotation.
-    const unusable = normalized.find((normalizedKey) => !isUsable(normalizedKey))
-    if (unusable) {
-      this.utils.logger.warn(
-        `KeyRotationSystemCheck: skipping — key '${unusable.key.id}' has no usable created timestamp`
-      )
+    // Log and ignore keys with no usable timestamp rather than skipping the whole check: signing
+    // always uses the metadata-newest key, so an untracked key (Android reports createdAt: 0 for
+    // one, which would otherwise read as a 1970 key and force rotation) is never the active key
+    // whose age this check is about.
+    for (const unusable of normalized.filter((normalizedKey) => !isUsable(normalizedKey))) {
+      this.utils.logger.warn(`KeyRotationSystemCheck: ignoring key '${unusable.key.id}' — no usable created timestamp`)
+    }
+    const usable = normalized.filter(isUsable)
+    if (usable.length === 0) {
+      this.utils.logger.warn('KeyRotationSystemCheck: skipping — no local key has a usable created timestamp')
       return true
     }
 
-    // unusable is undefined here, so every element passed isUsable and usable has >= 1 entry —
-    // destructuring the head makes that non-emptiness structural instead of assumed by reduce().
-    const [head, ...tail] = normalized.filter(isUsable)
+    const [head, ...tail] = usable
     const newest = tail.reduce((a, b) => (b.createdAtMs > a.createdAtMs ? b : a), head)
     const ageDays = keyAgeDays(newest.createdAtMs)
     if (ageDays < KEY_ROTATION_MAX_AGE_DAYS) {
