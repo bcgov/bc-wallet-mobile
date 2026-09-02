@@ -291,7 +291,7 @@ jobs:
       - uses: ./.github/workflows/actions/setup-node
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: yarn install --immutable --mode=skip-build
 
       - name: Run changelog script tests
         run: yarn changelog:test
