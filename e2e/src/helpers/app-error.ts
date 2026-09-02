@@ -1,3 +1,4 @@
+import { Timeouts } from '../constants.js'
 import { AppErrorModal } from '../screens/errors.js'
 import { describeCurrentScreen } from './screens.js'
 
@@ -7,9 +8,34 @@ import { describeCurrentScreen } from './screens.js'
  */
 const PROBE_TIMEOUT_MS = 1_000
 
+/** Cap on the details carried into a failure message — the modal can hold a stack. */
+const DETAILS_MAX_CHARS = 400
+
 /** Is the app's error modal up? Cheap probe — never scrolls, never throws. */
 export async function isAppErrorShowing(timeoutMs: number = PROBE_TIMEOUT_MS): Promise<boolean> {
   return AppErrorModal.isPresent(timeoutMs)
+}
+
+/**
+ * The modal's expandable details ("Error code N - message"), or '' when it carries none. Best-effort:
+ * a details read must never mask the failure it decorates.
+ */
+export async function readAppErrorDetails(): Promise<string> {
+  try {
+    if (!(await AppErrorModal.isVisible('showDetails'))) return ''
+    await AppErrorModal.link('showDetails')
+    const details = await AppErrorModal.read('details', Timeouts.ELEMENT_VISIBLE)
+    return details.replaceAll(/\s+/g, ' ').trim().slice(0, DETAILS_MAX_CHARS)
+  } catch {
+    return ''
+  }
+}
+
+/** The screen dump plus the modal's details — what a recorder or camera failure should carry. */
+export async function describeAppError(): Promise<string> {
+  const details = await readAppErrorDetails()
+  const screen = await describeCurrentScreen()
+  return details ? `${screen} | details: ${details}` : screen
 }
 
 /**
@@ -19,5 +45,5 @@ export async function isAppErrorShowing(timeoutMs: number = PROBE_TIMEOUT_MS): P
  */
 export async function throwIfAppErrorShowing(context: string): Promise<void> {
   if (!(await isAppErrorShowing())) return
-  throw new Error(`${context}: the app raised an error modal. On screen: ${await describeCurrentScreen()}`)
+  throw new Error(`${context}: the app raised an error modal. On screen: ${await describeAppError()}`)
 }

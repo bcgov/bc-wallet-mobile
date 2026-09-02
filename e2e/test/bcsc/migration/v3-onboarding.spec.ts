@@ -283,9 +283,13 @@ describe('V3 Add Card', () => {
       await dateField.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
       await dateField.click()
 
-      // Wait for the date picker dialog's NumberPickers to appear
+      // The dialog opens asynchronously — `$$` answers [] until it renders, so wait for a picker first.
+      await $('android.widget.NumberPicker').waitForDisplayed({ timeout: 5_000 })
       const pickers = await $$('android.widget.NumberPicker')
-      await pickers[0].waitForDisplayed({ timeout: 5_000 })
+      const pickerCount = await pickers.length
+      if (pickerCount < 3) {
+        throw new Error(`Expected the day/month/year NumberPickers, found ${pickerCount}`)
+      }
 
       // Detect locale order: if first picker has alphabetic text, it's month-first
       const firstText = await pickers[0].$('android.widget.EditText').getText()

@@ -15,6 +15,12 @@ const ANDROID_PERM_DENY_REGEX = '.*:id/permission_deny.*'
 const ANDROID_PERM_ANY_REGEX = '.*:id/permission_(allow|deny).*'
 const ANDROID_RESET_APP_SELECTOR = 'android=new UiSelector().textMatches("(?i)^reset app$")'
 const ANDROID_ALERT_OK_SELECTOR = 'android=new UiSelector().textMatches("(?i)^ok$")'
+// Android 12+ sensor-privacy toggle (SystemUI) — raised when the mic/camera is blocked device-wide. Not a
+// permission-controller dialog, so the resourceId probes never see it; matched by its title copy.
+const ANDROID_SENSOR_PRIVACY_TITLE_SELECTOR =
+  'android=new UiSelector().textMatches("(?i)^unblock( device)? (microphone|camera|camera and microphone)\\?$")'
+const ANDROID_SENSOR_PRIVACY_ACCEPT_SELECTOR = 'android=new UiSelector().textMatches("(?i)^unblock$")'
+const ANDROID_SENSOR_PRIVACY_DISMISS_SELECTOR = 'android=new UiSelector().textMatches("(?i)^cancel$")'
 
 const webdriverLogger = logger('webdriver')
 
@@ -57,8 +63,17 @@ async function hasAndroidPermissionDialog(): Promise<boolean> {
   return btn.isDisplayed().catch(() => false)
 }
 
+async function hasAndroidSensorPrivacyDialog(): Promise<boolean> {
+  return $(ANDROID_SENSOR_PRIVACY_TITLE_SELECTOR)
+    .isDisplayed()
+    .catch(() => false)
+}
+
 async function hasNativePopup(): Promise<boolean> {
-  return driver.isAndroid ? hasAndroidPermissionDialog() : hasIosNativePopup()
+  if (driver.isAndroid) {
+    return (await hasAndroidPermissionDialog()) || (await hasAndroidSensorPrivacyDialog())
+  }
+  return hasIosNativePopup()
 }
 
 async function waitForPopup(timeoutMs: number): Promise<boolean> {
@@ -171,6 +186,17 @@ async function resolveAndroidPermissionDialog(action: 'accept' | 'dismiss', appe
     return
   }
 
+  // Unblocking flips a device-wide toggle, so the next session on this rack device starts clean.
+  if (await hasAndroidSensorPrivacyDialog()) {
+    const selector = action === 'accept' ? ANDROID_SENSOR_PRIVACY_ACCEPT_SELECTOR : ANDROID_SENSOR_PRIVACY_DISMISS_SELECTOR
+    await $(selector).click()
+    if (await waitForDismissal(DEFAULT_DISMISS_TIMEOUT_MS)) {
+      console.log(`[alerts] ${action === 'accept' ? 'Unblocked' : 'Left blocked'} the device sensor (sensor-privacy dialog)`)
+      return
+    }
+    throw new Error(`[alerts] Tapped the sensor-privacy dialog's ${action} button but it did not dismiss`)
+  }
+
   const resourceIdRegex = action === 'accept' ? ANDROID_PERM_ALLOW_REGEX : ANDROID_PERM_DENY_REGEX
   const btn = $(`android=new UiSelector().resourceIdMatches("${resourceIdRegex}")`)
   if (!(await btn.isDisplayed().catch(() => false))) {
@@ -194,7 +220,9 @@ async function resolveAndroidPermissionDialog(action: 'accept' | 'dismiss', appe
  *
  * Android: the system permission controller renders the dialog with stable
  * `permission_allow*` resourceIds — we match those with a regex to cover
- * "Allow", "While using the app", "Only this time" across OS versions.
+ * "Allow", "While using the app", "Only this time" across OS versions. The
+ * Android 12+ "Unblock device microphone/camera?" sensor-privacy dialog is
+ * handled too (matched by title; "Unblock" accepts it).
  */
 export async function acceptSystemAlert(appearTimeoutMs = DEFAULT_APPEAR_TIMEOUT_MS): Promise<void> {
   if (driver.isAndroid) {
