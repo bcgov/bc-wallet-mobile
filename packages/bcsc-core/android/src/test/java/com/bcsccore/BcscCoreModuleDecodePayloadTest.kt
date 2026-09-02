@@ -384,7 +384,7 @@ class BcscCoreModuleDecodePayloadTest {
     @Test
     fun `a tracked-newest alias that is not actually held rejects with E_NO_KEYS_FOUND rather than minting`() {
         fakeKeyPairSource.enumerationReturnsEmpty = true
-        fakeKeyPairSource.newestTrackedAlias = "rsa7"
+        fakeKeyPairSource.trackedNewestAlias = "rsa7"
         val inner = signedInnerJwt(rsa1, "rsa1")
         val jweString = jwe(inner, kid = null, encryptTo = rsa1)
         val (promise, capture) = capturingPromise()
@@ -403,7 +403,7 @@ class BcscCoreModuleDecodePayloadTest {
     @Test
     fun `no keys at all rejects with E_NO_KEYS_FOUND`() {
         fakeKeyPairSource.enumerationReturnsEmpty = true
-        fakeKeyPairSource.newestTrackedAlias = null
+        fakeKeyPairSource.trackedNewestAlias = null
         val inner = signedInnerJwt(rsa1, "rsa1")
         val jweString = jwe(inner, kid = null, encryptTo = rsa1)
         val (promise, capture) = capturingPromise()
@@ -412,6 +412,20 @@ class BcscCoreModuleDecodePayloadTest {
 
         assertEquals("E_NO_KEYS_FOUND", capture.rejectedCode)
         assertTrue(capture.rejectedMessage!!.contains("keys=0"))
+        assertEquals(0, fakeKeyPairSource.getCurrentCallCount)
+    }
+
+    @Test
+    fun `no keys at all under a failed enumeration rejects with E_KEYSTORE_ERROR`() {
+        fakeKeyPairSource.enumerationShouldFail = true
+        fakeKeyPairSource.trackedNewestAlias = null
+        val inner = signedInnerJwt(rsa1, "rsa1")
+        val jweString = jwe(inner, kid = null, encryptTo = rsa1)
+        val (promise, capture) = capturingPromise()
+
+        module.decodePayload(jweString, jwkMap(rsa1), promise)
+
+        assertEquals("E_KEYSTORE_ERROR", capture.rejectedCode)
         assertEquals(0, fakeKeyPairSource.getCurrentCallCount)
     }
 
@@ -439,7 +453,10 @@ class BcscCoreModuleDecodePayloadTest {
         val forceKeystoreFaultFor = mutableSetOf<String>()
         var enumerationShouldFail = false
         var enumerationReturnsEmpty = false
-        var newestTrackedAlias: String? = currentAlias
+
+        // Not named newestTrackedAlias: its auto-generated getter would clash with the
+        // getNewestTrackedAlias() override just below (same JVM signature).
+        var trackedNewestAlias: String? = currentAlias
         var getCurrentCallCount = 0
             private set
 
@@ -469,7 +486,7 @@ class BcscCoreModuleDecodePayloadTest {
             return BcscKeyPair(entry.keyPair, entry.info)
         }
 
-        override fun getNewestTrackedAlias(): String? = newestTrackedAlias
+        override fun getNewestTrackedAlias(): String? = trackedNewestAlias
 
         override fun getNewBcscKeyPair(): BcscKeyPair = throw UnsupportedOperationException()
 

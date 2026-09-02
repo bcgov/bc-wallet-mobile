@@ -171,9 +171,8 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
         return null;
       }
     } catch (Exception e) {
-      // Keystore load / enumeration fault, not "alias absent" — distinct from the
-      // present-but-unreadable case below so callers (decodePayload) can classify the two
-      // differently. Matches getAllBcscKeyPairInfos()'s BcscException(GENERAL, …) below.
+      // A keystore fault, not "alias absent" — distinct from present-but-unreadable below
+      // so callers can classify the two differently.
       throw new BcscException(AlertKey.GENERAL,
           "Failed to load keystore or check alias '" + kid + "': " + e.getMessage(), e);
     }

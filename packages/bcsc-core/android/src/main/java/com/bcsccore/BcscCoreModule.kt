@@ -1871,12 +1871,9 @@ class BcscCoreModule internal constructor(
             if (labelled != null) {
                 kidMatchesLocal = true
             }
-            // Newest comes from the same enumeration the diagnostics report, never from
-            // getCurrentBcscKeyPair(): that reconciles metadata and can mint a key pair, and a
-            // decrypt must not have side effects. If enumeration came back empty (whether the
-            // keystore really is empty, or AndroidKeyStoreSpi swallowed a list() fault into an
-            // empty batch — see #4595), fall back to the tracked-newest alias and try it
-            // directly through the same confirmed-local read as the label above.
+            // Newest comes from the enumeration, never getCurrentBcscKeyPair() (which can mint
+            // a key). If enumeration came back empty, fall back to the tracked-newest alias
+            // and read it directly, same as the label above.
             val decryptKeyPair =
                 labelled
                     ?: aliases.firstOrNull()?.let { keyPairSource.getBcscKeyPair(it) }
@@ -1950,8 +1947,8 @@ class BcscCoreModule internal constructor(
             Log.d(NAME, "decodePayload: decoded JWE payload, verified=$verified ${diagnostics()}")
             promise.resolve(result)
         } catch (e: KeyNotFoundException) {
-            // Alias present but unreadable (invalidated, OEM keystore error) — a key-content
-            // problem, distinct from the keystore itself faulting below. Text unchanged.
+            // Alias present but unreadable — a key-content problem, distinct from a keystore
+            // fault (caught below).
             Log.e(NAME, "decodePayload: BCSC key error: ${e.devMessage} ${diagnostics()}", e)
             promise.reject(
                 "E_BCSC_DECODE_ERROR",
@@ -1959,10 +1956,8 @@ class BcscCoreModule internal constructor(
                 e,
             )
         } catch (e: BcscException) {
-            // Keystore load / enumeration fault (e.g. OEM keystore unavailable) rather than a
-            // problem with a specific key's content — kept out of the 2507 (E_BCSC_DECODE_ERROR)
-            // bucket so field reports can tell the two apart. Subclass caught above must come
-            // first: KeyNotFoundException extends BcscException.
+            // Keystore itself faulted (e.g. OEM keystore unavailable). Must come after
+            // KeyNotFoundException, which is a subclass of this.
             Log.e(NAME, "decodePayload: keystore error: ${e.devMessage} ${diagnostics()}", e)
             promise.reject(
                 "E_KEYSTORE_ERROR",
