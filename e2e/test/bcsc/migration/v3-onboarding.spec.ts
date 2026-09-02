@@ -99,8 +99,8 @@ async function scrollNumberPickerTo(
   throw new Error(`NumberPicker did not reach "${target}" after ${maxClicks} clicks`)
 }
 
-describe('V3 Add Card', () => {
-  it('should tap the Add Card / Setup button', async () => {
+describe('Upgrade from v3: setting up on the v3 release', () => {
+  it('taps the Add Card / Setup button', async () => {
     await annotate('Migration: V3 onboarding')
     const addCard = await V3.Initial.addCard()
     await addCard.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
@@ -108,7 +108,7 @@ describe('V3 Add Card', () => {
     await addCard.click()
   })
 
-  it('should complete the tutorial carousel', async () => {
+  it('completes the tutorial carousel', async () => {
     const numPages = 3
     for (let i = 0; i < numPages; i++) {
       try {
@@ -123,14 +123,14 @@ describe('V3 Add Card', () => {
   })
 
   // this is the one that it gets stuck on
-  it('should advance past the "New setup" intro page', async () => {
+  it('advances past the "New setup" intro page', async () => {
     const continueBtn = await V3.NewSetup.continue()
     await continueBtn.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
     await continueBtn.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await continueBtn.click()
   })
 
-  it('should enable notifications', async () => {
+  it('enables notifications', async () => {
     const enableBtn = await V3.Notifications.continue()
     await enableBtn.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
     await enableBtn.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
@@ -141,28 +141,28 @@ describe('V3 Add Card', () => {
     await acceptSystemAlert()
   })
 
-  it('should tap Step 1', async () => {
+  it('taps Step 1', async () => {
     const step1 = await V3.SetupSteps.step1()
     await step1.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
     await step1.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await step1.click()
   })
 
-  it('should accept the privacy policy', async () => {
+  it('accepts the privacy policy', async () => {
     const continueBtn = await V3.Privacy.continue()
     await continueBtn.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
     await continueBtn.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await continueBtn.click()
   })
 
-  it('should accept terms of use', async () => {
+  it('accepts the terms of use', async () => {
     const acceptBtn = await V3.Terms.acceptAndContinue()
     await acceptBtn.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
     await acceptBtn.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await acceptBtn.click()
   })
 
-  it('should enter an account nickname', async () => {
+  it('enters an account nickname', async () => {
     if (driver.isAndroid) {
       const nicknameInput = await V3.Nickname.nicknameInput()
       await nicknameInput.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
@@ -188,14 +188,14 @@ describe('V3 Add Card', () => {
     }
   })
 
-  it('should tap Choose a PIN', async () => {
+  it('taps Choose a PIN', async () => {
     const choosePinBtn = await V3.PINPrep.choosePIN()
     await choosePinBtn.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
     await choosePinBtn.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await choosePinBtn.click()
   })
 
-  it('should create a PIN', async () => {
+  it('creates a PIN', async () => {
     const { pin } = migrationContext
 
     if (driver.isAndroid) {
@@ -240,27 +240,27 @@ describe('V3 Add Card', () => {
     }
   })
 
-  it('should tap Step 2', async () => {
+  it('taps Step 2', async () => {
     const step2 = await V3.SetupSteps.step2()
     await step2.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await step2.click()
   })
 
-  it('should select the combined card type', async () => {
+  it('selects the combined card type', async () => {
     const combined = await V3.CardTypeSelection.combinedCard()
     await combined.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
     await combined.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await combined.click()
   })
 
-  it('should choose Enter Manually', async () => {
+  it('chooses Enter Manually', async () => {
     const enterManually = await V3.AddCardInstructions.enterManually()
     await enterManually.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
     await enterManually.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await enterManually.click()
   })
 
-  it('should enter the card serial number', async () => {
+  it('enters the card serial number', async () => {
     const serialInput = await V3.ManualEntry.serialInput()
     await serialInput.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
     await serialInput.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
@@ -273,7 +273,7 @@ describe('V3 Add Card', () => {
     await continueBtn.click()
   })
 
-  it('should enter the birthdate', async () => {
+  it('enters the birthdate', async () => {
     const dob = parseDob(testUser.dob)
 
     if (driver.isAndroid) {
@@ -329,14 +329,14 @@ describe('V3 Add Card', () => {
     }
   })
 
-  it('should tap step 5', async () => {
+  it('taps Step 5', async () => {
     const step5 = await V3.SetupSteps.step5()
     await step5.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
     await step5.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
     await step5.click()
   })
 
-  it('should select in-person verification', async () => {
+  it('selects in-person verification', async () => {
     if (driver.isAndroid) {
       const inPersonOption = await $('android=new UiSelector().textContains("In Person")')
       await inPersonOption.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
@@ -349,7 +349,7 @@ describe('V3 Add Card', () => {
     }
   })
 
-  it('should read the confirmation code and approve via SiteMinder', async () => {
+  it('reads the confirmation code and approves it via SiteMinder', async () => {
     let confirmationCode: string
 
     if (driver.isAndroid) {
@@ -370,7 +370,7 @@ describe('V3 Add Card', () => {
     })
   })
 
-  it('should tap complete button once the verification is approved and tap Ok on the "You\'re all set" screen', async () => {
+  it('completes the approved verification and dismisses the "You\'re all set" screen', async () => {
     const completeBtn = await V3.VerifyInPerson.complete()
     await completeBtn.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
     await completeBtn.waitForEnabled({ timeout: Timeouts.SCREEN_TRANSITION })
