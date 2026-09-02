@@ -6,6 +6,7 @@ import com.bcsccore.keypair.core.interfaces.KeyPairInfoSource
 import com.bcsccore.keypair.core.models.KeyPairInfo
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -218,6 +219,9 @@ class BcscKeyPairRepoGetBcscKeyPairTest {
 
     @Test
     fun `getNewestTrackedAlias returns the metadata-newest alias`() {
+        // Keystore deliberately disagrees with (is emptier than) metadata: a keystore-derived
+        // lookup (e.g. over getAllBcscKeyPairInfos()/getCurrentBcscKeyPair()) would return null
+        // or a different alias here; only a metadata-only read returns "rsa2".
         val infoSource =
             InMemoryKeyPairInfoSource(
                 mapOf(
@@ -225,26 +229,38 @@ class BcscKeyPairRepoGetBcscKeyPairTest {
                     "rsa2" to KeyPairInfo("rsa2", 2_000L),
                 ),
             )
-        val repo = TestRepo(infoSource, keyStoreWithAliases(setOf("rsa1", "rsa2")))
+        val repo = TestRepo(infoSource, keyStoreWithAliases(emptySet()))
 
         assertEquals("rsa2", repo.getNewestTrackedAlias())
     }
 
     @Test
     fun `getNewestTrackedAlias returns null when nothing is tracked`() {
-        val repo = TestRepo(InMemoryKeyPairInfoSource(), keyStoreWithAliases(emptySet()))
+        // The keystore holds an untracked alias so a keystore-derived lookup would return it
+        // (non-null) instead of null; only a metadata-only read is unaffected by it.
+        val repo = TestRepo(InMemoryKeyPairInfoSource(), keyStoreWithAliases(setOf("rsa9")))
 
         assertNull(repo.getNewestTrackedAlias())
     }
 
     @Test
-    fun `getNewestTrackedAlias does not write metadata`() {
+    fun `getNewestTrackedAlias does not write metadata or touch the keystore`() {
         val infoSource = InMemoryKeyPairInfoSource(mapOf("rsa1" to KeyPairInfo("rsa1", 1_000L)))
-        val repo = TestRepo(infoSource, keyStoreWithAliases(setOf("rsa1")))
+        // rsa3 is an untracked keystore-only orphan; a mutating/reconciling lookup could pick
+        // it up and persist it, which the size assertion below must catch.
+        val ks = keyStoreWithAliases(setOf("rsa1", "rsa3"))
+        val repo = TestRepo(infoSource, ks)
+        val aliasesBefore = infoSource.store.keys.toSet()
 
         repo.getNewestTrackedAlias()
 
-        assertEquals(1, infoSource.store.size)
+        assertEquals("no new metadata rows may be written", aliasesBefore, infoSource.store.keys)
+        assertEquals(
+            "rsa1's createdAt must not be rewritten",
+            1_000L,
+            infoSource.store["rsa1"]!!.createdAt,
+        )
+        verify(exactly = 0) { ks.containsAlias(any()) }
     }
 
     // MARK: - sanity: the tracked/normal case is unchanged

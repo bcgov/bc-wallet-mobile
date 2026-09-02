@@ -379,6 +379,7 @@ class BcscCoreModuleDecodePayloadTest {
         module.decodePayload(jweString, jwkMap(rsa2), promise)
 
         capture.assertResolved()
+        assertEquals(0, fakeKeyPairSource.getCurrentCallCount)
     }
 
     @Test
