@@ -18,6 +18,7 @@ import org.robolectric.RobolectricTestRunner
 import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.KeyStore
+import java.security.KeyStoreException
 import java.security.UnrecoverableEntryException
 import java.util.Collections
 import java.util.HashMap
@@ -153,6 +154,32 @@ class BcscKeyPairRepoGetBcscKeyPairTest {
         val repo = TestRepo(infoSource, keyStoreWithAliases(emptySet()))
 
         assertNull(repo.getBcscKeyPair("rsa9"))
+    }
+
+    // MARK: - enumeration: a keystore fault must surface, not read as "no keys"
+
+    @Test
+    fun `getAllBcscKeyPairInfos throws when the keystore cannot enumerate aliases`() {
+        val ks = mockk<KeyStore>(relaxed = true)
+        every { ks.aliases() } throws KeyStoreException("simulated aliases() fault")
+        val repo = TestRepo(InMemoryKeyPairInfoSource(), ks)
+
+        try {
+            repo.getAllBcscKeyPairInfos()
+            fail("expected getAllBcscKeyPairInfos to throw, not return an empty list")
+        } catch (e: BcscException) {
+            assertTrue(e.cause is KeyStoreException)
+        }
+    }
+
+    @Test
+    fun `getAllBcscKeyPairInfos lists every rsa alias with createdAt 0 for untracked ones`() {
+        val infoSource = InMemoryKeyPairInfoSource(mapOf("rsa1" to KeyPairInfo("rsa1", 1_000L)))
+        val repo = TestRepo(infoSource, keyStoreWithAliases(setOf("rsa1", "rsa3", "legacy")))
+
+        val infos = repo.getAllBcscKeyPairInfos().associate { it.alias to it.createdAt }
+
+        assertEquals(mapOf("rsa1" to 1_000L, "rsa3" to 0L), infos)
     }
 
     // MARK: - sanity: the tracked/normal case is unchanged

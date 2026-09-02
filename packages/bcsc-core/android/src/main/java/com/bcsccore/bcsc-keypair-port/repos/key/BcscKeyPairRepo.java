@@ -392,15 +392,17 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
    * recovery flow to match local keys against the server's jwks.
    *
    * @return list of KeyPairInfo, one per keystore alias matching rsa\d+. The
-   *         createdAt is 0 for aliases not yet tracked in metadata. Empty list
-   *         (never null) if the keystore can't be read.
+   *         createdAt is 0 for aliases not yet tracked in metadata.
+   * @throws BcscException if the keystore can't be loaded or enumerated. Callers use this
+   *         to tell a faulting keystore apart from an empty one, so the fault is not swallowed
+   *         into an empty list the way the reconcile/alias-allocation paths tolerate.
    */
   @NonNull
   @Override
   public List<KeyPairInfo> getAllBcscKeyPairInfos() throws BcscException {
     try {
       KeyStore keyStore = loadAndroidKeyStore();
-      java.util.TreeMap<Integer, String> keystoreAliases = findRsaAliasesInKeyStore(keyStore);
+      java.util.TreeMap<Integer, String> keystoreAliases = rsaAliasesInKeyStore(keyStore);
       HashMap<String, KeyPairInfo> metadata = keyPairInfoSource.getKeyPairInfo();
       List<KeyPairInfo> result = new ArrayList<>(keystoreAliases.size());
       for (String alias : keystoreAliases.values()) {
@@ -411,7 +413,7 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
     } catch (BcscException e) {
       throw e;
     } catch (Exception e) {
-      throw new BcscException("Failed to enumerate keystore aliases: " + e.getMessage());
+      throw new BcscException(AlertKey.GENERAL, "Failed to enumerate keystore aliases: " + e.getMessage(), e);
     }
   }
 
@@ -436,18 +438,25 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
    */
   @NonNull
   private java.util.TreeMap<Integer, String> findRsaAliasesInKeyStore(@NonNull KeyStore keyStore) {
-    java.util.TreeMap<Integer, String> result = new java.util.TreeMap<>();
     try {
-      Enumeration<String> aliases = keyStore.aliases();
-      while (aliases.hasMoreElements()) {
-        String alias = aliases.nextElement();
-        Matcher m = RSA_ALIAS_PATTERN.matcher(alias);
-        if (m.matches()) {
-          result.put(Integer.parseInt(m.group(1)), alias);
-        }
-      }
+      return rsaAliasesInKeyStore(keyStore);
     } catch (KeyStoreException e) {
       SimpleLog.e(TAG, "Failed to enumerate keystore aliases for reconciliation", e);
+      return new java.util.TreeMap<>();
+    }
+  }
+
+  @NonNull
+  private static java.util.TreeMap<Integer, String> rsaAliasesInKeyStore(@NonNull KeyStore keyStore)
+      throws KeyStoreException {
+    java.util.TreeMap<Integer, String> result = new java.util.TreeMap<>();
+    Enumeration<String> aliases = keyStore.aliases();
+    while (aliases.hasMoreElements()) {
+      String alias = aliases.nextElement();
+      Matcher m = RSA_ALIAS_PATTERN.matcher(alias);
+      if (m.matches()) {
+        result.put(Integer.parseInt(m.group(1)), alias);
+      }
     }
     return result;
   }
