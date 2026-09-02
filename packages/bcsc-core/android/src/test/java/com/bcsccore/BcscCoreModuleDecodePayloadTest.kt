@@ -148,6 +148,12 @@ class BcscCoreModuleDecodePayloadTest {
         var resolved: Any? = null
         var rejectedCode: String? = null
         var rejectedMessage: String? = null
+
+        /** Asserts the promise resolved and returns the resolved value, cast to [ReadableMap]. */
+        fun assertResolved(why: String = "expected resolve"): ReadableMap {
+            assertTrue("$why, got reject: $rejectedCode $rejectedMessage", resolved != null)
+            return resolved as ReadableMap
+        }
     }
 
     // MARK: - case 1: previous-key label decrypts (the regression guard)
@@ -160,11 +166,7 @@ class BcscCoreModuleDecodePayloadTest {
 
         module.decodePayload(jweString, jwkMap(rsa1), promise)
 
-        assertTrue(
-            "expected resolve, got reject: ${capture.rejectedCode} ${capture.rejectedMessage}",
-            capture.resolved != null,
-        )
-        val result = capture.resolved as ReadableMap
+        val result = capture.assertResolved()
         assertTrue(result.getString("claims")!!.contains("user-123"))
         assertTrue(result.getBoolean("verified"))
     }
@@ -179,10 +181,7 @@ class BcscCoreModuleDecodePayloadTest {
 
         module.decodePayload(jweString, jwkMap(rsa2), promise)
 
-        assertTrue(
-            "expected resolve, got reject: ${capture.rejectedCode} ${capture.rejectedMessage}",
-            capture.resolved != null,
-        )
+        capture.assertResolved()
     }
 
     // MARK: - case 3: no kid falls back to newest, not "try all"
@@ -195,10 +194,7 @@ class BcscCoreModuleDecodePayloadTest {
 
         module.decodePayload(jweString, jwkMap(rsa2), promise)
 
-        assertTrue(
-            "expected resolve, got reject: ${capture.rejectedCode} ${capture.rejectedMessage}",
-            capture.resolved != null,
-        )
+        capture.assertResolved()
         assertEquals(
             "newest must come from the enumerated list; getCurrentBcscKeyPair() reconciles " +
                 "metadata and can mint a key pair, which a decrypt must never do",
@@ -229,10 +225,7 @@ class BcscCoreModuleDecodePayloadTest {
 
         module.decodePayload(jweString, jwkMap(rsa2), promise)
 
-        assertTrue(
-            "expected resolve, got reject: ${capture.rejectedCode} ${capture.rejectedMessage}",
-            capture.resolved != null,
-        )
+        capture.assertResolved()
         assertEquals(0, fakeKeyPairSource.getCurrentCallCount)
     }
 
@@ -305,10 +298,7 @@ class BcscCoreModuleDecodePayloadTest {
 
         module.decodePayload(jweString, jwkMap(rsa3), promise)
 
-        assertTrue(
-            "expected resolve, got reject: ${capture.rejectedCode} ${capture.rejectedMessage}",
-            capture.resolved != null,
-        )
+        capture.assertResolved()
         assertEquals(
             "an orphan kid must resolve via the confirmed-local lookup alone — any call to " +
                 "getCurrentBcscKeyPair() here would mean it fell through to a newest fallback " +
@@ -329,11 +319,7 @@ class BcscCoreModuleDecodePayloadTest {
 
         module.decodePayload(jweString, jwkMap(rsa1), promise)
 
-        assertTrue(
-            "an enumeration fault must not make a held previous key fall back to newest — " +
-                "got reject ${capture.rejectedCode} ${capture.rejectedMessage}",
-            capture.resolved != null,
-        )
+        capture.assertResolved("an enumeration fault must not make a held previous key fall back to newest")
     }
 
     @Test
@@ -347,11 +333,7 @@ class BcscCoreModuleDecodePayloadTest {
 
         module.decodePayload(jweString, jwkMap(rsa1), promise)
 
-        assertTrue(
-            "an empty enumeration must not make a held previous key fall back to newest — " +
-                "got reject ${capture.rejectedCode} ${capture.rejectedMessage}",
-            capture.resolved != null,
-        )
+        capture.assertResolved("an empty enumeration must not make a held previous key fall back to newest")
         assertEquals(0, fakeKeyPairSource.getCurrentCallCount)
     }
 
@@ -383,10 +365,7 @@ class BcscCoreModuleDecodePayloadTest {
 
         module.decodePayload(jweString, jwkMap(rsa2), promise)
 
-        assertTrue(
-            "expected resolve, got reject: ${capture.rejectedCode} ${capture.rejectedMessage}",
-            capture.resolved != null,
-        )
+        capture.assertResolved()
         assertEquals(0, fakeKeyPairSource.getCurrentCallCount)
     }
 
@@ -399,10 +378,7 @@ class BcscCoreModuleDecodePayloadTest {
 
         module.decodePayload(jweString, jwkMap(rsa2), promise)
 
-        assertTrue(
-            "expected resolve, got reject: ${capture.rejectedCode} ${capture.rejectedMessage}",
-            capture.resolved != null,
-        )
+        capture.assertResolved()
     }
 
     @Test
