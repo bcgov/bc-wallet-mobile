@@ -19,8 +19,8 @@
  *   3  no entries and --allow-empty not passed (assemble only)
  */
 
-import { existsSync, readFileSync, readdirSync, unlinkSync, writeFileSync } from 'fs'
-import { join } from 'path'
+import { existsSync, readFileSync, readdirSync, unlinkSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { parse as parseYaml } from 'yaml'
 
 // ─── Constants ──────────────────────────────────────────────────

@@ -22,8 +22,8 @@
  *   node scripts/changelog/create.mjs
  */
 
-import { existsSync, mkdirSync, writeFileSync } from 'fs'
-import { join } from 'path'
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import prompts from 'prompts'
 import { TYPE_LABELS, VALID_TYPES } from './index.mjs'
 

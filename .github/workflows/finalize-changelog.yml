@@ -34,7 +34,7 @@ jobs:
       - uses: ./.github/workflows/actions/setup-node
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: yarn install --immutable --mode=skip-build
 
       # --allow-empty makes "nothing pending" a clean no-op instead of a
       # failure: this workflow runs on a schedule/whim, not in response to
