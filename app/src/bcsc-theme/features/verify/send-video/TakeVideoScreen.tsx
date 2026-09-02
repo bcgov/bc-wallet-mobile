@@ -1,5 +1,6 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { getCameraMetadata } from '@/bcsc-theme/components/utils/camera'
+import { SelfiePhotoOutput, SelfieVideoOutput } from '@/bcsc-theme/components/utils/camera-output'
 import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useVisionCamera } from '@/bcsc-theme/hooks/useVisionCamera'
@@ -31,15 +32,7 @@ import { useTranslation } from 'react-i18next'
 import { Alert, Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import {
-  Camera,
-  // CameraCaptureError,
-  // CameraRuntimeError,
-  CommonResolutions,
-  PhotoFile,
-  useCameraPermission,
-  useMicrophonePermission,
-} from 'react-native-vision-camera'
+import { Camera, PhotoFile, useCameraPermission, useMicrophonePermission } from 'react-native-vision-camera'
 
 type TakeVideoScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakeVideo>
@@ -49,9 +42,10 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   const { cameraRef, device, takePhoto, cancelRecordingVideo, startRecordingVideo, stopRecordingVideo } =
     useVisionCamera({
       position: 'front',
-      targetVideoResolution: CommonResolutions.VGA_4_3, // 480p
-      targetPhotoResolution: CommonResolutions.FHD_16_9, // 1080p
+      videoOutput: SelfieVideoOutput,
+      photoOutput: SelfiePhotoOutput,
     })
+
   const { t } = useTranslation()
   const { ColorPalette, Spacing, TextTheme } = useTheme()
   const [store] = useStore<BCState>()

@@ -1,23 +1,19 @@
 import { TOKENS, useServices } from '@bifold/core'
-import { useIsFocused } from '@react-navigation/native'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useFocusEffect } from '@mocks/@react-navigation/native'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import {
+  CameraOutput,
+  CameraPhotoOutput,
   CameraRef,
-  CommonResolutions,
-  QualityPrioritization,
+  CameraVideoOutput,
+  DeviceFilter,
   Recorder,
   RecordingFinishedReason,
-  Size,
   TargetCameraPosition,
   useCameraDevice,
-  usePhotoOutput,
-  useVideoOutput,
 } from 'react-native-vision-camera'
 
-// NOTE: Pull any of these values into VisionCameraOptions if external customization needed
-const DEFAULT_QUALITY_COMPRESSION = 0.9
-const DEFAULT_VIDEO_FILE_TYPE = 'mp4'
-const DEFAULT_VIDEO_CODEC = 'h264'
+const DEFAULT_VIDEO_OUTPUT_CODEC = 'h264'
 
 interface StartRecordingCallbacks {
   onRecordingFinished: (recording: {
@@ -30,51 +26,56 @@ interface StartRecordingCallbacks {
 }
 
 interface VisionCameraOptions {
-  position?: TargetCameraPosition
-  qualityPrioritization?: QualityPrioritization
-  targetVideoResolution?: Size
-  targetPhotoResolution?: Size
+  position: TargetCameraPosition
+  deviceFilter?: DeviceFilter
+  photoOutput?: CameraPhotoOutput
+  videoOutput?: CameraVideoOutput
+  scannerOutput?: CameraOutput
 }
 
-const DEFAULT_OPTIONS: Required<VisionCameraOptions> = {
-  position: 'back',
-  qualityPrioritization: 'quality',
-  targetPhotoResolution: CommonResolutions.FHD_16_9, // 1080p
-  targetVideoResolution: CommonResolutions.VGA_16_9, // 480p
-}
-
-export const useVisionCamera = (visionCameraOptions: VisionCameraOptions) => {
-  const options = { ...DEFAULT_OPTIONS, ...visionCameraOptions }
-
-  // Utility Hooks
+/**
+ * A custom hook that provides a convenient interface for using the Vision Camera.
+ * It manages camera device selection, photo capture, and video recording.
+ * @returns An object containing the camera reference, selected device, and functions for taking photos and recording videos.
+ */
+export const useVisionCamera = ({ position, deviceFilter, photoOutput, videoOutput }: VisionCameraOptions) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const isFocused = useIsFocused()
-
-  // Vision Camera Hooks
+  const device = useCameraDevice(position, deviceFilter)
   const cameraRef = useRef<CameraRef>(null)
-  const device = useCameraDevice(options.position)
-  const photoOutput = usePhotoOutput({
-    quality: DEFAULT_QUALITY_COMPRESSION,
-    qualityPrioritization: options.qualityPrioritization,
-    targetResolution: options.targetPhotoResolution,
-  })
-  const videoOutput = useVideoOutput({
-    targetResolution: options.targetVideoResolution,
-    enableAudio: true,
-    fileType: DEFAULT_VIDEO_FILE_TYPE,
-  })
-  const [isTorchOn, setIsTorchOn] = useState(cameraRef.current?.controller?.torchMode === 'on')
   const recorderRef = useRef<Recorder>(null)
+  const controller = cameraRef.current?.controller
 
+  const [torchEnabled, setTorchEnabled] = useState(controller?.torchMode === 'on')
   const hasTorch = device?.hasTorch ?? false
 
+  /**
+   * Captures a photo using the configured `CameraPhotoOutput`.
+   * @throws If no `CameraPhotoOutput` is configured or if an error occurs during photo capture.
+   * @returns A Promise that resolves with the file path of the captured photo.
+   */
   const takePhoto = useCallback(async () => {
+    if (!photoOutput) {
+      throw new Error('[Camera] No photo output configured')
+    }
+
     logger.debug('[Camera] Capturing photo to file')
+
     return photoOutput.capturePhotoToFile({ flashMode: 'off', enableShutterSound: false }, {})
   }, [logger, photoOutput])
 
+  /**
+   * Starts recording a video using the configured `CameraVideoOutput`.
+   * @throws If no `CameraVideoOutput` is configured or if an error occurs during recording.
+   * @returns A Promise that resolves when the recording has started.
+   *  `onRecordingFinished` callback will be invoked when the recording is finished.
+   *  `onRecordingError` callback will be invoked if an error occurs during recording.
+   */
   const startRecordingVideo = useCallback(
     async (options: StartRecordingCallbacks) => {
+      if (!videoOutput) {
+        throw new Error('[Camera] No video output configured')
+      }
+
       if (recorderRef.current?.isRecording) {
         logger.warn('[Camera] Recording already in progress')
         return
@@ -83,7 +84,7 @@ export const useVisionCamera = (visionCameraOptions: VisionCameraOptions) => {
       logger.debug('[Camera] Starting video recording')
 
       // Note: Video output settings must be set before creating the recorder
-      videoOutput.setOutputSettings({ codec: DEFAULT_VIDEO_CODEC })
+      videoOutput.setOutputSettings({ codec: DEFAULT_VIDEO_OUTPUT_CODEC })
       recorderRef.current = await videoOutput.createRecorder({})
 
       await recorderRef.current.startRecording(
@@ -100,6 +101,10 @@ export const useVisionCamera = (visionCameraOptions: VisionCameraOptions) => {
     [logger, videoOutput]
   )
 
+  /**
+   * Stops the current video recording.
+   * @returns A Promise that resolves when the recording has been stopped.
+   */
   const stopRecordingVideo = useCallback(async () => {
     try {
       if (!recorderRef.current?.isRecording) {
@@ -115,25 +120,44 @@ export const useVisionCamera = (visionCameraOptions: VisionCameraOptions) => {
     }
   }, [logger])
 
+  /**
+   * Cancels the current video recording and discards the recorded file.
+   * @returns A Promise that resolves when the recording has been canceled.
+   */
   const cancelRecordingVideo = useCallback(async () => {
     if (!recorderRef.current?.isRecording) {
       logger.warn('[Camera] No recording in progress to cancel')
       return
     }
 
+    logger.debug('[Camera] Canceling video recording')
+
     await recorderRef.current.cancelRecording()
   }, [logger])
 
-  const enableTorch = useCallback((enabled: boolean) => {
-    setIsTorchOn(enabled)
-    cameraRef.current?.controller?.setTorchMode(enabled ? 'on' : 'off')
-  }, [])
+  /**
+   * Enables or disables the torch (flashlight) mode of the camera.
+   * @param enable A boolean indicating whether to enable (true) or disable (false) the torch mode.
+   * @returns A Promise that resolves when the torch mode has been set.
+   */
+  const enableTorch = useCallback(
+    (enable: boolean) => {
+      if (!controller) {
+        logger.warn('[Camera] No camera controller available to set torch mode')
+        return
+      }
 
-  useEffect(() => {
-    if (!isFocused) {
-      enableTorch(false)
-    }
-  }, [enableTorch, isFocused])
+      controller.setTorchMode(enable ? 'on' : 'off')
+      setTorchEnabled(enable)
+    },
+    [controller, logger]
+  )
+
+  useFocusEffect(
+    useCallback(() => {
+      setTorchEnabled(false)
+    }, [])
+  )
 
   return useMemo(
     () => ({
@@ -144,22 +168,18 @@ export const useVisionCamera = (visionCameraOptions: VisionCameraOptions) => {
       stopRecordingVideo,
       cancelRecordingVideo,
       hasTorch,
-      isTorchOn,
       enableTorch,
-      photoOutput,
-      videoOutput,
+      isTorchEnabled: torchEnabled,
     }),
     [
       cancelRecordingVideo,
       device,
       enableTorch,
       hasTorch,
-      isTorchOn,
-      photoOutput,
       startRecordingVideo,
       stopRecordingVideo,
       takePhoto,
-      videoOutput,
+      torchEnabled,
     ]
   )
 }

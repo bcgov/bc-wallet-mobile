@@ -1,5 +1,5 @@
 import { AbstractBifoldLogger } from '@bifold/core'
-import { BarcodeFormat } from 'react-native-vision-camera-barcode-scanner'
+import { Barcode, BarcodeFormat } from 'react-native-vision-camera-barcode-scanner'
 import { BCComboCardBarcodeDecoder } from './BCComboCardBarcodeDecoder'
 import { BCServicesCardBarcodeDecoder } from './BCServicesCardBarcodeDecoder'
 import { DriversLicenseBarcodeDecoder } from './DriversLicenseBarcodeDecoder'
@@ -150,4 +150,94 @@ export const decodeBarcodes = (codes: ScanableCode[], logger: AbstractBifoldLogg
   }
 
   return decodedCodes
+}
+
+export class BCServicesCardReader {
+  private decodedBarcodeMap = new Map<string, { hits: number; decoded: DecodedCode }>()
+  private isBCServicesCardFlag: boolean | null = null
+  private unknownBarcodeCount = 0
+
+  constructor(
+    private logger: AbstractBifoldLogger,
+    private hitsThreshold = 5
+  ) {}
+
+  addBarcodes(codes: Barcode[]) {
+    if (!codes.length) {
+      return
+    }
+
+    const scanableCodes = codes.map((barcode) => ({
+      type: barcode.format,
+      value: barcode.rawValue,
+    }))
+
+    for (const code of scanableCodes) {
+      const decoded = decodeScannedCode(code, this.logger)
+
+      this.logger.debug('[BCSCEvidenceDecoder] Decoded barcode metadata:', { barcode: code, decoded })
+
+      if (!decoded || !code.value) {
+        this.unknownBarcodeCount++
+        continue
+      }
+
+      if (
+        (this.isBCServicesCardFlag === null && decoded.kind === DecodedCodeKind.BCServicesCardBarcode) ||
+        decoded.kind === DecodedCodeKind.BCServicesComboCardCardBarcode
+      ) {
+        this.isBCServicesCardFlag = true
+      }
+
+      const hits = this.decodedBarcodeMap.get(code.value)?.hits ?? 0
+      this.decodedBarcodeMap.set(code.value, { hits: hits + 1, decoded })
+    }
+  }
+
+  reset() {
+    this.decodedBarcodeMap.clear()
+    this.isBCServicesCardFlag = null
+    this.unknownBarcodeCount = 0
+    return this
+  }
+
+  isBCServicesCard(): boolean | null {
+    return this.isBCServicesCardFlag
+  }
+
+  getSerial(): string | null {
+    return (
+      this.getBestDecodedCode(DecodedCodeKind.BCServicesCardBarcode)?.bcscSerial ??
+      this.getBestDecodedCode(DecodedCodeKind.BCServicesComboCardCardBarcode)?.bcscSerial ??
+      null
+    )
+  }
+
+  getLicense(): DriversLicenseMetadata | null {
+    return (
+      this.getBestDecodedCode(DecodedCodeKind.BCServicesComboCardCardBarcode) ??
+      this.getBestDecodedCode(DecodedCodeKind.DriversLicenseBarcode) ??
+      null
+    )
+  }
+
+  getBirthdate(): Date | null {
+    return this.getLicense()?.birthDate ?? null
+  }
+
+  private getBestDecodedCode<T extends DecodedCodeKind>(kind: T): Extract<DecodedCode, { kind: T }> | undefined {
+    let bestHits = 0
+    let bestDecoded: Extract<DecodedCode, { kind: T }> | undefined
+
+    for (const { hits, decoded } of this.decodedBarcodeMap.values()) {
+      if (hits < bestHits || hits < this.hitsThreshold || decoded.kind !== kind) {
+        continue
+      }
+
+      bestHits = hits
+      bestDecoded = decoded as Extract<DecodedCode, { kind: T }>
+    }
+
+    return bestDecoded
+  }
 }

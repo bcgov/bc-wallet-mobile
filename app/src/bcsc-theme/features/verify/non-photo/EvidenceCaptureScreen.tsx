@@ -1,12 +1,13 @@
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import PhotoReview from '@/bcsc-theme/components/PhotoReview'
+import { EvidencePhotoOutput } from '@/bcsc-theme/components/utils/camera-output'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { buildBarcodePayload } from '@/bcsc-theme/utils/barcode'
-import { DriversLicenseMetadata } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
+import { BCServicesCardReader, DriversLicenseMetadata } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
 import { getPhotoMetadata } from '@/bcsc-theme/utils/file-info'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
@@ -76,35 +77,17 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const barcodesCheckedRef = useRef(false)
   const { isLoading: isCameraLoading } = useAutoRequestPermission(hasPermission, requestPermission)
   const { failedToReadFromLocalStorageAlert } = useAlerts(navigation)
+
+  // TODO (MD VisionCamer): Reset bcServicesCardReaderRef on unmount
+  const bcServicesCardReaderRef = useRef(new BCServicesCardReader(logger, 0))
   const codeScanner = useBarcodeScannerOutput({
     barcodeFormats: scanner.codeTypes,
     onBarcodeScanned: async (codes) => {
-      if (!codes.length) {
-        return
-      }
-
-      // If we have already captured both values, no need to keep scanning
-      if (bcscSerialRef.current && licenseRef.current) {
-        return
-      }
-
-      const scannableCodes = codes.map((code) => ({
-        type: code.format,
-        value: code.displayValue,
-      }))
-
-      await scanner.scanCard(scannableCodes, async (bcscSerial, license) => {
-        if (bcscSerial) {
-          bcscSerialRef.current = bcscSerial
-        }
-
-        if (license) {
-          licenseRef.current = license
-        }
-      })
+      bcServicesCardReaderRef.current.addBarcodes(codes)
     },
-    onError: () => {
-      // TODO (MD VisionCamera): Handle errors
+    onError: (error) => {
+      logger.error('[EvidenceCaptureScreen] Barcode scanner error', error)
+      bcServicesCardReaderRef.current = bcServicesCardReaderRef.current.reset()
     },
   })
 
@@ -147,6 +130,10 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     if (!currentPhotoPath || !currentSide) {
       return
     }
+
+    // TODO (MD VisionCamera): Remove these refs and use the bcServicesCardReader directly
+    bcscSerialRef.current = bcServicesCardReaderRef.current.getSerial()
+    licenseRef.current = bcServicesCardReaderRef.current.getLicense()
 
     /**
      * Non-BCSC flow only: the user may have scanned a real BC Services Card.
@@ -244,6 +231,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
             maskLineColor={ColorPalette.brand.primary}
             onPhotoTaken={handlePhotoTaken}
             codeScanner={codeScanner}
+            photoOutput={EvidencePhotoOutput}
           />
         </View>
       ) : (

@@ -2,7 +2,7 @@ import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { decodeBarcodes, DecodedCodeKind, ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
+import { BCServicesCardReader } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
@@ -201,17 +201,40 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const isProcessingScan = useRef(false)
-  const bcscSerialRef = useRef<string | null>(null)
-  const birthDateRef = useRef<Date | null>(null)
+  // const bcscSerialRef = useRef<string | null>(null)
+  // const birthDateRef = useRef<Date | null>(null)
+  const bcServicesCardReaderRef = useRef(new BCServicesCardReader(logger))
 
   const barcodeScannerOutput = useBarcodeScannerOutput({
     barcodeFormats: scanner.codeTypes,
     onBarcodeScanned: async (barcodes) => {
-      const scannableCodes = barcodes.map((barcode) => ({
-        type: barcode.format,
-        value: barcode.rawValue,
-      }))
-      await onCodeScanned(scannableCodes)
+      if (isProcessingScan.current) {
+        return
+      }
+
+      bcServicesCardReaderRef.current.addBarcodes(barcodes)
+
+      if (bcServicesCardReaderRef.current.isBCServicesCard() === false) {
+        isProcessingScan.current = true
+        setScanState('locked')
+        scanner.handleScanNonBcsc()
+        return
+      }
+
+      const serial = bcServicesCardReaderRef.current.getSerial()
+      const birthDate = bcServicesCardReaderRef.current.getBirthdate()
+
+      if (serial && birthDate) {
+        isProcessingScan.current = true
+        setScanState('locked')
+        await scanner.handleScanComboCard(serial, { birthDate })
+        return
+      }
+
+      // if (!barcodes || barcodes.length === 0) {
+      //   return
+      // }
+      // await onCodeScanned(scannableCodes)
     },
     onError: (error) => {
       logger.error('Barcode scanner error', { error })
@@ -243,54 +266,55 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     setCameraKey((prev) => prev + 1)
     // Reset the caches so we can scan again.
     isProcessingScan.current = false
-    bcscSerialRef.current = null
-    birthDateRef.current = null
-  }, [])
+    // bcscSerialRef.current = null
+    // birthDateRef.current = null
+    bcServicesCardReaderRef.current = new BCServicesCardReader(logger)
+  }, [logger])
 
   useFocusEffect(useCallback(() => retryCamera(), [retryCamera]))
 
-  const onCodeScanned = async (barcodes: ScanableCode[]): Promise<boolean> => {
-    if (isProcessingScan.current) {
-      return true
-    }
-
-    const decodedBarcodes = decodeBarcodes(barcodes, logger)
-
-    for (const decoded of decodedBarcodes) {
-      if (!decoded && !bcscSerialRef.current && !birthDateRef.current) {
-        // Scanned a non-BCSC barcode - lock the camera and handle it as a non-BCSC card.
-        isProcessingScan.current = true
-        setScanState('locked')
-        scanner.handleScanNonBcsc()
-        return true
-      }
-
-      switch (decoded?.kind) {
-        case DecodedCodeKind.BCServicesCardBarcode:
-          bcscSerialRef.current = decoded.bcscSerial
-          break
-        case DecodedCodeKind.BCServicesComboCardCardBarcode:
-          // Use the serial from the 1D barcode for safety (ie: Alberta DL + appended health number)
-          birthDateRef.current = decoded.birthDate
-          break
-        case DecodedCodeKind.DriversLicenseBarcode:
-          birthDateRef.current = decoded.birthDate
-          break
-      }
-    }
-
-    if (bcscSerialRef.current && birthDateRef.current) {
-      // We have both the serial and the birthdate — lock the camera and handle the card.
-      isProcessingScan.current = true
-      setScanState('locked')
-      await scanner.handleScanComboCard(bcscSerialRef.current, { birthDate: birthDateRef.current })
-      return true
-    }
-
-    // Still missing the serial or the birthdate — tell CodeScanningCamera to
-    // unlock and keep scanning instead of freezing on this one barcode.
-    return false
-  }
+  // const onCodeScanned = async (barcodes: ScanableCode[]): Promise<boolean> => {
+  //   if (isProcessingScan.current) {
+  //     return true
+  //   }
+  //
+  //   const decodedBarcodes = decodeBarcodes(barcodes, logger)
+  //
+  //   for (const decoded of decodedBarcodes) {
+  //     if (!decoded && !bcscSerialRef.current && !birthDateRef.current) {
+  //       // Scanned a non-BCSC barcode - lock the camera and handle it as a non-BCSC card.
+  //       isProcessingScan.current = true
+  //       setScanState('locked')
+  //       scanner.handleScanNonBcsc()
+  //       return true
+  //     }
+  //
+  //     switch (decoded?.kind) {
+  //       case DecodedCodeKind.BCServicesCardBarcode:
+  //         bcscSerialRef.current = decoded.bcscSerial
+  //         break
+  //       case DecodedCodeKind.BCServicesComboCardCardBarcode:
+  //         // Use the serial from the 1D barcode for safety (ie: Alberta DL + appended health number)
+  //         birthDateRef.current = decoded.birthDate
+  //         break
+  //       case DecodedCodeKind.DriversLicenseBarcode:
+  //         birthDateRef.current = decoded.birthDate
+  //         break
+  //     }
+  //   }
+  //
+  //   if (bcscSerialRef.current && birthDateRef.current) {
+  //     // We have both the serial and the birthdate — lock the camera and handle the card.
+  //     isProcessingScan.current = true
+  //     setScanState('locked')
+  //     await scanner.handleScanComboCard(bcscSerialRef.current, { birthDate: birthDateRef.current })
+  //     return true
+  //   }
+  //
+  //   // Still missing the serial or the birthdate — tell CodeScanningCamera to
+  //   // unlock and keep scanning instead of freezing on this one barcode.
+  //   return false
+  // }
 
   const styles = StyleSheet.create({
     container: {

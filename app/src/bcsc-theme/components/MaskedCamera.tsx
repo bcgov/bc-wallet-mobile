@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { Camera, CameraOutput, CommonResolutions } from 'react-native-vision-camera'
+import { Camera, CameraOutput, CameraPhotoOutput } from 'react-native-vision-camera'
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
 import { useVisionCamera } from '../hooks/useVisionCamera'
 import { isBackgroundedAppState } from '../utils/app-state'
@@ -25,6 +25,7 @@ import { getCameraMetadata } from './utils/camera'
 
 type MaskedCameraProps = {
   navigation: NavigationProp<ParamListBase>
+  photoOutput: CameraPhotoOutput
   cameraFace: 'front' | 'back'
   cameraInstructions?: string
   cameraLabel?: string
@@ -34,12 +35,13 @@ type MaskedCameraProps = {
   maskOverlayOpacity?: number
   customPath?: string
   codeScanner?: CameraOutput
-  photoQualityBalance?: 'speed' | 'balanced' | 'quality'
+  // photoQualityBalance?: 'speed' | 'balanced' | 'quality'
   onPhotoTaken: (path: string) => void
 }
 
 const MaskedCamera = ({
   navigation,
+  photoOutput,
   cameraInstructions,
   cameraLabel,
   maskLineColor,
@@ -48,22 +50,19 @@ const MaskedCamera = ({
   maskType,
   customPath,
   codeScanner,
-  photoQualityBalance = 'speed',
+  // photoQualityBalance = 'speed',
   cameraFace = 'back',
   onPhotoTaken,
 }: MaskedCameraProps) => {
-  const { cameraRef, device, takePhoto, hasTorch, isTorchOn, enableTorch, photoOutput } = useVisionCamera({
+  const { cameraRef, device, takePhoto, hasTorch, isTorchEnabled, enableTorch } = useVisionCamera({
     position: cameraFace,
-    qualityPrioritization: photoQualityBalance,
-    targetPhotoResolution: CommonResolutions.FHD_16_9, // 1080p
+    photoOutput,
   })
-  // const device = useCameraDevice(cameraFace)
   const { t } = useTranslation()
   const safeAreaInsets = useSafeAreaInsets()
   const { Spacing, ColorPalette } = useTheme()
   // const [torchOn, setTorchOn] = useState(false)
   // const cameraRef = useRef<CameraRef>(null)
-  // const controller = cameraRef.current?.controller
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const isFocused = useIsFocused()
   // const format = useCameraFormat(device, cameraFormatFilter)
@@ -71,13 +70,8 @@ const MaskedCamera = ({
   const { emitErrorModal } = useErrorAlert()
   const { preventDoublePress } = usePreventDoublePress()
   const { appStateStatus } = useBCSCActivity()
-  //const hasTorch = device?.hasTorch ?? false
+  // const hasTorch = device?.hasTorch ?? false
 
-  // const photoOutput = usePhotoOutput({
-  //   quality: 0.9,
-  //   qualityPrioritization: photoQualityBalance,
-  //   targetResolution: CommonResolutions.FHD_16_9, // 1080p
-  // })
   // TODO (MD VisionCamera): Replace with actual metadata
   const cameraMetadata = useMemo(() => getCameraMetadata(device), [device])
 
@@ -196,7 +190,7 @@ const MaskedCamera = ({
   }
 
   const takeAndSavePhoto = async () => {
-    if (!cameraRef.current || !isFocused) {
+    if (!isFocused) {
       return
     }
 
@@ -279,12 +273,12 @@ const MaskedCamera = ({
         {hasTorch ? (
           <TouchableOpacity
             style={{ flex: 1, alignItems: 'flex-end' }}
-            onPress={() => enableTorch(!isTorchOn)}
+            onPress={() => enableTorch(!isTorchEnabled)}
             accessibilityLabel={t('BCSC.CameraDisclosure.ToggleFlash')}
             accessibilityRole="button"
             testID={testIdWithKey('ToggleFlash')}
           >
-            <Icon size={24} name={isTorchOn ? 'flash' : 'flash-off'} color={ColorPalette.grayscale.white} />
+            <Icon size={24} name={isTorchEnabled ? 'flash' : 'flash-off'} color={ColorPalette.grayscale.white} />
           </TouchableOpacity>
         ) : (
           <View style={{ flex: 1 }} />
