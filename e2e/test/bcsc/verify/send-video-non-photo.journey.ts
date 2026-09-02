@@ -4,6 +4,7 @@ import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
   captureAdditionalPhotoId,
   chooseAddAccount,
+  cleanUpQueuedSubmission,
   enterBirthdate,
   enterSerialManually,
   reachAdditionalPhotoIdList,
@@ -13,7 +14,7 @@ import {
   submitSendVideoVerification,
   waitForSendVideoDecision,
 } from '../../../src/flows/verify.js'
-import { reviewSendVideoRequest } from '../../../src/helpers/approval.js'
+import { type ClaimedRequestSummary, drainSendVideoQueue, reviewSendVideoRequest } from '../../../src/helpers/approval.js'
 import { HomeScreen, SettingsScreen } from '../../../src/screens/main.js'
 import { VerificationSuccessScreen } from '../../../src/screens/verify.js'
 import { getTestUser, setTestUser } from '../../../src/support/context.js'
@@ -32,13 +33,25 @@ const ADDITIONAL_ID_MATCH = 'Passport'
  *
  * CAMERA-DEPENDENT — both the document and the selfie use Sauce image injection.
  *
- * QUEUE HYGIENE: reviews claim the NEXT queued request blindly — a foreign head is CLOSED and the
- * claim retried — so no other send-video journey may run CONCURRENTLY: its live request would be
- * closed too (the suite is serial at the default `maxInstances: 1`).
+ * QUEUE HYGIENE: the portal has no worklist — a review claims the NEXT queued request blindly and
+ * matches it by persona, which a stale upload of the same persona also satisfies. So the queue is
+ * drained before this journey submits, drained again by the teardown if the upload is never reviewed,
+ * and the send-video journeys run one platform at a time (CI's `send-video` lane), never concurrently.
  */
 describe('Verified journey: non-photo card, send video', () => {
+  /** What the scripted review claimed — named by the decision wait's failure, should the app never see it. */
+  let reviewed: ClaimedRequestSummary | undefined
+
   before(() => {
     setTestUser(TestUsers.nonPhoto)
+  })
+
+  after(async () => {
+    await cleanUpQueuedSubmission()
+  })
+
+  it('clears the review queue before submitting', async () => {
+    await drainSendVideoQueue()
   })
 
   it('onboards to the verify prompt', async () => {
@@ -65,7 +78,7 @@ describe('Verified journey: non-photo card, send video', () => {
 
   it('is approved by the agent (scripted against the SIT review portal)', async () => {
     const user = getTestUser()
-    await reviewSendVideoRequest({
+    reviewed = await reviewSendVideoRequest({
       decision: 'approve',
       cardSerialNumber: user.cardSerial,
       surname: user.lastName,
@@ -74,7 +87,7 @@ describe('Verified journey: non-photo card, send video', () => {
   })
 
   it('picks up the approval and lands on verified Home', async () => {
-    await waitForSendVideoDecision('verified')
+    await waitForSendVideoDecision('verified', { reviewed })
     await VerificationSuccessScreen.tap('primary') // Continue → exits the verify stack to Home
     await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
