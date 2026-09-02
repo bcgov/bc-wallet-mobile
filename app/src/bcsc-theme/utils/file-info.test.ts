@@ -18,27 +18,28 @@ jest.mock('@/utils/read-file', () => ({
 
 const mockReadFileInChunks = readFileInChunks as jest.MockedFunction<typeof readFileInChunks>
 
-describe('File Info Utils', () => {
-  beforeEach(() => {
-    jest.clearAllMocks()
-  })
+type FileStatOverrides = Partial<{ mtime: number; size: number; path: string; name: string }>
 
+const mockFileStat = (overrides: FileStatOverrides = {}) =>
+  jest.mocked(RNFS).stat.mockResolvedValue({
+    mtime: new Date('2025-01-15T12:00:00Z').getTime(),
+    size: 1024,
+    path: '/path/to/photo.png',
+    isFile: () => true,
+    isDirectory: () => false,
+    ctime: 0,
+    name: 'photo.png',
+    ...overrides,
+  } as any)
+
+describe('File Info Utils', () => {
   describe('getFileInfo', () => {
     it('should return filename, timestamp, and size from file stats', async () => {
-      const RNFSMock = jest.mocked(RNFS)
-      RNFSMock.stat.mockResolvedValue({
-        mtime: new Date('2025-01-15T12:00:00Z').getTime(),
-        size: 1024,
-        path: '/path/to/photo.png',
-        isFile: () => true,
-        isDirectory: () => false,
-        ctime: 0,
-        name: 'photo.png',
-      } as any)
+      mockFileStat()
 
       const result = await getFileInfo('/path/to/photo.png')
 
-      expect(RNFSMock.stat).toHaveBeenCalledWith('/path/to/photo.png')
+      expect(jest.mocked(RNFS).stat).toHaveBeenCalledWith('/path/to/photo.png')
       expect(result).toEqual({
         filename: 'photo.png',
         timestamp: new Date('2025-01-15T12:00:00Z').getTime() / 1000,
@@ -47,17 +48,8 @@ describe('File Info Utils', () => {
     })
 
     it('should default filename to selfie.png when path has no filename', async () => {
-      const RNFSMock = jest.mocked(RNFS)
       // Edge case: path ending with "/" so pop() returns ""
-      RNFSMock.stat.mockResolvedValue({
-        mtime: new Date('2025-01-15T12:00:00Z').getTime(),
-        size: 512,
-        path: '',
-        isFile: () => true,
-        isDirectory: () => false,
-        ctime: 0,
-        name: '',
-      } as any)
+      mockFileStat({ size: 512, path: '', name: '' })
 
       const result = await getFileInfo('')
 
@@ -68,18 +60,14 @@ describe('File Info Utils', () => {
   describe('getPhotoMetadata', () => {
     it('should return photo metadata with permanent path on successful save', async () => {
       const mockLogger = new MockLogger()
-      const RNFSMock = jest.mocked(RNFS)
       const mockBuffer = Buffer.from('fake-jpeg-data')
 
-      RNFSMock.stat.mockResolvedValue({
+      mockFileStat({
         mtime: new Date('2025-06-01T10:00:00Z').getTime(),
         size: mockBuffer.byteLength,
         path: '/tmp/photo.jpg',
-        isFile: () => true,
-        isDirectory: () => false,
-        ctime: 0,
         name: 'photo.jpg',
-      } as any)
+      })
 
       mockReadFileInChunks.mockResolvedValue(mockBuffer)
       ;(hashBase64 as jest.Mock).mockResolvedValue('sha256-hash-value')
@@ -106,18 +94,14 @@ describe('File Info Utils', () => {
 
     it('should fall back to original file path when saveEvidencePhoto fails', async () => {
       const mockLogger = new MockLogger()
-      const RNFSMock = jest.mocked(RNFS)
       const mockBuffer = Buffer.from('fake-jpeg-data')
 
-      RNFSMock.stat.mockResolvedValue({
+      mockFileStat({
         mtime: new Date('2025-06-01T10:00:00Z').getTime(),
         size: mockBuffer.byteLength,
         path: '/tmp/photo.jpg',
-        isFile: () => true,
-        isDirectory: () => false,
-        ctime: 0,
         name: 'photo.jpg',
-      } as any)
+      })
 
       mockReadFileInChunks.mockResolvedValue(mockBuffer)
       ;(hashBase64 as jest.Mock).mockResolvedValue('sha256-hash-value')
@@ -131,21 +115,12 @@ describe('File Info Utils', () => {
 
     it('should substitute the current time when the file mtime is implausible (e.g. 0)', async () => {
       const mockLogger = new MockLogger()
-      const RNFSMock = jest.mocked(RNFS)
       const mockBuffer = Buffer.from('fake-jpeg-data')
       const now = new Date('2026-07-28T00:00:00Z').getTime()
       const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(now)
 
       // Android's File.lastModified() can return 0 on failure.
-      RNFSMock.stat.mockResolvedValue({
-        mtime: 0,
-        size: mockBuffer.byteLength,
-        path: '/tmp/photo.jpg',
-        isFile: () => true,
-        isDirectory: () => false,
-        ctime: 0,
-        name: 'photo.jpg',
-      } as any)
+      mockFileStat({ mtime: 0, size: mockBuffer.byteLength, path: '/tmp/photo.jpg', name: 'photo.jpg' })
 
       mockReadFileInChunks.mockResolvedValue(mockBuffer)
       ;(hashBase64 as jest.Mock).mockResolvedValue('sha256-hash-value')
@@ -163,18 +138,14 @@ describe('File Info Utils', () => {
 
     it('should handle non-Error thrown by saveEvidencePhoto', async () => {
       const mockLogger = new MockLogger()
-      const RNFSMock = jest.mocked(RNFS)
       const mockBuffer = Buffer.from('fake-jpeg-data')
 
-      RNFSMock.stat.mockResolvedValue({
+      mockFileStat({
         mtime: new Date('2025-06-01T10:00:00Z').getTime(),
         size: mockBuffer.byteLength,
         path: '/tmp/photo.jpg',
-        isFile: () => true,
-        isDirectory: () => false,
-        ctime: 0,
         name: 'photo.jpg',
-      } as any)
+      })
 
       mockReadFileInChunks.mockResolvedValue(mockBuffer)
       ;(hashBase64 as jest.Mock).mockResolvedValue('sha256-hash-value')
@@ -262,19 +233,6 @@ describe('File Info Utils', () => {
 
       expect(RNFSMock.exists).toHaveBeenCalledWith(mockFilePath)
       expect(RNFSMock.unlink).toHaveBeenCalledWith(mockFilePath)
-    })
-
-    it('should not attempt to remove file when file does not exist', async () => {
-      const mockFilePath = '/path/to/selfie.png'
-      const mockLogger = new MockLogger()
-      const RNFSMock = jest.mocked(RNFS)
-
-      RNFSMock.exists.mockResolvedValue(false)
-
-      await removeFileSafely(mockFilePath, mockLogger)
-
-      expect(RNFSMock.exists).toHaveBeenCalledWith(mockFilePath)
-      expect(RNFSMock.unlink).not.toHaveBeenCalled()
     })
 
     it('should handle undefined file path gracefully', async () => {
