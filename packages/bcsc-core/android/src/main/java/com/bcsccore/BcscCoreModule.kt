@@ -1790,13 +1790,8 @@ class BcscCoreModule internal constructor(
     }
 
     /**
-     * Local key aliases, newest first, plus whether enumeration itself succeeded.
-     * `enumerationFailed` lets a caller tell "the keystore enumeration API faulted" apart
-     * from "this device genuinely holds no keys" — collapsing both to an empty list made a
-     * kid-matching read silently fall back to newest-wins on a mere enumeration fault, which
-     * is the #4595 bug again (F2). A real keystore fault on the actual decrypt path still
-     * surfaces on its own, via getBcscKeyPair()/getCurrentBcscKeyPair() — neither of which
-     * goes through this enumeration call.
+     * Local key aliases, newest first. `enumerationFailed` tells a keystore enumeration fault
+     * apart from a device that genuinely holds no keys.
      */
     private data class AliasEnumeration(
         val aliases: List<String>,
@@ -1824,9 +1819,6 @@ class BcscCoreModule internal constructor(
      * header and whether its kid matches a local key — enough to tell "no key" / "wrong
      * key" / "unsupported alg" / "corrupt" apart from a field report alone. The alias is
      * the same identifier the recovery flow matches against the server's jwks kids.
-     *
-     * `kidMatchesLocal` is passed in rather than recomputed so the diagnostics always
-     * report the same match decodePayload actually used to pick the decrypt key.
      * `enumerationFailed` is appended only when true, so the normal-path format is unchanged.
      */
     private fun decodeDiagnosticsSummary(
@@ -1859,37 +1851,38 @@ class BcscCoreModule internal constructor(
         key: ReadableMap?,
         promise: Promise,
     ) {
-        // Built once up front so every failure path reports the same picture, which is what
-        // makes 2507 reports self-classifying in the field.
         val header = incomingJWEHeader(jweString)
         val (aliases, enumerationFailed) = localAliasesNewestFirst()
-        val kidConfirmedLocal = header.kid.isNotEmpty() && aliases.contains(header.kid)
-        // Enumeration just failed, so a kid absent from `aliases` might still be held locally
-        // — try it directly rather than trusting the (possibly wrong) empty list into the old
-        // newest-wins bug. getBcscKeyPair()'s own containsAlias check is a different keystore
-        // call than the one that just failed, so it isn't affected by that fault.
-        val kidWorthTrying = header.kid.isNotEmpty() && (kidConfirmedLocal || enumerationFailed)
-        val diagnostics = decodeDiagnosticsSummary(header, aliases, enumerationFailed, kidConfirmedLocal)
+        val kid = header.kid.takeIf { it.isNotEmpty() }
+        // Seeded from the enumeration, confirmed by the direct lookup below, so the report names
+        // the key actually used even when the enumeration missed it or failed outright.
+        var kidMatchesLocal = kid != null && aliases.contains(kid)
+
+        // Evaluated at each use so every failure path reports the post-selection picture, which
+        // is what makes 2507 reports self-classifying in the field.
+        fun diagnostics() = decodeDiagnosticsSummary(header, aliases, enumerationFailed, kidMatchesLocal)
         try {
             // During rotation the server still encrypts to the previous key until it sees the
             // new one, so the label on the response wins over "newest" when we hold that key.
-            // getBcscKeyPair() never persists metadata for what it reads (issue #4595 F1), so
-            // this can't promote an orphan/unregistered alias to "newest" as a side effect.
-            val decryptKeyPair =
-                if (kidConfirmedLocal) {
-                    keyPairSource.getBcscKeyPair(header.kid)
-                        ?: throw KeyNotFoundException(
-                            "Key '${header.kid}' was enumerated locally moments ago but is no longer present",
-                        )
-                } else if (kidWorthTrying) {
-                    keyPairSource.getBcscKeyPair(header.kid) ?: keyPairSource.getCurrentBcscKeyPair()
-                } else {
-                    keyPairSource.getCurrentBcscKeyPair()
-                }
+            // The label is always tried directly: the enumeration can be empty or stale after a
+            // keystore fault, and getBcscKeyPair() is null only for a definitively absent alias.
+            val labelled = kid?.let { keyPairSource.getBcscKeyPair(it) }
+            if (labelled != null) {
+                kidMatchesLocal = true
+            }
+            // Newest comes from the same enumeration the diagnostics report, never from
+            // getCurrentBcscKeyPair(): that reconciles metadata and can mint a key pair, and a
+            // decrypt must not have side effects.
+            val decryptKeyPair = labelled ?: aliases.firstOrNull()?.let { keyPairSource.getBcscKeyPair(it) }
+            if (decryptKeyPair == null) {
+                val code = if (enumerationFailed) "E_KEYSTORE_ERROR" else "E_NO_KEYS_FOUND"
+                promise.reject(code, "No key available to decrypt JWE ${diagnostics()}")
+                return
+            }
 
             val privateKey =
                 decryptKeyPair.getKeyPair()?.private ?: run {
-                    promise.reject("E_NO_KEYS_FOUND", "No private key available for decryption $diagnostics")
+                    promise.reject("E_NO_KEYS_FOUND", "No private key available for decryption ${diagnostics()}")
                     return
                 }
 
@@ -1919,7 +1912,7 @@ class BcscCoreModule internal constructor(
             // Parse the JWT to extract and decode the payload (claims)
             val jwtSegments = jwtPayload.split(".")
             if (jwtSegments.size != JWS_COMPACT_SEGMENT_COUNT) {
-                promise.reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload $diagnostics")
+                promise.reject("E_FAILED_TO_PARSE_JWS", "Invalid JWS format in decrypted payload ${diagnostics()}")
                 return
             }
 
@@ -1947,34 +1940,34 @@ class BcscCoreModule internal constructor(
                     putString("claims", decodedPayload)
                 }
 
-            Log.d(NAME, "decodePayload: decoded JWE payload, verified=$verified $diagnostics")
+            Log.d(NAME, "decodePayload: decoded JWE payload, verified=$verified ${diagnostics()}")
             promise.resolve(result)
         } catch (e: BcscException) {
             // Key retrieval / keystore problem (key unavailable, OEM keystore error, invalidation).
-            Log.e(NAME, "decodePayload: BCSC key error: ${e.devMessage} $diagnostics", e)
+            Log.e(NAME, "decodePayload: BCSC key error: ${e.devMessage} ${diagnostics()}", e)
             promise.reject(
                 "E_BCSC_DECODE_ERROR",
-                "Error accessing key for JWE decryption: ${e.devMessage} $diagnostics",
+                "Error accessing key for JWE decryption: ${e.devMessage} ${diagnostics()}",
                 e,
             )
         } catch (e: java.text.ParseException) {
             // Malformed / truncated / replaced JWE on the wire (transport corruption).
-            Log.e(NAME, "decodePayload: JWE parse error: ${e.message} $diagnostics", e)
-            promise.reject("E_JWE_PARSE_ERROR", "Invalid JWE format: ${e.message} $diagnostics", e)
+            Log.e(NAME, "decodePayload: JWE parse error: ${e.message} ${diagnostics()}", e)
+            promise.reject("E_JWE_PARSE_ERROR", "Invalid JWE format: ${e.message} ${diagnostics()}", e)
         } catch (e: com.nimbusds.jose.JOSEException) {
             // Wrong key (kidMatchesLocal=false) or unsupported alg/enc — read the diagnostics.
-            Log.e(NAME, "decodePayload: JWE decryption error: ${e.message} $diagnostics", e)
-            promise.reject("E_JWE_DECRYPT_ERROR", "Failed to decrypt JWE: ${e.message} $diagnostics", e)
+            Log.e(NAME, "decodePayload: JWE decryption error: ${e.message} ${diagnostics()}", e)
+            promise.reject("E_JWE_DECRYPT_ERROR", "Failed to decrypt JWE: ${e.message} ${diagnostics()}", e)
         } catch (e: IllegalArgumentException) {
-            Log.e(NAME, "decodePayload: Base64 decode error: ${e.message} $diagnostics", e)
+            Log.e(NAME, "decodePayload: Base64 decode error: ${e.message} ${diagnostics()}", e)
             promise.reject(
                 "E_FAILED_TO_PARSE_JWS",
-                "Failed to decode JWS payload segment: ${e.message} $diagnostics",
+                "Failed to decode JWS payload segment: ${e.message} ${diagnostics()}",
                 e,
             )
         } catch (e: Exception) {
-            Log.e(NAME, "decodePayload: Unexpected error: ${e.message} $diagnostics", e)
-            promise.reject("E_PAYLOAD_DECODE_ERROR", "Unable to decode payload: ${e.message} $diagnostics", e)
+            Log.e(NAME, "decodePayload: Unexpected error: ${e.message} ${diagnostics()}", e)
+            promise.reject("E_PAYLOAD_DECODE_ERROR", "Unable to decode payload: ${e.message} ${diagnostics()}", e)
         }
     }
 
