@@ -244,6 +244,11 @@ class KeyPairManager: KeyPairManagerProtocol {
     }
   }
 
+  /// The most recently created key, or nil for empty `keys`.
+  static func newestKey(in keys: [PrivateKeyInfo]) -> PrivateKeyInfo? {
+    keys.sorted(by: { $0.created > $1.created }).first
+  }
+
   /**
    During rotation the server still encrypts to the previous key until it sees the new one, so
    the JWE's own label beats "newest" when we hold that key. Returns nil only for empty `keys`.
@@ -252,7 +257,7 @@ class KeyPairManager: KeyPairManagerProtocol {
     if !kid.isEmpty, let match = keys.first(where: { $0.tag == kid }) {
       return match
     }
-    return keys.sorted(by: { $0.created > $1.created }).first
+    return newestKey(in: keys)
   }
 
   func generateKeyPair(

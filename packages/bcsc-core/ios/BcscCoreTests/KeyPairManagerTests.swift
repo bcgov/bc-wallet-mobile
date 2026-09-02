@@ -126,6 +126,19 @@ final class KeyPairManagerDecryptKeySelectionTests: XCTestCase {
   func testEmptyKeysReturnsNil() {
     XCTAssertNil(KeyPairManager.decryptKeyInfo(matching: "rsa1", in: []))
   }
+
+  // MARK: - newestKey
+
+  func testNewestKeyReturnsMostRecentlyCreated() {
+    let older = key("rsa1", createdSecondsAgo: 100)
+    let newer = key("rsa2", createdSecondsAgo: 0)
+
+    XCTAssertEqual(KeyPairManager.newestKey(in: [older, newer])?.tag, "rsa2")
+  }
+
+  func testNewestKeyOfEmptyKeysReturnsNil() {
+    XCTAssertNil(KeyPairManager.newestKey(in: []))
+  }
 }
 
 /// Exercises the real simulator keychain. Covers the key lifecycle relied on by

@@ -26,6 +26,15 @@ enum DeviceInfoKeys {
   static let hasOtherAccounts = "has_other_accounts"
 }
 
+/// The fields of an incoming JWE's protected header relevant to decrypt-key diagnostics.
+/// Mirrors Android's `JweHeaderInfo` so the two platforms' diagnostics shapes stay aligned.
+struct JWEHeaderInfo {
+  let alg: String
+  let enc: String
+  let kid: String
+  let parts: Int
+}
+
 @objcMembers
 @objc(BcscCore)
 class BcscCore: NSObject {
@@ -209,21 +218,23 @@ class BcscCore: NSObject {
   }
 
   /// Best-effort read of the *incoming* JWE protected header for diagnostics. Reads the
-  /// real `kid` straight off the wire — NOT `JWEHeader.kid`, which the parser overwrites
-  /// with the server's own public-key id. Unreadable fields come back as "?".
-  private func incomingJWEHeader(_ jweString: String) -> (alg: String, enc: String, kid: String, parts: Int) {
+  /// real `kid` straight off the wire — NOT `JWEHeader.kid`: `JWEHeader.parse` always sets
+  /// it to `""`, since `PublicServerKeyState.serverPublicKeyId` (JOSEHeader.swift) is
+  /// declared but never assigned anywhere in this codebase. Unreadable fields come back
+  /// as "?".
+  private func incomingJWEHeader(_ jweString: String) -> JWEHeaderInfo {
     let parts = jweString.components(separatedBy: ".")
     guard parts.count == 5, let headerSegment = parts.first,
           let headerData = base64URLDecodeSafely(headerSegment),
           let obj = (try? JSONSerialization.jsonObject(with: headerData)) as? [String: Any]
     else {
-      return ("?", "?", "?", parts.count)
+      return JWEHeaderInfo(alg: "?", enc: "?", kid: "?", parts: parts.count)
     }
-    return (
-      (obj["alg"] as? String) ?? "?",
-      (obj["enc"] as? String) ?? "?",
-      (obj["kid"] as? String) ?? "",
-      parts.count
+    return JWEHeaderInfo(
+      alg: (obj["alg"] as? String) ?? "?",
+      enc: (obj["enc"] as? String) ?? "?",
+      kid: (obj["kid"] as? String) ?? "",
+      parts: parts.count
     )
   }
 
@@ -233,15 +244,18 @@ class BcscCore: NSObject {
   /// the essentials for telling "no key" / "wrong key" / "unsupported alg" / "corrupt"
   /// apart from a field report alone.
   ///
+  /// `kidMatchesLocal` is passed in rather than recomputed so the diagnostics always
+  /// report the same match decodePayload actually used to pick the decrypt key.
+  ///
   /// Non-throwing by construction: `decodePayload` builds this up front on every call
   /// (success path included), so it must never break decoding. Never force-unwraps — keep
   /// it that way.
   private func decodeDiagnosticsSummary(
     keys: [PrivateKeyInfo],
-    header: (alg: String, enc: String, kid: String, parts: Int)
+    header: JWEHeaderInfo,
+    kidMatchesLocal: Bool
   ) -> String {
-    let newest = keys.sorted(by: { $0.created > $1.created }).first?.tag ?? "none"
-    let kidMatchesLocal = !header.kid.isEmpty && keys.contains { $0.tag == header.kid }
+    let newest = KeyPairManager.newestKey(in: keys)?.tag ?? "none"
     let jweKid = header.kid.isEmpty ? "none" : header.kid
     return "[keys=\(keys.count), newest=\(newest), jweParts=\(header.parts), jweAlg=\(header.alg), jweEnc=\(header.enc), jweKid=\(jweKid), kidMatchesLocal=\(kidMatchesLocal)]"
   }
@@ -1513,15 +1527,21 @@ class BcscCore: NSObject {
       reject("E_KEYSTORE_ERROR", "Failed to enumerate decrypt keys: \(error.localizedDescription)", error)
       return
     }
-    // Never `jwe.header.kid` — JWEHeader.parse overwrites `kid` with the server's own
-    // public-key id (see PublicServerKeyState.serverPublicKeyId in JOSEHeader.swift).
+    // Never `jwe.header.kid` — JWEHeader.parse always sets `kid` to `""` (see
+    // incomingJWEHeader's doc). Read the real kid straight off the wire instead.
     let header = incomingJWEHeader(jweString)
+    // decryptKeyInfo is pure/non-throwing — call it before building diagnostics so
+    // `kidMatchesLocal` reports the SAME match used to pick the decrypt key below, by
+    // construction, rather than a separately recomputed (and possibly divergent) predicate.
+    let selectedKeyInfo = KeyPairManager.decryptKeyInfo(matching: header.kid, in: keys)
     // Built once up front so every failure path reports the same picture: key
     // inventory + the incoming JWE's alg/enc/kid + whether that kid matches a local
     // key. This is what makes 2507 reports self-classifying in the field.
-    let diagnostics = decodeDiagnosticsSummary(keys: keys, header: header)
+    let diagnostics = decodeDiagnosticsSummary(
+      keys: keys, header: header, kidMatchesLocal: selectedKeyInfo?.tag == header.kid
+    )
 
-    guard let decryptKeyInfo = KeyPairManager.decryptKeyInfo(matching: header.kid, in: keys) else {
+    guard let decryptKeyInfo = selectedKeyInfo else {
       reject(
         "E_NO_KEYS_FOUND",
         "No keys available to decrypt JWE \(diagnostics)",
