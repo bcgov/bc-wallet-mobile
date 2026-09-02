@@ -277,3 +277,21 @@ jobs:
             exit 1
           fi
           echo "Found changelog entry: $added"
+
+  changelog-tests:
+    name: Changelog Script Tests
+    runs-on: ubuntu-22.04
+    needs: detect-relevant-changes
+    if: needs.detect-relevant-changes.outputs.should_skip != 'true'
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/workflows/actions/setup-node
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run changelog script tests
+        run: yarn changelog:test
