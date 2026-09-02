@@ -634,26 +634,51 @@ function backcheckFormPostHeaders(referer) {
 }
 
 /**
- * Finds the dashboard's claim button. The portal renders a DIFFERENT form per queue — cardholder
+ * @typedef {'cardholder' | 'cardless'} ReviewQueue
+ * @typedef {{ action: string, csrfToken: string, queue: ReviewQueue }} ClaimForm
+ */
+
+/** Which queue a claim/detail URL belongs to: `verifyIdentity` is cardholder, `reviewIdentity` cardless. */
+function queueOfUrl(url) {
+  return /reviewIdentity/.test(url) ? 'cardless' : 'cardholder'
+}
+
+/**
+ * Every claim button on the dashboard. The portal renders a DIFFERENT form per queue — cardholder
  * requests post to `verifyIdentity`, cardless ones to `reviewIdentity` — and only for queues that
- * actually have work, so the endpoint is discovered rather than assumed.
+ * actually have work, so the endpoints are discovered rather than assumed.
  *
  * @param {string} dashboardHtml
- * @returns {{ action: string, csrfToken: string } | null}
+ * @returns {ClaimForm[]}
  */
-function findClaimForm(dashboardHtml) {
+function findClaimForms(dashboardHtml) {
   const $ = load(dashboardHtml)
-  const form = $('form[id^="open-next-request"]').first()
-  if (form.length === 0) {
-    return null
-  }
+  /** @type {ClaimForm[]} */
+  const forms = []
+  $('form[id^="open-next-request"]').each((_, element) => {
+    const form = $(element)
+    const action = form.attr('action')
+    const csrfToken = form.find('input[name="csrftoken"]').first().attr('value')
+    if (!action || !csrfToken) {
+      return
+    }
+    const href = new URL(action, IDCHECK_ORIGIN).href
+    forms.push({ action: href, csrfToken, queue: queueOfUrl(href) })
+  })
+  return forms
+}
 
-  const action = form.attr('action')
-  const csrfToken = form.find('input[name="csrftoken"]').first().attr('value')
-  if (!action || !csrfToken) {
-    return null
-  }
-  return { action: new URL(action, IDCHECK_ORIGIN).href, csrfToken }
+/**
+ * The claim button to press for `preferredQueue`, falling back to whichever queue has work (its head
+ * then reads as foreign and is released) — so a review never stalls on a claim it could have made.
+ *
+ * @param {string} dashboardHtml
+ * @param {ReviewQueue} preferredQueue
+ * @returns {ClaimForm | null}
+ */
+function findClaimForm(dashboardHtml, preferredQueue) {
+  const forms = findClaimForms(dashboardHtml)
+  return forms.find((form) => form.queue === preferredQueue) ?? forms[0] ?? null
 }
 
 /**
@@ -820,12 +845,14 @@ async function resolveIdentityMatch(fetchWithCookies, matchesHtml, matchesUrl, e
  * @property {string} cardSerialNumber - Expected serial; guards the blind FIFO claim ('N/A' when cardless)
  * @property {string} surname - Expected surname; the real guard for a cardless request
  * @property {string} firstName - Expected first name; also picks the identity match when one is asked for
+ * @property {'ios' | 'android'} [platform] - The submitting device's platform; a same-persona request from the other one is foreign
  *
  * @typedef {Object} SendVideoRejectInput
  * @property {'reject'} decision
  * @property {string} cardSerialNumber
  * @property {string} surname
  * @property {string} firstName
+ * @property {'ios' | 'android'} [platform]
  * @property {string} verificationComment - Reason text the app shows the user on the cancelled-review screen
  * @property {string} [comment] - Internal portal note; defaults to verificationComment
  * @property {string} [typeReasonId] - Portal reject-reason id; defaults to DEFAULT_REJECT_REASON_ID
@@ -860,13 +887,31 @@ function assertValidSendVideoReviewInput(input) {
  * @property {string} claimedName
  * @property {string} claimedSurname
  * @property {string} claimedFirstName
+ * @property {string} claimedOs - "iOS 18.6" / "Android 15" as the portal renders it ('' when absent)
+ * @property {'ios' | 'android' | 'unknown'} claimedPlatform
+ * @property {string} claimedAppVersion
+ * @property {string} videoDate
+ * @property {ReviewQueue} queue
  */
+
+/** @param {string} os */
+function platformOfOs(os) {
+  if (/^(ios|iphone|ipad)\b/i.test(os)) return 'ios'
+  if (/^android\b/i.test(os)) return 'android'
+  return 'unknown'
+}
+
+/** Text of one detail-page field, whitespace-collapsed (the portal pads them with newlines and tabs). */
+function detailText($detail, selector) {
+  return $detail(selector).first().text().replaceAll(/\s+/g, ' ').trim()
+}
 
 /**
  * @param {string} detailHtml
+ * @param {string} detailUrl
  * @returns {ClaimedRequest}
  */
-function parseClaimedRequest(detailHtml) {
+function parseClaimedRequest(detailHtml, detailUrl) {
   const detailAttributes = extractPageDataAttributes(detailHtml)
   const requestIdentifier = detailAttributes?.['request-identifier']
   if (!requestIdentifier) {
@@ -877,6 +922,7 @@ function parseClaimedRequest(detailHtml) {
     .map((_, element) => $detail(element).text().trim())
     .get()
     .filter(Boolean)
+  const claimedOs = detailText($detail, '#device-os')
   return {
     requestIdentifier,
     csrfToken: detailAttributes['csrf-token'],
@@ -885,23 +931,41 @@ function parseClaimedRequest(detailHtml) {
     claimedName: claimedNames.join(', '),
     claimedSurname: claimedNames[0] ?? '',
     claimedFirstName: claimedNames[1] ?? '',
+    claimedOs,
+    claimedPlatform: platformOfOs(claimedOs),
+    claimedAppVersion: detailText($detail, '#device-app-version'),
+    videoDate: detailText($detail, '#video-date').replace(/^video date:?\s*/i, ''),
+    queue: queueOfUrl(detailUrl),
   }
 }
 
 /**
  * Serial alone cannot identify a cardless request (they all read "N/A"), so the surname AND first
  * name are what actually distinguish those — all three are checked, since a shared surname alone
- * could otherwise match the wrong queued request.
+ * could otherwise match the wrong queued request. The personas are shared across platforms, so when
+ * the caller names its platform, the other platform's submission of the same person is foreign too.
  *
  * @param {ClaimedRequest} claimed
- * @param {SendVideoReviewInput} input
+ * @param {{ cardSerialNumber: string, surname: string, firstName: string, platform?: 'ios' | 'android' }} input
  */
 function matchesExpectedIdentity(claimed, input) {
   return (
     claimed.claimedSerial.toUpperCase() === input.cardSerialNumber.toUpperCase() &&
     claimed.claimedSurname.toUpperCase() === input.surname.toUpperCase() &&
-    claimed.claimedFirstName.toUpperCase() === input.firstName.toUpperCase()
+    claimed.claimedFirstName.toUpperCase() === input.firstName.toUpperCase() &&
+    matchesExpectedPlatform(claimed, input)
   )
+}
+
+/** Only blocks when the caller named a platform AND the page clearly names the other one. */
+function matchesExpectedPlatform(claimed, input) {
+  if (!input.platform || claimed.claimedPlatform === 'unknown') return true
+  return claimed.claimedPlatform === input.platform
+}
+
+/** One line naming a claimed request, for logs and summaries. */
+function describeClaimed(claimed) {
+  return `${claimed.queue} ${claimed.requestIdentifier}: ${claimed.claimedName} — serial ${claimed.claimedSerial}, ${claimed.claimedOs || 'os unknown'}, app ${claimed.claimedAppVersion || '?'}, video ${claimed.videoDate || '?'}`
 }
 
 /**
@@ -935,7 +999,7 @@ async function claimMatchingSendVideoRequest(fetchWithCookies, input, claimTimeo
 
     // Rendered only for a queue with work, so its absence is the empty-queue signal — and which one
     // it is decides the endpoint. A fresh-login role interstitial also lands here, hence the title.
-    const claimForm = findClaimForm(dashboardHtml)
+    const claimForm = findClaimForm(dashboardHtml, input.cardSerialNumber.toUpperCase() === 'N/A' ? 'cardless' : 'cardholder')
     if (!claimForm) {
       console.log(
         `[sm-login] [~] claim attempt ${attempt}: no claim button on the dashboard — page is "${extractPageTitle(dashboardHtml) || '(untitled)'}"`
@@ -953,10 +1017,10 @@ async function claimMatchingSendVideoRequest(fetchWithCookies, input, claimTimeo
     const claimHtml = await claimResponse.text()
     // fetch-cookie follows the 302; landing on a per-request page means something was claimed.
     if (claimResponse.ok && /\/backCheckRequest\/(verify|review)Identity\/[^/?#]+$/.test(claimResponse.url)) {
-      const claimed = parseClaimedRequest(claimHtml)
+      const claimed = parseClaimedRequest(claimHtml, claimResponse.url)
       if (matchesExpectedIdentity(claimed, input)) {
         await logStep('claim send-video request', claimResponse, claimHtml)
-        console.log(`  claimed ${claimed.requestIdentifier}: ${claimed.claimedName} — serial ${claimed.claimedSerial}`)
+        console.log(`  claimed ${describeClaimed(claimed)}`)
         return { detailUrl: claimResponse.url, claimed }
       }
 
@@ -975,7 +1039,7 @@ async function claimMatchingSendVideoRequest(fetchWithCookies, input, claimTimeo
       }
       console.log(
         `[sm-login] [~] claim attempt ${attempt}: claimed foreign request ${claimed.requestIdentifier} ` +
-          `("${claimed.claimedName}", serial ${claimed.claimedSerial}) — closing it and retrying`
+          `("${claimed.claimedName}", serial ${claimed.claimedSerial}, ${claimed.claimedOs || 'os unknown'}) — closing it and retrying`
       )
       await releaseClaimedRequest(fetchWithCookies, claimed.$detail, claimResponse.url, signal)
       await waitForNextClaimAttemptOrThrow(
@@ -1117,7 +1181,7 @@ async function submitSendVideoDecision(fetchWithCookies, $detail, detailUrl, req
  *
  * @param {SendVideoReviewInput} input
  * @param {{ signal?: AbortSignal, claimTimeoutMs?: number }} [options]
- * @returns {Promise<{ requestIdentifier: string, claimedSerial: string, claimedName: string }>}
+ * @returns {Promise<ClaimedRequestSummary>}
  */
 export async function reviewSendVideoLogin(input, options = {}) {
   const { signal, claimTimeoutMs = DEFAULT_CLAIM_TIMEOUT_MS } = options
@@ -1126,11 +1190,157 @@ export async function reviewSendVideoLogin(input, options = {}) {
 
   const fetchWithCookies = await establishIdcheckSession(signal)
   const { detailUrl, claimed } = await claimMatchingSendVideoRequest(fetchWithCookies, input, claimTimeoutMs, signal)
-  const { requestIdentifier, csrfToken, $detail, claimedSerial, claimedName } = claimed
+  const { requestIdentifier, csrfToken, $detail } = claimed
 
   await submitSendVideoDecision(fetchWithCookies, $detail, detailUrl, requestIdentifier, csrfToken, input, signal)
 
-  return { requestIdentifier, claimedSerial, claimedName }
+  return summarizeClaimed(claimed)
+}
+
+/**
+ * @typedef {Object} ClaimedRequestSummary
+ * @property {string} requestIdentifier
+ * @property {ReviewQueue} queue
+ * @property {string} claimedName
+ * @property {string} claimedSerial
+ * @property {string} claimedOs
+ * @property {string} claimedAppVersion
+ * @property {string} videoDate
+ *
+ * @typedef {Object} DrainSendVideoQueueResult
+ * @property {ClaimedRequestSummary[]} rejected
+ * @property {ClaimedRequestSummary[]} released
+ * @property {ReviewQueue[]} queuesWithWork - Queues still showing a claim button when the drain ended
+ * @property {string} [stoppedReason] - Why the drain stopped before the dashboard ran dry
+ */
+
+/** @param {ClaimedRequest} claimed @returns {ClaimedRequestSummary} */
+function summarizeClaimed(claimed) {
+  const { requestIdentifier, queue, claimedName, claimedSerial, claimedOs, claimedAppVersion, videoDate } = claimed
+  return { requestIdentifier, queue, claimedName, claimedSerial, claimedOs, claimedAppVersion, videoDate }
+}
+
+/** The reason the portal records for a request the drain rejects — it lands in the card's activity log. */
+const DEFAULT_DRAIN_REASON = 'Automated e2e queue cleanup'
+/** Upper bound on claims per drain: a queue that deep is a person's problem, not a loop's. */
+const DEFAULT_DRAIN_MAX_CLAIMS = 25
+
+/**
+ * Empty the review queues: claim the head, reject it, repeat until the dashboard renders no claim
+ * button. The journeys run it before they submit (so their own upload is the head the review claims)
+ * and after a failure (so an orphan never waits for the morning); CI runs it after every lane.
+ *
+ * `scope: 'e2e'` rejects only the listed personas and STOPS at the first foreign head, releasing it
+ * the way a review does — FIFO means nothing behind it is reachable without touching it. Rejecting,
+ * not closing: a rejection is a terminal, logged decision, while `CloseRequest` has only ever been
+ * observed to release the claim.
+ *
+ * `dryRun` only logs in and reads the dashboard — which queues hold work — claiming nothing.
+ *
+ * @param {{ scope?: 'all' | 'e2e', personas?: { cardSerialNumber: string, surname: string, firstName: string }[], reason?: string, maxClaims?: number, dryRun?: boolean, signal?: AbortSignal }} [options]
+ * @returns {Promise<DrainSendVideoQueueResult>}
+ */
+export async function drainSendVideoQueue(options = {}) {
+  const {
+    scope = 'all',
+    personas = [],
+    reason = DEFAULT_DRAIN_REASON,
+    maxClaims = DEFAULT_DRAIN_MAX_CLAIMS,
+    dryRun = false,
+    signal,
+  } = options
+  if (scope !== 'all' && scope !== 'e2e') {
+    throw new Error(`[queue drain] unknown scope "${scope}" (all | e2e)`)
+  }
+  if (scope === 'e2e' && personas.length === 0) {
+    throw new Error("[queue drain] scope 'e2e' needs the personas to keep to")
+  }
+
+  const fetchWithCookies = await establishIdcheckSession(signal)
+  /** @type {DrainSendVideoQueueResult} */
+  const result = { rejected: [], released: [], queuesWithWork: [] }
+  /** @type {Map<string, 'rejected' | 'released'>} what this run already did to each request id */
+  const handled = new Map()
+
+  for (let claims = 0; ; claims++) {
+    const dashboardResponse = await fetchWithCookies(BACKCHECK_DASHBOARD_URL, {
+      headers: backcheckDocumentHeaders(`${IDCHECK_ORIGIN}/idcheck/?`),
+      body: null,
+      method: 'GET',
+      signal,
+    })
+    const dashboardHtml = await logStep('backcheck dashboard', dashboardResponse)
+    const claimForms = findClaimForms(dashboardHtml)
+    result.queuesWithWork = claimForms.map((form) => form.queue)
+    const claimForm = claimForms[0]
+    if (!claimForm) {
+      console.log(`[queue drain] queues empty after ${claims} claim(s)`)
+      return result
+    }
+    if (dryRun) {
+      result.stoppedReason = `dry run — work queued in: ${result.queuesWithWork.join(', ')} (nothing claimed)`
+      return result
+    }
+    if (claims >= maxClaims) {
+      result.stoppedReason = `stopped after ${maxClaims} claims with the ${claimForm.queue} queue still holding work`
+      return result
+    }
+
+    const claimResponse = await fetchWithCookies(claimForm.action, {
+      headers: backcheckFormPostHeaders(BACKCHECK_DASHBOARD_URL),
+      body: new URLSearchParams({ csrftoken: claimForm.csrfToken }).toString(),
+      method: 'POST',
+      signal,
+    })
+    const claimHtml = await claimResponse.text()
+    if (!claimResponse.ok) {
+      await logStep('claim queued request', claimResponse, claimHtml) // throws with the portal's message
+    }
+    if (!/\/backCheckRequest\/(verify|review)Identity\/[^/?#]+$/.test(claimResponse.url)) {
+      const landedPath = new URL(claimResponse.url).pathname
+      result.stoppedReason = `the claim landed on ${landedPath} ("${extractPageTitle(claimHtml) || '(untitled)'}") instead of a request`
+      return result
+    }
+
+    const claimed = parseClaimedRequest(claimHtml, claimResponse.url)
+    const summary = summarizeClaimed(claimed)
+    const before = handled.get(claimed.requestIdentifier)
+    if (before) {
+      // A decision that did not stick, or a foreign head under 'e2e' — either way, stop churning.
+      await releaseClaimedRequest(fetchWithCookies, claimed.$detail, claimResponse.url, signal)
+      result.stoppedReason = `${claimed.requestIdentifier} ("${claimed.claimedName}") came back after being ${before}`
+      return result
+    }
+
+    if (scope === 'e2e' && !personas.some((persona) => matchesExpectedIdentity(claimed, persona))) {
+      await releaseClaimedRequest(fetchWithCookies, claimed.$detail, claimResponse.url, signal)
+      handled.set(claimed.requestIdentifier, 'released')
+      result.released.push(summary)
+      result.stoppedReason = `foreign request at the head — released ${claimed.requestIdentifier} ("${claimed.claimedName}") and stopped (scope e2e)`
+      console.log(`[queue drain] released ${describeClaimed(claimed)}`)
+      return result
+    }
+
+    await submitSendVideoDecision(
+      fetchWithCookies,
+      claimed.$detail,
+      claimResponse.url,
+      claimed.requestIdentifier,
+      claimed.csrfToken,
+      {
+        decision: 'reject',
+        cardSerialNumber: claimed.claimedSerial,
+        surname: claimed.claimedSurname,
+        firstName: claimed.claimedFirstName,
+        verificationComment: reason,
+        comment: reason,
+      },
+      signal
+    )
+    handled.set(claimed.requestIdentifier, 'rejected')
+    result.rejected.push(summary)
+    console.log(`[queue drain] rejected ${describeClaimed(claimed)}`)
+  }
 }
 
 function isRunAsCli() {
@@ -1164,6 +1374,7 @@ function printUsage() {
   console.error('  node login.mjs send-video approve <serial> <surname> <firstName>')
   console.error('  node login.mjs send-video reject  <serial> <surname> <firstName> [reasonId] [message]')
   console.error('     (serial is "N/A" for a cardless registration; the name is what identifies it)')
+  console.error('  Draining the review queue: yarn queue:drain [--scope all|e2e] (scripts/send-video-queue.ts)')
 }
 
 if (isRunAsCli()) {
