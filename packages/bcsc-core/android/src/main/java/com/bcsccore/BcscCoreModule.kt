@@ -140,10 +140,8 @@ private enum class AccountFileName(
 @ReactModule(name = BcscCoreModule.NAME)
 class BcscCoreModule internal constructor(
     reactContext: ReactApplicationContext,
-    private val keyPairSourceOverride: BcscKeyPairSource?,
+    private val keyPairSourceOverride: BcscKeyPairSource? = null,
 ) : BcscCoreSpec(reactContext) {
-    constructor(reactContext: ReactApplicationContext) : this(reactContext, null)
-
     companion object {
         const val NAME = "BcscCore"
 
@@ -177,10 +175,7 @@ class BcscCoreModule internal constructor(
 
     // Initialize the BC Services Card KeyPair functionality
     private val keyPairSource: BcscKeyPairSource by lazy {
-        keyPairSourceOverride ?: run {
-            val keyPairInfoSource = SimpleKeyPairInfoSource(reactApplicationContext)
-            BcscKeyPairRepo(keyPairInfoSource)
-        }
+        keyPairSourceOverride ?: BcscKeyPairRepo(SimpleKeyPairInfoSource(reactApplicationContext))
     }
 
     // Initialize native-compatible storage for rollback support
@@ -1795,17 +1790,32 @@ class BcscCoreModule internal constructor(
     }
 
     /**
-     * Local key aliases, newest first; gates kid matching and feeds diagnostics. Degrades to
-     * empty on failure — a real keystore fault still surfaces via getCurrentBcscKeyPair().
+     * Local key aliases, newest first, plus whether enumeration itself succeeded.
+     * `enumerationFailed` lets a caller tell "the keystore enumeration API faulted" apart
+     * from "this device genuinely holds no keys" — collapsing both to an empty list made a
+     * kid-matching read silently fall back to newest-wins on a mere enumeration fault, which
+     * is the #4595 bug again (F2). A real keystore fault on the actual decrypt path still
+     * surfaces on its own, via getBcscKeyPair()/getCurrentBcscKeyPair() — neither of which
+     * goes through this enumeration call.
      */
-    private fun localAliasesNewestFirst(): List<String> =
+    private data class AliasEnumeration(
+        val aliases: List<String>,
+        val enumerationFailed: Boolean,
+    )
+
+    private fun localAliasesNewestFirst(): AliasEnumeration =
         try {
-            keyPairSource
-                .getAllBcscKeyPairInfos()
-                .sortedByDescending { it.getCreatedAt() }
-                .map { it.getAlias() }
+            AliasEnumeration(
+                aliases =
+                    keyPairSource
+                        .getAllBcscKeyPairInfos()
+                        .sortedByDescending { it.getCreatedAt() }
+                        .map { it.getAlias() },
+                enumerationFailed = false,
+            )
         } catch (e: Exception) {
-            emptyList()
+            Log.w(NAME, "localAliasesNewestFirst: key enumeration failed; diagnostics will be degraded", e)
+            AliasEnumeration(aliases = emptyList(), enumerationFailed = true)
         }
 
     /**
@@ -1817,16 +1827,30 @@ class BcscCoreModule internal constructor(
      *
      * `kidMatchesLocal` is passed in rather than recomputed so the diagnostics always
      * report the same match decodePayload actually used to pick the decrypt key.
+     * `enumerationFailed` is appended only when true, so the normal-path format is unchanged.
      */
     private fun decodeDiagnosticsSummary(
         header: JweHeaderInfo,
         aliases: List<String>,
+        enumerationFailed: Boolean,
         kidMatchesLocal: Boolean,
     ): String {
         val newest = aliases.firstOrNull() ?: "none"
         val jweKid = if (header.kid.isEmpty()) "none" else header.kid
-        return "[keys=${aliases.size}, newest=$newest, jweParts=${header.parts}, " +
-            "jweAlg=${header.alg}, jweEnc=${header.enc}, jweKid=$jweKid, kidMatchesLocal=$kidMatchesLocal]"
+        val fields =
+            mutableListOf(
+                "keys=${aliases.size}",
+                "newest=$newest",
+                "jweParts=${header.parts}",
+                "jweAlg=${header.alg}",
+                "jweEnc=${header.enc}",
+                "jweKid=$jweKid",
+                "kidMatchesLocal=$kidMatchesLocal",
+            )
+        if (enumerationFailed) {
+            fields.add("enumerationFailed=true")
+        }
+        return "[" + fields.joinToString(", ") + "]"
     }
 
     @ReactMethod
@@ -1838,32 +1862,42 @@ class BcscCoreModule internal constructor(
         // Built once up front so every failure path reports the same picture, which is what
         // makes 2507 reports self-classifying in the field.
         val header = incomingJWEHeader(jweString)
-        val aliases = localAliasesNewestFirst()
-        val kidIsLocal = header.kid.isNotEmpty() && aliases.contains(header.kid)
-        val diagnostics = decodeDiagnosticsSummary(header, aliases, kidIsLocal)
+        val (aliases, enumerationFailed) = localAliasesNewestFirst()
+        val kidConfirmedLocal = header.kid.isNotEmpty() && aliases.contains(header.kid)
+        // Enumeration just failed, so a kid absent from `aliases` might still be held locally
+        // — try it directly rather than trusting the (possibly wrong) empty list into the old
+        // newest-wins bug. getBcscKeyPair()'s own containsAlias check is a different keystore
+        // call than the one that just failed, so it isn't affected by that fault.
+        val kidWorthTrying = header.kid.isNotEmpty() && (kidConfirmedLocal || enumerationFailed)
+        val diagnostics = decodeDiagnosticsSummary(header, aliases, enumerationFailed, kidConfirmedLocal)
         try {
             // During rotation the server still encrypts to the previous key until it sees the
             // new one, so the label on the response wins over "newest" when we hold that key.
+            // getBcscKeyPair() never persists metadata for what it reads (issue #4595 F1), so
+            // this can't promote an orphan/unregistered alias to "newest" as a side effect.
             val decryptKeyPair =
-                if (kidIsLocal) {
+                if (kidConfirmedLocal) {
                     keyPairSource.getBcscKeyPair(header.kid)
                         ?: throw KeyNotFoundException(
-                            "Key '${header.kid}' is in the keystore but could not be read",
+                            "Key '${header.kid}' was enumerated locally moments ago but is no longer present",
                         )
+                } else if (kidWorthTrying) {
+                    keyPairSource.getBcscKeyPair(header.kid) ?: keyPairSource.getCurrentBcscKeyPair()
                 } else {
                     keyPairSource.getCurrentBcscKeyPair()
                 }
 
-            if (decryptKeyPair.getKeyPair()?.private == null) {
-                promise.reject("E_NO_KEYS_FOUND", "No private key available for decryption $diagnostics")
-                return
-            }
+            val privateKey =
+                decryptKeyPair.getKeyPair()?.private ?: run {
+                    promise.reject("E_NO_KEYS_FOUND", "No private key available for decryption $diagnostics")
+                    return
+                }
 
             // Parse the JWE object
             val jweObject = JWEObject.parse(jweString)
 
             // Create RSA decrypter with the private key
-            val rsaDecrypter = RSADecrypter(decryptKeyPair.getKeyPair()!!.private)
+            val rsaDecrypter = RSADecrypter(privateKey)
 
             // Decrypt the JWE to get the inner JWT (compact JWS)
             jweObject.decrypt(rsaDecrypter)

@@ -153,26 +153,47 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
     }
   }
 
+  /**
+   * Read-only lookup: honours the interface contract (null only when the alias is
+   * definitively absent; {@link BcscException} — never a swallowed null — on any other
+   * retrieval failure) and never writes metadata. A prior version stamped a fresh
+   * {@link KeyPairInfo} for an alias the keystore held but metadata didn't yet track,
+   * which let a bare read (e.g. decodePayload matching an orphan kid) silently promote
+   * that alias to "newest" and derail signing/rotation. See issue #4595.
+   */
   @Nullable
   @Override
   public BcscKeyPair getBcscKeyPair(@NonNull String kid) throws BcscException {
+    KeyStore keyStore;
     try {
-      KeyStore keyStore = loadAndroidKeyStore();
+      keyStore = loadAndroidKeyStore();
+    } catch (Exception e) {
+      throw new KeyNotFoundException(
+          "Failed to load keystore while retrieving key pair for alias '" + kid + "': " + e.getMessage(), e);
+    }
 
+    try {
       if (!keyStore.containsAlias(kid)) {
         return null;
       }
+    } catch (KeyStoreException e) {
+      throw new KeyNotFoundException(
+          "Failed to check keystore for alias '" + kid + "': " + e.getMessage(), e);
+    }
 
+    try {
+      // createdAt=0 for an alias the keystore holds but metadata doesn't track yet —
+      // mirrors getAllBcscKeyPairInfos()'s contract. Never persisted here.
       KeyPairInfo info = keyPairInfoSource.getKeyPairInfo(kid);
       if (info == null) {
-        info = new KeyPairInfo(kid, System.currentTimeMillis());
-        keyPairInfoSource.saveKeyPairInfo(info);
+        info = new KeyPairInfo(kid, 0L);
       }
 
       final KeyPair keyPair = getKeyPair(keyStore, kid);
       return new BcscKeyPair(keyPair, info);
     } catch (Exception e) {
-      return null;
+      throw new KeyNotFoundException(
+          "Failed to retrieve key pair for alias '" + kid + "': " + e.getMessage(), e);
     }
   }
 

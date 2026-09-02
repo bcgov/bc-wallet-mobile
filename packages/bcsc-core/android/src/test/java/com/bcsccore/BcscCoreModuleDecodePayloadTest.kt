@@ -1,5 +1,7 @@
 package com.bcsccore
 
+import com.bcsccore.keypair.core.exceptions.KeyNotFoundException
+import com.bcsccore.keypair.core.exceptions.KeypairGenerationException
 import com.bcsccore.keypair.core.interfaces.BcscKeyPairSource
 import com.bcsccore.keypair.core.models.BcscKeyPair
 import com.bcsccore.keypair.core.models.KeyPairInfo
@@ -44,12 +46,20 @@ import org.robolectric.RobolectricTestRunner
  */
 @RunWith(RobolectricTestRunner::class)
 class BcscCoreModuleDecodePayloadTest {
+    companion object {
+        // Hoisted so 2048-bit RSA generation happens once for the whole class, not once per
+        // test — three sibling BcscKeyPairRepo*Test files use the same `by lazy` pattern.
+        private val rsa1: KeyPair by lazy { generateRsaKeyPair() }
+        private val rsa2: KeyPair by lazy { generateRsaKeyPair() }
+        private val rsa3: KeyPair by lazy { generateRsaKeyPair() }
+
+        private fun generateRsaKeyPair(): KeyPair =
+            KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.generateKeyPair()
+    }
+
     private lateinit var mockReactContext: ReactApplicationContext
     private lateinit var fakeKeyPairSource: FakeKeyPairSource
     private lateinit var module: BcscCoreModule
-
-    private lateinit var rsa1: KeyPair
-    private lateinit var rsa2: KeyPair
 
     @Before
     fun setUp() {
@@ -58,14 +68,15 @@ class BcscCoreModuleDecodePayloadTest {
         mockkStatic(Arguments::class)
         every { Arguments.createMap() } answers { JavaOnlyMap() }
 
-        rsa1 = generateRsaKeyPair()
-        rsa2 = generateRsaKeyPair()
         fakeKeyPairSource =
             FakeKeyPairSource(
                 keys =
                     linkedMapOf(
                         "rsa1" to KeyPairAndInfo(rsa1, KeyPairInfo("rsa1", 1_000L)),
                         "rsa2" to KeyPairAndInfo(rsa2, KeyPairInfo("rsa2", 2_000L)),
+                        // Present in the keystore but untracked in metadata (createdAt=0), e.g.
+                        // a failed rollback or a failed deleteKeyEntry — see F1 tests below.
+                        "rsa3" to KeyPairAndInfo(rsa3, KeyPairInfo("rsa3", 0L)),
                     ),
                 currentAlias = "rsa2",
             )
@@ -76,9 +87,6 @@ class BcscCoreModuleDecodePayloadTest {
     fun tearDown() {
         unmockkStatic(Arguments::class)
     }
-
-    private fun generateRsaKeyPair(): KeyPair =
-        KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.generateKeyPair()
 
     /** Inner signed JWT (RS512, `alg:none` would fail `SignedJWT.parse`). */
     private fun signedInnerJwt(
@@ -235,7 +243,10 @@ class BcscCoreModuleDecodePayloadTest {
 
     @Test
     fun `kid present locally but unreadable rejects and never falls back to newest`() {
-        fakeKeyPairSource.forceNullFor.add("rsa1")
+        // Post-#4595-F3 contract: an alias the repo enumerates but can't retrieve throws,
+        // it does not return null — model that here rather than the null-return the real
+        // repo used to (incorrectly) produce.
+        fakeKeyPairSource.forceThrowFor.add("rsa1")
         val inner = signedInnerJwt(rsa1, "rsa1")
         val jweString = jwe(inner, kid = "rsa1", encryptTo = rsa1)
         val (promise, capture) = capturingPromise()
@@ -258,21 +269,86 @@ class BcscCoreModuleDecodePayloadTest {
         assertEquals("E_JWE_PARSE_ERROR", capture.rejectedCode)
     }
 
+    // MARK: - F1 regression: a locally-held but untracked (orphan) kid must not require /
+    // trigger a promotion to "newest" to be usable
+
+    @Test
+    fun `kid matching a locally-held but untracked orphan alias decrypts via the confirmed-local path`() {
+        val inner = signedInnerJwt(rsa3, "rsa3")
+        val jweString = jwe(inner, kid = "rsa3", encryptTo = rsa3)
+        val (promise, capture) = capturingPromise()
+
+        module.decodePayload(jweString, jwkMap(rsa3), promise)
+
+        assertTrue(
+            "expected resolve, got reject: ${capture.rejectedCode} ${capture.rejectedMessage}",
+            capture.resolved != null,
+        )
+        assertEquals(
+            "an orphan kid must resolve via the confirmed-local lookup alone — any call to " +
+                "getCurrentBcscKeyPair() here would mean it fell through to a newest fallback " +
+                "instead of being read directly",
+            0,
+            fakeKeyPairSource.getCurrentCallCount,
+        )
+    }
+
+    // MARK: - F2 regression: an enumeration fault must not silently reintroduce newest-wins
+
+    @Test
+    fun `previous-key label still decrypts correctly when key enumeration itself fails`() {
+        fakeKeyPairSource.enumerationShouldFail = true
+        val inner = signedInnerJwt(rsa1, "rsa1")
+        val jweString = jwe(inner, kid = "rsa1", encryptTo = rsa1)
+        val (promise, capture) = capturingPromise()
+
+        module.decodePayload(jweString, jwkMap(rsa1), promise)
+
+        assertTrue(
+            "an enumeration fault must not make a held previous key fall back to newest — " +
+                "got reject ${capture.rejectedCode} ${capture.rejectedMessage}",
+            capture.resolved != null,
+        )
+    }
+
+    @Test
+    fun `unmatched kid still falls back to newest when enumeration fails, and the fault is visible in diagnostics`() {
+        fakeKeyPairSource.enumerationShouldFail = true
+        val inner = signedInnerJwt(rsa1, "rsa1")
+        // Labelled with a kid this device does not hold, but encrypted to the PREVIOUS key
+        // (not newest) — a wrongly-skipped fallback would fail to decrypt, proving the
+        // fallback path actually ran rather than the (unmatched) direct lookup succeeding.
+        val jweString = jwe(inner, kid = "rsa9", encryptTo = rsa1)
+        val (promise, capture) = capturingPromise()
+
+        module.decodePayload(jweString, jwkMap(rsa1), promise)
+
+        assertEquals("E_JWE_DECRYPT_ERROR", capture.rejectedCode)
+        assertTrue(capture.rejectedMessage!!.contains("enumerationFailed=true"))
+    }
+
     private data class KeyPairAndInfo(
         val keyPair: KeyPair,
         val info: KeyPairInfo,
     )
 
     /**
-     * Test double for [BcscKeyPairSource] backed by real in-memory RSA key pairs. Only the
-     * methods `decodePayload` actually calls are implemented; anything else throws so an
-     * accidental new call site is caught rather than silently returning a stub value.
+     * Test double for [BcscKeyPairSource] backed by real in-memory RSA key pairs, modeling the
+     * real repo's post-#4595 contract: [getBcscKeyPair] is a pure read (never mutates [keys]),
+     * returns null only for an alias absent from [keys], and throws for one in [forceThrowFor]
+     * (simulating "present but unreadable" — a real repo error, never a swallowed null).
+     * [getAllBcscKeyPairInfos] throws when [enumerationShouldFail], independent of whether a
+     * specific alias is still directly readable via [getBcscKeyPair] — the two are backed by
+     * different keystore calls in the real repo and can disagree. Only the methods
+     * `decodePayload` actually calls are implemented; anything else throws so an accidental
+     * new call site is caught rather than silently returning a stub value.
      */
     private class FakeKeyPairSource(
         private val keys: LinkedHashMap<String, KeyPairAndInfo>,
         private val currentAlias: String,
     ) : BcscKeyPairSource {
-        val forceNullFor = mutableSetOf<String>()
+        val forceThrowFor = mutableSetOf<String>()
+        var enumerationShouldFail = false
         var getCurrentCallCount = 0
             private set
 
@@ -285,7 +361,12 @@ class BcscCoreModuleDecodePayloadTest {
         }
 
         override fun getBcscKeyPair(kid: String): BcscKeyPair? {
-            if (kid in forceNullFor) return null
+            if (kid in forceThrowFor) {
+                throw KeyNotFoundException(
+                    "simulated unreadable key for '$kid'",
+                    RuntimeException("simulated OEM keystore failure"),
+                )
+            }
             val entry = keys[kid] ?: return null
             return BcscKeyPair(entry.keyPair, entry.info)
         }
@@ -294,7 +375,12 @@ class BcscCoreModuleDecodePayloadTest {
 
         override fun deleteBcscKeyPair(alias: String): Unit = throw UnsupportedOperationException()
 
-        override fun getAllBcscKeyPairInfos(): List<KeyPairInfo> = keys.values.map { it.info }
+        override fun getAllBcscKeyPairInfos(): List<KeyPairInfo> {
+            if (enumerationShouldFail) {
+                throw KeypairGenerationException("simulated keystore enumeration fault")
+            }
+            return keys.values.map { it.info }
+        }
 
         override fun markActiveBcscKeyPair(alias: String): Unit = throw UnsupportedOperationException()
 
