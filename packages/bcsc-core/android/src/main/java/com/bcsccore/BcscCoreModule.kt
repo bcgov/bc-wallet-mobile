@@ -1872,8 +1872,14 @@ class BcscCoreModule internal constructor(
             }
             // Newest comes from the same enumeration the diagnostics report, never from
             // getCurrentBcscKeyPair(): that reconciles metadata and can mint a key pair, and a
-            // decrypt must not have side effects.
-            val decryptKeyPair = labelled ?: aliases.firstOrNull()?.let { keyPairSource.getBcscKeyPair(it) }
+            // decrypt must not have side effects. If enumeration came back empty (whether the
+            // keystore really is empty, or AndroidKeyStoreSpi swallowed a list() fault into an
+            // empty batch — see #4595), fall back to the tracked-newest alias and try it
+            // directly through the same confirmed-local read as the label above.
+            val decryptKeyPair =
+                labelled
+                    ?: aliases.firstOrNull()?.let { keyPairSource.getBcscKeyPair(it) }
+                    ?: keyPairSource.getNewestTrackedAlias()?.let { keyPairSource.getBcscKeyPair(it) }
             if (decryptKeyPair == null) {
                 val code = if (enumerationFailed) "E_KEYSTORE_ERROR" else "E_NO_KEYS_FOUND"
                 promise.reject(code, "No key available to decrypt JWE ${diagnostics()}")

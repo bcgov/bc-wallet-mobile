@@ -182,6 +182,39 @@ class BcscKeyPairRepoGetBcscKeyPairTest {
         assertEquals(mapOf("rsa1" to 1_000L, "rsa3" to 0L), infos)
     }
 
+    // MARK: - F1: getNewestTrackedAlias is a read-only metadata-newest lookup
+
+    @Test
+    fun `getNewestTrackedAlias returns the metadata-newest alias`() {
+        val infoSource =
+            InMemoryKeyPairInfoSource(
+                mapOf(
+                    "rsa1" to KeyPairInfo("rsa1", 1_000L),
+                    "rsa2" to KeyPairInfo("rsa2", 2_000L),
+                ),
+            )
+        val repo = TestRepo(infoSource, keyStoreWithAliases(setOf("rsa1", "rsa2")))
+
+        assertEquals("rsa2", repo.getNewestTrackedAlias())
+    }
+
+    @Test
+    fun `getNewestTrackedAlias returns null when nothing is tracked`() {
+        val repo = TestRepo(InMemoryKeyPairInfoSource(), keyStoreWithAliases(emptySet()))
+
+        assertNull(repo.getNewestTrackedAlias())
+    }
+
+    @Test
+    fun `getNewestTrackedAlias does not write metadata`() {
+        val infoSource = InMemoryKeyPairInfoSource(mapOf("rsa1" to KeyPairInfo("rsa1", 1_000L)))
+        val repo = TestRepo(infoSource, keyStoreWithAliases(setOf("rsa1")))
+
+        repo.getNewestTrackedAlias()
+
+        assertEquals(1, infoSource.store.size)
+    }
+
     // MARK: - sanity: the tracked/normal case is unchanged
 
     @Test

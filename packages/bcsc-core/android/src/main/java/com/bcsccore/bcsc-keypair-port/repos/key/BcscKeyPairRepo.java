@@ -197,6 +197,13 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
     }
   }
 
+  @Nullable
+  @Override
+  public String getNewestTrackedAlias() throws BcscException {
+    KeyPairInfo info = getNewestKeyPairInfo(keyPairInfoSource.getKeyPairInfo());
+    return info == null ? null : info.getAlias();
+  }
+
   @NonNull
   @Override
   public BcscKeyPair getNewBcscKeyPair() throws BcscException {

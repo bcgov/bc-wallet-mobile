@@ -353,20 +353,54 @@ class BcscCoreModuleDecodePayloadTest {
         assertTrue(capture.rejectedMessage!!.contains("enumerationFailed=true"))
     }
 
+    // MARK: - F1 regression: an empty (rather than failed) enumeration falls back to the
+    // tracked-newest alias instead of rejecting outright
+
     @Test
-    fun `unmatched kid with a failed enumeration rejects as a keystore error instead of guessing newest`() {
+    fun `no kid falls back to the tracked-newest alias when enumeration returns empty`() {
+        fakeKeyPairSource.enumerationReturnsEmpty = true
+        val inner = signedInnerJwt(rsa2, "rsa2")
+        val jweString = jwe(inner, kid = null, encryptTo = rsa2)
+        val (promise, capture) = capturingPromise()
+
+        module.decodePayload(jweString, jwkMap(rsa2), promise)
+
+        assertTrue(
+            "expected resolve, got reject: ${capture.rejectedCode} ${capture.rejectedMessage}",
+            capture.resolved != null,
+        )
+        assertEquals(0, fakeKeyPairSource.getCurrentCallCount)
+    }
+
+    @Test
+    fun `unmatched kid with a failed enumeration still falls back to the tracked-newest alias`() {
         fakeKeyPairSource.enumerationShouldFail = true
+        val inner = signedInnerJwt(rsa2, "rsa2")
+        val jweString = jwe(inner, kid = "rsa9", encryptTo = rsa2)
+        val (promise, capture) = capturingPromise()
+
+        module.decodePayload(jweString, jwkMap(rsa2), promise)
+
+        assertTrue(
+            "expected resolve, got reject: ${capture.rejectedCode} ${capture.rejectedMessage}",
+            capture.resolved != null,
+        )
+    }
+
+    @Test
+    fun `a tracked-newest alias that is not actually held rejects with E_NO_KEYS_FOUND rather than minting`() {
+        fakeKeyPairSource.enumerationReturnsEmpty = true
+        fakeKeyPairSource.newestTrackedAlias = "rsa7"
         val inner = signedInnerJwt(rsa1, "rsa1")
-        val jweString = jwe(inner, kid = "rsa9", encryptTo = rsa1)
+        val jweString = jwe(inner, kid = null, encryptTo = rsa1)
         val (promise, capture) = capturingPromise()
 
         module.decodePayload(jweString, jwkMap(rsa1), promise)
 
-        assertEquals("E_KEYSTORE_ERROR", capture.rejectedCode)
-        assertTrue(capture.rejectedMessage!!.contains("enumerationFailed=true"))
+        assertEquals("E_NO_KEYS_FOUND", capture.rejectedCode)
         assertEquals(
-            "with no enumerated newest there is nothing to fall back to; getCurrentBcscKeyPair() " +
-                "must not be used as a guess because it can mint a key pair",
+            "an untracked/unheld newest alias must reject, not fall through to " +
+                "getCurrentBcscKeyPair() which can mint a key pair",
             0,
             fakeKeyPairSource.getCurrentCallCount,
         )
@@ -375,6 +409,7 @@ class BcscCoreModuleDecodePayloadTest {
     @Test
     fun `no keys at all rejects with E_NO_KEYS_FOUND`() {
         fakeKeyPairSource.enumerationReturnsEmpty = true
+        fakeKeyPairSource.newestTrackedAlias = null
         val inner = signedInnerJwt(rsa1, "rsa1")
         val jweString = jwe(inner, kid = null, encryptTo = rsa1)
         val (promise, capture) = capturingPromise()
@@ -409,6 +444,7 @@ class BcscCoreModuleDecodePayloadTest {
         val forceThrowFor = mutableSetOf<String>()
         var enumerationShouldFail = false
         var enumerationReturnsEmpty = false
+        var newestTrackedAlias: String? = currentAlias
         var getCurrentCallCount = 0
             private set
 
@@ -430,6 +466,8 @@ class BcscCoreModuleDecodePayloadTest {
             val entry = keys[kid] ?: return null
             return BcscKeyPair(entry.keyPair, entry.info)
         }
+
+        override fun getNewestTrackedAlias(): String? = newestTrackedAlias
 
         override fun getNewBcscKeyPair(): BcscKeyPair = throw UnsupportedOperationException()
 

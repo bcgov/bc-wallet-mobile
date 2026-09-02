@@ -57,6 +57,15 @@ public interface BcscKeyPairSource {
   void deleteBcscKeyPair(@NonNull String alias) throws BcscException;
 
   /**
+   * Return the alias of the most recently tracked key pair, by metadata createdAt.
+   * Read-only: never mints a key or writes metadata, unlike {@link #getCurrentBcscKeyPair()}.
+   * @return the newest tracked alias, or null when nothing is tracked yet
+   * @throws BcscException if metadata cannot be read
+   */
+  @Nullable
+  String getNewestTrackedAlias() throws BcscException;
+
+  /**
    * Enumerate every key pair backed by an entry in the platform keystore.
    * The createdAt on each result reflects metadata when present, or 0 when
    * the alias exists in the keystore but has no metadata entry yet.
