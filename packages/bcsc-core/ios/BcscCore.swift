@@ -217,11 +217,8 @@ class BcscCore: NSObject {
     return Data(base64Encoded: base64)
   }
 
-  /// Best-effort read of the *incoming* JWE protected header for diagnostics. Reads the
-  /// real `kid` straight off the wire — NOT `JWEHeader.kid`: `JWEHeader.parse` always sets
-  /// it to `""`, since `PublicServerKeyState.serverPublicKeyId` (JOSEHeader.swift) is
-  /// declared but never assigned anywhere in this codebase. Unreadable fields come back
-  /// as "?".
+  /// Best-effort read of the incoming JWE protected header; non-throwing so it can feed
+  /// diagnostics for malformed input too. Unreadable fields come back as `?`.
   private func incomingJWEHeader(_ jweString: String) -> JWEHeaderInfo {
     let parts = jweString.components(separatedBy: ".")
     guard parts.count == 5, let headerSegment = parts.first,
@@ -1527,8 +1524,6 @@ class BcscCore: NSObject {
       reject("E_KEYSTORE_ERROR", "Failed to enumerate decrypt keys: \(error.localizedDescription)", error)
       return
     }
-    // Never `jwe.header.kid` — JWEHeader.parse always sets `kid` to `""` (see
-    // incomingJWEHeader's doc). Read the real kid straight off the wire instead.
     let header = incomingJWEHeader(jweString)
     // decryptKeyInfo is pure/non-throwing — call it before building diagnostics so
     // `kidMatchesLocal` reports the SAME match used to pick the decrypt key below, by

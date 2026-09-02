@@ -231,7 +231,7 @@ class JWEHeader: JOSEHeader {
     self.alg = alg
     self.enc = enc
     self.cty = "JWT"
-    self.kid = PublicServerKeyState.serverPublicKeyId ?? ""
+    self.kid = header["kid"] ?? ""
 
     super.init(header: header, encoded: encoded)
   }
