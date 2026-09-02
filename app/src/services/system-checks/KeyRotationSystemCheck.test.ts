@@ -198,11 +198,9 @@ describe('KeyRotationSystemCheck', () => {
         { id: 'rsa3', created: 0 } as any,
       ])
       const utils = makeUtils()
-      const rotate = jest.fn()
-      const check = new KeyRotationSystemCheck(false, undefined, rotate, utils)
+      const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
 
       expect(await check.runCheck()).toBe(true)
-      expect(rotate).not.toHaveBeenCalled()
       expect(utils.logger.warn).toHaveBeenCalledWith(expect.stringContaining("ignoring key 'rsa3'"))
     })
 

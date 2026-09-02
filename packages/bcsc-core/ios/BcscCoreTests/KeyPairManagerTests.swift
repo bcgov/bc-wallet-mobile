@@ -76,8 +76,8 @@ final class KeyPairManagerEnumerationClassifierTests: XCTestCase {
   }
 }
 
-/// Pins the decrypt-key selection rule behind issue #4595. Pure and synchronous — fixtures
-/// only, no keychain — so these run in the entitlement-less SPM runner.
+/// Covers how the decrypt key is chosen (issue #4595). These use plain test data rather than the
+/// keychain, so they run everywhere, including CI, where the keychain is not available.
 final class KeyPairManagerDecryptKeySelectionTests: XCTestCase {
   private func key(_ tag: String, createdSecondsAgo: TimeInterval) -> PrivateKeyInfo {
     PrivateKeyInfo(

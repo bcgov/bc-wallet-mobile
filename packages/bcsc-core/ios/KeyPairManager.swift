@@ -244,8 +244,8 @@ class KeyPairManager: KeyPairManagerProtocol {
     }
   }
 
-  /// During rotation the server keeps encrypting to the previous key until it sees the new
-  /// one, so the JWE's own `kid` beats "newest" when we hold that key. Nil only for empty `keys`.
+  /// The server keeps encrypting to the previous key until it has seen the new one, so use the key
+  /// the response names when we hold it, and the newest key otherwise. Nil only when there are none.
   static func decryptKeyInfo(matching kid: String, in keys: [PrivateKeyInfo]) -> PrivateKeyInfo? {
     if !kid.isEmpty, let match = keys.first(where: { $0.tag == kid }) {
       return match

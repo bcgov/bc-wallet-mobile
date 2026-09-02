@@ -39,20 +39,18 @@ import java.security.interfaces.RSAPublicKey
 import java.util.Collections
 
 /**
- * Covers the decrypt-key selection rule behind issue #4595: a response's own JWE `kid` wins
- * over "newest" when we hold that key, falling back to newest exactly as before otherwise.
- * Drives the real [BcscCoreModule.decodePayload] through the constructor test seam with a real
- * [BcscKeyPairRepo] over a mocked [KeyStore], so the metadata-write contract (case 4) is
- * exercised against the real repo code, not a fake.
+ * Covers how the decrypt key is chosen (issue #4595): use the key a response names when we hold it,
+ * and the newest key otherwise. Runs the real [BcscCoreModule.decodePayload] against a real
+ * [BcscKeyPairRepo] over a stand-in [KeyStore], so the last test checks real code, not a substitute.
  */
 @RunWith(RobolectricTestRunner::class)
 class BcscCoreModuleDecodePayloadTest {
     companion object {
         private fun rsa(): KeyPair = KeyPairGenerator.getInstance("RSA").also { it.initialize(2048) }.generateKeyPair()
 
-        // One DISTINCT key per alias so the tests can tell which key decrypted: rsa1 = previous
-        // key, rsa2 = tracked newest, rsa3 = held in the keystore but untracked in metadata.
-        // Sharing one JVM key across aliases would let a wrong-key fallback still decrypt.
+        // A different key per alias so a test can tell which one decrypted: rsa1 is the previous
+        // key, rsa2 the newest, rsa3 one the keystore holds but our records don't. Reusing a single
+        // key across aliases would let the wrong choice still decrypt and hide a failure.
         private val KEYS: Map<String, KeyPair> = listOf("rsa1", "rsa2", "rsa3").associateWith { rsa() }
     }
 
@@ -74,7 +72,7 @@ class BcscCoreModuleDecodePayloadTest {
         }
     }
 
-    /** Real repo over a fake keystore whose aliases are exactly [KEYS]. */
+    /** The real repository, over a stand-in keystore holding exactly the [KEYS] aliases. */
     private class InMemoryKeyStoreRepo(
         infoSource: KeyPairInfoSource,
     ) : BcscKeyPairRepo(infoSource) {
@@ -86,9 +84,9 @@ class BcscCoreModuleDecodePayloadTest {
 
         override fun loadAndroidKeyStore(): KeyStore = keyStore
 
-        // AssertionError is an Error, not an Exception, so it escapes every catch in
-        // getCurrentBcscKeyPair/decodePayload and fails the test loudly. Do NOT throw
-        // KeypairGenerationException here — that would be swallowed into a confusing reject.
+        // fail() throws an Error, which escapes the catch blocks in getCurrentBcscKeyPair and
+        // decodePayload, so the test fails clearly. Don't throw KeypairGenerationException here —
+        // it would be caught and reported as a confusing decrypt failure instead.
         override fun generateKeyPair(alias: String) = fail("decodePayload must never mint a key (tried '$alias')")
 
         override fun getKeyPair(
@@ -104,7 +102,7 @@ class BcscCoreModuleDecodePayloadTest {
     fun setUp() {
         mockkStatic(Arguments::class)
         every { Arguments.createMap() } answers { JavaOnlyMap() }
-        // rsa2 is the tracked newest; rsa3 exists only in the keystore (no metadata row).
+        // rsa2 is the newest key on record; rsa3 is in the keystore but has no record.
         infoSource =
             InMemoryKeyPairInfoSource(
                 mapOf(
@@ -118,7 +116,7 @@ class BcscCoreModuleDecodePayloadTest {
     @After
     fun tearDown() = unmockkStatic(Arguments::class)
 
-    /** What the server sends: inner RS512 JWT, outer RSA1_5 JWE (the app's own JWE alg), labelled [kid] when non-null. */
+    /** Builds what the server sends: a signed token wrapped in an encrypted one, labelled [kid]. */
     private fun serverJwe(
         encryptTo: KeyPair,
         kid: String?,

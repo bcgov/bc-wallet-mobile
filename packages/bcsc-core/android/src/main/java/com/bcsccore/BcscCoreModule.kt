@@ -140,7 +140,7 @@ private enum class AccountFileName(
 @ReactModule(name = BcscCoreModule.NAME)
 class BcscCoreModule internal constructor(
     reactContext: ReactApplicationContext,
-    // Test seam: lets unit tests inject a keystore-free BcscKeyPairSource.
+    // Lets tests supply their own key source, so the decrypt path can run without a device keystore.
     private val keyPairSourceOverride: BcscKeyPairSource? = null,
 ) : BcscCoreSpec(reactContext) {
     companion object {
@@ -1833,8 +1833,8 @@ class BcscCoreModule internal constructor(
         // makes 2507 reports self-classifying in the field.
         val diagnostics = decodeDiagnosticsSummary(jweString)
         try {
-            // The server keeps encrypting to the previous key until it has seen the new one, so
-            // the response's own kid wins when we hold that key; otherwise newest, as before.
+            // The server keeps encrypting to the previous key until it has seen the new one, so use
+            // the key the response names when we hold it. Otherwise fall back to newest, as before.
             val kid = incomingJWEHeader(jweString).kid.takeIf { it.isNotEmpty() }
             val decryptKeyPair =
                 kid?.let { keyPairSource.getBcscKeyPair(it) }

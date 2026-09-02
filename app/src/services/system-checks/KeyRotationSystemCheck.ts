@@ -72,8 +72,8 @@ export class KeyRotationSystemCheck implements SystemCheckStrategy {
       }
     }
 
-    // Never rotate on "can't tell": enumeration failure and an empty keystore skip. A key with
-    // no usable `created` is ignored below rather than blocking the check on its own.
+    // Never rotate when we can't tell: skip if the keys can't be listed, or there are none. A key
+    // with no usable creation date is ignored below instead of stopping the check.
     let keys
     try {
       keys = await getAllKeys()
@@ -96,10 +96,9 @@ export class KeyRotationSystemCheck implements SystemCheckStrategy {
     }))
     const isUsable = (normalizedKey: { createdAtMs: number | null }): normalizedKey is NormalizedKey =>
       normalizedKey.createdAtMs !== null && normalizedKey.createdAtMs > 0
-    // Log and ignore keys with no usable timestamp rather than skipping the whole check: signing
-    // always uses the metadata-newest key, so an untracked key (Android reports createdAt: 0 for
-    // one, which would otherwise read as a 1970 key and force rotation) is never the active key
-    // whose age this check is about.
+    // Signing always uses the newest key we have a record of, so a key without a creation date is
+    // never the active one this check is about — ignore those rather than skipping the whole check.
+    // Zero counts as missing, so it isn't read as a 1970 key that would force rotation.
     for (const unusable of normalized.filter((normalizedKey) => !isUsable(normalizedKey))) {
       this.utils.logger.warn(`KeyRotationSystemCheck: ignoring key '${unusable.key.id}' — no usable created timestamp`)
     }
