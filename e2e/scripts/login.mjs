@@ -25,6 +25,8 @@ const BACKCHECK_APPROVE_URL = `${BACKCHECK_BASE_URL}/approve`
 const BACKCHECK_NOTE_URL = `${BACKCHECK_BASE_URL}/note`
 /** Per-candidate identity data behind the match step; the page itself renders those names client-side. */
 const IDMATCH_RESULT_URL = `${IDCHECK_ORIGIN}/idcheck/protected/idmatch/result`
+/** A claim that took work lands on the request's own page; any other landing means the queue ran dry. */
+const CLAIMED_REQUEST_URL_PATTERN = /\/backCheckRequest\/(verify|review)Identity\/[^/?#]+$/
 
 /** The "all good" answer for every attestation radio group the review form renders. */
 const AFFIRMATIVE_ANSWER = '0'
@@ -968,6 +970,49 @@ function describeClaimed(claimed) {
   return `${claimed.queue} ${claimed.requestIdentifier}: ${claimed.claimedName} — serial ${claimed.claimedSerial}, ${claimed.claimedOs || 'os unknown'}, app ${claimed.claimedAppVersion || '?'}, video ${claimed.videoDate || '?'}`
 }
 
+/** Reads the dashboard — the only page that says which queues hold work. */
+async function fetchBackcheckDashboard(fetchWithCookies, signal) {
+  const response = await fetchWithCookies(BACKCHECK_DASHBOARD_URL, {
+    headers: backcheckDocumentHeaders(`${IDCHECK_ORIGIN}/idcheck/?`),
+    body: null,
+    method: 'GET',
+    signal,
+  })
+  return logStep('backcheck dashboard', response)
+}
+
+/**
+ * Presses a claim button and reports what it took. The queue can empty between the dashboard read and
+ * the claim, and the portal then lands the POST on a list page instead of a request — which is why
+ * `claimed` is optional. A non-OK response throws through logStep: a real error is never blind-retried.
+ *
+ * @param {typeof fetch} fetchWithCookies
+ * @param {ClaimForm} claimForm
+ * @param {string} step - log label, and the prefix on the error a non-OK response throws
+ * @param {AbortSignal} [signal]
+ * @returns {Promise<{ claimed?: ClaimedRequest, response: Response, html: string }>}
+ */
+async function claimQueueHead(fetchWithCookies, claimForm, step, signal) {
+  const response = await fetchWithCookies(claimForm.action, {
+    headers: backcheckFormPostHeaders(BACKCHECK_DASHBOARD_URL),
+    body: new URLSearchParams({ csrftoken: claimForm.csrfToken }).toString(),
+    method: 'POST',
+    signal,
+  })
+  const html = await response.text()
+  if (!response.ok) {
+    await logStep(step, response, html) // throws with the portal's message
+  }
+  // fetch-cookie follows the 302; landing on a per-request page means something was claimed.
+  const claimed = CLAIMED_REQUEST_URL_PATTERN.test(response.url) ? parseClaimedRequest(html, response.url) : undefined
+  return { claimed, response, html }
+}
+
+/** Where a claim that took nothing landed instead — the portal's way of saying the queue is empty. */
+function describeClaimLanding(response, html) {
+  return `${new URL(response.url).pathname} ("${extractPageTitle(html) || '(untitled)'}")`
+}
+
 /**
  * Polls the backcheck dashboard, claiming until the claimed request matches the expected person.
  *
@@ -989,13 +1034,7 @@ async function claimMatchingSendVideoRequest(fetchWithCookies, input, claimTimeo
   const foreignClaims = new Map()
 
   for (let attempt = 1; ; attempt++) {
-    const dashboardResponse = await fetchWithCookies(BACKCHECK_DASHBOARD_URL, {
-      headers: backcheckDocumentHeaders(`${IDCHECK_ORIGIN}/idcheck/?`),
-      body: null,
-      method: 'GET',
-      signal,
-    })
-    const dashboardHtml = await logStep('backcheck dashboard', dashboardResponse)
+    const dashboardHtml = await fetchBackcheckDashboard(fetchWithCookies, signal)
 
     // Rendered only for a queue with work, so its absence is the empty-queue signal — and which one
     // it is decides the endpoint. A fresh-login role interstitial also lands here, hence the title.
@@ -1008,56 +1047,49 @@ async function claimMatchingSendVideoRequest(fetchWithCookies, input, claimTimeo
       continue
     }
 
-    const claimResponse = await fetchWithCookies(claimForm.action, {
-      headers: backcheckFormPostHeaders(BACKCHECK_DASHBOARD_URL),
-      body: new URLSearchParams({ csrftoken: claimForm.csrfToken }).toString(),
-      method: 'POST',
-      signal,
-    })
-    const claimHtml = await claimResponse.text()
-    // fetch-cookie follows the 302; landing on a per-request page means something was claimed.
-    if (claimResponse.ok && /\/backCheckRequest\/(verify|review)Identity\/[^/?#]+$/.test(claimResponse.url)) {
-      const claimed = parseClaimedRequest(claimHtml, claimResponse.url)
-      if (matchesExpectedIdentity(claimed, input)) {
-        await logStep('claim send-video request', claimResponse, claimHtml)
-        console.log(`  claimed ${describeClaimed(claimed)}`)
-        return { detailUrl: claimResponse.url, claimed }
-      }
-
-      const timesClaimed = (foreignClaims.get(claimed.requestIdentifier) ?? 0) + 1
-      foreignClaims.set(claimed.requestIdentifier, timesClaimed)
-      if (timesClaimed >= 3) {
-        // One last release before failing: the previous ones evidently did not stick, but bailing
-        // while still holding the claim would leave the queue head ours and block the next run too.
-        await releaseClaimedRequest(fetchWithCookies, claimed.$detail, claimResponse.url, signal)
-        throw new Error(
-          `[claim send-video request] CloseRequest is not clearing ${claimed.requestIdentifier} ` +
-            `("${claimed.claimedName}", serial ${claimed.claimedSerial}) — claimed it ${timesClaimed} times while ` +
-            `waiting for "${input.surname}, ${input.firstName}" (serial ${input.cardSerialNumber}); ` +
-            `check the SIT backcheck dashboard`
-        )
-      }
-      console.log(
-        `[sm-login] [~] claim attempt ${attempt}: claimed foreign request ${claimed.requestIdentifier} ` +
-          `("${claimed.claimedName}", serial ${claimed.claimedSerial}, ${claimed.claimedOs || 'os unknown'}) — closing it and retrying`
-      )
-      await releaseClaimedRequest(fetchWithCookies, claimed.$detail, claimResponse.url, signal)
-      await waitForNextClaimAttemptOrThrow(
-        claimDeadline,
-        claimTimeoutMs,
-        signal,
-        () => `closed foreign request ${claimed.requestIdentifier} ("${claimed.claimedName}")`
-      )
+    const {
+      claimed,
+      response: claimResponse,
+      html: claimHtml,
+    } = await claimQueueHead(fetchWithCookies, claimForm, 'claim send-video request', signal)
+    if (!claimed) {
+      const landing = describeClaimLanding(claimResponse, claimHtml)
+      console.log(`[sm-login] [~] claim attempt ${attempt}: nothing queued yet (landed on ${landing})`)
+      await waitForNextClaimAttemptOrThrow(claimDeadline, claimTimeoutMs, signal, () => landing)
       continue
     }
-    if (!claimResponse.ok) {
-      // Reuses logStep's throw path — a real error is never blind-retried.
+
+    if (matchesExpectedIdentity(claimed, input)) {
       await logStep('claim send-video request', claimResponse, claimHtml)
+      console.log(`  claimed ${describeClaimed(claimed)}`)
+      return { detailUrl: claimResponse.url, claimed }
     }
 
-    const landedPath = new URL(claimResponse.url).pathname
-    console.log(`[sm-login] [~] claim attempt ${attempt}: nothing queued yet (landed on ${landedPath})`)
-    await waitForNextClaimAttemptOrThrow(claimDeadline, claimTimeoutMs, signal, () => extractPageTitle(claimHtml) || landedPath)
+    const timesClaimed = (foreignClaims.get(claimed.requestIdentifier) ?? 0) + 1
+    foreignClaims.set(claimed.requestIdentifier, timesClaimed)
+    if (timesClaimed >= 3) {
+      // One last release before failing: the previous ones evidently did not stick, but bailing
+      // while still holding the claim would leave the queue head ours and block the next run too.
+      await releaseClaimedRequest(fetchWithCookies, claimed.$detail, claimResponse.url, signal)
+      throw new Error(
+        `[claim send-video request] CloseRequest is not clearing ${claimed.requestIdentifier} ` +
+          `("${claimed.claimedName}", serial ${claimed.claimedSerial}) — claimed it ${timesClaimed} times while ` +
+          `waiting for "${input.surname}, ${input.firstName}" (serial ${input.cardSerialNumber}); ` +
+          `check the SIT backcheck dashboard`
+      )
+    }
+
+    console.log(
+      `[sm-login] [~] claim attempt ${attempt}: claimed foreign request ${claimed.requestIdentifier} ` +
+        `("${claimed.claimedName}", serial ${claimed.claimedSerial}, ${claimed.claimedOs || 'os unknown'}) — closing it and retrying`
+    )
+    await releaseClaimedRequest(fetchWithCookies, claimed.$detail, claimResponse.url, signal)
+    await waitForNextClaimAttemptOrThrow(
+      claimDeadline,
+      claimTimeoutMs,
+      signal,
+      () => `closed foreign request ${claimed.requestIdentifier} ("${claimed.claimedName}")`
+    )
   }
 }
 
@@ -1074,7 +1106,7 @@ async function waitForNextClaimAttemptOrThrow(claimDeadline, claimTimeoutMs, sig
     await sleep(CLAIM_POLL_INTERVAL_MS, signal)
     return
   }
-  const suffix = describeLastPage ? ` — last: "${describeLastPage()}"` : ''
+  const suffix = describeLastPage ? ` — last: ${describeLastPage()}` : ''
   throw new Error(`[claim send-video request] no matching submission within ${claimTimeoutMs}ms${suffix}`)
 }
 
@@ -1226,6 +1258,20 @@ const DEFAULT_DRAIN_REASON = 'Automated e2e queue cleanup'
 const DEFAULT_DRAIN_MAX_CLAIMS = 25
 
 /**
+ * Guards JS/CLI callers the TS types cannot protect against.
+ * @param {string} scope
+ * @param {unknown[]} personas
+ */
+function assertValidDrainScope(scope, personas) {
+  if (scope !== 'all' && scope !== 'e2e') {
+    throw new Error(`[queue drain] unknown scope "${scope}" (all | e2e)`)
+  }
+  if (scope === 'e2e' && personas.length === 0) {
+    throw new Error("[queue drain] scope 'e2e' needs the personas to keep to")
+  }
+}
+
+/**
  * Empty the review queues: claim the head, reject it, repeat until the dashboard renders no claim
  * button. The journeys run it before they submit (so their own upload is the head the review claims)
  * and after a failure (so an orphan never waits for the morning); CI runs it after every lane.
@@ -1249,12 +1295,7 @@ export async function drainSendVideoQueue(options = {}) {
     dryRun = false,
     signal,
   } = options
-  if (scope !== 'all' && scope !== 'e2e') {
-    throw new Error(`[queue drain] unknown scope "${scope}" (all | e2e)`)
-  }
-  if (scope === 'e2e' && personas.length === 0) {
-    throw new Error("[queue drain] scope 'e2e' needs the personas to keep to")
-  }
+  assertValidDrainScope(scope, personas)
 
   const fetchWithCookies = await establishIdcheckSession(signal)
   /** @type {DrainSendVideoQueueResult} */
@@ -1263,13 +1304,7 @@ export async function drainSendVideoQueue(options = {}) {
   const handled = new Map()
 
   for (let claims = 0; ; claims++) {
-    const dashboardResponse = await fetchWithCookies(BACKCHECK_DASHBOARD_URL, {
-      headers: backcheckDocumentHeaders(`${IDCHECK_ORIGIN}/idcheck/?`),
-      body: null,
-      method: 'GET',
-      signal,
-    })
-    const dashboardHtml = await logStep('backcheck dashboard', dashboardResponse)
+    const dashboardHtml = await fetchBackcheckDashboard(fetchWithCookies, signal)
     const claimForms = findClaimForms(dashboardHtml)
     result.queuesWithWork = claimForms.map((form) => form.queue)
     const claimForm = claimForms[0]
@@ -1286,23 +1321,16 @@ export async function drainSendVideoQueue(options = {}) {
       return result
     }
 
-    const claimResponse = await fetchWithCookies(claimForm.action, {
-      headers: backcheckFormPostHeaders(BACKCHECK_DASHBOARD_URL),
-      body: new URLSearchParams({ csrftoken: claimForm.csrfToken }).toString(),
-      method: 'POST',
-      signal,
-    })
-    const claimHtml = await claimResponse.text()
-    if (!claimResponse.ok) {
-      await logStep('claim queued request', claimResponse, claimHtml) // throws with the portal's message
-    }
-    if (!/\/backCheckRequest\/(verify|review)Identity\/[^/?#]+$/.test(claimResponse.url)) {
-      const landedPath = new URL(claimResponse.url).pathname
-      result.stoppedReason = `the claim landed on ${landedPath} ("${extractPageTitle(claimHtml) || '(untitled)'}") instead of a request`
+    const {
+      claimed,
+      response: claimResponse,
+      html: claimHtml,
+    } = await claimQueueHead(fetchWithCookies, claimForm, 'claim queued request', signal)
+    if (!claimed) {
+      result.stoppedReason = `the claim landed on ${describeClaimLanding(claimResponse, claimHtml)} instead of a request`
       return result
     }
 
-    const claimed = parseClaimedRequest(claimHtml, claimResponse.url)
     const summary = summarizeClaimed(claimed)
     const before = handled.get(claimed.requestIdentifier)
     if (before) {

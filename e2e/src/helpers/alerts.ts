@@ -18,7 +18,7 @@ const ANDROID_ALERT_OK_SELECTOR = 'android=new UiSelector().textMatches("(?i)^ok
 // Android 12+ sensor-privacy toggle (SystemUI) — raised when the mic/camera is blocked device-wide. Not a
 // permission-controller dialog, so the resourceId probes never see it; matched by its title copy.
 const ANDROID_SENSOR_PRIVACY_TITLE_SELECTOR =
-  'android=new UiSelector().textMatches("(?i)^unblock( device)? (microphone|camera|camera and microphone)\\?$")'
+  String.raw`android=new UiSelector().textMatches("(?i)^unblock( device)? (microphone|camera|camera and microphone)\?$")`
 const ANDROID_SENSOR_PRIVACY_ACCEPT_SELECTOR = 'android=new UiSelector().textMatches("(?i)^unblock$")'
 const ANDROID_SENSOR_PRIVACY_DISMISS_SELECTOR = 'android=new UiSelector().textMatches("(?i)^cancel$")'
 
