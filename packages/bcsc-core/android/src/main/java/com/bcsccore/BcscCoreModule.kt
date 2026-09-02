@@ -1948,12 +1948,24 @@ class BcscCoreModule internal constructor(
 
             Log.d(NAME, "decodePayload: decoded JWE payload, verified=$verified ${diagnostics()}")
             promise.resolve(result)
-        } catch (e: BcscException) {
-            // Key retrieval / keystore problem (key unavailable, OEM keystore error, invalidation).
+        } catch (e: KeyNotFoundException) {
+            // Alias present but unreadable (invalidated, OEM keystore error) — a key-content
+            // problem, distinct from the keystore itself faulting below. Text unchanged.
             Log.e(NAME, "decodePayload: BCSC key error: ${e.devMessage} ${diagnostics()}", e)
             promise.reject(
                 "E_BCSC_DECODE_ERROR",
                 "Error accessing key for JWE decryption: ${e.devMessage} ${diagnostics()}",
+                e,
+            )
+        } catch (e: BcscException) {
+            // Keystore load / enumeration fault (e.g. OEM keystore unavailable) rather than a
+            // problem with a specific key's content — kept out of the 2507 (E_BCSC_DECODE_ERROR)
+            // bucket so field reports can tell the two apart. Subclass caught above must come
+            // first: KeyNotFoundException extends BcscException.
+            Log.e(NAME, "decodePayload: keystore error: ${e.devMessage} ${diagnostics()}", e)
+            promise.reject(
+                "E_KEYSTORE_ERROR",
+                "Keystore error while accessing key for JWE decryption: ${e.devMessage} ${diagnostics()}",
                 e,
             )
         } catch (e: java.text.ParseException) {

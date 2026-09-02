@@ -1,5 +1,7 @@
 package com.bcsccore
 
+import com.bcsccore.keypair.core.exceptions.AlertKey
+import com.bcsccore.keypair.core.exceptions.BcscException
 import com.bcsccore.keypair.core.exceptions.KeyNotFoundException
 import com.bcsccore.keypair.core.exceptions.KeypairGenerationException
 import com.bcsccore.keypair.core.interfaces.BcscKeyPairSource
@@ -265,6 +267,22 @@ class BcscCoreModuleDecodePayloadTest {
         assertEquals(0, fakeKeyPairSource.getCurrentCallCount)
     }
 
+    // MARK: - F2 regression: a keystore load fault classifies differently from an
+    // alias that is present but individually unreadable
+
+    @Test
+    fun `keystore load fault on a labelled kid rejects as a keystore error, not a decode error`() {
+        fakeKeyPairSource.forceKeystoreFaultFor.add("rsa1")
+        val inner = signedInnerJwt(rsa1, "rsa1")
+        val jweString = jwe(inner, kid = "rsa1", encryptTo = rsa1)
+        val (promise, capture) = capturingPromise()
+
+        module.decodePayload(jweString, jwkMap(rsa1), promise)
+
+        assertEquals("E_KEYSTORE_ERROR", capture.rejectedCode)
+        assertEquals(0, fakeKeyPairSource.getCurrentCallCount)
+    }
+
     // MARK: - case 6: malformed JWE still rejects as a parse error
 
     @Test
@@ -442,6 +460,7 @@ class BcscCoreModuleDecodePayloadTest {
         private val currentAlias: String,
     ) : BcscKeyPairSource {
         val forceThrowFor = mutableSetOf<String>()
+        val forceKeystoreFaultFor = mutableSetOf<String>()
         var enumerationShouldFail = false
         var enumerationReturnsEmpty = false
         var newestTrackedAlias: String? = currentAlias
@@ -457,6 +476,13 @@ class BcscCoreModuleDecodePayloadTest {
         }
 
         override fun getBcscKeyPair(kid: String): BcscKeyPair? {
+            if (kid in forceKeystoreFaultFor) {
+                throw BcscException(
+                    AlertKey.GENERAL,
+                    "simulated keystore load fault for '$kid'",
+                    RuntimeException("simulated OEM keystore failure"),
+                )
+            }
             if (kid in forceThrowFor) {
                 throw KeyNotFoundException(
                     "simulated unreadable key for '$kid'",

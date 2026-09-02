@@ -167,18 +167,15 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
     KeyStore keyStore;
     try {
       keyStore = loadAndroidKeyStore();
-    } catch (Exception e) {
-      throw new KeyNotFoundException(
-          "Failed to load keystore while retrieving key pair for alias '" + kid + "': " + e.getMessage(), e);
-    }
-
-    try {
       if (!keyStore.containsAlias(kid)) {
         return null;
       }
-    } catch (KeyStoreException e) {
-      throw new KeyNotFoundException(
-          "Failed to check keystore for alias '" + kid + "': " + e.getMessage(), e);
+    } catch (Exception e) {
+      // Keystore load / enumeration fault, not "alias absent" — distinct from the
+      // present-but-unreadable case below so callers (decodePayload) can classify the two
+      // differently. Matches getAllBcscKeyPairInfos()'s BcscException(GENERAL, …) below.
+      throw new BcscException(AlertKey.GENERAL,
+          "Failed to load keystore or check alias '" + kid + "': " + e.getMessage(), e);
     }
 
     try {

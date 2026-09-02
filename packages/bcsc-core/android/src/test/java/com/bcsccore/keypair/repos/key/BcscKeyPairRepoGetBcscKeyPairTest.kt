@@ -66,8 +66,14 @@ class BcscKeyPairRepoGetBcscKeyPairTest {
         infoSource: KeyPairInfoSource,
         private val fakeKeyStore: KeyStore,
         private val unreadableAliases: Set<String> = emptySet(),
+        private val loadShouldFail: Boolean = false,
     ) : BcscKeyPairRepo(infoSource) {
-        override fun loadAndroidKeyStore(): KeyStore = fakeKeyStore
+        override fun loadAndroidKeyStore(): KeyStore {
+            if (loadShouldFail) {
+                throw KeyStoreException("simulated keystore load fault")
+            }
+            return fakeKeyStore
+        }
 
         override fun getKeyPair(
             keyStore: KeyStore,
@@ -145,6 +151,53 @@ class BcscKeyPairRepoGetBcscKeyPairTest {
         assertTrue(
             "the real underlying failure must be preserved as the cause",
             thrown.cause is UnrecoverableEntryException,
+        )
+    }
+
+    // MARK: - F2: a keystore load / enumeration fault classifies differently from a
+    // present-but-unreadable alias
+
+    @Test
+    fun `a keystore load fault throws a general BcscException, not KeyNotFoundException`() {
+        val infoSource = InMemoryKeyPairInfoSource()
+        val repo = TestRepo(infoSource, keyStoreWithAliases(emptySet()), loadShouldFail = true)
+
+        val thrown =
+            try {
+                repo.getBcscKeyPair("rsa1")
+                fail("expected getBcscKeyPair to throw, not return")
+                null
+            } catch (e: BcscException) {
+                e
+            }
+
+        assertFalse("a keystore load fault must not be reported as KeyNotFoundException", thrown is KeyNotFoundException)
+        assertTrue(
+            "the real underlying failure must be preserved as the cause",
+            thrown!!.cause is KeyStoreException,
+        )
+    }
+
+    @Test
+    fun `a containsAlias fault throws a general BcscException, not KeyNotFoundException`() {
+        val infoSource = InMemoryKeyPairInfoSource()
+        val ks = mockk<KeyStore>(relaxed = true)
+        every { ks.containsAlias(any()) } throws KeyStoreException("simulated containsAlias fault")
+        val repo = TestRepo(infoSource, ks)
+
+        val thrown =
+            try {
+                repo.getBcscKeyPair("rsa1")
+                fail("expected getBcscKeyPair to throw, not return")
+                null
+            } catch (e: BcscException) {
+                e
+            }
+
+        assertFalse("a containsAlias fault must not be reported as KeyNotFoundException", thrown is KeyNotFoundException)
+        assertTrue(
+            "the real underlying failure must be preserved as the cause",
+            thrown!!.cause is KeyStoreException,
         )
     }
 
