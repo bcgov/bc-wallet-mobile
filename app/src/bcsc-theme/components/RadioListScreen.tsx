@@ -50,7 +50,7 @@ function RadioListRow({ title, value, selected, testID, onPress }: RadioListRowP
           unfillColor={ColorPalette.brand.secondaryBackground}
           size={36}
           innerIconStyle={{ borderColor: ColorPalette.brand.primary, borderWidth: 2 }}
-          ImageComponent={() => <Icon name="circle" size={18} color={ColorPalette.brand.primary} />}
+          ImageComponent={<Icon name="circle" size={18} color={ColorPalette.brand.primary} />}
           onPress={() => onPress(value)}
           isChecked={selected}
           disableBuiltInState
