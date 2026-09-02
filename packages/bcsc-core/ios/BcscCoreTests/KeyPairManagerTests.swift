@@ -80,7 +80,12 @@ final class KeyPairManagerEnumerationClassifierTests: XCTestCase {
 /// only, no keychain — so these run in the entitlement-less SPM runner.
 final class KeyPairManagerDecryptKeySelectionTests: XCTestCase {
   private func key(_ tag: String, createdSecondsAgo: TimeInterval) -> PrivateKeyInfo {
-    PrivateKeyInfo(keyType: KeyType.RSA, keySize: 2048, tag: tag, created: Date(timeIntervalSinceNow: -createdSecondsAgo))
+    PrivateKeyInfo(
+      keyType: KeyType.RSA,
+      keySize: 2048,
+      tag: tag,
+      created: Date(timeIntervalSinceNow: -createdSecondsAgo)
+    )
   }
 
   func testKidNamingThePreviousKeySelectsItOverNewest() {

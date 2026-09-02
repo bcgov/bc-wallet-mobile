@@ -56,7 +56,9 @@ class BcscCoreModuleDecodePayloadTest {
         private val KEYS: Map<String, KeyPair> = listOf("rsa1", "rsa2", "rsa3").associateWith { rsa() }
     }
 
-    private class InMemoryKeyPairInfoSource(initial: Map<String, KeyPairInfo>) : KeyPairInfoSource {
+    private class InMemoryKeyPairInfoSource(
+        initial: Map<String, KeyPairInfo>,
+    ) : KeyPairInfoSource {
         val store = HashMap<String, KeyPairInfo>(initial)
 
         override fun getKeyPairInfo(kid: String): KeyPairInfo? = store[kid]
@@ -73,7 +75,9 @@ class BcscCoreModuleDecodePayloadTest {
     }
 
     /** Real repo over a fake keystore whose aliases are exactly [KEYS]. */
-    private class InMemoryKeyStoreRepo(infoSource: KeyPairInfoSource) : BcscKeyPairRepo(infoSource) {
+    private class InMemoryKeyStoreRepo(
+        infoSource: KeyPairInfoSource,
+    ) : BcscKeyPairRepo(infoSource) {
         private val keyStore: KeyStore =
             mockk<KeyStore>(relaxed = true).also {
                 every { it.aliases() } answers { Collections.enumeration(KEYS.keys.toList()) }
@@ -119,7 +123,8 @@ class BcscCoreModuleDecodePayloadTest {
         encryptTo: KeyPair,
         kid: String?,
     ): String {
-        val inner = SignedJWT(JWSHeader.Builder(JWSAlgorithm.RS512).build(), JWTClaimsSet.Builder().subject("user-123").build())
+        val inner =
+            SignedJWT(JWSHeader.Builder(JWSAlgorithm.RS512).build(), JWTClaimsSet.Builder().subject("user-123").build())
         inner.sign(RSASSASigner(encryptTo.private))
         val header = JWEHeader.Builder(JWEAlgorithm.RSA1_5, EncryptionMethod.A256CBC_HS512)
         if (kid != null) header.keyID(kid)
