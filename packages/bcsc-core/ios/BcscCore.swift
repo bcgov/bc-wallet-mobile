@@ -235,7 +235,7 @@ class BcscCore: NSObject {
   ///
   /// Non-throwing by construction: `decodePayload` builds this up front on every call
   /// (success path included), so it must never break decoding. Never force-unwraps — keep
-  /// it that way. (The Android twin can throw, so there the whole body is guarded.)
+  /// it that way.
   private func decodeDiagnosticsSummary(
     keys: [PrivateKeyInfo],
     header: (alg: String, enc: String, kid: String, parts: Int)

@@ -1815,24 +1815,19 @@ class BcscCoreModule internal constructor(
      * key" / "unsupported alg" / "corrupt" apart from a field report alone. The alias is
      * the same identifier the recovery flow matches against the server's jwks kids.
      *
-     * Never throws. decodePayload builds this up front on every call (success path
-     * included), so a failure while gathering diagnostics must never break decoding —
-     * the whole body is guarded and degrades to a fallback string.
+     * `kidMatchesLocal` is passed in rather than recomputed so the diagnostics always
+     * report the same match decodePayload actually used to pick the decrypt key.
      */
     private fun decodeDiagnosticsSummary(
         header: JweHeaderInfo,
         aliases: List<String>,
-    ): String =
-        try {
-            val newest = aliases.firstOrNull() ?: "none"
-            val kidMatchesLocal = header.kid.isNotEmpty() && aliases.contains(header.kid)
-            val jweKid = if (header.kid.isEmpty()) "none" else header.kid
-            "[keys=${aliases.size}, newest=$newest, jweParts=${header.parts}, " +
-                "jweAlg=${header.alg}, jweEnc=${header.enc}, jweKid=$jweKid, kidMatchesLocal=$kidMatchesLocal]"
-        } catch (e: Exception) {
-            Log.w(NAME, "decodeDiagnosticsSummary: failed to build diagnostics", e)
-            "[diagnostics unavailable]"
-        }
+        kidMatchesLocal: Boolean,
+    ): String {
+        val newest = aliases.firstOrNull() ?: "none"
+        val jweKid = if (header.kid.isEmpty()) "none" else header.kid
+        return "[keys=${aliases.size}, newest=$newest, jweParts=${header.parts}, " +
+            "jweAlg=${header.alg}, jweEnc=${header.enc}, jweKid=$jweKid, kidMatchesLocal=$kidMatchesLocal]"
+    }
 
     @ReactMethod
     override fun decodePayload(
@@ -1845,7 +1840,7 @@ class BcscCoreModule internal constructor(
         val header = incomingJWEHeader(jweString)
         val aliases = localAliasesNewestFirst()
         val kidIsLocal = header.kid.isNotEmpty() && aliases.contains(header.kid)
-        val diagnostics = decodeDiagnosticsSummary(header, aliases)
+        val diagnostics = decodeDiagnosticsSummary(header, aliases, kidIsLocal)
         try {
             // During rotation the server still encrypts to the previous key until it sees the
             // new one, so the label on the response wins over "newest" when we hold that key.
