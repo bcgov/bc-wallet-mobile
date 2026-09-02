@@ -41,6 +41,7 @@ _Tests are organized into named suites. Use the_ `--suite` _flag to select which
 | `onboarding` | _Onboarding journeys — happy path + detours (`onboarding/*.journey.ts`)_                    |
 | `auth`       | _Returning-user unlock journey — PIN unlock, wrong-PIN retry, lockout (`auth/*.journey.ts`)_ |
 | `verify`     | _Verification journeys — the four card types + entry spine/detours (`verify/*.journey.ts`)_ |
+| `send-video` | _The four send-video journeys alone (`verify/send-video-*.journey.ts`): a scripted agent review against the shared SIT queue. Also inside `verify` / `regression`, but CI runs them in their own one-platform-at-a-time lane and drops them from any parallel multi-device run (`E2E_EXCLUDE_SEND_VIDEO=1`) — see **[Send-video review queue](#send-video-review-queue)**_ |
 | `main`       | _Main-stack journeys — unverified gating + settings + wallet credential lifecycle (`main/*.journey.ts`)_ |
 | `migration`  | _V3→V4 upgrade: v3 onboarding + verification, upgrade to v4, unlock with the v3 PIN_                 |
 | `upgrade`    | _Previous released build → current: onboard on the previous release, in-place upgrade, unlock with the old PIN + settings persistence. Runs on Sauce on **both platforms** (mid-session install passes Sauce resigning)_ |
@@ -318,6 +319,23 @@ SM_PASSWORD='your-siteminder-password'
 
 _The same_ `scripts/login.mjs` _can also be invoked as a CLI; it loads_ `.env.e2e` _itself when run standalone. Without these credentials, any journey that completes in-person verification (the verified_ `verify` _/_ `main` _journeys, and_ `migration`_) will fail at the approval step._
 
+### _Send-video review queue_
+
+_The send-video journeys upload real verification requests to the SIT IDcheck agent queue and review them through the same SiteMinder session (`reviewSendVideoRequest`). That queue has **no worklist** — a review claims the_ next _request blindly and then checks it is the expected persona on the expected platform — and it is **shared** with the UAT team. Two things follow:_
+
+- _**Never run send-video journeys on two platforms at once.** The personas are shared, so one platform would review (or drain) the other's live upload. CI keeps them out of the concurrent device matrix and runs them in their own_ `send-video` _lane, one platform at a time; a parallel multi-device_ `verify` _/_ `regression` _run drops them automatically (`E2E_EXCLUDE_SEND_VIDEO=1`, with a notice)._
+- _**The queue is drained around every submission.** Each send-video journey rejects whatever is queued before it submits (so its own upload is the head the review claims), its teardown drains again if the upload was never reviewed, and CI drains after every lane that ran them plus once at the end of the nightly (`e2e-send-video-queue.yml`). Rejections carry the reason "Automated e2e queue cleanup"._
+
+_On demand — locally with the SiteMinder credentials above (and an allowlisted egress IP, e.g. the VPN), or from the Actions tab as **Drain send-video queue**:_
+
+```bash
+yarn queue:drain                 # reject everything queued (scope all)
+yarn queue:drain --scope e2e     # only the e2e personas; stops at the first foreign request
+yarn queue:drain --dry-run       # log in and report which queues hold work; claims nothing
+```
+
+_The journeys drain with scope_ `all` _by default (the nightly runs at midnight PT, when anything still queued is stale);_ `E2E_QUEUE_DRAIN_SCOPE=e2e` _keeps a daytime run to the e2e personas so it never touches a UAT tester's pending request._
+
 ## _Config Hierarchy_
 
 ```
@@ -593,6 +611,8 @@ _Tests run automatically in GitHub Actions via a device matrix that controls whi
 | _Nightly (schedule)_ | `regression` | _1 iOS (18) + 1 Android (15)_ | `bcsc-dev` | _—_          |
 
 > _The nightly `regression` suite (all per-area journeys) replaces the retired `happy-path` / `full-regression` suites. It is the default suite in_ `e2e-nightly.yml` _and selectable from_ `e2e.yml` _(alongside the per-area suites); `migration`, `upgrade`, and `upgrade403` are separate suites because each boots an OLD build via its own config, and the nightly runs them as chained advisory lanes after the regression (migration on Android 15; `upgrade` / `upgrade403` on iOS 18 + Android 15) — `upgrade` starts on the rolling previous-release build (`BCSC-prev.*`, or any stored build via the `prev_build_number` dispatch input; until the first full release publishes its e2e builds the lane skips with a notice) and installs the current build mid-session, while `upgrade403` pins the preserved `BCSC-v4.0.3.*`. `a11y` rides inside `regression` on both platforms as an advisory lane — its findings are reports, not failures. `scan` is inside `regression` but Android-only — the iOS configs list it in_ `exclude` _(`ANDROID_ONLY_SPECS`), so those specs are dropped before scheduling instead of costing an iOS session each to reach a skip._
+
+_The four send-video journeys are excluded from that concurrent regression matrix and run right after it as their own_ `send-video` _lane — both platforms, one at a time (`max_parallel: 1`), alongside the Android-only migration lane — because they review a shared, blind-FIFO SIT agent queue with shared personas (see **Send-video review queue**). Every_ `e2e.yml` _call that ran them drains that queue behind itself, and the nightly ends with a_ `queue-hygiene` _job that drains it once more._
 
 _The device matrix is passed as a JSON array of_ `{platform, device, os_version}` _objects to_ `e2e.yml`_. Each entry spawns a separate SauceLabs session with its own logs and pass/fail status. (Biometric CI wiring — its Sauce configs, dev scripts, and workflow job — has been removed pending re-implementation as a journey; the_ `biometrics` _helper is retained for that future work.)_
 

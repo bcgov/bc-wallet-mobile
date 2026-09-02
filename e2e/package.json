@@ -12,6 +12,7 @@
     "brief": "tsx scripts/brief.ts",
     "brief:check": "tsx scripts/brief-check.ts",
     "a11y:baseline": "tsx scripts/a11y-baseline.ts",
+    "queue:drain": "tsx scripts/send-video-queue.ts drain",
     "typecheck": "tsc --noEmit --skipLibCheck",
     "test:android:local": "wdio configs/local/wdio.android.local.emu.conf.ts",
     "test:android:device": "wdio configs/local/wdio.android.local.device.conf.ts",
