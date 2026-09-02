@@ -9,6 +9,9 @@
 #   auth         — auth/unlock journey
 #   main         — main navigation + settings + wallet credential journeys (issuer creds from 1Password)
 #   verify       — verify entry + verified card-type journeys (uses SM_* creds)
+#   send-video   — the four send-video journeys alone: scripted agent review against a shared,
+#                  blind-FIFO SIT queue, so CI runs them one platform at a time (max-parallel 1) and
+#                  keeps them out of every concurrent multi-device run (exclude_send_video)
 #   a11y         — automated accessibility audits over the core screens (iOS: Apple's audit engine; Android: heuristics)
 #   regression   — every per-area journey (nightly default)
 #   migration    — v3 → v4 app upgrade flow (Sauce RDC only; separate v3 build)
@@ -41,7 +44,7 @@ on:
   workflow_call:
     inputs:
       suite:
-        description: 'Test suite (smoke, onboarding, auth, main, verify, a11y, regression, migration, upgrade, upgrade403)'
+        description: 'Test suite (smoke, onboarding, auth, main, verify, send-video, a11y, regression, migration, upgrade, upgrade403)'
         type: string
         required: true
       build_number:
@@ -72,6 +75,19 @@ on:
         type: boolean
         required: false
         default: false
+      exclude_send_video:
+        description: >
+          Drop the send-video journeys from the suite. They review a shared blind-FIFO agent queue with
+          shared personas and must never run on two platforms at once; the nightly runs them in their
+          own `send-video` lane. Auto-enabled for a verify/regression run with parallel platforms.
+        type: boolean
+        required: false
+        default: false
+      max_parallel:
+        description: 'Matrix jobs allowed at once — 1 serialises the platforms (send-video is always 1)'
+        type: number
+        required: false
+        default: 2
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN:
         required: true
@@ -96,6 +112,7 @@ on:
           - auth
           - main
           - verify
+          - send-video
           - a11y
           - regression
           - migration
@@ -123,6 +140,14 @@ on:
         description: 'Render the run brief into the run summary'
         type: boolean
         default: true
+      exclude_send_video:
+        description: 'Drop the send-video journeys (auto for verify/regression with parallel platforms)'
+        type: boolean
+        default: false
+      max_parallel:
+        description: 'Matrix jobs allowed at once — 1 serialises the platforms (send-video is always 1)'
+        type: number
+        default: 2
 
 jobs:
   # ─── E2E Tests ─────────────────────────────────────────────────────
@@ -141,11 +166,13 @@ jobs:
     runs-on: ${{ inputs.runner_label }}
     permissions:
       contents: read
-    # regression runs every journey serially (~2h per platform with retries and growing); other suites (merge-queue smoke) stay tight
-    timeout-minutes: ${{ inputs.suite == 'regression' && 180 || 45 }}
+    # regression runs every journey serially (~2h per platform with retries and growing); send-video is four
+    # recording journeys with retries; other suites (merge-queue smoke) stay tight
+    timeout-minutes: ${{ (inputs.suite == 'regression' && 180) || (inputs.suite == 'send-video' && 90) || 45 }}
     continue-on-error: ${{ contains(fromJSON('["migration","upgrade","upgrade403"]'), inputs.suite) }}
     strategy:
-      max-parallel: 2
+      # send-video is pinned to 1: its journeys must never run on two platforms at once
+      max-parallel: ${{ (inputs.suite == 'send-video' && 1) || inputs.max_parallel || 2 }}
       fail-fast: false
       matrix:
         device: ${{ fromJSON(inputs.device_matrix) }}
@@ -225,6 +252,8 @@ jobs:
           BUILD_NUMBER: ${{ inputs.build_number }}
           PREV_BUILD_NUMBER: ${{ inputs.prev_build_number }}
           SUITE: ${{ inputs.suite }}
+          MAX_PARALLEL: ${{ inputs.max_parallel || 2 }}
+          EXCLUDE_SEND_VIDEO_INPUT: ${{ inputs.exclude_send_video }}
           BUILD_NAME: 'build-${{ inputs.build_number }}'
           TEST_NAME: 'E2E ${{ inputs.suite }} - ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
         run: |
@@ -234,9 +263,25 @@ jobs:
           # POST /session until the client aborts and reports "Failed to create a session".
           DEVICE_COUNT=$(printf '%s' "$DEVICE_MATRIX" | jq 'length')
           [ "$DEVICE_COUNT" -ge 1 ] 2>/dev/null || DEVICE_COUNT=1
-          PARALLEL_JOBS=$(( DEVICE_COUNT > 2 ? 2 : DEVICE_COUNT ))   # strategy.max-parallel is 2
+          [ "$MAX_PARALLEL" -ge 1 ] 2>/dev/null || MAX_PARALLEL=2
+          if [ "$SUITE" = "send-video" ]; then MAX_PARALLEL=1; fi   # mirrors strategy.max-parallel
+          PARALLEL_JOBS=$(( DEVICE_COUNT > MAX_PARALLEL ? MAX_PARALLEL : DEVICE_COUNT ))
           export SAUCE_MAX_INSTANCES=$(( SAUCE_RDS_CONCURRENCY / PARALLEL_JOBS ))
+          # The send-video journeys review a blind-FIFO queue: one session at a time whatever the budget
+          # (the Android lane caps itself, iOS has no per-lane cap).
+          if [ "$SUITE" = "send-video" ]; then export SAUCE_MAX_INSTANCES=1; fi
           echo "Devices: $DEVICE_COUNT | parallel jobs: $PARALLEL_JOBS | wdio maxInstances: $SAUCE_MAX_INSTANCES"
+
+          # Those journeys must never run on two platforms at once — each platform's queue drain would
+          # reject the other's live upload — so a multi-device parallel verify/regression run drops them;
+          # the nightly runs them in its own one-platform-at-a-time lane.
+          export E2E_EXCLUDE_SEND_VIDEO=0
+          if [ "$EXCLUDE_SEND_VIDEO_INPUT" = "true" ]; then
+            export E2E_EXCLUDE_SEND_VIDEO=1
+          elif [ "$PARALLEL_JOBS" -gt 1 ] && { [ "$SUITE" = "verify" ] || [ "$SUITE" = "regression" ]; }; then
+            export E2E_EXCLUDE_SEND_VIDEO=1
+            echo "::notice::Send-video journeys excluded from this ${SUITE} run: ${PARALLEL_JOBS} platforms run in parallel. Use the send-video suite (or max_parallel: 1) to include them."
+          fi
 
           case "$SUITE" in
             migration)
@@ -346,3 +391,20 @@ jobs:
             e2e/brief.json
           if-no-files-found: warn
           retention-days: 14
+
+  # ─── Queue hygiene ─────────────────────────────────────────────────
+  # The send-video journeys review a shared SIT agent queue; a journey that died between its upload
+  # and the scripted review leaves a submission there. Drain it after any suite that ran them —
+  # whatever the matrix did (always()).
+  queue-hygiene:
+    name: 'queue hygiene - ${{ inputs.suite }}'
+    needs: [e2e-tests]
+    if: ${{ always() && !inputs.exclude_send_video && contains(fromJSON('["verify","regression","send-video"]'), inputs.suite) }}
+    uses: ./.github/workflows/e2e-send-video-queue.yml
+    permissions:
+      contents: read
+    with:
+      scope: all
+      runner_label: ${{ inputs.runner_label }}
+    secrets:
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}

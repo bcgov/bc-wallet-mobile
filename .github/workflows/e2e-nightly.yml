@@ -1,10 +1,15 @@
 # E2E Nightly Full Regression
 #
 # Runs the `regression` E2E suite (every per-area journey) against the
-# latest successful main build's SauceLabs artifacts, then the upgrade
-# lanes (migration v3→v4, previous release → current, 4.0.3 → current) as
-# chained advisory jobs — each boots an OLD build via its own config, so
-# they cannot live inside the regression wdio suite itself.
+# latest successful main build's SauceLabs artifacts, then the send-video
+# lane (the four send-video journeys, one platform at a time — they review
+# a shared, blind-FIFO SIT agent queue with shared personas, so they are
+# kept out of the concurrent regression matrix) alongside the Android-only
+# migration lane, then the remaining upgrade lanes (previous release →
+# current, 4.0.3 → current) as chained advisory jobs — each boots an OLD
+# build via its own config, so they cannot live inside the regression wdio
+# suite itself. A final queue-hygiene job drains the SIT review queue so
+# the UAT team never starts the day behind e2e leftovers.
 #
 # Default device matrix: 1 iOS + 1 Android device (one modern OS major each).
 # os_version stays PINNED: unpinned, Sauce hands out iOS 15-era devices, where
@@ -52,6 +57,7 @@ on:
           - auth
           - main
           - verify
+          - send-video
           - a11y
           - migration
           - upgrade
@@ -170,6 +176,28 @@ jobs:
       suite: ${{ inputs.suite || 'regression' }}
       build_number: ${{ needs.resolve-build.outputs.build_number }}
       device_matrix: ${{ inputs.device_matrix || '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]' }}
+      # The send-video journeys get their own lane below; a `send-video` dispatch runs them here instead.
+      exclude_send_video: ${{ (inputs.suite || 'regression') != 'send-video' }}
+    secrets:
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
+  # ─── Send-video lane: one platform at a time ────────────────────
+  # The four send-video journeys review a shared, blind-FIFO SIT agent queue with shared personas:
+  # two platforms at once would review (or drain) each other's uploads. So they leave the concurrent
+  # regression matrix (exclude_send_video above) and run here iOS-then-Android at max_parallel 1 —
+  # alongside the Android-only migration lane, which keeps both Sauce sessions busy. Blocking, like
+  # the regression it belongs to; every e2e.yml call drains the queue behind itself.
+  e2e-send-video:
+    needs: [check-for-merges, resolve-build, e2e]
+    if: ${{ !cancelled() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' && (inputs.suite || 'regression') == 'regression' }}
+    uses: ./.github/workflows/e2e.yml
+    permissions:
+      contents: read
+    with:
+      suite: send-video
+      build_number: ${{ needs.resolve-build.outputs.build_number }}
+      device_matrix: ${{ inputs.device_matrix || '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]' }}
+      max_parallel: 1
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
@@ -196,7 +224,7 @@ jobs:
       OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
   e2e-upgrade:
-    needs: [check-for-merges, resolve-build, e2e-migration]
+    needs: [check-for-merges, resolve-build, e2e-migration, e2e-send-video]
     if: ${{ !cancelled() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' && (inputs.suite || 'regression') == 'regression' }}
     uses: ./.github/workflows/e2e.yml
     permissions:
@@ -221,13 +249,27 @@ jobs:
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
+  # ─── Queue hygiene: the last word on the SIT review queue ───────
+  # Every lane that ran send-video journeys drained the queue behind itself (e2e.yml); this is the
+  # end-of-night double check, whatever the lanes did (always()).
+  queue-hygiene:
+    needs: [check-for-merges, resolve-build, e2e, e2e-send-video, e2e-migration, e2e-upgrade, e2e-upgrade403]
+    if: ${{ always() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' }}
+    uses: ./.github/workflows/e2e-send-video-queue.yml
+    permissions:
+      contents: read
+    with:
+      scope: all
+    secrets:
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
   # ─── Nightly brief ──────────────────────────────────────────────
   # The page for the night: the UAT checklist per platform across every lane above, every failure,
   # and the accessibility findings vs e2e/a11y-baseline.json. Runs whatever the lanes did (always()),
   # reads the e2e-reports-* artifacts they uploaded, and writes the run summary + e2e-nightly-brief.
   brief:
     name: Nightly brief
-    needs: [check-for-merges, resolve-build, e2e, e2e-migration, e2e-upgrade, e2e-upgrade403]
+    needs: [check-for-merges, resolve-build, e2e, e2e-send-video, e2e-migration, e2e-upgrade, e2e-upgrade403, queue-hygiene]
     if: ${{ always() && needs.check-for-merges.outputs.should_run == 'true' && needs.resolve-build.result == 'success' }}
     runs-on: ubuntu-22.04
     permissions:
@@ -258,13 +300,15 @@ jobs:
           BUILD_NUMBER: ${{ needs.resolve-build.outputs.build_number }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           LANE_REGRESSION: ${{ needs.e2e.result }}
+          LANE_SEND_VIDEO: ${{ needs.e2e-send-video.result }}
           LANE_MIGRATION: ${{ needs.e2e-migration.result }}
           LANE_UPGRADE: ${{ needs.e2e-upgrade.result }}
           LANE_UPGRADE403: ${{ needs.e2e-upgrade403.result }}
         run: |
           ./node_modules/.bin/tsx scripts/brief.ts --reports artifacts \
             --title "E2E nightly — build ${BUILD_NUMBER}" --run-url "$RUN_URL" \
-            --lane "regression=${LANE_REGRESSION}" --lane "migration=${LANE_MIGRATION}" \
+            --lane "regression=${LANE_REGRESSION}" --lane "send-video=${LANE_SEND_VIDEO}" \
+            --lane "migration=${LANE_MIGRATION}" \
             --lane "upgrade=${LANE_UPGRADE}" --lane "upgrade403=${LANE_UPGRADE403}" \
             --out brief.md --json brief.json
           cat brief.md >> "$GITHUB_STEP_SUMMARY"
