@@ -1,7 +1,7 @@
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { TestUsers } from '../constants.js'
-import { markSubmissionReviewed } from '../support/send-video-queue.js'
+import { clearQueuedSubmission } from '../support/send-video-queue.js'
 
 /**
  * Normalizes BIRTH_DATE to YYYY-MM-DD regardless of input format.
@@ -237,7 +237,7 @@ export async function reviewSendVideoRequest(
     const claimed = await withDriverKeepalive(() =>
       reviewSendVideoLogin({ ...input, platform }, { signal: controller.signal })
     )
-    markSubmissionReviewed()
+    clearQueuedSubmission()
     console.log(
       `[approval] Decided ${claimed.queue} request ${claimed.requestIdentifier}: ${claimed.claimedName} ` +
         `(serial ${claimed.claimedSerial}, ${claimed.claimedOs || 'os unknown'})`

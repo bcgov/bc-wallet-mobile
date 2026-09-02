@@ -6,6 +6,7 @@ import {
   captureSecondNonBcscDocument,
   chooseAddAccount,
   cleanUpQueuedSubmission,
+  clearReviewQueueBeforeSubmit,
   completeEmailVerification,
   fillResidentialAddress,
   startEmailVerification,
@@ -15,7 +16,7 @@ import {
   submitSendVideoVerification,
   waitForSendVideoDecision,
 } from '../../../src/flows/verify.js'
-import { type ClaimedRequestSummary, drainSendVideoQueue, reviewSendVideoRequest } from '../../../src/helpers/approval.js'
+import { type ClaimedRequestSummary, reviewSendVideoRequest } from '../../../src/helpers/approval.js'
 import { getEmailConfirmationCode } from '../../../src/helpers/email.js'
 import { HomeScreen, SettingsScreen } from '../../../src/screens/main.js'
 import { VerificationSuccessScreen } from '../../../src/screens/verify.js'
@@ -58,7 +59,7 @@ describe('Verified journey: non-bcsc, send video', () => {
   })
 
   it('clears the review queue before submitting', async () => {
-    await drainSendVideoQueue()
+    await clearReviewQueueBeforeSubmit()
   })
 
   it('onboards to the verify prompt', async () => {

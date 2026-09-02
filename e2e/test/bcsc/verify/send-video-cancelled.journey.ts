@@ -3,6 +3,7 @@ import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
   chooseAddAccount,
   cleanUpQueuedSubmission,
+  clearReviewQueueBeforeSubmit,
   enterBirthdate,
   enterSerialManually,
   expectCancelledReviewReason,
@@ -12,7 +13,7 @@ import {
   submitSendVideoVerification,
   waitForSendVideoDecision,
 } from '../../../src/flows/verify.js'
-import { type ClaimedRequestSummary, drainSendVideoQueue, reviewSendVideoRequest } from '../../../src/helpers/approval.js'
+import { type ClaimedRequestSummary, reviewSendVideoRequest } from '../../../src/helpers/approval.js'
 import { getTestUser, setTestUser } from '../../../src/support/context.js'
 
 /**
@@ -45,7 +46,7 @@ describe('Verified journey: send video, rejected', () => {
   })
 
   it('clears the review queue before submitting', async () => {
-    await drainSendVideoQueue()
+    await clearReviewQueueBeforeSubmit()
   })
 
   it('onboards to the verify prompt', async () => {

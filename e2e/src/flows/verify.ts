@@ -60,7 +60,7 @@ import {
   VideoReviewScreen,
   VideoTooLongScreen,
 } from '../screens/verify.js'
-import { hasQueuedSubmission, markSubmissionQueued } from '../support/send-video-queue.js'
+import { clearQueuedSubmission, hasQueuedSubmission, markSubmissionQueued } from '../support/send-video-queue.js'
 
 /**
  * Verify-stack arranges: the entry spine plus the per-step arranges that mirror the app's
@@ -568,6 +568,21 @@ export async function waitForSendVideoDecision(
 }
 
 /**
+ * Journey setup: the review claims the queue HEAD blindly, so this journey's upload only reaches it
+ * once the queue is empty. A drain that stops early leaves a foreign request in front of ours — fail
+ * here, rather than twenty minutes later on a decision wait that never settles.
+ */
+export async function clearReviewQueueBeforeSubmit(): Promise<void> {
+  const { stoppedReason, queuesWithWork } = await drainSendVideoQueue()
+  if (stoppedReason) {
+    throw new Error(
+      `The review queue is not empty, so this journey's upload would not be the request the review claims: ` +
+        `${stoppedReason}. Queues still holding work: ${queuesWithWork.join(', ') || 'none reported'}.`
+    )
+  }
+}
+
+/**
  * Journey teardown: drain the review queue when this session's upload was never claimed — a failure
  * between the upload and the scripted review would otherwise leave it for the next run, or the
  * morning. Best-effort by design: a hook that throws is reported as a failure of its own.
@@ -581,6 +596,9 @@ export async function cleanUpQueuedSubmission(): Promise<void> {
     await drainSendVideoQueue({ maxClaims: 5, timeoutMs: 120_000 })
   } catch (err) {
     console.warn(`[verify] The post-journey queue drain failed: ${(err as Error).message ?? err}`)
+  } finally {
+    // Cleared however the drain went: the orphan is this teardown's to deal with, once.
+    clearQueuedSubmission()
   }
 }
 
