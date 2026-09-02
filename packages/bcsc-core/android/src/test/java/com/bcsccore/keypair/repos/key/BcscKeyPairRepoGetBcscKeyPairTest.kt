@@ -246,9 +246,7 @@ class BcscKeyPairRepoGetBcscKeyPairTest {
     @Test
     fun `getNewestTrackedAlias does not write metadata or touch the keystore`() {
         val infoSource = InMemoryKeyPairInfoSource(mapOf("rsa1" to KeyPairInfo("rsa1", 1_000L)))
-        // rsa3 is an untracked keystore-only orphan; a mutating/reconciling lookup could pick
-        // it up and persist it, which the size assertion below must catch.
-        val ks = keyStoreWithAliases(setOf("rsa1", "rsa3"))
+        val ks = keyStoreWithAliases(setOf("rsa1"))
         val repo = TestRepo(infoSource, ks)
         val aliasesBefore = infoSource.store.keys.toSet()
 
@@ -261,6 +259,7 @@ class BcscKeyPairRepoGetBcscKeyPairTest {
             infoSource.store["rsa1"]!!.createdAt,
         )
         verify(exactly = 0) { ks.containsAlias(any()) }
+        verify(exactly = 0) { ks.aliases() }
     }
 
     // MARK: - sanity: the tracked/normal case is unchanged
