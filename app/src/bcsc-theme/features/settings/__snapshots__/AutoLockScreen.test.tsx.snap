@@ -25,25 +25,21 @@ exports[`AutoLockScreen renders correctly 1`] = `
     data={
       [
         {
-          "onPress": [Function],
           "testID": "auto-lock-time-5",
           "title": "AutoLockTimes.FiveMinutes",
           "value": 5,
         },
         {
-          "onPress": [Function],
           "testID": "auto-lock-time-3",
           "title": "AutoLockTimes.ThreeMinutes",
           "value": 3,
         },
         {
-          "onPress": [Function],
           "testID": "auto-lock-time-1",
           "title": "AutoLockTimes.OneMinute",
           "value": 1,
         },
         {
-          "onPress": [Function],
           "testID": "auto-lock-time-0",
           "title": "AutoLockTimes.Never",
           "value": 0,
