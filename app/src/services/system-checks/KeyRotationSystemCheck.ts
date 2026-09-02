@@ -72,8 +72,8 @@ export class KeyRotationSystemCheck implements SystemCheckStrategy {
       }
     }
 
-    // Never rotate on "can't tell": enumeration failure, an empty keystore, and a missing
-    // `created` all skip rather than risk rotating (or not) based on a guess.
+    // Never rotate on "can't tell": enumeration failure and an empty keystore skip. Keys
+    // without a usable `created` are ignored below and the check runs on the rest.
     let keys
     try {
       keys = await getAllKeys()
