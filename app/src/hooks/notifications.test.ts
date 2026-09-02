@@ -125,9 +125,7 @@ describe('useNotifications - proof request expiry', () => {
     mockUseBasicMessages.mockReturnValue({ records: [] })
     mockUseCredentialByState.mockReturnValue([])
     mockUseOptionalAgent.mockReturnValue({ agent: fakeAgent })
-    mockUseProofByState.mockImplementation((state: unknown) =>
-      Array.isArray(state) ? proofsDone : proofsRequested
-    )
+    mockUseProofByState.mockImplementation((state: unknown) => (Array.isArray(state) ? proofsDone : proofsRequested))
     mockIsProofRequestingAttestation.mockResolvedValue(false)
     mockDeclineProofRequest.mockResolvedValue(undefined)
     setStore(PROOF_EXPIRATION_TIMES.TwoMinutes)
@@ -280,9 +278,7 @@ describe('useNotifications - proof request expiry', () => {
 
     it('keeps an old pending proof in the list when expiry is disabled (Never)', async () => {
       setStore(PROOF_EXPIRATION_TIMES.Never)
-      proofsRequested = [
-        makeProof({ id: 'old-proof', createdAt: new Date(Date.now() - 30 * 24 * HOUR_MS) }),
-      ]
+      proofsRequested = [makeProof({ id: 'old-proof', createdAt: new Date(Date.now() - 30 * 24 * HOUR_MS) })]
 
       const { result } = renderHook(() => useNotifications())
 

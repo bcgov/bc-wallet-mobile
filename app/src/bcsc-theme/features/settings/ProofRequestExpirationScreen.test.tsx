@@ -12,7 +12,9 @@ const withExpiration = (proofRequestExpirationMs?: number) => ({
 const renderScreen = (proofRequestExpirationMs?: number) =>
   render(
     <BasicAppContext
-      initialStateOverride={proofRequestExpirationMs === undefined ? undefined : withExpiration(proofRequestExpirationMs)}
+      initialStateOverride={
+        proofRequestExpirationMs === undefined ? undefined : withExpiration(proofRequestExpirationMs)
+      }
     >
       <ProofRequestExpirationScreen />
     </BasicAppContext>

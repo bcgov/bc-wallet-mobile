@@ -276,7 +276,8 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
   const notificationsOnText =
     notificationStatus === PushNotifications.NotificationPermissionStatus.GRANTED ? 'ON' : 'OFF'
   const autoLockTimeText = `${store.preferences.autoLockTime ?? DEFAULT_AUTO_LOCK_TIME_MIN} min`
-  const proofRequestExpirationMs = store.preferences.proofRequestExpirationMs ?? ProofRequestExpirationTime.FortyEightHours
+  const proofRequestExpirationMs =
+    store.preferences.proofRequestExpirationMs ?? ProofRequestExpirationTime.FortyEightHours
   const proofRequestExpirationLabelKey =
     Object.entries(ProofRequestExpirationTime).find(([, value]) => value === proofRequestExpirationMs)?.[0] ??
     'FortyEightHours'
