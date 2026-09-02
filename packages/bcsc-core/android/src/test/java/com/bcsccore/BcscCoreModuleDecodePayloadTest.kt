@@ -324,8 +324,8 @@ class BcscCoreModuleDecodePayloadTest {
 
     @Test
     fun `previous-key label still decrypts when enumeration reports no keys at all`() {
-        // The real repo used to swallow a keyStore.aliases() fault into an empty list rather than
-        // throwing, so the label must be tried directly regardless of what enumeration says.
+        // AndroidKeyStoreSpi can return an empty alias batch while containsAlias/getEntry work,
+        // so the label is tried directly regardless of what enumeration says.
         fakeKeyPairSource.enumerationReturnsEmpty = true
         val inner = signedInnerJwt(rsa1, "rsa1")
         val jweString = jwe(inner, kid = "rsa1", encryptTo = rsa1)

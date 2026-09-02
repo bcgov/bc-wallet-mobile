@@ -1864,8 +1864,9 @@ class BcscCoreModule internal constructor(
         try {
             // During rotation the server still encrypts to the previous key until it sees the
             // new one, so the label on the response wins over "newest" when we hold that key.
-            // The label is always tried directly: the enumeration can be empty or stale after a
-            // keystore fault, and getBcscKeyPair() is null only for a definitively absent alias.
+            // The label is always tried directly: AndroidKeyStoreSpi can return an empty alias
+            // batch while containsAlias/getEntry work, and getBcscKeyPair() is null only for a
+            // definitively absent alias.
             val labelled = kid?.let { keyPairSource.getBcscKeyPair(it) }
             if (labelled != null) {
                 kidMatchesLocal = true
