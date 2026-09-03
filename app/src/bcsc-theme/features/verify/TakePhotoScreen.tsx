@@ -48,7 +48,6 @@ const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) =>
         maskLineColor={ColorPalette.brand.highlight}
         onPhotoTaken={handlePhotoTaken}
         photoOutput={SelfiePhotoOutput}
-        // photoQualityBalance="quality"
         maskLineWidth={Spacing.xs}
         maskOverlayOpacity={0.6}
       />

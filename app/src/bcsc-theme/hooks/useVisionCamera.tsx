@@ -55,7 +55,7 @@ export const useVisionCamera = ({ position, deviceFilter, photoOutput, videoOutp
    */
   const takePhoto = useCallback(async () => {
     if (!photoOutput) {
-      throw new Error('[Camera] No photo output configured')
+      throw new Error('[Camera] No photo output configured. Please provide a CameraPhotoOutput to take photos.')
     }
 
     logger.debug('[Camera] Capturing photo to file')
@@ -73,7 +73,7 @@ export const useVisionCamera = ({ position, deviceFilter, photoOutput, videoOutp
   const startRecordingVideo = useCallback(
     async (options: StartRecordingCallbacks) => {
       if (!videoOutput) {
-        throw new Error('[Camera] No video output configured')
+        throw new Error('[Camera] No video output configured. Please provide a CameraVideoOutput to start recording.')
       }
 
       if (recorderRef.current?.isRecording) {

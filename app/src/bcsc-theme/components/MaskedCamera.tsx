@@ -35,7 +35,6 @@ type MaskedCameraProps = {
   maskOverlayOpacity?: number
   customPath?: string
   codeScanner?: CameraOutput
-  // photoQualityBalance?: 'speed' | 'balanced' | 'quality'
   onPhotoTaken: (path: string) => void
 }
 
@@ -61,18 +60,12 @@ const MaskedCamera = ({
   const { t } = useTranslation()
   const safeAreaInsets = useSafeAreaInsets()
   const { Spacing, ColorPalette } = useTheme()
-  // const [torchOn, setTorchOn] = useState(false)
-  // const cameraRef = useRef<CameraRef>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const isFocused = useIsFocused()
-  // const format = useCameraFormat(device, cameraFormatFilter)
-  // const { failedToWriteToLocalStorageAlert } = useAlerts(navigation)
   const { emitErrorModal } = useErrorAlert()
   const { preventDoublePress } = usePreventDoublePress()
   const { appStateStatus } = useBCSCActivity()
-  // const hasTorch = device?.hasTorch ?? false
 
-  // TODO (MD VisionCamera): Replace with actual metadata
   const cameraMetadata = useMemo(() => getCameraMetadata(device), [device])
 
   const styles = StyleSheet.create({
@@ -116,18 +109,6 @@ const MaskedCamera = ({
     },
   })
 
-  // const handleTorchChange = useCallback(
-  //   (newTorchMode: 'on' | 'off') => {
-  //     setTorchOn(newTorchMode === 'on')
-  //     controller?.setTorchMode(newTorchMode)
-  //   },
-  //   [controller]
-  // )
-
-  // const toggleTorch = () => {
-  //   handleTorchChange(torchOn ? 'off' : 'on')
-  // }
-
   useEffect(() => {
     if (!device) {
       // provide back button if they have no working camera
@@ -136,26 +117,6 @@ const MaskedCamera = ({
       })
     }
   }, [device, navigation])
-
-  // useEffect(() => {
-  //   if (!isFocused) {
-  //     handleTorchChange('off')
-  //   }
-  // }, [handleTorchChange, isFocused])
-
-  // const emitCameraError = useCallback(
-  //   (error: unknown) => {
-  //     const appError = ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
-  //
-  //     // Add camera device and format info to the error context for better debugging
-  //     appError.addContext(cameraMetadata)
-  //
-  //     logger.error('[MaskedCamera] runtime error', appError.toJSON())
-  //
-  //     emitErrorModal(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorMessage'), appError)
-  //   },
-  //   [cameraMetadata, emitErrorModal, logger, t]
-  // )
 
   const onError = useCallback(
     (error: unknown) => {
@@ -210,19 +171,8 @@ const MaskedCamera = ({
         ref={cameraRef}
         style={styles.camera}
         device={device}
-        // TODO (MD VisionCamera): Audit these commented props
-        // format={format}
         isActive={isFocused && !isBackgroundedAppState(appStateStatus)}
-        // photo={true}
-        // video={true}
-        // photoQualityBalance={photoQualityBalance}
-        // isMirrored={false}
-        // onInitialized={() => logger.debug('MaskedCamera initialized', cameraMetadata)}
         onError={onError}
-        // codeScanner={codeScanner}
-        // torch={torchOn ? 'on' : 'off'}
-        // Set fps to max supported by the selected format for smoother preview
-        // fps={format?.maxFps}
         outputs={[photoOutput, codeScanner].filter(Boolean) as CameraOutput[]}
         onConfigured={() => logger.debug('MaskedCamera initialized', cameraMetadata)}
       />

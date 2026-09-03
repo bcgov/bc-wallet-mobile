@@ -4,6 +4,8 @@ import { BCComboCardBarcodeDecoder } from './BCComboCardBarcodeDecoder'
 import { BCServicesCardBarcodeDecoder } from './BCServicesCardBarcodeDecoder'
 import { DriversLicenseBarcodeDecoder } from './DriversLicenseBarcodeDecoder'
 
+type RawBarcodeValue = string
+
 // Enum representing the kinds of decoded codes
 export enum DecodedCodeKind {
   DriversLicenseBarcode = 'DriversLicenseBarcode',
@@ -153,7 +155,7 @@ export const decodeBarcodes = (codes: ScanableCode[], logger: AbstractBifoldLogg
 }
 
 export class BCServicesCardReader {
-  private decodedBarcodeMap = new Map<string, { hits: number; decoded: DecodedCode }>()
+  private decodedBarcodeMap = new Map<RawBarcodeValue, { hits: number; decoded: DecodedCode }>()
   private isBCServicesCardFlag: boolean | null = null
   private unknownBarcodeCount = 0
 

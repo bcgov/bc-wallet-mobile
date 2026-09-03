@@ -14,8 +14,9 @@ import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
 import { withAlert } from '@/utils/alert'
 import { MaskType, testIdWithKey, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { useFocusEffect } from '@mocks/@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { StyleSheet, useWindowDimensions, View } from 'react-native'
 import { BCSCCardProcess, EvidenceType, PhotoMetadata } from 'react-native-bcsc-core'
 import { useCameraPermission } from 'react-native-vision-camera'
@@ -78,7 +79,6 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const { isLoading: isCameraLoading } = useAutoRequestPermission(hasPermission, requestPermission)
   const { failedToReadFromLocalStorageAlert } = useAlerts(navigation)
 
-  // TODO (MD VisionCamer): Reset bcServicesCardReaderRef on unmount
   const bcServicesCardReaderRef = useRef(new BCServicesCardReader(logger, 0))
   const codeScanner = useBarcodeScannerOutput({
     barcodeFormats: scanner.codeTypes,
@@ -90,6 +90,12 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
       bcServicesCardReaderRef.current = bcServicesCardReaderRef.current.reset()
     },
   })
+
+  useFocusEffect(
+    useCallback(() => {
+      bcServicesCardReaderRef.current = bcServicesCardReaderRef.current.reset()
+    }, [])
+  )
 
   // SVGOverlay's customPath is the cutout — this rectangle leaves the top
   // banner area inside the dark overlay so the instruction text reads clearly.

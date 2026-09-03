@@ -5,6 +5,7 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { BCServicesCardReader } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, TOKENS, useServices, useTheme } from '@bifold/core'
+import { useIsFocused } from '@mocks/@react-navigation/native'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
@@ -190,7 +191,6 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const { hasPermission, requestPermission } = useCameraPermission()
   const scanner = useCardScanner()
   const { isLoading } = useAutoRequestPermission(hasPermission, requestPermission)
-  // const [torchOn, setTorchOn] = useState(false)
   const [size, setSize] = useState<{ width: number; height: number } | null>(null)
   const [scanState, setScanState] = useState<ScanState>('scanning')
   // Starts on mount; after the timeout we swap the initial guidance for the
@@ -199,10 +199,9 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const [cameraFailed, setCameraFailed] = useState(false)
   const [cameraKey, setCameraKey] = useState(0)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const isFocused = useIsFocused()
 
   const isProcessingScan = useRef(false)
-  // const bcscSerialRef = useRef<string | null>(null)
-  // const birthDateRef = useRef<Date | null>(null)
   const bcServicesCardReaderRef = useRef(new BCServicesCardReader(logger))
 
   const barcodeScannerOutput = useBarcodeScannerOutput({
@@ -230,11 +229,6 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
         await scanner.handleScanComboCard(serial, { birthDate })
         return
       }
-
-      // if (!barcodes || barcodes.length === 0) {
-      //   return
-      // }
-      // await onCodeScanned(scannableCodes)
     },
     onError: (error) => {
       logger.error('Barcode scanner error', { error })
@@ -251,8 +245,6 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     setSize({ width, height })
   }
 
-  // const toggleTorch = () => setTorchOn((prev) => !prev)
-
   const goToManualEntry = useCallback(() => navigation.navigate(BCSCScreens.ManualSerial), [navigation])
 
   const onCameraError = useCallback(() => {
@@ -266,55 +258,10 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     setCameraKey((prev) => prev + 1)
     // Reset the caches so we can scan again.
     isProcessingScan.current = false
-    // bcscSerialRef.current = null
-    // birthDateRef.current = null
-    bcServicesCardReaderRef.current = new BCServicesCardReader(logger)
-  }, [logger])
+    bcServicesCardReaderRef.current = bcServicesCardReaderRef.current.reset()
+  }, [])
 
   useFocusEffect(useCallback(() => retryCamera(), [retryCamera]))
-
-  // const onCodeScanned = async (barcodes: ScanableCode[]): Promise<boolean> => {
-  //   if (isProcessingScan.current) {
-  //     return true
-  //   }
-  //
-  //   const decodedBarcodes = decodeBarcodes(barcodes, logger)
-  //
-  //   for (const decoded of decodedBarcodes) {
-  //     if (!decoded && !bcscSerialRef.current && !birthDateRef.current) {
-  //       // Scanned a non-BCSC barcode - lock the camera and handle it as a non-BCSC card.
-  //       isProcessingScan.current = true
-  //       setScanState('locked')
-  //       scanner.handleScanNonBcsc()
-  //       return true
-  //     }
-  //
-  //     switch (decoded?.kind) {
-  //       case DecodedCodeKind.BCServicesCardBarcode:
-  //         bcscSerialRef.current = decoded.bcscSerial
-  //         break
-  //       case DecodedCodeKind.BCServicesComboCardCardBarcode:
-  //         // Use the serial from the 1D barcode for safety (ie: Alberta DL + appended health number)
-  //         birthDateRef.current = decoded.birthDate
-  //         break
-  //       case DecodedCodeKind.DriversLicenseBarcode:
-  //         birthDateRef.current = decoded.birthDate
-  //         break
-  //     }
-  //   }
-  //
-  //   if (bcscSerialRef.current && birthDateRef.current) {
-  //     // We have both the serial and the birthdate — lock the camera and handle the card.
-  //     isProcessingScan.current = true
-  //     setScanState('locked')
-  //     await scanner.handleScanComboCard(bcscSerialRef.current, { birthDate: birthDateRef.current })
-  //     return true
-  //   }
-  //
-  //   // Still missing the serial or the birthdate — tell CodeScanningCamera to
-  //   // unlock and keep scanning instead of freezing on this one barcode.
-  //   return false
-  // }
 
   const styles = StyleSheet.create({
     container: {
@@ -402,26 +349,11 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
             <Camera
               key={cameraKey}
               style={StyleSheet.absoluteFill}
-              isActive={true}
+              isActive={isFocused}
               device={'back'}
               onError={onCameraError}
               outputs={[barcodeScannerOutput]}
             />
-            {/* Camera fills the entire screen */}
-            {/* <CodeScanningCamera */}
-            {/*   key={cameraKey} */}
-            {/*   onCodeScanned={onCodeScanned} */}
-            {/*   cameraType={'back'} */}
-            {/*   initialZoom={2} */}
-            {/*   scanZones={BCSC_SN_SCAN_ZONES} */}
-            {/*   showScanZoneOverlay={false} */}
-            {/*   showZoomIndicator={false} */}
-            {/*   hideTorchButton */}
-            {/*   torchActive={torchOn} */}
-            {/*   onToggleTorch={toggleTorch} */}
-            {/*   onError={onCameraError} */}
-            {/*   style={StyleSheet.absoluteFill} */}
-            {/* /> */}
 
             {/* Vertical ID-card framing guide (appearance of MaskType.ID_CARD) */}
             {size ? <IdCardMaskOverlay width={size.width} height={size.height} strokeColor={frameStrokeColor} /> : null}
