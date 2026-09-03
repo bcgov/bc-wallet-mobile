@@ -31,3 +31,9 @@ New architecture support and turbomodule fixes. We should swap this library out 
 #### react-native-fs-npm-2.20.0-a38fe24051.patch
 
 Turbomodule fixes. We should swap this library out soon, hasn't been updated in four years.
+
+#### @bifold-remote-logs-npm-3.0.21-4ae200989a.patch
+
+Gates `test`/`trace` log methods on their own levels instead of `debug` (so ledger lookups no longer flood the default dev log level), drops `console.trace` for the `trace` level (no more stack traces on routine logs), and forces `LogLevel.test` instead of `debug` when remote logging is enabled (support sessions keep full detail). #4599
+
+Upstream (Bifold `packages/remote-logs`): `src/logger.ts` L86 (remote-logging override), L187/L193 (`test`/`trace` gates); `src/transports/console.ts` L146-148 (`console.trace`). Tests to adjust when porting: `src/__tests__/console.transport.test.ts` L18 (mocks `console.trace`), `src/__tests__/logger.comprehensive.test.ts` L44 (hardcodes `logLevel = 2`). Drop this patch once the upstream fix lands.
