@@ -1,5 +1,5 @@
 import { TOKENS, useServices } from '@bifold/core'
-import { useFocusEffect } from '@mocks/@react-navigation/native'
+import { useFocusEffect } from '@react-navigation/native'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import {
   CameraOutput,

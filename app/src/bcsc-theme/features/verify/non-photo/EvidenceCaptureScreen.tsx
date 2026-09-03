@@ -14,7 +14,7 @@ import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
 import { withAlert } from '@/utils/alert'
 import { MaskType, testIdWithKey, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
-import { useFocusEffect } from '@mocks/@react-navigation/native'
+import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useRef, useState } from 'react'
 import { StyleSheet, useWindowDimensions, View } from 'react-native'
@@ -79,7 +79,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const { isLoading: isCameraLoading } = useAutoRequestPermission(hasPermission, requestPermission)
   const { failedToReadFromLocalStorageAlert } = useAlerts(navigation)
 
-  const bcServicesCardReaderRef = useRef(new BCServicesCardReader(logger, 0))
+  const bcServicesCardReaderRef = useRef(new BCServicesCardReader(logger, 0)) // 0 == No minimum barcode hit threshold
   const codeScanner = useBarcodeScannerOutput({
     barcodeFormats: scanner.codeTypes,
     onBarcodeScanned: async (codes) => {
