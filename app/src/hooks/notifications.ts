@@ -60,7 +60,8 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
   const [now, setNow] = useState(() => Date.now())
   const { t } = useTranslation()
   const decliningProofIds = useRef<Set<string>>(new Set())
-  const proofRequestExpirationMs = store.preferences.proofRequestExpirationMs ?? ProofRequestExpirationTime.OneHour
+  const proofRequestExpirationMs =
+    store.preferences.proofRequestExpirationMs ?? ProofRequestExpirationTime.FortyEightHours
 
   // Single source of truth for which pending proof requests have aged out. Refetched on each tick
   // consumed both to hide them from the list and to decline them in dev mode.

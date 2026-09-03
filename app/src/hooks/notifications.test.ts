@@ -171,17 +171,17 @@ describe('useNotifications - proof request expiry', () => {
       expect(mockDeclineProofRequest).not.toHaveBeenCalled()
     })
 
-    it('falls back to the 1 hour default when no preference is set', async () => {
+    it('falls back to the 48 hour default when no preference is set', async () => {
       setStore(undefined)
-      // 30m old -> still within the 1h default, must not be declined
-      proofsRequested = [makeProof({ id: 'within-default', createdAt: new Date(Date.now() - HOUR_MS / 2) })]
+      // 47h old -> still within the 48h default, must not be declined
+      proofsRequested = [makeProof({ id: 'within-default', createdAt: new Date(Date.now() - 47 * HOUR_MS) })]
 
       const { rerender } = renderHook(() => useNotifications())
       await flushNonAttestationProofs()
       expect(mockDeclineProofRequest).not.toHaveBeenCalled()
 
-      // 2h old -> past the 1h default, must be declined
-      proofsRequested = [makeProof({ id: 'past-default', createdAt: new Date(Date.now() - 2 * HOUR_MS) })]
+      // 49h old -> past the 48h default, must be declined
+      proofsRequested = [makeProof({ id: 'past-default', createdAt: new Date(Date.now() - 49 * HOUR_MS) })]
       rerender({})
 
       await waitFor(() => expect(mockDeclineProofRequest).toHaveBeenCalledTimes(1))
