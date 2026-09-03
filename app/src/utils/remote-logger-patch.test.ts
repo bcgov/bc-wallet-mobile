@@ -29,6 +29,9 @@ describe('RemoteLogger trace/test level patch', () => {
   it('hides trace and test messages at the default development level (debug)', () => {
     const traceSpy = jest.spyOn(console, 'trace').mockImplementation(() => {})
     const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {})
+    // 'test' level falls through to the transport's default console.log branch,
+    // so this is the assertion that actually proves it's gated out.
+    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
 
     const logger = new RemoteLogger({ logLevel: LogLevel.debug })
 
@@ -38,6 +41,7 @@ describe('RemoteLogger trace/test level patch', () => {
     jest.runOnlyPendingTimers()
 
     expect(traceSpy).not.toHaveBeenCalled()
+    expect(logSpy).not.toHaveBeenCalled()
     expect(debugSpy).toHaveBeenCalledTimes(1)
     expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('a real debug message'))
   })
