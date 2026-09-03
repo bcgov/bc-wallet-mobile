@@ -97,6 +97,8 @@ describe('RemoteLogger trace/test level patch', () => {
 
     const logger = new RemoteLogger({
       logLevel: LogLevel.warn,
+      // Basic-auth credentials are load-bearing: the transport parses them out of the
+      // URL, matching the shape of the real REMOTE_LOGGING_URL.
       lokiUrl: 'https://user:pass@loki.example.com/loki/api/v1/push',
       lokiLabels: { application: 'test-app' },
     })
@@ -108,7 +110,7 @@ describe('RemoteLogger trace/test level patch', () => {
 
     expect(axios.post).toHaveBeenCalledTimes(1)
     expect(axios.post).toHaveBeenCalledWith(
-      expect.any(String),
+      'https://loki.example.com/loki/api/v1/push',
       expect.objectContaining({
         streams: [expect.objectContaining({ stream: expect.objectContaining({ level: 'trace' }) })],
       }),
