@@ -109,8 +109,20 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
+      # swiftformat ships preinstalled on the GitHub macOS image, so `brew install`
+      # is a no-op and the version is whatever that image happens to carry. Runners
+      # in the pool disagree (0.62.1 vs 0.63.0 on 2026-09-03), which made lint pass
+      # or fail on identical code depending on which machine the job drew. Pin it.
       - name: Install formatting and linting tools
-        run: brew install swiftformat clang-format ktlint
+        env:
+          SWIFTFORMAT_VERSION: '0.63.0'
+        run: |
+          brew install clang-format ktlint
+          curl -fsSL -o /tmp/swiftformat.zip \
+            "https://github.com/nicklockwood/SwiftFormat/releases/download/${SWIFTFORMAT_VERSION}/swiftformat.zip"
+          unzip -qo /tmp/swiftformat.zip -d /tmp/swiftformat
+          sudo install -m 0755 /tmp/swiftformat/swiftformat /usr/local/bin/swiftformat
+          swiftformat --version
 
       - name: Lint
         run: yarn lint
