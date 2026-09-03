@@ -71,6 +71,7 @@ export enum BCSCScreens {
   ContactJSONDetails = 'Contact JSON Details',
   ContactChat = 'Contact Chat',
   RemoveContact = 'Remove Contact',
+  CredentialJSONDetails = 'Credential JSON Details',
   /**
    * FIXME (MD): EvidenceTypeList screen in V4 maps to multiple screens in V3 https://github.com/bcgov/bc-wallet-mobile/issues/3409
    *
@@ -301,6 +302,7 @@ export type BCSCMainStackParams = {
   // Bifold's AnonCreds credential detail screen reused inside BCSC's MainStack
   // so ListCredentials (rendered in the Wallet tab) can navigate to it.
   [Screens.CredentialDetails]: { credentialId: string }
+  [BCSCScreens.CredentialJSONDetails]: { jsonBlob: string }
 
   [BCSCScreens.QRCore]: NavigatorScreenParams<BCSCQRCoreTabParams> | undefined
   [BCSCScreens.ConnectionLoading]: { oobRecordId?: string; credentialId?: string; proofId?: string }

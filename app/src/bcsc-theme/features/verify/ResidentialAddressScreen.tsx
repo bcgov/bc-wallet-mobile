@@ -13,7 +13,9 @@ import {
   useTheme,
 } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
+import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { TextInput } from 'react-native'
 import useResidentialAddressModel from './_models/useResidentialAddressModel'
 
 type ResidentialAddressScreenProps = StackScreenProps<BCSCVerifyStackParams, BCSCScreens.ResidentialAddress>
@@ -27,6 +29,7 @@ export const ResidentialAddressScreen = ({ navigation }: ResidentialAddressScree
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
   const { ButtonLoading } = useAnimatedComponents()
+  const postalCodeRef = useRef<TextInput>(null)
 
   const { formState, formErrors, isSubmitting, handleChange, handleSubmit } = useResidentialAddressModel({ navigation })
 
@@ -98,12 +101,19 @@ export const ResidentialAddressScreen = ({ navigation }: ResidentialAddressScree
         value={formState.province}
         options={PROVINCE_OPTIONS}
         onChange={(value) => handleChange('province', value)}
+        onModalClose={() => {
+          if (!formState.postalCode) {
+            // Focus the postal code input after the province dropdown is closed, if postal code is empty
+            postalCodeRef.current?.focus()
+          }
+        }}
         error={formErrors.province}
         placeholder={t('BCSC.Address.ProvincePlaceholder')}
         subtext={t('BCSC.Address.ProvinceSubtext')}
       />
 
       <InputWithValidation
+        ref={postalCodeRef}
         id={'postalCode'}
         label={t('BCSC.Address.PostalCodeLabel')}
         labelProps={labelProps}

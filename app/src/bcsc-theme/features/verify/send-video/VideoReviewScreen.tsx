@@ -20,12 +20,12 @@ import {
 } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import type { OnLoadData } from 'react-native-video'
-import { Video, VideoRef } from 'react-native-video'
+import { Video } from 'react-native-video'
 
 export const VerificationVideoCache = new MediaCache()
 
@@ -47,7 +47,6 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { width, height } = useWindowDimensions()
   const [paused, setPaused] = useState(false)
-  const videoRef = useRef<VideoRef>(null)
   const { videoPath, videoThumbnailPath } = route.params
   const { t } = useTranslation()
   const { failedToReadFromLocalStorageAlert, videoPromptsMissingAlert } = useAlerts(navigation)
@@ -210,7 +209,6 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
         {t('BCSC.SendVideo.VideoReview.Heading')}
       </ThemedText>
       <Video
-        ref={videoRef}
         source={{ uri: videoPath }}
         paused={paused}
         audioOutput={'speaker'}

@@ -70,6 +70,7 @@ const translation = {
     "AddFirstCredential": "Add your first credential (PT-BR)",
     "NotAnIDInfoTitle": "This does not replace your physical ID (PT-BR)",
     "NotAnIDInfoDescription": "Do not share this screen as ID. This credential is used for digital interactions via the BC Services Card app only. (PT-BR)",
+    "JSONDetailsTitle": "Credential JSON Details (PT-BR)",
   },
   "Onboarding": {
     "DifferentWalletHeading": "A different smart wallet (PT-BR)",
