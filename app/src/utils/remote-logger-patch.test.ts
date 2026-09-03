@@ -60,13 +60,19 @@ describe('RemoteLogger trace/test level patch', () => {
     expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('[TRACE]'))
   })
 
-  it('forces the lowest level (test) when remote logging is enabled, and restores the base level after', () => {
+  it('forces the lowest level (test) when remote logging is enabled, and trace reaches the console', () => {
+    const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {})
+
     const logger = new RemoteLogger({ logLevel: LogLevel.warn })
 
     expect(logger.logLevel).toBe(LogLevel.warn)
 
     logger.remoteLoggingEnabled = true
     expect(logger.logLevel).toBe(LogLevel.test)
+
+    logger.trace('ledger lookup')
+    jest.runOnlyPendingTimers()
+    expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('[TRACE]'))
 
     logger.remoteLoggingEnabled = false
     expect(logger.logLevel).toBe(LogLevel.warn)
