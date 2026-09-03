@@ -1,0 +1,56 @@
+name: Toolchain Versions
+
+# swiftformat and ktlint are pinned in quality.yml so a new release cannot fail the build
+# on code nobody touched. Nothing else announces those releases — Dependabot has no
+# manager that reads a version string out of a workflow file — so this checks weekly and
+# keeps a single issue up to date.
+
+on:
+  schedule:
+    - cron: '0 16 * * 1' # Mondays, 09:00 Canada/Pacific
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    name: Check pinned formatter versions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Compare pinned versions against upstream
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          report="$(./.github/scripts/check-toolchain-versions.sh)"
+          if [ -z "$report" ]; then
+            echo "behind=false" >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo "behind=true"
+              echo 'report<<TOOLCHAIN_EOF'
+              echo "$report"
+              echo 'TOOLCHAIN_EOF'
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open or update the tracking issue
+        if: steps.check.outputs.behind == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPORT: ${{ steps.check.outputs.report }}
+          TITLE: Pinned formatter versions are behind upstream
+        run: |
+          set -euo pipefail
+          existing="$(gh issue list --state open --search "$TITLE in:title" --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --body "$REPORT"
+            echo "updated issue #$existing"
+          else
+            gh issue create --title "$TITLE" --body "$REPORT" --label "component/cicd" --label "work/tech-debt"
+          fi
