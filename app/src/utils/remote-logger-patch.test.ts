@@ -106,7 +106,14 @@ describe('RemoteLogger trace/test level patch', () => {
     logger.trace('ledger lookup')
     jest.runOnlyPendingTimers()
 
-    expect(axios.post).toHaveBeenCalled()
+    expect(axios.post).toHaveBeenCalledTimes(1)
+    expect(axios.post).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        streams: [expect.objectContaining({ stream: expect.objectContaining({ level: 'trace' }) })],
+      }),
+      expect.anything()
+    )
 
     logger.remoteLoggingEnabled = false
     logger.dispose()
