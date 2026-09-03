@@ -563,7 +563,9 @@ jobs:
 
       - name: Install ccache
         run: |
-          # ccache is pre-installed on macOS runner images but may not be linked
+          # ccache is pre-installed on macOS runner images but may not be linked.
+          # Deliberately not `brew bundle`: that would see ccache installed, consider the
+          # Brewfile satisfied and skip it, leaving the binary unlinked and unusable.
           brew list ccache &>/dev/null && brew link --overwrite ccache 2>/dev/null || brew install ccache
           ccache --version
           # Configure ccache: 2GB max, no compression (faster), sloppiness for Xcode

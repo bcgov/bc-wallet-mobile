@@ -127,7 +127,9 @@ jobs:
           KTLINT_SHA256: 'a3fd620207d5c40da6ca789b95e7f823c54e854b7fade7f613e91096a3706d75'
         run: |
           set -euo pipefail
-          brew bundle --file=Brewfile
+          # The Brewfile is for local setup; CI takes clang-format from it and pins the
+          # two formatters below itself, so skip the ones it is about to override.
+          HOMEBREW_BUNDLE_BREW_SKIP='swiftformat ktlint' brew bundle --file=Brewfile
 
           # --proto/--proto-redir keep a redirect from downgrading a download to http.
           curl -fsSL --proto '=https' --proto-redir '=https' \
@@ -136,14 +138,17 @@ jobs:
           echo "${SWIFTFORMAT_SHA256}  /tmp/swiftformat.zip" | shasum -a 256 -c -
           unzip -qo /tmp/swiftformat.zip -d /tmp/swiftformat
           sudo install -m 0755 /tmp/swiftformat/swiftformat /usr/local/bin/swiftformat
-          swiftformat --version
+          # Fail loudly if anything else on PATH shadows the pinned copy.
+          swiftformat --version | grep -qx "${SWIFTFORMAT_VERSION}" \
+            || { echo "::error::swiftformat on PATH is $(swiftformat --version), expected ${SWIFTFORMAT_VERSION}"; exit 1; }
 
           curl -fsSL --proto '=https' --proto-redir '=https' \
             --retry 3 --retry-delay 2 --retry-connrefused -o /tmp/ktlint \
             "https://github.com/pinterest/ktlint/releases/download/${KTLINT_VERSION}/ktlint"
           echo "${KTLINT_SHA256}  /tmp/ktlint" | shasum -a 256 -c -
           sudo install -m 0755 /tmp/ktlint /usr/local/bin/ktlint
-          ktlint --version
+          ktlint --version | grep -q "${KTLINT_VERSION}" \
+            || { echo "::error::ktlint on PATH is $(ktlint --version), expected ${KTLINT_VERSION}"; exit 1; }
 
       - name: Lint
         run: yarn lint

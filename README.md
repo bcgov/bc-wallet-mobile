@@ -160,8 +160,13 @@ The project uses multiple formatters and linters for different languages
 ### Install Native Formatters (macOS)
 
 ```sh
-brew install swiftformat clang-format ktlint
+brew bundle
 ```
+
+Installs everything listed in the `Brewfile`. CI pins swiftformat and ktlint to exact
+releases (see `.github/workflows/quality.yml`), so a newer local copy can disagree with
+CI — if `yarn lint` passes locally but fails in CI, compare versions against those pins
+first.
 
 ### Install VS Code Extensions
 

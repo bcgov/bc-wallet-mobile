@@ -1,10 +1,15 @@
-# Formatting and linting tools used by `yarn lint` and CI (.github/workflows/quality.yml).
+# Native formatters and build tools. Install them all with:
 #
-# Homebrew installs the current version of a formula and offers no way to request an
-# older one, so this file pins the tool *set*, not their versions. The two formatters
-# whose rules can fail a build — swiftformat and ktlint — are therefore installed from
-# pinned upstream releases in CI instead, and are deliberately absent here.
+#   brew bundle
 #
-# For local development `brew bundle` gets you close enough; run `yarn lint` to confirm.
+# Homebrew always installs the current version of a formula and offers no way to ask
+# for an older one, so this file pins the tool *set*, not their versions.
+#
+# CI pins swiftformat and ktlint to exact releases (see .github/workflows/quality.yml)
+# because their rules can change between versions and fail a build on code nobody
+# touched. Your local copies may therefore be newer than CI's. If `yarn lint` disagrees
+# with CI, compare versions against the pins in that workflow first.
+brew "swiftformat"
+brew "ktlint"
 brew "clang-format"
 brew "ccache"
