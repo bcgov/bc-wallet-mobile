@@ -429,14 +429,14 @@ export const UAT_CHECKLIST: CoverageSection[] = [
       },
       {
         id: 'ext-migration-v3',
-        label: 'Migration v3 → v4',
+        label: 'Upgrade from v3 (migration)',
         platforms: androidOnly,
         proof: [
           {
             file: spec('migration/migration.spec.ts'),
             sources: [
               spec('migration/v3-onboarding.spec.ts'),
-              spec('migration/upgrade.spec.ts'),
+              spec('migration/v3-to-v4-upgrade.spec.ts'),
               spec('migration/v4-unlock.spec.ts'),
             ],
           },
@@ -516,21 +516,39 @@ export const OTHER_COVERAGE: CoverageSection[] = [
       { id: 'j-upgrade-403', label: 'Upgrade from 4.0.3', platforms: both, proof: [{ file: spec('upgrade/upgrade-from-v403.spec.ts') }] },
       {
         id: 'j-migration-v3-add-card',
-        label: 'Migration: v3 add card',
+        label: 'Upgrade from v3: set up on the v3 release',
         platforms: androidOnly,
-        proof: [{ file: spec('migration/migration.spec.ts'), suite: 'V3 Add Card', sources: [spec('migration/v3-onboarding.spec.ts')] }],
+        proof: [
+          {
+            file: spec('migration/migration.spec.ts'),
+            suite: 'Upgrade from v3: setting up on the v3 release',
+            sources: [spec('migration/v3-onboarding.spec.ts')],
+          },
+        ],
       },
       {
         id: 'j-migration-upgrade',
-        label: 'Migration: upgrade v3 → v4',
+        label: 'Upgrade from v3: install the current build',
         platforms: androidOnly,
-        proof: [{ file: spec('migration/migration.spec.ts'), suite: 'Upgrade v3 → v4', sources: [spec('migration/upgrade.spec.ts')] }],
+        proof: [
+          {
+            file: spec('migration/migration.spec.ts'),
+            suite: 'Upgrade from v3: installing the current build',
+            sources: [spec('migration/v3-to-v4-upgrade.spec.ts')],
+          },
+        ],
       },
       {
         id: 'j-migration-v4-unlock',
-        label: 'Migration: v4 unlock',
+        label: 'Upgrade from v3: unlock with the v3 PIN',
         platforms: androidOnly,
-        proof: [{ file: spec('migration/migration.spec.ts'), suite: 'V4 Unlock After Migration', sources: [spec('migration/v4-unlock.spec.ts')] }],
+        proof: [
+          {
+            file: spec('migration/migration.spec.ts'),
+            suite: 'Upgrade from v3: unlocking with the v3 PIN',
+            sources: [spec('migration/v4-unlock.spec.ts')],
+          },
+        ],
       },
     ],
   },

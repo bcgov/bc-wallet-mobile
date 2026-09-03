@@ -16,7 +16,7 @@ import { migrationContext } from './migration-context.js'
  * card — so the old `CardButton-<nickname>` step is gone (it referenced a v3 concept that no longer
  * exists in v4).
  */
-describe('V4 Unlock After Migration', () => {
+describe('Upgrade from v3: unlocking with the v3 PIN', () => {
   it('unlocks the migrated account and enters the v3 PIN', async () => {
     await annotate('Migration: V4 unlock')
     await selectAccountLandingIfPresent()

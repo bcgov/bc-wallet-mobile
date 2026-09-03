@@ -1,5 +1,5 @@
 import { TEST_PIN, TestUsers, Timeouts } from '../../../src/constants.js'
-import { relaunchApp, selectAccountLandingIfPresent } from '../../../src/flows/auth.js'
+import { relaunchApp, selectAccountLandingIfPresent, submitPin } from '../../../src/flows/auth.js'
 import { chooseAddAccount, leaveVerificationToHome, startVerification } from '../../../src/flows/verify.js'
 import { auditScreen, reportA11ySummary } from '../../../src/helpers/a11y-audit.js'
 import { tapAtWindowPercent } from '../../../src/helpers/gestures.js'
@@ -267,12 +267,9 @@ describe('Accessibility journey: automated audits over the core screens', () => 
     await AccountLandingScreen.tap('primary')
     await EnterPINScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     await auditScreen('EnterPIN')
-    // The PIN auto-submits on the 6th digit; Continue is the fallback when it does not navigate.
-    await EnterPINScreen.fill('pin', TEST_PIN)
-    if (!(await HomeScreen.isPresent(Timeouts.SCREEN_TRANSITION))) {
-      await EnterPINScreen.tapWhenEnabled('primary')
-      await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-    }
+    // Where the PIN lands is not this audit's business: the session started a verification, which the
+    // app resumes on unlock, so only the departure from EnterPIN is proven.
+    await submitPin(TEST_PIN)
   })
 
   it('reports the accessibility audit roll-up', async () => {

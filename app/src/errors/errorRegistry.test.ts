@@ -1,29 +1,31 @@
 import { ErrorCategory, ErrorRegistry, ErrorRegistryKey, ErrorSeverity } from './errorRegistry'
 
 describe('errorRegistry', () => {
+  // These strings are serialized into AppError.code and shipped to analytics/Loki, so the
+  // exact set is a wire contract — asserting the whole set catches additions as well as renames.
   describe('ErrorSeverity', () => {
     it('should have all expected severity levels', () => {
-      expect(ErrorSeverity.INFO).toBe('info')
-      expect(ErrorSeverity.WARNING).toBe('warning')
-      expect(ErrorSeverity.ERROR).toBe('error')
-      expect(ErrorSeverity.CRITICAL).toBe('critical')
+      expect(Object.values(ErrorSeverity).sort()).toEqual(['critical', 'error', 'info', 'warning'])
     })
   })
 
   describe('ErrorCategory', () => {
     it('should have all expected categories', () => {
-      expect(ErrorCategory.CAMERA).toBe('camera')
-      expect(ErrorCategory.NETWORK).toBe('network')
-      expect(ErrorCategory.AUTHENTICATION).toBe('auth')
-      expect(ErrorCategory.CREDENTIAL).toBe('credential')
-      expect(ErrorCategory.PROOF).toBe('proof')
-      expect(ErrorCategory.CONNECTION).toBe('connection')
-      expect(ErrorCategory.WALLET).toBe('wallet')
-      expect(ErrorCategory.VERIFICATION).toBe('verification')
-      expect(ErrorCategory.DEVICE).toBe('device')
-      expect(ErrorCategory.STORAGE).toBe('storage')
-      expect(ErrorCategory.TOKEN).toBe('token')
-      expect(ErrorCategory.GENERAL).toBe('general')
+      expect(Object.values(ErrorCategory).sort()).toEqual([
+        'auth',
+        'camera',
+        'connection',
+        'credential',
+        'device',
+        'general',
+        'network',
+        'proof',
+        'storage',
+        'token',
+        'unknown',
+        'verification',
+        'wallet',
+      ])
     })
   })
 
@@ -40,55 +42,38 @@ describe('errorRegistry', () => {
       expect(uniqueAppEvents.size).toBe(appEvents.length)
     })
 
+    // Deliberately untyped strings: a typed `ErrorRegistryKey[]` would only fail the TS build,
+    // whereas plain strings make a rename or removal fail here with the offending key named.
     it('should contain all expected error keys', () => {
-      // Camera errors
-      expect(ErrorRegistry.CAMERA_BROKEN).toBeDefined()
-      expect(ErrorRegistry.INVALID_QR_CODE).toBeDefined()
+      const expectedKeys = [
+        'CAMERA_BROKEN',
+        'INVALID_QR_CODE',
+        'NO_INTERNET',
+        'SERVER_ERROR',
+        'SERVER_TIMEOUT',
+        'LOGIN_PARSE_URI',
+        'LOGIN_REJECTED_401',
+        'CARD_EXPIRED_WILL_REMOVE',
+        'VERIFY_NOT_COMPLETE',
+        'VIDEO_VERIFY_NOT_COMPLETE',
+        'INVALID_TOKEN',
+        'TOKEN_NULL',
+        'STORAGE_WRITE_ERROR',
+        'STORAGE_READ_ERROR',
+        'ANDROID_APP_UPDATE_REQUIRED',
+        'IOS_APP_UPDATE_REQUIRED',
+        'GENERAL_ERROR',
+        'DYNAMIC_REGISTRATION_ERROR',
+        'STATE_LOAD_ERROR',
+        'AGENT_INITIALIZATION_ERROR',
+        'WALLET_SECRET_NOT_FOUND',
+        'PARSE_INVITATION_ERROR',
+        'RECEIVE_INVITATION_ERROR',
+        'ATTESTATION_BAD_INVITATION',
+        'ATTESTATION_CONNECTION_ERROR',
+      ]
 
-      // Network errors
-      expect(ErrorRegistry.NO_INTERNET).toBeDefined()
-      expect(ErrorRegistry.SERVER_ERROR).toBeDefined()
-      expect(ErrorRegistry.SERVER_TIMEOUT).toBeDefined()
-
-      // Auth errors
-      expect(ErrorRegistry.LOGIN_PARSE_URI).toBeDefined()
-      expect(ErrorRegistry.LOGIN_REJECTED_401).toBeDefined()
-
-      // Credential errors
-      expect(ErrorRegistry.CARD_EXPIRED_WILL_REMOVE).toBeDefined()
-
-      // Verification errors
-      expect(ErrorRegistry.VERIFY_NOT_COMPLETE).toBeDefined()
-      expect(ErrorRegistry.VIDEO_VERIFY_NOT_COMPLETE).toBeDefined()
-
-      // Token errors
-      expect(ErrorRegistry.INVALID_TOKEN).toBeDefined()
-      expect(ErrorRegistry.TOKEN_NULL).toBeDefined()
-
-      // Storage errors
-      expect(ErrorRegistry.STORAGE_WRITE_ERROR).toBeDefined()
-      expect(ErrorRegistry.STORAGE_READ_ERROR).toBeDefined()
-
-      // Device errors
-      expect(ErrorRegistry.ANDROID_APP_UPDATE_REQUIRED).toBeDefined()
-      expect(ErrorRegistry.IOS_APP_UPDATE_REQUIRED).toBeDefined()
-
-      // General errors
-      expect(ErrorRegistry.GENERAL_ERROR).toBeDefined()
-      expect(ErrorRegistry.DYNAMIC_REGISTRATION_ERROR).toBeDefined()
-
-      // Wallet errors
-      expect(ErrorRegistry.STATE_LOAD_ERROR).toBeDefined()
-      expect(ErrorRegistry.AGENT_INITIALIZATION_ERROR).toBeDefined()
-      expect(ErrorRegistry.WALLET_SECRET_NOT_FOUND).toBeDefined()
-
-      // Connection errors
-      expect(ErrorRegistry.PARSE_INVITATION_ERROR).toBeDefined()
-      expect(ErrorRegistry.RECEIVE_INVITATION_ERROR).toBeDefined()
-
-      // Attestation errors
-      expect(ErrorRegistry.ATTESTATION_BAD_INVITATION).toBeDefined()
-      expect(ErrorRegistry.ATTESTATION_CONNECTION_ERROR).toBeDefined()
+      expect(Object.keys(ErrorRegistry)).toEqual(expect.arrayContaining(expectedKeys))
     })
 
     it('should have valid error definitions with all required fields', () => {

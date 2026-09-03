@@ -13,16 +13,16 @@ import { annotate } from '../../../src/helpers/sauce.js'
  * Runs on Sauce for both platforms — the storage-based mid-session install passes Sauce resigning
  * (iOS validated 2026-08-25).
  */
-describe('Upgrade v3 → v4', () => {
+describe('Upgrade from v3: installing the current build', () => {
   let appId: string | undefined
 
-  it('should install the v4 app over v3', async () => {
+  it('installs the current build over v3', async () => {
     await annotate('Migration: Upgrading v3 → v4')
     appId = await installCurrentBuildOverRunningApp()
     console.log('[migration] Installed v4 app over v3 successfully')
   })
 
-  it('should terminate and relaunch the app as v4', async () => {
+  it('relaunches as the current build', async () => {
     if (!appId) throw new Error('install step did not record the app id')
     await relaunchAfterInstall(appId)
   })

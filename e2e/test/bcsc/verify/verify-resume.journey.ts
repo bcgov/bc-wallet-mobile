@@ -30,9 +30,9 @@ const INTERRUPTED_EVIDENCE_MATCH = 'BC Drivers Licence'
  * unfinished verification. That mapping drives the verify stack's initial route and every step-completion
  * navigation, and none of it was covered.
  *
- * The route back in is always Home's verification card: the in-progress flag is in-memory and hydration
- * recomputes it, so leaving the flow AND every relaunch land there. Each checkpoint leaves, returns, and
- * asserts which step the app chose.
+ * Leaving the flow lands on Home, whose verification card is the route back in (the in-progress flag is
+ * in-memory); a relaunch resumes a user who chose to verify straight onto the step. Each checkpoint
+ * leaves, returns, and asserts which step the app chose.
  *
  * Deliberately cheap — nothing is verified and no camera is used. The serial is saved but never submitted
  * (no `authorizeDevice`), and the interrupted capture is a selected ID with zero photos, which the app
@@ -91,9 +91,10 @@ describe('Verify journey: resume routing', () => {
 
   it('still resumes onto the birthdate step after a relaunch', async () => {
     // A relaunch is what the in-memory flag cannot cover: the serial must survive in native storage and
-    // hydration must recompute the step. Landing on Home is part of it — `unlockWithPin` requires it.
-    await unlockWithPin(TEST_PIN, { relaunch: true })
-    await resumeVerification()
+    // hydration must recompute the step. The unlock lands straight on it (the app resumes a user who
+    // chose to verify) or on Home, whose card is the other way in — so the landing is left open.
+    await unlockWithPin(TEST_PIN, { relaunch: true, landing: 'any' })
+    await resumeVerification(EnterBirthdateScreen, Timeouts.APP_LAUNCH)
     await EnterBirthdateScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 

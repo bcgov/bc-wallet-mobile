@@ -190,7 +190,7 @@ describe('migrateBCSCState', () => {
   it('stamps verificationSkipped:true on an onboarded blob that predates the field', () => {
     const result = migrateBCSCState({ hasAccount: true })
 
-    expect(result).toEqual({ bcsc: { hasAccount: true, verificationSkipped: false }, migrated: true })
+    expect(result).toEqual({ bcsc: { hasAccount: true, verificationSkipped: true }, migrated: true })
   })
 
   it.each([true, false])('leaves an existing verificationSkipped (%s) untouched', (verificationSkipped) => {
@@ -209,7 +209,7 @@ describe('migrateBCSCState', () => {
     const result = migrateBCSCState({ hasAccount: true, reportUUID: 'x' })
 
     expect(result).toEqual({
-      bcsc: { hasAccount: true, installId: 'x', verificationSkipped: false },
+      bcsc: { hasAccount: true, installId: 'x', verificationSkipped: true },
       migrated: true,
     })
     expect(result.bcsc).not.toHaveProperty('reportUUID')
