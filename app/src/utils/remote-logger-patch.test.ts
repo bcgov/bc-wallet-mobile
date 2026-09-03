@@ -1,14 +1,7 @@
-/**
- * Confirms the behaviour patched into @bifold/remote-logs by
- * .yarn/patches/@bifold-remote-logs-npm-3.0.21-4ae200989a.patch (#4599).
- *
- * app/jestSetup.js mocks @bifold/remote-logs and react-native-logs globally
- * so nothing else exercises the patched build. Unmocking both here (hoisted
- * above the imports by babel-jest) lets the real RemoteLogger construct
- * under jest, wired directly to the patched files in node_modules. If a
- * future dependency bump moves past 3.0.21 and this patch is dropped, this
- * file should be deleted along with it.
- */
+// Exercises the real @bifold/remote-logs build patched by
+// .yarn/patches/@bifold-remote-logs-npm-3.0.21-4ae200989a.patch (#4599); jestSetup.js
+// mocks the package globally, so the unmocks below (hoisted by babel-jest) are required.
+// Delete this file when the patch is dropped.
 import { RemoteLogger } from '@bifold/remote-logs'
 import { LogLevel } from '@credo-ts/core'
 
