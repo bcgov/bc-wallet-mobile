@@ -23,7 +23,7 @@ class RSASigner: JWSSigner {
 
     var hashData = Data(count: alg.digestLength)
     let hash = hashData.withUnsafeMutableBytes({ (bytes: UnsafeMutablePointer<UInt8>) -> UnsafeMutablePointer<UInt8> in
-      return bytes
+      bytes
     })
 
     switch alg.name {
@@ -52,7 +52,7 @@ class RSASigner: JWSSigner {
     var resultData = Data(count: SecKeyGetBlockSize(privateKey))
     let resultPointer = resultData
       .withUnsafeMutableBytes({ (bytes: UnsafeMutablePointer<UInt8>) -> UnsafeMutablePointer<UInt8> in
-        return bytes
+        bytes
       })
     var resultLength = resultData.count
 
