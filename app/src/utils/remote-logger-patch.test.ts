@@ -4,6 +4,12 @@
 // Delete this file when the patch is dropped.
 import { RemoteLogger } from '@bifold/remote-logs'
 import { LogLevel } from '@credo-ts/core'
+import axios from 'axios'
+
+jest.mock('axios', () => ({
+  __esModule: true,
+  default: { post: jest.fn().mockResolvedValue({ status: 204 }) },
+}))
 
 jest.unmock('@bifold/remote-logs')
 jest.unmock('react-native-logs')
@@ -39,6 +45,19 @@ describe('RemoteLogger trace/test level patch', () => {
     expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('a real debug message'))
   })
 
+  it('prints test via console.log with a [TEST] prefix at the lowest level', () => {
+    // 'test' level falls through to the transport's default console.log branch, not console.debug.
+    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
+
+    const logger = new RemoteLogger({ logLevel: LogLevel.test })
+
+    logger.test('a test line')
+    jest.runOnlyPendingTimers()
+
+    expect(logSpy).toHaveBeenCalledTimes(1)
+    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('[TEST]'))
+  })
+
   it('prints trace via console.debug (no stack) with a [TRACE] prefix once enabled', () => {
     const traceSpy = jest.spyOn(console, 'trace').mockImplementation(() => {})
     const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {})
@@ -70,6 +89,26 @@ describe('RemoteLogger trace/test level patch', () => {
     logger.remoteLoggingEnabled = false
     expect(logger.logLevel).toBe(LogLevel.warn)
 
+    logger.dispose()
+  })
+
+  it('actually reaches Loki (not just the console) once remote logging is enabled', () => {
+    jest.spyOn(console, 'debug').mockImplementation(() => {})
+
+    const logger = new RemoteLogger({
+      logLevel: LogLevel.warn,
+      lokiUrl: 'https://user:pass@loki.example.com/loki/api/v1/push',
+      lokiLabels: { application: 'test-app' },
+    })
+
+    logger.remoteLoggingEnabled = true
+
+    logger.trace('ledger lookup')
+    jest.runOnlyPendingTimers()
+
+    expect(axios.post).toHaveBeenCalled()
+
+    logger.remoteLoggingEnabled = false
     logger.dispose()
   })
 
