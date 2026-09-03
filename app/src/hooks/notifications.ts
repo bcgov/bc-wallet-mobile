@@ -25,6 +25,23 @@ import { useTranslation } from 'react-i18next'
 
 export type CredentialNotificationRecord = DidCommBasicMessageRecord | CredentialRecord | DidCommProofExchangeRecord
 
+/**
+ * A pending proof request is considered expired once its TTL has elapsed. Requests that have
+ * reached a done state never expire, and a TTL of 0 means the user has configured proof
+ * requests to never expire.
+ */
+const isProofRequestExpired = (
+  proof: DidCommProofExchangeRecord,
+  doneStates: DidCommProofState[],
+  proofRequestExpirationMs: number,
+  now: number
+): boolean => {
+  if (doneStates.includes(proof.state) || proofRequestExpirationMs <= 0) {
+    return false
+  }
+  return new Date(proof.createdAt).getTime() + proofRequestExpirationMs <= now
+}
+
 export const useNotifications = (): Array<CredentialNotificationRecord> => {
   const { agent } = useOptionalAgent<BCAgent>()
   const [store] = useStore<BCState>()
@@ -43,8 +60,15 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
   const [now, setNow] = useState(() => Date.now())
   const { t } = useTranslation()
   const decliningProofIds = useRef<Set<string>>(new Set())
-  const proofRequestExpirationMs =
-    store.preferences.proofRequestExpirationMs ?? ProofRequestExpirationTime.FortyEightHours
+  const proofRequestExpirationMs = store.preferences.proofRequestExpirationMs ?? ProofRequestExpirationTime.OneHour
+
+  // Single source of truth for which pending proof requests have aged out. Refetched on each tick
+  // consumed both to hide them from the list and to decline them in dev mode.
+  const expiredProofs = useMemo(
+    () =>
+      nonAttestationProofs.filter((proof) => isProofRequestExpired(proof, doneStates, proofRequestExpirationMs, now)),
+    [nonAttestationProofs, doneStates, proofRequestExpirationMs, now]
+  )
 
   // Tick periodically so time-based rules (proof request TTL, expiry warnings) are
   // re-evaluated while the notifications list stays mounted
@@ -80,17 +104,13 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
 
     const custom: { type: 'CustomNotification'; createdAt: Date; id: string }[] = []
 
+    const expiredProofIds = new Set(expiredProofs.map((proof) => proof.id))
     const proofs = nonAttestationProofs.filter((proof) => {
       const isDone = doneStates.includes(proof.state)
 
       // Pending proof requests are usually abandoned once they get old (e.g. the user scanned
-      // a new QR code), so they are removed from the list after their TTL passes. A TTL of 0
-      // means the user has configured proof requests to never expire.
-      if (
-        !isDone &&
-        proofRequestExpirationMs > 0 &&
-        new Date(proof.createdAt).getTime() + proofRequestExpirationMs <= now
-      ) {
+      // a new QR code), so they are removed from the list after their TTL passes.
+      if (expiredProofIds.has(proof.id)) {
         return false
       }
 
@@ -113,8 +133,7 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
     nonAttestationProofs,
     doneStates,
     store.dismissPersonCredentialOffer.personCredentialOfferDismissed,
-    now,
-    proofRequestExpirationMs,
+    expiredProofs,
   ])
 
   useEffect(() => {
@@ -133,20 +152,14 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
     ).then((val) => setNonAttestationProofs(val.filter((v) => v.include).map((data) => data.value)))
   }, [proofsRequested, proofsDone, agent])
 
-  // Once a proof "expires" decline it
+  // Once a proof "expires" hide it from the notification list
+  // If developer mode is active, auto decline the proof
   useEffect(() => {
-    if (!agent) {
+    if (!store.preferences.developerModeEnabled || !agent) {
       return
     }
 
-    const expired = nonAttestationProofs.filter((proof) => {
-      if (doneStates.includes(proof.state) || proofRequestExpirationMs <= 0) {
-        return false
-      }
-      return new Date(proof.createdAt).getTime() + proofRequestExpirationMs <= now
-    })
-
-    expired.forEach((proof) => {
+    expiredProofs.forEach((proof) => {
       if (decliningProofIds.current.has(proof.id)) {
         return
       }
@@ -155,7 +168,7 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
         decliningProofIds.current.delete(proof.id)
       })
     })
-  }, [agent, nonAttestationProofs, doneStates, now, t, proofRequestExpirationMs])
+  }, [agent, expiredProofs, t, store.preferences.developerModeEnabled])
 
   return notifications
 }

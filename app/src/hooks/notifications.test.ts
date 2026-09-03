@@ -98,10 +98,10 @@ const fakeAgent = { config: { logger: { error: jest.fn() } } }
 let proofsRequested: FakeProof[] = []
 let proofsDone: FakeProof[] = []
 
-const setStore = (proofRequestExpirationMs: number | undefined) => {
+const setStore = (proofRequestExpirationMs: number | undefined, developerModeEnabled = true) => {
   mockUseStore.mockReturnValue([
     {
-      preferences: { proofRequestExpirationMs },
+      preferences: { proofRequestExpirationMs, developerModeEnabled },
       dismissPersonCredentialOffer: { personCredentialOfferDismissed: false },
     },
     jest.fn(),
@@ -151,6 +151,16 @@ describe('useNotifications - proof request expiry', () => {
       expect(mockDeclineProofRequest).not.toHaveBeenCalled()
     })
 
+    it('does not decline expired requests when developer mode is disabled', async () => {
+      setStore(PROOF_EXPIRATION_TIMES.TwoMinutes, false)
+      proofsRequested = [makeProof({ id: 'expired-proof', createdAt: new Date(Date.now() - HOUR_MS) })]
+
+      renderHook(() => useNotifications())
+
+      await flushNonAttestationProofs()
+      expect(mockDeclineProofRequest).not.toHaveBeenCalled()
+    })
+
     it('does not decline anything when the expiration preference is Never (0)', async () => {
       setStore(PROOF_EXPIRATION_TIMES.Never)
       proofsRequested = [makeProof({ id: 'old-proof', createdAt: new Date(Date.now() - 30 * 24 * HOUR_MS) })]
@@ -161,17 +171,17 @@ describe('useNotifications - proof request expiry', () => {
       expect(mockDeclineProofRequest).not.toHaveBeenCalled()
     })
 
-    it('falls back to the 48 hour default when no preference is set', async () => {
+    it('falls back to the 1 hour default when no preference is set', async () => {
       setStore(undefined)
-      // 47h old -> still within the 48h default, must not be declined
-      proofsRequested = [makeProof({ id: 'within-default', createdAt: new Date(Date.now() - 47 * HOUR_MS) })]
+      // 30m old -> still within the 1h default, must not be declined
+      proofsRequested = [makeProof({ id: 'within-default', createdAt: new Date(Date.now() - HOUR_MS / 2) })]
 
       const { rerender } = renderHook(() => useNotifications())
       await flushNonAttestationProofs()
       expect(mockDeclineProofRequest).not.toHaveBeenCalled()
 
-      // 49h old -> past the 48h default, must be declined
-      proofsRequested = [makeProof({ id: 'past-default', createdAt: new Date(Date.now() - 49 * HOUR_MS) })]
+      // 2h old -> past the 1h default, must be declined
+      proofsRequested = [makeProof({ id: 'past-default', createdAt: new Date(Date.now() - 2 * HOUR_MS) })]
       rerender({})
 
       await waitFor(() => expect(mockDeclineProofRequest).toHaveBeenCalledTimes(1))
