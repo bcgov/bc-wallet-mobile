@@ -116,10 +116,15 @@ jobs:
       - name: Install formatting and linting tools
         env:
           SWIFTFORMAT_VERSION: '0.63.0'
+          # sha256 of swiftformat.zip for the version above. Bump both together.
+          SWIFTFORMAT_SHA256: '28c7802e11fa5ae113d903066439c6bb1be20a8ac1ad9709c42616a7e273fb0f'
         run: |
+          set -euo pipefail
           brew install clang-format ktlint
-          curl -fsSL -o /tmp/swiftformat.zip \
+          # --proto/--proto-redir keep a redirect from downgrading the download to http.
+          curl -fsSL --proto '=https' --proto-redir '=https' -o /tmp/swiftformat.zip \
             "https://github.com/nicklockwood/SwiftFormat/releases/download/${SWIFTFORMAT_VERSION}/swiftformat.zip"
+          echo "${SWIFTFORMAT_SHA256}  /tmp/swiftformat.zip" | shasum -a 256 -c -
           unzip -qo /tmp/swiftformat.zip -d /tmp/swiftformat
           sudo install -m 0755 /tmp/swiftformat/swiftformat /usr/local/bin/swiftformat
           swiftformat --version
