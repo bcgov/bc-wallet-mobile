@@ -9,6 +9,9 @@
 #   auth         — auth/unlock journey
 #   main         — main navigation + settings + wallet credential journeys (issuer creds from 1Password)
 #   verify       — verify entry + verified card-type journeys (uses SM_* creds)
+#   send-video   — the four send-video journeys alone: scripted agent review against a shared,
+#                  blind-FIFO SIT queue, so CI runs them one platform at a time (max-parallel 1) and
+#                  keeps them out of every concurrent multi-device run (exclude_send_video)
 #   a11y         — automated accessibility audits over the core screens (iOS: Apple's audit engine; Android: heuristics)
 #   regression   — every per-area journey (nightly default)
 #   migration    — v3 → v4 app upgrade flow (Sauce RDC only; separate v3 build)
@@ -32,6 +35,13 @@
 # Constraint: the SauceLabs account allows 2 concurrent real-device sessions, shared across every
 # job AND every wdio worker inside them. max-parallel caps the jobs; SAUCE_MAX_INSTANCES (computed
 # in the run step) divides the session budget among the jobs running in parallel.
+#
+# This workflow only runs tests and uploads reports. The brief (UAT coverage per platform, failures,
+# accessibility findings) is rendered ONCE per run by the caller — e2e-nightly.yml, whose dispatch
+# takes the same suite choice and resolves the build itself. For a brief over the reports of any
+# other run: `gh run download <id> -p 'e2e-reports-*' -D e2e/artifacts && cd e2e && yarn brief
+# --reports artifacts`. The send-video review queue is drained by the journeys themselves and by
+# e2e-nightly.yml's queue-hygiene job (manual: the "Drain send-video queue" workflow).
 name: E2E Tests
 
 permissions:
@@ -41,7 +51,7 @@ on:
   workflow_call:
     inputs:
       suite:
-        description: 'Test suite (smoke, onboarding, auth, main, verify, a11y, regression, migration, upgrade, upgrade403)'
+        description: 'Test suite (smoke, onboarding, auth, main, verify, send-video, a11y, regression, migration, upgrade, upgrade403)'
         type: string
         required: true
       build_number:
@@ -65,13 +75,19 @@ on:
         type: string
         required: false
         default: 'ubuntu-latest-m'
-      brief:
+      exclude_send_video:
         description: >
-          Render the run brief (UAT coverage per platform, failures, accessibility findings) into the
-          run summary after the matrix. Off for callers — the nightly renders its own aggregate.
+          Drop the send-video journeys from the suite. They review a shared blind-FIFO agent queue with
+          shared personas and must never run on two platforms at once; the nightly runs them in their
+          own `send-video` lane. Auto-enabled for a verify/regression run with parallel platforms.
         type: boolean
         required: false
         default: false
+      max_parallel:
+        description: 'Matrix jobs allowed at once — 1 serialises the platforms (send-video is always 1)'
+        type: number
+        required: false
+        default: 2
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN:
         required: true
@@ -96,6 +112,7 @@ on:
           - auth
           - main
           - verify
+          - send-video
           - a11y
           - regression
           - migration
@@ -119,10 +136,14 @@ on:
         description: 'Label of the large runner with whitelisted egress IPs'
         type: string
         default: 'ubuntu-latest-m'
-      brief:
-        description: 'Render the run brief into the run summary'
+      exclude_send_video:
+        description: 'Drop the send-video journeys (auto for verify/regression with parallel platforms)'
         type: boolean
-        default: true
+        default: false
+      max_parallel:
+        description: 'Matrix jobs allowed at once — 1 serialises the platforms (send-video is always 1)'
+        type: number
+        default: 2
 
 jobs:
   # ─── E2E Tests ─────────────────────────────────────────────────────
@@ -141,11 +162,13 @@ jobs:
     runs-on: ${{ inputs.runner_label }}
     permissions:
       contents: read
-    # regression runs every journey serially (~2h per platform with retries and growing); other suites (merge-queue smoke) stay tight
-    timeout-minutes: ${{ inputs.suite == 'regression' && 180 || 45 }}
+    # regression runs every journey serially (~2h per platform with retries and growing); send-video is four
+    # recording journeys with retries; other suites (merge-queue smoke) stay tight
+    timeout-minutes: ${{ (inputs.suite == 'regression' && 180) || (inputs.suite == 'send-video' && 90) || 45 }}
     continue-on-error: ${{ contains(fromJSON('["migration","upgrade","upgrade403"]'), inputs.suite) }}
     strategy:
-      max-parallel: 2
+      # send-video is pinned to 1: its journeys must never run on two platforms at once
+      max-parallel: ${{ (inputs.suite == 'send-video' && 1) || inputs.max_parallel || 2 }}
       fail-fast: false
       matrix:
         device: ${{ fromJSON(inputs.device_matrix) }}
@@ -225,6 +248,8 @@ jobs:
           BUILD_NUMBER: ${{ inputs.build_number }}
           PREV_BUILD_NUMBER: ${{ inputs.prev_build_number }}
           SUITE: ${{ inputs.suite }}
+          MAX_PARALLEL: ${{ inputs.max_parallel || 2 }}
+          EXCLUDE_SEND_VIDEO_INPUT: ${{ inputs.exclude_send_video }}
           BUILD_NAME: 'build-${{ inputs.build_number }}'
           TEST_NAME: 'E2E ${{ inputs.suite }} - ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
         run: |
@@ -234,9 +259,25 @@ jobs:
           # POST /session until the client aborts and reports "Failed to create a session".
           DEVICE_COUNT=$(printf '%s' "$DEVICE_MATRIX" | jq 'length')
           [ "$DEVICE_COUNT" -ge 1 ] 2>/dev/null || DEVICE_COUNT=1
-          PARALLEL_JOBS=$(( DEVICE_COUNT > 2 ? 2 : DEVICE_COUNT ))   # strategy.max-parallel is 2
+          [ "$MAX_PARALLEL" -ge 1 ] 2>/dev/null || MAX_PARALLEL=2
+          if [ "$SUITE" = "send-video" ]; then MAX_PARALLEL=1; fi   # mirrors strategy.max-parallel
+          PARALLEL_JOBS=$(( DEVICE_COUNT > MAX_PARALLEL ? MAX_PARALLEL : DEVICE_COUNT ))
           export SAUCE_MAX_INSTANCES=$(( SAUCE_RDS_CONCURRENCY / PARALLEL_JOBS ))
+          # The send-video journeys review a blind-FIFO queue: one session at a time whatever the budget
+          # (the Android lane caps itself, iOS has no per-lane cap).
+          if [ "$SUITE" = "send-video" ]; then export SAUCE_MAX_INSTANCES=1; fi
           echo "Devices: $DEVICE_COUNT | parallel jobs: $PARALLEL_JOBS | wdio maxInstances: $SAUCE_MAX_INSTANCES"
+
+          # Those journeys must never run on two platforms at once — each platform's queue drain would
+          # reject the other's live upload — so a multi-device parallel verify/regression run drops them;
+          # the nightly runs them in its own one-platform-at-a-time lane.
+          export E2E_EXCLUDE_SEND_VIDEO=0
+          if [ "$EXCLUDE_SEND_VIDEO_INPUT" = "true" ]; then
+            export E2E_EXCLUDE_SEND_VIDEO=1
+          elif [ "$PARALLEL_JOBS" -gt 1 ] && { [ "$SUITE" = "verify" ] || [ "$SUITE" = "regression" ]; }; then
+            export E2E_EXCLUDE_SEND_VIDEO=1
+            echo "::notice::Send-video journeys excluded from this ${SUITE} run: ${PARALLEL_JOBS} platforms run in parallel. Use the send-video suite (or max_parallel: 1) to include them."
+          fi
 
           case "$SUITE" in
             migration)
@@ -291,58 +332,5 @@ jobs:
         with:
           name: e2e-reports-${{ inputs.suite }}-${{ matrix.device.platform }}-${{ matrix.device.os_version }}
           path: e2e/reports/
-          if-no-files-found: warn
-          retention-days: 14
-
-  # ─── Brief ─────────────────────────────────────────────────────────
-  # One page for the run: the UAT checklist per platform, every failure, and the accessibility
-  # findings vs e2e/a11y-baseline.json — rendered from the e2e-reports-* artifacts above into the
-  # run summary, and saved as an artifact. Report-only: it never fails the run on findings.
-  brief:
-    name: 'brief - ${{ inputs.suite }}'
-    needs: [e2e-tests]
-    if: ${{ always() && inputs.brief }}
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Setup E2E
-        uses: ./.github/workflows/actions/setup-e2e
-
-      # A pattern that matches nothing must not kill the summary — the page says so instead.
-      - name: Download E2E reports
-        uses: actions/download-artifact@v8
-        continue-on-error: true
-        with:
-          pattern: e2e-reports-${{ inputs.suite }}-*
-          path: e2e/artifacts
-
-      - name: Check the coverage map
-        working-directory: e2e
-        run: ./node_modules/.bin/tsx scripts/brief-check.ts
-
-      - name: Render the brief
-        working-directory: e2e
-        env: # via env, never inline in run — inputs are attacker-controlled
-          SUITE: ${{ inputs.suite }}
-          BUILD_NUMBER: ${{ inputs.build_number }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          ./node_modules/.bin/tsx scripts/brief.ts --reports artifacts \
-            --title "E2E ${SUITE} — build ${BUILD_NUMBER}" --run-url "$RUN_URL" \
-            --out brief.md --json brief.json
-          cat brief.md >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload brief
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: e2e-brief-${{ inputs.suite }}
-          path: |
-            e2e/brief.md
-            e2e/brief.json
           if-no-files-found: warn
           retention-days: 14

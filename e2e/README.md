@@ -41,8 +41,9 @@ _Tests are organized into named suites. Use the_ `--suite` _flag to select which
 | `onboarding` | _Onboarding journeys — happy path + detours (`onboarding/*.journey.ts`)_                    |
 | `auth`       | _Returning-user unlock journey — PIN unlock, wrong-PIN retry, lockout (`auth/*.journey.ts`)_ |
 | `verify`     | _Verification journeys — the four card types + entry spine/detours (`verify/*.journey.ts`)_ |
+| `send-video` | _The four send-video journeys alone (`verify/send-video-*.journey.ts`): a scripted agent review against the shared SIT queue. Also inside `verify` / `regression`, but CI runs them in their own one-platform-at-a-time lane and drops them from any parallel multi-device run (`E2E_EXCLUDE_SEND_VIDEO=1`) — see **[Send-video review queue](#send-video-review-queue)**_ |
 | `main`       | _Main-stack journeys — unverified gating + settings + wallet credential lifecycle (`main/*.journey.ts`)_ |
-| `migration`  | _V3→V4 upgrade: v3 onboarding + verification, upgrade to v4, unlock with the v3 PIN_                 |
+| `migration`  | _The upgrade **from v3**: v3 onboarding + verification, install the current build over it, unlock with the v3 PIN. Same shape as the two upgrade lanes below; its own suite because v3 is a different app lineage (own binaries + `src/v3TestIDs.ts`) and it runs Android-only in CI_ |
 | `upgrade`    | _Previous released build → current: onboard on the previous release, in-place upgrade, unlock with the old PIN + settings persistence. Runs on Sauce on **both platforms** (mid-session install passes Sauce resigning)_ |
 | `upgrade403` | _Upgrade from the shipped **4.0.3** release specifically — its pre-rework onboarding runs via a frozen walk (`flows/onboarding-v403.ts`). Runs on Sauce on **both platforms**; retire once 4.1.0 is the previous release_ |
 | `scan`       | _Card-barcode scanning — non-BCSC→BCSC reroutes + the serial scanner (`scan/*.journey.ts`). **Android + Sauce only**, and also part of `regression`; the iOS configs `exclude` it_ |
@@ -317,6 +318,23 @@ SM_PASSWORD='your-siteminder-password'
 ```
 
 _The same_ `scripts/login.mjs` _can also be invoked as a CLI; it loads_ `.env.e2e` _itself when run standalone. Without these credentials, any journey that completes in-person verification (the verified_ `verify` _/_ `main` _journeys, and_ `migration`_) will fail at the approval step._
+
+### _Send-video review queue_
+
+_The send-video journeys upload real verification requests to the SIT IDcheck agent queue and review them through the same SiteMinder session (`reviewSendVideoRequest`). That queue has **no worklist** — a review claims the_ next _request blindly and then checks it is the expected persona on the expected platform — and it is **shared** with the UAT team. Two things follow:_
+
+- _**Never run send-video journeys on two platforms at once.** The personas are shared, so one platform would review (or drain) the other's live upload. CI keeps them out of the concurrent device matrix and runs them in their own_ `send-video` _lane, one platform at a time; a parallel multi-device_ `verify` _/_ `regression` _run drops them automatically (`E2E_EXCLUDE_SEND_VIDEO=1`, with a notice)._
+- _**The queue is drained around every submission.** Each send-video journey rejects whatever is queued before it submits (so its own upload is the head the review claims), and its teardown drains again if the upload was never reviewed. The nightly ends with a_ `queue-hygiene` _job (`e2e-send-video-queue.yml`) that drains once more, so a run that died mid-journey leaves nothing for the morning. Rejections carry the reason "Automated e2e queue cleanup"._
+
+_On demand — locally with the SiteMinder credentials above (and an allowlisted egress IP, e.g. the VPN), or from the Actions tab as **Drain send-video queue**:_
+
+```bash
+yarn queue:drain                 # reject everything queued (scope all)
+yarn queue:drain --scope e2e     # only the e2e personas; stops at the first foreign request
+yarn queue:drain --dry-run       # log in and report which queues hold work; claims nothing
+```
+
+_The journeys drain with scope_ `all` _by default (the nightly runs at midnight PT, when anything still queued is stale);_ `E2E_QUEUE_DRAIN_SCOPE=e2e` _keeps a daytime run to the e2e personas so it never touches a UAT tester's pending request._
 
 ## _Config Hierarchy_
 
@@ -594,6 +612,8 @@ _Tests run automatically in GitHub Actions via a device matrix that controls whi
 
 > _The nightly `regression` suite (all per-area journeys) replaces the retired `happy-path` / `full-regression` suites. It is the default suite in_ `e2e-nightly.yml` _and selectable from_ `e2e.yml` _(alongside the per-area suites); `migration`, `upgrade`, and `upgrade403` are separate suites because each boots an OLD build via its own config, and the nightly runs them as chained advisory lanes after the regression (migration on Android 15; `upgrade` / `upgrade403` on iOS 18 + Android 15) — `upgrade` starts on the rolling previous-release build (`BCSC-prev.*`, or any stored build via the `prev_build_number` dispatch input; until the first full release publishes its e2e builds the lane skips with a notice) and installs the current build mid-session, while `upgrade403` pins the preserved `BCSC-v4.0.3.*`. `a11y` rides inside `regression` on both platforms as an advisory lane — its findings are reports, not failures. `scan` is inside `regression` but Android-only — the iOS configs list it in_ `exclude` _(`ANDROID_ONLY_SPECS`), so those specs are dropped before scheduling instead of costing an iOS session each to reach a skip._
 
+_The four send-video journeys are excluded from that concurrent regression matrix and run right after it as their own_ `send-video` _lane — both platforms, one at a time (`max_parallel: 1`), alongside the Android-only migration lane — because they review a shared, blind-FIFO SIT agent queue with shared personas (see **Send-video review queue**). The journeys drain that queue around their own uploads, and the nightly ends with a_ `queue-hygiene` _job that drains it once more._
+
 _The device matrix is passed as a JSON array of_ `{platform, device, os_version}` _objects to_ `e2e.yml`_. Each entry spawns a separate SauceLabs session with its own logs and pass/fail status. (Biometric CI wiring — its Sauce configs, dev scripts, and workflow job — has been removed pending re-implementation as a journey; the_ `biometrics` _helper is retained for that future work.)_
 
 _**Note:** There is no E2E job on_ `main` _merge by design — regression is deferred to the nightly workflow so SauceLabs devices stay free during the day when multiple PRs merge. The in-person verification step needs the runner's egress IP allowlisted with the BC Gov ID Check portal; see the notes in_ `e2e-nightly.yml` _and use the "Verify Allowlist Connectivity" workflow to confirm reachability._
@@ -602,7 +622,7 @@ _**Concurrency:** SauceLabs sessions are limited to_ `max-parallel: 2`_. For PRs
 
 ### Nightly brief
 
-Every nightly run ends with a **brief** — one page on the run's Summary tab (and the `e2e-nightly-brief` artifact: `brief.md` + `brief.json`) rendered from the `e2e-reports-*` artifacts of every lane: the UAT checklist with an iOS and an Android column, every other journey, every failure with its checkpoint, and the accessibility findings against `a11y-baseline.json`. A manual dispatch of `e2e.yml` gets the same page for its suite (input `brief`, on by default). Nothing in it fails a run — it is what to read instead of downloading artifacts.
+Every nightly run ends with a **brief** — one page on the run's Summary tab (and the `e2e-nightly-brief` artifact: `brief.md` + `brief.json`) rendered from the `e2e-reports-*` artifacts of every lane: the UAT checklist with an iOS and an Android column, every other journey, every failure with its checkpoint, and the accessibility findings against `a11y-baseline.json`. Dispatching **E2E Nightly** with a `suite` renders the same page for that suite (it resolves the build itself), and `yarn brief --reports <dir>` renders it locally from downloaded `e2e-reports-*` artifacts. Nothing in it fails a run — it is what to read instead of downloading artifacts.
 
 | Symbol | Meaning |
 | --- | --- |

@@ -43,6 +43,13 @@ export const SEND_VIDEO_SPECS = ALL_SPEC_FILES.filter(isSendVideoSpec)
 export const NON_SEND_VIDEO_SPECS = ALL_SPEC_FILES.filter((path) => !isSendVideoSpec(path))
 
 /**
+ * `E2E_EXCLUDE_SEND_VIDEO=1` drops the send-video journeys from whatever suite runs. They review a
+ * shared, blind-FIFO agent queue and must never run on two platforms at once, so CI keeps them out
+ * of the concurrent device matrix and runs them one platform at a time via `--suite send-video`.
+ */
+export const EXCLUDE_SEND_VIDEO = process.env.E2E_EXCLUDE_SEND_VIDEO === '1'
+
+/**
  * Did the test end in a runtime `this.skip()`? WDIO reports a skip as `{ passed: false, skipped: true }`
  * — a shape that reads as a FAILURE to anything checking `passed` alone — and `@wdio/types` does not
  * declare `skipped` yet.
@@ -86,6 +93,8 @@ export const config: WebdriverIO.Config = {
     onboarding: [resolve(__dirname, `../test/${variant}/onboarding/*.journey.ts`)],
     auth: [resolve(__dirname, `../test/${variant}/auth/*.journey.ts`)],
     verify: [resolve(__dirname, `../test/${variant}/verify/*.journey.ts`)],
+    // The send-video journeys alone: CI's own sequential lane (see EXCLUDE_SEND_VIDEO).
+    'send-video': SEND_VIDEO_SPECS,
     main: [resolve(__dirname, `../test/${variant}/main/*.journey.ts`)],
     // Card-barcode scanning: Sauce + Android only (see ANDROID_ONLY_SPECS). Its own suite for targeted
     // runs, and part of `regression` — the iOS configs exclude it rather than schedule and skip it.
@@ -108,7 +117,8 @@ export const config: WebdriverIO.Config = {
     // Upgrade from the shipped 4.0.3 specifically — its pre-rework onboarding needs the frozen walk.
     upgrade403: [resolve(__dirname, `../test/${variant}/upgrade/upgrade-from-v403.spec.ts`)],
   },
-  exclude: [],
+  // iOS configs append ANDROID_ONLY_SPECS to this — append, never assign, or the env exclusion is lost.
+  exclude: EXCLUDE_SEND_VIDEO ? [...SEND_VIDEO_SPECS] : [],
   capabilities: [],
 
   logLevel: 'warn',

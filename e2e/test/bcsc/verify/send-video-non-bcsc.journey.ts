@@ -5,6 +5,8 @@ import {
   captureFirstNonBcscDocument,
   captureSecondNonBcscDocument,
   chooseAddAccount,
+  cleanUpQueuedSubmission,
+  clearReviewQueueBeforeSubmit,
   completeEmailVerification,
   fillResidentialAddress,
   startEmailVerification,
@@ -14,7 +16,7 @@ import {
   submitSendVideoVerification,
   waitForSendVideoDecision,
 } from '../../../src/flows/verify.js'
-import { reviewSendVideoRequest } from '../../../src/helpers/approval.js'
+import { type ClaimedRequestSummary, reviewSendVideoRequest } from '../../../src/helpers/approval.js'
 import { getEmailConfirmationCode } from '../../../src/helpers/email.js'
 import { HomeScreen, SettingsScreen } from '../../../src/screens/main.js'
 import { VerificationSuccessScreen } from '../../../src/screens/verify.js'
@@ -39,13 +41,25 @@ const SECOND_DOC_MATCH = 'Canadian Passport'
  * mandatory for a cardless registration, so this cannot run on a network that intercepts the disposable
  * -inbox providers — see the non-BCSC in-person journey's note.
  *
- * QUEUE HYGIENE: reviews claim the NEXT queued request blindly — a foreign head is CLOSED and the
- * claim retried — so no other send-video journey may run CONCURRENTLY: its live request would be
- * closed too (the suite is serial at the default `maxInstances: 1`).
+ * QUEUE HYGIENE: the portal has no worklist — a review claims the NEXT queued request blindly and
+ * matches it by persona, which a stale upload of the same persona also satisfies. So the queue is
+ * drained before this journey submits, drained again by the teardown if the upload is never reviewed,
+ * and the send-video journeys run one platform at a time (CI's `send-video` lane), never concurrently.
  */
 describe('Verified journey: non-bcsc, send video', () => {
+  /** What the scripted review claimed — named by the decision wait's failure, should the app never see it. */
+  let reviewed: ClaimedRequestSummary | undefined
+
   before(() => {
     setTestUser(TestUsers.na)
+  })
+
+  after(async () => {
+    await cleanUpQueuedSubmission()
+  })
+
+  it('clears the review queue before submitting', async () => {
+    await clearReviewQueueBeforeSubmit()
   })
 
   it('onboards to the verify prompt', async () => {
@@ -85,7 +99,7 @@ describe('Verified journey: non-bcsc, send video', () => {
     const user = getTestUser()
     // Serial is 'N/A' for every cardless request, so the name is what identifies this one — and it also
     // chooses the identity the portal matches against.
-    await reviewSendVideoRequest({
+    reviewed = await reviewSendVideoRequest({
       decision: 'approve',
       cardSerialNumber: user.cardSerial,
       surname: user.lastName,
@@ -94,7 +108,7 @@ describe('Verified journey: non-bcsc, send video', () => {
   })
 
   it('picks up the approval and lands on verified Home', async () => {
-    await waitForSendVideoDecision('verified')
+    await waitForSendVideoDecision('verified', { reviewed })
     await VerificationSuccessScreen.tap('primary') // Continue → exits the verify stack to Home
     await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })

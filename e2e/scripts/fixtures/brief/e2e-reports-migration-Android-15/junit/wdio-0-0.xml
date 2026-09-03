@@ -1,33 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites tests="6" failures="0" errors="0" skipped="0">
-  <testsuite name="V3 Add Card" timestamp="2026-08-28T06:02:11" time="512.907" tests="2" failures="0" errors="0" skipped="0">
+  <testsuite name="Upgrade from v3 setting up on the v3 release" timestamp="2026-08-28T06:02:11" time="512.907" tests="2" failures="0" errors="0" skipped="0">
     <properties>
       <property name="specId" value="0"/>
-      <property name="suiteName" value="V3 Add Card"/>
+      <property name="suiteName" value="Upgrade from v3: setting up on the v3 release"/>
       <property name="capabilities" value="android.2b291fdh2008n8"/>
       <property name="file" value="file://./test/bcsc/migration/migration.spec.ts"/>
     </properties>
-    <testcase classname="android.2b291fdh2008n8.V3_Add_Card" name="should tap the Add Card Setup button" time="11.480"/>
-    <testcase classname="android.2b291fdh2008n8.V3_Add_Card" name="should read the confirmation code and approve via SiteMinder" time="91.226"/>
+    <testcase classname="android.2b291fdh2008n8.Upgrade_from_v3:_setting_up_on_the_v3_release" name="taps the Add Card Setup button" time="11.480"/>
+    <testcase classname="android.2b291fdh2008n8.Upgrade_from_v3:_setting_up_on_the_v3_release" name="reads the confirmation code and approves it via SiteMinder" time="91.226"/>
   </testsuite>
-  <testsuite name="Upgrade v3 v4" timestamp="2026-08-28T06:11:40" time="88.520" tests="2" failures="0" errors="0" skipped="0">
+  <testsuite name="Upgrade from v3 installing the current build" timestamp="2026-08-28T06:11:40" time="88.520" tests="2" failures="0" errors="0" skipped="0">
     <properties>
       <property name="specId" value="0"/>
-      <property name="suiteName" value="Upgrade v3 → v4"/>
+      <property name="suiteName" value="Upgrade from v3: installing the current build"/>
       <property name="capabilities" value="android.2b291fdh2008n8"/>
       <property name="file" value="file://./test/bcsc/migration/migration.spec.ts"/>
     </properties>
-    <testcase classname="android.2b291fdh2008n8.Upgrade_v3_→_v4" name="should install the v4 app over v3" time="61.212"/>
-    <testcase classname="android.2b291fdh2008n8.Upgrade_v3_→_v4" name="should terminate and relaunch the app as v4" time="27.308"/>
+    <testcase classname="android.2b291fdh2008n8.Upgrade_from_v3:_installing_the_current_build" name="installs the current build over v3" time="61.212"/>
+    <testcase classname="android.2b291fdh2008n8.Upgrade_from_v3:_installing_the_current_build" name="relaunches as the current build" time="27.308"/>
   </testsuite>
-  <testsuite name="V4 Unlock After Migration" timestamp="2026-08-28T06:13:12" time="64.114" tests="2" failures="0" errors="0" skipped="0">
+  <testsuite name="Upgrade from v3 unlocking with the v3 PIN" timestamp="2026-08-28T06:13:12" time="64.114" tests="2" failures="0" errors="0" skipped="0">
     <properties>
       <property name="specId" value="0"/>
-      <property name="suiteName" value="V4 Unlock After Migration"/>
+      <property name="suiteName" value="Upgrade from v3: unlocking with the v3 PIN"/>
       <property name="capabilities" value="android.2b291fdh2008n8"/>
       <property name="file" value="file://./test/bcsc/migration/migration.spec.ts"/>
     </properties>
-    <testcase classname="android.2b291fdh2008n8.V4_Unlock_After_Migration" name="unlocks the migrated account and enters the v3 PIN" time="38.669"/>
-    <testcase classname="android.2b291fdh2008n8.V4_Unlock_After_Migration" name="lands on the Home screen" time="25.445"/>
+    <testcase classname="android.2b291fdh2008n8.Upgrade_from_v3:_unlocking_with_the_v3_PIN" name="unlocks the migrated account and enters the v3 PIN" time="38.669"/>
+    <testcase classname="android.2b291fdh2008n8.Upgrade_from_v3:_unlocking_with_the_v3_PIN" name="lands on the Home screen" time="25.445"/>
   </testsuite>
 </testsuites>

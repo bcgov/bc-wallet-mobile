@@ -28,7 +28,9 @@ const androidCaps = {
  *
  * The exclude lists are complementary by construction (wdio.shared.conf.ts), and capability-level
  * `wdio:exclude` composes with --suite AND --spec — unlike `wdio:specs`, which --suite discards — so
- * every spec routes to exactly one lane under any invocation. `config.maxInstances` caps the lanes
+ * every spec routes to exactly one lane under any invocation, and a lane left with no specs is never
+ * scheduled — `--suite send-video` runs the injection-off lane alone, `E2E_EXCLUDE_SEND_VIDEO=1` the
+ * injection lane alone (that is how CI keeps send-video to one platform at a time). `config.maxInstances` caps the lanes
  * GLOBALLY: at the default 1 the injection lane drains fully, then send-video runs as a strictly
  * serial tail block (the blind-FIFO review queue requires that), retries included.
  *
