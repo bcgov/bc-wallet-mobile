@@ -109,46 +109,8 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      # swiftformat and ktlint ship preinstalled on the GitHub macOS image, so
-      # `brew install` is a no-op and the version is whatever that image happens to
-      # carry. Runners in the pool disagree (swiftformat 0.62.1 vs 0.63.0 on
-      # 2026-09-03), which made lint pass or fail on identical code depending on
-      # which machine the job drew. Both formatters gate the build, so both are
-      # installed from pinned upstream releases and checksummed.
-      #
-      # clang-format and ccache come from the Brewfile: neither can fail the build on
-      # a rule change, and Homebrew cannot install a specific version anyway.
       - name: Install formatting and linting tools
-        env:
-          SWIFTFORMAT_VERSION: '0.63.0'
-          # sha256 of each pinned download. Bump the version and its hash together.
-          SWIFTFORMAT_SHA256: '28c7802e11fa5ae113d903066439c6bb1be20a8ac1ad9709c42616a7e273fb0f'
-          KTLINT_VERSION: '1.8.0'
-          KTLINT_SHA256: 'a3fd620207d5c40da6ca789b95e7f823c54e854b7fade7f613e91096a3706d75'
-        run: |
-          set -euo pipefail
-          # The Brewfile is for local setup; CI takes clang-format from it and pins the
-          # two formatters below itself, so skip the ones it is about to override.
-          HOMEBREW_BUNDLE_BREW_SKIP='swiftformat ktlint' brew bundle --file=Brewfile
-
-          # --proto/--proto-redir keep a redirect from downgrading a download to http.
-          curl -fsSL --proto '=https' --proto-redir '=https' \
-            --retry 3 --retry-delay 2 --retry-connrefused -o /tmp/swiftformat.zip \
-            "https://github.com/nicklockwood/SwiftFormat/releases/download/${SWIFTFORMAT_VERSION}/swiftformat.zip"
-          echo "${SWIFTFORMAT_SHA256}  /tmp/swiftformat.zip" | shasum -a 256 -c -
-          unzip -qo /tmp/swiftformat.zip -d /tmp/swiftformat
-          sudo install -m 0755 /tmp/swiftformat/swiftformat /usr/local/bin/swiftformat
-          # Fail loudly if anything else on PATH shadows the pinned copy.
-          swiftformat --version | grep -qx "${SWIFTFORMAT_VERSION}" \
-            || { echo "::error::swiftformat on PATH is $(swiftformat --version), expected ${SWIFTFORMAT_VERSION}"; exit 1; }
-
-          curl -fsSL --proto '=https' --proto-redir '=https' \
-            --retry 3 --retry-delay 2 --retry-connrefused -o /tmp/ktlint \
-            "https://github.com/pinterest/ktlint/releases/download/${KTLINT_VERSION}/ktlint"
-          echo "${KTLINT_SHA256}  /tmp/ktlint" | shasum -a 256 -c -
-          sudo install -m 0755 /tmp/ktlint /usr/local/bin/ktlint
-          ktlint --version | grep -q "${KTLINT_VERSION}" \
-            || { echo "::error::ktlint on PATH is $(ktlint --version), expected ${KTLINT_VERSION}"; exit 1; }
+        run: brew install swiftformat clang-format ktlint
 
       - name: Lint
         run: yarn lint
