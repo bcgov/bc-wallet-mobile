@@ -1,6 +1,6 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { getCameraMetadata } from '@/bcsc-theme/components/utils/camera'
-import { SelfiePhotoOutput, SelfieVideoOutput } from '@/bcsc-theme/components/utils/camera-output'
+import { useSelfiePhotoOutput, useSelfieVideoOutput } from '@/bcsc-theme/components/utils/camera-output'
 import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useVisionCamera } from '@/bcsc-theme/hooks/useVisionCamera'
@@ -39,46 +39,34 @@ type TakeVideoScreenProps = {
 }
 
 const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
-  const { cameraRef, device, takePhoto, cancelRecordingVideo, startRecordingVideo, stopRecordingVideo } =
+  const photoOutput = useSelfiePhotoOutput()
+  const videoOutput = useSelfieVideoOutput()
+  const { cameraRef, device, takePhoto, cancelRecordingVideo, startRecordingVideo, stopRecordingVideo, cameraOutputs } =
     useVisionCamera({
       position: 'front',
-      videoOutput: SelfieVideoOutput,
-      photoOutput: SelfiePhotoOutput,
+      videoOutput,
+      photoOutput,
     })
-
   const { t } = useTranslation()
   const { ColorPalette, Spacing, TextTheme } = useTheme()
   const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  // const device = useCameraDevice('front')
   const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } = useCameraPermission()
   const { hasPermission: hasMicrophonePermission, requestPermission: requestMicrophonePermission } =
     useMicrophonePermission()
   const { appStateStatus } = useBCSCActivity()
-
-  // // Video format for 480p at 24fps to reduce file size
-  // const format = useCameraFormat(device, [
-  //   {
-  //     videoResolution: VIDEO_RESOLUTION_480P,
-  //     videoAspectRatio: VIDEO_RESOLUTION_480P.width / VIDEO_RESOLUTION_480P.height,
-  //   },
-  //   { fps: SELFIE_VIDEO_FRAME_RATE },
-  // ])
-
   const [isActive, setIsActive] = useState(false)
   const [prompt, setPrompt] = useState('3')
   const [recordingInProgress, setRecordingInProgress] = useState(false)
   const [elapsedTime, setElapsedTime] = useState(0)
   const [promptTimestamp, setPromptTimestamp] = useState(0)
   const [exceedsMaxDuration, setExceedsMaxDuration] = useState(false)
-  // const cameraRef = useRef<Camera>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const exceedsMaxDurationRef = useRef(false)
   const elapsedTimeRef = useRef(0)
   const promptOpacity = useRef(new Animated.Value(1)).current
   const prompts = useMemo(() => store.bcsc.prompts?.map(({ prompt }) => prompt) || [], [store.bcsc.prompts])
   const safeAreaInsets = useSafeAreaInsets()
-  // const { failedToWriteToLocalStorageAlert } = useAlerts(navigation)
   const { emitErrorModal } = useErrorAlert()
   const isLastPrompt = useMemo(() => {
     if (prompt === '') {
@@ -238,14 +226,6 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
       setRecordingInProgress(false)
       logger.error(`Error capturing video thumbnail snapshot: ${error}`)
 
-      // if (error instanceof CameraCaptureError && error.code === 'capture/file-io-error') {
-      //   failedToWriteToLocalStorageAlert(error)
-      // } else {
-      //   Alert.alert(
-      //     t('BCSC.SendVideo.TakeVideo.RecordingError'),
-      //     t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription')
-      //   )
-      // }
       Alert.alert(t('BCSC.SendVideo.TakeVideo.RecordingError'), t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription'))
 
       // Back to the previous screen so the user can retry once the issue is resolved
@@ -257,19 +237,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
       onRecordingError: (error) => {
         stopTimer() // Stop timer on error
 
-        // // If recording was canceled, do not show an alert
-        // if (error.code === 'capture/recording-canceled') {
-        //   logger.debug('Video recording canceled')
-        //   return
-        // }
-
         logger.error(`Recording error: ${error.message}`, error)
-
-        // // Handle file I/O errors separately to provide a specific alert
-        // if (error.code === 'capture/file-io-error') {
-        //   failedToWriteToLocalStorageAlert(error)
-        //   return
-        // }
 
         emitErrorModal(
           t('BCSC.SendVideo.TakeVideo.RecordingError'),
@@ -403,7 +371,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           ref={cameraRef}
           style={styles.camera}
           device={device}
-          // format={format}
+          outputs={cameraOutputs}
           // Also deactivate while the app is backgrounded/inactive, same as CodeScanningCamera and
           // MaskedCamera — this only changes what gets passed to the native camera prop; `isActive`
           // the state variable (and the useFocusEffect below that gates startRecording() on it) is
@@ -412,13 +380,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           // to the same file once reactivated — the resulting video will have a gap for however long
           // the app was backgrounded, but nothing is discarded, corrupted, or surfaced as an error.
           isActive={isActive && !isBackgroundedAppState(appStateStatus)}
-          //video
-          //photo
-          //photoQualityBalance="speed"
-          //onInitialized={onInitialized}
           onError={onError}
-          //isMirrored={false}
-          //audio
           onConfigured={onInitialized}
         />
 

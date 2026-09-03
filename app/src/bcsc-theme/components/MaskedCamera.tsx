@@ -19,7 +19,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { Camera, CameraOutput, CameraPhotoOutput } from 'react-native-vision-camera'
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
-import { useVisionCamera } from '../hooks/useVisionCamera'
+import { useVisionCamera, useVisionCameraControls } from '../hooks/useVisionCamera'
 import { isBackgroundedAppState } from '../utils/app-state'
 import { getCameraMetadata } from './utils/camera'
 
@@ -53,10 +53,6 @@ const MaskedCamera = ({
   cameraFace = 'back',
   onPhotoTaken,
 }: MaskedCameraProps) => {
-  const { cameraRef, device, takePhoto, hasTorch, isTorchEnabled, enableTorch } = useVisionCamera({
-    position: cameraFace,
-    photoOutput,
-  })
   const { t } = useTranslation()
   const safeAreaInsets = useSafeAreaInsets()
   const { Spacing, ColorPalette } = useTheme()
@@ -65,6 +61,12 @@ const MaskedCamera = ({
   const { emitErrorModal } = useErrorAlert()
   const { preventDoublePress } = usePreventDoublePress()
   const { appStateStatus } = useBCSCActivity()
+
+  const { cameraRef, device, takePhoto } = useVisionCamera({
+    position: cameraFace,
+    photoOutput,
+  })
+  const { hasTorch, isTorchEnabled, enableTorch } = useVisionCameraControls(cameraRef)
 
   const cameraMetadata = useMemo(() => getCameraMetadata(device), [device])
 

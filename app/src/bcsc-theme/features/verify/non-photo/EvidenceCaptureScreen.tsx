@@ -1,26 +1,24 @@
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import PhotoReview from '@/bcsc-theme/components/PhotoReview'
-import { EvidencePhotoOutput } from '@/bcsc-theme/components/utils/camera-output'
+import { useBCServicesCardScannerOutput, useEvidencePhotoOutput } from '@/bcsc-theme/components/utils/camera-output'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { buildBarcodePayload } from '@/bcsc-theme/utils/barcode'
-import { BCServicesCardReader, DriversLicenseMetadata } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
+import { DriversLicenseMetadata } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
 import { getPhotoMetadata } from '@/bcsc-theme/utils/file-info'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
 import { withAlert } from '@/utils/alert'
 import { MaskType, testIdWithKey, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
-import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { StyleSheet, useWindowDimensions, View } from 'react-native'
 import { BCSCCardProcess, EvidenceType, PhotoMetadata } from 'react-native-bcsc-core'
 import { useCameraPermission } from 'react-native-vision-camera'
-import { useBarcodeScannerOutput } from 'react-native-vision-camera-barcode-scanner'
 
 /**
  * Builds the barcodes array for the evidence upload payload, matching the
@@ -70,6 +68,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const { ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const scanner = useCardScanner()
+  const photoOutput = useEvidencePhotoOutput()
   const bcscSerialRef = useRef<string | null>(null)
   const licenseRef = useRef<DriversLicenseMetadata | null>(null)
   // Guards against re-hitting /device/barcodes on every photo of a multi-sided
@@ -79,23 +78,13 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const { isLoading: isCameraLoading } = useAutoRequestPermission(hasPermission, requestPermission)
   const { failedToReadFromLocalStorageAlert } = useAlerts(navigation)
 
-  const bcServicesCardReaderRef = useRef(new BCServicesCardReader(logger, 0)) // 0 == No minimum barcode hit threshold
-  const codeScanner = useBarcodeScannerOutput({
-    barcodeFormats: scanner.codeTypes,
-    onBarcodeScanned: async (codes) => {
-      bcServicesCardReaderRef.current.addBarcodes(codes)
-    },
-    onError: (error) => {
-      logger.error('[EvidenceCaptureScreen] Barcode scanner error', error)
-      bcServicesCardReaderRef.current = bcServicesCardReaderRef.current.reset()
+  const codeScanner = useBCServicesCardScannerOutput({
+    minMatches: 0, // No hit threshold
+    onScanBCServicesCard: async (serial, license) => {
+      bcscSerialRef.current = serial
+      licenseRef.current = license
     },
   })
-
-  useFocusEffect(
-    useCallback(() => {
-      bcServicesCardReaderRef.current = bcServicesCardReaderRef.current.reset()
-    }, [])
-  )
 
   // SVGOverlay's customPath is the cutout — this rectangle leaves the top
   // banner area inside the dark overlay so the instruction text reads clearly.
@@ -136,10 +125,6 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     if (!currentPhotoPath || !currentSide) {
       return
     }
-
-    // TODO (MD VisionCamera): Remove these refs and use the bcServicesCardReader directly
-    bcscSerialRef.current = bcServicesCardReaderRef.current.getSerial()
-    licenseRef.current = bcServicesCardReaderRef.current.getLicense()
 
     /**
      * Non-BCSC flow only: the user may have scanned a real BC Services Card.
@@ -237,7 +222,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
             maskLineColor={ColorPalette.brand.primary}
             onPhotoTaken={handlePhotoTaken}
             codeScanner={codeScanner}
-            photoOutput={EvidencePhotoOutput}
+            photoOutput={photoOutput}
           />
         </View>
       ) : (

@@ -1,6 +1,6 @@
 import { TOKENS, useServices } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { RefObject, useCallback, useMemo, useRef, useState } from 'react'
 import {
   CameraOutput,
   CameraPhotoOutput,
@@ -43,10 +43,11 @@ export const useVisionCamera = ({ position, deviceFilter, photoOutput, videoOutp
   const device = useCameraDevice(position, deviceFilter)
   const cameraRef = useRef<CameraRef>(null)
   const recorderRef = useRef<Recorder>(null)
-  const controller = cameraRef.current?.controller
 
-  const [torchEnabled, setTorchEnabled] = useState(controller?.torchMode === 'on')
-  const hasTorch = device?.hasTorch ?? false
+  /**
+   * THOUGHT: Should this component be responsible for requesting permissions?
+   * Or should that be handled by the parent component?
+   */
 
   /**
    * Captures a photo using the configured `CameraPhotoOutput`.
@@ -135,6 +136,31 @@ export const useVisionCamera = ({ position, deviceFilter, photoOutput, videoOutp
     await recorderRef.current.cancelRecording()
   }, [logger])
 
+  return useMemo(
+    () => ({
+      cameraRef,
+      device,
+      takePhoto,
+      startRecordingVideo,
+      stopRecordingVideo,
+      cancelRecordingVideo,
+      cameraOutputs: [photoOutput, videoOutput].filter(Boolean) as CameraOutput[],
+    }),
+    [cancelRecordingVideo, device, photoOutput, startRecordingVideo, stopRecordingVideo, takePhoto, videoOutput]
+  )
+}
+
+/**
+ * A custom hook that provides controls for the Vision Camera, including torch (flashlight) functionality.
+ * @returns An object containing the torch state, availability, and a function to enable or disable the torch.
+ */
+export const useVisionCameraControls = (cameraRef: RefObject<CameraRef | null>) => {
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const controller = cameraRef.current?.controller
+
+  const [torchEnabled, setTorchEnabled] = useState(controller?.torchMode === 'on')
+  const hasTorch = controller?.device.hasTorch ?? false
+
   /**
    * Enables or disables the torch (flashlight) mode of the camera.
    * @param enable A boolean indicating whether to enable (true) or disable (false) the torch mode.
@@ -161,25 +187,10 @@ export const useVisionCamera = ({ position, deviceFilter, photoOutput, videoOutp
 
   return useMemo(
     () => ({
-      cameraRef,
-      device,
-      takePhoto,
-      startRecordingVideo,
-      stopRecordingVideo,
-      cancelRecordingVideo,
       hasTorch,
-      enableTorch,
       isTorchEnabled: torchEnabled,
-    }),
-    [
-      cancelRecordingVideo,
-      device,
       enableTorch,
-      hasTorch,
-      startRecordingVideo,
-      stopRecordingVideo,
-      takePhoto,
-      torchEnabled,
-    ]
+    }),
+    [enableTorch, hasTorch, torchEnabled]
   )
 }
