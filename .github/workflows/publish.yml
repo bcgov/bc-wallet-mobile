@@ -373,6 +373,51 @@ jobs:
           version_name: ${{ env.APP_VERSION }}
           version_code: ${{ needs.resolve-build.outputs.run_number }}
 
+  # ─── Tag the ring-0 build ──────────────────────────────────────────
+  # Once a build reaches ring-0 (uploaded to stores, firebase etc.), tag
+  # the commit with bcsc-v<APP_VERSION>-<build number>.
+  # APP_VERSION comes from that commit's variant.env, not from main.
+  # Idempotent: a single-store retry re-runs this and finds the tag already there
+  tag-ring-0:
+    name: Tag ring-0 build
+    needs: [resolve-build, apple-upload, google-upload, firebase-ios, firebase-android]
+    if: >-
+      always() && !cancelled() &&
+      needs.resolve-build.result == 'success' &&
+      needs.apple-upload.result != 'failure' &&
+      needs.google-upload.result != 'failure' &&
+      needs.firebase-ios.result != 'failure' &&
+      needs.firebase-android.result != 'failure'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.resolve-build.outputs.head_sha }}
+
+      - name: Load bcsc-prod variant config
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: bcsc-prod
+
+      - name: Create and push the tag
+        env:
+          BUILD_NUMBER: ${{ needs.resolve-build.outputs.run_number }}
+          HEAD_SHA: ${{ needs.resolve-build.outputs.head_sha }}
+        run: |
+          set -euo pipefail
+          TAG="bcsc-v${APP_VERSION}-${BUILD_NUMBER}"
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists — nothing to do."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${TAG}" "${HEAD_SHA}" -m "Published build ${BUILD_NUMBER} to ring-0"
+          git push origin "refs/tags/${TAG}"
+          echo "Tagged ${HEAD_SHA} as ${TAG}"
+
   # ─── The approval gate ──────────────────────────────────────────────
   # The environment is named after the chosen ring, so who may approve
   # ring-4 is configured separately from who may approve ring-1. Everything
@@ -392,14 +437,7 @@ jobs:
   # is open until required reviewers are configured in Settings.
   approval:
     name: 'Approve ${{ inputs.ring }}'
-    needs:
-      [
-        resolve-build,
-        apple-upload,
-        google-upload,
-        firebase-ios,
-        firebase-android,
-      ]
+    needs: [resolve-build, apple-upload, google-upload, firebase-ios, firebase-android]
     if: >-
       always() && !cancelled() &&
       needs.resolve-build.result == 'success'
