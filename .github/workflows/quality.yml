@@ -122,7 +122,8 @@ jobs:
           set -euo pipefail
           brew install clang-format ktlint
           # --proto/--proto-redir keep a redirect from downgrading the download to http.
-          curl -fsSL --proto '=https' --proto-redir '=https' -o /tmp/swiftformat.zip \
+          curl -fsSL --proto '=https' --proto-redir '=https' \
+            --retry 3 --retry-delay 2 --retry-connrefused -o /tmp/swiftformat.zip \
             "https://github.com/nicklockwood/SwiftFormat/releases/download/${SWIFTFORMAT_VERSION}/swiftformat.zip"
           echo "${SWIFTFORMAT_SHA256}  /tmp/swiftformat.zip" | shasum -a 256 -c -
           unzip -qo /tmp/swiftformat.zip -d /tmp/swiftformat
