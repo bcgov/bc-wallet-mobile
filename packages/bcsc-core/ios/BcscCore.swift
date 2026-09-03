@@ -308,7 +308,7 @@ class BcscCore: NSObject {
       let keys = try keyPairManager.findAllPrivateKeys()
 
       let result = keys.map { keyInfo -> [String: Any] in
-        return [
+        [
           "keyType": keyInfo.keyType.name,
           "keySize": keyInfo.keySize,
           "id": keyInfo.tag,
