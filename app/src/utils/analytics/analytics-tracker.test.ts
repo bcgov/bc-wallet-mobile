@@ -1,35 +1,44 @@
 import { AlertInteractionEvent, AppEventCode } from '@/events/appEventCode'
 import { AnalyticsTracker } from '@/utils/analytics/analytics-tracker'
+import { removeTracker } from '@snowplow/react-native-tracker'
+
+jest.mock('@snowplow/react-native-tracker', () => ({
+  ...jest.requireActual('@snowplow/react-native-tracker'),
+  removeTracker: jest.fn(),
+}))
+
+/**
+ * The spies are wired into the client's `newTracker` result, so a test that never calls
+ * `initializeTracker` still fails loudly if a `!this.tracker` guard is removed — the
+ * production call would throw rather than silently no-op.
+ */
+const createSubject = () => {
+  const tracker = {
+    setAppId: jest.fn(),
+    trackScreenViewEvent: jest.fn(),
+    trackSelfDescribingEvent: jest.fn(),
+  }
+  const newTracker = jest.fn().mockResolvedValue(tracker)
+  const analytics = new AnalyticsTracker('namespace', 'endpoint', { newTracker } as never)
+
+  return { analytics, tracker, newTracker }
+}
 
 describe('Analytics Tracker', () => {
-  it('should construct properly', () => {
-    const analytics = new AnalyticsTracker('namespace', 'endpoint')
-
-    expect(analytics).toBeInstanceOf(AnalyticsTracker)
-  })
-
   describe('initializeTracker', () => {
     it('should initialize tracker', async () => {
-      const mockNewTracker = jest.fn()
-      const mockAnalyticsClient = {
-        newTracker: mockNewTracker,
-      }
+      const { analytics, newTracker } = createSubject()
 
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
-
-      // First initialization
       await analytics.initializeTracker('testAppId')
-      expect(mockNewTracker).toHaveBeenCalledTimes(1)
+
+      expect(newTracker).toHaveBeenCalledTimes(1)
+      expect(newTracker).toHaveBeenCalledWith(expect.objectContaining({ namespace: 'namespace', appId: 'testAppId' }))
     })
   })
 
   describe('hasTracker', () => {
     it('should return true if tracker exists', async () => {
-      const mockAnalyticsClient = {
-        newTracker: jest.fn().mockReturnValue({}),
-      }
-
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+      const { analytics } = createSubject()
 
       await analytics.initializeTracker('testAppId')
 
@@ -37,96 +46,72 @@ describe('Analytics Tracker', () => {
     })
 
     it('should return false if tracker is not initialized', () => {
-      const analytics = new AnalyticsTracker('namespace', 'endpoint')
+      const { analytics } = createSubject()
 
       expect(analytics.hasTracker()).toBe(false)
     })
+  })
 
-    it('should return false if tracking not enabled', async () => {
-      const mockAnalyticsClient = {
-        newTracker: jest.fn(),
-      }
+  describe('stopTracking', () => {
+    it('should remove the tracker', async () => {
+      const { analytics } = createSubject()
 
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+      await analytics.initializeTracker('testAppId')
 
+      analytics.stopTracking()
+
+      expect(removeTracker).toHaveBeenCalledWith('namespace')
       expect(analytics.hasTracker()).toBe(false)
     })
   })
 
   describe('setAppId', () => {
     it('should set app ID when tracker exists', async () => {
-      const mockSetAppId = jest.fn()
-      const mockAnalyticsClient = {
-        newTracker: jest.fn().mockResolvedValue({
-          setAppId: mockSetAppId,
-        }),
-      }
-
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+      const { analytics, tracker } = createSubject()
 
       await analytics.initializeTracker('testAppId')
 
       analytics.setAppId('newAppId')
 
-      expect(mockSetAppId).toHaveBeenCalledWith('newAppId')
+      expect(tracker.setAppId).toHaveBeenCalledWith('newAppId')
     })
 
     it('should not set app ID when tracker does not exist', () => {
-      const mockSetAppId = jest.fn()
-      const mockAnalyticsClient = {
-        newTracker: jest.fn(),
-      }
-
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+      const { analytics, tracker } = createSubject()
 
       analytics.setAppId('newAppId')
 
-      expect(mockSetAppId).not.toHaveBeenCalled()
+      expect(tracker.setAppId).not.toHaveBeenCalled()
     })
   })
 
   describe('trackScreenEvent', () => {
-    it('should not track when missing tracker', async () => {
-      const mockTrackScreenView = jest.fn()
-      const mockAnalyticsClient = {
-        newTracker: jest.fn(),
-      }
-
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+    it('should not track when missing tracker', () => {
+      const { analytics, tracker } = createSubject()
 
       analytics.trackScreenEvent('HomeScreen')
 
-      expect(mockTrackScreenView).not.toHaveBeenCalled()
+      expect(tracker.trackScreenViewEvent).not.toHaveBeenCalled()
     })
 
     it('should not track when screen name === previous screen name', async () => {
-      const mockTrackScreenView = jest.fn()
-      const mockAnalyticsClient = {
-        newTracker: jest.fn(),
-      }
+      const { analytics, tracker } = createSubject()
 
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+      await analytics.initializeTracker('testAppId')
 
       analytics.trackScreenEvent('HomeScreen', 'HomeScreen')
 
-      expect(mockTrackScreenView).not.toHaveBeenCalled()
+      expect(tracker.trackScreenViewEvent).not.toHaveBeenCalled()
     })
 
     it('should track when tracking enabled and valid screen names', async () => {
-      const mockTrackScreenView = jest.fn()
-      const mockAnalyticsClient = {
-        newTracker: jest.fn().mockResolvedValue({
-          trackScreenViewEvent: mockTrackScreenView,
-        }),
-      }
-
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+      const { analytics, tracker } = createSubject()
 
       await analytics.initializeTracker('testAppId')
 
       analytics.trackScreenEvent('HomeScreen', 'NewScreen')
 
-      expect(mockTrackScreenView).toHaveBeenCalledWith({
+      expect(tracker.trackScreenViewEvent).toHaveBeenCalledWith({
         name: 'HomeScreen',
         previousName: 'NewScreen',
       })
@@ -134,34 +119,22 @@ describe('Analytics Tracker', () => {
   })
 
   describe('trackErrorEvent', () => {
-    it('should not track when missing tracker', async () => {
-      const mockTrackError = jest.fn()
-      const mockAnalyticsClient = {
-        newTracker: jest.fn(),
-      }
-
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+    it('should not track when missing tracker', () => {
+      const { analytics, tracker } = createSubject()
 
       analytics.trackErrorEvent({ code: 'test', message: 'Test error' })
 
-      expect(mockTrackError).not.toHaveBeenCalled()
+      expect(tracker.trackSelfDescribingEvent).not.toHaveBeenCalled()
     })
 
     it('should track when tracking enabled and valid error', async () => {
-      const mockTrackError = jest.fn()
-      const mockAnalyticsClient = {
-        newTracker: jest.fn().mockResolvedValue({
-          trackSelfDescribingEvent: mockTrackError,
-        }),
-      }
-
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+      const { analytics, tracker } = createSubject()
 
       await analytics.initializeTracker('testAppId')
 
       analytics.trackErrorEvent({ code: 'test', message: 'Test error' })
 
-      expect(mockTrackError).toHaveBeenCalledWith({
+      expect(tracker.trackSelfDescribingEvent).toHaveBeenCalledWith({
         schema: 'iglu:ca.bc.gov.idim/mobile_error/jsonschema/1-0-0',
         data: {
           errorCode: 'test',
@@ -169,75 +142,51 @@ describe('Analytics Tracker', () => {
         },
       })
     })
+  })
 
-    describe('trackAlertDisplayEvent', () => {
-      it('should not track when missing tracker', async () => {
-        const mockTrackAlert = jest.fn()
-        const mockAnalyticsClient = {
-          newTracker: jest.fn(),
-        }
+  describe('trackAlertDisplayEvent', () => {
+    it('should not track when missing tracker', () => {
+      const { analytics, tracker } = createSubject()
 
-        const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+      analytics.trackAlertDisplayEvent(AppEventCode.ADD_CARD_CAMERA_BROKEN)
 
-        analytics.trackAlertDisplayEvent(AppEventCode.ADD_CARD_CAMERA_BROKEN)
+      expect(tracker.trackSelfDescribingEvent).not.toHaveBeenCalled()
+    })
 
-        expect(mockTrackAlert).not.toHaveBeenCalled()
-      })
+    it('should track when tracking enabled and valid app event', async () => {
+      const { analytics, tracker } = createSubject()
 
-      it('should track when tracking enabled and valid app event', async () => {
-        const mockTrackAlert = jest.fn()
-        const mockAnalyticsClient = {
-          newTracker: jest.fn().mockResolvedValue({
-            trackSelfDescribingEvent: mockTrackAlert,
-          }),
-        }
+      await analytics.initializeTracker('testAppId')
 
-        const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+      analytics.trackAlertDisplayEvent(AppEventCode.ADD_CARD_CAMERA_BROKEN)
 
-        await analytics.initializeTracker('testAppId')
-
-        analytics.trackAlertDisplayEvent(AppEventCode.ADD_CARD_CAMERA_BROKEN)
-
-        expect(mockTrackAlert).toHaveBeenCalledWith({
-          schema: 'iglu:ca.bc.gov.idim/action/jsonschema/1-0-0',
-          data: {
-            action: AlertInteractionEvent.ALERT_DISPLAY,
-            text: AppEventCode.ADD_CARD_CAMERA_BROKEN,
-          },
-        })
+      expect(tracker.trackSelfDescribingEvent).toHaveBeenCalledWith({
+        schema: 'iglu:ca.bc.gov.idim/action/jsonschema/1-0-0',
+        data: {
+          action: AlertInteractionEvent.ALERT_DISPLAY,
+          text: AppEventCode.ADD_CARD_CAMERA_BROKEN,
+        },
       })
     })
   })
 
   describe('trackAlertActionEvent', () => {
-    it('should not track when missing tracker', async () => {
-      const mockTrackAlert = jest.fn()
-      const mockAnalyticsClient = {
-        newTracker: jest.fn(),
-      }
-
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+    it('should not track when missing tracker', () => {
+      const { analytics, tracker } = createSubject()
 
       analytics.trackAlertActionEvent(AppEventCode.ADD_CARD_CAMERA_BROKEN, 'ok')
 
-      expect(mockTrackAlert).not.toHaveBeenCalled()
+      expect(tracker.trackSelfDescribingEvent).not.toHaveBeenCalled()
     })
 
     it('should track when tracking enabled and valid app event', async () => {
-      const mockTrackAlert = jest.fn()
-      const mockAnalyticsClient = {
-        newTracker: jest.fn().mockResolvedValue({
-          trackSelfDescribingEvent: mockTrackAlert,
-        }),
-      }
-
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+      const { analytics, tracker } = createSubject()
 
       await analytics.initializeTracker('testAppId')
 
       analytics.trackAlertActionEvent(AppEventCode.ADD_CARD_CAMERA_BROKEN, 'ok')
 
-      expect(mockTrackAlert).toHaveBeenCalledWith({
+      expect(tracker.trackSelfDescribingEvent).toHaveBeenCalledWith({
         schema: 'iglu:ca.bc.gov.idim/action/jsonschema/1-0-0',
         data: {
           action: AlertInteractionEvent.ALERT_ACTION,
