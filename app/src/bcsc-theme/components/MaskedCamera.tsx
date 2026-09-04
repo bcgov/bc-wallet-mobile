@@ -55,12 +55,12 @@ const MaskedCamera = ({
   const { t } = useTranslation()
   const safeAreaInsets = useSafeAreaInsets()
   const { Spacing, ColorPalette } = useTheme()
+  const [torchOn, setTorchOn] = useState(false)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const isFocused = useIsFocused()
   const { emitErrorModal } = useErrorAlert()
   const { preventDoublePress } = usePreventDoublePress()
   const { appStateStatus } = useBCSCActivity()
-  const [toggleTorch, setToggleTorch] = useState(false)
 
   const { cameraRef, device, takePhoto } = useVisionCamera({
     position: cameraFace,
@@ -173,7 +173,7 @@ const MaskedCamera = ({
         isActive={isFocused && !isBackgroundedAppState(appStateStatus)}
         onError={onError}
         outputs={[photoOutput, codeScanner].filter(Boolean) as CameraOutput[]}
-        torchMode={toggleTorch ? 'on' : 'off'}
+        torchMode={torchOn ? 'on' : 'off'}
         onConfigured={() => logger.debug('MaskedCamera initialized', cameraMetadata)}
       />
       {maskType && (
@@ -223,12 +223,12 @@ const MaskedCamera = ({
         {hasTorch ? (
           <TouchableOpacity
             style={{ flex: 1, alignItems: 'flex-end' }}
-            onPress={() => setToggleTorch((prev) => !prev)}
+            onPress={() => setTorchOn((prev) => !prev)}
             accessibilityLabel={t('BCSC.CameraDisclosure.ToggleFlash')}
             accessibilityRole="button"
             testID={testIdWithKey('ToggleFlash')}
           >
-            <Icon size={24} name={toggleTorch ? 'flash' : 'flash-off'} color={ColorPalette.grayscale.white} />
+            <Icon size={24} name={torchOn ? 'flash' : 'flash-off'} color={ColorPalette.grayscale.white} />
           </TouchableOpacity>
         ) : (
           <View style={{ flex: 1 }} />

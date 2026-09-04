@@ -190,6 +190,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const { hasPermission, requestPermission } = useCameraPermission()
   const scanner = useCardScanner()
   const { isLoading } = useAutoRequestPermission(hasPermission, requestPermission)
+  const [torchOn, setTorchOn] = useState(false)
   const [size, setSize] = useState<{ width: number; height: number } | null>(null)
   const [scanState, setScanState] = useState<ScanState>('scanning')
   // Starts on mount; after the timeout we swap the initial guidance for the
@@ -197,7 +198,6 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const [showHelp, setShowHelp] = useState(false)
   const [cameraFailed, setCameraFailed] = useState(false)
   const [cameraKey, setCameraKey] = useState(0)
-  const [toggleTorch, setToggleTorch] = useState(false)
   const isFocused = useIsFocused()
 
   const cameraRef = useRef<CameraRef>(null)
@@ -228,7 +228,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const goToManualEntry = useCallback(() => navigation.navigate(BCSCScreens.ManualSerial), [navigation])
 
   const onCameraError = useCallback(() => {
-    setToggleTorch(false)
+    setTorchOn(false)
     setCameraFailed(true)
   }, [])
 
@@ -331,7 +331,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
               isActive={isFocused}
               device={'back'}
               onError={onCameraError}
-              torchMode={toggleTorch ? 'on' : 'off'}
+              torchMode={torchOn ? 'on' : 'off'}
               outputs={[scannerOutput]}
             />
 
@@ -356,7 +356,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
         <View style={styles.bottomBar} pointerEvents="box-none">
           {cameraFailed ? null : (
             <View style={styles.torchRow} pointerEvents="box-none">
-              <TorchButton active={toggleTorch} onPress={() => setToggleTorch((prev) => !prev)} />
+              <TorchButton active={torchOn} onPress={() => setTorchOn((prev) => !prev)} />
             </View>
           )}
           <View style={[styles.buttonBlock, { paddingBottom: insets.bottom + Spacing.lg }]}>
