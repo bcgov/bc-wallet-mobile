@@ -160,7 +160,7 @@ export const decodeBarcodes = (codes: ScanableCode[], logger: AbstractBifoldLogg
 export class BCServicesCardReader {
   /** @example { "K123456789": { hits: 3, decoded: { kind: "BCServicesCardBarcode", bcscSerial: "K123456789" } } } */
   private decodedBarcodeMap = new Map<RawBarcodeValue, { hits: number; decoded: DecodedCode }>()
-  private isBCServicesCardFlag: boolean | null = null
+  private decodedBarcodeKinds = new Set<DecodedCodeKind>()
   private unknownBarcodeCount = 0
 
   constructor(
@@ -193,13 +193,7 @@ export class BCServicesCardReader {
         continue
       }
 
-      if (
-        (this.isBCServicesCardFlag === null && decoded.kind === DecodedCodeKind.BCServicesCardBarcode) ||
-        decoded.kind === DecodedCodeKind.BCServicesComboCardCardBarcode
-      ) {
-        this.isBCServicesCardFlag = true
-      }
-
+      this.decodedBarcodeKinds.add(decoded.kind)
       const hits = this.decodedBarcodeMap.get(code.value)?.hits ?? 0
       this.decodedBarcodeMap.set(code.value, { hits: hits + 1, decoded })
     }
@@ -211,7 +205,7 @@ export class BCServicesCardReader {
    */
   reset() {
     this.decodedBarcodeMap.clear()
-    this.isBCServicesCardFlag = null
+    this.decodedBarcodeKinds.clear()
     this.unknownBarcodeCount = 0
     return this
   }
@@ -220,10 +214,22 @@ export class BCServicesCardReader {
    * Determines if the scanned barcodes indicate that the card is a BC Services Card.
    * @returns True if the card is identified as a BC Services Card, false if it is not,
    * or null if the determination cannot be made yet (still scanning - under threshold).
-   *
    */
   isBCServicesCard(): boolean | null {
-    return this.isBCServicesCardFlag
+    if (this.unknownBarcodeCount >= this.hitsThreshold) {
+      return false
+    }
+
+    if (
+      this.decodedBarcodeKinds.has(DecodedCodeKind.BCServicesCardBarcode) &&
+      (this.decodedBarcodeKinds.has(DecodedCodeKind.DriversLicenseBarcode) ||
+        this.decodedBarcodeKinds.has(DecodedCodeKind.BCServicesComboCardCardBarcode))
+    ) {
+      return true
+    }
+
+    // If we have not yet reached the threshold of hits for any decoded barcode, we cannot determine if it's a BC Services Card yet.
+    return null
   }
 
   /**

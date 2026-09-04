@@ -111,12 +111,9 @@ const MaskedCamera = ({
   })
 
   useEffect(() => {
-    if (!device) {
-      // provide back button if they have no working camera
-      navigation.setOptions({
-        headerShown: true,
-      })
-    }
+    navigation.setOptions({
+      headerShown: !device,
+    })
   }, [device, navigation])
 
   const onError = useCallback(

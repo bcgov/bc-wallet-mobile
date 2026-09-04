@@ -41,7 +41,7 @@ type TakeVideoScreenProps = {
 const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   const photoOutput = useSelfiePhotoOutput()
   const videoOutput = useSelfieVideoOutput()
-  const { cameraRef, device, takePhoto, cancelRecordingVideo, startRecordingVideo, stopRecordingVideo, cameraOutputs } =
+  const { cameraRef, device, takePhoto, cancelRecordingVideo, startRecordingVideo, stopRecordingVideo } =
     useVisionCamera({
       position: 'front',
       videoOutput,
@@ -371,7 +371,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           ref={cameraRef}
           style={styles.camera}
           device={device}
-          outputs={cameraOutputs}
+          outputs={[photoOutput, videoOutput]}
           // Also deactivate while the app is backgrounded/inactive, same as CodeScanningCamera and
           // MaskedCamera — this only changes what gets passed to the native camera prop; `isActive`
           // the state variable (and the useFocusEffect below that gates startRecording() on it) is
