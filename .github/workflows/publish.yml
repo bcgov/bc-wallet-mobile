@@ -78,6 +78,7 @@ jobs:
       widen_aab_variants: ${{ steps.resolve.outputs.widen_aab_variants }}
       widen_apk_variants: ${{ steps.resolve.outputs.widen_apk_variants }}
       reached_rings: ${{ steps.resolve.outputs.reached_rings }}
+      has_widening: ${{ steps.resolve.outputs.has_widening }}
     steps:
       # A feature branch can produce a perfectly good build, but shipping one
       # to real testers is almost always a mistake. Releases come off main or
@@ -105,6 +106,7 @@ jobs:
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
           RING: ${{ inputs.ring }}
+          TARGETS: ${{ inputs.targets }}
           REQUESTED_BUILD: ${{ inputs.build_number }}
         run: python3 .github/scripts/resolve_publishable_build.py
 
@@ -433,9 +435,11 @@ jobs:
     name: Approve ring-1
     needs: [resolve-build, apple-upload, google-upload, firebase-ios, firebase-android]
     # resolve-build success is tested first: fromJSON must not see an empty output.
+    # Skipping this gate skips the whole chain, since each one needs the last.
     if: >-
       always() && !cancelled() &&
       needs.resolve-build.result == 'success' &&
+      needs.resolve-build.outputs.has_widening == 'true' &&
       contains(fromJSON(needs.resolve-build.outputs.reached_rings), 'ring-1')
     runs-on: ubuntu-22.04
     environment:
