@@ -1,0 +1,249 @@
+# Widens an already-published build to ONE ring. Called once per ring by
+# publish.yml after that ring's gate. Nothing new reaches the stores here:
+# TestFlight and Play only change who can see the build, Firebase re-sends it.
+name: Publish ring
+
+on:
+  workflow_call:
+    inputs:
+      ring:
+        type: string
+        required: true
+      run_id:
+        type: string
+        required: true
+      run_number:
+        type: string
+        required: true
+      head_sha:
+        type: string
+        required: true
+      widen_ipa_variants:
+        type: string
+        required: true
+      widen_aab_variants:
+        type: string
+        required: true
+      widen_apk_variants:
+        type: string
+        required: true
+      targets:
+        type: string
+        required: true
+
+permissions: {}
+
+jobs:
+  testflight-widen:
+    name: 'TestFlight widen - ${{ matrix.variant }}'
+    if: >-
+      inputs.widen_ipa_variants != '[]' &&
+      (inputs.targets == 'all' || inputs.targets == 'apple-store')
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(inputs.widen_ipa_variants) }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Use the build's variant config
+        uses: ./.github/workflows/actions/use-build-variant-config
+        with:
+          head_sha: ${{ inputs.head_sha }}
+
+      - name: Load variant config
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      # TestFlight and Play match the ring's display name, spaced; Firebase the alias, which cannot.
+      - name: Derive the ring's spaced name
+        id: ring
+        env:
+          RING: ${{ inputs.ring }}
+        run: echo "spaced=${RING//-/ }" >> "$GITHUB_OUTPUT"
+
+      - name: Add the ring to TestFlight
+        uses: ./.github/workflows/actions/distribute-testflight
+        with:
+          app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          app_store_connect_key_identifier: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
+          app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
+          bundle_id: ${{ env.IOS_BUNDLE_ID }}
+          version_code: ${{ inputs.run_number }}
+          version_name: ${{ env.APP_VERSION }}
+          beta_groups: ${{ steps.ring.outputs.spaced }}
+
+  google-promote:
+    name: 'Google Play closed - ${{ matrix.variant }}'
+    if: >-
+      inputs.widen_aab_variants != '[]' &&
+      (inputs.targets == 'all' || inputs.targets == 'google-store')
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(inputs.widen_aab_variants) }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Use the build's variant config
+        uses: ./.github/workflows/actions/use-build-variant-config
+        with:
+          head_sha: ${{ inputs.head_sha }}
+
+      - name: Load variant config
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      # TestFlight and Play match the ring's display name, spaced; Firebase the alias, which cannot.
+      - name: Derive the ring's spaced name
+        id: ring
+        env:
+          RING: ${{ inputs.ring }}
+        run: echo "spaced=${RING//-/ }" >> "$GITHUB_OUTPUT"
+
+      - name: Install 1Password CLI
+        uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
+
+      - name: Fetch Google Play publisher credentials
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          # `op read` to stdout appends a trailing newline, which would corrupt
+          # this JSON credentials file. --out-file writes the bytes as-is.
+          op read "op://bcsc-mobile-app-cd/google-play-publisher/service-account.json" --out-file "${RUNNER_TEMP}/play-service-account.json" --force
+
+      - name: Promote onto the ring's closed track
+        uses: ./.github/workflows/actions/promote-play-track
+        with:
+          service_account_file: ${{ runner.temp }}/play-service-account.json
+          package_name: ${{ env.ANDROID_PACKAGE_NAME }}
+          version_code: ${{ inputs.run_number }}
+          version_name: ${{ env.APP_VERSION }}
+          build_number: ${{ inputs.run_number }}
+          target_tracks: ${{ steps.ring.outputs.spaced }}
+
+  firebase-ios-widen:
+    name: 'Firebase iOS widen - ${{ matrix.variant }}'
+    if: >-
+      inputs.widen_ipa_variants != '[]' &&
+      (inputs.targets == 'all' || inputs.targets == 'firebase')
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(inputs.widen_ipa_variants) }}
+    steps:
+      - name: Download IPA
+        uses: actions/download-artifact@v8
+        with:
+          name: ios-${{ matrix.variant }}.ipa
+          path: ${{ runner.temp }}/firebase-artifact
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - uses: actions/checkout@v7
+
+      - name: Use the build's variant config
+        uses: ./.github/workflows/actions/use-build-variant-config
+        with:
+          head_sha: ${{ inputs.head_sha }}
+
+      - name: Load variant config
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      - name: Install 1Password CLI
+        uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
+
+      - name: Fetch Firebase credentials
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          # `op read` to stdout appends a trailing newline; --out-file writes
+          # the document byte-for-byte instead.
+          op read "op://bcsc-mobile-app-cd/google-services-ios-${{ matrix.variant }}/GoogleService-Info.plist" --out-file "${RUNNER_TEMP}/google-services-source" --force
+          op read "${FIREBASE_IOS_SA_REF}" --out-file "${RUNNER_TEMP}/firebase-service-account.json" --force
+
+      - name: Add the ring to Firebase
+        uses: ./.github/workflows/actions/distribute-firebase
+        with:
+          platform: ios
+          app_identifier: ${{ env.IOS_BUNDLE_ID }}
+          google_services_file: ${{ runner.temp }}/google-services-source
+          service_account_file: ${{ runner.temp }}/firebase-service-account.json
+          artifact_path: ${{ runner.temp }}/firebase-artifact/BCWallet.ipa
+          groups: ${{ inputs.ring }}
+          version_name: ${{ env.APP_VERSION }}
+          version_code: ${{ inputs.run_number }}
+
+  firebase-android-widen:
+    name: 'Firebase Android widen - ${{ matrix.variant }}'
+    if: >-
+      inputs.widen_apk_variants != '[]' &&
+      (inputs.targets == 'all' || inputs.targets == 'firebase')
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(inputs.widen_apk_variants) }}
+    steps:
+      - name: Download APK
+        uses: actions/download-artifact@v8
+        with:
+          name: android-${{ matrix.variant }}.apk
+          path: ${{ runner.temp }}/firebase-artifact
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - uses: actions/checkout@v7
+
+      - name: Use the build's variant config
+        uses: ./.github/workflows/actions/use-build-variant-config
+        with:
+          head_sha: ${{ inputs.head_sha }}
+
+      - name: Load variant config
+        uses: ./.github/workflows/actions/load-variant-config
+        with:
+          variant: ${{ matrix.variant }}
+
+      - name: Install 1Password CLI
+        uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
+
+      - name: Fetch Firebase credentials
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+        run: |
+          # `op read` to stdout appends a trailing newline; --out-file writes
+          # the document byte-for-byte instead.
+          op read "op://bcsc-mobile-app-cd/google-services-android-${{ matrix.variant }}/google-services.json" --out-file "${RUNNER_TEMP}/google-services-source" --force
+          op read "${FIREBASE_ANDROID_SA_REF}" --out-file "${RUNNER_TEMP}/firebase-service-account.json" --force
+
+      - name: Add the ring to Firebase
+        uses: ./.github/workflows/actions/distribute-firebase
+        with:
+          platform: android
+          app_identifier: ${{ env.ANDROID_PACKAGE_NAME }}
+          google_services_file: ${{ runner.temp }}/google-services-source
+          service_account_file: ${{ runner.temp }}/firebase-service-account.json
+          artifact_path: ${{ runner.temp }}/firebase-artifact/app-release.apk
+          groups: ${{ inputs.ring }}
+          version_name: ${{ env.APP_VERSION }}
+          version_code: ${{ inputs.run_number }}
