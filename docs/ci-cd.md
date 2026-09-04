@@ -16,9 +16,9 @@ flowchart TD
     H([Someone runs Publish]) --> R[Pick a build]
     A --> R
     R --> R0[ring-0 - the team, no approval]
-    R0 --> AP{Approve the chosen ring?}
-    AP -->|yes| W[Widen to rings 1 to 4]
-    AP -->|no| S[Stops at ring-0]
+    R0 --> G{Approve the next ring?}
+    G -->|yes| W[That ring's testers get it] --> G
+    G -->|no| S[Stops there]
 ```
 
 ## On a pull request
@@ -40,8 +40,8 @@ That's the end of it. No store, no testers, no notifications.
 ## Publishing
 
 Go to **Actions → Publish → Run workflow**, pick how far it should go, and run
-it. Anyone with write access can start one; only an approver can take it past
-ring-0. Publish runs from `main` or a `release/*` branch only.
+it. Anyone with write access can start one; each ring past ring-0 waits for
+that ring's approvers. Publish runs from `main` or a `release/*` branch only.
 
 Publish never builds. It uploads the artifacts an earlier run produced, so what
 a tester installs is exactly what CI made.
