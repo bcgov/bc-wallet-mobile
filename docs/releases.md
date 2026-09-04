@@ -44,7 +44,8 @@ is the one case where a build can knock another off a track.
 
 QA and UAT are separate rings with separate gates. ring-1 goes to QA testers,
 ring-2 to UAT testers, and each has its own approval even though the same
-people sit on both teams today. A ring-4 publish asks all four teams in turn.
+people sit on both teams today. A ring-4 publish stops at all four gates in
+turn, and the same team approves the last two.
 
 | Team | Approves | Who is on it |
 |---|---|---|

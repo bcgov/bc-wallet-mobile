@@ -66,7 +66,7 @@ jobs:
           RING: ${{ inputs.ring }}
         run: echo "spaced=${RING//-/ }" >> "$GITHUB_OUTPUT"
 
-      - name: Add the higher rings to TestFlight
+      - name: Add the ring to TestFlight
         uses: ./.github/workflows/actions/distribute-testflight
         with:
           app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -177,7 +177,7 @@ jobs:
           op read "op://bcsc-mobile-app-cd/google-services-ios-${{ matrix.variant }}/GoogleService-Info.plist" --out-file "${RUNNER_TEMP}/google-services-source" --force
           op read "${FIREBASE_IOS_SA_REF}" --out-file "${RUNNER_TEMP}/firebase-service-account.json" --force
 
-      - name: Add the higher rings to Firebase
+      - name: Add the ring to Firebase
         uses: ./.github/workflows/actions/distribute-firebase
         with:
           platform: ios
@@ -235,7 +235,7 @@ jobs:
           op read "op://bcsc-mobile-app-cd/google-services-android-${{ matrix.variant }}/google-services.json" --out-file "${RUNNER_TEMP}/google-services-source" --force
           op read "${FIREBASE_ANDROID_SA_REF}" --out-file "${RUNNER_TEMP}/firebase-service-account.json" --force
 
-      - name: Add the higher rings to Firebase
+      - name: Add the ring to Firebase
         uses: ./.github/workflows/actions/distribute-firebase
         with:
           platform: android
