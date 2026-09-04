@@ -44,11 +44,10 @@ export type KeyRotationResult = {
 }
 
 /**
- * Deletes every local key except the newest, at the START of a rotation, so the key the
- * previous rotation superseded gets a full cycle for in-flight responses to arrive (#4601).
- * Holds at most two keys when the delete succeeds; a failed delete is swallowed and stale.
+ * Deletes every local key except the newest two, on a confirmed rotation (#4601). An
+ * unconfirmed rotation prunes nothing, leaving three keys until the next confirmed one does.
  */
-async function pruneAllButNewestKey(logger: BifoldLogger): Promise<void> {
+async function pruneKeepingNewestTwo(newKeyId: string, logger: BifoldLogger): Promise<void> {
   let keys: Array<{ id: string; created?: number }>
   try {
     keys = await getAllKeysWithPublicInfo()
@@ -59,21 +58,23 @@ async function pruneAllButNewestKey(logger: BifoldLogger): Promise<void> {
     return
   }
 
-  // Newest-by-created is the key both platforms sign with; same ordering as performKeyRecovery's gate.
-  const newest = keys.slice().sort((a, b) => (b.created ?? 0) - (a.created ?? 0))[0]
-  if (!newest) {
-    logger.warn('[rotateSigningKey] event=prune_skipped_no_keys no local keys to prune')
-    return
-  }
+  // Newest-by-created first, same ordering as performKeyRecovery's gate; keep the newest two.
+  const newestTwoIds = new Set(
+    keys
+      .slice()
+      .sort((a, b) => (b.created ?? 0) - (a.created ?? 0))
+      .slice(0, 2)
+      .map((k) => k.id)
+  )
 
   let pruned = 0
   let failures = 0
   for (const key of keys) {
-    if (key.id === newest.id) {
+    if (newestTwoIds.has(key.id)) {
       continue
     }
     try {
-      logger.info(`[rotateSigningKey] pruning previous key '${key.id}' (superseded by '${newest.id}')`)
+      logger.info(`[rotateSigningKey] pruning previous key '${key.id}' (superseded by '${newKeyId}')`)
       await deleteKey(key.id)
       pruned++
     } catch (err) {
@@ -83,7 +84,7 @@ async function pruneAllButNewestKey(logger: BifoldLogger): Promise<void> {
       )
     }
   }
-  logger.info(`[rotateSigningKey] event=pruned active='${newest.id}' pruned=${pruned} prune_failures=${failures}`)
+  logger.info(`[rotateSigningKey] event=pruned active='${newKeyId}' pruned=${pruned} prune_failures=${failures}`)
 }
 
 /**
@@ -114,9 +115,9 @@ async function rollback(
 }
 
 /**
- * Rotates the device's signing key: prunes down to the newest key first, then generates, PUTs
- * to IAS and confirms via the echoed jwks. The superseded key is kept until the next rotation
- * (#4601). See issue #3876 for the full design rationale.
+ * Rotates the device's signing key: generate, PUT to IAS, confirm via the echoed jwks, and
+ * prune down to the newest two keys on confirmed success, so the previous key survives one
+ * full rotation cycle (#4601). See issue #3876 for the full design rationale.
  */
 export async function rotateSigningKey(
   apiClient: BCSCApiClient,
@@ -125,8 +126,6 @@ export async function rotateSigningKey(
   logger: BifoldLogger
 ): Promise<KeyRotationResult> {
   logger.info(`[rotateSigningKey] event=triggered client_id=${redactClientId(clientId)}`)
-
-  await pruneAllButNewestKey(logger)
 
   const newKey = await createNewKeyPair().catch((err) => {
     logger.error(`[rotateSigningKey] event=failed_generate could not generate a new key: ${describeError(err)}`)
@@ -179,9 +178,10 @@ export async function rotateSigningKey(
   }
 
   logger.info(`[rotateSigningKey] event=confirmed new key '${newKey.id}' present in server jwks`)
+  await pruneKeepingNewestTwo(newKey.id, logger)
 
-  // The server now encrypts to the new key; clear the cache directly rather than via TOKENS_REFRESHED,
-  // which would re-run system checks. The previous key itself stays until the next rotation (#4601).
+  // Rotation switched the JWE decryption key, so any id_token cached under the old key is now
+  // undecryptable; clear directly rather than via TOKENS_REFRESHED, which would re-run system checks.
   apiClient.clearTokens()
 
   logger.info(`[rotateSigningKey] event=succeeded active='${newKey.id}'`)

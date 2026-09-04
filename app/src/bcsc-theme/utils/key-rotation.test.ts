@@ -57,6 +57,12 @@ const makeApiClient = () =>
     clearTokens: mockedClearTokens,
   }) as any
 
+/** Two pre-rotation keys, steady state, for the retention tests below. */
+const twoKeyFixture = (): KeyPublicInfo[] => [
+  { id: 'rsa1', n: n(1), e: 'AQAB', created: 1000 },
+  { id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 },
+]
+
 /**
  * In-memory keystore so multi-rotation tests can assert the key count at every mutation.
  * `undeletableIds` models a key whose native delete always fails (e.g. E_KEYSTORE_ERROR).
@@ -129,8 +135,8 @@ describe('constants', () => {
 describe('rotateSigningKey', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    // Rotation now enumerates at its start (#4601); default to one key so tests that ignore
-    // pruning don't inherit a stale fixture (`clearMocks` clears calls, not implementations).
+    // Pruning runs on a confirmed rotation (#4601); default to one key so a test that reaches
+    // that branch without its own fixture doesn't inherit a stale one from `clearMocks`.
     mockedGetAllKeysWithPublicInfo.mockResolvedValue([{ id: 'rsa1', n: n(1), e: 'AQAB', created: 1000 }])
     mockedDeleteKey.mockResolvedValue(undefined)
   })
@@ -148,10 +154,11 @@ describe('rotateSigningKey', () => {
     expect(logger.info).not.toHaveBeenCalledWith(expect.stringContaining(longClientId))
   })
 
-  it('happy path: prunes the previous key at the start, generates, PUTs, confirms via modulus, and returns rotated', async () => {
+  it('happy path: generates, PUTs, confirms via modulus, prunes down to the newest two keys, and returns rotated', async () => {
     mockedGetAllKeysWithPublicInfo.mockResolvedValue([
       { id: 'rsa0', n: n(0), e: 'AQAB', created: 500 },
       { id: 'rsa1', n: n(1), e: 'AQAB', created: 1000 },
+      { id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 },
     ])
     mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
     mockedReRegisterNewestKey.mockResolvedValue({ success: true, serverKeyNs: [n(1), n(2)] })
@@ -163,37 +170,47 @@ describe('rotateSigningKey', () => {
     expect(result.confirmed).toBe(true)
     expect(mockedCreateNewKeyPair).toHaveBeenCalled()
     expect(mockedReRegisterNewestKey).toHaveBeenCalledWith(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
-    // Only the key that was newest BEFORE rotation started is pruned, and it happens before the
-    // new key even exists — never the new key itself.
+    // Pruning runs AFTER confirm, once enumeration can see the new key; keeps the newest two
+    // ('rsa1','rsa2') and deletes the one before that ('rsa0').
     expect(mockedDeleteKey).toHaveBeenCalledTimes(1)
     expect(mockedDeleteKey).toHaveBeenCalledWith('rsa0')
-    expect(mockedDeleteKey.mock.invocationCallOrder[0]).toBeLessThan(mockedCreateNewKeyPair.mock.invocationCallOrder[0])
-    expect(logger.info).toHaveBeenCalledWith("[rotateSigningKey] event=pruned active='rsa1' pruned=1 prune_failures=0")
+    expect(mockedDeleteKey.mock.invocationCallOrder[0]).toBeGreaterThan(
+      mockedCreateNewKeyPair.mock.invocationCallOrder[0]
+    )
+    expect(logger.info).toHaveBeenCalledWith("[rotateSigningKey] event=pruned active='rsa2' pruned=1 prune_failures=0")
   })
 
-  it('a confirmed rotation never deletes the key that was newest when it started', async () => {
-    // Fake keystore, not a static fixture: the new key must actually enter the enumerated set
-    // for this test to distinguish a start-of-rotation prune from an end-of-rotation one — a
-    // static `getAllKeysWithPublicInfo` fixture can't see the new key and passes either way.
-    const keystore = makeFakeKeystore([
-      { id: 'rsa1', n: n(1), e: 'AQAB', created: 1000 },
-      { id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 },
-    ])
-    const logger = makeLogger()
+  describe('key retention across rotations (fake keystore)', () => {
+    it('a confirmed rotation from two keys ends at the newest two — the new key and the one it replaced, never itself', async () => {
+      const keystore = makeFakeKeystore(twoKeyFixture())
+      const logger = makeLogger()
 
-    const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
-    expect(result.status).toBe('rotated')
-    expect(result.confirmed).toBe(true)
-    // Unit-level proxy for AC1 (a response encrypted to the previous key still opens after
-    // rotation) — the actual decrypt is native, kid-aware (#4600), and not testable here.
-    expect(mockedDeleteKey).not.toHaveBeenCalledWith('rsa2')
-    expect(mockedDeleteKey).not.toHaveBeenCalledWith('rsa3')
-    expect(keystore.ids()).toEqual(['rsa2', 'rsa3'])
-  })
+      expect(result.status).toBe('rotated')
+      expect(result.confirmed).toBe(true)
+      // Unit-level proxy for AC1 (a response encrypted to the previous key still opens after
+      // rotation) — the actual decrypt is native, kid-aware (#4600), and not testable here.
+      expect(mockedDeleteKey).toHaveBeenCalledTimes(1)
+      expect(mockedDeleteKey).toHaveBeenCalledWith('rsa1')
+      expect(mockedDeleteKey).not.toHaveBeenCalledWith('rsa2')
+      expect(mockedDeleteKey).not.toHaveBeenCalledWith('rsa3')
+      expect(keystore.ids()).toEqual(['rsa2', 'rsa3'])
+    })
 
-  describe('multi-rotation key retention (fake keystore)', () => {
-    it('three consecutive confirmed rotations hold at most two keys', async () => {
+    it('the first rotation from a single key ends at both keys, nothing deleted', async () => {
+      const keystore = makeFakeKeystore([{ id: 'rsa1', n: n(1), e: 'AQAB', created: 1000 }])
+      const logger = makeLogger()
+
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
+
+      expect(result.status).toBe('rotated')
+      expect(result.confirmed).toBe(true)
+      expect(keystore.ids()).toEqual(['rsa1', 'rsa2'])
+      expect(mockedDeleteKey).not.toHaveBeenCalled()
+    })
+
+    it('three consecutive confirmed rotations hold two keys at rest after each', async () => {
       const keystore = makeFakeKeystore([{ id: 'rsa1', n: n(1), e: 'AQAB', created: 1000 }])
       const logger = makeLogger()
 
@@ -205,17 +222,13 @@ describe('rotateSigningKey', () => {
       }
 
       expect(keystore.ids()).toEqual(['rsa3', 'rsa4'])
-      expect(keystore.maxHeld()).toBe(2)
+      // Pruning runs after generate, so once steady state is reached each rotation is
+      // momentarily at three keys until its own prune completes.
+      expect(keystore.maxHeld()).toBe(3)
     })
 
-    it('a permanently undeletable key leaves the device one over the two-key bound, not blocking rotation', async () => {
-      const keystore = makeFakeKeystore(
-        [
-          { id: 'rsa1', n: n(1), e: 'AQAB', created: 1000 },
-          { id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 },
-        ],
-        ['rsa1']
-      )
+    it('a permanently undeletable key leaves the device one over the two-key bound after a confirmed rotation', async () => {
+      const keystore = makeFakeKeystore(twoKeyFixture(), ['rsa1'])
       const logger = makeLogger()
 
       const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
@@ -226,8 +239,8 @@ describe('rotateSigningKey', () => {
       expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('event=failed_prune_delete'))
     })
 
-    it('an unconfirmed rotation followed by a confirmed one holds at most two keys throughout', async () => {
-      const keystore = makeFakeKeystore([{ id: 'rsa1', n: n(1), e: 'AQAB', created: 1000 }])
+    it('an unconfirmed rotation leaves three keys; the next confirmed rotation prunes back to two', async () => {
+      const keystore = makeFakeKeystore(twoKeyFixture())
       mockedReRegisterNewestKey.mockResolvedValueOnce({ success: true, serverKeyNs: [] })
       const logger = makeLogger()
 
@@ -235,43 +248,60 @@ describe('rotateSigningKey', () => {
 
       expect(result1.status).toBe('rotated')
       expect(result1.confirmed).toBe(false)
-      expect(keystore.ids()).toEqual(['rsa1', 'rsa2'])
+      expect(keystore.ids()).toEqual(['rsa1', 'rsa2', 'rsa3'])
       expect(mockedDeleteKey).not.toHaveBeenCalled()
 
       const result2 = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
       expect(result2.status).toBe('rotated')
       expect(result2.confirmed).toBe(true)
-      expect(keystore.ids()).toEqual(['rsa2', 'rsa3'])
-      expect(mockedDeleteKey).toHaveBeenCalledTimes(1)
+      expect(keystore.ids()).toEqual(['rsa3', 'rsa4'])
+      expect(mockedDeleteKey).toHaveBeenCalledTimes(2)
       expect(mockedDeleteKey).toHaveBeenCalledWith('rsa1')
-      // The second rotation's start-of-rotation prune (deleting 'rsa1', the key that was newest
-      // going into it) happens before that rotation generates its own new key.
-      expect(mockedDeleteKey.mock.invocationCallOrder[0]).toBeLessThan(
-        mockedCreateNewKeyPair.mock.invocationCallOrder[1]
-      )
-      expect(keystore.maxHeld()).toBe(2)
+      expect(mockedDeleteKey).toHaveBeenCalledWith('rsa2')
     })
 
-    it.each([
-      ['PUT failure', { success: false }],
-      ['echo mismatch', { success: true, serverKeyNs: [n(99)] }],
-    ])(
-      'rollback after the start prune leaves the device holding the pre-rotation key (%s)',
-      async (_label, putResult) => {
-        const keystore = makeFakeKeystore([
-          { id: 'rsa1', n: n(1), e: 'AQAB', created: 1000 },
-          { id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 },
-        ])
+    describe('failure paths delete nothing', () => {
+      it('createNewKeyPair throws -> failed, unconfirmed, no PUT attempted, pre-rotation keys untouched', async () => {
+        const keystore = makeFakeKeystore(twoKeyFixture())
+        mockedCreateNewKeyPair.mockRejectedValue(new Error('keychain unavailable'))
+        const logger = makeLogger()
+
+        const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
+
+        expect(result).toEqual({ status: 'failed', confirmed: false })
+        expect(mockedReRegisterNewestKey).not.toHaveBeenCalled()
+        expect(keystore.ids()).toEqual(['rsa1', 'rsa2'])
+      })
+
+      it.each([
+        ['PUT failure', { success: false }],
+        ['echo mismatch', { success: true, serverKeyNs: [n(99)] }],
+      ])('%s -> rolls back the new key, pre-rotation keys untouched', async (_label, putResult) => {
+        const keystore = makeFakeKeystore(twoKeyFixture())
         mockedReRegisterNewestKey.mockResolvedValueOnce(putResult)
         const logger = makeLogger()
 
         const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
         expect(result.status).toBe('rolled_back')
-        expect(keystore.ids()).toEqual(['rsa2'])
-      }
-    )
+        expect(result.confirmed).toBe(false)
+        expect(keystore.ids()).toEqual(['rsa1', 'rsa2'])
+      })
+
+      it('unknown verdict (undecodable/empty echo) -> keeps the new key without pruning, pre-rotation keys untouched', async () => {
+        const keystore = makeFakeKeystore(twoKeyFixture())
+        mockedReRegisterNewestKey.mockResolvedValueOnce({ success: true, serverKeyNs: [] })
+        const logger = makeLogger()
+
+        const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
+
+        expect(result).toEqual({ status: 'rotated', confirmed: false, newRegistrationAccessToken: undefined })
+        expect(keystore.ids()).toEqual(['rsa1', 'rsa2', 'rsa3'])
+        expect(mockedDeleteKey).not.toHaveBeenCalled()
+        expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('event=rotated_unconfirmed_no_prune'))
+      })
+    })
   })
 
   it('persists a rotated registration_access_token via native setToken BEFORE confirm/rollback', async () => {
@@ -287,6 +317,10 @@ describe('rotateSigningKey', () => {
 
     expect(result.newRegistrationAccessToken).toBe('rotated-token')
     expect(mockedSetToken).toHaveBeenCalledWith(TokenType.Registration, 'rotated-token')
+    // setToken must have been invoked before the confirmed-branch prune enumerates.
+    expect(mockedSetToken.mock.invocationCallOrder[0]).toBeLessThan(
+      mockedGetAllKeysWithPublicInfo.mock.invocationCallOrder[0]
+    )
   })
 
   it('setToken throws while persisting the rotated registration_access_token -> logs failure but still returns the token and continues rotation', async () => {
@@ -321,61 +355,6 @@ describe('rotateSigningKey', () => {
     expect(mockedSetToken.mock.invocationCallOrder[0]).toBeLessThan(mockedDeleteKey.mock.invocationCallOrder[0])
   })
 
-  it('createNewKeyPair throws -> failed, unconfirmed, no PUT attempted', async () => {
-    mockedCreateNewKeyPair.mockRejectedValue(new Error('keychain unavailable'))
-    const logger = makeLogger()
-
-    const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
-
-    expect(result).toEqual({ status: 'failed', confirmed: false })
-    expect(result.confirmed).toBe(false)
-    expect(mockedReRegisterNewestKey).not.toHaveBeenCalled()
-    expect(mockedDeleteKey).not.toHaveBeenCalled()
-  })
-
-  it('PUT success:false -> rolls back the new key -> rolled_back, unconfirmed', async () => {
-    mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
-    mockedReRegisterNewestKey.mockResolvedValue({ success: false })
-    const logger = makeLogger()
-
-    const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
-
-    expect(result).toEqual({ status: 'rolled_back', confirmed: false, newRegistrationAccessToken: undefined })
-    expect(result.confirmed).toBe(false)
-    expect(mockedDeleteKey).toHaveBeenCalledWith('rsa2')
-  })
-
-  it('echo definitively missing the new modulus -> rolls back', async () => {
-    mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
-    mockedReRegisterNewestKey.mockResolvedValue({ success: true, serverKeyNs: [n(1)] })
-    const logger = makeLogger()
-
-    const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
-
-    expect(result).toEqual({ status: 'rolled_back', confirmed: false, newRegistrationAccessToken: undefined })
-    expect(mockedDeleteKey).toHaveBeenCalledWith('rsa2')
-  })
-
-  it('echo undecodable/empty -> keeps the new key WITHOUT an end-of-rotation prune, returns rotated but unconfirmed', async () => {
-    mockedGetAllKeysWithPublicInfo.mockResolvedValue([
-      { id: 'rsa0', n: n(0), e: 'AQAB', created: 500 },
-      { id: 'rsa1', n: n(1), e: 'AQAB', created: 1000 },
-    ])
-    mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
-    mockedReRegisterNewestKey.mockResolvedValue({ success: true, serverKeyNs: [] })
-    const logger = makeLogger()
-
-    const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
-
-    expect(result).toEqual({ status: 'rotated', confirmed: false, newRegistrationAccessToken: undefined })
-    expect(result.confirmed).toBe(false)
-    // Only the start-of-rotation prune runs (deleting 'rsa0', the key superseded before this
-    // rotation began) — the unconfirmed new key is never itself pruned.
-    expect(mockedDeleteKey).toHaveBeenCalledTimes(1)
-    expect(mockedDeleteKey).toHaveBeenCalledWith('rsa0')
-    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('event=rotated_unconfirmed_no_prune'))
-  })
-
   it('echo entirely undecodable garbage -> same as empty: rotated without pruning the new key, unconfirmed', async () => {
     mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
     mockedReRegisterNewestKey.mockResolvedValue({ success: true, serverKeyNs: ['not-valid-base64!!!'] })
@@ -385,7 +364,7 @@ describe('rotateSigningKey', () => {
 
     expect(result.status).toBe('rotated')
     expect(result.confirmed).toBe(false)
-    expect(mockedDeleteKey).not.toHaveBeenCalledWith('rsa2')
+    expect(mockedDeleteKey).not.toHaveBeenCalled()
   })
 
   it('undecodable local newKey.n with a decodable server echo -> rotated, unconfirmed, no prune (not a rollback)', async () => {
@@ -399,7 +378,7 @@ describe('rotateSigningKey', () => {
     const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
     expect(result).toEqual({ status: 'rotated', confirmed: false, newRegistrationAccessToken: undefined })
-    expect(mockedDeleteKey).not.toHaveBeenCalledWith('rsa2')
+    expect(mockedDeleteKey).not.toHaveBeenCalled()
     expect(mockedClearTokens).toHaveBeenCalledTimes(1)
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('event=rotated_unconfirmed_no_prune'))
   })
@@ -417,10 +396,11 @@ describe('rotateSigningKey', () => {
     expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('event=failed_rollback_delete'))
   })
 
-  it('a prune failure of the previous key at the start of rotation is non-fatal — still reports rotated', async () => {
+  it('a prune failure of the previous key on a confirmed rotation is non-fatal — still reports rotated', async () => {
     mockedGetAllKeysWithPublicInfo.mockResolvedValue([
       { id: 'rsa0', n: n(0), e: 'AQAB', created: 500 },
       { id: 'rsa1', n: n(1), e: 'AQAB', created: 1000 },
+      { id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 },
     ])
     mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
     mockedReRegisterNewestKey.mockResolvedValue({ success: true, serverKeyNs: [n(2)] })
@@ -432,11 +412,13 @@ describe('rotateSigningKey', () => {
     expect(result.status).toBe('rotated')
     expect(result.confirmed).toBe(true)
     expect(mockedCreateNewKeyPair).toHaveBeenCalled()
-    expect(mockedDeleteKey.mock.invocationCallOrder[0]).toBeLessThan(mockedCreateNewKeyPair.mock.invocationCallOrder[0])
+    expect(mockedDeleteKey.mock.invocationCallOrder[0]).toBeGreaterThan(
+      mockedCreateNewKeyPair.mock.invocationCallOrder[0]
+    )
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('event=failed_prune_delete'))
   })
 
-  it('a prune enumeration failure at the start of rotation is non-fatal — still reports rotated', async () => {
+  it('a prune enumeration failure on a confirmed rotation is non-fatal — still reports rotated', async () => {
     mockedGetAllKeysWithPublicInfo.mockRejectedValue(new Error('keystore unavailable'))
     mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
     mockedReRegisterNewestKey.mockResolvedValue({ success: true, serverKeyNs: [n(2)] })
@@ -447,7 +429,7 @@ describe('rotateSigningKey', () => {
     expect(result.status).toBe('rotated')
     expect(result.confirmed).toBe(true)
     expect(mockedCreateNewKeyPair).toHaveBeenCalled()
-    expect(mockedGetAllKeysWithPublicInfo.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(mockedGetAllKeysWithPublicInfo.mock.invocationCallOrder[0]).toBeGreaterThan(
       mockedCreateNewKeyPair.mock.invocationCallOrder[0]
     )
     expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('event=failed_prune_enumerate'))
