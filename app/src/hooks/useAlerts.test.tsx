@@ -8,6 +8,16 @@ import { renderHook } from '@testing-library/react-native'
 import RN, { Platform } from 'react-native'
 import { showErrorAlert, useAlerts } from './useAlerts'
 
+/**
+ * Alerts driven by name from an it.each table. Restricted to the ones callable with no
+ * arguments, which is all these tables exercise. Typing the key this way means a
+ * mistyped name, a renamed alert, or one that actually needs an argument fails to
+ * compile — rather than failing at runtime with "undefined is not a function", or
+ * silently calling an alert with a missing parameter.
+ */
+type Alerts = ReturnType<typeof useAlerts>
+type AlertName = { [K in keyof Alerts]: Alerts[K] extends () => void ? K : never }[keyof Alerts]
+
 jest.mock('@/bcsc-theme/api/hooks/useFactoryReset')
 
 const mockUseStore = jest.fn()
@@ -46,7 +56,7 @@ describe('useAlerts', () => {
     Platform.OS = originalPlatformOS
   })
 
-  it.each<[string, string, string, AppEventCode]>([
+  it.each<[AlertName, string, string, AppEventCode]>([
     [
       'problemWithAppAlert',
       'Alerts.SomethingWentWrong.Title',
@@ -254,7 +264,7 @@ describe('useAlerts', () => {
 
     const { result } = renderHook(() => useAlerts({ navigate: jest.fn() } as any))
 
-    ;(result.current as unknown as Record<string, () => void>)[method]()
+    result.current[method]()
 
     expect(mockEmitErrorModal).toHaveBeenCalledWith(title, description, expect.objectContaining({ appEvent }))
   })
@@ -1046,7 +1056,7 @@ describe('useAlerts', () => {
   })
 
   describe('IAS error alerts (201–300)', () => {
-    it.each<[string, string, string, AppEventCode]>([
+    it.each<[AlertName, string, string, AppEventCode]>([
       [
         'serverConfigurationAlert',
         'Alerts.ProblemWithService.Title',
@@ -1122,7 +1132,7 @@ describe('useAlerts', () => {
 
       const { result } = renderHook(() => useAlerts({ navigate: jest.fn() } as any))
 
-      ;(result.current as unknown as Record<string, () => void>)[method]()
+      result.current[method]()
 
       expect(mockEmitErrorModal).toHaveBeenCalledWith(title, description, expect.objectContaining({ appEvent }))
     })
