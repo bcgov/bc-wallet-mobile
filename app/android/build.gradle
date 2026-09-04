@@ -24,7 +24,17 @@ buildscript {
     }
 }
 
-allprojects {
+allprojects { project ->
+    // When @animo-id/expo-secure-environment is pulled in during a local link to bifold 
+    // it sets kotlinOptions.jvmTarget = "17" directly
+    // But when RNGP's global Java/Kotlin alignment then tries to
+    // set the same value again and Gradle throws "the value for property
+    // 'languageVersion' is final and cannot be changed any further"
+    // This check is a workaround to disable RNGP's global alignment for this specific project
+    if (project.path == ':animo-id-expo-secure-environment') {
+        project.ext.set('react.internal.disableJavaVersionAlignment', 'true')
+    }
+
     repositories {
         mavenCentral()
         mavenLocal()

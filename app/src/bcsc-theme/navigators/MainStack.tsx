@@ -61,6 +61,7 @@ import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsS
 import { MainPrivacyPolicyScreen } from '../features/settings/MainPrivacyPolicyScreen'
 import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
 import { NotificationSettingsScreen } from '../features/settings/NotificationSettingsScreen'
+import { ProofRequestExpirationScreen } from '../features/settings/ProofRequestExpirationScreen'
 import { MainResetWalletConfirmationScreen } from '../features/settings/ResetWalletConfirmationScreen'
 import { useVerificationResponseListener } from '../features/verification-response/useVerificationResponseListener'
 import CancelledReview from '../features/verify/send-video/CancelledReview'
@@ -343,6 +344,14 @@ const MainStack: React.FC = () => {
             options={{
               headerShown: true,
               title: t('BCSC.Settings.AutoLockTime'),
+            }}
+          />
+          <Stack.Screen
+            name={BCSCScreens.ProofRequestExpiry}
+            component={ProofRequestExpirationScreen}
+            options={{
+              headerShown: true,
+              title: t('BCSC.Settings.ProofRequestExpiry'),
             }}
           />
           <Stack.Screen

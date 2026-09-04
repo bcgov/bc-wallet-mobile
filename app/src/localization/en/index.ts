@@ -213,6 +213,13 @@ const translation = {
     "EnableProxy": "Enable proxy",
     "EnableAppToAppPersonFlow": "App-to-app Person flow",
     "SwitchTheme": "Switch theme",
+    "ProofRequestExpirationTimes": {
+      "TwoMinutes": "2 minutes",
+      "OneHour": "1 hour",
+      "FortyEightHours": "48 hours",
+      "SevenDays": "7 days",
+      "Never": "Never"
+    },
     "AppSection": "App",
     "Testing": "Testing",
     "ErrorAlertTest": "Error & Alert Testing",
@@ -437,6 +444,7 @@ const translation = {
       "Biometrics": "Biometrics",
       "EditNickname": "Edit Nickname",
       "AutoLockTime": "Auto lock time",
+      "ProofRequestExpiry": "Proof request expiration",
       "Notifications": "Notifications",
       "ChangeNotificationsHeader": "Change notification settings?",
       "NotificationsEnabledContent": "With notifications enabled, stay informed about account updates, credential changes and service interruptions.",
@@ -1081,7 +1089,6 @@ const translation = {
         "ButtonText": "Get a BC Services Card"
       }
     },
-    // TODO: placeholder copy — needs content review before ship
     "DeviceAuthorizationError": {
       "InvalidParameter": {
         "Heading": "Card Not Found",

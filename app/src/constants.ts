@@ -122,12 +122,6 @@ export const SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS = 4 * 1000
 
 // Notification constants
 /**
- * How long a pending proof request notification stays in the notifications list. Users who hit
- * a problem often scan a new QR code and abandon the previous proof request, so old requests
- * are removed rather than left to pile up. (Duration is tentative, per the designs.)
- */
-export const PROOF_REQUEST_NOTIFICATION_TTL_MS = 60 * 60 * 1000 // 1 hour
-/**
  * Notifications within this window of expiring (or already expired) show the yellow
  * "attention" state to warn the user before the item becomes unusable / is removed.
  */
