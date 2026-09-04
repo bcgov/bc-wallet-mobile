@@ -49,7 +49,6 @@ const MaskedCamera = ({
   maskType,
   customPath,
   codeScanner,
-  // photoQualityBalance = 'speed',
   cameraFace = 'back',
   onPhotoTaken,
 }: MaskedCameraProps) => {

@@ -11,7 +11,7 @@ import { useFocusEffect, useIsFocused } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native'
+import { LayoutChangeEvent, StyleSheet, Text, Vibration, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Svg, { Defs, Mask, Rect } from 'react-native-svg'
 import { Camera, CameraRef, useCameraPermission } from 'react-native-vision-camera'
@@ -202,13 +202,15 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
 
   const cameraRef = useRef<CameraRef>(null)
 
-  const barcodeScannerOutput = useBCServicesCardScannerOutput({
+  const { scannerOutput, resetScanner } = useBCServicesCardScannerOutput({
     onScanBCServicesCard: async (serial, license) => {
       setScanState('locked')
+      Vibration.vibrate()
       await scanner.handleScanComboCard(serial, license)
     },
     onScanUnknownCard: () => {
       setScanState('locked')
+      Vibration.vibrate()
       scanner.handleScanNonBcsc()
     },
   })
@@ -227,15 +229,16 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const goToManualEntry = useCallback(() => navigation.navigate(BCSCScreens.ManualSerial), [navigation])
 
   const onCameraError = useCallback(() => {
-    // setTorchOn(false)
+    enableTorch(false)
     setCameraFailed(true)
-  }, [])
+  }, [enableTorch])
 
   const retryCamera = useCallback(() => {
     setCameraFailed(false)
     setScanState('scanning')
     setCameraKey((prev) => prev + 1)
-  }, [])
+    resetScanner()
+  }, [resetScanner])
 
   useFocusEffect(useCallback(() => retryCamera(), [retryCamera]))
 
@@ -329,7 +332,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
               isActive={isFocused}
               device={'back'}
               onError={onCameraError}
-              outputs={[barcodeScannerOutput]}
+              outputs={[scannerOutput]}
             />
 
             {/* Vertical ID-card framing guide (appearance of MaskType.ID_CARD) */}

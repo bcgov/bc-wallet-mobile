@@ -144,9 +144,8 @@ export const useVisionCamera = ({ position, deviceFilter, photoOutput, videoOutp
       startRecordingVideo,
       stopRecordingVideo,
       cancelRecordingVideo,
-      cameraOutputs: [photoOutput, videoOutput].filter(Boolean) as CameraOutput[],
     }),
-    [cancelRecordingVideo, device, photoOutput, startRecordingVideo, stopRecordingVideo, takePhoto, videoOutput]
+    [cancelRecordingVideo, device, startRecordingVideo, stopRecordingVideo, takePhoto]
   )
 }
 

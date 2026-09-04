@@ -1,10 +1,15 @@
 import { BCServicesCardReader, DriversLicenseMetadata } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
 import { BC_SERVICES_CARD_BARCODE, DRIVERS_LICENSE_BARCODE, OLD_BC_SERVICES_CARD_BARCODE } from '@/constants'
 import { TOKENS, useServices } from '@bifold/core'
-import { useFocusEffect } from '@react-navigation/native'
-import { useCallback, useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import { CommonResolutions, usePhotoOutput, useVideoOutput } from 'react-native-vision-camera'
 import { BarcodeFormat, useBarcodeScannerOutput } from 'react-native-vision-camera-barcode-scanner'
+
+const BC_SERVICES_CARD_SCANNER_BARCODE_FORMATS = [
+  BC_SERVICES_CARD_BARCODE,
+  OLD_BC_SERVICES_CARD_BARCODE,
+  DRIVERS_LICENSE_BARCODE,
+] satisfies BarcodeFormat[]
 
 interface BCServicesCardScannerOutputOptions {
   minMatches?: number
@@ -12,6 +17,7 @@ interface BCServicesCardScannerOutputOptions {
   onScanUnknownCard?: () => Promise<void> | void
 }
 
+// Optimized for speed and moderate file size
 export const useEvidencePhotoOutput = () => {
   return usePhotoOutput({
     quality: 0.9,
@@ -21,6 +27,7 @@ export const useEvidencePhotoOutput = () => {
   })
 }
 
+// Optimized for quality and moderate file size
 export const useSelfiePhotoOutput = () => {
   return usePhotoOutput({
     quality: 0.9,
@@ -30,6 +37,7 @@ export const useSelfiePhotoOutput = () => {
   })
 }
 
+// Optimized for small file size
 export const useSelfieVideoOutput = () => {
   return useVideoOutput({
     fileType: 'mp4',
@@ -43,19 +51,8 @@ export const useBCServicesCardScannerOutput = (options: BCServicesCardScannerOut
   const bcServicesCardReaderRef = useRef(new BCServicesCardReader(logger, options.minMatches))
   const bcServicesCardReader = bcServicesCardReaderRef.current
 
-  useFocusEffect(
-    useCallback(() => {
-      isProcessingScan.current = false
-      bcServicesCardReaderRef.current.reset()
-    }, [])
-  )
-
-  return useBarcodeScannerOutput({
-    barcodeFormats: [
-      BC_SERVICES_CARD_BARCODE,
-      OLD_BC_SERVICES_CARD_BARCODE,
-      DRIVERS_LICENSE_BARCODE,
-    ] satisfies BarcodeFormat[],
+  const scannerOutput = useBarcodeScannerOutput({
+    barcodeFormats: BC_SERVICES_CARD_SCANNER_BARCODE_FORMATS,
     onBarcodeScanned: async (barcodes) => {
       if (isProcessingScan.current) {
         return
@@ -85,8 +82,18 @@ export const useBCServicesCardScannerOutput = (options: BCServicesCardScannerOut
       }
     },
     onError: (error) => {
-      // TODO (MD): Handle errors appropriately ie: show alert
       logger.error('[BCServicesCardScanner] Error scanning barcode', error)
     },
   })
+
+  return useMemo(
+    () => ({
+      scannerOutput,
+      resetScanner: () => {
+        isProcessingScan.current = false
+        bcServicesCardReader.reset()
+      },
+    }),
+    [scannerOutput, bcServicesCardReader]
+  )
 }
