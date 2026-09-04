@@ -217,7 +217,7 @@ describe('rotateSigningKey', () => {
       expect(mockedDeleteKey).not.toHaveBeenCalledWith('rsa1')
     })
 
-    it('falls back to the newest local key by created when none match the server set', async () => {
+    it('prunes nothing when two or more other keys are ambiguous — none match the server set', async () => {
       const keystore = makeFakeKeystore(twoKeyFixture())
       mockedReRegisterNewestKey.mockResolvedValueOnce({ success: true, serverKeyNs: [n(3)] })
       const logger = makeLogger()
@@ -226,10 +226,27 @@ describe('rotateSigningKey', () => {
 
       expect(result.status).toBe('rotated')
       expect(result.confirmed).toBe(true)
-      // IAS's last-N merge may have aged every older key out of the echo; falls back to
-      // newest-by-created rather than pruning down to just the new key.
-      expect(keystore.ids()).toEqual(['rsa2', 'rsa3'])
-      expect(mockedDeleteKey).toHaveBeenCalledWith('rsa1')
+      // Neither rsa1 nor rsa2 is confirmed present in the server set, and with two candidates
+      // we can't tell which (if either) is still registered — never delete on "can't tell"
+      // (#4601). Both survive for a later rotation to resolve.
+      expect(keystore.ids()).toEqual(['rsa1', 'rsa2', 'rsa3'])
+      expect(mockedDeleteKey).not.toHaveBeenCalled()
+      expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('event=prune_skipped_ambiguous'))
+    })
+
+    it('falls back to the newest key when there is exactly one other, even if it matches nothing', async () => {
+      const keystore = makeFakeKeystore([{ id: 'rsa1', n: n(1), e: 'AQAB', created: 1000 }])
+      mockedReRegisterNewestKey.mockResolvedValueOnce({ success: true, serverKeyNs: [n(2)] })
+      const logger = makeLogger()
+
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
+
+      expect(result.status).toBe('rotated')
+      expect(result.confirmed).toBe(true)
+      // Only one candidate exists, so there's nothing to be ambiguous about — it's kept
+      // regardless of whether its modulus is in the echo (#4601's whole point).
+      expect(keystore.ids()).toEqual(['rsa1', 'rsa2'])
+      expect(mockedDeleteKey).not.toHaveBeenCalled()
     })
 
     it('the first rotation from a single key ends at both keys, nothing deleted', async () => {
@@ -440,7 +457,9 @@ describe('rotateSigningKey', () => {
       { id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 },
     ])
     mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
-    mockedReRegisterNewestKey.mockResolvedValue({ success: true, serverKeyNs: [n(2)] })
+    // rsa1's modulus is echoed too so it's the unambiguous keep — this test is about a delete
+    // failure being non-fatal, not the ambiguous-match guard (covered separately).
+    mockedReRegisterNewestKey.mockResolvedValue({ success: true, serverKeyNs: [n(1), n(2)] })
     mockedDeleteKey.mockRejectedValue(new Error('E_KEYSTORE_ERROR'))
     const logger = makeLogger()
 

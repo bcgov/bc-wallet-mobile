@@ -44,10 +44,11 @@ export type KeyRotationResult = {
 }
 
 /**
- * Deletes every local key except `newKeyId` and one other, on a confirmed rotation (#4601). An
- * unconfirmed rotation prunes nothing, leaving three keys until the next confirmed one does.
+ * Deletes every local key except `newKeyId` and one other, on a confirmed rotation (#4601): the
+ * newest whose modulus is in `serverKeyNs`, or — if exactly one other key exists — that one.
+ * With two-or-more unmatched candidates the choice is ambiguous, so nothing is pruned this round.
  */
-async function pruneKeepingNewestTwo(
+async function pruneSupersededKeys(
   newKeyId: string,
   serverKeyNs: Array<string | undefined>,
   logger: BifoldLogger
@@ -66,7 +67,16 @@ async function pruneKeepingNewestTwo(
   // still present in the server's jwks; fall back to newest-by-created if none match (e.g. IAS's
   // last-N merge already aged every older key out).
   const others = keys.filter((k) => k.id !== newKeyId).sort((a, b) => (b.created ?? 0) - (a.created ?? 0))
-  const keep = others.find((k) => modulusInSet(k.n, serverKeyNs)) ?? others[0]
+  const match = others.find((k) => modulusInSet(k.n, serverKeyNs))
+  if (!match && others.length > 1) {
+    // Never delete on "can't tell", only on "confirmed not present" (see key-recovery.ts) — with
+    // more than one unmatched candidate we can't tell which is registered, so prune nothing.
+    logger.warn(
+      `[rotateSigningKey] event=prune_skipped_ambiguous none of ${others.length} other local keys matched the server's jwks; keeping all until a later rotation resolves it`
+    )
+    return
+  }
+  const keep = match ?? others[0]
   const keepIds = new Set([newKeyId, keep?.id].filter((id): id is string => id !== undefined))
 
   let pruned = 0
@@ -118,8 +128,8 @@ async function rollback(
 
 /**
  * Rotates the device's signing key: generate, PUT to IAS, confirm via the echoed jwks, and
- * prune down to the newest two keys on confirmed success, so the previous key survives one
- * full rotation cycle (#4601). See issue #3876 for the full design rationale.
+ * prune the superseded key on confirmed success, so the previous key survives one full
+ * rotation cycle (#4601). See issue #3876 for the full design rationale.
  */
 export async function rotateSigningKey(
   apiClient: BCSCApiClient,
@@ -180,7 +190,7 @@ export async function rotateSigningKey(
   }
 
   logger.info(`[rotateSigningKey] event=confirmed new key '${newKey.id}' present in server jwks`)
-  await pruneKeepingNewestTwo(newKey.id, serverKeyNs, logger)
+  await pruneSupersededKeys(newKey.id, serverKeyNs, logger)
 
   // Rotation switched the JWE decryption key, so any id_token cached under the old key is now
   // undecryptable; clear directly rather than via TOKENS_REFRESHED, which would re-run system checks.
