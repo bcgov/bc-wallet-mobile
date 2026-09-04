@@ -1,6 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
+import useServerStatusCheck from '@/bcsc-theme/hooks/useServerStatusCheck'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl, hitSlop, REPORT_SUSPICIOUS_URL } from '@/constants'
 import { isHandledAppError } from '@/errors/appError'
@@ -281,6 +282,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   const { Spacing, ColorPalette, TextTheme, Buttons } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const alerts = useAlerts(navigation)
+  const { checkServerStatus } = useServerStatusCheck()
   const pairingService = usePairingService()
   const { pairing, metadata } = useApi()
   const getQuickLoginURL = useQuickLoginURL()
@@ -415,6 +417,12 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   }, [getQuickLoginURL, logger, state.service, navigation, alerts, t, setIsContinueDisabled])
 
   const onContinue = useCallback(async () => {
+    const { isAvailable } = await checkServerStatus()
+    if (!isAvailable) {
+      setIsContinueDisabled(false)
+      return
+    }
+
     if (state.pairingCode) {
       await onContinueWithPairingCode()
     } else if (state.service) {
@@ -425,6 +433,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       alerts.loginServerErrorAlert()
     }
   }, [
+    checkServerStatus,
     logger,
     onContinueWithPairingCode,
     onContinueWithQuickLoginUrl,

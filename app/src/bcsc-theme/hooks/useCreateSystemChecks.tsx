@@ -11,7 +11,6 @@ import { EventReasonAlertsSystemCheck } from '@/services/system-checks/EventReas
 import { InstallIdSystemCheck } from '@/services/system-checks/InstallIdSystemCheck'
 import { PendingVerificationRecoverySystemCheck } from '@/services/system-checks/PendingVerificationRecoverySystemCheck'
 import { ServerClockSkewSystemCheck } from '@/services/system-checks/ServerClockSkewSystemCheck'
-import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { TermsOfUseSystemCheck } from '@/services/system-checks/TermsOfUseSystemCheck'
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
 import { UpdateDeviceRegistrationSystemCheck } from '@/services/system-checks/UpdateDeviceRegistrationSystemCheck'
@@ -100,9 +99,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
    * @returns Array of system check strategies
    */
   const getStartupSystemChecks = useCallback(async (): Promise<SystemCheckStrategy[]> => {
-    // Server status banners are not cleared on startup so they persist across app restarts
-    // and remain visible for VPN users who bypass the blocking outage modal.
-
     const serverStatus = await configApi.getServerStatus()
 
     const systemChecks: SystemCheckStrategy[] = [
@@ -113,7 +109,6 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
         Analytics,
         logger
       ),
-      new ServerStatusSystemCheck(serverStatus, utils, navigation),
       new ServerClockSkewSystemCheck(serverStatus.serverTimestamp, new Date(), emitAlert, utils),
     ]
 
