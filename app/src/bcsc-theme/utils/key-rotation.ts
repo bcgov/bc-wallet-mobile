@@ -44,12 +44,12 @@ export type KeyRotationResult = {
 }
 
 /**
- * Deletes every local key except `newKeyId`. Only called once the modulus confirm proves
- * `newKeyId` is registered — pruning earlier would forfeit IAS's last-N merge grace window.
- * Per-key delete failures are non-fatal; never rolls back an already-registered key over one.
+ * Deletes every local key except the newest, at the START of a rotation: the key the previous
+ * rotation superseded has had a full cycle for in-flight responses encrypted to it to arrive
+ * (#4601), and the device never holds more than two keys. Delete failures are non-fatal.
  */
-async function pruneOtherKeys(newKeyId: string, logger: BifoldLogger): Promise<void> {
-  let keys: Array<{ id: string }>
+async function pruneAllButNewestKey(logger: BifoldLogger): Promise<void> {
+  let keys: Array<{ id: string; created?: number }>
   try {
     keys = await getAllKeysWithPublicInfo()
   } catch (err) {
@@ -59,14 +59,21 @@ async function pruneOtherKeys(newKeyId: string, logger: BifoldLogger): Promise<v
     return
   }
 
+  // Newest-by-created is the key both platforms sign with; same ordering as performKeyRecovery's gate.
+  const newest = keys.slice().sort((a, b) => (b.created ?? 0) - (a.created ?? 0))[0]
+  if (!newest) {
+    logger.warn('[rotateSigningKey] event=prune_skipped_no_keys no local keys to prune')
+    return
+  }
+
   let pruned = 0
   let failures = 0
   for (const key of keys) {
-    if (key.id === newKeyId) {
+    if (key.id === newest.id) {
       continue
     }
     try {
-      logger.info(`[rotateSigningKey] pruning previous key '${key.id}' (superseded by '${newKeyId}')`)
+      logger.info(`[rotateSigningKey] pruning previous key '${key.id}' (superseded by '${newest.id}')`)
       await deleteKey(key.id)
       pruned++
     } catch (err) {
@@ -76,7 +83,7 @@ async function pruneOtherKeys(newKeyId: string, logger: BifoldLogger): Promise<v
       )
     }
   }
-  logger.info(`[rotateSigningKey] event=pruned active='${newKeyId}' pruned=${pruned} prune_failures=${failures}`)
+  logger.info(`[rotateSigningKey] event=pruned active='${newest.id}' pruned=${pruned} prune_failures=${failures}`)
 }
 
 /**
@@ -107,8 +114,9 @@ async function rollback(
 }
 
 /**
- * Rotates the device's signing key: generate, PUT to IAS, confirm via the echoed jwks, and
- * prune superseded keys on confirmed success. See issue #3876 for the full design rationale.
+ * Rotates the device's signing key: prunes down to the newest key first, then generates, PUTs
+ * to IAS and confirms via the echoed jwks. The superseded key is kept until the next rotation
+ * (#4601). See issue #3876 for the full design rationale.
  */
 export async function rotateSigningKey(
   apiClient: BCSCApiClient,
@@ -117,6 +125,8 @@ export async function rotateSigningKey(
   logger: BifoldLogger
 ): Promise<KeyRotationResult> {
   logger.info(`[rotateSigningKey] event=triggered client_id=${redactClientId(clientId)}`)
+
+  await pruneAllButNewestKey(logger)
 
   const newKey = await createNewKeyPair().catch((err) => {
     logger.error(`[rotateSigningKey] event=failed_generate could not generate a new key: ${describeError(err)}`)
@@ -169,10 +179,9 @@ export async function rotateSigningKey(
   }
 
   logger.info(`[rotateSigningKey] event=confirmed new key '${newKey.id}' present in server jwks`)
-  await pruneOtherKeys(newKey.id, logger)
 
-  // Rotation switched the JWE decryption key, so any id_token cached under the old key is now
-  // undecryptable; clear directly rather than via TOKENS_REFRESHED, which would re-run system checks.
+  // The server now encrypts to the new key; clear the cache directly rather than via TOKENS_REFRESHED,
+  // which would re-run system checks. The previous key itself stays until the next rotation (#4601).
   apiClient.clearTokens()
 
   logger.info(`[rotateSigningKey] event=succeeded active='${newKey.id}'`)
