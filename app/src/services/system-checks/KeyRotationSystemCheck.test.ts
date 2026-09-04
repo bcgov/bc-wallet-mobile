@@ -178,26 +178,53 @@ describe('KeyRotationSystemCheck', () => {
       expect(utils.logger.warn).toHaveBeenCalled()
     })
 
-    it('skips instead of rotating on a sibling when the newest key lacks a created timestamp', async () => {
+    it('ignores a sibling with no created timestamp and rotates based on the remaining usable key', async () => {
       Object.defineProperty(Platform, 'OS', { get: () => 'android' })
       mockedGetAllKeys.mockResolvedValue([
         { id: 'old', created: NOW - 400 * 24 * 60 * 60 * 1000 } as any,
-        { id: 'newest-no-ts' } as any,
+        { id: 'untracked-no-ts' } as any,
+      ])
+      const utils = makeUtils()
+      const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
+
+      expect(await check.runCheck()).toBe(false)
+      expect(utils.logger.warn).toHaveBeenCalledWith(expect.stringContaining("ignoring key 'untracked-no-ts'"))
+    })
+
+    it('ignores a sibling with created: 0 and passes based on the remaining usable key', async () => {
+      Object.defineProperty(Platform, 'OS', { get: () => 'android' })
+      mockedGetAllKeys.mockResolvedValue([
+        { id: 'rsa2', created: NOW - 10 * 24 * 60 * 60 * 1000 } as any,
+        { id: 'rsa3', created: 0 } as any,
       ])
       const utils = makeUtils()
       const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
 
       expect(await check.runCheck()).toBe(true)
-      expect(utils.logger.warn).toHaveBeenCalled()
+      expect(utils.logger.warn).toHaveBeenCalledWith(expect.stringContaining("ignoring key 'rsa3'"))
     })
 
-    it('skips when a key has created: 0 rather than reading it as an epoch-1970 key', async () => {
+    it('skips when the only key has created: 0 rather than reading it as an epoch-1970 key', async () => {
       mockedGetAllKeys.mockResolvedValue([{ id: 'rsa1', created: 0 } as any])
       const utils = makeUtils()
       const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
 
       expect(await check.runCheck()).toBe(true)
-      expect(utils.logger.warn).toHaveBeenCalled()
+      expect(utils.logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('no local key has a usable created timestamp')
+      )
+    })
+
+    it('skips when every key lacks a usable created timestamp', async () => {
+      Object.defineProperty(Platform, 'OS', { get: () => 'android' })
+      mockedGetAllKeys.mockResolvedValue([{ id: 'rsa1', created: 0 } as any, { id: 'rsa2' } as any])
+      const utils = makeUtils()
+      const check = new KeyRotationSystemCheck(false, undefined, jest.fn(), utils)
+
+      expect(await check.runCheck()).toBe(true)
+      expect(utils.logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('no local key has a usable created timestamp')
+      )
     })
   })
 

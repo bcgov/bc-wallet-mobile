@@ -244,6 +244,15 @@ class KeyPairManager: KeyPairManagerProtocol {
     }
   }
 
+  /// The server keeps encrypting to the previous key until it has seen the new one, so use the key
+  /// the response names when we hold it, and the newest key otherwise. Nil only when there are none.
+  static func decryptKeyInfo(matching kid: String, in keys: [PrivateKeyInfo]) -> PrivateKeyInfo? {
+    if !kid.isEmpty, let match = keys.first(where: { $0.tag == kid }) {
+      return match
+    }
+    return keys.sorted(by: { $0.created > $1.created }).first
+  }
+
   func generateKeyPair(
     withLabel label: String,
     keyType: KeyType = KeyType.RSA,
