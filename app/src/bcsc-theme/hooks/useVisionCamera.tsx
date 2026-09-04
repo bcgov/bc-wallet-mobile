@@ -1,6 +1,5 @@
 import { TOKENS, useServices } from '@bifold/core'
-import { useFocusEffect } from '@react-navigation/native'
-import { RefObject, useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import {
   CameraOutput,
   CameraPhotoOutput,
@@ -146,50 +145,5 @@ export const useVisionCamera = ({ position, deviceFilter, photoOutput, videoOutp
       cancelRecordingVideo,
     }),
     [cancelRecordingVideo, device, startRecordingVideo, stopRecordingVideo, takePhoto]
-  )
-}
-
-/**
- * A custom hook that provides controls for the Vision Camera, including torch (flashlight) functionality.
- * @returns An object containing the torch state, availability, and a function to enable or disable the torch.
- */
-export const useVisionCameraControls = (cameraRef: RefObject<CameraRef | null>) => {
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const controller = cameraRef.current?.controller
-
-  const [torchEnabled, setTorchEnabled] = useState(controller?.torchMode === 'on')
-  const hasTorch = controller?.device.hasTorch ?? false
-
-  /**
-   * Enables or disables the torch (flashlight) mode of the camera.
-   * @param enable A boolean indicating whether to enable (true) or disable (false) the torch mode.
-   * @returns A Promise that resolves when the torch mode has been set.
-   */
-  const enableTorch = useCallback(
-    (enable: boolean) => {
-      if (!controller) {
-        logger.warn('[Camera] No camera controller available to set torch mode')
-        return
-      }
-
-      controller.setTorchMode(enable ? 'on' : 'off')
-      setTorchEnabled(enable)
-    },
-    [controller, logger]
-  )
-
-  useFocusEffect(
-    useCallback(() => {
-      setTorchEnabled(false)
-    }, [])
-  )
-
-  return useMemo(
-    () => ({
-      hasTorch,
-      isTorchEnabled: torchEnabled,
-      enableTorch,
-    }),
-    [enableTorch, hasTorch, torchEnabled]
   )
 }

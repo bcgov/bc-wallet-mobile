@@ -12,14 +12,14 @@ import {
   useTheme,
 } from '@bifold/core'
 import { NavigationProp, ParamListBase, useIsFocused } from '@react-navigation/native'
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { Camera, CameraOutput, CameraPhotoOutput } from 'react-native-vision-camera'
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
-import { useVisionCamera, useVisionCameraControls } from '../hooks/useVisionCamera'
+import { useVisionCamera } from '../hooks/useVisionCamera'
 import { isBackgroundedAppState } from '../utils/app-state'
 import { getCameraMetadata } from './utils/camera'
 
@@ -60,14 +60,15 @@ const MaskedCamera = ({
   const { emitErrorModal } = useErrorAlert()
   const { preventDoublePress } = usePreventDoublePress()
   const { appStateStatus } = useBCSCActivity()
+  const [toggleTorch, setToggleTorch] = useState(false)
 
   const { cameraRef, device, takePhoto } = useVisionCamera({
     position: cameraFace,
     photoOutput,
   })
-  const { hasTorch, isTorchEnabled, enableTorch } = useVisionCameraControls(cameraRef)
 
   const cameraMetadata = useMemo(() => getCameraMetadata(device), [device])
+  const hasTorch = device?.hasTorch ?? false
 
   const styles = StyleSheet.create({
     container: {
@@ -172,6 +173,7 @@ const MaskedCamera = ({
         isActive={isFocused && !isBackgroundedAppState(appStateStatus)}
         onError={onError}
         outputs={[photoOutput, codeScanner].filter(Boolean) as CameraOutput[]}
+        torchMode={toggleTorch ? 'on' : 'off'}
         onConfigured={() => logger.debug('MaskedCamera initialized', cameraMetadata)}
       />
       {maskType && (
@@ -221,12 +223,12 @@ const MaskedCamera = ({
         {hasTorch ? (
           <TouchableOpacity
             style={{ flex: 1, alignItems: 'flex-end' }}
-            onPress={() => enableTorch(!isTorchEnabled)}
+            onPress={() => setToggleTorch((prev) => !prev)}
             accessibilityLabel={t('BCSC.CameraDisclosure.ToggleFlash')}
             accessibilityRole="button"
             testID={testIdWithKey('ToggleFlash')}
           >
-            <Icon size={24} name={isTorchEnabled ? 'flash' : 'flash-off'} color={ColorPalette.grayscale.white} />
+            <Icon size={24} name={toggleTorch ? 'flash' : 'flash-off'} color={ColorPalette.grayscale.white} />
           </TouchableOpacity>
         ) : (
           <View style={{ flex: 1 }} />

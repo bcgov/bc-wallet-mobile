@@ -3,7 +3,6 @@ import TorchButton from '@/bcsc-theme/components/TorchButton'
 import { useBCServicesCardScannerOutput } from '@/bcsc-theme/components/utils/camera-output'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
-import { useVisionCameraControls } from '@/bcsc-theme/hooks/useVisionCamera'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
@@ -198,6 +197,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const [showHelp, setShowHelp] = useState(false)
   const [cameraFailed, setCameraFailed] = useState(false)
   const [cameraKey, setCameraKey] = useState(0)
+  const [toggleTorch, setToggleTorch] = useState(false)
   const isFocused = useIsFocused()
 
   const cameraRef = useRef<CameraRef>(null)
@@ -214,7 +214,6 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       scanner.handleScanNonBcsc()
     },
   })
-  const { enableTorch, isTorchEnabled } = useVisionCameraControls(cameraRef)
 
   useEffect(() => {
     const timer = setTimeout(() => setShowHelp(true), SCAN_HELP_TIMEOUT_MS)
@@ -229,9 +228,9 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const goToManualEntry = useCallback(() => navigation.navigate(BCSCScreens.ManualSerial), [navigation])
 
   const onCameraError = useCallback(() => {
-    enableTorch(false)
+    setToggleTorch(false)
     setCameraFailed(true)
-  }, [enableTorch])
+  }, [])
 
   const retryCamera = useCallback(() => {
     setCameraFailed(false)
@@ -332,6 +331,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
               isActive={isFocused}
               device={'back'}
               onError={onCameraError}
+              torchMode={toggleTorch ? 'on' : 'off'}
               outputs={[scannerOutput]}
             />
 
@@ -356,7 +356,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
         <View style={styles.bottomBar} pointerEvents="box-none">
           {cameraFailed ? null : (
             <View style={styles.torchRow} pointerEvents="box-none">
-              <TorchButton active={isTorchEnabled} onPress={() => enableTorch(!isTorchEnabled)} />
+              <TorchButton active={toggleTorch} onPress={() => setToggleTorch((prev) => !prev)} />
             </View>
           )}
           <View style={[styles.buttonBlock, { paddingBottom: insets.bottom + Spacing.lg }]}>
