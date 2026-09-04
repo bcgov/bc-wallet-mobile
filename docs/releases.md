@@ -20,8 +20,8 @@ A ring is an audience. Each one is wider than the last.
 
 Publishing to a ring publishes every ring below it, so `ring-2` sends the build
 to ring-0, ring-1 and ring-2. The team gets it straight away, and each ring
-after that has its own gate — its testers get the build as soon as that gate
-passes. Rejecting at any gate stops the run there, and every ring below
+after that has its own gate, and its testers get the build as soon as that
+gate passes. Rejecting at any gate stops the run there, and every ring below
 already has it.
 
 BC Wallet is the exception. It is being retired after v4.1, so it publishes to
@@ -46,6 +46,10 @@ QA and UAT are separate rings with separate gates. ring-1 goes to QA testers,
 ring-2 to UAT testers, and each has its own approval even though the same
 people sit on both teams today. A ring-4 publish stops at all four gates in
 turn, and the same team approves the last two.
+
+A run with nothing to widen asks for no approvals at all. Picking `targets`
+that no artifact in the build can reach, such as `google-store` on an
+iOS-only build, publishes ring-0 and skips every gate.
 
 | Team | Approves | Who is on it |
 |---|---|---|

@@ -1,5 +1,6 @@
 # Widens an already-published build to ONE ring. Called once per ring by
-# publish.yml after that ring's gate; nothing here uploads.
+# publish.yml after that ring's gate. Nothing new reaches the stores here:
+# TestFlight and Play only change who can see the build, Firebase re-sends it.
 name: Publish ring
 
 on:
