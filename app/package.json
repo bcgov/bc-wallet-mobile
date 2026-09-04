@@ -42,7 +42,7 @@
   },
   "dependencies": {
     "@bifold/core": "3.0.21",
-    "@bifold/oca": "3.0.21",
+    "@bifold/oca": "3.0.22",
     "@bifold/react-hooks": "3.0.21",
     "@bifold/react-native-attestation": "3.0.21",
     "@bifold/remote-logs": "patch:@bifold/remote-logs@npm%3A3.0.21#~/.yarn/patches/@bifold-remote-logs-npm-3.0.21-4ae200989a.patch",

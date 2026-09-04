@@ -1874,9 +1874,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bifold/oca@npm:3.0.21":
-  version: 3.0.21
-  resolution: "@bifold/oca@npm:3.0.21"
+"@bifold/oca@npm:3.0.22":
+  version: 3.0.22
+  resolution: "@bifold/oca@npm:3.0.22"
   dependencies:
     "@credo-ts/anoncreds": "npm:0.6.3"
     "@credo-ts/core": "npm:0.6.3"
@@ -1884,7 +1884,7 @@ __metadata:
     axios: "npm:~1.13.2"
     lodash.startcase: "npm:~4.4.0"
     react-native-fs: "npm:~2.20.0"
-  checksum: 10c0/0db86ab924808a310181c62126b07bdf5d2e9568097ed7fa3a5d2938115855064b174846d58c0551ba48f8b371c9bb697bb191f5b3e7ccdfc3dd02b3993430bf
+  checksum: 10c0/03fddc26a688ee8c5357db9315d8870ad09872822e7b6ef50c66502bbb5268c28d03e45b0e105958e8b9a080cfddb180d874e1729ed0c69e1f6682cdb701329b
   languageName: node
   linkType: hard
 
@@ -7734,7 +7734,7 @@ __metadata:
     "@babel/preset-env": "npm:~7.28.6"
     "@babel/runtime": "npm:~7.28.6"
     "@bifold/core": "npm:3.0.21"
-    "@bifold/oca": "npm:3.0.21"
+    "@bifold/oca": "npm:3.0.22"
     "@bifold/react-hooks": "npm:3.0.21"
     "@bifold/react-native-attestation": "npm:3.0.21"
     "@bifold/remote-logs": "patch:@bifold/remote-logs@npm%3A3.0.21#~/.yarn/patches/@bifold-remote-logs-npm-3.0.21-4ae200989a.patch"
