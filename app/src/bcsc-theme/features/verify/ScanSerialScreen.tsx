@@ -1,21 +1,20 @@
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
+import TorchButton from '@/bcsc-theme/components/TorchButton'
+import { useBCServicesCardScannerOutput } from '@/bcsc-theme/components/utils/camera-output'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { decodeBarcodes, DecodedCodeKind, ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, TOKENS, useServices, useTheme } from '@bifold/core'
-import { useFocusEffect } from '@react-navigation/native'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
+import { useFocusEffect, useIsFocused } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native'
+import { LayoutChangeEvent, StyleSheet, Text, Vibration, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Svg, { Defs, Mask, Rect } from 'react-native-svg'
-import { useCameraPermission } from 'react-native-vision-camera'
-import CodeScanningCamera from '../../components/CodeScanningCamera'
-import TorchButton from '../../components/TorchButton'
-import { BCSC_SN_SCAN_ZONES, ScanState } from '../../components/utils/camera'
+import { Camera, CameraRef, useCameraPermission } from 'react-native-vision-camera'
+import { ScanState } from '../../components/utils/camera'
 
 /**
  * How long the initial "Scan your card" guidance shows before falling back to
@@ -199,11 +198,22 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const [showHelp, setShowHelp] = useState(false)
   const [cameraFailed, setCameraFailed] = useState(false)
   const [cameraKey, setCameraKey] = useState(0)
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const isFocused = useIsFocused()
 
-  const isProcessingScan = useRef(false)
-  const bcscSerialRef = useRef<string | null>(null)
-  const birthDateRef = useRef<Date | null>(null)
+  const cameraRef = useRef<CameraRef>(null)
+
+  const { scannerOutput, resetScanner } = useBCServicesCardScannerOutput({
+    onScanBCServicesCard: async (serial, license) => {
+      setScanState('locked')
+      Vibration.vibrate()
+      await scanner.handleScanComboCard(serial, license)
+    },
+    onScanUnknownCard: () => {
+      setScanState('locked')
+      Vibration.vibrate()
+      scanner.handleScanNonBcsc()
+    },
+  })
 
   useEffect(() => {
     const timer = setTimeout(() => setShowHelp(true), SCAN_HELP_TIMEOUT_MS)
@@ -214,8 +224,6 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     const { width, height } = event.nativeEvent.layout
     setSize({ width, height })
   }
-
-  const toggleTorch = () => setTorchOn((prev) => !prev)
 
   const goToManualEntry = useCallback(() => navigation.navigate(BCSCScreens.ManualSerial), [navigation])
 
@@ -228,56 +236,10 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     setCameraFailed(false)
     setScanState('scanning')
     setCameraKey((prev) => prev + 1)
-    // Reset the caches so we can scan again.
-    isProcessingScan.current = false
-    bcscSerialRef.current = null
-    birthDateRef.current = null
-  }, [])
+    resetScanner()
+  }, [resetScanner])
 
   useFocusEffect(useCallback(() => retryCamera(), [retryCamera]))
-
-  const onCodeScanned = async (barcodes: ScanableCode[]): Promise<boolean> => {
-    if (isProcessingScan.current) {
-      return true
-    }
-
-    const decodedBarcodes = decodeBarcodes(barcodes, logger)
-
-    for (const decoded of decodedBarcodes) {
-      if (!decoded && !bcscSerialRef.current && !birthDateRef.current) {
-        // Scanned a non-BCSC barcode - lock the camera and handle it as a non-BCSC card.
-        isProcessingScan.current = true
-        setScanState('locked')
-        scanner.handleScanNonBcsc()
-        return true
-      }
-
-      switch (decoded?.kind) {
-        case DecodedCodeKind.BCServicesCardBarcode:
-          bcscSerialRef.current = decoded.bcscSerial
-          break
-        case DecodedCodeKind.BCServicesComboCardCardBarcode:
-          // Use the serial from the 1D barcode for safety (ie: Alberta DL + appended health number)
-          birthDateRef.current = decoded.birthDate
-          break
-        case DecodedCodeKind.DriversLicenseBarcode:
-          birthDateRef.current = decoded.birthDate
-          break
-      }
-    }
-
-    if (bcscSerialRef.current && birthDateRef.current) {
-      // We have both the serial and the birthdate — lock the camera and handle the card.
-      isProcessingScan.current = true
-      setScanState('locked')
-      await scanner.handleScanComboCard(bcscSerialRef.current, { birthDate: birthDateRef.current })
-      return true
-    }
-
-    // Still missing the serial or the birthdate — tell CodeScanningCamera to
-    // unlock and keep scanning instead of freezing on this one barcode.
-    return false
-  }
 
   const styles = StyleSheet.create({
     container: {
@@ -362,20 +324,15 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
           </View>
         ) : (
           <>
-            {/* Camera fills the entire screen */}
-            <CodeScanningCamera
+            <Camera
+              ref={cameraRef}
               key={cameraKey}
-              onCodeScanned={onCodeScanned}
-              cameraType={'back'}
-              initialZoom={2}
-              scanZones={BCSC_SN_SCAN_ZONES}
-              showScanZoneOverlay={false}
-              showZoomIndicator={false}
-              hideTorchButton
-              torchActive={torchOn}
-              onToggleTorch={toggleTorch}
-              onError={onCameraError}
               style={StyleSheet.absoluteFill}
+              isActive={isFocused}
+              device={'back'}
+              onError={onCameraError}
+              torchMode={torchOn ? 'on' : 'off'}
+              outputs={[scannerOutput]}
             />
 
             {/* Vertical ID-card framing guide (appearance of MaskType.ID_CARD) */}
@@ -399,7 +356,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
         <View style={styles.bottomBar} pointerEvents="box-none">
           {cameraFailed ? null : (
             <View style={styles.torchRow} pointerEvents="box-none">
-              <TorchButton active={torchOn} onPress={toggleTorch} />
+              <TorchButton active={torchOn} onPress={() => setTorchOn((prev) => !prev)} />
             </View>
           )}
           <View style={[styles.buttonBlock, { paddingBottom: insets.bottom + Spacing.lg }]}>

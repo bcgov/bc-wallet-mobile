@@ -1753,9 +1753,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bifold/core@portal:../bifold/packages/core::locator=bc-wallet-mobile%40workspace%3A.":
+"@bifold/core@portal:bifold/packages/core::locator=bc-wallet-mobile%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@bifold/core@portal:../bifold/packages/core::locator=bc-wallet-mobile%40workspace%3A."
+  resolution: "@bifold/core@portal:bifold/packages/core::locator=bc-wallet-mobile%40workspace%3A."
   dependencies:
     "@openwallet-foundation/askar-react-native": "npm:0.6.1-alpha-20260720140434"
     "@openwallet-foundation/askar-shared": "npm:0.6.1-alpha-20260720140434"
@@ -1835,9 +1835,9 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@bifold/oca@portal:../bifold/packages/oca::locator=bc-wallet-mobile%40workspace%3A.":
+"@bifold/oca@portal:bifold/packages/oca::locator=bc-wallet-mobile%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@bifold/oca@portal:../bifold/packages/oca::locator=bc-wallet-mobile%40workspace%3A."
+  resolution: "@bifold/oca@portal:bifold/packages/oca::locator=bc-wallet-mobile%40workspace%3A."
   dependencies:
     "@credo-ts/anoncreds": "npm:0.7.0"
     "@credo-ts/core": "npm:0.7.0"
@@ -1848,9 +1848,9 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@bifold/react-hooks@portal:../bifold/packages/react-hooks::locator=bc-wallet-mobile%40workspace%3A.":
+"@bifold/react-hooks@portal:bifold/packages/react-hooks::locator=bc-wallet-mobile%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@bifold/react-hooks@portal:../bifold/packages/react-hooks::locator=bc-wallet-mobile%40workspace%3A."
+  resolution: "@bifold/react-hooks@portal:bifold/packages/react-hooks::locator=bc-wallet-mobile%40workspace%3A."
   dependencies:
     rxjs: "npm:^7.2.0"
   peerDependencies:
@@ -1863,18 +1863,18 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@bifold/react-native-attestation@portal:../bifold/packages/react-native-attestation::locator=bc-wallet-mobile%40workspace%3A.":
+"@bifold/react-native-attestation@portal:bifold/packages/react-native-attestation::locator=bc-wallet-mobile%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@bifold/react-native-attestation@portal:../bifold/packages/react-native-attestation::locator=bc-wallet-mobile%40workspace%3A."
+  resolution: "@bifold/react-native-attestation@portal:bifold/packages/react-native-attestation::locator=bc-wallet-mobile%40workspace%3A."
   peerDependencies:
     react: "*"
     react-native: "*"
   languageName: node
   linkType: soft
 
-"@bifold/remote-logs@portal:../bifold/packages/remote-logs::locator=bc-wallet-mobile%40workspace%3A.":
+"@bifold/remote-logs@portal:bifold/packages/remote-logs::locator=bc-wallet-mobile%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@bifold/remote-logs@portal:../bifold/packages/remote-logs::locator=bc-wallet-mobile%40workspace%3A."
+  resolution: "@bifold/remote-logs@portal:bifold/packages/remote-logs::locator=bc-wallet-mobile%40workspace%3A."
   dependencies:
     "@bifold/core": "npm:3.0.22"
     "@credo-ts/core": "npm:0.7.0"
@@ -1893,9 +1893,9 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@bifold/verifier@portal:../bifold/packages/verifier::locator=bc-wallet-mobile%40workspace%3A.":
+"@bifold/verifier@portal:bifold/packages/verifier::locator=bc-wallet-mobile%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@bifold/verifier@portal:../bifold/packages/verifier::locator=bc-wallet-mobile%40workspace%3A."
+  resolution: "@bifold/verifier@portal:bifold/packages/verifier::locator=bc-wallet-mobile%40workspace%3A."
   peerDependencies:
     "@bifold/react-hooks": 3.0.22
     "@credo-ts/anoncreds": 0.7.0
@@ -7427,6 +7427,8 @@ __metadata:
     react-native-keychain: "npm:~10.0.0"
     react-native-localize: "npm:~2.2.6"
     react-native-logs: "npm:~5.1.0"
+    react-native-nitro-image: "npm:^0.15.2"
+    react-native-nitro-modules: "npm:^0.37.0"
     react-native-orientation-locker: "npm:~1.6.0"
     react-native-permissions: "npm:~5.4.1"
     react-native-qrcode-svg: "npm:~6.2.0"
@@ -7445,7 +7447,8 @@ __metadata:
     react-native-uuid: "npm:~2.0.4"
     react-native-vector-icons: "npm:~10.3.0"
     react-native-video: "npm:~6.19.2"
-    react-native-vision-camera: "patch:react-native-vision-camera@npm%3A4.7.3#~/.yarn/patches/react-native-vision-camera-npm-4.7.3-dc361fe55c.patch"
+    react-native-vision-camera: "npm:^5.2.3"
+    react-native-vision-camera-barcode-scanner: "npm:^5.2.3"
     react-native-volume-manager: "npm:~1.10.0"
     react-native-webrtc: "npm:~124.0.6"
     react-native-webview: "npm:13.16.1"
@@ -15684,6 +15687,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-nitro-image@npm:^0.15.2":
+  version: 0.15.2
+  resolution: "react-native-nitro-image@npm:0.15.2"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+    react-native-nitro-modules: "*"
+  peerDependenciesMeta:
+    react-native-nitro-modules:
+      optional: true
+  checksum: 10c0/25ac98e5bdbdaf05bfdab704e7098e54541b053e6022b03f1d3053297f84e13b876006fc4d600223fb82b322b271f74ba42fff1234dc6474b35bf244326eab0c
+  languageName: node
+  linkType: hard
+
+"react-native-nitro-modules@npm:^0.37.0":
+  version: 0.37.1
+  resolution: "react-native-nitro-modules@npm:0.37.1"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10c0/5178f2ee891cb746b084fdf382b6020e366d8e4a81922a3f1d60a453d34fca6ebb1b00c4c28785c36385bc182ab76a30cba70441c39abbc25d3ad54db612e46e
+  languageName: node
+  linkType: hard
+
 "react-native-orientation-locker@npm:~1.6.0":
   version: 1.6.0
   resolution: "react-native-orientation-locker@npm:1.6.0"
@@ -15894,43 +15921,34 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-vision-camera@npm:4.7.3":
-  version: 4.7.3
-  resolution: "react-native-vision-camera@npm:4.7.3"
+"react-native-vision-camera-barcode-scanner@npm:^5.2.3":
+  version: 5.2.3
+  resolution: "react-native-vision-camera-barcode-scanner@npm:5.2.3"
   peerDependencies:
-    "@shopify/react-native-skia": "*"
     react: "*"
     react-native: "*"
-    react-native-reanimated: "*"
-    react-native-worklets-core: "*"
+    react-native-nitro-image: "*"
+    react-native-nitro-modules: "*"
+    react-native-vision-camera: "*"
   peerDependenciesMeta:
-    "@shopify/react-native-skia":
+    react-native-nitro-modules:
       optional: true
-    react-native-reanimated:
-      optional: true
-    react-native-worklets-core:
-      optional: true
-  checksum: 10c0/46001037f4f9a85e75c023e5082b137c179fd520741e088009d217f0a6eaf3a819b9784ae68aced95fa70c3345346c79dd2ee70bc04cfd811c7eefeda675cab2
+  checksum: 10c0/3081afe648ef397a074c4bbc3c421d2b03d5bca4cff550b61e23904bb78c0f9fd75176b5b0c91040c040e395091b9c64f84a39f743da4f358f55f41ed82f5f28
   languageName: node
   linkType: hard
 
-"react-native-vision-camera@patch:react-native-vision-camera@npm%3A4.7.3#~/.yarn/patches/react-native-vision-camera-npm-4.7.3-dc361fe55c.patch":
-  version: 4.7.3
-  resolution: "react-native-vision-camera@patch:react-native-vision-camera@npm%3A4.7.3#~/.yarn/patches/react-native-vision-camera-npm-4.7.3-dc361fe55c.patch::version=4.7.3&hash=0907f2"
+"react-native-vision-camera@npm:^5.2.3":
+  version: 5.2.3
+  resolution: "react-native-vision-camera@npm:5.2.3"
   peerDependencies:
-    "@shopify/react-native-skia": "*"
     react: "*"
     react-native: "*"
-    react-native-reanimated: "*"
-    react-native-worklets-core: "*"
+    react-native-nitro-image: "*"
+    react-native-nitro-modules: "*"
   peerDependenciesMeta:
-    "@shopify/react-native-skia":
+    react-native-nitro-modules:
       optional: true
-    react-native-reanimated:
-      optional: true
-    react-native-worklets-core:
-      optional: true
-  checksum: 10c0/2341dfb7181a7ff28534aceb0dce25b292923ec48795c6c01642627da42485d15f5f8d2ae4ca63dbb54137a017ec66a0e5fba15f646315160e1f8ea0ba3c76f4
+  checksum: 10c0/4c55b4e2dc659f38d3247e300c1a462493ea22e3d704b61d457dcb261399a23f57418e5caa6793456a0c557999f50439a4b4143bd467b3c5bb91dbb1aee2a324
   languageName: node
   linkType: hard
 

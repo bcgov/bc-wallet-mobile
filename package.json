@@ -59,7 +59,6 @@
     "elliptic": "6.6.1",
     "@types/react": "~19.2.18",
     "fast-xml-parser": "4.5.4",
-    "react-native-vision-camera": "patch:react-native-vision-camera@npm%3A4.7.3#~/.yarn/patches/react-native-vision-camera-npm-4.7.3-dc361fe55c.patch",
     "@credo-ts/anoncreds@npm:0.5.19": "patch:@credo-ts/anoncreds@npm%3A0.5.19#~/.yarn/patches/@credo-ts-anoncreds-npm-0.5.19-09c3e8bbd1.patch",
     "@credo-ts/anoncreds@npm:0.5.15": "patch:@credo-ts/anoncreds@npm%3A0.5.19#~/.yarn/patches/@credo-ts-anoncreds-npm-0.5.19-09c3e8bbd1.patch",
     "@credo-ts/core@npm:0.5.19": "patch:@credo-ts/core@npm%3A0.5.19#~/.yarn/patches/@credo-ts-core-npm-0.5.19-0177059ca8.patch",
@@ -78,12 +77,12 @@
     "@credo-ts/anoncreds@npm:0.7.0": "patch:@credo-ts/anoncreds@npm%3A0.7.0#~/.yarn/patches/@credo-ts-anoncreds-npm-0.7.0-757752e5ca.patch",
     "@credo-ts/anoncreds@npm:^0.6.1": "patch:@credo-ts/anoncreds@npm%3A0.7.0#~/.yarn/patches/@credo-ts-anoncreds-npm-0.7.0-757752e5ca.patch",
     "@credo-ts/core@npm:^0.6.1": "0.7.0",
-    "@bifold/core": "portal:../bifold/packages/core",
-    "@bifold/oca": "portal:../bifold/packages/oca",
-    "@bifold/react-hooks": "portal:../bifold/packages/react-hooks",
-    "@bifold/react-native-attestation": "portal:../bifold/packages/react-native-attestation",
-    "@bifold/remote-logs": "portal:../bifold/packages/remote-logs",
-    "@bifold/verifier": "portal:../bifold/packages/verifier"
+    "@bifold/core": "portal:bifold/packages/core",
+    "@bifold/oca": "portal:bifold/packages/oca",
+    "@bifold/react-hooks": "portal:bifold/packages/react-hooks",
+    "@bifold/react-native-attestation": "portal:bifold/packages/react-native-attestation",
+    "@bifold/remote-logs": "portal:bifold/packages/remote-logs",
+    "@bifold/verifier": "portal:bifold/packages/verifier"
   },
   "dependencies": {
     "react-native-bcsc-core": "workspace:*"

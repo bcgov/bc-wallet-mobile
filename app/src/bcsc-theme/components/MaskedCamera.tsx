@@ -1,7 +1,6 @@
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
-import { useAlerts } from '@/hooks/useAlerts'
 import {
   MaskType,
   SVGOverlay,
@@ -13,28 +12,21 @@ import {
   useTheme,
 } from '@bifold/core'
 import { NavigationProp, ParamListBase, useIsFocused } from '@react-navigation/native'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import {
-  Camera,
-  CameraCaptureError,
-  CodeScanner,
-  FormatFilter,
-  PhotoFile,
-  useCameraDevice,
-  useCameraFormat,
-} from 'react-native-vision-camera'
+import { Camera, CameraOutput, CameraPhotoOutput } from 'react-native-vision-camera'
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
+import { useVisionCamera } from '../hooks/useVisionCamera'
 import { isBackgroundedAppState } from '../utils/app-state'
 import { getCameraMetadata } from './utils/camera'
 
 type MaskedCameraProps = {
   navigation: NavigationProp<ParamListBase>
+  photoOutput: CameraPhotoOutput
   cameraFace: 'front' | 'back'
-  cameraFormatFilter?: FormatFilter[]
   cameraInstructions?: string
   cameraLabel?: string
   maskType?: MaskType
@@ -42,13 +34,13 @@ type MaskedCameraProps = {
   maskLineWidth?: number
   maskOverlayOpacity?: number
   customPath?: string
-  codeScanner?: CodeScanner
-  photoQualityBalance?: 'speed' | 'balanced' | 'quality'
+  codeScanner?: CameraOutput
   onPhotoTaken: (path: string) => void
 }
 
 const MaskedCamera = ({
   navigation,
+  photoOutput,
   cameraInstructions,
   cameraLabel,
   maskLineColor,
@@ -57,27 +49,26 @@ const MaskedCamera = ({
   maskType,
   customPath,
   codeScanner,
-  photoQualityBalance = 'speed',
   cameraFace = 'back',
-  cameraFormatFilter = [],
   onPhotoTaken,
 }: MaskedCameraProps) => {
-  const device = useCameraDevice(cameraFace)
   const { t } = useTranslation()
   const safeAreaInsets = useSafeAreaInsets()
   const { Spacing, ColorPalette } = useTheme()
   const [torchOn, setTorchOn] = useState(false)
-  const cameraRef = useRef<Camera>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const isFocused = useIsFocused()
-  const format = useCameraFormat(device, cameraFormatFilter)
-  const { failedToWriteToLocalStorageAlert } = useAlerts(navigation)
   const { emitErrorModal } = useErrorAlert()
   const { preventDoublePress } = usePreventDoublePress()
   const { appStateStatus } = useBCSCActivity()
-  const hasTorch = device?.hasTorch ?? false
 
-  const cameraMetadata = useMemo(() => getCameraMetadata(device, format), [device, format])
+  const { cameraRef, device, takePhoto } = useVisionCamera({
+    position: cameraFace,
+    photoOutput,
+  })
+
+  const cameraMetadata = useMemo(() => getCameraMetadata(device), [device])
+  const hasTorch = device?.hasTorch ?? false
 
   const styles = StyleSheet.create({
     container: {
@@ -120,36 +111,11 @@ const MaskedCamera = ({
     },
   })
 
-  const toggleTorch = () => setTorchOn((prev: boolean) => !prev)
-
   useEffect(() => {
-    if (!device) {
-      // provide back button if they have no working camera
-      navigation.setOptions({
-        headerShown: true,
-      })
-    }
+    navigation.setOptions({
+      headerShown: !device,
+    })
   }, [device, navigation])
-
-  useEffect(() => {
-    if (!isFocused) {
-      setTorchOn(false)
-    }
-  }, [isFocused])
-
-  const getCameraError = useCallback(
-    (error: unknown) => {
-      const appError = ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
-
-      // Add camera device and format info to the error context for better debugging
-      appError.addContext(cameraMetadata)
-
-      logger.error('[MaskedCamera] runtime error', appError.toJSON())
-
-      return appError
-    },
-    [cameraMetadata, logger]
-  )
 
   const onError = useCallback(
     (error: unknown) => {
@@ -160,9 +126,14 @@ const MaskedCamera = ({
         return
       }
 
-      emitErrorModal(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorMessage'), getCameraError(error))
+      const appError = ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
+
+      // Add camera device and format info to the error context for better debugging
+      appError.addContext(cameraMetadata)
+
+      emitErrorModal(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorMessage'), appError)
     },
-    [appStateStatus, getCameraError, emitErrorModal, t, logger]
+    [appStateStatus, cameraMetadata, emitErrorModal, logger, t]
   )
   if (!device) {
     return (
@@ -178,38 +149,18 @@ const MaskedCamera = ({
     navigation.goBack()
   }
 
-  const takePhoto = async () => {
-    if (!cameraRef.current || !isFocused) {
+  const takeAndSavePhoto = async () => {
+    if (!isFocused) {
       return
     }
 
     try {
-      let photo: PhotoFile
-      if (cameraFace === 'back') {
-        // Use `takeSnapshot` on back camera: significantly faster read/write
-        photo = await cameraRef.current.takeSnapshot({ quality: 90 })
-      } else {
-        // Use `takePhoto` on front camera: `takeSnapshot` flips image vertically (front camera bug)
-        photo = await cameraRef.current.takePhoto({
-          flash: 'off',
-          enableShutterSound: false,
-        })
-      }
-
-      onPhotoTaken(photo.path)
-      logger.info(`Photo taken and saved temporarily: ${photo.path}`)
+      const photo = await takePhoto()
+      onPhotoTaken(photo.filePath)
+      logger.info(`[MaskedCamera] Photo taken and saved temporarily: ${photo.filePath}`)
     } catch (error) {
-      logger.error(`Error taking photo: ${error}`)
-
-      // Handle file I/O errors separately to provide a specific alert
-      if (error instanceof CameraCaptureError && error.code === 'capture/file-io-error') {
-        failedToWriteToLocalStorageAlert(error)
-        return
-      }
-
-      const appError = getCameraError(error)
-
-      emitErrorModal(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorTakingPhoto'), appError)
+      logger.error('[MaskedCamera] Error taking photo', error as Error)
+      onError(error)
     }
   }
 
@@ -219,18 +170,11 @@ const MaskedCamera = ({
         ref={cameraRef}
         style={styles.camera}
         device={device}
-        format={format}
         isActive={isFocused && !isBackgroundedAppState(appStateStatus)}
-        photo={true}
-        video={true}
-        photoQualityBalance={photoQualityBalance}
-        isMirrored={false}
-        onInitialized={() => logger.debug('MaskedCamera initialized', cameraMetadata)}
         onError={onError}
-        codeScanner={codeScanner}
-        torch={torchOn ? 'on' : 'off'}
-        // Set fps to max supported by the selected format for smoother preview
-        fps={format?.maxFps}
+        outputs={[photoOutput, codeScanner].filter(Boolean) as CameraOutput[]}
+        torchMode={torchOn ? 'on' : 'off'}
+        onConfigured={() => logger.debug('MaskedCamera initialized', cameraMetadata)}
       />
       {maskType && (
         <SVGOverlay
@@ -271,7 +215,7 @@ const MaskedCamera = ({
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.captureButton}
-          onPress={preventDoublePress(takePhoto)}
+          onPress={preventDoublePress(takeAndSavePhoto)}
           accessibilityLabel={t('BCSC.CameraDisclosure.TakePhoto')}
           accessibilityRole="button"
           testID={testIdWithKey('TakePhoto')}
@@ -279,7 +223,7 @@ const MaskedCamera = ({
         {hasTorch ? (
           <TouchableOpacity
             style={{ flex: 1, alignItems: 'flex-end' }}
-            onPress={toggleTorch}
+            onPress={() => setTorchOn((prev) => !prev)}
             accessibilityLabel={t('BCSC.CameraDisclosure.ToggleFlash')}
             accessibilityRole="button"
             testID={testIdWithKey('ToggleFlash')}

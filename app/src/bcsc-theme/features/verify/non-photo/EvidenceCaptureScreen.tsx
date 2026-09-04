@@ -1,7 +1,7 @@
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import PhotoReview from '@/bcsc-theme/components/PhotoReview'
-import { CameraFormat } from '@/bcsc-theme/components/utils/camera'
+import { useBCServicesCardScannerOutput, useEvidencePhotoOutput } from '@/bcsc-theme/components/utils/camera-output'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
@@ -18,7 +18,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useRef, useState } from 'react'
 import { StyleSheet, useWindowDimensions, View } from 'react-native'
 import { BCSCCardProcess, EvidenceType, PhotoMetadata } from 'react-native-bcsc-core'
-import { useCameraPermission, useCodeScanner } from 'react-native-vision-camera'
+import { useCameraPermission } from 'react-native-vision-camera'
 
 /**
  * Builds the barcodes array for the evidence upload payload, matching the
@@ -68,6 +68,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const { ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const scanner = useCardScanner()
+  const photoOutput = useEvidencePhotoOutput()
   const bcscSerialRef = useRef<string | null>(null)
   const licenseRef = useRef<DriversLicenseMetadata | null>(null)
   // Guards against re-hitting /device/barcodes on every photo of a multi-sided
@@ -76,27 +77,12 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const barcodesCheckedRef = useRef(false)
   const { isLoading: isCameraLoading } = useAutoRequestPermission(hasPermission, requestPermission)
   const { failedToReadFromLocalStorageAlert } = useAlerts(navigation)
-  const codeScanner = useCodeScanner({
-    codeTypes: scanner.codeTypes,
-    onCodeScanned: async (codes) => {
-      if (!codes.length) {
-        return
-      }
 
-      // If we have already captured both values, no need to keep scanning
-      if (bcscSerialRef.current && licenseRef.current) {
-        return
-      }
-
-      await scanner.scanCard(codes, async (bcscSerial, license) => {
-        if (bcscSerial) {
-          bcscSerialRef.current = bcscSerial
-        }
-
-        if (license) {
-          licenseRef.current = license
-        }
-      })
+  const codeScanner = useBCServicesCardScannerOutput({
+    minMatches: 0, // No hit threshold
+    onScanBCServicesCard: async (serial, license) => {
+      bcscSerialRef.current = serial
+      licenseRef.current = license
     },
   })
 
@@ -236,7 +222,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
             maskLineColor={ColorPalette.brand.primary}
             onPhotoTaken={handlePhotoTaken}
             codeScanner={codeScanner}
-            cameraFormatFilter={CameraFormat.MaskedWithBarcodeDetection}
+            photoOutput={photoOutput}
           />
         </View>
       ) : (
