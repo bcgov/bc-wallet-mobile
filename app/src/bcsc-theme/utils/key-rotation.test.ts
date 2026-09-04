@@ -57,12 +57,7 @@ const makeApiClient = () =>
     clearTokens: mockedClearTokens,
   }) as any
 
-/**
- * In-memory keystore so multi-rotation tests can assert the key count held at every mutation,
- * something a static `mockResolvedValue` can't express. `getAllKeysWithPublicInfo` echoes the
- * current set, `createNewKeyPair` appends a fresh key, `deleteKey` removes one, and
- * `reRegisterNewestKey` echoes every key currently held (modelling IAS's last-N jwks merge).
- */
+/** In-memory keystore so multi-rotation tests can assert the key count at every mutation. */
 const makeFakeKeystore = (initial: KeyPublicInfo[]) => {
   const keys = [...initial]
   let maxHeld = keys.length
@@ -128,10 +123,9 @@ describe('constants', () => {
 describe('rotateSigningKey', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    // Every rotation now enumerates local keys at its start (#4601); default to a single-key
-    // device so tests that don't care about pruning don't trip over a stale fixture or a
-    // `.slice()`-on-undefined TypeError left over from `clearMocks` (which clears calls, not
-    // implementations).
+    // Every rotation now enumerates at its start (#4601); default to a single-key device so
+    // tests that don't care about pruning aren't left with a stale fixture (`clearMocks` clears
+    // calls, not implementations).
     mockedGetAllKeysWithPublicInfo.mockResolvedValue([{ id: 'rsa1', n: n(1), e: 'AQAB', created: 1000 }])
     mockedDeleteKey.mockResolvedValue(undefined)
   })
@@ -429,7 +423,7 @@ describe('rotateSigningKey', () => {
   })
 
   describe('clearTokens (rotation switches the JWE decryption key)', () => {
-    it('clears the token cache on a confirmed, pruned rotation', async () => {
+    it('clears the token cache on a confirmed rotation', async () => {
       mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
       mockedReRegisterNewestKey.mockResolvedValue({ success: true, serverKeyNs: [n(2)] })
       const logger = makeLogger()
