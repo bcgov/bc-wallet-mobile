@@ -65,9 +65,10 @@ const twoKeyFixture = (): KeyPublicInfo[] => [
 
 /**
  * In-memory keystore so multi-rotation tests can assert the key count at every mutation.
- * `undeletableIds` models a key whose native delete always fails (e.g. E_KEYSTORE_ERROR).
+ * `undeletableIds` models a delete that always fails; `unregisteredIds` excludes a key's
+ * modulus from the echoed server jwks (models a key the server never actually accepted).
  */
-const makeFakeKeystore = (initial: KeyPublicInfo[], undeletableIds: string[] = []) => {
+const makeFakeKeystore = (initial: KeyPublicInfo[], undeletableIds: string[] = [], unregisteredIds: string[] = []) => {
   const keys = [...initial]
   let maxHeld = keys.length
   let seq = keys.length
@@ -90,7 +91,10 @@ const makeFakeKeystore = (initial: KeyPublicInfo[], undeletableIds: string[] = [
     }
     keys.splice(i, 1)
   })
-  mockedReRegisterNewestKey.mockImplementation(async () => ({ success: true, serverKeyNs: keys.map((k) => k.n) }))
+  mockedReRegisterNewestKey.mockImplementation(async () => ({
+    success: true,
+    serverKeyNs: keys.filter((k) => !unregisteredIds.includes(k.id)).map((k) => k.n),
+  }))
 
   return { ids: () => keys.map((k) => k.id), maxHeld: () => maxHeld }
 }
@@ -198,6 +202,36 @@ describe('rotateSigningKey', () => {
       expect(keystore.ids()).toEqual(['rsa2', 'rsa3'])
     })
 
+    it('keeps the registered key over a newer unregistered one', async () => {
+      const keystore = makeFakeKeystore(twoKeyFixture(), [], ['rsa2'])
+      const logger = makeLogger()
+
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
+
+      expect(result.status).toBe('rotated')
+      expect(result.confirmed).toBe(true)
+      // rsa2 is newer than rsa1 but was never accepted server-side; picking by timestamp alone
+      // would keep it and delete the still-registered rsa1 — the bug this fixes (#4601).
+      expect(keystore.ids()).toEqual(['rsa1', 'rsa3'])
+      expect(mockedDeleteKey).toHaveBeenCalledWith('rsa2')
+      expect(mockedDeleteKey).not.toHaveBeenCalledWith('rsa1')
+    })
+
+    it('falls back to the newest local key by created when none match the server set', async () => {
+      const keystore = makeFakeKeystore(twoKeyFixture())
+      mockedReRegisterNewestKey.mockResolvedValueOnce({ success: true, serverKeyNs: [n(3)] })
+      const logger = makeLogger()
+
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
+
+      expect(result.status).toBe('rotated')
+      expect(result.confirmed).toBe(true)
+      // IAS's last-N merge may have aged every older key out of the echo; falls back to
+      // newest-by-created rather than pruning down to just the new key.
+      expect(keystore.ids()).toEqual(['rsa2', 'rsa3'])
+      expect(mockedDeleteKey).toHaveBeenCalledWith('rsa1')
+    })
+
     it('the first rotation from a single key ends at both keys, nothing deleted', async () => {
       const keystore = makeFakeKeystore([{ id: 'rsa1', n: n(1), e: 'AQAB', created: 1000 }])
       const logger = makeLogger()
@@ -239,8 +273,11 @@ describe('rotateSigningKey', () => {
       expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('event=failed_prune_delete'))
     })
 
-    it('an unconfirmed rotation leaves three keys; the next confirmed rotation prunes back to two', async () => {
-      const keystore = makeFakeKeystore(twoKeyFixture())
+    it('an unconfirmed rotation leaves three keys; the next confirmed rotation prunes back to two, keeping the still-registered key', async () => {
+      // rsa2 comes from the unconfirmed rotation and is never accepted server-side (modelled via
+      // unregisteredIds) — the point being that "newest of the other two" (rsa2) must NOT win
+      // over "still in the server's jwks" (rsa1) just because it's more recent (#4601).
+      const keystore = makeFakeKeystore([{ id: 'rsa1', n: n(1), e: 'AQAB', created: 1000 }], [], ['rsa2'])
       mockedReRegisterNewestKey.mockResolvedValueOnce({ success: true, serverKeyNs: [] })
       const logger = makeLogger()
 
@@ -248,17 +285,17 @@ describe('rotateSigningKey', () => {
 
       expect(result1.status).toBe('rotated')
       expect(result1.confirmed).toBe(false)
-      expect(keystore.ids()).toEqual(['rsa1', 'rsa2', 'rsa3'])
+      expect(keystore.ids()).toEqual(['rsa1', 'rsa2'])
       expect(mockedDeleteKey).not.toHaveBeenCalled()
 
       const result2 = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
       expect(result2.status).toBe('rotated')
       expect(result2.confirmed).toBe(true)
-      expect(keystore.ids()).toEqual(['rsa3', 'rsa4'])
-      expect(mockedDeleteKey).toHaveBeenCalledTimes(2)
-      expect(mockedDeleteKey).toHaveBeenCalledWith('rsa1')
+      expect(keystore.ids()).toEqual(['rsa1', 'rsa3'])
+      expect(mockedDeleteKey).toHaveBeenCalledTimes(1)
       expect(mockedDeleteKey).toHaveBeenCalledWith('rsa2')
+      expect(mockedDeleteKey).not.toHaveBeenCalledWith('rsa1')
     })
 
     describe('failure paths delete nothing', () => {

@@ -2,7 +2,7 @@ import { BifoldLogger } from '@bifold/core'
 import { Platform } from 'react-native'
 import { createNewKeyPair, deleteKey, getAllKeysWithPublicInfo, setToken, TokenType } from 'react-native-bcsc-core'
 import BCSCApiClient from '../api/client'
-import { confirmModulusRegistered } from './jwk-modulus'
+import { confirmModulusRegistered, modulusInSet } from './jwk-modulus'
 import { describeError, reRegisterNewestKey } from './key-recovery'
 
 // NIST SP 800-57 Pt 1 Rev 5 §5.3 puts signing-key cryptoperiods at 1-3 years; 365 days keeps at
@@ -44,11 +44,15 @@ export type KeyRotationResult = {
 }
 
 /**
- * Deletes every local key except the newest two, on a confirmed rotation (#4601). An
+ * Deletes every local key except `newKeyId` and one other, on a confirmed rotation (#4601). An
  * unconfirmed rotation prunes nothing, leaving three keys until the next confirmed one does.
  */
-async function pruneKeepingNewestTwo(newKeyId: string, logger: BifoldLogger): Promise<void> {
-  let keys: Array<{ id: string; created?: number }>
+async function pruneKeepingNewestTwo(
+  newKeyId: string,
+  serverKeyNs: Array<string | undefined>,
+  logger: BifoldLogger
+): Promise<void> {
+  let keys: Array<{ id: string; n?: string; created?: number }>
   try {
     keys = await getAllKeysWithPublicInfo()
   } catch (err) {
@@ -58,19 +62,17 @@ async function pruneKeepingNewestTwo(newKeyId: string, logger: BifoldLogger): Pr
     return
   }
 
-  // Newest-by-created first, same ordering as performKeyRecovery's gate; keep the newest two.
-  const newestTwoIds = new Set(
-    keys
-      .slice()
-      .sort((a, b) => (b.created ?? 0) - (a.created ?? 0))
-      .slice(0, 2)
-      .map((k) => k.id)
-  )
+  // The newest OTHER local key isn't necessarily the registered one (#4601) — prefer the newest
+  // still present in the server's jwks; fall back to newest-by-created if none match (e.g. IAS's
+  // last-N merge already aged every older key out).
+  const others = keys.filter((k) => k.id !== newKeyId).sort((a, b) => (b.created ?? 0) - (a.created ?? 0))
+  const keep = others.find((k) => modulusInSet(k.n, serverKeyNs)) ?? others[0]
+  const keepIds = new Set([newKeyId, keep?.id].filter((id): id is string => id !== undefined))
 
   let pruned = 0
   let failures = 0
   for (const key of keys) {
-    if (newestTwoIds.has(key.id)) {
+    if (keepIds.has(key.id)) {
       continue
     }
     try {
@@ -178,7 +180,7 @@ export async function rotateSigningKey(
   }
 
   logger.info(`[rotateSigningKey] event=confirmed new key '${newKey.id}' present in server jwks`)
-  await pruneKeepingNewestTwo(newKey.id, logger)
+  await pruneKeepingNewestTwo(newKey.id, serverKeyNs, logger)
 
   // Rotation switched the JWE decryption key, so any id_token cached under the old key is now
   // undecryptable; clear directly rather than via TOKENS_REFRESHED, which would re-run system checks.
