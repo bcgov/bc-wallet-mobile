@@ -63,14 +63,14 @@ async function pruneSupersededKeys(
     return
   }
 
-  // The newest OTHER local key isn't necessarily the registered one (#4601) — prefer the newest
-  // still present in the server's jwks; fall back to newest-by-created if none match (e.g. IAS's
-  // last-N merge already aged every older key out).
+  // Prefer the newest OTHER local key whose modulus is confirmed in `serverKeyNs` (the newest
+  // key isn't necessarily the registered one, #4601). Exactly one other key with no match is
+  // kept anyway; two or more with no match are left alone by the guard below.
   const others = keys.filter((k) => k.id !== newKeyId).sort((a, b) => (b.created ?? 0) - (a.created ?? 0))
   const match = others.find((k) => modulusInSet(k.n, serverKeyNs))
   if (!match && others.length > 1) {
-    // Never delete on "can't tell", only on "confirmed not present" (see key-recovery.ts) — with
-    // more than one unmatched candidate we can't tell which is registered, so prune nothing.
+    // Never delete on "can't tell", only on "confirmed not present" (see key-recovery.ts);
+    // prune nothing when two or more candidates are unmatched (we can't tell which is registered).
     logger.warn(
       `[rotateSigningKey] event=prune_skipped_ambiguous none of ${others.length} other local keys matched the server's jwks; keeping all until a later rotation resolves it`
     )
