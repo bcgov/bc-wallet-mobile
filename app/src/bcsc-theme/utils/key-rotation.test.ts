@@ -123,9 +123,8 @@ describe('constants', () => {
 describe('rotateSigningKey', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    // Every rotation now enumerates at its start (#4601); default to a single-key device so
-    // tests that don't care about pruning aren't left with a stale fixture (`clearMocks` clears
-    // calls, not implementations).
+    // Rotation now enumerates at its start (#4601); default to one key so tests that ignore
+    // pruning don't inherit a stale fixture (`clearMocks` clears calls, not implementations).
     mockedGetAllKeysWithPublicInfo.mockResolvedValue([{ id: 'rsa1', n: n(1), e: 'AQAB', created: 1000 }])
     mockedDeleteKey.mockResolvedValue(undefined)
   })
