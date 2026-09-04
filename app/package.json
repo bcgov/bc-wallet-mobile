@@ -141,7 +141,7 @@
     "react-native-vision-camera": "patch:react-native-vision-camera@npm%3A4.7.3#~/.yarn/patches/react-native-vision-camera-npm-4.7.3-dc361fe55c.patch",
     "react-native-volume-manager": "~1.10.0",
     "react-native-webrtc": "~124.0.6",
-    "react-native-webview": "~13.16.0",
+    "react-native-webview": "~13.16.2",
     "reflect-metadata": "~0.1.14",
     "rxjs": "~7.8.2",
     "tsyringe": "~4.8.0",
