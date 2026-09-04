@@ -7,15 +7,15 @@
 # only from here.
 #
 # `ring` is the audience. ring-0 is the team and always publishes, without
-# approval. Picking a higher ring publishes every ring up to it, and those
-# wait on the chosen ring's environment approval. See docs/releases.md.
+# approval. Picking a higher ring publishes every ring up to it, each behind
+# its own environment approval, in order. See docs/releases.md.
 name: Publish
 
 on:
   workflow_dispatch:
     inputs:
       ring:
-        description: 'How far to publish. ring-0 (the team) always goes; this picks how much further, and needs approval.'
+        description: 'How far to publish. ring-0 (the team) always goes; this picks how much further, and each ring on the way needs its own approval.'
         required: false
         default: ring-2
         type: choice
@@ -77,9 +77,7 @@ jobs:
       widen_ipa_variants: ${{ steps.resolve.outputs.widen_ipa_variants }}
       widen_aab_variants: ${{ steps.resolve.outputs.widen_aab_variants }}
       widen_apk_variants: ${{ steps.resolve.outputs.widen_apk_variants }}
-      widen_rings_csv: ${{ steps.resolve.outputs.widen_rings_csv }}
-      widen_tracks_csv: ${{ steps.resolve.outputs.widen_tracks_csv }}
-      widen_groups_lines: ${{ steps.resolve.outputs.widen_groups_lines }}
+      reached_rings: ${{ steps.resolve.outputs.reached_rings }}
     steps:
       # A feature branch can produce a perfectly good build, but shipping one
       # to real testers is almost always a mistake. Releases come off main or
@@ -418,257 +416,164 @@ jobs:
           git push origin "refs/tags/${TAG}"
           echo "Tagged ${HEAD_SHA} as ${TAG}"
 
-  # ─── The approval gate ──────────────────────────────────────────────
-  # The environment is named after the chosen ring, so who may approve
-  # ring-4 is configured separately from who may approve ring-1. Everything
-  # below waits here; ring-0 above has already gone out, and still goes out
-  # if this is rejected.
-  #
-  # It waits on the ring-0 jobs so the prompt only appears once the team
-  # has the build — an approver deciding whether to go wider should be able
-  # to see that ring-0 landed. A failed ring-0 leg does not block approval —
-  # a broken iOS upload should not hold up widening on Android — and each
-  # widen job fails on its own if its variant's build never made it out:
-  # TestFlight bails NOT_FOUND after 180s, `tracks set-release` errors on a
-  # version code that was never uploaded, and Firebase widen re-distributes
-  # its own artifact.
-  #
-  # An environment with no protection rules approves instantly, so this gate
-  # is open until required reviewers are configured in Settings.
-  approval:
-    name: 'Approve ${{ inputs.ring }}'
+  # ─── The approval gates ──────────────────────────────────────────────
+  # Each gate is its own environment, so who approves ring-4 is configured
+  # separately from who approves ring-1. approve-ring-1 waits on the ring-0
+  # jobs so the prompt appears once the team has the build; a failed ring-0
+  # leg does not block it, because each widen job fails on its own if its
+  # variant's build never made it out: TestFlight bails NOT_FOUND after
+  # 180s, `tracks set-release` errors on a version code that was never
+  # uploaded, and Firebase widen re-distributes its own artifact. Later
+  # gates wait on the previous ring's widening the same way, and
+  # deliberately not on its result. An environment with no protection rules
+  # approves instantly, so a gate is open until required reviewers are
+  # configured in Settings.
+
+  approve-ring-1:
+    name: Approve ring-1
     needs: [resolve-build, apple-upload, google-upload, firebase-ios, firebase-android]
+    # resolve-build success is tested first: fromJSON must not see an empty output.
     if: >-
       always() && !cancelled() &&
-      needs.resolve-build.result == 'success'
+      needs.resolve-build.result == 'success' &&
+      contains(fromJSON(needs.resolve-build.outputs.reached_rings), 'ring-1')
     runs-on: ubuntu-22.04
     environment:
-      name: ${{ inputs.ring }}
+      name: ring-1
     permissions: {}
     steps:
       - name: Approved
         env:
-          RING: ${{ inputs.ring }}
-          RINGS: ${{ needs.resolve-build.outputs.widen_rings_csv }}
           BUILD: ${{ needs.resolve-build.outputs.run_number }}
-        run: echo "Build ${BUILD} approved for ${RING} — publishing ${RINGS}"
+        run: echo "Build ${BUILD} approved for ring-1"
 
-  # ─── Widening: every ring above ring-0 ──────────────────────────────
-  # Nothing here uploads. The build is already in the stores; these jobs
-  # only add rings to the audience that can see it.
-
-  testflight-widen:
-    name: 'TestFlight widen - ${{ matrix.variant }}'
-    needs: [resolve-build, approval, apple-upload]
+  ring-1:
+    needs: [resolve-build, approve-ring-1]
     if: >-
-      always() && !cancelled() &&
-      needs.resolve-build.result == 'success' &&
-      needs.approval.result == 'success' &&
-      needs.resolve-build.outputs.widen_ipa_variants != '[]' &&
-      (inputs.targets == 'all' || inputs.targets == 'apple-store')
-    runs-on: ubuntu-22.04
+      needs.approve-ring-1.result == 'success' &&
+      contains(fromJSON(needs.resolve-build.outputs.reached_rings), 'ring-1')
     permissions:
       contents: read
       actions: read
-    strategy:
-      fail-fast: false
-      matrix:
-        variant: ${{ fromJSON(needs.resolve-build.outputs.widen_ipa_variants) }}
-    steps:
-      - uses: actions/checkout@v7
+    uses: ./.github/workflows/publish-ring.yml
+    with:
+      ring: ring-1
+      run_id: ${{ needs.resolve-build.outputs.run_id }}
+      run_number: ${{ needs.resolve-build.outputs.run_number }}
+      head_sha: ${{ needs.resolve-build.outputs.head_sha }}
+      widen_ipa_variants: ${{ needs.resolve-build.outputs.widen_ipa_variants }}
+      widen_aab_variants: ${{ needs.resolve-build.outputs.widen_aab_variants }}
+      widen_apk_variants: ${{ needs.resolve-build.outputs.widen_apk_variants }}
+      targets: ${{ inputs.targets }}
+    secrets: inherit
 
-      - name: Use the build's variant config
-        uses: ./.github/workflows/actions/use-build-variant-config
-        with:
-          head_sha: ${{ needs.resolve-build.outputs.head_sha }}
-
-      - name: Load variant config
-        uses: ./.github/workflows/actions/load-variant-config
-        with:
-          variant: ${{ matrix.variant }}
-
-      - name: Add the higher rings to TestFlight
-        uses: ./.github/workflows/actions/distribute-testflight
-        with:
-          app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          app_store_connect_key_identifier: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
-          app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
-          bundle_id: ${{ env.IOS_BUNDLE_ID }}
-          version_code: ${{ needs.resolve-build.outputs.run_number }}
-          version_name: ${{ env.APP_VERSION }}
-          beta_groups: ${{ needs.resolve-build.outputs.widen_groups_lines }}
-
-  google-promote:
-    name: 'Google Play closed - ${{ matrix.variant }}'
-    needs: [resolve-build, approval, google-upload]
+  approve-ring-2:
+    name: Approve ring-2
+    needs: [resolve-build, approve-ring-1, ring-1]
     if: >-
       always() && !cancelled() &&
-      needs.resolve-build.result == 'success' &&
-      needs.approval.result == 'success' &&
-      needs.resolve-build.outputs.widen_aab_variants != '[]' &&
-      (inputs.targets == 'all' || inputs.targets == 'google-store')
+      needs.approve-ring-1.result == 'success' &&
+      contains(fromJSON(needs.resolve-build.outputs.reached_rings), 'ring-2')
     runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-      actions: read
-    strategy:
-      fail-fast: false
-      matrix:
-        variant: ${{ fromJSON(needs.resolve-build.outputs.widen_aab_variants) }}
+    environment:
+      name: ring-2
+    permissions: {}
     steps:
-      - uses: actions/checkout@v7
-
-      - name: Use the build's variant config
-        uses: ./.github/workflows/actions/use-build-variant-config
-        with:
-          head_sha: ${{ needs.resolve-build.outputs.head_sha }}
-
-      - name: Load variant config
-        uses: ./.github/workflows/actions/load-variant-config
-        with:
-          variant: ${{ matrix.variant }}
-
-      - name: Install 1Password CLI
-        uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
-
-      - name: Fetch Google Play publisher credentials
+      - name: Approved
         env:
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-        run: |
-          # `op read` to stdout appends a trailing newline, which would corrupt
-          # this JSON credentials file. --out-file writes the bytes as-is.
-          op read "op://bcsc-mobile-app-cd/google-play-publisher/service-account.json" --out-file "${RUNNER_TEMP}/play-service-account.json" --force
+          BUILD: ${{ needs.resolve-build.outputs.run_number }}
+        run: echo "Build ${BUILD} approved for ring-2"
 
-      - name: Promote onto the ring's closed track
-        uses: ./.github/workflows/actions/promote-play-track
-        with:
-          service_account_file: ${{ runner.temp }}/play-service-account.json
-          package_name: ${{ env.ANDROID_PACKAGE_NAME }}
-          version_code: ${{ needs.resolve-build.outputs.run_number }}
-          version_name: ${{ env.APP_VERSION }}
-          build_number: ${{ needs.resolve-build.outputs.run_number }}
-          target_tracks: ${{ needs.resolve-build.outputs.widen_tracks_csv }}
-
-  firebase-ios-widen:
-    name: 'Firebase iOS widen - ${{ matrix.variant }}'
-    needs: [resolve-build, approval, firebase-ios]
+  ring-2:
+    needs: [resolve-build, approve-ring-2]
     if: >-
-      always() && !cancelled() &&
-      needs.resolve-build.result == 'success' &&
-      needs.approval.result == 'success' &&
-      needs.resolve-build.outputs.widen_ipa_variants != '[]' &&
-      (inputs.targets == 'all' || inputs.targets == 'firebase')
-    runs-on: ubuntu-22.04
+      needs.approve-ring-2.result == 'success' &&
+      contains(fromJSON(needs.resolve-build.outputs.reached_rings), 'ring-2')
     permissions:
       contents: read
       actions: read
-    strategy:
-      fail-fast: false
-      matrix:
-        variant: ${{ fromJSON(needs.resolve-build.outputs.widen_ipa_variants) }}
-    steps:
-      - name: Download IPA
-        uses: actions/download-artifact@v8
-        with:
-          name: ios-${{ matrix.variant }}.ipa
-          path: ${{ runner.temp }}/firebase-artifact
-          run-id: ${{ needs.resolve-build.outputs.run_id }}
-          github-token: ${{ github.token }}
+    uses: ./.github/workflows/publish-ring.yml
+    with:
+      ring: ring-2
+      run_id: ${{ needs.resolve-build.outputs.run_id }}
+      run_number: ${{ needs.resolve-build.outputs.run_number }}
+      head_sha: ${{ needs.resolve-build.outputs.head_sha }}
+      widen_ipa_variants: ${{ needs.resolve-build.outputs.widen_ipa_variants }}
+      widen_aab_variants: ${{ needs.resolve-build.outputs.widen_aab_variants }}
+      widen_apk_variants: ${{ needs.resolve-build.outputs.widen_apk_variants }}
+      targets: ${{ inputs.targets }}
+    secrets: inherit
 
-      - uses: actions/checkout@v7
-
-      - name: Use the build's variant config
-        uses: ./.github/workflows/actions/use-build-variant-config
-        with:
-          head_sha: ${{ needs.resolve-build.outputs.head_sha }}
-
-      - name: Load variant config
-        uses: ./.github/workflows/actions/load-variant-config
-        with:
-          variant: ${{ matrix.variant }}
-
-      - name: Install 1Password CLI
-        uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
-
-      - name: Fetch Firebase credentials
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-        run: |
-          # `op read` to stdout appends a trailing newline; --out-file writes
-          # the document byte-for-byte instead.
-          op read "op://bcsc-mobile-app-cd/google-services-ios-${{ matrix.variant }}/GoogleService-Info.plist" --out-file "${RUNNER_TEMP}/google-services-source" --force
-          op read "${FIREBASE_IOS_SA_REF}" --out-file "${RUNNER_TEMP}/firebase-service-account.json" --force
-
-      - name: Add the higher rings to Firebase
-        uses: ./.github/workflows/actions/distribute-firebase
-        with:
-          platform: ios
-          app_identifier: ${{ env.IOS_BUNDLE_ID }}
-          google_services_file: ${{ runner.temp }}/google-services-source
-          service_account_file: ${{ runner.temp }}/firebase-service-account.json
-          artifact_path: ${{ runner.temp }}/firebase-artifact/BCWallet.ipa
-          groups: ${{ needs.resolve-build.outputs.widen_rings_csv }}
-          version_name: ${{ env.APP_VERSION }}
-          version_code: ${{ needs.resolve-build.outputs.run_number }}
-
-  firebase-android-widen:
-    name: 'Firebase Android widen - ${{ matrix.variant }}'
-    needs: [resolve-build, approval, firebase-android]
+  approve-ring-3:
+    name: Approve ring-3
+    needs: [resolve-build, approve-ring-2, ring-2]
     if: >-
       always() && !cancelled() &&
-      needs.resolve-build.result == 'success' &&
-      needs.approval.result == 'success' &&
-      needs.resolve-build.outputs.widen_apk_variants != '[]' &&
-      (inputs.targets == 'all' || inputs.targets == 'firebase')
+      needs.approve-ring-2.result == 'success' &&
+      contains(fromJSON(needs.resolve-build.outputs.reached_rings), 'ring-3')
     runs-on: ubuntu-22.04
+    environment:
+      name: ring-3
+    permissions: {}
+    steps:
+      - name: Approved
+        env:
+          BUILD: ${{ needs.resolve-build.outputs.run_number }}
+        run: echo "Build ${BUILD} approved for ring-3"
+
+  ring-3:
+    needs: [resolve-build, approve-ring-3]
+    if: >-
+      needs.approve-ring-3.result == 'success' &&
+      contains(fromJSON(needs.resolve-build.outputs.reached_rings), 'ring-3')
     permissions:
       contents: read
       actions: read
-    strategy:
-      fail-fast: false
-      matrix:
-        variant: ${{ fromJSON(needs.resolve-build.outputs.widen_apk_variants) }}
+    uses: ./.github/workflows/publish-ring.yml
+    with:
+      ring: ring-3
+      run_id: ${{ needs.resolve-build.outputs.run_id }}
+      run_number: ${{ needs.resolve-build.outputs.run_number }}
+      head_sha: ${{ needs.resolve-build.outputs.head_sha }}
+      widen_ipa_variants: ${{ needs.resolve-build.outputs.widen_ipa_variants }}
+      widen_aab_variants: ${{ needs.resolve-build.outputs.widen_aab_variants }}
+      widen_apk_variants: ${{ needs.resolve-build.outputs.widen_apk_variants }}
+      targets: ${{ inputs.targets }}
+    secrets: inherit
+
+  approve-ring-4:
+    name: Approve ring-4
+    needs: [resolve-build, approve-ring-3, ring-3]
+    if: >-
+      always() && !cancelled() &&
+      needs.approve-ring-3.result == 'success' &&
+      contains(fromJSON(needs.resolve-build.outputs.reached_rings), 'ring-4')
+    runs-on: ubuntu-22.04
+    environment:
+      name: ring-4
+    permissions: {}
     steps:
-      - name: Download APK
-        uses: actions/download-artifact@v8
-        with:
-          name: android-${{ matrix.variant }}.apk
-          path: ${{ runner.temp }}/firebase-artifact
-          run-id: ${{ needs.resolve-build.outputs.run_id }}
-          github-token: ${{ github.token }}
-
-      - uses: actions/checkout@v7
-
-      - name: Use the build's variant config
-        uses: ./.github/workflows/actions/use-build-variant-config
-        with:
-          head_sha: ${{ needs.resolve-build.outputs.head_sha }}
-
-      - name: Load variant config
-        uses: ./.github/workflows/actions/load-variant-config
-        with:
-          variant: ${{ matrix.variant }}
-
-      - name: Install 1Password CLI
-        uses: 1password/install-cli-action@1a3160d5e9de1ae0803eaa08a88746f5ae3daa50 # v4.1.0
-
-      - name: Fetch Firebase credentials
+      - name: Approved
         env:
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-        run: |
-          # `op read` to stdout appends a trailing newline; --out-file writes
-          # the document byte-for-byte instead.
-          op read "op://bcsc-mobile-app-cd/google-services-android-${{ matrix.variant }}/google-services.json" --out-file "${RUNNER_TEMP}/google-services-source" --force
-          op read "${FIREBASE_ANDROID_SA_REF}" --out-file "${RUNNER_TEMP}/firebase-service-account.json" --force
+          BUILD: ${{ needs.resolve-build.outputs.run_number }}
+        run: echo "Build ${BUILD} approved for ring-4"
 
-      - name: Add the higher rings to Firebase
-        uses: ./.github/workflows/actions/distribute-firebase
-        with:
-          platform: android
-          app_identifier: ${{ env.ANDROID_PACKAGE_NAME }}
-          google_services_file: ${{ runner.temp }}/google-services-source
-          service_account_file: ${{ runner.temp }}/firebase-service-account.json
-          artifact_path: ${{ runner.temp }}/firebase-artifact/app-release.apk
-          groups: ${{ needs.resolve-build.outputs.widen_rings_csv }}
-          version_name: ${{ env.APP_VERSION }}
-          version_code: ${{ needs.resolve-build.outputs.run_number }}
+  ring-4:
+    needs: [resolve-build, approve-ring-4]
+    if: >-
+      needs.approve-ring-4.result == 'success' &&
+      contains(fromJSON(needs.resolve-build.outputs.reached_rings), 'ring-4')
+    permissions:
+      contents: read
+      actions: read
+    uses: ./.github/workflows/publish-ring.yml
+    with:
+      ring: ring-4
+      run_id: ${{ needs.resolve-build.outputs.run_id }}
+      run_number: ${{ needs.resolve-build.outputs.run_number }}
+      head_sha: ${{ needs.resolve-build.outputs.head_sha }}
+      widen_ipa_variants: ${{ needs.resolve-build.outputs.widen_ipa_variants }}
+      widen_aab_variants: ${{ needs.resolve-build.outputs.widen_aab_variants }}
+      widen_apk_variants: ${{ needs.resolve-build.outputs.widen_apk_variants }}
+      targets: ${{ inputs.targets }}
+    secrets: inherit
