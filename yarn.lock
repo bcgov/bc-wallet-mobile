@@ -1904,13 +1904,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bifold/react-native-attestation@npm:3.0.21":
-  version: 3.0.21
-  resolution: "@bifold/react-native-attestation@npm:3.0.21"
+"@bifold/react-native-attestation@npm:3.0.22":
+  version: 3.0.22
+  resolution: "@bifold/react-native-attestation@npm:3.0.22"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10c0/22e555ac6e17a3c9837ed08e5c8a824a5e9c715de7b3e353a741cae82339b4733bb00b4561793d15ab836c7db0293a8e2393e6e4a152ed1392a088d27767000d
+  checksum: 10c0/0af9f309e081ea53a35e7ce8d6d93d2909c647d6c1c53416e25f4b876128cbf06884378b5f13b18967d47953d60fe98e2cb4072c7a7a3568f84fdd2e9e46855e
   languageName: node
   linkType: hard
 
@@ -7736,7 +7736,7 @@ __metadata:
     "@bifold/core": "npm:3.0.21"
     "@bifold/oca": "npm:3.0.21"
     "@bifold/react-hooks": "npm:3.0.21"
-    "@bifold/react-native-attestation": "npm:3.0.21"
+    "@bifold/react-native-attestation": "npm:3.0.22"
     "@bifold/remote-logs": "patch:@bifold/remote-logs@npm%3A3.0.21#~/.yarn/patches/@bifold-remote-logs-npm-3.0.21-4ae200989a.patch"
     "@bifold/verifier": "npm:3.0.21"
     "@credo-ts/anoncreds": "npm:0.6.3"
