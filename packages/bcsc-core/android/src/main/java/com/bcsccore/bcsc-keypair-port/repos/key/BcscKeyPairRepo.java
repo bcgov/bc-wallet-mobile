@@ -165,8 +165,9 @@ public class BcscKeyPairRepo implements BcscKeyPairSource {
 
       KeyPairInfo info = keyPairInfoSource.getKeyPairInfo(kid);
       if (info == null) {
-        info = new KeyPairInfo(kid, System.currentTimeMillis());
-        keyPairInfoSource.saveKeyPairInfo(info);
+        // A key the keystore holds but our records don't: report no creation date, and don't save
+        // one. Recording a date here would make a stray key look newest and take over signing (#4595).
+        info = new KeyPairInfo(kid, 0L);
       }
 
       final KeyPair keyPair = getKeyPair(keyStore, kid);

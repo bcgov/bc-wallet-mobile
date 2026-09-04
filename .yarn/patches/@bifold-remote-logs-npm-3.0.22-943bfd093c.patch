@@ -1,0 +1,68 @@
+diff --git a/build/logger.js b/build/logger.js
+index 7e9c252ba4d35eba614d8ac5362dba79e514a510..0c58b0e8665bc20703fed6f57af545431b54da94 100644
+--- a/build/logger.js
++++ b/build/logger.js
+@@ -27,14 +27,14 @@ class RemoteLogger extends core_1.AbstractBifoldLogger {
+         // Standardized logging methods with consistent overloads
+         this.test = (message, dataOrError, error) => {
+             var _a, _b;
+-            if (!this.isEnabled(core_2.LogLevel.debug))
++            if (!this.isEnabled(core_2.LogLevel.test))
+                 return;
+             const { data, actualError } = this.parseLogArguments(dataOrError, error);
+             (_b = (_a = this._log) === null || _a === void 0 ? void 0 : _a.test) === null || _b === void 0 ? void 0 : _b.call(_a, { message, data, error: actualError });
+         };
+         this.trace = (message, dataOrError, error) => {
+             var _a, _b;
+-            if (!this.isEnabled(core_2.LogLevel.debug))
++            if (!this.isEnabled(core_2.LogLevel.trace))
+                 return;
+             const { data, actualError } = this.parseLogArguments(dataOrError, error);
+             (_b = (_a = this._log) === null || _a === void 0 ? void 0 : _a.trace) === null || _b === void 0 ? void 0 : _b.call(_a, { message, data, error: actualError });
+@@ -105,8 +105,8 @@ class RemoteLogger extends core_1.AbstractBifoldLogger {
+             if (!this._sessionId) {
+                 this._sessionId = Math.floor(SESSION_ID_RANGE.MIN + Math.random() * (SESSION_ID_RANGE.MAX - SESSION_ID_RANGE.MIN + 1));
+             }
+-            // Override to most verbose when remote logging active
+-            this.logLevel = core_2.LogLevel.debug;
++            // Force the lowest level (test) so remote sessions keep full detail
++            this.logLevel = core_2.LogLevel.test;
+         }
+         else {
+             this._sessionId = undefined;
+@@ -146,7 +146,7 @@ class RemoteLogger extends core_1.AbstractBifoldLogger {
+     setLogLevel(level) {
+         this._baseLogLevel = level;
+         // Only apply immediately if remote logging isn't forcing
+-        // debug
++        // the lowest level (test)
+         if (!this._remoteLoggingEnabled) {
+             this.logLevel = level;
+         }
+diff --git a/build/transports/console.js b/build/transports/console.js
+index bdc70c2dd8bc37cebe02d32fcb1b170238fa5d13..9a207a82f35a0ef664b2acece7a2803df8b4cce1 100644
+--- a/build/transports/console.js
++++ b/build/transports/console.js
+@@ -100,9 +100,9 @@ const consoleTransport = (props) => {
+         const formattedData = messageDataFormatter(...Object.values(rest)).join(' ');
+         logMessage = `${logMessage} ${formattedData}`;
+     }
+-    // Only prepend a tag for test logs.
++    // Only prepend a tag for test/trace logs, to distinguish them from debug in Metro.
+     const levelText = props.level.text.toLowerCase();
+-    if (levelText === 'test') {
++    if (levelText === 'test' || levelText === 'trace') {
+         const levelTag = `[${props.level.text.toUpperCase()}]`;
+         logMessage = `${levelTag} ${logMessage}`;
+     }
+@@ -113,10 +113,6 @@ const consoleTransport = (props) => {
+         // Use appropriate console method based on log level
+         switch (props.level.text.toLowerCase()) {
+             case 'trace':
+-                // console.trace prints a stack; we only want the message. Provide a wrapper.
+-                // Some environments always include stack; if so this remains acceptable.
+-                console.trace(logMessage);
+-                break;
+             case 'debug':
+                 // Prefer console.debug for debug level; fallback to console.log if unavailable
+                 if (typeof console.debug === 'function') {
