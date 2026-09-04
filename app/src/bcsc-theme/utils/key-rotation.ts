@@ -44,9 +44,9 @@ export type KeyRotationResult = {
 }
 
 /**
- * Deletes every local key except the newest, at the START of a rotation: the key the previous
- * rotation superseded has had a full cycle for in-flight responses encrypted to it to arrive
- * (#4601), and the device never holds more than two keys. Delete failures are non-fatal.
+ * Deletes every local key except the newest, at the START of a rotation, so the key the
+ * previous rotation superseded gets a full cycle for in-flight responses to arrive (#4601).
+ * Holds at most two keys when the delete succeeds; a failed delete is swallowed and stale.
  */
 async function pruneAllButNewestKey(logger: BifoldLogger): Promise<void> {
   let keys: Array<{ id: string; created?: number }>

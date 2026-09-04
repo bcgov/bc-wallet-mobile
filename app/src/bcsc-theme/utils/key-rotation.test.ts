@@ -57,8 +57,11 @@ const makeApiClient = () =>
     clearTokens: mockedClearTokens,
   }) as any
 
-/** In-memory keystore so multi-rotation tests can assert the key count at every mutation. */
-const makeFakeKeystore = (initial: KeyPublicInfo[]) => {
+/**
+ * In-memory keystore so multi-rotation tests can assert the key count at every mutation.
+ * `undeletableIds` models a key whose native delete always fails (e.g. E_KEYSTORE_ERROR).
+ */
+const makeFakeKeystore = (initial: KeyPublicInfo[], undeletableIds: string[] = []) => {
   const keys = [...initial]
   let maxHeld = keys.length
   let seq = keys.length
@@ -72,6 +75,9 @@ const makeFakeKeystore = (initial: KeyPublicInfo[]) => {
     return key
   })
   mockedDeleteKey.mockImplementation(async (id: string) => {
+    if (undeletableIds.includes(id)) {
+      throw new Error('E_KEYSTORE_ERROR')
+    }
     const i = keys.findIndex((k) => k.id === id)
     if (i === -1) {
       throw new Error('E_KEY_NOT_FOUND')
@@ -166,20 +172,24 @@ describe('rotateSigningKey', () => {
   })
 
   it('a confirmed rotation never deletes the key that was newest when it started', async () => {
-    mockedGetAllKeysWithPublicInfo.mockResolvedValue([
-      { id: 'rsa0', n: n(0), e: 'AQAB', created: 500 },
+    // Fake keystore, not a static fixture: the new key must actually enter the enumerated set
+    // for this test to distinguish a start-of-rotation prune from an end-of-rotation one — a
+    // static `getAllKeysWithPublicInfo` fixture can't see the new key and passes either way.
+    const keystore = makeFakeKeystore([
       { id: 'rsa1', n: n(1), e: 'AQAB', created: 1000 },
+      { id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 },
     ])
-    mockedCreateNewKeyPair.mockResolvedValue({ id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 })
-    mockedReRegisterNewestKey.mockResolvedValue({ success: true, serverKeyNs: [n(1), n(2)] })
     const logger = makeLogger()
 
-    await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
+    const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
 
+    expect(result.status).toBe('rotated')
+    expect(result.confirmed).toBe(true)
     // Unit-level proxy for AC1 (a response encrypted to the previous key still opens after
     // rotation) — the actual decrypt is native, kid-aware (#4600), and not testable here.
-    expect(mockedDeleteKey).not.toHaveBeenCalledWith('rsa1')
     expect(mockedDeleteKey).not.toHaveBeenCalledWith('rsa2')
+    expect(mockedDeleteKey).not.toHaveBeenCalledWith('rsa3')
+    expect(keystore.ids()).toEqual(['rsa2', 'rsa3'])
   })
 
   describe('multi-rotation key retention (fake keystore)', () => {
@@ -196,6 +206,24 @@ describe('rotateSigningKey', () => {
 
       expect(keystore.ids()).toEqual(['rsa3', 'rsa4'])
       expect(keystore.maxHeld()).toBe(2)
+    })
+
+    it('a permanently undeletable key leaves the device one over the two-key bound, not blocking rotation', async () => {
+      const keystore = makeFakeKeystore(
+        [
+          { id: 'rsa1', n: n(1), e: 'AQAB', created: 1000 },
+          { id: 'rsa2', n: n(2), e: 'AQAB', created: 2000 },
+        ],
+        ['rsa1']
+      )
+      const logger = makeLogger()
+
+      const result = await rotateSigningKey(makeApiClient(), CLIENT_ID, REG_TOKEN, logger)
+
+      expect(result.status).toBe('rotated')
+      expect(result.confirmed).toBe(true)
+      expect(keystore.ids()).toEqual(['rsa1', 'rsa2', 'rsa3'])
+      expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('event=failed_prune_delete'))
     })
 
     it('an unconfirmed rotation followed by a confirmed one holds at most two keys throughout', async () => {
@@ -404,6 +432,7 @@ describe('rotateSigningKey', () => {
     expect(result.status).toBe('rotated')
     expect(result.confirmed).toBe(true)
     expect(mockedCreateNewKeyPair).toHaveBeenCalled()
+    expect(mockedDeleteKey.mock.invocationCallOrder[0]).toBeLessThan(mockedCreateNewKeyPair.mock.invocationCallOrder[0])
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('event=failed_prune_delete'))
   })
 
@@ -418,6 +447,9 @@ describe('rotateSigningKey', () => {
     expect(result.status).toBe('rotated')
     expect(result.confirmed).toBe(true)
     expect(mockedCreateNewKeyPair).toHaveBeenCalled()
+    expect(mockedGetAllKeysWithPublicInfo.mock.invocationCallOrder[0]).toBeLessThan(
+      mockedCreateNewKeyPair.mock.invocationCallOrder[0]
+    )
     expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('event=failed_prune_enumerate'))
   })
 
