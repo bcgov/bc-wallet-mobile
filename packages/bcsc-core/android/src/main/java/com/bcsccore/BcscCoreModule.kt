@@ -138,8 +138,10 @@ private enum class AccountFileName(
  * for BC Services Card integration in React Native applications.
  */
 @ReactModule(name = BcscCoreModule.NAME)
-class BcscCoreModule(
+class BcscCoreModule internal constructor(
     reactContext: ReactApplicationContext,
+    // Lets tests supply their own key source, so the decrypt path can run without a device keystore.
+    private val keyPairSourceOverride: BcscKeyPairSource? = null,
 ) : BcscCoreSpec(reactContext) {
     companion object {
         const val NAME = "BcscCore"
@@ -174,8 +176,7 @@ class BcscCoreModule(
 
     // Initialize the BC Services Card KeyPair functionality
     private val keyPairSource: BcscKeyPairSource by lazy {
-        val keyPairInfoSource = SimpleKeyPairInfoSource(reactApplicationContext)
-        BcscKeyPairRepo(keyPairInfoSource)
+        keyPairSourceOverride ?: BcscKeyPairRepo(SimpleKeyPairInfoSource(reactApplicationContext))
     }
 
     // Initialize native-compatible storage for rollback support
@@ -1766,9 +1767,9 @@ class BcscCoreModule(
     )
 
     /**
-     * Best-effort read of the *incoming* JWE protected header for diagnostics. Reads the
-     * real `kid` straight off the wire so we can tell whether the server encrypted to a key
-     * this device actually holds. Never throws — unreadable fields come back as "?".
+     * Best-effort read of the *incoming* JWE protected header for diagnostics and decrypt-key
+     * selection. Reads the real `kid` straight off the wire so we can tell whether the server
+     * encrypted to a key this device actually holds. Never throws — unreadable fields come back as "?".
      */
     private fun incomingJWEHeader(jweString: String): JweHeaderInfo {
         val parts = jweString.split(".")
@@ -1832,10 +1833,14 @@ class BcscCoreModule(
         // makes 2507 reports self-classifying in the field.
         val diagnostics = decodeDiagnosticsSummary(jweString)
         try {
-            // Get the current (latest) key pair for decryption
-            val currentKeyPair = keyPairSource.getCurrentBcscKeyPair()
+            // The server keeps encrypting to the previous key until it has seen the new one, so use
+            // the key the response names when we hold it. Otherwise fall back to newest, as before.
+            val kid = incomingJWEHeader(jweString).kid.takeIf { it.isNotEmpty() }
+            val decryptKeyPair =
+                kid?.let { keyPairSource.getBcscKeyPair(it) }
+                    ?: keyPairSource.getCurrentBcscKeyPair()
 
-            if (currentKeyPair.getKeyPair()?.private == null) {
+            if (decryptKeyPair.getKeyPair()?.private == null) {
                 promise.reject("E_NO_KEYS_FOUND", "No private key available for decryption $diagnostics")
                 return
             }
@@ -1844,7 +1849,7 @@ class BcscCoreModule(
             val jweObject = JWEObject.parse(jweString)
 
             // Create RSA decrypter with the private key
-            val rsaDecrypter = RSADecrypter(currentKeyPair.getKeyPair()!!.private)
+            val rsaDecrypter = RSADecrypter(decryptKeyPair.getKeyPair()!!.private)
 
             // Decrypt the JWE to get the inner JWT (compact JWS)
             jweObject.decrypt(rsaDecrypter)
