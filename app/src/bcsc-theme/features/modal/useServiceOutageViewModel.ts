@@ -1,13 +1,8 @@
-import BCSCApiClient from '@/bcsc-theme/api/client'
-import useConfigApi from '@/bcsc-theme/api/hooks/useConfigApi'
-import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import useServerStatusCheck from '@/bcsc-theme/hooks/useServerStatusCheck'
 import { BCSCAuthStackParams, BCSCModals } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
-import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
-import { BCState } from '@/store'
 import { openLink } from '@/utils/links'
-import { TOKENS, useServices, useStore } from '@bifold/core'
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native'
+import { RouteProp, useRoute } from '@react-navigation/native'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -15,39 +10,17 @@ type ServiceOutageRouteProps = RouteProp<BCSCAuthStackParams, BCSCModals.Service
 
 const useServiceOutageViewModel = () => {
   const { t } = useTranslation()
-  const navigation = useNavigation()
   const route = useRoute<ServiceOutageRouteProps>()
-  const [, dispatch] = useStore<BCState>()
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { client, isClientReady } = useBCSCApiClientState()
-  const configApi = useConfigApi(client as BCSCApiClient)
   const [statusMessage, setStatusMessage] = useState(route.params?.statusMessage)
-  const [isChecking, setIsChecking] = useState(false)
+  const { checkServerStatus, isChecking, isClientReady } = useServerStatusCheck()
 
   const handleCheckAgain = useCallback(async () => {
-    if (!isClientReady) {
-      return
-    }
+    const result = await checkServerStatus()
 
-    setIsChecking(true)
-    try {
-      const serverStatus = await configApi.getServerStatus()
-      const utils = { dispatch, translation: t, logger }
-      const check = new ServerStatusSystemCheck(serverStatus, utils, navigation)
-
-      if (check.runCheck()) {
-        // onSuccess() handles modal dismissal via navigation.goBack() and banner cleanup
-        check.onSuccess()
-      } else {
-        check.onFail()
-        setStatusMessage(serverStatus.statusMessage ?? t('BCSC.SystemChecks.ServerStatus.UnavailableBannerTitle'))
-      }
-    } catch (error) {
-      logger.error('ServiceOutage: Failed to re-check server status', error as Error)
-    } finally {
-      setIsChecking(false)
+    if (!result.isAvailable) {
+      setStatusMessage(result.statusMessage ?? t('BCSC.SystemChecks.ServerStatus.UnavailableBannerTitle'))
     }
-  }, [isClientReady, configApi, dispatch, t, logger, navigation])
+  }, [checkServerStatus, t])
 
   const contentText = statusMessage ? [statusMessage] : [t('BCSC.SystemChecks.ServerStatus.UnavailableBannerTitle')]
 
