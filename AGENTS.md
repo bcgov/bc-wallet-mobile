@@ -1,318 +1,288 @@
-# Project Context & AI Persona
+# AGENTS.md
 
-You are an expert mobile developer specializing in React Native, clean architecture, performance optimization, and robust UI implementation. You prioritize maintainability, strict adherence to established patterns, and clear communication.
+Shared instructions for AI coding agents working in this repository. Keep them in
+mind while writing or changing code — they describe how this project actually
+works, not aspirations.
 
-## Architecture Patterns
+GitHub Copilot code review has its own file: `.github/copilot-instructions.md`.
 
-### MVVM (Model-View-ViewModel)
+## Developer-specific instructions
 
-This project follows a **React-adapted MVVM pattern** using hooks. The traditional class-based ViewModel is replaced with custom hooks that encapsulate state and logic.
+If `.codex/AGENTS.local.md` exists, read it before starting work.
 
-#### ViewModel Hook (`useXxxViewModel`)
+This file is intentionally gitignored and may contain developer-specific
+workflow preferences. It supplements the shared project instructions and
+must not override project requirements.
 
-- Custom React hook that serves as the **ViewModel** layer in MVVM
-- Consumes the Model layer (stores, API hooks, services) and exposes state/actions to the View
-- Returns state values and action handlers for the View to consume
-- Should not contain any TSX or UI components
+## What this is
 
-> **Note:** The **Model** layer is composed of `useStore`, API hooks (such as `useApi`), and services. ViewModel hooks consume and orchestrate these.
+BC Wallet Mobile is a React Native app for holding Verifiable Credentials, built
+on the OpenWallet Foundation's Bifold framework with Credo-ts for DIDComm and
+credential exchange.
 
-```typescript
-// useSetupStepsViewModel.tsx
-const useSetupStepsViewModel = (navigation: StackNavigationProp<...>) => {
-  const { t } = useTranslation()
-  const [store] = useStore<BCState>()
-  const [isCheckingStatus, setIsCheckingStatus] = useState(false)
+One repository ships two apps, selected by `BUILD_TARGET` in `app/.env`:
 
-  // Derived state
-  const steps = useSetupSteps(store)
+- **BC Wallet** (`bcwallet`) — the general credential wallet
+- **BC Services Card** (`bcsc`) — government identity
 
-  // Action handlers
-  const handleCheckStatus = useCallback(async () => {
-    setIsCheckingStatus(true)
-    try {
-      // Business logic here
-      navigation.navigate(BCSCScreens.VerificationSuccess)
-    } finally {
-      setIsCheckingStatus(false)
-    }
-  }, [navigation])
-
-  const stepActions = useMemo(() => ({
-    nickname: () => navigation.navigate(BCSCScreens.NicknameAccount),
-    id: () => navigation.navigate(BCSCScreens.IdentitySelection),
-  }), [navigation])
-
-  return {
-    steps,
-    stepActions,
-    isCheckingStatus,
-    handleCheckStatus,
-  }
-}
-
-export default useSetupStepsViewModel
-```
-
-#### View (Screen/Component)
-
-- React component that consumes the ViewModel hook
-- Handles UI rendering and user interactions
-- Should contain minimal logic—delegate to the ViewModel hook
-- Focus on layout, styling, and presenting data
-
-```typescript
-// SetupStepsScreen.tsx
-const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
-  const { t } = useTranslation()
-  const { Spacing, ColorPalette } = useTheme()
-
-  // Consume the ViewModel hook
-  const { steps, stepActions, isCheckingStatus, handleCheckStatus } =
-    useSetupStepsViewModel(navigation)
-
-  return (
-    <ScreenWrapper>
-      <SetupStep
-        title={t('BCSC.Steps.Nickname')}
-        completed={steps.nickname.completed}
-        onPress={stepActions.nickname}
-      />
-      <Button
-        title={t('BCSC.Steps.CheckStatus')}
-        onPress={handleCheckStatus}
-        loading={isCheckingStatus}
-      />
-    </ScreenWrapper>
-  )
-}
-```
-
-#### Pattern Benefits
-
-- **Separation of concerns**: Logic in hooks, rendering in components
-- **Testability**: ViewModel hooks can be tested independently with `renderHook`
-- **Reusability**: ViewModel hooks can be shared across multiple views if needed
-- **React-native**: Leverages React's built-in reactivity (`useState`, `useMemo`, `useCallback`)
-
-### Directory Structure
-
-This codebase uses a **feature-based structure** where each feature contains its own screens, components, ViewModels, and models. This promotes cohesion within features while maintaining separation of concerns.
+The architecture is theme-based: `BUILD_TARGET` selects a theme directory under
+`app/src/` — `bcwallet-theme/` or `bcsc-theme/` — and that is where each app's
+screens and features live.
 
 ```
-/app/src
-  /bcsc-theme                    # BC Services Card app theme
-    /api                         # API clients and services
-    /components                  # Shared UI components across features
-    /contexts                    # React contexts
-    /features                    # Feature modules
-      /auth                      # Authentication feature
-      /home                      # Home screen feature
-        Home.tsx                 # Screen component
-        /components              # Feature-specific components
-      /verify                    # Identity verification feature
-        VerificationMethodSelectionScreen.tsx
-        SetupStepsScreen.tsx
-        useVerificationMethodViewModel.tsx
-        useSetupStepsViewModel.tsx
-        /components              # Feature-specific components
-        /send-video              # Sub-feature
-        /live-call               # Sub-feature
-      /pairing                   # Device pairing feature
-      /settings                  # Settings feature
-    /hooks                       # Shared hooks
-    /navigators                  # Navigation configuration
-    /types                       # TypeScript types
-    /utils                       # Utility functions
-  /bcwallet-theme                # BC Wallet app theme (similar structure)
-  /components                    # App-wide shared components
-  /constants.ts                  # App constants
-  /localization                  # i18n translations
-  /services                      # Shared services
-  /store                         # State management
-  /utils                         # Shared utilities
+app/                  React Native app (both build targets)
+packages/bcsc-core/   Native Turbo Module `react-native-bcsc-core` — Swift + Kotlin
+e2e/                  Appium/WDIO suite, a separate Yarn project (see e2e/README.md)
+variants/             Build-variant overlays applied by scripts/apply-variant.mjs
+scripts/              Variant, version, icon, and ops scripts
+docs/                 CI/CD, pull requests, labels, releases
 ```
 
-**Key conventions:**
+Yarn 4 workspaces (`app`, `packages/*`). `e2e/` is deliberately outside the
+workspace and has its own lockfile and `node_modules`.
 
-- Tests are co-located with their source files (e.g., `Screen.tsx` + `Screen.test.tsx`)
-- Feature-specific components stay within the feature folder
-- Shared components are elevated to `/components` at the appropriate level
+## Commands
 
-### Guidelines
+Node 24 and Yarn 4.9.2 (`packageManager` in `package.json`). Run from the repo
+root unless noted.
 
-1. **Separation of Concerns**
+```sh
+yarn build        # builds packages/bcsc-core — required before typecheck
+yarn typecheck    # tsc --noEmit across app + bcsc-core
+yarn lint
+yarn format:check # Prettier, swiftformat, clang-format, ktlint
+yarn test         # app Jest suite (TZ=GMT)
+yarn coverage
+yarn check        # typecheck + lint + format:check + test — run this before opening a PR
+```
 
-   - ViewModel hooks should not contain JSX or UI components
-   - Views should delegate logic to ViewModel hooks
-   - Keep styling and layout in Views, business logic in hooks
+Native lint and format need `swiftformat`, `clang-format`, and `ktlint`
+(`brew install swiftformat clang-format ktlint`). Without them the format
+scripts exit with an install hint, not a real failure.
 
-2. **Data Flow**
+`yarn build` must run before `yarn typecheck` — `bcsc-core`'s emitted types live
+in `packages/bcsc-core/lib/`, which is gitignored.
 
-   - ViewModel hook manages state and exposes it to the View
-   - User actions call handlers returned by the ViewModel hook
-   - Use `useMemo` for derived state, `useCallback` for stable handlers
+App-level commands run from `app/`: `yarn android`, `yarn ios`, `yarn start`,
+`yarn test:watch`.
 
-3. **Testing**
+Bifold can be linked locally with `yarn link:bifold`. If you hit strange module
+resolution or duplicate-dependency errors, check whether Bifold is currently
+linked.
 
-   - ViewModel hooks: Test with `renderHook` from `@testing-library/react-native`
-   - Views: Test UI interactions and rendering with mocked hooks
-   - Co-locate tests with source files (e.g., `useSetupStepsViewModel.test.ts`)
+## Architecture
 
-4. **State Management**
+New work follows a React-adapted **MVVM** pattern; existing work follows the
+pattern already in the file it lives in. Suggest a refactor to MVVM when it is
+genuinely warranted, don't do it as drive-by cleanup.
 
-   - ViewModel hook owns the state for its View
-   - Use React hooks (`useState`, `useMemo`, `useCallback`) for reactivity
-   - Access global state via `useStore` or context hooks
+- **Model** — `useStore`, API hooks (`useApi`, etc.), and services.
+- **ViewModel** — a `use[Feature]ViewModel` hook that consumes the Model layer
+  and returns state plus action handlers. **No JSX or UI components in a
+  ViewModel hook.** It may use `useTranslation` and hold a navigation object;
+  what it must not do is render.
+- **View** — a `[Feature]Screen` or component that consumes the ViewModel hook
+  and handles layout, styling, and presentation only.
 
-5. **Naming Conventions**
+Some older hooks use a `Model` suffix (`useSetupStepsModel`); those may be
+renamed to `ViewModel` over time.
 
-   - ViewModel hooks: `use[Feature]ViewModel` (e.g., `useServiceOutageViewModel`, `useTransferQRScannerViewModel`). Some older hooks use a `Model` suffix (e.g., `useSetupStepsModel`); these may be renamed to `ViewModel` over time for consistency.
-   - Views: `[Feature]Screen` or descriptive component names
+Use `useMemo` for derived state and `useCallback` for stable handlers.
 
-6. **Error Handling**
+### Directory layout
 
-   - **User-facing errors belong in the UI layer** (Views or ViewModel hooks), not in API/data hooks. API hooks should throw errors and let callers decide whether and how to surface them.
-   - Use `emitErrorAlert` with `AppError.fromErrorDefinition(ErrorRegistry.XXX, { cause: error })` to show errors as native alerts. Prefer this over `emitError` with registry keys.
-   - Callers should inspect error types (e.g., `isBcscNativeError`) and choose the appropriate response — some errors are critical (onboarding, auth), others are intentionally non-critical (background tasks, optional nickname updates).
-   - API hooks should remain single-responsibility: make the API call, return data, throw on failure. No UI side effects.
+Feature-based: each feature owns its screens, components, ViewModels, and
+sub-features.
 
-## Commit Message and PR Title Formatting
+```
+app/src/
+  bcsc-theme/          BC Services Card app
+    api/               API clients and services
+    components/        Shared across features
+    contexts/
+    features/
+      home/            Home.tsx + components/
+      verify/          Screens, ViewModels, components/, send-video/, live-call/
+      auth/  pairing/  settings/
+    hooks/  navigators/  types/  utils/
+  bcwallet-theme/      BC Wallet app (same shape)
+  components/          App-wide shared components
+  localization/        i18n translations
+  services/  store/  utils/
+```
 
-When suggesting commit messages or pull request titles, always follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format:
+Feature-specific components stay in the feature folder; promote to a shared
+`components/` only when a second feature needs them.
+
+### Error handling
+
+- Favour idempotency over erroring — deleting something that doesn't exist
+  should succeed, not throw.
+- **API hooks throw. Service and UI hooks catch and surface.** An API hook makes
+  the call, returns data, and throws on failure — no UI side effects.
+- User-facing errors belong in Views or ViewModel hooks. Use `emitErrorAlert`
+  with `AppError.fromErrorDefinition(ErrorRegistry.XXX, { cause: error })` in
+  preference to `emitError` with registry keys.
+- Native module errors go through `throwNativeError` / `toNativeAppError` in
+  `app/src/bcsc-theme/utils/native-error-map.ts`.
+- Callers inspect the error type (e.g. `isBcscNativeError`) and decide: some
+  paths are critical (onboarding, auth), others are intentionally non-critical
+  (background tasks, optional nickname updates).
+- Errors should surface, not be swallowed.
+
+## Conventions
+
+**Accessibility.** Every `TouchableOpacity` and `Pressable` needs
+`accessibilityLabel`, `accessibilityRole`, `hitSlop`, and `testID`.
+
+**Localization.** All user-facing text is localised. Prefer interpolation over
+concatenation: `t('Key', { value })` with `"Key": "Text {{value}}"`. Never embed
+layout characters such as `\n` in a localized string — handle wrapping in the
+component.
+
+**Privacy.** Personal data, tokens, credential attributes, and whole request or
+response bodies must not reach a log line, an analytics event, or a user-visible
+error string. Remote logging makes anything logged permanent.
+
+**Platform parity.** A change that alters behaviour on one platform should alter
+it on both, or say why not. Native modules, permissions, camera, and biometrics
+are where divergence hides.
+
+**Comments.** Explain why, not what. `@ts-expect-error` needs a description —
+`@typescript-eslint/ban-ts-comment` warns without one.
+
+**Design and UX decisions** are recorded in `CONVENTIONS.md`. Add an entry when
+a pattern is established or an approach is chosen over an alternative.
+
+## Testing
+
+- Jest with the React Native preset and Testing Library; tests run with `TZ=GMT`.
+- Co-locate tests with source (`Screen.tsx` + `Screen.test.tsx`).
+- ViewModel hooks: `renderHook` from `@testing-library/react-native`.
+- Views: render with the ViewModel hook mocked.
+- Codecov posts project and patch status on PRs, targeting current coverage.
+
+**Native tests** live in `packages/bcsc-core` and run on their own toolchain —
+XCTest via SPM on iOS, JUnit 4 + MockK on Android. From that package:
+`yarn test:ios`, `yarn test:android`, or `yarn test` for both. The package
+targets **JDK 17** (`.tool-versions`, `android/build.gradle`, and the CI job all
+pin it); if `test:android` fails on a newer default JDK, point `JAVA_HOME` at a
+17 install. Read `.agents/skills/bcsc-core-native-testing/SKILL.md` before
+adding native tests — it covers the SPM test target, `SPM_BUILD` stubs, mocking
+patterns, and injectable timestamps.
+
+**E2E tests** are a separate Yarn project in `e2e/`; run everything from there.
+Its conventions — the testID registry, screen descriptors, arrange flows, and
+one-journey-per-session files — are documented in `e2e/README.md`. Follow them
+rather than inventing a new shape.
+
+## Generated and managed files — do not hand-edit
+
+- `packages/bcsc-core/lib/` — emitted by `yarn build` (bob).
+- `yarn.lock`, `app/android/**/gradle.lockfile`, `app/ios/Podfile.lock` — a CI
+  check fails if they drift from the manifests. Regenerate them with the
+  package manager, never by hand.
+- `app/ios/Pods/`, build outputs, coverage.
+- **Variant overlays.** The checked-in working tree _is_ the `bcsc-dev` variant.
+  `scripts/apply-variant.mjs` overlays `variants/<name>/` on top of it, so a
+  change to an asset or config that a variant also overlays must be mirrored in
+  both places or applying that variant will silently revert it.
+
+## Keeping changes scoped
+
+- Do what was asked. Don't widen a change into unrelated refactoring, renaming,
+  or reformatting — it makes review harder and hides the real diff.
+- Prefer several small, self-contained PRs over one large one.
+- Don't reformat files you aren't otherwise changing; Prettier and ESLint own
+  formatting.
+- Update or remove a comment in the same change that makes it stale.
+
+## Commits
+
+Conventional Commits, configured in `commitlint.config.js`:
 
 ```
 <type>[optional scope]: <description>
-
-[optional body]
-
-[optional footer(s)]
 ```
 
-### Types
+Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`,
+`revert`. Lower-case type, non-empty subject.
 
-- `feat`: A new feature
-- `fix`: A bug fix
-- `docs`: Documentation only changes
-- `style`: Changes that do not affect the meaning of the code (white-space, formatting, etc)
-- `refactor`: A code change that neither fixes a bug nor adds a feature
-- `perf`: A code change that improves performance
-- `test`: Adding missing tests or correcting existing tests
-- `build`: Changes that affect the build system or external dependencies
-- `ci`: Changes to CI configuration files and scripts
-- `chore`: Other changes that don't modify src or test files
-- `revert`: Reverts a previous commit
+Scope is optional. Use the feature or package touched — `bcsc`, `bcsc-theme`,
+`ui`, `deps`, `ci`, `e2e` — rather than an architectural layer.
 
-### Scope
+- Imperative mood ("add", not "added"), no leading capital, no trailing period.
+- Under 72 characters where you can manage it.
+- Body explains what and why, not how.
 
-The scope should be the name of the architectural layer or component affected:
+**Every commit needs a `Signed-off-by` trailer.** The DCO check fails the PR
+without it on _every_ commit, and fixing it afterwards needs a rebase and a
+force-push. Commit with `git commit -s` — git has no config that adds the
+trailer automatically.
 
-- `model`: Changes to domain models
-- `viewmodel`: Changes to ViewModels
-- `view`: Changes to Views/UI
-- `adapter`: Changes to data adapters
-- `service`: Changes to external services
-- Specific feature names: `auth`, `wallet`, `credentials`, etc.
+## Issues and pull requests
 
-### Examples
+Write for a PO or PM first: what changed for the user or the product, then the
+technical detail if it earns its place. Short is good.
 
-- `feat(viewmodel): add user profile editing capability`
-- `fix(adapter): correct date transformation in UserAdapter`
-- `refactor(model): simplify user repository interface`
-- `test(viewmodel): add unit tests for authentication flow`
-- `docs(architecture): update MVVM pattern documentation`
-- `style(view): adjust spacing in credential card component`
+**PR titles** use the same Conventional Commits format as commits.
 
-### Pull Request Titles
+**PR bodies** follow `.github/pull_request_template.md` — `docs/pull-requests.md`
+has the detail:
 
-Pull request titles should follow the same conventional commit format to maintain consistency between commits and PRs.
-
-## General Guidance
-
-### Commit Messages
-
-- Keep descriptions concise and under 72 characters when possible
-- Use the imperative mood ("add" not "added" or "adds")
-- Do not capitalize the first letter of the description
-- No period at the end of the description
-- Use the body to explain what and why vs. how
-- Use [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) for clarity
-
-### Code Quality
-
-- Always maintain clear separation between layers
-- Use adapters when transforming data between layers
-- Write unit tests for each layer independently
-- Keep ViewModels framework-agnostic (no UI dependencies)
-- Document complex business logic in Models
-- Keep Views thin—move logic to ViewModels
-- Keep tests close to the code they are testing
-- Follow established naming conventions for clarity
-
-## Variant Configuration Files (`variant.env`)
-
-### Quoting Rules
-
-- **Prefer single quotes** (`'...'`) for all values by default. Single quotes denote literal strings and prevent unintended shell expansion (e.g., `$(...)` is preserved as-is).
-- **Use double quotes** (`"..."`) only when shell variable substitution or interpolation is explicitly required.
-- When in doubt, use single quotes.
-
-#### Examples
-
-```dotenv
-# Correct — literal values use single quotes
-APP_NAME='BC Services Card'
-IOS_BUNDLE_ID='ca.bc.gov.iddev.servicescard'
-IOS_PRODUCT_NAME='$(TARGET_NAME)'
-
-# Incorrect — double quotes risk shell expansion of $(...) and similar syntax
-IOS_PRODUCT_NAME="$(TARGET_NAME)"
-```
-
-### Rationale
-
-These files are sourced in shell contexts (e.g., GitHub Actions `source variant.env`). Double-quoted strings containing `$`, backticks, or `!` will be interpreted by the shell, leading to unexpected behaviour. Single quotes ensure values are loaded exactly as written.
-
-## CI/CD
-
-Merging to `main` builds artifacts and publishes nothing. App Store Connect, Google Play, and Firebase App Distribution are all reached from the manual **Publish** workflow, which uploads an existing build's artifacts and never rebuilds.
-
-See `docs/ci-cd.md` for the pipeline overview, the publish inputs, and the ring model.
-
-## Issues and Pull Requests
-
-Write for a PO or PM first. Say what changed for the user or the product, then the technical detail if it earns its place. Favour concision — a short description is a good one.
-
-**PRs** follow `.github/pull_request_template.md`; `docs/pull-requests.md` has the detail:
-
-- `Closes #<issue>` on the first line. A bare `#123` further down creates no link GitHub tracks; linking from the Development panel works too.
-- **What changed** — enough to read the diff. The backstory lives in the issue. Screenshots and video go here.
-- **What should the reviewer focus on** — the part you are least sure about, or say there isn't one.
+- `Closes #<issue>` on the first line, or a link from the Development panel. A
+  bare `#123` further down creates no link GitHub tracks. `Closes` does not
+  close anything here — auto-close is off, so it is pure traceability.
+- **What changed** — enough to read the diff. Backstory lives in the issue.
+  Screenshots and video go here.
+- **What should the reviewer focus on** — the part you're least sure about, or
+  say there isn't one.
 - **How to test** — how someone else checks it. "Covered by unit tests" counts.
 
-Aim for a couple of hundred words across the whole body. Don't restate the issue's acceptance criteria or pad a section to look thorough. No issue to link? Omit the `Closes` line and add the `status/no-issue` label — a `chore:` title does **not** exempt a PR from the hygiene check.
+A couple of hundred words for the whole body. Don't restate the issue's
+acceptance criteria or pad a section to look thorough.
 
-**Issues** are created from the forms in `.github/ISSUE_TEMPLATE/`. Titles are plain text — the conventional-commit prefixes above are for commits and PR titles only.
+No issue behind it? Omit the `Closes` line and add the `status/no-issue` label.
+The hygiene check exempts `build:`, `docs:`, and `release:` titles — work that
+structurally cannot have an issue. A `chore:` title does **not** exempt a PR.
 
-**Stacked PRs** each need their own link — the same `Closes #<issue>` on each, or sub-issues for a stack of four or more. Say which PR to merge first.
+**Stacked PRs** each need their own link: the same `Closes #<issue>` on each, or
+sub-issues under a parent for a stack of four or more. Say which to merge first.
 
-## Code Review Priorities
+**Issues** are created from the forms in `.github/ISSUE_TEMPLATE/`. Titles are
+plain text — the conventional-commit prefixes are for commits and PR titles only.
 
-When reviewing a pull request in this repository, prioritise these, roughly in order:
+**Labels** — see `docs/labels.md`. At most one `component/` and one `work/`;
+`status/` flags only while true. Workflow state, priority, and
+Bug/Feature/Task/Epic are board fields, not labels.
 
-- **Credential and wallet state.** Anything that creates, stores, mutates, or deletes a credential, or that changes onboarding, PIN, or biometric state. Corrupt wallet state is not recoverable for a holder in the field.
-- **PII in logs and errors.** Personal data, tokens, credential attributes, and full request or response bodies must not reach a log line, an analytics event, or a user-visible error string.
-- **iOS/Android divergence.** Flag changes that alter behaviour on one platform without the other, especially in native modules, permissions, and camera or biometric flows.
-- **Accessibility.** `TouchableOpacity` and `Pressable` require `accessibilityLabel`, `accessibilityRole`, `hitSlop`, and `testID`. New user-facing text must be localised, and localised strings must not carry layout characters such as `\n`.
-- **Error handling.** Errors should surface, not be swallowed. API hooks throw; service and UI hooks catch and surface. Prefer idempotency — deleting something absent should succeed, not throw.
+## CI
 
-Do not comment on:
+`yarn check` locally covers what the Code Quality workflow runs: build,
+typecheck, test with coverage, lint, and format check. That workflow also runs
+native tests for iOS and Android. Alongside it, every PR gets a lockfile sync
+check (`yarn.lock`, `gradle.lockfile`, `Podfile.lock`), a PR hygiene check,
+CodeQL, SonarCloud, Codecov, and DCO.
 
-- Formatting, import order, or anything Prettier and ESLint already enforce.
-- Naming preferences, or restructuring that does not change behaviour, unless the current form is genuinely ambiguous.
-- Test coverage percentages as a number, or missing tests for code that is not new.
-- Generated files, lockfiles, and dependency bumps.
+Merging to `main` builds artifacts and publishes nothing — App Store Connect,
+Google Play, and Firebase App Distribution are reached from the manual
+**Publish** workflow, which uploads an existing build's artifacts and never
+rebuilds. See `docs/ci-cd.md`.
 
-## Labels
+## Variant configuration files (`variant.env`)
 
-See `docs/labels.md`. At most one `component/` and one `work/`; `status/` flags only while true. Workflow state, priority, and Bug/Feature/Task/Epic are board fields, not labels.
+These are sourced in shell contexts (GitHub Actions runs `source variant.env`),
+so quoting matters.
+
+**Prefer single quotes.** They are literal and prevent shell expansion. Use
+double quotes only when substitution is explicitly required — a double-quoted
+value containing `$`, a backtick, or `!` will be interpreted by the shell.
+
+```dotenv
+# Correct
+APP_NAME='BC Services Card'
+IOS_PRODUCT_NAME='$(TARGET_NAME)'
+
+# Incorrect — $(...) is expanded
+IOS_PRODUCT_NAME="$(TARGET_NAME)"
+```
