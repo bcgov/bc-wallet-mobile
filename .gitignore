@@ -22,6 +22,10 @@ GoogleService-Info.plist
 ExportOptions.dev.plist
 .idea/
 
+# AI agent local config
+.claude/
+.codex/
+
 # Other
 node_modules
 .gradle
