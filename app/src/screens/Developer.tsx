@@ -158,7 +158,7 @@ const Developer: React.FC = () => {
   const [tokensDeleted, setTokensDeleted] = useState<boolean>(false)
   const [personCredentialFetchStatus, setPersonCredentialFetchStatus] = useState<string>('idle')
   const remoteConfig = useRemoteConfig()
-  const { featureFlags } = useFeatureFlags()
+  const { featureFlags, featureGates } = useFeatureFlags()
   const navigation = useNavigation()
 
   useEffect(() => {
@@ -680,6 +680,7 @@ const Developer: React.FC = () => {
       {BCSCMode ? (
         <>
           <SectionHeader icon={'flag'} title={'Remote Config + Feature Flags'} />
+
           <ListButtonGroup>
             <ListButton onPress={remoteConfig.refresh}>
               <Row
@@ -701,6 +702,12 @@ const Developer: React.FC = () => {
               />
             ))}
           </ListButtonGroup>
+          {
+            // TODO: Remove this test feature when feature flagging is fully enabled
+            featureGates.testFeatureEnabled() ? (
+              <ThemedText style={{ color: ColorPalette.brand.headerText }}>{`Test feature is enabled!`}</ThemedText>
+            ) : null
+          }
         </>
       ) : null}
 
