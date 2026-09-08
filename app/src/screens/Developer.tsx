@@ -697,7 +697,7 @@ const Developer: React.FC = () => {
                   remoteConfig.setValue('featureFlags', { ...featureFlags, [flag]: !value })
                 }}
                 accessibilityLabel={flag}
-                testID={`toggle-${flag}`}
+                testID={`toggle-${flag.replace('.', '-')}`}
               />
             ))}
           </ListButtonGroup>
