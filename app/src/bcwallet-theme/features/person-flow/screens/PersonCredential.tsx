@@ -1,4 +1,5 @@
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import PersonIssuance1 from '@assets/img/PersonIssuance1.svg'
 import PersonIssuance2 from '@assets/img/PersonIssuance2.svg'
 import {
@@ -140,7 +141,7 @@ const PersonCredential: React.FC<PersonProps> = ({ navigation }) => {
             {appInstalled && (
               <Icon
                 name="check-circle"
-                testID={testIdWithKey('AppInstalledIcon')}
+                testID={testIdWithKey(TestIds.bcwallet.personCredential.appInstalledIcon)}
                 size={35}
                 style={{ marginLeft: 10, color: ColorPalette.semantic.success }}
               />
@@ -152,13 +153,13 @@ const PersonCredential: React.FC<PersonProps> = ({ navigation }) => {
                 buttonType={ButtonType.Primary}
                 onPress={getBCServicesCardApp}
                 accessibilityLabel={t('PersonCredential.InstallApp')}
-                testID={testIdWithKey('InstallApp')}
+                testID={testIdWithKey(TestIds.bcwallet.personCredential.installApp)}
                 title={t('PersonCredential.InstallApp')}
               />
               <TouchableOpacity
                 onPress={() => setAppInstalled(true)}
                 accessibilityLabel={t('PersonCredential.AppOnOtherDevice')}
-                testID={testIdWithKey('AppOnOtherDevice')}
+                testID={testIdWithKey(TestIds.bcwallet.personCredential.appOnOtherDevice)}
                 style={styles.sectionSecondaryAction}
               >
                 <Text style={{ ...TextTheme.bold, color: ColorPalette.brand.primary }}>
@@ -186,7 +187,7 @@ const PersonCredential: React.FC<PersonProps> = ({ navigation }) => {
           {appInstalled ? (
             <Button
               buttonType={ButtonType.Primary}
-              testID={testIdWithKey('StartProcess')}
+              testID={testIdWithKey(TestIds.bcwallet.personCredential.startProcess)}
               accessibilityLabel={t('PersonCredential.StartProcess')}
               title={t('PersonCredential.StartProcess')}
               onPress={acceptPersonCredentialOffer}
@@ -198,21 +199,21 @@ const PersonCredential: React.FC<PersonProps> = ({ navigation }) => {
             style={styles.link}
             linkText={t('PersonCredential.WhatIsPersonCredentialLink')}
             onPress={() => openLink(links.WhatIsPersonCredential)}
-            testID={testIdWithKey('WhatIsPersonCredentialLink')}
+            testID={testIdWithKey(TestIds.bcwallet.personCredential.whatIsPersonCredential)}
           />
           <View style={styles.line} />
           <Link
             style={styles.link}
             linkText={t('PersonCredential.WhereToUseLink')}
             onPress={() => openLink(links.WhereToUse)}
-            testID={testIdWithKey('WhereToUse')}
+            testID={testIdWithKey(TestIds.bcwallet.personCredential.whereToUse)}
           />
           <View style={styles.line} />
           <Link
             style={styles.link}
             linkText={t('PersonCredential.HelpLink')}
             onPress={() => openLink(links.Help)}
-            testID={testIdWithKey('Help')}
+            testID={testIdWithKey(TestIds.bcwallet.personCredential.help)}
           />
         </View>
       </ScrollView>
