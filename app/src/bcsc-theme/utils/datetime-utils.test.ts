@@ -130,7 +130,9 @@ describe('getProofRequestExpiry', () => {
 
   it('returns the TTL removal time when it comes before the protocol expiry', () => {
     const protocolExpiresTime = new Date('2026-06-10T00:00:00.000Z')
-    expect(getProofRequestExpiry(createdAt, hours(48), protocolExpiresTime)).toEqual(new Date('2026-06-06T00:00:00.000Z'))
+    expect(getProofRequestExpiry(createdAt, hours(48), protocolExpiresTime)).toEqual(
+      new Date('2026-06-06T00:00:00.000Z')
+    )
   })
 
   it('ignores a negative TTL', () => {
