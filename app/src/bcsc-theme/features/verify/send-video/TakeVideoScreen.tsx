@@ -489,7 +489,9 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
                 title={isLastPrompt ? t('BCSC.SendVideo.TakeVideo.Done') : t('BCSC.SendVideo.TakeVideo.ShowNextPrompt')}
                 onPress={onPressNextPrompt}
                 testID={testIdWithKey(TestIds.verify.takeVideo.nextPrompt)}
-                accessibilityLabel={t('BCSC.SendVideo.TakeVideo.StartRecordingButton')}
+                accessibilityLabel={
+                  isLastPrompt ? t('BCSC.SendVideo.TakeVideo.Done') : t('BCSC.SendVideo.TakeVideo.ShowNextPrompt')
+                }
                 disabled={elapsedTime - promptTimestamp < MIN_PROMPT_DURATION_SECONDS}
               />
             </View>
