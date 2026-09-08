@@ -33,7 +33,7 @@ jest.mock('../hooks/useSystemChecks', () => ({
   useSystemChecks: jest.fn(),
 }))
 jest.mock('../contexts/BCSCLoadingContext', () => ({
-  LoadingScreen: () => 'LoadingScreen',
+  LoadingScreen: 'LoadingScreen',
 }))
 jest.mock('./AuthStack', () => ({
   __esModule: true,
@@ -97,7 +97,7 @@ describe('BCSCRootStack', () => {
 
     const { toJSON } = render(<BCSCRootStack />)
 
-    expect(toJSON()).toBe('LoadingScreen')
+    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { presentation: 'startup' } })
   })
 
   it('renders LoadingScreen when initializingAccount is true', () => {
@@ -109,7 +109,7 @@ describe('BCSCRootStack', () => {
 
     const { toJSON } = render(<BCSCRootStack />)
 
-    expect(toJSON()).toBe('LoadingScreen')
+    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { presentation: 'startup' } })
   })
 
   it('renders LoadingScreen when isClientReady is false', () => {
@@ -122,7 +122,7 @@ describe('BCSCRootStack', () => {
 
     const { toJSON } = render(<BCSCRootStack />)
 
-    expect(toJSON()).toBe('LoadingScreen')
+    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { presentation: 'startup' } })
 
     // Reset for other tests
     jest.requireMock('../hooks/useBCSCApiClient').useBCSCApiClientState = () => ({
@@ -140,7 +140,7 @@ describe('BCSCRootStack', () => {
 
     const { toJSON } = render(<BCSCRootStack />)
 
-    expect(toJSON()).toBe('LoadingScreen')
+    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { presentation: 'startup' } })
 
     // Reset for other tests
     jest.requireMock('@/contexts/NavigationContainerContext').useNavigationContainer = () => ({

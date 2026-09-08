@@ -215,13 +215,19 @@ describe('MainStack', () => {
 
     const { toJSON } = render(<MainStack />)
 
-    expect(toJSON()).toMatchObject({ type: 'LoadingScreen' })
+    expect(toJSON()).toMatchObject({
+      type: 'LoadingScreen',
+      props: { presentation: 'startup', statusMessage: 'BCSC.Loading.AccountLoading' },
+    })
   })
 
   it('holds the loading screen over the stack while system checks are still settling', () => {
     jest.mocked(useSystemChecks).mockReturnValue({ hasSettled: false })
 
-    expect(queryLoadingScreens(render(<MainStack />))).toHaveLength(1)
+    const loadingScreens = queryLoadingScreens(render(<MainStack />))
+    expect(loadingScreens).toHaveLength(1)
+    expect(loadingScreens[0].props.presentation).toBe('startup')
+    expect(loadingScreens[0].props.statusMessage).toBe('BCSC.Loading.AccountLoading')
   })
 
   it('drops the loading screen once the system checks have settled', () => {

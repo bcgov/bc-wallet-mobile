@@ -11,11 +11,19 @@ import {
 } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { LoadingScreenContent, LoadingScreenContentProps } from '../features/splash-loading/LoadingScreenContent'
+import { StartupLoadingScreenContent } from '../features/splash-loading/StartupLoadingScreenContent'
+
+type LoadingPresentation = 'default' | 'startup'
+
+interface LoadingScreenProps extends LoadingScreenContentProps {
+  presentation?: LoadingPresentation
+  statusMessage?: string
+}
 
 interface BCSCLoadingContextType {
   isLoading: boolean
   loadingMessage: string | null
-  startLoading: (message?: string) => () => void
+  startLoading: (message?: string, presentation?: LoadingPresentation, statusMessage?: string) => () => void
   updateLoadingMessage: (message: string) => void
 }
 
@@ -38,6 +46,8 @@ export const BCSCLoadingContext = createContext<BCSCLoadingContextType | null>(n
 export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
   // Using a Set to track active loaders allows for multiple concurrent loading states without conflicts
   const loadersRef = useRef(new Set<symbol>())
+  const startupLoadersRef = useRef(new Map<symbol, { message?: string; statusMessage?: string }>())
+  const [startupLoader, setStartupLoader] = useState<{ message?: string; statusMessage?: string } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState<string | null>(null)
 
@@ -72,25 +82,41 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
    * @param - Optional message to display on the loading screen.
    * @returns A function that, when called, will stop the loading state.
    */
-  const startLoading = useCallback((message?: string) => {
-    const loadingToken = Symbol()
-    loadersRef.current.add(loadingToken)
-    setIsLoading(true)
+  const startLoading = useCallback(
+    (message?: string, presentation: LoadingPresentation = 'default', statusMessage?: string) => {
+      const loadingToken = Symbol()
+      loadersRef.current.add(loadingToken)
+      setIsLoading(true)
 
-    if (message) {
-      // Only update the message if it's intentional
-      setLoadingMessage(message)
-    }
-
-    return () => {
-      loadersRef.current.delete(loadingToken)
-      // Only once all loaders have been stopped do we hide the loading screen
-      if (loadersRef.current.size === 0) {
-        setIsLoading(false)
-        setLoadingMessage(null)
+      if (presentation === 'startup') {
+        const loader = { message, statusMessage }
+        startupLoadersRef.current.set(loadingToken, loader)
+        setStartupLoader(loader)
+      } else {
+        if (startupLoadersRef.current.size === 0) {
+          setStartupLoader(null)
+        }
+        if (message) {
+          // Only update the message if it's intentional
+          setLoadingMessage(message)
+        }
       }
-    }
-  }, [])
+
+      return () => {
+        loadersRef.current.delete(loadingToken)
+        // Keep startup mounted while idle so authentication can hand it to Main without restarting the animation.
+        if (startupLoadersRef.current.delete(loadingToken) && loadersRef.current.size > 0) {
+          setStartupLoader(Array.from(startupLoadersRef.current.values()).at(-1) ?? null)
+        }
+        // Only once all loaders have been stopped do we hide the loading screen
+        if (loadersRef.current.size === 0) {
+          setIsLoading(false)
+          setLoadingMessage(null)
+        }
+      }
+    },
+    []
+  )
 
   const loadingContext = useMemo(
     () => ({
@@ -120,7 +146,11 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
         accessible={isLoading} // Only make the loading screen accessible when it's visible
         importantForAccessibility={isLoading ? 'yes' : 'no-hide-descendants'} // Hide from screen readers when not visible, show when visible
       >
-        <LoadingScreenContent message={loadingMessage ?? undefined} />
+        {startupLoader ? (
+          <StartupLoadingScreenContent message={startupLoader.message} statusMessage={startupLoader.statusMessage} />
+        ) : (
+          <LoadingScreenContent message={loadingMessage ?? undefined} />
+        )}
       </View>
     </BCSCLoadingContext.Provider>
   )
@@ -153,17 +183,13 @@ export const useLoadingScreen = () => {
  * @param props - The props for the LoadingScreen component, including an optional message to display.
  * @returns The LoadingScreen component that starts the loading state on mount and stops it on unmount.
  */
-export const LoadingScreen = ({ message }: LoadingScreenContentProps) => {
-  const loadingScreen = useLoadingScreen()
+export const LoadingScreen = ({ message, presentation, statusMessage }: LoadingScreenProps) => {
+  const { startLoading } = useLoadingScreen()
 
   // Runs before the component is painted to the screen, ensuring the loading state is active immediately on mount and cleaned up on unmount
   useLayoutEffect(() => {
-    // Start loading when the component mounts
-    const stopLoading = loadingScreen.startLoading(message)
-
-    // Stop loading when the component unmounts
-    return stopLoading
-  }, [loadingScreen, message])
+    return startLoading(message, presentation, statusMessage)
+  }, [startLoading, message, presentation, statusMessage])
 
   // This component doesn't render anything itself, it just manages the loading state
   return null

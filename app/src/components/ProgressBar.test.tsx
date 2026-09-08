@@ -1,6 +1,7 @@
 import { BasicAppContext } from '@mocks/helpers/app'
 import { render, waitFor } from '@testing-library/react-native'
 import React from 'react'
+import { StyleSheet, View } from 'react-native'
 import ProgressBar from './ProgressBar'
 
 describe('ProgressBar Component', () => {
@@ -12,27 +13,35 @@ describe('ProgressBar Component', () => {
     jest.useRealTimers()
   })
 
-  test('renders correctly', () => {
+  test('renders correctly', async () => {
     const tree = render(
       <BasicAppContext>
         <ProgressBar progressPercent={0} />
       </BasicAppContext>
     )
 
-    waitFor(() => {
+    await waitFor(() => {
       expect(tree).toMatchSnapshot()
     })
   })
 
-  test('renders correctly in dark mode', () => {
+  test('renders correctly in dark mode', async () => {
     const tree = render(
       <BasicAppContext>
         <ProgressBar progressPercent={0} dark />
       </BasicAppContext>
     )
 
-    waitFor(() => {
+    await waitFor(() => {
       expect(tree).toMatchSnapshot()
     })
+  })
+
+  test('supports screen-specific height and colors', () => {
+    const tree = render(<ProgressBar progressPercent={0} height={8} trackColor="#FAF9F8" progressColor="#F8BA47" />)
+    const [track, fill] = tree.UNSAFE_getAllByType(View)
+
+    expect(StyleSheet.flatten(track.props.style)).toMatchObject({ height: 8, backgroundColor: '#FAF9F8' })
+    expect(StyleSheet.flatten(fill.props.style)).toMatchObject({ backgroundColor: '#F8BA47' })
   })
 })

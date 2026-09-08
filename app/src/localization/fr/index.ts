@@ -366,7 +366,8 @@ const translation = {
     },
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online (FR)",
-      "AppStartup": "Getting your BC Services Card app ready... (FR)"
+      "AppStartup": "Getting your BC Services Card App ready... (FR)",
+      "AccountLoading": "Loading your account... (FR)"
     },
     "AccountLanding": {
       "Title": "BC Services Card (FR)",

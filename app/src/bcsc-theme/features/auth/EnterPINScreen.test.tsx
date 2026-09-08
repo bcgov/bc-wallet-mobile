@@ -2,7 +2,7 @@ import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
 import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
-import { fireEvent, render, waitFor } from '@testing-library/react-native'
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { verifyPIN } from 'react-native-bcsc-core'
 import { EnterPINScreen } from './EnterPINScreen'
@@ -14,6 +14,12 @@ jest.mock('react-native-bcsc-core', () => ({
 }))
 
 const mockHandleSuccessfulAuth = jest.fn()
+const mockStopLoading = jest.fn()
+const mockStartLoading = jest.fn(() => mockStopLoading)
+
+jest.mock('@/bcsc-theme/contexts/BCSCLoadingContext', () => ({
+  useLoadingScreen: () => ({ startLoading: mockStartLoading }),
+}))
 
 jest.mock('@/bcsc-theme/hooks/useSecureActions', () => ({
   __esModule: true,
@@ -97,7 +103,44 @@ describe('EnterPINScreen', () => {
           })
         )
       })
+      expect(mockStartLoading).not.toHaveBeenCalled()
     })
+  })
+
+  it('starts account loading only after PIN verification succeeds and cleans up a hydration failure', async () => {
+    let resolveVerification!: (result: Awaited<ReturnType<typeof verifyPIN>>) => void
+    let rejectHydration!: (error: Error) => void
+    mockVerifyPIN.mockReturnValue(
+      new Promise((resolve) => {
+        resolveVerification = resolve
+      })
+    )
+    mockHandleSuccessfulAuth.mockReturnValue(
+      new Promise((_, reject) => {
+        rejectHydration = reject
+      })
+    )
+
+    const tree = render(
+      <BasicAppContext>
+        <EnterPINScreen navigation={mockNavigation} />
+      </BasicAppContext>
+    )
+    fireEvent.changeText(tree.getByA11yHint('Enter your 6-digit PIN'), '123456')
+    fireEvent.press(tree.getByTestId(testIdWithKey('Continue')))
+    await waitFor(() => expect(mockVerifyPIN).toHaveBeenCalled())
+    expect(mockStartLoading).not.toHaveBeenCalled()
+
+    await act(async () => {
+      resolveVerification({ success: true, walletKey: 'test-key', locked: false, message: '', remainingTime: 0 })
+    })
+    expect(mockStartLoading).toHaveBeenCalledWith('BCSC.Loading.AppStartup', 'startup', 'BCSC.Loading.AccountLoading')
+    expect(mockStopLoading).not.toHaveBeenCalled()
+
+    await act(async () => {
+      rejectHydration(new Error('hydration failed'))
+    })
+    expect(mockStopLoading).toHaveBeenCalledTimes(1)
   })
 
   describe('UI elements', () => {

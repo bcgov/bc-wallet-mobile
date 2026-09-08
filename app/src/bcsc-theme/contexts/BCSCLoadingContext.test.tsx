@@ -176,6 +176,89 @@ describe('useLoadingScreen hook', () => {
 })
 
 describe('LoadingScreen component', () => {
+  it('restores the generic loader and its message after startup finishes', () => {
+    const TestWrapper = ({ startup }: { startup: boolean }) => (
+      <BCSCLoadingProvider>
+        <LoadingScreen message="Loading data..." />
+        {startup && <LoadingScreen message="Preparing the app..." presentation="startup" />}
+      </BCSCLoadingProvider>
+    )
+
+    const view = render(<TestWrapper startup />)
+    expect(view.getByTestId(testIdWithKey('StartupLoadingScreenContent'))).toBeTruthy()
+    expect(view.getByText('Preparing the app...')).toBeTruthy()
+    expect(view.queryByTestId(testIdWithKey('LoadingScreenContent'))).toBeNull()
+
+    view.rerender(<TestWrapper startup={false} />)
+    expect(view.queryByTestId(testIdWithKey('StartupLoadingScreenContent'))).toBeNull()
+    expect(view.getByTestId(testIdWithKey('LoadingScreenContent'))).toBeTruthy()
+    expect(view.getByText('Loading data...')).toBeTruthy()
+  })
+
+  it('keeps startup visible when an overlapping generic loader finishes', () => {
+    const TestWrapper = ({ generic }: { generic: boolean }) => (
+      <BCSCLoadingProvider>
+        <LoadingScreen presentation="startup" />
+        {generic && <LoadingScreen message="Loading data..." />}
+      </BCSCLoadingProvider>
+    )
+
+    const view = render(<TestWrapper generic />)
+    view.rerender(<TestWrapper generic={false} />)
+
+    expect(view.getByTestId(testIdWithKey('StartupLoadingScreenContent'))).toBeTruthy()
+    expect(view.getByText('BCSC.Loading.AppStartup')).toBeTruthy()
+  })
+
+  it('restores an earlier startup loader until its own token is stopped', () => {
+    const TestWrapper = ({ first, second }: { first: boolean; second: boolean }) => (
+      <BCSCLoadingProvider>
+        {first && <LoadingScreen message="First startup" presentation="startup" />}
+        {second && <LoadingScreen message="Second startup" presentation="startup" />}
+      </BCSCLoadingProvider>
+    )
+
+    const view = render(<TestWrapper first second />)
+    expect(view.getByText('Second startup')).toBeTruthy()
+
+    view.rerender(<TestWrapper first second={false} />)
+    expect(view.getByText('First startup')).toBeTruthy()
+
+    view.rerender(<TestWrapper first={false} second={false} />)
+    expect(view.queryByTestId(testIdWithKey('StartupLoadingScreenContent'))).toBeNull()
+    expect(view.getByTestId(testIdWithKey('BCSCLoadingProviderOverlay'), { includeHiddenElements: true })).toHaveStyle({
+      display: 'none',
+    })
+  })
+
+  it('does not restart its token when the loading context changes', () => {
+    const stopLoading = jest.fn()
+    const startLoading = jest.fn(() => stopLoading)
+    const initialContext = {
+      isLoading: false,
+      loadingMessage: null,
+      startLoading,
+      updateLoadingMessage: jest.fn(),
+    }
+    const view = render(
+      <BCSCLoadingContext.Provider value={initialContext}>
+        <LoadingScreen message="Preparing the app..." presentation="startup" />
+      </BCSCLoadingContext.Provider>
+    )
+
+    view.rerender(
+      <BCSCLoadingContext.Provider value={{ ...initialContext, isLoading: true }}>
+        <LoadingScreen message="Preparing the app..." presentation="startup" />
+      </BCSCLoadingContext.Provider>
+    )
+
+    expect(startLoading).toHaveBeenCalledTimes(1)
+    expect(startLoading).toHaveBeenCalledWith('Preparing the app...', 'startup', undefined)
+    expect(stopLoading).not.toHaveBeenCalled()
+    view.unmount()
+    expect(stopLoading).toHaveBeenCalledTimes(1)
+  })
+
   it('should start loading when mounted', () => {
     let isLoading: boolean | undefined
 

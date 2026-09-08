@@ -4,6 +4,7 @@ import { TOKENS, useServices } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   AccountSecurityMethod,
   canPerformDeviceAuthentication,
@@ -25,7 +26,8 @@ import useSecureActions from './useSecureActions'
  */
 export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackParams>) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const loadingScreen = useLoadingScreen()
+  const { startLoading } = useLoadingScreen()
+  const { t } = useTranslation()
   const { handleSuccessfulAuth } = useSecureActions()
   const { deviceAuthenticationErrorAlert } = useAlerts(navigation)
 
@@ -38,7 +40,7 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
     let stopLoading
 
     try {
-      stopLoading = loadingScreen.startLoading()
+      stopLoading = startLoading(t('BCSC.Loading.AppStartup'), 'startup', t('BCSC.Loading.AccountLoading'))
 
       // Check if they have changed their device auth settings
       const deviceAuthAvailable = await canPerformDeviceAuthentication()
@@ -68,7 +70,7 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
     } finally {
       stopLoading?.()
     }
-  }, [handleSuccessfulAuth, loadingScreen, logger, navigation, deviceAuthenticationErrorAlert])
+  }, [handleSuccessfulAuth, startLoading, t, logger, navigation, deviceAuthenticationErrorAlert])
 
   /**
    * Handles unlocking the app using the user selected authentication method.
