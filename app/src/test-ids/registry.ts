@@ -541,6 +541,19 @@ export const TestIds = {
       addDevice: 'AddDevice',
       myDevices: 'MyDevices',
       forgetPairings: 'ForgetPairings',
+      scanQr: 'ScanQR',
+      sendProofRequest: 'SendProofRequest',
+      // Collapsible-section toggle — rendered once PER section, so this id repeats down the screen.
+      sectionHeaderChevron: 'SectionHeaderChevron',
+    },
+    /** `ReviewDevices` — the too-many-devices system-check sheet, raised by `NotificationBannerContainer`
+     *  rather than reached by navigation. `headerClose` is the X; `close` is the button of the same
+     *  name in the footer, so the two are NOT interchangeable. `delete` is destructive. */
+    reviewDevices: {
+      headerClose: 'CloseReviewDevices',
+      manageDevices: 'ManageDevices',
+      close: 'Close',
+      delete: 'Delete',
     },
     /** App Security sub-screen (SecurityMethodSelector). `ChoosePINButton` renders in both post-load
      *  branches, so it is the arrival marker (during the async load the screen is a bare spinner).
@@ -637,6 +650,12 @@ export const TestIds = {
     },
     /** Where `settings.addDevice` lands instead when the account holder is under 12. Static copy; the
      *  title is its only testID (the description has none) and the header title is blank. */
+    /** `TransferSuccess` — the transferer's confirmation. `done` returns to Home; `removeAccount`
+     *  drops the account from THIS device (the point of a transfer-off). */
+    transferSuccess: {
+      done: 'TransferSuccessButton',
+      removeAccount: 'RemoveAccountButton',
+    },
     transferAgeRestriction: {
       title: 'AgeRestrictedTransferTitle',
     },
@@ -690,10 +709,20 @@ export const TestIds = {
       confirm: 'ConfirmRemove',
       cancel: 'CancelRemove',
     },
-    // NB: the WhatAreContacts info screen has NO usable testID — its only one (`ContactsList`) is on an
-    // inline <Link> nested in a <ThemedText>, which RN flattens into the paragraph so it is not a
-    // separately addressable element on iOS/Android. The journey anchors that screen on its heading copy
-    // (findByText) and returns via the header Back, so there is no key here.
+    /** `WhatAreContacts` info screen. `contactsList` is registered because the app emits it, but it is
+     *  NOT usable as a selector: it sits on an inline `Link` nested in a `ThemedText`, which RN flattens
+     *  into the paragraph on both platforms. The journey anchors this screen on its heading copy
+     *  (findByText) and returns via the header Back. */
+    whatAreContacts: {
+      contactsList: 'ContactsList',
+    },
+    /** `AccountRenewalInformation` — the renewal primer. Both ids are inline `Link`s inside paragraphs:
+     *  `getNewCard` leaves to an external browser, `typesOfAcceptedId` opens the in-app help webview.
+     *  Its primary CTA is label-derived by `ActionScreenLayout`, so it has no key here. */
+    accountRenewalInformation: {
+      getNewCard: 'InformationGetNewCard',
+      typesOfAcceptedId: 'InformationTypesOfAcceptedId',
+    },
     /** AccountDetails (`features/account/AccountDetailsScreen`) — verified-only, reached via Settings →
      *  `settings.profile` (the ProfileCard row is `isVerified`-gated, so absent unverified). Renders a
      *  LoadingScreen until the account loads, then read-only fields + `seeFullDetails` (opens the BCSC

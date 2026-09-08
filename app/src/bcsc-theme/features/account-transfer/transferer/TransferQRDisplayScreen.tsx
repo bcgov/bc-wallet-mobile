@@ -3,6 +3,7 @@ import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -211,7 +212,7 @@ const TransferQRDisplayScreen: React.FC = () => {
         buttonType={ButtonType.Secondary}
         accessibilityLabel={t('BCSC.TransferQRDisplay.GetNewQRCode')}
         title={t('BCSC.TransferQRDisplay.GetNewQRCode')}
-        testID={testIdWithKey('GetNewQRCode')}
+        testID={testIdWithKey(TestIds.main.transfer.newQrCode)}
         onPress={refreshToken}
       />
     </ControlContainer>

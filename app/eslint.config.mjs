@@ -106,6 +106,10 @@ export default [
       'src/bcsc-theme/features/onboarding/**',
       'src/bcsc-theme/features/auth/**',
       'src/bcsc-theme/features/verify/**',
+      'src/bcsc-theme/features/settings/**',
+      'src/bcsc-theme/features/account/**',
+      'src/bcsc-theme/features/account-transfer/**',
+      'src/bcsc-theme/features/contacts/**',
     ],
     ignores: ['**/*.test.{ts,tsx}'],
     rules: {
