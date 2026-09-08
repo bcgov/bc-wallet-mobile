@@ -5,6 +5,7 @@ import { MediaCache } from '@/bcsc-theme/utils/media-cache'
 import { useAlerts } from '@/hooks/useAlerts'
 import usePreventGestureBack from '@/hooks/usePreventGestureBack'
 import { BCDispatchAction, BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { withAlert } from '@/utils/alert'
 import readFileInChunks from '@/utils/read-file'
 import {
@@ -182,7 +183,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       <Button
         buttonType={ButtonType.Primary}
         onPress={onPressUse}
-        testID={testIdWithKey('UseVideo')}
+        testID={testIdWithKey(TestIds.verify.videoReview.useVideo)}
         title={t('BCSC.SendVideo.VideoReview.UseVideo')}
         accessibilityLabel={t('BCSC.SendVideo.VideoReview.UseVideo')}
         disabled={isRefreshingPrompts}
@@ -190,7 +191,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       <Button
         buttonType={ButtonType.Secondary}
         onPress={onPressRetake}
-        testID={testIdWithKey('RetakeVideo')}
+        testID={testIdWithKey(TestIds.verify.videoReview.retakeVideo)}
         title={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
         accessibilityLabel={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
         disabled={isRefreshingPrompts}
@@ -225,7 +226,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
         onPress={onTogglePause}
         accessibilityLabel={t('BCSC.SendVideo.VideoReview.TogglePlayPause')}
         accessibilityRole="button"
-        testID={testIdWithKey('TogglePlayPause')}
+        testID={testIdWithKey(TestIds.verify.videoReview.togglePlayPause)}
       >
         <Icon name={paused ? 'play' : 'pause'} size={pauseButtonSize} color={ColorPalette.brand.primaryBackground} />
       </TouchableOpacity>

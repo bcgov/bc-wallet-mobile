@@ -19,6 +19,7 @@ import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -458,7 +459,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
               <TouchableOpacity
                 onPress={handleCancel}
                 hitSlop={hitSlop}
-                testID={testIdWithKey('CancelRecording')}
+                testID={testIdWithKey(TestIds.verify.takeVideo.cancel)}
                 accessibilityLabel={t('Global.Cancel')}
                 accessibilityRole="button"
                 style={{ flexDirection: 'row', alignItems: 'center' }}
@@ -487,7 +488,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
                 buttonType={ButtonType.Primary}
                 title={isLastPrompt ? t('BCSC.SendVideo.TakeVideo.Done') : t('BCSC.SendVideo.TakeVideo.ShowNextPrompt')}
                 onPress={onPressNextPrompt}
-                testID={testIdWithKey('NextPrompt')}
+                testID={testIdWithKey(TestIds.verify.takeVideo.nextPrompt)}
                 accessibilityLabel={t('BCSC.SendVideo.TakeVideo.StartRecordingButton')}
                 disabled={elapsedTime - promptTimestamp < MIN_PROMPT_DURATION_SECONDS}
               />

@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCAnimatedLoadingIcon } from '@/bcsc-theme/features/splash-loading/BCAnimatedLoadingIcon'
 import ProgressBar from '@/components/ProgressBar'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -47,7 +48,7 @@ const CallLoadingView = ({ onCancel, message }: CallLoadingViewProps) => {
         onPress={onCancel}
         title={t('Global.Cancel')}
         accessibilityLabel={t('Global.Cancel')}
-        testID={testIdWithKey('Cancel')}
+        testID={testIdWithKey(TestIds.verify.liveCall.cancel)}
       />
     </ControlContainer>
   )

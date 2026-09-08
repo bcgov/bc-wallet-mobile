@@ -154,6 +154,12 @@ export const TestIds = {
       scan: 'Scan',
       otherId: 'OtherID',
     },
+    /** `SerialInstructions` — the primer before the camera; both CTAs lead into the serial flow
+     *  (`enterManually` shares its key with the ScanSerial control of the same name). */
+    serialInstructions: {
+      scanBarcode: 'ScanBarcode',
+      enterManually: 'EnterManually',
+    },
     /** Camera scan screen; `EnterManually` is the CI path around the live camera and renders in BOTH
      *  bodies. `openSettings` marks the refused-permission `PermissionDisabled` fallback — asserted,
      *  never tapped (it exits to the OS settings app). `scanTorch` is the shared `TorchButton`
@@ -162,6 +168,8 @@ export const TestIds = {
       enterManually: 'EnterManually',
       openSettings: 'OpenSettings',
       scanTorch: 'ScanTorch',
+      // Rendered only in the camera-failed body, alongside `enterManually`.
+      retryCamera: 'RetryCamera',
     },
     /** Manual serial form (`InputWithValidation id='serial'` → derived ids). `serialSubtext` is the
      *  shared error slot: no static subtext here, so it exists only while a validation error shows,
@@ -179,12 +187,20 @@ export const TestIds = {
       birthdateInput: 'birthDate-input',
       continue: 'Continue',
     },
+    /** `BirthdateLockout` — too many wrong birthdates. `close` just goes back; there is no header. */
+    birthdateLockout: {
+      close: 'Close',
+    },
     /** `VerificationCardError` — the authorize-failure screen at the EnterBirthdate submit. The
      *  `MismatchedSerial` variant (CSN/birthdate mismatch or card-not-found — the unhandled-error path)
      *  shows `tryAnother` → IdentitySelection; the `CardExpired` variant shows `getBcsc` (opens a browser). */
     verificationCardError: {
       tryAnother: 'TryAnother',
       getBcsc: 'GetBCSC',
+    },
+    /** `DeviceAuthorizationError` — device-authorization failure; its only control is the help link. */
+    deviceAuthorizationError: {
+      link: 'DeviceAuthorizationErrorLink',
     },
     /** `EnterEmail` — appears after birthdate only when the card provides no verified email (a photo
      *  card that already carries one resumes straight to method selection). `skip` (`SkipEmail`) is
@@ -205,6 +221,17 @@ export const TestIds = {
       sendVideo: 'SendVideo',
       videoCall: 'VideoCall',
       settingsMenu: 'SettingsMenuButton',
+    },
+    /** `ServicePeriodList` — the video-call hours block, mounted by THREE screens (method selection,
+     *  StartCall, CallBusyOrClosed), so these ids do not identify which screen you are on. It renders
+     *  `hours` (a single default line) when the period list is empty, otherwise `list` wrapping one
+     *  `ServicePeriod` per entry — those rows append server-provided text to the stems below. */
+    servicePeriods: {
+      hours: 'ServiceHours',
+      list: 'ServicePeriodList',
+      titleStem: 'ServicePeriodTitle_',
+      hoursStem: 'ServicePeriodHours_',
+      dateStem: 'ServicePeriodDate_',
     },
     /** In-person verification (`'Verify In Person Instruction'`) — shows the XXXX-XXXX confirmation
      *  code the SM approval reads; `complete` advances to VerificationSuccess. */
@@ -274,10 +301,12 @@ export const TestIds = {
     pendingReview: {
       chooseAnotherWay: 'ChooseAnotherWayToVerify',
     },
-    /** `CancelledReview` and its MainStack twin — both render the shared SystemModal, so the button is
-     *  that component's generic key. The agent's reason is body COPY (no testID): assert it by text. */
+    /** `CancelledReview` and its MainStack twin (same component on both stacks). The agent's reason is
+     *  body COPY (no testID): assert it by text. NB this screen does NOT render `SystemModal` — it has
+     *  its own two buttons; `retryWithNewVideo` is the stable arrival marker. */
     cancelledReview: {
-      button: 'SystemModalButton',
+      retryWithNewVideo: 'RetryWithNewVideo',
+      restartVerification: 'RestartVerification',
     },
     /** Live-call busy/closed (`'Video Verify Closed'`) — the live-call branch when no agent queue is
      *  free or outside service hours. `callStatusTitle` is the marker; `sendVideo` resets to method
@@ -339,12 +368,15 @@ export const TestIds = {
      *  the screen by heading copy when it matters. */
     additionalIdRequired: {
       continue: 'Continue',
+      // Opens the accepted-services webview; the same key renders on `dualIdRequired`.
+      whichServices: 'WhichServices',
     },
     /** `DualIdentificationRequired` — non-BCSC needs two IDs. CTA is label-derived `Continue`;
      *  `seeAcceptedId` opens the accepted-documents webview. */
     dualIdRequired: {
       continue: 'Continue',
       seeAcceptedId: 'SeeAcceptedID',
+      whichServices: 'WhichServices',
     },
     /** `EvidenceTypeList` — the document-type picker. Rows are `EvidenceTypeListItem-<evidence_type>`
      *  where evidence_type is SERVER-PROVIDED (unknown/variable, may contain spaces), so specs select a
@@ -352,6 +384,7 @@ export const TestIds = {
      *  document types. */
     evidenceTypeList: {
       otherOptions: 'EvidenceTypeListOtherOptions',
+      itemStem: 'EvidenceTypeListItem-',
     },
     /** `IDPhotoInformation` ('ID Photo Instructions') — the primer before the document camera. */
     idPhotoInformation: {

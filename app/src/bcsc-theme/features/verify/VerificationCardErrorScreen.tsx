@@ -1,5 +1,6 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { RouteProp, useRoute } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -29,7 +30,7 @@ const VerificationCardErrorScreen = ({ navigation }: VerificationCardErrorScreen
           title={t('BCSC.VerificationCardError.CardExpired.ButtonText')}
           accessibilityLabel={t('BCSC.VerificationCardError.CardExpired.ButtonText')}
           accessibilityHint={t('Global.A11y.OpensInBrowser')}
-          testID={testIdWithKey('GetBCSC')}
+          testID={testIdWithKey(TestIds.verify.verificationCardError.getBcsc)}
           buttonType={ButtonType.Primary}
           onPress={() => Linking.openURL(GET_BCSC_URL)}
         />
@@ -53,7 +54,7 @@ const VerificationCardErrorScreen = ({ navigation }: VerificationCardErrorScreen
       <Button
         title={t('BCSC.MismatchedSerial.TryAnotherCard')}
         accessibilityLabel={t('BCSC.MismatchedSerial.TryAnotherCard')}
-        testID={testIdWithKey('TryAnother')}
+        testID={testIdWithKey(TestIds.verify.verificationCardError.tryAnother)}
         buttonType={ButtonType.Primary}
         onPress={() => {
           navigation.navigate(BCSCScreens.IdentitySelection)
