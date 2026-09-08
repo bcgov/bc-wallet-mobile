@@ -6,7 +6,9 @@
 //  Copyright © 2016 idim. All rights reserved.
 //
 
+import CommonCrypto
 import Foundation
+import Security
 
 protocol JWEDecrypter {
   func decrypt(jwe: JWE) throws -> Data
@@ -112,7 +114,7 @@ class RSADecrypter: JWEDecrypter {
       } else {
         // CEK length mismatch, signalled by null instead of
         // exception to prevent MMA attack
-        secretKey = Data(SecureRandom.nextBytes(count: keyLength))
+        secretKey = Data(SecureRandom.nextBytes(count: keyLength / 8))
       }
 
       // decrypt content
@@ -244,7 +246,10 @@ class AESCBC {
     let m = HMAC.compute(macKey: compositeKey.macKey, aad: aad, iv: iv, e: e)
     let t = m.subdata(in: 0 ..< compositeKey.truncatedMacLength)
 
-    let macCheckPassed = areEqual(a: t.arrayOfBytes(), b: authTag.arrayOfBytes())
+    let macCheckPassed = JWEAuthentication.tagsMatch(expected: t, received: authTag)
+    guard macCheckPassed else {
+      return nil
+    }
 
     let keyDataBytes = compositeKey.encKey.withUnsafeBytes {
       [UInt8](UnsafeBufferPointer(start: $0, count: compositeKey.encKey.count))
@@ -262,14 +267,6 @@ class AESCBC {
       }
     }
     return nil
-  }
-
-  class func areEqual(a: [UInt8], b: [UInt8]) -> Bool {
-    var result = UInt8(0)
-    for i in 0 ..< a.count {
-      result |= a[i] ^ b[i]
-    }
-    return result == 0
   }
 }
 
@@ -723,7 +720,7 @@ class RSA1_5 {
     throw JOSEException("Couldn't encrypt ceKMaterial [status=/(status)]")
   }
 
-  class func decryptCEK(privateKey: SecKey, encryptedCEK: String, bitLength _: Int) -> Data? {
+  class func decryptCEK(privateKey: SecKey, encryptedCEK: String, bitLength: Int) -> Data? {
     let cekData = Base64URL.decode(encryptedCEK)
     let blockSize = SecKeyGetBlockSize(privateKey)
     let dataSize = cekData.count / MemoryLayout<UInt8>.size
@@ -760,6 +757,9 @@ class RSA1_5 {
       idx += blockSize
     }
 
+    guard decryptedDataBytes.count == bitLength / 8 else {
+      return nil
+    }
     return Data(bytes: UnsafePointer<UInt8>(decryptedDataBytes), count: decryptedDataBytes.count)
   }
 

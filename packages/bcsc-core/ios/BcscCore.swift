@@ -1517,8 +1517,8 @@ class BcscCore: NSObject {
     // key. This is what makes 2507 reports self-classifying in the field.
     let diagnostics = decodeDiagnosticsSummary(keys: keys, jweString: jweString)
 
-    guard let decryptKeyInfo = KeyPairManager.decryptKeyInfo(matching: incomingJWEHeader(jweString).kid, in: keys)
-    else {
+    let decryptKeyInfos = KeyPairManager.decryptKeyInfos(matching: incomingJWEHeader(jweString).kid, in: keys)
+    guard !decryptKeyInfos.isEmpty else {
       reject(
         "E_NO_KEYS_FOUND",
         "No keys available to decrypt JWE \(diagnostics)",
@@ -1527,35 +1527,15 @@ class BcscCore: NSObject {
       return
     }
 
-    let keyPair: (public: SecKey, private: SecKey)
     do {
-      keyPair = try keyPairManager.getKeyPair(with: decryptKeyInfo.tag)
-    } catch let KeychainError.keychainUnavailable(status) {
-      // The key likely exists but can't be read right now (device locked, auth
-      // failure, or launched in the background before first unlock). Distinct,
-      // retryable signal — do not conflate with a genuine decryption failure.
-      reject(
-        "E_KEYCHAIN_UNAVAILABLE",
-        "Keychain temporarily unavailable while retrieving decrypt key (OSStatus \(status)) \(diagnostics)",
-        keychainDiagnosticsError(
-          site: "decode_payload_retrieve_key", underlying: KeychainError.keychainUnavailable(status), keys: keys
-        )
-      )
-      return
-    } catch {
-      reject(
-        "E_KEYPAIR_RETRIEVAL_FAILED",
-        "Failed to retrieve decrypt key: \(errorMessage(error)) \(diagnostics)",
-        keychainDiagnosticsError(site: "decode_payload_retrieve_key", underlying: error, keys: keys)
-      )
-      return
-    }
-
-    do {
-      let jwe = try JWE.parse(s: jweString)
-      let decrypter = RSADecrypter(privateKey: keyPair.private)
-      // Decrypt JWE payload into the inner JWT (compact JWS)
-      let payload = try jwe.decrypt(withDecrypter: decrypter)
+      let payload = try JWEDecryption.decrypt(with: decryptKeyInfos, attempt: { decryptKeyInfo in
+        let keyPair = try keyPairManager.getKeyPair(with: decryptKeyInfo.tag)
+        // A JWE becomes stateful after decrypting, so each candidate needs a fresh parse.
+        let jwe = try JWE.parse(s: jweString)
+        return try jwe.decrypt(withDecrypter: RSADecrypter(privateKey: keyPair.private))
+      }, shouldRetry: { error in
+        (error as? JOSEException)?.description == "Decryption failed"
+      })
 
       // Validate the decrypted payload is a compact JWS
       let segments = payload.components(separatedBy: ".")
@@ -1593,11 +1573,25 @@ class BcscCore: NSObject {
         return
       }
       resolve(["verified": verified, "claims": claims])
+    } catch let KeychainError.keychainUnavailable(status) {
+      reject(
+        "E_KEYCHAIN_UNAVAILABLE",
+        "Keychain temporarily unavailable while retrieving decrypt key (OSStatus \(status)) \(diagnostics)",
+        keychainDiagnosticsError(
+          site: "decode_payload_retrieve_key", underlying: KeychainError.keychainUnavailable(status), keys: keys
+        )
+      )
+    } catch let error as KeychainError {
+      reject(
+        "E_KEYPAIR_RETRIEVAL_FAILED",
+        "Failed to retrieve decrypt key: \(errorMessage(error)) \(diagnostics)",
+        keychainDiagnosticsError(site: "decode_payload_retrieve_key", underlying: error, keys: keys)
+      )
     } catch {
       // Wrong key, unsupported alg, corrupted/garbled ciphertext, or a malformed JWE all
       // land here. The diagnostics string is what tells them apart downstream:
       //   [keys=0]              → no usable key
-      //   kidMatchesLocal=false → server encrypted to a key this device doesn't hold
+      //   kidMatchesLocal=false → server did not name a local key; every local key was tried
       //   jweAlg/jweEnc unsupported → algorithm mismatch (iOS supports RSA1_5 + CBC-HMAC)
       //   jweParts!=5 / jweAlg=? → corrupted or replaced ciphertext in transit
       reject(

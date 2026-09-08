@@ -244,13 +244,18 @@ class KeyPairManager: KeyPairManagerProtocol {
     }
   }
 
-  /// The server keeps encrypting to the previous key until it has seen the new one, so use the key
-  /// the response names when we hold it, and the newest key otherwise. Nil only when there are none.
-  static func decryptKeyInfo(matching kid: String, in keys: [PrivateKeyInfo]) -> PrivateKeyInfo? {
-    if !kid.isEmpty, let match = keys.first(where: { $0.tag == kid }) {
-      return match
+  /// The response-named key gets the first attempt; all other existing keys follow newest-first.
+  /// The snapshot prevents keychain changes during a decrypt from changing the retry set.
+  static func decryptKeyInfos(matching kid: String, in keys: [PrivateKeyInfo]) -> [PrivateKeyInfo] {
+    let newestFirst = keys.sorted(by: { $0.created > $1.created })
+    guard !kid.isEmpty, let match = newestFirst.first(where: { $0.tag == kid }) else {
+      return newestFirst
     }
-    return keys.sorted(by: { $0.created > $1.created }).first
+    return [match] + newestFirst.filter { $0.tag != match.tag }
+  }
+
+  static func decryptKeyInfo(matching kid: String, in keys: [PrivateKeyInfo]) -> PrivateKeyInfo? {
+    return decryptKeyInfos(matching: kid, in: keys).first
   }
 
   func generateKeyPair(

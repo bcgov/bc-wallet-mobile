@@ -112,6 +112,110 @@ final class KeyPairManagerDecryptKeySelectionTests: XCTestCase {
   func testEmptyKeysReturnsNil() {
     XCTAssertNil(KeyPairManager.decryptKeyInfo(matching: "rsa1", in: []))
   }
+
+  func testNamedKeyIsTriedBeforeAllOtherKeysNewestFirst() {
+    let oldest = key("rsa1", createdSecondsAgo: 200)
+    let named = key("rsa2", createdSecondsAgo: 100)
+    let newest = key("rsa3", createdSecondsAgo: 0)
+
+    XCTAssertEqual(
+      KeyPairManager.decryptKeyInfos(matching: "rsa2", in: [oldest, named, newest]).map(\.tag),
+      ["rsa2", "rsa3", "rsa1"]
+    )
+  }
+
+  func testUnknownKidUsesEveryKeyNewestFirst() {
+    let previous = key("rsa1", createdSecondsAgo: 100)
+    let newest = key("rsa2", createdSecondsAgo: 0)
+
+    XCTAssertEqual(
+      KeyPairManager.decryptKeyInfos(matching: "rsa9", in: [previous, newest]).map(\.tag),
+      ["rsa2", "rsa1"]
+    )
+  }
+
+  func testAuthenticatedFailureUsesTheOlderKeyAndStopsAfterSuccess() throws {
+    let newer = key("rsa2", createdSecondsAgo: 0)
+    let older = key("rsa1", createdSecondsAgo: 100)
+    var attemptedTags = [String]()
+
+    let result: String = try JWEDecryption.decrypt(
+      with: KeyPairManager.decryptKeyInfos(matching: "rsa2", in: [older, newer]),
+      attempt: { candidate in
+        attemptedTags.append(candidate.tag)
+        if candidate.tag == "rsa2" {
+          throw AuthenticationFailure()
+        }
+        return "decrypted"
+      },
+      shouldRetry: { $0 is AuthenticationFailure }
+    )
+
+    XCTAssertEqual(result, "decrypted")
+    XCTAssertEqual(attemptedTags, ["rsa2", "rsa1"])
+  }
+
+  func testNonAuthenticationFailureDoesNotTryAnotherKey() {
+    let newer = key("rsa2", createdSecondsAgo: 0)
+    let older = key("rsa1", createdSecondsAgo: 100)
+    var attemptedTags = [String]()
+
+    XCTAssertThrowsError(
+      try JWEDecryption.decrypt(
+        with: KeyPairManager.decryptKeyInfos(matching: "rsa2", in: [older, newer]),
+        attempt: { candidate in
+          attemptedTags.append(candidate.tag)
+          throw KeychainError.keychainUnavailable(errSecInteractionNotAllowed)
+        },
+        shouldRetry: { $0 is AuthenticationFailure }
+      ) as String
+    )
+    XCTAssertEqual(attemptedTags, ["rsa2"])
+  }
+
+  func testWrongRsaKeyRetriesOlderKeyWithRealJweDecrypt() throws {
+    let older = key("rsa1", createdSecondsAgo: 100)
+    let named = key("rsa2", createdSecondsAgo: 0)
+    let olderKeyPair = try makeKeyPair()
+    let namedKeyPair = try makeKeyPair()
+    let original = JWE(
+      header: JWEHeader(alg: JWEAlgorithm.RSA1_5, enc: EncryptionMethod.A256CBC_HS512),
+      payload: "inner-jws"
+    )
+    try original.encrypt(withEncrypter: RSAEncrypter(publicKey: olderKeyPair.public))
+    let jweString = try original.serialize()
+    let privateKeys = ["rsa1": olderKeyPair.private, "rsa2": namedKeyPair.private]
+    var attemptedTags = [String]()
+
+    let payload: String = try JWEDecryption.decrypt(
+      with: KeyPairManager.decryptKeyInfos(matching: "rsa2", in: [older, named]),
+      attempt: { candidate in
+        attemptedTags.append(candidate.tag)
+        let jwe = try JWE.parse(s: jweString)
+        return try jwe.decrypt(withDecrypter: RSADecrypter(privateKey: privateKeys[candidate.tag]!))
+      },
+      shouldRetry: { ($0 as? JOSEException)?.description == "Decryption failed" }
+    )
+
+    XCTAssertEqual(payload, "inner-jws")
+    XCTAssertEqual(attemptedTags, ["rsa2", "rsa1"])
+  }
+
+  private func makeKeyPair() throws -> (public: SecKey, private: SecKey) {
+    let attributes: [String: Any] = [
+      kSecAttrKeyType as String: kSecAttrKeyTypeRSA,
+      kSecAttrKeySizeInBits as String: 2048,
+    ]
+    var error: Unmanaged<CFError>?
+    guard let privateKey = SecKeyCreateRandomKey(attributes as CFDictionary, &error),
+          let publicKey = SecKeyCopyPublicKey(privateKey)
+    else {
+      throw error!.takeRetainedValue()
+    }
+    return (publicKey, privateKey)
+  }
+
+  private struct AuthenticationFailure: Error {}
 }
 
 /// Exercises the real simulator keychain. Covers the key lifecycle relied on by
