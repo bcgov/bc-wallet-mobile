@@ -107,7 +107,12 @@ export default [
       'no-restricted-syntax': [
         'error',
         {
-          selector: "CallExpression[callee.name='testIdWithKey'] > :matches(Literal, TemplateLiteral[expressions.length=0])",
+          // Two paths: the argument itself, and one wrapped in a ternary / `??` / `||` — otherwise
+          // `testIdWithKey(a ? 'X' : 'Y')` slips through. Deliberately NOT a plain descendant selector:
+          // that would flag the `''` in `title.replaceAll(/\s+/g, '')` inside a legitimate stem template.
+          selector:
+            "CallExpression[callee.name='testIdWithKey'] > :matches(Literal, TemplateLiteral[expressions.length=0])," +
+            "CallExpression[callee.name='testIdWithKey'] > :matches(ConditionalExpression, LogicalExpression) :matches(Literal, TemplateLiteral[expressions.length=0])",
           message: 'Pass a key from src/test-ids/registry.ts to testIdWithKey, not a string literal.',
         },
         {

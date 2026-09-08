@@ -129,7 +129,7 @@ jobs:
       - uses: ./.github/workflows/actions/setup-node
 
       # e2e is not a root workspace member, so it installs from its own lockfile into its own cache.
-      - name: Cache e2e node_modules
+      - name: Cache e2e Yarn cache
         uses: actions/cache@v6
         with:
           path: e2e/.yarn/cache
