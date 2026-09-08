@@ -41,6 +41,10 @@ export const TestIds = {
     loadingOverlay: 'BCSCLoadingProviderOverlay',
     loadingChildren: 'BCSCLoadingProviderChildren',
     agentRetry: 'AgentRetry',
+    // `SettingsHeaderButton`, the header-left menu on onboarding, auth and main. The per-mount
+    // entries (`onboarding.intro.settings`, `auth.accountLanding.settings`, `main.header.settings`)
+    // are the SAME id, kept where specs look for them; this is the one the component references.
+    settingsMenu: 'SettingsMenuButton',
   },
 
   /**
@@ -76,6 +80,65 @@ export const TestIds = {
       helpCentre: 'ServiceOutageHelpCentre',
       checkAgain: 'ServiceOutageCheckAgain',
     },
+  },
+
+  /**
+   * Ids that shared BCSC components COMPOSE, rather than ids a screen owns. A caller passes an `id`
+   * or a title and the component appends/prefixes these, so the emitted string is only knowable at
+   * the call site — which is exactly why the pieces belong here instead of being retyped per screen.
+   * Where a composed result is stable and specs use it, it ALSO appears spelled out under its screen
+   * (e.g. `verify.manualSerial.serialInput` is `'serial'` + `field.input`).
+   */
+  shared: {
+    /** bifold `MaskedCamera` — the selfie capture and the evidence capture mount the same component,
+     *  so `verify.selfieCapture` / `verify.evidenceCapture` document these same ids per mount. */
+    maskedCamera: {
+      takePhoto: 'TakePhoto',
+      cancel: 'CancelCamera',
+      toggleFlash: 'ToggleFlash',
+    },
+    /** `AppBanner` composes `<part>-<banner type>`; the type is the banner's variant, not a screen. */
+    appBanner: {
+      buttonPrefix: 'button-',
+      iconPrefix: 'icon-',
+      textPrefix: 'text-',
+      descriptionPrefix: 'description-',
+    },
+    /** `InputWithValidation` and `DropdownWithValidation` append these to the caller's `id`. iOS types
+     *  into `pressable`, not `input`. `subtext` doubles as the validation-error slot. */
+    field: {
+      label: '-label',
+      pressable: '-pressable',
+      input: '-input',
+      subtext: '-subtext',
+      error: '-error',
+      optionPrefix: '-option-',
+      modalContent: '-modal-content',
+      close: '-close',
+    },
+    /** `PINInput` appends this to its `testIDKey`, and uses it BARE when no key was passed. */
+    pinInput: {
+      visibilitySuffix: 'VisibilityButton',
+    },
+    /** Title-derived row ids. `SectionButton` strips whitespace from the title; `CardButton` does not. */
+    cardButtonPrefix: 'CardButton-',
+    sectionButtonPrefix: 'SectionButton-',
+  },
+
+  /**
+   * `ReportProblemModal`, raised from the floating help menu — an overlay, like `errorModal` and
+   * `systemModal`. Two phases: the description form (`description` + `submit`), then the receipt
+   * (`reportId` + `copyReportId` + `done`). `modal` is the container, `close` the header dismiss.
+   * Distinct from `ErrorInfoCard`'s own report controls, which are different ids on a different card.
+   */
+  reportProblem: {
+    modal: 'ReportProblemModal',
+    close: 'ReportProblemClose',
+    description: 'ReportProblemDescription',
+    submit: 'ReportProblemSubmit',
+    reportId: 'ReportProblemReportId',
+    copyReportId: 'ReportProblemCopyReportId',
+    done: 'ReportProblemDone',
   },
 
   onboarding: {
@@ -531,6 +594,7 @@ export const TestIds = {
     wallet: {
       loading: 'Wallet.Loading',
       empty: 'Wallet.Empty',
+      emptyIllustration: 'Wallet.EmptyIllustration',
       emptyLearnMore: 'Wallet.EmptyLearnMore',
     },
     /** QRCore bottom-tab navigator (opened by the scan FAB). Display tab only exists in dev mode. */
@@ -744,6 +808,7 @@ export const TestIds = {
     /** Edit-contact-name form. `save`/`cancel` are label-derived by `ActionScreenLayout`
      *  (`testIdWithKey(t('Global.Continue'))` etc.), so they break under a locale change — en-only. */
     contactEditName: {
+      loading: 'EditContactName.Loading',
       nameInput: 'NameInput',
       save: 'Continue',
       cancel: 'Cancel',
@@ -751,6 +816,7 @@ export const TestIds = {
     /** Remove-contact confirmation — a modal with NO header back (`headerLeft: null`); `cancel` is the
      *  only non-destructive exit. The failure branch is an untestID'd native alert. */
     contactRemove: {
+      loading: 'RemoveContact.Loading',
       confirm: 'ConfirmRemove',
       cancel: 'CancelRemove',
     },
@@ -867,6 +933,8 @@ export const TestIds = {
    * hidden from the accessibility tree and cannot be selected. `Testing` rows are BCSC-mode only.
    */
   developer: {
+    /** Tap counter on the settings version row (`DeveloperModeTrigger`) that unlocks developer mode. */
+    counter: 'DeveloperCounter',
     /** Always-rendered first row — the reliable "Developer screen mounted" marker. */
     toggleDeveloper: 'ToggleDeveloper',
     /** i18n-DERIVED: `testIdWithKey(t('Developer.Environment').toLowerCase())` — breaks under a locale change. */

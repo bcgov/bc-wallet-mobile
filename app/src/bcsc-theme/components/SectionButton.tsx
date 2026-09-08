@@ -1,3 +1,4 @@
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { StyleSheet, TouchableOpacity, ViewStyle } from 'react-native'
@@ -52,7 +53,7 @@ const SectionButton: React.FC<SectionButtonProps> = ({
       accessibilityLabel={a11yLabel(accessibilityLabel ?? title)}
       accessibilityRole="button"
       accessibilityHint={accessibilityHint}
-      testID={testID ?? testIdWithKey(`SectionButton-${title.replaceAll(/\s+/g, '')}`)}
+      testID={testID ?? testIdWithKey(`${TestIds.shared.sectionButtonPrefix}${title.replaceAll(/\s+/g, '')}`)}
     >
       <ThemedText variant={'headingFour'} style={styles.title}>
         {title}

@@ -1,4 +1,5 @@
 import { PIN_LENGTH } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -99,7 +100,11 @@ export const PINInput = ({
         <TouchableOpacity
           style={styles.visibilityButton}
           onPress={toggleVisibility}
-          testID={testIDKey ? testIdWithKey(`${testIDKey}VisibilityButton`) : testIdWithKey('VisibilityButton')}
+          testID={
+            testIDKey
+              ? testIdWithKey(`${testIDKey}${TestIds.shared.pinInput.visibilitySuffix}`)
+              : testIdWithKey(TestIds.shared.pinInput.visibilitySuffix)
+          }
           accessibilityLabel={a11yLabel(isVisible ? t('PINCreate.Hide') : t('PINCreate.Show'))}
           accessibilityRole="button"
         >

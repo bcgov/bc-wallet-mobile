@@ -101,7 +101,7 @@ export default [
   // so unmigrated areas stay green while migrated ones cannot regress. Tests are exempt on purpose:
   // asserting the literal id string is what proves the emitted ids never moved.
   {
-    files: ['src/test-ids/**', 'src/bcsc-theme/features/**', 'src/bcsc-theme/contexts/**'],
+    files: ['src/test-ids/**', 'src/bcsc-theme/**'],
     ignores: ['**/*.test.{ts,tsx}'],
     rules: {
       'no-restricted-syntax': [
