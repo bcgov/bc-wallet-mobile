@@ -2,6 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import CodeInput from '@/bcsc-theme/components/CodeInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { PAIRING_CODE_LENGTH } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
@@ -115,7 +116,7 @@ const ManualPairing: React.FC = () => {
           autoCapitalize: 'characters',
           autoComplete: 'off',
           autoCorrect: false,
-          testID: testIdWithKey('ManualPairingCodeInput'),
+          testID: testIdWithKey(TestIds.main.pairing.manualCodeInput),
           accessibilityLabel: 'Pairing-Code-Input',
         }}
       />

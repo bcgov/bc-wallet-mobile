@@ -1,4 +1,5 @@
 import { ICON_CIRCLE_SIZE } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
@@ -50,23 +51,27 @@ const NotificationActionCard: React.FC<NotificationActionCardProps> = (props) =>
   })
 
   return (
-    <View style={styles.container} testID={testIdWithKey('NotificationListItem')}>
+    <View style={styles.container} testID={testIdWithKey(TestIds.main.notification.item)}>
       <View style={styles.headerContainer}>
         <NotificationIcon iconName={iconName} iconColor={iconColor} hideIconCircle={props.hideIconCircle} />
-        <ThemedText variant="bold" style={styles.headerText} testID={testIdWithKey('HeaderText')}>
+        <ThemedText
+          variant="bold"
+          style={styles.headerText}
+          testID={testIdWithKey(TestIds.main.notification.headerText)}
+        >
           {props.title}
         </ThemedText>
         {props.onClose && <DismissButton onClose={props.onClose} />}
       </View>
       <View style={styles.bodyContainer}>
-        <ThemedText style={styles.bodyText} testID={testIdWithKey('BodyText')}>
+        <ThemedText style={styles.bodyText} testID={testIdWithKey(TestIds.main.notification.bodyText)}>
           {props.description}
         </ThemedText>
         <View style={styles.buttonContainer}>
           <Button
             title={props.buttonTitle}
             accessibilityLabel={props.buttonTitle}
-            testID={testIdWithKey('ViewNotification')}
+            testID={testIdWithKey(TestIds.main.notification.view)}
             buttonType={ButtonType.Primary}
             onPress={props.onPress}
           />

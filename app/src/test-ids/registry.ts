@@ -35,6 +35,12 @@ export const TestIds = {
     back: 'Back',
     /** Floating help menu button (headerRight on the onboarding/verify stacks). */
     help: 'HelpMenu',
+    // App-level gates and overlays, not screen controls: the splash/loading body, the two halves of
+    // `BCSCLoadingContext`'s overlay, and the retry on the Credo agent gate. Any screen can be behind them.
+    loadingScreen: 'LoadingScreenContent',
+    loadingOverlay: 'BCSCLoadingProviderOverlay',
+    loadingChildren: 'BCSCLoadingProviderChildren',
+    agentRetry: 'AgentRetry',
   },
 
   /**
@@ -51,6 +57,25 @@ export const TestIds = {
     details: 'DetailsText', // "Error code N - message", rendered only once ShowDetails is pressed
     title: 'HeaderText',
     body: 'BodyText',
+  },
+
+  /**
+   * App-wide system modals (`features/modal/`) — like `errorModal`, overlays any screen can raise.
+   * `shared.button` is `SystemModal`'s generic CTA, used as-is by DeviceInvalidated, MandatoryUpdate
+   * and InternetDisconnected; screens that pass their own testID get their own key below.
+   */
+  systemModal: {
+    shared: {
+      button: 'SystemModalButton',
+    },
+    sessionExpired: {
+      button: 'VerificationSessionExpiredButton',
+    },
+    /** ServiceOutage does NOT use `SystemModal` — it is its own component with two buttons. */
+    serviceOutage: {
+      helpCentre: 'ServiceOutageHelpCentre',
+      checkAgain: 'ServiceOutageCheckAgain',
+    },
   },
 
   onboarding: {
@@ -442,6 +467,15 @@ export const TestIds = {
       services: 'Services',
       wallet: 'Wallet',
     },
+    /** Home tab. `logInFromComputer` renders TWICE (a card and a SectionButton, different branches)
+     *  and is the pairing entry point, so its key lives under `main.pairing`. Saved-service rows are
+     *  NAME-DERIVED from the service title minus whitespace, same shape as the services catalogue. */
+    home: {
+      whereToUse: 'WhereToUse',
+      pairingCodeCard: 'PairingCodeCard',
+      savedServiceOpenPrefix: 'OpenService-',
+      savedServiceRemovePrefix: 'RemoveService-',
+    },
     /** Services catalogue (verified-only; unverified taps redirect to MainVerifyPrompt). `search` is
      *  the always-present sticky-header catalogue search field — the "Services opened, not gated" marker. */
     services: {
@@ -482,6 +516,7 @@ export const TestIds = {
       bodyText: 'BodyText',
       timestamp: 'TimestampText',
       dismiss: 'DismissNotification',
+      logo: 'NotificationLogo',
     },
     /** Floating scan FAB (rendered on the Home + Wallet tabs, not verification-gated) → QRCore. */
     scan: {
@@ -504,6 +539,16 @@ export const TestIds = {
       displayTab: 'MyQRCode',
       pairingCodeTab: 'PairingCode',
       torchToggle: 'TorchToggle',
+    },
+    /** The `MyQRCode` tab's body (dev-mode only, per `qrCore.displayTab`). `loading` and `error` are
+     *  mutually exclusive state containers — neither renders once the code is up. `editNickname` opens
+     *  the same nickname form as `main.editNickname`. */
+    qrDisplay: {
+      walletName: 'WalletName',
+      editNickname: 'EditNickname',
+      share: 'Share',
+      loading: 'QRDisplay.Loading',
+      error: 'QRDisplay.Error',
     },
     /** The QR scanner's failed-scan popup (bifold `DismissiblePopupModal`). `okay` is its CTA
      *  (labelled "Dismiss"); `header`/`body` are bifold-generic ids shared with the Home notification
