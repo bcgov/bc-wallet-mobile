@@ -2,7 +2,7 @@ import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import { hitSlop } from '@/constants'
 import { a11yLabel } from '@/utils/accessibility'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import type { ReactNode } from 'react'
+import type { ReactNode, RefObject } from 'react'
 import { useRef, useState } from 'react'
 import {
   LayoutChangeEvent,
@@ -17,6 +17,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 type InputWithValidationProps = {
+  ref?: RefObject<TextInput | null>
   id: string // unique input identifier
   value: string
   onChange?: (value: string) => void
@@ -49,8 +50,10 @@ type InputWithValidationProps = {
 export const InputWithValidation: React.FC<InputWithValidationProps> = (props: InputWithValidationProps) => {
   const { Inputs, ColorPalette, Spacing, TextTheme } = useTheme()
   const { reportActivity } = useBCSCActivity() ?? {}
-  const inputRef = useRef<TextInput>(null)
+  const _inputRef = useRef<TextInput>(null)
   const [isFocused, setIsFocused] = useState(false)
+
+  const inputRef = props.ref ?? _inputRef
 
   const styles = StyleSheet.create({
     label: {

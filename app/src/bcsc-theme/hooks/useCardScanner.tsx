@@ -152,7 +152,7 @@ export const useCardScanner = () => {
    *
    * @param bcscSerial - The serial decoded from the card's 1D (CODE_128) barcode.
    * @param license - The metadata decoded from the card's 2D (PDF-417) barcode.
-   * @returns `true` if authorized as a BCSC and rerouted, `false` to continue as evidence.
+   * @returns true if the scanned card is a BC Services Card
    */
   const handleScanBarcodes = useCallback(
     async (bcscSerial: string, license: DriversLicenseMetadata): Promise<boolean> => {
@@ -160,32 +160,14 @@ export const useCardScanner = () => {
         '[CardScanner] Non-BCSC flow: querying /device/barcodes to check if the scanned card is a BC Services Card'
       )
 
-      try {
-        // short cutting the error handling in authorizationService because
-        // the scan flow pushes non matches into the non-bcsc flow
-        const deviceAuth = await authorizationService.authorizeDeviceWithBarcodes(
-          buildBarcodePayload(bcscSerial, license),
-          { skipErrorHandling: true }
-        )
-        await updateUserInfo({ serial: bcscSerial, birthdate: license.birthDate })
-        await applyDeviceAuthorization(deviceAuth, { serial: bcscSerial, birthdate: license.birthDate })
-        logger.info('[CardScanner] Scanned card matched a BC Services Card; switching to setup')
-        return true
-      } catch (error) {
-        // A global client error policy (e.g. cardExpiredOnBarcodesErrorPolicy) may already have
-        // navigated the user to an error screen, so stop here instead of continuing.
-        if (isHandledAppError(error)) {
-          return true
-        }
-
-        // Any other failure means we could not confirm a BC Services Card, so stay in
-        // the evidence-capture flow rather than surfacing an error (matches v3's
-        // `card_not_found → continue with non-bcsc`).
-        logger.info('[CardScanner] Barcodes did not match a BC Services Card; continuing as evidence', {
-          error: String(error),
-        })
-        return false
-      }
+      const deviceAuth = await authorizationService.authorizeDeviceWithBarcodes(
+        buildBarcodePayload(bcscSerial, license),
+        { skipErrorHandling: true }
+      )
+      await updateUserInfo({ serial: bcscSerial, birthdate: license.birthDate })
+      await applyDeviceAuthorization(deviceAuth, { serial: bcscSerial, birthdate: license.birthDate })
+      logger.info('[CardScanner] Scanned card matched a BC Services Card; switching to setup')
+      return true
     },
     [authorizationService, updateUserInfo, applyDeviceAuthorization, logger]
   )

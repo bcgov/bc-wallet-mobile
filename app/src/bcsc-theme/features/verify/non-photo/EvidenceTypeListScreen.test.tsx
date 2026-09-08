@@ -7,10 +7,12 @@ import { useNavigation } from '@mocks/custom/@react-navigation/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import * as Navigation from '@react-navigation/native'
 import { RouteProp } from '@react-navigation/native'
-import { fireEvent, render } from '@testing-library/react-native'
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { BCSCCardProcess, EvidenceMetadata, EvidenceType } from 'react-native-bcsc-core'
 import EvidenceTypeListScreen from './EvidenceTypeListScreen'
+
+jest.mock('@/bcsc-theme/api/hooks/useApi')
 
 jest.mock('@/bcsc-theme/hooks/useDataLoader')
 jest.mock('@/bcsc-theme/hooks/useSecureActions')
@@ -61,7 +63,7 @@ describe('EvidenceTypeList', () => {
     mockUseSecureActions.mockReturnValue({
       removeIncompleteEvidence: jest.fn().mockResolvedValue([]),
       truncateEvidence: jest.fn().mockResolvedValue([]),
-      addEvidenceType: jest.fn(),
+      addEvidenceType: jest.fn().mockResolvedValue(undefined),
     })
     mockUseDataLoader.mockReturnValue({
       data: undefined,
@@ -453,7 +455,7 @@ describe('EvidenceTypeList', () => {
       mockUseSecureActions.mockReturnValue({
         removeIncompleteEvidence: removeIncompleteEvidenceMock,
         truncateEvidence: jest.fn().mockResolvedValue([]),
-        addEvidenceType: jest.fn(),
+        addEvidenceType: jest.fn().mockResolvedValue(undefined),
       })
 
       render(
@@ -477,7 +479,7 @@ describe('EvidenceTypeList', () => {
       mockUseSecureActions.mockReturnValue({
         removeIncompleteEvidence: removeIncompleteEvidenceMock,
         truncateEvidence: jest.fn().mockResolvedValue([]),
-        addEvidenceType: jest.fn(),
+        addEvidenceType: jest.fn().mockResolvedValue(undefined),
       })
 
       const existingEvidence: EvidenceMetadata = {
@@ -500,6 +502,166 @@ describe('EvidenceTypeList', () => {
       )
 
       expect(removeIncompleteEvidenceMock).toHaveBeenCalledWith([existingEvidence])
+    })
+  })
+
+  describe('double press handling', () => {
+    const cardA = makeEvidenceType({ evidence_type: 'card_a', evidence_type_label: 'Card A' })
+    const cardB = makeEvidenceType({ evidence_type: 'card_b', evidence_type_label: 'Card B' })
+
+    const testIdFor = (card: EvidenceType) => `com.ariesbifold:id/EvidenceTypeListItem-${card.evidence_type}`
+
+    const renderList = (addEvidenceType: jest.Mock) => {
+      mockUseSecureActions.mockReturnValue({
+        removeIncompleteEvidence: jest.fn().mockResolvedValue([]),
+        truncateEvidence: jest.fn().mockResolvedValue([]),
+        addEvidenceType,
+      })
+      mockUseDataLoader.mockReturnValue({
+        data: mockMetadata([cardA, cardB], BCSCCardProcess.None as string),
+        load: jest.fn(),
+        isLoading: false,
+      })
+
+      return render(
+        <BasicAppContext>
+          <EvidenceTypeListScreen
+            navigation={mockNavigation as never}
+            route={{ params: { cardProcess: BCSCCardProcess.None } } as EvidenceTypeListRoute}
+          />
+        </BasicAppContext>
+      )
+    }
+
+    it('ignores a second press on the same row after the first has settled', async () => {
+      const addEvidenceType = jest.fn().mockResolvedValue(undefined)
+      const { getByTestId } = renderList(addEvidenceType)
+
+      const row = getByTestId(testIdFor(cardA))
+      await act(async () => {
+        fireEvent.press(row)
+      })
+      await act(async () => {
+        fireEvent.press(row)
+      })
+
+      expect(addEvidenceType).toHaveBeenCalledTimes(1)
+      expect(mockNavigation.push).toHaveBeenCalledTimes(1)
+    })
+
+    it('ignores a press on a different row while the first selection is in flight', async () => {
+      const addEvidenceType = jest.fn().mockResolvedValue(undefined)
+      const { getByTestId } = renderList(addEvidenceType)
+
+      await act(async () => {
+        fireEvent.press(getByTestId(testIdFor(cardA)))
+        fireEvent.press(getByTestId(testIdFor(cardB)))
+      })
+
+      expect(addEvidenceType).toHaveBeenCalledTimes(1)
+      expect(addEvidenceType).toHaveBeenCalledWith(cardA)
+      expect(mockNavigation.push).toHaveBeenCalledTimes(1)
+    })
+
+    it('ignores a card press while "Other Options" is navigating', async () => {
+      const addEvidenceType = jest.fn().mockResolvedValue(undefined)
+      mockUseSecureActions.mockReturnValue({
+        removeIncompleteEvidence: jest.fn().mockResolvedValue([]),
+        truncateEvidence: jest.fn().mockResolvedValue([]),
+        addEvidenceType,
+      })
+      mockUseDataLoader.mockReturnValue({
+        data: mockMetadata([cardA], BCSCCardProcess.BCSCNonPhoto as string),
+        load: jest.fn(),
+        isLoading: false,
+      })
+
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <EvidenceTypeListScreen
+            navigation={mockNavigation as never}
+            route={
+              { params: { cardProcess: BCSCCardProcess.BCSCNonPhoto, photoFilter: 'photo' } } as EvidenceTypeListRoute
+            }
+          />
+        </BasicAppContext>
+      )
+
+      await act(async () => {
+        fireEvent.press(getByTestId('com.ariesbifold:id/EvidenceTypeListOtherOptions'))
+        fireEvent.press(getByTestId(testIdFor(cardA)))
+      })
+
+      expect(mockNavigation.replace).toHaveBeenCalledTimes(1)
+      expect(addEvidenceType).not.toHaveBeenCalled()
+      expect(mockNavigation.push).not.toHaveBeenCalled()
+    })
+
+    it('re-arms selection when the screen regains focus', async () => {
+      let focusCallback: (() => void) | undefined
+      jest.spyOn(Navigation, 'useFocusEffect').mockImplementation((callback) => {
+        focusCallback = callback as () => void
+        callback()
+      })
+
+      const addEvidenceType = jest.fn().mockResolvedValue(undefined)
+      const { getByTestId } = renderList(addEvidenceType)
+
+      await act(async () => {
+        fireEvent.press(getByTestId(testIdFor(cardA)))
+      })
+      expect(mockNavigation.push).toHaveBeenCalledTimes(1)
+
+      // Simulate navigating back to the list.
+      await act(async () => {
+        focusCallback?.()
+      })
+
+      await act(async () => {
+        fireEvent.press(getByTestId(testIdFor(cardA)))
+      })
+      expect(mockNavigation.push).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  describe('failed evidence persistence', () => {
+    const card = makeEvidenceType({ evidence_type: 'card_a', evidence_type_label: 'Card A' })
+    const cardTestId = 'com.ariesbifold:id/EvidenceTypeListItem-card_a'
+
+    it('logs and re-arms selection when the evidence write fails', async () => {
+      const addEvidenceType = jest.fn().mockRejectedValue(new Error('native write failed'))
+      mockUseSecureActions.mockReturnValue({
+        removeIncompleteEvidence: jest.fn().mockResolvedValue([]),
+        truncateEvidence: jest.fn().mockResolvedValue([]),
+        addEvidenceType,
+      })
+      mockUseDataLoader.mockReturnValue({
+        data: mockMetadata([card], BCSCCardProcess.None as string),
+        load: jest.fn(),
+        isLoading: false,
+      })
+
+      const { getByTestId } = render(
+        <BasicAppContext>
+          <EvidenceTypeListScreen
+            navigation={mockNavigation as never}
+            route={{ params: { cardProcess: BCSCCardProcess.None } } as EvidenceTypeListRoute}
+          />
+        </BasicAppContext>
+      )
+
+      await act(async () => {
+        fireEvent.press(getByTestId(cardTestId))
+      })
+
+      await waitFor(() =>
+        expect(defaultLogger.error).toHaveBeenCalledWith(expect.stringContaining('native write failed'))
+      )
+
+      await act(async () => {
+        fireEvent.press(getByTestId(cardTestId))
+      })
+      expect(addEvidenceType).toHaveBeenCalledTimes(2)
     })
   })
 })

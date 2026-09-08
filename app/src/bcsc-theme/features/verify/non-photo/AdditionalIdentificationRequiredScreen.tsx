@@ -1,7 +1,9 @@
 import { BulletedInstructionsScreen } from '@/bcsc-theme/components/BulletedInstructionsScreen'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { ACCOUNT_SERVICES_URL } from '@/constants'
 import { BCState } from '@/store'
-import { useStore } from '@bifold/core'
+import { openLink } from '@/utils/links'
+import { testIdWithKey, useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
@@ -32,6 +34,12 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
         {
           heading: t('BCSC.AdditionalEvidence.LimitedAccess'),
           paragraph: t('BCSC.AdditionalEvidence.LimitedAccessDescription'),
+          footerLink: {
+            label: t('BCSC.AdditionalEvidence.WhichServices'),
+            testID: testIdWithKey('WhichServices'),
+            externalButton: true,
+            onPress: () => openLink(ACCOUNT_SERVICES_URL),
+          },
         },
       ]}
       primaryAction={{

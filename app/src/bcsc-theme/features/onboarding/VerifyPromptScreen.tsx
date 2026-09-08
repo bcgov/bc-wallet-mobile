@@ -41,6 +41,7 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
 
   const handleVerifyNow = useCallback(() => {
     onAnswered?.()
+    dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [false] })
     dispatch({
       type: BCDispatchAction.UPDATE_SECURE_VERIFIED_STATUS,
       payload: [VerificationStatus.IN_PROGRESS],
@@ -52,7 +53,8 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
 
   const handleLater = useCallback(() => {
     onAnswered?.()
-  }, [onAnswered])
+    dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [true] })
+  }, [dispatch, onAnswered])
 
   const controls = (
     <ControlContainer>

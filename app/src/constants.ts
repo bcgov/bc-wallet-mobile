@@ -54,6 +54,7 @@ export const BCThemeNames = {
 export const BCSC_EMAIL_NOT_PROVIDED = 'Not provided'
 export const BCSC_APPLE_STORE_URL = 'https://apps.apple.com/us/app/id1234298467'
 export const BCSC_GOOGLE_PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=ca.bc.gov.id.servicescard'
+export const ACCOUNT_SERVICES_URL = 'https://id.gov.bc.ca/account/services'
 export const TERMS_OF_USE_URL = 'https://id.gov.bc.ca/static/termsOfUse.html'
 export const FEEDBACK_URL = 'https://id.gov.bc.ca/static/feedback.html'
 export const ACCESSIBILITY_URL =
@@ -112,6 +113,12 @@ export const ACCOUNT_EXPIRATION_DATE_FORMAT = 'MMMM D, YYYY'
 export const ACCOUNT_EXPIRATION_WARNING_DAYS = 30
 export const FIVE_MINUTES_IN_SECONDS = 5 * 60
 export const SERVER_STATUS_RECHECK_INTERVAL_MS = 60 * 1000
+/**
+ * Ceiling on how long the main stack holds its startup loading screen waiting for system checks to
+ * complete. An unreachable or hung endpoint must not be able to strand the app behind the loading
+ * screen indefinitely.
+ */
+export const SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS = 4 * 1000
 
 // Notification constants
 /**

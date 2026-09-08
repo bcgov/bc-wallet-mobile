@@ -35,8 +35,6 @@ import { DependencyContainer } from 'tsyringe'
 
 import EmptyWalletList from '@/bcsc-theme/components/EmptyWalletList'
 import { createFloatingHelpMenuButton } from '@/bcsc-theme/components/FloatingHelpMenuHeaderButton'
-import { createStackHeaderWithoutBanner } from '@/bcsc-theme/components/HeaderWithBanner'
-import { createMainSettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
 import { CredentialDetailsSubHeader } from '@/bcsc-theme/features/credentials/CredentialDetailsSubHeader'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import filePersistedLedgers from '@/configs/ledgers/indy/ledgers'
@@ -272,10 +270,7 @@ export class AppContainer implements Container {
       this._container.registerInstance(TOKENS.OBJECT_SCREEN_CONFIG, {
         ...DefaultScreenOptionsDictionary,
         [Screens.Credentials]: {
-          ...DefaultScreenOptionsDictionary[Screens.Credentials],
-          title: 'Wallet',
-          headerLeft: createMainSettingsHeaderButton(),
-          header: createStackHeaderWithoutBanner,
+          headerShown: false,
         },
       })
     }

@@ -1,8 +1,6 @@
 import { expirationOverrideInMinutes } from '@utils/expiration'
 import MockDate from 'mockdate'
 
-jest.useFakeTimers({ legacyFakeTimers: true })
-
 describe('Helpers', () => {
   beforeAll(() => {
     // Set the date to a fixed point in time

@@ -4,6 +4,8 @@ import { unlockWithPin } from '../../../src/flows/auth.js'
 import { completeOnboarding } from '../../../src/flows/onboarding.js'
 import {
   chooseAddAccount,
+  cleanUpQueuedSubmission,
+  clearReviewQueueBeforeSubmit,
   enterBirthdate,
   enterSerialManually,
   reachVerificationMethod,
@@ -12,7 +14,7 @@ import {
   submitSendVideoVerification,
   waitForSendVideoDecision,
 } from '../../../src/flows/verify.js'
-import { reviewSendVideoRequest } from '../../../src/helpers/approval.js'
+import { type ClaimedRequestSummary, reviewSendVideoRequest } from '../../../src/helpers/approval.js'
 import { HomeScreen, SettingsScreen } from '../../../src/screens/main.js'
 import { PendingReviewScreen, VerificationSuccessScreen } from '../../../src/screens/verify.js'
 import { getTestUser, setTestUser } from '../../../src/support/context.js'
@@ -26,14 +28,25 @@ import { getTestUser, setTestUser } from '../../../src/support/context.js'
  * IDCheck SIT review portal (`reviewSendVideoRequest`; needs `SM_USER`/`SM_PASSWORD` on an allowlisted
  * runner), then the app's own status re-check → VerificationSuccess and verified Home.
  *
- * QUEUE HYGIENE: the portal has no worklist — a review claims the NEXT queued request, blindly. A
- * foreign head (stale or third-party) is CLOSED and the claim retried, so a polluted queue self-heals;
- * that is exactly why no other send-video journey may run CONCURRENTLY with this one — its live
- * request would be closed too (the suite is serial at the default `maxInstances: 1`).
+ * QUEUE HYGIENE: the portal has no worklist — a review claims the NEXT queued request blindly and
+ * matches it by persona, which a stale upload of the same persona also satisfies. So the queue is
+ * drained before this journey submits, drained again by the teardown if the upload is never reviewed,
+ * and the send-video journeys run one platform at a time (CI's `send-video` lane), never concurrently.
  */
 describe('Verified journey: send video, approved', () => {
+  /** What the scripted review claimed — named by the decision wait's failure, should the app never see it. */
+  let reviewed: ClaimedRequestSummary | undefined
+
   before(() => {
     setTestUser(TestUsers.photo)
+  })
+
+  after(async () => {
+    await cleanUpQueuedSubmission()
+  })
+
+  it('clears the review queue before submitting', async () => {
+    await clearReviewQueueBeforeSubmit()
   })
 
   it('onboards to the verify prompt', async () => {
@@ -56,8 +69,8 @@ describe('Verified journey: send video, approved', () => {
     // The one resume-matrix row nothing could reach before a submission existed. A relaunch is what
     // makes it worth asserting: the submitted-video flag has to survive native storage and hydration
     // has to route back to the status screen, rather than the in-memory flag carrying it.
-    await unlockWithPin(TEST_PIN, { relaunch: true })
-    await resumeVerification()
+    await unlockWithPin(TEST_PIN, { relaunch: true, landing: 'any' })
+    await resumeVerification(PendingReviewScreen, Timeouts.APP_LAUNCH)
     await PendingReviewScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
     // Back marks the account unverified rather than popping, which returns the stack to Home — where
     // the decision wait below starts.
@@ -67,7 +80,7 @@ describe('Verified journey: send video, approved', () => {
 
   it('is approved by the agent (scripted against the SIT review portal)', async () => {
     const user = getTestUser()
-    await reviewSendVideoRequest({
+    reviewed = await reviewSendVideoRequest({
       decision: 'approve',
       cardSerialNumber: user.cardSerial,
       surname: user.lastName,
@@ -76,7 +89,7 @@ describe('Verified journey: send video, approved', () => {
   })
 
   it('picks up the approval and lands on verified Home', async () => {
-    await waitForSendVideoDecision('verified')
+    await waitForSendVideoDecision('verified', { reviewed })
     await VerificationSuccessScreen.tap('primary') // Continue → exits the verify stack to Home
     await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })

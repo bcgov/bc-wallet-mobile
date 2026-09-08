@@ -34,4 +34,4 @@ runs:
         name: ${{ inputs.output_artifact_ref }}.ipa
         path: export/BCWallet.ipa
         if-no-files-found: error
-        retention-days: 7
+        retention-days: 30

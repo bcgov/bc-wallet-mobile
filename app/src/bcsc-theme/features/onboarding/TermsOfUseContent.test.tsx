@@ -5,6 +5,8 @@ import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 import { TermsOfUseContent } from './TermsOfUseContent'
 
+jest.mock('@/bcsc-theme/hooks/useBCSCApiClient')
+
 jest.mock('@/bcsc-theme/api/hooks/useApi')
 
 const mockTermsOfUseResponse = {

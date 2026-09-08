@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="1" failures="1" errors="0" skipped="0">
+  <testsuite name="Wallet journey DIDComm credential lifecycle" timestamp="2026-08-28T05:15:38" time="48.226" tests="1" failures="1" errors="0" skipped="0">
+    <properties>
+      <property name="specId" value="0"/>
+      <property name="suiteName" value="Wallet journey: DIDComm credential lifecycle"/>
+      <property name="capabilities" value="android.2b291fdh2008n8"/>
+      <property name="file" value="file://./test/bcsc/main/wallet.journey.ts"/>
+    </properties>
+    <testcase classname="android.2b291fdh2008n8.Wallet_journey:_DIDComm_credential_lifecycle" name="before all hook for onboards and skips verification to Home" time="45.001">
+      <failure message="issuer preflight failed: request to the Traction admin API timed out after 15000ms"/>
+    </testcase>
+  </testsuite>
+</testsuites>

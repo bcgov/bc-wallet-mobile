@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="5" failures="0" errors="0" skipped="0">
+  <testsuite name="Auth journey unlock" timestamp="2026-08-28T05:12:47" time="352.118" tests="5" failures="0" errors="0" skipped="0">
+    <properties>
+      <property name="specId" value="0"/>
+      <property name="suiteName" value="Auth journey: unlock"/>
+      <property name="capabilities" value="ios.5fc23a1b909c4d"/>
+      <property name="file" value="file://./test/bcsc/auth/auth-unlock.journey.ts"/>
+    </properties>
+    <testcase classname="ios.5fc23a1b909c4d.Auth_journey:_unlock" name="onboards and skips to unverified Home" time="40.871"/>
+    <testcase classname="ios.5fc23a1b909c4d.Auth_journey:_unlock" name="relaunches to AccountLanding and unlocks with the PIN" time="19.322"/>
+    <testcase classname="ios.5fc23a1b909c4d.Auth_journey:_unlock" name="opens Get Help Forgot PIN from the PIN screen" time="24.017"/>
+    <testcase classname="ios.5fc23a1b909c4d.Auth_journey:_unlock" name="rejects a wrong PIN inline and unlocks on retry" time="27.590"/>
+    <testcase classname="ios.5fc23a1b909c4d.Auth_journey:_unlock" name="locks on return from a long background and re unlocks with the PIN terminal" time="63.204"/>
+  </testsuite>
+</testsuites>

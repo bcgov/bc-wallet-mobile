@@ -1,0 +1,118 @@
+# Checks that a PR asking for review is linked to an issue and has its template
+# sections filled in. Deterministic — no judgement calls, and one GraphQL query
+# unless it has to wait for GitHub to register the issue link.
+#
+# Lands non-blocking. Make it a required check on `main` and `release/**` only
+# after it has run quietly for a week (see the rollout plan).
+name: PR Hygiene
+
+on:
+  pull_request:
+    # `labeled`/`unlabeled` matter: the escape-hatch labels are usually added in
+    # response to a red check, and without them nothing re-evaluates.
+    types: [opened, reopened, ready_for_review, converted_to_draft, edited, synchronize, labeled, unlabeled]
+  merge_group:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: pr-hygiene-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: PR hygiene
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const pr = context.payload.pull_request
+
+            const pass = async (reason) => {
+              core.info(`PASS — ${reason}`)
+              await core.summary.addRaw(`✅ **PR hygiene passed** — ${reason}`).write()
+            }
+            const fail = async (problems) => {
+              const list = problems.map((p) => `- ${p}`).join('\n')
+              await core.summary
+                .addRaw(`❌ **PR hygiene**\n\n${list}\n\n<sub>No issue to link? Add the \`status/no-issue\` label.</sub>`)
+                .write()
+              core.setFailed(problems.join(' | '))
+            }
+
+            // merge_group carries no PR payload; the check already ran on the PR itself.
+            if (!pr) return pass('merge group')
+            if (pr.draft) return pass('draft — not asking for review yet')
+
+            const login = pr.user?.login ?? ''
+            if (pr.user?.type === 'Bot' || login.endsWith('[bot]')) return pass(`bot author (${login})`)
+
+            const labels = pr.labels.map((l) => l.name)
+            for (const skip of ['dependencies', 'status/no-issue']) {
+              if (labels.includes(skip)) return pass(`\`${skip}\` label`)
+            }
+
+            // Prefixes for work that structurally cannot have an issue. `chore:` is
+            // deliberately NOT here — it exempted ~19% of merged PRs on a self-declared
+            // title nobody verifies, so chores use the `status/no-issue` label instead.
+            if (/^(build|docs|release)(\([^)]*\))?!?:/i.test(pr.title)) {
+              return pass('title prefix exempts it')
+            }
+
+            const problems = []
+
+            // Ask for links GitHub actually tracks — a bare "#123" in prose creates none.
+            const closingIssues = async () => {
+              const { repository } = await github.graphql(
+                `query($owner:String!, $repo:String!, $number:Int!) {
+                   repository(owner:$owner, name:$repo) {
+                     pullRequest(number:$number) {
+                       closingIssuesReferences(first: 5) { nodes { number } }
+                     }
+                   }
+                 }`,
+                { owner: context.repo.owner, repo: context.repo.repo, number: pr.number }
+              )
+              return repository.pullRequest.closingIssuesReferences.nodes
+            }
+
+            // GitHub resolves `Closes #123` into a tracked link a few seconds after
+            // the webhook fires, so an empty first result may just be the workflow
+            // outrunning it. Only an absent link waits, and only long enough to tell
+            // "not linked yet" apart from "not linked".
+            const RETRY_DELAY_MS = 7000
+            const RETRIES = 3
+            let linked = await closingIssues()
+            for (let attempt = 1; linked.length === 0 && attempt <= RETRIES; attempt++) {
+              core.info(`No linked issue yet — retrying in ${RETRY_DELAY_MS / 1000}s (${attempt}/${RETRIES})`)
+              await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS))
+              linked = await closingIssues()
+            }
+
+            if (linked.length === 0) {
+              problems.push(
+                'No linked issue. Put `Closes #1234` on the first line, or link one in the Development sidebar. ' +
+                  'A bare `#1234` in the body does not create a link GitHub tracks.'
+              )
+            }
+
+            // Guidance lives in HTML comments, so strip them before measuring.
+            const body = (pr.body ?? '').replace(/<!--[\s\S]*?-->/g, '')
+            const SECTIONS = ['What changed', 'What should the reviewer focus on', 'How to test']
+            const MIN = 15
+
+            for (const heading of SECTIONS) {
+              const re = new RegExp(`^#{1,6}\\s*${heading}\\s*$([\\s\\S]*?)(?=^#{1,6}\\s|$(?![\\s\\S]))`, 'im')
+              const match = body.match(re)
+              if (!match) {
+                problems.push(`Missing section: **${heading}**`)
+              } else if (match[1].trim().length < MIN) {
+                problems.push(`**${heading}** is empty or too short (needs ${MIN}+ characters)`)
+              }
+            }
+
+            if (problems.length) return fail(problems)
+            await pass(`linked to #${linked.map((n) => n.number).join(', #')}, all sections filled in`)

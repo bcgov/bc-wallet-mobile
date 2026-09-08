@@ -8,154 +8,112 @@ jest.mock('@/contexts/NavigationContainerContext', () => ({
   navigationRef: { isReady: () => false, getCurrentRoute: () => undefined },
 }))
 
-describe('AppError', () => {
-  beforeEach(() => {
-    jest.clearAllMocks()
-  })
+const GENERAL_IDENTITY = {
+  category: ErrorCategory.GENERAL,
+  appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
+  statusCode: 1234,
+}
 
+const BAD_REQUEST_IDENTITY = {
+  category: ErrorCategory.NETWORK,
+  appEvent: AppEventCode.ERR_209_BAD_REQUEST,
+  statusCode: 2107,
+}
+
+describe('AppError', () => {
   describe('constructor', () => {
     it('should create an AppError with correct properties', () => {
-      const identity = {
-        category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
-        statusCode: 1234,
-      }
       const message = 'Detailed technical message'
-      const error = new AppError(message, identity, { cause: new Error(message) })
+      const error = new AppError(message, GENERAL_IDENTITY, { cause: new Error(message) })
 
       expect(error.message).toBe(message)
       expect(error.code).toBe('general.unknown_server_error.1234')
       expect(error.appEvent).toBe('unknown_server_error')
       expect(error.technicalMessage).toBe(message)
       expect(error.cause).toBeInstanceOf(Error)
-      expect(error.timestamp).toBeDefined()
+      expect(error.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
       expect(error.handled).toBe(false)
     })
   })
 
   describe('technicalMessage', () => {
     it('should return null if there is no cause', () => {
-      const identity = {
-        category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
-        statusCode: 1234,
-      }
-      const error = new AppError('Something went wrong', identity)
+      const error = new AppError('Something went wrong', GENERAL_IDENTITY)
 
       expect(error.technicalMessage).toBeNull()
     })
 
     it('should return null if cause is not an Error', () => {
-      const identity = {
-        category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
-        statusCode: 1234,
-      }
-      const error = new AppError('Something went wrong', identity, { cause: 'Not an error' as any })
+      const error = new AppError('Something went wrong', GENERAL_IDENTITY, { cause: 'Not an error' as any })
 
       expect(error.technicalMessage).toBeNull()
     })
 
     it('should prefix the native error code when present on the cause', () => {
-      const identity = {
-        category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
-        statusCode: 1234,
-      }
       const cause = Object.assign(new Error("Key pair with alias 'abc' not found."), { code: 'E_KEY_NOT_FOUND' })
-      const error = new AppError('Something went wrong', identity, { cause })
+      const error = new AppError('Something went wrong', GENERAL_IDENTITY, { cause })
 
       expect(error.technicalMessage).toBe("E_KEY_NOT_FOUND: Key pair with alias 'abc' not found.")
     })
 
     it('should append the server response body for AxiosErrors when it is a short string', () => {
-      const identity = {
-        category: ErrorCategory.NETWORK,
-        appEvent: AppEventCode.ERR_209_BAD_REQUEST,
-        statusCode: 2107,
-      }
       const axiosLike = Object.assign(new Error('Request failed with status code 400'), {
         isAxiosError: true,
         response: { data: 'email_address is invalid' },
       })
-      const error = new AppError('Bad request', identity, { cause: axiosLike, track: false })
+      const error = new AppError('Bad request', BAD_REQUEST_IDENTITY, { cause: axiosLike, track: false })
 
       expect(error.technicalMessage).toBe('Request failed with status code 400: email_address is invalid')
     })
 
     it('should not append the response body for objects without a string message', () => {
-      const identity = {
-        category: ErrorCategory.NETWORK,
-        appEvent: AppEventCode.ERR_209_BAD_REQUEST,
-        statusCode: 2107,
-      }
       const axiosLike = Object.assign(new Error('Request failed with status code 400'), {
         isAxiosError: true,
         response: { data: { error: 'bad_request' } },
       })
-      const error = new AppError('Bad request', identity, { cause: axiosLike, track: false })
+      const error = new AppError('Bad request', BAD_REQUEST_IDENTITY, { cause: axiosLike, track: false })
 
       expect(error.technicalMessage).toBe('Request failed with status code 400')
     })
 
     it('should not append the response body when the JSON message field is not a string', () => {
-      const identity = {
-        category: ErrorCategory.NETWORK,
-        appEvent: AppEventCode.ERR_209_BAD_REQUEST,
-        statusCode: 2107,
-      }
       const axiosLike = Object.assign(new Error('Request failed with status code 400'), {
         isAxiosError: true,
         response: { data: { message: 42 } },
       })
-      const error = new AppError('Bad request', identity, { cause: axiosLike, track: false })
+      const error = new AppError('Bad request', BAD_REQUEST_IDENTITY, { cause: axiosLike, track: false })
 
       expect(error.technicalMessage).toBe('Request failed with status code 400')
     })
 
     it('should append the JSON message field for AxiosErrors when the response body is an object (e.g. IAS 4xx evidence rejections)', () => {
-      const identity = {
-        category: ErrorCategory.NETWORK,
-        appEvent: AppEventCode.ERR_209_BAD_REQUEST,
-        statusCode: 2107,
-      }
       const axiosLike = Object.assign(new Error('Request failed with status code 400'), {
         isAxiosError: true,
         response: { data: { message: 'unexpected images count' } },
       })
-      const error = new AppError('Bad request', identity, { cause: axiosLike, track: false })
+      const error = new AppError('Bad request', BAD_REQUEST_IDENTITY, { cause: axiosLike, track: false })
 
       expect(error.technicalMessage).toBe('Request failed with status code 400: unexpected images count')
     })
 
     it('should truncate a JSON message field longer than 500 chars', () => {
-      const identity = {
-        category: ErrorCategory.NETWORK,
-        appEvent: AppEventCode.ERR_209_BAD_REQUEST,
-        statusCode: 2107,
-      }
       const longMessage = 'x'.repeat(600)
       const axiosLike = Object.assign(new Error('Request failed with status code 400'), {
         isAxiosError: true,
         response: { data: { message: longMessage } },
       })
-      const error = new AppError('Bad request', identity, { cause: axiosLike, track: false })
+      const error = new AppError('Bad request', BAD_REQUEST_IDENTITY, { cause: axiosLike, track: false })
 
       expect(error.technicalMessage).toBe(`Request failed with status code 400: ${'x'.repeat(500)}`)
     })
 
     it('should truncate a string response body longer than 500 chars', () => {
-      const identity = {
-        category: ErrorCategory.NETWORK,
-        appEvent: AppEventCode.ERR_209_BAD_REQUEST,
-        statusCode: 2107,
-      }
       const longBody = 'y'.repeat(600)
       const axiosLike = Object.assign(new Error('Request failed with status code 400'), {
         isAxiosError: true,
         response: { data: longBody },
       })
-      const error = new AppError('Bad request', identity, { cause: axiosLike, track: false })
+      const error = new AppError('Bad request', BAD_REQUEST_IDENTITY, { cause: axiosLike, track: false })
 
       expect(error.technicalMessage).toBe(`Request failed with status code 400: ${'y'.repeat(500)}`)
     })
@@ -187,24 +145,14 @@ describe('AppError', () => {
 
   describe('fullMessage', () => {
     it('should return message without technicalMessage', () => {
-      const identity = {
-        category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
-        statusCode: 1234,
-      }
-      const error = new AppError('Something went wrong', identity)
+      const error = new AppError('Something went wrong', GENERAL_IDENTITY)
 
       expect(error.fullMessage).toBe('Something went wrong\nDebug: [general.unknown_server_error.1234]')
     })
 
     it('should return message with technicalMessage if cause is present', () => {
-      const identity = {
-        category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
-        statusCode: 1234,
-      }
       const technicalMessage = 'Technical details about the error'
-      const error = new AppError('Something went wrong', identity, { cause: new Error(technicalMessage) })
+      const error = new AppError('Something went wrong', GENERAL_IDENTITY, { cause: new Error(technicalMessage) })
 
       expect(error.fullMessage).toBe(
         'Something went wrong\nDebug: [general.unknown_server_error.1234] Technical details about the error'
@@ -217,16 +165,11 @@ describe('AppError', () => {
       // fullMessage is what ErrorAlertContext.emitErrorModal forwards as `message` to
       // ErrorModal.handleReport -> logger.reportProblem, which is what reaches Loki when the
       // user taps "Report a problem". The server's real reason must survive that whole path.
-      const identity = {
-        category: ErrorCategory.NETWORK,
-        appEvent: AppEventCode.ERR_209_BAD_REQUEST,
-        statusCode: 2107,
-      }
       const axiosLike = Object.assign(new Error('Request failed with status code 400'), {
         isAxiosError: true,
         response: { data: { message: 'unexpected images count' } },
       })
-      const error = new AppError('Bad request', identity, { cause: axiosLike, track: false })
+      const error = new AppError('Bad request', BAD_REQUEST_IDENTITY, { cause: axiosLike, track: false })
 
       expect(error.fullMessage).toBe(
         'Bad request\nDebug: [network.err_209_bad_request.2107] Request failed with status code 400: unexpected images count'
@@ -282,12 +225,7 @@ describe('AppError', () => {
       // Screen/Request are intentionally kept out of fullMessage (the "Show details" string)
       // so infra context never alarms the user. They ride along in toJSON() (screen + context)
       // when the full error is handed to reportProblem.
-      const identity = {
-        category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
-        statusCode: 1234,
-      }
-      const error = new AppError('Something went wrong', identity)
+      const error = new AppError('Something went wrong', GENERAL_IDENTITY)
       error.addContext({ url: 'https://example.com/device/token', method: 'POST' })
 
       expect(error.fullMessage).toBe('Something went wrong\nDebug: [general.unknown_server_error.1234]')
@@ -300,12 +238,7 @@ describe('AppError', () => {
     it('should track error event in analytics', () => {
       const trackErrorEventSpy = jest.spyOn(Analytics, 'trackErrorEvent')
 
-      const identity = {
-        category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
-        statusCode: 1234,
-      }
-      const error = new AppError('Something went wrong', identity)
+      const error = new AppError('Something went wrong', GENERAL_IDENTITY)
 
       error.track()
 
@@ -387,16 +320,17 @@ describe('AppError', () => {
   })
 
   describe('toJSON', () => {
-    it('should serialize AppError to JSON', () => {
+    beforeEach(() => {
       jest.useFakeTimers().setSystemTime(new Date('2024-01-01T00:00:00Z'))
+    })
 
-      const identity = {
-        category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
-        statusCode: 1234,
-      }
+    afterEach(() => {
+      jest.useRealTimers()
+    })
+
+    it('should serialize AppError to JSON', () => {
       const cause = new Error('Technical message')
-      const error = new AppError('Something went wrong', identity, { cause })
+      const error = new AppError('Something went wrong', GENERAL_IDENTITY, { cause })
       const json = error.toJSON()
 
       expect(json).toEqual({
@@ -411,8 +345,6 @@ describe('AppError', () => {
         handled: false,
         context: {},
       })
-
-      jest.useRealTimers()
     })
 
     it('summarizes the cause so a large request body is never serialized', () => {
@@ -436,17 +368,12 @@ describe('AppError', () => {
     })
 
     it('includes the server response body in the summarized cause for AxiosErrors', () => {
-      const identity = {
-        category: ErrorCategory.NETWORK,
-        appEvent: AppEventCode.ERR_209_BAD_REQUEST,
-        statusCode: 2107,
-      }
       const axiosLike = Object.assign(new Error('Request failed with status code 400'), {
         isAxiosError: true,
         code: 'ERR_BAD_REQUEST',
         response: { status: 400, data: 'email_address is invalid' },
       })
-      const error = new AppError('Bad request', identity, { cause: axiosLike, track: false })
+      const error = new AppError('Bad request', BAD_REQUEST_IDENTITY, { cause: axiosLike, track: false })
 
       const json = error.toJSON()
 
@@ -462,16 +389,11 @@ describe('AppError', () => {
       // toJSON().technicalMessage is what client.ts and ErrorAlertContext auto-log to Loki for
       // every AppError (not just user-initiated "Report a problem"), so the lifted JSON `message`
       // must survive serialization too.
-      const identity = {
-        category: ErrorCategory.NETWORK,
-        appEvent: AppEventCode.ERR_209_BAD_REQUEST,
-        statusCode: 2107,
-      }
       const axiosLike = Object.assign(new Error('Request failed with status code 400'), {
         isAxiosError: true,
         response: { status: 400, data: { message: 'unexpected images count' } },
       })
-      const error = new AppError('Bad request', identity, { cause: axiosLike, track: false })
+      const error = new AppError('Bad request', BAD_REQUEST_IDENTITY, { cause: axiosLike, track: false })
 
       const json = error.toJSON()
 
@@ -504,24 +426,14 @@ describe('AppError', () => {
 
   describe('isHandledAppError', () => {
     it('should return true for handled AppError', () => {
-      const identity = {
-        category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
-        statusCode: 1234,
-      }
-      const error = new AppError('Error', identity)
+      const error = new AppError('Error', GENERAL_IDENTITY)
       error.handled = true
 
       expect(isHandledAppError(error)).toBe(true)
     })
 
     it('should return false for unhandled AppError', () => {
-      const identity = {
-        category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
-        statusCode: 1234,
-      }
-      const error = new AppError('Error', identity)
+      const error = new AppError('Error', GENERAL_IDENTITY)
 
       expect(isHandledAppError(error)).toBe(false)
     })
@@ -535,34 +447,19 @@ describe('AppError', () => {
 
   describe('isAppError', () => {
     it('should return true for AppError', () => {
-      const identity = {
-        category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
-        statusCode: 1234,
-      }
-      const error = new AppError('Error', identity)
+      const error = new AppError('Error', GENERAL_IDENTITY)
 
       expect(isAppError(error)).toBe(true)
     })
 
     it('should return true for AppError with matching appEvent code', () => {
-      const identity = {
-        category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
-        statusCode: 1234,
-      }
-      const error = new AppError('Error', identity)
+      const error = new AppError('Error', GENERAL_IDENTITY)
 
       expect(isAppError(error, AppEventCode.UNKNOWN_SERVER_ERROR)).toBe(true)
     })
 
     it('should return false for AppError with non-matching appEvent code', () => {
-      const identity = {
-        category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
-        statusCode: 1234,
-      }
-      const error = new AppError('Error', identity)
+      const error = new AppError('Error', GENERAL_IDENTITY)
 
       expect(isAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)).toBe(false)
     })
@@ -570,25 +467,13 @@ describe('AppError', () => {
 
   describe('isAxiosAppError', () => {
     it('should return true for AppError with AxiosError cause', () => {
-      const identity = {
-        category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
-        statusCode: 1234,
-      }
-
-      const axiosAppError = new AppError('Error', identity, { cause: new AxiosError() })
+      const axiosAppError = new AppError('Error', GENERAL_IDENTITY, { cause: new AxiosError() })
 
       expect(isAxiosAppError(axiosAppError)).toBe(true)
     })
 
     it('should return false for AppError without AxiosError cause', () => {
-      const identity = {
-        category: ErrorCategory.GENERAL,
-        appEvent: AppEventCode.UNKNOWN_SERVER_ERROR,
-        statusCode: 1234,
-      }
-
-      const appError = new AppError('Error', identity)
+      const appError = new AppError('Error', GENERAL_IDENTITY)
       expect(isAxiosAppError(appError)).toBe(false)
     })
   })

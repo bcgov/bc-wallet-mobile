@@ -9,8 +9,14 @@
 #   auth         — auth/unlock journey
 #   main         — main navigation + settings + wallet credential journeys (issuer creds from 1Password)
 #   verify       — verify entry + verified card-type journeys (uses SM_* creds)
+#   send-video   — the four send-video journeys alone: scripted agent review against a shared,
+#                  blind-FIFO SIT queue, so CI runs them one platform at a time (max-parallel 1) and
+#                  keeps them out of every concurrent multi-device run (exclude_send_video)
+#   a11y         — automated accessibility audits over the core screens (iOS: Apple's audit engine; Android: heuristics)
 #   regression   — every per-area journey (nightly default)
 #   migration    — v3 → v4 app upgrade flow (Sauce RDC only; separate v3 build)
+#   upgrade      — previous released build → current in-place upgrade (Sauce RDC, both platforms)
+#   upgrade403   — the shipped 4.0.3 release → current, via its frozen pre-rework onboarding walk
 #
 # All suites require the single OP_SERVICE_ACCOUNT_TOKEN secret: SAUCE_USERNAME,
 # SAUCE_ACCESS_KEY, SM_USER, and SM_PASSWORD are all loaded from the
@@ -29,6 +35,13 @@
 # Constraint: the SauceLabs account allows 2 concurrent real-device sessions, shared across every
 # job AND every wdio worker inside them. max-parallel caps the jobs; SAUCE_MAX_INSTANCES (computed
 # in the run step) divides the session budget among the jobs running in parallel.
+#
+# This workflow only runs tests and uploads reports. The brief (UAT coverage per platform, failures,
+# accessibility findings) is rendered ONCE per run by the caller — e2e-nightly.yml, whose dispatch
+# takes the same suite choice and resolves the build itself. For a brief over the reports of any
+# other run: `gh run download <id> -p 'e2e-reports-*' -D e2e/artifacts && cd e2e && yarn brief
+# --reports artifacts`. The send-video review queue is drained by the journeys themselves and by
+# e2e-nightly.yml's queue-hygiene job (manual: the "Drain send-video queue" workflow).
 name: E2E Tests
 
 permissions:
@@ -38,13 +51,21 @@ on:
   workflow_call:
     inputs:
       suite:
-        description: 'Test suite (smoke, onboarding, auth, main, verify, regression, migration)'
+        description: 'Test suite (smoke, onboarding, auth, main, verify, send-video, a11y, regression, migration, upgrade, upgrade403)'
         type: string
         required: true
       build_number:
         description: 'Build number for SauceLabs artifact lookup'
         type: string
         required: true
+      prev_build_number:
+        description: >
+          Upgrade suite only: run number of an older build still in Sauce storage
+          (empty = rolling BCSC-prev.*). Must be older than build_number — Android
+          forbids downgrade installs.
+        type: string
+        required: false
+        default: ''
       device_matrix:
         description: 'JSON array of {platform, device, os_version} objects'
         type: string
@@ -54,6 +75,19 @@ on:
         type: string
         required: false
         default: 'ubuntu-latest-m'
+      exclude_send_video:
+        description: >
+          Drop the send-video journeys from the suite. They review a shared blind-FIFO agent queue with
+          shared personas and must never run on two platforms at once; the nightly runs them in their
+          own `send-video` lane. Auto-enabled for a verify/regression run with parallel platforms.
+        type: boolean
+        required: false
+        default: false
+      max_parallel:
+        description: 'Matrix jobs allowed at once — 1 serialises the platforms (send-video is always 1)'
+        type: number
+        required: false
+        default: 2
     secrets:
       OP_SERVICE_ACCOUNT_TOKEN:
         required: true
@@ -78,13 +112,22 @@ on:
           - auth
           - main
           - verify
+          - send-video
+          - a11y
           - regression
           - migration
+          - upgrade
+          - upgrade403
         default: smoke
       build_number:
         description: 'Build number (run_number from the build workflow)'
         type: string
         required: true
+      prev_build_number:
+        description: 'Upgrade suite only: older build run number still in Sauce storage (empty = rolling BCSC-prev.*)'
+        type: string
+        required: false
+        default: ''
       device_matrix:
         description: 'JSON array of {platform, device, os_version} objects'
         type: string
@@ -93,28 +136,39 @@ on:
         description: 'Label of the large runner with whitelisted egress IPs'
         type: string
         default: 'ubuntu-latest-m'
+      exclude_send_video:
+        description: 'Drop the send-video journeys (auto for verify/regression with parallel platforms)'
+        type: boolean
+        default: false
+      max_parallel:
+        description: 'Matrix jobs allowed at once — 1 serialises the platforms (send-video is always 1)'
+        type: number
+        default: 2
 
 jobs:
   # ─── E2E Tests ─────────────────────────────────────────────────────
   # Single unified job for all suites. Config file paths are selected at
   # runtime via a case statement on $SUITE:
   #   migration                → configs/sauce/wdio.{ios,android}.sauce.migration.conf.ts
+  #   upgrade / upgrade403     → configs/sauce/wdio.{ios,android}.sauce.upgrade.conf.ts
   #   everything else (smoke,  → configs/sauce/wdio.{ios,android}.sauce.rdc.conf.ts
   #    onboarding, auth, main,
   #    verify, regression)
   #
-  # Non-blocking suites (migration): failures are reported but
+  # Non-blocking suites (migration, upgrade, upgrade403): failures are reported but
   # do not gate the pipeline.
   e2e-tests:
     name: '${{ inputs.suite }} - ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
     runs-on: ${{ inputs.runner_label }}
     permissions:
       contents: read
-    # regression runs every journey serially (~50m+ on iOS and growing); other suites (merge-queue smoke) stay tight
-    timeout-minutes: ${{ inputs.suite == 'regression' && 90 || 45 }}
-    continue-on-error: ${{ inputs.suite == 'migration' }}
+    # regression runs every journey serially (~2h per platform with retries and growing); send-video is four
+    # recording journeys with retries; other suites (merge-queue smoke) stay tight
+    timeout-minutes: ${{ (inputs.suite == 'regression' && 180) || (inputs.suite == 'send-video' && 90) || 45 }}
+    continue-on-error: ${{ contains(fromJSON('["migration","upgrade","upgrade403"]'), inputs.suite) }}
     strategy:
-      max-parallel: 2
+      # send-video is pinned to 1: its journeys must never run on two platforms at once
+      max-parallel: ${{ (inputs.suite == 'send-video' && 1) || inputs.max_parallel || 2 }}
       fail-fast: false
       matrix:
         device: ${{ fromJSON(inputs.device_matrix) }}
@@ -126,21 +180,8 @@ jobs:
         with:
           variant: bcsc-dev
 
-      - name: Setup NodeJS
-        uses: ./.github/workflows/actions/setup-node
-
-      - name: Cache E2E dependencies
-        uses: actions/cache@v6
-        with:
-          path: |
-            e2e/.yarn/cache
-            e2e/node_modules
-          key: e2e-deps-${{ hashFiles('e2e/yarn.lock') }}
-          restore-keys: e2e-deps-
-
-      - name: Install E2E dependencies
-        working-directory: e2e
-        run: yarn install --immutable
+      - name: Setup E2E
+        uses: ./.github/workflows/actions/setup-e2e
 
       # The wallet journey (main + regression suites) drives the e2e issuer — a Traction dev tenant
       # (e2e/issuer/README.md) — over its admin API. This preflight runs the idempotent provisioning
@@ -154,7 +195,7 @@ jobs:
       # Run step needs no ISSUER_* env of its own and the script never has to echo them.
       - name: Load issuer credentials from 1Password
         if: contains(fromJSON('["main","regression"]'), inputs.suite)
-        uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
         with:
           export-env: true
         env:
@@ -179,7 +220,7 @@ jobs:
       # step below that references them.
       - name: Load SauceLabs and SiteMinder secrets from 1Password
         id: op_e2e
-        uses: 1password/load-secrets-action@e544b780808654ba8ceba5fb2fe2897103d92ff4 # v5.0.0
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           SAUCE_USERNAME: op://bcsc-mobile-app-cd/saucelabs/username
@@ -205,7 +246,10 @@ jobs:
           ANDROID_DEVICE_NAME: ${{ matrix.device.platform == 'Android' && matrix.device.device || '' }}
           ANDROID_PLATFORM_VERSION: ${{ matrix.device.platform == 'Android' && matrix.device.os_version || '' }}
           BUILD_NUMBER: ${{ inputs.build_number }}
+          PREV_BUILD_NUMBER: ${{ inputs.prev_build_number }}
           SUITE: ${{ inputs.suite }}
+          MAX_PARALLEL: ${{ inputs.max_parallel || 2 }}
+          EXCLUDE_SEND_VIDEO_INPUT: ${{ inputs.exclude_send_video }}
           BUILD_NAME: 'build-${{ inputs.build_number }}'
           TEST_NAME: 'E2E ${{ inputs.suite }} - ${{ matrix.device.platform }} ${{ matrix.device.os_version }}'
         run: |
@@ -215,20 +259,62 @@ jobs:
           # POST /session until the client aborts and reports "Failed to create a session".
           DEVICE_COUNT=$(printf '%s' "$DEVICE_MATRIX" | jq 'length')
           [ "$DEVICE_COUNT" -ge 1 ] 2>/dev/null || DEVICE_COUNT=1
-          PARALLEL_JOBS=$(( DEVICE_COUNT > 2 ? 2 : DEVICE_COUNT ))   # strategy.max-parallel is 2
+          [ "$MAX_PARALLEL" -ge 1 ] 2>/dev/null || MAX_PARALLEL=2
+          if [ "$SUITE" = "send-video" ]; then MAX_PARALLEL=1; fi   # mirrors strategy.max-parallel
+          PARALLEL_JOBS=$(( DEVICE_COUNT > MAX_PARALLEL ? MAX_PARALLEL : DEVICE_COUNT ))
           export SAUCE_MAX_INSTANCES=$(( SAUCE_RDS_CONCURRENCY / PARALLEL_JOBS ))
+          # The send-video journeys review a blind-FIFO queue: one session at a time whatever the budget
+          # (the Android lane caps itself, iOS has no per-lane cap).
+          if [ "$SUITE" = "send-video" ]; then export SAUCE_MAX_INSTANCES=1; fi
           echo "Devices: $DEVICE_COUNT | parallel jobs: $PARALLEL_JOBS | wdio maxInstances: $SAUCE_MAX_INSTANCES"
+
+          # Those journeys must never run on two platforms at once — each platform's queue drain would
+          # reject the other's live upload — so a multi-device parallel verify/regression run drops them;
+          # the nightly runs them in its own one-platform-at-a-time lane.
+          export E2E_EXCLUDE_SEND_VIDEO=0
+          if [ "$EXCLUDE_SEND_VIDEO_INPUT" = "true" ]; then
+            export E2E_EXCLUDE_SEND_VIDEO=1
+          elif [ "$PARALLEL_JOBS" -gt 1 ] && { [ "$SUITE" = "verify" ] || [ "$SUITE" = "regression" ]; }; then
+            export E2E_EXCLUDE_SEND_VIDEO=1
+            echo "::notice::Send-video journeys excluded from this ${SUITE} run: ${PARALLEL_JOBS} platforms run in parallel. Use the send-video suite (or max_parallel: 1) to include them."
+          fi
 
           case "$SUITE" in
             migration)
               IOS_CONF="configs/sauce/wdio.ios.sauce.migration.conf.ts"
               ANDROID_CONF="configs/sauce/wdio.android.sauce.migration.conf.ts"
               ;;
+            upgrade | upgrade403)
+              IOS_CONF="configs/sauce/wdio.ios.sauce.upgrade.conf.ts"
+              ANDROID_CONF="configs/sauce/wdio.android.sauce.upgrade.conf.ts"
+              ;;
             *)
               IOS_CONF="configs/sauce/wdio.ios.sauce.rdc.conf.ts"
               ANDROID_CONF="configs/sauce/wdio.android.sauce.rdc.conf.ts"
               ;;
           esac
+          # Upgrade suite: optional override of the rolling previous build (BCSC-prev.*).
+          if [ "$SUITE" = "upgrade" ] && [ -n "$PREV_BUILD_NUMBER" ]; then
+            export PREV_ANDROID_APP="${SAUCE_LABS_PREFIX}-${PREV_BUILD_NUMBER}.apk"
+            export PREV_IOS_APP="${SAUCE_LABS_PREFIX}-${PREV_BUILD_NUMBER}.ipa"
+          fi
+          # The rolling BCSC-prev.* first exists once a full release publishes its e2e builds —
+          # until then a default upgrade run cannot start a session; skip with a notice, not a failure.
+          # Each matrix job is one platform, so probe that platform's file.
+          if [ "$SUITE" = "upgrade" ] && [ -z "$PREV_BUILD_NUMBER" ]; then
+            if [ "$PLATFORM" = "iOS" ]; then PREV_FILE="BCSC-prev.ipa"; else PREV_FILE="BCSC-prev.apk"; fi
+            total=$(curl -su "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
+              "https://api.us-west-1.saucelabs.com/v1/storage/files?q=${PREV_FILE}&per_page=1" | jq -r '.total_items')
+            if [ "$total" = "0" ]; then
+              echo "::notice::${PREV_FILE} not in Sauce storage yet (no full release has published e2e builds) — skipping the upgrade suite"
+              exit 0
+            fi
+          fi
+          # upgrade403 pins its previous build to the preserved 4.0.3 binaries.
+          if [ "$SUITE" = "upgrade403" ]; then
+            export PREV_ANDROID_APP="BCSC-v4.0.3.apk"
+            export PREV_IOS_APP="BCSC-v4.0.3.ipa"
+          fi
           if [ "$PLATFORM" = "iOS" ]; then
             IOS_APP_FILENAME="${SAUCE_LABS_PREFIX}-${BUILD_NUMBER}.ipa" \
               yarn wdio "$IOS_CONF" --suite "${SUITE}"

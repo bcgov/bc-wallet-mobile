@@ -41,9 +41,13 @@ _Tests are organized into named suites. Use the_ `--suite` _flag to select which
 | `onboarding` | _Onboarding journeys — happy path + detours (`onboarding/*.journey.ts`)_                    |
 | `auth`       | _Returning-user unlock journey — PIN unlock, wrong-PIN retry, lockout (`auth/*.journey.ts`)_ |
 | `verify`     | _Verification journeys — the four card types + entry spine/detours (`verify/*.journey.ts`)_ |
+| `send-video` | _The four send-video journeys alone (`verify/send-video-*.journey.ts`): a scripted agent review against the shared SIT queue. Also inside `verify` / `regression`, but CI runs them in their own one-platform-at-a-time lane and drops them from any parallel multi-device run (`E2E_EXCLUDE_SEND_VIDEO=1`) — see **[Send-video review queue](#send-video-review-queue)**_ |
 | `main`       | _Main-stack journeys — unverified gating + settings + wallet credential lifecycle (`main/*.journey.ts`)_ |
-| `migration`  | _V3→V4 upgrade: v3 onboarding + verification, upgrade to v4, unlock with the v3 PIN_                 |
+| `migration`  | _The upgrade **from v3**: v3 onboarding + verification, install the current build over it, unlock with the v3 PIN. Same shape as the two upgrade lanes below; its own suite because v3 is a different app lineage (own binaries + `src/v3TestIDs.ts`) and it runs Android-only in CI_ |
+| `upgrade`    | _Previous released build → current: onboard on the previous release, in-place upgrade, unlock with the old PIN + settings persistence. Runs on Sauce on **both platforms** (mid-session install passes Sauce resigning)_ |
+| `upgrade403` | _Upgrade from the shipped **4.0.3** release specifically — its pre-rework onboarding runs via a frozen walk (`flows/onboarding-v403.ts`). Runs on Sauce on **both platforms**; retire once 4.1.0 is the previous release_ |
 | `scan`       | _Card-barcode scanning — non-BCSC→BCSC reroutes + the serial scanner (`scan/*.journey.ts`). **Android + Sauce only**, and also part of `regression`; the iOS configs `exclude` it_ |
+| `a11y`       | _Automated accessibility audits over the core unverified screens (`a11y/*.journey.ts`): iOS runs Apple's XCTest audit engine, Android the page-source/screenshot heuristics — see **[Accessibility audits](#accessibility-audits)**. Also part of `regression`_ |
 
 ```bash
 # Run by suite name (per-area journey suites)
@@ -206,7 +210,40 @@ yarn test:ios:migration:sauce
 yarn wdio configs/sauce/wdio.ios.sauce.migration.conf.ts --suite migration
 ```
 
-_The migration configs start with the v3 app as the initial install. During the test, `driver.installApp()` upgrades to v4 mid-session. Both apps share the same bundle/package ID (eg. `ca.bc.gov.id.servicescard.dev`), so the upgrade preserves app data._
+_The migration configs start with the v3 app as the initial install. During the test, the shared install helper (`src/helpers/app-install.ts`) upgrades to v4 mid-session — on Sauce via the storage-based `mobile: installApp` script (the plain installApp endpoint only accepts http/https), locally via `driver.installApp()`. Both apps share the same bundle/package ID (eg. `ca.bc.gov.id.servicescard.dev`), so the upgrade preserves app data._
+
+### _Upgrade Tests (previous release → current)_
+
+_The upgrade suite tests upgrading from the **previous released build** to the current build under test — the check an RC needs release after release. It onboards on the previous release (driven with the current screen DSL — a release that renames testIDs or reshapes onboarding will surface here, which is signal), sets auto-lock, installs the current build over it mid-session, then verifies the app unlocks with the pre-upgrade PIN, the setting persisted, and the Settings version footer changed (the binary really swapped)._
+
+**_Prerequisites:_**
+
+1. _The rolling previous-release builds in Sauce Labs storage: `BCSC-prev.apk` / `BCSC-prev.ipa`. They track the newest **full** (non-prerelease) `bcsc-v*` GitHub release: the **Publish Release E2E Builds** workflow attaches `BCSC-Dev-e2e.*` assets to a version's release and pushes them to Sauce when a full release ships (see `RELEASE.md`); the monthly **Refresh E2E Sauce Builds** workflow keeps them inside Sauce's 60-day retention. To upgrade from any other build still in storage, override `PREV_ANDROID_APP` / `PREV_IOS_APP` (or pass the `prev_build_number` input when dispatching `e2e.yml`)._
+2. _The current build under test via the standard vars: `ANDROID_APP_FILENAME` / `IOS_APP_FILENAME`._
+
+```bash
+# Android on Sauce (the CI path)
+yarn test:android:upgrade:sauce
+
+# Upgrade from a specific older build instead of the rolling BCSC-prev
+PREV_ANDROID_APP=BCSC-Dev-4550.apk ANDROID_APP_FILENAME=BCSC-Dev-4700.apk \
+  yarn test:android:upgrade:sauce
+
+# iOS on Sauce (storage-based mid-session install passes Sauce resigning; validated 2026-08-25)
+yarn test:ios:upgrade:sauce
+
+# or iOS locally on a USB device
+PREV_IOS_APP=BCSC-prev.ipa IOS_APP_DEVICE=BCSC.ipa yarn test:ios:upgrade:device
+```
+
+_Android installs only go old → new: versionCode = the build run number, so the previous build must be an **older** run number than the current one (Android refuses downgrade installs). No SiteMinder credentials are needed — the journey stays unverified._
+
+_The previous build must also carry the **current onboarding shape** — the spec drives it with today's screen DSL, so the first eligible release is **4.1.0**; older builds fail phase 1 by design. The one shipped release before that boundary gets its own spec: `upgrade403` onboards the **4.0.3** binary via a frozen copy of its pre-rework walk (`src/flows/onboarding-v403.ts`, previous binary preserved in Sauce storage as `BCSC-v4.0.3.*`), then reuses the standard install + post-upgrade assertions. Runs on Sauce on both platforms; retire it once 4.1.0 becomes the previous release:_
+
+```bash
+ANDROID_APP_FILENAME=BCSC-Dev-<current>.apk yarn test:android:upgrade403:sauce
+IOS_APP_FILENAME=BCSC-Dev-<current>.ipa yarn test:ios:upgrade403:sauce
+```
 
 ### _Variant Selection_
 
@@ -260,6 +297,8 @@ _Two env files split general e2e config (including SiteMinder credentials) from 
 | `TEST_NAME`                | `E2E Tests`           | _SauceLabs test name_                                                         |
 | `V3_ANDROID_APP`           | `BCSC-v3.apk`         | _V3 Android app for migration tests (local file or Sauce storage filename)_   |
 | `V3_IOS_APP`               | `BCSC-v3.ipa`         | _V3 iOS app for migration tests (local file or Sauce storage filename)_       |
+| `PREV_ANDROID_APP`         | `BCSC-prev.apk`       | _Previous released Android app for upgrade tests (local file or Sauce storage filename)_ |
+| `PREV_IOS_APP`             | `BCSC-prev.ipa`       | _Previous released iOS app for upgrade tests (local file or Sauce storage filename)_ |
 
 ### _SiteMinder (in_ `.env.e2e`_)_
 
@@ -280,6 +319,23 @@ SM_PASSWORD='your-siteminder-password'
 
 _The same_ `scripts/login.mjs` _can also be invoked as a CLI; it loads_ `.env.e2e` _itself when run standalone. Without these credentials, any journey that completes in-person verification (the verified_ `verify` _/_ `main` _journeys, and_ `migration`_) will fail at the approval step._
 
+### _Send-video review queue_
+
+_The send-video journeys upload real verification requests to the SIT IDcheck agent queue and review them through the same SiteMinder session (`reviewSendVideoRequest`). That queue has **no worklist** — a review claims the_ next _request blindly and then checks it is the expected persona on the expected platform — and it is **shared** with the UAT team. Two things follow:_
+
+- _**Never run send-video journeys on two platforms at once.** The personas are shared, so one platform would review (or drain) the other's live upload. CI keeps them out of the concurrent device matrix and runs them in their own_ `send-video` _lane, one platform at a time; a parallel multi-device_ `verify` _/_ `regression` _run drops them automatically (`E2E_EXCLUDE_SEND_VIDEO=1`, with a notice)._
+- _**The queue is drained around every submission.** Each send-video journey rejects whatever is queued before it submits (so its own upload is the head the review claims), and its teardown drains again if the upload was never reviewed. The nightly ends with a_ `queue-hygiene` _job (`e2e-send-video-queue.yml`) that drains once more, so a run that died mid-journey leaves nothing for the morning. Rejections carry the reason "Automated e2e queue cleanup"._
+
+_On demand — locally with the SiteMinder credentials above (and an allowlisted egress IP, e.g. the VPN), or from the Actions tab as **Drain send-video queue**:_
+
+```bash
+yarn queue:drain                 # reject everything queued (scope all)
+yarn queue:drain --scope e2e     # only the e2e personas; stops at the first foreign request
+yarn queue:drain --dry-run       # log in and report which queues hold work; claims nothing
+```
+
+_The journeys drain with scope_ `all` _by default (the nightly runs at midnight PT, when anything still queued is stale);_ `E2E_QUEUE_DRAIN_SCOPE=e2e` _keeps a daytime run to the e2e personas so it never touches a UAT tester's pending request._
+
 ## _Config Hierarchy_
 
 ```
@@ -293,7 +349,9 @@ wdio.shared.conf.ts                         ← base (specs, suites, framework, 
       ├── sauce/wdio.android.sauce.rdc.conf.ts    ← + Android real device caps
       ├── sauce/wdio.ios.sauce.rdc.conf.ts         ← + iOS real device caps
       ├── sauce/wdio.android.sauce.migration.conf.ts ← + Android migration (v3 app)
-      └── sauce/wdio.ios.sauce.migration.conf.ts     ← + iOS migration (v3 app)
+      ├── sauce/wdio.ios.sauce.migration.conf.ts     ← + iOS migration (v3 app)
+      ├── sauce/wdio.android.sauce.upgrade.conf.ts   ← + Android upgrade (previous release)
+      └── sauce/wdio.ios.sauce.upgrade.conf.ts       ← + iOS upgrade (previous release)
 ```
 
 _Each leaf config only contains **capabilities** (device name, platform version, app path). Everything else is inherited. Each platform config reads its own env vars (_`IOS_DEVICE_NAME`_,_ `IOS_PLATFORM_VERSION`_,_ `ANDROID_DEVICE_NAME`_,_ `ANDROID_PLATFORM_VERSION`_) to allow CI to control device targeting without config changes._
@@ -400,6 +458,43 @@ Run just the file you are iterating on:
 
 ```bash
 yarn wdio configs/local/wdio.ios.local.sim.conf.ts --spec test/bcsc/verify/verified-photo.journey.ts
+```
+
+<a id="accessibility-audits"></a>
+
+### Accessibility audits
+
+`src/helpers/a11y-audit.ts` audits the screen on display and records what it finds — it never fails the checkpoint that calls it. Call it right after a screen's `expectVisible()`, with no transition or keyboard in flight:
+
+```typescript
+import { auditScreen, reportA11ySummary } from '../../../src/helpers/a11y-audit.js'
+
+it('audits Settings', async () => {
+  await SettingsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await auditScreen('Settings') // findings → Allure attachment + reports/a11y/<platform>/*.json
+})
+
+it('reports the accessibility audit roll-up', async () => {
+  await reportA11ySummary() // terminal checkpoint: fails only if NO audit could run (or under A11Y_AUDIT_STRICT=1)
+})
+```
+
+What each platform can see is very different, and the report says which engine produced it:
+
+| Platform | Engine | Checks | Blind spots |
+| --- | --- | --- | --- |
+| iOS 17+ | Apple's audit engine via `mobile: performAccessibilityAudit` (XCTest) | contrast, hit region, element description, traits, clipped text, dynamic type, parent/child, actions | screen-reader announcements and order |
+| Android | page-source + screenshot heuristics (`src/helpers/a11y-android.ts`) | tappable elements with no accessible name, unlabeled text fields, touch targets under 44dp (error under 24dp), text contrast under 4.5:1 sampled from the screenshot (regions the pushed screen covers are skipped, not flagged) | roles/traits, focus order, live regions, anything semantic — there is no Appium-native audit engine for Android (Google's ATF is in-process only) |
+
+Findings carry a `severity` (`error` = the engine calls it a defect; `warning` = a heuristic that needs a human look) and a `signature` (rule + element identity) that `a11y-baseline.json` is keyed on — the nightly brief tags findings missing from it as NEW (see **Nightly brief** under CI/CD). Neither engine can assert VoiceOver/TalkBack behaviour — that pass stays manual with the UAT team.
+
+```bash
+# The whole lane locally (one cheap unverified session, ~20 screens)
+yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite a11y
+yarn wdio configs/local/wdio.android.local.emu.conf.ts --suite a11y
+
+A11Y_AUDIT_TYPES=contrast,hitRegion   # iOS: narrow the audit types (default: all)
+A11Y_AUDIT_STRICT=1                    # fail the roll-up on error-severity findings
 ```
 
 ### _Camera Image Injection_
@@ -513,15 +608,41 @@ _Tests run automatically in GitHub Actions via a device matrix that controls whi
 | _Trigger_            | _Suite_      | _Device Matrix_                     | _Variant_  | _Biometrics_ |
 | -------------------- | ------------ | ----------------------------------- | ---------- | ------------ |
 | _PR_                 | `smoke`      | _1 iOS (18) + 1 Android (15)_       | `bcsc-dev` | _No_         |
-| _Nightly (schedule)_ | `regression` | _3 iOS (16–18) + 3 Android (13–15)_ | `bcsc-dev` | _—_          |
+| _Nightly (schedule)_ | `regression` | _1 iOS (18) + 1 Android (15)_ | `bcsc-dev` | _—_          |
 
-> _The nightly `regression` suite (all per-area journeys) replaces the retired `happy-path` / `full-regression` suites. It is the default suite in_ `e2e-nightly.yml` _and selectable from_ `e2e.yml` _(alongside the per-area suites); `migration` stays a separate suite because it boots the v3 app via its own config. `scan` is inside `regression` but Android-only — the iOS configs list it in_ `exclude` _(`ANDROID_ONLY_SPECS`), so those specs are dropped before scheduling instead of costing an iOS session each to reach a skip._
+> _The nightly `regression` suite (all per-area journeys) replaces the retired `happy-path` / `full-regression` suites. It is the default suite in_ `e2e-nightly.yml` _and selectable from_ `e2e.yml` _(alongside the per-area suites); `migration`, `upgrade`, and `upgrade403` are separate suites because each boots an OLD build via its own config, and the nightly runs them as chained advisory lanes after the regression (migration on Android 15; `upgrade` / `upgrade403` on iOS 18 + Android 15) — `upgrade` starts on the rolling previous-release build (`BCSC-prev.*`, or any stored build via the `prev_build_number` dispatch input; until the first full release publishes its e2e builds the lane skips with a notice) and installs the current build mid-session, while `upgrade403` pins the preserved `BCSC-v4.0.3.*`. `a11y` rides inside `regression` on both platforms as an advisory lane — its findings are reports, not failures. `scan` is inside `regression` but Android-only — the iOS configs list it in_ `exclude` _(`ANDROID_ONLY_SPECS`), so those specs are dropped before scheduling instead of costing an iOS session each to reach a skip._
+
+_The four send-video journeys are excluded from that concurrent regression matrix and run right after it as their own_ `send-video` _lane — both platforms, one at a time (`max_parallel: 1`), alongside the Android-only migration lane — because they review a shared, blind-FIFO SIT agent queue with shared personas (see **Send-video review queue**). The journeys drain that queue around their own uploads, and the nightly ends with a_ `queue-hygiene` _job that drains it once more._
 
 _The device matrix is passed as a JSON array of_ `{platform, device, os_version}` _objects to_ `e2e.yml`_. Each entry spawns a separate SauceLabs session with its own logs and pass/fail status. (Biometric CI wiring — its Sauce configs, dev scripts, and workflow job — has been removed pending re-implementation as a journey; the_ `biometrics` _helper is retained for that future work.)_
 
 _**Note:** There is no E2E job on_ `main` _merge by design — regression is deferred to the nightly workflow so SauceLabs devices stay free during the day when multiple PRs merge. The in-person verification step needs the runner's egress IP allowlisted with the BC Gov ID Check portal; see the notes in_ `e2e-nightly.yml` _and use the "Verify Allowlist Connectivity" workflow to confirm reachability._
 
-_**Concurrency:** SauceLabs sessions are limited to_ `max-parallel: 2`_. For PRs (2 devices = 2 jobs) this fits within a single round. Nightly runs with the full device matrix queue longer._
+_**Concurrency:** SauceLabs sessions are limited to_ `max-parallel: 2`_. For PRs (2 devices = 2 jobs) this fits within a single round. Nightly uses the same two-device matrix; it runs longer end-to-end because the advisory lanes (migration, upgrade, upgrade403) chain serially after the regression._
+
+### Nightly brief
+
+Every nightly run ends with a **brief** — one page on the run's Summary tab (and the `e2e-nightly-brief` artifact: `brief.md` + `brief.json`) rendered from the `e2e-reports-*` artifacts of every lane: the UAT checklist with an iOS and an Android column, every other journey, every failure with its checkpoint, and the accessibility findings against `a11y-baseline.json`. Dispatching **E2E Nightly** with a `suite` renders the same page for that suite (it resolves the build itself), and `yarn brief --reports <dir>` renders it locally from downloaded `e2e-reports-*` artifacts. Nothing in it fails a run — it is what to read instead of downloading artifacts.
+
+| Symbol | Meaning |
+| --- | --- |
+| ✅ / ❌ | every listed checkpoint passed / at least one failed |
+| ⛔ blocked | skipped because an earlier checkpoint in the same file failed (`mochaOpts.bail`) |
+| ⏭️ skipped | a runtime `this.skip()` — an env or data gate (Sauce-only, iOS-only, missing SIT data) |
+| ⬜ not run | no result for it in these reports (lane not run, spec not scheduled, worker never got a session) |
+| ➖ n/a | not applicable on that platform (e.g. card-barcode scanning on iOS) |
+| 📝 manual | proved by the UAT team, not automation — the manual script is linked |
+
+Cells show `passed/listed` plus tallies when not everything listed passed (`✅ 4/5 ⏭1`). The rows come from `src/brief/coverage-map.ts` — each UAT row names the spec files and exact `it` titles that prove it, per platform — and `yarn brief:check` (the brief job runs it first) fails when a listed title no longer exists or a journey under `test/bcsc/` is not mapped, so renaming a checkpoint means updating the map.
+
+```bash
+yarn brief --reports reports                                   # the brief for a local run, to stdout
+gh run download <run-id> -p 'e2e-reports-*' -D artifacts && yarn brief --reports artifacts --out brief.md
+yarn brief:check                                               # the coverage map + the fixture self-test
+yarn a11y:baseline --reports reports                           # re-snapshot the known a11y findings after triage
+```
+
+The accessibility section lists only screens with errors, per platform, with how many findings are NEW versus `a11y-baseline.json` (platform → screen → issue `signature`). A screen the baseline has never seen shows all its findings as NEW and says so. The baseline is report-only: regenerate it once the findings are triaged, and review its diff like code.
 
 ## _Local App Binaries_
 
@@ -544,7 +665,16 @@ e2e/
 ├── .env.e2e.example                         # general e2e config template (copy to .env.e2e)
 ├── .env.saucelabs.example                   # SauceLabs credentials template (copy to .env.saucelabs)
 │
+├── a11y-baseline.json                       # known accessibility findings (yarn a11y:baseline); the brief flags NEW ones
+│
 ├── scripts/
+│   ├── brief.ts                             # renders the e2e brief from report dirs (yarn brief)
+│   ├── brief-check.ts                       # coverage-map validator + fixture self-test (yarn brief:check)
+│   ├── a11y-baseline.ts                     # snapshots a11y findings as the baseline (yarn a11y:baseline)
+│   ├── fixtures/brief/                      # hand-written reports the self-test asserts against
+│   ├── generate-scan-assets.mjs             # combo-card backs for the scan suite
+│   ├── issuer-provision.ts                  # issuer tenant bootstrap / CI preflight (yarn issuer:provision)
+│   ├── issuer-smoke.ts                      # issuer API smoke, no device (yarn issuer:smoke)
 │   ├── login.mjs                            # SiteMinder login helper for approval flow
 │   ├── setup-drivers.mjs                    # installs Appium drivers (yarn setup)
 │   └── start-android-emulator.mjs           # launches emulator with DNS (yarn emulator:android)
@@ -559,6 +689,14 @@ e2e/
 │   ├── e2eConfig.ts                         # variant detection (bcsc / bc-wallet)
 │   ├── v3TestIDs.ts                         # v3 native app selectors (iOS + Android) for migration
 │   │
+│   ├── brief/                               # the nightly brief: JUnit → coverage map → markdown
+│   │   ├── coverage-map.ts                  # UAT rows + every journey → proving spec files / it titles, per platform
+│   │   ├── junit.ts                         # JUnit XML → suite results (bail cascade → blocked, retries deduped)
+│   │   ├── evaluate.ts                      # row × platform → pass/fail/blocked/skipped/not-run/n-a/manual
+│   │   ├── a11y-summary.ts                  # latest audit per platform vs a11y-baseline.json (NEW vs known)
+│   │   ├── render.ts                        # the markdown GitHub shows as the run summary
+│   │   └── build.ts                         # report dirs → brief model (the CLI and the self-test share it)
+│   │
 │   ├── test-ids/
 │   │   └── registry.ts                      # single source of testID keys + com.ariesbifold:id/ prefix
 │   │
@@ -572,6 +710,8 @@ e2e/
 │   │   └── context.ts                       # per-journey TestUser context (setTestUser / getTestUser)
 │   │
 │   ├── helpers/
+│   │   ├── a11y-audit.ts                    # auditScreen(): iOS XCTest audit engine + report/roll-up (non-blocking)
+│   │   ├── a11y-android.ts                  # Android heuristics: unlabeled controls, touch targets, screenshot contrast
 │   │   ├── alerts.ts                        # iOS system alert acceptance (permissions, dialogs)
 │   │   ├── approval.ts                      # in-person verification approval via SiteMinder
 │   │   ├── biometrics.ts                    # biometric simulation (Sauce Labs RDC)
@@ -615,10 +755,32 @@ e2e/
 │       │   ├── verified-photo.journey.ts    # photo card + send-video/live-call detours
 │       │   ├── verified-non-photo.journey.ts # non-photo card (+ additional photo ID)
 │       │   ├── verified-combined.journey.ts # combined card + login/deep-link/transfer/contacts/account
-│       │   └── verified-non-bcsc.journey.ts # non-BCSC (two IDs + address + email)
+│       │   ├── verified-non-bcsc.journey.ts # non-BCSC (two IDs + address + email)
+│       │   ├── send-video-approved.journey.ts # send-video end-to-end: record → upload → scripted approve → verified
+│       │   ├── send-video-cancelled.journey.ts # scripted reject + agent-reason round-trip (+ over-long recording)
+│       │   ├── send-video-non-photo.journey.ts # send-video from the card type that adds a photo ID first
+│       │   ├── send-video-non-bcsc.journey.ts # cardless send-video through the identity-match step (inbox-dependent)
+│       │   ├── video-call.journey.ts        # live call: WebRTC connect → answered by the SIT test harness (or queue-wait) → end → VerifyNotComplete (or busy/closed asserts)
+│       │   └── under-12.journey.ts          # under-12 persona: restricted method set + transfer age gate
 │       ├── main/
 │       │   ├── unverified-main.journey.ts   # unverified tab / QRCore gating
-│       │   └── settings.journey.ts          # settings rows, change-PIN, auto-lock, reset/remove account
+│       │   ├── settings.journey.ts          # settings rows, change-PIN, auto-lock, reset/remove account
+│       │   └── wallet.journey.ts            # DIDComm credential lifecycle + populated Contacts (issuer tenant)
+│       │
+│       ├── scan/                            # card-barcode scanning — Android + Sauce only (--suite scan; in regression)
+│       │   ├── reroute-photo-card.journey.ts # non-BCSC flow reroutes when the photographed ID is a real photo card
+│       │   ├── reroute-non-photo-card.journey.ts # … a real non-photo card
+│       │   ├── reroute-combined-card.journey.ts  # … a real combined card
+│       │   ├── reroute-second-id.journey.ts # … on the second ID
+│       │   ├── serial-scanner.journey.ts    # an unrecognised barcode at the serial scanner
+│       │   └── reroute-context.ts           # shared arrange for the reroute journeys
+│       │
+│       ├── a11y/
+│       │   └── accessibility.journey.ts     # audits 28 unverified screens (--suite a11y; also in regression)
+│       │
+│       ├── upgrade/                         # previous release → current in-place upgrade (--suite upgrade)
+│       │   ├── upgrade.spec.ts              # onboard on prev build → installApp current → unlock + settings persist
+│       │   └── upgrade-from-v403.spec.ts    # the shipped 4.0.3 via its frozen pre-rework onboarding (--suite upgrade403)
 │       │
 │       └── migration/                       # v3 → v4 upgrade (--suite migration; deprioritized). v3 phase uses v3TestIDs.ts
 │           ├── migration.spec.ts            # orchestrator: v3 onboarding → upgrade → v4 unlock

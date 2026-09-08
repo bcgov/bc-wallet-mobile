@@ -1,6 +1,7 @@
 import { BulletedInstructionsScreen } from '@/bcsc-theme/components/BulletedInstructionsScreen'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { HelpCentreUrl } from '@/constants'
+import { ACCOUNT_SERVICES_URL, HelpCentreUrl } from '@/constants'
+import { openLink } from '@/utils/links'
 import { testIdWithKey } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -46,6 +47,12 @@ const DualIdentificationRequiredScreen: React.FC<DualIdentificationRequiredScree
         {
           heading: t('BCSC.AdditionalEvidence.LimitedAccess'),
           paragraph: t('BCSC.AdditionalEvidence.LimitedAccessDescription'),
+          footerLink: {
+            label: t('BCSC.AdditionalEvidence.WhichServices'),
+            testID: testIdWithKey('WhichServices'),
+            externalButton: true,
+            onPress: () => openLink(ACCOUNT_SERVICES_URL),
+          },
         },
       ]}
       primaryAction={{

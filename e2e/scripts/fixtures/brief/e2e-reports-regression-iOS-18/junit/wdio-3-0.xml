@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="16" failures="1" errors="0" skipped="6">
+  <testsuite name="Main journey settings" timestamp="2026-08-28T05:45:44" time="401.220" tests="16" failures="1" errors="0" skipped="6">
+    <properties>
+      <property name="specId" value="0"/>
+      <property name="suiteName" value="Main journey: settings"/>
+      <property name="capabilities" value="ios.5fc23a1b909c4d"/>
+      <property name="file" value="file://./test/bcsc/main/settings.journey.ts"/>
+    </properties>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_settings" name="onboards and skips to unverified Home" time="41.008"/>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_settings" name="opens Settings and hides the verified only rows" time="9.552"/>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_settings" name="toggles Analytics Opt In and the row adornment tracks it" time="12.106"/>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_settings" name="opens App Security and backs out" time="8.417"/>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_settings" name="opens the Help Centre webview and returns" time="16.230"/>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_settings" name="opens Privacy and returns" time="14.885"/>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_settings" name="opens the Contact Us webview and returns" time="15.101"/>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_settings" name="enables push from Notification settings crossing from the unset to the OS managed branch" time="21.774"/>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_settings" name="opens the external Feedback Accessibility and Terms links and returns" time="28.359"/>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_settings" name="changes the PIN exercising the wrong current mismatch and checkbox gate errors" time="34.062">
+      <failure message="Element ChangePINDoneAlert still not displayed after 15000ms"/>
+    </testcase>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_settings" name="sets Auto Lock to 3 minutes" time="0">
+      <skipped/>
+    </testcase>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_settings" name="auto locks after the inactivity timeout and re unlocks with the changed PIN" time="0">
+      <skipped/>
+    </testcase>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_settings" name="shows the Remove Account confirmation and cancels" time="0">
+      <skipped/>
+    </testcase>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_settings" name="shows the Reset Wallet confirmation and cancels" time="0">
+      <skipped/>
+    </testcase>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_settings" name="resets the wallet confirm and lands back on Settings with the account intact" time="0">
+      <skipped/>
+    </testcase>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_settings" name="removes the account terminal and returns to onboarding" time="0">
+      <skipped/>
+    </testcase>
+  </testsuite>
+</testsuites>

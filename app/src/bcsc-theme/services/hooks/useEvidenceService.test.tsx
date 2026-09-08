@@ -10,6 +10,8 @@ import { renderHook } from '@testing-library/react-native'
 import { AxiosError } from 'axios'
 import { useEvidenceService } from './useEvidenceService'
 
+jest.mock('@/bcsc-theme/api/hooks/useFactoryReset')
+
 jest.mock('@/bcsc-theme/api/hooks/useEvidenceApi')
 jest.mock('@/bcsc-theme/hooks/useBCSCApiClient')
 jest.mock('@bifold/core', () => ({

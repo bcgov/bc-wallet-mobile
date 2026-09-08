@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="7" failures="0" errors="0" skipped="3">
+  <testsuite name="Main journey unverified gating" timestamp="2026-08-28T05:30:02" time="264.671" tests="7" failures="0" errors="0" skipped="3">
+    <properties>
+      <property name="specId" value="0"/>
+      <property name="suiteName" value="Main journey: unverified gating"/>
+      <property name="capabilities" value="ios.5fc23a1b909c4d"/>
+      <property name="file" value="file://./test/bcsc/main/unverified-main.journey.ts"/>
+    </properties>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_unverified_gating" name="onboards and skips to unverified Home" time="40.905"/>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_unverified_gating" name="Home shows exactly one custom card Start verification" time="6.114"/>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_unverified_gating" name="the scan FAB opens the ungated QR scanner" time="14.228"/>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_unverified_gating" name="an unrecognised QR raises the scan error popup" time="0">
+      <skipped/>
+    </testcase>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_unverified_gating" name="an OpenID credential offer QR is deliberately rejected" time="0">
+      <skipped/>
+    </testcase>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_unverified_gating" name="a mediator invitation QR is deliberately rejected" time="0">
+      <skipped/>
+    </testcase>
+    <testcase classname="ios.5fc23a1b909c4d.Main_journey:_unverified_gating" name="Settings opens unverified and hides the account profile row" time="11.933"/>
+  </testsuite>
+</testsuites>

@@ -19,7 +19,7 @@ const mockServiceClientA: ClientMetadata = {
   suppress_bookmark_prompt: false,
   allowed_identification_processes: [BCSCCardProcess.BCSCPhoto],
   bc_address: true,
-  service_listing_sort_order: undefined,
+  service_listing_sort_order: 2,
 }
 
 const mockServiceClientB: ClientMetadata = {
@@ -32,7 +32,7 @@ const mockServiceClientB: ClientMetadata = {
   suppress_bookmark_prompt: false,
   allowed_identification_processes: [BCSCCardProcess.NonBCSC],
   bc_address: false,
-  service_listing_sort_order: undefined,
+  service_listing_sort_order: 2,
 }
 
 const mockServiceClientC: ClientMetadata = {
@@ -46,6 +46,20 @@ const mockServiceClientC: ClientMetadata = {
   allowed_identification_processes: [BCSCCardProcess.NonBCSC],
   bc_address: false,
   service_listing_sort_order: 1,
+}
+
+// Not meant to be listed: no service_listing_sort_order
+const mockServiceClientD: ClientMetadata = {
+  client_ref_id: 'test-client-id-d',
+  client_name: 'TEST CLIENT DELTA',
+  client_uri: 'https://test.client.d',
+  application_type: 'web',
+  claims_description: 'claims',
+  suppress_confirmation_info: false,
+  suppress_bookmark_prompt: false,
+  allowed_identification_processes: [BCSCCardProcess.BCSCPhoto],
+  bc_address: true,
+  service_listing_sort_order: undefined,
 }
 
 describe('useFilterServiceClients', () => {
@@ -77,7 +91,7 @@ describe('useFilterServiceClients', () => {
       expect(hook.result.current.isLoading).toBe(false)
     })
 
-    it('should sort by sort order then name', async () => {
+    it('should sort by name when the sort order matches', async () => {
       const bifoldMock = jest.mocked(Bifold)
       const useApiMock = jest.mocked(useApi)
 
@@ -97,6 +111,79 @@ describe('useFilterServiceClients', () => {
       expect(hook.result.current.serviceClients[0].client_ref_id).toBe(mockServiceClientA.client_ref_id)
       expect(hook.result.current.serviceClients[1].client_ref_id).toBe(mockServiceClientB.client_ref_id)
       expect(hook.result.current.isLoading).toBe(false)
+    })
+  })
+
+  describe('service listing sort order filter', () => {
+    it('should filter out service clients without a service listing sort order', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      const useApiMock = jest.mocked(useApi)
+
+      useApiMock.default.mockReturnValue({
+        metadata: {
+          getClientMetadata: jest.fn().mockResolvedValue([mockServiceClientD, mockServiceClientC]),
+        },
+      } as any)
+      bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
+
+      const hook = renderHook(() => useFilterServiceClients({}))
+
+      expect(hook.result.current.isLoading).toBe(true)
+      await waitFor(() => {
+        expect(hook.result.current.serviceClients).toHaveLength(1)
+      })
+      expect(hook.result.current.serviceClients[0].client_ref_id).toBe(mockServiceClientC.client_ref_id)
+      expect(hook.result.current.isLoading).toBe(false)
+    })
+
+    it('should keep service clients without a service listing sort order when they are saved', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      const useApiMock = jest.mocked(useApi)
+
+      useApiMock.default.mockReturnValue({
+        metadata: {
+          getClientMetadata: jest.fn().mockResolvedValue([mockServiceClientD, mockServiceClientC]),
+        },
+      } as any)
+      bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
+
+      const hook = renderHook(() =>
+        useFilterServiceClients({ savedServiceClientIds: [mockServiceClientD.client_ref_id] })
+      )
+
+      expect(hook.result.current.isLoading).toBe(true)
+      await waitFor(() => {
+        expect(hook.result.current.serviceClients).toHaveLength(2)
+      })
+      // Unlisted services sort to the end
+      expect(hook.result.current.serviceClients[0].client_ref_id).toBe(mockServiceClientC.client_ref_id)
+      expect(hook.result.current.serviceClients[1].client_ref_id).toBe(mockServiceClientD.client_ref_id)
+      expect(hook.result.current.isLoading).toBe(false)
+    })
+
+    it('should still apply the other filters to saved service clients', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      const useApiMock = jest.mocked(useApi)
+
+      useApiMock.default.mockReturnValue({
+        metadata: {
+          getClientMetadata: jest.fn().mockResolvedValue([mockServiceClientD]),
+        },
+      } as any)
+      bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
+
+      const hook = renderHook(() =>
+        useFilterServiceClients({
+          cardProcessFilter: BCSCCardProcess.NonBCSC,
+          savedServiceClientIds: [mockServiceClientD.client_ref_id],
+        })
+      )
+
+      expect(hook.result.current.isLoading).toBe(true)
+      await waitFor(() => {
+        expect(hook.result.current.serviceClients).toHaveLength(0)
+        expect(hook.result.current.isLoading).toBe(false)
+      })
     })
   })
 

@@ -327,7 +327,7 @@ exports[`SuccessfullySent renders correctly 1`] = `
               "padding": 16,
             }
           }
-          testID="com.ariesbifold:id/BCSC.SendVideo.SuccessfullySent.ButtonText"
+          testID="com.ariesbifold:id/GoToHome"
         >
           <View
             style={

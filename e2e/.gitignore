@@ -19,6 +19,11 @@ logs/
 # Test reports (JUnit / Allure / failure screenshots)
 reports/
 
+# Downloaded CI artifacts + the rendered brief (yarn brief)
+artifacts/
+brief.md
+brief.json
+
 # Notes
 .notes/
 

@@ -6,8 +6,9 @@ const appFilename = process.env.IOS_APP_FILENAME || 'BCSC-Dev-latest.ipa'
 
 const config = { ...sauceConfig }
 
-// Dropped before scheduling, so `--suite regression` costs no iOS session on them.
-config.exclude = ANDROID_ONLY_SPECS
+// Dropped before scheduling, so `--suite regression` costs no iOS session on them. Appended: the
+// shared conf may already exclude the send-video journeys (E2E_EXCLUDE_SEND_VIDEO).
+config.exclude = [...(config.exclude ?? []), ...ANDROID_ONLY_SPECS]
 
 config.capabilities = [
   {

@@ -1,0 +1,93 @@
+# Drain send-video queue
+#
+# The send-video e2e journeys upload real verification requests to the SIT IDcheck agent queue and
+# review them by script. The queue has no worklist — a review claims the NEXT request blindly — so
+# anything a failed journey leaves behind is what the next run claims, or what the UAT team cleans
+# by hand in the morning. This workflow rejects whatever is queued, with the reason
+# "Automated e2e queue cleanup", and lists what it rejected in the run summary.
+#
+#   workflow_call     — after every e2e.yml suite that ran the send-video journeys, and once more at
+#                       the end of the nightly (e2e-nightly.yml)
+#   workflow_dispatch — on demand from the Actions tab: scope `all` (everything queued) or `e2e`
+#                       (only the e2e personas; stops at the first foreign request)
+#
+# The drain talks to idsit.gov.bc.ca from the RUNNER (e2e/scripts/login.mjs), so it needs the
+# allowlisted `ubuntu-latest-m` runner and the SiteMinder test account from 1Password — the same
+# constraints as the in-person approval step in e2e.yml.
+name: Drain send-video queue
+
+permissions:
+  contents: read
+
+on:
+  workflow_call:
+    inputs:
+      scope:
+        description: 'all (everything queued) or e2e (only the e2e personas)'
+        type: string
+        required: false
+        default: all
+      max_claims:
+        description: 'Stop after this many claims'
+        type: number
+        required: false
+        default: 25
+      runner_label:
+        description: 'Label of the large runner with whitelisted egress IPs'
+        type: string
+        required: false
+        default: 'ubuntu-latest-m'
+    secrets:
+      OP_SERVICE_ACCOUNT_TOKEN:
+        required: true
+        description: '1Password service account token; SM_USER / SM_PASSWORD come from the bcsc-mobile-app-cd vault'
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: 'What to reject: everything queued, or only the e2e personas'
+        type: choice
+        options:
+          - all
+          - e2e
+        default: all
+      max_claims:
+        description: 'Stop after this many claims'
+        type: number
+        default: 25
+      runner_label:
+        description: 'Label of the large runner with whitelisted egress IPs'
+        type: string
+        default: 'ubuntu-latest-m'
+
+jobs:
+  drain:
+    name: 'drain send-video queue (${{ inputs.scope }})'
+    runs-on: ${{ inputs.runner_label }}
+    permissions:
+      contents: read
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup E2E
+        uses: ./.github/workflows/actions/setup-e2e
+
+      # Outputs (not export-env) keep the credentials scoped to the one step that uses them.
+      - name: Load SiteMinder secrets from 1Password
+        id: op_sm
+        uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2 # v5.0.1
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          SM_USER: op://bcsc-mobile-app-cd/bcsc-e2e-test-account/username
+          SM_PASSWORD: op://bcsc-mobile-app-cd/bcsc-e2e-test-account/password
+
+      - name: Drain the queue
+        working-directory: e2e
+        env:
+          SM_USER: ${{ steps.op_sm.outputs.SM_USER }}
+          SM_PASSWORD: ${{ steps.op_sm.outputs.SM_PASSWORD }}
+          SCOPE: ${{ inputs.scope }} # via env, never inline in run — inputs are attacker-controlled
+          MAX_CLAIMS: ${{ inputs.max_claims }}
+        run: |
+          # tsx binary directly — yarn's own stdout banners would garble the summary
+          ./node_modules/.bin/tsx scripts/send-video-queue.ts drain --scope "$SCOPE" --max "${MAX_CLAIMS:-25}"

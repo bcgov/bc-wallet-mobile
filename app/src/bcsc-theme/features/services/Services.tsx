@@ -48,11 +48,6 @@ const Services: React.FC = () => {
       onError: (error) => logger.error('Error loading card type', error as Error),
     }
   )
-  const { serviceClients, isLoading } = useFilterServiceClients({
-    cardProcessFilter: getCardProcessForCardType(idTokenMetadata?.bcsc_card_type ?? null),
-    partialNameFilter: !search ? '' : debouncedSearch, // if search is empty, avoid debounce delay
-  })
-
   const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
 
   // Track the latest bookmarks via a ref so toggling a bookmark does not
@@ -69,6 +64,15 @@ const Services: React.FC = () => {
       setSortVersion((v) => v + 1)
     }, [])
   )
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const savedServicesSnapshot = useMemo(() => savedServicesRef.current, [sortVersion])
+
+  const { serviceClients, isLoading } = useFilterServiceClients({
+    cardProcessFilter: getCardProcessForCardType(idTokenMetadata?.bcsc_card_type ?? null),
+    partialNameFilter: !search ? '' : debouncedSearch, // if search is empty, avoid debounce delay
+    savedServiceClientIds: savedServicesSnapshot,
+  })
 
   const sortedServiceClients = useMemo(() => {
     const saved = new Set(savedServicesRef.current)

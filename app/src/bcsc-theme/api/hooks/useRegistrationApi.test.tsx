@@ -103,6 +103,21 @@ const toBase64UrlUnpadded = (bytes: number[]) =>
 const SENT_N_IOS_SHAPE = toStdBase64([0x00, ...REAL_MODULUS_BYTES])
 const SERVER_N_ANDROID_SHAPE = toBase64UrlUnpadded(REAL_MODULUS_BYTES)
 
+/** Asserts a promise rejects with an AppError carrying `appEvent`. Fails if it resolves. */
+const expectAppErrorRejection = async (promise: Promise<unknown>, appEvent: AppEventCode) => {
+  // The resolve path has to fail loudly: `.catch((e) => e)` passes the resolved value
+  // straight through, so an implementation that *returns* an AppError instead of
+  // throwing one would satisfy the assertions below.
+  const error: unknown = await promise.then(
+    (value) => {
+      throw new Error(`Expected a rejection, but the promise resolved with: ${String(value)}`)
+    },
+    (reason: unknown) => reason
+  )
+  expect(error).toBeInstanceOf(AppError)
+  expect((error as AppError).appEvent).toBe(appEvent)
+}
+
 describe('useRegistrationApi', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -157,13 +172,9 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      try {
-        await result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
-        fail('Expected an error to be thrown')
-      } catch (error) {
-        expect(error).toBeInstanceOf(AppError)
-        expect((error as AppError).appEvent).toBe(AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)
-      }
+      const promise = result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+
+      await expectAppErrorRejection(promise, AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)
     })
 
     it.each([
@@ -181,13 +192,9 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      try {
-        await result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
-        fail('Expected an error to be thrown')
-      } catch (error) {
-        expect(error).toBeInstanceOf(AppError)
-        expect((error as AppError).appEvent).toBe(expectedAppEvent)
-      }
+      const promise = result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+
+      await expectAppErrorRejection(promise, expectedAppEvent)
     })
 
     it('maps an unmapped native error code to UNMAPPED_NATIVE_ERROR', async () => {
@@ -197,13 +204,9 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      try {
-        await result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
-        fail('Expected an error to be thrown')
-      } catch (error) {
-        expect(error).toBeInstanceOf(AppError)
-        expect((error as AppError).appEvent).toBe(AppEventCode.UNMAPPED_NATIVE_ERROR)
-      }
+      const promise = result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+
+      await expectAppErrorRejection(promise, AppEventCode.UNMAPPED_NATIVE_ERROR)
     })
 
     it('maps a non-native error to UNMAPPED_NATIVE_ERROR', async () => {
@@ -212,13 +215,9 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      try {
-        await result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
-        fail('Expected an error to be thrown')
-      } catch (error) {
-        expect(error).toBeInstanceOf(AppError)
-        expect((error as AppError).appEvent).toBe(AppEventCode.UNMAPPED_NATIVE_ERROR)
-      }
+      const promise = result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+
+      await expectAppErrorRejection(promise, AppEventCode.UNMAPPED_NATIVE_ERROR)
     })
 
     // -------------------------------------------------------------------------
@@ -268,13 +267,9 @@ describe('useRegistrationApi', () => {
 
         const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-        try {
-          await result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
-          fail('Expected an error to be thrown')
-        } catch (error) {
-          expect(error).toBeInstanceOf(AppError)
-          expect((error as AppError).appEvent).toBe(AppEventCode.ERR_121_REGISTRATION_KEY_NOT_CONFIRMED)
-        }
+        const promise = result.current.createRegistration(AccountSecurityMethod.PinNoDeviceAuth)
+
+        await expectAppErrorRejection(promise, AppEventCode.ERR_121_REGISTRATION_KEY_NOT_CONFIRMED)
 
         expect(setAccount).not.toHaveBeenCalled()
         expect(mockUpdateTokens).not.toHaveBeenCalled()
@@ -435,13 +430,9 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      try {
-        await result.current.updateRegistration('token', 'nickname')
-        fail('Expected an error to be thrown')
-      } catch (error) {
-        expect(error).toBeInstanceOf(AppError)
-        expect((error as AppError).appEvent).toBe(AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)
-      }
+      const promise = result.current.updateRegistration('token', 'nickname')
+
+      await expectAppErrorRejection(promise, AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL)
     })
 
     it.each([
@@ -458,13 +449,9 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      try {
-        await result.current.updateRegistration('token', 'nickname')
-        fail('Expected an error to be thrown')
-      } catch (error) {
-        expect(error).toBeInstanceOf(AppError)
-        expect((error as AppError).appEvent).toBe(expectedAppEvent)
-      }
+      const promise = result.current.updateRegistration('token', 'nickname')
+
+      await expectAppErrorRejection(promise, expectedAppEvent)
     })
 
     it('should throw DESERIALIZE_JSON_ERROR when body cannot be parsed as JSON', async () => {
@@ -472,13 +459,9 @@ describe('useRegistrationApi', () => {
 
       const { result } = renderHook(() => useRegistrationApi(mockApiClient as any))
 
-      try {
-        await result.current.updateRegistration('token', 'nickname')
-        fail('Expected an error to be thrown')
-      } catch (error) {
-        expect(error).toBeInstanceOf(AppError)
-        expect((error as AppError).appEvent).toBe(AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON)
-      }
+      const promise = result.current.updateRegistration('token', 'nickname')
+
+      await expectAppErrorRejection(promise, AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON)
     })
 
     it('should propagate API errors from the PUT request', async () => {

@@ -8,6 +8,8 @@ import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import DefaultHome, { HomeV4_0_x as Home } from './Home'
 
+jest.mock('@/bcsc-theme/contexts/BCSCAccountContext')
+
 jest.mock('@/bcsc-theme/hooks/useBCSCApiClient', () => ({
   useBCSCApiClient: jest.fn(() => ({
     endpoints: {

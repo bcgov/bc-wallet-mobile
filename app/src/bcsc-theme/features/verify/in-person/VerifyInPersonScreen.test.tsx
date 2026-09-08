@@ -6,6 +6,8 @@ import React from 'react'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
 import VerifyInPersonScreen from './VerifyInPersonScreen'
 
+jest.mock('@/bcsc-theme/api/hooks/useApi')
+
 describe('VerifyInPerson', () => {
   let mockNavigation: any
 

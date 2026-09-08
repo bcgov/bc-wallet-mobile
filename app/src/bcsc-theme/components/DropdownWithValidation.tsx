@@ -19,6 +19,7 @@ type DropdownWithValidationProps<T> = {
   value: T | null
   options: DropdownOption<T>[]
   onChange: (value: T) => void
+  onModalClose?: () => void
   label: string
   placeholder?: string
   subtext?: string
@@ -40,6 +41,7 @@ export const DropdownWithValidation = <T extends string | number>({
   value,
   options,
   onChange,
+  onModalClose,
   label,
   placeholder = 'Select an option',
   subtext,
@@ -206,7 +208,7 @@ export const DropdownWithValidation = <T extends string | number>({
         </ThemedText>
       ) : null}
 
-      <Modal visible={isOpen} transparent animationType="slide" onRequestClose={handleClose}>
+      <Modal visible={isOpen} transparent animationType="slide" onRequestClose={handleClose} onDismiss={onModalClose}>
         <View
           style={[styles.modalContent, { paddingTop: insets.top, paddingBottom: insets.bottom }]}
           testID={testIdWithKey(`${id}-modal-content`)}

@@ -1,8 +1,13 @@
 import type { TestUser } from '../constants.js'
 import { COMBO_CARD_BARCODE_MASKS, Timeouts } from '../constants.js'
-import { tapAlertButton } from '../helpers/alerts.js'
-import { isAppErrorShowing, throwIfAppErrorShowing } from '../helpers/app-error.js'
-import { ApproveInPersonInput, approveInPersonRequest } from '../helpers/approval.js'
+import { acceptAppAlert, acceptSystemAlert, acceptSystemAlertsUntil, tapAlertButton } from '../helpers/alerts.js'
+import { describeAppError, isAppErrorShowing, throwIfAppErrorShowing } from '../helpers/app-error.js'
+import {
+  ApproveInPersonInput,
+  approveInPersonRequest,
+  type ClaimedRequestSummary,
+  drainSendVideoQueue,
+} from '../helpers/approval.js'
 import type { ImageMaskRegion } from '../helpers/camera.js'
 import { canInjectImages, injectPhoto, injectScanTarget } from '../helpers/camera.js'
 import { getEmailConfirmationCode, getLatestMailId, getTempEmailAddress } from '../helpers/email.js'
@@ -14,13 +19,16 @@ import {
   RestartVerificationAlert,
   tapHelpMenuRow,
 } from '../helpers/help-menu.js'
-import { describeCurrentScreen, reachCameraScreen } from '../helpers/screens.js'
+import { describeCurrentScreen, reachCameraScreen, type ScreenProbe, waitForAnyScreen } from '../helpers/screens.js'
 import { BaseScreen } from '../screens/core/BaseScreen.js'
+import type { ScreenPresence } from '../screens/core/defineScreen.js'
+import { AppErrorModal } from '../screens/errors.js'
 import { HomeNotificationCard, HomeScreen } from '../screens/main.js'
 import { VerifyPromptScreen } from '../screens/onboarding.js'
 import {
   AccountSetupScreen,
   AdditionalIdentificationRequiredScreen,
+  CallBusyOrClosedScreen,
   CancelledReviewScreen,
   DualIdentificationRequiredScreen,
   EmailConfirmationScreen,
@@ -31,6 +39,9 @@ import {
   EvidenceIDCollectionScreen,
   IdentitySelectionScreen,
   IDPhotoInformationScreen,
+  LiveCallErrorScreen,
+  LiveCallLoadingScreen,
+  LiveCallScreen,
   ManualSerialScreen,
   PendingReviewScreen,
   PhotoInstructionsScreen,
@@ -38,15 +49,18 @@ import {
   ResidentialAddressScreen,
   ScanSerialScreen,
   SelfieCaptureScreen,
+  StartCallScreen,
   SuccessfullySentScreen,
   TakeVideoScreen,
   VerificationMethodSelectionScreen,
   VerificationSuccessScreen,
   VerifyInPersonScreen,
+  VerifyNotCompleteScreen,
   VideoInstructionsScreen,
   VideoReviewScreen,
   VideoTooLongScreen,
 } from '../screens/verify.js'
+import { clearQueuedSubmission, hasQueuedSubmission, markSubmissionQueued } from '../support/send-video-queue.js'
 
 /**
  * Verify-stack arranges: the entry spine plus the per-step arranges that mirror the app's
@@ -90,13 +104,24 @@ export async function leaveVerificationToHome(): Promise<void> {
 }
 
 /**
- * Re-enter an interrupted verification from Home's verification card — the only route back in, since
- * the in-progress flag is in-memory. The stack mounts at `getResumeStepRoute`; which screen that is,
- * is the caller's assertion.
+ * Re-enter an interrupted verification. In-session, Home's verification card is the only route back
+ * in (the in-progress flag is in-memory); across a relaunch the app resumes a user who chose to
+ * verify straight onto their step, so pass `resumedOnto` to accept that landing too. Either way the
+ * stack mounts at `getResumeStepRoute`; which screen that is stays the caller's assertion.
  */
-export async function resumeVerification(): Promise<void> {
-  await HomeNotificationCard.expectVisible(Timeouts.SCREEN_TRANSITION)
-  await HomeNotificationCard.tapToNavigate('primary')
+export async function resumeVerification(
+  resumedOnto?: ScreenPresence,
+  timeoutMs: number = Timeouts.SCREEN_TRANSITION
+): Promise<void> {
+  const candidates: Record<string, ScreenProbe> = { card: HomeNotificationCard }
+  if (resumedOnto) {
+    candidates.resumed = resumedOnto
+  }
+  if ((await waitForAnyScreen(candidates, timeoutMs)) === 'card') {
+    await HomeNotificationCard.tapToNavigate('primary')
+    return
+  }
+  console.log('[verify] Already inside verification — the app resumed onto the step itself')
 }
 
 /**
@@ -262,12 +287,17 @@ export async function submitSendVideoVerification(user: TestUser): Promise<void>
 
   await VideoReviewScreen.tapWhenEnabled('primary') // UseVideo → RESETS to EvidenceUploading, which uploads on mount
   await SuccessfullySentScreen.expectVisible(Timeouts.VIDEO_UPLOAD)
+  markSubmissionQueued() // from here until the scripted review claims it, a failure leaves an orphan behind
   await SuccessfullySentScreen.tapToNavigate('primary') // Go to home — the screen's only way out
 
   await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
 }
 
-/** The selfie half: enter the front camera, inject when the session can, shoot, accept. Ends on VideoInstructions. */
+/**
+ * The selfie half: enter the front camera, inject when the session can, shoot, accept. UsePhoto RESETS
+ * to where the branch goes next — VideoInstructions (send-video) or StartCall (live-call) — so the
+ * caller asserts the destination.
+ */
 async function captureSelfie(user: TestUser): Promise<void> {
   await reachCameraScreen('TakePhoto (selfie)', () => SelfieCaptureScreen.isPresent(1_000))
   // The send-video lane runs without injection (it breaks the recorder) — the rack feed is fine
@@ -278,7 +308,7 @@ async function captureSelfie(user: TestUser): Promise<void> {
   }
   await SelfieCaptureScreen.tap('primary') // shutter — NOT tapToNavigate (not idempotent)
   await PhotoReviewScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-  await PhotoReviewScreen.tapToNavigate('primary') // UsePhoto → RESETS to VideoInstructions
+  await PhotoReviewScreen.tapToNavigate('primary') // UsePhoto — its id is not on either reset destination
 }
 
 /**
@@ -299,9 +329,7 @@ async function recordPromptedVideo(): Promise<void> {
   if (await VideoReviewScreen.isPresent(Timeouts.SCREEN_TRANSITION)) {
     return
   }
-  // Probed only now that the recorder is gone: VideoTooLong's marker is a BARE `Cancel`, and TakeVideo's
-  // own cancel control carries "Cancel" as its accessibility label — which iOS reports as the element
-  // name when no identifier is set, so the same selector matches it while that screen is up.
+  // Probed second: the review is the expected outcome, VideoTooLong the diagnosable failure.
   if (await VideoTooLongScreen.isPresent(1_000)) {
     throw new Error(
       'The recording ran past the 30s limit and landed on VideoTooLong. Each prompt is held for a minimum ' +
@@ -313,24 +341,100 @@ async function recordPromptedVideo(): Promise<void> {
   )
 }
 
-/** VideoInstructions → an armed recorder, with the prompt set the recording will be judged against. */
+/** Attempts at arming the recorder before the journey gives up on the device's camera stack. */
+const RECORDING_START_ATTEMPTS = 3
+
+/** How long StartRecording gets to leave the screen after its tap before the tap is called swallowed. */
+const RECORDING_START_LEAVE_MS = 5_000
+
+type RecorderArmOutcome = 'armed' | 'error' | 'bounced'
+
+/**
+ * VideoInstructions → an armed recorder, with the prompt set the recording will be judged against.
+ *
+ * Arming fails transiently on rack devices — the recorder errors at 00:00 behind the app's
+ * "Recording error" modal, or the thumbnail snapshot fails and the app bounces back to the
+ * instructions — so it is retried from VideoInstructions, whose StartRecording issues a fresh prompt
+ * set each time. The final failure carries the modal's details rather than a timeout.
+ */
 async function startVideoRecording(): Promise<void> {
+  let lastFailure = ''
+  for (let attempt = 1; attempt <= RECORDING_START_ATTEMPTS; attempt++) {
+    const outcome = await armRecorder()
+    if (outcome === 'armed') {
+      return
+    }
+    lastFailure = outcome === 'error' ? await recoverFromRecordingError() : await recoverFromRecorderBounce()
+    console.warn(`[verify] The recorder did not arm (attempt ${attempt}/${RECORDING_START_ATTEMPTS}): ${lastFailure}`)
+  }
+  throw new Error(`The recording failed to start after ${RECORDING_START_ATTEMPTS} attempts. Last: ${lastFailure}`)
+}
+
+/** Tap StartRecording and wait for the recorder to arm, the app to error, or the instructions to come back. */
+async function armRecorder(): Promise<RecorderArmOutcome> {
   await VideoInstructionsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   // Disabled until a fresh prompt set lands — the wait for it IS the wait for the fetch.
   await VideoInstructionsScreen.tapWhenEnabled('primary')
+  // A swallowed tap leaves the instructions up — the same recovery as a bounce.
+  if (!(await waitForInstructionsToLeave())) {
+    return 'bounced'
+  }
 
   // No start button: recording arms itself after a 3-2-1 countdown, behind camera AND microphone
   // dialogs, so the first prompt button gets a camera budget rather than a transition one.
   //
   // The error modal counts as "we got somewhere": iOS drops the covered recorder out of the
   // accessibility tree, so a recording that fails on arm would otherwise spend the whole camera budget
-  // waiting for a screen that is already there and unreachable. Ending the wait on either outcome lets
-  // the assert below name the app's error instead of a 45s timeout.
-  await reachCameraScreen(
-    'TakeVideo',
-    async () => (await TakeVideoScreen.isPresent(1_000)) || (await isAppErrorShowing())
-  )
-  await throwIfAppErrorShowing('The recording failed to start')
+  // waiting for a screen that is already there and unreachable. The instructions coming back is the
+  // snapshot-failure path (a native alert, then goBack).
+  const arm: { outcome: RecorderArmOutcome | null } = { outcome: null }
+  await reachCameraScreen('TakeVideo', async () => {
+    if (await TakeVideoScreen.isPresent(1_000)) {
+      arm.outcome = 'armed'
+    } else if (await isAppErrorShowing()) {
+      arm.outcome = 'error'
+    } else if (await VideoInstructionsScreen.isPresent(500)) {
+      arm.outcome = 'bounced'
+    }
+    return arm.outcome !== null
+  })
+  return arm.outcome ?? 'bounced'
+}
+
+async function waitForInstructionsToLeave(): Promise<boolean> {
+  const deadline = Date.now() + RECORDING_START_LEAVE_MS
+  while (Date.now() < deadline) {
+    if (!(await VideoInstructionsScreen.isPresent(500))) {
+      return true
+    }
+  }
+  return false
+}
+
+/** Close the app's error modal and back out of the dead recorder to VideoInstructions; returns what it said. */
+async function recoverFromRecordingError(): Promise<string> {
+  const failure = await describeAppError()
+  await AppErrorModal.tap('primary') // close
+  // Cancel is TakeVideo's only way back; it pops to VideoInstructions, which refetches prompts on focus.
+  if (await TakeVideoScreen.isPresent(Timeouts.ELEMENT_VISIBLE)) {
+    await TakeVideoScreen.tap('secondary')
+  }
+  await VideoInstructionsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  return failure
+}
+
+/** The app came back to VideoInstructions on its own (snapshot failure → native alert → goBack): clear the alert. */
+async function recoverFromRecorderBounce(): Promise<string> {
+  const failure = `bounced back to VideoInstructions. On screen: ${await describeCurrentScreen()}`
+  // The RN Alert is an app dialog on Android (never matched by the permission probe) and a system-style
+  // alert on iOS; both are best-effort here — a swallowed tap raised none.
+  if (driver.isAndroid) {
+    await acceptAppAlert(1_000).catch(() => undefined)
+  } else {
+    await acceptSystemAlert(1_000).catch(() => undefined)
+  }
+  await VideoInstructionsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  return failure
 }
 
 /**
@@ -382,7 +486,7 @@ export async function recordOverLongVideoDetour(user: TestUser): Promise<void> {
   // app's own error says so where "Cancel not visible" does not.
   await throwIfAppErrorShowing('The over-long recording failed')
   await VideoTooLongScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
-  // Cancel, the screen's only addressable control — Retake has no testID at all.
+  // Cancel rather than Retake: the detour's point is landing here, not re-recording.
   await VideoTooLongScreen.tap('secondary')
   await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
 }
@@ -431,7 +535,10 @@ function assertExpectedDecision(actual: 'verified' | 'cancelled', expected: 'ver
  * foregrounding would NOT do — the Home-side status check runs once per stack mount, not per resume.
  * The push notification is advisory and never navigates, so it is not waited on either.
  */
-export async function waitForSendVideoDecision(expected: 'verified' | 'cancelled'): Promise<void> {
+export async function waitForSendVideoDecision(
+  expected: 'verified' | 'cancelled',
+  options: { reviewed?: ClaimedRequestSummary } = {}
+): Promise<void> {
   const deadline = Date.now() + REVIEW_DECISION_TIMEOUT_MS
   for (;;) {
     await HomeScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
@@ -444,14 +551,54 @@ export async function waitForSendVideoDecision(expected: 'verified' | 'cancelled
     }
 
     if (Date.now() + REVIEW_DECISION_POLL_MS >= deadline) {
+      const reviewed = options.reviewed
+        ? `The scripted review decided ${options.reviewed.queue} request ${options.reviewed.requestIdentifier} ` +
+          `(${options.reviewed.claimedName}, serial ${options.reviewed.claimedSerial}, ${options.reviewed.claimedOs || 'os unknown'})`
+        : 'The scripted review reported success'
       throw new Error(
         `The agent decision (${expected}) did not reach the app within ${REVIEW_DECISION_TIMEOUT_MS}ms of re-checking. ` +
-          'The scripted review reported success, so suspect the status endpoint or a submission other than this one.'
+          `${reviewed}, so suspect the status endpoint or a submission other than this one — ` +
+          'a stale same-persona upload at the head of the queue is the usual cause.'
       )
     }
     // Back does not pop here: it marks the account unverified, which swaps the stack back to Home.
     await PendingReviewScreen.back.tap()
     await driver.pause(REVIEW_DECISION_POLL_MS)
+  }
+}
+
+/**
+ * Journey setup: the review claims the queue HEAD blindly, so this journey's upload only reaches it
+ * once the queue is empty. A drain that stops early leaves a foreign request in front of ours — fail
+ * here, rather than twenty minutes later on a decision wait that never settles.
+ */
+export async function clearReviewQueueBeforeSubmit(): Promise<void> {
+  const { stoppedReason, queuesWithWork } = await drainSendVideoQueue()
+  if (stoppedReason) {
+    throw new Error(
+      `The review queue is not empty, so this journey's upload would not be the request the review claims: ` +
+        `${stoppedReason}. Queues still holding work: ${queuesWithWork.join(', ') || 'none reported'}.`
+    )
+  }
+}
+
+/**
+ * Journey teardown: drain the review queue when this session's upload was never claimed — a failure
+ * between the upload and the scripted review would otherwise leave it for the next run, or the
+ * morning. Best-effort by design: a hook that throws is reported as a failure of its own.
+ */
+export async function cleanUpQueuedSubmission(): Promise<void> {
+  if (!hasQueuedSubmission()) {
+    return
+  }
+  console.warn('[verify] This journey left its send-video upload in the review queue — draining it')
+  try {
+    await drainSendVideoQueue({ maxClaims: 5, timeoutMs: 120_000 })
+  } catch (err) {
+    console.warn(`[verify] The post-journey queue drain failed: ${(err as Error).message ?? err}`)
+  } finally {
+    // Cleared however the drain went: the orphan is this teardown's to deal with, once.
+    clearQueuedSubmission()
   }
 }
 
@@ -480,6 +627,191 @@ export async function expectCancelledReviewReason(reason: string): Promise<void>
     throw new Error(
       `CancelledReview does not show the agent reason "${reason}". On screen: ${await describeCurrentScreen()}`
     )
+  }
+}
+
+/** Where the Video Call method button landed: open service hours → the selfie primer; otherwise the status screen. */
+export type LiveCallEntry = 'open' | 'busyOrClosed'
+
+/**
+ * Method selection → Video Call. The app routes on the agent-queue destinations and service hours:
+ * open lands on the shared PhotoInstructions (live-call flavour), busy/closed on CallBusyOrClosed.
+ * Which one is SIT's answer at this moment, so the branch is returned for the journey to dispatch on —
+ * both are legitimate outcomes for a suite that runs day and night.
+ */
+export async function chooseVideoCallMethod(): Promise<LiveCallEntry> {
+  await VerificationMethodSelectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await VerificationMethodSelectionScreen.link('videoCall')
+  const deadline = Date.now() + Timeouts.SCREEN_TRANSITION
+  for (;;) {
+    if (await CallBusyOrClosedScreen.isPresent(1_000)) {
+      return 'busyOrClosed'
+    }
+    if (await PhotoInstructionsScreen.isPresent(1_000)) {
+      return 'open'
+    }
+    if (Date.now() > deadline) {
+      throw new Error(
+        `Video Call led to neither PhotoInstructions nor CallBusyOrClosed. On screen: ${await describeCurrentScreen()}`
+      )
+    }
+  }
+}
+
+/** The two CallBusyOrClosed title variants, keyed by the `busy` route param that selects them. */
+const CALL_STATUS_TITLES = {
+  busy: 'All agents are busy', // BCSC.VideoCall.CallBusyOrClosed.AllAgentsBusy
+  closed: 'Call us later', // BCSC.VideoCall.CallBusyOrClosed.CallUsLater
+} as const
+
+/**
+ * Assert CallBusyOrClosed is showing one of its two variants IN FULL — a status title matching a known
+ * variant, the hours-of-service block, and the add-your-card-again reminder — and return which.
+ *
+ * 'busy' means the destination list offered no usable queue (a config state, not live agent load);
+ * 'closed' covers outside-service-hours and the hours-fetch-failed fallback. SIT keeps a Test Harness
+ * queue destination, so 'closed' is what a night run deterministically gets.
+ */
+export async function expectCallBusyOrClosedVariant(): Promise<'busy' | 'closed'> {
+  await CallBusyOrClosedScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  const title = await CallBusyOrClosedScreen.read('callStatusTitle')
+  const variant = (Object.keys(CALL_STATUS_TITLES) as ('busy' | 'closed')[]).find(
+    (key) => CALL_STATUS_TITLES[key] === title
+  )
+  if (!variant) {
+    throw new Error(`CallBusyOrClosed shows an unknown status title: "${title}"`)
+  }
+  await CallBusyOrClosedScreen.waitFor('hoursOfServiceTitle', Timeouts.SCREEN_TRANSITION)
+  await CallBusyOrClosedScreen.waitFor('reminderTitle', Timeouts.SCREEN_TRANSITION)
+  return variant
+}
+
+/**
+ * The open-hours live-call arrange: PhotoInstructions → selfie capture (injected on Sauce, the rack or
+ * device camera otherwise) → StartCall. The UsePhoto accept RESETS the stack to [PhotoInstructions,
+ * StartCall], so backing out of StartCall returns to the instructions, not the review.
+ */
+export async function reachStartCallViaSelfie(user: TestUser): Promise<void> {
+  await PhotoInstructionsScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  // Plain tap, NOT tapToNavigate: the camera's shutter carries the same testID as this CTA, so a
+  // confirm-and-retry would read the push as a miss and fire the shutter.
+  await PhotoInstructionsScreen.tap('primary')
+  await captureSelfie(user)
+  await StartCallScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+}
+
+/** How the live-call setup settled: queued at the human boundary, or actually answered by an agent. */
+export type LiveCallOutcome = 'waiting' | 'connected'
+
+/** BCSC.VideoCall.CallStates.WaitingForAgent — the loading state that proves the queue was reached. */
+const WAITING_FOR_AGENT_COPY = 'Waiting for an agent to join...'
+
+/** Budget for the whole call setup: selfie upload, session mint, Pexip WebRTC connect, queue entry. */
+const LIVE_CALL_SETUP_TIMEOUT_MS = 90_000
+
+/**
+ * StartCall → LiveCall → the agent queue. The Start press requests microphone permission (Android adds
+ * Bluetooth on 12+, and WebRTC can raise iOS's local-network prompt mid-connect), so the whole wait
+ * accepts system dialogs until the call settles on one of three outcomes:
+ *
+ * - 'waiting' — evidence uploaded, session minted, WebRTC connected as the Pexip guest, queued until
+ *   a host (agent) joins. The human boundary — where a run stops when nobody answers.
+ * - 'connected' — an agent ANSWERED (the in-call controls are up). SIT's Test Harness queue does this
+ *   (observed 2026-08-27: it auto-answers within seconds), so on SIT this is the common outcome; it
+ *   converges on the same exit (`leaveLiveCall` handles both) and does NOT approve the verification.
+ * - CallErrorView → throws, surfacing the app's own error where a bare wait would report a timeout.
+ */
+export async function startLiveCall(): Promise<LiveCallOutcome> {
+  await StartCallScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await StartCallScreen.tapWhenEnabled('primary')
+
+  let outcome: LiveCallOutcome | 'error' | null = null
+  const settled = await acceptSystemAlertsUntil(
+    async () => {
+      if (await LiveCallScreen.isPresent(500)) {
+        outcome = 'connected'
+        return true
+      }
+      if (await engine.isTextDisplayed(WAITING_FOR_AGENT_COPY)) {
+        outcome = 'waiting'
+        return true
+      }
+      if (await LiveCallErrorScreen.isPresent(500)) {
+        outcome = 'error'
+        return true
+      }
+      return false
+    },
+    { timeoutMs: LIVE_CALL_SETUP_TIMEOUT_MS }
+  )
+
+  if (!settled || outcome === null) {
+    throw new Error(
+      `The live call did not reach the agent queue within ${LIVE_CALL_SETUP_TIMEOUT_MS}ms. ` +
+        `On screen: ${await describeCurrentScreen()}`
+    )
+  }
+  if (outcome === 'error') {
+    throw new Error(
+      `The live-call setup failed — CallErrorView is showing. On screen: ${await describeCurrentScreen()}`
+    )
+  }
+  console.log(`[live-call] Settled: ${outcome === 'waiting' ? 'queued, waiting for an agent' : 'an agent ANSWERED'}`)
+  return outcome
+}
+
+/**
+ * In-call checkpoint, reachable whenever the Test Harness agent answers: the control row is usable.
+ * Mute and video each get a there-and-back toggle (each tap flips the local track state), and the
+ * having-trouble affordance must be offered. Kept SHORT on purpose — the far side owns the call's
+ * lifetime, so this must not dwell in it.
+ */
+export async function exerciseInCallControls(): Promise<void> {
+  await LiveCallScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
+  await LiveCallScreen.link('mute')
+  await LiveCallScreen.link('mute')
+  await LiveCallScreen.link('video')
+  await LiveCallScreen.link('video')
+  if (!(await LiveCallScreen.isVisible('havingTrouble'))) {
+    throw new Error('The in-call HavingTrouble control is missing')
+  }
+}
+
+/**
+ * Leave the live call — Cancel on the loading/waiting view, EndCall once connected — and ride the
+ * app's own exit: the CALL_ENDED processing view, a verification-status re-check, then the stack
+ * reset to [VerificationMethodSelection, VerifyNotComplete] for an account that is (as expected in
+ * CI) not verified.
+ */
+export async function leaveLiveCall(outcome: LiveCallOutcome): Promise<void> {
+  // WHICH face is up is read here, not taken from `outcome`: the agent can answer (or hang up) in the
+  // gap since the settle. Neither up means the call is already leaving through the reset waited on below.
+  const [expected, other] =
+    outcome === 'connected' ? [LiveCallScreen, LiveCallLoadingScreen] : [LiveCallLoadingScreen, LiveCallScreen]
+  if (await expected.isPresent(1_000)) {
+    await expected.tap('primary') // EndCall / Cancel
+  } else if (await other.isPresent(1_000)) {
+    await other.tap('primary')
+  }
+  // Pexip disconnect + two session-status calls + the verification re-check run behind the processing
+  // view before the reset lands, so the exit gets a launch-sized budget rather than a transition one.
+  const deadline = Date.now() + Timeouts.APP_LAUNCH
+  for (;;) {
+    if (await VerifyNotCompleteScreen.isPresent(1_000)) {
+      return
+    }
+    if (await VerificationSuccessScreen.isPresent(1_000)) {
+      throw new Error(
+        'The live call ended VERIFIED (VerificationSuccess) — an SIT agent approved the request. ' +
+          'Record the changed Test Harness queue behavior and extend the journey to full completion.'
+      )
+    }
+    if (Date.now() > deadline) {
+      throw new Error(
+        `Leaving the live call reached neither VerifyNotComplete nor VerificationSuccess. ` +
+          `On screen: ${await describeCurrentScreen()}`
+      )
+    }
   }
 }
 

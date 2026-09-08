@@ -4,6 +4,8 @@ import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import EnterBirthdateScreen from './EnterBirthdateScreen'
 
+jest.mock('@/bcsc-theme/api/hooks/useApi')
+
 describe('EnterBirthdate', () => {
   let mockNavigation: any
 

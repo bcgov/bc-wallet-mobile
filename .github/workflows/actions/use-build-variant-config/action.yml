@@ -1,0 +1,43 @@
+name: Use build variant config
+description: |
+  Replace the checked-out `variants/` tree with the one from the commit that
+  produced the build being published.
+
+  publish.yml checks out the default branch so that composite actions and
+  scripts are current — an older build must still be publishable by today's
+  tooling. But APP_VERSION and the bundle IDs have to describe the binary in
+  hand, not whatever main has moved on to, so that config alone is taken from
+  the build's own commit.
+
+inputs:
+  head_sha:
+    description: 'Commit that produced the build being published.'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Check out the build commit's variant config
+      uses: actions/checkout@v7
+      with:
+        ref: ${{ inputs.head_sha }}
+        path: .build-commit
+        sparse-checkout: variants
+
+    - name: Swap it in
+      shell: bash
+      env:
+        HEAD_SHA: ${{ inputs.head_sha }}
+      run: |
+        set -euo pipefail
+
+        if [ ! -d .build-commit/variants ]; then
+          echo "::error::No variants/ directory at ${HEAD_SHA}"
+          exit 1
+        fi
+
+        rm -rf variants
+        mv .build-commit/variants variants
+        rm -rf .build-commit
+
+        echo "Using variant config from ${HEAD_SHA}"

@@ -10,7 +10,24 @@ import { MockLogger } from '@bifold/core'
 
 const devGlobal = global as typeof global & { __DEV__: boolean }
 
-jest.mock('react-native-bcsc-core')
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+const makeUtils = (translation: jest.Mock = jest.fn()) => ({
+  dispatch: jest.fn(),
+  translation: translation as any,
+  logger: {} as any,
+})
+
+// Built per test rather than shared: the outer `jest.resetAllMocks()` strips
+// `mockReturnValue` implementations, which would silently turn getState() into undefined.
+const makeNavigation = (currentRoute = 'SomeScreen', overrides: Record<string, unknown> = {}) => ({
+  navigate: jest.fn(),
+  canGoBack: jest.fn().mockReturnValue(false),
+  goBack: jest.fn(),
+  getState: jest.fn().mockReturnValue({ routes: [{ name: currentRoute }], index: 0 }),
+  ...overrides,
+})
+
 describe('System Checks', () => {
   beforeEach(() => {
     jest.resetAllMocks()
@@ -147,11 +164,7 @@ describe('System Checks', () => {
   describe('DeviceCountSystemCheck', () => {
     describe('runCheck', () => {
       it('should return true when device count is within limit', async () => {
-        const mockUtils = {
-          dispatch: jest.fn(),
-          translation: jest.fn() as any,
-          logger: {} as any,
-        }
+        const mockUtils = makeUtils()
         const getIdToken = jest.fn().mockResolvedValue({
           bcsc_devices_count: 3,
           bcsc_max_devices: 5,
@@ -166,11 +179,7 @@ describe('System Checks', () => {
       })
 
       it('should return false when device count exceeds limit', async () => {
-        const mockUtils = {
-          dispatch: jest.fn(),
-          translation: jest.fn() as any,
-          logger: {} as any,
-        }
+        const mockUtils = makeUtils()
         const getIdToken = jest.fn().mockResolvedValue({
           bcsc_devices_count: 6,
           bcsc_max_devices: 5,
@@ -185,11 +194,7 @@ describe('System Checks', () => {
       })
 
       it('should return false when device count is equal to limit', async () => {
-        const mockUtils = {
-          dispatch: jest.fn(),
-          translation: jest.fn() as any,
-          logger: {} as any,
-        }
+        const mockUtils = makeUtils()
         const getIdToken = jest.fn().mockResolvedValue({
           bcsc_devices_count: 5,
           bcsc_max_devices: 5,
@@ -207,11 +212,7 @@ describe('System Checks', () => {
         const devReplacement = jest.replaceProperty(devGlobal, '__DEV__', true)
 
         try {
-          const mockUtils = {
-            dispatch: jest.fn(),
-            translation: jest.fn() as any,
-            logger: {} as any,
-          }
+          const mockUtils = makeUtils()
           const getIdToken = jest.fn()
           const dismissedAt = new Date(Date.now() - 29 * 60 * 1000).getTime() // 29 minute ago
 
@@ -228,11 +229,7 @@ describe('System Checks', () => {
       it('should run the check when dismissed for longer than cooldown time', async () => {
         const devReplacement = jest.replaceProperty(devGlobal, '__DEV__', true)
         try {
-          const mockUtils = {
-            dispatch: jest.fn(),
-            translation: jest.fn() as any,
-            logger: {} as any,
-          }
+          const mockUtils = makeUtils()
           const getIdToken = jest.fn().mockResolvedValue({
             bcsc_devices_count: 6,
             bcsc_max_devices: 5,
@@ -252,11 +249,7 @@ describe('System Checks', () => {
 
     describe('onFail', () => {
       it('should dispatch a warning banner message', async () => {
-        const mockUtils = {
-          dispatch: jest.fn(),
-          translation: jest.fn().mockReturnValue('Device limit reached') as any,
-          logger: {} as any,
-        }
+        const mockUtils = makeUtils(jest.fn().mockReturnValue('Device limit reached'))
         const getIdToken = jest.fn()
 
         const deviceCountCheck = new DeviceCountSystemCheck(getIdToken, mockUtils)
@@ -281,11 +274,7 @@ describe('System Checks', () => {
 
     describe('onSuccess', () => {
       it('should dispatch action to remove the banner message', async () => {
-        const mockUtils = {
-          dispatch: jest.fn(),
-          translation: jest.fn() as any,
-          logger: {} as any,
-        }
+        const mockUtils = makeUtils()
         const getIdToken = jest.fn()
 
         const deviceCountCheck = new DeviceCountSystemCheck(getIdToken, mockUtils)
@@ -302,28 +291,15 @@ describe('System Checks', () => {
   })
 
   describe('ServerStatusSystemCheck', () => {
-    const mockNavigation = {
-      navigate: jest.fn(),
-      canGoBack: jest.fn().mockReturnValue(false),
-      goBack: jest.fn(),
-      getState: jest.fn().mockReturnValue({ routes: [{ name: 'SomeScreen' }], index: 0 }),
-    }
-
-    beforeEach(() => {
-      jest.clearAllMocks()
-    })
-
     describe('runCheck', () => {
       it('should return true when server status ok', () => {
-        const mockUtils = { dispatch: jest.fn(), translation: jest.fn() as any, logger: {} as any }
-        const check = new ServerStatusSystemCheck({ status: 'ok' } as any, mockUtils, mockNavigation)
+        const check = new ServerStatusSystemCheck({ status: 'ok' } as any, makeUtils(), makeNavigation())
 
         expect(check.runCheck()).toBe(true)
       })
 
       it('should return false when server status not ok', () => {
-        const mockUtils = { dispatch: jest.fn(), translation: jest.fn() as any, logger: {} as any }
-        const check = new ServerStatusSystemCheck({ status: 'unavailable' } as any, mockUtils, mockNavigation)
+        const check = new ServerStatusSystemCheck({ status: 'unavailable' } as any, makeUtils(), makeNavigation())
 
         expect(check.runCheck()).toBe(false)
       })
@@ -331,11 +307,8 @@ describe('System Checks', () => {
 
     describe('onFail', () => {
       it('should navigate to ServiceOutage modal and dispatch a non-dismissible info banner', () => {
-        const mockUtils = {
-          dispatch: jest.fn(),
-          translation: jest.fn().mockReturnValue('Server unavailable') as any,
-          logger: {} as any,
-        }
+        const mockUtils = makeUtils(jest.fn().mockReturnValue('Server unavailable'))
+        const mockNavigation = makeNavigation()
         const check = new ServerStatusSystemCheck(
           { status: 'unavailable', contactLink: 'https://status.com' } as any,
           mockUtils,
@@ -365,11 +338,7 @@ describe('System Checks', () => {
       })
 
       it('should use statusMessage as description when available', () => {
-        const mockUtils = {
-          dispatch: jest.fn(),
-          translation: jest.fn().mockReturnValue('Server unavailable') as any,
-          logger: {} as any,
-        }
+        const mockUtils = makeUtils(jest.fn().mockReturnValue('Server unavailable'))
         const check = new ServerStatusSystemCheck(
           {
             status: 'unavailable',
@@ -377,7 +346,7 @@ describe('System Checks', () => {
             statusMessage: 'Custom server down message',
           } as any,
           mockUtils,
-          mockNavigation
+          makeNavigation()
         )
 
         check.onFail()
@@ -397,15 +366,8 @@ describe('System Checks', () => {
       })
 
       it('should not navigate if modal is already visible', () => {
-        const navWithModal = {
-          ...mockNavigation,
-          getState: jest.fn().mockReturnValue({ routes: [{ name: BCSCModals.ServiceOutage }], index: 0 }),
-        }
-        const mockUtils = {
-          dispatch: jest.fn(),
-          translation: jest.fn().mockReturnValue('Server unavailable') as any,
-          logger: {} as any,
-        }
+        const navWithModal = makeNavigation(BCSCModals.ServiceOutage)
+        const mockUtils = makeUtils(jest.fn().mockReturnValue('Server unavailable'))
         const check = new ServerStatusSystemCheck(
           { status: 'unavailable', contactLink: 'https://status.com' } as any,
           mockUtils,
@@ -421,8 +383,8 @@ describe('System Checks', () => {
 
     describe('onSuccess', () => {
       it('should remove both banner messages when no statusMessage', () => {
-        const mockUtils = { dispatch: jest.fn(), translation: jest.fn() as any, logger: {} as any }
-        const check = new ServerStatusSystemCheck({ status: 'ok' } as any, mockUtils, mockNavigation)
+        const mockUtils = makeUtils()
+        const check = new ServerStatusSystemCheck({ status: 'ok' } as any, mockUtils, makeNavigation())
 
         check.onSuccess()
 
@@ -438,12 +400,8 @@ describe('System Checks', () => {
       })
 
       it('should dismiss modal if visible and go back', () => {
-        const navWithModal = {
-          ...mockNavigation,
-          getState: jest.fn().mockReturnValue({ routes: [{ name: BCSCModals.ServiceOutage }], index: 0 }),
-          canGoBack: jest.fn().mockReturnValue(true),
-        }
-        const mockUtils = { dispatch: jest.fn(), translation: jest.fn() as any, logger: {} as any }
+        const navWithModal = makeNavigation(BCSCModals.ServiceOutage, { canGoBack: jest.fn().mockReturnValue(true) })
+        const mockUtils = makeUtils()
         const check = new ServerStatusSystemCheck({ status: 'ok' } as any, mockUtils, navWithModal)
 
         check.onSuccess()
@@ -452,11 +410,11 @@ describe('System Checks', () => {
       })
 
       it('should dispatch non-dismissible info banner if statusMessage exists', () => {
-        const mockUtils = { dispatch: jest.fn(), translation: jest.fn() as any, logger: {} as any }
+        const mockUtils = makeUtils()
         const check = new ServerStatusSystemCheck(
           { status: 'ok', contactLink: 'https://status.com', statusMessage: 'Server maintenance scheduled' } as any,
           mockUtils,
-          mockNavigation
+          makeNavigation()
         )
 
         check.onSuccess()

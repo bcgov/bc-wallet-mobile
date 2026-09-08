@@ -17,11 +17,13 @@ jest.mock('@/bcsc-theme/hooks/useVerificationReset', () => ({
 
 const mockCleanUpVerificationData = jest.fn()
 const mockResumeVerification = jest.fn()
+const mockRetryWithNewVideo = jest.fn()
 jest.mock('./CancelledReviewViewModel', () => ({
   __esModule: true,
   default: jest.fn(() => ({
     cleanUpVerificationData: mockCleanUpVerificationData,
     resumeVerification: mockResumeVerification,
+    retryWithNewVideo: mockRetryWithNewVideo,
   })),
 }))
 
@@ -110,8 +112,8 @@ describe('CancelledReview', () => {
       </BasicAppContext>
     )
 
-    const okButton = tree.getByText('BCSC.CancelledVerification.Button')
-    fireEvent.press(okButton)
+    const restartButton = tree.getByText('BCSC.CancelledVerification.RestartButton')
+    fireEvent.press(restartButton)
 
     await waitFor(() => {
       expect(mockResumeVerification).toHaveBeenCalledTimes(1)
@@ -133,8 +135,8 @@ describe('CancelledReview', () => {
       </BasicAppContext>
     )
 
-    const okButton = tree.getByText('BCSC.CancelledVerification.Button')
-    fireEvent.press(okButton)
+    const restartButton = tree.getByText('BCSC.CancelledVerification.RestartButton')
+    fireEvent.press(restartButton)
 
     expect(mockStartLoading).toHaveBeenCalledWith('Alerts.RestartVerification.Loading')
 
@@ -158,14 +160,14 @@ describe('CancelledReview', () => {
       </BasicAppContext>
     )
 
-    const okButton = tree.getByText('BCSC.CancelledVerification.Button')
-    fireEvent.press(okButton)
+    const restartButton = tree.getByText('BCSC.CancelledVerification.RestartButton')
+    fireEvent.press(restartButton)
 
     await waitFor(() => {
       expect(mockResumeVerification).toHaveBeenCalledTimes(1)
     })
 
-    fireEvent.press(okButton)
+    fireEvent.press(restartButton)
 
     await waitFor(() => {
       expect(mockVerificationReset).toHaveBeenCalledTimes(2)
@@ -193,9 +195,9 @@ describe('CancelledReview', () => {
       </BasicAppContext>
     )
 
-    const okButton = tree.getByText('BCSC.CancelledVerification.Button')
-    fireEvent.press(okButton)
-    fireEvent.press(okButton)
+    const restartButton = tree.getByText('BCSC.CancelledVerification.RestartButton')
+    fireEvent.press(restartButton)
+    fireEvent.press(restartButton)
 
     expect(mockVerificationReset).toHaveBeenCalledTimes(1)
     expect(mockStartLoading).toHaveBeenCalledTimes(1)
@@ -222,19 +224,19 @@ describe('CancelledReview', () => {
       </BasicAppContext>
     )
 
-    const okButton = tree.getByText('BCSC.CancelledVerification.Button')
-    fireEvent.press(okButton)
+    const restartButton = tree.getByText('BCSC.CancelledVerification.RestartButton')
+    fireEvent.press(restartButton)
 
     await waitFor(() => {
       expect(mockStopLoading).toHaveBeenCalledTimes(1)
     })
 
     expect(mockResumeVerification).not.toHaveBeenCalled()
-    const buttonTouchable = tree.getByTestId(testIdWithKey('SystemModalButton'))
+    const buttonTouchable = tree.getByTestId(testIdWithKey('RestartVerification'))
     expect(buttonTouchable.props.accessibilityState?.disabled).toBeFalsy()
   })
 
-  it('displays OK button', () => {
+  it('displays both retry and restart buttons', () => {
     const route = {
       params: {
         agentReason: 'Test reason',
@@ -247,14 +249,15 @@ describe('CancelledReview', () => {
       </BasicAppContext>
     )
 
-    expect(tree.getByText('BCSC.CancelledVerification.Button')).toBeTruthy()
+    expect(tree.getByTestId(testIdWithKey('RetryWithNewVideo'))).toBeTruthy()
+    expect(tree.getByTestId(testIdWithKey('RestartVerification'))).toBeTruthy()
   })
 
-  it('renders SystemModal component', () => {
-    const agentReason = 'Test reason'
+  // Retry keeps the ID, address and email steps — the reset belongs to the other button only.
+  it('retries with a new video without resetting verification', async () => {
     const route = {
       params: {
-        agentReason,
+        agentReason: 'Test reason',
       },
     } as any
 
@@ -264,7 +267,13 @@ describe('CancelledReview', () => {
       </BasicAppContext>
     )
 
-    // SystemModal should render with the header text
-    expect(tree.getByText('BCSC.CancelledVerification.Title')).toBeTruthy()
+    fireEvent.press(tree.getByText('BCSC.CancelledVerification.RetryButton'))
+
+    await waitFor(() => {
+      expect(mockRetryWithNewVideo).toHaveBeenCalledTimes(1)
+    })
+    expect(mockVerificationReset).not.toHaveBeenCalled()
+    expect(mockResumeVerification).not.toHaveBeenCalled()
+    expect(mockStartLoading).not.toHaveBeenCalled()
   })
 })

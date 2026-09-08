@@ -345,7 +345,7 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
       el = await this.findByTestId(testId) // scrolling can invalidate the cached handle — re-query
       await el.waitForDisplayed({ timeout })
     }
-    await this.settleAndClick(el, testId)
+    await this.settleAndClick(el, testId, scroll)
   }
 
   /**
@@ -355,9 +355,9 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
    * `waitForDisplayed` proving an element is there says nothing about a round-trip later: a re-render
    * on the seam (a DIDComm state advancing, a form revalidating) invalidates the handle, and
    * WebdriverIO surfaces that as a hard "element wasn't found" rather than re-finding it. Re-querying
-   * is the whole fix — the element is still on screen, only its handle is gone.
+   * is the fix, with a scroll hunt behind it in case the re-render also moved the control off-screen.
    */
-  private async settleAndClick(el: ClickableElement, testId: string): Promise<void> {
+  private async settleAndClick(el: ClickableElement, testId: string, scroll?: ScrollHint): Promise<void> {
     await this.waitForSteadyPosition(el)
     let target = el
     if (await this.nudgeTapPointIntoView(testId)) {
@@ -368,8 +368,9 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
     } catch (err) {
       if (!STALE_HANDLE_MESSAGE.test(String(err))) throw err
       console.warn(`Element "${testId}" went stale before the tap; re-querying and retrying`)
+      // Hunt, don't just re-wait: the same re-render can have pushed the control below the fold.
+      await this.waitForDisplayed(testId, Timeouts.SCREEN_TRANSITION, scroll)
       const fresh = await this.findByTestId(testId)
-      await fresh.waitForDisplayed({ timeout: Timeouts.SCREEN_TRANSITION })
       await this.waitForSteadyPosition(fresh)
       await fresh.click()
     }
@@ -464,7 +465,7 @@ export class BaseScreen<T extends Record<string, string> = Record<string, string
       await el.waitForDisplayed({ timeout })
     }
     await el.waitForEnabled({ timeout })
-    await this.settleAndClick(el, testId)
+    await this.settleAndClick(el, testId, scroll)
   }
 
   /**

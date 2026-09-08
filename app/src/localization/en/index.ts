@@ -70,6 +70,7 @@ const translation = {
     "AddFirstCredential": "Add your first credential",
     "NotAnIDInfoTitle": "This does not replace your physical ID",
     "NotAnIDInfoDescription": "Do not share this screen as ID. This credential is used for digital interactions via the BC Services Card app only.",
+    "JSONDetailsTitle": "Credential JSON Details",
   },
   "Onboarding": {
     "DifferentWalletHeading": "A different smart wallet",
@@ -211,7 +212,6 @@ const translation = {
     "Toggle": "Toggle Developer Mode",
     "EnableProxy": "Enable proxy",
     "EnableAppToAppPersonFlow": "App-to-app Person flow",
-    "SwitchMode": "Switch mode",
     "SwitchTheme": "Switch theme",
     "AppSection": "App",
     "Testing": "Testing",
@@ -823,7 +823,7 @@ const translation = {
       "CheckYourIDBullet3": "Is not expired",
       "LimitedAccess": "Limited access to services",
       "LimitedAccessDescription": "Some services only accept the app when it's set up with a BC Services Card with a photo.",
-      "OpenAccountServices": "Open account services",
+      "WhichServices": "Which services?",
     },
     "AccountSetup": {
       "Title": "Have you verified before?",
@@ -1200,7 +1200,8 @@ const translation = {
     "CancelledVerification": {
       "Title": "Your identity couldn't be verified",
       "Label": "Details from Service BC agent: \n{{reason}}",
-      "Button": "Retry verification",
+      "RetryButton": "Try again",
+      "RestartButton": "Restart from beginning",
       "NoReason": "No reason provided"
     },
     "DualNonBCSCEvidence": {

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="5" failures="1" errors="0" skipped="2">
+  <testsuite name="Auth journey unlock" timestamp="2026-08-28T05:05:12" time="311.402" tests="5" failures="1" errors="0" skipped="2">
+    <properties>
+      <property name="specId" value="0"/>
+      <property name="suiteName" value="Auth journey: unlock"/>
+      <property name="capabilities" value="ios.5fc23a1b909c4d"/>
+      <property name="file" value="file://./test/bcsc/auth/auth-unlock.journey.ts"/>
+    </properties>
+    <testcase classname="ios.5fc23a1b909c4d.Auth_journey:_unlock" name="onboards and skips to unverified Home" time="41.210"/>
+    <testcase classname="ios.5fc23a1b909c4d.Auth_journey:_unlock" name="relaunches to AccountLanding and unlocks with the PIN" time="18.960"/>
+    <testcase classname="ios.5fc23a1b909c4d.Auth_journey:_unlock" name="opens Get Help Forgot PIN from the PIN screen" time="30.114">
+      <failure message="Element GetHelpWebView still not displayed after 10000ms"/>
+    </testcase>
+    <testcase classname="ios.5fc23a1b909c4d.Auth_journey:_unlock" name="rejects a wrong PIN inline and unlocks on retry" time="0">
+      <skipped/>
+    </testcase>
+    <testcase classname="ios.5fc23a1b909c4d.Auth_journey:_unlock" name="locks on return from a long background and re unlocks with the PIN terminal" time="0">
+      <skipped/>
+    </testcase>
+  </testsuite>
+</testsuites>

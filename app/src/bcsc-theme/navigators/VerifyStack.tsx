@@ -71,6 +71,7 @@ import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
 import { WebViewScreen } from '../features/webview/WebViewScreen'
 import { useLeaveVerification } from '../hooks/useLeaveVerification'
+import useSecureActions from '../hooks/useSecureActions'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { getResumeStepRoute } from '../utils/resume-step-route'
 
@@ -136,6 +137,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
   const { t } = useTranslation()
   const defaultStackOptions = useDefaultStackOptions(theme)
   const [store] = useStore<BCState>()
+  const { clearAdditionalEvidence } = useSecureActions()
   const resumeRoute = getResumeStepRoute(store)
   // Opening on the prompt (rather than swapping stacks to reach it) lets prompt → setup question
   // animate as an in-stack slide. Everyone else resumes at the step they left off on.
@@ -396,7 +398,14 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         }
         options={{
           header: createProgressHeader(2, 60),
-          headerLeft: createVerifyHeaderBackButton(),
+          headerLeft: createVerifyHeaderBackButton((navigation) => {
+            if (navigation.canGoBack()) {
+              return navigation.goBack()
+            }
+
+            clearAdditionalEvidence()
+            navigation.replace(BCSCScreens.IdentitySelection)
+          }),
         }}
       />
       <Stack.Screen
@@ -414,7 +423,14 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         }
         options={{
           header: createProgressHeader(2, 75),
-          headerLeft: createVerifyHeaderBackButton(),
+          headerLeft: createVerifyHeaderBackButton((navigation) => {
+            if (navigation.canGoBack()) {
+              return navigation.goBack()
+            }
+
+            clearAdditionalEvidence()
+            navigation.replace(BCSCScreens.IdentitySelection)
+          }),
         }}
       />
       <Stack.Screen name={BCSCScreens.VerifyWebView} component={WebViewScreen} />

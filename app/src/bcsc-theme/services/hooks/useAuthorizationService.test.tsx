@@ -6,6 +6,8 @@ import { AppError, ErrorCategory } from '@/errors'
 import { AppEventCode } from '@/events/appEventCode'
 import { renderHook } from '@testing-library/react-native'
 
+jest.mock('@/bcsc-theme/api/hooks/useApi')
+
 jest.mock('@bifold/core', () => ({
   __esModule: true,
   TOKENS: { UTIL_LOGGER: 'UTIL_LOGGER' },

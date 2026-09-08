@@ -10,7 +10,7 @@
  * `n` must therefore always be decode-tolerant and byte-compared — never raw-string-compared.
  */
 
-import { decodeBase64Loose, modulusInSet, normalizeModulus } from './jwk-modulus'
+import { confirmModulusRegistered, decodeBase64Loose, modulusInSet, normalizeModulus } from './jwk-modulus'
 
 // An arbitrary "modulus" whose first byte has its high bit set (0xC0 = 0b1100_0000), i.e.
 // exactly the shape that forces DER's ASN.1 INTEGER encoding to prepend a 0x00 sign byte.
@@ -79,6 +79,28 @@ describe('jwk-modulus', () => {
       expect(modulusInSet('garbage!!!', [toBase64(REAL_MODULUS_BYTES)])).toBe(false)
       expect(modulusInSet(toBase64(REAL_MODULUS_BYTES), ['garbage!!!', undefined])).toBe(false)
       expect(modulusInSet(undefined, [])).toBe(false)
+    })
+  })
+
+  describe('confirmModulusRegistered', () => {
+    it("returns 'confirmed' when the sent modulus is present in a decodable server set", () => {
+      const n1 = toBase64(REAL_MODULUS_BYTES)
+      expect(confirmModulusRegistered(n1, [toBase64(OTHER_MODULUS_BYTES), n1])).toBe('confirmed')
+    })
+
+    it("returns 'mismatch' when both sides decode but the sent modulus is absent", () => {
+      const n1 = toBase64(REAL_MODULUS_BYTES)
+      const n2 = toBase64(OTHER_MODULUS_BYTES)
+      expect(confirmModulusRegistered(n1, [n2])).toBe('mismatch')
+    })
+
+    it("returns 'unknown' when the sent modulus doesn't decode, even with a decodable server set", () => {
+      expect(confirmModulusRegistered('not-valid-base64!!!', [toBase64(REAL_MODULUS_BYTES)])).toBe('unknown')
+    })
+
+    it("returns 'unknown' when no server modulus decodes, even with a decodable sent modulus", () => {
+      expect(confirmModulusRegistered(toBase64(REAL_MODULUS_BYTES), ['garbage!!!', undefined])).toBe('unknown')
+      expect(confirmModulusRegistered(toBase64(REAL_MODULUS_BYTES), [])).toBe('unknown')
     })
   })
 

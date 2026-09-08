@@ -34,7 +34,7 @@ const useEvidenceUpload = () => {
     logger.info('Uploading selfie photo...')
     const metadataResponse = await evidence.uploadPhotoEvidenceMetadata(metadataToUpload)
     const photoBytes = await readFileInChunks(photoPath, logger)
-    await evidence.uploadPhotoEvidenceBinary(metadataResponse.upload_uri, photoBytes)
+    await evidence.uploadPhotoEvidenceBinary(metadataResponse.upload_uri, photoBytes, 'image')
     logger.info(`Selfie photo uploaded: ${photoBytes.length} bytes`)
   }, [evidence, logger, store.bcsc])
 
@@ -123,7 +123,7 @@ const useEvidenceUpload = () => {
   const uploadEvidenceBinaries = useCallback(
     async (items: EvidenceUploadItem[]) => {
       for (const { uploadUri, imageBytes } of items) {
-        await evidence.uploadPhotoEvidenceBinary(uploadUri, imageBytes)
+        await evidence.uploadPhotoEvidenceBinary(uploadUri, imageBytes, 'document')
       }
       if (items.length > 0) {
         logger.info(`All additional evidence uploaded (${items.length} file(s))`)

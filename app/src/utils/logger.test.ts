@@ -103,8 +103,8 @@ describe('createAppLogger', () => {
     ['fatal', LogLevel.fatal],
     ['error', LogLevel.error],
     ['warning', LogLevel.warn],
-    ['trace', LogLevel.debug],
-    ['test', LogLevel.debug],
+    ['trace', LogLevel.trace],
+    ['test', LogLevel.test],
     ['unknown', LogLevel.debug],
   ])('maps env value %s to correct log level', (envValue, expectedLevel) => {
     mockedConfig.LOG_LEVEL = envValue

@@ -121,14 +121,14 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
           </Fragment>
         ))}
       {promptsStatus === 'loading' && (
-        <ActivityIndicator style={{ marginBottom: Spacing.xl }} testID={'PromptsLoading'} />
+        <ActivityIndicator style={{ marginBottom: Spacing.xl }} testID={testIdWithKey('PromptsLoading')} />
       )}
       {promptsStatus === 'failed' && (
         <Button
           buttonType={ButtonType.Secondary}
           title={t('Global.Retry')}
           onPress={loadPrompts}
-          testID={'RetryLoadPrompts'}
+          testID={testIdWithKey('RetryLoadPrompts')}
           accessibilityLabel={t('Global.Retry')}
         />
       )}

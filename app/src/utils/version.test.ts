@@ -2,126 +2,49 @@ import deviceInfo from 'react-native-device-info'
 
 import { AppVersion, isVersionAtLeast } from './version'
 
+const expectIsVersionAtLeast = (appVersion: string, minVersion: string, expected: boolean) => {
+  jest.spyOn(deviceInfo, 'getVersion').mockReturnValue(appVersion)
+
+  expect(isVersionAtLeast(minVersion)).toBe(expected)
+}
+
 describe('isVersionAtLeast', () => {
   describe('exact version comparisons', () => {
-    it('returns true when the app version equals the minimum version', () => {
-      jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('4.1.0')
-
-      expect(isVersionAtLeast('4.1.0')).toBe(true)
-    })
-
-    it('returns true when the major version is greater', () => {
-      jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('5.0.0')
-
-      expect(isVersionAtLeast('4.9.9')).toBe(true)
-    })
-
-    it('returns false when the major version is lower', () => {
-      jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('3.9.9')
-
-      expect(isVersionAtLeast('4.0.0')).toBe(false)
-    })
-
-    it('returns true when the minor version is greater within the same major', () => {
-      jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('4.2.0')
-
-      expect(isVersionAtLeast('4.1.9')).toBe(true)
-    })
-
-    it('returns false when the minor version is lower within the same major', () => {
-      jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('4.0.9')
-
-      expect(isVersionAtLeast('4.1.0')).toBe(false)
-    })
-
-    it('returns true when the patch version is greater', () => {
-      jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('4.1.2')
-
-      expect(isVersionAtLeast('4.1.1')).toBe(true)
-    })
-
-    it('returns false when the patch version is lower', () => {
-      jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('4.1.0')
-
-      expect(isVersionAtLeast('4.1.1')).toBe(false)
-    })
+    it.each([
+      ['4.1.0', '4.1.0', true, 'the app version equals the minimum version'],
+      ['5.0.0', '4.9.9', true, 'the major version is greater'],
+      ['3.9.9', '4.0.0', false, 'the major version is lower'],
+      ['4.2.0', '4.1.9', true, 'the minor version is greater within the same major'],
+      ['4.0.9', '4.1.0', false, 'the minor version is lower within the same major'],
+      ['4.1.2', '4.1.1', true, 'the patch version is greater'],
+      ['4.1.0', '4.1.1', false, 'the patch version is lower'],
+    ])('app %s vs minimum %s -> %s when %s', expectIsVersionAtLeast)
   })
 
   describe('wildcard segments', () => {
-    it('ignores the patch segment when the minimum version uses "x"', () => {
-      jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('4.1.0')
-
-      expect(isVersionAtLeast('4.1.x')).toBe(true)
-    })
-
-    it('returns true when the minor version exceeds a wildcard minimum', () => {
-      jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('4.2.0')
-
-      expect(isVersionAtLeast('4.1.x')).toBe(true)
-    })
-
-    it('returns false when the version is below a wildcard minimum', () => {
-      jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('4.0.9')
-
-      expect(isVersionAtLeast('4.1.x')).toBe(false)
-    })
-
-    it('supports "*" as a wildcard segment', () => {
-      jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('4.1.3')
-
-      expect(isVersionAtLeast('4.1.*')).toBe(true)
-    })
-
-    it('returns true for any version when the first segment is a wildcard', () => {
-      jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('0.0.1')
-
-      expect(isVersionAtLeast('x')).toBe(true)
-    })
+    it.each([
+      ['4.1.0', '4.1.x', true, 'the patch segment is ignored for an "x" minimum'],
+      ['4.2.0', '4.1.x', true, 'the minor version exceeds a wildcard minimum'],
+      ['4.0.9', '4.1.x', false, 'the version is below a wildcard minimum'],
+      ['4.1.3', '4.1.*', true, '"*" is used as a wildcard segment'],
+      ['0.0.1', 'x', true, 'the first segment is a wildcard'],
+    ])('app %s vs minimum %s -> %s when %s', expectIsVersionAtLeast)
   })
 
   describe('versions with differing segment counts', () => {
-    it('treats missing app version segments as 0', () => {
-      jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('4.1')
-
-      expect(isVersionAtLeast('4.1.1')).toBe(false)
-    })
-
-    it('returns true when missing segments compare equal to 0', () => {
-      jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('4.1')
-
-      expect(isVersionAtLeast('4.1.0')).toBe(true)
-    })
-
-    it('returns true when the app version has more segments than the minimum', () => {
-      jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('4.1.2')
-
-      expect(isVersionAtLeast('4.1')).toBe(true)
-    })
+    it.each([
+      ['4.1', '4.1.1', false, 'missing app version segments are treated as 0'],
+      ['4.1', '4.1.0', true, 'missing segments compare equal to 0'],
+      ['4.1.2', '4.1', true, 'the app version has more segments than the minimum'],
+    ])('app %s vs minimum %s -> %s when %s', expectIsVersionAtLeast)
   })
 
   describe('AppVersion enum values', () => {
-    it('returns true when the app version is within V4_1_x', () => {
-      jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('4.1.0')
-
-      expect(isVersionAtLeast(AppVersion.V4_1_x)).toBe(true)
-    })
-
-    it('returns true when the app version is above V4_1_x', () => {
-      jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('4.2.0')
-
-      expect(isVersionAtLeast(AppVersion.V4_1_x)).toBe(true)
-    })
-
-    it('returns false when the app version is below V4_2_x', () => {
-      jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('4.1.5')
-
-      expect(isVersionAtLeast(AppVersion.V4_2_x)).toBe(false)
-    })
-
-    it('returns true when the app version satisfies V4_0_x', () => {
-      jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('4.0.3')
-
-      expect(isVersionAtLeast(AppVersion.V4_0_x)).toBe(true)
-    })
+    it.each([
+      ['4.1.0', AppVersion.V4_1_x, true, 'the app version is within V4_1_x'],
+      ['4.2.0', AppVersion.V4_1_x, true, 'the app version is above V4_1_x'],
+      ['4.1.5', AppVersion.V4_2_x, false, 'the app version is below V4_2_x'],
+      ['4.0.3', AppVersion.V4_0_x, true, 'the app version satisfies V4_0_x'],
+    ])('app %s vs minimum %s -> %s when %s', expectIsVersionAtLeast)
   })
 })

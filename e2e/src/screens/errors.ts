@@ -20,7 +20,10 @@ const { errorModal } = TestIds
 export const AppErrorModal = defineScreen({
   self: bcsc(errorModal.close),
   primary: bcsc(errorModal.close),
-  elements: {
+  links: {
     showDetails: bcsc(errorModal.showDetails),
+  },
+  elements: {
+    details: bcsc(errorModal.details), // the error code + message, only after ShowDetails
   },
 })

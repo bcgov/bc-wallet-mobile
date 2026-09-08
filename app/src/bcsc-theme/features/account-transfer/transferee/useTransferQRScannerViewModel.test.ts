@@ -8,6 +8,8 @@ import { act, renderHook, waitFor } from '@testing-library/react-native'
 import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
 import useTransferQRScannerViewModel from './useTransferQRScannerViewModel'
 
+jest.mock('@/bcsc-theme/api/hooks/useApi')
+
 const mockAuthorizeDevice = jest.fn().mockResolvedValue(null)
 const mockVerifyAttestation = jest.fn().mockResolvedValue({ success: true })
 const mockDeviceToken = jest.fn().mockResolvedValue({

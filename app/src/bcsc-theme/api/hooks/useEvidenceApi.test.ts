@@ -42,6 +42,7 @@ describe('useEvidenceApi - verification deadline reconciliation', () => {
     endpoints: { evidence: 'https://example.test/evidence' },
     get: jest.fn(),
     put: jest.fn(),
+    post: jest.fn(),
     logger: mockLogger,
   }
 
@@ -195,5 +196,160 @@ describe('useEvidenceApi - verification deadline reconciliation', () => {
       expect.stringContaining('Failed to persist extended expiry'),
       expect.objectContaining({ error: expect.any(Error) })
     )
+  })
+})
+
+describe('useEvidenceApi - upload log context', () => {
+  const jpegBytes = Buffer.from([0xff, 0xd8, 0xff, 0xe0])
+  const mp4Bytes = Buffer.from([
+    0,
+    0,
+    0,
+    16,
+    ...'ftyp'.split('').map((c) => c.charCodeAt(0)),
+    ...'isom'.split('').map((c) => c.charCodeAt(0)),
+    0,
+    0,
+    0,
+    0,
+  ])
+  const unrecognizableBytes = Buffer.from([1, 2, 3, 4, 5, 6, 7, 8])
+
+  const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() }
+  const mockStore: any = { bcsc: {}, bcscSecure: { deviceCode: 'test-device-code' } }
+
+  const apiClient: any = {
+    endpoints: { evidence: 'https://example.test/evidence' },
+    get: jest.fn(),
+    put: jest.fn().mockResolvedValue({ data: undefined }),
+    post: jest.fn().mockResolvedValue({ data: undefined }),
+    logger: mockLogger,
+  }
+
+  const renderApi = () => renderHook(() => useEvidenceApi(apiClient)).result
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+    apiClient.put.mockResolvedValue({ data: undefined })
+    apiClient.post.mockResolvedValue({ data: undefined })
+    ;(getAccount as jest.Mock).mockResolvedValue({ clientID: 'client-id', issuer: 'issuer' })
+    jest.mocked(Bifold.useStore).mockReturnValue([mockStore as Bifold.State, jest.fn()])
+  })
+
+  it('attaches full binary context, sniffing the format from the buffer, for a document-kind photo binary upload', async () => {
+    const result = renderApi()
+
+    await act(async () => {
+      await result.current.uploadPhotoEvidenceBinary('https://upload.test/photo', jpegBytes, 'document')
+    })
+
+    const [, , config] = apiClient.put.mock.calls[0]
+    expect(config.uploadLogContext).toEqual({
+      media_kind: 'document',
+      media_stage: 'binary',
+      media_bytes: jpegBytes.byteLength,
+      media_format: 'image/jpeg',
+    })
+  })
+
+  it('attaches media_kind "video" for a video binary upload', async () => {
+    const result = renderApi()
+
+    await act(async () => {
+      await result.current.uploadVideoEvidenceBinary('https://upload.test/video', mp4Bytes)
+    })
+
+    const [, , config] = apiClient.put.mock.calls[0]
+    expect(config.uploadLogContext).toEqual({
+      media_kind: 'video',
+      media_stage: 'binary',
+      media_bytes: mp4Bytes.byteLength,
+      media_format: 'video/mp4',
+    })
+  })
+
+  it('omits media_format (not a placeholder) when the binary is unrecognizable, keeping the other fields', async () => {
+    const result = renderApi()
+
+    await act(async () => {
+      await result.current.uploadPhotoEvidenceBinary('https://upload.test/photo', unrecognizableBytes, 'image')
+    })
+
+    const [, , config] = apiClient.put.mock.calls[0]
+    expect(config.uploadLogContext).not.toHaveProperty('media_format')
+    expect(config.uploadLogContext).toEqual({
+      media_kind: 'image',
+      media_stage: 'binary',
+      media_bytes: unrecognizableBytes.byteLength,
+    })
+  })
+
+  it('attaches metadata-stage context with content_length as media_bytes and a pass-through format for a photo', async () => {
+    const result = renderApi()
+    const payload = {
+      label: 'front',
+      content_type: 'image/jpeg',
+      content_length: 12345,
+      date: 0,
+      sha256: 'sha',
+    }
+
+    await act(async () => {
+      await result.current.uploadPhotoEvidenceMetadata(payload, 'image/heic')
+    })
+
+    const [, , config] = apiClient.post.mock.calls[0]
+    expect(config.uploadLogContext).toEqual({
+      media_kind: 'image',
+      media_stage: 'metadata',
+      media_bytes: 12345,
+      media_format: 'image/heic',
+    })
+  })
+
+  it('attaches metadata-stage context for a video', async () => {
+    const result = renderApi()
+    const payload = {
+      content_type: 'video/mp4',
+      content_length: 54321,
+      date: 0,
+      sha256: 'sha',
+      duration: 10,
+      prompts: [],
+    }
+
+    await act(async () => {
+      await result.current.uploadVideoEvidenceMetadata(payload, 'video/mp4')
+    })
+
+    const [, , config] = apiClient.post.mock.calls[0]
+    expect(config.uploadLogContext).toEqual({
+      media_kind: 'video',
+      media_stage: 'metadata',
+      media_bytes: 54321,
+      media_format: 'video/mp4',
+    })
+  })
+
+  it('sums media_bytes across images and omits media_format for the multi-image document metadata call', async () => {
+    const result = renderApi()
+    const payload = {
+      images: [
+        { label: 'FRONT_SIDE', content_type: 'image/jpeg', content_length: 100, date: 0, sha256: 'a' },
+        { label: 'BACK_SIDE', content_type: 'image/jpeg', content_length: 200, date: 0, sha256: 'b' },
+      ],
+    }
+
+    await act(async () => {
+      await result.current.sendEvidenceMetadata(payload)
+    })
+
+    const [, , config] = apiClient.post.mock.calls[0]
+    expect(config.uploadLogContext).not.toHaveProperty('media_format')
+    expect(config.uploadLogContext).toEqual({
+      media_kind: 'document',
+      media_stage: 'metadata',
+      media_bytes: 300,
+    })
   })
 })

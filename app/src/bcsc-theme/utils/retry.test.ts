@@ -4,13 +4,8 @@ describe('retryAsync', () => {
   it('attempts the request the specified number of times', async () => {
     const fn = jest.fn().mockRejectedValue(new Error('Failed'))
 
-    try {
-      await retryAsync(fn, 3, 100)
-      expect(true).toBe(false) // This should not be reached
-    } catch (error) {
-      expect(error).toEqual(new Error('Failed'))
-      expect(fn).toHaveBeenCalledTimes(3)
-    }
+    await expect(retryAsync(fn, 3, 100)).rejects.toThrow('Failed')
+    expect(fn).toHaveBeenCalledTimes(3)
   })
 
   it('succeeds if the request eventually succeeds', async () => {
@@ -24,13 +19,8 @@ describe('retryAsync', () => {
   it('throws an error if the request fails after all retries', async () => {
     const fn = jest.fn().mockRejectedValue(new Error('Failed'))
 
-    try {
-      await retryAsync(fn, 2, 100)
-      expect(true).toBe(false) // This should not be reached
-    } catch (error) {
-      expect(error).toEqual(new Error('Failed'))
-      expect(fn).toHaveBeenCalledTimes(2)
-    }
+    await expect(retryAsync(fn, 2, 100)).rejects.toThrow('Failed')
+    expect(fn).toHaveBeenCalledTimes(2)
   })
 
   it('retries if retryIfNullish is true and the result is null', async () => {
@@ -42,26 +32,34 @@ describe('retryAsync', () => {
     expect(fn).toHaveBeenCalledTimes(2)
   })
 
-  it('waits the specified delay between retries', async () => {
-    jest.useFakeTimers()
-    const fn = jest.fn().mockRejectedValue(new Error('Failed'))
-    const delay = 100
+  describe('with a mocked clock', () => {
+    beforeEach(() => {
+      jest.useFakeTimers()
+    })
 
-    const promise = retryAsync(fn, 3, delay).catch(() => {})
+    afterEach(() => {
+      jest.useRealTimers()
+    })
 
-    // First attempt is immediate
-    expect(fn).toHaveBeenCalledTimes(1)
+    it('waits the specified delay between retries', async () => {
+      const fn = jest.fn().mockRejectedValue(new Error('Failed'))
+      const delay = 100
 
-    // Advance past first delay
-    await jest.advanceTimersByTimeAsync(delay)
-    expect(fn).toHaveBeenCalledTimes(2)
+      const promise = retryAsync(fn, 3, delay).catch(() => {})
 
-    // Advance past second delay
-    await jest.advanceTimersByTimeAsync(delay)
-    expect(fn).toHaveBeenCalledTimes(3)
+      // First attempt is immediate
+      expect(fn).toHaveBeenCalledTimes(1)
 
-    await promise
-    jest.useRealTimers()
+      // Advance past first delay
+      await jest.advanceTimersByTimeAsync(delay)
+      expect(fn).toHaveBeenCalledTimes(2)
+
+      // Advance past second delay
+      await jest.advanceTimersByTimeAsync(delay)
+      expect(fn).toHaveBeenCalledTimes(3)
+
+      await promise
+    })
   })
 
   it('preserves retryIfNullish after an error recovery', async () => {
@@ -77,25 +75,10 @@ describe('retryAsync', () => {
     expect(fn).toHaveBeenCalledTimes(3)
   })
 
-  it('throws an error if maxRetries is set to 0', async () => {
+  it.each([0, -1])('throws an error if maxRetries is %s', async (maxRetries) => {
     const fn = jest.fn().mockRejectedValue(new Error('Failed'))
 
-    try {
-      await retryAsync(fn, 0, 100)
-      expect(true).toBe(false) // This should not be reached
-    } catch (error) {
-      expect(error).toEqual(new Error('[retryAsync]: attempts < 1'))
-    }
-  })
-
-  it('throws an error if maxRetries is negative', async () => {
-    const fn = jest.fn().mockRejectedValue(new Error('Failed'))
-
-    try {
-      await retryAsync(fn, -1, 100)
-      expect(true).toBe(false) // This should not be reached
-    } catch (error) {
-      expect(error).toEqual(new Error('[retryAsync]: attempts < 1'))
-    }
+    await expect(retryAsync(fn, maxRetries, 100)).rejects.toThrow('[retryAsync]: attempts < 1')
+    expect(fn).not.toHaveBeenCalled()
   })
 })

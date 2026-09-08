@@ -51,6 +51,11 @@ type UseGetSystemChecksReturn = Record<
      * Indicates if the system checks for the scope are ready to be run
      */
     isReady: boolean
+    /**
+     * Indicates if the scope will ever run in the current app state. False means callers waiting on
+     * the scope (see the loading gate in MainStack) should stop waiting — `isReady` will never flip.
+     */
+    isApplicable: boolean
   }
 >
 
@@ -273,18 +278,24 @@ export const useCreateSystemChecks = (): UseGetSystemChecksReturn => {
       [SystemCheckScope.STARTUP]: {
         getSystemChecks: getStartupSystemChecks,
         isReady: Boolean(defaultReadiness && store.stateLoaded),
+        isApplicable: true,
       },
       [SystemCheckScope.MAIN_STACK]: {
         getSystemChecks: getMainSystemChecks,
         isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated),
+        isApplicable: true,
       },
       [SystemCheckScope.VERIFY]: {
         getSystemChecks: getVerifySystemChecks,
         isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated),
+        isApplicable: true,
       },
       [SystemCheckScope.ACCOUNT]: {
         getSystemChecks: getAccountSystemChecks,
         isReady: Boolean(defaultReadiness && store.bcscSecure.isHydrated && !!accountContext?.account),
+        // Account metadata is only fetched for verified users, and a failed fetch leaves `account`
+        // null for good — so without an account in hand this scope has nothing to wait for.
+        isApplicable: Boolean(accountContext?.account),
       },
     }
   }, [

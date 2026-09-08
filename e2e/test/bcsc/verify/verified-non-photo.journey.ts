@@ -81,8 +81,8 @@ describe('Verified journey: non-photo card', () => {
   it('resumes onto the document-number form after a relaunch', async () => {
     // Photos-but-no-number is the ONE mid-capture state hydration preserves (an evidence with no photos
     // is dropped), so the photos must survive the relaunch and the app must resume here.
-    await unlockWithPin(TEST_PIN, { relaunch: true })
-    await resumeVerification()
+    await unlockWithPin(TEST_PIN, { relaunch: true, landing: 'any' })
+    await resumeVerification(EvidenceIDCollectionScreen, Timeouts.APP_LAUNCH)
     await EvidenceIDCollectionScreen.expectVisible(Timeouts.SCREEN_TRANSITION)
   })
 

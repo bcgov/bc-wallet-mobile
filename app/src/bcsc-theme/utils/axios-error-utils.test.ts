@@ -334,5 +334,32 @@ describe('Error Utils', () => {
       expect(headers['set-cookie']).toBe('[redacted]')
       expect(JSON.stringify(details)).not.toContain('session=SECRET')
     })
+
+    it('does not duplicate uploadLogContext into the formatted cause, and leaves redaction/summarization untouched', () => {
+      const error = {
+        name: 'AxiosError',
+        code: 'ERR_NETWORK',
+        message: 'Network Error',
+        config: {
+          method: 'put',
+          url: 'https://store.blob.core.windows.net/c/video.mp4?sig=TOPSECRET&se=2026',
+          data: Buffer.alloc(1_000_000),
+          uploadLogContext: {
+            media_kind: 'video',
+            media_stage: 'binary',
+            media_bytes: 1_000_000,
+            media_format: 'video/mp4',
+          },
+        },
+      } as any
+
+      const details = formatAxiosErrorForLogger({ error, suppressStackTrace: true })
+
+      expect(details.url).toBe('https://store.blob.core.windows.net/c/video.mp4')
+      expect((details.request as { data: unknown }).data).toBe('[binary 1000000 bytes]')
+      expect(details).not.toHaveProperty('media_kind')
+      expect(details).not.toHaveProperty('uploadLogContext')
+      expect(JSON.stringify(details)).not.toContain('media_kind')
+    })
   })
 })

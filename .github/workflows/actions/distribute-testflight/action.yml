@@ -40,41 +40,11 @@ runs:
   steps:
     - name: Generate JWT for App Store Connect API
       id: jwt
-      shell: bash
-      env:
-        ASC_KEY_ID: ${{ inputs.app_store_connect_key_identifier }}
-        ASC_ISSUER_ID: ${{ inputs.app_store_connect_issuer_id }}
-        ASC_PRIVATE_KEY: ${{ inputs.app_store_connect_private_key }}
-      run: |
-        # Build a JWT for App Store Connect API using only openssl + base64
-        HEADER=$(printf '{"alg":"ES256","kid":"%s","typ":"JWT"}' "$ASC_KEY_ID" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
-        NOW=$(date +%s)
-        EXP=$((NOW + 1200))
-        PAYLOAD=$(printf '{"iss":"%s","iat":%d,"exp":%d,"aud":"appstoreconnect-v1"}' "$ASC_ISSUER_ID" "$NOW" "$EXP" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
-
-        # Write the private key to a temp file
-        KEY_FILE=$(mktemp)
-        echo "$ASC_PRIVATE_KEY" > "$KEY_FILE"
-
-        # openssl dgst outputs DER-encoded ECDSA signatures, but JWT ES256
-        # requires raw R||S format (64 bytes for P-256). Convert via python3.
-        SIGNATURE=$(printf '%s.%s' "$HEADER" "$PAYLOAD" | \
-          openssl dgst -sha256 -sign "$KEY_FILE" -binary | \
-          python3 -c "
-        import sys
-        d = sys.stdin.buffer.read()
-        # Parse DER: SEQUENCE(INTEGER(r), INTEGER(s))
-        i = 2
-        rl = d[i+1]; r = d[i+2:i+2+rl]; i += 2 + rl
-        sl = d[i+1]; s = d[i+2:i+2+sl]
-        # Pad/trim each to 32 bytes for P-256 curve
-        sys.stdout.buffer.write(r[-32:].rjust(32, b'\x00') + s[-32:].rjust(32, b'\x00'))
-        " | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
-        rm -f "$KEY_FILE"
-
-        JWT="${HEADER}.${PAYLOAD}.${SIGNATURE}"
-        echo "::add-mask::${JWT}"
-        echo "token=${JWT}" >> "$GITHUB_OUTPUT"
+      uses: ./.github/workflows/actions/asc-jwt
+      with:
+        app_store_connect_issuer_id: ${{ inputs.app_store_connect_issuer_id }}
+        app_store_connect_key_identifier: ${{ inputs.app_store_connect_key_identifier }}
+        app_store_connect_private_key: ${{ inputs.app_store_connect_private_key }}
 
     - name: Wait for build processing & distribute
       shell: bash
@@ -130,6 +100,7 @@ runs:
         MAX_SECONDS=$((MAX_WAIT * 60))
         NOT_FOUND_THRESHOLD=180  # seconds — bail early if build never appears
         BUILD_ID=""
+        STATE=""
 
         while [ $ELAPSED -lt $MAX_SECONDS ]; do
           RESPONSE=$(asc_get \
@@ -170,8 +141,8 @@ runs:
           ELAPSED=$((ELAPSED + INTERVAL))
         done
 
-        if [ -z "$BUILD_ID" ]; then
-          echo "❌ Timed out waiting for build ${VERSION_CODE} after ${MAX_WAIT} minutes"
+        if [ "$STATE" != "VALID" ]; then
+          echo "❌ Timed out after ${MAX_WAIT} minutes waiting for build ${VERSION_CODE} to finish processing (last state: ${STATE:-unknown})"
           exit 1
         fi
 
@@ -244,40 +215,59 @@ runs:
           exit 0
         fi
 
-        # Fetch all beta groups for the app (APP_ID was resolved above)
-        ALL_GROUPS=$(asc_get "${API}/apps/${APP_ID}/betaGroups?limit=50") \
-          || ALL_GROUPS='{"data":[]}'
+        # Fetch every page of beta groups for the app (APP_ID was resolved
+        # above). A single page (the API defaults to far fewer than most
+        # apps' group count) would silently miss groups added after the
+        # first 50-ish — so page through `links.next` until it's absent. A
+        # failed page fetch is a hard failure: silently treating it as "no
+        # groups" would misreport a real API error as "group missing".
+        ALL_GROUPS_FILE=$(mktemp)
+        echo '[]' > "$ALL_GROUPS_FILE"
+        PAGE_URL="${API}/apps/${APP_ID}/betaGroups?limit=200"
+        while [ -n "$PAGE_URL" ]; do
+          PAGE_RESPONSE=$(asc_get "$PAGE_URL") || {
+            echo "❌ Failed to fetch beta groups (GET ${PAGE_URL})" >&2
+            exit 1
+          }
+          PAGE_URL=$(PAGE="$PAGE_RESPONSE" GROUPS_FILE="$ALL_GROUPS_FILE" python3 -c "
+        import json, os
+        page = json.loads(os.environ['PAGE'])
+        groups_file = os.environ['GROUPS_FILE']
+        with open(groups_file) as f:
+            acc = json.load(f)
+        acc.extend(page.get('data', []))
+        with open(groups_file, 'w') as f:
+            json.dump(acc, f)
+        print(page.get('links', {}).get('next') or '')
+        ")
+        done
 
-        # Build the list of group IDs that match requested names
-        GROUP_IDS=$(echo "$ALL_GROUPS" | python3 -c "
-        import sys, json
-        groups = json.load(sys.stdin).get('data', [])
-        requested = set('''${BETA_GROUPS}'''.strip().split('\n'))
-        requested = {g.strip() for g in requested if g.strip()}
-        ids = []
+        # Group names reach python through the environment, not by being
+        # pasted into the source: a name containing a quote would otherwise
+        # change the program rather than the data. Matching is done as name
+        # sets (not a bash line count vs. a python-deduplicated ID count) so
+        # duplicate requested names or duplicate matches can't disagree.
+        ID_LIST=$(GROUPS_FILE="$ALL_GROUPS_FILE" BETA_GROUPS="${BETA_GROUPS}" python3 -c "
+        import os, sys, json
+        with open(os.environ['GROUPS_FILE']) as f:
+            groups = json.load(f)
+        requested = {g.strip() for g in os.environ['BETA_GROUPS'].split('\n') if g.strip()}
+        matched = {}
         for g in groups:
             name = g['attributes'].get('name', '')
             if name in requested:
-                ids.append(g['id'])
-                print(f'  Matched group: {name} -> {g[\"id\"]}', file=sys.stderr)
-        for gid in ids:
+                matched[name] = g['id']
+        missing = requested - matched.keys()
+        if missing:
+            print(f'❌ Beta group(s) not found: {\", \".join(sorted(missing))}', file=sys.stderr)
+            print('Available groups:', file=sys.stderr)
+            for g in groups:
+                print(f'  - {g[\"attributes\"].get(\"name\", \"unknown\")}', file=sys.stderr)
+            sys.exit(1)
+        for gid in dict.fromkeys(matched.values()):
             print(gid)
-        " 2>&1)
-
-        # Separate stderr (info) from stdout (IDs)
-        echo "$GROUP_IDS" | grep '^ ' || true
-        ID_LIST=$(echo "$GROUP_IDS" | grep -v '^ ' || true)
-
-        if [ -z "$ID_LIST" ]; then
-          echo "⚠️ No matching beta groups found for: ${GROUPS[*]}"
-          echo "Available groups in response:"
-          echo "$ALL_GROUPS" | python3 -c "
-        import sys, json
-        for g in json.load(sys.stdin).get('data', []):
-            print(f'  - {g[\"attributes\"].get(\"name\", \"unknown\")}')
-        " 2>/dev/null || true
-          exit 1
-        fi
+        ")
+        MATCHED_COUNT=$(echo "$ID_LIST" | grep -c . || true)
 
         # Add build to each beta group
         PAYLOAD=$(echo "$ID_LIST" | python3 -c "
@@ -301,7 +291,7 @@ runs:
         fi
 
         echo ""
-        echo "✅ Build ${VERSION_CODE} distributed to ${#GROUPS[@]} beta group(s)"
+        echo "✅ Build ${VERSION_CODE} distributed to ${MATCHED_COUNT} beta group(s)"
 
         # Add release notes (what's new)
         # First, get the build's betaBuildLocalizations

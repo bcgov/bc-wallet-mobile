@@ -138,8 +138,10 @@ private enum class AccountFileName(
  * for BC Services Card integration in React Native applications.
  */
 @ReactModule(name = BcscCoreModule.NAME)
-class BcscCoreModule(
+class BcscCoreModule internal constructor(
     reactContext: ReactApplicationContext,
+    // Lets tests supply their own key source, so the decrypt path can run without a device keystore.
+    private val keyPairSourceOverride: BcscKeyPairSource? = null,
 ) : BcscCoreSpec(reactContext) {
     companion object {
         const val NAME = "BcscCore"
@@ -174,8 +176,7 @@ class BcscCoreModule(
 
     // Initialize the BC Services Card KeyPair functionality
     private val keyPairSource: BcscKeyPairSource by lazy {
-        val keyPairInfoSource = SimpleKeyPairInfoSource(reactApplicationContext)
-        BcscKeyPairRepo(keyPairInfoSource)
+        keyPairSourceOverride ?: BcscKeyPairRepo(SimpleKeyPairInfoSource(reactApplicationContext))
     }
 
     // Initialize native-compatible storage for rollback support
@@ -394,6 +395,76 @@ class BcscCoreModule(
             promise.reject("E_KEYSTORE_ERROR", "Unexpected error deleting key: ${e.message}", e)
         }
     }
+
+    /** Generates a new signing keypair; activation is implicit on generation — see the JS wrapper's warning. */
+    @ReactMethod
+    fun createNewKeyPair(promise: Promise) {
+        // Captured once generated so a failure below can best-effort delete it (see cleanup fun).
+        var bcscKeyPair: BcscKeyPair? = null
+        try {
+            if (!keyPairSource.isAvailable()) {
+                promise.reject("E_KEYSTORE_UNAVAILABLE", "Android KeyStore is not available on this device")
+                return
+            }
+            bcscKeyPair = keyPairSource.getNewBcscKeyPair()
+            val jwk = keyPairSource.convertBcscKeyPairToJWK(bcscKeyPair)
+            if (jwk !is RSAKey) {
+                cleanUpUnregisteredKeyAfterGenerationFailure(bcscKeyPair.getKeyInfo().getAlias(), "not an RSA key")
+                // Redacted: surfaces via AppError.technicalMessage/analytics, which travel further than logs.
+                promise.reject(
+                    "E_KEYSTORE_ERROR",
+                    "Newly generated key '${redactAlias(bcscKeyPair.getKeyInfo().getAlias())}' is not an RSA key",
+                )
+                return
+            }
+            val entry: WritableMap = Arguments.createMap()
+            entry.putString("id", bcscKeyPair.getKeyInfo().getAlias())
+            entry.putDouble("created", bcscKeyPair.getKeyInfo().getCreatedAt().toDouble())
+            entry.putString("n", jwk.modulus.toString())
+            entry.putString("e", jwk.publicExponent.toString())
+            promise.resolve(entry)
+        } catch (e: BcscException) {
+            bcscKeyPair?.let {
+                cleanUpUnregisteredKeyAfterGenerationFailure(
+                    it.getKeyInfo().getAlias(),
+                    "BcscException after generation",
+                )
+            }
+            promise.reject("E_KEYSTORE_ERROR", "Error generating new key pair: ${e.devMessage}", e)
+        } catch (e: Exception) {
+            bcscKeyPair?.let {
+                cleanUpUnregisteredKeyAfterGenerationFailure(
+                    it.getKeyInfo().getAlias(),
+                    "unexpected error after generation",
+                )
+            }
+            promise.reject("E_KEYSTORE_ERROR", "Unexpected error generating new key pair: ${e.message}", e)
+        }
+    }
+
+    /**
+     * A key activates the instant generation succeeds, before JS gets its alias — so a failure
+     * after that point must delete it here or strand signing on an unregistered key (#4166/2111).
+     * Best-effort only: a cleanup failure is logged but never masks the caller's error.
+     */
+    private fun cleanUpUnregisteredKeyAfterGenerationFailure(
+        alias: String,
+        context: String,
+    ) {
+        try {
+            keyPairSource.deleteBcscKeyPair(alias)
+        } catch (e: Exception) {
+            Log.w(
+                NAME,
+                "createNewKeyPair: best-effort cleanup failed to delete unregistered key '${redactAlias(
+                    alias,
+                )}' after $context: ${e.message}",
+            )
+        }
+    }
+
+    /** Truncates for logging, matching iOS's redaction even though Android aliases (`rsa1`, `rsa2`, ...) aren't UUID-based. */
+    private fun redactAlias(alias: String): String = if (alias.length <= 8) alias else "…" + alias.takeLast(8)
 
     @ReactMethod
     override fun getToken(
@@ -1696,9 +1767,9 @@ class BcscCoreModule(
     )
 
     /**
-     * Best-effort read of the *incoming* JWE protected header for diagnostics. Reads the
-     * real `kid` straight off the wire so we can tell whether the server encrypted to a key
-     * this device actually holds. Never throws — unreadable fields come back as "?".
+     * Best-effort read of the *incoming* JWE protected header for diagnostics and decrypt-key
+     * selection. Reads the real `kid` straight off the wire so we can tell whether the server
+     * encrypted to a key this device actually holds. Never throws — unreadable fields come back as "?".
      */
     private fun incomingJWEHeader(jweString: String): JweHeaderInfo {
         val parts = jweString.split(".")
@@ -1762,10 +1833,14 @@ class BcscCoreModule(
         // makes 2507 reports self-classifying in the field.
         val diagnostics = decodeDiagnosticsSummary(jweString)
         try {
-            // Get the current (latest) key pair for decryption
-            val currentKeyPair = keyPairSource.getCurrentBcscKeyPair()
+            // The server keeps encrypting to the previous key until it has seen the new one, so use
+            // the key the response names when we hold it. Otherwise fall back to newest, as before.
+            val kid = incomingJWEHeader(jweString).kid.takeIf { it.isNotEmpty() }
+            val decryptKeyPair =
+                kid?.let { keyPairSource.getBcscKeyPair(it) }
+                    ?: keyPairSource.getCurrentBcscKeyPair()
 
-            if (currentKeyPair.getKeyPair()?.private == null) {
+            if (decryptKeyPair.getKeyPair()?.private == null) {
                 promise.reject("E_NO_KEYS_FOUND", "No private key available for decryption $diagnostics")
                 return
             }
@@ -1774,7 +1849,7 @@ class BcscCoreModule(
             val jweObject = JWEObject.parse(jweString)
 
             // Create RSA decrypter with the private key
-            val rsaDecrypter = RSADecrypter(currentKeyPair.getKeyPair()!!.private)
+            val rsaDecrypter = RSADecrypter(decryptKeyPair.getKeyPair()!!.private)
 
             // Decrypt the JWE to get the inner JWT (compact JWS)
             jweObject.decrypt(rsaDecrypter)
