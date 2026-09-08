@@ -8,6 +8,28 @@ import { testIdWithKey } from '@bifold/core'
 import { act, render, renderHook } from '@testing-library/react-native'
 import { useContext } from 'react'
 
+const mockAnimationFrames = () => {
+  const callbacks = new Map<number, Parameters<typeof requestAnimationFrame>[0]>()
+  let nextFrame = 0
+
+  jest.spyOn(global, 'requestAnimationFrame').mockImplementation((callback) => {
+    const frame = ++nextFrame
+    callbacks.set(frame, callback)
+    return frame
+  })
+  jest.spyOn(global, 'cancelAnimationFrame').mockImplementation((frame) => {
+    callbacks.delete(frame)
+  })
+
+  return () => {
+    const pendingCallbacks = Array.from(callbacks.values())
+    callbacks.clear()
+    act(() => pendingCallbacks.forEach((callback) => callback(0)))
+  }
+}
+
+afterEach(() => jest.restoreAllMocks())
+
 describe('BCSCLoadingContext', () => {
   it('should show children and hide overlay when not loading', () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -216,6 +238,7 @@ describe('LoadingScreen component', () => {
   })
 
   it('restores an earlier startup loader until its own token is stopped', () => {
+    const flushAnimationFrames = mockAnimationFrames()
     const TestWrapper = ({ first, second }: { first: boolean; second: boolean }) => (
       <BCSCLoadingProvider>
         {first && <LoadingScreen message="First startup" presentation={LoadingPresentation.Startup} />}
@@ -230,10 +253,14 @@ describe('LoadingScreen component', () => {
     expect(view.getByText('First startup')).toBeTruthy()
 
     view.rerender(<TestWrapper first={false} second={false} />)
+    expect(view.getByTestId(testIdWithKey('StartupLoadingScreenContent'), { includeHiddenElements: true })).toBeTruthy()
     expect(view.queryByTestId(testIdWithKey('StartupLoadingScreenContent'))).toBeNull()
     expect(view.getByTestId(testIdWithKey('BCSCLoadingProviderOverlay'), { includeHiddenElements: true })).toHaveStyle({
       display: 'none',
     })
+
+    flushAnimationFrames()
+    expect(view.queryByTestId(testIdWithKey('StartupLoadingScreenContent'), { includeHiddenElements: true })).toBeNull()
   })
 
   it('does not restart its token when the loading context changes', () => {

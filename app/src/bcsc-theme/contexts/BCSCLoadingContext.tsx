@@ -4,6 +4,7 @@ import {
   PropsWithChildren,
   useCallback,
   useContext,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -50,6 +51,7 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
   // Using a Set to track active loaders allows for multiple concurrent loading states without conflicts
   const loadersRef = useRef(new Set<symbol>())
   const startupLoadersRef = useRef(new Map<symbol, { message?: string; statusMessage?: string }>())
+  const startupClearFrameRef = useRef<number | null>(null)
   const [startupLoader, setStartupLoader] = useState<{ message?: string; statusMessage?: string } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState<string | null>(null)
@@ -67,6 +69,15 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
 
   const childrenStyle = isLoading ? styles.hidden : styles.visible
   const loadingStyle = isLoading ? styles.visible : styles.hidden
+
+  const cancelStartupClear = useCallback(() => {
+    if (startupClearFrameRef.current !== null) {
+      cancelAnimationFrame(startupClearFrameRef.current)
+      startupClearFrameRef.current = null
+    }
+  }, [])
+
+  useEffect(() => cancelStartupClear, [cancelStartupClear])
 
   /**
    * Starts the loading state and returns a function to stop it.
@@ -87,6 +98,7 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
    */
   const startLoading = useCallback(
     (message?: string, presentation: LoadingPresentation = LoadingPresentation.Default, statusMessage?: string) => {
+      cancelStartupClear()
       const loadingToken = Symbol()
       loadersRef.current.add(loadingToken)
       setIsLoading(true)
@@ -107,9 +119,18 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
 
       return () => {
         loadersRef.current.delete(loadingToken)
-        // Keep startup mounted while idle so authentication can hand it to Main without restarting the animation.
-        if (startupLoadersRef.current.delete(loadingToken) && loadersRef.current.size > 0) {
-          setStartupLoader(Array.from(startupLoadersRef.current.values()).at(-1) ?? null)
+        if (startupLoadersRef.current.delete(loadingToken)) {
+          if (loadersRef.current.size > 0) {
+            setStartupLoader(Array.from(startupLoadersRef.current.values()).at(-1) ?? null)
+          } else {
+            // Allow an authentication-to-Main handoff to reuse the animation without retaining it while idle.
+            startupClearFrameRef.current = requestAnimationFrame(() => {
+              startupClearFrameRef.current = null
+              if (loadersRef.current.size === 0 && startupLoadersRef.current.size === 0) {
+                setStartupLoader(null)
+              }
+            })
+          }
         }
         // Only once all loaders have been stopped do we hide the loading screen
         if (loadersRef.current.size === 0) {
@@ -118,7 +139,7 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
         }
       }
     },
-    []
+    [cancelStartupClear]
   )
 
   const loadingContext = useMemo(

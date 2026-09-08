@@ -12,6 +12,26 @@ import useSecureActions from './useSecureActions'
 jest.mock('./useSecureActions')
 jest.mock('@/hooks/useAlerts')
 
+const mockAnimationFrames = () => {
+  const callbacks = new Map<number, Parameters<typeof requestAnimationFrame>[0]>()
+  let nextFrame = 0
+
+  jest.spyOn(global, 'requestAnimationFrame').mockImplementation((callback) => {
+    const frame = ++nextFrame
+    callbacks.set(frame, callback)
+    return frame
+  })
+  jest.spyOn(global, 'cancelAnimationFrame').mockImplementation((frame) => {
+    callbacks.delete(frame)
+  })
+
+  return () => {
+    const pendingCallbacks = Array.from(callbacks.values())
+    callbacks.clear()
+    act(() => pendingCallbacks.forEach((callback) => callback(0)))
+  }
+}
+
 describe('authentication loading handoff', () => {
   const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
   let authenticate: () => Promise<void>
@@ -46,7 +66,10 @@ describe('authentication loading handoff', () => {
     jest.mocked(useSecureActions).mockReturnValue({ handleSuccessfulAuth: jest.fn() } as any)
   })
 
+  afterEach(() => jest.restoreAllMocks())
+
   it('keeps the same startup illustration through authentication, hydration, and a separate Main loading commit', async () => {
+    const flushAnimationFrames = mockAnimationFrames()
     let resolveUnlock!: (result: Awaited<ReturnType<typeof unlockWithDeviceSecurity>>) => void
     let resolveHydration!: () => void
     jest.mocked(unlockWithDeviceSecurity).mockReturnValue(
@@ -94,6 +117,10 @@ describe('authentication loading handoff', () => {
 
     view.rerender(<App />)
     expect(view.getByTestId(testIdWithKey('BCSCLoadingProviderChildren'))).toHaveStyle({ display: 'flex' })
+    expect(view.getByTestId(testIdWithKey('StartupLoadingScreenContent'), { includeHiddenElements: true })).toBeTruthy()
+
+    flushAnimationFrames()
+    expect(view.queryByTestId(testIdWithKey('StartupLoadingScreenContent'), { includeHiddenElements: true })).toBeNull()
   })
 
   it.each(['cancelled', 'failed'] as const)(

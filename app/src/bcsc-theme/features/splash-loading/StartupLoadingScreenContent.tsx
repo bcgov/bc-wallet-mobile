@@ -13,21 +13,21 @@ const STARTUP_LIGHT_COLORS = {
   progress: '#F8BA47',
 }
 
+const STARTUP_PROGRESS_PERCENT = (2 / 3) * 100
+
 export const StartupLoadingScreenContent = ({
   message,
   statusMessage,
-  progress = 2 / 3,
 }: {
   message?: string
   statusMessage?: string
-  /** Visual stage as a fraction from 0 to 1, clamped to that range. */
-  progress?: number
 }) => {
   const { t } = useTranslation()
   const { ColorPalette, NavigationTheme, Spacing, TextTheme } = useTheme()
   const [viewportHeight, setViewportHeight] = useState(0)
   const [loadingHeight, setLoadingHeight] = useState(0)
   const iconSize = 113
+  const isLayoutReady = viewportHeight > 0 && loadingHeight > 0
 
   const styles = StyleSheet.create({
     container: {
@@ -37,6 +37,9 @@ export const StartupLoadingScreenContent = ({
     content: {
       flexGrow: 1,
       paddingBottom: Spacing.sm,
+    },
+    viewport: {
+      opacity: isLayoutReady ? 1 : 0,
     },
     header: {
       gap: Spacing.sm,
@@ -75,7 +78,9 @@ export const StartupLoadingScreenContent = ({
   return (
     <SafeAreaView style={styles.container} testID={testIdWithKey('StartupLoadingScreenContent')}>
       <ScrollView
+        style={styles.viewport}
         contentContainerStyle={styles.content}
+        testID={testIdWithKey('StartupLoadingScreenContentViewport')}
         onLayout={({ nativeEvent }) => {
           if (nativeEvent.layout.height > 0) {
             setViewportHeight(nativeEvent.layout.height)
@@ -85,6 +90,7 @@ export const StartupLoadingScreenContent = ({
         <View style={styles.header}>
           <View
             style={styles.loading}
+            testID={testIdWithKey('StartupLoadingScreenContentStatus')}
             onLayout={({ nativeEvent }) => {
               if (nativeEvent.layout.height > 0) {
                 setLoadingHeight(nativeEvent.layout.height)
@@ -98,7 +104,7 @@ export const StartupLoadingScreenContent = ({
               accessibilityState={{ busy: true }}
             >
               <ProgressBar
-                progressPercent={Math.max(0, Math.min(1, progress)) * 100}
+                progressPercent={STARTUP_PROGRESS_PERCENT}
                 trackColor={NavigationTheme.dark ? ColorPalette.grayscale.veryLightGrey : STARTUP_LIGHT_COLORS.track}
                 progressColor={NavigationTheme.dark ? ColorPalette.brand.highlight : STARTUP_LIGHT_COLORS.progress}
               />

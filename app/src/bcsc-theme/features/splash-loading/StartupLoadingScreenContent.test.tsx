@@ -1,51 +1,57 @@
-import { render } from '@testing-library/react-native'
-import { Animated } from 'react-native'
+import ProgressBar from '@/components/ProgressBar'
+import { BCThemeNames } from '@/constants'
+import { themes } from '@/theme'
+import { testIdWithKey, ThemeProvider } from '@bifold/core'
+import { fireEvent, render } from '@testing-library/react-native'
+import { PropsWithChildren } from 'react'
 import { StartupLoadingScreenContent } from './StartupLoadingScreenContent'
 
+jest.mock('@/components/ProgressBar', () => ({
+  __esModule: true,
+  default: jest.fn(() => null),
+}))
 jest.mock('./BCAnimatedLoadingIcon', () => ({ BCAnimatedLoadingIcon: () => null }))
 
-describe('StartupLoadingScreenContent progress', () => {
-  afterEach(() => jest.restoreAllMocks())
+const LightThemeProvider = ({ children }: PropsWithChildren) => (
+  <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.Light}>
+    {children}
+  </ThemeProvider>
+)
 
-  it('advances to two-thirds once without looping or restarting on status changes', () => {
-    const start = jest.fn()
-    const stop = jest.fn()
-    const timing = jest.spyOn(Animated, 'timing').mockReturnValue({ start, stop, reset: jest.fn() })
-    const loop = jest.spyOn(Animated, 'loop')
-    const view = render(<StartupLoadingScreenContent statusMessage="Starting..." />)
+describe('StartupLoadingScreenContent', () => {
+  beforeEach(() => jest.mocked(ProgressBar).mockClear())
 
-    expect(timing).toHaveBeenCalledWith(
-      expect.any(Animated.Value),
-      expect.objectContaining({ toValue: (2 / 3) * 100, useNativeDriver: true, isInteraction: false })
+  it('renders the startup copy and fixed progress stage', () => {
+    const view = render(<StartupLoadingScreenContent />, { wrapper: LightThemeProvider })
+
+    expect(view.getByText('BCSC.Loading.AppStartup')).toBeTruthy()
+    expect(view.getByText('Init.Starting')).toBeTruthy()
+    expect(jest.mocked(ProgressBar)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        progressPercent: (2 / 3) * 100,
+        trackColor: '#FAF9F8',
+        progressColor: '#F8BA47',
+      }),
+      undefined
     )
-    expect(loop).not.toHaveBeenCalled()
-    expect(start).toHaveBeenCalledTimes(1)
-
-    view.rerender(<StartupLoadingScreenContent statusMessage="Loading your account..." />)
-    expect(timing).toHaveBeenCalledTimes(1)
-
-    view.unmount()
-    expect(stop).toHaveBeenCalledTimes(1)
   })
 
-  it('advances to supplied stages, including completion', () => {
-    const timing = jest
-      .spyOn(Animated, 'timing')
-      .mockReturnValue({ start: jest.fn(), stop: jest.fn(), reset: jest.fn() })
-    const view = render(<StartupLoadingScreenContent progress={1 / 3} />)
+  it('uses supplied copy and keeps the content hidden until its layout is measured', () => {
+    const view = render(<StartupLoadingScreenContent message="Preparing the app..." statusMessage="Starting..." />, {
+      wrapper: LightThemeProvider,
+    })
+    const viewport = view.getByTestId(testIdWithKey('StartupLoadingScreenContentViewport'))
+    const status = view.getByTestId(testIdWithKey('StartupLoadingScreenContentStatus'))
 
-    expect(timing).toHaveBeenLastCalledWith(
-      expect.any(Animated.Value),
-      expect.objectContaining({ toValue: (1 / 3) * 100 })
-    )
+    expect(viewport).toHaveStyle({ opacity: 0 })
+    expect(view.getByText('Preparing the app...')).toBeTruthy()
+    expect(view.getByText('Starting...')).toBeTruthy()
+    expect(view.getByLabelText('Starting...').props.accessibilityRole).toBe('progressbar')
 
-    view.rerender(<StartupLoadingScreenContent progress={2 / 3} />)
-    expect(timing).toHaveBeenLastCalledWith(
-      expect.any(Animated.Value),
-      expect.objectContaining({ toValue: (2 / 3) * 100 })
-    )
+    fireEvent(viewport, 'layout', { nativeEvent: { layout: { height: 800 } } })
+    expect(viewport).toHaveStyle({ opacity: 0 })
 
-    view.rerender(<StartupLoadingScreenContent progress={1} />)
-    expect(timing).toHaveBeenLastCalledWith(expect.any(Animated.Value), expect.objectContaining({ toValue: 100 }))
+    fireEvent(status, 'layout', { nativeEvent: { layout: { height: 43 } } })
+    expect(viewport).toHaveStyle({ opacity: 1 })
   })
 })

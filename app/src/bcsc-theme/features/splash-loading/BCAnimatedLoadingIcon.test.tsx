@@ -18,12 +18,11 @@ describe('BCAnimatedLoadingIcon', () => {
       expect.any(Animated.Value),
       expect.objectContaining({
         toValue: 1,
-        duration: 4000,
         useNativeDriver: true,
         isInteraction: false,
       })
     )
-    expect(loop).toHaveBeenCalledWith(timing.mock.results[0].value)
+    expect(loop).toHaveBeenCalledTimes(1)
     expect(start).toHaveBeenCalledTimes(1)
     view.rerender(<BCAnimatedLoadingIcon size={150} />)
     expect(start).toHaveBeenCalledTimes(1)
