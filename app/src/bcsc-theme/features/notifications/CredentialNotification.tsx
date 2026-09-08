@@ -1,6 +1,6 @@
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { formatExpiryBadge, formatTimestamp } from '@/bcsc-theme/utils/datetime-utils'
+import { formatExpiryBadge, formatTimestamp, getProofRequestExpiry } from '@/bcsc-theme/utils/datetime-utils'
 import { NOTIFICATION_EXPIRY_WARNING_WINDOW_MS } from '@/constants'
 import { CredentialNotificationRecord } from '@/hooks/notifications'
 import { useDeclineCredentialOffer } from '@/hooks/useDeclineCredentialOffer'
@@ -292,18 +292,11 @@ const ProofRequestNotification = ({ notification }: CredentialNotificationProps)
   // Done proofs only stay in the list until their outcome has been viewed, so treat them as unread
   const isRead = !isDone && Boolean(proofMeta?.request_seen)
 
-  // Pending proof requests are short-lived: they are removed from the list once their TTL
-  // passes (see useNotifications), so warn about the protocol expiry or the app-imposed
-  // removal time, whichever comes first
-  // A configuration time of 0 means the proof never "expires"
   const proofRequestExpirationMs =
     store.preferences.proofRequestExpirationMs ?? ProofRequestExpirationTime.FortyEightHours
-  const removalTime =
-    proofRequestExpirationMs > 0 ? new Date(new Date(proof.createdAt).getTime() + proofRequestExpirationMs) : undefined
-  const soonestExpiry = [expiresTime, removalTime]
-    .filter((d): d is Date => d !== undefined)
-    .reduce((earliest: Date | undefined, d) => (!earliest || d < earliest ? d : earliest), undefined)
-  const effectiveExpiry = isDone ? undefined : soonestExpiry
+  const effectiveExpiry = isDone
+    ? undefined
+    : getProofRequestExpiry(proof.createdAt, proofRequestExpirationMs, expiresTime)
 
   // Flip the notification from unread to read once the user opens it
   const markRequestSeen = async () => {
