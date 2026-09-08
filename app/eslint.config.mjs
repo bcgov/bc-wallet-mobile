@@ -96,4 +96,25 @@ export default [
       'jest/valid-expect': 'error',
     },
   },
+  // testID single source of truth: keys come from src/test-ids/registry.ts, which the e2e suite
+  // compiles against too. `files` lists the directories migrated so far and grows one slice per PR,
+  // so unmigrated areas stay green while migrated ones cannot regress. Tests are exempt on purpose:
+  // asserting the literal id string is what proves the emitted ids never moved.
+  {
+    files: ['src/test-ids/**'],
+    ignores: ['**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "CallExpression[callee.name='testIdWithKey'] > :matches(Literal, TemplateLiteral[expressions.length=0])",
+          message: 'Pass a key from src/test-ids/registry.ts to testIdWithKey, not a string literal.',
+        },
+        {
+          selector: "JSXAttribute[name.name='testIDKey'] :matches(Literal, TemplateLiteral[expressions.length=0])",
+          message: 'Pass a key from src/test-ids/registry.ts to testIDKey, not a string literal.',
+        },
+      ],
+    },
+  },
 ]

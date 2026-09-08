@@ -118,6 +118,34 @@ jobs:
       - name: Format check
         run: yarn format:check
 
+  e2e-typecheck:
+    runs-on: ubuntu-latest
+    name: E2E Typecheck
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/workflows/actions/setup-node
+
+      # e2e is not a root workspace member, so it installs from its own lockfile into its own cache.
+      - name: Cache e2e node_modules
+        uses: actions/cache@v6
+        with:
+          path: e2e/.yarn/cache
+          key: ${{ runner.os }}-yarn-e2e-${{ hashFiles('e2e/yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-e2e-
+
+      - name: Install dependencies
+        working-directory: e2e
+        run: yarn install --immutable
+
+      # The suite compiles against app/src/test-ids/registry.ts, so a testID key renamed or deleted
+      # app-side fails here at PR time instead of minutes into a Sauce run behind a build cycle.
+      - name: Typecheck
+        working-directory: e2e
+        run: yarn typecheck
+
   test-ios:
     runs-on: macos-26
     name: Native Tests (iOS)
