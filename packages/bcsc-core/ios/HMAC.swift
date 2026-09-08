@@ -6,7 +6,6 @@
 //  Copyright © 2016 idim. All rights reserved.
 //
 
-import CommonCrypto
 import Foundation
 
 class HMAC {
@@ -32,26 +31,11 @@ class HMAC {
 
     let inputBytes = input.withUnsafeBytes { [UInt8](UnsafeBufferPointer(start: $0, count: input.count)) }
 //        print(inputBytes)
-    let algorithm: CCHmacAlgorithm
-    let digestLength: Int
-    switch key.count {
-    case 16:
-      algorithm = CCHmacAlgorithm(kCCHmacAlgSHA256)
-      digestLength = Int(CC_SHA256_DIGEST_LENGTH)
-    case 24:
-      algorithm = CCHmacAlgorithm(kCCHmacAlgSHA384)
-      digestLength = Int(CC_SHA384_DIGEST_LENGTH)
-    case 32:
-      algorithm = CCHmacAlgorithm(kCCHmacAlgSHA512)
-      digestLength = Int(CC_SHA512_DIGEST_LENGTH)
-    default:
-      return Data()
-    }
-    var resultData = Data(count: digestLength)
+    var resultData = Data(count: Int(CC_SHA256_DIGEST_LENGTH))
 
     _ = resultData.withUnsafeMutableBytes({
       (resultBytes: UnsafeMutablePointer<UInt8>) -> UnsafeMutablePointer<UInt8> in
-      CCHmac(algorithm, key, key.count, inputBytes, input.count, resultBytes)
+      CCHmac(CCHmacAlgorithm(kCCHmacAlgSHA256), key, key.count, inputBytes, input.count, resultBytes)
       return resultBytes
     })
 //        print(resultData.arrayOfBytes())

@@ -6,7 +6,6 @@
 //  Copyright © 2016 idim. All rights reserved.
 //
 
-import CommonCrypto
 import Foundation
 
 enum PublicServerKeyState {

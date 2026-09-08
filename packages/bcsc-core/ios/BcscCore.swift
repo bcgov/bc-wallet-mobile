@@ -1534,7 +1534,10 @@ class BcscCore: NSObject {
         let jwe = try JWE.parse(s: jweString)
         return try jwe.decrypt(withDecrypter: RSADecrypter(privateKey: keyPair.private))
       }, shouldRetry: { error in
-        (error as? JOSEException)?.description == "Decryption failed"
+        guard let message = (error as? JOSEException)?.description else {
+          return false
+        }
+        return JWEDecryption.isRetryableJOSEFailure(message)
       })
 
       // Validate the decrypted payload is a compact JWS

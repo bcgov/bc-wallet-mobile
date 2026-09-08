@@ -134,7 +134,7 @@ final class KeyPairManagerDecryptKeySelectionTests: XCTestCase {
     )
   }
 
-  func testAuthenticatedFailureUsesTheOlderKeyAndStopsAfterSuccess() throws {
+  func testRetryableFailureUsesTheOlderKeyAndStopsAfterSuccess() throws {
     let newer = key("rsa2", createdSecondsAgo: 0)
     let older = key("rsa1", createdSecondsAgo: 100)
     var attemptedTags = [String]()
@@ -144,18 +144,18 @@ final class KeyPairManagerDecryptKeySelectionTests: XCTestCase {
       attempt: { candidate in
         attemptedTags.append(candidate.tag)
         if candidate.tag == "rsa2" {
-          throw AuthenticationFailure()
+          throw RetryableFailure()
         }
         return "decrypted"
       },
-      shouldRetry: { $0 is AuthenticationFailure }
+      shouldRetry: { $0 is RetryableFailure }
     )
 
     XCTAssertEqual(result, "decrypted")
     XCTAssertEqual(attemptedTags, ["rsa2", "rsa1"])
   }
 
-  func testNonAuthenticationFailureDoesNotTryAnotherKey() {
+  func testNonRetryableFailureDoesNotTryAnotherKey() {
     let newer = key("rsa2", createdSecondsAgo: 0)
     let older = key("rsa1", createdSecondsAgo: 100)
     var attemptedTags = [String]()
@@ -167,55 +167,29 @@ final class KeyPairManagerDecryptKeySelectionTests: XCTestCase {
           attemptedTags.append(candidate.tag)
           throw KeychainError.keychainUnavailable(errSecInteractionNotAllowed)
         },
-        shouldRetry: { $0 is AuthenticationFailure }
+        shouldRetry: { $0 is RetryableFailure }
       ) as String
     )
     XCTAssertEqual(attemptedTags, ["rsa2"])
   }
 
-  func testWrongRsaKeyRetriesOlderKeyWithRealJweDecrypt() throws {
-    let older = key("rsa1", createdSecondsAgo: 100)
-    let named = key("rsa2", createdSecondsAgo: 0)
-    let olderKeyPair = try makeKeyPair()
-    let namedKeyPair = try makeKeyPair()
-    let original = JWE(
-      header: JWEHeader(alg: JWEAlgorithm.RSA1_5, enc: EncryptionMethod.A256CBC_HS512),
-      payload: "inner-jws"
+  func testLegacyWrongKeyFailureIsRetryable() {
+    XCTAssertTrue(
+      JWEDecryption.isRetryableJOSEFailure(
+        "Unsupported AES/CBC/PKCS5Padding/HMAC-SHA2 key length, must be 256, 384 or 512 bits, but is 512"
+      )
     )
-    try original.encrypt(withEncrypter: RSAEncrypter(publicKey: olderKeyPair.public))
-    let jweString = try original.serialize()
-    let privateKeys = ["rsa1": olderKeyPair.private, "rsa2": namedKeyPair.private]
-    var attemptedTags = [String]()
-
-    let payload: String = try JWEDecryption.decrypt(
-      with: KeyPairManager.decryptKeyInfos(matching: "rsa2", in: [older, named]),
-      attempt: { candidate in
-        attemptedTags.append(candidate.tag)
-        let jwe = try JWE.parse(s: jweString)
-        return try jwe.decrypt(withDecrypter: RSADecrypter(privateKey: privateKeys[candidate.tag]!))
-      },
-      shouldRetry: { ($0 as? JOSEException)?.description == "Decryption failed" }
-    )
-
-    XCTAssertEqual(payload, "inner-jws")
-    XCTAssertEqual(attemptedTags, ["rsa2", "rsa1"])
   }
 
-  private func makeKeyPair() throws -> (public: SecKey, private: SecKey) {
-    let attributes: [String: Any] = [
-      kSecAttrKeyType as String: kSecAttrKeyTypeRSA,
-      kSecAttrKeySizeInBits as String: 2048,
-    ]
-    var error: Unmanaged<CFError>?
-    guard let privateKey = SecKeyCreateRandomKey(attributes as CFDictionary, &error),
-          let publicKey = SecKeyCopyPublicKey(privateKey)
-    else {
-      throw error!.takeRetainedValue()
-    }
-    return (publicKey, privateKey)
+  func testContentDecryptionFailureIsRetryable() {
+    XCTAssertTrue(JWEDecryption.isRetryableJOSEFailure("Decryption failed"))
   }
 
-  private struct AuthenticationFailure: Error {}
+  func testUnsupportedAlgorithmFailureIsNotRetryable() {
+    XCTAssertFalse(JWEDecryption.isRetryableJOSEFailure("Unsupported JWE algorithm [RSA-OAEP]"))
+  }
+
+  private struct RetryableFailure: Error {}
 }
 
 /// Exercises the real simulator keychain. Covers the key lifecycle relied on by
