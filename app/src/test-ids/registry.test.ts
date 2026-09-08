@@ -121,7 +121,10 @@ const sourceFiles = (dir: string): string[] =>
   fs.readdirSync(dir).flatMap((entry) => {
     const full = path.join(dir, entry)
     if (fs.statSync(full).isDirectory()) {
-      return ['__tests__', '__snapshots__', 'node_modules'].includes(entry) ? [] : sourceFiles(full)
+      // Skip node_modules and every Jest-convention `__x__` directory — tests, snapshots, mocks,
+      // fixtures. A reference from test-only code must not satisfy this ratchet, and matching the
+      // whole convention avoids extending a denylist each time one of them appears.
+      return entry === 'node_modules' || /^__.*__$/.test(entry) ? [] : sourceFiles(full)
     }
     return /\.tsx?$/.test(entry) && !/\.test\.tsx?$/.test(entry) ? [full] : []
   })
