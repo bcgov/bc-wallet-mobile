@@ -9,8 +9,6 @@ export interface ProgressBarProps {
   progressColor?: ColorValue
 }
 
-const PROGRESS_BAR_HEIGHT = 11
-
 const ProgressBar = ({ progressPercent, dark = false, trackColor, progressColor }: ProgressBarProps) => {
   const { ColorPalette } = useTheme()
   const { width: windowWidth } = useWindowDimensions()
@@ -30,7 +28,7 @@ const ProgressBar = ({ progressPercent, dark = false, trackColor, progressColor 
   const styles = StyleSheet.create({
     progressBarContainer: {
       width: '100%',
-      height: PROGRESS_BAR_HEIGHT,
+      height: 11, // Preserve the existing shared progress-bar height.
       backgroundColor: trackColor ?? (dark ? '#001e3d' : ColorPalette.brand.primaryBackground),
     },
     progressBar: {
