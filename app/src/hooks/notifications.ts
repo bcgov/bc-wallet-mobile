@@ -161,13 +161,11 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
     }
 
     expiredProofs.forEach((proof) => {
-      if (decliningProofIds.current.has(proof.id)) {
+      if (decliningProofIds.current.has(proof.id) || proof.state !== DidCommProofState.RequestReceived) {
         return
       }
       decliningProofIds.current.add(proof.id)
-      declineProofRequest(agent, proof, t('ProofRequest.Declined')).finally(() => {
-        decliningProofIds.current.delete(proof.id)
-      })
+      declineProofRequest(agent, proof, t('ProofRequest.Declined'))
     })
   }, [agent, expiredProofs, t, store.preferences.developerModeEnabled])
 
