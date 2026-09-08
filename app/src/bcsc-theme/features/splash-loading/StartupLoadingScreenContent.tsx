@@ -46,7 +46,6 @@ export const StartupLoadingScreenContent = ({
       gap: 2,
     },
     track: {
-      height: 8,
       overflow: 'hidden',
     },
     status: {
@@ -100,7 +99,6 @@ export const StartupLoadingScreenContent = ({
             >
               <ProgressBar
                 progressPercent={Math.max(0, Math.min(1, progress)) * 100}
-                height={8}
                 trackColor={NavigationTheme.dark ? ColorPalette.grayscale.veryLightGrey : STARTUP_LIGHT_COLORS.track}
                 progressColor={NavigationTheme.dark ? ColorPalette.brand.highlight : STARTUP_LIGHT_COLORS.progress}
               />

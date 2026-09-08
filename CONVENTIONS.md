@@ -18,12 +18,12 @@ message or text on the screen itself informing the user that the feature isn't a
 
 ## Startup loading presentation
 
-BCSC initialization gates select `presentation="startup"` on `LoadingScreen`. The
+BCSC initialization gates select `presentation={LoadingPresentation.Startup}` on `LoadingScreen`. The
 overlay keeps the navigation tree mounted while showing a safe-area-aware loading
 bar, localized status, centered heading, and the shared `BCAnimatedLoadingIcon`.
 Startup reuses `app/src/components/ProgressBar.tsx`, also used by BC Wallet's splash.
-Its optional height and color props preserve the startup design without changing
-existing callers' defaults. The bar is left-anchored and advances only when its
+Its optional color props preserve the startup design without changing existing
+callers' defaults. The bar is left-anchored and advances only when its
 supplied proportion changes, without looping. Startup advances once to two-thirds
 and holds until the overlay closes when loading finishes; this is a chosen visual
 stage, not measured progress.
@@ -49,4 +49,4 @@ The [BCSC style guide](https://www.figma.com/design/GhRluKzTmhtGAjTrYZWSE4/BCSC-
 defines the startup light-theme heading (`#013366`), status (`#474543`), loading
 track (`#FAF9F8`), and fill (`#F8BA47`). These colors are scoped to this feature;
 dark mode retains the existing theme palette. The caption uses 14px BC Sans with
-a 21px line height and 6px vertical padding, separated from the 8px bar by 2px.
+a 21px line height and 6px vertical padding, separated from the 11px bar by 2px.

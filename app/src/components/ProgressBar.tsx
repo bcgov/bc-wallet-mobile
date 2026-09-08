@@ -5,12 +5,13 @@ import { Animated, ColorValue, StyleSheet, useWindowDimensions, View } from 'rea
 export interface ProgressBarProps {
   progressPercent: number
   dark?: boolean
-  height?: number
   trackColor?: ColorValue
   progressColor?: ColorValue
 }
 
-const ProgressBar = ({ progressPercent, dark = false, height = 11, trackColor, progressColor }: ProgressBarProps) => {
+const PROGRESS_BAR_HEIGHT = 11
+
+const ProgressBar = ({ progressPercent, dark = false, trackColor, progressColor }: ProgressBarProps) => {
   const { ColorPalette } = useTheme()
   const { width: windowWidth } = useWindowDimensions()
   const [progressBarScale] = useState(new Animated.Value(0))
@@ -29,7 +30,7 @@ const ProgressBar = ({ progressPercent, dark = false, height = 11, trackColor, p
   const styles = StyleSheet.create({
     progressBarContainer: {
       width: '100%',
-      height,
+      height: PROGRESS_BAR_HEIGHT,
       backgroundColor: trackColor ?? (dark ? '#001e3d' : ColorPalette.brand.primaryBackground),
     },
     progressBar: {
