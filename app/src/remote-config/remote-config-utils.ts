@@ -1,15 +1,14 @@
 import { PersistentStorage } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios from 'axios'
+import Config from 'react-native-config'
 import z from 'zod'
 import remoteConfigJSON from './prod-remote-config.json'
 
 const REMOTE_CONFIG_STORAGE_KEY = 'remoteConfigCache'
 const REMOTE_CONFIG_CACHE_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
 const REMOTE_CONFIG_TIMEOUT_MS = 5 * 1000 // 5 seconds
-// TODO (MD): Move to ENV
-const REMOTE_CONFIG_URL =
-  'https://idim.objectstore.gov.bc.ca/bcsc-mobile-prod-remote-configuration/prod-remote-config.json'
+const REMOTE_CONFIG_URL = String(Config.REMOTE_CONFIG_URL)
 
 /**
  * RemoteConfigSchema defines the expected structure of the remote configuration object.
