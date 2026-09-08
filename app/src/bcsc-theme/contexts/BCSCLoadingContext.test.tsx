@@ -1,4 +1,9 @@
-import { BCSCLoadingContext, BCSCLoadingProvider, LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import {
+  BCSCLoadingContext,
+  BCSCLoadingProvider,
+  LoadingPresentation,
+  LoadingScreen,
+} from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { testIdWithKey } from '@bifold/core'
 import { act, render, renderHook } from '@testing-library/react-native'
 import { useContext } from 'react'
@@ -180,7 +185,7 @@ describe('LoadingScreen component', () => {
     const TestWrapper = ({ startup }: { startup: boolean }) => (
       <BCSCLoadingProvider>
         <LoadingScreen message="Loading data..." />
-        {startup && <LoadingScreen message="Preparing the app..." presentation="startup" />}
+        {startup && <LoadingScreen message="Preparing the app..." presentation={LoadingPresentation.Startup} />}
       </BCSCLoadingProvider>
     )
 
@@ -198,7 +203,7 @@ describe('LoadingScreen component', () => {
   it('keeps startup visible when an overlapping generic loader finishes', () => {
     const TestWrapper = ({ generic }: { generic: boolean }) => (
       <BCSCLoadingProvider>
-        <LoadingScreen presentation="startup" />
+        <LoadingScreen presentation={LoadingPresentation.Startup} />
         {generic && <LoadingScreen message="Loading data..." />}
       </BCSCLoadingProvider>
     )
@@ -213,8 +218,8 @@ describe('LoadingScreen component', () => {
   it('restores an earlier startup loader until its own token is stopped', () => {
     const TestWrapper = ({ first, second }: { first: boolean; second: boolean }) => (
       <BCSCLoadingProvider>
-        {first && <LoadingScreen message="First startup" presentation="startup" />}
-        {second && <LoadingScreen message="Second startup" presentation="startup" />}
+        {first && <LoadingScreen message="First startup" presentation={LoadingPresentation.Startup} />}
+        {second && <LoadingScreen message="Second startup" presentation={LoadingPresentation.Startup} />}
       </BCSCLoadingProvider>
     )
 
@@ -242,18 +247,18 @@ describe('LoadingScreen component', () => {
     }
     const view = render(
       <BCSCLoadingContext.Provider value={initialContext}>
-        <LoadingScreen message="Preparing the app..." presentation="startup" />
+        <LoadingScreen message="Preparing the app..." presentation={LoadingPresentation.Startup} />
       </BCSCLoadingContext.Provider>
     )
 
     view.rerender(
       <BCSCLoadingContext.Provider value={{ ...initialContext, isLoading: true }}>
-        <LoadingScreen message="Preparing the app..." presentation="startup" />
+        <LoadingScreen message="Preparing the app..." presentation={LoadingPresentation.Startup} />
       </BCSCLoadingContext.Provider>
     )
 
     expect(startLoading).toHaveBeenCalledTimes(1)
-    expect(startLoading).toHaveBeenCalledWith('Preparing the app...', 'startup', undefined)
+    expect(startLoading).toHaveBeenCalledWith('Preparing the app...', LoadingPresentation.Startup, undefined)
     expect(stopLoading).not.toHaveBeenCalled()
     view.unmount()
     expect(stopLoading).toHaveBeenCalledTimes(1)

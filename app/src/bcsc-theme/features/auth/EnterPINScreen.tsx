@@ -1,6 +1,6 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PINInput } from '@/bcsc-theme/components/PINInput'
-import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { LoadingPresentation, useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl, PIN_LENGTH } from '@/constants'
@@ -61,7 +61,11 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         const { success, walletKey, locked, message } = await verifyPIN(pin)
 
         if (success) {
-          stopLoading = startLoading(t('BCSC.Loading.AppStartup'), 'startup', t('BCSC.Loading.AccountLoading'))
+          stopLoading = startLoading(
+            t('BCSC.Loading.AppStartup'),
+            LoadingPresentation.Startup,
+            t('BCSC.Loading.AccountLoading')
+          )
           await handleSuccessfulAuth(walletKey)
           logger.info('PIN verified successfully - navigating to main app')
         } else if (locked) {

@@ -10,7 +10,7 @@ import useThirdPartyKeyboardWarning from '../api/hooks/useThirdPartyKeyboardWarn
 import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
 import { BCSCActivityProvider } from '../contexts/BCSCActivityContext'
 import { BCSCIdTokenProvider } from '../contexts/BCSCIdTokenContext'
-import { LoadingScreen } from '../contexts/BCSCLoadingContext'
+import { LoadingPresentation, LoadingScreen } from '../contexts/BCSCLoadingContext'
 import BCSCAgentProvider from '../features/agent/BCSCAgentProvider'
 import { useFcmService } from '../features/fcm'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
@@ -109,7 +109,7 @@ const BCSCRootStack: React.FC = () => {
 
   // Show loading screen if state, API client or navigation is not ready
   if (!store.stateLoaded || !isClientReady || initializingAccount || !isNavigationReady) {
-    return <LoadingScreen message={t('BCSC.Loading.AppStartup')} presentation="startup" />
+    return <LoadingScreen message={t('BCSC.Loading.AppStartup')} presentation={LoadingPresentation.Startup} />
   }
 
   if (store.bcsc.hasAccount === false) {

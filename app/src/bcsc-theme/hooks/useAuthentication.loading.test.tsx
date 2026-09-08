@@ -1,4 +1,4 @@
-import { BCSCLoadingProvider, LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { BCSCLoadingProvider, LoadingPresentation, LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCAnimatedLoadingIcon } from '@/bcsc-theme/features/splash-loading/BCAnimatedLoadingIcon'
 import { LoadingScreenContent } from '@/bcsc-theme/features/splash-loading/LoadingScreenContent'
 import { useAlerts } from '@/hooks/useAlerts'
@@ -31,7 +31,7 @@ describe('authentication loading handoff', () => {
     <BasicAppContext>
       <BCSCLoadingProvider>
         {mainLoading ? (
-          <LoadingScreen presentation="startup" statusMessage="BCSC.Loading.AccountLoading" />
+          <LoadingScreen presentation={LoadingPresentation.Startup} statusMessage="BCSC.Loading.AccountLoading" />
         ) : (
           <Authentication />
         )}

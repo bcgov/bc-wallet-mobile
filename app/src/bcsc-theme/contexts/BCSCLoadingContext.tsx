@@ -13,7 +13,10 @@ import { StyleSheet, View } from 'react-native'
 import { LoadingScreenContent, LoadingScreenContentProps } from '../features/splash-loading/LoadingScreenContent'
 import { StartupLoadingScreenContent } from '../features/splash-loading/StartupLoadingScreenContent'
 
-type LoadingPresentation = 'default' | 'startup'
+export enum LoadingPresentation {
+  Default = 'default',
+  Startup = 'startup',
+}
 
 interface LoadingScreenProps extends LoadingScreenContentProps {
   presentation?: LoadingPresentation
@@ -83,12 +86,12 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
    * @returns A function that, when called, will stop the loading state.
    */
   const startLoading = useCallback(
-    (message?: string, presentation: LoadingPresentation = 'default', statusMessage?: string) => {
+    (message?: string, presentation: LoadingPresentation = LoadingPresentation.Default, statusMessage?: string) => {
       const loadingToken = Symbol()
       loadersRef.current.add(loadingToken)
       setIsLoading(true)
 
-      if (presentation === 'startup') {
+      if (presentation === LoadingPresentation.Startup) {
         const loader = { message, statusMessage }
         startupLoadersRef.current.set(loadingToken, loader)
         setStartupLoader(loader)

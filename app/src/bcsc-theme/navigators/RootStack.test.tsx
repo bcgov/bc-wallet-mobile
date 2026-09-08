@@ -4,6 +4,7 @@ import * as Bifold from '@bifold/core'
 import { render } from '@testing-library/react-native'
 import React from 'react'
 import * as useInitializeAccountStatusModule from '../api/hooks/useInitializeAccountStatus'
+import { LoadingPresentation } from '../contexts/BCSCLoadingContext'
 import { useFcmService } from '../features/fcm'
 import { toAppError } from '../utils/native-error-map'
 import BCSCRootStack from './RootStack'
@@ -33,6 +34,7 @@ jest.mock('../hooks/useSystemChecks', () => ({
   useSystemChecks: jest.fn(),
 }))
 jest.mock('../contexts/BCSCLoadingContext', () => ({
+  LoadingPresentation: { Default: 'default', Startup: 'startup' },
   LoadingScreen: 'LoadingScreen',
 }))
 jest.mock('./AuthStack', () => ({
@@ -97,7 +99,7 @@ describe('BCSCRootStack', () => {
 
     const { toJSON } = render(<BCSCRootStack />)
 
-    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { presentation: 'startup' } })
+    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { presentation: LoadingPresentation.Startup } })
   })
 
   it('renders LoadingScreen when initializingAccount is true', () => {
@@ -109,7 +111,7 @@ describe('BCSCRootStack', () => {
 
     const { toJSON } = render(<BCSCRootStack />)
 
-    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { presentation: 'startup' } })
+    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { presentation: LoadingPresentation.Startup } })
   })
 
   it('renders LoadingScreen when isClientReady is false', () => {
@@ -122,7 +124,7 @@ describe('BCSCRootStack', () => {
 
     const { toJSON } = render(<BCSCRootStack />)
 
-    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { presentation: 'startup' } })
+    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { presentation: LoadingPresentation.Startup } })
 
     // Reset for other tests
     jest.requireMock('../hooks/useBCSCApiClient').useBCSCApiClientState = () => ({
@@ -140,7 +142,7 @@ describe('BCSCRootStack', () => {
 
     const { toJSON } = render(<BCSCRootStack />)
 
-    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { presentation: 'startup' } })
+    expect(toJSON()).toMatchObject({ type: 'LoadingScreen', props: { presentation: LoadingPresentation.Startup } })
 
     // Reset for other tests
     jest.requireMock('@/contexts/NavigationContainerContext').useNavigationContainer = () => ({
