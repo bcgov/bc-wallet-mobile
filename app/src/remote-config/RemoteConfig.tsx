@@ -89,11 +89,11 @@ export const RemoteConfigProvider = (props: RemoteConfigProviderProps) => {
   const setValue = useCallback(
     <T extends keyof RemoteConfig>(key: T, value: RemoteConfig[T]) => {
       setRemoteConfig({
-        ...remoteConfigState,
+        ...REMOTE_CONFIG_CACHE,
         [key]: value,
       })
     },
-    [remoteConfigState, setRemoteConfig]
+    [setRemoteConfig]
   )
 
   /**
