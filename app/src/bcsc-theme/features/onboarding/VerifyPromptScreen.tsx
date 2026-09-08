@@ -1,5 +1,6 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import AccountVerificationCta from '@assets/img/account-verification-cta.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import React, { useCallback } from 'react'
@@ -63,7 +64,7 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
         title={t('Global.Continue')}
         onPress={handleVerifyNow}
         accessibilityLabel={t('Global.Continue')}
-        testID={testIdWithKey('Continue')}
+        testID={testIdWithKey(TestIds.onboarding.verifyPrompt.continue)}
       />
       {showSkip && (
         <Button
@@ -71,7 +72,7 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
           title={t('BCSC.VerifyPrompt.SkipVerification')}
           onPress={handleLater}
           accessibilityLabel={t('BCSC.VerifyPrompt.SkipVerification')}
-          testID={testIdWithKey('SkipVerification')}
+          testID={testIdWithKey(TestIds.onboarding.verifyPrompt.skipVerification)}
         />
       )}
     </ControlContainer>

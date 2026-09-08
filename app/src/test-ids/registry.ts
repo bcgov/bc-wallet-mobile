@@ -92,6 +92,9 @@ export const TestIds = {
       pin2Visibility: 'PINInput2VisibilityButton',
       understand: 'IUnderstand',
       createPin: 'CreatePIN',
+      // The non-`creatingNewPIN` arm of the same button: the settings device-auth→PIN switch
+      // (`ChangePINContent`) reuses this form and falls back to the generic `Continue`.
+      continue: 'Continue',
     },
     verifyPrompt: {
       continue: 'Continue',
@@ -116,6 +119,21 @@ export const TestIds = {
     /** Timed lockout screen after 5 consecutive wrong PINs (native counter, persisted across relaunches). */
     lockout: {
       removeAccount: 'RemoveAccount',
+    },
+    /** Device-auth confirmation info (`ConfirmDeviceAuthInfo`) — the checkbox opts out of showing
+     *  this screen again, so a run that ticks it changes what later launches render. */
+    confirmDeviceAuthInfo: {
+      hideConfirmation: 'HideConfirmationCheckbox',
+      continue: 'Continue',
+    },
+    /** Recovery prompt shown when a session cannot be restored; the button resets app state. */
+    sessionRecovery: {
+      reset: 'SessionRecoveryReset',
+    },
+    /** Post-reset landing after device auth is removed OS-side — `learnMore` leaves for the help centre. */
+    deviceAuthAppReset: {
+      setUpApp: 'SetUpApp',
+      learnMore: 'LearnMore',
     },
   },
 
@@ -492,7 +510,9 @@ export const TestIds = {
       forgetPairings: 'ForgetPairings',
     },
     /** App Security sub-screen (SecurityMethodSelector). `ChoosePINButton` renders in both post-load
-     *  branches, so it is the arrival marker (during the async load the screen is a bare spinner). */
+     *  branches, so it is the arrival marker (during the async load the screen is a bare spinner).
+     *  Same component as `onboarding.secureApp` (it branches on `isSettingsContext`), so the app
+     *  call sites reference the onboarding keys — identical strings, one set of call sites. */
     appSecurity: {
       choosePin: 'ChoosePINButton',
     },

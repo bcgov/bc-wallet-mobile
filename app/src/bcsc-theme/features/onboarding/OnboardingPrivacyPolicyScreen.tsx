@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BC_LOGIN_PRIVACY_URL } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, testIdWithKey } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -35,7 +36,7 @@ export const OnboardingPrivacyPolicyScreen = ({ navigation }: OnboardingPrivacyP
         title={t('BCSC.Onboarding.PrivacyPolicyButton')}
         buttonType={ButtonType.Primary}
         onPress={onPress}
-        testID={testIdWithKey('Continue')}
+        testID={testIdWithKey(TestIds.onboarding.privacyPolicy.continue)}
         accessibilityLabel={t('BCSC.Onboarding.PrivacyPolicyButton')}
       />
     </ControlContainer>
