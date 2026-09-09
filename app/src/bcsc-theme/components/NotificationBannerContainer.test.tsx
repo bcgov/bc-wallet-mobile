@@ -61,6 +61,21 @@ describe('NotificationBannerContainer', () => {
     expect(tree.getByText('Server notification')).toBeTruthy()
   })
 
+  it('renders banners in severity order regardless of prop order', () => {
+    const tree = render(
+      <BasicAppContext>
+        <NotificationBannerContainer
+          onManageDevices={onManageDevices}
+          bannerMessages={[serverNotificationBanner, deviceLimitBanner]}
+        />
+      </BasicAppContext>
+    )
+
+    const titles = tree.getAllByTestId(/text-(error|warning|info|success)$/).map((node) => node.props.children)
+
+    expect(titles).toEqual(['Device limit reached', 'Server notification'])
+  })
+
   it('hides a dismissible banner after it is pressed', () => {
     const tree = render(
       <BasicAppContext>

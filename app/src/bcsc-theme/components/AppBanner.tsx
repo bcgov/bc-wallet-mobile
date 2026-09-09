@@ -1,4 +1,5 @@
 import { TestIds } from '@/test-ids/registry'
+import { BannerColors, BannerType } from '@bcwallet-theme/theme'
 import { ThemedText, testIdWithKey, useTheme } from '@bifold/core'
 import React, { useState } from 'react'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
@@ -19,7 +20,7 @@ export interface BCSCBannerMessage {
   id: BCSCBanner
   title: string | undefined
   description?: string
-  type: 'error' | 'warning' | 'info' | 'success'
+  type: BannerType
   dismissible?: boolean
   metadata?: Record<string, unknown>
 }
@@ -33,14 +34,19 @@ interface AppBannerProps {
   messages: AppBannerSectionProps[]
 }
 
+// Designer note pinned on the Figma component: order multiple banners by severity.
+const BANNER_SEVERITY_ORDER: BannerType[] = ['error', 'warning', 'info', 'success']
+
 export const AppBanner: React.FC<AppBannerProps> = ({ messages }: AppBannerProps) => {
   if (!messages || messages.length == 0) {
     return null
   }
 
+  const ordered = BANNER_SEVERITY_ORDER.flatMap((type) => messages.filter((message) => message.type === type))
+
   return (
     <View>
-      {messages.map((message) => (
+      {ordered.map((message) => (
         <AppBannerSection
           key={message.id}
           id={message.id}
@@ -63,12 +69,13 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
   description,
   dismissible = true,
 }) => {
-  const { Spacing, ColorPalette } = useTheme()
+  const { Spacing } = useTheme()
   const [showBanner, setShowBanner] = useState(true)
+  const { background, foreground } = BannerColors[type]
 
   const styles = StyleSheet.create({
     container: {
-      backgroundColor: ColorPalette.brand.primary,
+      backgroundColor: background,
       flexDirection: 'row',
       padding: Spacing.md,
     },
@@ -98,21 +105,6 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
     }
   }
 
-  const bannerColor = (type: string): string => {
-    switch (type) {
-      case 'error':
-        return '#CE3E39'
-      case 'warning':
-        return '#F8BB47'
-      case 'info':
-        return '#2E5DD7'
-      case 'success':
-        return '#42814A'
-      default:
-        return '#2E5DD7'
-    }
-  }
-
   if (!showBanner) {
     return null
   }
@@ -120,7 +112,7 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
   // If more details are needed we might need to push the banner down to accommodate the extra information
   return (
     <TouchableOpacity
-      style={[{ ...styles.container, backgroundColor: bannerColor(type) }]}
+      style={styles.container}
       testID={testIdWithKey(`${TestIds.shared.appBanner.buttonPrefix}${type}`)}
       accessibilityLabel={a11yLabel(title || description || '')}
       accessibilityRole="button"
@@ -134,7 +126,7 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
       <Icon
         name={iconName(type)}
         size={24}
-        color={type === 'warning' ? ColorPalette.brand.secondaryBackground : ColorPalette.grayscale.white}
+        color={foreground}
         style={styles.icon}
         testID={testIdWithKey(`${TestIds.shared.appBanner.iconPrefix}${type}`)}
       />
@@ -142,9 +134,7 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
         {title ? (
           <ThemedText
             variant={'bold'}
-            style={{
-              color: type === 'warning' ? ColorPalette.brand.secondaryBackground : ColorPalette.grayscale.white,
-            }}
+            style={{ color: foreground }}
             testID={testIdWithKey(`${TestIds.shared.appBanner.textPrefix}${type}`)}
           >
             {title}
@@ -152,10 +142,7 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
         ) : null}
         {description ? (
           <ThemedText
-            style={{
-              lineHeight: 24,
-              color: type === 'warning' ? ColorPalette.brand.secondaryBackground : ColorPalette.grayscale.white,
-            }}
+            style={{ lineHeight: 24, color: foreground }}
             testID={testIdWithKey(`${TestIds.shared.appBanner.descriptionPrefix}${type}`)}
           >
             {description}
