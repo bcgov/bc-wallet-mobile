@@ -33,7 +33,7 @@ interface AppBannerProps {
   messages: AppBannerSectionProps[]
 }
 
-// Designer note pinned on the Figma component: order multiple banners by severity.
+// Order multiple banners by severity
 const BANNER_SEVERITY_ORDER: BannerType[] = ['error', 'warning', 'info', 'success']
 
 export const AppBanner: React.FC<AppBannerProps> = ({ messages }: AppBannerProps) => {
