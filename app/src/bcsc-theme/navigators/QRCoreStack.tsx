@@ -5,6 +5,7 @@ import { useCardStatus } from '@/bcsc-theme/hooks/useCardStatus'
 import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useNavigation } from '@react-navigation/native'
@@ -38,7 +39,7 @@ const createQRBackButton = () => {
     return (
       <HeaderBackButton
         accessibilityLabel="Back"
-        testID={testIdWithKey('Back')}
+        testID={testIdWithKey(TestIds.common.back)}
         onPress={() => navigation.getParent()?.goBack()}
       />
     )
@@ -144,7 +145,7 @@ const QRCoreStack: React.FC = () => {
             tabBarIcon: createTabBarIcon(t('Scan.ScanQRCode'), 'qrcode-scan'),
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: t('Scan.ScanQRCode'),
-            tabBarTestID: testIdWithKey('ScanQRCode'),
+            tabBarTestID: testIdWithKey(TestIds.main.qrCore.scannerTab),
             headerRight: createFloatingHelpMenuButton({
               webViewScreen: BCSCScreens.MainWebView,
               learnMoreUrl: HelpCentreUrl.COMPUTER_LOGIN,
@@ -161,7 +162,7 @@ const QRCoreStack: React.FC = () => {
               tabBarIcon: createTabBarIcon(t('Scan.MyQRCode'), 'qrcode'),
               tabBarShowLabel: false,
               tabBarAccessibilityLabel: t('Scan.MyQRCode'),
-              tabBarTestID: testIdWithKey('MyQRCode'),
+              tabBarTestID: testIdWithKey(TestIds.main.qrCore.displayTab),
             }}
           />
         ) : null}
@@ -174,7 +175,7 @@ const QRCoreStack: React.FC = () => {
             tabBarIcon: createTabBarIcon(t('BCSC.ManualPairing.TabTitle'), 'import'),
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: t('BCSC.ManualPairing.TabTitle'),
-            tabBarTestID: testIdWithKey('PairingCode'),
+            tabBarTestID: testIdWithKey(TestIds.main.qrCore.pairingCodeTab),
             headerRight: createFloatingHelpMenuButton({
               webViewScreen: BCSCScreens.MainWebView,
               learnMoreUrl: HelpCentreUrl.COMPUTER_LOGIN,
