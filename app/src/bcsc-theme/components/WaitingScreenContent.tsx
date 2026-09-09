@@ -119,7 +119,6 @@ export const WaitingScreenContent = ({
                   progressPercent={progressPercent}
                   trackColor={colors.track}
                   progressColor={colors.progress}
-                  height={8}
                   active={active}
                 />
               </View>

@@ -43,7 +43,7 @@ exports[`LiveCall renders correctly 1`] = `
       style={
         {
           "backgroundColor": "#001e3d",
-          "height": 11,
+          "height": 8,
           "width": "100%",
         }
       }

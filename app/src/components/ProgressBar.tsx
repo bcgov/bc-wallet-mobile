@@ -7,19 +7,10 @@ export interface ProgressBarProps {
   dark?: boolean
   trackColor?: ColorValue
   progressColor?: ColorValue
-  /** Height in logical points; defaults to 11 for existing callers. */
-  height?: number
   active?: boolean
 }
 
-const ProgressBar = ({
-  progressPercent,
-  dark = false,
-  trackColor,
-  progressColor,
-  height = 11,
-  active = true,
-}: ProgressBarProps) => {
+const ProgressBar = ({ progressPercent, dark = false, trackColor, progressColor, active = true }: ProgressBarProps) => {
   const { ColorPalette } = useTheme()
   const { width: windowWidth } = useWindowDimensions()
   const [progressBarScale] = useState(new Animated.Value(0))
@@ -41,7 +32,7 @@ const ProgressBar = ({
   const styles = StyleSheet.create({
     progressBarContainer: {
       width: '100%',
-      height,
+      height: 8, // As specified in Figma.
       backgroundColor: trackColor ?? (dark ? '#001e3d' : ColorPalette.brand.primaryBackground),
     },
     progressBar: {
