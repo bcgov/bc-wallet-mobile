@@ -3,6 +3,7 @@ import { BCDispatchAction, BCState } from '@/store'
 import { useStore, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import NotificationActionCard from './NotificationActionCard'
+import { useGuardedVerificationEntry } from './useGuardedVerificationEntry'
 
 /**
  * StartVerificationNotification is a component that displays a notification card prompting the user to start the verification process for their BCSC account.
@@ -14,6 +15,7 @@ const StartVerificationNotification = () => {
   const { ColorPalette } = useTheme()
   const secureActions = useSecureActions()
   const [, dispatch] = useStore<BCState>()
+  const guardVerificationEntry = useGuardedVerificationEntry()
 
   return (
     <NotificationActionCard
@@ -23,10 +25,10 @@ const StartVerificationNotification = () => {
       icon="information"
       iconColor={ColorPalette.brand.primary}
       hideIconCircle={true}
-      onPress={() => {
+      onPress={guardVerificationEntry(() => {
         dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [false] })
         secureActions.continueVerificationProcess()
-      }}
+      })}
     />
   )
 }

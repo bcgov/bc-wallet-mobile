@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import NotificationActionCard from './NotificationActionCard'
+import { useGuardedVerificationEntry } from './useGuardedVerificationEntry'
 
 const CancelledReviewNotification = () => {
   const { ColorPalette } = useTheme()
@@ -12,6 +13,7 @@ const CancelledReviewNotification = () => {
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const [store] = useStore<BCState>()
   const agentReason = store.bcscSecure.verificationRequestStatusMessage
+  const guardVerificationEntry = useGuardedVerificationEntry()
 
   return (
     <NotificationActionCard
@@ -21,7 +23,7 @@ const CancelledReviewNotification = () => {
       icon="information"
       hideIconCircle={true}
       iconColor={ColorPalette.brand.primary}
-      onPress={() => navigation.navigate(BCSCScreens.MainCancelledReview, { agentReason })}
+      onPress={guardVerificationEntry(() => navigation.navigate(BCSCScreens.MainCancelledReview, { agentReason }))}
     />
   )
 }

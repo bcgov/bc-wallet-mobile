@@ -1,5 +1,6 @@
 import { BCState } from '@/store'
-import { useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
+import { TestIds } from '@/test-ids/registry'
+import { testIdWithKey, useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -184,7 +185,8 @@ const AuthStack = (): React.ReactElement => {
         name={BCSCModals.ServiceOutage}
         options={{
           ...getDefaultModalOptions(t('BCSC.Title')),
-          gestureEnabled: false,
+          headerLeft: createHeaderBackButton,
+          headerBackTestID: testIdWithKey(TestIds.common.back),
         }}
       >
         {({ route }) => <ServiceOutage inOnboarding={route.params?.inOnboarding} />}

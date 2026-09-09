@@ -187,7 +187,8 @@ const OnboardingStack = (): React.ReactElement => {
         name={BCSCModals.ServiceOutage}
         options={{
           ...getDefaultModalOptions(t('BCSC.Title')),
-          gestureEnabled: false,
+          headerLeft: createHeaderBackButton,
+          headerBackTestID: testIdWithKey(TestIds.common.back),
         }}
       >
         {({ route }) => <ServiceOutage inOnboarding={route.params?.inOnboarding} />}

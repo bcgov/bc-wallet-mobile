@@ -2,11 +2,13 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import NotificationActionCard from './NotificationActionCard'
+import { useGuardedVerificationEntry } from './useGuardedVerificationEntry'
 
 const PendingReviewNotification = () => {
   const { ColorPalette } = useTheme()
   const { t } = useTranslation()
   const secureActions = useSecureActions()
+  const guardVerificationEntry = useGuardedVerificationEntry()
 
   return (
     <NotificationActionCard
@@ -16,7 +18,7 @@ const PendingReviewNotification = () => {
       icon="information"
       hideIconCircle={true}
       iconColor={ColorPalette.brand.primary}
-      onPress={() => secureActions.continueVerificationProcess()}
+      onPress={guardVerificationEntry(() => secureActions.continueVerificationProcess())}
     />
   )
 }

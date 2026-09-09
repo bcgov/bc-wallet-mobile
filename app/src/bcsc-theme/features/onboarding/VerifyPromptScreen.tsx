@@ -6,7 +6,6 @@ import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import AccountVerificationCta from '@assets/img/account-verification-cta.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
-import { useFocusEffect } from '@react-navigation/native'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
@@ -43,15 +42,9 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [, dispatch] = useStore<BCState>()
-  const { isAvailable, isChecking, lastCheckedAt, refresh } = useServerStatus()
-
-  // Re-check on focus (deduped/rate-limited by the provider) so a recovered outage clears the
-  // gate when the user returns to this screen.
-  useFocusEffect(
-    useCallback(() => {
-      refresh()
-    }, [refresh])
-  )
+  // Startup seeds server status; the inline ServiceOutage's "Check again" force-refreshes it, so
+  // no on-focus re-check is needed here.
+  const { isAvailable, isChecking, serverStatus } = useServerStatus()
 
   const handleVerifyNow = useCallback(() => {
     onAnswered?.()
@@ -70,11 +63,13 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
     dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [true] })
   }, [dispatch, onAnswered])
 
-  if (lastCheckedAt === null && isChecking) {
+  // First status fetch still in flight: brief local spinner so we don't paint the prompt only to
+  // swap it for the outage screen a moment later.
+  if (serverStatus === null && isChecking) {
     return <LoadingScreenContent />
   }
 
-  // IAS service outage blocks verification, prompt user to check again or skip verification
+  // IAS service outage blocks verification; prompt the user to check again or skip verification.
   if (!isAvailable) {
     return <ServiceOutage inOnboarding onSkipVerification={showSkip ? handleLater : undefined} />
   }

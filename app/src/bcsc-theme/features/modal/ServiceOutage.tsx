@@ -1,5 +1,4 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
-import usePreventGestureBack from '@/hooks/usePreventGestureBack'
 import { TestIds } from '@/test-ids/registry'
 import {
   Button,
@@ -27,8 +26,6 @@ export const ServiceOutage = ({ inOnboarding = false, onSkipVerification }: Serv
   const { ButtonLoading } = useAnimatedComponents()
   const [loading, setLoading] = useState(false)
   const { Spacing, ColorPalette } = useTheme()
-
-  usePreventGestureBack()
 
   const styles = StyleSheet.create({
     container: {
