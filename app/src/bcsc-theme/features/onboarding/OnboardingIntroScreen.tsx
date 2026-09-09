@@ -2,6 +2,7 @@ import { Callout } from '@/bcsc-theme/components/Callout'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { DeveloperModeTrigger } from '@/bcsc-theme/components/DeveloperModeTrigger'
 import { BCDispatchAction, BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import WelcomeIllustration from '@assets/img/welcome_phone.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import React, { useCallback } from 'react'
@@ -53,7 +54,7 @@ export const OnboardingIntroScreen = ({ onContinue, onActivateDeveloper }: Onboa
         title={t('Global.Continue')}
         onPress={handleContinue}
         accessibilityLabel={t('Global.Continue')}
-        testID={testIdWithKey('Continue')}
+        testID={testIdWithKey(TestIds.onboarding.intro.continue)}
       />
     </ControlContainer>
   )

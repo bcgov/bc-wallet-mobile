@@ -3,6 +3,7 @@ import useVideoPrompts from '@/bcsc-theme/hooks/useVideoPrompts'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import BrownHandHoldingPhone from '@assets/img/brown-hand-holding-phone.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
@@ -82,7 +83,7 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
         onPress={() => {
           navigation.navigate(BCSCScreens.TakeVideo)
         }}
-        testID={testIdWithKey('StartRecording')}
+        testID={testIdWithKey(TestIds.verify.videoInstructions.startRecording)}
         accessibilityLabel={t('BCSC.SendVideo.VideoInstructions.StartRecordingButton')}
         disabled={promptsStatus !== 'ready'}
       />
@@ -121,14 +122,17 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
           </Fragment>
         ))}
       {promptsStatus === 'loading' && (
-        <ActivityIndicator style={{ marginBottom: Spacing.xl }} testID={testIdWithKey('PromptsLoading')} />
+        <ActivityIndicator
+          style={{ marginBottom: Spacing.xl }}
+          testID={testIdWithKey(TestIds.verify.videoInstructions.promptsLoading)}
+        />
       )}
       {promptsStatus === 'failed' && (
         <Button
           buttonType={ButtonType.Secondary}
           title={t('Global.Retry')}
           onPress={loadPrompts}
-          testID={testIdWithKey('RetryLoadPrompts')}
+          testID={testIdWithKey(TestIds.verify.videoInstructions.retryLoadPrompts)}
           accessibilityLabel={t('Global.Retry')}
         />
       )}

@@ -1,5 +1,6 @@
 import { ListButton, ListButtonGroup, ListButtonProps } from '@/bcsc-theme/components/ListButton'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { TestIds } from '@/test-ids/registry'
 import { a11yLabel } from '@/utils/accessibility'
 import {
   ScreenWrapper,
@@ -149,21 +150,21 @@ const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) 
               icon="message-text-outline"
               label={t('BCSC.Contacts.Details.Message')}
               onPress={onMessage}
-              testID={testIdWithKey('MessageContact')}
+              testID={testIdWithKey(TestIds.main.contactDetails.message)}
             />,
             <ActionButton
               key="pin"
               icon="pin"
               label={t(pinned ? 'BCSC.Contacts.Details.UnpinContact' : 'BCSC.Contacts.Details.PinContact')}
               onPress={onTogglePin}
-              testID={testIdWithKey(pinned ? 'UnpinContact' : 'PinContact')}
+              testID={testIdWithKey(pinned ? TestIds.main.contactDetails.unpin : TestIds.main.contactDetails.pin)}
             />,
             <ActionButton
               key="editName"
               icon="pencil"
               label={t('BCSC.Contacts.Details.EditName')}
               onPress={onEditName}
-              testID={testIdWithKey('EditContactName')}
+              testID={testIdWithKey(TestIds.main.contactDetails.editName)}
             />,
             store.preferences.developerModeEnabled ? (
               <ActionButton
@@ -171,7 +172,7 @@ const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) 
                 icon="code-braces"
                 label={t('BCSC.Contacts.Details.ViewJSON')}
                 onPress={onViewJSON}
-                testID={testIdWithKey('ViewJSON')}
+                testID={testIdWithKey(TestIds.main.contactDetails.viewJson)}
               />
             ) : null,
           ]}
@@ -182,7 +183,7 @@ const ContactDetailsScreen = ({ navigation, route }: ContactDetailsScreenProps) 
         onPress={onRemove}
         accessibilityRole="button"
         accessibilityLabel={t('BCSC.Contacts.Details.RemoveContact')}
-        testID={testIdWithKey('RemoveContact')}
+        testID={testIdWithKey(TestIds.main.contactDetails.remove)}
         style={styles.removeRow}
       >
         <CommunityIcon name="trash-can-outline" size={22} color={ColorPalette.semantic.error} />

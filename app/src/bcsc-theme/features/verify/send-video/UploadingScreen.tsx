@@ -2,6 +2,7 @@ import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { LoadingScreenContent } from '@/bcsc-theme/features/splash-loading/LoadingScreenContent'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { Spacing } from '@/bcwallet-theme/theme'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useEffect, useState } from 'react'
@@ -49,7 +50,7 @@ const UploadingScreen = ({ navigation }: UploadingScreenProps) => {
           buttonType={ButtonType.Secondary}
           onPress={handleCancel}
           disabled={isCancelling}
-          testID={testIdWithKey('CancelUpload')}
+          testID={testIdWithKey(TestIds.verify.evidenceUploading.cancelUpload)}
           title={t('Global.Cancel')}
           accessibilityLabel={t('Global.Cancel')}
         />

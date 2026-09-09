@@ -2,6 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useAlerts } from '@/hooks/useAlerts'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -67,7 +68,7 @@ export const ForgetAllPairingsScreen = ({ navigation }: ForgetAllPairingsScreenP
         title={t('BCSC.ForgetAllPairings.ButtonTitle')}
         buttonType={ButtonType.Critical}
         onPress={handleForgetAllPairings}
-        testID={testIdWithKey('ForgetAllPairings')}
+        testID={testIdWithKey(TestIds.main.forgetPairingsScreen.confirm)}
         accessibilityLabel={t('BCSC.ForgetAllPairings.ButtonTitle')}
         disabled={isLoading}
       >
