@@ -76,6 +76,8 @@ export const PINInput = ({
     setIsVisible(!isVisible)
   }
 
+  const visibilityTestIDKey = `${testIDKey ?? ''}${TestIds.shared.pinInput.visibilitySuffix}`
+
   return (
     <View style={styles.pinInputContainer}>
       <View style={styles.inputContainer}>
@@ -100,11 +102,7 @@ export const PINInput = ({
         <TouchableOpacity
           style={styles.visibilityButton}
           onPress={toggleVisibility}
-          testID={
-            testIDKey
-              ? testIdWithKey(`${testIDKey}${TestIds.shared.pinInput.visibilitySuffix}`)
-              : testIdWithKey(TestIds.shared.pinInput.visibilitySuffix)
-          }
+          testID={testIdWithKey(visibilityTestIDKey)}
           accessibilityLabel={a11yLabel(isVisible ? t('PINCreate.Hide') : t('PINCreate.Show'))}
           accessibilityRole="button"
         >

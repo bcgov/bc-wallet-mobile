@@ -87,21 +87,17 @@ const ScopedCredentialDetails = (props: CredentialDetailsProps) => {
 
 const VerifyPromptScreenNoSkip = () => <VerifyPromptScreen showSkip={false} />
 
+const mainIds = TestIds.main
+
 // Contact screens call Bifold connection hooks (useConnections / useConnectionById)
 // that require the providers BifoldScope only mounts once the agent is ready.
 // Gate them so an early mount — a cold-start quick-tap into Settings → Contacts,
 // or navigation state restoring onto a deep contact screen — shows the loading/
 // retry state instead of crashing on a missing ConnectionProvider.
-const ScopedContacts = withAgentReadyGate(ContactsScreen, testIdWithKey(TestIds.main.contacts.loading))
-const ScopedContactDetails = withAgentReadyGate(
-  ContactDetailsScreen,
-  testIdWithKey(TestIds.main.contactDetails.loading)
-)
-const ScopedEditContactName = withAgentReadyGate(
-  EditContactNameScreen,
-  testIdWithKey(TestIds.main.contactEditName.loading)
-)
-const ScopedRemoveContact = withAgentReadyGate(RemoveContactScreen, testIdWithKey(TestIds.main.contactRemove.loading))
+const ScopedContacts = withAgentReadyGate(ContactsScreen, testIdWithKey(mainIds.contacts.loading))
+const ScopedContactDetails = withAgentReadyGate(ContactDetailsScreen, testIdWithKey(mainIds.contactDetails.loading))
+const ScopedEditContactName = withAgentReadyGate(EditContactNameScreen, testIdWithKey(mainIds.contactEditName.loading))
+const ScopedRemoveContact = withAgentReadyGate(RemoveContactScreen, testIdWithKey(mainIds.contactRemove.loading))
 
 /**
  * Holds the startup loading screen until the system checks that decide the Home notification card
