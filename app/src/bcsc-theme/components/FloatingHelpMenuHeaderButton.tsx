@@ -1,4 +1,5 @@
 import { FEEDBACK_URL, HelpCentreUrl } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import { a11yLabel } from '@/utils/accessibility'
 import { openLink } from '@/utils/links'
 import { ButtonLocation, IconButton, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
@@ -45,7 +46,7 @@ const FloatingHelpMenuButton = (props: FloatingHelpMenuButtonProps) => {
         icon={props.icon}
         iconTintColor={ColorPalette.brand.primary}
         accessibilityLabel={t('BCSC.HelpMenu.AccessibilityLabel')}
-        testID={testIdWithKey('HelpMenu')}
+        testID={testIdWithKey(TestIds.common.help)}
         onPress={() => setOpen(true)}
       />
       <FloatingHelpMenu ref={props.ref} open={open} onClose={() => setOpen(false)}>

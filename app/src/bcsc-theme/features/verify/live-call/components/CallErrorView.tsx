@@ -1,4 +1,5 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
@@ -23,7 +24,7 @@ const CallErrorView = ({ title, message, onRetry, onGoBack }: CallErrorViewProps
           onPress={onRetry}
           title={t('BCSC.VideoCall.Errors.TryAgain')}
           accessibilityLabel={t('BCSC.VideoCall.Errors.TryAgain')}
-          testID={testIdWithKey('TryAgain')}
+          testID={testIdWithKey(TestIds.verify.liveCall.errorTryAgain)}
         />
       )}
       <Button
@@ -31,7 +32,7 @@ const CallErrorView = ({ title, message, onRetry, onGoBack }: CallErrorViewProps
         onPress={onGoBack}
         title={t('BCSC.VideoCall.Errors.GoBack')}
         accessibilityLabel={t('BCSC.VideoCall.Errors.GoBack')}
-        testID={testIdWithKey('GoBack')}
+        testID={testIdWithKey(TestIds.verify.liveCall.errorGoBack)}
       />
     </ControlContainer>
   )

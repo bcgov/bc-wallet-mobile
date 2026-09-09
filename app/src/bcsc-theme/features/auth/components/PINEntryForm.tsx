@@ -6,6 +6,7 @@ import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { toAppError } from '@/bcsc-theme/utils/native-error-map'
 import { TEMPORARY_ACCOUNT_CLIENT_ID } from '@/constants'
 import { ErrorRegistry } from '@/errors/errorRegistry'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -222,7 +223,9 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
         buttonType={ButtonType.Primary}
         title={creatingNewPIN ? tWithPrefix('CreatePINShort') : t('Global.Continue')}
         accessibilityLabel={a11yLabel(creatingNewPIN ? tWithPrefix('CreatePINShort') : t('Global.Continue'))}
-        testID={testIdWithKey(creatingNewPIN ? 'CreatePIN' : 'Continue')}
+        testID={testIdWithKey(
+          creatingNewPIN ? TestIds.onboarding.createPin.createPin : TestIds.onboarding.createPin.continue
+        )}
         onPress={onPressContinue}
       >
         {loading && <ButtonLoading />}
@@ -241,7 +244,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
             onPINChange={handlePIN1Change}
             onPINComplete={handlePIN1Complete}
             errorMessage={errorMessage1}
-            testIDKey="PINInput1"
+            testIDKey={TestIds.onboarding.createPin.pin}
             accessibilityLabel={a11yLabel(tWithPrefix('CreatePINShort'))}
           />
           <ThemedText variant={'labelSubtitle'}>{tWithPrefix('CreatePINExample')}</ThemedText>
@@ -255,7 +258,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
             onPINChange={handlePIN2Change}
             onPINComplete={handlePIN2Complete}
             errorMessage={errorMessage2}
-            testIDKey="PINInput2"
+            testIDKey={TestIds.onboarding.createPin.confirmPin}
             accessibilityLabel={a11yLabel(tWithPrefix('ConfirmPIN'))}
           />
         </View>
@@ -275,7 +278,7 @@ export const PINEntryForm: React.FC<PINEntryFormProps> = ({
           <CheckBoxRow
             title={tWithPrefix('IUnderstand')}
             accessibilityLabel={a11yLabel(tWithPrefix('IUnderstand'))}
-            testID={testIdWithKey('IUnderstand')}
+            testID={testIdWithKey(TestIds.onboarding.createPin.understand)}
             checked={checked}
             onPress={() => {
               setCheckboxError(checked)

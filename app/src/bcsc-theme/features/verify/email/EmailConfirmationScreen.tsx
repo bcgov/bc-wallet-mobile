@@ -5,6 +5,7 @@ import { HighlightDivider } from '@/bcsc-theme/components/HighlightDivider'
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -136,7 +137,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
         onPress={preventDoublePress(handleSubmit)}
         title={t('Global.Continue')}
         accessibilityLabel={t('Global.Continue')}
-        testID={testIdWithKey('Continue')}
+        testID={testIdWithKey(TestIds.verify.emailConfirmation.continue)}
       >
         {loading && <ButtonLoading />}
       </Button>
@@ -173,7 +174,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
           keyboardType: 'number-pad',
           textContentType: 'oneTimeCode',
           autoComplete: 'sms-otp',
-          testID: testIdWithKey('EmailConfirmationCodeInput'),
+          testID: testIdWithKey(TestIds.verify.emailConfirmation.codeInput),
           accessibilityLabel: 'Confirmation-Code-Input',
         }}
       />
@@ -186,7 +187,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
           onPress={loading ? undefined : preventDoublePress(handleResendCode)}
           accessibilityRole={'link'}
           accessibilityLabel={t('BCSC.EmailConfirmation.SendNewCode')}
-          testID={testIdWithKey('ResendCodeLink')}
+          testID={testIdWithKey(TestIds.verify.emailConfirmation.resendCode)}
         >
           {t('BCSC.EmailConfirmation.SendNewCode')}
         </ThemedText>
@@ -197,7 +198,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
         onPress={handleGoToEmail}
         accessibilityRole={'link'}
         accessibilityLabel={t('BCSC.EmailConfirmation.GoToMyEmail')}
-        testID={testIdWithKey('GoToMyEmailLink')}
+        testID={testIdWithKey(TestIds.verify.emailConfirmation.goToMyEmail)}
       >
         {t('BCSC.EmailConfirmation.GoToMyEmail')}
       </ThemedText>

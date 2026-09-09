@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import BulletPointList from '@/components/BulletPointList'
+import { TestIds } from '@/test-ids/registry'
 import ScanIdImage from '@assets/img/id-photo-info.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -22,7 +23,7 @@ const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScree
       <Button
         title={t('BCSC.IDPhotoInformation.TakePhoto')}
         accessibilityLabel={t('BCSC.IDPhotoInformation.TakePhoto')}
-        testID={testIdWithKey('IDPhotoInformationTakePhoto')}
+        testID={testIdWithKey(TestIds.verify.idPhotoInformation.takePhoto)}
         onPress={() => {
           // push (not navigate) so the second ID opens a fresh capture screen instead of popping back
           // to the first ID's EvidenceCapture already in the stack.

@@ -1,3 +1,4 @@
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import { Linking, Platform, StyleSheet, View } from 'react-native'
@@ -142,7 +143,7 @@ export const PermissionDisabled = ({
         title={t('BCSC.PermissionDisabled.OpenSettings')}
         buttonType={ButtonType.Primary}
         onPress={handleOpenSettings}
-        testID={testIdWithKey('OpenSettings')}
+        testID={testIdWithKey(TestIds.onboarding.notifications.openSettings)}
         accessibilityLabel={t('BCSC.PermissionDisabled.OpenSettings')}
       />
       {secondaryAction ? (
@@ -159,7 +160,7 @@ export const PermissionDisabled = ({
           title={t('BCSC.PermissionDisabled.ContinueWithoutNotifications')}
           buttonType={ButtonType.Secondary}
           onPress={navigateToNextScreen}
-          testID={testIdWithKey('ContinueWithoutNotifications')}
+          testID={testIdWithKey(TestIds.onboarding.notifications.continueWithout)}
           accessibilityLabel={t('BCSC.PermissionDisabled.ContinueWithoutNotifications')}
         />
       ) : null}

@@ -290,16 +290,18 @@ export const PendingReviewScreen = defineScreen({
 })
 
 /**
- * `CancelledReview` — the rejected-request modal, reached from PendingReview's status check or (via
- * the Home card) as its MainStack twin; both render the same SystemModal, which is why `self` is that
- * component's generic button key rather than anything screen-specific.
+ * `CancelledReview` — the rejected-request screen, reached from PendingReview's status check or (via
+ * the Home card) as its MainStack twin (the same component on both stacks). It renders its own two
+ * buttons, NOT the shared SystemModal, so `self` anchors on the first of them.
  *
  * The agent's reason is body copy with no testID — assert it with `expectCancelledReviewReason`.
- * `primary` ('Retry verification') RESETS the device registration and re-enters verification.
+ * `primary` ('Try again') retries with a new video; `secondary` ('Restart from beginning') resets the
+ * device registration and re-enters verification from the top.
  */
 export const CancelledReviewScreen = defineScreen({
-  self: bcsc(v.cancelledReview.button),
-  primary: bcsc(v.cancelledReview.button),
+  self: bcsc(v.cancelledReview.retryWithNewVideo),
+  primary: bcsc(v.cancelledReview.retryWithNewVideo),
+  secondary: bcsc(v.cancelledReview.restartVerification),
 })
 
 /**

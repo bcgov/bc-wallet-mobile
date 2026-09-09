@@ -5,6 +5,7 @@ import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
 import { BCSCModals, BCSCScreens, BCSCStacks, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
 import { HeaderBackButtonProps } from '@react-navigation/elements'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
@@ -162,7 +163,7 @@ const VerifyStack = ({ showVerifyPrompt = false, onVerifyPromptAnswered }: Verif
         headerShadowVisible: false,
         headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
         headerLeft: createHeaderBackButton,
-        headerBackTestID: testIdWithKey('Back'),
+        headerBackTestID: testIdWithKey(TestIds.common.back),
         headerBackTitleVisible: false,
         header: createHeaderWithoutBanner,
         headerRight: createVerifyHelpMenuButton({ showRestartVerification: true }),

@@ -1,5 +1,6 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
 import usePreventGestureBack from '@/hooks/usePreventGestureBack'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -50,7 +51,7 @@ export const ServiceOutage = (): React.ReactElement => {
             title={learnMoreText}
             onPress={handleLearnMore}
             endIcon="open-in-new"
-            testID={testIdWithKey('ServiceOutageHelpCentre')}
+            testID={testIdWithKey(TestIds.systemModal.serviceOutage.helpCentre)}
           />
         </View>
       </ScrollView>
@@ -62,7 +63,7 @@ export const ServiceOutage = (): React.ReactElement => {
           onPress={handleCheckAgain}
           disabled={isCheckDisabled}
           accessibilityLabel={buttonText}
-          testID={testIdWithKey('ServiceOutageCheckAgain')}
+          testID={testIdWithKey(TestIds.systemModal.serviceOutage.checkAgain)}
         />
       </View>
     </SafeAreaView>

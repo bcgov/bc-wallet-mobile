@@ -1,6 +1,7 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useAlerts } from '@/hooks/useAlerts'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -46,7 +47,7 @@ export const SessionRecoveryScreen = (): React.ReactElement => {
       <Button
         title={t('BCSC.SessionRecovery.PrimaryAction')}
         buttonType={ButtonType.Primary}
-        testID={testIdWithKey('SessionRecoveryReset')}
+        testID={testIdWithKey(TestIds.auth.sessionRecovery.reset)}
         accessibilityLabel={t('BCSC.SessionRecovery.PrimaryAction')}
         onPress={onPressPrimaryAction}
       />

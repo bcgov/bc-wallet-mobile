@@ -4,6 +4,7 @@ import { HighlightDivider } from '@/bcsc-theme/components/HighlightDivider'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import { formStringLengths } from '@/constants'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -75,7 +76,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
       <Button
         title={t('BCSC.NicknameAccount.SaveAndContinue')}
         buttonType={ButtonType.Primary}
-        testID={testIdWithKey('SaveAndContinue')}
+        testID={testIdWithKey(TestIds.main.editNickname.save)}
         accessibilityLabel={a11yLabel(t('BCSC.NicknameAccount.SaveAndContinue'))}
         onPress={handleButtonPress}
         disabled={loading}

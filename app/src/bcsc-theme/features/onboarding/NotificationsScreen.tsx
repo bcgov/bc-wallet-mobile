@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { PermissionDisabled } from '@/bcsc-theme/components/PermissionDisabled'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { TestIds } from '@/test-ids/registry'
 import PushNotificationImage from '@assets/img/push-notifications-image.svg'
 import {
   Button,
@@ -115,7 +116,7 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
           await activatePushNotifications()
           navigation.navigate(BCSCScreens.OnboardingSecureApp)
         }}
-        testID={testIdWithKey('EnableNotifications')}
+        testID={testIdWithKey(TestIds.onboarding.notifications.enable)}
         accessibilityLabel={t('BCSC.Onboarding.EnableNotifications')}
       />
       <Button
@@ -125,7 +126,7 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): R
           skipPushNotifications()
           navigation.navigate(BCSCScreens.OnboardingSecureApp)
         }}
-        testID={testIdWithKey('SkipNotifications')}
+        testID={testIdWithKey(TestIds.onboarding.notifications.skip)}
         accessibilityLabel={t('BCSC.Onboarding.SkipNotifications')}
       />
     </ControlContainer>

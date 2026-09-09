@@ -5,6 +5,7 @@ import { PressableOpacity } from '@/components/PressableOpacity'
 import { ACCESSIBILITY_URL, DEFAULT_AUTO_LOCK_TIME_MIN, FEEDBACK_URL, hitSlop, TERMS_OF_USE_URL } from '@/constants'
 import { ErrorRegistry } from '@/errors/errorRegistry'
 import { BCDispatchAction, BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { a11yLabel } from '@/utils/accessibility'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import * as PushNotifications from '@/utils/PushNotificationsHelper'
@@ -108,7 +109,7 @@ const SectionHeader: React.FC<
         <PressableOpacity
           onPress={toggleSection}
           hitSlop={hitSlop}
-          testID={testIdWithKey('SectionHeaderChevron')}
+          testID={testIdWithKey(TestIds.main.settings.sectionHeaderChevron)}
           accessibilityLabel={t(showSection ? 'Global.HideDetails' : 'Global.ShowDetails')}
           accessibilityRole="button"
           style={styles.sectionHeaderChevron}
@@ -196,7 +197,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           onPress={onAccountDetails ?? noop}
           accessibilityRole="button"
           accessibilityLabel={profileName}
-          testID={testIdWithKey('Profile')}
+          testID={testIdWithKey(TestIds.main.settings.profile)}
         >
           <Icon name="account" size={24} color={ColorPalette.brand.primary} />
           <ThemedText variant="bold" style={styles.profileName}>
@@ -209,7 +210,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
             hitSlop={hitSlop}
             accessibilityRole="button"
             accessibilityLabel={t('BCSC.Settings.EditNickname')}
-            testID={testIdWithKey('EditProfile')}
+            testID={testIdWithKey(TestIds.main.settings.editProfile)}
           >
             <Icon name="pencil" size={20} color={ColorPalette.brand.primary} />
           </PressableOpacity>
@@ -300,12 +301,20 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
             <ListButtonGroup>
               {[
                 onContacts ? (
-                  <ListButton key="contacts" onPress={onContacts} testID={testIdWithKey('Contacts')}>
+                  <ListButton
+                    key="contacts"
+                    onPress={onContacts}
+                    testID={testIdWithKey(TestIds.main.settings.contacts)}
+                  >
                     {t('BCSC.Settings.Features.Contacts')}
                   </ListButton>
                 ) : null,
                 developerModeEnabled ? (
-                  <ListButton key="scanqr" onPress={onScanMyQR ?? noop} testID={testIdWithKey('ScanQR')}>
+                  <ListButton
+                    key="scanqr"
+                    onPress={onScanMyQR ?? noop}
+                    testID={testIdWithKey(TestIds.main.settings.scanQr)}
+                  >
                     {t('BCSC.Settings.Features.ScanQR')}
                   </ListButton>
                 ) : null,
@@ -313,7 +322,7 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
                   <ListButton
                     key="proof"
                     onPress={onSendProofRequest ?? noop}
-                    testID={testIdWithKey('SendProofRequest')}
+                    testID={testIdWithKey(TestIds.main.settings.sendProofRequest)}
                   >
                     {t('BCSC.Settings.Features.SendProofRequest')}
                   </ListButton>
@@ -329,17 +338,21 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
           <ListButtonGroup>
             {[
               onAppSecurity ? (
-                <ListButton key="security" onPress={onAppSecurity} testID={testIdWithKey('AppSecurity')}>
+                <ListButton
+                  key="security"
+                  onPress={onAppSecurity}
+                  testID={testIdWithKey(TestIds.main.settings.appSecurity)}
+                >
                   {t('BCSC.Settings.AppSecurity.ChangeAppSecurity')}
                 </ListButton>
               ) : null,
               showChangePIN ? (
-                <ListButton key="pin" onPress={onChangePIN!} testID={testIdWithKey('ChangePIN')}>
+                <ListButton key="pin" onPress={onChangePIN!} testID={testIdWithKey(TestIds.main.settings.changePin)}>
                   {t('BCSC.Settings.ChangePIN.ButtonTitle')}
                 </ListButton>
               ) : null,
               onAutoLock ? (
-                <ListButton key="lock" onPress={onAutoLock} testID={testIdWithKey('AutoLock')}>
+                <ListButton key="lock" onPress={onAutoLock} testID={testIdWithKey(TestIds.main.settings.autoLock)}>
                   <Row title={t('BCSC.Settings.AutoLockTime')} endAdornment={autoLockTimeText} />
                 </ListButton>
               ) : null,
@@ -347,39 +360,67 @@ const AuthenticatedSection: React.FC<AuthenticatedSectionProps> = ({
                 <ListButton
                   key="proofRequestExpiration"
                   onPress={onProofRequestExpiration}
-                  testID={testIdWithKey('ProofRequestExpiration')}
+                  testID={testIdWithKey(TestIds.main.settings.proofRequestExpiration)}
                 >
                   <Row title={t('BCSC.Settings.ProofRequestExpiry')} endAdornment={proofRequestExpirationText} />
                 </ListButton>
               ) : null,
-              <ListButton key="notifications" onPress={onNotifications ?? noop} testID={testIdWithKey('Notifications')}>
+              <ListButton
+                key="notifications"
+                onPress={onNotifications ?? noop}
+                testID={testIdWithKey(TestIds.main.settings.notifications)}
+              >
                 <Row title={t('BCSC.Settings.Notifications')} endAdornment={notificationsOnText} />
               </ListButton>,
-              <ListButton key="analytics" onPress={onPressOptInAnalytics} testID={testIdWithKey('AnalyticsOptIn')}>
+              <ListButton
+                key="analytics"
+                onPress={onPressOptInAnalytics}
+                testID={testIdWithKey(TestIds.main.settings.analyticsOptIn)}
+              >
                 <Row title={t('BCSC.Settings.AnalyticsOptIn')} endAdornment={analyticsOptInText} />
               </ListButton>,
               isVerified ? (
-                <ListButton key="adddevice" onPress={onAddDevice ?? noop} testID={testIdWithKey('AddDevice')}>
+                <ListButton
+                  key="adddevice"
+                  onPress={onAddDevice ?? noop}
+                  testID={testIdWithKey(TestIds.main.settings.addDevice)}
+                >
                   {t('BCSC.Settings.AddDevice')}
                 </ListButton>
               ) : null,
               isVerified ? (
-                <ListButton key="mydevices" onPress={onMyDevices ?? noop} testID={testIdWithKey('MyDevices')}>
+                <ListButton
+                  key="mydevices"
+                  onPress={onMyDevices ?? noop}
+                  testID={testIdWithKey(TestIds.main.settings.myDevices)}
+                >
                   <Row title={t('BCSC.Settings.MyDevices')} />
                 </ListButton>
               ) : null,
               isVerified && onForgetAllPairings ? (
-                <ListButton key="forget" onPress={onForgetAllPairings} testID={testIdWithKey('ForgetPairings')}>
+                <ListButton
+                  key="forget"
+                  onPress={onForgetAllPairings}
+                  testID={testIdWithKey(TestIds.main.settings.forgetPairings)}
+                >
                   {t('BCSC.Settings.ForgetPairings')}
                 </ListButton>
               ) : null,
               onResetWallet ? (
-                <ListButton key="reset" onPress={onResetWallet} testID={testIdWithKey('ResetWallet')}>
+                <ListButton
+                  key="reset"
+                  onPress={onResetWallet}
+                  testID={testIdWithKey(TestIds.main.settings.resetWallet)}
+                >
                   <Row title={t('BCSC.Settings.ResetWallet')} />
                 </ListButton>
               ) : null,
               onPressRemoveAccount ? (
-                <ListButton key="remove" onPress={onPressRemoveAccount} testID={testIdWithKey('RemoveAccount')}>
+                <ListButton
+                  key="remove"
+                  onPress={onPressRemoveAccount}
+                  testID={testIdWithKey(TestIds.main.settings.removeAccount)}
+                >
                   <Row title={t('BCSC.Settings.RemoveAccount')} />
                 </ListButton>
               ) : null,
@@ -574,15 +615,15 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
       <SectionHeader title={t('BCSC.Settings.HelpHeader')} iconName="help-circle-outline" styles={styles}>
         <View style={styles.sectionContainer}>
           <ListButtonGroup>
-            <ListButton onPress={onHelp} testID={testIdWithKey('Help')}>
+            <ListButton onPress={onHelp} testID={testIdWithKey(TestIds.main.settings.help)}>
               {t('BCSC.Settings.HelpUsingApp')}
             </ListButton>
-            <ListButton onPress={onContactUs} testID={testIdWithKey('ContactUs')}>
+            <ListButton onPress={onContactUs} testID={testIdWithKey(TestIds.main.settings.contactUs)}>
               {t('BCSC.Settings.ContactUs')}
             </ListButton>
             <ListButton
               onPress={onPressFeedback}
-              testID={testIdWithKey('Feedback')}
+              testID={testIdWithKey(TestIds.main.settings.feedback)}
               accessibilityLabel={a11yLabel(t('BCSC.Settings.GiveFeedback'))}
               accessibilityHint={t('Global.A11y.OpensInBrowser')}
             >
@@ -600,7 +641,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           <ListButtonGroup>
             <ListButton
               onPress={onPressAccessibility}
-              testID={testIdWithKey('Accessibility')}
+              testID={testIdWithKey(TestIds.main.settings.accessibility)}
               accessibilityLabel={a11yLabel(t('BCSC.Settings.Accessibility'))}
               accessibilityHint={t('Global.A11y.OpensInBrowser')}
             >
@@ -611,7 +652,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
             </ListButton>
             <ListButton
               onPress={onPressTermsOfUse}
-              testID={testIdWithKey('TermsOfUse')}
+              testID={testIdWithKey(TestIds.main.settings.termsOfUse)}
               accessibilityLabel={a11yLabel(t('BCSC.Settings.TermsOfUse'))}
               accessibilityHint={t('Global.A11y.OpensInBrowser')}
             >
@@ -620,11 +661,15 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
               </ThemedText>
               <Icon name="open-in-new" size={20} color={ColorPalette.brand.headerText} />
             </ListButton>
-            <ListButton onPress={onPrivacy} testID={testIdWithKey('Privacy')}>
+            <ListButton onPress={onPrivacy} testID={testIdWithKey(TestIds.main.settings.privacy)}>
               {t('BCSC.Settings.Privacy')}
             </ListButton>
             {store.preferences.developerModeEnabled ? (
-              <ListButton key="dev" onPress={onPressDeveloperMode} testID={testIdWithKey('DeveloperMode')}>
+              <ListButton
+                key="dev"
+                onPress={onPressDeveloperMode}
+                testID={testIdWithKey(TestIds.main.settings.developerMode)}
+              >
                 {t('BCSC.Settings.DeveloperOptions')}
               </ListButton>
             ) : null}

@@ -3,6 +3,7 @@ import { QRScannerFrame } from '@/bcsc-theme/components/QRScannerFrame'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { hitSlop } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import { DismissiblePopupModal, ScanCamera, testIdWithKey, useTheme } from '@bifold/core'
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
@@ -92,7 +93,7 @@ const QRScanner: React.FC = () => {
         accessibilityRole="button"
         accessibilityLabel={t(torchActive ? 'BCSC.Scan.TorchOff' : 'BCSC.Scan.TorchOn')}
         hitSlop={hitSlop}
-        testID={testIdWithKey('TorchToggle')}
+        testID={testIdWithKey(TestIds.main.qrCore.torchToggle)}
       >
         <Icon name={torchActive ? 'flash' : 'flash-off'} size={28} style={styles.torchIcon} />
       </TouchableOpacity>

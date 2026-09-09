@@ -2,6 +2,7 @@ import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
 import { useLeaveVerification } from '@/bcsc-theme/hooks/useLeaveVerification'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { TestIds } from '@/test-ids/registry'
 import { BLUE_LIGHT } from '@/theme/light'
 
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
@@ -43,7 +44,7 @@ const SuccessfullySentScreen = ({ route }: SuccessfullySentScreenProps) => {
   const controls = (
     <ControlContainer>
       <Button
-        testID={testIdWithKey('GoToHome')}
+        testID={testIdWithKey(TestIds.verify.successfullySent.goToHome)}
         accessibilityLabel={t('BCSC.SendVideo.SuccessfullySent.ButtonText')}
         title={t('BCSC.SendVideo.SuccessfullySent.ButtonText')}
         buttonType={ButtonType.Primary}

@@ -3,6 +3,7 @@ import DateInput from '@/bcsc-theme/components/DateInput'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { parseBirthdateToLocalDate } from '@/bcsc-theme/utils/birthdate'
 import { isHandledAppError } from '@/errors/appError'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -74,7 +75,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
       <Button
         title={t('Global.Continue')}
         accessibilityLabel={t('Global.Continue')}
-        testID={testIdWithKey('Continue')}
+        testID={testIdWithKey(TestIds.verify.enterBirthdate.continue)}
         onPress={handleSubmit}
         buttonType={ButtonType.Primary}
         disabled={loading}
