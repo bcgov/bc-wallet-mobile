@@ -1,5 +1,4 @@
 import * as useFactoryResetModule from '@/bcsc-theme/api/hooks/useFactoryReset'
-import { mockUseServices, mockUseStore } from '@/bcsc-theme/hooks/useCreateSystemChecks.test'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import * as ErrorAlertContext from '@/contexts/ErrorAlertContext'
 import { AppEventCode } from '@/events/appEventCode'
@@ -9,7 +8,20 @@ import { renderHook } from '@testing-library/react-native'
 import RN, { Platform } from 'react-native'
 import { showErrorAlert, useAlerts } from './useAlerts'
 
+/**
+ * Alerts driven by name from an it.each table. Restricted to the ones callable with no
+ * arguments, which is all these tables exercise. Typing the key this way means a
+ * mistyped name, a renamed alert, or one that actually needs an argument fails to
+ * compile — rather than failing at runtime with "undefined is not a function", or
+ * silently calling an alert with a missing parameter.
+ */
+type Alerts = ReturnType<typeof useAlerts>
+type AlertName = { [K in keyof Alerts]: Alerts[K] extends () => void ? K : never }[keyof Alerts]
+
 jest.mock('@/bcsc-theme/api/hooks/useFactoryReset')
+
+const mockUseStore = jest.fn()
+const mockUseServices = jest.fn()
 
 jest.mock('@bifold/core', () => ({
   useStore: () => mockUseStore(),
@@ -33,92 +45,228 @@ jest.mock('@/utils/analytics/analytics-singleton', () => ({
 }))
 
 describe('useAlerts', () => {
+  const originalPlatformOS = Platform.OS
+
   beforeEach(() => {
-    jest.clearAllMocks()
+    mockUseStore.mockReturnValue([{}, jest.fn()])
+    mockUseServices.mockReturnValue([{ info: jest.fn(), error: jest.fn(), warn: jest.fn() }])
   })
 
-  describe('problemWithAppAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.problemWithAppAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.SomethingWentWrong.Title',
-        'Alerts.SomethingWentWrong.Description',
-        expect.objectContaining({ appEvent: AppEventCode.GENERAL })
-      )
-    })
+  afterEach(() => {
+    Platform.OS = originalPlatformOS
   })
 
-  describe('unsecuredNetworkAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
+  it.each<[AlertName, string, string, AppEventCode]>([
+    [
+      'problemWithAppAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.GENERAL,
+    ],
+    [
+      'unsecuredNetworkAlert',
+      'Alerts.UnsecuredNetwork.Title',
+      'Alerts.UnsecuredNetwork.Description',
+      AppEventCode.UNSECURED_NETWORK,
+    ],
+    [
+      'serverTimeoutAlert',
+      'Alerts.ServerTimeout.Title',
+      'Alerts.ServerTimeout.Description',
+      AppEventCode.SERVER_TIMEOUT,
+    ],
+    ['serverErrorAlert', 'Alerts.ServerError.Title', 'Alerts.ServerError.Description', AppEventCode.SERVER_ERROR],
+    [
+      'tooManyAttemptsAlert',
+      'Alerts.TooManyAttempts.Title',
+      'Alerts.TooManyAttempts.Description',
+      AppEventCode.TOO_MANY_ATTEMPTS,
+    ],
+    [
+      'verificationNotCompleteAlert',
+      'Alerts.VerificationNotComplete.Title',
+      'Alerts.VerificationNotComplete.Description',
+      AppEventCode.VERIFY_NOT_COMPLETE,
+    ],
+    [
+      'invalidPairingCodeAlert',
+      'Alerts.InvalidPairingCode.Title',
+      'Alerts.InvalidPairingCode.Description',
+      AppEventCode.INVALID_PAIRING_CODE,
+    ],
+    [
+      'alreadyVerifiedAlert',
+      'Alerts.AlreadyVerified.Title',
+      'Alerts.AlreadyVerified.Description',
+      AppEventCode.ALREADY_VERIFIED,
+    ],
+    [
+      'fileUploadErrorAlert',
+      'Alerts.FileUploadError.Title',
+      'Alerts.FileUploadError.Description',
+      AppEventCode.FILE_UPLOAD_ERROR,
+    ],
+    [
+      'videoPromptsMissingAlert',
+      'Alerts.VideoPromptsMissing.Title',
+      'Alerts.VideoPromptsMissing.Description',
+      AppEventCode.VIDEO_PROMPTS_MISSING,
+    ],
+    [
+      'loginSameDeviceInvalidPairingCodeAlert',
+      'Alerts.InvalidPairingCodeSameDevice.Title',
+      'Alerts.InvalidPairingCodeSameDevice.Description',
+      AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE,
+    ],
+    [
+      'missingJwkAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK,
+    ],
+    [
+      'jwsVerificationFailedAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.ERR_112_JWS_VERIFICATION_FAILED,
+    ],
+    [
+      'loginServerErrorAlert',
+      'Alerts.ProblemWithLogin.Title',
+      'Alerts.ProblemWithLogin.Description',
+      AppEventCode.LOGIN_SERVER_ERROR,
+    ],
+    [
+      'problemWithLoginAlert',
+      'Alerts.ProblemWithLogin.Title',
+      'Alerts.ProblemWithLogin.Description',
+      AppEventCode.LOGIN_PARSE_URI,
+    ],
+    [
+      'failedToSerializeJsonAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.ERR_115_FAILED_TO_SERIALIZE_JSON,
+    ],
+    [
+      'tokenUnexpectedlyNullAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL,
+    ],
+    [
+      'failedToReadFromLocalStorageAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.ERR_101_FAILED_TO_READ_LOCAL_STORAGE,
+    ],
+    [
+      'failedToParseJwsAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.ERR_117_FAILED_TO_PARSE_JWS,
+    ],
+    [
+      'clientRegistrationNullAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL,
+    ],
+    [
+      'unableToDecryptIdTokenAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN,
+    ],
+    [
+      'failedToDeserializeJsonAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON,
+    ],
+    [
+      'unableToDecryptJweAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.ERR_110_UNABLE_TO_DECRYPT_JWE,
+    ],
+    [
+      'toJsonMethodFailureAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.ERR_120_TOJSON_METHOD_FAILURE,
+    ],
+    [
+      'toJsonStringMethodFailureAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.ERR_120_TOJSONSTRING_METHOD_FAILURE,
+    ],
+    [
+      'keychainKeyExistsAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.ERR_120_KEYCHAIN_KEY_EXISTS_ERROR,
+    ],
+    [
+      'keychainKeyDoesntExistAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR,
+    ],
+    [
+      'keychainUnavailableAlert',
+      'Alerts.KeychainUnavailable.Title',
+      'Alerts.KeychainUnavailable.Description',
+      AppEventCode.ERR_120_KEYCHAIN_UNAVAILABLE_ERROR,
+    ],
+    [
+      'keychainKeyGenerationAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.ERR_120_KEYCHAIN_KEY_GENERATION_ERROR,
+    ],
+    [
+      'jwtDeviceInfoAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.ERR_120_JWT_DEVICE_INFO_ERROR,
+    ],
+    [
+      'clientRegistrationFailureAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE,
+    ],
+    [
+      'failedToRetrieveStringResourceAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE,
+    ],
+    [
+      'invalidUrlAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.ERR_500_INVALID_URL,
+    ],
+    [
+      'invalidRegistrationRequestAlert',
+      'Alerts.SomethingWentWrong.Title',
+      'Alerts.SomethingWentWrong.Description',
+      AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST,
+    ],
+  ])('%s should show an error modal with the correct title and message', (method, title, description, appEvent) => {
+    const mockEmitErrorModal = jest.fn()
+    jest
+      .spyOn(ErrorAlertContext, 'useErrorAlert')
+      .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
 
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
+    const { result } = renderHook(() => useAlerts({ navigate: jest.fn() } as any))
 
-      result.current.unsecuredNetworkAlert()
+    result.current[method]()
 
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.UnsecuredNetwork.Title',
-        'Alerts.UnsecuredNetwork.Description',
-        expect.objectContaining({ appEvent: AppEventCode.UNSECURED_NETWORK })
-      )
-    })
-  })
-
-  describe('serverTimeoutAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.serverTimeoutAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ServerTimeout.Title',
-        'Alerts.ServerTimeout.Description',
-        expect.objectContaining({ appEvent: AppEventCode.SERVER_TIMEOUT })
-      )
-    })
-  })
-
-  describe('serverErrorAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.serverErrorAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ServerError.Title',
-        'Alerts.ServerError.Description',
-        expect.objectContaining({ appEvent: AppEventCode.SERVER_ERROR })
-      )
-    })
+    expect(mockEmitErrorModal).toHaveBeenCalledWith(title, description, expect.objectContaining({ appEvent }))
   })
 
   describe('forgetPairingsAlert', () => {
@@ -135,237 +283,6 @@ describe('useAlerts', () => {
         event: AppEventCode.FORGET_ALL_PAIRINGS,
         actions: [{ text: 'Global.OK' }],
       })
-    })
-  })
-
-  describe('tooManyAttemptsAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.tooManyAttemptsAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.TooManyAttempts.Title',
-        'Alerts.TooManyAttempts.Description',
-        expect.objectContaining({ appEvent: AppEventCode.TOO_MANY_ATTEMPTS })
-      )
-    })
-  })
-
-  describe('verificationNotCompleteAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.verificationNotCompleteAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.VerificationNotComplete.Title',
-        'Alerts.VerificationNotComplete.Description',
-        expect.objectContaining({ appEvent: AppEventCode.VERIFY_NOT_COMPLETE })
-      )
-    })
-  })
-
-  describe('invalidPairingCodeAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.invalidPairingCodeAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.InvalidPairingCode.Title',
-        'Alerts.InvalidPairingCode.Description',
-        expect.objectContaining({ appEvent: AppEventCode.INVALID_PAIRING_CODE })
-      )
-    })
-  })
-
-  describe('alreadyVerifiedAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.alreadyVerifiedAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.AlreadyVerified.Title',
-        'Alerts.AlreadyVerified.Description',
-        expect.objectContaining({ appEvent: AppEventCode.ALREADY_VERIFIED })
-      )
-    })
-  })
-
-  describe('fileUploadErrorAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.fileUploadErrorAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.FileUploadError.Title',
-        'Alerts.FileUploadError.Description',
-        expect.objectContaining({ appEvent: AppEventCode.FILE_UPLOAD_ERROR })
-      )
-    })
-  })
-
-  describe('videoPromptsMissingAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.videoPromptsMissingAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.VideoPromptsMissing.Title',
-        'Alerts.VideoPromptsMissing.Description',
-        expect.objectContaining({ appEvent: AppEventCode.VIDEO_PROMPTS_MISSING })
-      )
-    })
-  })
-
-  describe('loginSameDeviceInvalidPairingCodeAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.loginSameDeviceInvalidPairingCodeAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.InvalidPairingCodeSameDevice.Title',
-        'Alerts.InvalidPairingCodeSameDevice.Description',
-        expect.objectContaining({ appEvent: AppEventCode.LOGIN_SAME_DEVICE_INVALID_PAIRING_CODE })
-      )
-    })
-  })
-
-  describe('missingJwkAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.missingJwkAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.SomethingWentWrong.Title',
-        'Alerts.SomethingWentWrong.Description',
-        expect.objectContaining({ appEvent: AppEventCode.ERR_111_UNABLE_TO_VERIFY_MISSING_JWK })
-      )
-    })
-  })
-
-  describe('jwsVerificationFailedAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.jwsVerificationFailedAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.SomethingWentWrong.Title',
-        'Alerts.SomethingWentWrong.Description',
-        expect.objectContaining({ appEvent: AppEventCode.ERR_112_JWS_VERIFICATION_FAILED })
-      )
-    })
-  })
-
-  describe('loginServerErrorAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.loginServerErrorAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithLogin.Title',
-        'Alerts.ProblemWithLogin.Description',
-        expect.objectContaining({ appEvent: AppEventCode.LOGIN_SERVER_ERROR })
-      )
-    })
-  })
-
-  describe('problemWithLoginAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.problemWithLoginAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.ProblemWithLogin.Title',
-        'Alerts.ProblemWithLogin.Description',
-        expect.objectContaining({ appEvent: AppEventCode.LOGIN_PARSE_URI })
-      )
     })
   })
 
@@ -998,342 +915,6 @@ describe('useAlerts', () => {
     })
   })
 
-  describe('failedToSerializeJsonAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.failedToSerializeJsonAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.SomethingWentWrong.Title',
-        'Alerts.SomethingWentWrong.Description',
-        expect.objectContaining({ appEvent: AppEventCode.ERR_115_FAILED_TO_SERIALIZE_JSON })
-      )
-    })
-  })
-
-  describe('tokenUnexpectedlyNullAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.tokenUnexpectedlyNullAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.SomethingWentWrong.Title',
-        'Alerts.SomethingWentWrong.Description',
-        expect.objectContaining({ appEvent: AppEventCode.ERR_119_TOKEN_UNEXPECTEDLY_NULL })
-      )
-    })
-  })
-
-  describe('failedToReadFromLocalStorageAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.failedToReadFromLocalStorageAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.SomethingWentWrong.Title',
-        'Alerts.SomethingWentWrong.Description',
-        expect.objectContaining({ appEvent: AppEventCode.ERR_101_FAILED_TO_READ_LOCAL_STORAGE })
-      )
-    })
-  })
-
-  describe('failedToParseJwsAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.failedToParseJwsAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.SomethingWentWrong.Title',
-        'Alerts.SomethingWentWrong.Description',
-        expect.objectContaining({ appEvent: AppEventCode.ERR_117_FAILED_TO_PARSE_JWS })
-      )
-    })
-  })
-
-  describe('clientRegistrationNullAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.clientRegistrationNullAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.SomethingWentWrong.Title',
-        'Alerts.SomethingWentWrong.Description',
-        expect.objectContaining({ appEvent: AppEventCode.ERR_102_CLIENT_REGISTRATION_UNEXPECTEDLY_NULL })
-      )
-    })
-  })
-
-  describe('unableToDecryptIdTokenAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.unableToDecryptIdTokenAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.SomethingWentWrong.Title',
-        'Alerts.SomethingWentWrong.Description',
-        expect.objectContaining({ appEvent: AppEventCode.ERR_105_UNABLE_TO_DECRYPT_AND_VERIFY_ID_TOKEN })
-      )
-    })
-  })
-
-  describe('failedToDeserializeJsonAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.failedToDeserializeJsonAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.SomethingWentWrong.Title',
-        'Alerts.SomethingWentWrong.Description',
-        expect.objectContaining({ appEvent: AppEventCode.ERR_109_FAILED_TO_DESERIALIZE_JSON })
-      )
-    })
-  })
-
-  describe('unableToDecryptJweAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.unableToDecryptJweAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.SomethingWentWrong.Title',
-        'Alerts.SomethingWentWrong.Description',
-        expect.objectContaining({ appEvent: AppEventCode.ERR_110_UNABLE_TO_DECRYPT_JWE })
-      )
-    })
-  })
-
-  describe('toJsonMethodFailureAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.toJsonMethodFailureAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.SomethingWentWrong.Title',
-        'Alerts.SomethingWentWrong.Description',
-        expect.objectContaining({ appEvent: AppEventCode.ERR_120_TOJSON_METHOD_FAILURE })
-      )
-    })
-  })
-
-  describe('toJsonStringMethodFailureAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.toJsonStringMethodFailureAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.SomethingWentWrong.Title',
-        'Alerts.SomethingWentWrong.Description',
-        expect.objectContaining({ appEvent: AppEventCode.ERR_120_TOJSONSTRING_METHOD_FAILURE })
-      )
-    })
-  })
-
-  describe('keychainKeyExistsAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.keychainKeyExistsAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.SomethingWentWrong.Title',
-        'Alerts.SomethingWentWrong.Description',
-        expect.objectContaining({ appEvent: AppEventCode.ERR_120_KEYCHAIN_KEY_EXISTS_ERROR })
-      )
-    })
-  })
-
-  describe('keychainKeyDoesntExistAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.keychainKeyDoesntExistAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.SomethingWentWrong.Title',
-        'Alerts.SomethingWentWrong.Description',
-        expect.objectContaining({ appEvent: AppEventCode.ERR_120_KEYCHAIN_KEY_DOESNT_EXIST_ERROR })
-      )
-    })
-  })
-
-  describe('keychainUnavailableAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.keychainUnavailableAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.KeychainUnavailable.Title',
-        'Alerts.KeychainUnavailable.Description',
-        expect.objectContaining({ appEvent: AppEventCode.ERR_120_KEYCHAIN_UNAVAILABLE_ERROR })
-      )
-    })
-  })
-
-  describe('keychainKeyGenerationAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.keychainKeyGenerationAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.SomethingWentWrong.Title',
-        'Alerts.SomethingWentWrong.Description',
-        expect.objectContaining({ appEvent: AppEventCode.ERR_120_KEYCHAIN_KEY_GENERATION_ERROR })
-      )
-    })
-  })
-
-  describe('jwtDeviceInfoAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.jwtDeviceInfoAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.SomethingWentWrong.Title',
-        'Alerts.SomethingWentWrong.Description',
-        expect.objectContaining({ appEvent: AppEventCode.ERR_120_JWT_DEVICE_INFO_ERROR })
-      )
-    })
-  })
-
-  describe('clientRegistrationFailureAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.clientRegistrationFailureAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.SomethingWentWrong.Title',
-        'Alerts.SomethingWentWrong.Description',
-        expect.objectContaining({ appEvent: AppEventCode.ERR_120_CLIENT_REGISTRATION_FAILURE })
-      )
-    })
-  })
-
   describe('noTokensReturnedAlert', () => {
     it('should show an alert with the correct title and message', () => {
       const mockNavigation = { navigate: jest.fn() }
@@ -1426,69 +1007,6 @@ describe('useAlerts', () => {
     })
   })
 
-  describe('failedToRetrieveStringResourceAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.failedToRetrieveStringResourceAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.SomethingWentWrong.Title',
-        'Alerts.SomethingWentWrong.Description',
-        expect.objectContaining({ appEvent: AppEventCode.ERR_400_FAILED_TO_RETRIEVE_STRING_RESOURCE })
-      )
-    })
-  })
-
-  describe('invalidUrlAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.invalidUrlAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.SomethingWentWrong.Title',
-        'Alerts.SomethingWentWrong.Description',
-        expect.objectContaining({ appEvent: AppEventCode.ERR_500_INVALID_URL })
-      )
-    })
-  })
-
-  describe('invalidRegistrationRequestAlert', () => {
-    it('should show an error modal with the correct title and message', () => {
-      const mockNavigation = { navigate: jest.fn() }
-      const mockEmitAlert = jest.fn()
-      const mockEmitErrorModal = jest.fn()
-      jest
-        .spyOn(ErrorAlertContext, 'useErrorAlert')
-        .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-      const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-      result.current.invalidRegistrationRequestAlert()
-
-      expect(mockEmitErrorModal).toHaveBeenCalledWith(
-        'Alerts.SomethingWentWrong.Title',
-        'Alerts.SomethingWentWrong.Description',
-        expect.objectContaining({ appEvent: AppEventCode.ERR_501_INVALID_REGISTRATION_REQUEST })
-      )
-    })
-  })
-
   describe('factoryResetAlert', () => {
     it('should show an alert with the correct title and message', () => {
       const mockNavigation = { navigate: jest.fn() }
@@ -1538,25 +1056,85 @@ describe('useAlerts', () => {
   })
 
   describe('IAS error alerts (201–300)', () => {
-    describe('serverConfigurationAlert', () => {
-      it('should show an error modal with the correct title and message', () => {
-        const mockNavigation = { navigate: jest.fn() }
-        const mockEmitAlert = jest.fn()
-        const mockEmitErrorModal = jest.fn()
-        jest
-          .spyOn(ErrorAlertContext, 'useErrorAlert')
-          .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
+    it.each<[AlertName, string, string, AppEventCode]>([
+      [
+        'serverConfigurationAlert',
+        'Alerts.ProblemWithService.Title',
+        'Alerts.ProblemWithService.Description',
+        AppEventCode.ADD_CARD_SERVER_CONFIGURATION,
+      ],
+      [
+        'addCardNotAvailableAlert',
+        'Alerts.AddCardNotAvailable.Title',
+        'Alerts.AddCardNotAvailable.Description',
+        AppEventCode.ADD_CARD_PROVIDER,
+      ],
+      [
+        'missingJsonValuesAlert',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
+        AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE,
+      ],
+      [
+        'signClaimsErrorAlert',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
+        AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET,
+      ],
+      [
+        'unexpectedNetworkCallAlert',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
+        AppEventCode.ERR_208_UNEXPECTED_NETWORK_CALL_EXCEPTION,
+      ],
+      ['badRequestAlert', 'Alerts.BadRequest.Title', 'Alerts.BadRequest.Description', AppEventCode.ERR_209_BAD_REQUEST],
+      [
+        'unauthorizedAlert',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
+        AppEventCode.ERR_210_UNAUTHORIZED,
+      ],
+      [
+        'serverOutageAlert',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
+        AppEventCode.ERR_211_SERVER_OUTAGE,
+      ],
+      [
+        'retryLaterAlert',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
+        AppEventCode.ERR_212_RETRY_LATER,
+      ],
+      [
+        'creatingClientRegistrationFailedAlert',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
+        AppEventCode.ERR_213_FAILED_CREATING_CLIENT_REGISTRATION,
+      ],
+      [
+        'keysOutOfSyncAlert',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
+        AppEventCode.ERR_299_KEYS_OUT_OF_SYNC,
+      ],
+      [
+        'emptyResponseAlert',
+        'Alerts.SomethingWentWrong.Title',
+        'Alerts.SomethingWentWrong.Description',
+        AppEventCode.ERR_300_EMPTY_RESPONSE,
+      ],
+    ])('%s should show an error modal with the correct title and message', (method, title, description, appEvent) => {
+      const mockEmitErrorModal = jest.fn()
+      jest
+        .spyOn(ErrorAlertContext, 'useErrorAlert')
+        .mockReturnValue({ emitAlert: jest.fn(), emitErrorModal: mockEmitErrorModal } as any)
 
-        const { result } = renderHook(() => useAlerts(mockNavigation as any))
+      const { result } = renderHook(() => useAlerts({ navigate: jest.fn() } as any))
 
-        result.current.serverConfigurationAlert()
+      result.current[method]()
 
-        expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.ProblemWithService.Title',
-          'Alerts.ProblemWithService.Description',
-          expect.objectContaining({ appEvent: AppEventCode.ADD_CARD_SERVER_CONFIGURATION })
-        )
-      })
+      expect(mockEmitErrorModal).toHaveBeenCalledWith(title, description, expect.objectContaining({ appEvent }))
     })
 
     describe('dynamicRegistrationErrorAlert', () => {
@@ -1637,237 +1215,6 @@ describe('useAlerts', () => {
           'Alerts.DynamicRegistrationError.Title',
           'Alerts.DynamicRegistrationError.Description',
           expect.objectContaining({ appEvent: AppEventCode.ADD_CARD_INCORRECT_OS })
-        )
-      })
-    })
-
-    describe('addCardNotAvailableAlert', () => {
-      it('should show an error modal with the correct title and message', () => {
-        const mockNavigation = { navigate: jest.fn() }
-        const mockEmitAlert = jest.fn()
-        const mockEmitErrorModal = jest.fn()
-        jest
-          .spyOn(ErrorAlertContext, 'useErrorAlert')
-          .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-        const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-        result.current.addCardNotAvailableAlert()
-
-        expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.AddCardNotAvailable.Title',
-          'Alerts.AddCardNotAvailable.Description',
-          expect.objectContaining({ appEvent: AppEventCode.ADD_CARD_PROVIDER })
-        )
-      })
-    })
-
-    describe('missingJsonValuesAlert', () => {
-      it('should show an error modal with the correct title and message', () => {
-        const mockNavigation = { navigate: jest.fn() }
-        const mockEmitAlert = jest.fn()
-        const mockEmitErrorModal = jest.fn()
-        jest
-          .spyOn(ErrorAlertContext, 'useErrorAlert')
-          .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-        const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-        result.current.missingJsonValuesAlert()
-
-        expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.SomethingWentWrong.Title',
-          'Alerts.SomethingWentWrong.Description',
-          expect.objectContaining({ appEvent: AppEventCode.ERR_206_MISSING_OR_NULL_VALUES_IN_JSON_RESPONSE })
-        )
-      })
-    })
-
-    describe('signClaimsErrorAlert', () => {
-      it('should show an error modal with the correct title and message', () => {
-        const mockNavigation = { navigate: jest.fn() }
-        const mockEmitAlert = jest.fn()
-        const mockEmitErrorModal = jest.fn()
-        jest
-          .spyOn(ErrorAlertContext, 'useErrorAlert')
-          .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-        const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-        result.current.signClaimsErrorAlert()
-
-        expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.SomethingWentWrong.Title',
-          'Alerts.SomethingWentWrong.Description',
-          expect.objectContaining({ appEvent: AppEventCode.ERR_207_UNABLE_TO_SIGN_CLAIMS_SET })
-        )
-      })
-    })
-
-    describe('unexpectedNetworkCallAlert', () => {
-      it('should show an error modal with the correct title and message', () => {
-        const mockNavigation = { navigate: jest.fn() }
-        const mockEmitAlert = jest.fn()
-        const mockEmitErrorModal = jest.fn()
-        jest
-          .spyOn(ErrorAlertContext, 'useErrorAlert')
-          .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-        const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-        result.current.unexpectedNetworkCallAlert()
-
-        expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.SomethingWentWrong.Title',
-          'Alerts.SomethingWentWrong.Description',
-          expect.objectContaining({ appEvent: AppEventCode.ERR_208_UNEXPECTED_NETWORK_CALL_EXCEPTION })
-        )
-      })
-    })
-
-    describe('badRequestAlert', () => {
-      it('should show an error modal with the correct title and message', () => {
-        const mockNavigation = { navigate: jest.fn() }
-        const mockEmitAlert = jest.fn()
-        const mockEmitErrorModal = jest.fn()
-        jest
-          .spyOn(ErrorAlertContext, 'useErrorAlert')
-          .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-        const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-        result.current.badRequestAlert()
-
-        expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.BadRequest.Title',
-          'Alerts.BadRequest.Description',
-          expect.objectContaining({ appEvent: AppEventCode.ERR_209_BAD_REQUEST })
-        )
-      })
-    })
-
-    describe('unauthorizedAlert', () => {
-      it('should show an error modal with the correct title and message', () => {
-        const mockNavigation = { navigate: jest.fn() }
-        const mockEmitAlert = jest.fn()
-        const mockEmitErrorModal = jest.fn()
-        jest
-          .spyOn(ErrorAlertContext, 'useErrorAlert')
-          .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-        const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-        result.current.unauthorizedAlert()
-
-        expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.SomethingWentWrong.Title',
-          'Alerts.SomethingWentWrong.Description',
-          expect.objectContaining({ appEvent: AppEventCode.ERR_210_UNAUTHORIZED })
-        )
-      })
-    })
-
-    describe('serverOutageAlert', () => {
-      it('should show an error modal with the correct title and message', () => {
-        const mockNavigation = { navigate: jest.fn() }
-        const mockEmitAlert = jest.fn()
-        const mockEmitErrorModal = jest.fn()
-        jest
-          .spyOn(ErrorAlertContext, 'useErrorAlert')
-          .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-        const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-        result.current.serverOutageAlert()
-
-        expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.SomethingWentWrong.Title',
-          'Alerts.SomethingWentWrong.Description',
-          expect.objectContaining({ appEvent: AppEventCode.ERR_211_SERVER_OUTAGE })
-        )
-      })
-    })
-
-    describe('retryLaterAlert', () => {
-      it('should show an error modal with the correct title and message', () => {
-        const mockNavigation = { navigate: jest.fn() }
-        const mockEmitAlert = jest.fn()
-        const mockEmitErrorModal = jest.fn()
-        jest
-          .spyOn(ErrorAlertContext, 'useErrorAlert')
-          .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-        const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-        result.current.retryLaterAlert()
-
-        expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.SomethingWentWrong.Title',
-          'Alerts.SomethingWentWrong.Description',
-          expect.objectContaining({ appEvent: AppEventCode.ERR_212_RETRY_LATER })
-        )
-      })
-    })
-
-    describe('creatingClientRegistrationFailedAlert', () => {
-      it('should show an error modal with the correct title and message', () => {
-        const mockNavigation = { navigate: jest.fn() }
-        const mockEmitAlert = jest.fn()
-        const mockEmitErrorModal = jest.fn()
-        jest
-          .spyOn(ErrorAlertContext, 'useErrorAlert')
-          .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-        const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-        result.current.creatingClientRegistrationFailedAlert()
-
-        expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.SomethingWentWrong.Title',
-          'Alerts.SomethingWentWrong.Description',
-          expect.objectContaining({ appEvent: AppEventCode.ERR_213_FAILED_CREATING_CLIENT_REGISTRATION })
-        )
-      })
-    })
-
-    describe('keysOutOfSyncAlert', () => {
-      it('should show an error modal with the correct title and message', () => {
-        const mockNavigation = { navigate: jest.fn() }
-        const mockEmitAlert = jest.fn()
-        const mockEmitErrorModal = jest.fn()
-        jest
-          .spyOn(ErrorAlertContext, 'useErrorAlert')
-          .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-        const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-        result.current.keysOutOfSyncAlert()
-
-        expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.SomethingWentWrong.Title',
-          'Alerts.SomethingWentWrong.Description',
-          expect.objectContaining({ appEvent: AppEventCode.ERR_299_KEYS_OUT_OF_SYNC })
-        )
-      })
-    })
-
-    describe('emptyResponseAlert', () => {
-      it('should show an error modal with the correct title and message', () => {
-        const mockNavigation = { navigate: jest.fn() }
-        const mockEmitAlert = jest.fn()
-        const mockEmitErrorModal = jest.fn()
-        jest
-          .spyOn(ErrorAlertContext, 'useErrorAlert')
-          .mockReturnValue({ emitAlert: mockEmitAlert, emitErrorModal: mockEmitErrorModal } as any)
-
-        const { result } = renderHook(() => useAlerts(mockNavigation as any))
-
-        result.current.emptyResponseAlert()
-
-        expect(mockEmitErrorModal).toHaveBeenCalledWith(
-          'Alerts.SomethingWentWrong.Title',
-          'Alerts.SomethingWentWrong.Description',
-          expect.objectContaining({ appEvent: AppEventCode.ERR_300_EMPTY_RESPONSE })
         )
       })
     })

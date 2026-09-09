@@ -8,6 +8,7 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { CROP_DELAY_MS } from '@/constants'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, ThemedText, TOKENS, usePreventDoublePress, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -410,7 +411,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
               style={styles.hasTroubleContainer}
               accessibilityLabel={a11yLabel(t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble'))}
               accessibilityRole="button"
-              testID={testIdWithKey('HavingTrouble')}
+              testID={testIdWithKey(TestIds.verify.liveCall.havingTrouble)}
             >
               <ThemedText style={{ color: ColorPalette.grayscale.white, padding: Spacing.sm }}>
                 {t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble')}
@@ -426,7 +427,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
               size={iconSize}
               iconName={onMute ? 'microphone-off' : 'microphone'}
               label={onMute ? 'Unmute' : 'Mute'}
-              testIDKey={'Mute'}
+              testIDKey={TestIds.verify.liveCall.mute}
             />
             <CallIconButton
               onPress={toggleVideo}
@@ -435,7 +436,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
               size={iconSize}
               iconName={videoHidden ? 'video-off' : 'video'}
               label={videoHidden ? 'Show Video' : 'Hide Video'}
-              testIDKey={'Video'}
+              testIDKey={TestIds.verify.liveCall.video}
             />
             <CallIconButton
               onPress={preventDoublePress(handleEndCall)}
@@ -444,7 +445,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
               size={iconSize}
               iconName={'phone-cancel'}
               label={'End Call'}
-              testIDKey={'EndCall'}
+              testIDKey={TestIds.verify.liveCall.endCall}
             />
           </View>
         </View>

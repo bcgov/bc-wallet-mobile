@@ -5,6 +5,7 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useRegistrationService } from '@/bcsc-theme/services/hooks/useRegistrationService'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { AccountSetupType, BCDispatchAction, BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import AddDeviceHands from '@assets/img/add-device-hands.svg'
 import {
   Button,
@@ -141,7 +142,7 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
         title={t('BCSC.AccountSetup.AddAccount')}
         onPress={handleAddAccount}
         accessibilityLabel={t('BCSC.AccountSetup.AddAccount')}
-        testID={testIdWithKey('AddAccount')}
+        testID={testIdWithKey(TestIds.verify.accountSetup.addAccount)}
         disabled={isAddingAccount}
       >
         {isAddingAccount && <ButtonLoading />}
@@ -151,7 +152,7 @@ const AccountSetupScreen = ({ navigation }: AccountSetupScreenProps) => {
         title={t('BCSC.AccountSetup.TransferAccount')}
         onPress={handleTransferAccount}
         accessibilityLabel={t('BCSC.AccountSetup.TransferAccount')}
-        testID={testIdWithKey('TransferAccount')}
+        testID={testIdWithKey(TestIds.verify.accountSetup.transferAccount)}
       />
     </ControlContainer>
   )

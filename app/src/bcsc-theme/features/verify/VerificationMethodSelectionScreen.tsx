@@ -1,5 +1,6 @@
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import { Spacing } from '@/bcwallet-theme/theme'
+import { TestIds } from '@/test-ids/registry'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { ScreenWrapper, testIdWithKey, ThemedText, usePreventDoublePress } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -45,7 +46,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         <VerifyMethodActionButton
           key="send_video"
           title={t('BCSC.VerificationMethods.SendVideoTitle')}
-          testIDKey="SendVideo"
+          testIDKey={TestIds.verify.methodSelection.sendVideo}
           description={t('BCSC.VerificationMethods.SendVideoDescription')}
           icon={'video-outline'}
           onPress={preventDoublePress(handlePressSendVideo)}
@@ -59,7 +60,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         <VerifyMethodActionButton
           key="in_person"
           title={t('BCSC.VerificationMethods.InPersonTitle')}
-          testIDKey="InPerson"
+          testIDKey={TestIds.verify.methodSelection.inPerson}
           description={t('BCSC.VerificationMethods.InPersonDescription')}
           icon={'account-outline'}
           onPress={() => navigation.navigate(BCSCScreens.VerifyInPerson)}
@@ -73,7 +74,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         <VerifyMethodActionButton
           key="video_call"
           title={t('BCSC.VerificationMethods.VideoCallTitle')}
-          testIDKey="VideoCall"
+          testIDKey={TestIds.verify.methodSelection.videoCall}
           description={t('BCSC.VerificationMethods.VideoCallDescription')}
           icon={'face-agent'}
           onPress={preventDoublePress(handlePressLiveCall)}
@@ -98,7 +99,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
       <ThemedText
         variant={'headingFour'}
         style={{ marginTop: Spacing.md, alignSelf: 'stretch' }}
-        testID={testIdWithKey('HoursOfServiceTitle')}
+        testID={testIdWithKey(TestIds.verify.methodSelection.hoursOfService)}
       >
         {t('BCSC.VideoCall.CallBusyOrClosed.HoursOfService')}
       </ThemedText>

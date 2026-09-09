@@ -4,6 +4,7 @@ import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { decodeBarcodes, DecodedCodeKind, ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -346,7 +347,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
         secondaryAction={{
           title: t('BCSC.Instructions.EnterManually'),
           onPress: goToManualEntry,
-          testID: testIdWithKey('EnterManually'),
+          testID: testIdWithKey(TestIds.verify.scanSerial.enterManually),
         }}
       />
     )
@@ -406,7 +407,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
             <Button
               title={t('BCSC.Instructions.EnterManually')}
               accessibilityLabel={t('BCSC.Instructions.EnterManually')}
-              testID={testIdWithKey('EnterManually')}
+              testID={testIdWithKey(TestIds.verify.scanSerial.enterManually)}
               onPress={goToManualEntry}
               buttonType={ButtonType.Primary}
             />
@@ -414,7 +415,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
               <Button
                 title={t('BCSC.Scan.TryAgain')}
                 accessibilityLabel={t('BCSC.Scan.TryAgain')}
-                testID={testIdWithKey('RetryCamera')}
+                testID={testIdWithKey(TestIds.verify.scanSerial.retryCamera)}
                 onPress={retryCamera}
                 buttonType={ButtonType.Secondary}
               />

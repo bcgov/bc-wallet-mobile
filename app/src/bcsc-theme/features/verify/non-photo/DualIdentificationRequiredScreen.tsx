@@ -1,6 +1,7 @@
 import { BulletedInstructionsScreen } from '@/bcsc-theme/components/BulletedInstructionsScreen'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { ACCOUNT_SERVICES_URL, HelpCentreUrl } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import { openLink } from '@/utils/links'
 import { testIdWithKey } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -35,7 +36,7 @@ const DualIdentificationRequiredScreen: React.FC<DualIdentificationRequiredScree
           ],
           link: {
             label: t('BCSC.DualNonBCSCEvidence.SeeAcceptedID'),
-            testID: testIdWithKey('SeeAcceptedID'),
+            testID: testIdWithKey(TestIds.verify.dualIdRequired.seeAcceptedId),
             onPress: () => {
               navigation.navigate(BCSCScreens.VerifyWebView, {
                 title: t('BCSC.Screens.HelpCentre'),
@@ -49,7 +50,7 @@ const DualIdentificationRequiredScreen: React.FC<DualIdentificationRequiredScree
           paragraph: t('BCSC.AdditionalEvidence.LimitedAccessDescription'),
           footerLink: {
             label: t('BCSC.AdditionalEvidence.WhichServices'),
-            testID: testIdWithKey('WhichServices'),
+            testID: testIdWithKey(TestIds.verify.dualIdRequired.whichServices),
             externalButton: true,
             onPress: () => openLink(ACCOUNT_SERVICES_URL),
           },

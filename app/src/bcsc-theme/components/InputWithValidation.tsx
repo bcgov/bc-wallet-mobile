@@ -1,5 +1,6 @@
 import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
 import { hitSlop } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import { a11yLabel } from '@/utils/accessibility'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import type { ReactNode, RefObject } from 'react'
@@ -105,7 +106,7 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
         <ThemedText
           variant={'labelTitle'}
           style={[styles.label, props.labelProps]}
-          testID={testIdWithKey(`${props.id}-label`)}
+          testID={testIdWithKey(`${props.id}${TestIds.shared.field.label}`)}
         >
           {props.label}
         </ThemedText>
@@ -117,7 +118,7 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
           inputRef.current?.focus()
         }}
         hitSlop={hitSlop}
-        testID={testIdWithKey(`${props.id}-pressable`)}
+        testID={testIdWithKey(`${props.id}${TestIds.shared.field.pressable}`)}
         accessible={false}
       >
         <View style={{ flex: 1 }}>
@@ -143,7 +144,7 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
             }}
             onPressIn={props.onPressIn}
             accessibilityLabel={a11yLabel(props.label)}
-            testID={testIdWithKey(`${props.id}-input`)}
+            testID={testIdWithKey(`${props.id}${TestIds.shared.field.input}`)}
             {...props.textInputProps}
             keyboardType={props.textInputProps?.keyboardType ?? props.keyboardType ?? 'default'}
             onFocus={(event) => {
@@ -170,7 +171,7 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
         <ThemedText
           style={[styles.subtext, props.error && styles.errorText, props.subtextProps]}
           variant={'labelSubtitle'}
-          testID={testIdWithKey(`${props.id}-subtext`)}
+          testID={testIdWithKey(`${props.id}${TestIds.shared.field.subtext}`)}
         >
           {props.error ? props.error : props.subtext}
         </ThemedText>

@@ -1,5 +1,6 @@
 import { useBCSCAgent } from '@/bcsc-theme/features/agent/BCSCAgentProvider'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, ThemedText, testIdWithKey, useTheme } from '@bifold/core'
 import { useConnectionById } from '@bifold/react-hooks'
 import { DidCommCredentialState } from '@credo-ts/didcomm'
@@ -123,14 +124,14 @@ const RemoveContactScreen = ({ navigation, route }: RemoveContactScreenProps) =>
           onPress={onConfirmRemove}
           disabled={submitting}
           accessibilityLabel={t('BCSC.Contacts.Remove.RemoveContact')}
-          testID={testIdWithKey('ConfirmRemove')}
+          testID={testIdWithKey(TestIds.main.contactRemove.confirm)}
         />
         <Button
           title={t('Global.Cancel')}
           buttonType={ButtonType.Secondary}
           onPress={() => navigation.goBack()}
           accessibilityLabel={t('Global.Cancel')}
-          testID={testIdWithKey('CancelRemove')}
+          testID={testIdWithKey(TestIds.main.contactRemove.cancel)}
         />
       </View>
     </ScreenWrapper>

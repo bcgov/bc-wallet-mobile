@@ -121,6 +121,24 @@ version it was built with.
 **The build number** is the CI run number. It always goes up, so there is
 nothing to coordinate.
 
+## Tagging
+
+Once a build reaches ring-0 — uploaded to App Store Connect, Google Play and
+Firebase — Publish tags the commit it came from: `bcsc-v<version>-<build
+number>` (e.g. `bcsc-v4.1.0-482`). The version always comes from
+`variants/bcsc-prod/variant.env`, regardless of which variants actually
+published, so the tag reads the same way no matter what was in `targets`.
+
+The tag lands on the commit that produced the published build, which is not
+always the branch tip — publishing an older `build_number` tags that older
+commit. It marks what was actually shipped, not just what merged.
+
+Tagging runs right after the ring-0 uploads and does not wait on approval or
+widening, since a build only reaches ring-0 once. It goes ahead as long as no
+ring-0 upload failed, so a run limited to one store via `targets` still gets
+tagged, and a retry after a partial failure re-runs it safely: the tag is left
+alone if it's already there.
+
 ## Branching a release
 
 `main` is always the next version. When a version is ready to stabilise, cut a

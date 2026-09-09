@@ -9,6 +9,7 @@ import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
 import { Mode } from '@/constants'
 import { useDebounce } from '@/hooks/useDebounce'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -165,7 +166,7 @@ const Services: React.FC = () => {
               }
             }}
             accessibilityLabel={a11yLabel(t('BCSC.Services.CatalogueSearch'))}
-            testID={testIdWithKey('search')}
+            testID={testIdWithKey(TestIds.main.services.search)}
             style={styles.searchText}
           />
           {search.length > 0 ? (
@@ -178,7 +179,7 @@ const Services: React.FC = () => {
                 setSearch('')
               }}
               accessibilityLabel={a11yLabel(t('Global.Close'))}
-              testID={testIdWithKey('clearSearch')}
+              testID={testIdWithKey(TestIds.main.services.clearSearch)}
             />
           ) : null}
         </View>
@@ -188,7 +189,7 @@ const Services: React.FC = () => {
         <ActivityIndicator
           size={'large'}
           style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
-          testID={testIdWithKey('ServicesLoading')}
+          testID={testIdWithKey(TestIds.main.services.loading)}
         />
       ) : (
         <View>

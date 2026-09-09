@@ -1,5 +1,6 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, useAnimatedComponents, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
@@ -33,7 +34,7 @@ const VerificationSuccessScreen = () => {
   const controls = (
     <ControlContainer>
       <Button
-        testID={testIdWithKey('Continue')}
+        testID={testIdWithKey(TestIds.verify.verificationSuccess.continue)}
         accessibilityLabel={t('BCSC.Verification.ButtonText')}
         title={t('BCSC.Verification.ButtonText')}
         buttonType={ButtonType.Primary}

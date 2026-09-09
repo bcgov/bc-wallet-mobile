@@ -1,5 +1,6 @@
 import { HeaderBackButton } from '@/bcsc-theme/components/HeaderBackButton'
 import { HEADER_SHADOW } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, CheckBoxRow, Link, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import ErrorTextBox from '@components/ErrorTextBox'
 import { Header } from '@react-navigation/elements'
@@ -60,7 +61,7 @@ const RemoteLogWarning: React.FC<RemoteLogWarningProps> = ({ onBackPressed, onEn
           <HeaderBackButton
             onPress={onBackPressed}
             accessibilityLabel={t('Global.Back')}
-            testID={testIdWithKey('BackButton')}
+            testID={testIdWithKey(TestIds.developer.remoteLogWarning.back)}
           />
         )}
       />
@@ -84,7 +85,7 @@ const RemoteLogWarning: React.FC<RemoteLogWarningProps> = ({ onBackPressed, onEn
             <CheckBoxRow
               title={t('RemoteLogging.CheckBoxTitle')}
               accessibilityLabel={t('RemoteLogging.IAgree')}
-              testID={testIdWithKey('IAgree')}
+              testID={testIdWithKey(TestIds.developer.remoteLogWarning.agree)}
               checked={checked}
               onPress={() => setChecked(!checked)}
               reverse
@@ -94,7 +95,7 @@ const RemoteLogWarning: React.FC<RemoteLogWarningProps> = ({ onBackPressed, onEn
               <Button
                 title={t('RemoteLogging.ButtonTitle')}
                 accessibilityLabel={t('RemoteLogging.ButtonTitle')}
-                testID={testIdWithKey('TurnOn')}
+                testID={testIdWithKey(TestIds.developer.remoteLogWarning.turnOn)}
                 disabled={!checked}
                 onPress={onSubmitPressed}
                 buttonType={ButtonType.Primary}

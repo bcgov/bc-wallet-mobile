@@ -1,5 +1,6 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import usePreventGestureBack from '@/hooks/usePreventGestureBack'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -62,7 +63,7 @@ export const ServiceOutage = ({ inOnboarding = false }: ServiceOutageProps): Rea
         onPress={handleControls}
         disabled={isCheckDisabled}
         accessibilityLabel={buttonText}
-        testID={testIdWithKey('ServiceOutageCheckAgain')}
+        testID={testIdWithKey(TestIds.systemModal.serviceOutage.checkAgain)}
       >
         {loading && <ButtonLoading />}
       </Button>
@@ -74,7 +75,7 @@ export const ServiceOutage = ({ inOnboarding = false }: ServiceOutageProps): Rea
             // TODO: this needs to act like the onboarding screen that prompts verification or skip
           }}
           accessibilityLabel={'Learn more'}
-          testID={testIdWithKey('ServiceOutageLearnMore')}
+          testID={testIdWithKey(TestIds.systemModal.serviceOutage.helpCentre)}
         />
       )}
     </ControlContainer>

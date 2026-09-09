@@ -6,6 +6,7 @@ import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types
 import { HelpCentreUrl, hitSlop, REPORT_SUSPICIOUS_URL } from '@/constants'
 import { isHandledAppError } from '@/errors/appError'
 import { useAlerts } from '@/hooks/useAlerts'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -83,7 +84,7 @@ const DevicePreferenceURLView: React.FC<DevicePreferenceURLViewProps> = ({
         <ThemedText selectable={true}>
           <Link
             linkText={serviceClientUri}
-            testID={testIdWithKey('ServiceClientLink')}
+            testID={testIdWithKey(TestIds.main.serviceLogin.serviceClientLink)}
             onPress={() => Linking.openURL(serviceClientUri)}
           />
         </ThemedText>
@@ -115,7 +116,7 @@ const ServiceLoginUnavailableView = ({ state, styles, t, logger, onCancel }: Ser
         title={''}
         accessibilityLabel={a11yLabel(t('BCSC.Services.GotoService', { service: state.serviceTitle }))}
         accessibilityHint={t('Global.A11y.OpensInBrowser')}
-        testID={testIdWithKey('GoToServiceClient')}
+        testID={testIdWithKey(TestIds.main.serviceLogin.goToService)}
         buttonType={ButtonType.Primary}
         onPress={async () => {
           if (!state.serviceClientUri) {
@@ -141,7 +142,7 @@ const ServiceLoginUnavailableView = ({ state, styles, t, logger, onCancel }: Ser
       <Button
         buttonType={ButtonType.Secondary}
         title={t('Global.Cancel')}
-        testID={testIdWithKey('Cancel')}
+        testID={testIdWithKey(TestIds.main.serviceLogin.cancelUnavailable)}
         accessibilityLabel={t('Global.Cancel')}
         onPress={onCancel}
       />
@@ -186,7 +187,7 @@ const ServiceLoginDefaultView = ({
       <Button
         title={t('Global.Continue')}
         accessibilityLabel={a11yLabel(t('Global.Continue'))}
-        testID={testIdWithKey('ServiceLoginContinue')}
+        testID={testIdWithKey(TestIds.main.serviceLogin.continue)}
         buttonType={ButtonType.Primary}
         disabled={isContinueDisabled}
         onPress={() => {
@@ -197,12 +198,12 @@ const ServiceLoginDefaultView = ({
       <Button
         title={t('Global.Cancel')}
         accessibilityLabel={a11yLabel(t('Global.Cancel'))}
-        testID={testIdWithKey('ServiceLoginCancel')}
+        testID={testIdWithKey(TestIds.main.serviceLogin.cancel)}
         buttonType={ButtonType.Secondary}
         onPress={onCancel}
       />
 
-      <ReportSuspiciousLink t={t} testID={testIdWithKey('ReportSuspiciousLink')} />
+      <ReportSuspiciousLink t={t} testID={testIdWithKey(TestIds.main.serviceLogin.reportSuspicious)} />
     </ControlContainer>
   )
 
@@ -236,7 +237,7 @@ const ServiceLoginDefaultView = ({
           >
             <ThemedText style={styles.infoHeader}>{t('BCSC.Services.FromAccount')}</ThemedText>
             <TouchableOpacity
-              testID={testIdWithKey('HelpButton')}
+              testID={testIdWithKey(TestIds.main.serviceLogin.help)}
               accessibilityLabel={a11yLabel(t('BCSC.Screens.HelpCentre'))}
               accessibilityRole="button"
               hitSlop={hitSlop}
@@ -250,7 +251,7 @@ const ServiceLoginDefaultView = ({
 
         {state.privacyPolicyUri ? (
           <TouchableOpacity
-            testID={testIdWithKey('ReadPrivacyPolicy')}
+            testID={testIdWithKey(TestIds.main.serviceLogin.readPrivacyPolicy)}
             accessibilityLabel={a11yLabel(t('BCSC.Services.PrivacyNotice'))}
             accessibilityRole="link"
             accessibilityHint={t('Global.A11y.OpensInBrowser')}

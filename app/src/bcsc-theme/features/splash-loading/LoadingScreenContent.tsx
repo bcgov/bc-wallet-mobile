@@ -1,3 +1,4 @@
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
@@ -47,7 +48,7 @@ export const LoadingScreenContent = ({ message, iconOnTop = true }: LoadingScree
   })
 
   return (
-    <SafeAreaView style={styles.container} testID={testIdWithKey('LoadingScreenContent')}>
+    <SafeAreaView style={styles.container} testID={testIdWithKey(TestIds.common.loadingScreen)}>
       <View style={styles.contentContainer}>
         {iconOnTop && <BCAnimatedLoadingIcon size={iconSize} />}
         <View style={styles.textContainer}>

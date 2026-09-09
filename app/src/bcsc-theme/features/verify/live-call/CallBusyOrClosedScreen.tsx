@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { CommonActions, RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -32,7 +33,7 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
     <ControlContainer>
       <Button
         buttonType={ButtonType.Primary}
-        testID={testIdWithKey('SendVideo')}
+        testID={testIdWithKey(TestIds.verify.callBusyOrClosed.sendVideo)}
         accessibilityLabel={t('BCSC.VideoCall.CallBusyOrClosed.SendVideoInstead')}
         title={t('BCSC.VideoCall.CallBusyOrClosed.SendVideoInstead')}
         onPress={onPressSendVideo}
@@ -45,7 +46,7 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
       <ThemedText
         variant={'headingThree'}
         style={{ marginBottom: Spacing.lg }}
-        testID={testIdWithKey('CallStatusTitle')}
+        testID={testIdWithKey(TestIds.verify.callBusyOrClosed.callStatusTitle)}
       >
         {busy ? t('BCSC.VideoCall.CallBusyOrClosed.AllAgentsBusy') : t('BCSC.VideoCall.CallBusyOrClosed.CallUsLater')}
       </ThemedText>
@@ -59,7 +60,7 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
       <ThemedText
         variant={'headingFour'}
         style={{ marginBottom: Spacing.sm }}
-        testID={testIdWithKey('HoursOfServiceTitle')}
+        testID={testIdWithKey(TestIds.verify.callBusyOrClosed.hoursOfServiceTitle)}
       >
         {t('BCSC.VideoCall.CallBusyOrClosed.HoursOfService')}
       </ThemedText>
@@ -67,7 +68,11 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
         <ServicePeriodList items={formattedHours} />
       </View>
 
-      <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }} testID={testIdWithKey('ReminderTitle')}>
+      <ThemedText
+        variant={'headingFour'}
+        style={{ marginTop: Spacing.md }}
+        testID={testIdWithKey(TestIds.verify.callBusyOrClosed.reminderTitle)}
+      >
         {t('BCSC.VideoCall.CallBusyOrClosed.Reminder')}
       </ThemedText>
       <ThemedText>

@@ -118,6 +118,37 @@ jobs:
       - name: Format check
         run: yarn format:check
 
+  e2e-typecheck:
+    runs-on: ubuntu-latest
+    name: E2E Typecheck
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/workflows/actions/setup-node
+
+      # e2e is not a root workspace member, so it installs from its own lockfile into its own cache.
+      - name: Cache e2e Yarn cache
+        uses: actions/cache@v6
+        with:
+          path: e2e/.yarn/cache
+          key: ${{ runner.os }}-yarn-e2e-${{ hashFiles('e2e/yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-e2e-
+
+      # --mode=skip-build disables Yarn's lifecycle scripts, which are on by default in Yarn v2+.
+      # Several e2e devDependencies fetch from the network on postinstall (edgedriver/geckodriver
+      # download browsers, appium auto-installs extensions); a typecheck needs none of them.
+      - name: Install dependencies
+        working-directory: e2e
+        run: yarn install --immutable --mode=skip-build
+
+      # The suite compiles against app/src/test-ids/registry.ts, so a testID key renamed or deleted
+      # app-side fails here at PR time instead of minutes into a Sauce run behind a build cycle.
+      - name: Typecheck
+        working-directory: e2e
+        run: yarn typecheck
+
   test-ios:
     runs-on: macos-26
     name: Native Tests (iOS)

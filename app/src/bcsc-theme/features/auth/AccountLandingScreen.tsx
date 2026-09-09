@@ -5,6 +5,7 @@ import { NotificationBannerContainer } from '@/bcsc-theme/components/Notificatio
 import { useAuthentication } from '@/bcsc-theme/hooks/useAuthentication'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
@@ -41,7 +42,7 @@ const AccountLandingScreen = ({ navigation }: AccountLandingScreenProps) => {
         accessibilityLabel={t('BCSC.AccountLanding.Unlock')}
         title={t('BCSC.AccountLanding.Unlock')}
         onPress={handleAccountSelect}
-        testID={testIdWithKey('Unlock')}
+        testID={testIdWithKey(TestIds.auth.accountLanding.unlock)}
       />
     </ControlContainer>
   )

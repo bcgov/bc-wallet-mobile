@@ -6,7 +6,7 @@ _End-to-end tests for BC Wallet and BC Services Card apps using **WebDriverIO (W
 
 The suite is built on a typed **screen-object DSL** and **per-area journey files**. Core conventions:
 
-- **testID keys** live in `src/test-ids/registry.ts` — the exact keys the app passes to `testIdWithKey`. Never write `com.ariesbifold:id/...` literals; wrap registry keys with `bcsc(key)`.
+- **testID keys** live in the app-owned registry `app/src/test-ids/registry.ts`, re-exported here as `src/test-ids/registry.ts` — the exact keys the app passes to `testIdWithKey`. Never write `com.ariesbifold:id/...` literals; wrap registry keys with `bcsc(key)`.
 - **Screen descriptors** (`src/screens/<stack>.ts`) map semantic roles (`self`/`primary`/`secondary`/`back`/`help`/`menu` + named `links`/`inputs`/`elements`) to testIDs via `defineScreen`. Journeys call `tap('primary')`, `fill('pin', …)` — never raw selectors. `src/screens/main.ts` is the reference style.
 - **Arrange flows** (`src/flows/`) are how journeys earn preconditions — there is no app-side seeding: `completeOnboarding()`, `skipToHome()`, `unlockWithPin()`, `completeVerification()`. The VerifyPrompt exists **only in the session that completed onboarding**; never relaunch between onboarding and verify entry.
 - **Journeys** (`test/bcsc/<area>/*.journey.ts`): one file = one app session = one ordered journey of checkpoints, so a failure isolates to its file and reports per scenario. wdio `bail: 0` keeps files independent; `mochaOpts.bail: true` aborts the rest of a file on its first failure. See **[Writing Tests → Journeys](#journeys)** to add one.
@@ -397,7 +397,7 @@ export const OnboardingIntroScreen = defineScreen({
 })
 ```
 
-**_Single source of test IDs._** _Test ID **keys** and the_ `com.ariesbifold:id/` _prefix live in one dependency-free registry,_ `src/test-ids/registry.ts`_;_ `bcsc(key)` _wraps a key into the selector both platforms use. That key is the same one the app passes to bifold's_ `testIdWithKey`_, and the registry is written to move into an app-owned/shared location so the app and the tests draw from it — a renamed key then updates both, enforced by_ `tsc`_. Pass a_ `{ ios, android }` _pair instead of a bare key for the rare element whose id differs per platform._
+**_Single source of test IDs._** _Test ID **keys** and the_ `com.ariesbifold:id/` _prefix live in one dependency-free registry the app owns,_ `app/src/test-ids/registry.ts`_, re-exported here as_ `src/test-ids/registry.ts`_;_ `bcsc(key)` _wraps a key into the selector both platforms use. The app passes that same key to bifold's_ `testIdWithKey`_, so a rename is one edit and a key an e2e descriptor still uses cannot be dropped app-side without failing_ `tsc` _in PR CI. Pass a_ `{ ios, android }` _pair instead of a bare key for the rare element whose id differs per platform._
 
 > _**v3 native selectors:** the migration suite's v3 phase (`migration/v3-onboarding.spec.ts`) drives the **native v3 app** (pre-React-Native) via_ `src/v3TestIDs.ts` _— those aren't bifold_ `com.ariesbifold:id/` _keys, so they can't live in_ `registry.ts`_. Everything else — every journey, every screen descriptor, and both variants' smoke — uses the DSL +_ `registry.ts`_. (The old flat_ `BCSC_TestIDs` / `BCWallet_TestIDs` _registry and the deprecated_ `BaseScreen` _shim have been removed.)_
 
@@ -450,7 +450,7 @@ describe('Verified journey: photo card', () => {
 ### Adding a test
 
 - **A new checkpoint on an existing journey** — add an `it` that drives screen objects **by role**, placed so the preceding checkpoints leave the app in the state it needs. Assert arrival with `expectVisible()` before acting, and leave the app in a clean state for the next checkpoint.
-- **A new screen** — add a descriptor to `src/screens/<stack>.ts` and its testID keys to `src/test-ids/registry.ts`. The keys must match what the app passes to `testIdWithKey` — **verify against the app source** (`grep testIdWithKey app/src/...`), don't guess. Anchor `self` on a stable, always-present element. For a screen with **no** usable testID (e.g. an inline `<Link>` iOS flattens into its paragraph), assert arrival by heading copy with `engine.findByText('…')` and return via the header `back` — but note not every stack sets `headerBackTestID` (AuthStack doesn't), so confirm the back button is addressable before relying on it.
+- **A new screen** — add a descriptor to `src/screens/<stack>.ts` and any missing testID keys to the app-owned registry `app/src/test-ids/registry.ts`. The keys must match what the app passes to `testIdWithKey` — **verify against the app source**, don't guess. Anchor `self` on a stable, always-present element. For a screen with **no** usable testID (e.g. an inline `<Link>` iOS flattens into its paragraph), assert arrival by heading copy with `engine.findByText('…')` and return via the header `back` — but note not every stack sets `headerBackTestID` (AuthStack doesn't), so confirm the back button is addressable before relying on it.
 - **A new journey** — add a `*.journey.ts` under the matching `test/bcsc/<area>/` directory; the area suite globs it automatically. `setTestUser()` in a `before` hook, arrange preconditions via `src/flows/`, then chain the checkpoints.
 - **A new arrange flow** — if several journeys need the same UI-driven precondition, add it to `src/flows/<area>.ts` (used by ≥1 journey, reused by the rest) rather than duplicating steps.
 
@@ -652,7 +652,7 @@ _Place local builds in_ `e2e/apps/` _for local testing. See_ [`apps/README.md`](
 
 1. **_One test suite, many targets_** _— the same specs run locally and on SauceLabs. Config files are the only difference._
 2. **_Variant + suite driven_** _— the_ `VARIANT` _env var selects which test directory to run (e.g._ `test/bcsc/`_), while_ `--suite` _selects scope:_ `smoke` _for a quick sanity check, or a per-area journey suite (_`onboarding`_,_ `auth`_,_ `verify`_,_ `main`_) for that area's ordered journeys._
-3. **_Action-based screen objects_** _— specs drive screens by semantic role via typed descriptors (_`defineScreen`_, one file per stack under_ `src/screens/`_) on the_ `BaseScreen` _engine in_ `src/screens/core/`_. Test IDs come from one dependency-free registry (_`src/test-ids/registry.ts`_), so a renamed id is a single edit and undeclared roles fail at compile time._
+3. **_Action-based screen objects_** _— specs drive screens by semantic role via typed descriptors (_`defineScreen`_, one file per stack under_ `src/screens/`_) on the_ `BaseScreen` _engine in_ `src/screens/core/`_. Test IDs come from one dependency-free registry the app owns (_`app/src/test-ids/registry.ts`_), so a renamed id is a single edit and undeclared roles fail at compile time._
 4. **_Workspace package_** _—_ `e2e/` _is a Yarn workspace package with its own_ `package.json`_, isolated from_ `app/`_._
 
 ## _Directory Structure_
@@ -698,7 +698,7 @@ e2e/
 │   │   └── build.ts                         # report dirs → brief model (the CLI and the self-test share it)
 │   │
 │   ├── test-ids/
-│   │   └── registry.ts                      # single source of testID keys + com.ariesbifold:id/ prefix
+│   │   └── registry.ts                      # re-export of the app-owned registry (app/src/test-ids/)
 │   │
 │   ├── flows/                               # UI-driven arrange flows (earn preconditions; no seeding)
 │   │   ├── onboarding.ts                    # completeOnboarding, skipToHome, skipNotificationsIfShown

@@ -1,5 +1,6 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import usePreventGestureBack from '@/hooks/usePreventGestureBack'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StyleSheet } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
@@ -81,7 +82,7 @@ export const SystemModal = ({
         onPress={onButtonPress}
         disabled={buttonDisabled}
         accessibilityLabel={buttonText}
-        testID={testID ?? testIdWithKey('SystemModalButton')}
+        testID={testID ?? testIdWithKey(TestIds.systemModal.shared.button)}
       />
     </ControlContainer>
   )

@@ -1,3 +1,4 @@
+import { TestIds } from '@/test-ids/registry'
 import { ThemedText, testIdWithKey, useTheme } from '@bifold/core'
 import React, { useState } from 'react'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
@@ -120,7 +121,7 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
   return (
     <TouchableOpacity
       style={[{ ...styles.container, backgroundColor: bannerColor(type) }]}
-      testID={testIdWithKey(`button-${type}`)}
+      testID={testIdWithKey(`${TestIds.shared.appBanner.buttonPrefix}${type}`)}
       accessibilityLabel={a11yLabel(title || description || '')}
       accessibilityRole="button"
       onPress={() => {
@@ -135,7 +136,7 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
         size={24}
         color={type === 'warning' ? ColorPalette.brand.secondaryBackground : ColorPalette.grayscale.white}
         style={styles.icon}
-        testID={testIdWithKey(`icon-${type}`)}
+        testID={testIdWithKey(`${TestIds.shared.appBanner.iconPrefix}${type}`)}
       />
       <View style={styles.textContainer}>
         {title ? (
@@ -144,7 +145,7 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
             style={{
               color: type === 'warning' ? ColorPalette.brand.secondaryBackground : ColorPalette.grayscale.white,
             }}
-            testID={testIdWithKey(`text-${type}`)}
+            testID={testIdWithKey(`${TestIds.shared.appBanner.textPrefix}${type}`)}
           >
             {title}
           </ThemedText>
@@ -155,7 +156,7 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
               lineHeight: 24,
               color: type === 'warning' ? ColorPalette.brand.secondaryBackground : ColorPalette.grayscale.white,
             }}
-            testID={testIdWithKey(`description-${type}`)}
+            testID={testIdWithKey(`${TestIds.shared.appBanner.descriptionPrefix}${type}`)}
           >
             {description}
           </ThemedText>

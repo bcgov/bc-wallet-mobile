@@ -1,4 +1,5 @@
 import BulletPointWithText from '@/components/BulletPointWithText'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -29,7 +30,7 @@ const PINExplainer: React.FC<PINExplainerProps> = ({ continueCreatePIN }) => {
     <Button
       title={t('Global.Continue')}
       accessibilityLabel={t('Global.Continue')}
-      testID={testIdWithKey('ContinueCreatePIN')}
+      testID={testIdWithKey(TestIds.bcwallet.pinExplainer.continue)}
       onPress={continueCreatePIN}
       buttonType={ButtonType.Primary}
     />
