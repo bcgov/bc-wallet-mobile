@@ -2,6 +2,7 @@ import { ledgerResolver } from '@/configs/ledgers/indy/ledgerResolver'
 import { AppError, ErrorRegistry } from '@/errors'
 import { toBifoldError } from '@/errors/errorHandler'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import {
   InfoBox,
   InfoBoxType,
@@ -172,7 +173,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
   return (
     <SafeAreaView style={styles.screenContainer}>
       <ScrollView contentContainerStyle={styles.scrollContentContainer}>
-        <View style={styles.progressContainer} testID={testIdWithKey('LoadingActivityIndicator')}>
+        <View style={styles.progressContainer} testID={testIdWithKey(TestIds.common.splashProgress)}>
           <ProgressBar progressPercent={progressPercent} dark />
           <View style={styles.stepTextContainer}>
             <Text style={styles.stepText}>{stepText}</Text>
@@ -203,7 +204,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
           <Image
             source={Assets.img.logoPrimary.src}
             style={{ width: Assets.img.logoPrimary.width, height: Assets.img.logoPrimary.height }}
-            testID={testIdWithKey('LoadingActivityIndicatorImage')}
+            testID={testIdWithKey(TestIds.common.splashImage)}
           />
         </View>
       </ScrollView>

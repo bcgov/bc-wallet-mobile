@@ -1,3 +1,4 @@
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import { Animated, StyleSheet, TouchableOpacity } from 'react-native'
@@ -54,7 +55,9 @@ export const SavedServiceCard: React.FC<SavedServiceCardProps> = (props: SavedSe
                 onPress={props.onRemove}
                 accessibilityLabel={`${t('BCSC.Services.Remove')} ${props.title}`}
                 accessibilityRole="button"
-                testID={testIdWithKey(`RemoveService-${props.title.replaceAll(/\s+/g, '')}`)}
+                testID={testIdWithKey(
+                  `${TestIds.main.home.savedServiceRemovePrefix}${props.title.replaceAll(/\s+/g, '')}`
+                )}
               >
                 <Icon name="delete" size={40} />
               </TouchableOpacity>
@@ -68,7 +71,7 @@ export const SavedServiceCard: React.FC<SavedServiceCardProps> = (props: SavedSe
           onPress={props.onPress}
           accessibilityLabel={`${t('BCSC.Services.Open')} ${props.title}`}
           accessibilityRole="button"
-          testID={testIdWithKey(`OpenService-${props.title.replaceAll(/\s+/g, '')}`)}
+          testID={testIdWithKey(`${TestIds.main.home.savedServiceOpenPrefix}${props.title.replaceAll(/\s+/g, '')}`)}
         >
           <ThemedText>{props.title}</ThemedText>
         </TouchableOpacity>

@@ -14,6 +14,7 @@ import { AppEventCode } from '@/events/appEventCode'
 import { useAlerts } from '@/hooks/useAlerts'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { withAlert } from '@/utils/alert'
 import { MaskType, testIdWithKey, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -243,7 +244,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   return (
     <>
       {captureState === CaptureState.CAPTURING ? (
-        <View style={styles.container} testID={testIdWithKey('EvidenceCaptureScreenMaskedCamera')}>
+        <View style={styles.container} testID={testIdWithKey(TestIds.verify.evidenceCapture.maskedCamera)}>
           <MaskedCamera
             navigation={navigation}
             cameraFace={'back'}

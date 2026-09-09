@@ -2,6 +2,7 @@ import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useVerificationReset } from '@/bcsc-theme/hooks/useVerificationReset'
 import usePreventGestureBack from '@/hooks/usePreventGestureBack'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -73,7 +74,7 @@ const CancelledReview = ({ route }: CancelledReviewProps) => {
         onPress={preventDoublePress(retryWithNewVideo)}
         disabled={isPressing}
         accessibilityLabel={t('BCSC.CancelledVerification.RetryButton')}
-        testID={testIdWithKey('RetryWithNewVideo')}
+        testID={testIdWithKey(TestIds.verify.cancelledReview.retryWithNewVideo)}
       >
         <MaterialIcon name={'sensor-occupied'} size={24} color={ColorPalette.brand.primary} style={styles.buttonIcon} />
       </Button>
@@ -83,7 +84,7 @@ const CancelledReview = ({ route }: CancelledReviewProps) => {
         onPress={onPressRestart}
         disabled={isPressing}
         accessibilityLabel={t('BCSC.CancelledVerification.RestartButton')}
-        testID={testIdWithKey('RestartVerification')}
+        testID={testIdWithKey(TestIds.verify.cancelledReview.restartVerification)}
       >
         <CommunityIcon name={'restore'} size={24} color={ColorPalette.brand.primary} style={styles.buttonIcon} />
       </Button>

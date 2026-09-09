@@ -1,5 +1,6 @@
 import { useNotifications } from '@/hooks/notifications'
 import { useCustomNotifications } from '@/hooks/useCustomNotifications'
+import { TestIds } from '@/test-ids/registry'
 import {
   CredentialStack,
   OpenIDCredentialRecordProvider,
@@ -29,9 +30,9 @@ import { useCardStatus } from '../hooks/useCardStatus'
 import { BCSCMainStackParams, BCSCScreens, BCSCTabStackParams } from '../types/navigators'
 
 const ScopedCredentialStack: React.FC = () => (
-  <AgentReadyGate testID={testIdWithKey('Wallet.Loading')}>
+  <AgentReadyGate testID={testIdWithKey(TestIds.main.wallet.loading)}>
     <OpenIDCredentialRecordProvider>
-      <CredentialsReadyGate testID={testIdWithKey('Wallet.Loading')}>
+      <CredentialsReadyGate testID={testIdWithKey(TestIds.main.wallet.loading)}>
         <CredentialStack />
       </CredentialsReadyGate>
     </OpenIDCredentialRecordProvider>
@@ -246,7 +247,7 @@ const BCSCTabStack: React.FC = () => {
             tabBarIcon: createTabBarIcon('Home', 'home-outline'),
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: t('BCSC.Home.Title'),
-            tabBarTestID: testIdWithKey('Home'),
+            tabBarTestID: testIdWithKey(TestIds.main.tabBar.home),
             tabBarBadge: homeNotificationsBadgeCount,
             headerLeft: createMainSettingsHeaderButton(),
           }}
@@ -259,7 +260,7 @@ const BCSCTabStack: React.FC = () => {
             tabBarIcon: createTabBarIcon('Services', 'list-alt'),
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: 'Services',
-            tabBarTestID: testIdWithKey('Services'),
+            tabBarTestID: testIdWithKey(TestIds.main.tabBar.services),
             headerLeft: createMainSettingsHeaderButton(),
             title: t('BCSC.Services.Title'),
           }}
@@ -272,7 +273,7 @@ const BCSCTabStack: React.FC = () => {
             tabBarIcon: createTabBarIcon('Wallet', 'wallet'),
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: 'Wallet',
-            tabBarTestID: testIdWithKey('Wallet'),
+            tabBarTestID: testIdWithKey(TestIds.main.tabBar.wallet),
             headerLeft: createMainSettingsHeaderButton(),
             headerShown: true,
           }}

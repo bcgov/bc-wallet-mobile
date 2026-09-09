@@ -1,3 +1,4 @@
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -47,7 +48,7 @@ const Preface: React.FC = () => {
       <CheckBoxRow
         title={t('Preface.Confirmed')}
         accessibilityLabel={t('Terms.IAgree')}
-        testID={testIdWithKey('IAgree')}
+        testID={testIdWithKey(TestIds.bcwallet.preface.iAgree)}
         checked={checked}
         onPress={() => setChecked(!checked)}
         reverse
@@ -56,7 +57,7 @@ const Preface: React.FC = () => {
       <Button
         title={t('Global.Continue')}
         accessibilityLabel={t('Global.Continue')}
-        testID={testIdWithKey('Continue')}
+        testID={testIdWithKey(TestIds.bcwallet.preface.continue)}
         disabled={!checked}
         onPress={onSubmitPressed}
         buttonType={ButtonType.Primary}
@@ -69,7 +70,7 @@ const Preface: React.FC = () => {
       <Assets.svg.preface style={{ alignSelf: 'center', marginBottom: Spacing.lg }} height={200} />
       <Pressable
         onPress={incrementDeveloperMenuCounter}
-        testID={testIdWithKey('DeveloperCounter')}
+        testID={testIdWithKey(TestIds.developer.counter)}
         accessibilityLabel={t('Preface.PrimaryHeading')}
       >
         <Text style={TextTheme.headingTwo}>{t('Preface.PrimaryHeading')}</Text>

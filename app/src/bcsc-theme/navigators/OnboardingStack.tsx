@@ -1,5 +1,6 @@
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE } from '@/constants'
 import Developer from '@/screens/Developer'
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -48,7 +49,7 @@ const OnboardingStack = (): React.ReactElement => {
         title: '',
         headerShadowVisible: false,
         headerBackTitleVisible: false,
-        headerBackTestID: testIdWithKey('Back'),
+        headerBackTestID: testIdWithKey(TestIds.common.back),
         headerBackAccessibilityLabel: t('Global.Back'),
         headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
         headerLeft: createHeaderBackButton,

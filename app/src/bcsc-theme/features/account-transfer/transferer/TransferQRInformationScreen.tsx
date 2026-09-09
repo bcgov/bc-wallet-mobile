@@ -1,5 +1,6 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -27,7 +28,7 @@ const TransferQRInformationScreen: React.FC = () => {
         onPress={() => {
           navigation.navigate(BCSCScreens.TransferAccountQRDisplay)
         }}
-        testID={testIdWithKey('GetQRCodeButton')}
+        testID={testIdWithKey(TestIds.main.transfer.getQrCode)}
       />
     </ControlContainer>
   )
