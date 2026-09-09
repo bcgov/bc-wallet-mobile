@@ -7,6 +7,7 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { isCardEvidenceComplete } from '@/bcsc-theme/utils/card-utils'
 import { ICON_SIZE } from '@/constants'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { RouteProp, useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -311,7 +312,7 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
               <ListButton
                 key={item.evidence_type_label}
                 onPress={() => handleSelectEvidenceType(item)}
-                testID={testIdWithKey(`EvidenceTypeListItem-${item.evidence_type}`)}
+                testID={testIdWithKey(`${TestIds.verify.evidenceTypeList.itemStem}${item.evidence_type}`)}
                 accessibilityLabel={a11yShortLabel(item.evidence_type_label)}
               >
                 <View style={styles.listButtonContainer}>
@@ -330,7 +331,7 @@ const EvidenceTypeListScreen = ({ navigation, route }: EvidenceTypeListScreenPro
           <ListButtonGroup>
             <ListButton
               onPress={handleShowOtherOptions}
-              testID={testIdWithKey('EvidenceTypeListOtherOptions')}
+              testID={testIdWithKey(TestIds.verify.evidenceTypeList.otherOptions)}
               accessibilityLabel={a11yLabel(t('BCSC.EvidenceTypeList.ShowMoreOptions'))}
             >
               <View style={styles.listButtonContainer}>

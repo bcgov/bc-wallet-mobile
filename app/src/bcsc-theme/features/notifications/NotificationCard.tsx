@@ -1,4 +1,5 @@
 import { CLOSE_ICON_SIZE, hitSlop, ICON_CIRCLE_SIZE, ICON_INNER_SIZE, ICON_SIZE } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import { IColorPalette, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -45,7 +46,7 @@ export const NotificationIcon: React.FC<NotificationIconProps> = ({ logoUrl, ico
         accessible={false}
         source={{ uri: logoUrl }}
         style={styles.logoImage}
-        testID={testIdWithKey('NotificationLogo')}
+        testID={testIdWithKey(TestIds.main.notificationCard.logo)}
       />
     )
   }
@@ -79,7 +80,7 @@ export const DismissButton: React.FC<{ onClose: () => void }> = ({ onClose }) =>
     <TouchableOpacity
       accessibilityLabel={t('Global.Dismiss')}
       accessibilityRole="button"
-      testID={testIdWithKey('DismissNotification')}
+      testID={testIdWithKey(TestIds.main.notificationCard.dismiss)}
       onPress={onClose}
       hitSlop={hitSlop}
     >
@@ -163,8 +164,12 @@ const NotificationCard: React.FC<NotificationCardProps> = (props) => {
   const iconName = props.icon ?? cardStyle.defaultIcon
 
   return (
-    <Pressable onPress={props.onPress} accessibilityRole="button" testID={testIdWithKey('NotificationCardPressable')}>
-      <View style={styles.container} testID={testIdWithKey('NotificationListItem')}>
+    <Pressable
+      onPress={props.onPress}
+      accessibilityRole="button"
+      testID={testIdWithKey(TestIds.main.notificationCard.pressable)}
+    >
+      <View style={styles.container} testID={testIdWithKey(TestIds.main.notificationCard.item)}>
         <View style={styles.headerContainer}>
           <NotificationIcon
             logoUrl={props.logoUrl}
@@ -172,7 +177,11 @@ const NotificationCard: React.FC<NotificationCardProps> = (props) => {
             iconColor={iconColor}
             hideIconCircle={props.hideIconCircle}
           />
-          <ThemedText variant="bold" style={styles.headerText} testID={testIdWithKey('HeaderText')}>
+          <ThemedText
+            variant="bold"
+            style={styles.headerText}
+            testID={testIdWithKey(TestIds.main.notificationCard.headerText)}
+          >
             {props.title}
           </ThemedText>
           {props.onClose && <DismissButton onClose={props.onClose} />}
@@ -183,11 +192,11 @@ const NotificationCard: React.FC<NotificationCardProps> = (props) => {
               <ThemedText style={styles.badgeText}>{props.badge}</ThemedText>
             </View>
           )}
-          <ThemedText style={styles.bodyText} testID={testIdWithKey('BodyText')}>
+          <ThemedText style={styles.bodyText} testID={testIdWithKey(TestIds.main.notificationCard.bodyText)}>
             {props.description}
           </ThemedText>
           {props.timestamp && (
-            <ThemedText style={styles.timestampText} testID={testIdWithKey('TimestampText')}>
+            <ThemedText style={styles.timestampText} testID={testIdWithKey(TestIds.main.notificationCard.timestamp)}>
               {props.timestamp}
             </ThemedText>
           )}

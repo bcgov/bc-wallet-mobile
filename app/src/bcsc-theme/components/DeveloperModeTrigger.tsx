@@ -1,3 +1,4 @@
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, useDeveloperMode } from '@bifold/core'
 import React from 'react'
 import { Pressable, StyleProp, Vibration, ViewStyle } from 'react-native'
@@ -28,7 +29,7 @@ export const DeveloperModeTrigger: React.FC<DeveloperModeTriggerProps> = ({ onAc
       accessible={false}
       accessibilityElementsHidden={true}
       importantForAccessibility="no-hide-descendants"
-      testID={testIdWithKey('DeveloperCounter')}
+      testID={testIdWithKey(TestIds.developer.counter)}
     >
       {children}
     </Pressable>

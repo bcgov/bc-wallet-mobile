@@ -1,5 +1,6 @@
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { formatTime, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useHeaderHeight } from '@react-navigation/elements'
 import { RouteProp } from '@react-navigation/native'
@@ -209,7 +210,7 @@ const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
               <TouchableOpacity
                 accessibilityRole="button"
                 accessibilityLabel={t('Chat.ViewRequest')}
-                testID={testIdWithKey('ViewRequest')}
+                testID={testIdWithKey(TestIds.main.contactChat.viewRequest)}
                 onPress={item.onView}
                 style={styles.viewButton}
               >
@@ -271,7 +272,7 @@ const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
         {...props}
         textInputProps={{
           ...props.textInputProps,
-          testID: testIdWithKey('ChatComposer'),
+          testID: testIdWithKey(TestIds.main.contactChat.composer),
           accessibilityLabel: '',
           maxFontSizeMultiplier: 1.2,
           editable: isAgentReady,
@@ -290,7 +291,7 @@ const ContactChatScreen = ({ navigation, route }: ContactChatScreenProps) => {
         {...props}
         isSendButtonAlwaysVisible
         containerStyle={styles.sendContainer}
-        sendButtonProps={{ testID: testIdWithKey('SendMessage') }}
+        sendButtonProps={{ testID: testIdWithKey(TestIds.main.contactChat.send) }}
       >
         <Icon
           name="send"

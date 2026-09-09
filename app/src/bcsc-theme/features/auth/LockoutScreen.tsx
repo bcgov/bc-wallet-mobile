@@ -1,6 +1,7 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { useAuthentication } from '@/bcsc-theme/hooks/useAuthentication'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -110,7 +111,7 @@ export const LockoutScreen = ({ navigation }: LockoutScreenProps) => {
       buttonType={ButtonType.Critical}
       title={t('BCSC.Account.RemoveAccount')}
       accessibilityLabel={t('BCSC.Account.RemoveAccount')}
-      testID={testIdWithKey('RemoveAccount')}
+      testID={testIdWithKey(TestIds.auth.lockout.removeAccount)}
       onPress={onPressRemoveAccount}
       disabled={isLoading}
     >

@@ -1,6 +1,7 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -45,14 +46,14 @@ export const DeviceAuthAppResetScreen: React.FC = () => {
         buttonType={ButtonType.Primary}
         title={t('BCSC.AppReset.SetUpApp')}
         accessibilityLabel={t('BCSC.AppReset.SetUpApp')}
-        testID={testIdWithKey('SetUpApp')}
+        testID={testIdWithKey(TestIds.auth.deviceAuthAppReset.setUpApp)}
         onPress={onPressSetUpApp}
       />
       <Button
         buttonType={ButtonType.Secondary}
         title={t('BCSC.AppReset.LearnMore')}
         accessibilityLabel={t('BCSC.AppReset.LearnMore')}
-        testID={testIdWithKey('LearnMore')}
+        testID={testIdWithKey(TestIds.auth.deviceAuthAppReset.learnMore)}
         onPress={onPressLearnMore}
       />
     </>

@@ -4,6 +4,7 @@ import { Switch } from '@/components/Switch'
 import { BCThemeNames, Mode } from '@/constants'
 import { AutoCredentialMonitor } from '@/services/auto-credential'
 import { BCDispatchAction, BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import {
   CredentialProvisioningEventTypes,
   DispatchAction,
@@ -436,7 +437,7 @@ const Developer: React.FC = () => {
             value={devMode}
             onToggle={toggleSwitch}
             accessibilityLabel={t('Developer.Toggle')}
-            testID={testIdWithKey('ToggleDeveloper')}
+            testID={testIdWithKey(TestIds.developer.toggleDeveloper)}
           />
         </ListButtonGroup>
       </View>
@@ -468,7 +469,7 @@ const Developer: React.FC = () => {
                 onToggle={toggleShareableLinkSwitch}
                 disabled={!store.authentication.didAuthenticate}
                 accessibilityLabel={t('PasteUrl.UseShareableLink')}
-                testID={testIdWithKey('ToggleUseShareableLink')}
+                testID={testIdWithKey(TestIds.developer.toggleUseShareableLink)}
               />
             ),
             BCSCMode ? null : (
@@ -478,7 +479,7 @@ const Developer: React.FC = () => {
                 value={useVerifierCapability}
                 onToggle={toggleVerifierCapabilitySwitch}
                 accessibilityLabel={t('Verifier.Toggle')}
-                testID={testIdWithKey('ToggleVerifierCapability')}
+                testID={testIdWithKey(TestIds.developer.toggleVerifierCapability)}
               />
             ),
             BCSCMode ? null : (
@@ -488,7 +489,7 @@ const Developer: React.FC = () => {
                 value={acceptDevCredentials}
                 onToggle={toggleAcceptDevCredentialsSwitch}
                 accessibilityLabel={t('Verifier.Toggle')}
-                testID={testIdWithKey('ToggleAcceptDevCredentials')}
+                testID={testIdWithKey(TestIds.developer.toggleAcceptDevCredentials)}
               />
             ),
             BCSCMode ? null : (
@@ -498,7 +499,7 @@ const Developer: React.FC = () => {
                 value={useConnectionInviterCapability}
                 onToggle={toggleConnectionInviterCapabilitySwitch}
                 accessibilityLabel={t('Connection.Toggle')}
-                testID={testIdWithKey('ToggleConnectionInviterCapabilitySwitch')}
+                testID={testIdWithKey(TestIds.developer.toggleConnectionInviterCapability)}
               />
             ),
             BCSCMode ? null : (
@@ -508,7 +509,7 @@ const Developer: React.FC = () => {
                 value={useDevVerifierTemplates}
                 onToggle={toggleDevVerifierTemplatesSwitch}
                 accessibilityLabel={t('Verifier.ToggleDevTemplates')}
-                testID={testIdWithKey('ToggleDevVerifierTemplatesSwitch')}
+                testID={testIdWithKey(TestIds.developer.toggleDevVerifierTemplates)}
               />
             ),
             !BCSCMode && !store.onboarding.didCreatePIN ? (
@@ -518,7 +519,7 @@ const Developer: React.FC = () => {
                 value={enableWalletNaming}
                 onToggle={toggleWalletNamingSwitch}
                 accessibilityLabel={t('NameWallet.ToggleWalletNaming')}
-                testID={testIdWithKey('ToggleWalletNamingSwitch')}
+                testID={testIdWithKey(TestIds.developer.toggleWalletNaming)}
               />
             ) : null,
             BCSCMode ? null : (
@@ -528,7 +529,7 @@ const Developer: React.FC = () => {
                 value={preventAutoLock}
                 onToggle={togglePreventAutoLockSwitch}
                 accessibilityLabel={t('Settings.TogglePreventAutoLock')}
-                testID={testIdWithKey('TogglePreventAutoLockSwitch')}
+                testID={testIdWithKey(TestIds.developer.togglePreventAutoLock)}
               />
             ),
             BCSCMode ? null : (
@@ -538,7 +539,7 @@ const Developer: React.FC = () => {
                 value={enableAppToAppPersonFlow}
                 onToggle={toggleEnableAppToAppPersonFlowSwitch}
                 accessibilityLabel={t('Developer.EnableAppToAppPersonFlow')}
-                testID={testIdWithKey('ToggleEnableAppToAppPersonFlow')}
+                testID={testIdWithKey(TestIds.developer.toggleEnableAppToAppPersonFlow)}
               />
             ),
           ]}
@@ -553,7 +554,7 @@ const Developer: React.FC = () => {
             value={!!remoteLoggingEnabled}
             onToggle={toggleRemoteLoggingSwitch}
             accessibilityLabel={t('RemoteLogging.ScreenTitle')}
-            testID={testIdWithKey('ToggleRemoteLoggingSwitch')}
+            testID={testIdWithKey(TestIds.developer.toggleRemoteLogging)}
             subContent={
               remoteLoggingEnabled ? (
                 <RowDetail label={t('RemoteLogging.SessionID')} value={logger.sessionId.toString()} />
@@ -565,14 +566,14 @@ const Developer: React.FC = () => {
             value={enableProxy}
             onToggle={toggleEnableProxySwitch}
             accessibilityLabel={t('Developer.EnableProxy')}
-            testID={testIdWithKey('ToggleEnableProxy')}
+            testID={testIdWithKey(TestIds.developer.toggleEnableProxy)}
           />
           <ToggleRow
             title={t('Developer.SwitchTheme')}
             value={themeName === BCThemeNames.Dark}
             onToggle={toggleTheme}
             accessibilityLabel={t('Developer.SwitchTheme')}
-            testID={testIdWithKey('ToggleTheme')}
+            testID={testIdWithKey(TestIds.developer.toggleTheme)}
           />
         </ListButtonGroup>
       </View>
@@ -585,14 +586,14 @@ const Developer: React.FC = () => {
               <ListButton
                 onPress={() => setErrorAlertTestModalVisible(true)}
                 accessibilityLabel={t('Developer.ErrorAlertTest')}
-                testID={testIdWithKey('ErrorAlertTest')}
+                testID={testIdWithKey(TestIds.developer.errorAlertTest)}
               >
                 <Row title={t('Developer.ErrorAlertTest')} />
               </ListButton>
               <ListButton
                 onPress={staleTermsOfUseAcceptance}
                 accessibilityLabel={t('Developer.StaleTermsOfUse')}
-                testID={testIdWithKey('StaleTermsOfUse')}
+                testID={testIdWithKey(TestIds.developer.staleTermsOfUse)}
               >
                 <Row
                   title={t('Developer.StaleTermsOfUse')}
@@ -608,7 +609,7 @@ const Developer: React.FC = () => {
               <ListButton
                 onPress={resetOnboardingIntro}
                 accessibilityLabel={t('Developer.ResetOnboardingIntro')}
-                testID={testIdWithKey('ResetOnboardingIntro')}
+                testID={testIdWithKey(TestIds.developer.resetOnboardingIntro)}
               >
                 <Row
                   title={t('Developer.ResetOnboardingIntro')}
@@ -624,7 +625,7 @@ const Developer: React.FC = () => {
               <ListButton
                 onPress={deleteTokens}
                 accessibilityLabel={t('Developer.DeleteTokens')}
-                testID={testIdWithKey('DeleteTokens')}
+                testID={testIdWithKey(TestIds.developer.deleteTokens)}
               >
                 <Row
                   title={t('Developer.DeleteTokens')}
@@ -634,7 +635,7 @@ const Developer: React.FC = () => {
               </ListButton>
               <ListButton
                 accessibilityLabel={t('Developer.FetchPersonCredentialTest')}
-                testID={testIdWithKey('FetchPersonCredentialTest')}
+                testID={testIdWithKey(TestIds.developer.fetchPersonCredentialTest)}
                 onPress={fetchPersonCredentialTest}
               >
                 <Row

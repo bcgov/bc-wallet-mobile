@@ -6,6 +6,7 @@ import { createTermsOfUseHtml, stripOuterDocumentTags } from '@/bcsc-theme/utils
 import { useErrorAlert } from '@/contexts/ErrorAlertContext'
 import { ensureAppError } from '@/errors/errorHandler'
 import { AppEventCode } from '@/events/appEventCode'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -138,7 +139,7 @@ export const TermsOfUseContent = ({ onAccept, headerText }: TermsOfUseContentPro
             title={t('Init.Retry')}
             buttonType={ButtonType.Primary}
             onPress={fetchTermsOfUse}
-            testID={testIdWithKey('RetryTermsOfUse')}
+            testID={testIdWithKey(TestIds.onboarding.termsOfUse.retry)}
             accessibilityLabel={a11yLabel(t('Init.Retry'))}
             disabled={isLoading}
           />
@@ -151,7 +152,7 @@ export const TermsOfUseContent = ({ onAccept, headerText }: TermsOfUseContentPro
                 await onAccept(termsOfUse)
               }
             }}
-            testID={testIdWithKey('AcceptAndContinue')}
+            testID={testIdWithKey(TestIds.onboarding.termsOfUse.acceptAndContinue)}
             accessibilityLabel={a11yLabel(t('BCSC.Onboarding.AcceptAndContinueButton'))}
             disabled={!webViewIsLoaded || isLoading}
           />

@@ -1,5 +1,6 @@
 import { WaitingScreenContent } from '@/bcsc-theme/components/WaitingScreenContent'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, testIdWithKey } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useEffect, useState } from 'react'
@@ -45,7 +46,7 @@ const UploadingScreen = ({ navigation }: UploadingScreenProps) => {
         buttonType={ButtonType.Secondary}
         onPress={handleCancel}
         disabled={!canCancel || isCancelling}
-        testID={testIdWithKey('CancelUpload')}
+        testID={testIdWithKey(TestIds.verify.evidenceUploading.cancelUpload)}
         title={t('Global.Cancel')}
         accessibilityLabel={t('Global.Cancel')}
       />
@@ -57,7 +58,7 @@ const UploadingScreen = ({ navigation }: UploadingScreenProps) => {
       message={t('BCSC.SendVideo.UploadProgress.UploadingInformation')}
       statusMessage={uploadMessage ?? t('BCSC.SendVideo.UploadProgress.PreparingVideo')}
       progressPercent={progressPercent}
-      testID={testIdWithKey('UploadingScreen')}
+      testID={testIdWithKey(TestIds.verify.evidenceUploading.screen)}
       controls={controls}
     />
   )

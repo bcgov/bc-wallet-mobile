@@ -4,6 +4,7 @@ import { LoadingPresentation, useLoadingScreen } from '@/bcsc-theme/contexts/BCS
 import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl, PIN_LENGTH } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -124,7 +125,7 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         buttonType={ButtonType.Primary}
         title={t('Global.Continue')}
         accessibilityLabel={t('Global.Continue')}
-        testID={testIdWithKey('Continue')}
+        testID={testIdWithKey(TestIds.auth.enterPin.continue)}
         disabled={loading}
         onPress={onPressContinue}
       >
@@ -134,7 +135,7 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
         buttonType={ButtonType.Secondary}
         title={t('Global.GetHelp')}
         accessibilityLabel={a11yLabel(t('Global.GetHelp'))}
-        testID={testIdWithKey('GetHelp')}
+        testID={testIdWithKey(TestIds.auth.enterPin.getHelp)}
         onPress={onPressGetHelp}
       />
     </ControlContainer>
@@ -145,7 +146,7 @@ export const EnterPINScreen = ({ navigation }: EnterPINScreenProps) => {
       <View style={{ gap: Spacing.sm }}>
         <ThemedText variant={'bold'}>{`Enter your 6-digit PIN`}</ThemedText>
         <PINInput
-          testIDKey="PINInput"
+          testIDKey={TestIds.auth.enterPin.pin}
           onPINChange={handlePINChange}
           onPINComplete={handlePINComplete}
           errorMessage={errorMessage}

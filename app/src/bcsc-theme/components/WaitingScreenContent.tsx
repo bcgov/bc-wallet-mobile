@@ -1,4 +1,5 @@
 import ProgressBar from '@/components/ProgressBar'
+import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { ReactNode, useState } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
@@ -86,7 +87,7 @@ export const WaitingScreenContent = ({
       <ScrollView
         style={styles.viewport}
         contentContainerStyle={styles.content}
-        testID={testIdWithKey('WaitingScreenContentViewport')}
+        testID={testIdWithKey(TestIds.common.waitingScreenViewport)}
         onLayout={({ nativeEvent }) => {
           if (nativeEvent.layout.height > 0) {
             setViewportHeight(nativeEvent.layout.height)
@@ -96,7 +97,7 @@ export const WaitingScreenContent = ({
         <View style={styles.header}>
           <View
             style={styles.loading}
-            testID={testIdWithKey('WaitingScreenContentStatus')}
+            testID={testIdWithKey(TestIds.common.waitingScreenStatus)}
             onLayout={({ nativeEvent }) => {
               if (nativeEvent.layout.height > 0) {
                 setLoadingHeight(nativeEvent.layout.height)

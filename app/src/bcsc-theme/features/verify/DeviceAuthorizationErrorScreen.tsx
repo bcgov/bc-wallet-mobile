@@ -1,4 +1,5 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { TestIds } from '@/test-ids/registry'
 import { openLink } from '@/utils/links'
 import { Button, ButtonType, ColorPalette, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { RouteProp, useRoute } from '@react-navigation/native'
@@ -23,7 +24,7 @@ const DeviceAuthorizationErrorScreen = () => {
         title=""
         accessibilityLabel={t(config.buttonTextKey)}
         accessibilityHint={t('Global.A11y.OpensInBrowser')}
-        testID={testIdWithKey('DeviceAuthorizationErrorLink')}
+        testID={testIdWithKey(TestIds.verify.deviceAuthorizationError.link)}
         buttonType={ButtonType.Primary}
         onPress={() => openLink(config.buttonUrl)}
       >

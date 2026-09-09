@@ -1,6 +1,7 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { useAuthentication } from '@/bcsc-theme/hooks/useAuthentication'
 import { BCSCAuthStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -51,7 +52,7 @@ export const ConfirmDeviceAuthInfoScreen: React.FC<ConfirmDeviceAuthInfoScreenPr
         <CheckBoxRow
           title={t('BCSC.ConfirmDeviceAuth.CheckboxLabel')}
           accessibilityLabel={t('BCSC.ConfirmDeviceAuth.CheckboxLabel')}
-          testID={testIdWithKey('HideConfirmationCheckbox')}
+          testID={testIdWithKey(TestIds.auth.confirmDeviceAuthInfo.hideConfirmation)}
           checked={checked}
           onPress={() => setChecked(!checked)}
           reverse
@@ -63,7 +64,7 @@ export const ConfirmDeviceAuthInfoScreen: React.FC<ConfirmDeviceAuthInfoScreenPr
           buttonType={ButtonType.Primary}
           title={t('Global.Continue')}
           accessibilityLabel={t('Global.Continue')}
-          testID={testIdWithKey('Continue')}
+          testID={testIdWithKey(TestIds.auth.confirmDeviceAuthInfo.continue)}
           onPress={onPressContinue}
         />
       </ControlContainer>

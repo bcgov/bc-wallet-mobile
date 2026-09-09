@@ -1,4 +1,5 @@
 import { surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, testIdWithKey, useTheme } from '@bifold/core'
 import WebDisplay from '@screens/WebDisplay'
 import React, { PropsWithChildren, useState } from 'react'
@@ -32,7 +33,7 @@ const HomeFooterView = ({ children }: HomeFooterViewProps) => {
       <Button
         title={t('Feedback.GiveFeedback')}
         accessibilityLabel={t('Feedback.GiveFeedback')}
-        testID={testIdWithKey('GiveFeedback')}
+        testID={testIdWithKey(TestIds.bcwallet.home.giveFeedback)}
         onPress={toggleSurveyVisibility}
         buttonType={ButtonType.Secondary}
       >

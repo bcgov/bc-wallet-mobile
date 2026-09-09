@@ -1,6 +1,7 @@
 import { PressableOpacity } from '@/components/PressableOpacity'
 import { CONTACT_US_HELP_URL, hitSlop, USER_REPORT_ERROR_CODE } from '@/constants'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { reportProblem } from '@/utils/logger'
 import { Button, ButtonType, Link, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import Clipboard from '@react-native-clipboard/clipboard'
@@ -196,7 +197,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
           placeholder={t('BCSC.ReportProblem.DescriptionPlaceholder')}
           placeholderTextColor={ColorPalette.grayscale.mediumGrey}
           accessibilityLabel={t('BCSC.ReportProblem.DescriptionLabel')}
-          testID={testIdWithKey('ReportProblemDescription')}
+          testID={testIdWithKey(TestIds.reportProblem.description)}
         />
       </View>
 
@@ -220,7 +221,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
       <Button
         title={t('BCSC.ReportProblem.Submit')}
         accessibilityLabel={t('BCSC.ReportProblem.Submit')}
-        testID={testIdWithKey('ReportProblemSubmit')}
+        testID={testIdWithKey(TestIds.reportProblem.submit)}
         buttonType={ButtonType.Primary}
         onPress={handleSubmit}
         disabled={!canSubmit}
@@ -252,7 +253,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
             style={styles.reportIdValue}
             selectable
             accessibilityLabel={`${t('BCSC.ReportProblem.ReportIdLabel')}: ${reportId}`}
-            testID={testIdWithKey('ReportProblemReportId')}
+            testID={testIdWithKey(TestIds.reportProblem.reportId)}
           >
             {reportId}
           </ThemedText>
@@ -262,7 +263,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
           onPress={handleCopy}
           accessibilityRole="button"
           accessibilityLabel={copied ? t('Error.CodeCopied') : t('Error.CopyCode')}
-          testID={testIdWithKey('ReportProblemCopyReportId')}
+          testID={testIdWithKey(TestIds.reportProblem.copyReportId)}
         >
           <CommunityIcon name={copied ? 'check' : 'content-copy'} size={20} color={ColorPalette.brand.primary} />
           <ThemedText style={styles.copyButtonText}>{copied ? t('Error.CodeCopied') : t('Error.CopyCode')}</ThemedText>
@@ -274,7 +275,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
       <Button
         title={t('Global.Done')}
         accessibilityLabel={t('Global.Done')}
-        testID={testIdWithKey('ReportProblemDone')}
+        testID={testIdWithKey(TestIds.reportProblem.done)}
         buttonType={ButtonType.Primary}
         onPress={handleClose}
       />
@@ -287,7 +288,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
       transparent
       animationType="slide"
       onRequestClose={handleClose}
-      testID={testIdWithKey('ReportProblemModal')}
+      testID={testIdWithKey(TestIds.reportProblem.modal)}
     >
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={styles.root}>
@@ -306,7 +307,7 @@ export const ReportProblemModal = ({ visible, onClose }: ReportProblemModalProps
                 hitSlop={hitSlop}
                 accessibilityRole="button"
                 accessibilityLabel={t('Global.Close')}
-                testID={testIdWithKey('ReportProblemClose')}
+                testID={testIdWithKey(TestIds.reportProblem.close)}
               >
                 <Icon name="close" size={24} color={ColorPalette.brand.headerText} />
               </PressableOpacity>

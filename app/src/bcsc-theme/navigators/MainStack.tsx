@@ -1,4 +1,5 @@
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl, SYSTEM_CHECK_LOADING_GATE_MAX_WAIT_MS } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import {
   CredentialDetails,
   Screens,
@@ -78,7 +79,7 @@ const ScopedCredentialDetails = (props: CredentialDetailsProps) => {
   const { t } = useTranslation()
   const navigation = useMemo(() => createBifoldNavigationAdapter(props.navigation, { t }), [props.navigation, t])
   return (
-    <AgentReadyGate testID={testIdWithKey('CredentialDetails.Loading')}>
+    <AgentReadyGate testID={testIdWithKey(TestIds.credential.details.loading)}>
       <CredentialDetails {...props} navigation={navigation} />
     </AgentReadyGate>
   )
@@ -91,10 +92,16 @@ const VerifyPromptScreenNoSkip = () => <VerifyPromptScreen showSkip={false} />
 // Gate them so an early mount — a cold-start quick-tap into Settings → Contacts,
 // or navigation state restoring onto a deep contact screen — shows the loading/
 // retry state instead of crashing on a missing ConnectionProvider.
-const ScopedContacts = withAgentReadyGate(ContactsScreen, testIdWithKey('Contacts.Loading'))
-const ScopedContactDetails = withAgentReadyGate(ContactDetailsScreen, testIdWithKey('ContactDetails.Loading'))
-const ScopedEditContactName = withAgentReadyGate(EditContactNameScreen, testIdWithKey('EditContactName.Loading'))
-const ScopedRemoveContact = withAgentReadyGate(RemoveContactScreen, testIdWithKey('RemoveContact.Loading'))
+const ScopedContacts = withAgentReadyGate(ContactsScreen, testIdWithKey(TestIds.main.contacts.loading))
+const ScopedContactDetails = withAgentReadyGate(
+  ContactDetailsScreen,
+  testIdWithKey(TestIds.main.contactDetails.loading)
+)
+const ScopedEditContactName = withAgentReadyGate(
+  EditContactNameScreen,
+  testIdWithKey(TestIds.main.contactEditName.loading)
+)
+const ScopedRemoveContact = withAgentReadyGate(RemoveContactScreen, testIdWithKey(TestIds.main.contactRemove.loading))
 
 /**
  * Holds the startup loading screen until the system checks that decide the Home notification card
@@ -204,7 +211,7 @@ const MainStack: React.FC = () => {
             ...defaultStackOptions,
             headerShown: false,
             title: '',
-            headerBackTestID: testIdWithKey('Back'),
+            headerBackTestID: testIdWithKey(TestIds.common.back),
             headerShadowVisible: false,
             headerBackTitleVisible: false,
             headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
