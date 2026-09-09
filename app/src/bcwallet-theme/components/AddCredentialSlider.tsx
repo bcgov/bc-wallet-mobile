@@ -1,5 +1,6 @@
 import { showPersonCredentialSelector } from '@/bcwallet-theme/features/person-flow/utils/BCIDHelper'
 import { hitSlop } from '@/constants'
+import { TestIds } from '@/test-ids/registry'
 import { SafeAreaModal, Screens, Stacks, testIdForAccessabilityLabel, testIdWithKey, useTheme } from '@bifold/core'
 import { useCredentialByState } from '@bifold/react-hooks'
 import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds'
@@ -114,12 +115,12 @@ export default function AddCredentialSlider() {
         onPress={deactivateSlider}
         accessibilityLabel={t('BCID.DismissMenu')}
         accessibilityRole="button"
-        testID={testIdWithKey('DismissAddCredentialSlider')}
+        testID={testIdWithKey(TestIds.bcwallet.addCredentialSlider.dismiss)}
       />
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
           <TouchableOpacity
-            testID={testIdWithKey('Close')}
+            testID={testIdWithKey(TestIds.bcwallet.addCredentialSlider.close)}
             accessibilityLabel={t('Global.Close')}
             accessibilityRole={'button'}
             onPress={deactivateSlider}

@@ -1,3 +1,4 @@
+import { TestIds } from '@/test-ids/registry'
 import EmptyWallet from '@assets/img/emptyWallet.svg'
 import { Button, ButtonType, testIdWithKey, useTheme } from '@bifold/core'
 import React, { useCallback, useEffect, useState } from 'react'
@@ -30,14 +31,17 @@ const EmptyList = ({ message }: EmptyListProps) => {
   return (
     <View style={{ marginTop: 100, height: '100%' }}>
       <EmptyWallet height={200} />
-      <Text style={[ListItems.emptyList, { textAlign: 'center' }]} testID={testIdWithKey('NoneYet')}>
+      <Text
+        style={[ListItems.emptyList, { textAlign: 'center' }]}
+        testID={testIdWithKey(TestIds.bcwallet.emptyList.noneYet)}
+      >
         {message || t('Global.NoneYet!')}
       </Text>
       <View style={{ margin: 25 }}>
         <Button
           title={t('Credentials.AddFirstCredential')}
           accessibilityLabel={t('Credentials.AddFirstCredential')}
-          testID={testIdWithKey('AddFirstCredential')}
+          testID={testIdWithKey(TestIds.bcwallet.emptyList.addFirstCredential)}
           buttonType={ButtonType.Primary}
           onPress={addCredentialPress}
           disabled={addCredentialPressed}

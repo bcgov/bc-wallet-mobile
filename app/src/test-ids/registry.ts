@@ -41,6 +41,9 @@ export const TestIds = {
     loadingOverlay: 'BCSCLoadingProviderOverlay',
     loadingChildren: 'BCSCLoadingProviderChildren',
     agentRetry: 'AgentRetry',
+    // `screens/Splash.tsx` — the pre-container boot screen, before any stack mounts.
+    splashProgress: 'LoadingActivityIndicator',
+    splashImage: 'LoadingActivityIndicatorImage',
     // `SettingsHeaderButton`, the header-left menu on onboarding, auth and main. The per-mount
     // entries (`onboarding.intro.settings`, `auth.accountLanding.settings`, `main.header.settings`)
     // are the SAME id, kept where specs look for them; this is the one the component references.
@@ -61,6 +64,18 @@ export const TestIds = {
     details: 'DetailsText', // "Error code N - message", rendered only once ShowDetails is pressed
     title: 'HeaderText',
     body: 'BodyText',
+    /** Optional recovery CTA the raising screen supplies (retry, go back, …). */
+    action: 'ActionButton',
+    /** Report-a-problem controls ON THE CARD — distinct ids from the help-menu `reportProblem` modal.
+     *  `reportThisProblem` flips to a 'Reported' label in place; `reportId`/`reportIdValue` and
+     *  `copyReportId` appear only once a report has been filed. */
+    reportThisProblem: 'ReportThisProblem',
+    reportNote: 'ReportNote',
+    reportId: 'ReportId',
+    reportIdValue: 'ReportIdValue',
+    copyReportId: 'CopyReportId',
+    supportLink: 'SupportLink',
+    versionNumber: 'VersionNumber',
   },
 
   /**
@@ -944,6 +959,30 @@ export const TestIds = {
     resetOnboardingIntro: 'ResetOnboardingIntro',
     /** Deletes the refresh/registration/access tokens from the native keychain. */
     deleteTokens: 'DeleteTokens',
+    /** Feature-flag switches, in screen order. Each toggles a store flag immediately; none confirm. */
+    toggleUseShareableLink: 'ToggleUseShareableLink',
+    toggleVerifierCapability: 'ToggleVerifierCapability',
+    toggleAcceptDevCredentials: 'ToggleAcceptDevCredentials',
+    toggleConnectionInviterCapability: 'ToggleConnectionInviterCapabilitySwitch',
+    toggleDevVerifierTemplates: 'ToggleDevVerifierTemplatesSwitch',
+    toggleWalletNaming: 'ToggleWalletNamingSwitch',
+    togglePreventAutoLock: 'TogglePreventAutoLockSwitch',
+    toggleEnableAppToAppPersonFlow: 'ToggleEnableAppToAppPersonFlow',
+    toggleRemoteLogging: 'ToggleRemoteLoggingSwitch',
+    toggleEnableProxy: 'ToggleEnableProxy',
+    toggleTheme: 'ToggleTheme',
+    /** Raises a deliberate error so the ErrorInfoCard path can be exercised by hand. */
+    errorAlertTest: 'ErrorAlertTest',
+    fetchPersonCredentialTest: 'FetchPersonCredentialTest',
+    /** `EnvironmentSelector` — the rows are `testIdWithKey(name.toLowerCase())` over the configured
+     *  environments, so they are DATA-derived and have no fixed key; only the cancel control does. */
+    environmentSelectorCancel: 'Cancel',
+    /** `RemoteLogWarning` — the consent screen before remote logging is switched on. */
+    remoteLogWarning: {
+      back: 'BackButton',
+      agree: 'IAgree',
+      turnOn: 'TurnOn',
+    },
   },
 
   /** BC Wallet variant — the Preface + onboarding-carousel intro screens (bifold `com.ariesbifold:id/`
@@ -958,6 +997,46 @@ export const TestIds = {
       next: 'Next',
       back: 'Back',
       getStarted: 'GetStarted',
+    },
+    /** Container-wired intro screens (`container-imp.ts`), the bifold versions — BCSC has its own
+     *  `onboarding.termsOfUse` / `onboarding.createPin` equivalents. */
+    terms: {
+      accept: 'Accept',
+    },
+    pinExplainer: {
+      continue: 'ContinueCreatePIN',
+    },
+    /** Home chrome: the session-id debug banner, the add-credential entry, and the feedback footer. */
+    home: {
+      sessionIdBanner: 'SessionIdBanner',
+      addCredential: 'AddCredential',
+      giveFeedback: 'GiveFeedback',
+    },
+    /** Empty wallet list. */
+    emptyList: {
+      noneYet: 'NoneYet',
+      addFirstCredential: 'AddFirstCredential',
+    },
+    /** Add-credential sheet. Its two option rows are i18n-DERIVED
+     *  (`testIdForAccessabilityLabel(t(...))`), so they break under a locale change and have no key. */
+    addCredentialSlider: {
+      dismiss: 'DismissAddCredentialSlider',
+      close: 'Close',
+    },
+    /** Person-credential flow (`features/person-flow`). `installApp` / `appOnOtherDevice` render on the
+     *  branch where the BC Services Card app is absent; `appInstalledIcon` on the branch where it is. */
+    personCredential: {
+      appInstalledIcon: 'AppInstalledIcon',
+      installApp: 'InstallApp',
+      appOnOtherDevice: 'AppOnOtherDevice',
+      startProcess: 'StartProcess',
+      whatIsPersonCredential: 'WhatIsPersonCredentialLink',
+      whereToUse: 'WhereToUse',
+      help: 'Help',
+    },
+    personCredentialLoading: {
+      requestProcessing: 'RequestProcessing',
+      backToPersonScreen: 'BackToPersonScreen',
     },
   },
 } as const

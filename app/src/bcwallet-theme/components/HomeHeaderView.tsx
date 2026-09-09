@@ -1,3 +1,4 @@
+import { TestIds } from '@/test-ids/registry'
 import { Screens, Stacks, testIdWithKey, useTheme } from '@bifold/core'
 import { useAgent } from '@bifold/react-hooks'
 import { RemoteLogger } from '@bifold/remote-logs'
@@ -35,7 +36,7 @@ const HomeHeaderView = () => {
   return logger?.remoteLoggingEnabled ? (
     <Pressable
       onPress={onPressBanner}
-      testID={testIdWithKey('SessionIdBanner')}
+      testID={testIdWithKey(TestIds.bcwallet.home.sessionIdBanner)}
       accessibilityLabel={a11yLabel(t('RemoteLogging.Banner', { sessionId: logger.sessionId.toString() }))}
       accessibilityRole="button"
     >
