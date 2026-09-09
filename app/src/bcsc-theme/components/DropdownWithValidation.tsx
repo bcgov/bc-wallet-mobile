@@ -135,11 +135,12 @@ export const DropdownWithValidation = <T extends string | number>({
 
   const handleSelect = (selectedValue: T) => {
     onChange(selectedValue)
-    setIsOpen(false)
+    handleClose()
   }
 
   const handleClose = () => {
     setIsOpen(false)
+    onModalClose?.()
   }
 
   const renderOption = ({ item, index }: { item: DropdownOption<T>; index: number }) => {
@@ -209,7 +210,7 @@ export const DropdownWithValidation = <T extends string | number>({
         </ThemedText>
       ) : null}
 
-      <Modal visible={isOpen} transparent animationType="slide" onRequestClose={handleClose} onDismiss={onModalClose}>
+      <Modal visible={isOpen} transparent animationType="slide" onRequestClose={handleClose}>
         <View
           style={[styles.modalContent, { paddingTop: insets.top, paddingBottom: insets.bottom }]}
           testID={testIdWithKey(`${id}${TestIds.shared.field.modalContent}`)}
