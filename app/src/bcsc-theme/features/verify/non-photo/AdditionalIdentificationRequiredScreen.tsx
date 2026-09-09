@@ -2,6 +2,7 @@ import { BulletedInstructionsScreen } from '@/bcsc-theme/components/BulletedInst
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { ACCOUNT_SERVICES_URL } from '@/constants'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import { openLink } from '@/utils/links'
 import { testIdWithKey, useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -36,7 +37,7 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
           paragraph: t('BCSC.AdditionalEvidence.LimitedAccessDescription'),
           footerLink: {
             label: t('BCSC.AdditionalEvidence.WhichServices'),
-            testID: testIdWithKey('WhichServices'),
+            testID: testIdWithKey(TestIds.verify.additionalIdRequired.whichServices),
             externalButton: true,
             onPress: () => openLink(ACCOUNT_SERVICES_URL),
           },

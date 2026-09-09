@@ -6,6 +6,7 @@ import { formatServiceAndUnavailableHours, FormattedServicePeriod } from '@/bcsc
 import BulletPointWithText from '@/components/BulletPointWithText'
 import { useAlerts } from '@/hooks/useAlerts'
 import { BCState } from '@/store'
+import { TestIds } from '@/test-ids/registry'
 import {
   Button,
   ButtonType,
@@ -145,7 +146,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
         accessibilityLabel={t('BCSC.VideoCall.StartVideoCall')}
         onPress={onPressStart}
         disabled={isWaitingForPermissions}
-        testID={testIdWithKey('StartCall')}
+        testID={testIdWithKey(TestIds.verify.startCall.start)}
       >
         {isWaitingForPermissions && <ButtonLoading />}
       </Button>
@@ -178,7 +179,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
       <ThemedText
         variant={'headingFour'}
         style={{ marginTop: Spacing.lg }}
-        testID={testIdWithKey('HoursOfServiceTitle')}
+        testID={testIdWithKey(TestIds.verify.startCall.hoursOfServiceTitle)}
       >
         {t('BCSC.VideoCall.CallBusyOrClosed.HoursOfService')}
       </ThemedText>
