@@ -20,10 +20,12 @@ import {
 } from '@credo-ts/didcomm'
 import { isProofRequestingAttestation } from '@services/attestation'
 import { BCAgent } from '@utils/bc-agent-modules'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 export type CredentialNotificationRecord = DidCommBasicMessageRecord | CredentialRecord | DidCommProofExchangeRecord
+
+const autoDecliningProofIds = new Set<string>()
 
 /**
  * A pending proof request is considered expired once its TTL has elapsed. Requests that have
@@ -59,7 +61,6 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
   const proofsDone = useProofByState(doneStates)
   const [now, setNow] = useState(() => Date.now())
   const { t } = useTranslation()
-  const decliningProofIds = useRef<Set<string>>(new Set())
   const proofRequestExpirationMs =
     store.preferences.proofRequestExpirationMs ?? ProofRequestExpirationTime.FortyEightHours
 
@@ -161,10 +162,10 @@ export const useNotifications = (): Array<CredentialNotificationRecord> => {
     }
 
     expiredProofs.forEach((proof) => {
-      if (decliningProofIds.current.has(proof.id) || proof.state !== DidCommProofState.RequestReceived) {
+      if (autoDecliningProofIds.has(proof.id) || proof.state !== DidCommProofState.RequestReceived) {
         return
       }
-      decliningProofIds.current.add(proof.id)
+      autoDecliningProofIds.add(proof.id)
       declineProofRequest(agent, proof, t('ProofRequest.Declined'))
     })
   }, [agent, expiredProofs, t, store.preferences.developerModeEnabled])
