@@ -13,6 +13,16 @@ import { AxiosError } from 'axios'
 import RNFS from 'react-native-fs'
 import { VerificationVideoCache } from './VideoReviewScreen'
 
+const deferred = <T>() => {
+  let resolve!: (value: T) => void
+  let reject!: (reason: Error) => void
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise
+    reject = rejectPromise
+  })
+  return { promise, resolve, reject }
+}
+
 jest.mock('@/bcsc-theme/api/hooks/useApi')
 jest.mock('@/utils/read-file')
 jest.mock('@/bcsc-theme/utils/file-info', () => ({
@@ -179,6 +189,115 @@ describe('useEvidenceUploadModel', () => {
   })
 
   describe('handleSend', () => {
+    it.each(['success', 'failure'] as const)(
+      'advances only after completed stages and handles finalization %s',
+      async (outcome) => {
+        const video = deferred<Buffer>()
+        const documents = deferred<{ label: string; upload_uri: string }[]>()
+        const videoUpload = deferred<void>()
+        const documentUpload = deferred<void>()
+        const submission = deferred<void>()
+        const accountFlags = deferred<void>()
+
+        jest.mocked(Bifold.useStore).mockReturnValue([
+          {
+            ...baseStore,
+            bcsc: {
+              ...baseStore.bcsc,
+              photoPath: '/photo.jpg',
+              videoPath: '/video.mp4',
+              videoDuration: 10,
+              prompts: [{ text: 'smile' }],
+              photoMetadata: plausiblePhotoMetadata,
+            },
+            bcscSecure: {
+              ...baseStore.bcscSecure,
+              verificationRequestId: 'req-123',
+              verificationRequestSha: 'sha-456',
+              additionalEvidenceData: [
+                {
+                  evidenceType: { evidence_type: 'drivers_licence' },
+                  documentNumber: 'DL123',
+                  metadata: [{ label: 'front', file_path: '/front.jpg', date: 1_782_000_000 }],
+                },
+              ],
+            },
+          } as BCState,
+          jest.fn(),
+        ])
+        jest.mocked(readFileInChunks).mockResolvedValue(Buffer.from([1, 2, 3]))
+        jest.mocked(VerificationVideoCache.getCache).mockReturnValueOnce(video.promise)
+        jest.mocked(RNFS.stat).mockResolvedValue({ mtime: new Date('2026-01-01') } as any)
+        jest.mocked(getVideoMetadata).mockResolvedValue({ duration: 10 } as any)
+        mockEvidenceApi.sendEvidenceMetadata.mockReturnValueOnce(documents.promise)
+        mockEvidenceApi.uploadPhotoEvidenceMetadata.mockResolvedValue({ upload_uri: 'photo-uri' })
+        mockEvidenceApi.uploadVideoEvidenceMetadata.mockResolvedValue({ upload_uri: 'video-uri' })
+        mockEvidenceApi.uploadPhotoEvidenceBinary
+          .mockResolvedValueOnce(undefined)
+          .mockReturnValueOnce(documentUpload.promise)
+        mockEvidenceApi.uploadVideoEvidenceBinary.mockReturnValueOnce(videoUpload.promise)
+        mockEvidenceApi.sendVerificationRequest.mockReturnValueOnce(submission.promise)
+
+        const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
+        let pending!: Promise<void>
+        await act(async () => {
+          pending = result.current.handleSend()
+        })
+        expect(result.current.progressPercent).toBe(0)
+        expect(result.current.uploadMessage).toBe('BCSC.SendVideo.UploadProgress.PreparingVideo')
+
+        await act(async () => {
+          video.resolve(Buffer.from([4, 5, 6]))
+        })
+        expect(result.current.progressPercent).toBe(25)
+        expect(result.current.uploadMessage).toBe('BCSC.SendVideo.UploadProgress.PreparingDocuments')
+
+        await act(async () => {
+          documents.resolve([{ label: 'FRONT_SIDE', upload_uri: 'document-uri' }])
+        })
+        expect(result.current.progressPercent).toBe(50)
+        expect(result.current.uploadMessage).toBe('BCSC.SendVideo.UploadProgress.UploadingFiles')
+
+        await act(async () => {
+          videoUpload.resolve()
+        })
+        expect(result.current.progressPercent).toBe(50)
+        expect(mockEvidenceApi.sendVerificationRequest).not.toHaveBeenCalled()
+
+        await act(async () => {
+          documentUpload.resolve()
+        })
+        expect(result.current.progressPercent).toBe(75)
+        expect(result.current.uploadMessage).toBe('BCSC.SendVideo.UploadProgress.FinalizingVerification')
+
+        if (outcome === 'failure') {
+          await act(async () => {
+            submission.reject(new Error('Submission failed'))
+            await pending
+          })
+          expect(result.current.progressPercent).toBe(75)
+          expect(mockFileUploadErrorAlert).toHaveBeenCalled()
+          expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+        } else {
+          mockUpdateAccountFlags.mockReturnValueOnce(accountFlags.promise)
+          await act(async () => {
+            submission.resolve()
+          })
+          expect(result.current.progressPercent).toBe(75)
+          expect(mockNavigation.dispatch).not.toHaveBeenCalled()
+
+          await act(async () => {
+            accountFlags.resolve()
+            await pending
+          })
+          expect(result.current.progressPercent).toBe(100)
+          expect(mockNavigation.dispatch).toHaveBeenCalled()
+          expect(mockFileUploadErrorAlert).not.toHaveBeenCalled()
+        }
+        expect(result.current.isUploading).toBe(false)
+      }
+    )
+
     it('should emit fileUploadErrorAlert when photo or video data is missing', async () => {
       const { result } = renderHook(() => useEvidenceUploadModel(mockNavigation))
 
@@ -364,6 +483,7 @@ describe('useEvidenceUploadModel', () => {
         sha256: 'sha-456',
       })
       expect(mockUpdateAccountFlags).toHaveBeenCalledWith({ userSubmittedVerificationVideo: true })
+      expect(result.current.progressPercent).toBe(100)
       expect(mockStoreDispatch).toHaveBeenCalledWith({
         type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_VIDEO_SUBMITTED_AT,
         payload: [expect.any(Date)],

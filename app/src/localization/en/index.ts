@@ -1064,6 +1064,7 @@ const translation = {
         "PreparingVideo": "Preparing your photo and video for verification",
         "PreparingDocuments": "Preparing additional documents",
         "UploadingInformation": "Uploading your documents securely",
+        "UploadingFiles": "Uploading your files",
         "FinalizingVerification": "Finalizing your request"
       }
     },

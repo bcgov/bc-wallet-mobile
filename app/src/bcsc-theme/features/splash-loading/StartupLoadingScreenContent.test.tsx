@@ -40,8 +40,8 @@ describe('StartupLoadingScreenContent', () => {
     const view = render(<StartupLoadingScreenContent message="Preparing the app..." statusMessage="Starting..." />, {
       wrapper: LightThemeProvider,
     })
-    const viewport = view.getByTestId(testIdWithKey('StartupLoadingScreenContentViewport'))
-    const status = view.getByTestId(testIdWithKey('StartupLoadingScreenContentStatus'))
+    const viewport = view.getByTestId(testIdWithKey('WaitingScreenContentViewport'))
+    const status = view.getByTestId(testIdWithKey('WaitingScreenContentStatus'))
 
     expect(viewport).toHaveStyle({ opacity: 0 })
     expect(view.getByText('Preparing the app...')).toBeTruthy()
