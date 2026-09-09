@@ -1,41 +1,38 @@
-import useServerStatusCheck from '@/bcsc-theme/hooks/useServerStatusCheck'
-import { BCSCAuthStackParams, BCSCModals } from '@/bcsc-theme/types/navigators'
-import { HelpCentreUrl } from '@/constants'
-import { openLink } from '@/utils/links'
-import { RouteProp, useRoute } from '@react-navigation/native'
-import { useCallback, useState } from 'react'
+import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
+import { BCSCModals } from '@/bcsc-theme/types/navigators'
+import { useNavigation } from '@react-navigation/native'
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-
-type ServiceOutageRouteProps = RouteProp<BCSCAuthStackParams, BCSCModals.ServiceOutage>
 
 const useServiceOutageViewModel = () => {
   const { t } = useTranslation()
-  const route = useRoute<ServiceOutageRouteProps>()
-  const [statusMessage, setStatusMessage] = useState(route.params?.statusMessage)
-  const { checkServerStatus, isChecking, isClientReady } = useServerStatusCheck()
+  const navigation = useNavigation()
+  const { isAvailable, statusMessage, isChecking, refresh } = useServerStatus()
 
   const handleCheckAgain = useCallback(async () => {
-    const result = await checkServerStatus()
+    const result = await refresh({ force: true })
 
     if (!result.isAvailable) {
-      setStatusMessage(result.statusMessage ?? t('BCSC.SystemChecks.ServerStatus.UnavailableBannerTitle'))
+      return
     }
-  }, [checkServerStatus, t])
+
+    const state = navigation.getState()
+    const currentRouteName = state?.routes?.[state.index]?.name
+    if (currentRouteName === BCSCModals.ServiceOutage && navigation.canGoBack()) {
+      navigation.goBack()
+    }
+  }, [refresh, navigation])
 
   const contentText = statusMessage ? [statusMessage] : [t('BCSC.SystemChecks.ServerStatus.UnavailableBannerTitle')]
-
-  const handleLearnMore = useCallback(() => {
-    openLink(HelpCentreUrl.HOME)
-  }, [])
 
   return {
     headerText: t('BCSC.Modals.ServiceOutage.Header'),
     contentText,
-    learnMoreText: t('BCSC.Modals.ServiceOutage.LearnMore'),
+    skipVerificationText: t('BCSC.VerifyPrompt.SkipVerification'),
     buttonText: t('BCSC.Modals.ServiceOutage.CheckAgainButton'),
-    isCheckDisabled: isChecking || !isClientReady,
+    isCheckDisabled: isChecking,
+    isAvailable,
     handleCheckAgain,
-    handleLearnMore,
   }
 }
 
