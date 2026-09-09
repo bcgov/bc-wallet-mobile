@@ -19,9 +19,10 @@ A ring is an audience. Each one is wider than the last.
 | `ring-4` | Everyone | `bcsc-approvers-ring-3-plus` |
 
 Publishing to a ring publishes every ring below it, so `ring-2` sends the build
-to ring-0, ring-1 and ring-2. The team gets it straight away; everything above
-ring-0 waits on one approval covering the whole run. Rejecting stops the
-widening, but the team already has it.
+to ring-0, ring-1 and ring-2. The team gets it straight away, and each ring
+after that has its own gate, and its testers get the build as soon as that
+gate passes. Rejecting at any gate stops the run there, and every ring below
+already has it.
 
 BC Wallet is the exception. It is being retired after v4.1, so it publishes to
 the team and is left out of the wider rings rather than failing on groups that
@@ -43,7 +44,12 @@ is the one case where a build can knock another off a track.
 
 QA and UAT are separate rings with separate gates. ring-1 goes to QA testers,
 ring-2 to UAT testers, and each has its own approval even though the same
-people sit on both teams today.
+people sit on both teams today. A ring-4 publish stops at all four gates in
+turn, and the same team approves the last two.
+
+A run with nothing to widen asks for no approvals at all. Picking `targets`
+that no artifact in the build can reach, such as `google-store` on an
+iOS-only build, publishes ring-0 and skips every gate.
 
 | Team | Approves | Who is on it |
 |---|---|---|
@@ -61,7 +67,7 @@ run, so a publish always needs a second person.
 ## Publishing
 
 Go to **Actions → Publish → Run workflow**. Anyone with write access can start
-one; only an approver can take it past ring-0.
+one; each ring past ring-0 waits for that ring's approvers.
 
 | Input | Leave it alone to | Use it to |
 |---|---|---|
@@ -107,8 +113,8 @@ version comes from the variant files, not the branch name.
 ### One publish at a time
 
 Publishes queue in the order they started rather than running together, so more
-than one can be waiting. A run sitting at the approval gate holds the queue, so
-approve or reject promptly.
+than one can be waiting. A run waiting at any of its gates holds the queue, and
+a ring-4 publish has four, so approve or reject promptly.
 
 ## Version numbers
 
@@ -133,8 +139,8 @@ The tag lands on the commit that produced the published build, which is not
 always the branch tip — publishing an older `build_number` tags that older
 commit. It marks what was actually shipped, not just what merged.
 
-Tagging runs right after the ring-0 uploads and does not wait on approval or
-widening, since a build only reaches ring-0 once. It goes ahead as long as no
+Tagging runs right after the ring-0 uploads and does not wait on any approval
+or widening, since a build only reaches ring-0 once. It goes ahead as long as no
 ring-0 upload failed, so a run limited to one store via `targets` still gets
 tagged, and a retry after a partial failure re-runs it safely: the tag is left
 alone if it's already there.
@@ -189,7 +195,8 @@ away, or it publishes with nobody signing off.
 ## When something goes wrong
 
 Each store publishes separately, so one failing does not stop the others.
-Re-run with `targets` set to the store that failed.
+Re-run with `targets` set to the store that failed. A re-run walks back
+through every gate on the way, since a publish always starts from ring-0.
 
 A destination that is skipped rather than failed had no artifact to publish.
 The **Resolve build** step lists what it found. iOS and Android build
