@@ -59,7 +59,7 @@ yarn wdio configs/local/wdio.ios.local.sim.conf.ts --suite main
 yarn wdio configs/sauce/wdio.android.sauce.rdc.conf.ts --suite scan
 ```
 
-_Without_ `--suite`_, the default spec is_ `smoke.spec.ts`_. The verified `verify` / `main` journeys need SiteMinder credentials (see the **SiteMinder** section) for the in-person approval step. The `main` suite's wallet journey additionally needs the Traction issuer tenant configured (`ISSUER_TENANT_ID`/`ISSUER_API_KEY` in `.env.e2e`, one-time `yarn issuer:provision` — see `issuer/README.md`). A nightly `regression` suite spans all journeys (see the **CI/CD** section)._
+_Without_ `--suite`_, the default spec is_ `smoke.spec.ts`_. The verified `verify` / `main` journeys need IDCheck credentials (see the **IDCheck sign-in** section) for the in-person approval step. The `main` suite's wallet journey additionally needs the Traction issuer tenant configured (`ISSUER_TENANT_ID`/`ISSUER_API_KEY` in `.env.e2e`, one-time `yarn issuer:provision` — see `issuer/README.md`). A nightly `regression` suite spans all journeys (see the **CI/CD** section)._
 
 ### _Local — iOS Simulator_
 
@@ -196,7 +196,7 @@ V3_IOS_APP=BCSC-v3.ipa
 # ANDROID_APP_FILENAME / IOS_APP_FILENAME
 ```
 
-3. _Ensure SiteMinder credentials (_`SM_USER`_,_ `SM_PASSWORD`_) are set in_ `.env.e2e` _(the v3 flow uses in-person verification)._
+3. _Ensure the IDCheck credentials (_`IDCHECK_USER`_,_ `IDCHECK_PASSWORD`_,_ `IDCHECK_TOTP_SECRET`_) are set in_ `.env.e2e` _(the v3 flow uses in-person verification)._
 
 ```bash
 # Run migration on both platforms
@@ -236,7 +236,7 @@ yarn test:ios:upgrade:sauce
 PREV_IOS_APP=BCSC-prev.ipa IOS_APP_DEVICE=BCSC.ipa yarn test:ios:upgrade:device
 ```
 
-_Android installs only go old → new: versionCode = the build run number, so the previous build must be an **older** run number than the current one (Android refuses downgrade installs). No SiteMinder credentials are needed — the journey stays unverified._
+_Android installs only go old → new: versionCode = the build run number, so the previous build must be an **older** run number than the current one (Android refuses downgrade installs). No IDCheck credentials are needed — the journey stays unverified._
 
 _The previous build must also carry the **current onboarding shape** — the spec drives it with today's screen DSL, so the first eligible release is **4.1.0**; older builds fail phase 1 by design. The one shipped release before that boundary gets its own spec: `upgrade403` onboards the **4.0.3** binary via a frozen copy of its pre-rework walk (`src/flows/onboarding-v403.ts`, previous binary preserved in Sauce storage as `BCSC-v4.0.3.*`), then reuses the standard install + post-upgrade assertions. Runs on Sauce on both platforms; retire it once 4.1.0 becomes the previous release:_
 
@@ -256,9 +256,9 @@ VARIANT=bcsc yarn test:android:sauce
 
 ## _Environment Variables_
 
-_Two env files split general e2e config (including SiteMinder credentials) from SauceLabs credentials:_
+_Two env files split general e2e config (including the IDCheck credentials) from SauceLabs credentials:_
 
-- **`.env.e2e`** _— loaded for every run target (local + sauce). Copy from_ `.env.e2e.example`_. Includes the SiteMinder credentials used by the in-person verification approval flow._
+- **`.env.e2e`** _— loaded for every run target (local + sauce). Copy from_ `.env.e2e.example`_. Includes the IDCheck credentials used by the in-person verification approval flow._
 - **`.env.saucelabs`** _— loaded only for sauce runs. Copy from_ `.env.saucelabs.example`_._
 
 ### _General (`.env.e2e`)_
@@ -300,33 +300,42 @@ _Two env files split general e2e config (including SiteMinder credentials) from 
 | `PREV_ANDROID_APP`         | `BCSC-prev.apk`       | _Previous released Android app for upgrade tests (local file or Sauce storage filename)_ |
 | `PREV_IOS_APP`             | `BCSC-prev.ipa`       | _Previous released iOS app for upgrade tests (local file or Sauce storage filename)_ |
 
-### _SiteMinder (in_ `.env.e2e`_)_
+### _IDCheck sign-in (in_ `.env.e2e`_)_
 
-_The in-person verification approval flow (`approveInPersonRequest` in_ `src/helpers/approval.ts`_) automates the SiteMinder login used by the IDCheck portal. It reads credentials from_ `process.env` _— locally these come from_ `e2e/.env.e2e` _(loaded by_ `configs/wdio.shared.conf.ts`_), and in CI they come from GitHub Actions secrets injected via_ `.github/workflows/e2e.yml`_:_
+_The in-person verification approval (`approveInPersonRequest` in_ `src/helpers/approval.ts`_), the send-video review and the queue drain all act in the IDCheck SIT portal, which signs its agents in through BC Gov SSO (Keycloak) and Entra ID ("IDIR - MFA"). The sign-in is a short drive of the Microsoft pages in a headless Chrome (`scripts/idcheck-session.mjs`); everything after it is plain cookie-bound HTTP (`scripts/login.mjs`). One sign-in is cached per process, so a journey's drain → review → drain signs in once. The account is the shared IAS test IDIR (`bcsc-ias-test-account` in 1Password); its sign-in name is the account's gov email. Credentials come from_ `process.env` _— locally from_ `e2e/.env.e2e` _(loaded by_ `configs/wdio.shared.conf.ts`_), in CI from 1Password via_ `.github/workflows/e2e.yml`_:_
 
-| _Variable_    | _Description_                                          |
-| ------------- | ------------------------------------------------------ |
-| `SM_USER`     | _SiteMinder username for the IDCheck test environment_ |
-| `SM_PASSWORD` | _SiteMinder password for the IDCheck test environment_ |
+| _Variable_             | _Description_                                                                                                                                            |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `IDCHECK_USER`         | _The account's Entra sign-in name (its gov email). Needs the IDIM Verification Specialist role._                                                          |
+| `IDCHECK_PASSWORD`     | _The account password_                                                                                                                                   |
+| `IDCHECK_TOTP_SECRET`  | _Base32 seed of the account's authenticator ("software token") MFA — the same seed 1Password renders the live code from. Required for CI; optional locally_ |
+| `IDCHECK_LOGIN_HEADED` | _Set to_ `1` _to watch the sign-in in a visible browser_                                                                                                 |
 
-_For local runs, add them to your_ `.env.e2e` _(see_ `.env.e2e.example`_):_
+_The browser is Google Chrome where it is installed (dev Macs, GitHub-hosted runners); otherwise run_ `yarn playwright-core install chromium` _once in_ `e2e/`_. Without a TOTP seed the script waits for you to approve the Microsoft Authenticator push on your phone and logs the number to match, so a personal IDIR works for local runs. Check the credentials with:_
 
 ```bash
-# e2e/.env.e2e
-SM_USER='your-siteminder-username'
-SM_PASSWORD='your-siteminder-password'
+yarn idcheck:check               # sign in, read the portal home; prints the MFA path (silent/totp/push) and landing title
 ```
 
-_The same_ `scripts/login.mjs` _can also be invoked as a CLI; it loads_ `.env.e2e` _itself when run standalone. Without these credentials, any journey that completes in-person verification (the verified_ `verify` _/_ `main` _journeys, and_ `migration`_) will fail at the approval step._
+_**Staying off Entra's bot-detection radar.** A shared account that signs in too often from an automation-flagged browser gets risk-blocked (see_ `.notes/mfa-account-protection.md`_). Three always-on defences keep sign-ins rare: the browser reuses a **persistent profile** (`~/.idcheck-e2e/profile`, or_ `IDCHECK_PROFILE_DIR`_) so Entra recognises the device and most sign-ins go silent; "Stay signed in?" is answered Yes for the persistent cookie; and a **circuit breaker** (`scripts/entra-auth-guard.mjs`) latches the run after_ `IDCHECK_MFA_MAX_FAILURES` _(default 3) genuine Entra rejections — never on timeouts or an allowlist 403. Knobs:_
+
+| _Variable_                 | _Description_                                                                                                    |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `IDCHECK_STATE_DIR`        | _Where the profile and the sign-in ledger live (default_ `~/.idcheck-e2e`_; CI uses the runner temp dir)_         |
+| `IDCHECK_PROFILE_DIR`      | _Override just the browser-profile dir. **Delete it to force a fresh MFA challenge.**_                            |
+| `IDCHECK_MFA_MAX_FAILURES` | _Entra rejections before the run latches (default 3)_                                                             |
+| `IDCHECK_AUTH_RESET`       | _Set to_ `1` _to clear a latch once the real cause is fixed_                                                      |
+
+_The same_ `scripts/login.mjs` _can also be invoked as a CLI; it loads_ `.env.e2e` _itself when run standalone. Without these credentials, any journey that completes in-person verification (the verified_ `verify` _/_ `main` _journeys, and_ `migration`_) will fail at the approval step. A failed sign-in leaves a screenshot in_ `reports/screenshots/` _and, on a genuine Entra rejection, names the account-protection state._
 
 ### _Send-video review queue_
 
-_The send-video journeys upload real verification requests to the SIT IDcheck agent queue and review them through the same SiteMinder session (`reviewSendVideoRequest`). That queue has **no worklist** — a review claims the_ next _request blindly and then checks it is the expected persona on the expected platform — and it is **shared** with the UAT team. Two things follow:_
+_The send-video journeys upload real verification requests to the SIT IDcheck agent queue and review them through the same IDCheck session (`reviewSendVideoRequest`). That queue has **no worklist** — a review claims the_ next _request blindly and then checks it is the expected persona on the expected platform — and it is **shared** with the UAT team. Two things follow:_
 
 - _**Never run send-video journeys on two platforms at once.** The personas are shared, so one platform would review (or drain) the other's live upload. CI keeps them out of the concurrent device matrix and runs them in their own_ `send-video` _lane, one platform at a time; a parallel multi-device_ `verify` _/_ `regression` _run drops them automatically (`E2E_EXCLUDE_SEND_VIDEO=1`, with a notice)._
 - _**The queue is drained around every submission.** Each send-video journey rejects whatever is queued before it submits (so its own upload is the head the review claims), and its teardown drains again if the upload was never reviewed. The nightly ends with a_ `queue-hygiene` _job (`e2e-send-video-queue.yml`) that drains once more, so a run that died mid-journey leaves nothing for the morning. Rejections carry the reason "Automated e2e queue cleanup"._
 
-_On demand — locally with the SiteMinder credentials above (and an allowlisted egress IP, e.g. the VPN), or from the Actions tab as **Drain send-video queue**:_
+_On demand — locally with the IDCheck credentials above (and an allowlisted egress IP, e.g. the VPN), or from the Actions tab as **Drain send-video queue**:_
 
 ```bash
 yarn queue:drain                 # reject everything queued (scope all)
@@ -675,7 +684,8 @@ e2e/
 │   ├── generate-scan-assets.mjs             # combo-card backs for the scan suite
 │   ├── issuer-provision.ts                  # issuer tenant bootstrap / CI preflight (yarn issuer:provision)
 │   ├── issuer-smoke.ts                      # issuer API smoke, no device (yarn issuer:smoke)
-│   ├── login.mjs                            # SiteMinder login helper for approval flow
+│   ├── idcheck-session.mjs                  # IDCheck sign-in (headless Chrome → cookie jar), cached per process
+│   ├── login.mjs                            # IDCheck portal driver: in-person approval, send-video review, queue drain
 │   ├── setup-drivers.mjs                    # installs Appium drivers (yarn setup)
 │   └── start-android-emulator.mjs           # launches emulator with DNS (yarn emulator:android)
 │
@@ -713,7 +723,7 @@ e2e/
 │   │   ├── a11y-audit.ts                    # auditScreen(): iOS XCTest audit engine + report/roll-up (non-blocking)
 │   │   ├── a11y-android.ts                  # Android heuristics: unlabeled controls, touch targets, screenshot contrast
 │   │   ├── alerts.ts                        # iOS system alert acceptance (permissions, dialogs)
-│   │   ├── approval.ts                      # in-person verification approval via SiteMinder
+│   │   ├── approval.ts                      # in-person approval + send-video review via the IDCheck portal
 │   │   ├── biometrics.ts                    # biometric simulation (Sauce Labs RDC)
 │   │   ├── camera.ts                        # camera image injection + padding (photos, QR, video)
 │   │   ├── deep-link.ts                     # dispatch <scheme>:// deep links (pairing / login)
