@@ -136,10 +136,12 @@ export const DropdownWithValidation = <T extends string | number>({
   const handleSelect = (selectedValue: T) => {
     onChange(selectedValue)
     setIsOpen(false)
+    onModalClose?.()
   }
 
   const handleClose = () => {
     setIsOpen(false)
+    onModalClose?.()
   }
 
   const renderOption = ({ item, index }: { item: DropdownOption<T>; index: number }) => {
