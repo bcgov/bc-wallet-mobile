@@ -1,6 +1,6 @@
 import ProgressBar from '@/components/ProgressBar'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { useState } from 'react'
+import { ReactNode, useState } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { BCAnimatedLoadingIcon } from '../features/splash-loading/BCAnimatedLoadingIcon'
@@ -17,11 +17,13 @@ export const WaitingScreenContent = ({
   statusMessage,
   progressPercent,
   testID,
+  controls,
 }: {
   message: string
   statusMessage: string
   progressPercent: number
   testID?: string
+  controls?: ReactNode
 }) => {
   const { ColorPalette, NavigationTheme, Spacing, TextTheme } = useTheme()
   const [viewportHeight, setViewportHeight] = useState(0)
@@ -73,6 +75,10 @@ export const WaitingScreenContent = ({
       marginTop: Spacing.sm,
       alignItems: 'center',
     },
+    controls: {
+      marginTop: 'auto',
+      padding: Spacing.lg,
+    },
   })
 
   return (
@@ -123,6 +129,7 @@ export const WaitingScreenContent = ({
         <View style={styles.illustration} accessible={false} importantForAccessibility="no-hide-descendants">
           <BCAnimatedLoadingIcon size={iconSize} />
         </View>
+        {controls ? <View style={styles.controls}>{controls}</View> : null}
       </ScrollView>
     </SafeAreaView>
   )

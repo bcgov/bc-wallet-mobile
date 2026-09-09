@@ -67,5 +67,10 @@ and local account updates succeed. These are equally weighted workflow stages, n
 bytes transferred or estimated time. Uploading waits for all concurrent files, including
 supporting documents; absent documents simply make their preparation stage finish quickly.
 The success screen opens immediately without waiting for the bar animation.
-The designer requested the bar for consistency with startup. The cancel button is
-omitted pending clarification of its intended behavior (#4513).
+The designer requested the bar for consistency with startup. Video submission preserves
+the Cancel behavior from #4585: the secondary button fades in after 10 seconds and
+calls the existing upload cancellation handler, returning to verification-method
+selection. Its space is reserved within the scrollable content so revealing it does
+not shift the centered illustration. Before the delay, it is disabled and hidden from
+accessibility; it is also disabled while cancellation is in progress. Startup supplies
+no controls.
