@@ -646,6 +646,7 @@ export const TestIds = {
       appSecurity: 'AppSecurity',
       changePin: 'ChangePIN',
       autoLock: 'AutoLock',
+      proofRequestExpiration: 'ProofRequestExpiration',
       notifications: 'Notifications',
       analyticsOptIn: 'AnalyticsOptIn',
       removeAccount: 'RemoveAccount',
