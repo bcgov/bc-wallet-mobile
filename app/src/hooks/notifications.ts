@@ -25,7 +25,7 @@ import { useTranslation } from 'react-i18next'
 
 export type CredentialNotificationRecord = DidCommBasicMessageRecord | CredentialRecord | DidCommProofExchangeRecord
 
-const autoDecliningProofIds = new Set<string>()
+export const autoDecliningProofIds = new Set<string>()
 
 /**
  * A pending proof request is considered expired once its TTL has elapsed. Requests that have

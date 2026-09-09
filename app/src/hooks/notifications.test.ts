@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native'
 
-import { useNotifications } from './notifications'
+import { autoDecliningProofIds, useNotifications } from './notifications'
 
 const mockUseStore = jest.fn()
 const mockUseBasicMessages = jest.fn()
@@ -120,6 +120,9 @@ const flushNonAttestationProofs = async () => {
 
 describe('useNotifications - proof request expiry', () => {
   beforeEach(() => {
+    // autoDecliningProofIds is a module-level singleton that intentionally survives hook
+    // remounts, so it also survives between tests - clear it so ids do not leak across cases.
+    autoDecliningProofIds.clear()
     proofsRequested = []
     proofsDone = []
     mockUseBasicMessages.mockReturnValue({ records: [] })
@@ -253,7 +256,7 @@ describe('useNotifications - proof request expiry', () => {
     })
 
     it('declines each expired proof only once while a decline is still in flight', async () => {
-      // Never resolves, so the in-flight guard (decliningProofIds) is what must prevent a repeat call
+      // Never resolves, so the guard (autoDecliningProofIds) is what must prevent a repeat call
       mockDeclineProofRequest.mockReturnValue(new Promise(() => {}))
       proofsRequested = [makeProof({ id: 'expired-proof', createdAt: new Date(Date.now() - HOUR_MS) })]
 
@@ -266,6 +269,21 @@ describe('useNotifications - proof request expiry', () => {
       await act(async () => {
         await Promise.resolve()
       })
+
+      expect(mockDeclineProofRequest).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not decline the same proof again after the hook remounts (module-level guard)', async () => {
+      mockDeclineProofRequest.mockReturnValue(new Promise(() => {}))
+      proofsRequested = [makeProof({ id: 'expired-proof', createdAt: new Date(Date.now() - HOUR_MS) })]
+
+      const first = renderHook(() => useNotifications())
+      await waitFor(() => expect(mockDeclineProofRequest).toHaveBeenCalledTimes(1))
+      first.unmount()
+
+      // A fresh mount must reuse the shared guard rather than start over
+      renderHook(() => useNotifications())
+      await flushNonAttestationProofs()
 
       expect(mockDeclineProofRequest).toHaveBeenCalledTimes(1)
     })
