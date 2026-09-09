@@ -14,8 +14,9 @@ import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
 import { BCState } from '@/store'
 import { withAlert } from '@/utils/alert'
 import { MaskType, testIdWithKey, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { StyleSheet, useWindowDimensions, View } from 'react-native'
 import { BCSCCardProcess, EvidenceType, PhotoMetadata } from 'react-native-bcsc-core'
 import { useCameraPermission } from 'react-native-vision-camera'
@@ -78,13 +79,15 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const { isLoading: isCameraLoading } = useAutoRequestPermission(hasPermission, requestPermission)
   const { failedToReadFromLocalStorageAlert } = useAlerts(navigation)
 
-  const codeScanner = useBCServicesCardScannerOutput({
+  const { scannerOutput, resetScanner } = useBCServicesCardScannerOutput({
     minMatches: 0, // No hit threshold
     onScanBCServicesCard: async (serial, license) => {
       bcscSerialRef.current = serial
       licenseRef.current = license
     },
   })
+
+  useFocusEffect(useCallback(() => resetScanner(), [resetScanner]))
 
   // SVGOverlay's customPath is the cutout — this rectangle leaves the top
   // banner area inside the dark overlay so the instruction text reads clearly.
@@ -221,7 +224,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
             customPath={customHeaderPath}
             maskLineColor={ColorPalette.brand.primary}
             onPhotoTaken={handlePhotoTaken}
-            codeScanner={codeScanner}
+            codeScanner={scannerOutput}
             photoOutput={photoOutput}
           />
         </View>

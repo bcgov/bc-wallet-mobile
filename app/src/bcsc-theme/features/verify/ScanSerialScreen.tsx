@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next'
 import { LayoutChangeEvent, StyleSheet, Text, Vibration, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Svg, { Defs, Mask, Rect } from 'react-native-svg'
-import { Camera, CameraRef, useCameraPermission } from 'react-native-vision-camera'
+import { Camera, CameraRef, useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
 import { ScanState } from '../../components/utils/camera'
 
 /**
@@ -190,7 +190,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const { hasPermission, requestPermission } = useCameraPermission()
   const scanner = useCardScanner()
   const { isLoading } = useAutoRequestPermission(hasPermission, requestPermission)
-  const [torchOn, setTorchOn] = useState(false)
+  const [torchMode, setTorchMode] = useState<'on' | 'off' | undefined>(undefined)
   const [size, setSize] = useState<{ width: number; height: number } | null>(null)
   const [scanState, setScanState] = useState<ScanState>('scanning')
   // Starts on mount; after the timeout we swap the initial guidance for the
@@ -200,7 +200,9 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const [cameraKey, setCameraKey] = useState(0)
   const isFocused = useIsFocused()
 
+  const device = useCameraDevice('back')
   const cameraRef = useRef<CameraRef>(null)
+  const hasTorch = device?.hasTorch ?? false
 
   const { scannerOutput, resetScanner } = useBCServicesCardScannerOutput({
     onScanBCServicesCard: async (serial, license) => {
@@ -228,7 +230,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const goToManualEntry = useCallback(() => navigation.navigate(BCSCScreens.ManualSerial), [navigation])
 
   const onCameraError = useCallback(() => {
-    setTorchOn(false)
+    setTorchMode('off')
     setCameraFailed(true)
   }, [])
 
@@ -297,7 +299,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const frameStrokeColor =
     scanState === 'scanning' ? ColorPalette.brand.highlight : scanState === 'aligned' ? '#00CC00' : '#00FF00'
 
-  if (isLoading) {
+  if (isLoading || !device) {
     return <LoadingScreen />
   }
 
@@ -331,7 +333,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
               isActive={isFocused}
               device={'back'}
               onError={onCameraError}
-              torchMode={torchOn ? 'on' : 'off'}
+              torchMode={torchMode}
               outputs={[scannerOutput]}
             />
 
@@ -356,7 +358,10 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
         <View style={styles.bottomBar} pointerEvents="box-none">
           {cameraFailed ? null : (
             <View style={styles.torchRow} pointerEvents="box-none">
-              <TorchButton active={torchOn} onPress={() => setTorchOn((prev) => !prev)} />
+              <TorchButton
+                active={torchMode === 'on'}
+                onPress={() => setTorchMode((prev) => (prev === 'on' ? 'off' : 'on'))}
+              />
             </View>
           )}
           <View style={[styles.buttonBlock, { paddingBottom: insets.bottom + Spacing.lg }]}>
