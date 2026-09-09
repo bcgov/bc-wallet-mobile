@@ -69,8 +69,8 @@ export const GrayscaleColors: IGrayscaleColors = {
 
 export type BannerType = 'error' | 'warning' | 'info' | 'success'
 
-// BCSC Style Guide "Banner" (Figma node 299-304). Backgrounds are design-fixed, so foregrounds are fixed
-// too. Deliberately a shared constant, not a PaletteSpec entry: Light and Dark must not be able to diverge.
+// BCSC Style Guide banner colours. Backgrounds are design-fixed, so foregrounds are too —
+// deliberately a shared constant, not a per-theme token, so Light and Dark cannot diverge.
 export const BannerColors: Record<BannerType, { background: string; foreground: string }> = {
   error: { background: '#CE3E39', foreground: '#FFFFFF' },
   warning: { background: '#F8BB47', foreground: '#2D2D2D' },
