@@ -185,12 +185,13 @@ const OnboardingStack = (): React.ReactElement => {
 
       <Stack.Screen
         name={BCSCModals.ServiceOutage}
-        component={ServiceOutage}
         options={{
           ...getDefaultModalOptions(t('BCSC.Title')),
           gestureEnabled: false,
         }}
-      />
+      >
+        {({ route }) => <ServiceOutage inOnboarding={route.params?.inOnboarding} />}
+      </Stack.Screen>
     </Stack.Navigator>
   )
 }

@@ -15,12 +15,15 @@ import { StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import useServiceOutageViewModel from './useServiceOutageViewModel'
 
+// TODO: replace inOnboarding with onSkipVerification function, if the fucntion is available, show the button
 export interface ServiceOutageProps {
   inOnboarding?: boolean
+  onSkipVerification?: () => void
 }
 
-export const ServiceOutage = ({ inOnboarding = false }: ServiceOutageProps): React.ReactElement => {
-  const { headerText, contentText, buttonText, isCheckDisabled, handleCheckAgain } = useServiceOutageViewModel()
+export const ServiceOutage = ({ inOnboarding = false, onSkipVerification }: ServiceOutageProps): React.ReactElement => {
+  const { headerText, contentText, buttonText, skipVerificationText, isCheckDisabled, handleCheckAgain } =
+    useServiceOutageViewModel()
   const { ButtonLoading } = useAnimatedComponents()
   const [loading, setLoading] = useState(false)
   const { Spacing, ColorPalette } = useTheme()
@@ -67,15 +70,13 @@ export const ServiceOutage = ({ inOnboarding = false }: ServiceOutageProps): Rea
       >
         {loading && <ButtonLoading />}
       </Button>
-      {inOnboarding && (
+      {inOnboarding && onSkipVerification && (
         <Button
-          title={'Learn more'}
+          title={skipVerificationText}
           buttonType={ButtonType.Secondary}
-          onPress={() => {
-            // TODO: this needs to act like the onboarding screen that prompts verification or skip
-          }}
-          accessibilityLabel={'Learn more'}
-          testID={testIdWithKey(TestIds.systemModal.serviceOutage.helpCentre)}
+          onPress={onSkipVerification}
+          accessibilityLabel={skipVerificationText}
+          testID={testIdWithKey(TestIds.systemModal.serviceOutage.skipVerification)}
         />
       )}
     </ControlContainer>

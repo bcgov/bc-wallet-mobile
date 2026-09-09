@@ -92,7 +92,8 @@ export const TestIds = {
     },
     /** ServiceOutage does NOT use `SystemModal` — it is its own component with two buttons. */
     serviceOutage: {
-      helpCentre: 'ServiceOutageHelpCentre',
+      /** Secondary button, onboarding only: skip verification and continue to Home. */
+      skipVerification: 'ServiceOutageSkipVerification',
       checkAgain: 'ServiceOutageCheckAgain',
     },
   },

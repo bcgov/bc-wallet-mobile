@@ -1,8 +1,12 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
+import { ServiceOutage } from '@/bcsc-theme/features/modal/ServiceOutage'
+import { LoadingScreenContent } from '@/bcsc-theme/features/splash-loading/LoadingScreenContent'
 import { BCDispatchAction, BCState, VerificationStatus } from '@/store'
 import { TestIds } from '@/test-ids/registry'
 import AccountVerificationCta from '@assets/img/account-verification-cta.svg'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { useFocusEffect } from '@react-navigation/native'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
@@ -39,6 +43,15 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [, dispatch] = useStore<BCState>()
+  const { isAvailable, isChecking, lastCheckedAt, refresh } = useServerStatus()
+
+  // Re-check on focus (deduped/rate-limited by the provider) so a recovered outage clears the
+  // gate when the user returns to this screen.
+  useFocusEffect(
+    useCallback(() => {
+      refresh()
+    }, [refresh])
+  )
 
   const handleVerifyNow = useCallback(() => {
     onAnswered?.()
@@ -56,6 +69,15 @@ export const VerifyPromptScreen: React.FC<VerifyPromptScreenProps> = ({
     onAnswered?.()
     dispatch({ type: BCDispatchAction.SET_VERIFICATION_SKIPPED, payload: [true] })
   }, [dispatch, onAnswered])
+
+  if (lastCheckedAt === null && isChecking) {
+    return <LoadingScreenContent />
+  }
+
+  // IAS service outage blocks verification, prompt user to check again or skip verification
+  if (!isAvailable) {
+    return <ServiceOutage inOnboarding onSkipVerification={showSkip ? handleLater : undefined} />
+  }
 
   const controls = (
     <ControlContainer>

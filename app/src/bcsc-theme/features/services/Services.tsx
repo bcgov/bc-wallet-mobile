@@ -1,8 +1,9 @@
 import { ListButtonGroup } from '@/bcsc-theme/components/ListButton'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import { useBCSCActivity } from '@/bcsc-theme/contexts/BCSCActivityContext'
+import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
+import { ServiceOutage } from '@/bcsc-theme/features/modal/ServiceOutage'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
-import useServerStatusCheck from '@/bcsc-theme/hooks/useServerStatusCheck'
 import { useTokenService } from '@/bcsc-theme/services/hooks/useTokenService'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
@@ -43,7 +44,7 @@ const Services: React.FC = () => {
   const debouncedSearch = useDebounce(search, SEARCH_DEBOUNCE_DELAY_MS)
   const searchInputRef = useRef<View>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { checkServerStatus } = useServerStatusCheck()
+  const { isAvailable: isServerAvailable } = useServerStatus()
   const { load: loadIdTokenMetadata, data: idTokenMetadata } = useDataLoader(
     // use the cache, card type doesn't change
     () => token.getCachedIdTokenMetadata({ refreshCache: false }),
@@ -66,13 +67,6 @@ const Services: React.FC = () => {
     useCallback(() => {
       setSortVersion((v) => v + 1)
     }, [])
-  )
-
-  // Check for service outage
-  useFocusEffect(
-    useCallback(() => {
-      checkServerStatus()
-    }, [checkServerStatus])
   )
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -127,6 +121,11 @@ const Services: React.FC = () => {
       margin: Spacing.lg,
     },
   })
+
+  // IAS is down, show outage screen
+  if (!isServerAvailable) {
+    return <ServiceOutage />
+  }
 
   return (
     <TabScreenWrapper scrollViewProps={{ stickyHeaderIndices: [0], keyboardShouldPersistTaps: 'handled' }}>
