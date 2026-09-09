@@ -1,5 +1,6 @@
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -25,7 +26,7 @@ const TransferInstructionsScreen: React.FC = () => {
         buttonType={ButtonType.Primary}
         title={t('BCSC.TransferInstructions.ScanQRCode')}
         accessibilityLabel={t('BCSC.TransferInstructions.ScanQRCode')}
-        testID={testIdWithKey('ScanQRCode')}
+        testID={testIdWithKey(TestIds.verify.transferInstructions.scanQrCode)}
         onPress={() => {
           navigation.navigate(BCSCScreens.TransferAccountQRScan)
         }}
