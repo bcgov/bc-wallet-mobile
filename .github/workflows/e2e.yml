@@ -227,7 +227,7 @@ jobs:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           SAUCE_USERNAME: op://bcsc-mobile-app-cd/saucelabs/username
           SAUCE_ACCESS_KEY: op://bcsc-mobile-app-cd/saucelabs/credential
-          # email = the account's Entra sign-in name (UPN); otp-seed = its authenticator base32 secret
+          # email = the Entra sign-in name (UPN); credential = the login password; the "password" field holds the authenticator base32 seed (TOTP)
           IDCHECK_USER: op://bcsc-mobile-app-cd/bcsc-ias-test-account/email
           IDCHECK_PASSWORD: op://bcsc-mobile-app-cd/bcsc-ias-test-account/credential
           IDCHECK_TOTP_SECRET: op://bcsc-mobile-app-cd/bcsc-ias-test-account/password
