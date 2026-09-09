@@ -213,6 +213,13 @@ const translation = {
     "EnableProxy": "Enable proxy (PT-BR)",
     "EnableAppToAppPersonFlow": "App-to-app Person flow (PT-BR)",
     "SwitchTheme": "Switch theme (PT-BR)",
+    "ProofRequestExpirationTimes": {
+      "TwoMinutes": "2 minutes (PT-BR)",
+      "OneHour": "1 hour (PT-BR)",
+      "FortyEightHours": "48 hours (PT-BR)",
+      "SevenDays": "7 days (PT-BR)",
+      "Never": "Never (PT-BR)"
+    },
     "AppSection": "App (PT-BR)",
     "Testing": "Testing (PT-BR)",
     "ErrorAlertTest": "Error & Alert Testing (PT-BR)",
@@ -437,6 +444,7 @@ const translation = {
       "Biometrics": "Biometrics (PT-BR)",
       "EditNickname": "Edit Nickname (PT-BR)",
       "AutoLockTime": "Auto lock time (PT-BR)",
+      "ProofRequestExpiry": "Proof request expiration (PT-BR)",
       "Notifications": "Notifications (PT-BR)",
       "ChangeNotificationsHeader": "Change notification settings? (PT-BR)",
       "NotificationsEnabledContent": "With notifications enabled, stay informed about account updates, credential changes and service interruptions. (PT-BR)",

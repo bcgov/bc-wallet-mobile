@@ -213,6 +213,13 @@ const translation = {
     "EnableProxy": "Enable proxy (FR)",
     "EnableAppToAppPersonFlow": "App-to-app Person flow (FR)",
     "SwitchTheme": "Switch theme (FR)",
+    "ProofRequestExpirationTimes": {
+      "TwoMinutes": "2 minutes (FR)",
+      "OneHour": "1 hour (FR)",
+      "FortyEightHours": "48 hours (FR)",
+      "SevenDays": "7 days (FR)",
+      "Never": "Never (FR)"
+    },
     "AppSection": "App (FR)",
     "Testing": "Testing (FR)",
     "ErrorAlertTest": "Error & Alert Testing (FR)",
@@ -437,6 +444,7 @@ const translation = {
       "Biometrics": "Biometrics (FR)",
       "EditNickname": "Edit Nickname (FR)",
       "AutoLockTime": "Auto lock time (FR)",
+      "ProofRequestExpiry": "Proof request expiration (FR)",
       "Notifications": "Notifications (FR)",
       "ChangeNotificationsHeader": "Change notification settings? (FR)",
       "NotificationsEnabledContent": "With notifications enabled, stay informed about account updates, credential changes and service interruptions. (FR)",
