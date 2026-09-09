@@ -1,36 +1,16 @@
-import { BCSCLoadingProvider, LoadingPresentation, LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
-import { BCAnimatedLoadingIcon } from '@/bcsc-theme/features/splash-loading/BCAnimatedLoadingIcon'
-import { LoadingScreenContent } from '@/bcsc-theme/features/splash-loading/LoadingScreenContent'
+import { BCAnimatedLoadingIcon } from '@/bcsc-theme/components/BCAnimatedLoadingIcon'
+import { BCSCLoadingProvider, LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useAlerts } from '@/hooks/useAlerts'
 import { testIdWithKey } from '@bifold/core'
 import { BasicAppContext } from '@mocks/helpers/app'
 import { act, render } from '@testing-library/react-native'
+import { Animated } from 'react-native'
 import { canPerformDeviceAuthentication, unlockWithDeviceSecurity } from 'react-native-bcsc-core'
 import { useAuthentication } from './useAuthentication'
 import useSecureActions from './useSecureActions'
 
 jest.mock('./useSecureActions')
 jest.mock('@/hooks/useAlerts')
-
-const mockAnimationFrames = () => {
-  const callbacks = new Map<number, Parameters<typeof requestAnimationFrame>[0]>()
-  let nextFrame = 0
-
-  jest.spyOn(global, 'requestAnimationFrame').mockImplementation((callback) => {
-    const frame = ++nextFrame
-    callbacks.set(frame, callback)
-    return frame
-  })
-  jest.spyOn(global, 'cancelAnimationFrame').mockImplementation((frame) => {
-    callbacks.delete(frame)
-  })
-
-  return () => {
-    const pendingCallbacks = Array.from(callbacks.values())
-    callbacks.clear()
-    act(() => pendingCallbacks.forEach((callback) => callback(0)))
-  }
-}
 
 describe('authentication loading handoff', () => {
   const navigation = { navigate: jest.fn(), dispatch: jest.fn() } as any
@@ -51,7 +31,11 @@ describe('authentication loading handoff', () => {
     <BasicAppContext>
       <BCSCLoadingProvider>
         {mainLoading ? (
-          <LoadingScreen presentation={LoadingPresentation.Startup} statusMessage="BCSC.Loading.AccountLoading" />
+          <LoadingScreen
+            message="BCSC.Loading.AppStartup"
+            progressPercent={(2 / 3) * 100}
+            statusMessage="BCSC.Loading.AccountLoading"
+          />
         ) : (
           <Authentication />
         )}
@@ -68,8 +52,40 @@ describe('authentication loading handoff', () => {
 
   afterEach(() => jest.restoreAllMocks())
 
+  it('stays visible without restarting the animation when Main acquires its token before auth releases', async () => {
+    const start = jest.fn()
+    const stop = jest.fn()
+    jest.spyOn(Animated, 'loop').mockReturnValue({ start, stop, reset: jest.fn() })
+    jest.mocked(unlockWithDeviceSecurity).mockResolvedValue({ success: true, walletKey: 'test-key' })
+    let resolveHydration!: () => void
+    jest.mocked(useSecureActions).mockReturnValue({
+      handleSuccessfulAuth: () =>
+        new Promise<void>((resolve) => {
+          resolveHydration = resolve
+        }),
+    } as any)
+    const view = render(<App />)
+    let pending!: Promise<void>
+    await act(async () => {
+      pending = authenticate()
+    })
+
+    view.rerender(<App mainLoading />)
+    await act(async () => {
+      resolveHydration()
+      await pending
+    })
+    expect(view.getByTestId(testIdWithKey('BCSCLoadingProviderOverlay'))).toHaveStyle({ display: 'flex' })
+    expect(view.getByText('BCSC.Loading.AccountLoading')).toBeTruthy()
+    expect(start).toHaveBeenCalledTimes(1)
+    expect(stop).not.toHaveBeenCalled()
+
+    view.rerender(<App />)
+    expect(stop).toHaveBeenCalledTimes(1)
+    expect(view.queryByTestId(testIdWithKey('LoadingScreenContent'))).toBeNull()
+  })
+
   it('keeps the same startup illustration through authentication, hydration, and a separate Main loading commit', async () => {
-    const flushAnimationFrames = mockAnimationFrames()
     let resolveUnlock!: (result: Awaited<ReturnType<typeof unlockWithDeviceSecurity>>) => void
     let resolveHydration!: () => void
     jest.mocked(unlockWithDeviceSecurity).mockReturnValue(
@@ -92,7 +108,6 @@ describe('authentication loading handoff', () => {
 
     const illustration = view.UNSAFE_getByType(BCAnimatedLoadingIcon)
     expect(view.getByText('BCSC.Loading.AccountLoading')).toBeTruthy()
-    expect(view.UNSAFE_queryAllByType(LoadingScreenContent)).toHaveLength(0)
 
     await act(async () => {
       resolveUnlock({ success: true, walletKey: 'test-key' })
@@ -108,19 +123,19 @@ describe('authentication loading handoff', () => {
       display: 'none',
     })
     expect(view.UNSAFE_getByType(BCAnimatedLoadingIcon)).toBe(illustration)
+    expect(illustration.props.active).toBe(false)
 
     view.rerender(<App mainLoading />)
-    expect(view.getByTestId(testIdWithKey('StartupLoadingScreenContent'))).toBeTruthy()
+    expect(view.getByTestId(testIdWithKey('LoadingScreenContent'))).toBeTruthy()
     expect(view.UNSAFE_getByType(BCAnimatedLoadingIcon)).toBe(illustration)
-    expect(view.UNSAFE_queryAllByType(LoadingScreenContent)).toHaveLength(0)
     expect(view.getByText('BCSC.Loading.AccountLoading')).toBeTruthy()
+    expect(illustration.props.active).toBe(true)
 
     view.rerender(<App />)
     expect(view.getByTestId(testIdWithKey('BCSCLoadingProviderChildren'))).toHaveStyle({ display: 'flex' })
-    expect(view.getByTestId(testIdWithKey('StartupLoadingScreenContent'), { includeHiddenElements: true })).toBeTruthy()
+    expect(view.getByTestId(testIdWithKey('LoadingScreenContent'), { includeHiddenElements: true })).toBeTruthy()
 
-    flushAnimationFrames()
-    expect(view.queryByTestId(testIdWithKey('StartupLoadingScreenContent'), { includeHiddenElements: true })).toBeNull()
+    expect(illustration.props.active).toBe(false)
   })
 
   it.each(['cancelled', 'failed'] as const)(
@@ -141,7 +156,7 @@ describe('authentication loading handoff', () => {
       view.rerender(<App genericLoading />)
       expect(view.getByTestId(testIdWithKey('LoadingScreenContent'))).toBeTruthy()
       expect(view.getByText('Other work')).toBeTruthy()
-      expect(view.queryByTestId(testIdWithKey('StartupLoadingScreenContent'))).toBeNull()
+      expect(view.queryByRole('progressbar')).toBeNull()
     }
   )
 })

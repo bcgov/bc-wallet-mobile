@@ -14,15 +14,11 @@ const AnimatedG = Animated.createAnimatedComponent(G)
 
 interface BCAnimatedLoadingIconProps {
   size: number
+  active?: boolean
 }
 
-/**
- * Renders the BCAnimatedLoadingIcon component, which displays an animated loading icon.
- *
- * @param {BCAnimatedLoadingIconProps} props - The properties for the BCAnimatedLoadingIcon component, including the size of the icon.
- * @returns The BCAnimatedLoadingIcon component.
- */
-export const BCAnimatedLoadingIcon = (props: BCAnimatedLoadingIconProps) => {
+/** Stops native animation while inactive, retaining the illustration for layout reuse. */
+export const BCAnimatedLoadingIcon = ({ size, active = true }: BCAnimatedLoadingIconProps) => {
   const phase = useRef(new Animated.Value(0)).current
 
   const darkSkyOpacity = phase.interpolate({
@@ -39,6 +35,9 @@ export const BCAnimatedLoadingIcon = (props: BCAnimatedLoadingIconProps) => {
   })
 
   useEffect(() => {
+    if (!active) {
+      return
+    }
     // A single timing keeps the entire loop on the native driver while startup occupies JavaScript.
     const animation = Animated.loop(
       Animated.timing(phase, {
@@ -53,10 +52,10 @@ export const BCAnimatedLoadingIcon = (props: BCAnimatedLoadingIconProps) => {
     animation.start()
 
     return () => animation.stop()
-  }, [phase])
+  }, [active, phase])
 
   return (
-    <Svg width={props.size} height={props.size} viewBox="0 0 113 113" fill="none">
+    <Svg width={size} height={size} viewBox="0 0 113 113" fill="none">
       <Defs>
         <ClipPath id="clip0_369_1738">
           <Rect width="113" height="113" fill="white" />

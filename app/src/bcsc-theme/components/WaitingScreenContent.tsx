@@ -1,17 +1,12 @@
 import ProgressBar from '@/components/ProgressBar'
 import { TestIds } from '@/test-ids/registry'
+import { AppColorPalette, LightWaitingScreenColors } from '@/theme/waiting-screen'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { ReactNode, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { BCAnimatedLoadingIcon } from '../features/splash-loading/BCAnimatedLoadingIcon'
-
-const WAITING_LIGHT_COLORS = {
-  heading: '#013366',
-  status: '#474543',
-  track: '#FAF9F8',
-  progress: '#F8BA47',
-}
+import { BCAnimatedLoadingIcon } from './BCAnimatedLoadingIcon'
 
 export const WaitingScreenContent = ({
   message,
@@ -19,18 +14,24 @@ export const WaitingScreenContent = ({
   progressPercent,
   testID,
   controls,
+  active = true,
 }: {
   message: string
-  statusMessage: string
-  progressPercent: number
+  statusMessage?: string
+  progressPercent?: number
   testID?: string
   controls?: ReactNode
+  active?: boolean
 }) => {
-  const { ColorPalette, NavigationTheme, Spacing, TextTheme } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
+  const colors = (ColorPalette as AppColorPalette).waitingScreen ?? LightWaitingScreenColors
+  const { t } = useTranslation()
   const [viewportHeight, setViewportHeight] = useState(0)
   const [loadingHeight, setLoadingHeight] = useState(0)
   const iconSize = 113
-  const isLayoutReady = viewportHeight > 0 && loadingHeight > 0
+  const hasProgress = progressPercent !== undefined
+  const status = statusMessage ?? t('Init.Starting')
+  const isLayoutReady = viewportHeight > 0 && (!hasProgress || loadingHeight > 0)
 
   const styles = StyleSheet.create({
     container: {
@@ -48,7 +49,6 @@ export const WaitingScreenContent = ({
       gap: Spacing.sm,
     },
     loading: {
-      minHeight: 43,
       gap: 2,
     },
     track: {
@@ -59,16 +59,19 @@ export const WaitingScreenContent = ({
       paddingVertical: 6,
       textAlign: 'center',
       lineHeight: 21,
-      color: NavigationTheme.dark ? TextTheme.caption.color : WAITING_LIGHT_COLORS.status,
+      color: colors.status,
     },
     headingContainer: {
-      minHeight: Math.max(0, (viewportHeight - iconSize) / 2 - loadingHeight - 2 * Spacing.sm),
+      minHeight: Math.max(
+        0,
+        (viewportHeight - iconSize) / 2 - (hasProgress ? loadingHeight + Spacing.sm : 0) - Spacing.sm
+      ),
       paddingHorizontal: Spacing.lg,
       justifyContent: 'center',
     },
     heading: {
       textAlign: 'center',
-      color: NavigationTheme.dark ? ColorPalette.brand.primary : WAITING_LIGHT_COLORS.heading,
+      color: colors.heading,
       fontSize: 24,
       lineHeight: 36,
     },
@@ -95,32 +98,36 @@ export const WaitingScreenContent = ({
         }}
       >
         <View style={styles.header}>
-          <View
-            style={styles.loading}
-            testID={testIdWithKey(TestIds.common.waitingScreenStatus)}
-            onLayout={({ nativeEvent }) => {
-              if (nativeEvent.layout.height > 0) {
-                setLoadingHeight(nativeEvent.layout.height)
-              }
-            }}
-          >
+          {hasProgress && (
             <View
-              style={styles.track}
-              accessible
-              accessibilityRole="progressbar"
-              accessibilityLabel={statusMessage}
-              accessibilityState={{ busy: true }}
+              style={styles.loading}
+              testID={testIdWithKey(TestIds.common.waitingScreenStatus)}
+              onLayout={({ nativeEvent }) => {
+                if (nativeEvent.layout.height > 0) {
+                  setLoadingHeight(nativeEvent.layout.height)
+                }
+              }}
             >
-              <ProgressBar
-                progressPercent={progressPercent}
-                trackColor={NavigationTheme.dark ? ColorPalette.grayscale.veryLightGrey : WAITING_LIGHT_COLORS.track}
-                progressColor={NavigationTheme.dark ? ColorPalette.brand.highlight : WAITING_LIGHT_COLORS.progress}
-              />
+              <View
+                style={styles.track}
+                accessible
+                accessibilityRole="progressbar"
+                accessibilityLabel={status}
+                accessibilityState={{ busy: true }}
+              >
+                <ProgressBar
+                  progressPercent={progressPercent}
+                  trackColor={colors.track}
+                  progressColor={colors.progress}
+                  height={8}
+                  active={active}
+                />
+              </View>
+              <ThemedText variant="caption" style={styles.status}>
+                {status}
+              </ThemedText>
             </View>
-            <ThemedText variant="caption" style={styles.status}>
-              {statusMessage}
-            </ThemedText>
-          </View>
+          )}
           <View style={styles.headingContainer}>
             <ThemedText variant="headingThree" style={styles.heading}>
               {message}
@@ -128,7 +135,7 @@ export const WaitingScreenContent = ({
           </View>
         </View>
         <View style={styles.illustration} accessible={false} importantForAccessibility="no-hide-descendants">
-          <BCAnimatedLoadingIcon size={iconSize} />
+          <BCAnimatedLoadingIcon size={iconSize} active={active} />
         </View>
         {controls ? <View style={styles.controls}>{controls}</View> : null}
       </ScrollView>

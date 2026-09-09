@@ -20,7 +20,7 @@ import { createFloatingHelpMenuButton } from '../components/FloatingHelpMenuHead
 import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { useAccount } from '../contexts/BCSCAccountContext'
-import { LoadingPresentation, LoadingScreen } from '../contexts/BCSCLoadingContext'
+import { LoadingScreen } from '../contexts/BCSCLoadingContext'
 import { useBCSCStack } from '../contexts/BCSCStackContext'
 import TransferQRDisplayScreen from '../features/account-transfer/transferer/TransferQRDisplayScreen'
 import TransferQRInformationScreen from '../features/account-transfer/transferer/TransferQRInformationScreen'
@@ -187,7 +187,7 @@ const MainStack: React.FC = () => {
     return (
       <LoadingScreen
         message={t('BCSC.Loading.AppStartup')}
-        presentation={LoadingPresentation.Startup}
+        progressPercent={(2 / 3) * 100}
         statusMessage={t('BCSC.Loading.AccountLoading')}
       />
     )
@@ -200,7 +200,7 @@ const MainStack: React.FC = () => {
       {isAwaitingSystemChecks ? (
         <LoadingScreen
           message={t('BCSC.Loading.AppStartup')}
-          presentation={LoadingPresentation.Startup}
+          progressPercent={(2 / 3) * 100}
           statusMessage={t('BCSC.Loading.AccountLoading')}
         />
       ) : null}

@@ -4,7 +4,6 @@ import { useNavigation } from '@react-navigation/native'
 import { act, render } from '@testing-library/react-native'
 import React from 'react'
 import { useAccount } from '../contexts/BCSCAccountContext'
-import { LoadingPresentation } from '../contexts/BCSCLoadingContext'
 import * as PairingModule from '../features/pairing'
 import { PairingNavigationListener, PairingPayload } from '../features/pairing/types'
 import { useSystemChecks } from '../hooks/useSystemChecks'
@@ -55,7 +54,6 @@ jest.mock('../contexts/BCSCStackContext', () => ({
   useBCSCStack: jest.fn(),
 }))
 jest.mock('../contexts/BCSCLoadingContext', () => ({
-  LoadingPresentation: { Default: 'default', Startup: 'startup' },
   LoadingScreen: 'LoadingScreen',
 }))
 jest.mock('../hooks/useSystemChecks', () => ({
@@ -219,7 +217,7 @@ describe('MainStack', () => {
 
     expect(toJSON()).toMatchObject({
       type: 'LoadingScreen',
-      props: { presentation: LoadingPresentation.Startup, statusMessage: 'BCSC.Loading.AccountLoading' },
+      props: { progressPercent: (2 / 3) * 100, statusMessage: 'BCSC.Loading.AccountLoading' },
     })
   })
 
@@ -228,7 +226,7 @@ describe('MainStack', () => {
 
     const loadingScreens = queryLoadingScreens(render(<MainStack />))
     expect(loadingScreens).toHaveLength(1)
-    expect(loadingScreens[0].props.presentation).toBe(LoadingPresentation.Startup)
+    expect(loadingScreens[0].props.progressPercent).toBe((2 / 3) * 100)
     expect(loadingScreens[0].props.statusMessage).toBe('BCSC.Loading.AccountLoading')
   })
 

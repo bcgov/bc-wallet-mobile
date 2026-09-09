@@ -11,7 +11,7 @@ jest.mock('@/components/ProgressBar', () => ({
   __esModule: true,
   default: jest.fn(() => null),
 }))
-jest.mock('@/bcsc-theme/features/splash-loading/BCAnimatedLoadingIcon', () => ({
+jest.mock('@/bcsc-theme/components/BCAnimatedLoadingIcon', () => ({
   BCAnimatedLoadingIcon: () => null,
 }))
 

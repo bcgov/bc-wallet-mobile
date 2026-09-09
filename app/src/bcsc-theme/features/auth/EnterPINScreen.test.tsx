@@ -1,4 +1,3 @@
-import { LoadingPresentation } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
 import { testIdWithKey } from '@bifold/core'
@@ -19,7 +18,6 @@ const mockStopLoading = jest.fn()
 const mockStartLoading = jest.fn(() => mockStopLoading)
 
 jest.mock('@/bcsc-theme/contexts/BCSCLoadingContext', () => ({
-  LoadingPresentation: { Default: 'default', Startup: 'startup' },
   useLoadingScreen: () => ({ startLoading: mockStartLoading }),
 }))
 
@@ -136,11 +134,10 @@ describe('EnterPINScreen', () => {
     await act(async () => {
       resolveVerification({ success: true, walletKey: 'test-key', locked: false, message: '', remainingTime: 0 })
     })
-    expect(mockStartLoading).toHaveBeenCalledWith(
-      'BCSC.Loading.AppStartup',
-      LoadingPresentation.Startup,
-      'BCSC.Loading.AccountLoading'
-    )
+    expect(mockStartLoading).toHaveBeenCalledWith('BCSC.Loading.AppStartup', {
+      progressPercent: (2 / 3) * 100,
+      statusMessage: 'BCSC.Loading.AccountLoading',
+    })
     expect(mockStopLoading).not.toHaveBeenCalled()
 
     await act(async () => {

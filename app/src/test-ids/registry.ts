@@ -38,7 +38,6 @@ export const TestIds = {
     // App-level gates and overlays, not screen controls: the splash/loading body, the two halves of
     // `BCSCLoadingContext`'s overlay, and the retry on the Credo agent gate. Any screen can be behind them.
     loadingScreen: 'LoadingScreenContent',
-    startupLoadingScreen: 'StartupLoadingScreenContent',
     waitingScreenViewport: 'WaitingScreenContentViewport',
     waitingScreenStatus: 'WaitingScreenContentStatus',
     loadingOverlay: 'BCSCLoadingProviderOverlay',

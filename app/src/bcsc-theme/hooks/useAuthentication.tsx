@@ -13,7 +13,7 @@ import {
   isAccountLocked,
   unlockWithDeviceSecurity,
 } from 'react-native-bcsc-core'
-import { LoadingPresentation, useLoadingScreen } from '../contexts/BCSCLoadingContext'
+import { useLoadingScreen } from '../contexts/BCSCLoadingContext'
 import { BCSCAuthStackParams, BCSCScreens } from '../types/navigators'
 import useSecureActions from './useSecureActions'
 
@@ -40,11 +40,10 @@ export const useAuthentication = (navigation: StackNavigationProp<BCSCAuthStackP
     let stopLoading
 
     try {
-      stopLoading = startLoading(
-        t('BCSC.Loading.AppStartup'),
-        LoadingPresentation.Startup,
-        t('BCSC.Loading.AccountLoading')
-      )
+      stopLoading = startLoading(t('BCSC.Loading.AppStartup'), {
+        progressPercent: (2 / 3) * 100,
+        statusMessage: t('BCSC.Loading.AccountLoading'),
+      })
 
       // Check if they have changed their device auth settings
       const deviceAuthAvailable = await canPerformDeviceAuthentication()
