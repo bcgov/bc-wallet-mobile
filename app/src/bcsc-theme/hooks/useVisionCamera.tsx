@@ -87,16 +87,17 @@ export const useVisionCamera = ({ position, deviceFilter, photoOutput, videoOutp
       videoOutput.setOutputSettings({ codec: DEFAULT_VIDEO_OUTPUT_CODEC })
       recorderRef.current = await videoOutput.createRecorder({})
 
-      await recorderRef.current.startRecording(
-        (filePath, reason) =>
-          options.onRecordingFinished({
-            filePath,
-            reason,
-            duration: recorderRef.current?.recordedDuration ?? -1,
-            fileSize: recorderRef.current?.recordedFileSize ?? -1,
-          }),
-        options.onRecordingError
-      )
+      await recorderRef.current.startRecording((filePath, reason) => {
+        options.onRecordingFinished({
+          filePath,
+          reason,
+          duration: recorderRef.current?.recordedDuration ?? -1,
+          fileSize: recorderRef.current?.recordedFileSize ?? -1,
+        })
+
+        // Reset the recorder reference after recording is finished
+        recorderRef.current = null
+      }, options.onRecordingError)
     },
     [logger, videoOutput]
   )
@@ -106,18 +107,14 @@ export const useVisionCamera = ({ position, deviceFilter, photoOutput, videoOutp
    * @returns A Promise that resolves when the recording has been stopped.
    */
   const stopRecordingVideo = useCallback(async () => {
-    try {
-      if (!recorderRef.current?.isRecording) {
-        logger.warn('[Camera] No recording in progress')
-        return
-      }
-
-      logger.debug('[Camera] Stopping video recording')
-
-      await recorderRef.current.stopRecording()
-    } finally {
-      recorderRef.current = null
+    if (!recorderRef.current?.isRecording) {
+      logger.warn('[Camera] No recording in progress')
+      return
     }
+
+    logger.debug('[Camera] Stopping video recording')
+
+    await recorderRef.current.stopRecording()
   }, [logger])
 
   /**

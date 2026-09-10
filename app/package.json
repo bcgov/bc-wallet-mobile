@@ -136,7 +136,7 @@
     "react-native-url-polyfill": "^3.0.0",
     "react-native-uuid": "~2.0.4",
     "react-native-vector-icons": "~10.3.0",
-    "react-native-video": "~6.19.2",
+    "react-native-video": "patch:react-native-video@npm%3A6.19.2#~/.yarn/patches/react-native-video-npm-6.19.2-1043ec3883.patch",
     "react-native-vision-camera": "^5.2.3",
     "react-native-vision-camera-barcode-scanner": "^5.2.3",
     "react-native-volume-manager": "~1.10.0",
