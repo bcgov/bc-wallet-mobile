@@ -27,7 +27,7 @@
     "start": "react-native start --reset-cache",
     "test": "TZ=GMT jest --config ./jest.config.js",
     "test:watch": "TZ=GMT jest --config ./jest.config.js --watch",
-    "test:coverage": "TZ=GMT jest --config ./jest.config.js --coverage",
+    "test:coverage": "TZ=GMT jest --config ./jest.config.js --coverage --logHeapUsage",
     "test:snapshot": "TZ=GMT jest --updateSnapshot",
     "lint": "eslint --color .",
     "lint:fix": "eslint --color . --fix",
