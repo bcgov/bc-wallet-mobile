@@ -254,10 +254,6 @@ class KeyPairManager: KeyPairManagerProtocol {
     return [match] + newestFirst.filter { $0.tag != match.tag }
   }
 
-  static func decryptKeyInfo(matching kid: String, in keys: [PrivateKeyInfo]) -> PrivateKeyInfo? {
-    return decryptKeyInfos(matching: kid, in: keys).first
-  }
-
   func generateKeyPair(
     withLabel label: String,
     keyType: KeyType = KeyType.RSA,
