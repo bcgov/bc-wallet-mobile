@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo, useRef } from 'react'
 import { BCSCCardProcess } from 'react-native-bcsc-core'
-import { CodeType } from 'react-native-vision-camera'
+import { BarcodeFormat } from 'react-native-vision-camera-barcode-scanner'
 import { DeviceAuthorizationResponse, DeviceVerificationOption } from '../api/hooks/useAuthorizationApi'
 import { useAuthorizationService } from '../services/hooks/useAuthorizationService'
 import { BCSCScreens, BCSCVerifyStackParams } from '../types/navigators'
@@ -329,7 +329,11 @@ export const useCardScanner = () => {
       handleScanBCServicesCard,
       handleScanDriversLicense,
       handleScanNonBcsc,
-      codeTypes: [BC_SERVICES_CARD_BARCODE, OLD_BC_SERVICES_CARD_BARCODE, DRIVERS_LICENSE_BARCODE] satisfies CodeType[],
+      codeTypes: [
+        BC_SERVICES_CARD_BARCODE,
+        OLD_BC_SERVICES_CARD_BARCODE,
+        DRIVERS_LICENSE_BARCODE,
+      ] satisfies BarcodeFormat[],
     }),
     [
       handleCardScan,

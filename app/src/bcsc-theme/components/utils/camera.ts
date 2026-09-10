@@ -1,14 +1,7 @@
 import { Platform } from 'react-native'
-import {
-  AutoFocusSystem,
-  CameraDevice,
-  CameraDeviceFormat,
-  Code,
-  FormatFilter,
-  VideoStabilizationMode,
-} from 'react-native-vision-camera'
-
-import { PHOTO_RESOLUTION_1080P } from '@/constants'
+import { CameraDevice } from 'react-native-vision-camera'
+// import { FormatFilter } from 'react-native-vision-camera'
+import { Barcode } from 'react-native-vision-camera-barcode-scanner'
 
 // ─── Shared Types ─────────────────────────────────────────────────────────────
 
@@ -18,7 +11,7 @@ export type Rect = { x: number; y: number; width: number; height: number }
 /**
  * Extended Code interface with position and orientation metadata
  */
-export interface EnhancedCode extends Code {
+export interface EnhancedCode extends Barcode {
   /** Position of the barcode in the camera frame */
   position?: Rect
   /** Orientation of the barcode (horizontal or vertical) */
@@ -45,99 +38,99 @@ export interface ScanZone {
 /** Collective scan state: scanning → aligned → locked */
 export type ScanState = 'scanning' | 'aligned' | 'locked'
 
-// ─── Camera Format Configurations ─────────────────────────────────────────────
-
-/**
- * Pre-defined camera format filters for different scanning scenarios.
- *
- * @see {@link node_modules/react-native-vision-camera/src/devices/getCameraFormat.ts} for the underlying format selection logic.
- */
-export const CameraFormat = {
-  /**
-   * Format optimized for barcode scanning (back camera, no selfie).
-   * Prioritizes high resolution and moderate frame rate for accurate detection
-   *
-   * Ideal format: 1080p + 30 FPS + non-HDR + stabilization
-   * Usecase: Scanning barcodes on ID cards.
-   */
-  CodeScanningFormat: [
-    // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
-    // pixel format (e.g. "btp2") is incompatible with VisionCamera's pipeline.
-    {
-      videoHdr: false,
-    },
-    // High resolution for better barcode detection
-    {
-      videoResolution: PHOTO_RESOLUTION_1080P,
-    },
-    // Moderate FPS for smooth preview without excessive processing load
-    {
-      fps: 30,
-    },
-    // Enable video stabilization for steadier scanning
-    {
-      videoStabilizationMode: 'auto',
-    },
-  ] satisfies FormatFilter[],
-  /**
-   * Format optimized for masked camera with barcode detection.
-   *
-   * Ideal format: 1080p + 60 FPS + non-HDR + stabilization
-   * Usecase: Capturing ID cards AND detecting barcodes in real-time.
-   */
-  MaskedWithBarcodeDetection: [
-    // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
-    // pixel format (e.g. "btp2") is incompatible with VisionCamera's pipeline.
-    {
-      videoHdr: false,
-    },
-    // Use phase-detection autofocus for faster and more accurate focusing on barcodes
-    {
-      autoFocusSystem: 'phase-detection',
-    },
-    // High resolution for better barcode detection
-    {
-      videoResolution: PHOTO_RESOLUTION_1080P,
-    },
-    // High resolution for better photo quality when capturing the ID card
-    {
-      photoResolution: PHOTO_RESOLUTION_1080P,
-    },
-    // Moderate FPS for smooth preview without excessive processing load
-    {
-      fps: 60,
-    },
-    // Enable video stabilization for steadier scanning
-    {
-      videoStabilizationMode: 'auto',
-    },
-  ] satisfies FormatFilter[],
-
-  /**
-   * Format optimized for capturing a still selfie (front camera, no barcode detection).
-   * Prioritizes photo resolution and quality over preview frame rate, since the output
-   * is a single still image that gets displayed full-screen and uploaded — unlike the
-   * barcode formats, there is no live scanning that needs high FPS.
-   *
-   * Ideal format: 1080p + 30 FPS + non-HDR
-   * Usecase: Capturing a selfie for identity verification or profile picture.
-   */
-  SelfiePhoto: [
-    // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
-    // pixel format (e.g. "btp2") is incompatible with VisionCamera's pipeline.
-    {
-      videoHdr: false,
-    },
-    // High resolution for better selfie quality
-    {
-      photoResolution: PHOTO_RESOLUTION_1080P,
-    },
-    // Moderate FPS for smooth preview without excessive processing load
-    {
-      fps: 30,
-    },
-  ] satisfies FormatFilter[],
-}
+// // ─── Camera Format Configurations ─────────────────────────────────────────────
+//
+// /**
+//  * Pre-defined camera format filters for different scanning scenarios.
+//  *
+//  * @see {@link node_modules/react-native-vision-camera/src/devices/getCameraFormat.ts} for the underlying format selection logic.
+//  */
+// export const CameraFormat = {
+//   /**
+//    * Format optimized for barcode scanning (back camera, no selfie).
+//    * Prioritizes high resolution and moderate frame rate for accurate detection
+//    *
+//    * Ideal format: 1080p + 30 FPS + non-HDR + stabilization
+//    * Usecase: Scanning barcodes on ID cards.
+//    */
+//   CodeScanningFormat: [
+//     // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
+//     // pixel format (e.g. "btp2") is incompatible with VisionCamera's pipeline.
+//     {
+//       videoHdr: false,
+//     },
+//     // High resolution for better barcode detection
+//     {
+//       videoResolution: PHOTO_RESOLUTION_1080P,
+//     },
+//     // Moderate FPS for smooth preview without excessive processing load
+//     {
+//       fps: 30,
+//     },
+//     // Enable video stabilization for steadier scanning
+//     {
+//       videoStabilizationMode: 'auto',
+//     },
+//   ] satisfies FormatFilter[],
+//   /**
+//    * Format optimized for masked camera with barcode detection.
+//    *
+//    * Ideal format: 1080p + 60 FPS + non-HDR + stabilization
+//    * Usecase: Capturing ID cards AND detecting barcodes in real-time.
+//    */
+//   MaskedWithBarcodeDetection: [
+//     // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
+//     // pixel format (e.g. "btp2") is incompatible with VisionCamera's pipeline.
+//     {
+//       videoHdr: false,
+//     },
+//     // Use phase-detection autofocus for faster and more accurate focusing on barcodes
+//     {
+//       autoFocusSystem: 'phase-detection',
+//     },
+//     // High resolution for better barcode detection
+//     {
+//       videoResolution: PHOTO_RESOLUTION_1080P,
+//     },
+//     // High resolution for better photo quality when capturing the ID card
+//     {
+//       photoResolution: PHOTO_RESOLUTION_1080P,
+//     },
+//     // Moderate FPS for smooth preview without excessive processing load
+//     {
+//       fps: 60,
+//     },
+//     // Enable video stabilization for steadier scanning
+//     {
+//       videoStabilizationMode: 'auto',
+//     },
+//   ] satisfies FormatFilter[],
+//
+//   /**
+//    * Format optimized for capturing a still selfie (front camera, no barcode detection).
+//    * Prioritizes photo resolution and quality over preview frame rate, since the output
+//    * is a single still image that gets displayed full-screen and uploaded — unlike the
+//    * barcode formats, there is no live scanning that needs high FPS.
+//    *
+//    * Ideal format: 1080p + 30 FPS + non-HDR
+//    * Usecase: Capturing a selfie for identity verification or profile picture.
+//    */
+//   SelfiePhoto: [
+//     // Prefer non-HDR (8-bit) formats to avoid 10-bit-only HDR formats whose
+//     // pixel format (e.g. "btp2") is incompatible with VisionCamera's pipeline.
+//     {
+//       videoHdr: false,
+//     },
+//     // High resolution for better selfie quality
+//     {
+//       photoResolution: PHOTO_RESOLUTION_1080P,
+//     },
+//     // Moderate FPS for smooth preview without excessive processing load
+//     {
+//       fps: 30,
+//     },
+//   ] satisfies FormatFilter[],
+// }
 
 // ─── Pure Utility Functions ───────────────────────────────────────────────────
 
@@ -363,203 +356,221 @@ export const isCodeAlignedWithZones = (
   return isFullyWithinBounds(scanZoneBounds, { x: marginX, y: marginY })
 }
 
-/**
- * Determine the collective scan state from the current set of enhanced codes.
- *
- * Transitions:
- * - `'scanning'`  — fewer than `minCodesForAligned` qualifying codes detected
- * - `'aligned'`   — enough qualifying codes, but not yet consistently read
- * - `'locked'`    — all qualifying codes have been read ≥ `lockReadingThreshold` times
- *
- * All identified (non-empty value) codes qualify for these transitions — position
- * on screen is not a gate. Card identity is validated downstream by decoding
- * content (`useCardScanner` → `decodeScannedCode`); a scan that decodes to a
- * DL-only card with no BCSC serial is rejected there via the `onCodeScanned`
- * `false` return, which resets the scanner. `isAligned` is still computed per
- * code (see `enhanceSingleCode`) but only drives focus-cycle prioritisation and
- * the (purely visual) scan zone outline colour — never whether a scan counts.
- *
- * @param codes Enhanced codes from the current scan frame
- * @param options Thresholds controlling state transitions
- * @returns The new scan state and the qualifying codes that drove the transition
- */
-export const determineScanState = (
-  codes: EnhancedCode[],
-  options: {
-    minCodesForAligned: number
-    lockReadingThreshold: number
-  }
-): { newScanState: ScanState; qualifyingCodes: EnhancedCode[] } => {
-  const { minCodesForAligned, lockReadingThreshold } = options
-  const identifiedCodes = codes.filter((c) => c.value && c.value.length > 0)
-
-  // Every identified code qualifies — no alignment/position filter.
-  const qualifyingCodes = identifiedCodes
-
-  const qualifyingCount = qualifyingCodes.length
-  const allLocked =
-    qualifyingCount >= minCodesForAligned && qualifyingCodes.every((c) => (c.readingCount ?? 0) >= lockReadingThreshold)
-
-  let newScanState: ScanState
-  if (allLocked) {
-    newScanState = 'locked'
-  } else if (qualifyingCount >= minCodesForAligned) {
-    newScanState = 'aligned'
-  } else {
-    newScanState = 'scanning'
-  }
-
-  return { newScanState, qualifyingCodes }
-}
+// /**
+//  * Determine the collective scan state from the current set of enhanced codes.
+//  *
+//  * Transitions:
+//  * - `'scanning'`  — fewer than `minCodesForAligned` qualifying codes detected
+//  * - `'aligned'`   — enough qualifying codes, but not yet consistently read
+//  * - `'locked'`    — all qualifying codes have been read ≥ `lockReadingThreshold` times
+//  *
+//  * All identified (non-empty value) codes qualify for these transitions — position
+//  * on screen is not a gate. Card identity is validated downstream by decoding
+//  * content (`useCardScanner` → `decodeScannedCode`); a scan that decodes to a
+//  * DL-only card with no BCSC serial is rejected there via the `onCodeScanned`
+//  * `false` return, which resets the scanner. `isAligned` is still computed per
+//  * code (see `enhanceSingleCode`) but only drives focus-cycle prioritisation and
+//  * the (purely visual) scan zone outline colour — never whether a scan counts.
+//  *
+//  * @param codes Enhanced codes from the current scan frame
+//  * @param options Thresholds controlling state transitions
+//  * @returns The new scan state and the qualifying codes that drove the transition
+//  */
+// export const determineScanState = (
+//   codes: EnhancedCode[],
+//   options: {
+//     minCodesForAligned: number
+//     lockReadingThreshold: number
+//   }
+// ): { newScanState: ScanState; qualifyingCodes: EnhancedCode[] } => {
+//   const { minCodesForAligned, lockReadingThreshold } = options
+//   const identifiedCodes = codes.filter((c) => c.value && c.value.length > 0)
+//
+//   // Every identified code qualifies — no alignment/position filter.
+//   const qualifyingCodes = identifiedCodes
+//
+//   const qualifyingCount = qualifyingCodes.length
+//   const allLocked =
+//     qualifyingCount >= minCodesForAligned && qualifyingCodes.every((c) => (c.readingCount ?? 0) >= lockReadingThreshold)
+//
+//   let newScanState: ScanState
+//   if (allLocked) {
+//     newScanState = 'locked'
+//   } else if (qualifyingCount >= minCodesForAligned) {
+//     newScanState = 'aligned'
+//   } else {
+//     newScanState = 'scanning'
+//   }
+//
+//   return { newScanState, qualifyingCodes }
+// }
 
 /** A validated code carried over from a recent frame, with the time it was recorded. */
 export type AccumulatedCode = { code: EnhancedCode; timestamp: number }
 
-/**
- * Merge a locked frame's qualifying codes with any recently-validated codes carried
- * over from the accumulator, so a lock that only required a single barcode (e.g.
- * `minCodesForAligned === 1` for the single-zone `BCSC_SN_SCAN_ZONES`) still hands
- * along a different barcode that was read moments earlier but dropped out of frame
- * before the lock — e.g. the birthdate-bearing PDF-417 on a combo card when the
- * easier code-39 serial alone satisfies the lock threshold first.
- *
- * Ordering: accumulated extras are returned FIRST, current-frame codes LAST. Callers
- * (`useCardScanner`'s decode loop) apply "later code wins" when the same kind of
- * data shows up twice, so putting the current frame last means a fresher reading
- * always overrides a stale accumulated one of the same decoded kind — ordering
- * alone resolves that conflict, no extra same-kind filtering is needed here. Only
- * exact `${type}-${value}` duplicates against the current frame are dropped from
- * the accumulator; anything else (including a stale same-type/different-value
- * entry) is passed through and left for the ordering to resolve downstream.
- *
- * Scoping: eligibility is time-based only (`windowMs`), not card-identity-based —
- * this is what makes the normal combo-card case work. Known limitation (accepted,
- * minor): if the user swaps to a *different* physical BCSC card mid-scan within the
- * window and the new card's serial locks before the prior card's PDF-417 expires,
- * the merge can pair a serial from card B with a birthdate from card A. This is
- * self-correcting — the backend rejects the mismatched serial+birthdate
- * (`VerificationCardError.MismatchedSerial` → retry), so it never produces an
- * incorrect authorization or corrupts data. Clearing on barcode-reading decay was
- * considered and rejected: that would defeat the feature, since carrying a
- * no-longer-visible barcode into the lock is precisely the point. A correct
- * card-identity-aware invalidation is deferred as out of scope.
- *
- * @param currentFrameCodes Qualifying codes from the frame that triggered the lock
- * @param accumulated Map of recently-validated codes, keyed by `${type}-${value}`
- * @param windowMs Max age (ms) for an accumulated entry to still be eligible
- * @param now Current time in ms (injectable for tests; defaults to `Date.now()`)
- * @returns Current-frame codes plus any still-fresh, non-duplicate accumulated codes, extras first
- */
-export const mergeLockedCodesWithAccumulated = (
-  currentFrameCodes: EnhancedCode[],
-  accumulated: ReadonlyMap<string, AccumulatedCode>,
-  windowMs: number,
-  now: number = Date.now()
-): EnhancedCode[] => {
-  const currentFrameKeys = new Set(currentFrameCodes.map((c) => `${c.type}-${c.value}`))
-
-  const accumulatedExtras: EnhancedCode[] = []
-  accumulated.forEach((entry, key) => {
-    if (now - entry.timestamp > windowMs) {
-      return
-    }
-    if (currentFrameKeys.has(key)) {
-      return
-    }
-    accumulatedExtras.push(entry.code)
-  })
-
-  return [...accumulatedExtras, ...currentFrameCodes]
-}
+// /**
+//  * Merge a locked frame's qualifying codes with any recently-validated codes carried
+//  * over from the accumulator, so a lock that only required a single barcode (e.g.
+//  * `minCodesForAligned === 1` for the single-zone `BCSC_SN_SCAN_ZONES`) still hands
+//  * along a different barcode that was read moments earlier but dropped out of frame
+//  * before the lock — e.g. the birthdate-bearing PDF-417 on a combo card when the
+//  * easier code-39 serial alone satisfies the lock threshold first.
+//  *
+//  * Ordering: accumulated extras are returned FIRST, current-frame codes LAST. Callers
+//  * (`useCardScanner`'s decode loop) apply "later code wins" when the same kind of
+//  * data shows up twice, so putting the current frame last means a fresher reading
+//  * always overrides a stale accumulated one of the same decoded kind — ordering
+//  * alone resolves that conflict, no extra same-kind filtering is needed here. Only
+//  * exact `${type}-${value}` duplicates against the current frame are dropped from
+//  * the accumulator; anything else (including a stale same-type/different-value
+//  * entry) is passed through and left for the ordering to resolve downstream.
+//  *
+//  * Scoping: eligibility is time-based only (`windowMs`), not card-identity-based —
+//  * this is what makes the normal combo-card case work. Known limitation (accepted,
+//  * minor): if the user swaps to a *different* physical BCSC card mid-scan within the
+//  * window and the new card's serial locks before the prior card's PDF-417 expires,
+//  * the merge can pair a serial from card B with a birthdate from card A. This is
+//  * self-correcting — the backend rejects the mismatched serial+birthdate
+//  * (`VerificationCardError.MismatchedSerial` → retry), so it never produces an
+//  * incorrect authorization or corrupts data. Clearing on barcode-reading decay was
+//  * considered and rejected: that would defeat the feature, since carrying a
+//  * no-longer-visible barcode into the lock is precisely the point. A correct
+//  * card-identity-aware invalidation is deferred as out of scope.
+//  *
+//  * @param currentFrameCodes Qualifying codes from the frame that triggered the lock
+//  * @param accumulated Map of recently-validated codes, keyed by `${type}-${value}`
+//  * @param windowMs Max age (ms) for an accumulated entry to still be eligible
+//  * @param now Current time in ms (injectable for tests; defaults to `Date.now()`)
+//  * @returns Current-frame codes plus any still-fresh, non-duplicate accumulated codes, extras first
+//  */
+// export const mergeLockedCodesWithAccumulated = (
+//   currentFrameCodes: EnhancedCode[],
+//   accumulated: ReadonlyMap<string, AccumulatedCode>,
+//   windowMs: number,
+//   now: number = Date.now()
+// ): EnhancedCode[] => {
+//   const currentFrameKeys = new Set(currentFrameCodes.map((c) => `${c.type}-${c.value}`))
+//
+//   const accumulatedExtras: EnhancedCode[] = []
+//   accumulated.forEach((entry, key) => {
+//     if (now - entry.timestamp > windowMs) {
+//       return
+//     }
+//     if (currentFrameKeys.has(key)) {
+//       return
+//     }
+//     accumulatedExtras.push(entry.code)
+//   })
+//
+//   return [...accumulatedExtras, ...currentFrameCodes]
+// }
 
 /**
  * Get camera metadata including the selected device and format, with deduplicated formats.
  * Mostly used for logging and debugging purposes.
  *
  * @param device The CameraDevice to get metadata for
- * @param format The CameraDeviceFormat to get metadata for
  * @returns An object containing the selected device and format, with deduplicated formats
  */
-export const getCameraMetadata = (device?: CameraDevice, format?: CameraDeviceFormat) => {
-  const cameraDevice = _removeDuplicateCameraFormats(device)
-
-  return {
-    selectedFormat: format ? _summarizeCameraFormat(format) : null,
-    selectedDevice: cameraDevice
-      ? {
-          ...cameraDevice,
-          formats: cameraDevice?.formats.map((format) => _summarizeCameraFormat(format)),
-        }
-      : null,
-  }
-}
-
-/**
- * Summarize a CameraDeviceFormat into a concise string for logging or debugging.
- *
- * @param format The CameraDeviceFormat to summarize
- * @returns A string summarizing the format's key properties
- */
-const _summarizeCameraFormat = (format: CameraDeviceFormat): string => {
-  // Maps the enumerated values to short strings for logging purposes
-  const autoFocusSystemMap: Record<AutoFocusSystem, string> = {
-    'contrast-detection': 'contrast',
-    'phase-detection': 'phase',
-    none: 'none',
-  }
-
-  const stabilizationMap: Record<VideoStabilizationMode, string> = {
-    auto: 'auto',
-    standard: 'std',
-    cinematic: 'cin',
-    off: 'off',
-    'cinematic-extended': 'cin-ext',
-  }
-
-  let hdr = [format.supportsVideoHdr ? 'vid' : null, format.supportsPhotoHdr ? 'photo' : null].filter(Boolean).join(',')
-
-  if (!hdr.length) {
-    hdr = 'none'
-  }
-
-  return [
-    `video:${format.videoWidth}x${format.videoHeight}`,
-    `photo:${format.photoWidth}x${format.photoHeight}`,
-    `fps:${format.maxFps}`,
-    `focus:${autoFocusSystemMap[format.autoFocusSystem]}`,
-    `stab:${format.videoStabilizationModes?.map((mode) => stabilizationMap[mode]).join(',')}`,
-    `hdr:${hdr}`,
-  ].join(' ')
-}
-
-/**
- * Remove duplicate formats from a CameraDevice's formats array, preserving the first occurrence of each unique format.
- *
- * @param device The CameraDevice to deduplicate formats for
- * @returns A new CameraDevice with deduplicated formats, or undefined if the input device is undefined
- */
-const _removeDuplicateCameraFormats = (device?: CameraDevice): CameraDevice | undefined => {
+export const getCameraMetadata = (device?: CameraDevice) => {
   if (!device) {
-    return
-  }
-
-  const seenFormats = new Map<string, CameraDeviceFormat>()
-
-  for (const format of device?.formats ?? []) {
-    // Ensures that formats with the same properties but in different orders are considered duplicates
-    const sortedFormat = Object.keys(format)
-      .sort((a, b) => a.localeCompare(b))
-      .map((key) => [key, format[key as keyof CameraDeviceFormat]])
-
-    const formatKey = JSON.stringify(sortedFormat)
-
-    if (!seenFormats.has(formatKey)) {
-      seenFormats.set(formatKey, format)
+    return {
+      selectedDevice: null,
     }
   }
 
-  return { ...device, formats: Array.from(seenFormats.values()) }
+  return {
+    selectedDevice: {
+      id: device.id,
+      name: device.name,
+      position: device.position,
+      hasFlash: device.hasFlash,
+      hasTorch: device.hasTorch,
+      supportsLowLightBoost: device.supportsLowLightBoost,
+      minZoom: device.minZoom,
+      maxZoom: device.maxZoom,
+      photoHDR: device.supportsPhotoHDR,
+    },
+  }
+  // const cameraDevice = _removeDuplicateCameraFormats(device)
+  //
+  // return {
+  //   selectedFormat: format ? _summarizeCameraFormat(format) : null,
+  //   selectedDevice: cameraDevice
+  //     ? {
+  //         ...cameraDevice,
+  //         formats: cameraDevice?.formats.map((format) => _summarizeCameraFormat(format)),
+  //       }
+  //     : null,
+  // }
 }
+
+// /**
+//  * Summarize a CameraDeviceFormat into a concise string for logging or debugging.
+//  *
+//  * @param format The CameraDeviceFormat to summarize
+//  * @returns A string summarizing the format's key properties
+//  */
+// const _summarizeCameraFormat = (format: CameraDeviceFormat): string => {
+//   // Maps the enumerated values to short strings for logging purposes
+//   const autoFocusSystemMap: Record<AutoFocusSystem, string> = {
+//     'contrast-detection': 'contrast',
+//     'phase-detection': 'phase',
+//     none: 'none',
+//   }
+//
+//   const stabilizationMap: Record<VideoStabilizationMode, string> = {
+//     auto: 'auto',
+//     standard: 'std',
+//     cinematic: 'cin',
+//     off: 'off',
+//     'cinematic-extended': 'cin-ext',
+//   }
+//
+//   let hdr = [format.supportsVideoHdr ? 'vid' : null, format.supportsPhotoHdr ? 'photo' : null].filter(Boolean).join(',')
+//
+//   if (!hdr.length) {
+//     hdr = 'none'
+//   }
+//
+//   return [
+//     `video:${format.videoWidth}x${format.videoHeight}`,
+//     `photo:${format.photoWidth}x${format.photoHeight}`,
+//     `fps:${format.maxFps}`,
+//     `focus:${autoFocusSystemMap[format.autoFocusSystem]}`,
+//     `stab:${format.videoStabilizationModes?.map((mode) => stabilizationMap[mode]).join(',')}`,
+//     `hdr:${hdr}`,
+//   ].join(' ')
+// }
+//
+// /**
+//  * Remove duplicate formats from a CameraDevice's formats array, preserving the first occurrence of each unique format.
+//  *
+//  * @param device The CameraDevice to deduplicate formats for
+//  * @returns A new CameraDevice with deduplicated formats, or undefined if the input device is undefined
+//  */
+// const _removeDuplicateCameraFormats = (device?: CameraDevice): CameraDevice | undefined => {
+//   if (!device) {
+//     return
+//   }
+//
+//   const seenFormats = new Map<string, CameraDeviceFormat>()
+//
+//   for (const format of device?.formats ?? []) {
+//     // Ensures that formats with the same properties but in different orders are considered duplicates
+//     const sortedFormat = Object.keys(format)
+//       .sort((a, b) => a.localeCompare(b))
+//       .map((key) => [key, format[key as keyof CameraDeviceFormat]])
+//
+//     const formatKey = JSON.stringify(sortedFormat)
+//
+//     if (!seenFormats.has(formatKey)) {
+//       seenFormats.set(formatKey, format)
+//     }
+//   }
+//
+//   return { ...device, formats: Array.from(seenFormats.values()) }
+// }
 
 /**
  * Scan zone for the BC Services Card / Driver's License serial number scan screen.

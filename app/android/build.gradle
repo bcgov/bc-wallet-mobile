@@ -9,6 +9,9 @@ buildscript {
         ndkVersion = "27.1.12297006"
         androidXBrowser = "1.5.0"
         javaVersion = JavaVersion.VERSION_17
+        // vision-camera's CameraX dependency forces media3 to 1.9.0 app-wide; pin react-native-video
+        // (patched in .yarn/patches) to compile against the same version instead of its 1.8.0 default.
+        RNVideo_media3Version = "1.9.0"
     }
     repositories {
         google()

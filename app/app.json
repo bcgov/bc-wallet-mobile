@@ -1,4 +1,13 @@
 {
   "name": "BCWallet",
-  "displayName": "BC Wallet"
+  "displayName": "BC Wallet",
+  "ios": {
+    "infoPlist": {
+      "NSCameraUsageDescription": "$(PRODUCT_NAME) needs access to your Camera to capture photos and videos.",
+      "NSMicrophoneUsageDescription": "$(PRODUCT_NAME) needs access to your Microphone to record audio for video recordings.",
+    }
+  },
+  "android": {
+    "permissions": ["android.permission.CAMERA", "android.permission.RECORD_AUDIO"]
+  }
 }

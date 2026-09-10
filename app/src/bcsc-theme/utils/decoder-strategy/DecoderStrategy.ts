@@ -1,8 +1,10 @@
 import { AbstractBifoldLogger } from '@bifold/core'
-import { CodeType } from 'react-native-vision-camera'
+import { Barcode, BarcodeFormat } from 'react-native-vision-camera-barcode-scanner'
 import { BCComboCardBarcodeDecoder } from './BCComboCardBarcodeDecoder'
 import { BCServicesCardBarcodeDecoder } from './BCServicesCardBarcodeDecoder'
 import { DriversLicenseBarcodeDecoder } from './DriversLicenseBarcodeDecoder'
+
+type RawBarcodeValue = string
 
 // Enum representing the kinds of decoded codes
 export enum DecodedCodeKind {
@@ -13,7 +15,7 @@ export enum DecodedCodeKind {
 
 // Stub interface representing a scanned code ie: barcode or qr code
 export interface ScanableCode {
-  type: CodeType | 'unknown'
+  type: BarcodeFormat | 'unknown'
   value?: string
 }
 
@@ -150,4 +152,136 @@ export const decodeBarcodes = (codes: ScanableCode[], logger: AbstractBifoldLogg
   }
 
   return decodedCodes
+}
+
+/**
+ * A class that manages the decoding of barcodes scanned from BC Services Cards
+ */
+export class BCServicesCardReader {
+  /** @example { "K123456789": { hits: 3, decoded: { kind: "BCServicesCardBarcode", bcscSerial: "K123456789" } } } */
+  private decodedBarcodeMap = new Map<RawBarcodeValue, { hits: number; decoded: DecodedCode }>()
+  private decodedBarcodeKinds = new Set<DecodedCodeKind>()
+  private unknownBarcodeCount = 0
+
+  constructor(
+    private logger: AbstractBifoldLogger,
+    private hitsThreshold = 5
+  ) {}
+
+  /**
+   * Adds an array of barcodes to the reader for decoding and analysis.
+   * @param codes An array of barcodes to be added and decoded.
+   * @returns void. The internal state of the reader is updated with the decoded information from the barcodes.
+   */
+  addBarcodes(codes: Barcode[]) {
+    if (!codes.length) {
+      return
+    }
+
+    const scanableCodes = codes.map((barcode) => ({
+      type: barcode.format,
+      value: barcode.rawValue,
+    }))
+
+    for (const code of scanableCodes) {
+      const decoded = decodeScannedCode(code, this.logger)
+
+      this.logger.debug('[BCSCEvidenceDecoder] Decoded barcode metadata:', { barcode: code, decoded })
+
+      if (!decoded || !code.value) {
+        this.unknownBarcodeCount++
+        continue
+      }
+
+      this.decodedBarcodeKinds.add(decoded.kind)
+      const hits = this.decodedBarcodeMap.get(code.value)?.hits ?? 0
+      this.decodedBarcodeMap.set(code.value, { hits: hits + 1, decoded })
+    }
+  }
+
+  /**
+   * Resets the internal state of the BCServicesCardReader, clearing all decoded barcode data and resetting flags and counters.
+   * @returns The BCServicesCardReader instance, allowing for method chaining.
+   */
+  reset() {
+    this.decodedBarcodeMap.clear()
+    this.decodedBarcodeKinds.clear()
+    this.unknownBarcodeCount = 0
+    return this
+  }
+
+  /**
+   * Determines if the scanned barcodes indicate that the card is a BC Services Card.
+   * @returns True if the card is identified as a BC Services Card, false if it is not,
+   * or null if the determination cannot be made yet (still scanning - under threshold).
+   */
+  isBCServicesCard(): boolean | null {
+    if (this.unknownBarcodeCount >= this.hitsThreshold) {
+      return false
+    }
+
+    if (
+      this.decodedBarcodeKinds.has(DecodedCodeKind.BCServicesCardBarcode) &&
+      (this.decodedBarcodeKinds.has(DecodedCodeKind.DriversLicenseBarcode) ||
+        this.decodedBarcodeKinds.has(DecodedCodeKind.BCServicesComboCardCardBarcode))
+    ) {
+      return true
+    }
+
+    // If we have not yet reached the threshold of hits for any decoded barcode, we cannot determine if it's a BC Services Card yet.
+    return null
+  }
+
+  /**
+   * Retrieves the serial number from the best decoded BC Services Card barcode or BC Services Combo Card barcode.
+   * @returns The serial number as a string if available, or null if not found.
+   */
+  getSerial(): string | null {
+    return (
+      this.getBestDecodedCode(DecodedCodeKind.BCServicesCardBarcode)?.bcscSerial ??
+      this.getBestDecodedCode(DecodedCodeKind.BCServicesComboCardCardBarcode)?.bcscSerial ??
+      null
+    )
+  }
+
+  /**
+   * Retrieves the driver's license metadata from the best decoded BC Services Combo Card barcode or Driver's License barcode.
+   * @returns The driver's license metadata if available, or null if not found.
+   */
+  getLicense(): DriversLicenseMetadata | null {
+    return (
+      this.getBestDecodedCode(DecodedCodeKind.BCServicesComboCardCardBarcode) ??
+      this.getBestDecodedCode(DecodedCodeKind.DriversLicenseBarcode) ??
+      null
+    )
+  }
+
+  /**
+   * Retrieves the birthdate from the best decoded driver's license metadata.
+   * @returns The birthdate as a Date object if available, or null if not found.
+   */
+  getBirthdate(): Date | null {
+    return this.getLicense()?.birthDate ?? null
+  }
+
+  /**
+   * Retrieves the best decoded code of a specific kind from the internal decoded barcode map.
+   * @param kind The kind of decoded code to retrieve.
+   * @returns The best decoded code of the specified kind if available, or undefined if not found.
+   */
+  private getBestDecodedCode<T extends DecodedCodeKind>(kind: T): Extract<DecodedCode, { kind: T }> | undefined {
+    let bestHits = 0
+    let bestDecoded: Extract<DecodedCode, { kind: T }> | undefined
+
+    for (const { hits, decoded } of this.decodedBarcodeMap.values()) {
+      if (hits < bestHits || hits < this.hitsThreshold || decoded.kind !== kind) {
+        continue
+      }
+
+      bestHits = hits
+      bestDecoded = decoded as Extract<DecodedCode, { kind: T }>
+    }
+
+    return bestDecoded
+  }
 }
