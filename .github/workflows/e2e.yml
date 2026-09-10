@@ -8,7 +8,7 @@
 #   onboarding   — onboarding journeys
 #   auth         — auth/unlock journey
 #   main         — main navigation + settings + wallet credential journeys (issuer creds from 1Password)
-#   verify       — verify entry + verified card-type journeys (uses SM_* creds)
+#   verify       — verify entry + verified card-type journeys (uses the IDCHECK_* sign-in)
 #   send-video   — the four send-video journeys alone: scripted agent review against a shared,
 #                  blind-FIFO SIT queue, so CI runs them one platform at a time (max-parallel 1) and
 #                  keeps them out of every concurrent multi-device run (exclude_send_video)
@@ -129,9 +129,9 @@ on:
         required: false
         default: ''
       device_matrix:
-        description: 'JSON array of {platform, device, os_version} objects'
+        description: 'JSON array of {platform, device, os_version} objects — keep os_version pinned (unpinned iOS lands on iOS 15-era devices)'
         type: string
-        default: '[{"platform":"iOS","device":"iPhone.*","os_version":""},{"platform":"Android","device":"Google.*","os_version":""}]'
+        default: '[{"platform":"iOS","device":"iPhone.*","os_version":"18"},{"platform":"Android","device":"Google.*","os_version":"15"}]'
       runner_label:
         description: 'Label of the large runner with whitelisted egress IPs'
         type: string
@@ -167,8 +167,9 @@ jobs:
     timeout-minutes: ${{ (inputs.suite == 'regression' && 180) || (inputs.suite == 'send-video' && 90) || 45 }}
     continue-on-error: ${{ contains(fromJSON('["migration","upgrade","upgrade403"]'), inputs.suite) }}
     strategy:
-      # send-video is pinned to 1: its journeys must never run on two platforms at once
-      max-parallel: ${{ (inputs.suite == 'send-video' && 1) || inputs.max_parallel || 2 }}
+      # send-video is pinned to 1: its journeys must never run on two platforms at once. fromJSON because a
+      # workflow_dispatch number input arrives as a string, which max-parallel rejects ("Unexpected value").
+      max-parallel: ${{ fromJSON((inputs.suite == 'send-video' && 1) || inputs.max_parallel || 2) }}
       fail-fast: false
       matrix:
         device: ${{ fromJSON(inputs.device_matrix) }}
