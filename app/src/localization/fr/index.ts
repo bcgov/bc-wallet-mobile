@@ -781,6 +781,9 @@ const translation = {
       "EnterManually": "Enter Serial Number Manually (FR)",
     },
     "Scan": {
+      "NfcTabTitle": "Tap to Scan (FR)",
+      "NfcReady": "Hold your device near an NFC tag (FR)",
+      "NfcNotSupported": "This device does not support NFC (FR)",
       "NoAccountFound": "No account found, restart the app and try again. (FR)",
       "NoAttestationResponse": "No attestation response, check your connection and try again. (FR)",
       "NoDeviceCodeFound": "No device code found (FR)",

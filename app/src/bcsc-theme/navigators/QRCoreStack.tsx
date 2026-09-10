@@ -1,4 +1,5 @@
 import ManualPairing from '@/bcsc-theme/features/pairing/ManualPairing'
+import NfcScanner from '@/bcsc-theme/features/qr-core/NfcScanner'
 import QRDisplay from '@/bcsc-theme/features/qr-core/QRDisplay'
 import QRScanner from '@/bcsc-theme/features/qr-core/QRScanner'
 import { useCardStatus } from '@/bcsc-theme/hooks/useCardStatus'
@@ -146,6 +147,22 @@ const QRCoreStack: React.FC = () => {
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: t('Scan.ScanQRCode'),
             tabBarTestID: testIdWithKey(TestIds.main.qrCore.scannerTab),
+            headerRight: createFloatingHelpMenuButton({
+              webViewScreen: BCSCScreens.MainWebView,
+              learnMoreUrl: HelpCentreUrl.COMPUTER_LOGIN,
+            }),
+          }}
+        />
+        <Tab.Screen
+          name={BCSCQRCoreScreens.NfcScanner}
+          component={NfcScanner}
+          options={{
+            title: t('BCSC.Scan.NfcTabTitle'),
+            tabBarIconStyle: styles.tabBarIcon,
+            tabBarIcon: createTabBarIcon(t('BCSC.Scan.NfcTabTitle'), 'nfc'),
+            tabBarShowLabel: false,
+            tabBarAccessibilityLabel: t('BCSC.Scan.NfcTabTitle'),
+            tabBarTestID: testIdWithKey(TestIds.main.qrCore.nfcScannerTab),
             headerRight: createFloatingHelpMenuButton({
               webViewScreen: BCSCScreens.MainWebView,
               learnMoreUrl: HelpCentreUrl.COMPUTER_LOGIN,

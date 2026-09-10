@@ -158,6 +158,7 @@ export enum BCSCScreens {
 
 export enum BCSCQRCoreScreens {
   Scanner = 'Scanner',
+  NfcScanner = 'NfcScanner',
   Display = 'Display',
   PairingCode = 'PairingCode',
   AccountNotVerified = 'AccountNotVerified',
@@ -165,6 +166,7 @@ export enum BCSCQRCoreScreens {
 
 export type BCSCQRCoreTabParams = {
   [BCSCQRCoreScreens.Scanner]: undefined
+  [BCSCQRCoreScreens.NfcScanner]: undefined
   [BCSCQRCoreScreens.Display]: undefined
   [BCSCQRCoreScreens.PairingCode]: { pairingCode?: string } | undefined
   [BCSCQRCoreScreens.AccountNotVerified]: undefined

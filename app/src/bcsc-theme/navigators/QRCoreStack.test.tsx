@@ -25,6 +25,7 @@ jest.mock('@react-navigation/bottom-tabs', () => {
 jest.mock('../features/pairing/ManualPairing', () => 'ManualPairing')
 jest.mock('../features/qr-core/QRDisplay', () => 'QRDisplay')
 jest.mock('../features/qr-core/QRScanner', () => 'QRScanner')
+jest.mock('../features/qr-core/NfcScanner', () => 'NfcScanner')
 jest.mock('../hooks/useCardStatus', () => ({
   useCardStatus: jest.fn(),
 }))

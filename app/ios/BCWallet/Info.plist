@@ -83,6 +83,8 @@
 	<string>Camera used for QR Code scanning and video calls</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>BC Services Card wants to use your FaceID/TouchID to authenticate your identity</string>
+	<key>NFCReaderUsageDescription</key>
+	<string>Allow $(PRODUCT_NAME) to scan NFC tags</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>BC Services Card needs access to your microphone to enable video calls</string>
 	<key>RCTNewArchEnabled</key>

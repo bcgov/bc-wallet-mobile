@@ -615,6 +615,7 @@ export const TestIds = {
     /** QRCore bottom-tab navigator (opened by the scan FAB). Display tab only exists in dev mode. */
     qrCore: {
       scannerTab: 'ScanQRCode',
+      nfcScannerTab: 'NfcScanner',
       displayTab: 'MyQRCode',
       pairingCodeTab: 'PairingCode',
       torchToggle: 'TorchToggle',
