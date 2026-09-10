@@ -28,11 +28,6 @@ export function createEntraAuthGuard(stateDir, { maxFailures = 3 } = {}) {
     }
   }
 
-  /** @param {string} line */
-  function reasonOf(line) {
-    return line.slice(line.indexOf(' ') + 1)
-  }
-
   return {
     /** Clears the ledger when IDCHECK_AUTH_RESET=1 — the escape hatch after the real cause is fixed. */
     resetIfRequested() {
@@ -71,4 +66,9 @@ export function createEntraAuthGuard(stateDir, { maxFailures = 3 } = {}) {
       return readLedger().length
     },
   }
+}
+
+/** The reason of a "<ISO time> <reason>" ledger line. */
+function reasonOf(line) {
+  return line.slice(line.indexOf(' ') + 1)
 }

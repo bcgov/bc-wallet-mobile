@@ -306,7 +306,7 @@ function maskUser(user) {
 
 /** `text` with every mention of the account name, in any case, masked. */
 function withoutUser(text, user) {
-  return text.replaceAll(new RegExp(user.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), maskUser(user))
+  return text.replaceAll(new RegExp(RegExp.escape(user), 'gi'), maskUser(user))
 }
 
 /**
@@ -410,6 +410,20 @@ async function launchPersistentBrowserContext(userDataDir, headed) {
 }
 
 /**
+ * The mutable state of one sign-in drive, shared by the page handlers below.
+ *
+ * @typedef {object} Drive
+ * @property {{ user: string, password: string, totpSecret?: string }} credentials
+ * @property {string} maskedUser the account name as a log may carry it
+ * @property {number} deadline when the drive gives up; a code retry or a wait for a person extends it
+ * @property {SignInMethod} method the MFA path taken so far
+ * @property {{ picker: boolean, user: boolean, password: boolean, kmsi: boolean, anotherWay: boolean, pushLogged: boolean }} done
+ *   the one-shot steps already taken, so a page that lingers is not acted on twice
+ * @property {number} codeSubmissions
+ * @property {number} codeSubmittedAt
+ */
+
+/**
  * Drives whatever sign-in page is showing until the browser is back on IDCheck. The pages come in
  * varying orders (MFA may not be asked, the method may be a push or a code, "stay signed in" may
  * not appear), so this reacts to what is visible instead of scripting one sequence.
@@ -419,155 +433,273 @@ async function launchPersistentBrowserContext(userDataDir, headed) {
  * @returns {Promise<SignInMethod>} the MFA path taken ('silent' when the profile carried the session)
  */
 async function driveSignIn(page, credentials) {
-  let deadline = Date.now() + SIGN_IN_TIMEOUT_MS
+  /** @type {Drive} */
+  const drive = {
+    credentials,
+    maskedUser: maskUser(credentials.user),
+    deadline: Date.now() + SIGN_IN_TIMEOUT_MS,
+    method: 'none',
+    done: { picker: false, user: false, password: false, kmsi: false, anotherWay: false, pushLogged: false },
+    codeSubmissions: 0,
+    codeSubmittedAt: 0,
+  }
   let lastKnownPageAt = Date.now()
   let lastNavAt = Date.now()
   page.on('framenavigated', (frame) => {
     if (frame === page.mainFrame()) lastNavAt = Date.now()
   })
-  const maskedUser = maskUser(credentials.user)
-  /** @type {SignInMethod} */
-  let method = 'none'
-  const done = { picker: false, user: false, password: false, kmsi: false, anotherWay: false, pushLogged: false }
-  let codeSubmissions = 0
-  let codeSubmittedAt = 0
 
   for (;;) {
-    if (Date.now() > deadline) {
+    if (Date.now() > drive.deadline) {
       throw new Error(`[idcheck sign-in] timed out ${await describePage(page, credentials.user)}`)
     }
     const url = currentUrl(page)
     if (url && isIdcheckPage(url)) {
-      const status = await documentStatus(page)
-      if (status >= 400) {
-        throw new Error(
-          `[idcheck sign-in] IDCheck answered HTTP ${status} at ${url.pathname}${status === 403 ? " — is this machine's egress IP allowlisted for SIT?" : ''}`
-        )
-      }
-      // Never having filled a field means the persistent profile carried the whole session — silent SSO.
-      return !done.user && !done.password ? 'silent' : method
+      return finishOnIdcheck(page, url, drive)
     }
-
-    let acted = true
-    if (url?.host === KEYCLOAK_HOST) {
-      if (await visible(page, '#kc-error-message, form#kc-form-login, #kc-page-title')) {
-        throw new Error(
-          `[idcheck sign-in] Keycloak wants a person ${await describePage(page, credentials.user)} — sign in once by hand to finish first-login/account linking`
-        )
-      }
-    } else if (url?.host === MICROSOFT_HOST && Date.now() - lastNavAt < NAV_SETTLE_MS) {
-      // Still navigating (the SSO reload storm) — that IS progress, so hold off touching any field.
-      acted = false
-      lastKnownPageAt = Date.now()
-    } else if (url?.host === MICROSOFT_HOST) {
-      const risk = await riskPageText(page)
-      if (risk) {
-        throw entraError(
-          `[idcheck sign-in] Entra is refusing this account (${risk}) — likely bot-detection / account protection; escalate to IAS, then clear the latch with IDCHECK_AUTH_RESET=1`
-        )
-      }
-      if (await visible(page, '#usernameError')) {
-        throw entraError(
-          `[idcheck sign-in] Entra rejected the sign-in name "${maskedUser}" — IDCHECK_USER must be the account's UPN (the account's gov email): ${await pageText(page, '#usernameError')}`
-        )
-      }
-      if (await visible(page, '#passwordError')) {
-        throw entraError(
-          `[idcheck sign-in] password rejected for ${maskedUser}: ${await pageText(page, '#passwordError')}`
-        )
-      }
-      if (await visible(page, '#idSubmit_ProofUp_Redirect')) {
-        throw entraError(
-          `[idcheck sign-in] the account must finish MFA registration first (https://mysignins.microsoft.com/security-info) ${await describePage(page, credentials.user)}`
-        )
-      }
-      if (await visible(page, 'input[name="newpwd"]')) {
-        throw entraError(
-          `[idcheck sign-in] the password for ${maskedUser} has expired — rotate it and update the secret`
-        )
-      }
-
-      if (Date.now() - codeSubmittedAt > OTC_VERDICT_SETTLE_MS && (await visible(page, '#idSpan_SAOTCC_Error_OTC'))) {
-        // Entra rejects a replayed code (two sign-ins in one window) and a drifted clock alike; the next
-        // window is a fair retry, with a deadline of its own since the wait for it is ours, not the page's.
-        if (codeSubmissions >= 2 || !credentials.totpSecret) {
-          throw entraError(
-            `[idcheck sign-in] verification code rejected twice — check IDCHECK_TOTP_SECRET and the clock: ${await pageText(page, '#idSpan_SAOTCC_Error_OTC')}`
-          )
-        }
-        await waitForFreshTotpWindow(page, codeSubmittedAt)
-        deadline = Date.now() + SIGN_IN_TIMEOUT_MS
-        await submitCode(page, totpCode(credentials.totpSecret))
-        codeSubmissions++
-        codeSubmittedAt = Date.now()
-      } else if (await visible(page, '#KmsiCheckboxField')) {
-        if (!done.kmsi) {
-          // "Stay signed in?" → Yes: Entra writes a persistent cookie the profile carries, so the next
-          // process signs in silently. Fewer full sign-ins is the whole anti-lockout game.
-          await page.locator('#idSIButton9').click()
-          done.kmsi = true
-        }
-      } else if (!done.picker && (await visible(page, '#tilesHolder'))) {
-        // A warm profile is offered its known accounts instead of the username field.
-        await chooseAccountTile(page, credentials.user)
-        done.picker = true
-      } else if (!done.user && (await visible(page, 'input[name="loginfmt"]'))) {
-        await submitField(page, 'input[name="loginfmt"]', credentials.user)
-        done.user = true
-      } else if (done.user && !done.password && (await visible(page, 'input[name="passwd"]'))) {
-        await submitField(page, 'input[name="passwd"]', credentials.password)
-        done.password = true
-      } else if (await visible(page, 'input[name="otc"]')) {
-        if (codeSubmissions === 0 || Date.now() - codeSubmittedAt > SIGN_IN_TIMEOUT_MS) {
-          if (credentials.totpSecret) {
-            await waitForFreshTotpWindow(page, codeSubmittedAt)
-            await submitCode(page, totpCode(credentials.totpSecret))
-            method = 'totp'
-          } else if (process.stdin.isTTY) {
-            await submitCode(page, await promptForCode())
-            method = 'prompt'
-          } else {
-            throw new Error('[idcheck sign-in] MFA asked for a verification code and no IDCHECK_TOTP_SECRET is set')
-          }
-          codeSubmissions++
-          codeSubmittedAt = Date.now()
-        }
-      } else if (await visible(page, '#idRichContext_DisplaySign, #idDiv_SAOTCAS_Title')) {
-        // The Authenticator push page: switch to a code when we can type one, else wait for the phone.
-        if (credentials.totpSecret) {
-          if (!done.anotherWay && (await visible(page, '#signInAnotherWay'))) {
-            await page.locator('#signInAnotherWay').click()
-            done.anotherWay = true
-          }
-        } else {
-          if (!done.pushLogged) {
-            const digits = (await pageText(page, '#idRichContext_DisplaySign')) || '(no number shown)'
-            console.log(
-              `[idcheck] [~] approve the sign-in for ${maskedUser} in Microsoft Authenticator — number ${digits}`
-            )
-            done.pushLogged = true
-            deadline = Date.now() + HUMAN_APPROVAL_TIMEOUT_MS
-          }
-          method = 'push'
-        }
-      } else if (await visible(page, 'div[data-value="PhoneAppOTP"], div[data-value="PhoneAppNotification"]')) {
-        // The "verify your identity" method list.
-        const tile = credentials.totpSecret ? 'PhoneAppOTP' : 'PhoneAppNotification'
-        await page.locator(`div[data-value="${tile}"]`).first().click()
-      } else {
-        acted = false
-      }
-    } else {
-      acted = false
-    }
-
-    if (acted) {
+    if (await reactToPage(page, url, drive, lastNavAt)) {
       lastKnownPageAt = Date.now()
     } else if (url?.host === MICROSOFT_HOST && Date.now() - lastKnownPageAt > STUCK_AFTER_MS) {
       throw new Error(`[idcheck sign-in] stuck ${await describePage(page, credentials.user)}`)
     }
     await page.waitForTimeout(POLL_INTERVAL_MS)
   }
+}
+
+/**
+ * Back on IDCheck: an error status is a failure, anything else is the drive done.
+ *
+ * @param {import('playwright-core').Page} page
+ * @param {URL} url
+ * @param {Drive} drive
+ * @returns {Promise<SignInMethod>}
+ */
+async function finishOnIdcheck(page, url, drive) {
+  const status = await documentStatus(page)
+  if (status >= 400) {
+    throw new Error(
+      `[idcheck sign-in] IDCheck answered HTTP ${status} at ${url.pathname}${status === 403 ? " — is this machine's egress IP allowlisted for SIT?" : ''}`
+    )
+  }
+  // Never having filled a field means the persistent profile carried the whole session — silent SSO.
+  return !drive.done.user && !drive.done.password ? 'silent' : drive.method
+}
+
+/**
+ * One reaction to the page that is showing. Returns whether the driver knows this page — a step was
+ * taken, or Microsoft is still reloading — which is what holds off the stuck timer.
+ *
+ * @param {import('playwright-core').Page} page
+ * @param {URL | null} url
+ * @param {Drive} drive
+ * @param {number} lastNavAt
+ */
+async function reactToPage(page, url, drive, lastNavAt) {
+  if (url?.host === KEYCLOAK_HOST) {
+    await assertNoKeycloakStop(page, drive)
+    return true
+  }
+  if (url?.host !== MICROSOFT_HOST) {
+    return false
+  }
+  if (Date.now() - lastNavAt < NAV_SETTLE_MS) {
+    return true // still navigating (the SSO reload storm) — that IS progress, so no field is touched yet
+  }
+  await assertNoEntraVerdict(page, drive)
+  return reactToMicrosoftPage(page, drive)
+}
+
+/**
+ * Keycloak shows a form or an error only when a person must act (first login, account linking).
+ *
+ * @param {import('playwright-core').Page} page
+ * @param {Drive} drive
+ */
+async function assertNoKeycloakStop(page, drive) {
+  if (await visible(page, '#kc-error-message, form#kc-form-login, #kc-page-title')) {
+    throw new Error(
+      `[idcheck sign-in] Keycloak wants a person ${await describePage(page, drive.credentials.user)} — sign in once by hand to finish first-login/account linking`
+    )
+  }
+}
+
+/**
+ * The Entra pages that end a sign-in. Each is a genuine verdict on the account or its config, so
+ * each counts toward the latch.
+ *
+ * @param {import('playwright-core').Page} page
+ * @param {Drive} drive
+ */
+async function assertNoEntraVerdict(page, drive) {
+  const risk = await riskPageText(page)
+  if (risk) {
+    throw entraError(
+      `[idcheck sign-in] Entra is refusing this account (${risk}) — likely bot-detection / account protection; escalate to IAS, then clear the latch with IDCHECK_AUTH_RESET=1`
+    )
+  }
+  if (await visible(page, '#usernameError')) {
+    throw entraError(
+      `[idcheck sign-in] Entra rejected the sign-in name "${drive.maskedUser}" — IDCHECK_USER must be the account's UPN (the account's gov email): ${await pageText(page, '#usernameError')}`
+    )
+  }
+  if (await visible(page, '#passwordError')) {
+    throw entraError(
+      `[idcheck sign-in] password rejected for ${drive.maskedUser}: ${await pageText(page, '#passwordError')}`
+    )
+  }
+  if (await visible(page, '#idSubmit_ProofUp_Redirect')) {
+    throw entraError(
+      `[idcheck sign-in] the account must finish MFA registration first (https://mysignins.microsoft.com/security-info) ${await describePage(page, drive.credentials.user)}`
+    )
+  }
+  if (await visible(page, 'input[name="newpwd"]')) {
+    throw entraError(
+      `[idcheck sign-in] the password for ${drive.maskedUser} has expired — rotate it and update the secret`
+    )
+  }
+}
+
+/**
+ * Takes the one step the settled Microsoft page calls for. Returns false for a page this driver
+ * does not know.
+ *
+ * @param {import('playwright-core').Page} page
+ * @param {Drive} drive
+ */
+async function reactToMicrosoftPage(page, drive) {
+  const { credentials, done } = drive
+  if (await codeRejected(page, drive)) {
+    await retryCode(page, drive)
+  } else if (await visible(page, '#KmsiCheckboxField')) {
+    await answerStaySignedIn(page, drive)
+  } else if (!done.picker && (await visible(page, '#tilesHolder'))) {
+    // A warm profile is offered its known accounts instead of the username field.
+    await chooseAccountTile(page, credentials.user)
+    done.picker = true
+  } else if (!done.user && (await visible(page, 'input[name="loginfmt"]'))) {
+    await submitField(page, 'input[name="loginfmt"]', credentials.user)
+    done.user = true
+  } else if (done.user && !done.password && (await visible(page, 'input[name="passwd"]'))) {
+    await submitField(page, 'input[name="passwd"]', credentials.password)
+    done.password = true
+  } else if (await visible(page, 'input[name="otc"]')) {
+    await submitVerificationCode(page, drive)
+  } else if (await visible(page, '#idRichContext_DisplaySign, #idDiv_SAOTCAS_Title')) {
+    await reactToPushPage(page, drive)
+  } else if (await visible(page, 'div[data-value="PhoneAppOTP"], div[data-value="PhoneAppNotification"]')) {
+    // The "verify your identity" method list.
+    const tile = credentials.totpSecret ? 'PhoneAppOTP' : 'PhoneAppNotification'
+    await page.locator(`div[data-value="${tile}"]`).first().click()
+  } else {
+    return false
+  }
+  return true
+}
+
+/**
+ * A code verdict is only trusted once Entra has had time to answer the last submission, so the
+ * previous rejection is not read twice while a retry is in flight.
+ *
+ * @param {import('playwright-core').Page} page
+ * @param {Drive} drive
+ */
+async function codeRejected(page, drive) {
+  return Date.now() - drive.codeSubmittedAt > OTC_VERDICT_SETTLE_MS && (await visible(page, '#idSpan_SAOTCC_Error_OTC'))
+}
+
+/**
+ * Entra rejects a replayed code (two sign-ins in one window) and a drifted clock alike; the next
+ * window is a fair retry, with a deadline of its own since the wait for it is ours, not the page's.
+ *
+ * @param {import('playwright-core').Page} page
+ * @param {Drive} drive
+ */
+async function retryCode(page, drive) {
+  if (drive.codeSubmissions >= 2 || !drive.credentials.totpSecret) {
+    throw entraError(
+      `[idcheck sign-in] verification code rejected twice — check IDCHECK_TOTP_SECRET and the clock: ${await pageText(page, '#idSpan_SAOTCC_Error_OTC')}`
+    )
+  }
+  await submitTotpCode(page, drive)
+  drive.deadline = Date.now() + SIGN_IN_TIMEOUT_MS
+}
+
+/**
+ * The code page. A code is typed once and then left alone — the page lingers while Entra checks it —
+ * and only a submission the deadline has outlived is typed again.
+ *
+ * @param {import('playwright-core').Page} page
+ * @param {Drive} drive
+ */
+async function submitVerificationCode(page, drive) {
+  if (drive.codeSubmissions > 0 && Date.now() - drive.codeSubmittedAt <= SIGN_IN_TIMEOUT_MS) {
+    return
+  }
+  if (drive.credentials.totpSecret) {
+    await submitTotpCode(page, drive)
+  } else if (process.stdin.isTTY) {
+    await submitCode(page, await promptForCode())
+    drive.method = 'prompt'
+    drive.codeSubmissions++
+    drive.codeSubmittedAt = Date.now()
+  } else {
+    throw new Error('[idcheck sign-in] MFA asked for a verification code and no IDCHECK_TOTP_SECRET is set')
+  }
+}
+
+/**
+ * Mints the code for a fresh window and submits it.
+ *
+ * @param {import('playwright-core').Page} page
+ * @param {Drive} drive
+ */
+async function submitTotpCode(page, drive) {
+  await waitForFreshTotpWindow(page, drive.codeSubmittedAt)
+  await submitCode(page, totpCode(drive.credentials.totpSecret))
+  drive.method = 'totp'
+  drive.codeSubmissions++
+  drive.codeSubmittedAt = Date.now()
+}
+
+/**
+ * "Stay signed in?" → Yes: Entra writes a persistent cookie the profile carries, so the next process
+ * signs in silently. Fewer full sign-ins is the whole anti-lockout game.
+ *
+ * @param {import('playwright-core').Page} page
+ * @param {Drive} drive
+ */
+async function answerStaySignedIn(page, drive) {
+  if (drive.done.kmsi) {
+    return
+  }
+  await page.locator('#idSIButton9').click()
+  drive.done.kmsi = true
+}
+
+/**
+ * The Authenticator push page: switch to a code when we can type one, else wait for the phone.
+ *
+ * @param {import('playwright-core').Page} page
+ * @param {Drive} drive
+ */
+async function reactToPushPage(page, drive) {
+  const { done } = drive
+  if (drive.credentials.totpSecret) {
+    if (!done.anotherWay && (await visible(page, '#signInAnotherWay'))) {
+      await page.locator('#signInAnotherWay').click()
+      done.anotherWay = true
+    }
+    return
+  }
+  if (!done.pushLogged) {
+    const digits = (await pageText(page, '#idRichContext_DisplaySign')) || '(no number shown)'
+    console.log(
+      `[idcheck] [~] approve the sign-in for ${drive.maskedUser} in Microsoft Authenticator — number ${digits}`
+    )
+    done.pushLogged = true
+    drive.deadline = Date.now() + HUMAN_APPROVAL_TIMEOUT_MS
+  }
+  drive.method = 'push'
 }
 
 /**
