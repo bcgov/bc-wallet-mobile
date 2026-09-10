@@ -149,6 +149,11 @@ jobs:
         working-directory: e2e
         run: yarn typecheck
 
+      # The IDCheck sign-in's circuit breaker (scripts/entra-auth-guard.test.mjs): plain node:test, no secrets.
+      - name: Unit tests
+        working-directory: e2e
+        run: yarn test:unit
+
   test-ios:
     runs-on: macos-26
     name: Native Tests (iOS)

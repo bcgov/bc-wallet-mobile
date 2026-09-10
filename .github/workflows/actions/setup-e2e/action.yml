@@ -29,8 +29,9 @@ runs:
       run: yarn install --immutable --mode=skip-build
 
     # The IDCheck sign-in drives Google Chrome, which the hosted Ubuntu images ship; the install is the fallback.
+    # The Playwright CLI is called by path: "yarn <bin> install" reads as a package install to SonarCloud (S6505).
     - name: Ensure a browser for the IDCheck sign-in
       if: inputs.idcheck-browser == 'true'
       shell: bash
       working-directory: e2e
-      run: google-chrome --version || yarn playwright-core install --with-deps chromium
+      run: google-chrome --version || node_modules/.bin/playwright-core install --with-deps chromium

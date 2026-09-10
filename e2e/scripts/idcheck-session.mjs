@@ -56,14 +56,14 @@ const TOTP_STEP_S = 30
 /** A code about to roll over is generated after the rollover instead. */
 const TOTP_MIN_REMAINING_S = 3
 
-/** @typedef {'silent' | 'none' | 'totp' | 'push' | 'prompt'} SignInMfa */
+/** @typedef {'silent' | 'none' | 'totp' | 'push' | 'prompt'} SignInMethod */
 /** @typedef {{ fetchWithCookies: typeof fetch }} Session */
 /** @type {Session | null} */
 let cachedSession = null
-/** What the last browser sign-in did, for the CLI check and the log line. */
+/** What the last browser sign-in did, for the CLI check and the log line. The account name is masked. */
 let lastSignIn = {
   user: '',
-  mfa: /** @type {SignInMfa} */ ('none'),
+  method: /** @type {SignInMethod} */ ('none'),
   elapsedMs: 0,
   cookieNames: /** @type {string[]} */ ([]),
 }
@@ -261,13 +261,13 @@ async function signInWithBrowser(jar, signal) {
       const page = context.pages()[0] ?? (await context.newPage())
       try {
         await page.goto(IDCHECK_HOME_URL, { waitUntil: 'domcontentloaded' })
-        const mfa = await Promise.race([driveSignIn(page, credentials), rejectOnAbort(signal)])
+        const method = await Promise.race([driveSignIn(page, credentials), rejectOnAbort(signal)])
         await page.waitForLoadState('load').catch(() => undefined)
         const cookies = (await context.cookies()).filter((cookie) => bareDomain(cookie.domain).endsWith('gov.bc.ca'))
         for (const cookie of cookies) {
           await jar.setCookie(toToughCookie(cookie), `https://${bareDomain(cookie.domain)}${cookie.path}`)
         }
-        return { mfa, cookieNames: cookies.map((cookie) => cookie.name) }
+        return { method, cookieNames: cookies.map((cookie) => cookie.name) }
       } catch (error) {
         if (!signal?.aborted) {
           await saveScreenshot(page)
@@ -288,14 +288,25 @@ async function signInWithBrowser(jar, signal) {
 
   stateConfig.authGuard.recordSuccess() // a healthy sign-in (silent SSO included) clears the failure budget
   lastSignIn = {
-    user: credentials.user,
-    mfa: result.mfa,
+    user: maskUser(credentials.user),
+    method: result.method,
     elapsedMs: Date.now() - startedAt,
     cookieNames: result.cookieNames,
   }
   console.log(
-    `[idcheck] [+] signed in as ${credentials.user}: ${result.mfa} MFA, ${result.cookieNames.length} cookies (${elapsedSeconds(startedAt)}s)`
+    `[idcheck] [+] signed in as ${lastSignIn.user}: ${result.method} MFA, ${result.cookieNames.length} cookies (${elapsedSeconds(startedAt)}s)`
   )
+}
+
+/** The account name as output may carry it — first letter and domain — so no identifier reaches a CI log. */
+function maskUser(user) {
+  const at = user.indexOf('@')
+  return `${user.slice(0, 1)}***${at === -1 ? '' : user.slice(at)}`
+}
+
+/** `text` with every mention of the account name, in any case, masked. */
+function withoutUser(text, user) {
+  return text.replaceAll(new RegExp(user.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), maskUser(user))
 }
 
 /**
@@ -405,7 +416,7 @@ async function launchPersistentBrowserContext(userDataDir, headed) {
  *
  * @param {import('playwright-core').Page} page
  * @param {{ user: string, password: string, totpSecret?: string }} credentials
- * @returns {Promise<SignInMfa>} the MFA path taken ('silent' when the profile carried the session)
+ * @returns {Promise<SignInMethod>} the MFA path taken ('silent' when the profile carried the session)
  */
 async function driveSignIn(page, credentials) {
   let deadline = Date.now() + SIGN_IN_TIMEOUT_MS
@@ -414,15 +425,16 @@ async function driveSignIn(page, credentials) {
   page.on('framenavigated', (frame) => {
     if (frame === page.mainFrame()) lastNavAt = Date.now()
   })
-  /** @type {SignInMfa} */
-  let mfa = 'none'
+  const maskedUser = maskUser(credentials.user)
+  /** @type {SignInMethod} */
+  let method = 'none'
   const done = { picker: false, user: false, password: false, kmsi: false, anotherWay: false, pushLogged: false }
   let codeSubmissions = 0
   let codeSubmittedAt = 0
 
   for (;;) {
     if (Date.now() > deadline) {
-      throw new Error(`[idcheck sign-in] timed out ${await describePage(page)}`)
+      throw new Error(`[idcheck sign-in] timed out ${await describePage(page, credentials.user)}`)
     }
     const url = currentUrl(page)
     if (url && isIdcheckPage(url)) {
@@ -433,14 +445,14 @@ async function driveSignIn(page, credentials) {
         )
       }
       // Never having filled a field means the persistent profile carried the whole session — silent SSO.
-      return !done.user && !done.password ? 'silent' : mfa
+      return !done.user && !done.password ? 'silent' : method
     }
 
     let acted = true
     if (url?.host === KEYCLOAK_HOST) {
       if (await visible(page, '#kc-error-message, form#kc-form-login, #kc-page-title')) {
         throw new Error(
-          `[idcheck sign-in] Keycloak wants a person ${await describePage(page)} — sign in once by hand to finish first-login/account linking`
+          `[idcheck sign-in] Keycloak wants a person ${await describePage(page, credentials.user)} — sign in once by hand to finish first-login/account linking`
         )
       }
     } else if (url?.host === MICROSOFT_HOST && Date.now() - lastNavAt < NAV_SETTLE_MS) {
@@ -456,22 +468,22 @@ async function driveSignIn(page, credentials) {
       }
       if (await visible(page, '#usernameError')) {
         throw entraError(
-          `[idcheck sign-in] Entra rejected the sign-in name "${credentials.user}" — IDCHECK_USER must be the account's UPN (the account's gov email): ${await pageText(page, '#usernameError')}`
+          `[idcheck sign-in] Entra rejected the sign-in name "${maskedUser}" — IDCHECK_USER must be the account's UPN (the account's gov email): ${await pageText(page, '#usernameError')}`
         )
       }
       if (await visible(page, '#passwordError')) {
         throw entraError(
-          `[idcheck sign-in] password rejected for ${credentials.user}: ${await pageText(page, '#passwordError')}`
+          `[idcheck sign-in] password rejected for ${maskedUser}: ${await pageText(page, '#passwordError')}`
         )
       }
       if (await visible(page, '#idSubmit_ProofUp_Redirect')) {
         throw entraError(
-          `[idcheck sign-in] the account must finish MFA registration first (https://mysignins.microsoft.com/security-info) ${await describePage(page)}`
+          `[idcheck sign-in] the account must finish MFA registration first (https://mysignins.microsoft.com/security-info) ${await describePage(page, credentials.user)}`
         )
       }
       if (await visible(page, 'input[name="newpwd"]')) {
         throw entraError(
-          `[idcheck sign-in] the password for ${credentials.user} has expired — rotate it and update the secret`
+          `[idcheck sign-in] the password for ${maskedUser} has expired — rotate it and update the secret`
         )
       }
 
@@ -510,10 +522,10 @@ async function driveSignIn(page, credentials) {
           if (credentials.totpSecret) {
             await waitForFreshTotpWindow(page, codeSubmittedAt)
             await submitCode(page, totpCode(credentials.totpSecret))
-            mfa = 'totp'
+            method = 'totp'
           } else if (process.stdin.isTTY) {
             await submitCode(page, await promptForCode())
-            mfa = 'prompt'
+            method = 'prompt'
           } else {
             throw new Error('[idcheck sign-in] MFA asked for a verification code and no IDCHECK_TOTP_SECRET is set')
           }
@@ -531,17 +543,17 @@ async function driveSignIn(page, credentials) {
           if (!done.pushLogged) {
             const digits = (await pageText(page, '#idRichContext_DisplaySign')) || '(no number shown)'
             console.log(
-              `[idcheck] [~] approve the sign-in for ${credentials.user} in Microsoft Authenticator — number ${digits}`
+              `[idcheck] [~] approve the sign-in for ${maskedUser} in Microsoft Authenticator — number ${digits}`
             )
             done.pushLogged = true
             deadline = Date.now() + HUMAN_APPROVAL_TIMEOUT_MS
           }
-          mfa = 'push'
+          method = 'push'
         }
       } else if (await visible(page, 'div[data-value="PhoneAppOTP"], div[data-value="PhoneAppNotification"]')) {
         // The "verify your identity" method list.
-        const method = credentials.totpSecret ? 'PhoneAppOTP' : 'PhoneAppNotification'
-        await page.locator(`div[data-value="${method}"]`).first().click()
+        const tile = credentials.totpSecret ? 'PhoneAppOTP' : 'PhoneAppNotification'
+        await page.locator(`div[data-value="${tile}"]`).first().click()
       } else {
         acted = false
       }
@@ -552,20 +564,12 @@ async function driveSignIn(page, credentials) {
     if (acted) {
       lastKnownPageAt = Date.now()
     } else if (url?.host === MICROSOFT_HOST && Date.now() - lastKnownPageAt > STUCK_AFTER_MS) {
-      throw new Error(`[idcheck sign-in] stuck ${await describePage(page)}`)
+      throw new Error(`[idcheck sign-in] stuck ${await describePage(page, credentials.user)}`)
     }
     await page.waitForTimeout(POLL_INTERVAL_MS)
   }
 }
 
-/**
- * Types into a sign-in field and presses the page's Next button. The caller only reaches here once the
- * page has stopped navigating, so the fill and the submit land on the same document.
- *
- * @param {import('playwright-core').Page} page
- * @param {string} selector
- * @param {string} value
- */
 /**
  * On the "Pick an account" screen, clicks the tile for our user, else "Use another account" so the
  * flow reaches the username field. Race-tolerant: a stale tile click is swallowed and re-tried next poll.
@@ -599,6 +603,14 @@ async function riskPageText(page) {
   return code ? code[0] : ''
 }
 
+/**
+ * Types into a sign-in field and presses the page's Next button. The caller only reaches here once the
+ * page has stopped navigating, so the fill and the submit land on the same document.
+ *
+ * @param {import('playwright-core').Page} page
+ * @param {string} selector
+ * @param {string} value
+ */
 async function submitField(page, selector, value) {
   await page.locator(selector).first().fill(value)
   await page.locator('#idSIButton9').first().click()
@@ -728,12 +740,19 @@ async function pageText(page, selector) {
   return text.replaceAll(/\s+/g, ' ').trim()
 }
 
-/** Where the drive is and what the page says — the tail of every sign-in error. */
-async function describePage(page) {
+/**
+ * Where the drive is and what the page says — the tail of every sign-in error. The page echoes the
+ * account name on most steps, so it is masked before the text can reach a log.
+ *
+ * @param {import('playwright-core').Page} page
+ * @param {string} user
+ */
+async function describePage(page, user) {
   const url = currentUrl(page)
+  const where = url ? `${url.host}${url.pathname}` : '(no page)'
   const title = await page.title().catch(() => '')
-  const text = (await pageText(page, 'body')).slice(0, 300)
-  return `on ${url ? `${url.host}${url.pathname}` : '(no page)'} "${title}": ${text}`
+  const text = withoutUser(await pageText(page, 'body'), user).slice(0, 300)
+  return `on ${where} "${title}": ${text}`
 }
 
 /** The status the current document was served with (0 when the browser cannot say). */

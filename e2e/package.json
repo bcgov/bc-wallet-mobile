@@ -15,6 +15,7 @@
     "queue:drain": "tsx scripts/send-video-queue.ts drain",
     "idcheck:check": "node scripts/login.mjs check",
     "typecheck": "tsc --noEmit --skipLibCheck",
+    "test:unit": "node --test 'scripts/**/*.test.mjs'",
     "test:android:local": "wdio configs/local/wdio.android.local.emu.conf.ts",
     "test:android:device": "wdio configs/local/wdio.android.local.device.conf.ts",
     "test:ios:local": "wdio configs/local/wdio.ios.local.sim.conf.ts",

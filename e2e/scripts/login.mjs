@@ -1415,7 +1415,7 @@ if (isRunAsCli()) {
   if (flow === 'check') {
     const result = await checkIdcheckSignIn()
     console.log(
-      `[idcheck] signed in as ${result.user} (${result.mfa} MFA) — landed on ${result.landingUrl} "${result.landingTitle}"`
+      `[idcheck] signed in as ${result.user} (${result.method} MFA) — landed on ${result.landingUrl} "${result.landingTitle}"`
     )
   } else if (sendVideoInput) {
     const claimed = await reviewSendVideoLogin(sendVideoInput)
