@@ -1,7 +1,8 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
+import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
+import { ServiceOutage } from '@/bcsc-theme/features/modal/ServiceOutage'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
-import useServerStatusCheck from '@/bcsc-theme/hooks/useServerStatusCheck'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl, hitSlop, REPORT_SUSPICIOUS_URL } from '@/constants'
 import { isHandledAppError } from '@/errors/appError'
@@ -283,7 +284,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   const { Spacing, ColorPalette, TextTheme, Buttons } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const alerts = useAlerts(navigation)
-  const { checkServerStatus } = useServerStatusCheck()
+  const { isAvailable: isServerAvailable } = useServerStatus()
   const pairingService = usePairingService()
   const { pairing, metadata } = useApi()
   const getQuickLoginURL = useQuickLoginURL()
@@ -418,12 +419,6 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   }, [getQuickLoginURL, logger, state.service, navigation, alerts, t, setIsContinueDisabled])
 
   const onContinue = useCallback(async () => {
-    const { isAvailable } = await checkServerStatus()
-    if (!isAvailable) {
-      setIsContinueDisabled(false)
-      return
-    }
-
     if (state.pairingCode) {
       await onContinueWithPairingCode()
     } else if (state.service) {
@@ -434,7 +429,6 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       alerts.loginServerErrorAlert()
     }
   }, [
-    checkServerStatus,
     logger,
     onContinueWithPairingCode,
     onContinueWithQuickLoginUrl,
@@ -484,6 +478,11 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     navigation.navigate(BCSCStacks.Tab, { screen: BCSCScreens.Home })
     logger.info('ServiceLoginScreen: Cancel pressed without history, redirecting to Home tab')
   }, [logger, navigation, pairingService])
+
+  // IAS is down, show outage screen
+  if (!isServerAvailable) {
+    return <ServiceOutage />
+  }
 
   const renderState = (() => {
     if (isLoading || !serviceHydrated) {

@@ -8,7 +8,7 @@ import { TestIds } from '@/test-ids/registry'
 import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
-import { RouteProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -25,21 +25,13 @@ const ManualPairing: React.FC = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { pairing } = useApi()
   const loadingScreen = useLoadingScreen()
-  const { isAvailable: isServerAvailable, refresh: refreshServerStatus } = useServerStatus()
-
-  // Re-check on focus so a mid-session outage gates this screen (the "log in from another device"
-  // card and QR scans both land here), and a recovery clears it.
-  useFocusEffect(
-    useCallback(() => {
-      refreshServerStatus({ force: true })
-    }, [refreshServerStatus])
-  )
+  const { isAvailable: isServerAvailable } = useServerStatus()
 
   const onSubmit = useCallback(
     async (pairingCode: string) => {
-      // Pairing exchanges the code with IAS; skip the doomed request during an outage. The render
-      // below already shows the outage screen, but a QR-scan / deep-link code auto-submits from an
-      // effect that still runs behind it.
+      // Pairing exchanges the code with IAS. The render below already shows the outage screen when
+      // IAS is down, but a QR-scan / deep-link code auto-submits from an effect that still runs, so
+      // stop the doomed request here too.
       if (!isServerAvailable) {
         return
       }
@@ -111,7 +103,7 @@ const ManualPairing: React.FC = () => {
     },
   })
 
-  // Entering a pairing code is an IAS action; show the outage screen in its place while IAS is down.
+  // Entering a pairing code needs IAS; if it's down, show the outage screen in its place.
   if (!isServerAvailable) {
     return <ServiceOutage />
   }

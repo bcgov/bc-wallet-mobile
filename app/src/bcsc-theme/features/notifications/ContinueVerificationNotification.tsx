@@ -2,7 +2,6 @@ import useSecureActions from '@/bcsc-theme/hooks/useSecureActions'
 import { useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import NotificationActionCard from './NotificationActionCard'
-import { useGuardedVerificationEntry } from './useGuardedVerificationEntry'
 
 /**
  * ContinueVerificationNotification is a component that displays a notification card prompting the user to continue the verification process for their BCSC account.
@@ -13,7 +12,6 @@ const ContinueVerificationNotification = () => {
   const { t } = useTranslation()
   const { ColorPalette } = useTheme()
   const secureActions = useSecureActions()
-  const guardVerificationEntry = useGuardedVerificationEntry()
 
   return (
     <NotificationActionCard
@@ -23,9 +21,10 @@ const ContinueVerificationNotification = () => {
       icon="information"
       iconColor={ColorPalette.brand.primary}
       hideIconCircle={true}
-      onPress={guardVerificationEntry(() => {
+      requiresServerStatus
+      onPress={() => {
         secureActions.continueVerificationProcess()
-      })}
+      }}
     />
   )
 }
