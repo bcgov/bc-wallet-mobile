@@ -2,7 +2,7 @@ import { BifoldLogger } from '@bifold/core'
 import { Platform } from 'react-native'
 import { createNewKeyPair, deleteKey, getAllKeysWithPublicInfo, setToken, TokenType } from 'react-native-bcsc-core'
 import BCSCApiClient from '../api/client'
-import { confirmModulusRegistered } from './jwk-modulus'
+import { confirmModulusRegistered, modulusInSet } from './jwk-modulus'
 import { describeError, reRegisterNewestKey } from './key-recovery'
 
 // NIST SP 800-57 Pt 1 Rev 5 §5.3 puts signing-key cryptoperiods at 1-3 years; 365 days keeps at
@@ -44,12 +44,16 @@ export type KeyRotationResult = {
 }
 
 /**
- * Deletes every local key except `newKeyId`. Only called once the modulus confirm proves
- * `newKeyId` is registered — pruning earlier would forfeit IAS's last-N merge grace window.
- * Per-key delete failures are non-fatal; never rolls back an already-registered key over one.
+ * Deletes every local key except `newKeyId` and one other, on a confirmed rotation (#4601): the
+ * newest whose modulus is in `serverKeyNs`, or — if exactly one other key exists — that one.
+ * With two-or-more unmatched candidates the choice is ambiguous, so nothing is pruned this round.
  */
-async function pruneOtherKeys(newKeyId: string, logger: BifoldLogger): Promise<void> {
-  let keys: Array<{ id: string }>
+async function pruneSupersededKeys(
+  newKeyId: string,
+  serverKeyNs: Array<string | undefined>,
+  logger: BifoldLogger
+): Promise<void> {
+  let keys: Array<{ id: string; n?: string; created?: number }>
   try {
     keys = await getAllKeysWithPublicInfo()
   } catch (err) {
@@ -59,10 +63,26 @@ async function pruneOtherKeys(newKeyId: string, logger: BifoldLogger): Promise<v
     return
   }
 
+  // Prefer the newest OTHER local key whose modulus is confirmed in `serverKeyNs` (the newest
+  // key isn't necessarily the registered one, #4601). Exactly one other key with no match is
+  // kept anyway; two or more with no match are left alone by the guard below.
+  const others = keys.filter((k) => k.id !== newKeyId).sort((a, b) => (b.created ?? 0) - (a.created ?? 0))
+  const match = others.find((k) => modulusInSet(k.n, serverKeyNs))
+  if (!match && others.length > 1) {
+    // Never delete on "can't tell", only on "confirmed not present" (see key-recovery.ts);
+    // prune nothing when two or more candidates are unmatched (we can't tell which is registered).
+    logger.warn(
+      `[rotateSigningKey] event=prune_skipped_ambiguous none of ${others.length} other local keys matched the server's jwks; keeping all until a later rotation resolves it`
+    )
+    return
+  }
+  const keep = match ?? others[0]
+  const keepIds = new Set([newKeyId, keep?.id].filter((id): id is string => id !== undefined))
+
   let pruned = 0
   let failures = 0
   for (const key of keys) {
-    if (key.id === newKeyId) {
+    if (keepIds.has(key.id)) {
       continue
     }
     try {
@@ -108,7 +128,8 @@ async function rollback(
 
 /**
  * Rotates the device's signing key: generate, PUT to IAS, confirm via the echoed jwks, and
- * prune superseded keys on confirmed success. See issue #3876 for the full design rationale.
+ * prune the superseded key on confirmed success, so the previous key survives one full
+ * rotation cycle (#4601). See issue #3876 for the full design rationale.
  */
 export async function rotateSigningKey(
   apiClient: BCSCApiClient,
@@ -169,7 +190,7 @@ export async function rotateSigningKey(
   }
 
   logger.info(`[rotateSigningKey] event=confirmed new key '${newKey.id}' present in server jwks`)
-  await pruneOtherKeys(newKey.id, logger)
+  await pruneSupersededKeys(newKey.id, serverKeyNs, logger)
 
   // Rotation switched the JWE decryption key, so any id_token cached under the old key is now
   // undecryptable; clear directly rather than via TOKENS_REFRESHED, which would re-run system checks.
