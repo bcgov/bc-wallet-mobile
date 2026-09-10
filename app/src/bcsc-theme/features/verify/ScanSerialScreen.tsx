@@ -3,12 +3,13 @@ import TorchButton from '@/bcsc-theme/components/TorchButton'
 import { useBCServicesCardScannerOutput } from '@/bcsc-theme/components/utils/camera-output'
 import { LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
+import { isVisionCameraTorchToggleErrorV5_2_3 } from '@/bcsc-theme/hooks/useVisionCamera'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { useAutoRequestPermission } from '@/hooks/useAutoRequestPermission'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useFocusEffect, useIsFocused } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LayoutChangeEvent, StyleSheet, Text, Vibration, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -190,7 +191,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const { hasPermission, requestPermission } = useCameraPermission()
   const scanner = useCardScanner()
   const { isLoading } = useAutoRequestPermission(hasPermission, requestPermission)
-  const [torchMode, setTorchMode] = useState<'on' | 'off' | undefined>(undefined)
+  const [torchEnabled, setTorchEnabled] = useState(false)
   const [size, setSize] = useState<{ width: number; height: number } | null>(null)
   const [scanState, setScanState] = useState<ScanState>('scanning')
   // Starts on mount; after the timeout we swap the initial guidance for the
@@ -198,11 +199,24 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const [showHelp, setShowHelp] = useState(false)
   const [cameraFailed, setCameraFailed] = useState(false)
   const [cameraKey, setCameraKey] = useState(0)
+  const [cameraStarted, setCameraStarted] = useState(false)
   const isFocused = useIsFocused()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const device = useCameraDevice('back')
   const cameraRef = useRef<CameraRef>(null)
-  const hasTorch = device?.hasTorch ?? false
+
+  const torchMode = useMemo(() => {
+    if (!device?.hasTorch || !cameraStarted) {
+      return undefined
+    }
+
+    if (!torchEnabled) {
+      return 'off'
+    }
+
+    return 'on'
+  }, [cameraStarted, device?.hasTorch, torchEnabled])
 
   const { scannerOutput, resetScanner } = useBCServicesCardScannerOutput({
     onScanBCServicesCard: async (serial, license) => {
@@ -229,10 +243,20 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
 
   const goToManualEntry = useCallback(() => navigation.navigate(BCSCScreens.ManualSerial), [navigation])
 
-  const onCameraError = useCallback(() => {
-    setTorchMode('off')
-    setCameraFailed(true)
-  }, [])
+  const onCameraError = useCallback(
+    (error: unknown) => {
+      if (isVisionCameraTorchToggleErrorV5_2_3(error)) {
+        // VisionCamera v5.2.3 has a known issue where toggling the torch can throw an error on Android devices.
+        logger.debug('[ScanSerialScreen] Ignoring known Android VisionCamera(V5.2.3) torch toggle error')
+        setTorchEnabled(false)
+        return
+      }
+
+      setTorchEnabled(false)
+      setCameraFailed(true)
+    },
+    [logger]
+  )
 
   const retryCamera = useCallback(() => {
     setCameraFailed(false)
@@ -335,6 +359,8 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
               onError={onCameraError}
               torchMode={torchMode}
               outputs={[scannerOutput]}
+              onStarted={() => setCameraStarted(true)}
+              onStopped={() => setCameraStarted(false)}
             />
 
             {/* Vertical ID-card framing guide (appearance of MaskType.ID_CARD) */}
@@ -358,10 +384,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
         <View style={styles.bottomBar} pointerEvents="box-none">
           {cameraFailed ? null : (
             <View style={styles.torchRow} pointerEvents="box-none">
-              <TorchButton
-                active={torchMode === 'on'}
-                onPress={() => setTorchMode((prev) => (prev === 'on' ? 'off' : 'on'))}
-              />
+              <TorchButton active={torchEnabled} onPress={() => setTorchEnabled((prev) => !prev)} />
             </View>
           )}
           <View style={[styles.buttonBlock, { paddingBottom: insets.bottom + Spacing.lg }]}>

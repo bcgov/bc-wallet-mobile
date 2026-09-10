@@ -19,7 +19,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { Camera, CameraOutput, CameraPhotoOutput } from 'react-native-vision-camera'
 import { useBCSCActivity } from '../contexts/BCSCActivityContext'
-import { useVisionCamera } from '../hooks/useVisionCamera'
+import { isVisionCameraTorchToggleErrorV5_2_3, useVisionCamera } from '../hooks/useVisionCamera'
 import { isBackgroundedAppState } from '../utils/app-state'
 import { getCameraMetadata } from './utils/camera'
 
@@ -55,12 +55,13 @@ const MaskedCamera = ({
   const { t } = useTranslation()
   const safeAreaInsets = useSafeAreaInsets()
   const { Spacing, ColorPalette } = useTheme()
-  const [torchMode, setTorchMode] = useState<'on' | 'off' | undefined>(undefined)
+  const [torchEnabled, setTorchEnabled] = useState(false)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const isFocused = useIsFocused()
   const { emitErrorModal } = useErrorAlert()
   const { preventDoublePress } = usePreventDoublePress()
   const { appStateStatus } = useBCSCActivity()
+  const [cameraStarted, setCameraStarted] = useState(false)
 
   const { cameraRef, device, takePhoto } = useVisionCamera({
     position: cameraFace,
@@ -69,6 +70,18 @@ const MaskedCamera = ({
 
   const cameraMetadata = useMemo(() => getCameraMetadata(device), [device])
   const hasTorch = device?.hasTorch ?? false
+
+  const torchMode = useMemo(() => {
+    if (!device?.hasTorch || !cameraStarted) {
+      return undefined
+    }
+
+    if (!torchEnabled) {
+      return 'off'
+    }
+
+    return 'on'
+  }, [cameraStarted, device?.hasTorch, torchEnabled])
 
   const styles = StyleSheet.create({
     container: {
@@ -126,6 +139,12 @@ const MaskedCamera = ({
         return
       }
 
+      if (isVisionCameraTorchToggleErrorV5_2_3(error)) {
+        // VisionCamera v5.2.3 has a known issue where toggling the torch can throw an error on Android devices.
+        logger.debug('[MaskedCamera] Ignoring known Android VisionCamera(V5.2.3) torch toggle error')
+        return
+      }
+
       const appError = ensureAppError(error, AppEventCode.ADD_CARD_CAMERA_BROKEN)
 
       // Add camera device and format info to the error context for better debugging
@@ -175,6 +194,8 @@ const MaskedCamera = ({
         outputs={[photoOutput, codeScanner].filter(Boolean) as CameraOutput[]}
         torchMode={torchMode}
         onConfigured={() => logger.debug('MaskedCamera initialized', cameraMetadata)}
+        onStarted={() => setCameraStarted(true)}
+        onStopped={() => setCameraStarted(false)}
       />
       {maskType && (
         <SVGOverlay
@@ -223,12 +244,12 @@ const MaskedCamera = ({
         {hasTorch ? (
           <TouchableOpacity
             style={{ flex: 1, alignItems: 'flex-end' }}
-            onPress={() => setTorchMode((prev) => (prev === 'on' ? 'off' : 'on'))}
+            onPress={() => setTorchEnabled((prev) => !prev)}
             accessibilityLabel={t('BCSC.CameraDisclosure.ToggleFlash')}
             accessibilityRole="button"
             testID={testIdWithKey('ToggleFlash')}
           >
-            <Icon size={24} name={torchMode === 'on' ? 'flash' : 'flash-off'} color={ColorPalette.grayscale.white} />
+            <Icon size={24} name={torchEnabled ? 'flash' : 'flash-off'} color={ColorPalette.grayscale.white} />
           </TouchableOpacity>
         ) : (
           <View style={{ flex: 1 }} />

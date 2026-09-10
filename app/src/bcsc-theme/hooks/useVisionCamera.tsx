@@ -147,3 +147,14 @@ export const useVisionCamera = ({ position, deviceFilter, photoOutput, videoOutp
     [cancelRecordingVideo, device, startRecordingVideo, stopRecordingVideo, takePhoto]
   )
 }
+
+/** TODO (MD): Deprecate this once VisionCamera fixes the torch toggling issue on Android
+ * @see https://github.com/margelo/react-native-vision-camera/issues/3907#issuecomment-5264861310
+ * @see https://github.com/margelo/react-native-vision-camera/issues/4069
+ */
+export const isVisionCameraTorchToggleErrorV5_2_3 = (error: unknown): error is Error => {
+  const VISION_CAMERA_ANDROID_TORCH_TOGGLE_ERROR_V5_2_3 =
+    'androidx.camera.core.CameraControl$OperationCanceledException: There is a new enableTorch being set'
+
+  return error instanceof Error && error.message.includes(VISION_CAMERA_ANDROID_TORCH_TOGGLE_ERROR_V5_2_3)
+}
