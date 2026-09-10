@@ -373,7 +373,8 @@ const translation = {
     },
     "Loading": {
       "DefaultMessage": "A secure way to prove who you are online (PT-BR)",
-      "AppStartup": "Getting your BC Services Card app ready... (PT-BR)"
+      "AppStartup": "Getting your BC Services Card App ready... (PT-BR)",
+      "AccountLoading": "Loading your account... (PT-BR)"
     },
     "AccountLanding": {
       "Title": "BC Services Card (PT-BR)",
@@ -1071,6 +1072,7 @@ const translation = {
         "PreparingVideo": "Preparing your photo and video for verification (PT-BR)",
         "PreparingDocuments": "Preparing additional documents (PT-BR)",
         "UploadingInformation": "Uploading your documents securely (PT-BR)",
+        "UploadingFiles": "Uploading your files (PT-BR)",
         "FinalizingVerification": "Finalizing your request (PT-BR)"
       }
     },

@@ -1,5 +1,5 @@
+import { BCAnimatedLoadingIcon } from '@/bcsc-theme/components/BCAnimatedLoadingIcon'
 import { ControlContainer } from '@/bcsc-theme/components/ControlContainer'
-import { BCAnimatedLoadingIcon } from '@/bcsc-theme/features/splash-loading/BCAnimatedLoadingIcon'
 import ProgressBar from '@/components/ProgressBar'
 import { TestIds } from '@/test-ids/registry'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'

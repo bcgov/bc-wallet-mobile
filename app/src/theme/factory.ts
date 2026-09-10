@@ -1,7 +1,8 @@
 import { BCWalletTheme, GrayscaleColors, NotificationColors, Spacing } from '@bcwallet-theme/theme'
-import { DeepPartial, IColorPalette, INotificationColors, ITheme, ThemeBuilder } from '@bifold/core'
+import { DeepPartial, INotificationColors, ITheme, ThemeBuilder } from '@bifold/core'
 
 import { ThemeTextStyles } from './text-styles'
+import { AppColorPalette, WaitingScreenColors } from './waiting-screen'
 
 interface SecondaryButtonStyle {
   backgroundColor: string
@@ -11,6 +12,7 @@ interface SecondaryButtonStyle {
 
 /** Palette values that vary between variants. Everything else is shared defaults. */
 interface PaletteSpec {
+  waitingScreen: WaitingScreenColors
   primary: string
   primaryLight: string
   primaryBackground: string
@@ -74,9 +76,10 @@ export interface ThemeVariant extends PaletteSpec {
   pinInputBackground: string
 }
 
-function buildPalette(spec: PaletteSpec): IColorPalette {
+function buildPalette(spec: PaletteSpec): AppColorPalette {
   return {
     ...BCWalletTheme.ColorPalette,
+    waitingScreen: spec.waitingScreen,
     notification: { ...NotificationColors, ...spec.notification },
     brand: {
       ...BCWalletTheme.ColorPalette.brand,

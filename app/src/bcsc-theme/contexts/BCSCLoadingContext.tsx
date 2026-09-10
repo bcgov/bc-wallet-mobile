@@ -1,171 +1,110 @@
+import { WaitingScreenContent } from '@/bcsc-theme/components/WaitingScreenContent'
 import { TestIds } from '@/test-ids/registry'
 import { testIdWithKey } from '@bifold/core'
-import {
-  createContext,
-  PropsWithChildren,
-  useCallback,
-  useContext,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { createContext, PropsWithChildren, useCallback, useContext, useLayoutEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
-import { LoadingScreenContent, LoadingScreenContentProps } from '../features/splash-loading/LoadingScreenContent'
+
+interface LoadingOptions {
+  statusMessage?: string
+  progressPercent?: number
+}
+
+interface LoadingScreenProps extends LoadingOptions {
+  message?: string
+}
 
 interface BCSCLoadingContextType {
   isLoading: boolean
   loadingMessage: string | null
-  startLoading: (message?: string) => () => void
+  /** Returns an idempotent release function. The overlay stays visible until every loader releases it. */
+  startLoading: (message?: string, options?: LoadingOptions) => () => void
   updateLoadingMessage: (message: string) => void
 }
 
 export const BCSCLoadingContext = createContext<BCSCLoadingContextType | null>(null)
 
-/**
- * Provides the BCSCLoadingContext to child components.
- *
- * This provides a convenient API to show and hide a loading screen overlay.
- *
- * @example
- *   const loadingScreen = useLoadingScreen();
- *
- *   loadingScreen.startLoading("Loading data...");
- *   loadingScreen.updateLoadingMessage("Still loading, please wait...");
- *
- * @param {PropsWithChildren} props - The props containing child components.
- * @returns {*} {React.ReactElement} The BCSCLoadingProvider component wrapping its children.
- */
 export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
-  // Using a Set to track active loaders allows for multiple concurrent loading states without conflicts
-  const loadersRef = useRef(new Set<symbol>())
-  const [isLoading, setIsLoading] = useState(false)
-  const [loadingMessage, setLoadingMessage] = useState<string | null>(null)
+  const { t } = useTranslation()
+  const [loaders, setLoaders] = useState(new Map<symbol, LoadingScreenProps>())
+  const isLoading = loaders.size > 0
+  const activeLoaders = useMemo(() => Array.from(loaders.values()).reverse(), [loaders])
+  const loadingMessage = activeLoaders.find((loader) => loader.message !== undefined)?.message ?? null
+  const options = activeLoaders[0]
 
-  const styles = StyleSheet.create({
-    visible: {
-      flex: 1,
-      display: 'flex',
-    },
-    hidden: {
-      display: 'none',
-      pointerEvents: 'none', // Ensure hidden content doesn't intercept touches
-    },
-  })
-
-  const childrenStyle = isLoading ? styles.hidden : styles.visible
-  const loadingStyle = isLoading ? styles.visible : styles.hidden
-
-  /**
-   * Starts the loading state and returns a function to stop it.
-   *
-   * Note: All calls to startLoading must be stopped for the loading screen to disappear.
-   * Allowing for multiple overlapping loading states without prematurely hiding the screen.
-   *
-   * @example
-   *   const stopLoading = loadingScreen.startLoading("Loading data...");
-   *   try {
-   *      await someAsyncFunction();
-   *  } finally {
-   *      stopLoading(); // Call this once the async work is done to hide the loading screen
-   *  }
-   *
-   * @param - Optional message to display on the loading screen.
-   * @returns A function that, when called, will stop the loading state.
-   */
-  const startLoading = useCallback((message?: string) => {
-    const loadingToken = Symbol()
-    loadersRef.current.add(loadingToken)
-    setIsLoading(true)
-
-    if (message) {
-      // Only update the message if it's intentional
-      setLoadingMessage(message)
-    }
-
+  const startLoading = useCallback((message?: string, options?: LoadingOptions) => {
+    const token = Symbol()
+    setLoaders((current) => new Map(current).set(token, { message, ...options }))
     return () => {
-      loadersRef.current.delete(loadingToken)
-      // Only once all loaders have been stopped do we hide the loading screen
-      if (loadersRef.current.size === 0) {
-        setIsLoading(false)
-        setLoadingMessage(null)
-      }
+      setLoaders((current) => {
+        if (!current.has(token)) {
+          return current
+        }
+        const next = new Map(current)
+        next.delete(token)
+        return next
+      })
     }
   }, [])
 
-  const loadingContext = useMemo(
-    () => ({
-      isLoading,
-      loadingMessage,
-      startLoading,
-      updateLoadingMessage: setLoadingMessage,
-    }),
-    [isLoading, loadingMessage, startLoading]
+  const updateLoadingMessage = useCallback((message: string) => {
+    setLoaders((current) => {
+      const token = Array.from(current.keys()).at(-1)
+      return token ? new Map(current).set(token, { ...current.get(token), message }) : current
+    })
+  }, [])
+
+  const context = useMemo(
+    () => ({ isLoading, loadingMessage, startLoading, updateLoadingMessage }),
+    [isLoading, loadingMessage, startLoading, updateLoadingMessage]
   )
 
   return (
-    <BCSCLoadingContext.Provider value={loadingContext}>
-      {/** When loading make children invisible (still mounted) **/}
+    <BCSCLoadingContext.Provider value={context}>
       <View
-        style={childrenStyle}
+        style={isLoading ? styles.hidden : styles.visible}
         testID={testIdWithKey(TestIds.common.loadingChildren)}
-        importantForAccessibility={isLoading ? 'no-hide-descendants' : 'yes'} // Hide from screen readers when loading, show when not loading
+        importantForAccessibility={isLoading ? 'no-hide-descendants' : 'yes'}
       >
         {children}
       </View>
-
-      {/** When loading make loading overlay visible **/}
       <View
-        style={loadingStyle}
+        style={isLoading ? styles.visible : styles.hidden}
         testID={testIdWithKey(TestIds.common.loadingOverlay)}
-        accessible={isLoading} // Only make the loading screen accessible when it's visible
-        importantForAccessibility={isLoading ? 'yes' : 'no-hide-descendants'} // Hide from screen readers when not visible, show when visible
+        accessible={isLoading}
+        accessibilityElementsHidden={!isLoading}
+        importantForAccessibility={isLoading ? 'yes' : 'no-hide-descendants'}
       >
-        <LoadingScreenContent message={loadingMessage ?? undefined} />
+        <WaitingScreenContent
+          message={loadingMessage ?? t('BCSC.Loading.DefaultMessage')}
+          statusMessage={options?.statusMessage}
+          progressPercent={options?.progressPercent}
+          active={isLoading}
+          testID={testIdWithKey(TestIds.common.loadingScreen)}
+        />
       </View>
     </BCSCLoadingContext.Provider>
   )
 }
 
-/**
- * Hook to access the BCSC loading screen context.
- *
- * @example
- *   const loadingScreen = useLoadingScreen();
- *
- *   loadingScreen.startLoading("Loading data...");
- *   loadingScreen.updateLoadingMessage("Still loading, please wait...");
- *
- * @returns {*} {BCSCLoadingContextType} The loading screen context.
- */
 export const useLoadingScreen = () => {
   const context = useContext(BCSCLoadingContext)
-
   if (!context) {
     throw new Error('useLoadingScreen must be used within a BCSCLoadingContextProvider')
   }
-
   return context
 }
 
-/**
- * A wrapper component that manages the loading state using the useLoadingScreen hook.
- *
- * @param props - The props for the LoadingScreen component, including an optional message to display.
- * @returns The LoadingScreen component that starts the loading state on mount and stops it on unmount.
- */
-export const LoadingScreen = ({ message }: LoadingScreenContentProps) => {
-  const loadingScreen = useLoadingScreen()
-
-  // Runs before the component is painted to the screen, ensuring the loading state is active immediately on mount and cleaned up on unmount
-  useLayoutEffect(() => {
-    // Start loading when the component mounts
-    const stopLoading = loadingScreen.startLoading(message)
-
-    // Stop loading when the component unmounts
-    return stopLoading
-  }, [loadingScreen, message])
-
-  // This component doesn't render anything itself, it just manages the loading state
+export const LoadingScreen = ({ message, statusMessage, progressPercent }: LoadingScreenProps) => {
+  const { startLoading } = useLoadingScreen()
+  useLayoutEffect(
+    () => startLoading(message, { statusMessage, progressPercent }),
+    [startLoading, message, statusMessage, progressPercent]
+  )
   return null
 }
+
+const styles = StyleSheet.create({
+  visible: { flex: 1, display: 'flex' },
+  hidden: { display: 'none', pointerEvents: 'none' },
+})

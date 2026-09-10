@@ -1,220 +1,111 @@
-import { BCSCLoadingContext, BCSCLoadingProvider, LoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { BCAnimatedLoadingIcon } from '@/bcsc-theme/components/BCAnimatedLoadingIcon'
 import { testIdWithKey } from '@bifold/core'
 import { act, render, renderHook } from '@testing-library/react-native'
-import { useContext } from 'react'
+import { Animated } from 'react-native'
+import { BCSCLoadingProvider, LoadingScreen, useLoadingScreen } from './BCSCLoadingContext'
 
 describe('BCSCLoadingContext', () => {
-  it('should show children and hide overlay when not loading', () => {
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <BCSCLoadingProvider>{children}</BCSCLoadingProvider>
-    )
+  afterEach(() => jest.restoreAllMocks())
 
-    const { getByTestId } = render(<></>, { wrapper })
-
-    expect(getByTestId(testIdWithKey('BCSCLoadingProviderChildren'))).toHaveStyle({ display: 'flex' })
-    expect(getByTestId(testIdWithKey('BCSCLoadingProviderOverlay'), { includeHiddenElements: true })).toHaveStyle({
-      display: 'none',
-    })
+  it('keeps the idle layout mounted without starting an animation', () => {
+    const loop = jest.spyOn(Animated, 'loop')
+    const view = render(<BCSCLoadingProvider />)
+    expect(view.getByTestId(testIdWithKey('BCSCLoadingProviderChildren'))).toHaveStyle({ display: 'flex' })
+    expect(view.queryByTestId(testIdWithKey('LoadingScreenContent'))).toBeNull()
+    expect(view.UNSAFE_getByType(BCAnimatedLoadingIcon)).toBeTruthy()
+    expect(loop).not.toHaveBeenCalled()
   })
 
-  it('should show overlay and hide children when loading', () => {
-    const { getByTestId } = render(
+  it('uses one layout for loaders with and without progress and stops the loop when idle', () => {
+    const stop = jest.fn()
+    const start = jest.fn()
+    jest.spyOn(Animated, 'loop').mockReturnValue({ start, stop, reset: jest.fn() })
+    const App = ({ progress, show = true }: { progress?: number; show?: boolean }) => (
       <BCSCLoadingProvider>
-        <LoadingScreen />
+        {show && <LoadingScreen message="Preparing" statusMessage="Starting" progressPercent={progress} />}
       </BCSCLoadingProvider>
     )
+    const view = render(<App />)
+    const illustration = view.UNSAFE_getByType(BCAnimatedLoadingIcon)
+    expect(view.getByText('Preparing')).toBeTruthy()
+    expect(view.queryByRole('progressbar')).toBeNull()
+    expect(start).toHaveBeenCalledTimes(1)
 
-    expect(getByTestId(testIdWithKey('BCSCLoadingProviderOverlay'))).toHaveStyle({ display: 'flex' })
-    expect(getByTestId(testIdWithKey('BCSCLoadingProviderChildren'), { includeHiddenElements: true })).toHaveStyle({
-      display: 'none',
-    })
+    view.rerender(<App progress={50} />)
+    expect(view.getByRole('progressbar', { name: 'Starting' })).toBeTruthy()
+    expect(view.UNSAFE_getByType(BCAnimatedLoadingIcon)).toBe(illustration)
+    expect(start).toHaveBeenCalledTimes(1)
+    expect(stop).not.toHaveBeenCalled()
+
+    view.rerender(<App show={false} />)
+    expect(view.queryByTestId(testIdWithKey('LoadingScreenContent'))).toBeNull()
+    expect(view.UNSAFE_getByType(BCAnimatedLoadingIcon)).toBe(illustration)
+    expect(stop).toHaveBeenCalledTimes(1)
   })
 
-  it('should set isLoading to true when startLoading is called', () => {
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <BCSCLoadingProvider>{children}</BCSCLoadingProvider>
-    )
-
-    const { result } = renderHook(() => useContext(BCSCLoadingContext), { wrapper })
-
+  it('keeps overlapping loaders visible and restores the remaining loader when the latest finishes', () => {
+    const { result } = renderHook(() => useLoadingScreen(), { wrapper: BCSCLoadingProvider })
+    let stopFirst!: () => void
+    let stopSecond!: () => void
     act(() => {
-      result.current?.startLoading('Loading data...')
+      stopFirst = result.current.startLoading('First')
+      stopSecond = result.current.startLoading('Second', { progressPercent: 50 })
     })
-
-    expect(result.current?.isLoading).toBe(true)
-  })
-})
-
-describe('useLoadingScreen hook', () => {
-  it('should not be loading on init', () => {
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <BCSCLoadingProvider>{children}</BCSCLoadingProvider>
-    )
-
-    const { result } = renderHook(() => useContext(BCSCLoadingContext), { wrapper })
-
-    expect(result.current?.isLoading).toBe(false)
+    expect(result.current.loadingMessage).toBe('Second')
+    act(() => stopSecond())
+    expect(result.current.isLoading).toBe(true)
+    expect(result.current.loadingMessage).toBe('First')
+    act(() => stopSecond())
+    expect(result.current.isLoading).toBe(true)
+    act(() => stopFirst())
+    expect(result.current.isLoading).toBe(false)
+    expect(result.current.loadingMessage).toBeNull()
   })
 
-  it('should start and stop loading', () => {
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <BCSCLoadingProvider>{children}</BCSCLoadingProvider>
-    )
-
-    const { result } = renderHook(() => useContext(BCSCLoadingContext), { wrapper })
-
-    let stopLoading: (() => void) | undefined
+  it('does not replace a supplied message with an unnamed loader and supports updating it', () => {
+    const { result } = renderHook(() => useLoadingScreen(), { wrapper: BCSCLoadingProvider })
+    let stopSecond!: () => void
     act(() => {
-      stopLoading = result.current?.startLoading('Loading data...')
+      result.current.startLoading('First')
+      stopSecond = result.current.startLoading()
     })
-    expect(result.current?.isLoading).toBe(true)
-
-    act(() => {
-      stopLoading?.()
-    })
-    expect(result.current?.isLoading).toBe(false)
+    expect(result.current.loadingMessage).toBe('First')
+    act(() => result.current.updateLoadingMessage('Updated'))
+    expect(result.current.loadingMessage).toBe('Updated')
+    act(() => stopSecond())
+    expect(result.current.loadingMessage).toBe('First')
   })
 
-  it('should stay loading until all concurrent loaders have stopped', () => {
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <BCSCLoadingProvider>{children}</BCSCLoadingProvider>
-    )
-
-    const { result } = renderHook(() => useContext(BCSCLoadingContext), { wrapper })
-
-    let stopA: (() => void) | undefined
-    let stopB: (() => void) | undefined
-
+  it('retains the other loader when the earlier token is released first', () => {
+    const { result } = renderHook(() => useLoadingScreen(), { wrapper: BCSCLoadingProvider })
+    let stopFirst!: () => void
     act(() => {
-      stopA = result.current?.startLoading()
-      stopB = result.current?.startLoading()
+      stopFirst = result.current.startLoading('First')
+      result.current.startLoading('Second')
     })
-    expect(result.current?.isLoading).toBe(true)
-
-    act(() => {
-      stopA?.()
-    })
-    expect(result.current?.isLoading).toBe(true) // B is still active
-
-    act(() => {
-      stopB?.()
-    })
-    expect(result.current?.isLoading).toBe(false)
+    act(() => stopFirst())
+    expect(result.current.isLoading).toBe(true)
+    expect(result.current.loadingMessage).toBe('Second')
   })
 
-  it('should update the message as new loaders are started', () => {
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <BCSCLoadingProvider>{children}</BCSCLoadingProvider>
-    )
-
-    const { result } = renderHook(() => useContext(BCSCLoadingContext), { wrapper })
-
-    let stopA: (() => void) | undefined
-    let stopB: (() => void) | undefined
-    let stopC: (() => void) | undefined
-
-    act(() => {
-      stopA = result.current?.startLoading('Message A')
-    })
-    expect(result.current?.loadingMessage).toBe('Message A')
-
-    act(() => {
-      stopB = result.current?.startLoading('Message B')
-    })
-    expect(result.current?.loadingMessage).toBe('Message B')
-
-    act(() => {
-      stopC = result.current?.startLoading('Message C')
-    })
-    expect(result.current?.loadingMessage).toBe('Message C')
-
-    act(() => {
-      stopA?.()
-      stopB?.()
-      stopC?.()
-    })
-    expect(result.current?.isLoading).toBe(false)
-    expect(result.current?.loadingMessage).toBeNull()
-  })
-
-  it('should display the message of the most recently started loader that has one', () => {
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <BCSCLoadingProvider>{children}</BCSCLoadingProvider>
-    )
-
-    const { result } = renderHook(() => useContext(BCSCLoadingContext), { wrapper })
-
-    let stopA: (() => void) | undefined
-    let stopB: (() => void) | undefined
-
-    act(() => {
-      stopA = result.current?.startLoading('Message A')
-    })
-    expect(result.current?.isLoading).toBe(true)
-    expect(result.current?.loadingMessage).toBe('Message A')
-
-    // Starting a loader without a message should not overwrite "Message A"
-    act(() => {
-      stopB = result.current?.startLoading()
-    })
-    expect(result.current?.isLoading).toBe(true)
-    expect(result.current?.loadingMessage).toBe('Message A')
-
-    // Stopping B (no message) should leave "Message A" intact
-    act(() => {
-      stopB?.()
-    })
-    expect(result.current?.isLoading).toBe(true)
-    expect(result.current?.loadingMessage).toBe('Message A')
-
-    act(() => {
-      stopA?.()
-    })
-    expect(result.current?.isLoading).toBe(false)
-    expect(result.current?.loadingMessage).toBeNull()
-  })
-})
-
-describe('LoadingScreen component', () => {
-  it('should start loading when mounted', () => {
-    let isLoading: boolean | undefined
-
-    const ContextCapture = () => {
-      const ctx = useContext(BCSCLoadingContext)
-      isLoading = ctx?.isLoading
-      return null
-    }
-
-    render(
+  it('updates status and progress without restarting the illustration or losing the other loader', () => {
+    const App = ({ progress }: { progress?: number }) => (
       <BCSCLoadingProvider>
-        <ContextCapture />
-        <LoadingScreen />
+        <LoadingScreen message="Other work" />
+        {progress !== undefined && (
+          <LoadingScreen message="Submitting" statusMessage={`Stage ${progress}`} progressPercent={progress} />
+        )}
       </BCSCLoadingProvider>
     )
-
-    expect(isLoading).toBe(true)
-  })
-
-  it('should stop loading when unmounted', () => {
-    let isLoading: boolean | undefined
-
-    const ContextCapture = () => {
-      const ctx = useContext(BCSCLoadingContext)
-      isLoading = ctx?.isLoading
-      return null
-    }
-
-    const TestWrapper = ({ showLoading }: { showLoading: boolean }) => (
-      <BCSCLoadingProvider>
-        <ContextCapture />
-        {showLoading && <LoadingScreen />}
-      </BCSCLoadingProvider>
-    )
-
-    const { rerender } = render(<TestWrapper showLoading={true} />)
-    expect(isLoading).toBe(true)
-
-    rerender(<TestWrapper showLoading={false} />)
-    expect(isLoading).toBe(false)
+    const view = render(<App progress={25} />)
+    const illustration = view.UNSAFE_getByType(BCAnimatedLoadingIcon)
+    expect(view.getByRole('progressbar', { name: 'Stage 25' })).toBeTruthy()
+    view.rerender(<App progress={50} />)
+    expect(view.getByRole('progressbar', { name: 'Stage 50' })).toBeTruthy()
+    expect(view.UNSAFE_getByType(BCAnimatedLoadingIcon)).toBe(illustration)
+    view.rerender(<App />)
+    expect(view.getByText('Other work')).toBeTruthy()
+    expect(view.queryByRole('progressbar')).toBeNull()
+    expect(view.UNSAFE_getByType(BCAnimatedLoadingIcon)).toBe(illustration)
   })
 })

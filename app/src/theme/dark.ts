@@ -10,6 +10,12 @@ const GOLD = '#FCBA19'
 const PRIMARY_LIGHT = '#3470B1'
 
 export const DarkTheme = createAppTheme({
+  waitingScreen: {
+    heading: GOLD,
+    status: GrayscaleColors.white,
+    track: GrayscaleColors.veryLightGrey,
+    progress: GOLD,
+  },
   name: BCThemeNames.Dark,
   logo: Logo,
   primary: GOLD,

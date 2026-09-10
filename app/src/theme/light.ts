@@ -3,6 +3,7 @@ import Logo from '@assets/img/logo-with-text.svg'
 import { GrayscaleColors, NotificationColors } from '@bcwallet-theme/theme'
 
 import { createAppTheme } from './factory'
+import { LightWaitingScreenColors } from './waiting-screen'
 
 const BC_BLUE = '#003366'
 export const BLUE_LIGHT = '#7AB8F9'
@@ -14,6 +15,7 @@ const LIGHT_BLUE_BG = '#D8EAFD'
 const PRIMARY_LIGHT = '#D9EAF7'
 
 export const LightTheme = createAppTheme({
+  waitingScreen: LightWaitingScreenColors,
   name: BCThemeNames.Light,
   logo: Logo,
   primary: BC_BLUE,

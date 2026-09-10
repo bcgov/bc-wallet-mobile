@@ -1,35 +1,44 @@
 import { useTheme } from '@bifold/core'
 import React, { useEffect, useState } from 'react'
-import { Animated, StyleSheet, useWindowDimensions, View } from 'react-native'
+import { Animated, ColorValue, StyleSheet, useWindowDimensions, View } from 'react-native'
 
 export interface ProgressBarProps {
   progressPercent: number
   dark?: boolean
+  trackColor?: ColorValue
+  progressColor?: ColorValue
+  active?: boolean
 }
 
-const ProgressBar = ({ progressPercent, dark = false }: ProgressBarProps) => {
+const ProgressBar = ({ progressPercent, dark = false, trackColor, progressColor, active = true }: ProgressBarProps) => {
   const { ColorPalette } = useTheme()
   const { width: windowWidth } = useWindowDimensions()
   const [progressBarScale] = useState(new Animated.Value(0))
 
   useEffect(() => {
-    Animated.timing(progressBarScale, {
+    if (!active) {
+      return
+    }
+    const animation = Animated.timing(progressBarScale, {
       toValue: progressPercent,
       duration: 300,
       useNativeDriver: true, // allows for much smoother animation
-    }).start()
-  }, [progressPercent, progressBarScale])
+      isInteraction: false,
+    })
+    animation.start()
+    return () => animation.stop()
+  }, [progressPercent, progressBarScale, active])
 
   const styles = StyleSheet.create({
     progressBarContainer: {
       width: '100%',
-      height: 11,
-      backgroundColor: dark ? '#001e3d' : ColorPalette.brand.primaryBackground,
+      height: 8, // As specified in Figma.
+      backgroundColor: trackColor ?? (dark ? '#001e3d' : ColorPalette.brand.primaryBackground),
     },
     progressBar: {
       height: '100%',
       width: '100%',
-      backgroundColor: ColorPalette.brand.highlight,
+      backgroundColor: progressColor ?? ColorPalette.brand.highlight,
     },
   })
   // scaleX rather than width is used for the progress bar as this allows useNativeDriver to be true

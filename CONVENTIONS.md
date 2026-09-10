@@ -16,6 +16,25 @@ Where possible, users should be able to access screens or tools before async res
 (e.g. wallet initialization) are ready. Rather than blocking navigation, show a banner
 message or text on the screen itself informing the user that the feature isn't available yet and to try again shortly.
 
+## Waiting screens
+
+BCSC loading overlays and video submission use the shared `WaitingScreenContent`
+and `BCAnimatedLoadingIcon`. Center the illustration in the safe-area viewport,
+with the heading between the optional status row and illustration. Allow scrolling
+for larger text and short screens.
+
+Use explicit workflow stages for progress; omit the bar when progress is unknown.
+Startup holds at two-thirds until ready. Video submission advances through preparation,
+upload, and finalization. Progress does not introduce a delay before leaving the screen.
+Keep waiting-screen colors in the theme and follow the
+[style guide](https://www.figma.com/design/GhRluKzTmhtGAjTrYZWSE4/BCSC-Style-Guide?node-id=5143-5507).
+
+Hidden loading views must not run animations. Concurrent operations own separate
+loading tokens; the overlay stays visible until all tokens are released.
+Video submission preserves the existing Cancel behavior (#4585): reveal it after
+10 seconds without shifting content, then return to verification-method selection.
+Startup has no Cancel control.
+
 ## Test IDs: Register the key, then reference it
 
 Never pass a string literal to `testIdWithKey`. Add the key to `app/src/test-ids/registry.ts` under

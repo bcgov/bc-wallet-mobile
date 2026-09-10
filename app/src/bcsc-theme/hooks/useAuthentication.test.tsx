@@ -397,7 +397,10 @@ describe('useAuthentication', () => {
         await result.current.performDeviceAuth()
       })
 
-      expect(mockStartLoading).toHaveBeenCalled()
+      expect(mockStartLoading).toHaveBeenCalledWith('BCSC.Loading.AppStartup', {
+        progressPercent: (2 / 3) * 100,
+        statusMessage: 'BCSC.Loading.AccountLoading',
+      })
       expect(mockStopLoading).toHaveBeenCalled()
     })
 
