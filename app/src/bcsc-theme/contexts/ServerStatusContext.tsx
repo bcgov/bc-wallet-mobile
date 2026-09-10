@@ -59,6 +59,8 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
   // Wait for the request to finish before starting another
   const inFlightRef = useRef<Promise<ServerStatusRefreshResult> | null>(null)
   const fetchedForClientRef = useRef<BCSCApiClient | null>(null)
+  const serverStatusRef = useRef(serverStatus)
+  serverStatusRef.current = serverStatus
 
   const fetchStatus = useCallback(async (): Promise<ServerStatusRefreshResult> => {
     if (inFlightRef.current) {
@@ -88,14 +90,14 @@ export const ServerStatusProvider = ({ children }: PropsWithChildren) => {
   const refresh = useCallback(
     async (options?: { force?: boolean }): Promise<ServerStatusRefreshResult> => {
       if (!options?.force) {
-        return toResult(serverStatus)
+        return toResult(serverStatusRef.current)
       }
       if (!isClientReady || !client) {
-        return toResult(serverStatus)
+        return toResult(serverStatusRef.current)
       }
       return fetchStatus()
     },
-    [serverStatus, isClientReady, client, fetchStatus]
+    [isClientReady, client, fetchStatus]
   )
 
   // Fetch once the client is ready

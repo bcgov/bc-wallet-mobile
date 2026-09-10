@@ -1,12 +1,14 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import CodeInput from '@/bcsc-theme/components/CodeInput'
 import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
+import { useServerStatus } from '@/bcsc-theme/contexts/ServerStatusContext'
+import { ServiceOutage } from '@/bcsc-theme/features/modal/ServiceOutage'
 import { PAIRING_CODE_LENGTH } from '@/constants'
 import { TestIds } from '@/test-ids/registry'
 import { BCSCMainStackParams, BCSCQRCoreScreens, BCSCQRCoreTabParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native'
+import { RouteProp, useFocusEffect, useNavigation, useRoute } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -23,9 +25,24 @@ const ManualPairing: React.FC = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { pairing } = useApi()
   const loadingScreen = useLoadingScreen()
+  const { isAvailable: isServerAvailable, refresh: refreshServerStatus } = useServerStatus()
+
+  // Re-check on focus so a mid-session outage gates this screen (the "log in from another device"
+  // card and QR scans both land here), and a recovery clears it.
+  useFocusEffect(
+    useCallback(() => {
+      refreshServerStatus({ force: true })
+    }, [refreshServerStatus])
+  )
 
   const onSubmit = useCallback(
     async (pairingCode: string) => {
+      // Pairing exchanges the code with IAS; skip the doomed request during an outage. The render
+      // below already shows the outage screen, but a QR-scan / deep-link code auto-submits from an
+      // effect that still runs behind it.
+      if (!isServerAvailable) {
+        return
+      }
       const stopLoading = loadingScreen.startLoading()
       try {
         logger.info('Submitting pairing code.')
@@ -55,7 +72,7 @@ const ManualPairing: React.FC = () => {
         stopLoading()
       }
     },
-    [loadingScreen, logger, navigation, pairing, t]
+    [isServerAvailable, loadingScreen, logger, navigation, pairing, t]
   )
 
   // QRCoreStack keeps tabs mounted (unmountOnBlur: false), so a pre-populated
@@ -93,6 +110,11 @@ const ManualPairing: React.FC = () => {
       marginHorizontal: Spacing.md,
     },
   })
+
+  // Entering a pairing code is an IAS action; show the outage screen in its place while IAS is down.
+  if (!isServerAvailable) {
+    return <ServiceOutage />
+  }
 
   return (
     <ScreenWrapper keyboardActive>
